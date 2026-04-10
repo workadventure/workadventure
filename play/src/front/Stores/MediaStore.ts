@@ -2,21 +2,23 @@ import type { Readable, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import deepEqual from "fast-deep-equal";
 import { AvailabilityStatus } from "@workadventure/messages";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import * as Sentry from "@sentry/svelte";
+import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { isIOS } from "../WebRtc/DeviceUtils";
-import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
+import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { RequestedStatus } from "../Rules/StatusRules/statusRules";
+import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
 import {
-    createBackgroundTransformer,
-    type BackgroundTransformer,
     type BackgroundConfig,
+    type BackgroundTransformer,
+    createBackgroundTransformer,
 } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
+import { LL } from "../../i18n/i18n-svelte";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
-import { errorStore } from "./ErrorStore";
+import { errorStore, warningMessageStore } from "./ErrorStore";
 import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
 
 import { createSilentStore } from "./SilentStore";
@@ -27,6 +29,23 @@ import { hideHelpCameraSettings } from "./HelpSettingsStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 
 import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
+
+export const inBackgroundSettingsStore = writable<boolean>(false);
+
+export type MediaAccessIssue = "permission_denied" | "no_device";
+
+/**
+ * Last camera access failure, or no videoinput reported by the browser.
+ * Cleared when the user turns the camera off manually, when a video track is obtained, or when a camera appears.
+ */
+export const cameraAccessIssueStore = writable<MediaAccessIssue | null>(null);
+
+/**
+ * Last microphone access failure, or no audioinput reported by the browser.
+ * Cleared when the user turns the microphone off manually, when an audio track is obtained, or when a microphone appears.
+ */
+export const microphoneAccessIssueStore = writable<MediaAccessIssue | null>(null);
+
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
@@ -162,7 +181,7 @@ const userMoved5SecondsAgoStore = readable(false, function start(set) {
 /**
  * A store awaiting the loading of devices information.
  */
-const devicesNotLoaded = writable(true);
+export const devicesNotLoaded = writable(true);
 
 const deviceChanged10SecondsAgoStore = readable(false, function start(set) {
     let timeout: NodeJS.Timeout | null = null;
@@ -316,6 +335,11 @@ export const isSpeakerStore = writable(false);
 export const inLivekitStore = writable(false);
 export const isListenerStore = writable(false);
 export const listenerWaitingMediaStore = writable<string | undefined>(undefined);
+/**
+ * When true, the listener has consented to share their camera with the speaker (seeAttendees feature).
+ * This store is set to true when the listener accepts the camera sharing popup.
+ */
+export const listenerSharingCameraStore = writable(false);
 
 export const requestedStatusStore: Writable<RequestedStatus | null> = writable(localUserStore.getRequestedStatus());
 
@@ -400,6 +424,7 @@ export const mediaStreamConstraintsStore = derived(
         cameraEnergySavingStore,
         availabilityStatusStore,
         batchGetUserMediaStore,
+        inBackgroundSettingsStore,
     ],
     (
         [
@@ -415,6 +440,7 @@ export const mediaStreamConstraintsStore = derived(
             $cameraEnergySavingStore,
             $availabilityStatusStore,
             $batchGetUserMediaStore,
+            $inBackgroundSettingsStore,
         ],
         set
     ) => {
@@ -426,61 +452,45 @@ export const mediaStreamConstraintsStore = derived(
         let currentVideoConstraint: boolean | MediaTrackConstraints = $videoConstraintStore;
         let currentAudioConstraint: boolean | MediaTrackConstraints = $audioConstraintStore;
 
-        // Disable webcam if the user requested so
-        if ($requestedCameraState === false) {
-            currentVideoConstraint = false;
-        }
+        // Shared conditions for disabling media
+        const isInExternalService = $inExternalServiceStore === true;
+        const isEnergySaving = $cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false;
+        const isUnavailableStatus =
+            $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
+            $availabilityStatusStore === AvailabilityStatus.SILENT ||
+            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
+            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+            $availabilityStatusStore === AvailabilityStatus.BUSY;
+        const shouldDisableMicrophoneForPrivacy =
+            $privacyShutdownStore === true && !localUserStore.getMicrophonePrivacySettings();
+        const shouldDisableCameraForPrivacy =
+            $privacyShutdownStore === true && !localUserStore.getCameraPrivacySettings();
 
-        // Disable microphone if the user requested so
-        if ($requestedMicrophoneState === false) {
+        // Audio constraints always apply
+        if (
+            $requestedMicrophoneState === false ||
+            $myMicrophoneStore === false ||
+            isInExternalService ||
+            shouldDisableMicrophoneForPrivacy ||
+            isEnergySaving ||
+            isUnavailableStatus
+        ) {
             currentAudioConstraint = false;
         }
 
-        // Disable webcam when in a Jitsi
-        if ($myCameraStore === false) {
-            currentVideoConstraint = false;
-        }
-
-        // Disable microphone when in a Jitsi
-        if ($myMicrophoneStore === false) {
-            currentAudioConstraint = false;
-        }
-
-        if ($inExternalServiceStore === true) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-
-        // Disable webcam for privacy reasons (the game is not visible and we were talking to no one)
-        if ($privacyShutdownStore === true) {
-            const userMicrophonePrivacySetting = localUserStore.getMicrophonePrivacySettings();
-            const userCameraPrivacySetting = localUserStore.getCameraPrivacySettings();
-            if (!userMicrophonePrivacySetting) {
-                currentAudioConstraint = false;
-            }
-            if (!userCameraPrivacySetting) {
+        // Video constraints only apply when NOT in background settings (to allow camera preview)
+        if (!$inBackgroundSettingsStore) {
+            if (
+                $requestedCameraState === false ||
+                $myCameraStore === false ||
+                isInExternalService ||
+                shouldDisableCameraForPrivacy ||
+                isEnergySaving ||
+                isUnavailableStatus
+            ) {
                 currentVideoConstraint = false;
             }
         }
-
-        // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
-        if ($cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-
-        if (
-            $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
-            $availabilityStatusStore === AvailabilityStatus.SILENT ||
-            //$availabilityStatusStore === AvailabilityStatus.SPEAKER ||
-            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
-            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-            $availabilityStatusStore === AvailabilityStatus.BUSY
-        ) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-
         // Let's make the changes only if the new value is different from the old one.
         if (
             !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
@@ -505,7 +515,10 @@ export const mediaStreamConstraintsStore = derived(
     {
         video: false,
         audio: false,
-    } as MediaStreamConstraints
+    } as {
+        video: false | MediaTrackConstraints;
+        audio: false | MediaTrackConstraints;
+    }
 );
 
 export type LocalStreamStoreValue = StreamSuccessValue | StreamErrorValue;
@@ -521,11 +534,16 @@ interface StreamErrorValue {
 }
 
 let currentStream: MediaStream | undefined = undefined;
-let oldConstraints = { video: false, audio: false };
+let oldConstraints: { video: MediaTrackConstraints | false; audio: MediaTrackConstraints | false } = {
+    video: false,
+    audio: false,
+};
 // Use the factory to create the appropriate transformer
 let backgroundTransformer: BackgroundTransformer | undefined = undefined;
 // Track the last background config to detect if we need to recreate or just update
 let lastBackgroundConfig: BackgroundConfig | undefined = undefined;
+// AbortController for the in-flight transform; aborted when a new run is scheduled
+let currentTransformAbortController: AbortController | null = null;
 
 /**
  * Update background processor configuration without recreating the transformer
@@ -569,12 +587,222 @@ export function updateBackgroundProcessor(config: {
     }
 }
 
-// This promise is important to queue the calls to "getUserMedia"
-// Otherwise, this can happen:
-// User requests a start then a stop of the camera quickly
-// The promise to start the cam starts. Before the promise is fulfilled, the camera is stopped.
-// Then, the MediaStream of the camera start resolves (resulting in the LED being turned on instead of off)
-let currentGetUserMediaPromise: Promise<MediaStream | undefined> = Promise.resolve(undefined);
+/**
+ * Serializes raw local stream updates so that only one getUserMedia flow runs at a time
+ * and the last enqueued update wins (stale completions do not overwrite the store).
+ */
+let rawStreamGeneration = 0;
+let rawStreamUpdateQueue: Promise<void> = Promise.resolve();
+
+type SetRawStreamIfCurrent = (value: LocalStreamStoreValue) => void;
+
+function classifyMediaAccessError(error: unknown): MediaAccessIssue | null {
+    const name = error instanceof Error ? error.name : "";
+    if (name === "NotAllowedError" || name === "PermissionDeniedError" || name === "SecurityError") {
+        return "permission_denied";
+    }
+    if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+        return "no_device";
+    }
+    return null;
+}
+
+function emitCurrentStreamOrError(setIfCurrent: SetRawStreamIfCurrent, error: unknown) {
+    if (currentStream) {
+        setIfCurrent({
+            type: "success",
+            stream: currentStream,
+        });
+        return;
+    }
+
+    setIfCurrent({
+        type: "error",
+        error: error instanceof Error ? error : new Error("An unknown error happened"),
+    });
+}
+
+async function runRawStreamUpdate(
+    constraints: { video: false | MediaTrackConstraints; audio: false | MediaTrackConstraints },
+    setIfCurrent: SetRawStreamIfCurrent,
+    generation: number
+): Promise<{ video: false | MediaTrackConstraints; audio: false | MediaTrackConstraints }> {
+    if (navigator.mediaDevices === undefined) {
+        if (window.location.protocol === "http:") {
+            setIfCurrent({
+                type: "error",
+                error: new Error("Unable to access your camera or microphone. You need to use a HTTPS connection."),
+            });
+            return constraints;
+        }
+        if (isIOS()) {
+            setIfCurrent({
+                type: "error",
+                error: new WebviewOnOldIOS(),
+            });
+            return constraints;
+        }
+        setIfCurrent({
+            type: "error",
+            error: new BrowserTooOldError(),
+        });
+        return constraints;
+    }
+
+    if (currentStream === undefined) {
+        setIfCurrent({
+            type: "success",
+            stream: undefined,
+        });
+    }
+
+    cameraAccessIssueStore.set(null);
+    microphoneAccessIssueStore.set(null);
+
+    const nextConstraints = {
+        video: constraints.video ?? false,
+        audio: constraints.audio ?? false,
+    };
+
+    const mustRequestNewVideo =
+        (constraints.video && !deepEqual(oldConstraints.video, constraints.video)) ||
+        (!currentStream && constraints.video);
+    const mustRequestNewAudio =
+        (constraints.audio && !deepEqual(oldConstraints.audio, constraints.audio)) ||
+        (!currentStream && constraints.audio);
+
+    if (currentStream) {
+        const oldStream = currentStream;
+        const mustStopVideo = oldConstraints.video !== false && constraints.video === false;
+        const mustStopAudio = oldConstraints.audio !== false && constraints.audio === false;
+
+        if (mustStopVideo) {
+            oldStream.getVideoTracks().forEach((t) => {
+                t.stop();
+                oldStream.removeTrack(t);
+            });
+        }
+        if (mustStopAudio) {
+            oldStream.getAudioTracks().forEach((t) => {
+                t.stop();
+                oldStream.removeTrack(t);
+            });
+        }
+        if (mustStopVideo || mustStopAudio) {
+            setIfCurrent({
+                type: "success",
+                stream: oldStream,
+            });
+        }
+    }
+
+    if (mustRequestNewVideo || mustRequestNewAudio) {
+        const newConstraints: MediaStreamConstraints = {};
+        if (mustRequestNewVideo) {
+            newConstraints.video = constraints.video;
+        } else {
+            newConstraints.video = false;
+        }
+        if (mustRequestNewAudio) {
+            newConstraints.audio = constraints.audio;
+        } else {
+            newConstraints.audio = false;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(newConstraints);
+            if (currentStream) {
+                const oldStream = currentStream;
+                if (oldStream.getVideoTracks().length > 0) {
+                    if (stream.getVideoTracks().length > 0) {
+                        console.error("[MediaStore] New stream already has a video track, cannot reuse old one");
+                        oldStream.getVideoTracks().forEach((t) => t.stop());
+                    } else {
+                        const oldVideoTracks = currentStream.getVideoTracks();
+                        oldVideoTracks.forEach((t) => {
+                            if (t.readyState !== "ended") {
+                                stream.addTrack(t);
+                            }
+                            currentStream?.removeTrack(t);
+                        });
+                    }
+                }
+                if (oldStream.getAudioTracks().length > 0) {
+                    if (stream.getAudioTracks().length > 0) {
+                        console.error("[MediaStore] New stream already has an audio track, cannot reuse old one");
+                        oldStream.getAudioTracks().forEach((t) => t.stop());
+                    } else {
+                        const oldAudioTracks = currentStream.getAudioTracks();
+                        oldAudioTracks.forEach((t) => {
+                            if (t.readyState !== "ended") {
+                                stream.addTrack(t);
+                            }
+                            currentStream?.removeTrack(t);
+                        });
+                    }
+                }
+            }
+
+            currentStream = stream;
+            setIfCurrent({
+                type: "success",
+                stream: currentStream,
+            });
+            batchGetUserMediaStore.startBatch();
+            if (currentStream.getVideoTracks().length > 0) {
+                usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
+                requestedCameraState.enableWebcam();
+            }
+            if (currentStream.getAudioTracks().length > 0) {
+                usedMicrophoneDeviceIdStore.set(currentStream.getAudioTracks()[0]?.getSettings().deviceId);
+                requestedMicrophoneState.enableMicrophone();
+            }
+            batchGetUserMediaStore.commitChanges();
+            hideHelpCameraSettings();
+        } catch (e) {
+            if (isOverConstrainedError(e) && e.constraint === "deviceId") {
+                console.info(
+                    "Could not access the requested microphone or webcam. Falling back to default microphone and webcam",
+                    newConstraints,
+                    e
+                );
+                batchGetUserMediaStore.startBatch();
+                requestedCameraDeviceIdStore.set(undefined);
+                requestedMicrophoneDeviceIdStore.set(undefined);
+                batchGetUserMediaStore.commitChanges();
+            } else if (mustRequestNewVideo) {
+                console.info(
+                    "Error. Unable to get microphone and/or camera access. Trying audio only.",
+                    newConstraints,
+                    e
+                );
+                emitCurrentStreamOrError(setIfCurrent, e);
+                const classified = classifyMediaAccessError(e);
+                requestedCameraState.disableWebcam();
+                cameraAccessIssueStore.set(classified);
+                if (mustRequestNewAudio) {
+                    requestedMicrophoneState.disableMicrophone();
+                    microphoneAccessIssueStore.set(classified);
+                }
+            } else if (!constraints.video && !constraints.audio) {
+                console.error("Error. getUserMedia called with no audio and no video.");
+                setIfCurrent({
+                    type: "error",
+                    error: new MediaStreamConstraintsError(),
+                });
+            } else {
+                console.info("Error. Unable to get microphone and/or camera access.", newConstraints, e);
+                emitCurrentStreamOrError(setIfCurrent, e);
+                if (mustRequestNewAudio) {
+                    requestedMicrophoneState.disableMicrophone();
+                    microphoneAccessIssueStore.set(classifyMediaAccessError(e));
+                }
+            }
+        }
+    }
+
+    return nextConstraints;
+}
 
 /**
  * A store containing the MediaStream object (or undefined if nothing requested, or Error if an error occurred)
@@ -584,148 +812,95 @@ let currentGetUserMediaPromise: Promise<MediaStream | undefined> = Promise.resol
  * Parameter changes (blurAmount, etc.) are handled by a separate subscriber to avoid recreating
  * the transformer on every change (which causes WebGL context leaks).
  */
-
 export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore], LocalStreamStoreValue>(
     [mediaStreamConstraintsStore],
     ([$mediaStreamConstraintsStore], set) => {
         const constraints = { ...$mediaStreamConstraintsStore };
-
-        function initStream(constraints: MediaStreamConstraints): Promise<MediaStream | undefined> {
-            currentGetUserMediaPromise = currentGetUserMediaPromise.then(() => {
-                return navigator.mediaDevices
-                    .getUserMedia(constraints)
-                    .then((stream) => {
-                        // Close old stream
-                        if (currentStream) {
-                            //we need stop all tracks to make sure the old stream will be garbage collected
-                            currentStream.getTracks().forEach((t) => t.stop());
-                        }
-
-                        currentStream = stream;
-                        set({
-                            type: "success",
-                            stream: currentStream,
-                        });
-                        if (currentStream.getVideoTracks().length > 0) {
-                            usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
-                        }
-                        if (currentStream.getAudioTracks().length > 0) {
-                            usedMicrophoneDeviceIdStore.set(currentStream.getAudioTracks()[0]?.getSettings().deviceId);
-                        }
-                        hideHelpCameraSettings();
-
-                        return stream;
-                    })
-                    .catch((e) => {
-                        if (isOverConstrainedError(e) && e.constraint === "deviceId") {
-                            console.info(
-                                "Could not access the requested microphone or webcam. Falling back to default microphone and webcam",
-                                constraints,
-                                e
-                            );
-                            requestedCameraDeviceIdStore.set(undefined);
-                            requestedMicrophoneDeviceIdStore.set(undefined);
-                        } else if (constraints.video !== false /* || constraints.audio !== false*/) {
-                            console.info(
-                                "Error. Unable to get microphone and/or camera access. Trying audio only.",
-                                constraints,
-                                e
-                            );
-                            // TODO: does it make sense to pop this error when retrying?
-                            set({
-                                type: "error",
-                                error: e instanceof Error ? e : new Error("An unknown error happened"),
-                            });
-                            // Let's try without video constraints
-                            //if (constraints.video !== false) {
-                            requestedCameraState.disableWebcam();
-                            //}
-                            /*if (constraints.audio !== false) {
-                                requestedMicrophoneState.disableMicrophone();
-                            }*/
-                        } else if (!constraints.video && !constraints.audio) {
-                            set({
-                                type: "error",
-                                error: new MediaStreamConstraintsError(),
-                            });
-                        } else {
-                            console.info("Error. Unable to get microphone and/or camera access.", constraints, e);
-                            set({
-                                type: "error",
-                                error: e instanceof Error ? e : new Error("An unknown error happened"),
-                            });
-                        }
-                        return undefined;
-                    });
-            });
-            return currentGetUserMediaPromise;
-        }
-
-        if (navigator.mediaDevices === undefined) {
-            if (window.location.protocol === "http:") {
-                set({
-                    type: "error",
-                    error: new Error("Unable to access your camera or microphone. You need to use a HTTPS connection."),
-                });
-                return;
-            } else if (isIOS()) {
-                set({
-                    type: "error",
-                    error: new WebviewOnOldIOS(),
-                });
-                return;
-            } else {
-                set({
-                    type: "error",
-                    error: new BrowserTooOldError(),
-                });
-                return;
+        const myGen = ++rawStreamGeneration;
+        const setIfCurrent: SetRawStreamIfCurrent = (value) => {
+            if (myGen === rawStreamGeneration) {
+                set(value);
             }
-        }
+        };
 
-        if (currentStream === undefined) {
-            // we need to assign a first value to the stream because getUserMedia is async
-            set({
-                type: "success",
-                stream: undefined,
-            });
-        }
-
-        //on bad navigators like chrome, we have to stop the tracks when we mute and reinstantiate the stream when we need to unmute
-        if (constraints.audio === false && constraints.video === false) {
-            currentGetUserMediaPromise = currentGetUserMediaPromise.then(() => {
-                if (currentStream) {
-                    //we need stop all tracks to make sure the old stream will be garbage collected
-                    currentStream.getTracks().forEach((t) => t.stop());
+        rawStreamUpdateQueue = rawStreamUpdateQueue
+            .then(async () => {
+                const result = await runRawStreamUpdate(constraints, setIfCurrent, myGen);
+                if (myGen === rawStreamGeneration) {
+                    oldConstraints = result;
                 }
-
-                currentStream = undefined;
-                set({
-                    type: "success",
-                    stream: undefined,
-                });
-                return undefined;
-            });
-        } //we reemit the stream if it was muted just to be sure
-        else if (
-            constraints.audio /* && !oldConstraints.audio*/ ||
-            (!oldConstraints.video && constraints.video) ||
-            !deepEqual(oldConstraints.audio, constraints.audio) ||
-            !deepEqual(oldConstraints.video, constraints.video)
-        ) {
-            initStream(constraints).catch((e) => {
-                set({
+            })
+            .catch((e) => {
+                console.error("Error in raw local stream update queue", e);
+                setIfCurrent({
                     type: "error",
                     error: e instanceof Error ? e : new Error("An unknown error happened"),
                 });
             });
-        }
-        oldConstraints = {
-            video: !!constraints.video,
-            audio: !!constraints.audio,
-        };
     }
 );
+
+/**
+ * Serializes local stream (background-transformed) updates so that the last enqueued update wins.
+ */
+let localStreamGeneration = 0;
+let localStreamUpdateQueue: Promise<void> = Promise.resolve();
+
+type SetLocalStreamIfCurrent = (value: LocalStreamStoreValue) => void;
+
+async function runLocalStreamUpdate(
+    rawValue: LocalStreamStoreValue,
+    backgroundProcessingEnabled: boolean,
+    setIfCurrent: SetLocalStreamIfCurrent,
+    signal: AbortSignal
+): Promise<void> {
+    // This can happen when the user navigates away from the page while the stream is being updated
+    if (rawValue == undefined) return;
+    if (
+        rawValue.type === "error" ||
+        rawValue.stream === undefined ||
+        rawValue.stream.getVideoTracks().length === 0 ||
+        !backgroundProcessingEnabled
+    ) {
+        if (backgroundTransformer) {
+            backgroundTransformer.stop();
+        }
+        setIfCurrent(rawValue);
+        return;
+    }
+
+    if (!backgroundTransformer) {
+        const currentConfig = get(backgroundConfigStore);
+        backgroundTransformer = createBackgroundTransformer(currentConfig);
+    }
+
+    if (!rawValue.stream || !backgroundTransformer) {
+        setIfCurrent(rawValue);
+        return;
+    }
+
+    try {
+        const finalStream = await backgroundTransformer.transform(rawValue.stream, signal);
+        lastBackgroundConfig = { ...get(backgroundConfigStore) };
+        setIfCurrent({
+            type: "success",
+            stream: finalStream,
+        });
+    } catch (error) {
+        const isAbort = error instanceof AbortError || (error instanceof DOMException && error.name === "AbortError");
+        if (isAbort) {
+            return;
+        }
+        console.warn("[MediaStore] Failed to transform stream:", error);
+        Sentry.captureException(error);
+        warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.failedToApply());
+        backgroundConfigStore.reset();
+        setIfCurrent({
+            type: "error",
+            error: error instanceof Error ? error : new Error("Background transform failed"),
+        });
+    }
+}
 
 export const localStreamStore = derived<
     [typeof rawLocalStreamStore, typeof backgroundProcessingEnabledStore],
@@ -733,96 +908,72 @@ export const localStreamStore = derived<
 >(
     [rawLocalStreamStore, backgroundProcessingEnabledStore],
     ([$rawLocalStreamStore, $backgroundProcessingEnabled], set) => {
-        if (
-            $rawLocalStreamStore.type === "error" ||
-            $rawLocalStreamStore.stream === undefined ||
-            $rawLocalStreamStore.stream.getVideoTracks().length === 0 ||
-            !$backgroundProcessingEnabled
-        ) {
-            if (backgroundTransformer) {
-                backgroundTransformer.stop();
+        const myGen = ++localStreamGeneration;
+        const setIfCurrent: SetLocalStreamIfCurrent = (value) => {
+            if (myGen === localStreamGeneration) {
+                set(value);
             }
+        };
 
-            set($rawLocalStreamStore);
-            return;
-        }
+        currentTransformAbortController?.abort(new AbortError("Background transform cancelled: new stream update"));
+        const controller = new AbortController();
+        currentTransformAbortController = controller;
 
-        let finalStream;
-
-        if (!backgroundTransformer) {
-            // Get current config from the store
-            const currentConfig = get(backgroundConfigStore);
-
-            backgroundTransformer = createBackgroundTransformer(currentConfig);
-        }
-
-        (async () => {
-            // Only create if we don't have a transformer yet
-            if ($rawLocalStreamStore.stream && backgroundTransformer) {
-                // Transform the stream using the new approach if available
-                finalStream = await backgroundTransformer.transform($rawLocalStreamStore.stream);
-                // Store config for next comparison
-                lastBackgroundConfig = { ...get(backgroundConfigStore) };
-
-                set({
-                    type: "success",
-                    stream: finalStream,
+        localStreamUpdateQueue = localStreamUpdateQueue
+            .catch((e) => {
+                const isAbort = e instanceof AbortError || (e instanceof DOMException && e.name === "AbortError");
+                if (isAbort) {
+                    return;
+                }
+                console.error("Error in local stream update queue", e);
+                setIfCurrent({
+                    type: "error",
+                    error: e instanceof Error ? e : new Error("An unknown error happened"),
                 });
-            }
-        })().catch((error) => {
-            console.warn("[MediaStore] Failed to transform stream:", error);
-            Sentry.captureException(error);
-        });
+            })
+            .then(() =>
+                runLocalStreamUpdate(
+                    $rawLocalStreamStore,
+                    $backgroundProcessingEnabled,
+                    setIfCurrent,
+                    controller.signal
+                )
+            );
     }
 );
-
-export const stableLocalStream = new MediaStream();
 
 /**
- * This store is here to "stabilize" the MediaStream object given by localStreamStore. localStreamStore creates
- * new MediaStream instances when the tracks change, which makes it hard to use in simple-peer because the
- * replaceTrack method of simple-peer requires the MediaStream object to be the same (for no good reason,
- * as documented here: https://github.com/feross/simple-peer/issues/634)
+ * When (unavailable status + in background settings), we expose the local stream without video tracks
+ * so that LiveKit/WebRTC do not publish camera; preview in BackgroundSettingsPanel still uses localStreamStore.
  */
-export const stableLocalStreamStore = derived<[typeof localStreamStore], LocalStreamStoreValue>(
-    [localStreamStore],
-    ([$localStreamStore]) => {
-        if ($localStreamStore.type === "success") {
-            const stream = $localStreamStore.stream;
+export const localStreamStoreForPublishing = derived<
+    [typeof localStreamStore, typeof availabilityStatusStore, typeof inBackgroundSettingsStore],
+    LocalStreamStoreValue
+>(
+    [localStreamStore, availabilityStatusStore, inBackgroundSettingsStore],
+    ([$localStreamStore, $availabilityStatusStore, $inBackgroundSettingsStore], set) => {
+        const isUnavailableStatus =
+            $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
+            $availabilityStatusStore === AvailabilityStatus.SILENT ||
+            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
+            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+            $availabilityStatusStore === AvailabilityStatus.BUSY;
+        const shouldMaskVideoForPublishing = isUnavailableStatus && $inBackgroundSettingsStore;
 
-            if (stream) {
-                const newVideoTrack = stream.getVideoTracks()[0];
-                const currentVideoTrack = stableLocalStream.getVideoTracks()[0];
-
-                if (newVideoTrack && currentVideoTrack && newVideoTrack.id !== currentVideoTrack.id) {
-                    stableLocalStream.removeTrack(currentVideoTrack);
-                    stableLocalStream.addTrack(newVideoTrack);
-                } else if (newVideoTrack && !currentVideoTrack) {
-                    stableLocalStream.addTrack(newVideoTrack);
-                } else if (currentVideoTrack && !newVideoTrack) {
-                    stableLocalStream.removeTrack(currentVideoTrack);
-                }
-
-                const newAudioTrack = stream.getAudioTracks()[0];
-                const currentAudioTrack = stableLocalStream.getAudioTracks()[0];
-
-                if (newAudioTrack && currentAudioTrack && newAudioTrack.id !== currentAudioTrack.id) {
-                    stableLocalStream.removeTrack(currentAudioTrack);
-                    stableLocalStream.addTrack(newAudioTrack);
-                } else if (newAudioTrack && !currentAudioTrack) {
-                    stableLocalStream.addTrack(newAudioTrack);
-                } else if (currentAudioTrack && !newAudioTrack) {
-                    stableLocalStream.removeTrack(currentAudioTrack);
-                }
-                return {
-                    ...$localStreamStore,
-                    stream: stableLocalStream,
-                };
-            }
+        if (
+            shouldMaskVideoForPublishing &&
+            $localStreamStore.type === "success" &&
+            $localStreamStore.stream &&
+            $localStreamStore.stream.getVideoTracks().length > 0
+        ) {
+            const audioOnlyStream = new MediaStream($localStreamStore.stream.getAudioTracks());
+            set({ type: "success", stream: audioOnlyStream });
+            return;
         }
-        return $localStreamStore;
+        set($localStreamStore);
     }
 );
+
 /**
  * Firefox does not support the OverconstrainedError class.
  * Instead, it throw an error whose name is "OverconstrainedError"
@@ -834,49 +985,24 @@ function isOverConstrainedError(e: unknown): e is OverconstrainedErrorInterface 
     return e instanceof Error && e.name === "OverconstrainedError";
 }
 
-let obtainedMediaConstraint: ObtainedMediaStreamConstraints = {
-    audio: true,
-    video: true,
-};
-/**
- * A store containing the actual states of audio and video (activated or deactivated)
- */
-export const obtainedMediaConstraintStore = derived<Readable<MediaStreamConstraints>, ObtainedMediaStreamConstraints>(
-    mediaStreamConstraintsStore,
-    ($mediaStreamConstraintsStore, set) => {
-        const newObtainedMediaConstraint = {
-            video: !!$mediaStreamConstraintsStore.video,
-            audio: !!$mediaStreamConstraintsStore.audio,
-        };
-        if (newObtainedMediaConstraint !== obtainedMediaConstraint) {
-            obtainedMediaConstraint = newObtainedMediaConstraint;
-            set(obtainedMediaConstraint);
-        }
-    }
-);
-
-export const localVolumeStore = readable<number[] | undefined>(undefined, (set) => {
-    let timeout: ReturnType<typeof setTimeout>;
-    let soundMeter: SoundMeter;
-    const unsubscribe = stableLocalStreamStore.subscribe((localStreamStoreValue) => {
-        clearInterval(timeout);
-        if (soundMeter) {
-            soundMeter.stop();
-        }
-        if (localStreamStoreValue.type === "error") {
+export const localVolumeStore = derived<typeof localStreamStore, number[] | undefined>(
+    localStreamStore,
+    ($localStreamStoreValue, set) => {
+        if ($localStreamStoreValue.type === "error") {
             set(undefined);
             return;
         }
-        const mediaStream = localStreamStoreValue.stream;
+        const mediaStream = $localStreamStoreValue.stream;
 
         if (mediaStream === undefined || mediaStream.getAudioTracks().length <= 0) {
             set(undefined);
             return;
         }
-        soundMeter = new SoundMeter(mediaStream);
+
+        const soundMeter = new SoundMeter(mediaStream);
         let error = false;
 
-        timeout = setInterval(() => {
+        const timeout = setInterval(() => {
             try {
                 set(soundMeter.getVolume());
             } catch (err) {
@@ -886,16 +1012,14 @@ export const localVolumeStore = readable<number[] | undefined>(undefined, (set) 
                 }
             }
         }, 100);
-    });
 
-    return () => {
-        unsubscribe();
-        clearInterval(timeout);
-        if (soundMeter) {
+        return () => {
+            clearInterval(timeout);
             soundMeter.stop();
-        }
-    };
-});
+        };
+    },
+    undefined
+);
 
 const talkIconVolumeThreshold = 10;
 
@@ -971,7 +1095,7 @@ export const deviceListStore = readable<MediaDeviceInfo[] | undefined>(undefined
     };
 
     const unsubscribe = localStreamStore.subscribe((streamResult) => {
-        if (streamResult.type === "success" && streamResult.stream !== undefined) {
+        if (streamResult && streamResult.type === "success" && streamResult.stream !== undefined) {
             if (deviceListCanBeQueried === false) {
                 queryDeviceList();
                 deviceListCanBeQueried = true;
@@ -999,6 +1123,25 @@ export const cameraListStore = derived(deviceListStore, ($deviceListStore) => {
     return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "videoinput"));
 });
 
+/**
+ * Context for the camera action-bar tooltip when the camera is off: permission denied vs no usable device.
+ */
+export const cameraButtonHelpContextStore = derived(
+    [cameraAccessIssueStore, cameraListStore, devicesNotLoaded],
+    ([issue, cameras, notLoaded]) => {
+        if (issue === "permission_denied") {
+            return "permission" as const;
+        }
+        if (issue === "no_device") {
+            return "no_device" as const;
+        }
+        if (!notLoaded && cameras !== undefined && cameras.length === 0) {
+            return "no_device" as const;
+        }
+        return null;
+    }
+);
+
 export const microphoneListStore = derived(deviceListStore, ($deviceListStore) => {
     if ($deviceListStore === undefined) {
         return undefined;
@@ -1007,9 +1150,39 @@ export const microphoneListStore = derived(deviceListStore, ($deviceListStore) =
     return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "audioinput"));
 });
 
+/**
+ * Context for the microphone action-bar tooltip when the mic is off: permission denied vs no usable device.
+ */
+export const microphoneButtonHelpContextStore = derived(
+    [microphoneAccessIssueStore, microphoneListStore, devicesNotLoaded],
+    ([issue, mics, notLoaded]) => {
+        console.log("microphoneButtonHelpContextStore", issue, mics, notLoaded);
+        if (issue === "permission_denied") {
+            return "permission" as const;
+        }
+        if (issue === "no_device") {
+            return "no_device" as const;
+        }
+        console.log("mics", mics !== undefined && mics.length === 0);
+        if (mics !== undefined && mics.length === 0) {
+            return "no_device" as const;
+        }
+        return null;
+    }
+);
+
 export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
     if ($deviceListStore === undefined) {
         return undefined;
+    }
+
+    // Livekit does not support audio output device selection on Safari
+    // Code: https://github.com/livekit/client-sdk-js/blob/dbaf7a9b784114728857a447734bc5d5453345b4/src/room/utils.ts#L144C1-L153C2
+    // And it seems there is no plan to support it. Issue: https://github.com/livekit/components-js/issues/1216
+    // Because the audio output selector should work in full-mesh WebRTC AND in Livekit, we have to support the same
+    // features in both modes. So we disable audio output device selection on Safari here.
+    if (isSafari() || isIOS()) {
+        return;
     }
 
     return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "audiooutput"));
@@ -1107,8 +1280,8 @@ microphoneListStore.subscribe((devices) => {
 
 // It is ok to not unsubscribe to this store because it is a singleton.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
-stableLocalStreamStore.subscribe((streamResult) => {
-    if (streamResult.type === "error") {
+localStreamStore.subscribe((streamResult) => {
+    if (streamResult && streamResult.type === "error") {
         if (streamResult.error.name === BrowserTooOldError.NAME || streamResult.error.name === WebviewOnOldIOS.NAME) {
             errorStore.addErrorMessage(streamResult.error);
         }
@@ -1138,19 +1311,22 @@ stableLocalStreamStore.subscribe((streamResult) => {
     }
 });*/
 
-function createVideoBandwidthStore() {
-    const { subscribe, set } = writable<number | "unlimited">(localUserStore.getVideoBandwidth());
+function createVideoQualityStore() {
+    const { subscribe, set } = writable<VideoQualitySetting>(localUserStore.getVideoQuality());
 
     return {
         subscribe,
-        setBandwidth: (bandwidth: number | "unlimited") => {
-            set(bandwidth);
-            localUserStore.setVideoBandwidth(bandwidth);
+        setQuality: (quality: VideoQualitySetting) => {
+            set(quality);
+            localUserStore.setVideoQuality(quality);
         },
     };
 }
 
-export const videoBandwidthStore = createVideoBandwidthStore();
+/**
+ * A store containing the video quality setting.
+ */
+export const videoQualityStore = createVideoQualityStore();
 
 export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);
 

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
-    import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
+    import type { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 
     export let actualCowebsite: SimpleCoWebsite;
     export let visible: boolean;

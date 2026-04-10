@@ -3,10 +3,14 @@ import type { Translation } from "../i18n-types";
 
 const statusModal: DeepPartial<Translation["statusModal"]> = {
     accept: "Akzeptieren",
+    allowNotificationExplanation: "Eine Desktop-Benachrichtigung erhalten, wenn jemand mit dir sprechen möchte.",
     close: "Schließen",
     confirm: "Bestätigen",
     goBackToOnlineStatusLabel: "Möchtest du wieder online gehen?",
     allowNotification: "Möchtest du Benachrichtigungen erlauben?",
+    soundBlockedBackInAMoment:
+        'Ihr Browser blockiert den Ton im Moment, deshalb sind Sie im Modus "Komme gleich zurück".',
+    turnSoundOn: "Ton aktivieren",
 };
 
 export default statusModal;

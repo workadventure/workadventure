@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { EntityPrefab } from "@workadventure/map-editor";
+    import type { EntityPrefab } from "@workadventure/map-editor";
     import { createEventDispatcher } from "svelte";
     import LL from "../../../../../i18n/i18n-svelte";
     import EntityImage from "../EntityItem/EntityImage.svelte";
-    import { InputTagOption } from "../../../Input/InputTagOption";
+    import type { InputTagOption } from "../../../Input/InputTagOption";
     import InputTags from "../../../Input/InputTags.svelte";
     import Select from "../../../Input/Select.svelte";
     import Input from "../../../Input/Input.svelte";

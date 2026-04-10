@@ -1,9 +1,14 @@
+import * as Phaser from "phaser";
+globalThis.Phaser = Phaser;
+
 import { describe, vi, expect, it } from "vitest";
 
-import { FilterType, UpdateSpaceMetadataMessage } from "@workadventure/messages";
+import type { UpdateSpaceMetadataMessage } from "@workadventure/messages";
+import { FilterType } from "@workadventure/messages";
 import { Subject } from "rxjs";
+import { writable } from "svelte/store";
 import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
-import { RoomConnection } from "../../Connection/RoomConnection";
+import type { RoomConnection } from "../../Connection/RoomConnection";
 import { MockRoomConnectionForSpaces } from "./MockRoomConnectionForSpaces";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
@@ -34,35 +39,6 @@ vi.mock("../../Connection/ConnectionManager", () => {
         },
     };
 });
-// Mock the PeerStore module
-vi.mock("../../Stores/PeerStore", () => ({
-    screenSharingPeerStore: {
-        getSpaceStore: vi.fn(),
-        removePeer: vi.fn(),
-        getPeer: vi.fn(),
-    },
-    videoStreamStore: {
-        subscribe: vi.fn().mockImplementation((fn: (v: unknown) => void) => {
-            // send a default value immediately
-            fn([]);
-            return () => {};
-        }),
-    },
-    videoStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
-            // send a default value immediately
-            fn([]);
-            return () => {};
-        }),
-    },
-    screenShareStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
-            // send a default value immediately
-            fn([]);
-            return () => {};
-        }),
-    },
-}));
 
 // Mock SimplePeer
 vi.mock("../../WebRtc/SimplePeer", () => ({
@@ -71,6 +47,60 @@ vi.mock("../../WebRtc/SimplePeer", () => ({
         destroy: vi.fn(),
     })),
 }));
+
+vi.mock("../../Stores/ScreenSharingStore", () => {
+    const requested = writable(false);
+    return {
+        requestedScreenSharingState: {
+            subscribe: requested.subscribe,
+            enableScreenSharing: () => requested.set(true),
+            disableScreenSharing: () => requested.set(false),
+        },
+        screenSharingLocalStreamStore: writable({ type: "success" }),
+        screenSharingConstraintsStore: writable({ video: false, audio: false }),
+        screenSharingAvailableStore: writable(false),
+        screenSharingLocalVideoBox: writable(undefined),
+        screenSharingLocalMedia: writable(undefined),
+        screenShareQualityStore: {
+            subscribe: writable("recommended").subscribe,
+            setQuality: vi.fn(),
+        },
+    };
+});
+
+vi.mock("../../Stores/MegaphoneStore", () => {
+    return {
+        liveStreamingEnabledStore: writable(false),
+        requestedMegaphoneStore: writable(false),
+        megaphoneSpaceStore: writable(undefined),
+        megaphoneCanBeUsedStore: writable(false),
+    };
+});
+
+vi.mock("../../Stores/MenuStore", () => {
+    return {
+        menuIconVisiblilityStore: writable(false),
+        menuVisiblilityStore: writable(false),
+        screenSharingActivatedStore: writable(false),
+        inviteUserActivated: writable(false),
+        mapEditorActivated: writable(false),
+        roomListActivated: writable(false),
+    };
+});
+
+vi.mock("../../WebRtc/MediaManager", () => {
+    return {
+        MediaManager: vi.fn(),
+        mediaManager: {
+            enableMyCamera: vi.fn(),
+            disableMyCamera: vi.fn(),
+            enableMyMicrophone: vi.fn(),
+            disableMyMicrophone: vi.fn(),
+            enableProximityMeeting: vi.fn(),
+            disableProximityMeeting: vi.fn(),
+        },
+    };
+});
 
 vi.mock("../../Enum/EnvironmentVariable.ts", () => {
     return {
@@ -83,8 +113,21 @@ vi.mock("../../Enum/EnvironmentVariable.ts", () => {
         POSTHOG_API_KEY: "test-api-key",
         POSTHOG_URL: "https://test.com",
         MAX_USERNAME_LENGTH: 10,
-        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: 1000,
-        PEER_VIDEO_RECOMMENDED_BANDWIDTH: 1000,
+        PUSHER_URL: "http://localhost",
+        FALLBACK_LOCALE: "en-US",
+        ENABLE_CHAT: true,
+        KLAXOON_ENABLED: false,
+        KLAXOON_CLIENT_ID: "",
+        YOUTUBE_ENABLED: false,
+        GOOGLE_DRIVE_ENABLED: false,
+        GOOGLE_DOCS_ENABLED: false,
+        GOOGLE_SHEETS_ENABLED: false,
+        GOOGLE_SLIDES_ENABLED: false,
+        ERASER_ENABLED: false,
+        EXCALIDRAW_ENABLED: false,
+        EXCALIDRAW_DOMAINS: [],
+        CARDS_ENABLED: false,
+        TLDRAW_ENABLED: false,
     };
 });
 

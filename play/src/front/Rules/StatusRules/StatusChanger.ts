@@ -1,7 +1,7 @@
-import { AvailabilityStatus } from "@workadventure/messages";
-import { StatusStrategyInterface } from "./StatusStrategyInterface";
+import type { AvailabilityStatus } from "@workadventure/messages";
+import type { StatusStrategyInterface } from "./StatusStrategyInterface";
 import { BasicStatusStrategy } from "./StatusStrategy/BasicStatusStrategy";
-import { StatusRulesVerificationInterface } from "./statusRules";
+import type { StatusRulesVerificationInterface } from "./statusRules";
 import { InvalidStatusTransitionError } from "./Errors/InvalidStatusTransitionError";
 
 export interface StatusStrategyFactoryInterface {

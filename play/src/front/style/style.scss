@@ -1,6 +1,22 @@
-//* {
-//    cursor: auto;
-//}
+// Custom font Comic Jens for Speech / Think bubbles
+@font-face {
+    font-family: "Comic Jens";
+    src: url("./fonts/comic-jens/ComicJensFreePro-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+// Special fallback font for Korean characters (see https://github.com/workadventure/workadventure/issues/5626)
+@font-face {
+    font-family: "Pretendard Korean";
+    src: url("./fonts/pretendard/Pretendard-Regular.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+1100-11FF, U+3130-318F, U+AC00-D7AF, U+A960-A97F, U+D7B0-D7FF;
+}
+
 * a,
 button,
 select {
@@ -13,7 +29,8 @@ body {
 body button:focus,
 body img:focus,
 body input:focus {
-    outline: -webkit-focus-ring-color auto 0;
+    /*outline: -webkit-focus-ring-color auto 0;*/
+    outline: none;
 }
 
 body .message-info {
@@ -646,6 +663,48 @@ div.emoji-picker {
     p{
         @apply m-0 p-0;
     }
+
+    &.speech-dom-inner {
+        display: block;
+    }
+
+    &.speech-dom-inner--message strong {
+        color: #e2e8f0;
+        font-weight: 600;
+    }
+
+    &.speech-dom-inner--warning strong {
+        color: #fef3c7;
+        font-weight: 600;
+    }
+
+    /* Keyboard hint keycaps (SpeechDomElement) */
+    .speech-key {
+        user-select: none;
+        margin: 0 3px;
+        vertical-align: middle;
+    }
+
+    .speech-key--space {
+        position: relative;
+        top: -0.04em;
+    }
+
+    .speech-key--escape.speech-key--interactive {
+        cursor: pointer;
+        border-radius: 6px;
+        transition: filter 0.15s ease, transform 0.15s ease;
+
+        &:hover {
+            filter: brightness(1.12);
+            transform: translateY(-0.5px);
+        }
+
+        &:active {
+            transform: translateY(0);
+            filter: brightness(0.95);
+        }
+    }
 }
 
 /** Floating UI arrow placement **/
@@ -694,7 +753,7 @@ div.emoji-picker {
 
 .say-bubble{
     font-weight: 500;
-    font-family: "Comic Sans MS", "Comic Sans", cursive;
+    font-family: "Pretendard Korean", "Comic Jens", cursive;
     text-align: center;
 }
 
@@ -739,7 +798,7 @@ div.emoji-picker {
 .thinking-text {
     font-weight: 500;
     width: 100%;
-    font-family: "Comic Sans MS", "Comic Sans", cursive;
+    font-family: "Pretendard Korean", "Comic Jens", cursive;
     font-size: 12px;
     color: #000000;
     text-align: center;
@@ -779,4 +838,28 @@ div.emoji-picker {
     width: 6px;
     height: 6px;
     transform: translateX(calc(0px));
+}
+
+.scrollable-content {
+    // Force scrollbar to always be visible (not overlay) on macOS/WebKit
+    &::-webkit-scrollbar {
+        -webkit-appearance: none;
+        width: 4px;
+    }
+    &::-webkit-scrollbar-track {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: #928ebb;
+        border-radius: 10px;
+        min-height: 20px;
+    }
+    &::-webkit-scrollbar-thumb:active {
+        background-color: #56eaff;
+    }
+
+    // Firefox
+    scrollbar-width: thin;
+    scrollbar-color: #928ebb rgba(255, 255, 255, 0.1);
 }

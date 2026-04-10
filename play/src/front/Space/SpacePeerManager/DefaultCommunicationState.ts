@@ -1,6 +1,5 @@
-import { Subscription } from "rxjs";
-import { Streamable } from "../../Stores/StreamableCollectionStore";
-import { SimplePeerConnectionInterface, ICommunicationState } from "./SpacePeerManager";
+import type { Subscription } from "rxjs";
+import type { SimplePeerConnectionInterface, ICommunicationState } from "./SpacePeerManager";
 
 export class DefaultCommunicationState implements ICommunicationState {
     private _rxJsUnsubscribers: Subscription[] = [];
@@ -18,15 +17,11 @@ export class DefaultCommunicationState implements ICommunicationState {
 
     dispatchStream(mediaStream: MediaStream): void {}
 
-    getVideoForUser(spaceUserId: string): Streamable | undefined {
-        return undefined;
-    }
-
-    getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
-        return undefined;
-    }
-
     shutdown(): void {
         return;
+    }
+
+    retryAllFailedConnections(): void {
+        // No-op: DefaultCommunicationState has no connections to retry
     }
 }

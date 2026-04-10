@@ -1,6 +1,7 @@
 import path from "path";
-import { AreaDataProperty, fileUploadSupportedFormatForMapStorage } from "@workadventure/map-editor";
-import { UploadFileMessage } from "@workadventure/messages";
+import type { AreaDataProperty } from "@workadventure/map-editor";
+import { fileUploadSupportedFormatForMapStorage } from "@workadventure/map-editor";
+import type { UploadFileMessage } from "@workadventure/messages";
 import { fileSystem } from "../fileSystem";
 import { mapPathUsingDomainWithPrefix } from "./PathMapper";
 

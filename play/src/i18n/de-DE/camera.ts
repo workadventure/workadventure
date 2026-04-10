@@ -2,6 +2,12 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
+    editCam: "Kamera bearbeiten",
+    editMic: "Mikrofon bearbeiten",
+    editSpeaker: "Audioausgabe bearbeiten",
+    active: "Aktiv",
+    disabled: "Deaktiviert",
+    notRecommended: "Nicht empfohlen",
     enable: {
         title: "Bitte schalte deine Kamera und dein Mikrofon ein.",
         start: "Willkommen auf unserer Seite zur Konfiguration von Audio- und Videogeräten! Finden Sie hier die Werkzeuge, um Ihr Online-Erlebnis zu verbessern. Passen Sie die Einstellungen nach Ihren Vorlieben an, um mögliche Probleme zu lösen. Stellen Sie sicher, dass Ihre Hardware ordnungsgemäß angeschlossen und auf dem neuesten Stand ist. Erkunden und testen Sie verschiedene Konfigurationen, um herauszufinden, was am besten für Sie funktioniert.",
@@ -12,10 +18,41 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "Der Zugriff auf Kamera und Mikrofon muss im Browser freigegeben werden.",
         firefoxContent:
             'Bitte klicke auf die Schaltfläche "Diese Entscheidung speichern", um erneute Nachfragen nach der Freigabe in Firefox zu verhindern.',
+        allow: "Webcam erlauben",
         continue: "Ohne Kamera fortfahren",
         screen: {
-            firefox: "/resources/help-setting-camera-permission/de-DE-firefox.png",
+            firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",
+        },
+        tooltip: {
+            permissionDeniedTitle: "Kamerazugriff blockiert",
+            permissionDeniedDesc:
+                "Der Browser hat den Kamerazugriff für diese Seite verweigert. Erlauben Sie ihn über die Adressleiste (Schloss- oder Kamerasymbol) oder in den Seiteneinstellungen. Die Abbildung passt zu Ihrem Browser.",
+            noDeviceTitle: "Keine verwendbare Kamera",
+            noDeviceDesc:
+                "Der Browser erkennt keine verwendbare Kamera. Versuchen Sie einen anderen Browser, prüfen Sie die Verbindung der Kamera, prüfen Sie die Konfiguration des Computers (Datenschutz, Geräte), oder starten Sie den Computer neu, wenn die Hardware in Ordnung sein sollte.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/de-DE-chrome.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
+        microphoneTooltip: {
+            permissionDeniedTitle: "Mikrofonzugriff blockiert",
+            permissionDeniedDesc:
+                "Der Browser hat den Mikrofonzugriff für diese Seite verweigert. Erlauben Sie ihn über die Adressleiste (Schloss- oder Mikrofonsymbol) oder in den Seiteneinstellungen. Die Abbildung passt zu Ihrem Browser.",
+            noDeviceTitle: "Kein verwendbares Mikrofon",
+            noDeviceDesc:
+                "Der Browser erkennt kein verwendbares Mikrofon. Versuchen Sie einen anderen Browser, prüfen Sie das Mikrofon, prüfen Sie die Konfiguration des Computers (Datenschutz, Geräte), oder starten Sie den Computer neu, wenn die Hardware in Ordnung sein sollte.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/de-DE-chrome.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
         },
     },
     webrtc: {
@@ -32,10 +69,15 @@ const camera: DeepPartial<Translation["camera"]> = {
         preparingYouNetworkGuide: 'Anleitung "Preparing your network"',
         refresh: "Aktualisieren",
         continue: "Weiter",
+        solutionVpnNotAskAgain: "Verstanden. Mich nicht erneut warnen 🫡",
+        newDeviceDetected: "Neues Gerät erkannt {device} 🎉 Wechseln? [LEERTASTE] Ignorieren [ESC]",
     },
     my: {
         silentZone: "Stiller Bereich",
+        silentZoneDesc:
+            "Sie befinden sich in einer stillen Zone. Sie können nur die Menschen sehen und hören, mit denen Sie zusammen sind. Sie können die anderen Menschen im Raum nicht sehen oder hören.",
         nameTag: "Sie",
+        loading: "Ihre Kamera wird geladen...",
     },
     disable: "Kamera deaktivieren",
     menu: {
@@ -44,10 +86,21 @@ const camera: DeepPartial<Translation["camera"]> = {
         senPrivateMessage: "Private Nachricht senden (kommt bald)",
         kickoffUser: "Benutzer rauswerfen",
         muteAudioUser: "Audio stummschalten",
+        askToMuteAudioUser: "Bitten, Audio stummzuschalten",
         muteAudioEveryBody: "Audio für alle stummschalten",
         muteVideoUser: "Video stummschalten",
+        askToMuteVideoUser: "Bitten, Video stummzuschalten",
         muteVideoEveryBody: "Video für alle stummschalten",
         blockOrReportUser: "Benutzer blockieren oder melden",
+    },
+    backgroundEffects: {
+        imageTitle: "Hintergrundbilder",
+        videoTitle: "Hintergrundvideos",
+        blurTitle: "Hintergrundunschärfe",
+        resetTitle: "Hintergrundeffekte deaktivieren",
+        title: "Hintergrundeffekte",
+        close: "Schließen",
+        blurAmount: "Unschärfemenge",
     },
 };
 

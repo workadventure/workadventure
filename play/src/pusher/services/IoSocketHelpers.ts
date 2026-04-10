@@ -1,5 +1,6 @@
-import { SubMessage, ServerToClientMessage } from "@workadventure/messages";
-import { Socket } from "./SocketManager";
+import type { SubMessage } from "@workadventure/messages";
+import { ServerToClientMessage } from "@workadventure/messages";
+import type { Socket } from "./SocketManager";
 
 export function emitInBatch(socket: Socket, payload: SubMessage): void {
     const socketData = socket.getUserData();

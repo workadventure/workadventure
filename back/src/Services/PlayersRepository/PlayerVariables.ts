@@ -2,7 +2,7 @@
  * The list of variables attached to a user
  */
 import { PLAYER_VARIABLES_MAX_TTL } from "../../Enum/EnvironmentVariable";
-import {
+import type {
     LoadVariablesReturn,
     PlayersVariablesRepositoryInterface,
     VariableWithScope,

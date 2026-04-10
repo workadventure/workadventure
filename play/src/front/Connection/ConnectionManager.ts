@@ -1,18 +1,19 @@
 import * as Sentry from "@sentry/svelte";
 import { get } from "svelte/store";
-import type { ApplicationDefinitionInterface, AvailabilityStatus } from "@workadventure/messages";
-import {
+import type {
+    ApplicationDefinitionInterface,
+    AvailabilityStatus,
     ErrorApiErrorData,
     ErrorApiRetryData,
     ErrorApiUnauthorizedData,
-    isRegisterData,
-    MeResponse,
-    ErrorScreenMessage,
 } from "@workadventure/messages";
-import { isAxiosError } from "axios";
+import { isRegisterData, MeResponse, ErrorScreenMessage } from "@workadventure/messages";
+import axios, { AxiosError, isAxiosError } from "axios";
 import { defautlNativeIntegrationAppName, KlaxoonService } from "@workadventure/shared-utils";
 import { Subject } from "rxjs";
 import { asError } from "catch-unknown";
+import { v4 as uuidv4 } from "uuid";
+import axiosRetry, { exponentialDelay, isNetworkOrIdempotentRequestError } from "axios-retry";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
@@ -81,6 +82,10 @@ class ConnectionManager {
 
     private readonly _roomConnectionStream = new Subject<RoomConnection>();
     public readonly roomConnectionStream = this._roomConnectionStream.asObservable();
+
+    // Unique identifier for this browser tab, used to detect reconnections from the same tab
+    // and kill stale connections on the server side immediately instead of waiting for ping timeout
+    private readonly _tabId: string = uuidv4();
 
     get unloading() {
         return this._unloading;
@@ -315,12 +320,18 @@ class ConnectionManager {
 
             //todo: add here some kind of warning if authToken has expired.
             if (!this.authToken) {
-                if (!this._currentRoom.authenticationMandatory) {
+                const defaultWokaName = this._currentRoom.defaultWokaName;
+
+                if (!this._currentRoom.authenticationMandatory || defaultWokaName !== undefined) {
                     await this.anonymousLogin();
 
                     const characterTextures = localUserStore.getCharacterTextures();
                     if (characterTextures === null || characterTextures.length === 0) {
-                        nextScene = "selectCharacterScene";
+                        if (defaultWokaName) {
+                            nextScene = "gameScene";
+                        } else {
+                            nextScene = "selectCharacterScene";
+                        }
                     }
                 } else {
                     const redirect = this.loadOpenIDScreen(false);
@@ -401,7 +412,7 @@ class ConnectionManager {
             return Promise.reject(new Error("Invalid URL"));
         }
         if (this.localUser) {
-            analyticsClient.identifyUser(this.localUser.uuid, this.localUser.email);
+            analyticsClient.identifyUser(this.localUser.uuid, this.localUser.email, this._currentRoom.id);
         }
 
         //if limit room active test headband
@@ -466,6 +477,7 @@ class ConnectionManager {
                 viewport,
                 companionTextureId,
                 availabilityStatus,
+                this._tabId,
                 lastCommandId
             );
 
@@ -597,7 +609,6 @@ class ConnectionManager {
             });
         }).catch((err) => {
             console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => err", err);
-
             errorScreenStore.setError(
                 ErrorScreenMessage.fromPartial({
                     type: "reconnecting",
@@ -626,7 +637,7 @@ class ConnectionManager {
                         lastCommandId
                     );
 
-                    void this.connectToRoomSocket(
+                    this.connectToRoomSocket(
                         roomUrl,
                         name,
                         characterTextureIds,
@@ -635,10 +646,14 @@ class ConnectionManager {
                         companionTextureId,
                         availabilityStatus,
                         lastCommandId
-                    ).then((connection) => {
-                        this._roomConnectionStream.next(connection.connection);
-                        resolve(connection);
-                    });
+                    )
+                        .then((connection) => {
+                            this._roomConnectionStream.next(connection.connection);
+                            resolve(connection);
+                        })
+                        .catch(() => {
+                            /* Do nothing, the error is already handled in the connectToRoomSocket call */
+                        });
                 }, 4000 + Math.floor(Math.random() * 2000));
             });
         });
@@ -811,6 +826,10 @@ class ConnectionManager {
         return this._currentRoom;
     }
 
+    get tabId(): string {
+        return this._tabId;
+    }
+
     get klaxoonToolActivated(): boolean {
         return this._klaxoonToolActivated ?? false;
     }
@@ -893,6 +912,52 @@ class ConnectionManager {
 
     get applications(): ApplicationDefinitionInterface[] {
         return this._applications;
+    }
+
+    // Used when a disconnect happens to wait until the pusher server is reachable again
+    public waitForPusherPing(): Promise<void> {
+        if (this._unloading) {
+            return Promise.resolve();
+        }
+
+        const pingAxios = axios.create({
+            baseURL: ABSOLUTE_PUSHER_URL,
+            transitional: {
+                // Needed, otherwise timeout errors are throwing ECONNABORTED on Firefox
+                clarifyTimeoutError: true,
+            },
+        });
+
+        axiosRetry(pingAxios, {
+            retries: Number.MAX_SAFE_INTEGER,
+            shouldResetTimeout: true,
+            retryDelay: (retryCount: number) => {
+                const time = exponentialDelay(retryCount);
+                if (time >= 60_000) {
+                    return 60_000;
+                }
+                return time;
+            },
+            retryCondition: (error: AxiosError) => {
+                if (this._unloading) {
+                    return false;
+                }
+                if (isNetworkOrIdempotentRequestError(error)) {
+                    return true;
+                }
+                return (
+                    error.code !== "ECONNABORTED" &&
+                    (!error.response || error.response.status === 429 || error.response.status === 404)
+                );
+            },
+        });
+
+        return pingAxios.get("ping", { responseType: "text", timeout: 5_000 }).then((response) => {
+            if (typeof response.data === "string" && response.data === "pong") {
+                return;
+            }
+            throw new AxiosError("Ping did not return pong", "EPING", response.config, response.request, response);
+        });
     }
 }
 

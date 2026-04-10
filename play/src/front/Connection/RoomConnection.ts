@@ -3,17 +3,16 @@ import Debug from "debug";
 import * as Sentry from "@sentry/svelte";
 
 import type { AreaData, AtLeast, EntityDimensions, WAMEntityData } from "@workadventure/map-editor";
-import {
+import type {
     AddSpaceFilterMessage,
     AnswerMessage,
-    apiVersionHash,
     ApplicationMessage,
     AvailabilityStatus,
     CharacterTextureMessage,
     ChatMembersAnswer,
-    ClientToServerMessage as ClientToServerMessageTsProto,
     CompanionTextureMessage,
     DeleteCustomEntityMessage,
+    DeleteMapMessage,
     EditMapCommandMessage,
     EmbeddableWebsiteAnswer,
     EmoteEventMessage as EmoteEventMessageTsProto,
@@ -26,13 +25,11 @@ import {
     GroupUpdateMessage as GroupUpdateMessageTsProto,
     JitsiJwtAnswer,
     JoinBBBMeetingAnswer,
-    LeaveMucRoomMessage,
-    MegaphoneSettings,
     Member,
     ModifiyWAMMetadataMessage,
     ModifyCustomEntityMessage,
     MoveToPositionMessage as MoveToPositionMessageProto,
-    MucRoomDefinitionMessage,
+    LocatePositionMessage as LocatePositionMessageProto,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     PositionMessage_Direction,
@@ -40,11 +37,7 @@ import {
     RefreshRoomMessage,
     RemoveSpaceFilterMessage,
     RoomShortDescription,
-    ServerToClientMessage as ServerToClientMessageTsProto,
-    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
-    SetPlayerVariableMessage_Scope,
     TokenExpiredMessage,
-    UpdateSpaceMetadataMessage,
     UpdateWAMSettingsMessage,
     UploadEntityMessage,
     UserJoinedMessage as UserJoinedMessageTsProto,
@@ -52,7 +45,6 @@ import {
     UserMovedMessage as UserMovedMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
     WorldConnectionMessage,
-    TurnCredentialsAnswer,
     PublicEvent,
     JoinSpaceRequestMessage,
     LeaveSpaceRequestMessage,
@@ -63,38 +55,59 @@ import {
     RemoveSpaceUserPusherToFrontMessage,
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
-    SpaceUser,
     OauthRefreshToken,
     ExternalModuleMessage,
-    LeaveChatRoomAreaMessage,
     SpaceDestroyedMessage,
     SayMessage,
     FilterType,
     UploadFileMessage,
     MapStorageJwtAnswer,
+    DeleteRecordingAnswer,
     PrivateEventPusherToFront,
     InitSpaceUsersMessage,
+    NonUndefinedFields,
+    Recording,
+    IceServersAnswer,
+    BackEventMessage,
+    BackEventFrontToPusherMessage,
+    AskPositionMessage_AskType,
+    MeetingInvitationRequestReceivedMessage,
+    MeetingInvitationResponseReceivedMessage,
+    MeetingInvitationRequestClosedMessage,
+    MeetingInvitationRequestTooHighMessage,
 } from "@workadventure/messages";
-import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import { BehaviorSubject, Subject } from "rxjs";
+import {
+    noUndefined,
+    AskPositionMessage_AskType as AskPositionMessageAskType,
+    apiVersionHash,
+    ClientToServerMessage as ClientToServerMessageTsProto,
+    ServerToClientMessage as ServerToClientMessageTsProto,
+    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
+    SetPlayerVariableMessage_Scope,
+    UpdateSpaceMetadataMessage,
+    SpaceUser,
+    LeaveChatRoomAreaMessage,
+} from "@workadventure/messages";
+import { Subject } from "rxjs";
 import { get } from "svelte/store";
 import { generateFieldMask } from "protobuf-fieldmask";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { asError } from "catch-unknown";
 import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout";
-import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
+import type { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
-import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
-import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
+import { ENABLE_MAP_EDITOR, UPLOADER_URL, WOKA_SPEED } from "../Enum/EnvironmentVariable";
+import type { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
 import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
 import { chatZoneLiveStore } from "../Stores/ChatStore";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
+import { duplicateUserConnectedStore, shouldShowDuplicateUserPopup } from "../Stores/DuplicateUserConnectedStore";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import { isSpeakerStore, requestedMicrophoneState, requestedCameraState } from "../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../Stores/MegaphoneStore";
@@ -122,7 +135,7 @@ import type {
 import { localUserStore } from "./LocalUserStore";
 import { ConnectionClosedError } from "./ConnectionClosedError";
 
-// This must be greater than IoSocketController's PING_INTERVAL
+// This must be greater than RoomManager's PING_INTERVAL
 const manualPingDelay = 100_000;
 
 export class RoomConnection implements RoomConnection {
@@ -167,6 +180,8 @@ export class RoomConnection implements RoomConnection {
     public readonly userLeftMessageStream = this._userLeftMessageStream.asObservable();
     private readonly _refreshRoomMessageStream = new Subject<RefreshRoomMessage>();
     public readonly refreshRoomMessageStream = this._refreshRoomMessageStream.asObservable();
+    private readonly _deleteMapMessageStream = new Subject<DeleteMapMessage>();
+    public readonly deleteMapMessageStream = this._deleteMapMessageStream.asObservable();
 
     private readonly _followRequestMessageStream = new Subject<FollowRequestMessage>();
     public readonly followRequestMessageStream = this._followRequestMessageStream.asObservable();
@@ -188,6 +203,13 @@ export class RoomConnection implements RoomConnection {
     public readonly emoteEventMessageStream = this._emoteEventMessageStream.asObservable();
     private readonly _variableMessageStream = new Subject<{ name: string; value: unknown }>();
     public readonly variableMessageStream = this._variableMessageStream.asObservable();
+    private readonly _areaPropertyVariableMessageStream = new Subject<{
+        areaId: string;
+        propertyId: string;
+        key: string;
+        value: unknown;
+    }>();
+    public readonly areaPropertyVariableMessageStream = this._areaPropertyVariableMessageStream.asObservable();
     private readonly _editMapCommandMessageStream = new Subject<EditMapCommandMessage>();
     public readonly editMapCommandMessageStream = this._editMapCommandMessageStream.asObservable();
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
@@ -202,10 +224,18 @@ export class RoomConnection implements RoomConnection {
     private timeout: ReturnType<typeof setInterval> | undefined = undefined;
     private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
     public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
-    private readonly _joinMucRoomMessageStream = new Subject<MucRoomDefinitionMessage>();
-    public readonly joinMucRoomMessageStream = this._joinMucRoomMessageStream.asObservable();
-    private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
-    public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
+    private readonly _locatePositionMessageStream = new Subject<LocatePositionMessageProto>();
+    public readonly locatePositionMessageStream = this._locatePositionMessageStream.asObservable();
+    private readonly _meetingInvitationRequestReceivedStream = new Subject<MeetingInvitationRequestReceivedMessage>();
+    public readonly meetingInvitationRequestReceivedStream =
+        this._meetingInvitationRequestReceivedStream.asObservable();
+    private readonly _meetingInvitationResponseReceivedStream = new Subject<MeetingInvitationResponseReceivedMessage>();
+    public readonly meetingInvitationResponseReceivedStream =
+        this._meetingInvitationResponseReceivedStream.asObservable();
+    private readonly _meetingInvitationRequestTooHighStream = new Subject<MeetingInvitationRequestTooHighMessage>();
+    public readonly meetingInvitationRequestTooHighStream = this._meetingInvitationRequestTooHighStream.asObservable();
+    private readonly _meetingInvitationRequestClosedStream = new Subject<MeetingInvitationRequestClosedMessage>();
+    public readonly meetingInvitationRequestClosedStream = this._meetingInvitationRequestClosedStream.asObservable();
     private readonly _initSpaceUsersMessageStream = new Subject<InitSpaceUsersMessage>();
     public readonly initSpaceUsersMessageStream = this._initSpaceUsersMessageStream.asObservable();
     private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
@@ -216,8 +246,6 @@ export class RoomConnection implements RoomConnection {
     public readonly removeSpaceUserMessageStream = this._removeSpaceUserMessageStream.asObservable();
     private readonly _updateSpaceMetadataMessageStream = new Subject<UpdateSpaceMetadataMessage>();
     public readonly updateSpaceMetadataMessageStream = this._updateSpaceMetadataMessageStream.asObservable();
-    private readonly _megaphoneSettingsMessageStream = new BehaviorSubject<MegaphoneSettings | undefined>(undefined);
-    public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
     private readonly _receivedEventMessageStream = new Subject<ReceiveEventEvent>();
     public readonly receivedEventMessageStream = this._receivedEventMessageStream.asObservable();
     private readonly _spacePrivateMessageEvent = new Subject<PrivateEventPusherToFront>();
@@ -253,6 +281,7 @@ export class RoomConnection implements RoomConnection {
      * @param viewport
      * @param companionTextureId
      * @param availabilityStatus
+     * @param tabId Unique identifier for the browser tab, used to detect reconnections
      * @param lastCommandId
      */
     public constructor(
@@ -264,6 +293,7 @@ export class RoomConnection implements RoomConnection {
         viewport: ViewportInterface,
         companionTextureId: string | null,
         availabilityStatus: AvailabilityStatus,
+        tabId: string,
         lastCommandId?: string
     ) {
         const urlObj = new URL("ws/room", ABSOLUTE_PUSHER_URL);
@@ -295,6 +325,7 @@ export class RoomConnection implements RoomConnection {
         params.set("microphoneState", get(requestedMicrophoneState) ? "true" : "false");
         // TODO: check if the screenSharingState variable is used
         params.set("screenSharingState", get(requestedScreenSharingState) ? "true" : "false");
+        params.set("tabId", tabId);
 
         const url = urlObj.toString();
         let subProtocols: string[] | undefined = undefined;
@@ -396,6 +427,17 @@ export class RoomConnection implements RoomConnection {
                                         this._variableMessageStream.next({ name, value });
                                         break;
                                     }
+                                    case "areaPropertyVariableMessage": {
+                                        const { areaId, propertyId, key, value } =
+                                            subMessage.areaPropertyVariableMessage;
+                                        this._areaPropertyVariableMessageStream.next({
+                                            areaId,
+                                            propertyId,
+                                            key,
+                                            value: RoomConnection.unserializeVariable(value),
+                                        });
+                                        break;
+                                    }
                                     case "pingMessage": {
                                         this.resetPingTimeout();
                                         this.sendPong();
@@ -404,16 +446,6 @@ export class RoomConnection implements RoomConnection {
                                     case "editMapCommandMessage": {
                                         const message = subMessage.editMapCommandMessage;
                                         this._editMapCommandMessageStream.next(message);
-                                        break;
-                                    }
-                                    case "joinMucRoomMessage": {
-                                        this._joinMucRoomMessageStream.next(
-                                            subMessage.joinMucRoomMessage.mucRoomDefinitionMessage
-                                        );
-                                        break;
-                                    }
-                                    case "leaveMucRoomMessage": {
-                                        this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
                                         break;
                                     }
                                     case "initSpaceUsersMessage": {
@@ -438,16 +470,18 @@ export class RoomConnection implements RoomConnection {
                                         );
                                         break;
                                     }
-                                    case "megaphoneSettingsMessage": {
-                                        this._megaphoneSettingsMessageStream.next(subMessage.megaphoneSettingsMessage);
-                                        break;
-                                    }
                                     case "receivedEventMessage": {
                                         this._receivedEventMessageStream.next({
                                             name: subMessage.receivedEventMessage.name,
                                             data: subMessage.receivedEventMessage.data,
                                             senderId: subMessage.receivedEventMessage.senderId,
                                         });
+                                        break;
+                                    }
+                                    case "duplicateUserConnectedMessage": {
+                                        if (shouldShowDuplicateUserPopup()) {
+                                            duplicateUserConnectedStore.setDuplicateConnected(true);
+                                        }
                                         break;
                                     }
                                     // FIXME: not sure where kickOffMessage belongs
@@ -464,9 +498,6 @@ export class RoomConnection implements RoomConnection {
                                                 Sentry.captureException(e);
                                             });
 
-                                        void iframeListener.sendLeaveMucEventToChatIframe(
-                                            `${scene.roomUrl}/${slugify(name)}`
-                                        );
                                         chatZoneLiveStore.set(false);
                                         break;
                                     }
@@ -515,6 +546,15 @@ export class RoomConnection implements RoomConnection {
                             playerVariables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
                         }
 
+                        const areaPropertyVariables = (roomJoinedMessage.areaPropertyVariable ?? []).map(
+                            (variable) => ({
+                                areaId: variable.areaId,
+                                propertyId: variable.propertyId,
+                                key: variable.key,
+                                value: RoomConnection.unserializeVariable(variable.value),
+                            })
+                        );
+
                         const editMapCommandsArrayMessage = roomJoinedMessage.editMapCommandsArrayMessage;
                         let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
                         if (editMapCommandsArrayMessage) {
@@ -559,16 +599,11 @@ export class RoomConnection implements RoomConnection {
                                 characterTextures,
                                 companionTexture: roomJoinedMessage.companionTexture,
                                 playerVariables,
+                                areaPropertyVariables,
                                 commandsToApply,
-                                webRtcUserName: roomJoinedMessage.webRtcUserName,
-                                webRtcPassword: roomJoinedMessage.webRtcPassword,
                                 applications: applications,
                             } as RoomJoinedMessageInterface,
                         });
-
-                        if (roomJoinedMessage.megaphoneSettings) {
-                            this._megaphoneSettingsMessageStream.next(roomJoinedMessage.megaphoneSettings);
-                        }
 
                         break;
                     }
@@ -626,6 +661,10 @@ export class RoomConnection implements RoomConnection {
                         this._refreshRoomMessageStream.next(message.refreshRoomMessage);
                         break;
                     }
+                    case "deleteMapMessage": {
+                        this._deleteMapMessageStream.next(message.deleteMapMessage);
+                        break;
+                    }
                     case "followRequestMessage": {
                         this._followRequestMessageStream.next(message.followRequestMessage);
                         break;
@@ -663,12 +702,44 @@ export class RoomConnection implements RoomConnection {
                         if (message.moveToPositionMessage && message.moveToPositionMessage.position) {
                             gameManager
                                 .getCurrentGameScene()
-                                .moveTo(message.moveToPositionMessage.position)
+                                .moveTo(message.moveToPositionMessage.position, false, WOKA_SPEED * 2.5)
                                 .catch((error) => {
                                     console.warn(error);
                                 });
                         }
                         this._moveToPositionMessageStream.next(message.moveToPositionMessage);
+                        break;
+                    }
+                    case "locatePositionMessage": {
+                        this._locatePositionMessageStream.next(message.locatePositionMessage);
+                        break;
+                    }
+                    case "meetingInvitationRequestReceivedMessage": {
+                        this._meetingInvitationRequestReceivedStream.next(
+                            message.meetingInvitationRequestReceivedMessage
+                        );
+                        break;
+                    }
+                    case "meetingInvitationResponseReceivedMessage": {
+                        this._meetingInvitationResponseReceivedStream.next(
+                            message.meetingInvitationResponseReceivedMessage
+                        );
+                        break;
+                    }
+                    case "meetingInvitationRequestTooHighMessage": {
+                        this._meetingInvitationRequestTooHighStream.next(
+                            message.meetingInvitationRequestTooHighMessage
+                        );
+                        break;
+                    }
+                    case "meetingInvitationRequestClosedMessage": {
+                        this._meetingInvitationRequestClosedStream.next(message.meetingInvitationRequestClosedMessage);
+                        break;
+                    }
+                    case "duplicateUserConnectedMessage": {
+                        if (shouldShowDuplicateUserPopup()) {
+                            duplicateUserConnectedStore.setDuplicateConnected(true);
+                        }
                         break;
                     }
                     case "answerMessage": {
@@ -727,6 +798,16 @@ export class RoomConnection implements RoomConnection {
             return;
         }
 
+        if (event.code !== 1000) {
+            Sentry.captureMessage(
+                "WebSocket closed by remote side. Code: " +
+                    event.code +
+                    ", reason: " +
+                    event.reason +
+                    "wasClean: " +
+                    event.wasClean
+            );
+        }
         this.cleanupConnection(event.code === 1000);
     };
 
@@ -930,6 +1011,20 @@ export class RoomConnection implements RoomConnection {
                 $case: "variableMessage",
                 variableMessage: {
                     name,
+                    value: JSON.stringify(value),
+                },
+            },
+        });
+    }
+
+    emitSetAreaPropertyVariable(areaId: string, propertyId: string, key: string, value: unknown): void {
+        this.send({
+            message: {
+                $case: "setAreaPropertyVariableMessage",
+                setAreaPropertyVariableMessage: {
+                    areaId,
+                    propertyId,
+                    key,
                     value: JSON.stringify(value),
                 },
             },
@@ -1356,16 +1451,47 @@ export class RoomConnection implements RoomConnection {
         return this.tags;
     }
 
-    public emitAskPosition(uuid: string, playUri: string) {
+    public emitAskPosition(
+        uuid: string,
+        playUri: string,
+        type: AskPositionMessage_AskType = AskPositionMessageAskType.MOVE,
+        userId?: number
+    ) {
         this.send({
             message: {
                 $case: "askPositionMessage",
                 askPositionMessage: {
                     userIdentifier: uuid,
                     playUri,
+                    askType: type,
+                    userId,
                 },
             },
         });
+    }
+
+    public emitMeetingInvitationRequest(receiverUserUuid: string, receiverUserId?: number): void {
+        this.send({
+            message: {
+                $case: "meetingInvitationRequestMessage",
+                meetingInvitationRequestMessage: {
+                    receiverUserUuid,
+                    receiverUserId,
+                },
+            },
+        } as ClientToServerMessageTsProto);
+    }
+
+    public emitMeetingInvitationResponse(accept: boolean, requestSenderUserUuid: string): void {
+        this.send({
+            message: {
+                $case: "meetingInvitationResponseMessage",
+                meetingInvitationResponseMessage: {
+                    accept,
+                    requestSenderUserUuid,
+                },
+            },
+        } as ClientToServerMessageTsProto);
     }
 
     public emitAddSpaceFilter(filter: AddSpaceFilterMessage) {
@@ -1415,15 +1541,15 @@ export class RoomConnection implements RoomConnection {
         return answer.mapStorageJwtAnswer;
     }
 
-    public async queryTurnCredentials(): Promise<TurnCredentialsAnswer> {
+    public async queryIceServers(): Promise<IceServersAnswer> {
         const answer = await this.query({
-            $case: "turnCredentialsQuery",
-            turnCredentialsQuery: {},
+            $case: "iceServersQuery",
+            iceServersQuery: {},
         });
-        if (answer.$case !== "turnCredentialsAnswer") {
+        if (answer.$case !== "iceServersAnswer") {
             throw new Error("Unexpected answer");
         }
-        return answer.turnCredentialsAnswer;
+        return answer.iceServersAnswer;
     }
 
     public async queryBBBMeetingUrl(
@@ -1641,12 +1767,67 @@ export class RoomConnection implements RoomConnection {
         return answer.chatMembersAnswer;
     }
 
-    public async getOauthRefreshToken(tokenToRefresh: string): Promise<OauthRefreshToken> {
+    public async queryRecordings(): Promise<NonUndefinedFields<Recording>[]> {
+        const answer = await this.query({
+            $case: "getRecordingsQuery",
+            getRecordingsQuery: {},
+        });
+        if (answer.$case !== "getRecordingsAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        const nonUndefinedRecordingsAnswer: NonUndefinedFields<Recording>[] =
+            answer.getRecordingsAnswer.recordings.reduce((acc, cur) => {
+                try {
+                    const noUndefinedCurr = noUndefined(cur);
+                    acc.push(noUndefinedCurr);
+                } catch (e) {
+                    console.error("Error while removing undefined fields from recording", cur, e);
+                }
+                return acc;
+            }, [] as NonUndefinedFields<Recording>[]);
+
+        return nonUndefinedRecordingsAnswer;
+    }
+
+    public async getSignedUrl(key: string): Promise<string> {
+        const answer = await this.query({
+            $case: "getSignedUrlQuery",
+            getSignedUrlQuery: {
+                key: key,
+            },
+        });
+
+        if (answer.$case !== "getSignedUrlAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.getSignedUrlAnswer.signedUrl;
+    }
+
+    public async deleteRecording(recordingFileName: string): Promise<DeleteRecordingAnswer> {
+        const answer = await this.query({
+            $case: "deleteRecordingQuery",
+            deleteRecordingQuery: {
+                recordingId: recordingFileName,
+            },
+        });
+        if (answer.$case !== "deleteRecordingAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.deleteRecordingAnswer;
+    }
+
+    public async getOauthRefreshToken(
+        tokenToRefresh: string,
+        provider?: string,
+        userIdentifier?: string
+    ): Promise<OauthRefreshToken> {
         try {
             const answer = await this.query({
                 $case: "oauthRefreshTokenQuery",
                 oauthRefreshTokenQuery: {
                     tokenToRefresh,
+                    provider,
+                    userIdentifier,
                 },
             });
             if (answer.$case !== "oauthRefreshTokenAnswer") {
@@ -1713,6 +1894,7 @@ export class RoomConnection implements RoomConnection {
             console.warn(
                 "Timeout detected. No ping from the server received. Is your connection down? Closing connection."
             );
+            Sentry.captureMessage("RoomConnection: Ping timeout - closing connection");
             this.socket.close();
             this.cleanupConnection(false);
         }, manualPingDelay);
@@ -1760,15 +1942,14 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitRequestFullSync(spaceName: string, users: SpaceUser[]): void {
+    public emitBackEvent(spaceName: string, backEvent: NonNullable<BackEventMessage["backEvent"]>): void {
         this.send({
             message: {
-                $case: "requestFullSyncMessage",
-                requestFullSyncMessage: {
+                $case: "backEvent",
+                backEvent: {
                     spaceName,
-                    users,
-                    senderUserId: "",
-                },
+                    backEvent,
+                } satisfies BackEventFrontToPusherMessage,
             },
         });
     }
@@ -1878,24 +2059,25 @@ export class RoomConnection implements RoomConnection {
         this._userJoinedMessageStream.complete();
         this._userLeftMessageStream.complete();
         this._refreshRoomMessageStream.complete();
+        this._deleteMapMessageStream.complete();
         this._followRequestMessageStream.complete();
         this._followConfirmationMessageStream.complete();
         this._followAbortMessageStream.complete();
         this._itemEventMessageStream.complete();
         this._emoteEventMessageStream.complete();
         this._variableMessageStream.complete();
+        this._areaPropertyVariableMessageStream.complete();
         this._editMapCommandMessageStream.complete();
         this._playerDetailsUpdatedMessageStream.complete();
         this._websocketErrorStream.complete();
         this._connectionErrorStream.complete();
         this._moveToPositionMessageStream.complete();
-        this._joinMucRoomMessageStream.complete();
-        this._leaveMucRoomMessageStream.complete();
+        this._meetingInvitationRequestReceivedStream.complete();
+        this._meetingInvitationResponseReceivedStream.complete();
         this._addSpaceUserMessageStream.complete();
         this._updateSpaceUserMessageStream.complete();
         this._removeSpaceUserMessageStream.complete();
         this._updateSpaceMetadataMessageStream.complete();
-        this._megaphoneSettingsMessageStream.complete();
         this._receivedEventMessageStream.complete();
         this._spacePrivateMessageEvent.complete();
         this._spacePublicMessageEvent.complete();
@@ -1960,6 +2142,11 @@ export class RoomConnection implements RoomConnection {
 
             const queryId = this.lastQueryId;
             const onAbort = () => {
+                // If we abort AFTER the query was answered, nothing to do
+                if (!this.queries.has(queryId)) {
+                    return;
+                }
+
                 // Let's inform the server that we don't want the answer anymore
                 // Note that due to latency, it is possible that the answer will arrive anyway
                 // and we will have to ignore it when it arrives

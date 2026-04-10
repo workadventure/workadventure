@@ -4,15 +4,12 @@ import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
 import type { Player } from "../Player/Player";
 import { hasMovedEventName } from "../Player/Player";
-import {
-    WaScaleManagerFocusTarget,
-    WaScaleManager,
-    waScaleManager,
-    WaScaleManagerEvent,
-} from "../Services/WaScaleManager";
+import type { WaScaleManagerFocusTarget, WaScaleManager } from "../Services/WaScaleManager";
+import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
 import { debugZoom } from "../../Utils/Debuggers";
+import type { RemotePlayer } from "../Entity/RemotePlayer";
 import type { GameScene } from "./GameScene";
 import Clamp = Phaser.Math.Clamp;
 
@@ -64,7 +61,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private restoreZoomTween?: Phaser.Tweens.Tween;
     private startFollowTween?: Phaser.Tweens.Tween;
 
-    private playerToFollow?: Player;
+    private playerToFollow?: Player | RemotePlayer;
     private cameraLocked: boolean;
     private zoomLocked: boolean;
 
@@ -101,6 +98,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     // If set, the camera will move toward this target.
     private explorerFocusOnTarget: { x: number; y: number; zoom: number } | undefined;
     private focusTargetSpeed = 0.2;
+
+    // The tween for the camera offset
+    private cameraOffsetCurrentTween?: Phaser.Tweens.Tween;
 
     constructor(
         private scene: GameScene,
@@ -288,7 +288,11 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         }
     }
 
-    public startFollowPlayer(player: Player, duration = 0, targetZoomLevel: number | undefined = undefined): void {
+    public startFollowPlayer(
+        player: Player | RemotePlayer,
+        duration = 0,
+        targetZoomLevel: number | undefined = undefined
+    ): void {
         this.playerToFollow = player;
         this.setCameraMode(CameraMode.Follow);
         if (duration === 0) {
@@ -336,14 +340,39 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 this.animationInProgress = false;
                 this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
                 this.startFollowTween = undefined;
+                this.setFollowMode();
             },
         });
     }
 
-    public stopFollow(): void {
-        this.camera.stopFollow();
-        this.setCameraMode(CameraMode.Positioned);
-        this.scene.markDirty();
+    /**
+     * Follow a remote player by their UUID. Centers the camera on them and shows a popup.
+     */
+    public followRemotePlayer(userUuid: string): void {
+        // Find the remote player by UUID
+        let remotePlayer = null;
+        for (const [, player] of this.scene.MapPlayersByKey) {
+            if (player.userUuid === userUuid) {
+                remotePlayer = player;
+                break;
+            }
+        }
+
+        if (!remotePlayer) {
+            console.warn(`Remote player with UUID ${userUuid} not found`);
+            return;
+        }
+
+        // Restore camera mode
+        this.startFollowPlayer(remotePlayer, 1000);
+    }
+
+    /**
+     * Stop following a remote player.
+     */
+    public stopFollowRemotePlayer(): void {
+        // Start following the current player
+        this.startFollowPlayer(this.scene.CurrentPlayer, 1000);
     }
 
     /**
@@ -373,11 +402,19 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         const oldFollowOffsetY = this.camera.followOffset.y;
 
         this.animationInProgress = true;
-        this.scene.tweens.addCounter({
+        if (this.cameraOffsetCurrentTween) {
+            this.cameraOffsetCurrentTween.stop();
+            this.cameraOffsetCurrentTween.destroy();
+            this.cameraOffsetCurrentTween = undefined;
+        }
+        this.cameraOffsetCurrentTween = this.scene.tweens.addCounter({
             from: 0,
             to: 1,
             duration: 500,
             ease: Easing.QuadEaseOut,
+            onStart: () => {
+                this.animationInProgress = true;
+            },
             onUpdate: (tween) => {
                 const progress = tween.getValue() ?? 0;
                 const newOffsetX = oldFollowOffsetX + (followOffsetX - oldFollowOffsetX) * progress;
@@ -415,6 +452,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.scene.time.delayedCall(delay, () => {
             this.cameraLocked = false;
         });
+    }
+
+    public defineNewCameraBounds(width: number, height: number): void {
+        this.camera.setBounds(-width, -height, width * 3, height * 3, false);
     }
 
     public lockZoom(): void {
@@ -517,6 +558,11 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
         //const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(mapWidth, mapHeight);
         //this.waScaleManager.maxZoomOut = targetZoomModifier;
+    }
+
+    public setFollowMode(): void {
+        this.scene.reposition();
+        this.setCameraMode(CameraMode.Follow);
     }
 
     public triggerMaxZoomOutAnimation(): void {
@@ -870,12 +916,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         return this._resistanceEndZoomLevel;
     }
 
-    emit(event: string | symbol, ...args: unknown[]): boolean {
-        // If the camera is defined on Exploration mode, the camera manager events will be not emitted
-        if (event === CameraManagerEvent.CameraUpdate && CameraMode.Exploration === this.cameraMode) return false;
-        return super.emit(event, ...args);
-    }
-
     setSpeed(speed: { x: number; y: number }) {
         this.cameraSpeed = speed;
         this.explorerFocusOnTarget = undefined;
@@ -897,5 +937,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
         this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
         this.scene.markDirty();
+    }
+
+    get playerFollowing(): Player | RemotePlayer | undefined {
+        return this.playerToFollow;
     }
 }

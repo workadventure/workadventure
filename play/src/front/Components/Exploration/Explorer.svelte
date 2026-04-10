@@ -1,7 +1,7 @@
 <script lang="ts">
     import { writable } from "svelte/store";
     import { onMount } from "svelte";
-    import { OpenWebsitePropertyData } from "@workadventure/map-editor";
+    import type { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
     import AreaToolImg from "../images/icon-tool-area.png";
     import EntityToolImg from "../images/icon-tool-entity.svg";
@@ -12,15 +12,16 @@
         mapExplorationObjectSelectedStore,
     } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { Entity } from "../../Phaser/ECS/Entity";
-    import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
-    import { ExplorerTool } from "../../Phaser/Game/MapEditor/Tools/ExplorerTool";
+    import type { Entity } from "../../Phaser/ECS/Entity";
+    import type { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
+    import type { ExplorerTool } from "../../Phaser/Game/MapEditor/Tools/ExplorerTool";
     import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { mapExplorerSearchinputFocusStore } from "../../Stores/UserInputStore";
     import Input from "../Input/Input.svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { warningMessageStore } from "../../Stores/ErrorStore";
+    import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
     import { IconChevronUp, IconEye, IconWalk } from "@wa-icons";
 
     let filter = "";
@@ -210,7 +211,8 @@
                     x: object.x,
                     y: object.y,
                 },
-                true
+                true,
+                WOKA_SPEED * 2.5
             )
             .catch((error) => {
                 console.warn("Error while moving to the entity or area", error);
@@ -384,6 +386,7 @@
                 <div class="entity-items p-2 flex flex-col">
                     {#each [...$entitiesListFiltered] as [key, entity] (key)}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <div
                             id={entity.entityId}
                             on:mouseenter={() => highlightEntity(entity)}
@@ -454,6 +457,7 @@
                     {#if $areasListFiltered.size > 0}
                         {#each [...$areasListFiltered] as [key, area] (key)}
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <!-- svelte-ignore a11y-no-static-element-interactions -->
                             <div
                                 id={key}
                                 on:mouseenter={() => highlightArea(area)}

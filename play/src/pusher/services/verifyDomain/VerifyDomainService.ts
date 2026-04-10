@@ -1,5 +1,5 @@
-import { Capabilities } from "@workadventure/messages";
-import { VerifyDomainInterface } from "./VerifyDomainInterface";
+import type { Capabilities } from "@workadventure/messages";
+import type { VerifyDomainInterface } from "./VerifyDomainInterface";
 import { AdminVerifyDomainService } from "./AdminVerifyDomainService";
 import { LocalVerifyDomainService } from "./LocalVerifyDomainService";
 

@@ -3,7 +3,7 @@
     export let width = "w-6";
     export let strokeColor = "stroke-white";
     export let fillColor = "fill-transparent";
-    export let hover = "group-hover/btn-link:fill-white";
+    export let hover = "group-hover/btn-copy:fill-white";
     export let strokeWidth = "1.5";
     export let classList = "aspect-ratio transition-all";
 </script>
@@ -17,6 +17,7 @@
     viewBox="0 0 24 24"
 >
     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    <path d="M8 8m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z" />
-    <path d="M16 8v-2a2 2 0 0 0 -2 -2h-8a2 2 0 0 0 -2 2v8a2 2 0 0 0 2 2h2" />
+    <path d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6" />
+    <path d="M11 13l9 -9" />
+    <path d="M15 4h5v5" />
 </svg>

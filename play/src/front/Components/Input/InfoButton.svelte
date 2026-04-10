@@ -13,6 +13,7 @@
 </script>
 
 <div>
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <svg
         use:floatingUiRef
         class="icon icon-tabler icon-tabler-info-square-rounded-filled fill-contrast-200 stroke-contrast-200"

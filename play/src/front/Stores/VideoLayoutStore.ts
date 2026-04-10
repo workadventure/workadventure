@@ -57,7 +57,7 @@ export const isOnOneLine = derived(
         $highlightedEmbedScreen,
         $activePictureInPictureStore,
     ]) => {
-        // Show one line if we are NOT in a conversation ot the player has moved recently
+        // Show one line if we are NOT in a conversation or the player has moved recently
         return (
             $playerMovedInTheLast10Seconds ||
             !$isInRemoteConversation ||

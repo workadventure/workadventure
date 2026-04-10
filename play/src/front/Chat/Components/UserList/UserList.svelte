@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ChatUser } from "../../Connection/ChatConnection";
+    import type { ChatUser } from "../../Connection/ChatConnection";
     import User from "./User.svelte";
 
     export let userList: Array<ChatUser> = [];

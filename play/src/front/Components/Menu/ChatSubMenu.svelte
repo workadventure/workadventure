@@ -35,7 +35,7 @@
                     <InputCheckbox
                         data-testid="chatSounds"
                         bind:value={chatSounds}
-                        on:change={changeChatSounds}
+                        onChange={changeChatSounds}
                         label={$LL.menu.settings.chatSounds()}
                     />
                 </div>

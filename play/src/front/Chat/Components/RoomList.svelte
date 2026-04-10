@@ -6,13 +6,14 @@
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
-    import { ChatRoom } from "../Connection/ChatConnection";
+    import type { ChatRoom } from "../Connection/ChatConnection";
     import { INITIAL_SIDEBAR_WIDTH, loginTokenErrorStore } from "../../Stores/ChatStore";
     import { userIsConnected } from "../../Stores/MenuStore";
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
     import getCloseImg from "../images/get-close.png";
     import ExternalComponents from "../../Components/ExternalModules/ExternalComponents.svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { chatNotificationStore } from "../../Stores/ProximityNotificationStore";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -41,6 +42,7 @@
     let roomInvitations = chat.invitations;
     let roomFolders = chat.folders;
     let proximityHasUnreadMessages = proximityChatRoom.hasUnreadMessages;
+    const proximityUnreadCount = proximityChatRoom.unreadMessagesCount;
 
     let displayDirectRooms = false;
     let displayRooms = false;
@@ -122,12 +124,14 @@
     function toggleDisplayProximityChat() {
         selectedRoomStore.set(proximityChatRoom);
         proximityChatRoom.hasUnreadMessages.set(false);
+        proximityChatRoom.unreadMessagesCount.set(0);
+        chatNotificationStore.clearAll();
+        proximityChatRoom.unreadNotificationCount.set(0);
     }
 
     $: filteredDirectRoom = $directRooms
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
-
     $: filteredRooms = $rooms
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
@@ -215,9 +219,20 @@
                                 {$LL.chat.proximity()}
                             </div>
                             {#if $proximityHasUnreadMessages}
-                                <div class="flex items-center justify-center h-7 w-7 relative">
-                                    <div class="rounded-full bg-secondary-200 h-2 w-2 animate-ping absolute" />
-                                    <div class="rounded-full bg-secondary-200 h-1.5 w-1.5 absolute" />
+                                <div class="relative flex h-7 w-7 items-center justify-center">
+                                    <span
+                                        class="absolute top-1 start-2 block h-4 w-4 rounded-full bg-white animate-ping"
+                                    />
+                                    <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white" />
+                                    <div
+                                        class="flex aspect-square h-5 w-5 items-center justify-center rounded-full bg-success text-sm font-bold leading-none text-contrast z-10"
+                                        aria-label="{$proximityUnreadCount} unread"
+                                    >
+                                        <span>{$proximityUnreadCount > 9 ? "9" : $proximityUnreadCount}</span>
+                                        {#if $proximityUnreadCount > 9}
+                                            <span class="text-xxs">+</span>
+                                        {/if}
+                                    </div>
                                 </div>
                             {/if}
                         </button>
@@ -286,6 +301,7 @@
                     <div class="flex items-center space-x-2 grow m-0 p-0">
                         <!-- TODO : use div instead of button to avoid focus issues try to find a better solution -->
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <div
                             class="group relative px-3 m-0 mb-2 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
                             on:click={toggleDisplayRooms}

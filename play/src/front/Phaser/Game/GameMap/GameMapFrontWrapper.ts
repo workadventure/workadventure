@@ -1,5 +1,12 @@
-import type { AreaChangeCallback, AreaData, AtLeast, GameMap } from "@workadventure/map-editor";
-import { AreaCoordinates, AreaDataProperties, AreaUpdateCallback, GameMapProperties } from "@workadventure/map-editor";
+import type {
+    AreaChangeCallback,
+    AreaData,
+    AtLeast,
+    GameMap,
+    AreaDataProperties,
+    AreaUpdateCallback,
+} from "@workadventure/map-editor";
+import { AreaCoordinates, GameMapProperties } from "@workadventure/map-editor";
 import { MathUtils } from "@workadventure/math-utils";
 import type {
     ITiledMap,
@@ -11,11 +18,11 @@ import type {
 } from "@workadventure/tiled-map-type-guard";
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
-import { Deferred } from "ts-deferred";
+import { Deferred } from "@workadventure/shared-utils";
 import { PathTileType } from "../../../Utils/PathfindingManager";
-import { Entity } from "../../ECS/Entity";
+import type { Entity } from "../../ECS/Entity";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
-import { ITiledPlace } from "../GameMapPropertiesListener";
+import type { ITiledPlace } from "../GameMapPropertiesListener";
 import type { GameScene } from "../GameScene";
 import { EntitiesManager } from "./EntitiesManager";
 import { AreasManager } from "./AreasManager";
@@ -91,7 +98,10 @@ export class GameMapFrontWrapper {
      */
     private areasCollisionLayer: Phaser.Tilemaps.TilemapLayer;
 
+    private collisionGridDirty = true;
+    private areasCollisionLayerDirty = true;
     private perLayerCollisionGridCache: Map<number, (0 | 1 | 2 | 3)[][]> = new Map<number, (0 | 1 | 2 | 3)[][]>();
+    private dirtyLayerIndices: Set<number> = new Set<number>();
 
     private lastProperties = new Map<string, string | boolean | number>();
     private propertiesChangeCallbacks = new Map<string, Array<PropertyChangeCallback>>();
@@ -106,6 +116,13 @@ export class GameMapFrontWrapper {
     private leaveDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
 
     public areasManager: AreasManager | undefined;
+
+    /**
+     * Cache of area IDs that have maxUsersInAreaPropertyData.
+     * This avoids iterating through all properties on every position change.
+     * Updated when areas are added, removed, or modified.
+     */
+    private areasWithMaxUsersProperty: Set<string> = new Set();
 
     /**
      * Firing on map change, containing newest collision grid array
@@ -134,8 +151,6 @@ export class GameMapFrontWrapper {
         this.existingTileIndex = terrains.length > 0 ? terrains[0].firstgid : -1;
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
-
-        this.updateCollisionGrid(undefined, false);
 
         let depth = -2;
         for (const layer of this.gameMap.flatLayers) {
@@ -212,14 +227,14 @@ export class GameMapFrontWrapper {
         this.areasCollisionLayer.setDepth(-2).setCollisionByProperty({ collides: true }).setVisible(false);
 
         this.phaserLayers.push(this.areasCollisionLayer);
-
-        this.updateCollisionGrid(undefined, false);
     }
 
     public initialize(): Promise<void> {
         // Spawn first entities from WAM file on the map
         const addEntityPromises: Promise<Entity>[] = [];
-        for (const [entityId, entityData] of Object.entries(this.gameMap.getGameMapEntities()?.getEntities() ?? {})) {
+        for (const [entityId, entityData] of Object.entries(
+            this.gameMap.getWamFile()?.getGameMapEntities().getEntities() ?? {}
+        )) {
             addEntityPromises.push(this.entitiesManager.addEntity(entityId, entityData, undefined, undefined, false));
             // We need to AWAIT for all entities to be created.
             // OTHERWISE, delete commands might pass FIRST!
@@ -231,7 +246,7 @@ export class GameMapFrontWrapper {
                     console.error(result.reason);
                 }
             });
-            this.updateCollisionGrid(this.entitiesCollisionLayer, false);
+            this.invalidateCollisionGrid({ modifiedLayer: this.entitiesCollisionLayer });
             this.initializedPromise.resolve();
         });
     }
@@ -249,35 +264,95 @@ export class GameMapFrontWrapper {
             this.modifyToCollisionsLayer(entity.x, entity.y, entity.name, entityCollisionGrid, false);
         }
 
-        this.updateCollisionGrid(this.entitiesCollisionLayer, false);
+        this.invalidateCollisionGrid({ modifiedLayer: this.entitiesCollisionLayer });
     }
 
     public recomputeAreasCollisionGrid() {
-        //this.areasCollisionLayer.fill(-1);
-        for (let y = 0; y < (this.getMap()?.height ?? 0); y++) {
-            for (let x = 0; x < (this.getMap()?.width ?? 0); x++) {
-                this.areasCollisionLayer.removeTileAt(x, y, false);
-            }
-        }
-
-        if (this.areasManager) {
-            for (const area of this.areasManager.getCollidingAreas()) {
-                this.registerCollisionArea(area);
-            }
-        }
-
-        this.updateCollisionGrid(this.areasCollisionLayer, false);
+        this.invalidateCollisionGrid({ areasLayerDirty: true });
     }
 
     public initializeAreaManager(userConnectedTags: string[], userCanEdit: boolean) {
-        const gameMapAreas = this.getGameMap().getGameMapAreas();
+        const gameMapAreas = this.getGameMap().getWamFile()?.getGameMapAreas();
         // If gameMapAreas is undefined, we are on a public map
         if (gameMapAreas !== undefined) {
-            this.areasManager = new AreasManager(this.scene, gameMapAreas, userConnectedTags, userCanEdit);
+            this.areasManager = new AreasManager(
+                this.scene,
+                gameMapAreas,
+                userConnectedTags,
+                userCanEdit,
+                undefined,
+                () => this.invalidateCollisionGrid({ areasLayerDirty: true })
+            );
             gameMapAreas.triggerAreasChange(undefined, this.position);
+            // Initialize the cache of areas with maxUsersInAreaPropertyData
+            this.rebuildMaxUsersAreasCache();
         }
         // Once we have the tags, we can compute the colliding layer again
         this.recomputeAreasCollisionGrid();
+    }
+
+    /**
+     * Rebuilds the cache of areas that have maxUsersInAreaPropertyData.
+     * Should be called when areas are added, removed, or their properties change.
+     */
+    private rebuildMaxUsersAreasCache(): void {
+        this.areasWithMaxUsersProperty.clear();
+        const allAreas = this.gameMap.getWamFile()?.getGameMapAreas().getAreas();
+        if (!allAreas) {
+            return;
+        }
+        for (const area of allAreas.values()) {
+            if (this.areaHasMaxUsersProperty(area)) {
+                this.areasWithMaxUsersProperty.add(area.id);
+            }
+        }
+    }
+
+    /**
+     * Checks if an area has maxUsersInAreaPropertyData property.
+     */
+    private areaHasMaxUsersProperty(area: AreaData): boolean {
+        return area.properties.some((property) => property.type === "maxUsersInAreaPropertyData");
+    }
+
+    /**
+     * Gets the IDs of nearby areas that have maxUsersInAreaPropertyData.
+     * Uses an optimized bounding box check instead of distance calculation.
+     * @param position - The player's current position
+     * @param proximityThreshold - Distance in pixels to consider "nearby" (default: 100)
+     * @returns Array of area IDs that are nearby
+     */
+    private getNearbyMaxUsersAreas(position: { x: number; y: number }, proximityThreshold = 100): string[] {
+        const nearbyAreaIds: string[] = [];
+        const gameMapAreas = this.gameMap.getWamFile()?.getGameMapAreas();
+        if (!gameMapAreas) {
+            return nearbyAreaIds;
+        }
+
+        const playerX = position.x;
+        const playerY = position.y;
+
+        // Only iterate through cached areas with maxUsersProperty
+        for (const areaId of this.areasWithMaxUsersProperty) {
+            const area = gameMapAreas.getArea(areaId);
+            if (!area) {
+                continue;
+            }
+
+            // Optimized bounding box proximity check:
+            // Check if player is within (area bounds + threshold) using simple comparisons
+            // This avoids Math.abs and is more efficient for rectangular areas
+            const areaLeft = area.x - proximityThreshold;
+            const areaRight = area.x + area.width + proximityThreshold;
+            const areaTop = area.y - proximityThreshold;
+            const areaBottom = area.y + area.height + proximityThreshold;
+
+            if (playerX >= areaLeft && playerX <= areaRight && playerY >= areaTop && playerY <= areaBottom) {
+                nearbyAreaIds.push(areaId);
+            }
+        }
+
+        return nearbyAreaIds;
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {
@@ -285,7 +360,7 @@ export class GameMapFrontWrapper {
         if (phaserLayer != undefined) {
             phaserLayer.setVisible(visible);
             phaserLayer.setCollisionByProperty({ collides: true }, visible);
-            this.updateCollisionGrid(phaserLayer);
+            this.invalidateCollisionGrid();
         } else {
             const phaserLayers = this.findPhaserLayers(layerName + "/");
             if (phaserLayers.length === 0) {
@@ -300,7 +375,7 @@ export class GameMapFrontWrapper {
                 phaserLayers[i].setVisible(visible);
                 phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
             }
-            this.updateCollisionGrid(undefined, false);
+            this.invalidateCollisionGrid();
         }
     }
 
@@ -342,7 +417,7 @@ export class GameMapFrontWrapper {
         }
         this.entitiesCollisionLayer.setCollisionByProperty({ collides: true });
         if (withGridUpdate) {
-            this.updateCollisionGrid(this.entitiesCollisionLayer, false);
+            this.invalidateCollisionGrid({ modifiedLayer: this.entitiesCollisionLayer });
         }
     }
 
@@ -370,56 +445,157 @@ export class GameMapFrontWrapper {
         return this.gameMap.getPropertiesForIndex(index);
     }
 
-    public getCollisionGrid(): number[][] {
+    public getCollisionGrid({ emitMapChangedEvent = true }: { emitMapChangedEvent?: boolean } = {}): number[][] {
+        this.ensureCollisionGridUpToDate(emitMapChangedEvent);
         return this.collisionGrid;
     }
 
-    private updateCollisionGrid(modifiedLayer?: TilemapLayer, useCache = true): void {
+    private invalidateCollisionGrid({
+        areasLayerDirty = false,
+        modifiedLayer,
+    }: { areasLayerDirty?: boolean; modifiedLayer?: TilemapLayer } = {}): void {
+        if (areasLayerDirty) {
+            this.areasCollisionLayerDirty = true;
+        }
+        if (modifiedLayer) {
+            this.dirtyLayerIndices.add(modifiedLayer.layerIndex);
+        }
+        this.collisionGridDirty = true;
+    }
+
+    private rebuildAreasCollisionLayer(): void {
+        //this.areasCollisionLayer.fill(-1);
+        for (let y = 0; y < (this.getMap()?.height ?? 0); y++) {
+            for (let x = 0; x < (this.getMap()?.width ?? 0); x++) {
+                this.areasCollisionLayer.removeTileAt(x, y, false);
+            }
+        }
+
+        if (this.areasManager) {
+            for (const area of this.areasManager.getCollidingAreas()) {
+                this.registerCollisionArea(area);
+            }
+        }
+
+        this.areasCollisionLayerDirty = false;
+        this.dirtyLayerIndices.add(this.areasCollisionLayer.layerIndex);
+    }
+
+    private ensureCollisionGridUpToDate(emitMapChangedEvent = true): void {
+        if (!this.collisionGridDirty) {
+            return;
+        }
+
+        if (this.areasCollisionLayerDirty) {
+            this.rebuildAreasCollisionLayer();
+        }
+
         const map = this.gameMap.getMap();
         // initialize collision grid to write on
         if (map.height === undefined || map.width === undefined) {
             this.collisionGrid = [];
+            this.collisionGridDirty = false;
             return;
         }
         const grid: number[][] = Array.from(Array(map.height), (_) => Array(map.width).fill(PathTileType.Walkable));
-        if (modifiedLayer) {
-            // recalculate cache for certain layer if needed
-            this.perLayerCollisionGridCache.set(modifiedLayer.layerIndex, this.getLayerCollisionGrid(modifiedLayer));
-        }
         // go through all tilemap layers on map. Maintain order
         for (const layer of this.phaserLayers) {
             if (!layer.visible && layer !== this.entitiesCollisionLayer && layer !== this.areasCollisionLayer) {
                 continue;
             }
-            if (!useCache) {
-                this.perLayerCollisionGridCache.set(layer.layerIndex, this.getLayerCollisionGrid(layer));
-            }
             const cachedLayer = this.perLayerCollisionGridCache.get(layer.layerIndex);
-            if (!cachedLayer) {
-                // no cache, calculate collision grid for this layer
-                this.perLayerCollisionGridCache.set(layer.layerIndex, this.getLayerCollisionGrid(layer));
-            } else {
-                for (let y = 0; y < map.height; y += 1) {
-                    for (let x = 0; x < map.width; x += 1) {
-                        // currently no case where we can make tile non-collidable with collidable object beneath, skip position
-                        if (grid[y][x] === PathTileType.Exit && cachedLayer[y][x] === PathTileType.Collider) {
-                            grid[y][x] = cachedLayer[y][x];
-                            continue;
-                        }
-                        if (grid[y][x] === PathTileType.Start && cachedLayer[y][x] === PathTileType.Collider) {
-                            grid[y][x] = cachedLayer[y][x];
-                            continue;
-                        }
-                        if (grid[y][x] !== PathTileType.Walkable) {
-                            continue;
-                        }
-                        grid[y][x] = cachedLayer[y][x];
+            const shouldRecomputeLayer =
+                this.dirtyLayerIndices.has(layer.layerIndex) ||
+                !cachedLayer ||
+                cachedLayer.length !== map.height ||
+                cachedLayer[0]?.length !== map.width;
+            const layerCollisionGrid = shouldRecomputeLayer ? this.getLayerCollisionGrid(layer) : cachedLayer;
+            if (shouldRecomputeLayer) {
+                this.perLayerCollisionGridCache.set(layer.layerIndex, layerCollisionGrid);
+                this.dirtyLayerIndices.delete(layer.layerIndex);
+            }
+
+            for (let y = 0; y < map.height; y += 1) {
+                for (let x = 0; x < map.width; x += 1) {
+                    // currently no case where we can make tile non-collidable with collidable object beneath, skip position
+                    if (grid[y][x] === PathTileType.Exit && layerCollisionGrid[y][x] === PathTileType.Collider) {
+                        grid[y][x] = layerCollisionGrid[y][x];
+                        continue;
                     }
+                    if (grid[y][x] === PathTileType.Start && layerCollisionGrid[y][x] === PathTileType.Collider) {
+                        grid[y][x] = layerCollisionGrid[y][x];
+                        continue;
+                    }
+                    if (grid[y][x] !== PathTileType.Walkable) {
+                        continue;
+                    }
+                    grid[y][x] = layerCollisionGrid[y][x];
                 }
             }
         }
+        this.applyPathfindingAreaWeights(grid, map.width, map.height);
         this.collisionGrid = grid;
-        this.mapChangedSubject.next(this.collisionGrid);
+        this.collisionGridDirty = false;
+        if (emitMapChangedEvent) {
+            this.mapChangedSubject.next(this.collisionGrid);
+        }
+    }
+
+    /**
+     * Marks walkable tiles under meeting (Jitsi/Livekit) and personal desk areas with higher pathfinding cost.
+     * Meeting overlaps take precedence over personal desk on the same tile.
+     */
+    private applyPathfindingAreaWeights(grid: number[][], mapWidth: number, mapHeight: number): void {
+        const gameMapAreas = this.gameMap.getWamFile()?.getGameMapAreas();
+        if (!gameMapAreas) {
+            return;
+        }
+
+        const tileWidth = this.getMap().tilewidth ?? 32;
+        const tileHeight = this.getMap().tileheight ?? 32;
+
+        const personalAreas: AreaData[] = [];
+        const meetingAreas: AreaData[] = [];
+        for (const area of gameMapAreas.getAreas().values()) {
+            const hasMeeting = area.properties.some(
+                (p) => p.type === "jitsiRoomProperty" || p.type === "livekitRoomProperty"
+            );
+            const hasPersonalDesk = area.properties.some((p) => p.type === "personalAreaPropertyData");
+            if (hasPersonalDesk) {
+                personalAreas.push(area);
+            }
+            if (hasMeeting) {
+                meetingAreas.push(area);
+            }
+        }
+
+        const paintArea = (area: AreaData, tileType: PathTileType): void => {
+            const xStart = Math.floor(area.x / tileWidth);
+            const yStart = Math.floor(area.y / tileHeight);
+            const xEnd = Math.ceil((area.x + area.width) / tileWidth);
+            const yEnd = Math.ceil((area.y + area.height) / tileHeight);
+
+            for (let y = yStart; y < yEnd; y += 1) {
+                if (y < 0 || y >= mapHeight) {
+                    continue;
+                }
+                for (let x = xStart; x < xEnd; x += 1) {
+                    if (x < 0 || x >= mapWidth) {
+                        continue;
+                    }
+                    if (grid[y][x] === PathTileType.Walkable) {
+                        grid[y][x] = tileType;
+                    }
+                }
+            }
+        };
+
+        for (const area of personalAreas) {
+            paintArea(area, PathTileType.PersonalDesk);
+        }
+        for (const area of meetingAreas) {
+            paintArea(area, PathTileType.MeetingRoom);
+        }
     }
 
     public getTileDimensions(): { width: number; height: number } {
@@ -441,10 +617,34 @@ export class GameMapFrontWrapper {
         }
         this.oldPosition = this.position;
         this.position = { x, y };
-        const areasChanged = this.gameMap.getGameMapAreas()?.triggerAreasChange(this.oldPosition, this.position);
+        const areasChanged = this.gameMap
+            .getWamFile()
+            ?.getGameMapAreas()
+            .triggerAreasChange(this.oldPosition, this.position);
         const dynamicAreasChanged = this.triggerDynamicAreasChange(this.oldPosition, this.position);
         if (areasChanged || dynamicAreasChanged) {
             this.triggerAllProperties();
+        }
+
+        // Update collision states for areas when player position changes
+        // This recalculates collision based on current user count when player moves
+        // Also check nearby areas to prevent collision message when area becomes available
+        if (this.areasManager && this.position) {
+            const areasOnNewPosition = this.gameMap.getWamFile()?.getGameMapAreas()?.getAreasOnPosition(this.position);
+            if (areasOnNewPosition && areasOnNewPosition.length > 0) {
+                const affectedAreaIds = areasOnNewPosition.map((area) => area.id);
+                this.areasManager.updateAreasCollision(affectedAreaIds);
+            }
+
+            // Also update collision for nearby areas that might be approached
+            // This prevents showing error message when area becomes available
+            // Only check areas that have maxUsersInAreaPropertyData (using cached set for O(1) lookup)
+            if (this.areasWithMaxUsersProperty.size > 0) {
+                const nearbyAreaIds = this.getNearbyMaxUsersAreas(this.position);
+                if (nearbyAreaIds.length > 0) {
+                    this.areasManager.updateAreasCollision(nearbyAreaIds);
+                }
+            }
         }
 
         this.oldKey = this.key;
@@ -533,21 +733,21 @@ export class GameMapFrontWrapper {
      * Registers a callback called when the user moves inside another area.
      */
     public onEnterArea(callback: AreaChangeCallback) {
-        this.gameMap.onEnterArea(callback);
+        this.gameMap.getWamFile()?.onEnterArea(callback);
     }
 
     /**
      * Registers a callback called when an area has been updated.
      */
     public onUpdateArea(callback: AreaUpdateCallback) {
-        this.gameMap.onUpdateArea(callback);
+        this.gameMap.getWamFile()?.onUpdateArea(callback);
     }
 
     /**
      * Registers a callback called when the user moves outside another area.
      */
     public onLeaveArea(callback: AreaChangeCallback) {
-        this.gameMap.getGameMapAreas()?.onLeaveArea(callback);
+        this.gameMap.getWamFile()?.getGameMapAreas().onLeaveArea(callback);
     }
 
     public findLayer(layerName: string): ITiledMapLayer | undefined {
@@ -593,7 +793,7 @@ export class GameMapFrontWrapper {
                     }
                 }
             }
-            this.updateCollisionGrid(phaserLayer);
+            this.invalidateCollisionGrid({ modifiedLayer: phaserLayer });
         } else {
             console.error("The layer '" + layer + "' does not exist (or is not a tilelaye).");
         }
@@ -692,6 +892,7 @@ export class GameMapFrontWrapper {
     }
 
     public isSpaceAvailable(topLeftX: number, topLeftY: number, ignoreCollisionGrid?: boolean): boolean {
+        this.ensureCollisionGridUpToDate(false);
         if (this.collisionGrid.length === 0) {
             return false;
         }
@@ -740,6 +941,10 @@ export class GameMapFrontWrapper {
     }
 
     public isOutOfMapBounds(topLeftX: number, topLeftY: number, width = 0, height = 0): boolean {
+        this.ensureCollisionGridUpToDate(false);
+        if (this.collisionGrid.length === 0 || this.collisionGrid[0] === undefined) {
+            return true;
+        }
         const mapWidth = this.collisionGrid[0].length * this.getTileDimensions().width;
         const mapHeight = this.collisionGrid.length * this.getTileDimensions().height;
         if (topLeftX < 0 || topLeftX + width > mapWidth || topLeftY < 0 || topLeftY + height > mapHeight) {
@@ -772,6 +977,8 @@ export class GameMapFrontWrapper {
             // We found a property that disappeared
             this.trigger(oldPropName, oldPropValue, undefined, emptyProps);
         }
+
+        this.gameMap.getWamFile()?.getGameMapAreas().triggerAreasChange(this.position, undefined);
     }
 
     public getRandomPositionFromLayer(layerName: string): { x: number; y: number } {
@@ -822,11 +1029,11 @@ export class GameMapFrontWrapper {
     }
 
     public getAreas(): Map<string, AreaData> | undefined {
-        return this.gameMap.getGameMapAreas()?.getAreas();
+        return this.gameMap.getWamFile()?.getGameMapAreas().getAreas();
     }
 
     public addArea(area: AreaData): void {
-        this.gameMap.getGameMapAreas()?.addArea(area, true, this.position);
+        this.gameMap.getWamFile()?.getGameMapAreas().addArea(area, true, this.position);
     }
 
     public addDynamicArea(area: DynamicArea): boolean {
@@ -842,7 +1049,7 @@ export class GameMapFrontWrapper {
     }
 
     public triggerSpecificAreaOnEnter(area: AreaData): void {
-        this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnEnter(area);
+        this.gameMap.getWamFile()?.getGameMapAreas().triggerSpecificAreaOnEnter(area);
     }
 
     public triggerSpecificAreaOnUpdate(
@@ -850,19 +1057,19 @@ export class GameMapFrontWrapper {
         oldProperties: AreaDataProperties | undefined,
         newProperties: AreaDataProperties | undefined
     ): void {
-        this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnUpdate(area, oldProperties, newProperties);
+        this.gameMap.getWamFile()?.getGameMapAreas().triggerSpecificAreaOnUpdate(area, oldProperties, newProperties);
     }
 
     public triggerSpecificAreaOnLeave(area: AreaData): void {
-        this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnLeave(area);
+        this.gameMap.getWamFile()?.getGameMapAreas().triggerSpecificAreaOnLeave(area);
     }
 
     public getAreaByName(name: string): AreaData | undefined {
-        return this.gameMap.getGameMapAreas()?.getAreaByName(name);
+        return this.gameMap.getWamFile()?.getGameMapAreas().getAreaByName(name);
     }
 
     public getArea(id: string): AreaData | undefined {
-        return this.gameMap.getGameMapAreas()?.getArea(id);
+        return this.gameMap.getWamFile()?.getGameMapAreas().getArea(id);
     }
 
     public getDynamicArea(name: string): DynamicArea | undefined {
@@ -893,6 +1100,11 @@ export class GameMapFrontWrapper {
             throw new Error("AreasManager is not initialized. Are you on a public map?");
         }
         this.areasManager.addArea(areaData);
+
+        // Update cache if area has maxUsersInAreaPropertyData
+        if (this.areaHasMaxUsersProperty(areaData)) {
+            this.areasWithMaxUsersProperty.add(areaData.id);
+        }
     }
 
     public listenAreaChanges(oldConfig: AtLeast<AreaData, "id">, newConfig: AtLeast<AreaData, "id">): void {
@@ -907,7 +1119,7 @@ export class GameMapFrontWrapper {
             throw new Error("Something wrong happen! Area coordinates are not defined");
         }
 
-        const area = this.gameMap.getGameMapAreas()?.getArea(oldConfig.id);
+        const area = this.gameMap.getWamFile()?.getGameMapAreas().getArea(oldConfig.id);
 
         if (!area) {
             console.error("Area with id " + oldConfig.id + " does not exist, this not supposed to happen");
@@ -935,6 +1147,18 @@ export class GameMapFrontWrapper {
             throw new Error("AreasManager is not initialized. Are you on a public map?");
         }
         this.areasManager.updateArea(newConfig);
+
+        // Update cache if maxUsersInAreaPropertyData was added or removed
+        if (newConfig.properties) {
+            const hasMaxUsersProperty = newConfig.properties.some(
+                (property) => property.type === "maxUsersInAreaPropertyData"
+            );
+            if (hasMaxUsersProperty) {
+                this.areasWithMaxUsersProperty.add(newConfig.id);
+            } else {
+                this.areasWithMaxUsersProperty.delete(newConfig.id);
+            }
+        }
     }
 
     public listenAreaDeletion(areaData: AreaData | undefined) {
@@ -950,6 +1174,9 @@ export class GameMapFrontWrapper {
             throw new Error("AreasManager is not initialized. Are you on a public map?");
         }
         this.areasManager.removeArea(areaData.id);
+
+        // Remove from cache
+        this.areasWithMaxUsersProperty.delete(areaData.id);
     }
 
     public getMapChangedObservable(): Observable<number[][]> {
@@ -1190,12 +1417,17 @@ export class GameMapFrontWrapper {
         );
     }
 
+    /**
+     * Return properties attached to the given tile key (properties from the Tiled tile layer + properties attached
+     * to the tileset tile + properties attached to the activated entities (if any) + properties attached to the dynamic
+     * areas.
+     */
     private getProperties(key: number): Map<string, string | boolean | number> {
         const properties = new Map<string, string | boolean | number>();
         // NOTE: WE DO NOT WANT AREAS TO BE THE PART OF THE OLD PROPERTIES CHANGE SYSTEM
         // CHECK FOR AREAS PROPERTIES
         //if (this.position) {
-        //    const areasProperties = this.gameMap.getGameMapAreas()?.getProperties(this.position);
+        //    const areasProperties = this.gameMap.getWamFile()?.getGameMapAreas().getProperties(this.position);
         //    if (areasProperties) {
         //        for (const [key, value] of areasProperties) {
         //            properties.set(key, value);
@@ -1381,5 +1613,6 @@ export class GameMapFrontWrapper {
 
     public close() {
         this.entitiesManager.close();
+        this.areasManager?.destroy();
     }
 }

@@ -2,7 +2,7 @@
     import { closeModal, onBeforeClose } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
-    import { VerificationEmojiDialogProps } from "./MatrixSecurity";
+    import type { VerificationEmojiDialogProps } from "./MatrixSecurity";
     import { IconVerify } from "@wa-icons";
 
     export let isOpen: boolean;

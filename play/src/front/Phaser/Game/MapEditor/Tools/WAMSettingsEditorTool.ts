@@ -1,7 +1,7 @@
-import { EditMapCommandMessage } from "@workadventure/messages";
-import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
-import { GameScene } from "../../GameScene";
-import { MapEditorModeManager } from "../MapEditorModeManager";
+import type { EditMapCommandMessage } from "@workadventure/messages";
+import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
+import type { GameScene } from "../../GameScene";
+import type { MapEditorModeManager } from "../MapEditorModeManager";
 import { UpdateWAMSettingFrontCommand } from "../Commands/WAM/UpdateWAMSettingFrontCommand";
 import { mapEditorVisibilityStore } from "../../../../Stores/MapEditorStore";
 import { MapEditorTool } from "./MapEditorTool";
@@ -42,13 +42,24 @@ export class WAMSettingsEditorTool extends MapEditorTool {
         if (editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage") {
             const data = editMapCommandMessage.editMapMessage?.message.updateWAMSettingsMessage;
 
-            const wam = this.scene.getGameMap().getWam();
+            const wam = this.scene.getGameMap().getWamFile()?.getWam();
             if (wam === undefined) {
                 throw new Error("WAM file is undefined");
             }
+            if (!this.scene.connection) {
+                throw new Error("No connection available");
+            }
 
             // execute command locally
-            await this.mapEditorModeManager.executeLocalCommand(new UpdateWAMSettingFrontCommand(wam, data, commandId));
+            await this.mapEditorModeManager.executeLocalCommand(
+                new UpdateWAMSettingFrontCommand(
+                    wam,
+                    data,
+                    this.scene.connection.getAllTags(),
+                    this.scene.roomUrl,
+                    commandId
+                )
+            );
         }
         return Promise.resolve();
     }

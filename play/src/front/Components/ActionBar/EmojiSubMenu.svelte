@@ -1,16 +1,21 @@
 <script lang="ts">
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
+    import * as Sentry from "@sentry/svelte";
     import { fly } from "svelte/transition";
     import { clickOutside } from "svelte-outside";
     import { onDestroy } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { emoteDataStore, emoteMenuStore, emoteMenuSubCurrentEmojiSelectedStore } from "../../Stores/EmoteStore";
+    import {
+        emoteDataStore,
+        emoteMenuStore,
+        emoteMenuSubCurrentEmojiSelectedStore,
+        displayEmote,
+        isEmoteIndex,
+    } from "../../Stores/EmoteStore";
 
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import XIcon from "../Icons/XIcon.svelte";
-    import PenIcon from "../Icons/PenIcon.svelte";
     import { activeSecondaryZoneActionBarStore } from "../../Stores/MenuStore";
-    import { ArrowAction } from "../../Utils/svelte-floatingui";
+    import type { ArrowAction } from "../../Utils/svelte-floatingui";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import LazyEmote from "../EmoteMenu/LazyEmote.svelte";
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
@@ -18,6 +23,7 @@
     import { popupStore } from "../../Stores/PopupStore";
     import SayPopUp from "../PopUp/SayPopUp.svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { IconPencil, IconXIcon } from "@wa-icons";
 
     let emoteDataLoading = false;
 
@@ -27,14 +33,21 @@
 
     const isSayBubbleEnabled = connectionManager.currentRoom?.isSayEnabled ?? true;
 
-    function clickEmoji(selected?: number) {
+    function clickEmoji(selected: number) {
         //if open, in edit mode or playing mode
-        if ($emoteMenuStore && selected != undefined) {
+        if ($emoteMenuStore) {
             //select place to change in emoji sub menu
             emoteMenuSubCurrentEmojiSelectedStore.set(selected);
-        } else if (selected != undefined) {
+        } else {
             //play UX animation
             focusElement(selected);
+
+            if (isEmoteIndex(selected)) {
+                displayEmote(selected);
+            } else {
+                console.warn(`Invalid emote index: ${selected}`);
+                Sentry.captureException(new Error(`Invalid emote index: ${selected}`));
+            }
         }
     }
 
@@ -206,10 +219,10 @@
                             />
                         </svg>
                     {:else if !$emoteMenuStore}
-                        <PenIcon width="w-4" height="h-4" />
+                        <IconPencil stroke={1} font-size="12" class="text-white" />
                         <div>{$LL.actionbar.edit()}</div>
                     {:else}
-                        <XIcon width="w-4" height="h-4" />
+                        <IconXIcon stroke={1} font-size="16" class="text-white" />
                         <div>{$LL.actionbar.cancel()}</div>
                     {/if}
                 </button>

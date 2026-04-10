@@ -1,26 +1,26 @@
+<svelte:options immutable={true} />
+
 <script lang="ts">
-    import { volumeProximityDiscussionStore } from "../../../Stores/PeerStore";
+    import { writable } from "svelte/store";
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../../Stores/MediaStore";
-    import { userActivationManager } from "../../../Stores/UserActivationStore";
-    import { VideoBox } from "../../../Space/Space";
+    import type { VideoBox } from "../../../Space/VideoBox";
     import AudioStream from "./AudioStream.svelte";
 
     export let videoBox: VideoBox;
     const streamable = videoBox.streamable;
+
+    $: muteAudioStore = $streamable?.muteAudio;
+    $: muteAudio = $muteAudioStore ?? false;
+
+    $: hasAudio = $streamable?.hasAudio ?? writable(false);
 </script>
 
-{#if $streamable && ($streamable?.media.type === "webrtc" || $streamable?.media.type === "livekit") && !$streamable.muteAudio}
-    {#await userActivationManager.waitForUserActivation()}
-        <!-- waiting for user activation -->
-    {:then value}
-        {#if $streamable.media.streamStore}
-            <AudioStream
-                streamStore={$streamable.media.streamStore}
-                volume={$volumeProximityDiscussionStore}
-                outputDeviceId={$speakerSelectedStore}
-                isBlocked={$streamable.media.isBlocked}
-                on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
-            />
-        {/if}
-    {/await}
+{#if $streamable && ($streamable?.media.type === "webrtc" || $streamable?.media.type === "livekit") && !muteAudio && $hasAudio}
+    <AudioStream
+        streamStore={$streamable.media.streamStore}
+        volume={$streamable.volume}
+        outputDeviceId={$speakerSelectedStore}
+        isBlocked={$streamable.media.isBlocked}
+        on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
+    />
 {/if}

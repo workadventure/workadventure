@@ -1,20 +1,28 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Mock EasyStar to avoid external dependencies
-const mockEasyStar = {
-    findPath: vi.fn(),
-    calculate: vi.fn(),
-    cancelPath: vi.fn(),
-    setGrid: vi.fn(),
-    setAcceptableTiles: vi.fn(),
-    enableDiagonals: vi.fn(),
-    disableCornerCutting: vi.fn(),
-    setTileCost: vi.fn(),
-    setIterationsPerCalculation: vi.fn(),
-};
+const { mockEasyStar, EasyStarConstructor } = vi.hoisted(() => {
+    const mockEasyStar = {
+        findPath: vi.fn(),
+        calculate: vi.fn(),
+        cancelPath: vi.fn(),
+        setGrid: vi.fn(),
+        setAcceptableTiles: vi.fn(),
+        enableDiagonals: vi.fn(),
+        disableCornerCutting: vi.fn(),
+        setTileCost: vi.fn(),
+        setIterationsPerCalculation: vi.fn(),
+    };
+
+    const EasyStarConstructor = vi.fn(function EasyStarMock() {
+        return mockEasyStar;
+    });
+
+    return { mockEasyStar, EasyStarConstructor };
+});
 
 vi.mock("easystarjs", () => ({
-    js: vi.fn(() => mockEasyStar),
+    js: EasyStarConstructor,
 }));
 
 // Mock character constants
@@ -155,7 +163,7 @@ describe("PathfindingManager", () => {
 
             // Start second request quickly after first
             setTimeout(() => {
-                void pathfindingManager.findPathFromGameCoordinates(start, end2);
+                pathfindingManager.findPathFromGameCoordinates(start, end2).catch((e) => console.error(e));
             }, 5);
 
             await firstPromise;
@@ -237,7 +245,7 @@ describe("PathfindingManager", () => {
 
             // Start a pathfinding operation
             mockEasyStar.findPath.mockImplementation(() => 1);
-            void pathfindingManager.findPathFromGameCoordinates(start, end);
+            pathfindingManager.findPathFromGameCoordinates(start, end).catch((e) => console.error(e));
 
             // Call cleanup
             pathfindingManager.cleanup();

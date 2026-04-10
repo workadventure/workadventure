@@ -1,13 +1,9 @@
-import {
-    AreaDataProperties,
-    EntityData,
-    EntityDataProperties,
-    EntityDimensions,
-    EntityPrefabRef,
-    WAMEntityData,
-} from "@workadventure/map-editor";
-import { Observable, Subject } from "rxjs";
-import { get, Unsubscriber } from "svelte/store";
+import type { EntityData, WAMEntityData } from "@workadventure/map-editor";
+import { AreaDataProperties, EntityDataProperties, EntityDimensions, EntityPrefabRef } from "@workadventure/map-editor";
+import type { Observable } from "rxjs";
+import { Subject } from "rxjs";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 import { z } from "zod";
 import * as Sentry from "@sentry/svelte";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
@@ -362,20 +358,22 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 return;
             }
 
+            // If the entity is not editable and the entity editor tool is not active, switch automatically to entity editor tool
             if (
                 get(mapEditorModeStore) &&
-                this.isEntityEditorToolActive() &&
-                !get(mapEditorSelectedEntityPrefabStore)
+                get(mapEditorSelectedToolStore) != EditorToolName.ExploreTheRoom &&
+                this.isEntityEditorToolActive() == false
             ) {
+                // Activate entity editor tool
+                this.scene.getMapEditorModeManager().equipTool(EditorToolName.EntityEditor);
+            }
+
+            if (get(mapEditorModeStore) && !get(mapEditorSelectedEntityPrefabStore)) {
                 if (document.activeElement instanceof HTMLElement) {
                     document.activeElement.blur();
                 }
 
                 if (this.isTrashEditorToolActive()) {
-                    return;
-                }
-
-                if (!entity.canEdit) {
                     return;
                 }
 
@@ -474,7 +472,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     public getEntitiesInsideArea(areaId: string): Map<string, Entity> {
         const entitiesInsideArea = new Map<string, Entity>();
         const gameMapFrontWrapper = this.scene.getGameMapFrontWrapper();
-        const area = this.scene.getGameMap().getGameMapAreas()?.getArea(areaId);
+        const area = this.scene.getGameMap().getWamFile()?.getGameMapAreas().getArea(areaId);
         if (area === undefined) {
             return entitiesInsideArea;
         }

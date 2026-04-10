@@ -1,20 +1,21 @@
 <script lang="ts">
-    import { ChatMessageReaction } from "../../Connection/ChatConnection";
+    import type { ChatMessageReaction } from "../../Connection/ChatConnection";
 
     export let reaction: ChatMessageReaction;
 
-    const { reacted, key, users } = reaction;
+    const { reacted, key, users, component } = reaction;
 </script>
 
 {#if $users.size > 0}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
         on:click={() => reaction.react()}
         class="w-[40px] reaction group flex flex-row space-x-1 py-1 px-1.5 hover:bg-white/20 text-white hover:cursor-pointer rounded-full"
         data-testid={`${key}_reactionButton`}
     >
         <div class="group-hover:scale-[2] group-hover:rotate-3 transition-all text-xs p-0 m-0 hover:cursor-pointer">
-            {key}
+            <svelte:component this={component.component} {...component.props} />
         </div>
         <div class="text-xs p-0 m-0 hover:cursor-pointer text-white" class:font-extrabold={$reacted}>
             {$users.size}

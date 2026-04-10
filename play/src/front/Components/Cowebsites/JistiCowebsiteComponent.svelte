@@ -3,13 +3,8 @@
     import { get } from "svelte/store";
     import CancelablePromise from "cancelable-promise";
     import Debug from "debug";
-    import {
-        JitsiCoWebsite,
-        JitsiApi,
-        defaultInterfaceConfig,
-        mergeConfig,
-        JitsiOptions,
-    } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
+    import type { JitsiCoWebsite, JitsiApi, JitsiOptions } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
+    import { defaultInterfaceConfig, mergeConfig } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { jitsiExternalApiFactory } from "../../WebRtc/JitsiExternalApiFactory";
     import { screenWakeLock } from "../../Utils/ScreenWakeLock";
     import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";

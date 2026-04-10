@@ -37,6 +37,10 @@ class SoundManager {
     }
 
     public stopSound(soundManager: BaseSoundManager, soundUrl: string) {
+        const sound = soundManager.get(soundUrl);
+        if (sound === null) {
+            return;
+        }
         soundManager.get(soundUrl).stop();
     }
 }

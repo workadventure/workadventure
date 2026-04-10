@@ -7,6 +7,12 @@ const notification: DeepPartial<Translation["notification"]> = {
     chatRoom: "nella chat room",
     askToMuteMicrophone: "Chiedi di disattivare il microfono 🙏",
     askToMuteCamera: "Chiedi di disattivare la fotocamera 🙏",
+    microphoneMuted: "Il tuo microfono è stato disattivato da un moderatore",
+    cameraMuted: "La tua fotocamera è stata disattivata da un moderatore",
+    notificationSentToMuteMicrophone: "È stata inviata una notifica a {name} per disattivare il microfono",
+    notificationSentToMuteCamera: "È stata inviata una notifica a {name} per disattivare la fotocamera",
+    announcement: "Annuncio",
+    open: "Apri",
     help: {
         title: "Accesso alle notifiche negato",
         permissionDenied: "Permesso negato",
@@ -22,6 +28,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         },
     },
     addNewTag: "aggiungi un nuovo tag: '{tag}'",
+    screenSharingError: "Impossibile avviare la condivisione dello schermo",
+    recordingStarted: "Una persona nella discussione ha avviato una registrazione.",
+    urlCopiedToClipboard: "URL copiato negli appunti",
 };
 
 export default notification;

@@ -1,4 +1,4 @@
-import { CompanionTextureCollection } from "@workadventure/messages";
+import type { CompanionTextureCollection } from "@workadventure/messages";
 import { Loader } from "../Components/Loader";
 import { gameManager } from "../Game/GameManager";
 import { localUserStore } from "../../Connection/LocalUserStore";
@@ -9,10 +9,10 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { companionListMetakey, CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager";
-import { CompanionTextureDescriptionInterface, CompanionTextures } from "../Companion/CompanionTextures";
+import type { CompanionTextureDescriptionInterface } from "../Companion/CompanionTextures";
+import { CompanionTextures } from "../Companion/CompanionTextures";
 import { collectionsSizeStore, selectedCollection } from "../../Stores/SelectCharacterSceneStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
-import { EnableCameraSceneName } from "./EnableCameraScene";
 import { ResizableScene } from "./ResizableScene";
 
 // Event listeners are valid for the lifetime of the Phaser scene and will be garbage collected when the object is destroyed
@@ -135,7 +135,7 @@ export class SelectCompanionScene extends ResizableScene {
         // next scene
         this.scene.stop(SelectCompanionSceneName);
         waScaleManager.restoreZoom();
-        gameManager.tryResumingGame(EnableCameraSceneName);
+        gameManager.goToNextScene(SelectCompanionSceneName);
         this.scene.remove(SelectCompanionSceneName);
         selectCompanionSceneVisibleStore.set(false);
     }

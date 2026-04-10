@@ -1,27 +1,31 @@
 import { applyFieldMask } from "protobuf-fieldmask";
-import { isEqual, merge } from "lodash";
+import { deepmergeInto } from "deepmerge-ts";
 import * as Sentry from "@sentry/node";
-import {
-    AddSpaceUserMessage,
+import type {
+    BackEventMessage,
     BackToPusherSpaceMessage,
-    FilterType,
     PrivateEvent,
     PublicEvent,
-    RemoveSpaceUserMessage,
     SpaceAnswerMessage,
     SpaceQueryMessage,
     SpaceUser,
+} from "@workadventure/messages";
+import {
+    AddSpaceUserMessage,
+    FilterType,
+    RemoveSpaceUserMessage,
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
 import Debug from "debug";
 import { asError } from "catch-unknown";
 import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
-import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
-import { SpacesWatcher } from "./SpacesWatcher";
-import { EventProcessor } from "./EventProcessor";
+import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
+import type { SpacesWatcher } from "./SpacesWatcher";
+import type { EventProcessor } from "./EventProcessor";
 import { CommunicationManager } from "./CommunicationManager";
-import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
-import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
+import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
+import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
+import { metadataProcessor } from "./MetadataProcessorInit";
 
 const debug = Debug("space");
 
@@ -57,7 +61,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         debug(`${name} => created`);
     }
 
-    public addUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
+    public addUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser): void {
         try {
             const usersList = this.usersList(sourceWatcher);
             usersList.set(spaceUser.spaceUserId, spaceUser);
@@ -116,7 +120,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             const oldFilter = this.filterOneUser(user);
 
             const updateValues = applyFieldMask(spaceUser, updateMask);
-            merge(user, updateValues);
+            deepmergeInto(user, updateValues);
 
             const newFilter = this.filterOneUser(user);
 
@@ -153,9 +157,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                     `${this.name} : user updated => removed ${user.spaceUserId} updateMask : ${updateMask.join(", ")}`
                 );
 
-                this.communicationManager.handleUserDeleted(user).catch((e) => {
-                    Sentry.captureException(e);
-                    console.error(e);
+                this.communicationManager.handleUserDeleted(user, false).catch((error) => {
+                    console.error("Error while deleting user", error);
+                    Sentry.captureException(error);
                 });
 
                 this.notifyWatchers({
@@ -199,19 +203,19 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         }
     }
 
-    public removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string) {
+    public removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string): void {
         let user: SpaceUser | undefined;
         try {
             const usersList = this.usersList(sourceWatcher);
             user = usersList.get(spaceUserId);
 
-            const usersToNotifyList = this.usersListToNotify(sourceWatcher);
-            usersToNotifyList.delete(spaceUserId);
-
             if (!user) {
                 console.error("User not found in this space", spaceUserId);
                 return;
             }
+
+            const usersToNotifyList = this.usersListToNotify(sourceWatcher);
+            usersToNotifyList.delete(spaceUserId);
 
             usersList.delete(spaceUserId);
 
@@ -226,22 +230,15 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             }
             this._spaceUpdatedSubject.next(this);
             debug(`${this.name} : user => removed ${spaceUserId}`);
-
-            /*if (usersList.size === 0) {
-                debug(`${this.name} : users list => deleted ${sourceWatcher.id}`);
-                this.users.delete(sourceWatcher);
-            }*/
-
-            // this.communicationManager.handleUserDeleted(user);
         } catch (e) {
             console.error("Error while removing user", e);
             Sentry.captureException(e);
             debug("Error while removing user", e);
         } finally {
             if (user && this.filterOneUser(user)) {
-                this.communicationManager.handleUserDeleted(user).catch((e) => {
-                    Sentry.captureException(e);
-                    console.error(e);
+                this.communicationManager.handleUserDeleted(user, false).catch((error) => {
+                    console.error("Error while deleting user", error);
+                    Sentry.captureException(error);
                 });
 
                 this.notifyWatchers({
@@ -257,9 +254,28 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         }
     }
 
-    public updateMetadata(watcher: SpacesWatcher, metadata: { [key: string]: unknown }) {
+    public async updateMetadata(metadata: { [key: string]: unknown }, senderId: string) {
+        const processedMetadata: { [key: string]: unknown } = {};
+        const promises: Promise<void>[] = [];
+
         for (const key in metadata) {
-            this.metadata.set(key, metadata[key]);
+            promises.push(
+                metadataProcessor.processMetadata(key, metadata[key], senderId, this).then((processedValue) => {
+                    if (processedValue !== undefined) {
+                        processedMetadata[key] = processedValue;
+                    }
+                })
+            );
+        }
+
+        await Promise.allSettled(promises);
+
+        if (Object.keys(processedMetadata).length === 0) {
+            return;
+        }
+
+        for (const [key, value] of Object.entries(processedMetadata)) {
+            this.metadata.set(key, value);
         }
 
         this.notifyWatchers({
@@ -267,10 +283,11 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 $case: "updateSpaceMetadataMessage",
                 updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
                     spaceName: this.name,
-                    metadata: JSON.stringify(metadata),
+                    metadata: JSON.stringify(processedMetadata),
                 }),
             },
         });
+
         debug(`${this.name} : metadata => updated`);
     }
 
@@ -280,7 +297,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 return true;
             }
             case FilterType.LIVE_STREAMING_USERS: {
-                return /*(user.screenSharingState || user.microphoneState || user.cameraState) &&*/ user.megaphoneState;
+                return user.megaphoneState;
+            }
+            case FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK: {
+                return user.megaphoneState || user.attendeesState;
             }
             default: {
                 const _exhaustiveCheck: never = this._filterType;
@@ -300,16 +320,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             allSpaceUsers.push(...filteredSpaceUsers);
         }
 
-        watcher.write({
-            message: {
-                $case: "initSpaceUsersMessage",
-                initSpaceUsersMessage: {
-                    spaceName: this.name,
-                    users: allSpaceUsers,
-                },
-            },
-        });
-
         const metadata: { [key: string]: unknown } = {};
 
         for (const key of this.metadata.keys()) {
@@ -318,20 +328,29 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
         watcher.write({
             message: {
-                $case: "updateSpaceMetadataMessage",
-                updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
+                $case: "initSpaceUsersMessage",
+                initSpaceUsersMessage: {
                     spaceName: this.name,
+                    users: allSpaceUsers,
                     metadata: JSON.stringify(metadata),
-                }),
+                },
             },
         });
     }
 
     public removeWatcher(watcher: SpacesWatcher) {
         const spaceUsers = this.users.get(watcher);
+        if (spaceUsers) {
+            for (const spaceUser of spaceUsers.values()) {
+                this.communicationManager.handleUserDeleted(spaceUser, true).catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
+            }
+        }
         this.users.delete(watcher);
-        const spaceUsersToNotify = this.usersToNotify.get(watcher);
 
+        const spaceUsersToNotify = this.usersToNotify.get(watcher);
         if (spaceUsersToNotify) {
             for (const spaceUser of spaceUsersToNotify.values()) {
                 this.communicationManager.handleUserToNotifyDeleted(spaceUser).catch((e) => {
@@ -343,22 +362,20 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         this.usersToNotify.delete(watcher);
         // In case was not empty when it was removed, we need to notify the other watchers
         for (const spaceUser of spaceUsers?.values() || []) {
-            if (!this.filterOneUser(spaceUser)) {
-                continue;
+            if (this.filterOneUser(spaceUser)) {
+                debug(
+                    `${this.name} => removing space user ${spaceUser.spaceUserId} from watcher ${watcher.id} before removing watcher`
+                );
+                this.notifyWatchers({
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                            spaceName: this.name,
+                            spaceUserId: spaceUser.spaceUserId,
+                        }),
+                    },
+                });
             }
-
-            debug(
-                `${this.name} => removing space user ${spaceUser.spaceUserId} from watcher ${watcher.id} before removing watcher`
-            );
-            this.notifyWatchers({
-                message: {
-                    $case: "removeSpaceUserMessage",
-                    removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                        spaceName: this.name,
-                        spaceUserId: spaceUser.spaceUserId,
-                    }),
-                },
-            });
         }
 
         debug(`${this.name} => watcher removed ${watcher.id}`);
@@ -428,7 +445,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         return undefined;
     }
 
-    public dispatchPublicEvent(publicEvent: PublicEvent) {
+    public async dispatchPublicEvent(publicEvent: PublicEvent) {
         if (!publicEvent.spaceEvent?.event) {
             // If there is no event, just forward the public event as-is
             this.notifyWatchers({
@@ -441,10 +458,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         }
 
         // Process the event
-        const processedEvent = this.eventProcessor.processPublicEvent(
+        const processedEvent = await this.eventProcessor.processPublicEvent(
             publicEvent.spaceEvent.event,
             publicEvent.senderUserId,
-            this.getAllUsers()
+            this
         );
 
         // Create new public event with processed event
@@ -454,7 +471,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 event: processedEvent,
             },
         };
-
         this.notifyWatchers({
             message: {
                 $case: "publicEvent",
@@ -462,6 +478,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             },
         });
     }
+
     public dispatchPrivateEvent(privateEvent: PrivateEvent) {
         const sender = this.getAllUsers().find((user) => user.spaceUserId === privateEvent.senderUserId);
         if (!sender) {
@@ -521,6 +538,26 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                         },
                     },
                 });
+            }
+        }
+    }
+
+    public handleBackEvent(backEvent: BackEventMessage) {
+        const event = backEvent.backEvent?.event;
+        if (!event) {
+            throw new Error("Back event has no event");
+        }
+
+        switch (event.$case) {
+            case "meetingConnectionRestartMessage": {
+                this.communicationManager.handleMeetingConnectionRestartMessage(
+                    event.meetingConnectionRestartMessage,
+                    backEvent.senderUserId
+                );
+                break;
+            }
+            default: {
+                const _exhaustiveCheck: never = event as never;
             }
         }
     }
@@ -620,6 +657,12 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         return Array.from(this.usersToNotify.values()).flatMap((users) => Array.from(users.values()));
     }
 
+    public getUser(spaceUserId: string): SpaceUser | undefined {
+        return Array.from(this.users.values())
+            .flatMap((users: Map<string, SpaceUser>) => Array.from(users.values()))
+            .find((user: SpaceUser) => user.spaceUserId === spaceUserId);
+    }
+
     public getSpaceName(): string {
         return this.name;
     }
@@ -627,348 +670,21 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         return this._propertiesToSync;
     }
 
-    /**
-     * Synchronizes the provided user list with the local user list and returns diff events
-     * This is useful for resynchronization after network issues or throttling
-     *
-     * @param watcher The watcher requesting the sync
-     * @param providedUsers The user list from the client
-     * @returns Array of events representing the differences
-     */
-    public syncAndDiff(watcher: SpacesWatcher, providedUsers: SpaceUser[]): BackToPusherSpaceMessage[] {
-        const events: BackToPusherSpaceMessage[] = [];
-        const localUsers = this.usersList(watcher);
-
-        // Convert provided users to a Map for easier comparison
-        const providedUsersMap = new Map(providedUsers.map((user) => [user.spaceUserId, user]));
-
-        debug(
-            `${this.name} : syncAndDiff => comparing ${providedUsers.length} provided users with ${localUsers.size} local users`
-        );
-
-        // 1. Check for users that exist locally but not in provided list (client missing users)
-        for (const [localUserId, localUser] of localUsers.entries()) {
-            if (!providedUsersMap.has(localUserId)) {
-                // User exists locally but client doesn't have it -> ADD event
-                if (this.filterOneUser(localUser)) {
-                    events.push({
-                        message: {
-                            $case: "addSpaceUserMessage",
-                            addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
-                                spaceName: this.name,
-                                user: localUser,
-                            }),
-                        },
-                    });
-                    debug(`${this.name} : syncAndDiff => client missing user ${localUserId}, sending ADD`);
-                }
-            }
-        }
-
-        // 2. Check for users in provided list
-        for (const [providedUserId, providedUser] of providedUsersMap.entries()) {
-            const localUser = localUsers.get(providedUserId);
-
-            if (!localUser) {
-                // User exists in client but not locally -> REMOVE event
-                if (this.filterOneUser(providedUser)) {
-                    events.push({
-                        message: {
-                            $case: "removeSpaceUserMessage",
-                            removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                                spaceName: this.name,
-                                spaceUserId: providedUserId,
-                            }),
-                        },
-                    });
-                    debug(`${this.name} : syncAndDiff => client has extra user ${providedUserId}, sending REMOVE`);
-                }
-            } else {
-                // User exists in both, check for differences
-                const differences = this.getUserDifferences(localUser, providedUser);
-
-                if (differences.length > 0) {
-                    const oldFilter = this.filterOneUser(providedUser);
-                    const newFilter = this.filterOneUser(localUser);
-
-                    if (!oldFilter && newFilter) {
-                        // User now passes filter -> ADD event
-                        events.push({
-                            message: {
-                                $case: "addSpaceUserMessage",
-                                addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
-                                    spaceName: this.name,
-                                    user: localUser,
-                                }),
-                            },
-                        });
-                        debug(`${this.name} : syncAndDiff => user ${providedUserId} now visible, sending ADD`);
-                    } else if (oldFilter && !newFilter) {
-                        // User no longer passes filter -> REMOVE event
-                        events.push({
-                            message: {
-                                $case: "removeSpaceUserMessage",
-                                removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                                    spaceName: this.name,
-                                    spaceUserId: providedUserId,
-                                }),
-                            },
-                        });
-                        debug(`${this.name} : syncAndDiff => user ${providedUserId} no longer visible, sending REMOVE`);
-                    } else if (oldFilter && newFilter) {
-                        // User still passes filter but has changes -> UPDATE event
-                        events.push({
-                            message: {
-                                $case: "updateSpaceUserMessage",
-                                updateSpaceUserMessage: {
-                                    spaceName: this.name,
-                                    user: localUser,
-                                    updateMask: differences,
-                                },
-                            },
-                        });
-                        debug(
-                            `${
-                                this.name
-                            } : syncAndDiff => user ${providedUserId} updated, sending UPDATE with mask: ${differences.join(
-                                ", "
-                            )}`
-                        );
-                    }
-                }
-            }
-        }
-
-        debug(`${this.name} : syncAndDiff => generated ${events.length} diff events`);
-        return events;
-    }
-
-    /**
-     * Synchronizes the provided user list with the local user list and returns diff events as PrivateEvents
-     * This is useful for resynchronization after network issues or throttling
-     *
-     * @param watcher The watcher requesting the sync
-     * @param providedUsers The user list from the client
-     * @param senderUserId The user requesting the synchronization
-     * @returns Array of PrivateEvents representing the differences
-     */
-    public syncAndDiffAsPrivateEvents(
-        watcher: SpacesWatcher,
-        providedUsers: SpaceUser[],
-        senderUserId: string
-    ): BackToPusherSpaceMessage[] {
-        const backEvents: BackToPusherSpaceMessage[] = [];
-        const localUsers = this.usersList(watcher);
-
-        const providedUsersMap = new Map(providedUsers.map((user) => [user.spaceUserId, user]));
-        const sender = this.getAllUsers().find((user) => user.spaceUserId === senderUserId);
-        if (!sender) {
-            throw new Error(`Sender ${senderUserId} not found in space ${this.name}`);
-        }
-
-        debug(
-            `${this.name} : syncAndDiffAsPrivateEvents => comparing ${providedUsers.length} provided users with ${localUsers.size} local users`
-        );
-
-        for (const [localUserId, localUser] of localUsers.entries()) {
-            // Skip the sender user - they don't need to be synced to themselves
-            if (localUserId === senderUserId) {
-                continue;
-            }
-
-            if (!providedUsersMap.has(localUserId)) {
-                if (this.filterOneUser(localUser)) {
-                    backEvents.push({
-                        message: {
-                            $case: "privateEvent",
-                            privateEvent: {
-                                spaceName: this.name,
-                                receiverUserId: senderUserId,
-                                sender,
-                                spaceEvent: {
-                                    event: {
-                                        $case: "addSpaceUserMessage",
-                                        addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
-                                            spaceName: this.name,
-                                            user: localUser,
-                                        }),
-                                    },
-                                },
-                            },
-                        },
-                    });
-                    debug(
-                        `${this.name} : syncAndDiffAsPrivateEvents => client missing user ${localUserId}, sending ADD as PrivateEvent`
-                    );
-                }
-            }
-        }
-
-        for (const [providedUserId, providedUser] of providedUsersMap.entries()) {
-            // Skip the sender user - they don't need to be synced to themselves
-            if (providedUserId === senderUserId) {
-                continue;
-            }
-
-            const localUser = localUsers.get(providedUserId);
-
-            if (!localUser) {
-                if (this.filterOneUser(providedUser)) {
-                    backEvents.push({
-                        message: {
-                            $case: "privateEvent",
-                            privateEvent: {
-                                spaceName: this.name,
-                                receiverUserId: senderUserId,
-                                sender,
-                                spaceEvent: {
-                                    event: {
-                                        $case: "removeSpaceUserMessage",
-                                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                                            spaceName: this.name,
-                                            spaceUserId: providedUserId,
-                                        }),
-                                    },
-                                },
-                            },
-                        },
-                    });
-                    debug(
-                        `${this.name} : syncAndDiffAsPrivateEvents => client has extra user ${providedUserId}, sending REMOVE as PrivateEvent`
-                    );
-                }
-            } else {
-                const differences = this.getUserDifferences(localUser, providedUser);
-
-                if (differences.length > 0) {
-                    const oldFilter = this.filterOneUser(providedUser);
-                    const newFilter = this.filterOneUser(localUser);
-
-                    if (!oldFilter && newFilter) {
-                        backEvents.push(
-                            this.createPrivateEvent(sender, {
-                                event: {
-                                    $case: "addSpaceUserMessage",
-                                    addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
-                                        spaceName: this.name,
-                                        user: localUser,
-                                    }),
-                                },
-                            })
-                        );
-                        debug(
-                            `${this.name} : syncAndDiffAsPrivateEvents => user ${providedUserId} now visible, sending ADD as PrivateEvent`
-                        );
-                    } else if (oldFilter && !newFilter) {
-                        backEvents.push(
-                            this.createPrivateEvent(sender, {
-                                event: {
-                                    $case: "removeSpaceUserMessage",
-                                    removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                                        spaceName: this.name,
-                                        spaceUserId: providedUserId,
-                                    }),
-                                },
-                            })
-                        );
-                        debug(
-                            `${this.name} : syncAndDiffAsPrivateEvents => user ${providedUserId} no longer visible, sending REMOVE as PrivateEvent`
-                        );
-                    } else if (oldFilter && newFilter) {
-                        backEvents.push(
-                            this.createPrivateEvent(sender, {
-                                event: {
-                                    $case: "updateSpaceUserMessage",
-                                    updateSpaceUserMessage: {
-                                        spaceName: this.name,
-                                        user: localUser,
-                                        updateMask: differences,
-                                    },
-                                },
-                            })
-                        );
-                        debug(
-                            `${
-                                this.name
-                            } : syncAndDiffAsPrivateEvents => user ${providedUserId} updated, sending UPDATE as PrivateEvent with mask: ${differences.join(
-                                ", "
-                            )}`
-                        );
-                    }
-                }
-            }
-        }
-
-        debug(`${this.name} : syncAndDiffAsPrivateEvents => generated ${backEvents.length} PrivateEvent messages`);
-        return backEvents;
-    }
-
-    /**
-     * Configuration of SpaceUser fields for comparison
-     */
-    private static readonly USER_COMPARISON_FIELDS = [
-        "spaceUserId",
-        "name",
-        "microphoneState",
-        "cameraState",
-        "screenSharingState",
-        "megaphoneState",
-        "chatID",
-        "availabilityStatus",
-        "visitCardUrl",
-        "characterTextures",
-    ] as const;
-
-    private getUserDifferences(localUser: SpaceUser, providedUser: SpaceUser): string[] {
-        const differences: string[] = [];
-
-        for (const field of Space.USER_COMPARISON_FIELDS) {
-            if (!isEqual(localUser[field], providedUser[field])) {
-                differences.push(field);
-            }
-        }
-
-        return differences;
-    }
-
-    public sendDiffEvents(watcher: SpacesWatcher, events: BackToPusherSpaceMessage[]): void {
-        events.forEach((event) => {
-            watcher.write(event);
-        });
-
-        debug(`${this.name} : sendDiffEvents => sent ${events.length} events to watcher ${watcher.id}`);
-    }
-
-    public syncUsersAndNotify(watcher: SpacesWatcher, providedUsers: SpaceUser[], senderUserId: string) {
-        const diffEvents = this.syncAndDiffAsPrivateEvents(watcher, providedUsers, senderUserId);
-        this.sendDiffEvents(watcher, diffEvents);
-        debug(
-            `${this.name} : syncUsersAndNotify => processed sync for watcher ${watcher.id}, sent ${diffEvents.length} PrivateEvents`
-        );
-    }
-
-    private createPrivateEvent(sender: SpaceUser, spaceEvent: PrivateEvent["spaceEvent"]): BackToPusherSpaceMessage {
-        return {
-            message: {
-                $case: "privateEvent",
-                privateEvent: {
-                    spaceName: this.name,
-                    receiverUserId: sender.spaceUserId,
-                    sender,
-                    spaceEvent,
-                },
-            },
-        };
-    }
-
     private isPublishing(spaceUser: SpaceUser): boolean {
-        return (
-            (this.filterType === FilterType.ALL_USERS &&
-                (spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState)) ||
-            (this.filterType === FilterType.LIVE_STREAMING_USERS &&
+        if (this.filterType === FilterType.ALL_USERS) {
+            return spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState;
+        }
+        if (this.filterType === FilterType.LIVE_STREAMING_USERS) {
+            return (
                 spaceUser.megaphoneState &&
-                (spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState))
-        );
+                (spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState)
+            );
+        }
+        if (this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            // Speakers (megaphoneState) are publishing
+            return spaceUser.cameraState || spaceUser.microphoneState || spaceUser.megaphoneState;
+        }
+        return false;
     }
 
     get nbWatchers(): number {
@@ -979,5 +695,21 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
     get nbPublishers(): number {
         return this._nbPublishers;
+    }
+
+    public async startRecording(user: SpaceUser) {
+        try {
+            await this.communicationManager.handleStartRecording(user);
+        } catch (error) {
+            Sentry.captureException(error);
+            throw error; // Re-throw the error to be handled by the caller
+        }
+    }
+    public async stopRecording(user: SpaceUser) {
+        await this.communicationManager.handleStopRecording(user);
+    }
+    public destroy() {
+        this.communicationManager.destroy();
+        debug(`${this.name} => destroyed`);
     }
 }

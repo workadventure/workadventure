@@ -7,8 +7,11 @@
     import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
     import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
+    import { pwaInstallSceneVisibleStore } from "../Stores/PwaInstallStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
+    import { mapDeletedPromptStore } from "../Stores/MapDeletedPromptStore";
+    import { duplicateUserConnectedStore } from "../Stores/DuplicateUserConnectedStore";
     import { forceRefreshChatStore } from "../Stores/ChatStore";
     import { loaderVisibleStore } from "../Stores/LoaderStore";
     import { showModalGlobalComminucationVisibilityStore } from "../Stores/ModalStore";
@@ -21,8 +24,10 @@
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import ErrorScreen from "./UI/ErrorScreen.svelte";
+    import DuplicateUserConnectedModal from "./UI/DuplicateUserConnectedModal.svelte";
     import MapEditor from "./MapEditor/MapEditor.svelte";
     import RefreshPrompt from "./RefreshPrompt.svelte";
+    import MapDeletedPrompt from "./MapDeletedPrompt.svelte";
     import LoaderScene from "./Loader/LoaderScene.svelte";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import bgMap from "./images/map-exemple.png";
@@ -34,6 +39,8 @@
     import MainModal from "./Modal/MainModal.svelte";
     import DroppingFileScene from "./DroppingFile/DroppingFileScene.svelte";
     import WokaScene from "./Woka/WokaScene.svelte";
+    import Onboarding from "./Onboarding/Onboarding.svelte";
+    import PwaInstallScreen from "./PwaInstall/PwaInstallScreen.svelte";
 
     export let game: Game;
 
@@ -58,6 +65,9 @@
         <DroppingFileScene />
     </div>
 {/if}
+{#if $duplicateUserConnectedStore}
+    <DuplicateUserConnectedModal />
+{/if}
 {#if $errorScreenStore !== undefined}
     <div class="bg-contrast">
         <ErrorScreen />
@@ -67,21 +77,27 @@
         <ErrorDialog />
     </div>
 {:else if $loginSceneVisibleStore}
-    <div class="h-dvh overflow-y-auto">
+    <div class="absolute h-dvh w-dvw overflow-y-auto">
         <LoginScene {game} />
     </div>
 {:else if $selectCharacterSceneVisibleStore}
-    <div class="absolute h-dvh">
+    <div class="absolute h-dvh w-dvw overflow-y-auto">
         <WokaScene />
     </div>
 {:else if $selectCompanionSceneVisibleStore}
-    <div>
+    <div class="absolute h-dvh w-dvw overflow-y-auto">
         <SelectCompanionScene {game} />
     </div>
 {:else if $enableCameraSceneVisibilityStore}
-    <div class="h-dvh overflow-y-auto">
+    <div class="absolute h-dvh w-dvw overflow-y-auto">
         <EnableCameraScene {game} />
     </div>
+{:else if $pwaInstallSceneVisibleStore}
+    <div class="absolute h-dvh w-dvw overflow-y-auto">
+        <PwaInstallScreen />
+    </div>
+{:else if $mapDeletedPromptStore}
+    <MapDeletedPrompt />
 {:else if $gameSceneIsLoadedStore && !$loaderVisibleStore}
     {#if $refreshPromptStore}
         <RefreshPrompt />
@@ -94,6 +110,8 @@
         {#if $showModalGlobalComminucationVisibilityStore}
             <GlobalCommunicationModal />
         {/if}
+
+        <Onboarding />
 
         <MainLayout />
     {/key}

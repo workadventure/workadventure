@@ -1,22 +1,67 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
+    import { onDestroy } from "svelte";
+    import { get } from "svelte/store";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import type { GameScene } from "../../Phaser/Game/GameScene";
+    import { gameSceneStore } from "../../Stores/GameSceneStore";
+    import {
+        getInviteEntryPoint,
+        invitePreferencesStore,
+        setInviteEntryPoint,
+    } from "../../Stores/InvitePreferencesStore";
     import InputSwitch from "../Input/InputSwitch.svelte";
-    import LocationIcon from "../Icons/LocationIcon.svelte";
-    import CheckIcon from "../Icons/CheckIcon.svelte";
     import Select from "../Input/Select.svelte";
-    import ShareIcon from "../Icons/ShareIcon.svelte";
+    import { IconCheck, IconShare } from "@wa-icons";
 
-    let walkAutomatically = false;
-    let showZoneSelect = false;
+    const TIMEOUT_COPY_LINK_BUTTON = 5000;
+
+    const initialPrefs = get(invitePreferencesStore);
+
+    let walkAutomatically = initialPrefs.walkAutomatically;
+    let showZoneSelect = initialPrefs.showZoneSelect;
+    let entryPoint = "";
     let linkCopied = false;
-    const gameScene = gameManager.getCurrentGameScene();
-    const currentPlayer = gameScene.CurrentPlayer;
-    const playerPos = { x: Math.floor(currentPlayer.x), y: Math.floor(currentPlayer.y) };
-    const startPositions = gameScene.getStartPositionNames();
-    let entryPoint: string = startPositions[0];
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+
+    function getGameScene(): GameScene | null {
+        try {
+            return gameManager.getCurrentGameScene();
+        } catch {
+            return null;
+        }
+    }
+
+    $: gameScene = $gameSceneStore ?? getGameScene();
+    $: startPositions = gameScene ? gameScene.getStartPositionNames() : [];
+    $: playerPos = gameScene
+        ? { x: Math.floor(gameScene.CurrentPlayer.x), y: Math.floor(gameScene.CurrentPlayer.y) }
+        : { x: 0, y: 0 };
+
+    $: validEntryPointFromStore =
+        startPositions.length > 0
+            ? (() => {
+                  const saved = getInviteEntryPoint();
+                  return saved && startPositions.includes(saved) ? saved : startPositions[0] ?? "";
+              })()
+            : "";
+
+    $: if (startPositions.length > 0 && (entryPoint === "" || !startPositions.includes(entryPoint))) {
+        entryPoint = validEntryPointFromStore;
+    }
+
+    function syncEntryPointToStore(value: string) {
+        setInviteEntryPoint(value);
+    }
+
+    function syncWalkAutomaticallyToStore(value: boolean) {
+        invitePreferencesStore.update((p) => ({ ...p, walkAutomatically: value }));
+    }
+
+    function syncShowZoneSelectToStore(value: boolean) {
+        invitePreferencesStore.update((p) => ({ ...p, showZoneSelect: value }));
+    }
 
     function copyLink() {
         // Analytics Client
@@ -62,82 +107,92 @@
             copyLink();
         }
     }
+
+    function changeCopyLinkButtonStatus() {
+        linkCopied = true;
+
+        if (timeout) clearTimeout(timeout);
+
+        timeout = setTimeout(() => {
+            linkCopied = false;
+        }, TIMEOUT_COPY_LINK_BUTTON);
+    }
+
+    onDestroy(() => {
+        if (timeout) clearTimeout(timeout);
+    });
 </script>
 
-<section class="is-mobile p-4">
+<section class="is-mobile p-4 bg-contrast/85 backdrop-blur rounded-lg">
     <!-- <h3 class="bg-contrast font-bold text-lg p-4 flex items-center mb-7 m-l">
             {$LL.menu.invite.description()}
         </h3> -->
     <input type="hidden" readonly value={location.toString()} />
     <div class="w-full flex flex-col items-center justify-center gap-2">
         {#if canShare}
-            <div class="py-4 w-full">
+            <div class="py-4 w-full hidden mobile:block">
                 <div class="pb-4 text-lg font-semibold">
                     {$LL.menu.invite.description()}
                 </div>
                 <button type="button" class="btn btn-secondary w-full" on:click={shareLink}>
-                    <ShareIcon strokeWidth="stroke-[1.5]" height="h-5" width="w-5" classList="me-2" />
+                    <IconShare font-size="20" stroke={1.5} class="me-2" />
                     <span class="text-lg font-bold">
                         {$LL.menu.invite.share()}
                     </span>
                 </button>
             </div>
-            <div class="flex items-center justify-center flex-row gap-4 w-full mb-4">
-                <div class="w-full h-[1px] bg-white/10" />
-                <div class="font-bold text-sm text-white/50">OR</div>
-                <div class="w-full h-[1px] bg-white/10" />
-            </div>
         {/if}
-        <div class="share-url w-full">
+        <div class="share-url w-full block mobile:hidden">
             <div class="flex items-center relative">
                 <input
                     type="text"
                     readonly
                     id="input-share-link"
-                    class="grow h-12 text border-white bg-contrast rounded-md border border-solid border-white/20"
+                    class="grow h-12 text-sm border-white bg-contrast rounded-md border border-solid border-white/20"
                     value={location.toString()}
                 />
                 <button
                     type="button"
-                    class="flex items-center btn btn-sm absolute right-2 transition-all w-32 text-center justify-center {linkCopied
+                    class="flex items-center btn btn-sm absolute right-2 transition-all text-center justify-center {linkCopied
                         ? 'btn-success'
                         : 'btn-secondary'}"
-                    on:click={() => (linkCopied = !linkCopied)}
+                    on:click={changeCopyLinkButtonStatus}
                     on:click={copyLink}
                 >
                     <span class="flex items-center justify-center {linkCopied ? '' : 'hidden'}">
-                        <CheckIcon height="h-5" width="w-5" />
+                        <IconCheck class="text-white" />
                     </span>
-                    <span hidden={!linkCopied}>{$LL.menu.invite.copied()}</span>
-                    <span hidden={linkCopied}>{$LL.menu.invite.copy()}</span>
+                    <div hidden={!linkCopied}>{$LL.menu.invite.copied()}</div>
+                    <div hidden={linkCopied}>{$LL.menu.invite.copy()}</div>
                 </button>
             </div>
         </div>
     </div>
-</section>
 
-<div transition:fly={{ x: -700, duration: 250 }}>
-    <section class="m-4 mt-7">
-        <label for="showZoneSelect" class="flex cursor-pointer items-center relative my-4">
+    <div>
+        <label for="showZoneSelect" class="flex cursor-pointer items-center relative">
             <InputSwitch
                 id="showZoneSelect"
                 bind:value={showZoneSelect}
                 onChange={() => {
+                    syncShowZoneSelectToStore(showZoneSelect);
                     updateInputFieldValue();
+                    linkCopied = false;
                 }}
                 label={$LL.menu.invite.selectEntryPoint()}
             />
         </label>
         {#if showZoneSelect}
-            <div class="">
-                <div class="flex items-center justify-start mb-4 gap-2">
-                    <LocationIcon stroke="white" />
+            <div class="flex flex-col gap-2 pt-2">
+                <div class="flex items-center text-sm italic opacity-75 justify-start gap-2">
                     {$LL.menu.invite.selectEntryPointSelect()}
                 </div>
                 <Select
                     bind:value={entryPoint}
                     onChange={() => {
+                        syncEntryPointToStore(entryPoint);
                         updateInputFieldValue();
+                        linkCopied = false;
                     }}
                 >
                     {#each startPositions as entryPointName (entryPointName)}
@@ -146,15 +201,16 @@
                 </Select>
             </div>
         {/if}
-        <label for="walkto" class="flex cursor-pointer items-center relative my-4">
+        <label for="walkto" class="flex cursor-pointer items-center relative">
             <InputSwitch
                 id="walkto"
                 bind:value={walkAutomatically}
                 onChange={() => {
+                    syncWalkAutomaticallyToStore(walkAutomatically);
                     updateInputFieldValue();
                 }}
                 label={$LL.menu.invite.walkAutomaticallyToPosition()}
             />
         </label>
-    </section>
-</div>
+    </div>
+</section>

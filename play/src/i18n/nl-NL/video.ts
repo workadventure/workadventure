@@ -4,6 +4,15 @@ import type { DeepPartial } from "../DeepPartial";
 const video: DeepPartial<Translation["video"]> = {
     connection_issue: "Verbindingsprobleem!",
     no_video_stream_received: "Geen videostream ontvangen.",
+    user_is_muted: "{name} is gedempt.",
+    reduce: "Verminderen",
+    toggle_fullscreen: "Volledig scherm in-/uitschakelen",
+    exit_fullscreen: "Volledig scherm verlaten",
+    connecting: "Verbinden...",
+    reconnecting: "Opnieuw verbinden...",
+    persistent_connection_issue: "Opnieuw verbinden... Onstabiele verbinding...",
+    click_to_unblock: "Klik om te deblokkeren",
+    click_and_drag_to_resize: "Klikken en slepen om te vergroten/verkleinen",
 };
 
 export default video;

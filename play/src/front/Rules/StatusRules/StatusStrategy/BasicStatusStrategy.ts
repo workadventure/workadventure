@@ -1,5 +1,5 @@
 import { AvailabilityStatus } from "@workadventure/messages";
-import { TimedRules } from "../statusRules";
+import type { TimedRules } from "../statusRules";
 import { StatusStrategy } from "./AbstractStatusStrategy";
 
 export class BasicStatusStrategy extends StatusStrategy {
@@ -18,7 +18,6 @@ export class BasicStatusStrategy extends StatusStrategy {
             case AvailabilityStatus.JITSI:
             case AvailabilityStatus.BBB:
             case AvailabilityStatus.SPEAKER:
-            case AvailabilityStatus.LIVEKIT:
                 return false;
             default:
                 return true;

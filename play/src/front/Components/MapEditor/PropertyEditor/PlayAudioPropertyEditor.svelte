@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { PlayAudioPropertyData } from "@workadventure/map-editor";
+    import type { PlayAudioPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import RangeSlider from "../../Input/RangeSlider.svelte";
     import Input from "../../Input/Input.svelte";
@@ -46,9 +46,9 @@
             .catch((error) => {
                 playing = false;
                 if (error instanceof DOMException) {
-                    errorMessage = $LL.mapEditor.properties.audioProperties.error() + ": " + error.message;
+                    errorMessage = $LL.mapEditor.properties.playAudio.error() + ": " + error.message;
                 } else {
-                    errorMessage = $LL.mapEditor.properties.audioProperties.error();
+                    errorMessage = $LL.mapEditor.properties.playAudio.error();
                 }
                 console.error(error);
             });
@@ -81,16 +81,16 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <IconFileMusic font-size="18" class="mr-2" />
-        {$LL.mapEditor.properties.audioProperties.label()}
+        {$LL.mapEditor.properties.playAudio.label()}
     </span>
     <span slot="content">
         <div class="value-input">
             <div class="flex">
                 <Input
                     id="audioLink"
-                    label={$LL.mapEditor.properties.audioProperties.audioLinkLabel()}
+                    label={$LL.mapEditor.properties.playAudio.audioLinkLabel()}
                     type="text"
-                    placeholder={$LL.mapEditor.properties.audioProperties.audioLinkPlaceholder()}
+                    placeholder={$LL.mapEditor.properties.playAudio.audioLinkPlaceholder()}
                     bind:value={property.audioLink}
                     onChange={onValueChange}
                 />
@@ -102,7 +102,7 @@
             </div>
             <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
         </div>
-        <div class="value-input text-danger-500" class:invisible={!errorMessage}>
+        <div class="value-input text-danger-800" class:invisible={!errorMessage}>
             ⚠️ {errorMessage}
         </div>
 
@@ -117,7 +117,7 @@
                 {#if isArea === false}
                     <div class="value-input flex flex-col">
                         <Input
-                            label={$LL.mapEditor.properties.linkProperties.triggerMessage()}
+                            label={$LL.mapEditor.properties.openWebsite.triggerMessage()}
                             id="triggerMessage"
                             type="text"
                             placeholder={$LL.trigger.object()}
@@ -128,7 +128,7 @@
                 {/if}
                 <div class="value-input">
                     <RangeSlider
-                        label={$LL.mapEditor.properties.audioProperties.volumeLabel()}
+                        label={$LL.mapEditor.properties.playAudio.volumeLabel()}
                         unit=""
                         id="volume"
                         min={0}

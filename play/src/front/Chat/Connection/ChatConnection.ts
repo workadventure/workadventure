@@ -1,9 +1,10 @@
-import { Readable, Writable } from "svelte/store";
-import { AvailabilityStatus } from "@workadventure/messages";
-import { MapStore } from "@workadventure/store-utils";
-import { StateEvents } from "matrix-js-sdk";
-import { RoomConnection } from "../../Connection/RoomConnection";
-import { PictureStore } from "../../Stores/PictureStore";
+import type { Readable, Writable } from "svelte/store";
+import type { AvailabilityStatus } from "@workadventure/messages";
+import type { MapStore } from "@workadventure/store-utils";
+import type { StateEvents } from "matrix-js-sdk";
+import type { ComponentType, SvelteComponent } from "svelte";
+import type { RoomConnection } from "../../Connection/RoomConnection";
+import type { PictureStore } from "../../Stores/PictureStore";
 
 export type memberTypingInformation = { id: string; name: string | null; pictureStore: PictureStore };
 export type ChatUser = {
@@ -57,12 +58,14 @@ export interface ChatRoomMember {
     name: Readable<string>;
     membership: Readable<ChatRoomMembership>;
     permissionLevel: Readable<ChatPermissionLevel>;
+    pictureStore?: PictureStore;
 }
 export interface ChatRoom {
     readonly id: string;
     readonly name: Readable<string>;
     readonly type: "direct" | "multiple";
     readonly hasUnreadMessages: Readable<boolean>;
+    readonly unreadNotificationCount: Readable<number>;
     readonly pictureStore: PictureStore;
     readonly messages: Readable<readonly ChatMessage[]>;
     readonly sendMessage: (message: string) => void;
@@ -125,10 +128,11 @@ export interface ChatMessage {
 }
 
 export interface ChatMessageReaction {
-    key: string;
-    users: MapStore<string, ChatUser>;
-    react: () => void;
-    reacted: Readable<boolean>;
+    readonly key: string;
+    readonly users: MapStore<string, ChatUser>;
+    readonly react: () => void;
+    readonly reacted: Readable<boolean>;
+    readonly component: { component: ComponentType<SvelteComponent>; props: Record<string, unknown> };
 }
 
 export type ChatMessageType = "proximity" | "text" | "incoming" | "outcoming" | "image" | "file" | "audio" | "video";
@@ -138,6 +142,9 @@ export type ChatMessageContent = {
      */
     body: string;
     url: string | undefined;
+    thumbnailUrl?: string;
+    mediaState?: "ready" | "loading" | "error";
+    mediaErrorKind?: "download" | "decrypt";
 };
 export const historyVisibilityOptions = ["joined", "invited", "world_readable"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];
@@ -204,6 +211,9 @@ export interface ChatConnectionInterface {
     getRoomByID(roomId: string): ChatRoom;
     retrySendingEvents: () => Promise<void>;
     shouldRetrySendingEvents: Readable<boolean>;
+    nbUnreadRoomsMessages: Readable<number>;
+    nbUnreadDirectRoomsMessages: Readable<number>;
+    nbUnreadInvitationsMessages: Readable<number>;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

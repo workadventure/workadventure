@@ -4,6 +4,9 @@ import type { Translation } from "../i18n-types";
 const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     map: {
         refreshPrompt: "Nuova versione della mappa rilevata. È necessario aggiornare",
+        deletePrompt: "Questa mappa è stata eliminata",
+        deletePromptSubtitle: "Sei stato disconnesso da questa stanza.",
+        deletePromptDetails: "L'aggiornamento non ripristinerà questa mappa perché non esiste più.",
     },
     sideBar: {
         areaEditor: "Strumento di modifica dell'area",
@@ -22,21 +25,32 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         configureMyRoomActivated: "Configura la mia stanza attivata",
     },
     properties: {
-        silentProperty: {
+        noProperties: "No properties defined",
+        silent: {
             label: "Silenzioso",
             description: "Non consentire conversazioni all'interno.",
+            actionButtonLabel: "Non disturbare",
         },
-        textProperties: {
+        text: {
             label: "Testo Intestazione",
             placeholder: "Inserisci qui il testo che verrà visualizzato quando interagisci con l'oggetto",
         },
-        focusableProperties: {
+        focusable: {
             label: "Focalizzabile",
             description: "Metti a fuoco la telecamera su quest'area all'ingresso.",
             zoomMarginLabel: "Margine Zoom",
             defaultButtonLabel: "Metti a fuoco",
         },
-        jitsiProperties: {
+        highlight: {
+            label: "Evidenzia",
+            description: "Aggiungi un effetto di evidenziazione quando entriamo nell'area.",
+            opacityLabel: "Opacità",
+            gradientWidthLabel: "Larghezza gradiente",
+            colorLabel: "Colore",
+            durationLabel: "Durata transizione (ms)",
+        },
+        jitsiRoomProperty: {
+            disabled: "Jitsi integration is disabled for this room ❌",
             label: "Stanza Jitsi",
             description: "Avvia una riunione Jitsi all'ingresso.",
             roomNameLabel: "Nome Stanza",
@@ -58,12 +72,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 addConfig: "Aggiungi un'opzione",
                 startWithAudioMuted: "Avvia con microfono disattivato",
                 startWithVideoMuted: "Avvia con video disattivato",
+                disableChat: "Disabilita chat",
                 jitsiRoomAdminTag: "Tag moderatore per la stanza della riunione",
                 cancel: "Annulla",
                 validate: "Convalida",
             },
+            actionButtonLabel: "Avvia riunione Jitsi",
         },
-        audioProperties: {
+        playAudio: {
             label: "Riproduci File Audio",
             description: "Riproduci audio con volume regolabile.",
             volumeLabel: "Volume",
@@ -71,8 +87,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "Riproduci musica",
             error: "Impossibile caricare il suono",
+            actionButtonLabel: "Riproduci musica",
         },
-        linkProperties: {
+        openWebsite: {
+            hideUrlLabel: "Hide URL",
             label: "Apri Link",
             description: "Apri sito web all'interno di WorkAdventure o come nuova scheda.",
             linkLabel: "URL Link",
@@ -97,17 +115,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             openPickerSelector: "Apri selettore",
             forcedInNewTab: "Forzato in una nuova scheda",
             openApplication: "Apri applicazione",
+            actionButtonLabel: "Apri link",
         },
         advancedOptions: "Opzioni Avanzate",
-        speakerMegaphoneProperties: {
+        speakerMegaphone: {
             label: "Podio",
             description:
                 'Gli utenti sul podio (palco) possono parlare a tutti i partecipanti nell\'area "Pubblico" corrispondente.',
             nameLabel: "Nome",
             namePlaceholder: "PalcoPrincipale",
             disabled: "Il podio è disabilitato per questa stanza ❌",
+            actionButtonLabel: "Unisciti al podio",
         },
-        listenerMegaphoneProperties: {
+        listenerMegaphone: {
             label: "Pubblico",
             description: "Gli utenti nell'area del pubblico possono sentire l'oratore sul podio collegato.",
             nameLabel: "Nome del Podio",
@@ -119,68 +139,81 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Sembra che ci sia un problema con il link che hai fornito. Potresti ricontrollarlo, per favore? 🙏",
             waitingMedialLinkHelp: "Il link corretto dovrebbe essere 'https://monlienmedia.com/…'.",
             waitingSpeaker: "In attesa dell'oratore 🎤✨",
+            actionButtonLabel: "Unisciti al pubblico",
         },
         chatEnabled: "Associa un canale di chat dedicato",
-        startProperties: {
+        seeAttendees: "Vedi partecipanti",
+        start: {
             label: "Area di Partenza",
             description: "Dove le persone possono iniziare nella mappa.",
             nameLabel: "Nome di Partenza",
             namePlaceholder: "Entra1",
             type: "Tipo di posizione di partenza",
             defaultMenuItem: "Usa per impostazione predefinita",
-            hashMenuItem: "Usa se l'URL contiene #[nome area]",
+            hashMenuItem: "Usa se l'URL contiene #[nome-area]",
+            infoAreaName:
+                "Il nome dell'area verrà utilizzato nel selettore dell'area di uscita. Deve essere univoco sulla mappa e non può contenere spazi o caratteri speciali.",
+            actionButtonLabel: "Vai al punto di partenza",
         },
-        exitProperties: {
+        exit: {
             label: "Area di Uscita",
             description: "Dove le persone possono uscire dalla mappa verso un'altra.",
             exitMap: "Mappa di Uscita",
             exitMapStartAreaName: "Nome area di partenza",
             defaultStartArea: "Area di partenza predefinita",
+            actionButtonLabel: "Vai all'uscita",
         },
-        youtubeProperties: {
+        youtube: {
             label: "Apri Video YouTube",
             description: "Apri video YouTube all'interno di WorkAdventure o come nuova scheda.",
             error: "Inserisci un URL YouTube valido",
             disabled: "Integrazione YouTube disabilitata.",
+            actionButtonLabel: "Apri video YouTube",
         },
-        googleDocsProperties: {
+        googleDocs: {
             label: "Apri Google Docs",
             description: "Apri Google Docs all'interno di WorkAdventure o come nuova scheda.",
             error: "Inserisci un URL Google Docs valido",
             disabled: "Integrazione Google Docs disabilitata.",
+            actionButtonLabel: "Apri Google Docs",
         },
-        klaxoonProperties: {
+        klaxoon: {
             label: "Apri Klaxoon",
             description: "Apri Klaxoon all'interno di WorkAdventure o come nuova scheda.",
             error: "Inserisci un URL Klaxoon valido",
             disabled: "Integrazione Klaxoon disabilitata.",
+            actionButtonLabel: "Apri Klaxoon",
         },
-        googleSheetsProperties: {
+        googleSheets: {
             label: "Apri Google Sheets",
             description: "Apri Google Sheets all'interno di WorkAdventure o come nuova scheda.",
             error: "Inserisci un URL Google Sheets valido",
             disabled: "Integrazione Google Sheets disabilitata.",
+            actionButtonLabel: "Apri Google Sheets",
         },
-        googleSlidesProperties: {
+        googleSlides: {
             label: "Apri Google Slides",
             description: "Apri Google Slides all'interno di WorkAdventure o come nuova scheda.",
             error: "Inserisci un URL Google Slides valido",
             disabled: "Integrazione Google Slides disabilitata.",
+            actionButtonLabel: "Apri Google Slides",
         },
-        eraserProperties: {
+        eraser: {
             label: "Gomma",
             description: "Cancella tutti i disegni sulla mappa.",
             defaultButtonLabel: "Cancella",
             error: "Inserisci un URL Gomma valido",
             disabled: "Integrazione Gomma disabilitata.",
+            actionButtonLabel: "Cancella disegni",
         },
-        googleDriveProperties: {
+        googleDrive: {
             label: "Apri Google Drive",
             description: "Apri Google Drive all'interno di WorkAdventure o come nuova scheda.",
             error: "Inserisci un URL Google Drive valido",
             disabled: "Integrazione Google Drive disabilitata.",
+            actionButtonLabel: "Apri Google Drive",
         },
-        restrictedRightsProperties: {
+        restrictedRightsPropertyData: {
             label: "Aggiungi diritti",
             rightTitle: "Diritti di accesso / modifica per tag utente",
             rightDescription:
@@ -191,8 +224,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "Diritti di accesso",
             rightReadDescription:
                 "I diritti di accesso definiscono chi può interagire con l'area. Gli utenti che corrispondono a uno di questi tag possono entrare nell'area e utilizzare gli oggetti all'interno dell'area.",
+            actionButtonLabel: "Vai alla stanza privata",
         },
-        personalAreaConfiguration: {
+        personalAreaPropertyData: {
             label: "Area personale",
             description:
                 "Gli utenti possono rivendicare aree personali come loro spazio. Come amministratore, puoi impostare/revocare la proprietà di un'area",
@@ -205,28 +239,96 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "Utente consentito",
             owner: "Proprietario",
             revokeAccess: "Revoca accesso",
+            actionButtonLabel: "Vai alla scrivania personale",
         },
-        excalidrawProperties: {
+        excalidraw: {
             label: "Apri Excalidraw",
             description:
                 "Una lavagna virtuale open source in stile disegnato a mano. Collaborativa e crittografata end-to-end.",
             error: "Inserisci un URL Excalidraw valido",
             disabled: "Integrazione Excalidraw disabilitata.",
+            actionButtonLabel: "Apri Excalidraw",
         },
-        cardsProperties: {
+        cards: {
             label: "Apri Cards",
             description:
                 "La soluzione più rapida e semplice per condividere la tua conoscenza in pochissimo tempo, online, su MS Teams e su mobile.",
             error: "Inserisci un URL Cards valido",
             disabled: "Integrazione Cards disabilitata.",
+            actionButtonLabel: "Apri Cards",
         },
-        matrixProperties: {
+        matrixRoomPropertyData: {
             label: "Collega stanza Matrix",
             description: "Collega stanza Matrix alla tua area",
             openAutomaticallyChatLabel: "Apri automaticamente la chat",
             roomNameLabel: "Nome visualizzato della stanza",
             roomNameLabelPlaceholder: "La mia stanza",
             defaultChatRoomAreaName: "Area Stanza",
+            actionButtonLabel: "Inizia a chattare",
+        },
+        tooltipPropertyData: {
+            label: "Bolla informativa",
+            description: "Aggiungi una bolla informativa alla tua area ℹ️",
+            contentPlaceholder: "Scrivi il contenuto qui ✍️",
+            duration: "Durata (in secondi) ⏱️",
+            infinityDuration: "Durata infinita ⏱️",
+            actionButtonLabel: "Vedi bolla informativa",
+        },
+        openFile: {
+            label: "Apri file",
+            description: "Apri file all'interno di WorkAdventure.",
+            error: "Inserisci un file valido",
+            disabled: "Integrazione file disabilitata.",
+            fileUrlLabel: "URL del file",
+            uploadFile: {
+                title: "Aggiungi il tuo file",
+                description: "Trascina e rilascia o scegli il tuo file",
+                dragDrop: "Trascina e Rilascia o",
+                chooseFile: "Scegli file",
+                errorOnFileFormat: "Formato file non supportato",
+                errorOnFileNumber: "Il rilascio di più file non è supportato",
+                errorOnFileSize: "Il file è troppo grande, la dimensione massima è {size} MB",
+            },
+            hideUrlLabel: "Nascondi URL",
+            actionButtonLabel: "Apri file",
+        },
+        livekitRoomProperty: {
+            label: "Sala riunioni",
+            description: "Avvia una riunione all'ingresso.",
+            roomNameLabel: "Nome della sala",
+            roomNamePlaceholder: "Nome della sala",
+            highlightAreaOnEnter: "Evidenzia area all'ingresso",
+            moreOptionsLabel: "Più Opzioni",
+            livekitRoomConfig: {
+                addConfig: "Aggiungi un'opzione",
+                startWithAudioMuted: "Avvia con microfono disattivato",
+                startWithVideoMuted: "Avvia con video disattivato",
+                disableChat: "Disabilita chat",
+                livekitRoomAdminTag: "Tag moderatore per la sala riunioni",
+                cancel: "Annulla",
+                validate: "Convalida",
+            },
+            actionButtonLabel: "Avvia riunione",
+        },
+        maxUsersInAreaPropertyData: {
+            label: "Numero massimo di utenti",
+            description: "Imposta il numero massimo di utenti nell'area.",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "Area bloccabile",
+            description: "Blocca l'area per impedire l'ingresso dall'esterno.",
+            lockLabel: "Blocca area",
+            allowedTagsLabel: "Tag consentiti per bloccare/sbloccare",
+            allowedTagsInfo:
+                "Solo gli utenti con questi tag possono bloccare o sbloccare quest'area. Lascia vuoto per consentire a tutti.",
+        },
+        tldraw: {
+            label: "Apri tldraw",
+            description: "Una lavagna online / SDK canvas infinito.",
+            error: "Inserisci un URL tldraw valido",
+            disabled: "Integrazione tldraw disabilitata.",
+            actionButtonLabel: "Apri tldraw",
         },
     },
     areaEditor: {
@@ -237,6 +339,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "La mia area è un...",
         areaSerchable: "Ricercabile in modalità esplorazione",
         addDescriptionField: "Aggiungi campo descrizione",
+        clickAgainToSelectAnotherZone: "Puoi cliccare di nuovo per selezionare un'altra zona",
         actionPopupOnPersonalAreaWithEntities: {
             title: "Azione richiesta",
             description: "Quest'area personale contiene uno o più oggetti. Cosa vuoi fare con essi?",
@@ -256,9 +359,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         header: {
             title: "Aggiungi oggetto alla tua mappa",
             description: "Cerca, carica o seleziona un oggetto esistente e aggiungilo alla mappa.",
+            choose: "Scegli un oggetto",
         },
         title: "Posiziona il tuo oggetto",
         editing: "Modifica: {name}",
+        drop: "Rilascia il tuo file ovunque",
         itemPicker: {
             searchPlaceholder: "Cerca",
             backToSelectObject: "Torna a selezionare oggetto",
@@ -284,6 +389,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             chooseFile: "Scegli file",
             errorOnFileFormat: "Formato file non supportato",
             errorOnFileNumber: "Il rilascio di più file non è supportato",
+            errorOnFileSize: "Il file è troppo grande, la dimensione massima è {size} MB",
         },
         images: "Immagine{{s}}",
         noImage: "Nessuna immagine",
@@ -311,6 +417,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             save: "Salva",
             upload: "Carica",
         },
+        errors: {
+            dragNotConnected: "Non puoi caricare file se non sei connesso e non hai i diritti per farlo.",
+            dragNotAllowed: "Non hai i diritti per caricare file su questa mappa",
+        },
     },
     settings: {
         loading: "Caricamento",
@@ -325,14 +435,40 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 scope: "Ambito",
                 world: "Mondo",
                 room: "Stanza",
+                notificationSound: "Suono di notifica",
+                notificationSoundNoSound: "Nessun suono",
+                notificationSoundCustom: "Personalizzato",
+                enableSoundNotifications: "Abilita notifiche sonore",
                 rights: "Diritti",
                 rightsHelper:
                     "I diritti definiscono chi può usare il megafono. Se lo lasci vuoto, chiunque può usarlo. Se lo imposti, solo gli utenti che hanno uno di questi 'tag' possono usarlo.",
+                audienceVideoFeedbackActivated: "Modalità auditorium",
+                audienceVideoFeedbackActivatedDisabled: "Modalità auditorium",
+                audienceVideoFeedbackActivatedHelper:
+                    "Modalità auditorium attivata: Ricevi il flusso di camera e microfono di tutti gli utenti (con camera e microfono attivati) nella stanza/mondo. Ma il partecipante non sarà in grado di vedere gli altri partecipanti. Disattivato per impostazione predefinita.",
                 error: {
                     title: "Per favore inserisci un titolo",
                     save: {
                         success: "Impostazioni del megafono salvate",
                         fail: "Errore durante il salvataggio delle impostazioni del megafono",
+                    },
+                },
+            },
+        },
+        recording: {
+            title: "Registrazione",
+            description: "Configura chi può avviare una registrazione nelle bolle e nelle sale riunioni.",
+            inputs: {
+                rights: "Diritti",
+                rightsHelper:
+                    "Chiunque abbia almeno uno di questi tag può avviare una registrazione. Lascia vuoto per consentire a qualsiasi utente connesso.",
+                enableSounds: "Riprodurre una notifica sonora all'avvio e all'arresto della registrazione",
+                enableSoundsHelper:
+                    "Quando abilitato, tutti i partecipanti sentiranno una notifica sonora quando una registrazione inizia o si ferma.",
+                error: {
+                    save: {
+                        success: "Impostazioni di registrazione salvate",
+                        fail: "Errore durante il salvataggio delle impostazioni di registrazione",
                     },
                 },
             },

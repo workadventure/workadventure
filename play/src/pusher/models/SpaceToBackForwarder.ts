@@ -1,11 +1,26 @@
-import { FilterType, PusherToBackSpaceMessage, SpaceUser, SubMessage } from "@workadventure/messages";
+import type {
+    FilterType,
+    PusherToBackSpaceMessage,
+    PublicEventFrontToPusher,
+    PrivateEventFrontToPusher,
+} from "@workadventure/messages";
+import { SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import Debug from "debug";
 import { Color } from "@workadventure/shared-utils";
 
-import { Socket } from "../services/SocketManager";
+import type { Socket } from "../services/SocketManager";
 import { clientEventsEmitter } from "../services/ClientEventsEmitter";
-import { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
+import type { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
+import type { EventProcessor } from "./EventProcessor";
+import type { SocketData } from "./Websocket/SocketData";
+import { metadataProcessor } from "./MetadataProcessorInit";
+import {
+    SpaceUserIdNotFoundError,
+    UserAlreadyAddedInSpaceError,
+    SocketAlreadyRegisteredInSpaceError,
+    UserAlreadyInSpaceError,
+} from "./SpaceValidationErrors";
 
 const debug = Debug("space-to-back-forwarder");
 
@@ -13,30 +28,54 @@ export interface SpaceToBackForwarderInterface {
     registerUser(client: Socket, filterType: FilterType): Promise<void>;
     updateUser(spaceUser: PartialSpaceUser, updateMask: string[]): void;
     unregisterUser(socket: Socket): Promise<void>;
-    updateMetadata(metadata: { [key: string]: unknown }): void;
+    updateMetadata(metadata: { [key: string]: unknown }, senderId: string): void;
     forwardMessageToSpaceBack(pusherToBackSpaceMessage: PusherToBackSpaceMessage["message"]): void;
     syncLocalUsersWithServer(localUsers: SpaceUser[]): void;
     addUserToNotify(user: SpaceUser): void;
     deleteUserFromNotify(user: SpaceUser): void;
     leaveSpace(): void;
+    sendPublicEvent(event: PublicEventFrontToPusher, senderSocket: SocketData): void;
+    sendPrivateEvent(event: PrivateEventFrontToPusher, senderSocket: SocketData): void;
 }
 
 export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
-    constructor(private readonly _space: Space, private readonly _clientEventsEmitter = clientEventsEmitter) {}
+    constructor(
+        private readonly _space: Space,
+        private readonly eventProcessor: EventProcessor,
+        private readonly _clientEventsEmitter = clientEventsEmitter,
+        private readonly _metadataProcessor = metadataProcessor
+    ) {}
     async registerUser(client: Socket, filterType: FilterType): Promise<void> {
         const socketData = client.getUserData();
         const spaceUserId = socketData.spaceUserId;
 
         if (!spaceUserId) {
-            throw new Error("Space user id not found");
+            throw new SpaceUserIdNotFoundError();
         }
 
         if (this._space._localConnectedUser.has(spaceUserId)) {
-            throw new Error("Watcher already added for user " + spaceUserId);
+            throw new UserAlreadyAddedInSpaceError(
+                `User ${spaceUserId} already added in space ${this._space.name}`,
+                this._space.name,
+                spaceUserId
+            );
+        }
+        if (this._space._localConnectedUserWithSpaceUser.has(client)) {
+            throw new SocketAlreadyRegisteredInSpaceError(
+                `Socket already registered in space ${this._space.name}`,
+                this._space.name
+            );
+        }
+        if (socketData.spaces.has(this._space.name)) {
+            throw new UserAlreadyInSpaceError(
+                `User ${socketData.name} is trying to join a space they are already in.`,
+                this._space.name,
+                socketData.name
+            );
         }
 
         debug(
-            `${this._space.name} : watcher added ${socketData.name}. Watcher count ${this._space._localConnectedUser.size}`
+            `${this._space.name} : user added ${socketData.name}. User count ${this._space._localConnectedUser.size}`
         );
 
         const spaceUser: SpaceUserExtended = {
@@ -62,12 +101,11 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         };
 
         try {
-            this._space._localConnectedUserWithSpaceUser.set(client, {
-                ...spaceUser,
-                lowercaseName: socketData.name.toLowerCase(),
-            });
+            socketData.spaces.add(this._space.name);
+
+            this._space._localConnectedUserWithSpaceUser.set(client, spaceUser);
+
             this._space._localConnectedUser.set(spaceUserId, client);
-            this._clientEventsEmitter.emitClientJoinSpace(socketData.userUuid, this._space.name);
 
             await this._space.query.send({
                 $case: "addSpaceUserQuery",
@@ -79,25 +117,14 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             });
 
             debug(`${this._space.name} : user add sent ${spaceUser.spaceUserId}`);
-
-            if (this._space.metadata.size > 0) {
-                // Notify the client of the space metadata
-                const subMessage: SubMessage = {
-                    message: {
-                        $case: "updateSpaceMetadataMessage",
-                        updateSpaceMetadataMessage: {
-                            spaceName: this._space.localName,
-                            metadata: JSON.stringify(Object.fromEntries(this._space.metadata)),
-                        },
-                    },
-                };
-                this._space.dispatcher.notifyMe(client, subMessage);
-            }
         } catch (e) {
+            socketData.spaces.delete(this._space.name);
             this._space._localConnectedUser.delete(spaceUser.spaceUserId);
             this._space._localWatchers.delete(spaceUser.spaceUserId);
             this._space._localConnectedUserWithSpaceUser.delete(client);
-            this._clientEventsEmitter.emitClientLeaveSpace(socketData.userUuid, this._space.name);
+            if (this._space.isEmpty()) {
+                this._space.cleanup();
+            }
             throw e;
         }
     }
@@ -133,7 +160,10 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         }
 
         if (!this._space._localConnectedUser.has(spaceUserId)) {
-            throw new Error("User not found in pusher local connected user");
+            console.error(`Trying to remove user ${spaceUserId} that does not exist in space ${this._space.name}`);
+            Sentry.captureException(
+                new Error(`Trying to remove user ${spaceUserId} that does not exist in space ${this._space.name}`)
+            );
         }
 
         const spaceUser = this._space._localConnectedUserWithSpaceUser.get(socket);
@@ -149,12 +179,16 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                     spaceName: this._space.name,
                     spaceUserId,
                 },
+                // TODO: we should consider adding an abort signal here
             });
         } finally {
+            userData.spaces.delete(this._space.name);
             this._space._localConnectedUser.delete(spaceUserId);
             this._space._localWatchers.delete(spaceUserId);
             this._space._localConnectedUserWithSpaceUser.delete(socket);
-            this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
+            if (this._space.isEmpty()) {
+                this._space.cleanup();
+            }
         }
 
         debug(
@@ -164,12 +198,22 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         debug(`${this._space.name} : user remove sent ${spaceUserId}`);
     }
 
-    updateMetadata(metadata: { [key: string]: unknown }): void {
+    updateMetadata(metadata: { [key: string]: unknown }, senderId: string): void {
+        const senderSocket = this._space._localConnectedUser.get(senderId);
+        if (!senderSocket) {
+            throw new Error("Sender socket not found");
+        }
+
+        for (const key in metadata) {
+            metadata[key] = this._metadataProcessor.processMetadata(key, metadata[key], senderSocket.getUserData());
+        }
+
         this.forwardMessageToSpaceBack({
-            $case: "updateSpaceMetadataMessage",
-            updateSpaceMetadataMessage: {
+            $case: "updateSpaceMetadataPusherToBackMessage",
+            updateSpaceMetadataPusherToBackMessage: {
                 spaceName: this._space.name,
                 metadata: JSON.stringify(metadata),
+                senderId,
             },
         });
     }
@@ -180,6 +224,20 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         }
         this._space.spaceStreamToBackPromise
             .then((spaceStreamToBack) => {
+                if (spaceStreamToBack.closed) {
+                    console.warn("Trying to forward message to space back but the connection is closed", {
+                        spaceName: this._space.name,
+                        messageCase: pusherToBackSpaceMessage?.$case,
+                    });
+                    Sentry.captureMessage("Trying to forward message to space back but the connection is closed", {
+                        level: "warning",
+                        extra: {
+                            spaceName: this._space.name,
+                            messageCase: pusherToBackSpaceMessage?.$case,
+                        },
+                    });
+                    return;
+                }
                 spaceStreamToBack.write(
                     {
                         message: pusherToBackSpaceMessage,
@@ -240,10 +298,50 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         });
     }
 
-    private getSpaceUserFromSocket(user: SpaceUser): SpaceUserExtended {
-        return {
-            ...user,
-            lowercaseName: user.name.toLowerCase(),
-        };
+    sendPublicEvent(event: PublicEventFrontToPusher, senderSocket: SocketData): void {
+        const senderSpaceUser = this._space.users.get(senderSocket.spaceUserId || "");
+
+        if (!event.spaceEvent?.event) {
+            throw new Error("Event is required in spaceEvent");
+        }
+
+        const processedEvent = this.eventProcessor.processPublicEvent(
+            event.spaceEvent.event,
+            senderSpaceUser,
+            senderSocket
+        );
+
+        this.forwardMessageToSpaceBack({
+            $case: "publicEvent",
+            publicEvent: {
+                senderUserId: senderSocket.spaceUserId,
+                spaceEvent: {
+                    event: processedEvent,
+                },
+                spaceName: this._space.name,
+            },
+        });
+    }
+
+    sendPrivateEvent(event: PrivateEventFrontToPusher, senderSocket: SocketData): void {
+        const senderSpaceUser = this._space.users.get(senderSocket.spaceUserId);
+
+        if (!event.spaceEvent?.event) {
+            throw new Error("Event is required in spaceEvent");
+        }
+
+        const processedEvent = this.eventProcessor.processPrivateEvent(event.spaceEvent.event, senderSpaceUser);
+
+        this.forwardMessageToSpaceBack({
+            $case: "privateEvent",
+            privateEvent: {
+                senderUserId: senderSocket.spaceUserId,
+                receiverUserId: event.receiverUserId,
+                spaceEvent: {
+                    event: processedEvent,
+                },
+                spaceName: this._space.name,
+            },
+        });
     }
 }

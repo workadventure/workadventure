@@ -1,8 +1,8 @@
-import { SpaceManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import type { SpaceManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { v4 as uuid } from "uuid";
-import { BackToPusherSpaceMessage, PusherToBackSpaceMessage } from "@workadventure/messages";
+import type { BackToPusherSpaceMessage, PusherToBackSpaceMessage } from "@workadventure/messages";
 import Debug from "debug";
-import { ServerDuplexStream } from "@grpc/grpc-js";
+import type { ServerDuplexStream } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
 import { socketManager } from "./Services/SocketManager";
 import { SpacesWatcher } from "./Model/SpacesWatcher";
@@ -18,12 +18,13 @@ const spaceManager = {
         const pusher = new SpacesWatcher(pusherUuid, call);
 
         call.on("data", (message: PusherToBackSpaceMessage) => {
-            if (!message.message) {
-                console.error("Empty message received");
-                Sentry.captureException("Empty message received");
-                return;
-            }
             try {
+                if (!message.message) {
+                    console.error("Empty message received");
+                    Sentry.captureException("Empty message received");
+                    return;
+                }
+
                 switch (message.message.$case) {
                     case "joinSpaceMessage": {
                         socketManager.handleJoinSpaceMessage(pusher, message.message.joinSpaceMessage);
@@ -37,10 +38,10 @@ const spaceManager = {
                         socketManager.handleUpdateSpaceUserMessage(pusher, message.message.updateSpaceUserMessage);
                         break;
                     }
-                    case "updateSpaceMetadataMessage": {
+                    case "updateSpaceMetadataPusherToBackMessage": {
                         socketManager.handleUpdateSpaceMetadataMessage(
                             pusher,
-                            message.message.updateSpaceMetadataMessage
+                            message.message.updateSpaceMetadataPusherToBackMessage
                         );
                         break;
                     }
@@ -59,6 +60,10 @@ const spaceManager = {
                     }
                     case "privateEvent": {
                         socketManager.handlePrivateEvent(pusher, message.message.privateEvent);
+                        break;
+                    }
+                    case "backEvent": {
+                        socketManager.handleBackEvent(pusher, message.message.backEvent);
                         break;
                     }
                     case "syncSpaceUsersMessage": {
@@ -83,15 +88,17 @@ const spaceManager = {
                         );
                         break;
                     }
-                    case "requestFullSyncMessage": {
-                        socketManager.handleRequestFullSyncMessage(pusher, message.message.requestFullSyncMessage);
-                        break;
-                    }
                     default: {
                         const _exhaustiveCheck: never = message.message;
                     }
                 }
             } catch (e) {
+                if (!message.message) {
+                    console.error("Empty message received");
+                    Sentry.captureException("Empty message received");
+                    return;
+                }
+
                 console.error(
                     "An error occurred while managing a message of type PusherToBackSpaceMessage:" +
                         message.message.$case,

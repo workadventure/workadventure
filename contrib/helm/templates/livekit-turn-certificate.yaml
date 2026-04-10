@@ -1,0 +1,61 @@
+{{- if .Values.livekit.enabled -}}
+{{- $turnCertificate := .Values.livekit.turnCertificate | default dict -}}
+{{- $enabled := false -}}
+{{- if hasKey $turnCertificate "enabled" -}}
+{{- $enabled = $turnCertificate.enabled -}}
+{{- end -}}
+{{- if $enabled -}}
+{{- $livekitServer := index .Values "livekit-server" | default dict -}}
+{{- $livekitConfig := index $livekitServer "livekit" | default dict -}}
+{{- $turnConfig := index $livekitConfig "turn" | default dict -}}
+
+{{- $secretName := coalesce (index $turnCertificate "secretName") (index $turnConfig "secretName") -}}
+{{- if not $secretName -}}
+{{- fail "livekit.turnCertificate.secretName must be set, or livekit-server.livekit.turn.secretName must be set" -}}
+{{- end -}}
+
+{{- $commonName := coalesce (index $turnCertificate "commonName") (index $turnConfig "domain") -}}
+{{- $dnsNames := index $turnCertificate "dnsNames" | default list -}}
+{{- if and (eq (len $dnsNames) 0) $commonName -}}
+{{- $dnsNames = list $commonName -}}
+{{- end -}}
+{{- if and (not $commonName) (eq (len $dnsNames) 0) -}}
+{{- fail "livekit.turnCertificate requires a commonName or at least one dnsName (or livekit-server.livekit.turn.domain)" -}}
+{{- end -}}
+
+{{- $issuerRef := index $turnCertificate "issuerRef" | default dict -}}
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "workadventure.fullname" . }}-livekit-turn-certificate
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+spec:
+  secretName: {{ $secretName | quote }}
+  {{- if $commonName }}
+  commonName: {{ $commonName | quote }}
+  {{- end }}
+  {{- if gt (len $dnsNames) 0 }}
+  dnsNames:
+    {{- range $dnsName := $dnsNames }}
+    - {{ $dnsName | quote }}
+    {{- end }}
+  {{- end }}
+  issuerRef:
+    name: {{ required "livekit.turnCertificate.issuerRef.name is required when livekit.turnCertificate.enabled=true" (index $issuerRef "name") | quote }}
+    kind: {{ required "livekit.turnCertificate.issuerRef.kind is required when livekit.turnCertificate.enabled=true" (index $issuerRef "kind") | quote }}
+    group: {{ required "livekit.turnCertificate.issuerRef.group is required when livekit.turnCertificate.enabled=true" (index $issuerRef "group") | quote }}
+  {{- with (index $turnCertificate "duration") }}
+  duration: {{ . | quote }}
+  {{- end }}
+  {{- with (index $turnCertificate "renewBefore") }}
+  renewBefore: {{ . | quote }}
+  {{- end }}
+  {{- with (index $turnCertificate "usages") }}
+  usages:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end -}}
+{{- end -}}

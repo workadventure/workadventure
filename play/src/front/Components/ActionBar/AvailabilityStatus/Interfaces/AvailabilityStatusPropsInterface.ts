@@ -1,6 +1,6 @@
-import { AvailabilityStatus } from "@workadventure/messages";
-import { LocalizedString } from "typesafe-i18n";
-import { RequestedStatus } from "../../../../Rules/StatusRules/statusRules";
+import type { AvailabilityStatus } from "@workadventure/messages";
+import type { LocalizedString } from "typesafe-i18n";
+import type { RequestedStatus } from "../../../../Rules/StatusRules/statusRules";
 export interface StatusInformationInterface {
     AvailabilityStatus: RequestedStatus | AvailabilityStatus.ONLINE;
     label: LocalizedString | string;

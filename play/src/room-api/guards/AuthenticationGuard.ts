@@ -1,8 +1,8 @@
-import { Metadata } from "@grpc/grpc-js";
+import type { Metadata } from "@grpc/grpc-js";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { ADMIN_API_URL } from "../../pusher/enums/EnvironmentVariable";
 import AdminAuthenticator from "../authentication/AdminAuthenticator";
-import { AuthenticatorInterface } from "../authentication/AuthenticatorInterface";
+import type { AuthenticatorInterface } from "../authentication/AuthenticatorInterface";
 import LocalAuthenticator from "../authentication/LocalAuthenticator";
 import { GuardError } from "../types/GuardError";
 

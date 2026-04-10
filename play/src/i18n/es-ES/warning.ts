@@ -17,10 +17,57 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLostSubtitle: "Reconectando",
     waitingConnectionTitle: "Esperando a la conexión",
     waitingConnectionSubtitle: "Conectando",
+    megaphoneNeeds: "Para usar el megáfono, debes activar tu cámara o tu micrófono o compartir tu pantalla.",
+    mapEditorShortCut: "Hubo un error al intentar abrir el editor de mapas.",
+    mapEditorNotEnabled: "El editor de mapas no está habilitado en este mundo.",
+    backgroundProcessing: {
+        failedToApply: "Error al aplicar los efectos de fondo",
+    },
     popupBlocked: {
         title: "Bloqueo de ventanas emergentes",
         content: "Por favor, permita ventanas emergentes para este sitio web en la configuración de su navegador.",
         done: "Ok",
+    },
+    duplicateUserConnected: {
+        title: "Ya conectado",
+        message:
+            "Este usuario ya está conectado a esta sala desde otra pestaña o dispositivo. Para evitar conflictos, cierre la otra pestaña o ventana.",
+        confirmContinue: "Entendido, continuar",
+        dontRemindAgain: "No volver a mostrar este mensaje",
+    },
+    browserNotSupported: {
+        title: "😢 Navegador no compatible",
+        message: "Su navegador ({browserName}) ya no es compatible con WorkAdventure.",
+        description:
+            "Su navegador es demasiado antiguo para ejecutar WorkAdventure. Por favor, actualícelo a la última versión para continuar.",
+        whatToDo: "¿Qué puede hacer?",
+        option1: "Actualizar {browserName} a la última versión",
+        option2: "Salir de WorkAdventure y usar un navegador diferente",
+        updateBrowser: "Actualizar navegador",
+        leave: "Salir",
+    },
+    pwaInstall: {
+        title: "Instalar WorkAdventure",
+        description:
+            "Instala la app para disfrutar de una mejor experiencia: acceso rápido, inicio automático y una experiencia similar a la de una aplicación.",
+        descriptionIos:
+            "Añade WorkAdventure a tu pantalla de inicio para disfrutar de una mejor experiencia y un acceso rápido.",
+        feature1Title: "Acceso rápido",
+        feature1Description: "Abre WorkAdventure desde tu menú Inicio, Dock o escritorio.",
+        feature2Title: "Ventana de aplicación dedicada",
+        feature2Description:
+            "Mantén WorkAdventure separado de las pestañas del navegador y encuéntralo de un vistazo en la barra de tareas.",
+        feature3Title: "Iniciar con el ordenador",
+        feature3Description: "Abre WorkAdventure cuando se inicie tu dispositivo.",
+        iosStepsTitle: "Cómo instalar",
+        iosStep1: "Toque el botón Compartir (cuadrado con flecha) en la parte inferior de Safari.",
+        iosStep2: "Desplácese hacia abajo y toque «Añadir a la pantalla de inicio».",
+        iosStep3: "Toque «Añadir» para confirmar.",
+        install: "Instalar la app WorkAdventure",
+        installing: "Instalando…",
+        skip: "Continuar en el navegador",
+        continue: "Continuar en el navegador",
+        neverShowPage: "No volver a preguntar",
     },
 };
 

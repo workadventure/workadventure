@@ -1,4 +1,4 @@
-import { CompanionTextureCollection, CompanionTexture } from "@workadventure/messages";
+import type { CompanionTextureCollection, CompanionTexture } from "@workadventure/messages";
 
 export interface CompanionTextureByIdList {
     [key: string]: CompanionTexture;

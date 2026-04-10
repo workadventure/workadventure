@@ -1,4 +1,4 @@
-import { KlaxoonEvent } from "../types";
+import type { KlaxoonEvent } from "../types";
 import { KlaxoonException } from "./Exception/KlaxoonException";
 
 declare global {

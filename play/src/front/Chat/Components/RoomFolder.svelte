@@ -1,6 +1,6 @@
 <script lang="ts">
     import { get } from "svelte/store";
-    import { RoomFolder, ChatRoom, ChatRoomModeration } from "../Connection/ChatConnection";
+    import type { RoomFolder, ChatRoom, ChatRoomModeration } from "../Connection/ChatConnection";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
@@ -32,6 +32,8 @@
         (joinable) => !$suggestedRooms.some((suggested) => suggested.id === joinable.id)
     );
 
+    $: hasSuggestedRooms = $suggestedRooms.length > 0;
+
     function toggleFolder() {
         isOpen = !isOpen;
         if (isOpen) {
@@ -60,9 +62,18 @@
                         rootFolder
                             ? "text-white/75 group-hover:text-white text-sm font-bold tracking-widest uppercase grow text-start"
                             : "text-sm font-bold tracking-widest uppercase grow text-start"
-                    }`}
+                    } flex flex-wrap items-center gap-2 min-w-0`}
                 >
-                    {$name}
+                    <span class="truncate">{$name}</span>
+                    {#if hasSuggestedRooms}
+                        <span
+                            class="shrink-0 inline-flex items-center rounded-full bg-secondary/50 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white/95 border border-secondary/60"
+                            title={$LL.chat.suggestedRooms()}
+                            aria-label={$LL.chat.suggestedRooms()}
+                        >
+                            {$suggestedRooms.length}
+                        </span>
+                    {/if}
                 </div>
             </button>
             <CreateRoomOrFolderOption {folder} parentID={id} parentName={$name} />

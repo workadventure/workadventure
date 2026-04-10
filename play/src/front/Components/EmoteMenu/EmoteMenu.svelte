@@ -3,7 +3,7 @@
     import type { Picker } from "emoji-picker-element";
     import { clickOutside } from "svelte-outside";
     import { onDestroy, onMount } from "svelte";
-    import { EmojiClickEvent } from "emoji-picker-element/shared";
+    import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { emoteMenuStore } from "../../Stores/EmoteStore";
     import { locale } from "../../../i18n/i18n-svelte";
 

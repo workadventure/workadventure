@@ -38,6 +38,9 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         loggedIn: "接続中:",
         saveSync: "保存して同期",
         logout: "ログアウト",
+        back: "戻る",
+        tokenPlaceholder: "Discord トークン",
+        loginWithQrCode: "QR コードでログイン",
         guilds: "Discord サーバー",
         guildExplain: "Workadventure チャットインターフェースに追加するチャンネルを選択してください。\n",
     },
@@ -53,6 +56,15 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupScopeIsConnectedExplainText:
             "既に接続されています。ログアウトして再接続するには、ボタンをクリックしてください。",
         popupScopeIsConnectedButton: "ログアウト",
+        popupErrorTitle: "⚠️ Outlook または Teams モジュールの同期に失敗しました",
+        popupErrorDescription:
+            "Outlook または Teams モジュールの初期化同期に失敗しました。接続するには、再接続を試してください。",
+        popupErrorContactAdmin: "問題が解決しない場合は、管理者にお問い合わせください。",
+        popupErrorShowMore: "詳細情報を表示",
+        popupErrorMoreInfo1:
+            "サインインプロセスに問題がある可能性があります。SSO Azure プロバイダーが正しく設定されているか確認してください。",
+        popupErrorMoreInfo2:
+            'SSO Azure プロバイダーでスコープ "offline_access" が有効になっているか確認してください。このスコープは、更新トークンを取得し、Teams または Outlook モジュールを接続状態に保つために必要です。',
     },
     google: {
         signIn: "Google でサインイン",

@@ -1,5 +1,5 @@
 import { UploadFileCommand } from "@workadventure/map-editor";
-import { UploadFileMessage } from "@workadventure/messages";
+import type { UploadFileMessage } from "@workadventure/messages";
 import { CustomFileService } from "./../../Services/CustomFileService";
 
 export class UploadFileMapStorageCommand extends UploadFileCommand {

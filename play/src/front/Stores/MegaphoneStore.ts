@@ -1,5 +1,6 @@
-import { derived, Readable, writable } from "svelte/store";
-import { SpaceInterface } from "../Space/SpaceInterface";
+import type { Readable } from "svelte/store";
+import { derived, writable } from "svelte/store";
+import type { SpaceInterface } from "../Space/SpaceInterface";
 import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "./MediaStore";
 import { requestedScreenSharingState } from "./ScreenSharingStore";
 
@@ -7,8 +8,16 @@ export const currentLiveStreamingSpaceStore = writable<SpaceInterface | undefine
 export const megaphoneCanBeUsedStore = writable<boolean>(false);
 
 export const requestedMegaphoneStore = writable<boolean>(false);
-
+// A store that contains everything needed to connect to the megaphone space.
+export const megaphoneSpaceSettingsStore = writable<
+    | {
+          spaceName: string;
+          audienceVideoFeedbackActivated: boolean;
+      }
+    | undefined
+>(undefined);
 export const megaphoneSpaceStore = writable<SpaceInterface | undefined>(undefined);
+
 /**
  * This store is true if the user is livestreaming, i.e. if the user is a speaker or (if the user has requested the megaphone and is enabling its camera or microphone or screen)
  */

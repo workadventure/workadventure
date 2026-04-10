@@ -2,7 +2,6 @@
     import { onDestroy, onMount } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { localUserStore } from "../../Connection/LocalUserStore";
     import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
     import { areCharacterTexturesValid } from "../../Connection/LocalUserUtils";
     import BodyIcon from "../Icons/BodyIcon.svelte";
@@ -39,20 +38,7 @@
     async function loadWokaData() {
         try {
             isLoading = true;
-            const roomUrl = gameManager.currentStartedRoom.href;
-            const response = await fetch(`${ABSOLUTE_PUSHER_URL}woka/list?roomUrl=${encodeURIComponent(roomUrl)}`, {
-                headers: {
-                    Authorization: localUserStore.getAuthToken() || "",
-                },
-                credentials: "include",
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to load Woka data");
-            }
-
-            const data = await response.json();
-            wokaData = data;
+            wokaData = await gameManager.loadWokaData();
 
             loadSavedTextures();
         } catch (err) {

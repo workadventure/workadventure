@@ -1,21 +1,23 @@
-import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
+import { isDeepStrictEqual } from "util";
+import type { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
-import _ from "lodash";
-import {
+import type {
     AreaData,
-    AreaDataProperties,
     AtLeast,
-    CreateAreaCommand,
-    CreateEntityCommand,
     EntityCoordinates,
     EntityDataProperties,
     EntityDimensions,
-    EntityPermissions,
-    UpdateWAMMetadataCommand,
-    UpdateWAMSettingCommand,
     WAMEntityData,
 } from "@workadventure/map-editor";
 import {
+    AreaDataProperties,
+    CreateAreaCommand,
+    CreateEntityCommand,
+    EntityPermissions,
+    UpdateWAMMetadataCommand,
+    UpdateWAMSettingCommand,
+} from "@workadventure/map-editor";
+import type {
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
     EditMapCommandWithKeyMessage,
@@ -23,8 +25,8 @@ import {
     PingMessage,
     UpdateMapToNewestWithKeyMessage,
 } from "@workadventure/messages";
-import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
-import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
+import type { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { asError } from "catch-unknown";
 import { DeleteCustomEntityMapStorageCommand } from "./Commands/Entity/DeleteCustomEntityMapStorageCommand";
 import { ModifyCustomEntityMapStorageCommand } from "./Commands/Entity/ModifyCustomEntityMapStorageCommand";
@@ -32,15 +34,28 @@ import { UploadEntityMapStorageCommand } from "./Commands/Entity/UploadEntityMap
 import { entitiesManager } from "./EntitiesManager";
 import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
-import { LockByKey } from "./Services/LockByKey";
 import { DeleteAreaMapStorageCommand } from "./Commands/Area/DeleteAreaMapStorageCommand";
 import { UpdateAreaMapStorageCommand } from "./Commands/Area/UpdateAreaMapStorageCommand";
 import { DeleteEntityMapStorageCommand } from "./Commands/Entity/DeleteEntityMapStorageCommand";
 import { UploadFileMapStorageCommand } from "./Commands/File/UploadFileMapStorageCommand";
 import { hookManager } from "./Modules/HookManager";
 import { UpdateEntityMapStorageCommand } from "./Commands/Entity/UpdateEntityMapStorageCommand";
+import { isModifyAreaMessageOnlyClaim } from "./Services/isModifyAreaMessageOnlyClaim";
 
-const editionLocks = new LockByKey<string>();
+/**
+ * List of commands that can be executed even if the user does not have edit rights on the map
+ * (but have local edit rights on a given area).
+ */
+const COMMANDS_ACCESSIBLE_WITHOUT_CAN_EDIT = new Set<string>([
+    "modifyEntityMessage",
+    "createEntityMessage",
+    "deleteEntityMessage",
+    "uploadEntityMessage",
+    "modifyCustomEntityMessage",
+    "deleteCustomEntityMessage",
+    "uploadFileMessage",
+    "modifyAreaMessage",
+]);
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
@@ -69,7 +84,7 @@ const mapStorageServer: MapStorageServer = {
                 return;
             }
             const clientCommandId = updateMapToNewestMessage.commandId;
-            const lastCommandId = mapsManager.getGameMap(mapKey)?.getLastCommandId();
+            const lastCommandId = mapsManager.getWamFile(mapKey)?.getLastCommandId();
             let commandsToApply: EditMapCommandMessage[] = [];
             if (clientCommandId !== lastCommandId) {
                 commandsToApply = mapsManager.getCommandsNewerThan(mapKey, updateMapToNewestMessage.commandId);
@@ -101,26 +116,44 @@ const mapStorageServer: MapStorageServer = {
             const mapUrl = new URL(call.request.mapKey);
             const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
 
-            await editionLocks.waitForLock(mapKey, async () => {
+            await mapsManager.waitForLock(mapKey, async () => {
                 const editMapCommandMessage = call.request.editMapCommandMessage;
                 if (!editMapCommandMessage || !editMapCommandMessage.editMapMessage?.message) {
                     callback({ name: "MapStorageError", message: "EditMapCommand message does not exist" }, null);
                     return;
                 }
                 const editMapMessage = editMapCommandMessage.editMapMessage.message;
-                const gameMap = await mapsManager.getOrLoadGameMap(mapKey);
+                const wamFile = await mapsManager.getOrLoadWamFile(mapKey);
 
                 const { connectedUserTags, userCanEdit, userUUID } = call.request;
 
-                const gameMapAreas = gameMap.getGameMapAreas();
+                const gameMapAreas = wamFile.getGameMapAreas();
                 const entityCommandPermissions = gameMapAreas
                     ? new EntityPermissions(gameMapAreas, connectedUserTags, userCanEdit, userUUID)
                     : undefined;
 
                 const commandId = editMapCommandMessage.id;
+
+                if (!userCanEdit && !COMMANDS_ACCESSIBLE_WITHOUT_CAN_EDIT.has(editMapMessage.$case)) {
+                    // A user tried to bypass security!
+                    throw new Error(
+                        `User ${userUUID} is not allowed to edit the map but tried to execute command: ${editMapMessage.$case} on map ${mapUrl}`
+                    );
+                }
+
                 switch (editMapMessage.$case) {
                     case "modifyAreaMessage": {
                         const message = editMapMessage.modifyAreaMessage;
+                        if (!userCanEdit) {
+                            const existingArea = wamFile.getGameMapAreas().getArea(message.id);
+                            // TODO: Remove this check once we have a proper system for associating data with areas
+                            // (e.g., personal area data) or a WAM section accessible to all users.
+                            if (!isModifyAreaMessageOnlyClaim(message, userUUID, existingArea)) {
+                                throw new Error(
+                                    `User ${userUUID} is not allowed to edit the map and this modification is not a valid claim or revoke on map ${mapUrl}`
+                                );
+                            }
+                        }
                         // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
                         //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
                         //       by [] value which was supposed to be null.
@@ -128,13 +161,13 @@ const mapStorageServer: MapStorageServer = {
                         if (!message.modifyProperties) {
                             dataToModify.properties = undefined;
                         }
-                        const area = gameMap.getGameMapAreas()?.getArea(message.id);
+                        const area = wamFile.getGameMapAreas().getArea(message.id);
                         if (area) {
                             await mapsManager.executeCommand(
                                 mapKey,
                                 mapUrl.host,
                                 new UpdateAreaMapStorageCommand(
-                                    gameMap,
+                                    wamFile,
                                     dataToModify,
                                     commandId,
                                     area,
@@ -143,7 +176,7 @@ const mapStorageServer: MapStorageServer = {
                                 )
                             );
 
-                            const newAreaData = gameMap.getGameMapAreas()?.getArea(message.id);
+                            const newAreaData = wamFile.getGameMapAreas().getArea(message.id);
 
                             if (newAreaData) {
                                 const oldPropertiesParsed =
@@ -173,7 +206,7 @@ const mapStorageServer: MapStorageServer = {
 
                                 editMapMessage.modifyAreaMessage = {
                                     ...newAreaData,
-                                    modifyServerData: !_.isEqual(oldServerData, newServerData),
+                                    modifyServerData: !isDeepStrictEqual(oldServerData, newServerData),
                                 };
                             }
                         } else {
@@ -190,7 +223,7 @@ const mapStorageServer: MapStorageServer = {
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
-                            new CreateAreaCommand(gameMap, areaObjectConfig, commandId)
+                            new CreateAreaCommand(wamFile, areaObjectConfig, commandId)
                         );
                         break;
                     }
@@ -200,7 +233,7 @@ const mapStorageServer: MapStorageServer = {
                             mapKey,
                             mapUrl.host,
                             new DeleteAreaMapStorageCommand(
-                                gameMap,
+                                wamFile,
                                 message.id,
                                 commandId,
                                 mapUrl.hostname,
@@ -219,7 +252,7 @@ const mapStorageServer: MapStorageServer = {
                         if (!message.modifyProperties) {
                             dataToModify.properties = undefined;
                         }
-                        const entity = gameMap.getGameMapEntities()?.getEntity(message.id);
+                        const entity = wamFile.getGameMapEntities().getEntity(message.id);
                         if (entity) {
                             const { x, y, width, height } = message;
                             if (
@@ -235,7 +268,7 @@ const mapStorageServer: MapStorageServer = {
                                 mapKey,
                                 mapUrl.host,
                                 new UpdateEntityMapStorageCommand(
-                                    gameMap,
+                                    wamFile,
                                     message.id,
                                     dataToModify,
                                     commandId,
@@ -263,7 +296,7 @@ const mapStorageServer: MapStorageServer = {
                             mapKey,
                             mapUrl.host,
                             new CreateEntityCommand(
-                                gameMap,
+                                wamFile,
                                 message.id,
                                 {
                                     prefabRef: {
@@ -286,7 +319,7 @@ const mapStorageServer: MapStorageServer = {
                             mapKey,
                             mapUrl.host,
                             new DeleteEntityMapStorageCommand(
-                                gameMap,
+                                wamFile,
                                 message.id,
                                 commandId,
                                 mapUrl.hostname,
@@ -312,16 +345,13 @@ const mapStorageServer: MapStorageServer = {
                     case "deleteCustomEntityMessage": {
                         const deleteCustomEntityMessage = editMapMessage.deleteCustomEntityMessage;
                         await entitiesManager.executeCommand(
-                            new DeleteCustomEntityMapStorageCommand(deleteCustomEntityMessage, gameMap, mapUrl.hostname)
+                            new DeleteCustomEntityMapStorageCommand(deleteCustomEntityMessage, wamFile, mapUrl.hostname)
                         );
                         break;
                     }
                     case "updateWAMSettingsMessage": {
                         const message = editMapMessage.updateWAMSettingsMessage;
-                        const wam = gameMap.getWam();
-                        if (!wam) {
-                            throw new Error("WAM is not defined");
-                        }
+                        const wam = wamFile.getWam();
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
@@ -335,10 +365,7 @@ const mapStorageServer: MapStorageServer = {
                     }
                     case "modifiyWAMMetadataMessage": {
                         const message = editMapMessage.modifiyWAMMetadataMessage;
-                        const wam = gameMap.getWam();
-                        if (!wam) {
-                            throw new Error("WAM is not defined");
-                        }
+                        const wam = wamFile.getWam();
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
@@ -364,6 +391,7 @@ const mapStorageServer: MapStorageServer = {
             });
         })().catch((e: unknown) => {
             console.error(e);
+            Sentry.captureException(e);
             callback(null, {
                 id: call.request.editMapCommandMessage?.id ?? "Unknown id command error",
                 editMapMessage: {

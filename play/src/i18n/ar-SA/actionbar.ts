@@ -8,14 +8,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "إغلاق",
     login: "تسجيل الدخول",
     map: "خريطة",
+    participantListPlaceholder: "قائمة المشاركين",
+    participantSendMessage: "إرسال رسالة",
+    participantInviteUser: "دعوة مستخدم",
     profil: "تحرير اسمك",
     startScreenSharing: "بدء مشاركة الشاشة",
     stopScreenSharing: "إيقاف مشاركة الشاشة",
     screenSharingMode: "وضع مشاركة الشاشة",
-    focusMode: "وضع التركيز",
-    rightMode: "الوضع الصحيح",
-    hideMode: "إخفاء الوضع",
-    lightMode: "وضع الإضاءة",
     calendar: "التقويم",
     todoList: "قائمة المهام",
     woka: "تخصيص صورتك الرمزية",
@@ -23,7 +22,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     test: "اختبر إعداداتي",
     editCamMic: "تحرير الكاميرا / الميكروفون",
     allSettings: "جميع الإعدادات",
-    bo: "المكتب الخلفي",
+    installPwa: "تثبيت تطبيق الويب",
     globalMessage: "إرسال رسالة عالمية",
     mapEditor: "محرر الخرائط",
     mapEditorMobileLocked: "محرر الخرائط مقفل في الوضع المحمول",
@@ -33,16 +32,26 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "الكاميرا معطلة",
         activate: "قم بتنشيط الكاميرا",
         noDevices: "لم يتم العثور على جهاز كاميرا",
+        setBackground: "تعيين الخلفية",
+        blurEffects: "تأثيرات الضبابية",
+        disableBackgroundEffects: "تعطيل تأثيرات الخلفية",
+        close: "إغلاق",
     },
     microphone: {
         disabled: "الميكروفون معطل",
         activate: "قم بتنشيط الميكروفون",
         noDevices: "لم يتم العثور على جهاز ميكروفون",
+        noSoundWarning: "لم يتم اكتشاف أي صوت من الميكروفون. قد تكون هناك مشكلة — جرب تغيير الميكروفون في الإعدادات.",
+        noSoundWarningPressEnter: "لم يتم اكتشاف أي صوت من الميكروفون. اضغط على Enter لفتح الإعدادات.",
+        openSettings: "فتح الإعدادات",
+        ignore: "تجاهل",
     },
     speaker: {
         disabled: "مكبر الصوت معطل",
         activate: "قم بتنشيط مكبر الصوت",
         noDevices: "لم يتم العثور على جهاز مكبر صوت",
+        noDevicesDesc:
+            "لا يعرض المتصفح أي مخرجات صوت يمكن اختيارها. بعض المتصفحات تقتصر على ذلك (مثل Safari). جرّب متصفحًا آخر، أو أعد توصيل سماعات الرأس أو السماعات، أو تحقق من إعدادات صوت النظام وإعدادات الجهاز (الخصوصية، الأجهزة).",
     },
     status: {
         ONLINE: "متصل",
@@ -57,11 +66,23 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         DENY_PROXIMITY_MEETING: "غير متوفر",
         SPEAKER: "في اجتماع",
         LIVEKIT: "في اجتماع",
+        LISTENER: "في اجتماع",
     },
     subtitle: {
         camera: "الكاميرا",
         microphone: "الميكروفون",
         speaker: "مكبر الصوت",
+    },
+    background: {
+        settings: "الإعدادات",
+        cameraBackground: "خلفية الكاميرا",
+        noEffect: "بدون تأثير",
+        blur: "ضبابية",
+        blurSmall: "ضبابية صغيرة",
+        blurMiddle: "ضبابية متوسطة",
+        blurHigh: "ضبابية عالية",
+        images: "الصور",
+        videos: "الفيديوهات",
     },
     help: {
         chat: {
@@ -79,6 +100,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         audioManager: {
             title: "حجم الأصوات المحيطة",
             desc: "قم بضبط حجم الأصوات المحيطة بسهولة.",
+            pause: "انقر هنا لإيقاف الصوت مؤقتاً",
+            play: "انقر هنا لتشغيل الصوت",
+            stop: "انقر هنا لإيقاف الصوت",
         },
         audioManagerNotAllowed: {
             title: "الأصوات المحيطة محظورة",
@@ -95,6 +119,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "قفل المحادثة",
             desc: "بتفعيل هذه الميزة، تضمن عدم انضمام أي شخص إلى المناقشة. أنت سيد مساحتك، ويمكن فقط لأولئك الموجودين بالفعل التفاعل.",
+            areaPickerTitle: "اختر المنطقة لقفلها/فتحها",
+            bubbleLabel: "فقاعة المناقشة",
+            unnamedArea: "منطقة بدون اسم",
+        },
+        megaphone: {
+            title: "إيقاف المكبر الصوتي",
+            desc: "إيقاف بث رسالتك لجميع المستخدمين.",
         },
         mic: {
             title: "تمكين/تعطيل الميكروفون",
@@ -132,6 +163,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "قائمة المهام",
             desc: "إدارة قائمة المهام الخاصة بك بسهولة.",
         },
+        pictureInPicture: {
+            title: "صورة داخل صورة",
+            descDisabled:
+                "للأسف، هذه الميزة غير متوفرة على جهازك ❌. يرجى تجربة استخدام جهاز أو متصفح آخر، مثل Chrome أو Edge، للوصول إلى هذه الميزة.",
+            desc: "يمكنك استخدام ميزة صورة داخل صورة لمشاهدة فيديو أو عرض تقديمي أثناء وجودك في محادثة. ما عليك سوى النقر على أيقونة صورة داخل صورة والاستمتاع بمحتواك.",
+        },
+        videoNotSupported: "متصفحك لا يدعم وسم الفيديو.",
     },
     listStatusTitle: {
         enable: "تغيير حالتك",
@@ -161,6 +199,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         highlightToolText: "تمييز",
         hideToolText: "إخفاء",
         removeHighlightText: "إزالة",
+    },
+    personalDesk: {
+        label: "الذهاب إلى مكتبي",
+        unclaim: "تحرير مكتبي",
+        errorNoUser: "تعذر العثور على معلومات المستخدم",
+        errorNotFound: "ليس لديك مكتب شخصي بعد",
+        errorMoving: "تعذر الوصول إلى مكتبك الشخصي",
+        errorUnclaiming: "تعذر تحرير مكتبك الشخصي",
     },
 };
 

@@ -1,15 +1,17 @@
-import { Observable, Subject } from "rxjs";
-import {
+import type { Observable, Subject } from "rxjs";
+import type {
+    BackEventMessage,
     FilterType,
+    InitSpaceUsersMessage,
     PrivateSpaceEvent,
     SpaceEvent,
     SpaceUser,
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
-import { MapStore } from "@workadventure/store-utils";
-import { Readable } from "svelte/store";
-import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
-import { VideoBox } from "./Space";
+import type { MapStore } from "@workadventure/store-utils";
+import type { Readable } from "svelte/store";
+import type { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
+import type { VideoBox } from "./VideoBox";
 
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
@@ -47,6 +49,7 @@ export interface SpaceInterface {
     setMetadata(metadata: Map<string, unknown>): void;
     getMetadata(): Map<string, unknown>;
     //stopWatching(spaceFilter: SpaceFilterInterface): void;
+    observeMetadataProperty(key: string): Subject<unknown>;
     observePublicEvent<K extends keyof PublicEventsObservables>(key: K): NonNullable<PublicEventsObservables[K]>;
     observePrivateEvent<K extends keyof PrivateEventsObservables>(key: K): NonNullable<PrivateEventsObservables[K]>;
     emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void;
@@ -54,10 +57,11 @@ export interface SpaceInterface {
         message: NonNullable<PrivateSpaceEvent["event"]>,
         receiverUserId: SpaceUser["spaceUserId"]
     ): void;
+    emitBackEvent(message: NonNullable<BackEventMessage["backEvent"]>): void;
     emitUpdateUser(spaceUser: SpaceUserUpdate): void;
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
-    requestFullSync(): void;
+    watchInitSpaceUsersMessage(): Observable<InitSpaceUsersMessage>;
     videoStreamStore: Readable<Map<string, VideoBox>>;
     screenShareStreamStore: Readable<Map<string, VideoBox>>;
 
@@ -73,11 +77,7 @@ export interface SpaceInterface {
     readonly onLeaveSpace: Observable<void>;
     get spacePeerManager(): SpacePeerManager;
     dispatchSound(url: URL): Promise<void>;
-    //userExist(userId: number): boolean;
-    //addUser(user: SpaceUser): Promise<SpaceUserExtended>;
     readonly usersStore: Readable<Map<string, SpaceUserExtended>>;
-    //removeUser(userId: number): void;
-    //updateUserData(userdata: Partial<SpaceUser>): void;
     /**
      * Start streaming the local camera and microphone to other users in the space.
      * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
@@ -91,11 +91,26 @@ export interface SpaceInterface {
     stopStreaming(): void;
 
     /**
+     * Start streaming as a listener (for seeAttendees feature).
+     * This enables video streaming WITHOUT setting megaphoneState to true.
+     * The listener's video will only be visible to speakers, not to other listeners.
+     */
+    startListenerStreaming(): void;
+
+    /**
+     * Stop streaming as a listener (for seeAttendees feature).
+     */
+    stopListenerStreaming(): void;
+
+    /**
      * This store returns true if the local user is currently streaming their camera and microphone to other users in the space.
      * In a ALL_USERS space, this store will always return true.
      * In a LIVE_STREAMING_USERS, this store will return true when the startStreaming() method has been called, and false when the stopStreaming() method has been called.
+     * In a LIVE_STREAMING_USERS_WITH_FEEDBACK, this store will return true when the startStreaming() method has been called, and false when the stopStreaming() method has been called.
      */
     readonly isStreamingStore: Readable<boolean>;
+
+    readonly isStreamingAudioStore: Readable<boolean>;
 
     /**
      * Use this observer to get a description of new users.

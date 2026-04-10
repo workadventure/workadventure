@@ -1,5 +1,7 @@
-import { get, Unsubscriber } from "svelte/store";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
+import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Room } from "../../Connection/Room";
@@ -14,20 +16,27 @@ import {
 import { menuIconVisiblilityStore, userIsConnected } from "../../Stores/MenuStore";
 import { EnableCameraSceneName } from "../Login/EnableCameraScene";
 import { LoginSceneName } from "../Login/LoginScene";
+import { PwaInstallSceneName } from "../Login/PwaInstallScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { EmptySceneName } from "../Login/EmptyScene";
 import { gameSceneIsLoadedStore, waitForGameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
 import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
+import { pwaInstallProfileMenuEligibleStore, pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallStore";
 import { hasCapability } from "../../Connection/Capabilities";
-import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
+import type { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
 import { InvalidLoginTokenError, MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
 import { loginTokenErrorStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
 import { initializeChatVisibilitySubscription } from "../../Chat/Stores/ChatStore";
+import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
+import type { WokaData } from "../../Components/Woka/WokaTypes";
+import { generateRandomName } from "../../Utils/RandomNameGenerator";
+import { shouldShowPwaInstallSceneAsync } from "../../Utils/PwaInstallEligibility";
+import { raceTimeout } from "../../Utils/PromiseUtils";
 import { GameScene } from "./GameScene";
 /**
  * This class should be responsible for any scene starting/stopping
@@ -71,24 +80,114 @@ export class GameManager {
             }
             return EmptySceneName;
         }
+        let nextScene = result.nextScene;
         this.startRoom = result.room;
         this.loadMap(this.startRoom);
 
         const preferredAudioInputDeviceId = localUserStore.getPreferredAudioInputDevice();
         const preferredVideoInputDeviceId = localUserStore.getPreferredVideoInputDevice();
 
-        console.info("Preferred audio input device: " + preferredAudioInputDeviceId);
-        console.info("Preferred video input device: " + preferredVideoInputDeviceId);
+        if (!this.playerName) {
+            // Handle woka name based on provideDefaultWokaName setting
+            const provideDefaultWokaName = this.startRoom.provideDefaultWokaName;
+
+            if (provideDefaultWokaName === "random") {
+                // Use a random fun name based on current locale
+                this.playerName = generateRandomName();
+                localUserStore.setName(this.playerName);
+            } else if (provideDefaultWokaName === "fix" && this.startRoom.defaultWokaName) {
+                // Use the fixed name as-is
+                this.playerName = this.startRoom.defaultWokaName;
+                localUserStore.setName(this.playerName);
+            } else if (provideDefaultWokaName === "fix-plus-random-numbers" && this.startRoom.defaultWokaName) {
+                // Use the fixed name with random numbers appended
+                const randomNumber = Math.floor(Math.random() * 1000)
+                    .toString()
+                    .padStart(3, "0");
+                this.playerName = `${this.startRoom.defaultWokaName}-${randomNumber}`;
+                localUserStore.setName(this.playerName);
+            }
+        }
+
+        // Handle woka texture based on provideDefaultWokaTexture setting
+        if (!this.characterTextureIds || this.characterTextureIds.length === 0) {
+            if (this.startRoom.provideDefaultWokaTexture === "random") {
+                const wokaData = await this.loadWokaData();
+                const randomIndexCollections = Math.floor(Math.random() * wokaData.woka.collections.length);
+                const randomIndexTextures = Math.floor(
+                    Math.random() * wokaData.woka.collections[randomIndexCollections].textures.length
+                );
+                const defaultWokaTextureId =
+                    wokaData.woka.collections[randomIndexCollections].textures[randomIndexTextures].id;
+                this.characterTextureIds = [defaultWokaTextureId];
+                localUserStore.setCharacterTextures(this.characterTextureIds);
+                nextScene = "gameScene";
+            } else if (this.startRoom.provideDefaultWokaTexture === "fix" && this.startRoom.defaultWokaTexture) {
+                // Use the fixed texture from DEFAULT_WOKA_TEXTURE
+                this.characterTextureIds = [this.startRoom.defaultWokaTexture];
+                localUserStore.setCharacterTextures(this.characterTextureIds);
+                nextScene = "gameScene";
+            }
+        }
+
+        // Skip camera page if configured
+        if (this.startRoom.skipCameraPage) {
+            requestedMicrophoneState.disableMicrophone();
+            requestedCameraState.disableWebcam();
+
+            if (preferredAudioInputDeviceId && preferredAudioInputDeviceId !== "") {
+                requestedMicrophoneDeviceIdStore.set(preferredAudioInputDeviceId);
+            }
+            if (preferredVideoInputDeviceId && preferredVideoInputDeviceId !== "") {
+                requestedCameraDeviceIdStore.set(preferredVideoInputDeviceId);
+            }
+        }
+
+        Sentry.setUser({
+            id: localUserStore.getLocalUser()?.uuid ?? undefined,
+            email: localUserStore.getLocalUser()?.email ?? undefined,
+            username: this.playerName ?? undefined,
+        });
 
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
-        if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
+        let shouldShowPwaInstall = false;
+        pwaInstallProfileMenuEligibleStore.set(shouldShowPwaInstall);
+
+        const pwaInstallEligibilityPromise = shouldShowPwaInstallSceneAsync({
+            bypassPwa: this.startRoom.bypassPwa,
+        })
+            .then((isEligible) => {
+                pwaInstallProfileMenuEligibleStore.set(isEligible);
+                return isEligible;
+            })
+            .catch((error) => {
+                console.error("Error while checking if PWA install should be shown", error);
+                Sentry.captureException(error);
+                return false;
+            });
+
+        try {
+            shouldShowPwaInstall = await raceTimeout(pwaInstallEligibilityPromise, 1500);
+        } catch (error) {
+            if (!(error instanceof TimeoutError)) {
+                console.error("Error while checking if PWA install should be shown", error);
+                Sentry.captureException(error);
+            }
+        }
+
+        if (this.playerName && localUserStore.getAuthToken() && shouldShowPwaInstall) {
+            return PwaInstallSceneName;
+        } else if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
             return LoginSceneName;
-        } else if (result.nextScene === "selectCharacterScene") {
+        } else if (nextScene === "selectCharacterScene") {
             return SelectCharacterSceneName;
-        } else if (result.nextScene === "selectCompanionScene") {
+        } else if (nextScene === "selectCompanionScene") {
             return SelectCompanionSceneName;
-        } else if (preferredVideoInputDeviceId === undefined || preferredAudioInputDeviceId === undefined) {
+        } else if (
+            (preferredVideoInputDeviceId === undefined || preferredAudioInputDeviceId === undefined) &&
+            !this.startRoom.skipCameraPage
+        ) {
             return EnableCameraSceneName;
         } else {
             if (preferredVideoInputDeviceId !== "") {
@@ -98,15 +197,30 @@ export class GameManager {
             if (preferredAudioInputDeviceId !== "") {
                 requestedMicrophoneDeviceIdStore.set(preferredAudioInputDeviceId);
             }
-
             this.activeMenuSceneAndHelpCameraSettings();
             //TODO fix to return href with # saved in localstorage
             return this.startRoom.key;
         }
     }
 
+    /**
+     * Leave the Web App install scene (Phaser + Svelte) and enter the map or restore the game scene after the menu flow.
+     */
+    public completePwaInstall(): void {
+        pwaInstallSceneVisibleStore.set(false);
+        if (this.scenePlugin.isActive(PwaInstallSceneName)) {
+            this.scenePlugin.stop(PwaInstallSceneName);
+        }
+        this.goToStartingMap();
+    }
+
     public setPlayerName(name: string): void {
         this.playerName = name;
+        Sentry.setUser({
+            id: localUserStore.getLocalUser()?.uuid ?? undefined,
+            email: localUserStore.getLocalUser()?.email ?? undefined,
+            username: name,
+        });
     }
 
     public setVisitCardUrl(visitCardUrl: string): void {
@@ -209,12 +323,30 @@ export class GameManager {
     /**
      * follow up to leaveGame()
      */
-    tryResumingGame(fallbackSceneName: string) {
+    goToNextScene(currentSceneName: "LoginScene" | "SelectCharacterScene" | "SelectCompanionScene") {
         if (this.currentGameSceneName) {
+            // If there is a current game scene (it means we left this game scene to configure settings or so), then we restart it
             this.scenePlugin.start(this.currentGameSceneName);
             menuIconVisiblilityStore.set(true);
         } else {
-            this.scenePlugin.run(fallbackSceneName);
+            // If we are currently in the LoginScene and if we don't have a character selected, we go to SelectCharacterScene
+            if (
+                currentSceneName === LoginSceneName &&
+                (!this.characterTextureIds || this.characterTextureIds.length === 0)
+            ) {
+                this.scenePlugin.run(SelectCharacterSceneName);
+                return;
+            }
+            if (
+                (currentSceneName === SelectCompanionSceneName ||
+                    currentSceneName === LoginSceneName ||
+                    currentSceneName === SelectCharacterSceneName) &&
+                !this.startRoom.skipCameraPage
+            ) {
+                this.scenePlugin.run(EnableCameraSceneName);
+                return;
+            }
+            this.scenePlugin.run(this.startRoom.key);
         }
     }
 
@@ -329,6 +461,23 @@ export class GameManager {
         localUserStore.setMatrixUserId(null);
         localUserStore.setMatrixAccessToken(null);
         localUserStore.setMatrixRefreshToken(null);
+    }
+
+    public async loadWokaData(): Promise<WokaData> {
+        const roomUrl = gameManager.currentStartedRoom.href;
+        const response = await fetch(`${ABSOLUTE_PUSHER_URL}woka/list?roomUrl=${encodeURIComponent(roomUrl)}`, {
+            headers: {
+                Authorization: localUserStore.getAuthToken() || "",
+            },
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to load Woka data");
+        }
+
+        const data = await response.json();
+        return data as unknown as WokaData;
     }
 }
 

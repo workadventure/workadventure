@@ -1,7 +1,8 @@
 <script lang="ts">
     import { get } from "svelte/store";
     import { fly } from "svelte/transition";
-    import { ComponentType, onDestroy, onMount } from "svelte";
+    import type { ComponentType } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import type { Unsubscriber } from "svelte/store";
     import chevronImg from "../images/chevron.svg";
     import type { MenuItem } from "../../Stores/MenuStore";
@@ -22,10 +23,10 @@
     import AboutRoomSubMenu from "./AboutRoomSubMenu.svelte";
     import ContactSubMenu from "./ContactSubMenu.svelte";
     import CustomSubMenu from "./CustomSubMenu.svelte";
-    import GuestSubMenu from "./GuestSubMenu.svelte";
     import ReportSubMenu from "./ReportSubMenu.svelte";
     import ChatSubMenu from "./ChatSubMenu.svelte";
     import ShortcutSubMenu from "./ShortcutSubMenu.svelte";
+    import HelpSubMenu from "./HelpSubMenu.svelte";
 
     let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
     let activeComponent: ComponentType = ProfileSubMenu;
@@ -36,12 +37,16 @@
     onMount(async () => {
         unsubscriberActiveSubMenuStore = activeSubMenuStore.subscribe((value) => {
             if ($subMenusStore.length >= value - 1) {
-                void switchMenu($subMenusStore[value]);
+                switchMenu($subMenusStore[value]).catch((e) =>
+                    console.error("Failed to switch menu on activeSubMenuStore change", e)
+                );
             }
         });
         unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
             if (!$subMenusStore.includes(activeSubMenu)) {
-                void switchMenu($subMenusStore[$activeSubMenuStore]);
+                switchMenu($subMenusStore[$activeSubMenuStore]).catch((e) =>
+                    console.error("Failed to switch menu on subMenusStore change", e)
+                );
             }
         });
 
@@ -71,10 +76,6 @@
                     activeComponent = SettingsSubMenu;
                     analyticsClient.menuSetting();
                     break;
-                case SubMenusInterface.invite:
-                    activeComponent = GuestSubMenu;
-                    analyticsClient.menuInvite();
-                    break;
                 case SubMenusInterface.aboutRoom:
                     activeComponent = AboutRoomSubMenu;
                     analyticsClient.menuCredit();
@@ -98,6 +99,9 @@
                 case SubMenusInterface.shortcuts:
                     activeComponent = ShortcutSubMenu;
                     analyticsClient.menuShortcuts();
+                    break;
+                case SubMenusInterface.help:
+                    activeComponent = HelpSubMenu;
                     break;
             }
         } else {
@@ -164,6 +168,7 @@
                             </div>
 
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <!-- svelte-ignore a11y-no-static-element-interactions -->
                             <div
                                 class="menu-item-container group flex items-center @md/main-layout:justify-start justify-center h-full py-3.5 px-2 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-4 hover:opacity-100 cursor-pointer rounded-md @md/main-layout:rounded-lg overflow-hidden {activeSubMenu ===
                                 submenu

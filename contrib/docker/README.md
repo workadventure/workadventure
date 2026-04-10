@@ -104,13 +104,15 @@ or
 > Username/password authentication is sent to the browser and users with a technical knowledge can easily extract those.
 > With a static secret, the authentication is done using a time-limited token that is much more secure.
 
-Finally, if you plan to upload maps using the map-storage container and the [map starter kit](https://github.com/workadventure/map-starter-kit), 
-you should configure an API token for the map-storage container:
+Finally, to upload maps to the map-storage container using the [map starter kit](https://github.com/workadventure/map-starter-kit), 
+you will need to configure an API token for the map-storage container:
 
 - **MAP_STORAGE_ENABLE_BEARER_AUTHENTICATION**: set to "true" to enable the bearer authentication
 - **MAP_STORAGE_AUTHENTICATION_TOKEN**: the token to use to authenticate when uploading maps (use a very long random string here)
 
-Fill free to look the other environment variables and modify them according to your preferences.
+Feel free to look the other environment variables and modify them according to your preferences.
+
+For a complete reference of all available environment variables, see the [Environment Variables documentation](../../docs/others/self-hosting/env-variables.md).
 
 **Selecting the right version:**
 
@@ -190,6 +192,14 @@ authentication provider (like Google, GitHub, or any other provider).
 If you want to connect WorkAdventure to an authentication provider, you can follow the [OpenID Connect documentation](../../docs/others/self-hosting/openid.md).
 
 When OpenID is configured, you should set up a list of restricted users [allowed to access the inline map editor](../../docs/map-building/inline-editor/index.md).
+
+#### Enabling meeting recording
+
+WorkAdventure supports recording meetings using Livekit Egress. Recordings are stored in an S3-compatible storage bucket.
+
+To enable this feature, you will need to configure Livekit Egress and provide S3 credentials in the `.env` file.
+
+You can follow the [Meeting Recording documentation](../../docs/others/self-hosting/recording.md) to learn how to set this up.
 
 > [!NOTE]
 > We highly recommend configuring OpenID Connect. Authenticating users is mandatory to gain access to the inline map editor.

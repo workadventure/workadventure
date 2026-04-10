@@ -16,6 +16,8 @@ export default [
             "listeners/matching-remove-event-listener": "error",
             "listeners/no-inline-function-event-listener": "error",
 
+
+
             // Uncomment this to detect circular dependencies in imports
             // It is slow (~7 minutes) but is really helpful to detect architectural issues
             // TODO: solve these issues one by one and then enable this rule in CI only

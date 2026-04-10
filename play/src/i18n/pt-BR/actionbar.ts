@@ -7,6 +7,9 @@ const actionbar: BaseTranslation = {
     close: "Fechar",
     login: "Entrar",
     map: "Mapa",
+    participantListPlaceholder: "Lista de participantes",
+    participantSendMessage: "Enviar mensagem",
+    participantInviteUser: "Convidar usuário",
     profil: "Editar seu nome",
     startScreenSharing: "Iniciar compartilhamento de tela",
     stopScreenSharing: "Parar compartilhamento de tela",
@@ -23,7 +26,7 @@ const actionbar: BaseTranslation = {
     test: "Testar minhas configurações",
     editCamMic: "Editar câmera / microfone",
     allSettings: "Todas as configurações",
-    bo: "Back office",
+    installPwa: "Instalar aplicativo web",
     globalMessage: "Enviar mensagem global",
     mapEditor: "Editor de mapa",
     mapEditorMobileLocked: "Editor de mapa está bloqueado no modo móvel",
@@ -33,16 +36,27 @@ const actionbar: BaseTranslation = {
         disabled: "Sua câmera está desabilitada",
         activate: "Ativar sua câmera",
         noDevices: "Nenhum dispositivo de câmera encontrado",
+        setBackground: "Definir fundo",
+        blurEffects: "Efeitos de desfoque",
+        disableBackgroundEffects: "Desabilitar efeitos de fundo",
+        close: "Fechar",
     },
     microphone: {
         disabled: "Seu microfone está desabilitado",
         activate: "Ativar seu microfone",
         noDevices: "Nenhum dispositivo de microfone encontrado",
+        noSoundWarning:
+            "Nenhum som detectado do seu microfone. Pode haver um problema; tente trocar o microfone nas configurações.",
+        noSoundWarningPressEnter: "Nenhum som detectado do seu microfone. Pressione Enter para abrir as configurações.",
+        openSettings: "Abrir configurações",
+        ignore: "Ignorar",
     },
     speaker: {
         disabled: "Seu alto-falante está desabilitado",
         activate: "Ativar seu alto-falante",
         noDevices: "Nenhum dispositivo de alto-falante encontrado",
+        noDevicesDesc:
+            "O navegador não lista nenhuma saída de áudio selecionável. Alguns navegadores limitam isso (por exemplo Safari). Tente outro navegador, reconecte fones ou alto-falantes, verifique as configurações de som do sistema e as configurações do computador (privacidade, dispositivos).",
     },
     status: {
         ONLINE: "Online",
@@ -56,11 +70,24 @@ const actionbar: BaseTranslation = {
         BBB: "Em uma reunião",
         DENY_PROXIMITY_MEETING: "Não disponível",
         SPEAKER: "Em uma reunião",
+        LIVEKIT: "Em uma reunião",
+        LISTENER: "Em uma reunião",
     },
     subtitle: {
         camera: "Câmera",
         microphone: "Microfone",
         speaker: "Saída de áudio",
+    },
+    background: {
+        settings: "Configurações",
+        cameraBackground: "Fundo da câmera",
+        noEffect: "Sem efeito",
+        blur: "Desfoque",
+        blurSmall: "Desfoque pequeno",
+        blurMiddle: "Desfoque médio",
+        blurHigh: "Desfoque alto",
+        images: "Imagens",
+        videos: "Vídeos",
     },
     help: {
         chat: {
@@ -78,6 +105,9 @@ const actionbar: BaseTranslation = {
         audioManager: {
             title: "Volume dos sons ambiente",
             desc: "Controle o volume dos sons ambiente para uma experiência personalizada e confortável.",
+            pause: "Clique aqui para pausar o áudio",
+            play: "Clique aqui para reproduzir o áudio",
+            stop: "Clique aqui para parar o áudio",
         },
         audioManagerNotAllowed: {
             title: "Sons ambiente bloqueados",
@@ -94,6 +124,13 @@ const actionbar: BaseTranslation = {
         lock: {
             title: "Bloquear conversa",
             desc: "Ao habilitar este recurso, você garante que ninguém possa se juntar à discussão. Você é o mestre do seu espaço, e apenas aqueles já presentes podem interagir.",
+            areaPickerTitle: "Escolher área para bloquear/desbloquear",
+            bubbleLabel: "Bolha de discussão",
+            unnamedArea: "Área sem nome",
+        },
+        megaphone: {
+            title: "Parar megafone",
+            desc: "Parar de transmitir sua mensagem para todos os usuários.",
         },
         mic: {
             title: "Habilitar/desabilitar seu microfone",
@@ -131,6 +168,13 @@ const actionbar: BaseTranslation = {
             title: "Lista de tarefas",
             desc: "Organize e acompanhe suas tarefas e projetos de forma eficiente dentro do ambiente virtual.",
         },
+        pictureInPicture: {
+            title: "Picture in picture",
+            descDisabled:
+                "Infelizmente, este recurso não está disponível no seu dispositivo ❌. Tente usar outro dispositivo ou navegador, como Chrome ou Edge, para acessar este recurso.",
+            desc: "Você pode usar o recurso picture in picture para assistir a um vídeo ou uma apresentação enquanto está em uma conversa. Basta clicar no ícone picture in picture e aproveitar seu conteúdo.",
+        },
+        videoNotSupported: "Seu navegador não suporta a tag de vídeo.",
     },
     listStatusTitle: {
         enable: "Alterar seu status",
@@ -160,6 +204,14 @@ const actionbar: BaseTranslation = {
         highlightToolText: "Destacar",
         hideToolText: "Ocultar",
         removeHighlightText: "Remover",
+    },
+    personalDesk: {
+        label: "Ir para minha mesa",
+        unclaim: "Liberar minha mesa",
+        errorNoUser: "Não foi possível encontrar suas informações de usuário",
+        errorNotFound: "Você ainda não tem uma mesa pessoal",
+        errorMoving: "Não foi possível chegar à sua mesa pessoal",
+        errorUnclaiming: "Não foi possível liberar sua mesa pessoal",
     },
 };
 

@@ -1,4 +1,4 @@
-import type { SignalData } from "simple-peer";
+import type { SignalData } from "@workadventure/simple-peer";
 import type {
     ApplicationDefinitionInterface,
     AvailabilityStatus,
@@ -7,7 +7,7 @@ import type {
     SayMessage,
 } from "@workadventure/messages";
 import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
+import type { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
 import type { RoomConnection } from "./RoomConnection";
 
 export interface MessageUserMovedInterface {
@@ -28,6 +28,7 @@ export interface MessageUserJoined {
     variables: Map<string, unknown>;
     chatID?: string;
     sayMessage?: SayMessage;
+    activate?: () => void;
 }
 
 export interface PositionInterface {
@@ -55,8 +56,6 @@ export interface WebRtcDisconnectMessageInterface {
 export interface WebRtcSignalReceivedMessageInterface {
     userId: string;
     signal: SignalData;
-    webRtcUser: string | undefined;
-    webRtcPassword: string | undefined;
 }
 
 export interface ViewportInterface {
@@ -73,15 +72,21 @@ export interface ItemEventMessageInterface {
     parameters: unknown;
 }
 
+export interface AreaPropertyVariable {
+    areaId: string;
+    propertyId: string;
+    key: string;
+    value: unknown;
+}
+
 export interface RoomJoinedMessageInterface {
     items: { [itemId: number]: unknown };
     variables: Map<string, unknown>;
     playerVariables: Map<string, unknown>;
+    areaPropertyVariables: AreaPropertyVariable[];
     characterTextures: WokaTextureDescriptionInterface[];
     companionTexture?: CompanionTextureDescriptionInterface;
     commandsToApply?: EditMapCommandMessage[];
-    webRtcUserName: string;
-    webRtcPassword: string;
     applications?: Array<ApplicationDefinitionInterface> | undefined;
 }
 

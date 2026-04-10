@@ -2,8 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
-    import MicOffIcon from "../Icons/MicOffIcon.svelte";
-    import CheckIcon from "../Icons/CheckIcon.svelte";
+    import { IconMicrophoneOff, IconCheck } from "@wa-icons";
 
     let editMode = false;
     export let selectedDevice: string | undefined = undefined;
@@ -32,6 +31,7 @@
     <div class="flex w-full">
         <div class="flex flex-wrap justify-center w-full min-h-[129px]">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 class="flex border border-solid border-white w-full rounded-lg m-2 items-center justify-start transition-all overflow-hidden cursor-pointer px-8 py-6 space-x-4 {!selectedDevice
                     ? 'bg-white text-secondary border-none'
@@ -49,14 +49,14 @@
                     class:border-secondary={!selectedDevice}
                 >
                     {#if !selectedDevice}
-                        <CheckIcon width="w-4" height="h-4" />
+                        <IconCheck font-size="20" class="text-white" />
                     {/if}
                 </div>
 
                 <div class="space-y-1 min-w-0">
                     <div class="text-lg bold truncate leading-tight flex self-start">
                         {#if editMode && selectedDevice}
-                            <MicOffIcon height="h-4" width="w-4" />
+                            <IconMicrophoneOff font-size="20" />
                         {/if}
 
                         {$LL.audio.disable()}
@@ -74,6 +74,7 @@
             </div>
             {#each deviceList ?? [] as device (device.deviceId)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <div
                     class="border border-solid border-white w-full rounded-lg m-2 transition-all overflow-hidden cursor-pointer relative px-8 py-6 space-x-4 {selectedDevice ===
                     device.deviceId
@@ -96,7 +97,7 @@
                             class:border-secondary={selectedDevice === device.deviceId}
                         >
                             {#if selectedDevice == device.deviceId}
-                                <CheckIcon width="w-4" height="h-4" />
+                                <IconCheck class="text-white" />
                             {/if}
                         </div>
                         <div class="space-y-1 min-w-0">

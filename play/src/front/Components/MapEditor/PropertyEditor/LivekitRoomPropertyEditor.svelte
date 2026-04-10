@@ -1,12 +1,12 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { LivekitRoomPropertyData } from "@workadventure/map-editor";
+    import type { LivekitRoomPropertyData } from "@workadventure/map-editor";
     import { openModal } from "svelte-modals";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
-    import { IconCamera } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import LivekitRoomConfigEditor from "./LivekitRoomConfigEditor.svelte";
+    import { IconUsersGroup } from "@wa-icons";
 
     export let property: LivekitRoomPropertyData;
     export let hasHighlightProperty: boolean;
@@ -45,16 +45,16 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <IconCamera font-size="18" class="mr-2" />
-        {$LL.mapEditor.properties.livekitProperties.label()}
+        <IconUsersGroup font-size="18" class="mr-2" />
+        {$LL.mapEditor.properties.livekitRoomProperty.label()}
     </span>
     <span slot="content">
         <div class="value-input">
             <Input
                 id="roomName"
                 type="text"
-                label={$LL.mapEditor.properties.livekitProperties.roomNameLabel()}
-                placeholder={$LL.mapEditor.properties.livekitProperties.roomNamePlaceholder()}
+                label={$LL.mapEditor.properties.livekitRoomProperty.roomNameLabel()}
+                placeholder={$LL.mapEditor.properties.livekitRoomProperty.roomNamePlaceholder()}
                 bind:value={property.roomName}
                 onChange={onValueChange}
             />
@@ -64,7 +64,7 @@
             on:click={OpenPopup}
             data-testid="livekitRoomMoreOptionsButton"
         >
-            {$LL.mapEditor.properties.livekitProperties.moreOptionsLabel()}
+            {$LL.mapEditor.properties.livekitRoomProperty.moreOptionsLabel()}
         </button>
         {#if !hasHighlightProperty}
             <button
@@ -73,7 +73,7 @@
                     dispatch("highlightAreaOnEnter");
                 }}
             >
-                {$LL.mapEditor.properties.livekitProperties.highlightAreaOnEnter()}
+                {$LL.mapEditor.properties.livekitRoomProperty.highlightAreaOnEnter()}
             </button>
         {/if}
     </span>

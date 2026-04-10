@@ -83,6 +83,7 @@ enable_registration: true
 enable_registration_without_verification: true
 turn_allow_guests: true
 allow_guest_access: true
+enable_authenticated_media: false
 
 # Development server only: we allow creating publicly visible rooms to anyone.
 room_list_publication_rules:
@@ -109,3 +110,6 @@ rc_login:
   failed_attempts:
     per_second: 0.19
     burst_count: 10
+rc_room_creation:
+  per_second: 10
+  burst_count: 10000

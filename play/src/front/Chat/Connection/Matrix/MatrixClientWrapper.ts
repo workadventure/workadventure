@@ -1,19 +1,13 @@
 import { Buffer } from "buffer";
 import Olm from "@matrix-org/olm";
 
-import {
-    createClient,
-    ICreateClientOpts,
-    IndexedDBCryptoStore,
-    IndexedDBStore,
-    MatrixClient,
-    SecretStorage,
-} from "matrix-js-sdk";
+import type { ICreateClientOpts, MatrixClient, SecretStorage } from "matrix-js-sdk";
+import { createClient, IndexedDBCryptoStore, IndexedDBStore } from "matrix-js-sdk";
 
-import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
+import type { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
 import { openModal } from "svelte-modals";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
-import { LocalUser } from "../../../Connection/LocalUser";
+import type { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { matrixSecurity } from "./MatrixSecurity";
 import { customMatrixLogger } from "./CustomMatrixLogger";

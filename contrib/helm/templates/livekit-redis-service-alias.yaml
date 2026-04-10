@@ -1,0 +1,27 @@
+{{- if .Values.livekit.enabled -}}
+{{- $livekitServer := index .Values "livekit-server" | default dict -}}
+{{- $livekitConfig := index $livekitServer "livekit" | default dict -}}
+{{- $redisConfig := index $livekitConfig "redis" | default dict -}}
+{{- $redisAddress := index $redisConfig "address" | default "" -}}
+{{- if eq $redisAddress "workadventure-livekit-redis:6379" -}}
+# This alias provides a stable Redis hostname for LiveKit defaults.
+# The actual Bitnami Redis service name depends on the Helm release name
+# (<release>-redis-master), while `livekit-server.livekit.redis.address`
+# is a plain string in values and not release-aware by default.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: workadventure-livekit-redis
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+spec:
+  type: ExternalName
+  externalName: {{ printf "%s-redis-master.%s.svc.cluster.local" .Release.Name .Release.Namespace | quote }}
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP
+{{- end -}}
+{{- end -}}

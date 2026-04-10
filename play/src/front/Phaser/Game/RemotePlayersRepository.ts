@@ -1,10 +1,6 @@
-import {
-    AvailabilityStatus,
-    availabilityStatusToJSON,
-    PlayerDetailsUpdatedMessage,
-    UserMovedMessage,
-} from "@workadventure/messages";
-import { Deferred } from "ts-deferred";
+import type { PlayerDetailsUpdatedMessage, UserMovedMessage } from "@workadventure/messages";
+import { AvailabilityStatus, availabilityStatusToJSON } from "@workadventure/messages";
+import { Deferred } from "@workadventure/shared-utils";
 import type { MessageUserJoined } from "../../Connection/ConnexionModels";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { iframeListener } from "../../Api/IframeListener";
@@ -21,6 +17,7 @@ export type PlayerDetailsUpdate = {
         outlineColor: boolean;
         showVoiceIndicator: boolean;
         availabilityStatus: boolean;
+        chatID: boolean;
         sayMessage: boolean;
     };
 };
@@ -59,6 +56,7 @@ export class RemotePlayersRepository {
                     availabilityStatus: true,
                     outlineColor: true,
                     showVoiceIndicator: true,
+                    chatID: true,
                     sayMessage: true,
                 },
                 player,
@@ -120,6 +118,7 @@ export class RemotePlayersRepository {
                     availabilityStatus: false,
                     outlineColor: false,
                     showVoiceIndicator: false,
+                    chatID: false,
                     sayMessage: false,
                 },
                 player,
@@ -146,6 +145,10 @@ export class RemotePlayersRepository {
         if (details.availabilityStatus !== AvailabilityStatus.UNCHANGED) {
             player.availabilityStatus = details.availabilityStatus;
             updateStruct.updated.availabilityStatus = true;
+        }
+        if (details.chatID !== undefined) {
+            player.chatID = details.chatID ?? undefined;
+            updateStruct.updated.chatID = true;
         }
         if (details.setVariable !== undefined) {
             const value = RoomConnection.unserializeVariable(details.setVariable.value);
@@ -237,5 +240,13 @@ export class RemotePlayersRepository {
                 }, 5000);
             }),
         ]);
+    }
+
+    public getPlayerByUuid(userUuid: string): RemotePlayerData | undefined {
+        return Array.from(this.remotePlayersData.values()).find((player) => player.userUuid === userUuid);
+    }
+
+    public getPlayerByChatId(chatId: string): RemotePlayerData | undefined {
+        return Array.from(this.remotePlayersData.values()).find((player) => player.chatID === chatId);
     }
 }

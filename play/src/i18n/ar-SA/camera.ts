@@ -20,8 +20,38 @@ const camera: DeepPartial<Translation["camera"]> = {
         continue: "المتابعة بدون كاميرا", // Continue without camera
         allow: "السماح بالكاميرا", // Allow camera
         screen: {
-            firefox: "/resources/help-setting-camera-permission/ar-SA-firefox.png", // Firefox help setting camera permission
-            chrome: "/resources/help-setting-camera-permission/ar-SA-chrome.png", // Chrome help setting camera permission
+            firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+        },
+        tooltip: {
+            permissionDeniedTitle: "تم حظر الوصول إلى الكاميرا",
+            permissionDeniedDesc:
+                "رفض المتصفح الوصول إلى الكاميرا لهذا الموقع. اسمح بها من شريط العناوين (أيقونة القفل أو الكاميرا) أو من إعدادات الموقع. الصورة أدناه تناسب متصفحك.",
+            noDeviceTitle: "لا توجد كاميرا صالحة للاستخدام",
+            noDeviceDesc:
+                "المتصفح لا يكتشف أي كاميرا يمكن استخدامها. جرّب متصفحًا آخر، أو تحقق من توصيل الكاميرا، أو تحقق من إعدادات الجهاز (الخصوصية، الأجهزة)، أو أعد تشغيل الجهاز إذا كان يفترض أن يعمل.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
+        microphoneTooltip: {
+            permissionDeniedTitle: "تم حظر الوصول إلى الميكروفون",
+            permissionDeniedDesc:
+                "رفض المتصفح الوصول إلى الميكروفون لهذا الموقع. اسمح به من شريط العناوين (أيقونة القفل أو الميكروفون) أو من إعدادات الموقع. الصورة أدناه تناسب متصفحك.",
+            noDeviceTitle: "لا يوجد ميكروفون صالح للاستخدام",
+            noDeviceDesc:
+                "المتصفح لا يكتشف أي ميكروفون يمكن استخدامه. جرّب متصفحًا آخر، أو تحقق من توصيل الميكروفون، أو تحقق من إعدادات الجهاز (الخصوصية، الأجهزة)، أو أعد تشغيل الجهاز إذا كان يفترض أن يعمل.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
         },
     },
     webrtc: {
@@ -37,7 +67,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         refresh: "تحديث", // Refresh
         continue: "استمرار", // Continue
         solutionVpnNotAskAgain: "فهمت. لا تحذرني مرة أخرى 🫡",
-        newDeviceDetected: "تم اكتشاف جهاز جديد {device} 🎉 التبديل؟ [مسافة]",
+        newDeviceDetected: "تم اكتشاف جهاز جديد {device} 🎉 التبديل؟ [SPACE] تجاهل [ESC]",
     },
     my: {
         silentZone: "منطقة صامتة", // Silent zone
@@ -53,10 +83,21 @@ const camera: DeepPartial<Translation["camera"]> = {
         senPrivateMessage: "إرسال رسالة خاصة (قريبًا)", // Send private message (coming soon)
         kickoffUser: "طرد المستخدم", // Kick off user
         muteAudioUser: "كتم صوت المستخدم", // Mute user's audio
+        askToMuteAudioUser: "طلب كتم الصوت", // Ask to mute audio
         muteAudioEveryBody: "كتم الصوت للجميع", // Mute audio for everybody
         muteVideoUser: "كتم فيديو المستخدم", // Mute user's video
+        askToMuteVideoUser: "طلب كتم الفيديو", // Ask to mute video
         muteVideoEveryBody: "كتم الفيديو للجميع", // Mute video for everybody
-        blockOrReportUser: "حظر أو الإبلاغ عن المستخدم", // Block or report user
+        blockOrReportUser: "الإشراف", // Moderation
+    },
+    backgroundEffects: {
+        imageTitle: "صور الخلفية", // Background Images
+        videoTitle: "فيديوهات الخلفية", // Background Videos
+        blurTitle: "ضبابية الخلفية", // Background Blur
+        resetTitle: "تعطيل تأثيرات الخلفية", // Disable background effects
+        title: "تأثيرات الخلفية", // Background Effects
+        close: "إغلاق", // Close
+        blurAmount: "مقدار الضبابية", // Blur Amount
     },
 };
 

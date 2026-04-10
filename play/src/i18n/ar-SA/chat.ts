@@ -32,20 +32,44 @@ const chat: DeepPartial<Translation["chat"]> = {
         teleporting: "جار الانتقال الفوري ...",
         businessCard: "بطاقة العمل",
         sendMessage: "إرسال رسالة",
+        follow: "تحديد الموقع",
+        invite: "دعوة",
     },
     accept: "قبول",
     decline: "رفض",
+    meetingInvitation: {
+        title: "{name} يدعوك للانضمام إلى الاجتماع",
+        invitationDeclined: "تم رفض دعوتك من قبل {name}",
+        invitationAccepted: "تم قبول دعوتك من قبل {name}",
+        defaultResponderName: "المستخدم",
+        limitReached: "لقد أرسلت الكثير من دعوات الاجتماعات. يرجى المحاولة مرة أخرى لاحقاً.",
+    },
+    imagePreview: {
+        close: "إغلاق",
+        openInNewTab: "فتح في علامة تبويب جديدة",
+    },
     join: "انضمام",
+    search: "بحث",
+    closeSearch: "إغلاق البحث",
+    closeChat: "إغلاق الدردشة",
     connecting: "جار الاتصال بالخادم ...",
     waitingInit: "في انتظار تهيئة الخادم ...",
     waitingData: "في انتظار بيانات المستخدم ...",
     searchUser: "ابحث عن مستخدم، خريطة، إلخ ...",
     searchChat: "ابحث عن قناة، رسالة، إلخ ...",
-    people: "الأشخاص",
-    rooms: "الغرف",
+    people: "رسالة مباشرة",
+    rooms: "محادثات المجموعة",
     addNew: "إضافة جديد : ",
     invitations: "الدعوات",
+    roomInvitation: {
+        notification: "تمت دعوتك إلى الغرفة {roomName}",
+        notificationTitle: "دعوة جديدة",
+        unknownRoom: "غرفة",
+    },
     suggestedRooms: "الغرف المقترحة",
+    ignoreSuggestedRoom: "تجاهل",
+    joinableRooms: "المناقشات المتاحة",
+    joinableRoomsError: "خطأ في تحميل المناقشات، انقر لإعادة المحاولة",
     availableRooms: "الغرف المتاحة",
     proximity: "دردشة القرب",
     role: {
@@ -89,9 +113,14 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "الخط الزمني الخاص بك",
         open: "افتح سجل الخط الزمني الخاص بك!",
         description: "سجل الرسائل والأحداث",
+        newDiscussion: "مناقشة جديدة مع {userNames}",
         incoming: "{userName} انضم إلى المناقشة",
         outcoming: "{userName} غادر المناقشة",
         youLeft: "لقد غادرت المناقشة",
+        youleftMeetingRoom: "لقد غادرت غرفة الاجتماع",
+        youJoinedMeetingRoom: "لقد انضممت إلى غرفة الاجتماع",
+        today: "اليوم",
+        yesterday: "أمس",
     },
     form: {
         placeholder: "أدخل رسالتك...",
@@ -133,6 +162,10 @@ const chat: DeepPartial<Translation["chat"]> = {
                 title: "البطاقات",
                 description: "أرسل بطاقة في الدردشة!",
             },
+            tldraw: {
+                title: "Tldraw",
+                description: "أرسل لوحة بيضاء Tldraw عبر الإنترنت.",
+            },
             weblink: {
                 error: "يرجى إدخال عنوان URL صالح",
             },
@@ -142,6 +175,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         discussion: "يريد مناقشة معك",
         message: "يرسل رسالة",
         forum: "في المنتدى",
+        in: "في",
     },
     see: "رؤية",
     show: "عرض",
@@ -199,6 +233,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     addRoomToFolderError: "لا يمكن إضافة الغرفة إلى المجلد",
     createRoom: {
         title: "إنشاء غرفة جديدة",
+        rootTitle: "إنشاء مناقشة جديدة",
         name: "الاسم",
         visibility: {
             label: "الرؤية",
@@ -230,6 +265,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         error: "خطأ في إنشاء الغرفة",
         loadingCreation: "جار إنشاء الغرفة",
         creationSuccessNotification: "تم إنشاء الغرفة",
+        restrictedDescription: "ستكون هذه الغرفة مرئية فقط لأعضاء المجلد الأب: {folderName}",
     },
     createFolder: {
         title: "إنشاء مجلد جديد",
@@ -463,6 +499,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     dismiss: "رفض", // Dismiss
     whoops: "عذرًا! حدث خطأ ما", // Whoops! Something went wrong
     failedToOpenRoom: "فشل في فتح الغرفة: {roomId}", // Failed to open room: {roomId}
+    failedToSendAttachments: "فشل إرسال المرفقات. يرجى المحاولة مرة أخرى.", // Failed to send attachments. Please try again.
     refreshChatError: "فشل في تحديث الدردشة", // Failed to refresh chat
     discord: {
         chatBand: {

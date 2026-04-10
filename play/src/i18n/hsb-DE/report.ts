@@ -11,6 +11,7 @@ const report: DeepPartial<Translation["report"]> = {
     title: "přizjewić",
     content: "Napisaj pohóršk na administratorow tutoho ruma. Tući móža wužiwarja po tym wuzamknyć. ",
     message: {
+        error: "Report message error, you can contact the administrator.",
         title: "Twoja powěsć:",
         empty: "prošu tekst zapodać.",
     },

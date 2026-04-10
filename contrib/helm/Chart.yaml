@@ -30,3 +30,12 @@ dependencies:
   - name: common
     version: 2.x.x
     repository: oci://registry-1.docker.io/bitnamicharts
+  - name: livekit-server
+    version: 1.9.0
+    repository: https://helm.livekit.io
+    condition: livekit.enabled
+  - name: egress
+    alias: livekit-egress
+    version: 1.8.4
+    repository: https://helm.livekit.io
+    condition: livekit.egress.enabled

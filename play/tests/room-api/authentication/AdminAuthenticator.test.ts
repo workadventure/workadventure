@@ -1,7 +1,7 @@
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { describe, test, expect, vi, beforeAll, it } from "vitest";
-import { AxiosInstance } from "axios";
-import { CacheOptions } from "axios-cache-interceptor";
+import type { AxiosInstance } from "axios";
+import type { CacheOptions } from "axios-cache-interceptor";
 import authenticator from "../../../src/room-api/authentication/AdminAuthenticator";
 import { GuardError } from "../../../src/room-api/types/GuardError";
 

@@ -3,12 +3,14 @@ import type {
     AdminApiData,
     CompanionDetail,
     ErrorApiData,
+    IceServer,
     MapDetailsData,
     MemberData,
     OauthRefreshToken,
     RoomRedirect,
+    Capabilities,
 } from "@workadventure/messages";
-import { Capabilities, OpidWokaNamePolicy } from "@workadventure/messages";
+import { OpidWokaNamePolicy } from "@workadventure/messages";
 import axios from "axios";
 import { MapsCacheFileFormat } from "@workadventure/map-editor";
 import {
@@ -17,11 +19,18 @@ import {
     ENABLE_CHAT,
     ENABLE_CHAT_DISCONNECTED_LIST,
     ENABLE_CHAT_ONLINE_LIST,
+    DEFAULT_WOKA_NAME,
+    DEFAULT_WOKA_TEXTURE,
+    SKIP_CAMERA_PAGE,
+    BYPASS_PWA,
+    PROVIDE_DEFAULT_WOKA_NAME,
+    PROVIDE_DEFAULT_WOKA_TEXTURE,
     TLDRAW_ENABLED,
     ENABLE_CHAT_UPLOAD,
     ENABLE_ISSUE_REPORT,
     ENABLE_MAP_EDITOR,
     ENABLE_SAY,
+    ENABLE_TUTORIAL,
     ERASER_ENABLED,
     EXCALIDRAW_ENABLED,
     GOOGLE_DOCS_ENABLED,
@@ -30,6 +39,11 @@ import {
     GOOGLE_SLIDES_ENABLED,
     INTERNAL_MAP_STORAGE_URL,
     KLAXOON_ENABLED,
+    LIVEKIT_RECORDING_S3_ACCESS_KEY,
+    LIVEKIT_RECORDING_S3_BUCKET,
+    LIVEKIT_RECORDING_S3_ENDPOINT,
+    LIVEKIT_RECORDING_S3_REGION,
+    LIVEKIT_RECORDING_S3_SECRET_KEY,
     MAP_EDITOR_ALLOW_ALL_USERS,
     MAP_EDITOR_ALLOWED_USERS,
     OPID_WOKA_NAME_POLICY,
@@ -47,8 +61,17 @@ import type { AdminInterface } from "./AdminInterface";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 import { localCompanionService } from "./LocalCompanionSevice";
-import { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDescription";
-import { WorldChatMembersData } from "./WorldChatMembersData";
+import type { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDescription";
+import type { WorldChatMembersData } from "./WorldChatMembersData";
+import { iceServersService } from "./IceServersService";
+
+const isRecordingConfigured = !!(
+    LIVEKIT_RECORDING_S3_ENDPOINT &&
+    LIVEKIT_RECORDING_S3_BUCKET &&
+    LIVEKIT_RECORDING_S3_ACCESS_KEY &&
+    LIVEKIT_RECORDING_S3_SECRET_KEY &&
+    LIVEKIT_RECORDING_S3_REGION
+);
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -65,6 +88,7 @@ class LocalAdmin implements AdminInterface {
         tags?: string[]
     ): Promise<FetchMemberDataByUuidResponse> {
         let canEdit = false;
+        let canRecord = false;
         const roomUrl = new URL(playUri);
         const match = /\/~\/(.+)/.exec(roomUrl.pathname);
         if (
@@ -208,6 +232,8 @@ class LocalAdmin implements AdminInterface {
             });
         }
 
+        canRecord = isRecordingConfigured && accessToken !== undefined;
+
         return {
             status: "ok",
             email: userIdentifier,
@@ -224,6 +250,7 @@ class LocalAdmin implements AdminInterface {
             canEdit,
             world: "localWorld",
             applications,
+            canRecord,
         };
     }
 
@@ -294,8 +321,21 @@ class LocalAdmin implements AdminInterface {
             enableMatrixChat: Boolean(
                 MATRIX_PUBLIC_URI && MATRIX_API_URI && MATRIX_ADMIN_USER && MATRIX_ADMIN_PASSWORD && MATRIX_DOMAIN
             ),
+            defaultWokaName: DEFAULT_WOKA_NAME || undefined,
+            defaultWokaTexture: DEFAULT_WOKA_TEXTURE || undefined,
+            skipCameraPage: SKIP_CAMERA_PAGE,
+            bypassPwa: BYPASS_PWA,
+            provideDefaultWokaName: PROVIDE_DEFAULT_WOKA_NAME,
+            provideDefaultWokaTexture: PROVIDE_DEFAULT_WOKA_TEXTURE,
             metatags: {
                 ...MetaTagsDefaultValue,
+            },
+            recording: {
+                buttonState: isRecordingConfigured ? "enabled" : "hidden",
+                disabledReason: null,
+            },
+            metadata: {
+                enableTutorial: ENABLE_TUTORIAL,
             },
         });
     }
@@ -424,8 +464,12 @@ class LocalAdmin implements AdminInterface {
         return Promise.resolve();
     }
 
-    refreshOauthToken(token: string): Promise<OauthRefreshToken> {
+    refreshOauthToken(token: string, provider?: string, userIdentifier?: string): Promise<OauthRefreshToken> {
         return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
+    getIceServers(userId: number, userIdentifier: string, roomUrl: string): Promise<IceServer[]> {
+        return Promise.resolve(iceServersService.generateIceServers(userId.toString()));
     }
 }
 

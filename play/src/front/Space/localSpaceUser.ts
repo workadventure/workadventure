@@ -1,10 +1,10 @@
 import { get, readable, writable } from "svelte/store";
-import { PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
+import type { PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { availabilityStatusStore } from "../Stores/MediaStore";
 import LL from "../../i18n/i18n-svelte";
-import { SpaceUserExtended } from "./SpaceInterface";
+import type { SpaceUserExtended } from "./SpaceInterface";
 
 export const localSpaceUser = (name?: string): SpaceUserExtended => {
     return {
@@ -26,6 +26,7 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
         color: "local",
         jitsiParticipantId: undefined,
         characterTextures: [],
+        attendeesState: false,
         pictureStore: readable<string | undefined>(undefined, (set) => {
             const unsubscribe = gameManager
                 .getCurrentGameScene()
@@ -58,6 +59,7 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
             tags: writable([]),
             cameraState: writable(false),
             microphoneState: writable(false),
+            attendeesState: writable(false),
             screenSharingState: writable(true),
             megaphoneState: writable(false),
             jitsiParticipantId: writable(undefined),

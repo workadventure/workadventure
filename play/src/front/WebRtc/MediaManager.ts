@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
-import { stableLocalStreamStore } from "../Stores/MediaStore";
+import { localStreamStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { showHelpCameraSettings } from "../Stores/HelpSettingsStore";
 import {
@@ -30,7 +30,7 @@ export class MediaManager {
             .finally(() => {
                 // It is ok to not unsubscribe to this store because it is a singleton.
                 // eslint-disable-next-line svelte/no-ignored-unsubscribe
-                stableLocalStreamStore.subscribe((result) => {
+                localStreamStore.subscribe((result) => {
                     if (result.type === "error") {
                         if (result.error.name !== MediaStreamConstraintsError.NAME && get(myCameraStore)) {
                             showHelpCameraSettings();

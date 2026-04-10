@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { AuthDict, AuthType, MatrixClient } from "matrix-js-sdk";
+    import type { AuthDict, MatrixClient } from "matrix-js-sdk";
+    import { AuthType } from "matrix-js-sdk";
     import LL from "../../../../i18n/i18n-svelte";
     import { INTERACTIVE_AUTH_PHASE } from "./InteractiveAuthPhase";
 

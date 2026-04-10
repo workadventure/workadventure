@@ -1,5 +1,5 @@
-import type { Readable } from "svelte/store";
-import { Subscriber, Unsubscriber, derived } from "svelte/store";
+import type { Readable, Subscriber, Unsubscriber } from "svelte/store";
+import { derived } from "svelte/store";
 import { ForwardableStore } from "./ForwardableStore";
 
 /**

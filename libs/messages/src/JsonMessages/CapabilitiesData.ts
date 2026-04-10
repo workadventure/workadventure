@@ -26,6 +26,10 @@ export const isCapabilities = z.object({
         description: "Means the api implements the livekit credentials",
         example:"v1"
     }),
+    "api/ice-servers": extendApi(z.optional(z.string()), {
+        description: "The API can provide ICE server configurations (including TURN servers and credentials) for WebRTC connections.",
+        example:"v1"
+    }),
 });
 
 export type Capabilities = z.infer<typeof isCapabilities>;

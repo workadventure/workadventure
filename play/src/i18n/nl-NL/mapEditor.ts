@@ -4,6 +4,9 @@ import type { DeepPartial } from "../DeepPartial";
 const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     map: {
         refreshPrompt: "Nieuwe versie van de kaart gedetecteerd. Vernieuwing nodig",
+        deletePrompt: "Deze kaart is verwijderd",
+        deletePromptSubtitle: "Je bent losgekoppeld van deze ruimte.",
+        deletePromptDetails: "Verversen zal deze kaart niet herstellen omdat deze niet meer bestaat.",
     },
     sideBar: {
         areaEditor: "Gebied editor tool",
@@ -22,21 +25,30 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         configureMyRoomActivated: "Configureer mijn kamer geactiveerd",
     },
     properties: {
-        silentProperty: {
+        silent: {
             label: "Stil",
             description: "Sta geen gesprekken binnen toe.",
+            actionButtonLabel: "Niet storen",
         },
-        textProperties: {
+        text: {
             label: "Headertekst",
             placeholder: "Voer hier de tekst in die wordt weergegeven bij interactie met het object",
         },
-        focusableProperties: {
+        focusable: {
             label: "Focusbaar",
             description: "Focus de camera op dit gebied bij binnenkomst.",
             zoomMarginLabel: "Zoommarge",
             defaultButtonLabel: "Focus op",
         },
-        jitsiProperties: {
+        highlight: {
+            label: "Markeren",
+            description: "Voeg een markeringseffect toe wanneer we het gebied betreden.",
+            opacityLabel: "Doorzichtigheid",
+            gradientWidthLabel: "Gradiëntbreedte",
+            colorLabel: "Kleur",
+            durationLabel: "Overgangsduur (ms)",
+        },
+        jitsiRoomProperty: {
             label: "Jitsi Kamer",
             description: "Start Jitsi vergadering bij binnenkomst.",
             roomNameLabel: "Kamersnaam",
@@ -58,12 +70,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 addConfig: "Voeg een optie toe",
                 startWithAudioMuted: "Start met microfoon uitgeschakeld",
                 startWithVideoMuted: "Start met video gesloten",
+                disableChat: "Chat uitschakelen",
                 jitsiRoomAdminTag: "Moderator-tag voor de vergaderruimte",
                 cancel: "Annuleren",
                 validate: "Valideren",
             },
+            disabled: "Jitsi-integratie is uitgeschakeld voor deze kamer ❌",
+            actionButtonLabel: "Start Jitsi-vergadering",
         },
-        audioProperties: {
+        playAudio: {
             label: "Speel audiobestand af",
             description: "Speel audio af met instelbaar volume.",
             volumeLabel: "Volume",
@@ -71,8 +86,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "Speel muziek af",
             error: "Kon geluid niet laden",
+            actionButtonLabel: "Speel muziek",
         },
-        linkProperties: {
+        openWebsite: {
             label: "Open Link",
             description: "Open website binnen WorkAdventure of in een nieuw tabblad.",
             linkLabel: "Link URL",
@@ -97,17 +113,21 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             findOutMoreHere: "Meer informatie hier",
             openPickerSelector: "Open kiesselector",
             forcedInNewTab: "Gedwongen in nieuw tabblad",
+            openApplication: "Open applicatie",
+            hideUrlLabel: "URL verbergen",
+            actionButtonLabel: "Open link",
         },
         advancedOptions: "Geavanceerde opties",
-        speakerMegaphoneProperties: {
+        speakerMegaphone: {
             label: "Podium",
             description:
                 'Gebruikers op het podium (podium) kunnen spreken tot alle deelnemers in het bijbehorende "Publiek" gebied.',
             nameLabel: "Naam",
             namePlaceholder: "HoofdPodium",
             disabled: "Podium is uitgeschakeld voor deze kamer ❌",
+            actionButtonLabel: "Deelnemen aan podium",
         },
-        listenerMegaphoneProperties: {
+        listenerMegaphone: {
             label: "Publiek",
             description: "Gebruikers in het publieksgebied kunnen de spreker op het gekoppelde podium horen.",
             nameLabel: "Podiumnaam",
@@ -119,69 +139,82 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Er lijkt een probleem te zijn met de link die je hebt opgegeven. Zou je hem opnieuw kunnen controleren? 🙏",
             waitingMedialLinkHelp: "De juiste link zou 'https://monlienmedia.com/…' moeten zijn.",
             waitingSpeaker: "Wachten op de spreker 🎤✨",
+            actionButtonLabel: "Deelnemen aan publiek",
         },
 
         chatEnabled: "Koppel een speciale chatkanaal",
-        startProperties: {
+        seeAttendees: "Deelnemers zien",
+        start: {
             label: "Startgebied",
             description: "Waar mensen kunnen beginnen op de kaart.",
             nameLabel: "Startnaam",
             namePlaceholder: "Voer1",
             type: "Startpositie type",
             defaultMenuItem: "Standaard gebruiken",
-            hashMenuItem: "Gebruik als URL #[gebied naam] bevat",
+            hashMenuItem: "Gebruik als URL #[gebied-naam] bevat",
+            infoAreaName:
+                "De gebiedsnaam wordt gebruikt in de exitgebied selector. Deze moet uniek zijn op de kaart en mag geen spaties of speciale tekens bevatten.",
+            actionButtonLabel: "Ga naar start",
         },
-        exitProperties: {
+        exit: {
             label: "Exitgebied",
             description: "Waar mensen de kaart kunnen verlaten naar een andere.",
             exitMap: "Verlaat kaart",
             exitMapStartAreaName: "Startgebied naam",
             defaultStartArea: "Standaard startgebied",
+            actionButtonLabel: "Ga naar uitgang",
         },
-        youtubeProperties: {
+        youtube: {
             label: "Open YouTube Video",
             description: "Open YouTube video binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige YouTube URL in",
             disabled: "YouTube-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open YouTube-video",
         },
-        googleDocsProperties: {
+        googleDocs: {
             label: "Open Google Docs",
             description: "Open Google Docs binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige Google Docs URL in",
             disabled: "Google Docs-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open Google Docs",
         },
-        klaxoonProperties: {
+        klaxoon: {
             label: "Open Klaxoon",
             description: "Open Klaxoon binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige Klaxoon URL in",
             disabled: "Klaxoon-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open Klaxoon",
         },
-        googleSheetsProperties: {
+        googleSheets: {
             label: "Open Google Sheets",
             description: "Open Google Sheets binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige Google Sheets URL in",
             disabled: "Google Sheets-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open Google Sheets",
         },
-        googleSlidesProperties: {
+        googleSlides: {
             label: "Open Google Slides",
             description: "Open Google Slides binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige Google Slides URL in",
             disabled: "Google Slides-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open Google Slides",
         },
-        eraserProperties: {
+        eraser: {
             label: "Gum",
             description: "Verwijder alle tekeningen op de kaart.",
             defaultButtonLabel: "Gum",
             error: "Voer een geldige Gum URL in",
             disabled: "Gum-integratie is uitgeschakeld.",
+            actionButtonLabel: "Wis tekeningen",
         },
-        googleDriveProperties: {
+        googleDrive: {
             label: "Open Google Drive",
             description: "Open Google Drive binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige Google Drive URL in",
             disabled: "Google Drive-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open Google Drive",
         },
-        restrictedRightsProperties: {
+        restrictedRightsPropertyData: {
             label: "Voeg rechten toe",
             rightTitle: "Toegang / bewerkingsrechten per gebruikerslabel",
             rightDescription:
@@ -192,8 +225,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "Toegangsrechten",
             rightReadDescription:
                 "Toegangsrechten bepalen wie met het gebied kan interageren. Gebruikers die overeenkomen met een van deze tags kunnen het gebied binnenkomen en objecten binnen het gebied gebruiken.",
+            actionButtonLabel: "Ga naar privékamer",
         },
-        personalAreaConfiguration: {
+        personalAreaPropertyData: {
             label: "Persoonlijk gebied",
             description:
                 "Gebruikers kunnen persoonlijke gebieden claimen als hun eigen ruimte. Als beheerder kun je het eigendom van een gebied instellen/revorderen",
@@ -206,21 +240,98 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "Toegestane gebruiker",
             owner: "Eigenaar",
             revokeAccess: "Toegang intrekken",
+            actionButtonLabel: "Ga naar persoonlijke werkplek",
         },
-        excalidrawProperties: {
+        excalidraw: {
             label: "Open Excalidraw",
             description:
                 "Een open-source virtueel handgetekend stijl whiteboard. Samenwerkend en end-to-end versleuteld.",
             error: "Voer een geldige Excalidraw URL in",
             disabled: "Excalidraw-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open Excalidraw",
         },
-        cardsProperties: {
+        cards: {
             label: "Open Cards",
             description:
                 "De snelste en gemakkelijkste manier om je kennis snel te delen, online, op MS Teams en op mobiel.",
             error: "Voer een geldige Cards URL in",
             disabled: "Cards-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open Cards",
         },
+        tldraw: {
+            label: "Open tldraw",
+            description: "Een online whiteboard / oneindig canvas SDK.",
+            error: "Voer een geldige tldraw URL in",
+            disabled: "tldraw-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open tldraw",
+        },
+        matrixRoomPropertyData: {
+            label: "Matrix-kamer koppelen",
+            description: "Koppel een Matrix-kamer aan je gebied",
+            openAutomaticallyChatLabel: "Chat automatisch openen",
+            roomNameLabel: "Weergavenaam van kamer",
+            roomNameLabelPlaceholder: "Mijn kamer",
+            defaultChatRoomAreaName: "Kamergebied",
+            actionButtonLabel: "Begin met chatten",
+        },
+        tooltipPropertyData: {
+            label: "Infobubbel",
+            description: "Voeg een infobubbel toe aan je gebied ℹ️",
+            contentPlaceholder: "Schrijf hier inhoud ✍️",
+            duration: "Duur (in seconden) ⏱️",
+            infinityDuration: "Oneindige duur ⏱️",
+            actionButtonLabel: "Zie infobubbel",
+        },
+        openFile: {
+            label: "Open bestand",
+            description: "Open bestand binnen WorkAdventure.",
+            error: "Voer een geldig bestand in",
+            disabled: "Bestandsintegratie is uitgeschakeld.",
+            fileUrlLabel: "Bestands-URL",
+            uploadFile: {
+                title: "Voeg je bestand toe",
+                description: "Sleep en zet neer of kies je bestand",
+                dragDrop: "Sleep en zet neer of",
+                chooseFile: "Kies bestand",
+                errorOnFileFormat: "Bestandsformaat niet ondersteund",
+                errorOnFileNumber: "Meerdere bestanden neerzetten wordt niet ondersteund",
+                errorOnFileSize: "Bestand is te groot, maximale grootte is {size} MB",
+            },
+            hideUrlLabel: "URL verbergen",
+            actionButtonLabel: "Open bestand",
+        },
+        livekitRoomProperty: {
+            label: "Vergaderruimte",
+            description: "Start een vergadering bij binnenkomst.",
+            roomNameLabel: "Kamernaam",
+            roomNamePlaceholder: "Kamernaam",
+            highlightAreaOnEnter: "Gebied markeren bij binnenkomst",
+            moreOptionsLabel: "Meer opties",
+            livekitRoomConfig: {
+                addConfig: "Optie toevoegen",
+                startWithAudioMuted: "Start met microfoon gedempt",
+                startWithVideoMuted: "Start met video gesloten",
+                disableChat: "Chat uitschakelen",
+                livekitRoomAdminTag: "Moderatortag voor de vergaderruimte",
+                cancel: "Annuleren",
+                validate: "Valideren",
+            },
+            actionButtonLabel: "Start vergadering",
+        },
+        maxUsersInAreaPropertyData: {
+            label: "Maximaal aantal gebruikers",
+            description: "Stel het maximale aantal gebruikers in het gebied in.",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "Vergrendelbaar gebied",
+            description: "Vergrendel het gebied om toegang van buitenaf te voorkomen.",
+            lockLabel: "Gebied vergrendelen",
+            allowedTagsLabel: "Tags die mogen vergrendelen/ontgrendelen",
+            allowedTagsInfo:
+                "Alleen gebruikers met deze tags kunnen dit gebied vergrendelen of ontgrendelen. Laat leeg om iedereen toe te staan.",
+        },
+        noProperties: "Geen eigenschappen gedefinieerd",
     },
     areaEditor: {
         editInstructions: "Klik op een gebied om de eigenschappen te wijzigen.",
@@ -230,6 +341,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "Mijn gebied is een...",
         areaSerchable: "Zoekbaar in de verkenningsmodus",
         addDescriptionField: "Beschrijvingveld toevoegen",
+        clickAgainToSelectAnotherZone: "U kunt opnieuw klikken om een andere zone te selecteren",
         actionPopupOnPersonalAreaWithEntities: {
             title: "Actie vereist",
             description: "Dit persoonlijke gebied bevat een of meer objecten. Wat wil je ermee/hen doen?",
@@ -249,9 +361,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         header: {
             title: "Voeg object toe aan je kaart",
             description: "Zoek, upload of selecteer een bestaand object en voeg het toe aan de kaart.",
+            choose: "Kies een object",
         },
         title: "Plaats je object",
         editing: "Bewerken: {name}",
+        drop: "Sleep je bestand overal naartoe",
         itemPicker: {
             searchPlaceholder: "Zoeken",
             backToSelectObject: "Terug om object te selecteren",
@@ -277,6 +391,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             chooseFile: "Kies bestand",
             errorOnFileFormat: "Bestandsformaat niet ondersteund",
             errorOnFileNumber: "Meerdere bestandsoverdrachten worden niet ondersteund",
+            errorOnFileSize: "Bestand is te groot, maximale grootte is {size} MB",
         },
         images: "Afbeelding{{s}}",
         noImage: "Geen afbeelding",
@@ -304,6 +419,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             save: "Opslaan",
             upload: "Uploaden",
         },
+        errors: {
+            dragNotConnected:
+                "Je kunt geen bestanden uploaden als je niet bent ingelogd en niet de rechten hebt om dit te doen.",
+            dragNotAllowed: "Je hebt niet de rechten om bestanden op deze kaart te uploaden",
+        },
     },
     settings: {
         loading: "Laden",
@@ -318,14 +438,40 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 scope: "Reikwijdte",
                 world: "Wereld",
                 room: "Kamer",
+                notificationSound: "Meldingsgeluid",
+                notificationSoundNoSound: "Geen geluid",
+                notificationSoundCustom: "Aangepast",
+                enableSoundNotifications: "Geluidsmeldingen inschakelen",
                 rights: "Rechten",
                 rightsHelper:
                     "De rechten bepalen wie de megaphone kan gebruiken. Als je het leeg laat, kan iedereen het gebruiken. Als je het instelt, kunnen alleen gebruikers met een van die 'tags' het gebruiken.",
+                audienceVideoFeedbackActivated: "Auditoriummodus geactiveerd",
+                audienceVideoFeedbackActivatedDisabled: "Auditoriummodus gedeactiveerd",
+                audienceVideoFeedbackActivatedHelper:
+                    "Auditoriummodus geactiveerd: Ontvang de camera- en microfoonstream van alle gebruikers (met camera en microfoon geactiveerd) in de ruimte/wereld. Maar de deelnemer kan de andere deelnemers niet zien. Standaard uitgeschakeld.",
                 error: {
                     title: "Voer een titel in",
                     save: {
                         success: "Megaphone-instellingen opgeslagen",
                         fail: "Fout bij het opslaan van megaphone-instellingen",
+                    },
+                },
+            },
+        },
+        recording: {
+            title: "Opname",
+            description: "Configureer wie een opname kan starten in bubbels en vergaderruimtes.",
+            inputs: {
+                rights: "Rechten",
+                rightsHelper:
+                    "Iedereen met ten minste één van deze tags kan een opname starten. Laat leeg om elke ingelogde gebruiker toe te staan.",
+                enableSounds: "Speel een geluidssignaal af bij het starten en stoppen van de opname",
+                enableSoundsHelper:
+                    "Wanneer ingeschakeld, horen alle deelnemers een geluidsmelding wanneer een opname start of stopt.",
+                error: {
+                    save: {
+                        success: "Opname-instellingen opgeslagen",
+                        fail: "Fout bij het opslaan van opname-instellingen",
                     },
                 },
             },
@@ -385,7 +531,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         close: "Sluiten",
         movingToRoom: "Verplaatsen naar de kamer: {roomNameSelected}... Tot ziens... 🫡",
         searchLabel: "Zoek een kamer",
-        searchPlaceholder: "Schrijf...",
+        searchPlaceholder: "Typ trefwoorden...",
     },
 };
 

@@ -1,7 +1,6 @@
-version: "3.6"
 services:
   reverse-proxy:
-    image: traefik:v2.11
+    image: traefik:v3.6.1
     expose:
       - "8080"
     ports:
@@ -73,9 +72,10 @@ services:
       DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
       SKIP_RENDER_OPTIMIZATIONS: "$SKIP_RENDER_OPTIMIZATIONS"
       # Use TURN_USER/TURN_PASSWORD if your Coturn server is secured via hard coded credentials.
-      # Advice: you should instead use Coturn REST API along the TURN_STATIC_AUTH_SECRET in the Back container
+      # Advice: you should instead use Coturn with short-lived secrets thanks to TURN_STATIC_AUTH_SECRET
       TURN_USER: ""
       TURN_PASSWORD: ""
+      TURN_STATIC_AUTH_SECRET: "$TURN_STATIC_AUTH_SECRET"
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
       OPENID_CLIENT_ID: authorization-code-client-id
@@ -97,12 +97,21 @@ services:
       #Map editor
       PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
       INTERNAL_MAP_STORAGE_URL: "http://map-storage:3000"
+      REDIS_HOST: redis
       ENABLE_OPENAPI_ENDPOINT: "true"
       START_ROOM_URL: "$START_ROOM_URL"
       ENABLE_CHAT: "$ENABLE_CHAT"
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
       ENABLE_CHAT_ONLINE_LIST: "$ENABLE_CHAT_ONLINE_LIST"
       ENABLE_CHAT_DISCONNECTED_LIST: "$ENABLE_CHAT_DISCONNECTED_LIST"
+      ENABLE_TUTORIAL: "$ENABLE_TUTORIAL"
+      # Woka settings
+      DEFAULT_WOKA_NAME: ${DEFAULT_WOKA_NAME:-}
+      DEFAULT_WOKA_TEXTURE: ${DEFAULT_WOKA_TEXTURE:-}
+      SKIP_CAMERA_PAGE: ${SKIP_CAMERA_PAGE:-false}
+      BYPASS_PWA: ${BYPASS_PWA:-false}
+      PROVIDE_DEFAULT_WOKA_NAME: ${PROVIDE_DEFAULT_WOKA_NAME:-}
+      PROVIDE_DEFAULT_WOKA_TEXTURE: ${PROVIDE_DEFAULT_WOKA_TEXTURE:-}
       SERVER_NAME: $SERVER_NAME
       SERVER_MOTD: $SERVER_MOTD
       SERVER_ICON: $SERVER_ICON
@@ -141,13 +150,10 @@ services:
       # Report issues menu
       ACTIVE_REPORT_ISSUES_MENU: "true"
       URL_REPORT_ISSUES: "https://github.com/workadventure/workadventure/issues"
-      PEER_VIDEO_LOW_BANDWIDTH: "${PEER_VIDEO_LOW_BANDWIDTH:-}"
-      PEER_VIDEO_RECOMMENDED_BANDWIDTH: "${PEER_VIDEO_RECOMMENDED_BANDWIDTH:-}"
-      PEER_SCREEN_SHARE_LOW_BANDWIDTH: "${PEER_SCREEN_SHARE_LOW_BANDWIDTH:-}"
-      PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: "${PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH:-}"
       # Google drive picker
       GOOGLE_DRIVE_PICKER_CLIENT_ID: "${GOOGLE_DRIVE_PICKER_CLIENT_ID:-}"
       GOOGLE_DRIVE_PICKER_APP_ID: "${GOOGLE_DRIVE_PICKER_APP_ID:-}"
+      MINIMUM_DISTANCE: "${MINIMUM_DISTANCE}"
       #Chat
       MATRIX_API_URI: http://synapse:8008/
       MATRIX_PUBLIC_URI: http://matrix.workadventure.localhost
@@ -159,6 +165,10 @@ services:
       # Map editor restrictions (allow all users when OIDC is enabled by default)
       MAP_EDITOR_ALLOW_ALL_USERS: "false"
       MAX_DISPLAYED_VIDEOS: ${MAX_DISPLAYED_VIDEOS:-}
+
+      # "selfie-segmentation" or "tasks-vision"
+      # TODO: remove "selfie-segmentation" code when tasks-vision is stable enough
+      BACKGROUND_TRANSFORMER_ENGINE: ${BACKGROUND_TRANSFORMER_ENGINE:-}
     labels:
       - "traefik.enable=true"
 
@@ -171,12 +181,12 @@ services:
       - "traefik.http.services.room-api.loadbalancer.server.port=50051"
       - "traefik.http.services.room-api.loadbalancer.server.scheme=h2c"
 
-      - "traefik.http.routers.play.rule=HostRegexp(`{domain:.*}`)"
+      - "traefik.http.routers.play.rule=HostRegexp(`^.+$`)"
       - "traefik.http.routers.play.priority=1"
       - "traefik.http.routers.play.service=play"
       - "traefik.http.services.play.loadbalancer.server.port=3000"
 
-      - "traefik.http.routers.play-ws.rule=HostRegexp(`{domain:.*}`) && PathPrefix(`/ws/`)"
+      - "traefik.http.routers.play-ws.rule=HostRegexp(`^.+$`) && PathPrefix(`/ws/`)"
       - "traefik.http.routers.play-ws.priority=2"
       - "traefik.http.routers.play-ws.service=play-ws"
       - "traefik.http.services.play-ws.loadbalancer.server.port=3001"
@@ -208,6 +218,8 @@ services:
     environment:
       #DEBUG: "*"
       PLAY_URL: http://play.workadventure.localhost
+      MINIMUM_DISTANCE: "${MINIMUM_DISTANCE}"
+      GROUP_RADIUS: "${GROUP_RADIUS}"
       # On startup, we ask the messages container to regenerate the files.
       # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
       #STARTUP_COMMAND_0: touch /usr/src/app/back/src/Messages/generate_request/need_regenerate
@@ -225,7 +237,6 @@ services:
       JITSI_ISS: $JITSI_ISS
       BBB_URL: $BBB_URL
       BBB_SECRET: $BBB_SECRET
-      TURN_STATIC_AUTH_SECRET: "$TURN_STATIC_AUTH_SECRET"
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       REDIS_HOST: redis
       NODE_ENV: development
@@ -484,7 +495,9 @@ services:
     # A mock server to test OpenID connect connectivity
 
   synapse:
-    image: matrixdotorg/synapse:v1.132.0
+    # Note: v1.141.0 introduces a breaking change in OIDC authentication in http with Webkit
+    # See https://github.com/element-hq/synapse/pull/19309
+    image: matrixdotorg/synapse:v1.140.0
     entrypoint: /data/start.sh
     labels:
       - "traefik.enable=true"
@@ -532,4 +545,3 @@ services:
 #    network_mode: host
 #volumes:
 #  synapsedata:
-

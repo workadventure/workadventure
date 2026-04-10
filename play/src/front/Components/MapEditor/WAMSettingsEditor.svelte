@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { ComponentType, onDestroy, onMount } from "svelte";
+    import type { ComponentType } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { fly } from "svelte/transition";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -8,9 +9,10 @@
         mapEditorWamSettingsEditorToolCurrentMenuItemStore,
         WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
     } from "../../Stores/MapEditorStore";
-    import { userIsAdminStore } from "../../Stores/GameStore";
+    import { userIsAdminStore, userIsEditorStore } from "../../Stores/GameStore";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import Megaphone from "./ConfigureMyRoom/Megaphone.svelte";
+    import RecordingSettings from "./ConfigureMyRoom/RecordingSettings.svelte";
     import RoomSettings from "./ConfigureMyRoom/RoomSettings.svelte";
 
     import { IconChevronRight } from "@wa-icons";
@@ -21,6 +23,8 @@
         isVisible = true;
         if ($userIsAdminStore) {
             mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings);
+        } else if ($userIsEditorStore) {
+            mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Recording);
         } else {
             mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone);
         }
@@ -34,6 +38,9 @@
         switch ($mapEditorWamSettingsEditorToolCurrentMenuItemStore) {
             case WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone: {
                 return Megaphone;
+            }
+            case WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Recording: {
+                return RecordingSettings;
             }
             case WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings: {
                 return RoomSettings;
@@ -52,7 +59,7 @@
 
 <div>
     <div
-        class="configure-my-room bg-contrast/80 overflow-hidden backdrop-blur-md flex flex-col justify-between absolute rounded-lg w-4/6 min-h-96 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-fit z-[10]"
+        class="configure-my-room bg-contrast/80 overflow-hidden backdrop-blur-md flex flex-col justify-between absolute rounded-lg w-4/6 min-h-96 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-fit z-[700]"
         in:fly={{ x: 100, duration: 250, delay: 200 }}
         out:fly={{ x: 100, duration: 200 }}
     >
@@ -67,6 +74,7 @@
                         <!-- check if the user has right to update room settings -->
                         {#if $userIsAdminStore}
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
                             <li
                                 class:selected={$mapEditorWamSettingsEditorToolCurrentMenuItemStore ===
                                     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings}
@@ -80,6 +88,7 @@
                             </li>
                         {/if}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
                         <li
                             class:selected={$mapEditorWamSettingsEditorToolCurrentMenuItemStore ===
                                 WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone}
@@ -90,6 +99,20 @@
                         >
                             <span>{$LL.mapEditor.settings.megaphone.title()}</span>
                         </li>
+                        {#if $userIsEditorStore || $userIsAdminStore}
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+                            <li
+                                class:selected={$mapEditorWamSettingsEditorToolCurrentMenuItemStore ===
+                                    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Recording}
+                                on:click={() =>
+                                    mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
+                                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Recording
+                                    )}
+                            >
+                                <span>{$LL.mapEditor.settings.recording.title()}</span>
+                            </li>
+                        {/if}
                     </ul>
                 </div>
             </div>

@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 import { mapPath } from "../Services/PathMapper";
-import { FileSystemInterface } from "../Upload/FileSystemInterface";
+import type { FileSystemInterface } from "../Upload/FileSystemInterface";
 import { CACHE_CONTROL } from "../Enum/EnvironmentVariable";
 
 const staticFileExtensions = ["png", "css", "js", "jpg", "jpeg", "ico", "svg", "html", "htm", "jpeg"];

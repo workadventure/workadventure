@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import { ModalEvent } from "../Api/Events/ModalEvent";
+import type { ModalEvent } from "../Api/Events/ModalEvent";
 
 export const showLimitRoomModalStore = writable(false);
 

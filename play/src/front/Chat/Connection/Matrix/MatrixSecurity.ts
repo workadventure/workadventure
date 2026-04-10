@@ -1,19 +1,18 @@
-import { MatrixClient, SecretStorage } from "matrix-js-sdk";
-import {
+import type { MatrixClient, SecretStorage } from "matrix-js-sdk";
+import type {
     EmojiMapping,
     GeneratedSecretStorageKey,
     KeyBackupInfo,
     VerificationRequest,
-    VerificationRequestEvent,
-    VerifierEvent,
 } from "matrix-js-sdk/lib/crypto-api";
+import { VerificationRequestEvent, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
 import { deriveKey } from "matrix-js-sdk/lib/crypto/key_passphrase";
 import { decodeRecoveryKey } from "matrix-js-sdk/lib/crypto/recoverykey";
 import { openModal } from "svelte-modals";
 import { writable } from "svelte/store";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
 import { Phase } from "matrix-js-sdk/lib/crypto/verification/request/VerificationRequest";
-import { Deferred } from "ts-deferred";
+import { Deferred } from "@workadventure/shared-utils";
 import { asError } from "catch-unknown";
 import { alreadyAskForInitCryptoConfiguration } from "../../Stores/AlreadyAskForInitCryptoConfigurationStore";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";

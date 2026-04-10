@@ -4,7 +4,7 @@ import type { AddPlayerEvent } from "../../Events/AddPlayerEvent";
 import type { PlayerPosition } from "../../Events/PlayerPosition";
 import { ActionsMenuAction } from "../ui";
 import { queryWorkadventure, sendToWorkadventure } from "../IframeApiContribution";
-import { PublicPlayerState, ReadOnlyPublicPlayerState } from "../PublicPlayerState";
+import type { PublicPlayerState, ReadOnlyPublicPlayerState } from "../PublicPlayerState";
 
 export interface RemotePlayerInterface {
     /**

@@ -3,10 +3,14 @@ import type { Translation } from "../i18n-types";
 
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
+        backToSelectCommunication: "Torna alla selezione comunicazione",
+        selectCommunication: "Seleziona comunicazione",
+        title: "Comunicazione globale",
         selectCamera: "Seleziona una fotocamera 📹",
         selectMicrophone: "Seleziona un microfono 🎙️",
         liveMessage: {
             startMegaphone: "Avvia megafono",
+            stopMegaphone: "Ferma megafono",
             goingToStream: "Stai per trasmettere",
             yourMicrophone: "il tuo microfono",
             yourCamera: "la tua fotocamera",

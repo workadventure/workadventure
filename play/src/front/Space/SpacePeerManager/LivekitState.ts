@@ -1,9 +1,8 @@
 import * as Sentry from "@sentry/svelte";
-import { Readable } from "svelte/store";
+import type { Readable } from "svelte/store";
 import { LivekitConnection } from "../../Livekit/LivekitConnection";
-import { SpaceInterface } from "../SpaceInterface";
-import { Streamable } from "../../Stores/StreamableCollectionStore";
-import { SimplePeerConnectionInterface, ICommunicationState, StreamableSubjects } from "./SpacePeerManager";
+import type { SpaceInterface } from "../SpaceInterface";
+import type { SimplePeerConnectionInterface, ICommunicationState, StreamableSubjects } from "./SpacePeerManager";
 
 export class LivekitState implements ICommunicationState {
     private livekitConnection: LivekitConnection;
@@ -34,19 +33,26 @@ export class LivekitState implements ICommunicationState {
         });
     }
 
-    getVideoForUser(spaceUserId: string): Streamable | undefined {
-        return this.livekitConnection.getVideoForUser(spaceUserId);
-    }
-
-    getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
-        return this.livekitConnection.getScreenSharingForUser(spaceUserId);
-    }
-
     /**
      * Starts the shutdown process of the communication state. It does not remove all video peers immediately,
      * but any asynchronous operation receiving a new stream should be ignored after this call.
      */
     shutdown(): void {
         this.livekitConnection.shutdown();
+    }
+
+    retryAllFailedConnections(): void {
+        console.warn(
+            "[LivekitState] retryAllFailedConnections called but LiveKit does not support failed connection retry. This case should not happen."
+        );
+    }
+
+    /**
+     * [DEBUG] Forces the WebSocket connection to close to test reconnection mechanism.
+     * This method is for development/testing purposes only.
+     * @returns true if the WebSocket was closed, false if no connection exists
+     */
+    forceWebSocketClose(): boolean {
+        return this.livekitConnection.forceWebSocketClose();
     }
 }

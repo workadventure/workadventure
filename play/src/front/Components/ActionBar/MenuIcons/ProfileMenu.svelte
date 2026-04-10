@@ -2,19 +2,28 @@
     import * as Sentry from "@sentry/svelte";
     import { clickOutside } from "svelte-outside";
     import { AvailabilityStatus } from "@workadventure/messages";
-    import { setContext, SvelteComponentTyped } from "svelte";
-    import { derived, get, Readable } from "svelte/store";
-    import { availabilityStatusStore, enableCameraSceneVisibilityStore } from "../../../Stores/MediaStore";
+    import { setContext } from "svelte";
+    import type { SvelteComponentTyped } from "svelte";
+    import type { Readable } from "svelte/store";
+    import { derived, get } from "svelte/store";
+    import {
+        availabilityStatusStore,
+        enableCameraSceneVisibilityStore,
+        inBbbStore,
+        inJitsiStore,
+        inLivekitStore,
+    } from "../../../Stores/MediaStore";
+    import { isInRemoteConversation } from "../../../Stores/StreamableCollectionStore";
 
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import type { RightMenuItem } from "../../../Stores/MenuStore";
     import {
         SubMenusInterface,
         userIsConnected,
         openedMenuStore,
         showMenuItem,
         rightActionBarMenuItems,
-        RightMenuItem,
     } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { ENABLE_OPENID, SENTRY_DSN_FRONT } from "../../../Enum/EnvironmentVariable";
@@ -27,11 +36,10 @@
     import XIcon from "../../Icons/XIcon.svelte";
     import MenuBurgerIcon from "../../Icons/MenuBurgerIcon.svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
-
     import { getColorHexOfStatus, getStatusInformation, getStatusLabel } from "../../../Utils/AvailabilityStatus";
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
     import AvailabilityStatusList from "../AvailabilityStatus/AvailabilityStatusList.svelte";
-    import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
+    import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
     import { loginSceneVisibleStore } from "../../../Stores/LoginSceneStore";
     import { LoginScene, LoginSceneName } from "../../../Phaser/Login/LoginScene";
     import { selectCharacterSceneVisibleStore } from "../../../Stores/SelectCharacterStore";
@@ -39,12 +47,15 @@
     import { selectCompanionSceneVisibleStore } from "../../../Stores/SelectCompanionStore";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../../Phaser/Login/SelectCompanionScene";
     import { EnableCameraScene, EnableCameraSceneName } from "../../../Phaser/Login/EnableCameraScene";
+    import { PwaInstallScene, PwaInstallSceneName } from "../../../Phaser/Login/PwaInstallScene";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import ActionBarButton from "../ActionBarButton.svelte";
+    import { IconHelpCircle, IconBug, IconLogout, IconFileDownload } from "../../Icons";
+    import { onboardingStore } from "../../../Stores/OnboardingStore";
+    import { pwaInstallProfileMenuEligibleStore } from "../../../Stores/PwaInstallStore";
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import { IconBug, IconLogout } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the profile menu.
     // We use the context to decide how to render it.
@@ -135,6 +146,8 @@
         8
     );
 
+    $: forceBurgerMode = $inJitsiStore || $inBbbStore || $inLivekitStore || $isInRemoteConversation;
+
     let rightActionBarMenuItemsInBurgerMenu: Readable<RightMenuItem<SvelteComponentTyped>[]> = derived(
         rightActionBarMenuItems,
         ($rightActionBarMenuItems, set) => {
@@ -152,19 +165,27 @@
             return () => ghostSubscriptionUnsubscribe();
         }
     );
+
+    function openPwaInstallPrompt(): void {
+        analyticsClient.pwaInstallFromProfileMenuClick();
+        openedMenuStore.close("profileMenu");
+        gameManager.leaveGame(PwaInstallSceneName, new PwaInstallScene());
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div data-testid="action-user" class="flex items-center transition-all pointer-events-auto">
     <div
         class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2 cursor-pointer"
+        class:profile-menu-force-burger={forceBurgerMode}
         use:floatingUiRef
         on:click|preventDefault={() => {
             openedMenuStore.toggle("profileMenu");
         }}
     >
         <div
-            class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 items-center justify-center flex @md/actions:hidden"
+            class="profile-menu-burger-icon h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 items-center justify-center flex @md/actions:hidden"
         >
             {#if $openedMenuStore !== "profileMenu"}
                 <!-- pointer-events-none is important for clickOutside to work. Otherwise, the
@@ -176,7 +197,7 @@
             {/if}
         </div>
         <div
-            class="hidden @md/actions:flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded gap-2 pl-0 pr-3"
+            class="profile-menu-full hidden @md/actions:flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded gap-2 pl-0 pr-3"
         >
             <div class="overflow-hidden p-2 flex items-center justify-center rounded h-full aspect-square relative">
                 <Woka userId={-1} placeholderSrc="" customWidth="30px" />
@@ -301,6 +322,40 @@
                     <svelte:component this={button.component} {...button.props} />
                 {/each}
 
+                {#if $pwaInstallProfileMenuEligibleStore === true}
+                    <button
+                        data-testid="profile-menu-install-web-app"
+                        disabled={$pwaInstallProfileMenuEligibleStore !== true}
+                        on:click={openPwaInstallPrompt}
+                        class="group flex p-2 gap-2 items-center font-bold text-sm w-full pointer-events-auto text-start rounded transition-all {$pwaInstallProfileMenuEligibleStore ===
+                        true
+                            ? 'hover:bg-white/10 cursor-pointer'
+                            : 'opacity-50 cursor-not-allowed'}"
+                    >
+                        <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
+                            <IconFileDownload height="20" width="20" class="text-white" />
+                        </div>
+                        <div class="text-start leading-4 text-white flex items-center">
+                            {$LL.actionbar.installPwa()}
+                        </div>
+                    </button>
+                {/if}
+
+                <button
+                    on:click={() => {
+                        onboardingStore.restart();
+                        openedMenuStore.close("profileMenu");
+                    }}
+                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
+                >
+                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
+                        <IconHelpCircle height="20" width="20" class="text-white" />
+                    </div>
+                    <div class="text-start leading-4 text-white flex items-center">
+                        {$LL.menu.profile.helpAndTips()}
+                    </div>
+                </button>
+
                 {#if ENABLE_OPENID && $userIsConnected}
                     <button
                         on:click={() => analyticsClient.logout()}
@@ -308,9 +363,9 @@
                         class="group flex p-2 gap-2 items-center hover:bg-danger-600 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
                     >
                         <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
-                            <IconLogout height="20" width="20" class="text-danger-600 group-hover:text-white" />
+                            <IconLogout height="20" width="20" class="text-danger-800 group-hover:text-white" />
                         </div>
-                        <div class="text-start leading-4 text-danger-600 group-hover:text-white flex items-center">
+                        <div class="text-start leading-4 text-danger-800 group-hover:text-white flex items-center">
                             {$LL.menu.profile.logout()}
                         </div>
                     </button>
@@ -319,3 +374,13 @@
         </div>
     {/if}
 </div>
+
+<style>
+    /* Force burger mode when in a meeting or conversation (more compact profile button) */
+    :global(.profile-menu-force-burger .profile-menu-burger-icon) {
+        display: flex !important;
+    }
+    :global(.profile-menu-force-burger .profile-menu-full) {
+        display: none !important;
+    }
+</style>

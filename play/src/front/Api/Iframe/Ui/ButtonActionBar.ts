@@ -1,4 +1,5 @@
-import { AddButtonActionBarEvent, isAddActionBarButtonEvent } from "../../Events/Ui/ButtonActionBarEvent";
+import type { AddButtonActionBarEvent } from "../../Events/Ui/ButtonActionBarEvent";
+import { isAddActionBarButtonEvent } from "../../Events/Ui/ButtonActionBarEvent";
 import { IframeApiContribution, sendToWorkadventure } from "../IframeApiContribution";
 import { apiCallback } from "../registeredCallbacks";
 

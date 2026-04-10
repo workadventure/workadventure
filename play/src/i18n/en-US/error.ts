@@ -12,7 +12,7 @@ const error: BaseTranslation = {
         details: "If you want more information, you may contact administrator or contact us at: hello@workadventu.re",
     },
     connectionRetry: {
-        unableConnect: "Unable to connect to WorkAdventure. Are you connected to internet?",
+        unableConnect: "Connection to server lost. You won't be able to speak to others.",
     },
     errorDialog: {
         title: "Error 😱",

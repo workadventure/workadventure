@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/node";
-import { RedisClient } from "../RedisClient";
-import {
+import type { RedisClient } from "../RedisClient";
+import type {
     LoadVariablesReturn,
     PlayersVariablesRepositoryInterface,
     VariableWithScope,

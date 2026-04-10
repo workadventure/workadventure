@@ -1,7 +1,8 @@
 import Phaser from "phaser";
-import { GameScene } from "../Game/GameScene";
+import type { GameScene } from "../Game/GameScene";
 import { DEPTH_CONVERSATION_BUBBLE_INDEX } from "../Game/DepthIndexes";
-import { Character } from "./Character";
+import { MINIMUM_DISTANCE } from "../../Enum/EnvironmentVariable";
+import type { Character } from "./Character";
 import { RemotePlayer } from "./RemotePlayer";
 
 /** A very small interface for whatever "player" object you use.
@@ -15,7 +16,7 @@ export interface Avatar {
 /** Jelly-like circle that bulges / dimples toward or away from avatars. */
 export class ConversationBubble extends Phaser.GameObjects.Sprite {
     // ==== Tunables =========================================================
-    private readonly R0 = 64; // resting radius (px)
+    private readonly R0 = MINIMUM_DISTANCE; // resting radius (px)
     private readonly lambda = 40; // fall-off distance for influence (px)
     private readonly kInside = 2; // angular sharpness of the bump from players inside the bubble
     private readonly kOutside = 20; // angular sharpness of the bump from players outside the bubble
@@ -261,7 +262,7 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     /** Clean up resources when destroying the object */
     public destroy(fromScene?: boolean): void {
         // Remove the generated texture before destroying the sprite
-        if (this.generatedTextureKey && this.scene.textures.exists(this.generatedTextureKey)) {
+        if (this.generatedTextureKey && this.scene?.textures?.exists(this.generatedTextureKey)) {
             this.scene.textures.remove(this.generatedTextureKey);
         }
         super.destroy(fromScene);

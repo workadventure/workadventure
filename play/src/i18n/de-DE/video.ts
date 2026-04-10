@@ -4,6 +4,15 @@ import type { Translation } from "../i18n-types";
 const video: DeepPartial<Translation["video"]> = {
     connection_issue: "Verbindungsproblem!",
     no_video_stream_received: "Kein Videostream empfangen.",
+    user_is_muted: "{name} ist stummgeschaltet.",
+    reduce: "Reduzieren",
+    toggle_fullscreen: "Vollbild umschalten",
+    exit_fullscreen: "Vollbild verlassen",
+    connecting: "Verbinden...",
+    reconnecting: "Wiederverbinden...",
+    persistent_connection_issue: "Wiederverbinden... Instabile Verbindung...",
+    click_to_unblock: "Klicken zum Entsperren",
+    click_and_drag_to_resize: "Klicken und ziehen zum Größenändern",
 };
 
 export default video;

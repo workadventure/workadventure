@@ -5,7 +5,6 @@ import tseslint from "typescript-eslint";
 import rxjs from "@smarttools/eslint-plugin-rxjs";
 import { defineConfig, globalIgnores } from "eslint/config";
 
-//import unusedImports from "eslint-plugin-unused-imports";
 //import tsParser from "@typescript-eslint/parser";
 import parser from "svelte-eslint-parser";
 import importPlugin from 'eslint-plugin-import';
@@ -94,7 +93,6 @@ export function generateConfig(tsconfigRootDir) {
                 parserOptions: {
                     projectService: true,
                     tsconfigRootDir: import.meta.dirname,
-                    project: "./tsconfig.json",
                     extraFileExtensions: [".svelte"],
                 },
             },
@@ -122,11 +120,15 @@ export function generateConfig(tsconfigRootDir) {
                 "eol-last": ["error", "always"],
                 "@typescript-eslint/no-explicit-any": "error",
                 "no-throw-literal": "error",
+                "no-void": "error",
 
                 "@typescript-eslint/no-unused-vars": ["error", {
                     args: "none",
                     caughtErrors: "all",
                     varsIgnorePattern: "_exhaustiveCheck",
+                    enableAutofixRemoval: {
+                        imports: true,
+                    },
                 }],
 
                 "@typescript-eslint/no-empty-function": "off",
@@ -136,6 +138,10 @@ export function generateConfig(tsconfigRootDir) {
                 //"@typescript-eslint/ban-ts-ignore": "off",
                 "@typescript-eslint/no-unsafe-enum-comparison": "off",
                 "@typescript-eslint/no-redundant-type-constituents": "off",
+
+                // To automatically add "type" to type imports
+                "@typescript-eslint/consistent-type-imports": "error",
+                "@typescript-eslint/no-import-type-side-effects": "error",
 
                 "import/order": "error",
                 "no-async-promise-executor": "error",
@@ -149,6 +155,10 @@ export function generateConfig(tsconfigRootDir) {
                 "svelte/valid-compile": ["error", {
                     ignoreWarnings: true,
                 }],
+
+                // Disable this rule because svelte-check uses different warning codes than eslint-plugin-svelte.
+                // The svelte-ignore comments are needed for svelte-check but appear as "unused" to eslint.
+                "svelte/no-unused-svelte-ignore": "off",
 
                 //"svelte/no-at-html-tags": "off",
                 "import/default": "off",

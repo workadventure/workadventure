@@ -1,5 +1,5 @@
-import type { Observable } from "rxjs";
-import { Subject, Subscription } from "rxjs";
+import type { Observable, Subscription } from "rxjs";
+import { Subject } from "rxjs";
 
 import type { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import type { EnterLeaveEvent } from "../Events/EnterLeaveEvent";

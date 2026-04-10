@@ -1,3 +1,8 @@
+{{- $commonEnv := .Values.commonEnv | default dict -}}
+{{- $backEnv := .Values.back.env | default dict -}}
+{{- $commonSecretEnv := .Values.commonSecretEnv | default dict -}}
+{{- $backSecretEnv := .Values.back.secretEnv | default dict -}}
+{{- $livekitHostDefined := or (or (hasKey $commonEnv "LIVEKIT_HOST") (hasKey $backEnv "LIVEKIT_HOST")) (or (hasKey $commonSecretEnv "LIVEKIT_HOST") (hasKey $backSecretEnv "LIVEKIT_HOST")) -}}
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -11,6 +16,9 @@ data:
   MAP_STORAGE_URL: "{{ include "workadventure.fullname" . }}-mapstorage:50053"
   INTERNAL_MAP_STORAGE_URL: "http://{{ include "workadventure.fullname" . }}-mapstorage:3000"
   PUBLIC_MAP_STORAGE_URL: {{ include "workadventure.mapStorageUrl" . | quote }}
+  {{- if and .Values.livekit.enabled (not $livekitHostDefined) }}
+  LIVEKIT_HOST: {{ include "workadventure.livekitHost" . | quote }}
+  {{- end }}
 
   {{- range $key, $val := .Values.commonEnv }}
   {{ $key }}: {{ $val | quote }}

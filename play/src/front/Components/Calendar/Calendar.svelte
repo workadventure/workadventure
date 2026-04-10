@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { CalendarEventInterface } from "@workadventure/shared-utils";
+    import type { CalendarEventInterface } from "@workadventure/shared-utils";
     import { get } from "svelte/store";
     import { calendarEventsStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { gameManager } from "../../Phaser/Game/GameManager";

@@ -22,6 +22,7 @@ const follow: BaseTranslation = {
         yes: "Yes",
         no: "No",
     },
+    actionName: "Locate",
 };
 
 export default follow;

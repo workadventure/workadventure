@@ -1,5 +1,5 @@
-import { RedisClient } from "../RedisClient";
-import { VariablesRepositoryInterface } from "./VariablesRepositoryInterface";
+import type { RedisClient } from "../RedisClient";
+import type { VariablesRepositoryInterface } from "./VariablesRepositoryInterface";
 
 /**
  * Class in charge of saving/loading variables from the data store

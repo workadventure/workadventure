@@ -6,15 +6,14 @@ const actionbar: BaseTranslation = {
     cancel: "Cancel",
     close: "Close",
     login: "Login",
-    map: "Build",
+    map: "Tools",
+    participantListPlaceholder: "Participants list",
+    participantSendMessage: "Send a message",
+    participantInviteUser: "Invite a user",
     profil: "Edit your name",
     startScreenSharing: "Start screen sharing",
     stopScreenSharing: "Stop screen sharing",
     screenSharingMode: "Screen sharing mode",
-    focusMode: "Focus mode",
-    rightMode: "Right mode",
-    hideMode: "Hide mode",
-    lightMode: "Light mode",
     calendar: "Calendar",
     todoList: "Todo list",
     woka: "Customize your avatar",
@@ -23,7 +22,7 @@ const actionbar: BaseTranslation = {
     test: "Test my settings",
     editCamMic: "Edit cam / mic",
     allSettings: "All settings",
-    bo: "Back office",
+    installPwa: "Install Web App",
     globalMessage: "Send global message",
     mapEditor: "Map editor",
     mapEditorMobileLocked: "Map editor is locked on mobile mode",
@@ -42,11 +41,18 @@ const actionbar: BaseTranslation = {
         disabled: "Your microphone is disabled",
         activate: "Activate your microphone",
         noDevices: "No microphone device found",
+        noSoundWarning:
+            "No sound detected from your microphone. There may be a problem; try changing your microphone in settings.",
+        noSoundWarningPressEnter: "No sound detected from your microphone. Press Enter to open settings.",
+        openSettings: "Open settings",
+        ignore: "Ignore",
     },
     speaker: {
         disabled: "Your speaker is disabled",
         activate: "Activate your speaker",
         noDevices: "No speaker device found",
+        noDevicesDesc:
+            "Your browser does not list any selectable audio output. Some browsers limit this (for example Safari). Try another browser, reconnect headphones or speakers, check your system sound settings and your computer's configuration (privacy, devices).",
     },
     status: {
         ONLINE: "Online",
@@ -68,6 +74,17 @@ const actionbar: BaseTranslation = {
         microphone: "Microphone",
         speaker: "Audio output",
     },
+    background: {
+        settings: "Settings",
+        cameraBackground: "Camera background",
+        noEffect: "No effect",
+        blur: "Blur",
+        blurSmall: "Small blur",
+        blurMiddle: "Middle blur",
+        blurHigh: "High blur",
+        images: "Images",
+        videos: "Videos",
+    },
     help: {
         chat: {
             title: "Send text message",
@@ -83,7 +100,10 @@ const actionbar: BaseTranslation = {
         },
         audioManager: {
             title: "Ambient sounds volume",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            desc: "Configure the audio volume to click here.",
+            pause: "Click here to pause audio",
+            play: "Click here to play audio",
+            stop: "Click here to stop audio",
         },
         audioManagerNotAllowed: {
             title: "Ambient sounds blocked",
@@ -100,6 +120,13 @@ const actionbar: BaseTranslation = {
         lock: {
             title: "Lock conversation",
             desc: "By enabling this feature, you ensure that no one can join the discussion. You are the master of your space, and only those already present can interact.",
+            areaPickerTitle: "Choose area to lock/unlock",
+            bubbleLabel: "Discussion bubble",
+            unnamedArea: "Unnamed Area",
+        },
+        megaphone: {
+            title: "Stop megaphone",
+            desc: "Stop broadcasting your message to all users.",
         },
         mic: {
             title: "Enable/disable your microphone",
@@ -137,6 +164,13 @@ const actionbar: BaseTranslation = {
             title: "Todolist",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
+        pictureInPicture: {
+            title: "Picture in picture",
+            descDisabled:
+                "Unfortunately, this feature is not available on your device ❌. Please try using another device or browser, like Chrome or Edge, to access this feature.",
+            desc: "You can use the picture in picture feature to watch a video or a presentation while you are in a conversation. Just click on the picture in picture icon and enjoy your content.",
+        },
+        videoNotSupported: "Your browser does not support the video tag.",
     },
     listStatusTitle: {
         enable: "Change your status",
@@ -166,6 +200,14 @@ const actionbar: BaseTranslation = {
         highlightToolText: "Highlight",
         hideToolText: "Hide",
         removeHighlightText: "Remove",
+    },
+    personalDesk: {
+        label: "Walk to my desk",
+        unclaim: "Unclaim my desk",
+        errorNoUser: "Unable to find your user information",
+        errorNotFound: "You don't have a personal desk yet",
+        errorMoving: "Unable to reach your personal desk",
+        errorUnclaiming: "Unable to unclaim your personal desk",
     },
 };
 export default actionbar;

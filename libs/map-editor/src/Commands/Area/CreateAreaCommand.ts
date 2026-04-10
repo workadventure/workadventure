@@ -1,20 +1,20 @@
 import type { AreaData } from "../../types";
-import type { GameMap } from "../../GameMap/GameMap";
+import type { WamFile } from "../../GameMap/WamFile";
 import { Command } from "../Command";
 
 export class CreateAreaCommand extends Command {
     protected readonly areaConfig: AreaData;
 
-    protected gameMap: GameMap;
+    protected wamFile: WamFile;
 
-    constructor(gameMap: GameMap, areaObjectConfig: AreaData, commandId?: string) {
+    constructor(wamFile: WamFile, areaObjectConfig: AreaData, commandId?: string) {
         super(commandId);
-        this.gameMap = gameMap;
+        this.wamFile = wamFile;
         this.areaConfig = structuredClone<AreaData>(areaObjectConfig);
     }
 
     public execute(): Promise<void> {
-        if (!this.gameMap.getGameMapAreas()?.addArea(this.areaConfig)) {
+        if (!this.wamFile.getGameMapAreas().addArea(this.areaConfig)) {
             throw new Error(`MapEditorError: Could not execute CreateArea Command. Area ID: ${this.areaConfig.id}`);
         }
         return Promise.resolve();

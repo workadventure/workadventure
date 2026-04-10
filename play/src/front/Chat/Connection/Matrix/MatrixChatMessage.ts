@@ -1,11 +1,14 @@
-import { Direction, EventType, MatrixEvent, MatrixEventEvent, MsgType, RelationType, Room } from "matrix-js-sdk";
-import { writable, Writable } from "svelte/store";
+import type { MatrixEvent, Room } from "matrix-js-sdk";
+import { Direction, EventType, MatrixEventEvent, MsgType, RelationType } from "matrix-js-sdk";
+import type { Writable } from "svelte/store";
+import { writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { MapStore } from "@workadventure/store-utils";
-import { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from "../ChatConnection";
+import type { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from "../ChatConnection";
 import { chatUserFactory } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
+import { resolveImageMediaFromEvent } from "./MatrixMediaResolver";
 
 export class MatrixChatMessage implements ChatMessage {
     id: string;
@@ -21,6 +24,9 @@ export class MatrixChatMessage implements ChatMessage {
     reactions: MapStore<string, MatrixChatMessageReaction>;
     relations: MatrixChatRelation | undefined;
     readonly canDelete: Writable<boolean>;
+    private imageMediaCleanup: () => void = () => undefined;
+    private imageMediaAbortController: AbortController | undefined;
+    private readonly decryptedListener = () => this.updateMessageContentOnDecryptedEvent();
 
     constructor(private event: MatrixEvent, private room: Room, isQuotedMessage?: boolean) {
         this.id = event.getId() ?? uuidv4();
@@ -56,9 +62,8 @@ export class MatrixChatMessage implements ChatMessage {
 
         this.canDelete = writable(this.isMyMessage || (hasSufficientPowerLevel && myPowerLevel > senderPowerLevel));
 
-        event.on(MatrixEventEvent.Decrypted, () => {
-            this.updateMessageContentOnDecryptedEvent();
-        });
+        event.on(MatrixEventEvent.Decrypted, this.decryptedListener);
+        this.loadImageMediaIfNeeded();
 
         this.initReactions();
     }
@@ -79,6 +84,7 @@ export class MatrixChatMessage implements ChatMessage {
 
     private updateMessageContentOnDecryptedEvent() {
         this.content.set(this.getMessageContent());
+        this.loadImageMediaIfNeeded();
     }
 
     private getMessageContent(): ChatMessageContent {
@@ -104,14 +110,63 @@ export class MatrixChatMessage implements ChatMessage {
             };
         }
 
-        if (this.type !== "text") {
+        if (this.type === "image") {
             return {
                 body: content.body,
-                url: this.room.client.mxcUrlToHttp(this.event.getOriginalContent().url) ?? undefined,
+                url: this.room.client.mxcUrlToHttp(content.url ?? content.file?.url) ?? undefined,
+                thumbnailUrl: this.room.client.mxcUrlToHttp(content.info?.thumbnail_url) ?? undefined,
+                mediaState: content.file !== undefined ? "loading" : "ready",
             };
         }
 
+        if (this.type !== "text") {
+            return { body: content.body, url: this.room.client.mxcUrlToHttp(content.url) ?? undefined };
+        }
+
         return { body: content.body, url: undefined };
+    }
+
+    private loadImageMediaIfNeeded() {
+        if (this.type !== "image") {
+            return;
+        }
+        this.imageMediaAbortController?.abort();
+        this.imageMediaCleanup();
+
+        const abortController = new AbortController();
+        this.imageMediaAbortController = abortController;
+
+        this.resolveImageMedia(abortController.signal).catch(() => undefined);
+    }
+
+    private async resolveImageMedia(signal: AbortSignal): Promise<void> {
+        this.content.update((content) => ({ ...content, mediaState: "loading", mediaErrorKind: undefined }));
+
+        try {
+            const media = await resolveImageMediaFromEvent(this.event, this.room.client, signal);
+            if (signal.aborted) {
+                media.cleanup();
+                return;
+            }
+
+            this.imageMediaCleanup = media.cleanup;
+            this.content.update((content) => ({
+                ...content,
+                url: media.sourceUrl,
+                thumbnailUrl: media.thumbnailUrl ?? media.sourceUrl,
+                mediaErrorKind: media.error,
+                mediaState: media.error ? "error" : "ready",
+            }));
+        } catch (error) {
+            if (error instanceof DOMException && error.name === "AbortError") {
+                return;
+            }
+            this.content.update((content) => ({
+                ...content,
+                mediaState: "error",
+                mediaErrorKind: "download",
+            }));
+        }
     }
 
     public initReactions() {
@@ -210,5 +265,11 @@ export class MatrixChatMessage implements ChatMessage {
         } catch (error) {
             console.error(error);
         }
+    }
+
+    destroy() {
+        this.event.off(MatrixEventEvent.Decrypted, this.decryptedListener);
+        this.imageMediaAbortController?.abort();
+        this.imageMediaCleanup();
     }
 }

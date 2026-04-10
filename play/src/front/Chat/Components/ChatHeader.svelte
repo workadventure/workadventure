@@ -1,12 +1,12 @@
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import { chatInputFocusStore } from "../../Stores/ChatStore";
-
     let searchActive = false;
     import { chatSearchBarValue, navChat, joignableRoom } from "../Stores/ChatStore";
     import LoadingSmall from "../images/loading-small.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
+    import type { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
     import { hideActionBarStoreBecauseOfChatBar } from "../ChatSidebarWidthStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
     import OnlineUsersCount from "./OnlineUsersCount.svelte";
@@ -77,6 +77,20 @@
         // Enable input manager to allow the game to receive the input
         chatInputFocusStore.set(false);
     }
+
+    onDestroy(() => {
+        if (typingTimer) {
+            clearTimeout(typingTimer);
+        }
+        chatSearchBarValue.set("");
+        joignableRoom.set([]);
+
+        userProviderMergerPromise
+            .then((userProviderMerger) => {
+                return userProviderMerger.setFilter("");
+            })
+            .catch((e) => console.error(e));
+    });
 </script>
 
 <div class=" relative p-2 flex items-center w-full z-40">
@@ -118,7 +132,6 @@
             hasSearch={$chatStatusStore !== "OFFLINE" && !isInSpecificDiscussion}
             on:toggleSearch={handleToggleSearch}
         />
-        <!-- Ici j'ai le bouton qui s'affiche pour chercher des utilisateurs ou des chats -->
     </div>
     <!-- searchbar -->
     {#if searchActive && $chatStatusStore !== "OFFLINE"}

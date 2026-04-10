@@ -22,6 +22,7 @@ if (SENTRY_DSN != undefined) {
             release: SENTRY_RELEASE,
             environment: SENTRY_ENVIRONMENT,
             tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE,
+            attachStacktrace: true,
         };
 
         Sentry.init(sentryOptions);

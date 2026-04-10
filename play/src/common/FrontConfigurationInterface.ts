@@ -5,15 +5,10 @@ export interface FrontConfigurationInterface {
     PUSHER_URL: string;
     FRONT_URL: string;
     ADMIN_URL: string | undefined;
-    ADMIN_BO_URL: string | undefined;
     UPLOADER_URL: string;
     ICON_URL: string;
-    STUN_SERVER: string | undefined;
-    TURN_SERVER: string | undefined;
     SKIP_RENDER_OPTIMIZATIONS: boolean;
     DISABLE_NOTIFICATIONS: boolean;
-    TURN_USER: string | undefined;
-    TURN_PASSWORD: string | undefined;
     JITSI_URL: string | undefined;
     JITSI_PRIVATE_MODE: boolean;
     ENABLE_MAP_EDITOR: boolean;
@@ -48,10 +43,7 @@ export interface FrontConfigurationInterface {
     GOOGLE_SHEETS_ENABLED: boolean;
     GOOGLE_SLIDES_ENABLED: boolean;
     ERASER_ENABLED: boolean;
-    PEER_VIDEO_LOW_BANDWIDTH: number;
-    PEER_VIDEO_RECOMMENDED_BANDWIDTH: number;
-    PEER_SCREEN_SHARE_LOW_BANDWIDTH: number;
-    PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: number;
+    MINIMUM_DISTANCE: number;
     GOOGLE_DRIVE_PICKER_CLIENT_ID: string | undefined;
     GOOGLE_DRIVE_PICKER_APP_ID: string | undefined;
     EXCALIDRAW_ENABLED: boolean;
@@ -68,4 +60,15 @@ export interface FrontConfigurationInterface {
     ENABLE_SAY: boolean | undefined;
     ENABLE_ISSUE_REPORT: boolean | undefined;
     GRPC_MAX_MESSAGE_SIZE: number;
+    TURN_CREDENTIALS_RENEWAL_TIME: number;
+    BACKGROUND_TRANSFORMER_ENGINE: "tasks-vision" | "selfie-segmentation" | undefined;
+    // Woka settings
+    DEFAULT_WOKA_NAME: string | undefined;
+    DEFAULT_WOKA_TEXTURE: string | undefined;
+    SKIP_CAMERA_PAGE: boolean | undefined;
+    BYPASS_PWA: boolean | undefined;
+    PROVIDE_DEFAULT_WOKA_NAME: "no" | "random" | "fix" | "fix-plus-random-numbers" | undefined;
+    PROVIDE_DEFAULT_WOKA_TEXTURE: "no" | "random" | "fix" | undefined;
+    // Tutorial settings
+    ENABLE_TUTORIAL: boolean | undefined;
 }

@@ -1,8 +1,8 @@
 import { get, writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { describe, expect, it } from "vitest";
-import { UserProviderInterface } from "../UserProvider/UserProviderInterface";
-import { PartialChatUser } from "../Connection/ChatConnection";
+import type { UserProviderInterface } from "../UserProvider/UserProviderInterface";
+import type { PartialChatUser } from "../Connection/ChatConnection";
 import { UserProviderMerger } from "./UserProviderMerger";
 
 describe("UserProviderMerger", () => {

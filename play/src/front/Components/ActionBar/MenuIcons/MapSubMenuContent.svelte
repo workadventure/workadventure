@@ -1,31 +1,29 @@
 <script lang="ts">
-    import { streamingMegaphoneStore } from "../../../Stores/MediaStore";
+    import type { AreaData } from "@workadventure/map-editor";
+    import { warningMessageStore } from "../../../Stores/ErrorStore";
+    import { isInsidePersonalAreaStore, personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
     import {
-        backOfficeMenuVisibleStore,
         globalMessageVisibleStore,
         mapManagerActivated,
         mapEditorMenuVisibleStore,
         openedMenuStore,
     } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { liveStreamingEnabledStore, requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
-    import AdjustmentsIcon from "../../Icons/AdjustmentsIcon.svelte";
-    import MessageGlobalIcon from "../../Icons/MessageGlobalIcon.svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import {
         modalIframeStore,
         modalVisibilityStore,
         showModalGlobalComminucationVisibilityStore,
     } from "../../../Stores/ModalStore";
-    import { mapEditorModeStore } from "../../../Stores/MapEditorStore";
+    import { mapEditorModeStore, mapExplorationModeStore } from "../../../Stores/MapEditorStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { isTodoListVisibleStore } from "../../../Stores/TodoListStore";
     import { isCalendarVisibleStore } from "../../../Stores/CalendarStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
-    import { ADMIN_BO_URL } from "../../../Enum/EnvironmentVariable";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
+    import { IconMapSearch, IconDesk, IconSpeakerPhone, IconMapEditor } from "@wa-icons";
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -38,13 +36,6 @@
     }
 
     function toggleGlobalMessage() {
-        if ($requestedMegaphoneStore || $liveStreamingEnabledStore || $streamingMegaphoneStore) {
-            analyticsClient.stopMegaphone();
-            requestedMegaphoneStore.set(false);
-            streamingMegaphoneStore.set(false);
-            showModalGlobalComminucationVisibilityStore.set(false);
-            return;
-        }
         if ($showModalGlobalComminucationVisibilityStore) {
             showModalGlobalComminucationVisibilityStore.set(false);
             return;
@@ -59,31 +50,77 @@
 
     function toggleMapEditorMode() {
         //if (isMobile) return;
-        if ($mapEditorModeStore) gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
-        analyticsClient.toggleMapEditor(!$mapEditorModeStore);
-        mapEditorModeStore.switchMode(!$mapEditorModeStore);
+        if ($mapEditorModeStore && !$mapExplorationModeStore) {
+            analyticsClient.toggleMapEditor(false);
+            mapEditorModeStore.switchMode(false);
+            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
+        } else {
+            analyticsClient.toggleMapEditor(true);
+            mapEditorModeStore.switchMode(true);
+            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.EntityEditor);
+        }
         isTodoListVisibleStore.set(false);
         isCalendarVisibleStore.set(false);
         closeMapMenu();
     }
 
     function toggleMapExplorerMode() {
-        toggleMapEditorMode();
-        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.ExploreTheRoom);
-    }
-
-    function openBo() {
-        if (!ADMIN_BO_URL) {
-            throw new Error("ADMIN_BO_URL not set");
+        if ($mapExplorationModeStore) {
+            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
+            mapEditorModeStore.switchMode(false);
+        } else {
+            mapEditorModeStore.switchMode(true);
+            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.ExploreTheRoom);
         }
-        const url = new URL(ADMIN_BO_URL, window.location.href);
-        url.searchParams.set("playUri", window.location.href);
-        window.open(url, "_blank");
-        analyticsClient.openBackOffice();
+
+        analyticsClient.clickTopOpenMapExplorer();
+        isTodoListVisibleStore.set(false);
+        isCalendarVisibleStore.set(false);
+        closeMapMenu();
     }
 
     function closeMapMenu() {
         openedMenuStore.close("mapMenu");
+    }
+
+    async function goToPersonalDesk() {
+        // Close the menu
+        openedMenuStore.close("profileMenu");
+
+        // Walk to the personal desk using the GameScene method
+        try {
+            await gameManager.getCurrentGameScene()?.walkToPersonalDesk();
+        } catch (error) {
+            console.error("Error while walking to personal desk", error);
+            warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorMoving(), { closable: true });
+        }
+    }
+
+    async function unclaimPersonalDesk() {
+        if (!$personalAreaDataStore) {
+            warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorNotFound(), { closable: true });
+            return;
+        }
+
+        try {
+            const gameScene = gameManager.getCurrentGameScene();
+            const mapEditorModeManager = gameScene.getMapEditorModeManager();
+            if (!mapEditorModeManager) {
+                warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorUnclaiming(), { closable: true });
+                return;
+            }
+            // Use unclaim personal area method of the map editor mode manager
+            await mapEditorModeManager.unclaimPersonalArea($personalAreaDataStore as unknown as AreaData);
+
+            // Send analytics event
+            analyticsClient.unclaimPersonalDesk();
+
+            // Close the menu
+            openedMenuStore.close("profileMenu");
+        } catch (error) {
+            console.error("Error while unclaiming personal desk", error);
+            warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorUnclaiming(), { closable: true });
+        }
     }
 </script>
 
@@ -91,46 +128,41 @@
     <ActionBarButton
         on:click={toggleMapEditorMode}
         label={$LL.actionbar.mapEditor()}
-        state={$mapEditorModeStore ? "active" : "normal"}
+        state={$mapEditorModeStore && !$mapExplorationModeStore ? "active" : "normal"}
     >
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-                d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z"
-                stroke="white"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-        </svg>
+        <IconMapEditor font-size="20" />
     </ActionBarButton>
 {/if}
 {#if $mapManagerActivated}
-    <ActionBarButton on:click={toggleMapExplorerMode} label={$LL.mapEditor.sideBar.exploreTheRoom()}>
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="icon icon-tabler icons-tabler-outline icon-tabler-search"
-            ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
-                d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"
-            /><path d="M21 21l-6 -6" /></svg
-        >
-    </ActionBarButton>
-{/if}
-{#if $backOfficeMenuVisibleStore}
-    <ActionBarButton on:click={openBo} label={$LL.actionbar.bo()}>
-        <AdjustmentsIcon />
+    <ActionBarButton
+        on:click={toggleMapExplorerMode}
+        label={$LL.mapEditor.sideBar.exploreTheRoom()}
+        state={$mapExplorationModeStore ? "active" : "normal"}
+    >
+        <IconMapSearch font-size="20" />
     </ActionBarButton>
 {/if}
 {#if $globalMessageVisibleStore}
     <ActionBarButton on:click={toggleGlobalMessage} label={$LL.actionbar.globalMessage()}>
-        <MessageGlobalIcon />
+        <IconSpeakerPhone font-size="20" />
+    </ActionBarButton>
+{/if}
+{#if $personalAreaDataStore}
+    <ActionBarButton
+        dataTestId="go-to-personal-desk-button"
+        label={$LL.actionbar.personalDesk.label()}
+        on:click={goToPersonalDesk}
+        state={$isInsidePersonalAreaStore ? "disabled" : "normal"}
+        classList="group/btn-personal-desk"
+    >
+        <IconDesk font-size="20" />
+    </ActionBarButton>
+    <ActionBarButton
+        label={$LL.actionbar.personalDesk.unclaim()}
+        on:click={unclaimPersonalDesk}
+        classList="group/btn-personal-desk"
+    >
+        <IconDesk font-size="20" />
     </ActionBarButton>
 {/if}
 

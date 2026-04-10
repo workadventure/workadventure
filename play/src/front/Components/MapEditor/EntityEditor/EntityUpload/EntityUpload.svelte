@@ -1,8 +1,10 @@
 <script lang="ts">
-    import { CustomEntityDirection, UploadEntityMessage } from "@workadventure/messages";
+    import type { UploadEntityMessage } from "@workadventure/messages";
+    import { CustomEntityDirection } from "@workadventure/messages";
     import { onDestroy } from "svelte";
     import { v4 as uuidv4 } from "uuid";
-    import { Direction, ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT, EntityPrefab } from "@workadventure/map-editor";
+    import type { EntityPrefab } from "@workadventure/map-editor";
+    import { Direction, ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT } from "@workadventure/map-editor";
     import LL from "../../../../../i18n/i18n-svelte";
     import { mapEditorEntityUploadEventStore, selectCategoryStore } from "../../../../Stores/MapEditorStore";
     import CustomEntityEditionForm from "../CustomEntityEditionForm/CustomEntityEditionForm.svelte";
@@ -122,6 +124,7 @@
     <div class="no-padding">
         <p class="m-0">{$LL.mapEditor.entityEditor.uploadEntity.title()}</p>
         <p class="opacity-50">{$LL.mapEditor.entityEditor.uploadEntity.description()}</p>
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
             on:drop|preventDefault|stopPropagation={dropHandler}
             on:dragover|preventDefault={() => dropZoneRef.classList.add("border-cyan-400")}

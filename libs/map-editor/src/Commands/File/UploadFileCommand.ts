@@ -1,4 +1,4 @@
-import { UploadFileMessage } from "@workadventure/messages";
+import type { UploadFileMessage } from "@workadventure/messages";
 import { Command } from "../Command";
 
 export class UploadFileCommand extends Command {

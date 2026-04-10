@@ -11,11 +11,9 @@ import type {
     BatchMessage,
     SubMessage,
 } from "@workadventure/messages";
-import { Deferred } from "ts-deferred";
-import { PusherRoom } from "../PusherRoom";
-import { Zone } from "../Zone";
-import { PointInterface } from "./PointInterface";
-import { ViewportInterface } from "./ViewportMessage";
+import type { PusherRoom } from "../PusherRoom";
+import type { PointInterface } from "./PointInterface";
+import type { ViewportInterface } from "./ViewportMessage";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 export type BackSpaceConnection_ = ClientDuplexStream<PusherToBackSpaceMessage, BackToPusherSpaceMessage>;
@@ -42,6 +40,8 @@ export type SocketData = {
     viewport: ViewportInterface;
     availabilityStatus: AvailabilityStatus;
     lastCommandId?: string;
+    // Unique identifier for the browser tab, used to detect reconnections from the same tab
+    tabId: string | undefined;
     messages: unknown[];
     tags: string[];
     visitCardUrl: string | null;
@@ -54,16 +54,19 @@ export type SocketData = {
     batchedMessages: BatchMessage;
     batchTimeout: NodeJS.Timeout | null;
     backConnection?: BackConnection;
-    listenedZones: Set<Zone>;
+    listenedZones: Set<string>;
     pusherRoom: PusherRoom | undefined;
     spaces: Set<SpaceName>;
-    joinSpacesPromise: Map<SpaceName, Deferred<void>>;
+    joinSpacesPromise: Map<SpaceName, Promise<void>>;
     chatID?: string;
     world: string;
     currentChatRoomArea: string[];
     roomName: string;
     microphoneState: boolean;
     cameraState: boolean;
+    attendeesState: boolean;
     // The abort controllers for each queries received
     queryAbortControllers: Map<number, AbortController>;
+    canRecord: boolean;
+    keepAliveInterval: NodeJS.Timeout | undefined;
 };

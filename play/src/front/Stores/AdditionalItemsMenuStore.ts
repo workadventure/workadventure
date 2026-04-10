@@ -1,7 +1,8 @@
-import { derived, Readable, writable } from "svelte/store";
-import { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "../Api/Events/Ui/ButtonActionBarEvent";
+import type { Readable } from "svelte/store";
+import { derived, writable } from "svelte/store";
+import type { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "../Api/Events/Ui/ButtonActionBarEvent";
 import { gameManager } from "../Phaser/Game/GameManager";
-import { CustomButtonActionBarDescriptor } from "./MenuStore";
+import type { CustomButtonActionBarDescriptor } from "./MenuStore";
 
 type AdditionalMenuItem = CustomButtonActionBarDescriptor & {
     location: "top" | "appsMenu" | "buildMenu" | "profileMenu";

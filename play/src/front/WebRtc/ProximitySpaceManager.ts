@@ -1,9 +1,9 @@
-import { Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
 import Debug from "debug";
 import * as Sentry from "@sentry/svelte";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
-import { RoomConnection } from "../Connection/RoomConnection";
-import { ProximityChatRoom } from "../Chat/Connection/Proximity/ProximityChatRoom";
+import type { RoomConnection } from "../Connection/RoomConnection";
+import type { ProximityChatRoom } from "../Chat/Connection/Proximity/ProximityChatRoom";
 
 const debug = Debug("ProximitySpaceManager");
 

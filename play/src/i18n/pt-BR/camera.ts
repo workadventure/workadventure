@@ -23,6 +23,36 @@ const camera: BaseTranslation = {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
         },
+        tooltip: {
+            permissionDeniedTitle: "Acesso à câmera bloqueado",
+            permissionDeniedDesc:
+                "O navegador negou o acesso à câmera para este site. Permita na barra de endereços (cadeado ou ícone da câmera) ou nas configurações do site. A ilustração abaixo corresponde ao seu navegador.",
+            noDeviceTitle: "Nenhuma câmera utilizável",
+            noDeviceDesc:
+                "O navegador não detecta nenhuma câmera utilizável. Tente outro navegador, verifique se a câmera está conectada, verifique as configurações do computador (privacidade, dispositivos) ou reinicie o computador se o dispositivo deveria funcionar.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
+        microphoneTooltip: {
+            permissionDeniedTitle: "Acesso ao microfone bloqueado",
+            permissionDeniedDesc:
+                "O navegador negou o acesso ao microfone para este site. Permita na barra de endereços (cadeado ou ícone do microfone) ou nas configurações do site. A ilustração abaixo corresponde ao seu navegador.",
+            noDeviceTitle: "Nenhum microfone utilizável",
+            noDeviceDesc:
+                "O navegador não detecta nenhum microfone utilizável. Tente outro navegador, verifique o microfone, verifique as configurações do computador (privacidade, dispositivos) ou reinicie o computador se o dispositivo deveria funcionar.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
     },
     webrtc: {
         title: "Erro de conexão do servidor de retransmissão de vídeo",
@@ -39,7 +69,7 @@ const camera: BaseTranslation = {
         preparingYouNetworkGuide: 'guia "Preparando sua rede"',
         refresh: "Atualizar",
         continue: "Continuar",
-        newDeviceDetected: "Novo dispositivo detectado {device} 🎉 Trocar? [ESPAÇO]",
+        newDeviceDetected: "Novo dispositivo detectado {device} 🎉 Trocar? [ESPAÇO] Ignorar [ESC]",
     },
     my: {
         silentZone: "Zona silenciosa",
@@ -55,10 +85,21 @@ const camera: BaseTranslation = {
         senPrivateMessage: "Enviar mensagem privada (em breve)",
         kickoffUser: "Expulsar usuário",
         muteAudioUser: "Silenciar áudio",
+        askToMuteAudioUser: "Pedir para silenciar áudio",
         muteAudioEveryBody: "Silenciar áudio para todos",
         muteVideoUser: "Silenciar vídeo",
+        askToMuteVideoUser: "Pedir para silenciar vídeo",
         muteVideoEveryBody: "Silenciar vídeo para todos",
         blockOrReportUser: "Moderação",
+    },
+    backgroundEffects: {
+        imageTitle: "Imagens de fundo",
+        videoTitle: "Vídeos de fundo",
+        blurTitle: "Desfoque de fundo",
+        resetTitle: "Desativar efeitos de fundo",
+        title: "Efeitos de fundo",
+        close: "Fechar",
+        blurAmount: "Quantidade de desfoque",
     },
 };
 

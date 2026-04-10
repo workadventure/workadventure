@@ -33,10 +33,10 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
      * @returns {Area} Area object
      */
     create(createAreaEvent: CreateDynamicAreaEvent): Area {
-        void queryWorkadventure({
+        queryWorkadventure({
             type: "createArea",
             data: createAreaEvent,
-        });
+        }).catch((e) => console.error("Error while creating area", e));
         return new Area(createAreaEvent);
     }
 

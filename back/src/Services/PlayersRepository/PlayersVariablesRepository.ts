@@ -2,7 +2,7 @@ import { asError } from "catch-unknown";
 import { getRedisClient } from "../RedisClient";
 import { RedisPlayersVariablesRepository } from "./RedisPlayersVariablesRepository";
 import { VoidPlayersVariablesRepository } from "./VoidPlayersVariablesRepository";
-import { PlayersVariablesRepositoryInterface } from "./PlayersVariablesRepositoryInterface";
+import type { PlayersVariablesRepositoryInterface } from "./PlayersVariablesRepositoryInterface";
 
 let playerVariablesRepositoryPromise: Promise<PlayersVariablesRepositoryInterface> | undefined;
 

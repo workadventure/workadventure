@@ -1,8 +1,7 @@
-import { Readable } from "svelte/store";
+import type { Readable } from "svelte/store";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
-import { SpaceInterface } from "../SpaceInterface";
-import { Streamable } from "../../Stores/StreamableCollectionStore";
-import {
+import type { SpaceInterface } from "../SpaceInterface";
+import type {
     SimplePeerConnectionInterface,
     PeerFactoryInterface,
     ICommunicationState,
@@ -52,19 +51,15 @@ export class WebRTCState implements ICommunicationState {
         this._peer.blockedFromRemotePlayer(userId);
     }
 
-    getVideoForUser(spaceUserId: string): Streamable | undefined {
-        return this._peer.getVideoForUser(spaceUserId);
-    }
-
-    getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
-        return this._peer.getScreenSharingForUser(spaceUserId);
-    }
-
     /**
      * Starts the shutdown process of the communication state. It does not remove all video peers immediately,
      * but any asynchronous operation receiving a new stream should be ignored after this call.
      */
     shutdown(): void {
         this._peer.shutdown();
+    }
+
+    retryAllFailedConnections(): void {
+        this._peer.retryAllFailedConnections();
     }
 }

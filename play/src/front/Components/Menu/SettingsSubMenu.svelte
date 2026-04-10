@@ -13,26 +13,25 @@
 
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import {
-        PEER_SCREEN_SHARE_LOW_BANDWIDTH,
-        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH,
-        PEER_VIDEO_LOW_BANDWIDTH,
-        PEER_VIDEO_RECOMMENDED_BANDWIDTH,
-    } from "../../Enum/EnvironmentVariable";
-    import { videoBandwidthStore } from "../../Stores/MediaStore";
-    import { screenShareBandwidthStore } from "../../Stores/ScreenSharingStore";
+    import { videoQualityStore } from "../../Stores/MediaStore";
+    import { screenShareQualityStore } from "../../Stores/ScreenSharingStore";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
+    import { bandwidthConstrainedPreferenceStore } from "../../Stores/BandwidthConstrainedPreferenceStore";
     import InputSwitch from "../Input/InputSwitch.svelte";
     import RangeSlider from "../Input/RangeSlider.svelte";
-    import Select from "../Input/Select.svelte";
-    import CamArrowIcon from "../Icons/CamArrowIcon.svelte";
-    import MicOnIcon from "../Icons/MicOnIcon.svelte";
-    import TablerAntennaBarsIcon from "../Icons/TablerAntennaBarsIcon.svelte";
-    import TablerAntennaBars2Icon from "../Icons/TablerAntennaBars2Icon.svelte";
-    import TablerAntennaBars3Icon from "../Icons/TablerAntennaBars3Icon.svelte";
-    import AdjustmentsIcon from "../Icons/AdjustmentsIcon.svelte";
-    import LanguageIcon from "../Icons/LanguageIcon.svelte";
-    import DoorArrowRightIcon from "../Icons/DoorArrowRightIcon.svelte";
+    import SoundSelect from "../Input/SoundSelect.svelte";
+    import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
+    import InputRadioBox from "../Input/InputRadioBox.svelte";
+    import {
+        IconAntennaBarsLow,
+        IconAntennaBarsMid,
+        IconAntennaBarsHigh,
+        IconAdjustements,
+        IconLanguage,
+        IconDoorExit,
+        IconScreenShare,
+        IconCameraUp,
+    } from "@wa-icons";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
@@ -45,17 +44,12 @@
     let valueLocale: string = $locale;
     let valueCameraPrivacySettings = localUserStore.getCameraPrivacySettings();
     let valueMicrophonePrivacySettings = localUserStore.getMicrophonePrivacySettings();
-    const initialVideoBandwidth = localUserStore.getVideoBandwidth();
-
-    let valueVideoBandwidth =
-        initialVideoBandwidth === "unlimited" ? 3 : initialVideoBandwidth === PEER_VIDEO_LOW_BANDWIDTH ? 1 : 2;
-    const initialScreenShareBandwidth = localUserStore.getScreenShareBandwidth();
-    let valueScreenShareBandwidth =
-        initialScreenShareBandwidth === "unlimited"
-            ? 3
-            : initialScreenShareBandwidth === PEER_SCREEN_SHARE_LOW_BANDWIDTH
-            ? 1
-            : 2;
+    const initialVideoQuality = localUserStore.getVideoQuality();
+    let valueVideoQuality = initialVideoQuality === "high" ? 3 : initialVideoQuality === "low" ? 1 : 2;
+    const initialScreenShareQuality = localUserStore.getScreenShareQuality();
+    let valueScreenShareQuality =
+        initialScreenShareQuality === "high" ? 3 : initialScreenShareQuality === "low" ? 1 : 2;
+    let bandwidthConstrainedPreference = localUserStore.getBandwidthConstrainedScreenSharePreference();
 
     let volumeProximityDiscussion = localUserStore.getVolumeProximityDiscussion();
 
@@ -63,46 +57,50 @@
     let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
 
     let valueBubbleSound = localUserStore.getBubbleSound();
-    const sound = new Audio();
+    let videoQualityStats = localUserStore.getDisplayVideoQualityStats();
 
     async function updateLocale() {
         await setCurrentLocale(valueLocale as Locales);
     }
 
-    function updateVideoBandwidth() {
-        let value: number | "unlimited";
+    function updateVideoQuality() {
+        let value: "low" | "recommended" | "high";
 
-        switch (valueVideoBandwidth) {
+        switch (valueVideoQuality) {
             case 1:
-                value = PEER_VIDEO_LOW_BANDWIDTH;
+                value = "low";
                 break;
             case 3:
-                value = "unlimited";
+                value = "high";
                 break;
             default:
-                value = PEER_VIDEO_RECOMMENDED_BANDWIDTH;
+                value = "recommended";
                 break;
         }
 
-        videoBandwidthStore.setBandwidth(value);
+        videoQualityStore.setQuality(value);
     }
 
-    function updateScreenShareBandwidth() {
-        let value: number | "unlimited";
+    function updateScreenShareQuality() {
+        let value: "low" | "recommended" | "high";
 
-        switch (valueScreenShareBandwidth) {
+        switch (valueScreenShareQuality) {
             case 1:
-                value = PEER_SCREEN_SHARE_LOW_BANDWIDTH;
+                value = "low";
                 break;
             case 3:
-                value = "unlimited";
+                value = "high";
                 break;
             default:
-                value = PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH;
+                value = "recommended";
                 break;
         }
 
-        screenShareBandwidthStore.setBandwidth(value);
+        screenShareQualityStore.setQuality(value);
+    }
+
+    function updateBandwidthConstrainedPreference() {
+        bandwidthConstrainedPreferenceStore.setPreference(bandwidthConstrainedPreference);
     }
 
     function changeFullscreen() {
@@ -214,62 +212,67 @@
     function changeBubbleSound() {
         localUserStore.setBubbleSound(valueBubbleSound);
         bubbleSoundStore.set(valueBubbleSound);
-        playBubbleSound().catch((e) => console.error(e));
     }
 
-    async function playBubbleSound() {
-        sound.src = `/resources/objects/webrtc-in-${valueBubbleSound}.mp3`;
-        sound.volume = 0.2;
-        await sound.play();
+    function changeVideoQualityStats() {
+        localUserStore.setDisplayVideoQualityStats(videoQualityStats);
+        displayVideoQualityStore.set(videoQualityStats);
+    }
+
+    function getBubbleSoundUrl(bubbleSound: string): string {
+        return `/resources/objects/webrtc-in-${bubbleSound}.mp3`;
     }
 </script>
 
 <div class="divide-y divide-white/20" transition:fly={{ x: -700, duration: 250 }}>
     <section class=" p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <CamArrowIcon />
+            <div class="me-4 opacity-50"><IconCameraUp /></div>
             {$LL.menu.settings.videoBandwidth.title()}
         </div>
         <div class="flex w-full mb-6 mt-2 ps-6 justify-center">
             <div class="flex flex-col w-10/12 lg:w-6/12">
                 <ul class="flex justify-between w-full px-[10px] mb-8">
                     <li
-                        class="flex justify-center relative {valueVideoBandwidth === 1
+                        class="flex justify-center relative {valueVideoQuality === 1
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <TablerAntennaBarsIcon />
+                        <IconAntennaBarsLow />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueVideoBandwidth = 1)}
+                            on:click|preventDefault={() => (valueVideoQuality = 1)}
                             >{$LL.menu.settings.videoBandwidth.low()}</span
                         >
                     </li>
                     <li
-                        class="flex justify-center relative {valueVideoBandwidth === 2
+                        class="flex justify-center relative {valueVideoQuality === 2
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <TablerAntennaBars2Icon />
+                        <IconAntennaBarsMid />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueVideoBandwidth = 2)}
+                            on:click|preventDefault={() => (valueVideoQuality = 2)}
                             >{$LL.menu.settings.videoBandwidth.recommended()}</span
                         >
                     </li>
                     <li
-                        class="flex justify-center relative {valueVideoBandwidth === 3
+                        class="flex justify-center relative {valueVideoQuality === 3
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <TablerAntennaBars3Icon />
+                        <IconAntennaBarsHigh />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueVideoBandwidth = 3)}
-                            >{$LL.menu.settings.videoBandwidth.unlimited()}</span
+                            on:click|preventDefault={() => (valueVideoQuality = 3)}
+                            >{$LL.menu.settings.videoBandwidth.high()}</span
                         >
                     </li>
                 </ul>
@@ -278,15 +281,15 @@
                     min={1}
                     max={3}
                     step={1}
-                    bind:value={valueVideoBandwidth}
-                    onChange={updateVideoBandwidth}
+                    bind:value={valueVideoQuality}
+                    onChange={updateVideoQuality}
                 />
             </div>
         </div>
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <div class="me-4 opacity-50"><MicOnIcon /></div>
+            <div class="me-4 opacity-50"><IconScreenShare /></div>
 
             {$LL.menu.settings.shareScreenBandwidth.title()}
         </div>
@@ -294,42 +297,45 @@
             <div class="flex flex-col w-10/12 lg:w-6/12">
                 <ul class="flex justify-between w-full px-[10px] mb-8">
                     <li
-                        class="flex relative {valueScreenShareBandwidth === 1
+                        class="flex relative {valueScreenShareQuality === 1
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <TablerAntennaBarsIcon />
+                        <IconAntennaBarsLow />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueScreenShareBandwidth = 1)}
+                            on:click|preventDefault={() => (valueScreenShareQuality = 1)}
                             >{$LL.menu.settings.shareScreenBandwidth.low()}</span
                         >
                     </li>
                     <li
-                        class="flex justify-center relative {valueScreenShareBandwidth === 2
+                        class="flex justify-center relative {valueScreenShareQuality === 2
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <TablerAntennaBars2Icon />
+                        <IconAntennaBarsMid />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueScreenShareBandwidth = 2)}
+                            on:click|preventDefault={() => (valueScreenShareQuality = 2)}
                             >{$LL.menu.settings.shareScreenBandwidth.recommended()}</span
                         >
                     </li>
                     <li
-                        class="flex justify-center relative {valueScreenShareBandwidth === 3
+                        class="flex justify-center relative {valueScreenShareQuality === 3
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <TablerAntennaBars3Icon />
+                        <IconAntennaBarsHigh />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueScreenShareBandwidth = 3)}
-                            >{$LL.menu.settings.shareScreenBandwidth.unlimited()}</span
+                            on:click|preventDefault={() => (valueScreenShareQuality = 3)}
+                            >{$LL.menu.settings.shareScreenBandwidth.high()}</span
                         >
                     </li>
                 </ul>
@@ -337,15 +343,49 @@
                     min={1}
                     max={3}
                     step={1}
-                    bind:value={valueScreenShareBandwidth}
-                    onChange={updateScreenShareBandwidth}
+                    bind:value={valueScreenShareQuality}
+                    onChange={updateScreenShareQuality}
                     buttonShape="square"
                 />
             </div>
         </div>
+        <div class="input-label">
+            <div class="grow font-light text-center font-semibold">
+                {$LL.menu.settings.bandwidthConstrainedPreference.title()}
+            </div>
+        </div>
+        <div class="mt-2 p-2 flex gap-4 justify-center items-stretch">
+            <InputRadioBox
+                value="maintain-resolution"
+                label={$LL.menu.settings.bandwidthConstrainedPreference.maintainResolutionTitle()}
+                bind:group={bandwidthConstrainedPreference}
+                onChange={updateBandwidthConstrainedPreference}
+                outerClass="flex-1"
+            >
+                <em>{$LL.menu.settings.bandwidthConstrainedPreference.maintainResolutionDescription()}</em>
+            </InputRadioBox>
+            <InputRadioBox
+                value="maintain-framerate"
+                label={$LL.menu.settings.bandwidthConstrainedPreference.maintainFramerateTitle()}
+                bind:group={bandwidthConstrainedPreference}
+                onChange={updateBandwidthConstrainedPreference}
+                outerClass="flex-1"
+            >
+                <em>{$LL.menu.settings.bandwidthConstrainedPreference.maintainFramerateDescription()}</em>
+            </InputRadioBox>
+            <InputRadioBox
+                value="balanced"
+                label={$LL.menu.settings.bandwidthConstrainedPreference.balancedTitle()}
+                bind:group={bandwidthConstrainedPreference}
+                onChange={updateBandwidthConstrainedPreference}
+                outerClass="flex-1"
+            >
+                <em>{$LL.menu.settings.bandwidthConstrainedPreference.balancedDescription()}</em>
+            </InputRadioBox>
+        </div>
 
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <div class="me-4 opacity-50"><AdjustmentsIcon /></div>
+            <div class="me-4 opacity-50"><IconAdjustements /></div>
 
             {$LL.menu.settings.proximityDiscussionVolume()}
         </div>
@@ -399,7 +439,7 @@
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <LanguageIcon />
+            <div class="me-4 opacity-50"><IconLanguage /></div>
             {$LL.menu.settings.language.title()}
         </div>
         <div class="mt-2 p-2">
@@ -421,7 +461,7 @@
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="tooltip">
             <div class="group bg-contrast font-bold text-lg p-4 flex items-center relative">
-                <DoorArrowRightIcon />
+                <div class="me-4 opacity-50"><IconDoorExit /></div>
                 <div class="grow">
                     <div>{$LL.menu.settings.privacySettings.title()}</div>
                     <div class="text-sm italic text-white/50">{$LL.menu.settings.privacySettings.explanation()}</div>
@@ -449,25 +489,23 @@
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <div class="me-4 opacity-50"><AdjustmentsIcon /></div>
+            <div class="me-4 opacity-50"><IconAdjustements /></div>
             {$LL.menu.settings.otherSettings()}
         </div>
 
         <div class="mt-2 p-2">
-            <div class="flex items-end gap-2">
-                <Select
-                    id="bubble-sound"
-                    bind:value={valueBubbleSound}
-                    onChange={changeBubbleSound}
-                    label={$LL.menu.settings.bubbleSound()}
-                    outerClass="flex-1"
-                    options={[
-                        { value: "ding", label: $LL.menu.settings.bubbleSoundOptions.ding() },
-                        { value: "wobble", label: $LL.menu.settings.bubbleSoundOptions.wobble() },
-                    ]}
-                />
-                <button class="btn btn-light btn-ghost mb-2" on:click={playBubbleSound}> ▶️ </button>
-            </div>
+            <SoundSelect
+                id="bubble-sound"
+                bind:value={valueBubbleSound}
+                onChange={changeBubbleSound}
+                label={$LL.menu.settings.bubbleSound()}
+                options={[
+                    { value: "ding", label: $LL.menu.settings.bubbleSoundOptions.ding() },
+                    { value: "wobble", label: $LL.menu.settings.bubbleSoundOptions.wobble() },
+                ]}
+                getSoundUrl={getBubbleSoundUrl}
+                playLabel="▶"
+            />
         </div>
 
         <div class="flex cursor-pointer items-center relative m-4">
@@ -535,6 +573,15 @@
                 bind:value={disableAnimations}
                 onChange={changeDisableAnimations}
                 label={$LL.menu.settings.disableAnimations()}
+            />
+        </div>
+
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="changeVideoQualityStats"
+                bind:value={videoQualityStats}
+                onChange={changeVideoQualityStats}
+                label={$LL.menu.settings.displayVideoQualityStats()}
             />
         </div>
     </section>

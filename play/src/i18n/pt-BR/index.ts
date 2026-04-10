@@ -25,6 +25,10 @@ import messageScreen from "./messageScreen";
 import refreshPrompt from "./refreshPrompt";
 import statusModal from "./statusModal";
 import say from "./say";
+import locate from "./locate";
+import randomNames from "./randomNames";
+import onboarding from "./onboarding";
+import recording from "./recording";
 
 const pt_BR = merge(en_US, {
     audio,
@@ -52,6 +56,10 @@ const pt_BR = merge(en_US, {
     refreshPrompt,
     statusModal,
     say,
+    locate,
+    randomNames,
+    onboarding,
+    recording,
 });
 
 export default pt_BR;

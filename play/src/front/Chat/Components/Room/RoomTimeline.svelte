@@ -2,9 +2,10 @@
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { get } from "svelte/store";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { ChatRoom } from "../../Connection/ChatConnection";
+    import type { ChatMessage, ChatRoom } from "../../Connection/ChatConnection";
     import getCloseImg from "../../images/get-close.png";
     import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
+    import { intentionallyClosedChatDuringMeetingStore } from "../../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -22,17 +23,16 @@
     const shouldRetrySendingEvents = chatConnection.shouldRetrySendingEvents;
     let myChatID = localUserStore.getChatId();
 
+    // Time gap threshold for message grouping (5 minutes)
+    const TIME_GAP_THRESHOLD = 5 * 60 * 1000;
+
     let messageListRef: HTMLDivElement;
     let autoScroll = true;
     let onScrollTop = false;
-
     let oldScrollHeight = 0;
-
     let loadingMessagePromise: Promise<void> | undefined = undefined;
-
     let scrollTimer: ReturnType<typeof setTimeout>;
     let shouldDisplayLoader = false;
-
     let messageInputBarRef: MessageInputBar;
 
     const gameScene = gameManager.getCurrentGameScene();
@@ -42,6 +42,95 @@
     $: messages = room?.messages;
     $: roomName = room?.name;
     $: typingMembers = room.typingMembers;
+
+    type RenderItem =
+        | { kind: "separator"; key: string; label: string }
+        | { kind: "message"; key: string; message: ChatMessage; showHeader: boolean };
+
+    function isValidDate(d: Date) {
+        return d instanceof Date && !Number.isNaN(d.getTime());
+    }
+
+    function getMessageDate(message: ChatMessage): Date | undefined {
+        if (message?.date && isValidDate(message.date)) {
+            return message.date;
+        }
+        return undefined;
+    }
+
+    function isSameLocalDay(a: Date, b: Date): boolean {
+        return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+
+    function dayLabel(d: Date): string {
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+
+        if (isSameLocalDay(d, today)) return $LL.chat.timeLine.today();
+        if (isSameLocalDay(d, yesterday)) return $LL.chat.timeLine.yesterday();
+
+        return new Intl.DateTimeFormat(undefined, {
+            weekday: "short",
+            day: "numeric",
+            month: "short",
+        }).format(d);
+    }
+
+    function dayKey(d: Date): string {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${dd}`;
+    }
+
+    $: renderItems = (() => {
+        const out: RenderItem[] = [];
+        let lastDayKey: string | null = null;
+        let previousMessage: ChatMessage | undefined = undefined;
+        const messageList = $messages ?? [];
+
+        for (const msg of messageList) {
+            const d = getMessageDate(msg);
+            let insertedSeparator = false;
+
+            if (d && isValidDate(d)) {
+                const k = dayKey(d);
+                if (k !== lastDayKey) {
+                    out.push({
+                        kind: "separator",
+                        key: `sep-${k}`,
+                        label: dayLabel(d),
+                    });
+                    lastDayKey = k;
+                    insertedSeparator = true;
+                }
+            }
+
+            if (insertedSeparator) {
+                previousMessage = undefined;
+            }
+
+            const previousMessageUserId = previousMessage?.sender?.spaceUserId ?? previousMessage?.sender?.chatId;
+            const currentMessageUserId = msg.sender?.spaceUserId ?? msg.sender?.chatId;
+            const timeDiff =
+                msg.date && previousMessage?.date ? msg.date.getTime() - previousMessage.date.getTime() : Infinity;
+            const isRepeatedSender =
+                !!previousMessageUserId &&
+                previousMessageUserId === currentMessageUserId &&
+                timeDiff < TIME_GAP_THRESHOLD;
+
+            out.push({
+                kind: "message",
+                key: `msg-${msg.id}`,
+                message: msg,
+                showHeader: !isRepeatedSender,
+            });
+            previousMessage = msg;
+        }
+
+        return out;
+    })();
 
     onMount(() => {
         initMessages()
@@ -104,8 +193,6 @@
     });
 
     function scrollToMessageListBottom() {
-        // Safety check for undefined reference
-        // After disposing the component, the reference can be undefined
         if (messageListRef == undefined) return;
         messageListRef.scroll({ top: messageListRef.scrollHeight, behavior: "smooth" });
     }
@@ -114,6 +201,10 @@
         selectedChatMessageToReply.set(null);
         selectedRoomStore.set(undefined);
         shouldRestoreChatStateStore.set(false);
+
+        if (room instanceof ProximityChatRoom) {
+            intentionallyClosedChatDuringMeetingStore.set(true);
+        }
     }
 
     function handleScroll() {
@@ -181,12 +272,13 @@
     }
 
     function onUpdateMessageBody(event: CustomEvent) {
+        const messageList = get(messages);
         if (
             autoScroll ||
             (event.detail != undefined &&
-                $messages.length > 0 &&
-                event.detail.id === $messages[$messages.length - 1].id &&
-                $messages[$messages.length - 1].sender?.chatId === myChatID)
+                messageList.length > 0 &&
+                event.detail.id === messageList[messageList.length - 1].id &&
+                messageList[messageList.length - 1].sender?.chatId === myChatID)
         ) {
             scrollToMessageListBottom();
         }
@@ -201,8 +293,10 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="flex flex-col flex-auto h-full w-full max-w-full"
+    data-testid="roomTimeline"
     on:dragover|preventDefault
     on:drop|preventDefault|stopPropagation={onDropFiles}
 >
@@ -242,19 +336,10 @@
             on:scroll={handleScroll}
         >
             <ul
-                class="list-none p-0 flex-1 flex flex-col max-h-full pt-10 {$messages.length === 0
+                class="list-none p-0 flex-1 flex flex-col max-w-full max-h-full pt-10 gap-1 {$messages.length === 0
                     ? 'items-center justify-center pb-4'
                     : 'max-w-6xl'}"
             >
-                <!--{#if room.id === "proximity" && $connectedUsers !== undefined}-->
-                <!--    <div class="flex flex-row items-center gap-2">-->
-                <!--        {#each [...$connectedUsers] as [userId, user] (userId)}-->
-                <!--            <div class="avatar">-->
-                <!--                <Avatar avatarUrl={user.avatarUrl} fallbackName={user?.username} color={user?.color} />-->
-                <!--            </div>-->
-                <!--        {/each}-->
-                <!--    </div>-->
-                <!--{/if}-->
                 {#if $messages.length === 0}
                     {#if room instanceof ProximityChatRoom}
                         <li class="text-center px-3 max-w-md">
@@ -286,12 +371,22 @@
                         </li>
                     {/if}
                 {/if}
-                {#each $messages as message (message.id)}
-                    <li class="last:pb-3" data-event-id={message.id}>
-                        {#if message.type === "outcoming" || message.type === "incoming"}
-                            <MessageSystem {message} />
+                {#each renderItems as item (item.key)}
+                    <li class="last:pb-3" data-event-id={item.kind === "message" ? item.message.id : undefined}>
+                        {#if item.kind === "separator"}
+                            <div class="flex justify-center items-center pt-3 pb-1 px-6">
+                                <span class="text-xs min-w-32 text-center bold block opacity-50 py-1.5 px-3"
+                                    >{item.label}</span
+                                >
+                            </div>
+                        {:else if item.message.type === "outcoming" || item.message.type === "incoming"}
+                            <MessageSystem message={item.message} />
                         {:else}
-                            <Message on:updateMessageBody={onUpdateMessageBody} {message} />
+                            <Message
+                                on:updateMessageBody={onUpdateMessageBody}
+                                message={item.message}
+                                showHeader={item.showHeader}
+                            />
                         {/if}
                     </li>
                 {/each}
@@ -305,3 +400,20 @@
         <MessageInputBar disabled={$shouldRetrySendingEvents} {room} bind:this={messageInputBarRef} />
     {/if}
 </div>
+
+<style>
+    :global(li.highlight-message) {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        animation: highlight-pulse 2s ease-out;
+    }
+
+    @keyframes highlight-pulse {
+        0% {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        100% {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+    }
+</style>

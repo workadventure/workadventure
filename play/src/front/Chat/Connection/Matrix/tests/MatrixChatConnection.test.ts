@@ -1,13 +1,15 @@
-import { ClientEvent, EventType, MatrixClient, PendingEventOrdering, RoomEvent, SyncState } from "matrix-js-sdk";
+import type { MatrixClient } from "matrix-js-sdk";
+import { ClientEvent, EventType, PendingEventOrdering, RoomEvent, SyncState } from "matrix-js-sdk";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
-import { get, readable, Readable, writable } from "svelte/store";
-import { AvailabilityStatus } from "@workadventure/messages";
+import type { Readable } from "svelte/store";
+import { get, readable, writable } from "svelte/store";
+import type { AvailabilityStatus } from "@workadventure/messages";
 import { MatrixChatConnection } from "../MatrixChatConnection";
-import { CreateRoomOptions } from "../../ChatConnection";
-import { MatrixChatRoom } from "../MatrixChatRoom";
-import { MatrixSecurity } from "../MatrixSecurity";
-import { RequestedStatus } from "../../../../Rules/StatusRules/statusRules";
+import type { CreateRoomOptions } from "../../ChatConnection";
+import type { MatrixChatRoom } from "../MatrixChatRoom";
+import type { MatrixSecurity } from "../MatrixSecurity";
+import type { RequestedStatus } from "../../../../Rules/StatusRules/statusRules";
 
 vi.mock("../../../../Phaser/Game/GameManager", () => {
     return {

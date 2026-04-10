@@ -1,5 +1,5 @@
-import { DeepPartial } from "../DeepPartial";
-import { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
 
 const video: DeepPartial<Translation["video"]> = {
     connection_issue: "Problème de connexion!",
@@ -8,7 +8,11 @@ const video: DeepPartial<Translation["video"]> = {
     reduce: "Réduire",
     toggle_fullscreen: "Passer en plein écran",
     exit_fullscreen: "Quitter le plein écran",
-    click_to_unmute: "Cliquez pour activer le son",
+    connecting: "Connexion en cours...",
+    reconnecting: "Reconnexion en cours...",
+    persistent_connection_issue: "Reconnexion en cours... Connexion instable...",
+    click_to_unblock: "Cliquez pour débloquer",
+    click_and_drag_to_resize: "Cliquez et faites glisser pour redimensionner",
 };
 
 export default video;

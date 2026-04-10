@@ -1,5 +1,5 @@
-import { z, ZodObject, ZodRawShape } from "zod";
-import { Request, Response } from "express";
+import type { z, ZodObject, ZodRawShape } from "zod";
+import type { Request, Response } from "express";
 
 /**
  * Either validates the query and returns the parsed query data (according to the validator passed in parameter)

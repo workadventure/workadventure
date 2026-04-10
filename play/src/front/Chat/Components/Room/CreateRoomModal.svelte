@@ -2,7 +2,8 @@
     import { closeModal } from "svelte-modals";
     import { get } from "svelte/store";
     import Popup from "../../../Components/Modal/Popup.svelte";
-    import { CreateRoomOptions, historyVisibility, historyVisibilityOptions } from "../../Connection/ChatConnection";
+    import type { CreateRoomOptions, historyVisibility } from "../../Connection/ChatConnection";
+    import { historyVisibilityOptions } from "../../Connection/ChatConnection";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import LL from "../../../../i18n/i18n-svelte";
     import { IconAlertTriangle, IconHelpCircle, IconInfoCircle } from "../../../Components/Icons";

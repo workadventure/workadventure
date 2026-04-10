@@ -1,36 +1,34 @@
 <script lang="ts">
     import { getColorByString } from "../../Utils/ColorGenerator";
-    import { PictureStore } from "../../Stores/PictureStore";
+    import type { PictureStore } from "../../Stores/PictureStore";
 
     export let pictureStore: PictureStore | undefined;
     export let fallbackName = "A";
     export let color: string | null = null;
     export let isChatAvatar = false;
+
+    let forceFallback = false;
 </script>
 
-{#if $pictureStore}
+{#if $pictureStore && !forceFallback}
     <img
         src={$pictureStore}
         alt="User avatar"
-        class="rounded-sm h-6 w-6 object-contain bg-white"
+        class="rounded-sm object-contain bg-white h-10 w-10"
         draggable="false"
         style:background-color={`${color ? color : `${getColorByString(fallbackName)}`}`}
+        on:error={(event) => {
+            console.warn(`Failed to load avatar image for ${fallbackName}`, event);
+            forceFallback = true;
+        }}
     />
 {:else}
     <div
         class:chatAvatar={isChatAvatar}
-        class="rounded-sm bg-amber-600 h-7 w-7 text-center uppercase text-white flex items-center justify-center font-bold"
+        class="rounded-sm h-10 w-10 text-center uppercase text-white flex items-center justify-center font-bold aspect-square"
         draggable="false"
         style:background-color={`${color ? color : getColorByString(fallbackName)}`}
     >
         {fallbackName.charAt(0)}
     </div>
 {/if}
-
-<style>
-    .chatAvatar {
-        border-style: solid;
-        border-color: rgb(27 42 65 / 0.95);
-        border-width: 1px;
-    }
-</style>

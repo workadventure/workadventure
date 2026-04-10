@@ -32,10 +32,7 @@ Megaphone settings will affect the entire map.
 
 ## How do I use the megaphone?
 
-Click the megaphone icon in the action bar.
-One click will enable the megaphone, and a second click will disable it.
-
-![](../images/editor/megaphone-icon.png)
+Click the **Tools** > **Send global message** > **Start live message** in the action bar.
 
 
 ## Frequently Asked Questions

@@ -34,7 +34,8 @@
 -->
 <script lang="ts">
     import { onDestroy, onMount, setContext } from "svelte";
-    import { myCameraPeerStore, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+    import type { Writable } from "svelte/store";
+    import { myCameraPeerStore, type MyLocalStreamable } from "../../Stores/StreamableCollectionStore";
     import VideoBox from "../Video/VideoBox.svelte";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -48,12 +49,18 @@
         maxVisibleVideosStore,
     } from "../../Stores/OrderedStreamableCollectionStore";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
+    import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
+    import type { ObservableElement } from "../../Interfaces/ObservableElement";
+    import ChevronLeftIcon from "../Icons/ChevronLeftIcon.svelte";
+    import ChevronRightIcon from "../Icons/ChevronRightIcon.svelte";
+    import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
+    import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import ResizeHandle from "./ResizeHandle.svelte";
 
     setContext("inCameraContainer", true);
 
     export let oneLineMaxHeight: number;
-    const gap = 16; // Configurable gap between videos in pixels
+    let gap = 16; // Configurable gap between videos in pixels
 
     // The "maximum" number of videos we want to display.
     // This is not 100% accurate, as if we are in "solution 2", the maximum number of videos
@@ -67,13 +74,38 @@
     let containerHeight: number;
     let videoWidth: number;
     let videoHeight: number | undefined;
+    let camerasContainer: HTMLDivElement | undefined;
 
     // The minimum width of a media box in pixels
     const minMediaBoxWidth = 160;
 
     const gameScene = gameManager.getCurrentGameScene();
 
+    $: myCameraStreamable = $myCameraPeerStore.streamable as Writable<MyLocalStreamable | undefined>;
+
+    // Single IntersectionObserver shared across all VideoBox components
+    let intersectionObserver: IntersectionObserver | undefined;
+
     onMount(() => {
+        // Create the IntersectionObserver once camerasContainer is bound
+        if (camerasContainer) {
+            intersectionObserver = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        const element = entry.target as ObservableElement;
+                        if (element.visibilityCallback) {
+                            element.visibilityCallback(entry.isIntersecting);
+                        }
+                    });
+                },
+                {
+                    root: camerasContainer,
+                    threshold: 0,
+                }
+            );
+        }
+
+        // Subscriptions for store changes
         const unsubscriber = orderedStreamableCollectionStore.subscribe((orderedStreamableCollection) => {
             // Each time the order of the videos changes, we update the displayOrder of each videoBox
             for (let i = 0; i < orderedStreamableCollection.length; i++) {
@@ -81,8 +113,29 @@
             }
         });
 
+        const unsubscribePictureInPictureMode = activePictureInPictureStore.subscribe((activePictureInPicture) => {
+            // If the picture in picture mode is activated, we update the displayInPictureInPictureMode of the local camera streamable
+            // To set true, the local camera streamable will appear like other camera boxes in the picture in picture mode
+            $myCameraStreamable?.setDisplayInPictureInPictureMode(
+                activePictureInPicture && $highlightedEmbedScreen != undefined
+            );
+        });
+
+        const unsubscribeHighlightedEmbedScreen = highlightedEmbedScreen.subscribe((highlightedEmbedScreen) => {
+            // If the highlighted embed screen is changed, we update the displayInPictureInPictureMode of the local camera streamable
+            // To set true, the local camera streamable will appear like other camera boxes in the picture in picture mode
+            $myCameraStreamable?.setDisplayInPictureInPictureMode(
+                highlightedEmbedScreen != undefined && $activePictureInPictureStore
+            );
+        });
+
         return () => {
             unsubscriber();
+            unsubscribePictureInPictureMode();
+            unsubscribeHighlightedEmbedScreen();
+            if (intersectionObserver) {
+                intersectionObserver.disconnect();
+            }
         };
     });
 
@@ -109,7 +162,7 @@
         if (isOnOneLine) {
             if (oneLineMode === "horizontal") {
                 videoWidth = Math.max(
-                    Math.min(maxMediaBoxWidth, containerWidth / $streamableCollectionStore.size),
+                    Math.min(maxMediaBoxWidth, containerWidth / $oneLineStreamableCollectionStore.length),
                     minMediaBoxWidth
                 );
                 videoHeight = undefined;
@@ -134,10 +187,20 @@
             };
         }
 
+        // When the user scroll in or out, the canvas is resize and "containerWidth" has a small jitter.
+        // When the user is not resizing the container through the resize handle, we don't want to take into account the jitter.
+        // Rules: Apply -2 pixels to the gap when the user is not resizing the container.
+        // TODO: find a better way to detect this and fix the jitter from the WaScalerManager.
+        if (resizeInProgress) {
+            gap = 16;
+        } else {
+            gap = 20;
+        }
+
         // Calculate maximum number of videos that can fit in one row at minimum size
         const maxVideosPerRow = Math.min(
             Math.floor((containerWidth + gap) / (minMediaBoxWidth + gap)),
-            $streamableCollectionStore.size
+            $oneLineStreamableCollectionStore.length
         );
 
         let lastValidConfig = null;
@@ -161,7 +224,7 @@
             // or the maximumVideosPerPage constant.
             // This is not 100% accurate, as if we are in "solution 2", the maximum number of videos
             // will be maximumVideosPerPage + nbVideos % vpr
-            const maxNbVideos = Math.min($streamableCollectionStore.size, maximumVideosPerPage);
+            const maxNbVideos = Math.min($oneLineStreamableCollectionStore.length, maximumVideosPerPage);
             // If we need scrolling, calculate the maximum height that would fit
             if (maxVisibleVideos < maxNbVideos) {
                 // Calculate total number of rows needed
@@ -235,7 +298,6 @@
             lastValidConfig = {
                 videoWidth: width,
             };
-            //}
         }
 
         // If we get here, we never needed scrolling, use the last valid config
@@ -246,7 +308,6 @@
         );
     }
 
-    let camerasContainer: HTMLDivElement | undefined;
     let grabPointerEvents = false;
     const isWebkit = "WebkitAppearance" in document.documentElement.style;
     $: {
@@ -256,7 +317,7 @@
 
         // Let's trigger this logic when the number of videos changes or when the container width changes
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        $streamableCollectionStore;
+        $oneLineStreamableCollectionStore;
 
         if (isWebkit && isOnOneLine && oneLineMode === "horizontal") {
             setTimeout(() => {
@@ -275,11 +336,9 @@
         }
     }
 
-    onDestroy(() => {
-        gameScene.reposition();
-    });
-
+    let resizeInProgress = false;
     function onResizeHandler(height: number) {
+        resizeInProgress = true;
         containerHeight = height;
         const coefCameraContainerHeight = containerHeight / maxContainerHeight;
         localUserStore.setCameraContainerHeight(coefCameraContainerHeight > 0.9 ? 0.9 : coefCameraContainerHeight);
@@ -292,17 +351,83 @@
             camerasContainer.scrollTop = camerasContainer.scrollHeight * oldScrollPercent;
         }
     }
+
+    // Scroll indicators: show when user can scroll to see more cameras
+    let canScrollLeft = false;
+    let canScrollRight = false;
+    let canScrollTop = false;
+    let canScrollBottom = false;
+
+    function updateScrollIndicators() {
+        if (!camerasContainer) return;
+        const { scrollLeft, scrollTop, scrollWidth, scrollHeight, clientWidth, clientHeight } = camerasContainer;
+        const threshold = 4; // pixels tolerance
+
+        if (isOnOneLine && oneLineMode === "horizontal") {
+            canScrollTop = false;
+            canScrollBottom = false;
+            canScrollLeft = scrollWidth > clientWidth && scrollLeft > threshold;
+            canScrollRight = scrollWidth > clientWidth && scrollLeft < scrollWidth - clientWidth - threshold;
+        } else {
+            canScrollLeft = false;
+            canScrollRight = false;
+            canScrollTop = scrollHeight > clientHeight && scrollTop > threshold;
+            canScrollBottom = scrollHeight > clientHeight && scrollTop < scrollHeight - clientHeight - threshold;
+        }
+    }
+
+    const scrollStepRatio = 0.85; // scroll ~85% of visible area per click
+
+    function scrollCamerasLeft() {
+        if (!camerasContainer) return;
+        const step = camerasContainer.clientWidth * scrollStepRatio;
+        camerasContainer.scrollBy({ left: -step, behavior: "smooth" });
+        setTimeout(updateScrollIndicators, 300);
+    }
+
+    function scrollCamerasRight() {
+        if (!camerasContainer) return;
+        const step = camerasContainer.clientWidth * scrollStepRatio;
+        camerasContainer.scrollBy({ left: step, behavior: "smooth" });
+        setTimeout(updateScrollIndicators, 300);
+    }
+
+    function scrollCamerasUp() {
+        if (!camerasContainer) return;
+        const step = camerasContainer.clientHeight * scrollStepRatio;
+        camerasContainer.scrollBy({ top: -step, behavior: "smooth" });
+        setTimeout(updateScrollIndicators, 300);
+    }
+
+    function scrollCamerasDown() {
+        if (!camerasContainer) return;
+        const step = camerasContainer.clientHeight * scrollStepRatio;
+        camerasContainer.scrollBy({ top: step, behavior: "smooth" });
+        setTimeout(updateScrollIndicators, 300);
+    }
+
+    // Re-run scroll indicator check when layout or content changes
+    $: if (camerasContainer) {
+        const _exhaustiveCheck = [
+            $oneLineStreamableCollectionStore,
+            containerWidth,
+            containerHeight,
+            isOnOneLine,
+            oneLineMode,
+        ];
+        setTimeout(updateScrollIndicators, 100);
+    }
 </script>
 
 <div
-    class="w-full"
+    class="group/cameras-container w-full"
     bind:clientHeight={maxContainerHeight}
     class:h-full={!isOnOneLine || (isOnOneLine && oneLineMode === "vertical")}
 >
     <div
         bind:clientWidth={containerWidth}
         bind:this={camerasContainer}
-        class="gap-4 mx-1"
+        class="no-scroll-bar gap-4 mx-1"
         class:pointer-events-none={!grabPointerEvents}
         class:pointer-events-auto={grabPointerEvents}
         class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
@@ -332,11 +457,11 @@
         id="cameras-container"
         data-testid="cameras-container"
     >
-        {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
-            <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} />
+        {#each $oneLineStreamableCollectionStore as videoBox (videoBox.uniqueId)}
+            <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} {intersectionObserver} />
         {/each}
         <!-- in PictureInPicture, let's finish with our video feedback in small -->
-        {#if isOnOneLine && oneLineMode === "vertical"}
+        {#if isOnOneLine && oneLineMode === "vertical" && !($myCameraStreamable?.displayInPictureInPictureMode ?? false)}
             <div class="fixed bottom-20 right-0 z-50">
                 <div
                     data-unique-id="my-camera"
@@ -358,9 +483,73 @@
             minHeight={maxContainerHeight * 0.1}
             maxHeight={maxContainerHeight * 0.9}
             onResize={onResizeHandler}
-            onResizeEnd={() => analyticsClient.resizeCameraLayout()}
+            onResizeEnd={() => {
+                resizeInProgress = false;
+                analyticsClient.resizeCameraLayout();
+
+                // We need to recalculate the layout to take into account the new container width
+                const layout = calculateOptimalLayout(containerWidth, containerHeight);
+                videoWidth = layout.videoWidth;
+                videoHeight = layout.videoHeight;
+            }}
             dataTestid="resize-handle"
         />
+    {/if}
+    <!-- Scroll buttons: show when more cameras are available, click to scroll -->
+    {#if isOnOneLine && oneLineMode === "horizontal"}
+        {#if canScrollLeft}
+            <button
+                type="button"
+                class="scroll-indicator scroll-indicator-left scroll-indicator-button opacity-10 group-hover/cameras-container:opacity-100"
+                aria-label="Scroll left to see more cameras"
+                on:click={scrollCamerasLeft}
+            >
+                <span class="scroll-indicator-gradient scroll-indicator-gradient-left" />
+                <span class="scroll-indicator-chevron">
+                    <ChevronLeftIcon height="h-8" width="w-8" strokeWidth="2" />
+                </span>
+            </button>
+        {/if}
+        {#if canScrollRight}
+            <button
+                type="button"
+                class="scroll-indicator scroll-indicator-right scroll-indicator-button opacity-10 group-hover/cameras-container:opacity-100"
+                aria-label="Scroll right to see more cameras"
+                on:click={scrollCamerasRight}
+            >
+                <span class="scroll-indicator-gradient scroll-indicator-gradient-right" />
+                <span class="scroll-indicator-chevron">
+                    <ChevronRightIcon height="h-8" width="w-8" strokeWidth="2" />
+                </span>
+            </button>
+        {/if}
+    {:else}
+        {#if canScrollTop}
+            <button
+                type="button"
+                class="scroll-indicator scroll-indicator-top scroll-indicator-button opacity-10 group-hover/cameras-container:opacity-100"
+                aria-label="Scroll up to see more cameras"
+                on:click={scrollCamerasUp}
+            >
+                <span class="scroll-indicator-gradient scroll-indicator-gradient-top" />
+                <span class="scroll-indicator-chevron">
+                    <ChevronUpIcon height="h-8" width="w-8" strokeWidth="2" />
+                </span>
+            </button>
+        {/if}
+        {#if canScrollBottom}
+            <button
+                type="button"
+                class="scroll-indicator scroll-indicator-bottom scroll-indicator-button h-fit w-fit opacity-40 group-hover/cameras-container:opacity-100"
+                aria-label="Scroll down to see more cameras"
+                on:click={scrollCamerasDown}
+            >
+                <span class="scroll-indicator-gradient scroll-indicator-gradient-bottom h-full" />
+                <span class="scroll-indicator-chevron">
+                    <ChevronDownIcon height="h-8" width="w-8" strokeWidth="2" />
+                </span>
+            </button>
+        {/if}
     {/if}
 </div>
 
@@ -368,6 +557,117 @@
 <style lang="scss">
     .hidden {
         display: none !important;
+    }
+
+    /* Scroll indicators: show users they can scroll to see more cameras */
+    .scroll-indicators-wrapper {
+        position: relative;
+    }
+
+    .scroll-indicator {
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .scroll-indicator-button {
+        pointer-events: auto;
+        cursor: pointer;
+        border: none;
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        font: inherit;
+        color: inherit;
+        -webkit-tap-highlight-color: transparent;
+        width: 100%;
+    }
+
+    .scroll-indicator-button:hover .scroll-indicator-chevron,
+    .scroll-indicator-button:focus-visible .scroll-indicator-chevron {
+        transform: scale(1.1);
+        background: rgba(0, 0, 0, 0.75);
+    }
+
+    .scroll-indicator-button:focus-visible {
+        outline: 2px solid white;
+        outline-offset: 2px;
+    }
+
+    .scroll-indicator-left {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 72px;
+    }
+
+    .scroll-indicator-right {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 72px;
+    }
+
+    .scroll-indicator-top {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+    }
+
+    .scroll-indicator-bottom {
+        position: relative;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+    }
+
+    .scroll-indicator-gradient {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    .scroll-indicator-gradient-left {
+        background: linear-gradient(to right, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.2) 70%, transparent 100%);
+    }
+
+    .scroll-indicator-gradient-right {
+        background: linear-gradient(to left, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.2) 70%, transparent 100%);
+    }
+
+    .scroll-indicator-gradient-top {
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.2) 20%, transparent 100%);
+    }
+
+    .scroll-indicator-gradient-bottom {
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 20%, transparent 100%);
+    }
+
+    .scroll-indicator-chevron {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.55);
+        color: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .scroll-indicator-chevron :global(svg) {
+        display: block;
     }
 
     @container (min-width: 1024) and (max-width: 1279px) {
@@ -386,5 +686,9 @@
         .not-highlighted {
             gap: 0.5rem;
         }
+    }
+    .no-scroll-bar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
     }
 </style>

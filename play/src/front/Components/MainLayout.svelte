@@ -32,8 +32,12 @@
     import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
     import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import { inputFormFocusStore } from "../Stores/UserInputStore";
+    import { showRecordingList } from "../Stores/RecordingStore";
+    import { toastStore } from "../Stores/ToastStore";
+    import { meetingInvitationRequestStore } from "../Stores/MeetingInvitationStore";
     import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
+
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
     import Menu from "./Menu/Menu.svelte";
@@ -62,7 +66,9 @@
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
-
+    import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
+    import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
+    import MeetingInvitationPopup from "./MeetingInvitation/MeetingInvitationPopup.svelte";
     const handleFocusInEvent = (event: FocusEvent) => {
         if (
             event.target instanceof HTMLInputElement ||
@@ -123,8 +129,8 @@
     {/if}
 
     {#if $highlightedEmbedScreen && $highlightFullScreen}
-        <div class="w-full h-full fixed start-0 end-0">
-            <MediaBox videoBox={$highlightedEmbedScreen} isHighlighted={true} />
+        <div class="w-full h-full fixed start-0 end-0 z-[310]">
+            <MediaBox videoBox={$highlightedEmbedScreen} fullScreen={true} />
         </div>
     {/if}
 
@@ -163,6 +169,7 @@
             {:else if $textMessageStore.length > 0}
                 <TextMessageContainer />
             {/if}
+            <ProximityNotificationContainer />
             {#if $notificationPlayingStore}
                 <div class="flex flex-col absolute w-auto end-0">
                     {#each [...$notificationPlayingStore.values()] as notification, index (`${index}-${notification.id}`)}
@@ -199,6 +206,19 @@
                 <LimitRoomModal />
             {/if}
 
+            {#if $toastStore.size > 0}
+                <div class="absolute top-0 right-2 z-[999] flex flex-col gap-2 items-end">
+                    {#each [...$toastStore.entries()] as toastEntry (toastEntry[0])}
+                        {@const toast = toastEntry[1]}
+                        <svelte:component this={toast.component} {...toast.props} />
+                    {/each}
+                </div>
+            {/if}
+
+            {#if $showRecordingList}
+                <RecordingsListModal />
+            {/if}
+
             {#if !$highlightFullScreen}
                 <PictureInPicture let:inPictureInPicture>
                     <PresentationLayout {inPictureInPicture} />
@@ -232,11 +252,25 @@
             {/if}
 
             <ExternalComponents zone="popup" />
-            <div class=" absolute bottom-0 w-full h-fit md:top-0 md:right-0 md:w-fit flex items-center justify-center">
-                {#if $requestVisitCardsStore}
-                    <VisitCard visitCardUrl={$requestVisitCardsStore} />
-                {/if}
-            </div>
+            {#if $requestVisitCardsStore || $wokaMenuStore || $actionsMenuStore || $meetingInvitationRequestStore}
+                <div
+                    transition:fly={{ x: 210, duration: 500 }}
+                    class="absolute bottom-0 w-full h-fit max-h-[calc(100dvh-100px)] md:top-0 md:right-0 md:w-fit flex flex-col gap-2 items-end justify-start p-0 m-0 mr-3 overflow-y-auto no-scroll-bar"
+                >
+                    {#if $requestVisitCardsStore}
+                        <VisitCard visitCardUrl={$requestVisitCardsStore} />
+                    {/if}
+                    {#if $wokaMenuStore}
+                        <WokaMenu />
+                    {/if}
+                    {#if $actionsMenuStore}
+                        <ActionsMenu />
+                    {/if}
+                    {#if $meetingInvitationRequestStore}
+                        <MeetingInvitationPopup />
+                    {/if}
+                </div>
+            {/if}
             <ExternalComponents zone="centeredPopup" />
 
             <ExplorerMenu />
@@ -246,12 +280,6 @@
         </div>
         <ActionBar />
     </div>
-
-    {#if $wokaMenuStore}
-        <WokaMenu />
-    {:else if $actionsMenuStore}
-        <ActionsMenu />
-    {/if}
 </div>
 
 <style lang="scss">
@@ -292,5 +320,16 @@
 
     #main-layout {
         container-type: size;
+    }
+
+    .no-scroll-bar {
+        max-width: calc(100% + 15px);
+    }
+    .no-scroll-bar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scroll-bar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
     }
 </style>

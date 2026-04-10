@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import { UserInputManager } from "../../Phaser/UserInput/UserInputManager";
+    import type { UserInputManager } from "../../Phaser/UserInput/UserInputManager";
     import PopUpContainer from "./PopUpContainer.svelte";
 
     export let message: string;

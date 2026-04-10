@@ -1,32 +1,34 @@
+import type {
+    IContent,
+    IPushRule,
+    IRoomTimelineData,
+    MatrixEvent,
+    Room,
+    RoomMember,
+    RoomState,
+    StateEvents,
+} from "matrix-js-sdk";
 import {
     ConditionKind,
     Direction,
     EventStatus,
     EventType,
-    IContent,
-    IPushRule,
-    IRoomTimelineData,
-    MatrixEvent,
     MsgType,
     NotificationCountType,
     PushRuleActionName,
     PushRuleKind,
     ReceiptType,
-    Room,
     RoomEvent,
-    RoomMember,
-    RoomState,
     RoomStateEvent,
     TimelineWindow,
-    StateEvents,
     EventTimeline,
 } from "matrix-js-sdk";
-import { derived, get, readable, Readable, Writable, writable } from "svelte/store";
-import { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/media";
+import type { Readable, Writable } from "svelte/store";
+import { derived, get, readable, writable } from "svelte/store";
+import type { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/media";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
-import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
-import {
-    ChatPermissionLevel,
+import type { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
+import type {
     ChatRoom,
     ChatRoomMember,
     ChatRoomMembership,
@@ -35,13 +37,16 @@ import {
     ChatRoomNotificationControl,
     memberTypingInformation,
 } from "../ChatConnection";
+import { ChatPermissionLevel } from "../ChatConnection";
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, botsChatIds } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MessageNotification } from "../../../Notification/MessageNotification";
 import { notificationManager } from "../../../Notification/NotificationManager";
-import { PictureStore } from "../../../Stores/PictureStore";
+import type { PictureStore } from "../../../Stores/PictureStore";
+import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
+import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -58,6 +63,7 @@ export class MatrixChatRoom
     readonly name: Writable<string>;
     readonly type: "multiple" | "direct";
     readonly hasUnreadMessages: Writable<boolean>;
+    readonly unreadNotificationCount: Writable<number>;
     pictureStore: PictureStore;
     messages: SearchableArrayStore<string, MatrixChatMessage>;
     members: Writable<MatrixChatRoomMember[]>;
@@ -79,27 +85,48 @@ export class MatrixChatRoom
     private handleStateEvent = this.onRoomStateEvent.bind(this);
     private handleNewMember = this.onRoomNewMember.bind(this);
     private handleMyMembership = this.onRoomMyMembership.bind(this);
+    private updateUnreadNotificationCount = this.onRoomUpdateUnreadNotificationCount.bind(this);
 
     constructor(
         private matrixRoom: Room,
         private notifyNewMessage = (message: MatrixChatMessage) => {
-            if (!localUserStore.getChatSounds() || get(this.areNotificationsMuted)) return;
-            gameManager.getCurrentGameScene().playSound("new-message");
-            notificationManager.createNotification(
-                new MessageNotification(
-                    message.sender?.username ?? "unknown",
-                    get(message.content).body,
-                    this.id,
-                    get(this.name)
-                )
-            );
+            // Only notify for "live" messages (after initial sync). Avoids notifying for messages loaded on room open (plan: live vs historical).
+            if (!this.matrixRoom.client.isInitialSyncComplete()) {
+                return;
+            }
+
+            const canPlaySound = localUserStore.getChatSounds();
+            const isRoomIsDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
+            const isNotificationIsMuted = get(this.areNotificationsMuted);
+            if (canPlaySound && !isRoomIsDisplayed && !isNotificationIsMuted) {
+                gameManager.getCurrentGameScene().playSound("new-message");
+            }
+
+            if (isNotificationIsMuted || isRoomIsDisplayed) {
+                return;
+            }
+
+            const messageBody = get(message.content).body;
+            const username = message.sender?.username ?? "unknown";
+            const roomName = get(this.name);
+
+            notificationManager.createNotification(new MessageNotification(username, messageBody, this.id, roomName));
+
+            // Show proximity notification when unread count increases
+            const numberOfChar = 60;
+            const messageToDisplay =
+                messageBody.length > numberOfChar ? messageBody.slice(0, numberOfChar) + "..." : messageBody;
+            chatNotificationStore.addNotification(username, messageToDisplay, this, message.id);
         }
     ) {
         this.id = matrixRoom.roomId;
         this.name = writable(matrixRoom.name);
         this.type = this.getMatrixRoomType();
         this.hasUnreadMessages = writable(matrixRoom.getUnreadNotificationCount() > 0);
-        this.pictureStore = readable(matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined);
+        this.unreadNotificationCount = writable(matrixRoom.getUnreadNotificationCount());
+        const roomAvatarStore: PictureStore = readable(
+            matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined
+        );
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.sendMessage = this.sendMessage.bind(this);
         this.myMembership = writable(matrixRoom.getMyMembership());
@@ -109,6 +136,19 @@ export class MatrixChatRoom
                 .getMembers()
                 .map((member) => new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl)),
         ]);
+
+        if (this.type === "direct") {
+            this.pictureStore = derived(this.members, (members) => {
+                const myUserId = this.matrixRoom.client.getUserId();
+                const other = members.find((m) => m.id !== myUserId);
+                if (other?.pictureStore) {
+                    return get(other.pictureStore);
+                }
+                return get(roomAvatarStore);
+            });
+        } else {
+            this.pictureStore = roomAvatarStore;
+        }
 
         this.hasPreviousMessage = writable(false);
 
@@ -216,6 +256,7 @@ export class MatrixChatRoom
         this.matrixRoom.on(RoomStateEvent.Events, this.handleStateEvent);
         this.matrixRoom.on(RoomEvent.MyMembership, this.handleMyMembership);
         this.matrixRoom.on(RoomStateEvent.NewMember, this.handleNewMember);
+        this.matrixRoom.on(RoomEvent.UnreadNotifications, this.updateUnreadNotificationCount);
     }
 
     protected onRoomMyMembership(room: Room) {
@@ -233,18 +274,35 @@ export class MatrixChatRoom
         const isEncrypted = !!state.getStateEvents(EventType.RoomEncryption)[0];
         if (isEncrypted) this.isEncrypted.set(isEncrypted);
     }
+    /**
+     * Strict "newly arrived" rule (see Element Web / matrix-js-sdk): only treat as live when
+     * !removed, data.liveEvent === true, and !toStartOfTimeline. Use this for notifications,
+     * unread, and any reaction to "new" timeline events.
+     */
+    private static isNewLiveTimelineEvent(
+        removed: boolean,
+        data: IRoomTimelineData | undefined,
+        toStartOfTimeline: boolean | undefined
+    ): boolean {
+        return !removed && !!data?.liveEvent && !toStartOfTimeline;
+    }
+
     private onRoomTimeline(
         event: MatrixEvent,
         room: Room | undefined,
         toStartOfTimeline: boolean | undefined,
-        _: boolean,
+        removed: boolean,
         data: IRoomTimelineData
     ) {
-        //get age give the age of the event when the event arrived at the device
+        if (removed) {
+            return;
+        }
+        // Event age when it arrived at the device; defensive guard for delayed sync (source of truth remains data.liveEvent).
         const ageOfEvent = event.getAge();
-
-        //Only get realtime event
-        if (toStartOfTimeline || !data || !data.liveEvent || (ageOfEvent && ageOfEvent >= 2000)) {
+        if (
+            !MatrixChatRoom.isNewLiveTimelineEvent(removed, data, toStartOfTimeline) ||
+            (ageOfEvent !== undefined && ageOfEvent >= 2000)
+        ) {
             return;
         }
 
@@ -254,6 +312,7 @@ export class MatrixChatRoom
                     await this.matrixRoom.client.decryptEventIfNeeded(event);
                 }
                 this.hasUnreadMessages.set(room.getUnreadNotificationCount() > 0);
+                this.unreadNotificationCount.set(room.getUnreadNotificationCount());
                 if (event.getType() === "m.room.message") {
                     const eventId = event.getId();
 
@@ -279,6 +338,14 @@ export class MatrixChatRoom
                 }
             })().catch((error) => console.error(error));
         }
+    }
+
+    private onRoomUpdateUnreadNotificationCount(
+        unreadNotifications?: Partial<Record<NotificationCountType, number>>,
+        threadId?: string
+    ) {
+        this.hasUnreadMessages.set(this.matrixRoom.getUnreadNotificationCount() > 0);
+        this.unreadNotificationCount.set(this.matrixRoom.getUnreadNotificationCount());
     }
 
     public async retrySendingEvents(): Promise<void> {
@@ -477,7 +544,8 @@ export class MatrixChatRoom
         this.matrixRoom.setUnreadNotificationCount(NotificationCountType.Highlight, 0);
         this.matrixRoom.setUnreadNotificationCount(NotificationCountType.Total, 0);
         this.hasUnreadMessages.set(false);
-        //TODO check doc with liveEvent
+        this.unreadNotificationCount.set(0);
+        // Read receipt must target the live timeline; getLastLiveEvent() matches the data.liveEvent semantics used in onRoomTimeline.
         this.matrixRoom.client
             .sendReadReceipt(this.matrixRoom.getLastLiveEvent() ?? null, ReceiptType.Read)
             .catch((error) => console.error(error));
@@ -674,6 +742,7 @@ export class MatrixChatRoom
         });
         this.messages.forEach((message) => {
             message.relations?.destroy();
+            message.destroy();
         });
     }
 

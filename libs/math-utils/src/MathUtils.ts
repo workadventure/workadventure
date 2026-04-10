@@ -45,11 +45,36 @@ export class MathUtils {
         return squared ? Math.sqrt(distance) : distance;
     }
 
+    /**
+     * Returns the center point of a rectangle.
+     */
+    public static getRectangleCenter(
+        rect: { x: number; y: number; width: number; height: number }
+    ): { x: number; y: number } {
+        return {
+            x: rect.x + rect.width / 2,
+            y: rect.y + rect.height / 2,
+        };
+    }
+
     public static randomFromArray<T>(array: T[]): T {
         return array[Math.floor(Math.random() * array.length)];
     }
 
     public static randomFrom(min: number, max: number): number {
         return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
+    /**
+     * Euclidean distance from a point to an axis-aligned rectangle.
+     * Returns 0 if the point lies inside the rectangle or on its edge.
+     */
+    public static distanceBetweenPointAndRectangle(
+        point: { x: number; y: number },
+        rect: { x: number; y: number; width: number; height: number }
+    ): number {
+        const closestX = Math.max(rect.x, Math.min(point.x, rect.x + rect.width));
+        const closestY = Math.max(rect.y, Math.min(point.y, rect.y + rect.height));
+        return Math.hypot(point.x - closestX, point.y - closestY);
     }
 }

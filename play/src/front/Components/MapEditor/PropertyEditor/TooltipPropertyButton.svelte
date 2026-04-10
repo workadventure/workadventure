@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { TooltipPropertyData } from "@workadventure/map-editor";
+    import type { TooltipPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import TextArea from "../../Input/TextArea.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
@@ -36,17 +36,17 @@
         <img
             class="w-6 mr-1"
             src={infoBulleSvg}
-            alt={$LL.mapEditor.properties.tooltipProperties.label()}
+            alt={$LL.mapEditor.properties.tooltipPropertyData.label()}
             draggable="false"
         />
-        <label for="contentTooltip">{$LL.mapEditor.properties.tooltipProperties.label()}</label>
+        <label for="contentTooltip">{$LL.mapEditor.properties.tooltipPropertyData.label()}</label>
     </span>
-    {$LL.mapEditor.properties.tooltipProperties.label()}
+    {$LL.mapEditor.properties.tooltipPropertyData.label()}
     <span slot="content">
         <TextArea
             id="contentTooltip"
-            label={$LL.mapEditor.properties.tooltipProperties.description()}
-            placeHolder={$LL.mapEditor.properties.tooltipProperties.contentPlaceholder()}
+            label={$LL.mapEditor.properties.tooltipPropertyData.description()}
+            placeHolder={$LL.mapEditor.properties.tooltipPropertyData.contentPlaceholder()}
             bind:value={property.content}
             onChange={onValueChange}
             onKeyPress={() => {}}
@@ -55,7 +55,7 @@
         <div class="value-switch">
             <InputSwitch
                 id="durationInfinityTooltip"
-                label={$LL.mapEditor.properties.tooltipProperties.infinityDuration()}
+                label={$LL.mapEditor.properties.tooltipPropertyData.infinityDuration()}
                 bind:value={infinity}
                 onChange={onInfinityChange}
             />
@@ -64,7 +64,7 @@
             <Input
                 id="durationTooltip"
                 type="number"
-                label={$LL.mapEditor.properties.tooltipProperties.duration()}
+                label={$LL.mapEditor.properties.tooltipPropertyData.duration()}
                 min={1}
                 step={1}
                 max={20}

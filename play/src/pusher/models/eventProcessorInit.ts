@@ -16,7 +16,7 @@ eventProcessor.registerPublicEventProcessor("muteVideoForEverybody", (event, sen
     return event;
 });
 
-eventProcessor.registerPrivateEventProcessor("muteAudio", (event, sender, receiver) => {
+eventProcessor.registerPrivateEventProcessor("muteAudio", (event, sender) => {
     if (event.$case !== "muteAudio") {
         // FIXME: improve the typing of the method to avoid this
         throw new Error("Invalid event type");
@@ -33,7 +33,7 @@ eventProcessor.registerPrivateEventProcessor("muteAudio", (event, sender, receiv
     return event;
 });
 
-eventProcessor.registerPrivateEventProcessor("muteVideo", (event, sender, receiver) => {
+eventProcessor.registerPrivateEventProcessor("muteVideo", (event, sender) => {
     if (event.$case !== "muteVideo") {
         // FIXME: improve the typing of the method to avoid this
         throw new Error("Invalid event type");

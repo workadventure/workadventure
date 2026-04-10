@@ -1,7 +1,7 @@
 import type { z, ZodObject, ZodRawShape } from "zod";
 import type { Request, Response } from "express";
-import { HttpRequest, HttpResponse, us_socket_context_t } from "uWebSockets.js";
-import { UpgradeFailedData } from "../controllers/IoSocketController";
+import type { HttpRequest, HttpResponse, us_socket_context_t } from "uWebSockets.js";
+import type { UpgradeFailedData } from "../controllers/IoSocketController";
 
 function validateObject<T extends ZodObject<ZodRawShape>>(
     obj: unknown,

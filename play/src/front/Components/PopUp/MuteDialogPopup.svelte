@@ -1,7 +1,7 @@
 <script lang="ts">
     import { readable } from "svelte/store";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { SpaceUserExtended } from "../../Space/SpaceInterface";
+    import type { SpaceUserExtended } from "../../Space/SpaceInterface";
     import Woka from "../Woka/Woka.svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
 

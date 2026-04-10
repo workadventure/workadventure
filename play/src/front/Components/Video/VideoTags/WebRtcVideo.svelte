@@ -1,7 +1,9 @@
+<svelte:options immutable={true} />
+
 <script lang="ts">
-    import { createEventDispatcher, onDestroy, onMount } from "svelte";
-    import { WebRtcStreamable } from "../../../Stores/StreamableCollectionStore";
-    import { NoVideoOutputDetector } from "./NoVideoOutputDetector";
+    import { createEventDispatcher } from "svelte";
+    import type { WebRtcStreamable } from "../../../Space/Streamable";
+    import InnerWebRtcVideo from "./InnerWebRtcVideo.svelte";
 
     export let style: string;
     export let className: string;
@@ -17,49 +19,23 @@
         noVideo: undefined;
     }>();
 
-    $: streamStore = media?.streamStore;
-    $: stream = $streamStore ? $streamStore : undefined;
-
-    let videoElement: HTMLVideoElement | undefined;
-    let noVideoOutputDetector: NoVideoOutputDetector | undefined;
-
-    $: if (videoElement && stream) {
-        if (videoElement.srcObject !== stream) {
-            videoElement.srcObject = stream;
-            noVideoOutputDetector?.expectVideoWithin5Seconds();
-        }
-    }
-
-    onMount(() => {
-        if (!videoElement) {
-            throw new Error("WebRtcVideo: videoElement is undefined");
-        }
-        noVideoOutputDetector = new NoVideoOutputDetector(
-            videoElement,
-            () => {
-                dispatch("noVideo");
-            },
-            () => {
-                dispatch("video");
-            }
-        );
-    });
-
-    onDestroy(() => {
-        noVideoOutputDetector?.destroy();
-    });
+    let streamStore = media.streamStore;
+    let setDimensions = media.setDimensions;
 </script>
 
-<video
-    {style}
-    bind:videoWidth
-    bind:videoHeight
-    bind:this={videoElement}
-    on:loadedmetadata={onLoadVideoElement}
-    class={className}
-    autoplay
-    playsinline
-    muted={true}
-    {loop}
-    data-testid="webrtc-video"
-/>
+{#if $streamStore}
+    {#key $streamStore}
+        <InnerWebRtcVideo
+            {style}
+            {className}
+            bind:videoWidth
+            bind:videoHeight
+            {onLoadVideoElement}
+            {loop}
+            stream={$streamStore}
+            {setDimensions}
+            on:video={() => dispatch("video")}
+            on:noVideo={() => dispatch("noVideo")}
+        />
+    {/key}
+{/if}

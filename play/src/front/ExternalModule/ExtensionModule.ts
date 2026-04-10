@@ -1,14 +1,14 @@
-import { AvailabilityStatus, ExternalModuleMessage, OauthRefreshToken } from "@workadventure/messages";
-import { Readable, Updater, Writable } from "svelte/store";
-import { CalendarEventInterface, TodoListInterface } from "@workadventure/shared-utils";
-import { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
-import { AreaData, AreaDataProperties } from "@workadventure/map-editor";
-import { Observable } from "rxjs";
+import type { AvailabilityStatus, ExternalModuleMessage, OauthRefreshToken } from "@workadventure/messages";
+import type { Readable, Updater, Writable } from "svelte/store";
+import type { CalendarEventInterface, TodoListInterface } from "@workadventure/shared-utils";
+import type { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
+import type { AreaData, AreaDataProperties } from "@workadventure/map-editor";
+import type { Observable } from "rxjs";
 import { z } from "zod";
-import { OpenCoWebsiteObject } from "../Chat/Utils";
-import { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
-import { ExternalComponentZones } from "../Stores/Utils/externalSvelteComponentService";
-import { HasPlayerMovedInterface } from "../Api/Events/HasPlayerMovedInterface";
+import type { OpenCoWebsiteObject } from "../Chat/Utils";
+import type { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
+import type { ExternalComponentZones } from "../Stores/Utils/externalSvelteComponentService";
+import type { HasPlayerMovedInterface } from "../Api/Events/HasPlayerMovedInterface";
 
 export interface ExternalSvelteComponentServiceInterface {
     addComponentToZone<Component extends SvelteComponentTyped>(
@@ -31,7 +31,11 @@ export interface ExtensionModuleOptions {
     openCoWebSite: (openCoWebsiteObject: OpenCoWebsiteObject, source: MessageEventSource | null) => { id: string };
     closeCoWebsite: (id: string) => unknown;
     adminUrl?: string;
-    getOauthRefreshToken?: (tokenToRefresh: string) => Promise<OauthRefreshToken>;
+    getOauthRefreshToken?: (
+        tokenToRefresh: string,
+        provider?: string,
+        userIdentifier?: string
+    ) => Promise<OauthRefreshToken>;
     spaceRegistry?: SpaceRegistryInterface;
     calendarEventsStoreUpdate?: (this: void, updater: Updater<Map<string, CalendarEventInterface>>) => void;
     todoListStoreUpdate?: (this: void, updater: Updater<Map<string, TodoListInterface>>) => void;

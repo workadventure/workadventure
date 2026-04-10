@@ -1,46 +1,53 @@
-import { expect, test } from '@playwright/test';
-import {oidcLogin, oidcLogout} from "./utils/oidc";
-import {evaluateScript} from "./utils/scripting";
-import {publicTestMapUrl} from "./utils/urls";
-import {getPage} from "./utils/auth";
-import {isMobile} from "./utils/isMobile";
+import { expect, test } from "@playwright/test";
+import { oidcLogin, oidcLogout } from "./utils/oidc";
+import { evaluateScript } from "./utils/scripting";
+import { publicTestMapUrl } from "./utils/urls";
+import { getPage } from "./utils/auth";
+import { isMobile } from "./utils/isMobile";
 
-test.describe('OpenID connect @oidc @nomobile', () => {
-  test.beforeEach(async ({ page }) => {
-    test.skip(isMobile(page), 'Skip on mobile devices');
-  });
-  test('can login and logout', async ({ browser }) => {
-    await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "oidc"))
-
-    // Test if player variable is correct
-    let isLogged = await evaluateScript(page, async () => {
-      await WA.onInit();
-      return WA.player.isLogged;
+test.describe("OpenID connect @oidc @nomobile", () => {
+    test.beforeEach(async ({ page }) => {
+        test.skip(isMobile(page), "Skip on mobile devices");
     });
-    expect(isLogged).toBe(false);
+    // https://github.com/element-hq/synapse/issues/19303 - skip webkit due to synapse v1.144.0 OIDC issues
+    test("can login and logout @nomobile @nowebkit", async ({ browser }) => {
+        await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "oidc"));
 
-    // Sign in, then sign out
-    await oidcLogin(page);
+        // Test if player variable is correct
+        let isLogged = await evaluateScript(page, async () => {
+            await WA.onInit();
+            return WA.player.isLogged;
+        });
+        expect(isLogged).toBe(false);
 
-    // Test if player variable is correct
-    isLogged = await evaluateScript(page, async () => {
-      await WA.onInit();
-      return WA.player.isLogged;
+        // Sign in, then sign out
+        await oidcLogin(page);
+
+        // Test if player variable is correct
+        isLogged = await evaluateScript(page, async () => {
+            await WA.onInit();
+            return WA.player.isLogged;
+        });
+        expect(isLogged).toBe(true);
+
+        // Log out user
+        await oidcLogout(page);
+        await expect(page.locator('button:has-text("Login")')).toBeVisible();
+        // Let's check the sign-in button is back here when we signed out
+        await page.getByRole("button", { name: "Share" }).click();
+        await expect(page.locator('button:has-text("Login")')).toContainText("Login");
     });
-    expect(isLogged).toBe(true);
 
-    // Log out user
-    await oidcLogout(page);
-    await expect(page.locator('button:has-text("Login")')).toBeVisible();
-    // Let's check the sign-in button is back here when we signed out
-    await page.getByRole('button', { name: 'Share' }).click();
-    await expect(page.locator('button:has-text("Login")')).toContainText("Login");
+    test("can login with scripting API @nomobile @nowebkit", async ({ browser }) => {
+        await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "oidc"));
 
-    // Let's try to login using the scripting API
-    await evaluateScript(page, async () => {
-      await WA.onInit();
-      await WA.nav.goToLogin();
+        // Let's try to login using the scripting API
+        await evaluateScript(page, async () => {
+            await WA.onInit();
+            await WA.nav.goToLogin();
+        });
+
+        // Check that evaluateScript function is working and the logi oidc provider page is loaded
+        await expect(page.locator("#Input_Username")).toBeVisible({ timeout: 10_000 });
     });
-    await expect(page.locator('#Input_Username')).toBeVisible();
-  });
 });

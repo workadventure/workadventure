@@ -15,7 +15,7 @@ const error: DeepPartial<Translation["error"]> = {
             "Si voleu més informació, podeu contactar amb l'administrador o contacteu amb nosaltres a: hello@workadventu.re",
     },
     connectionRetry: {
-        unableConnect: "No s'ha pogut conectar amb WorkAdventure. Esteu conectats a internet?",
+        unableConnect: "S'ha perdut la connexió amb el servidor. No podràs parlar amb els altres.",
     },
     errorDialog: {
         title: "Error 😱",

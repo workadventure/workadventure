@@ -8,4 +8,7 @@ export interface CoWebsite {
     getWidthPercent(): number | undefined;
     isClosable(): boolean;
     getHideUrl(): boolean;
+    getTitle(): string;
+    getIcon(): string;
+    shouldCloseOnOpenInNewTab(): boolean;
 }

@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import {
+import type {
     AreaData,
     AreaDataProperties,
     AreaDataProperty,
@@ -7,21 +7,25 @@ import {
     TooltipPropertyData,
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
+    LockableAreaPropertyData,
     MatrixRoomPropertyData,
     OpenFilePropertyData,
     OpenWebsitePropertyData,
-    PersonalAreaAccessClaimMode,
     PersonalAreaPropertyData,
     PlayAudioPropertyData,
     SpeakerMegaphonePropertyData,
     LivekitRoomPropertyData,
     HighlightPropertyData,
 } from "@workadventure/map-editor";
+import { PersonalAreaAccessClaimMode } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/svelte";
-import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
+import { getSpeakerMegaphoneAreaInfo, getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { Jitsi } from "@workadventure/shared-utils";
-import { get, Unsubscriber } from "svelte/store";
-import { FilterType, Member } from "@workadventure/messages";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
+import type { Member } from "@workadventure/messages";
+import { FilterType } from "@workadventure/messages";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { LL } from "../../../../i18n/i18n-svelte";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { iframeListener } from "../../../Api/IframeListener";
@@ -29,7 +33,11 @@ import { scriptUtils } from "../../../Api/ScriptUtils";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { Room } from "../../../Connection/Room";
 import { ADMIN_URL, JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
-import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
+import {
+    audioManagerFileStore,
+    audioManagerVisibilityStore,
+    audioManagerVolumeStore,
+} from "../../../Stores/AudioManagerStore";
 import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStore";
 /**
  * @DEPRECATED - This is the old way to show trigger message
@@ -42,6 +50,7 @@ import {
     isListenerStore,
     isSpeakerStore,
     listenerWaitingMediaStore,
+    listenerSharingCameraStore,
     requestedCameraState,
     requestedMicrophoneState,
     silentStore,
@@ -58,20 +67,20 @@ import {
     ON_ICON_TRIGGER_BUTTON,
 } from "../../../WebRtc/LayoutManager";
 import { gameManager } from "../GameManager";
-import { OpenCoWebsite } from "../GameMapPropertiesListener";
-import { GameScene } from "../GameScene";
+import type { OpenCoWebsite } from "../GameMapPropertiesListener";
+import type { GameScene } from "../GameScene";
 import { mapEditorAskToClaimPersonalAreaStore } from "../../../Stores/MapEditorStore";
 import {
     canRequestVisitCardsStore,
     requestVisitCardsStore,
     selectedChatIDRemotePlayerStore,
 } from "../../../Stores/GameStore";
-import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
-import { MessageUserJoined } from "../../../Connection/ConnexionModels";
+
+import type { MessageUserJoined } from "../../../Connection/ConnexionModels";
 import { navChat } from "../../../Chat/Stores/ChatStore";
-import { Area } from "../../Entity/Area";
+import type { Area } from "../../Entity/Area";
 import { extensionModuleStore } from "../../../Stores/GameSceneStore";
-import { ChatRoom } from "../../../Chat/Connection/ChatConnection";
+import type { ChatRoom } from "../../../Chat/Connection/ChatConnection";
 import { userIsConnected } from "../../../Stores/MenuStore";
 import { popupStore } from "../../../Stores/PopupStore";
 import PopupCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte";
@@ -79,7 +88,23 @@ import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
-import { SpaceInterface } from "../../../Space/SpaceInterface";
+import { isInsidePersonalAreaStore } from "../../../Stores/PersonalDeskStore";
+import { currentPlayerLockableAreasStore, type LockableAreaEntry } from "../../../Stores/CurrentPlayerAreaLockStore";
+import { areaPropertyVariablesManagerStore } from "../../../Stores/AreaPropertyVariablesStore";
+import { touchScreenManager } from "../../../Touch/TouchScreenManager";
+
+/**
+ * Represents the state of an active megaphone zone (speaker or listener).
+ * Used to track nested megaphone zones and handle role transitions.
+ */
+interface MegaphoneZoneState {
+    spaceName: string;
+    role: "speaker" | "listener";
+    propertyId: string;
+    seeAttendees: boolean;
+    chatEnabled: boolean;
+    waitingLink: string | undefined;
+}
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -93,11 +118,50 @@ export class AreasPropertiesListener {
     private _isVideoActiveBeforeLivekitRoom: boolean = false;
     private _requestedMicrophoneStateSubscription: Unsubscriber | undefined;
     private _requestedCameraStateSubscription: Unsubscriber | undefined;
+    private _areaPropertyVariablesSubscription: Unsubscriber | undefined;
+    private _variableChangesSubscription: Unsubscriber | undefined;
 
     private actionTriggerCallback: Map<string, () => void> = new Map<string, () => void>();
 
+    /**
+     * Tracks active megaphone zones the player is currently inside.
+     * Key is the property ID of the zone.
+     * This enables handling nested speaker/listener zones by switching roles
+     * instead of joining/leaving the space.
+     */
+    private activeMegaphoneZones: Map<string, MegaphoneZoneState> = new Map();
+
     constructor(scene: GameScene) {
         this.scene = scene;
+
+        // Subscribe to area property variable changes to update lock state store
+        // We subscribe to the manager store to handle cases where the manager is set later
+        this._areaPropertyVariablesSubscription = areaPropertyVariablesManagerStore.subscribe((manager) => {
+            // Clean up previous subscription when manager changes
+            if (this._variableChangesSubscription) {
+                this._variableChangesSubscription();
+                this._variableChangesSubscription = undefined;
+            }
+
+            if (!manager) {
+                return;
+            }
+
+            // Subscribe to the manager's variable changes
+            this._variableChangesSubscription = manager.variableChanges.subscribe((change) => {
+                if (!change || change.key !== "lock") {
+                    return;
+                }
+
+                currentPlayerLockableAreasStore.update((list) =>
+                    list.map((entry) =>
+                        entry.areaId === change.areaId && entry.propertyId === change.propertyId
+                            ? { ...entry, lockState: Boolean(change.value) }
+                            : entry
+                    )
+                );
+            });
+        });
     }
 
     public onEnterAreasHandler(areasData: AreaData[], areas?: Area[]): void {
@@ -121,6 +185,27 @@ export class AreasPropertiesListener {
             // get area from area data
             const area = areas?.find((area) => area.areaData.id === areaData.id);
 
+            // Check if area has lockableAreaPropertyData and add to list
+            const lockableProperty = areaData.properties.find(
+                (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+            );
+            if (lockableProperty) {
+                const manager = get(areaPropertyVariablesManagerStore);
+                const lockState = manager?.getVariable(areaData.id, lockableProperty.id, "lock") ?? false;
+                const entry: LockableAreaEntry = {
+                    areaId: areaData.id,
+                    propertyId: lockableProperty.id,
+                    lockState: Boolean(lockState),
+                    areaName: areaData.name ?? "",
+                };
+                currentPlayerLockableAreasStore.update((list) => {
+                    if (list.some((e) => e.areaId === entry.areaId && e.propertyId === entry.propertyId)) {
+                        return list;
+                    }
+                    return [...list, entry];
+                });
+            }
+
             for (const property of areaData.properties) {
                 this.addPropertyFilter(property, areaData, area);
             }
@@ -137,6 +222,63 @@ export class AreasPropertiesListener {
         if (newProperties === undefined) {
             return;
         }
+
+        // Check if area has lockableAreaPropertyData and update store if player is in this area
+        const lockableProperty = newProperties.find(
+            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+        );
+        const oldLockableProperty = oldProperties?.find(
+            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+        );
+
+        // Compare allowedTags arrays to detect permission changes
+        // Uses Set-based comparison for order-independent comparison
+        const allowedTagsChanged =
+            lockableProperty &&
+            oldLockableProperty &&
+            (() => {
+                const oldTags = oldLockableProperty.allowedTags ?? [];
+                const newTags = lockableProperty.allowedTags ?? [];
+                if (oldTags.length !== newTags.length) {
+                    return true;
+                }
+                // Use Set for order-independent comparison
+                const oldTagsSet = new Set(oldTags);
+                return newTags.some((tag) => !oldTagsSet.has(tag));
+            })();
+
+        const areasManager = this.scene.getGameMapFrontWrapper().areasManager;
+        const playerInArea = areasManager?.isCurrentPlayerInArea(area.id) ?? false;
+
+        // Handle lockableAreaPropertyData being added or removed
+        if (lockableProperty && !oldLockableProperty) {
+            if (playerInArea) {
+                const manager = get(areaPropertyVariablesManagerStore);
+                const lockState = manager?.getVariable(area.id, lockableProperty.id, "lock") ?? false;
+                const entry: LockableAreaEntry = {
+                    areaId: area.id,
+                    propertyId: lockableProperty.id,
+                    lockState: Boolean(lockState),
+                    areaName: area.name ?? "",
+                };
+                currentPlayerLockableAreasStore.update((list) => {
+                    if (list.some((e) => e.areaId === entry.areaId && e.propertyId === entry.propertyId)) {
+                        return list;
+                    }
+                    return [...list, entry];
+                });
+            }
+        } else if (!lockableProperty && oldLockableProperty) {
+            currentPlayerLockableAreasStore.update((list) =>
+                list.filter((e) => !(e.areaId === area.id && e.propertyId === oldLockableProperty.id))
+            );
+        } else if (allowedTagsChanged && lockableProperty && playerInArea) {
+            // Tags changed: trigger store update so UI re-evaluates canLockEntry (button disabled vs enabled)
+            currentPlayerLockableAreasStore.update((list) => [...list]);
+        }
+
+        // Note: Lock state changes are now handled via area property variables stream,
+        // not through WAM property updates
 
         if (oldProperties !== undefined) {
             for (const oldProperty of oldProperties) {
@@ -183,6 +325,26 @@ export class AreasPropertiesListener {
             // get area from area data
             const area = areas?.find((area) => area.areaData.id === areaData.id);
 
+            // Check if leaving area has lockableAreaPropertyData and remove only this area from list
+            const lockableProperty = areaData.properties.find(
+                (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+            );
+            if (lockableProperty) {
+                currentPlayerLockableAreasStore.update((list) =>
+                    list.filter((e) => !(e.areaId === areaData.id && e.propertyId === lockableProperty.id))
+                );
+
+                const areasManager = this.scene.getGameMapFrontWrapper().areasManager;
+                const manager = get(areaPropertyVariablesManagerStore);
+                const isLocked = manager?.getVariable(areaData.id, lockableProperty.id, "lock");
+
+                if (isLocked === true && areasManager) {
+                    // Unlock when area becomes empty is handled by the back on user leave
+                    // Update collision to block this player from re-entering the locked area
+                    areasManager.updateAreaCollision(areaData.id);
+                }
+            }
+
             for (const property of areaData.properties) {
                 this.removePropertyFilter(property, area, areaData);
             }
@@ -226,6 +388,9 @@ export class AreasPropertiesListener {
             }
             case "livekitRoomProperty": {
                 this.handleLivekitRoomPropertyOnEnter(property, abortController.signal).catch((e) => {
+                    if (e instanceof AbortError) {
+                        return;
+                    }
                     console.error(e);
                     Sentry.captureException(e);
                 });
@@ -337,6 +502,9 @@ export class AreasPropertiesListener {
                         return this.handleLivekitRoomPropertyOnEnter(newProperty, newAbortController.signal);
                     })
                     .catch((e) => {
+                        if (e instanceof AbortError) {
+                            return;
+                        }
                         console.error(e);
                         Sentry.captureException(e);
                     });
@@ -364,6 +532,9 @@ export class AreasPropertiesListener {
                     console.error(e);
                     Sentry.captureException(e);
                 });
+
+                this.recalculateHighlightProperty(area);
+
                 break;
             }
             case "exit": {
@@ -377,7 +548,7 @@ export class AreasPropertiesListener {
             }
             case "personalAreaPropertyData": {
                 newProperty = newProperty as typeof oldProperty;
-                this.handlePersonalAreaPropertyOnLeave();
+                this.handlePersonalAreaPropertyOnLeave(oldProperty);
                 this.handlePersonalAreaPropertyOnEnter(newProperty, area);
                 break;
             }
@@ -462,7 +633,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "personalAreaPropertyData": {
-                this.handlePersonalAreaPropertyOnLeave(area);
+                this.handlePersonalAreaPropertyOnLeave(property, area);
                 break;
             }
             case "extensionModule": {
@@ -487,6 +658,13 @@ export class AreasPropertiesListener {
         }
     }
 
+    private recalculateHighlightProperty(area: AreaData): void {
+        const highlightProperty = area.properties?.find((property) => property.type === "highlight");
+        if (highlightProperty) {
+            this.handleHighlightPropertyOnEnter(area, highlightProperty);
+        }
+    }
+
     private handlePlayAudioPropertyOnEnter(property: PlayAudioPropertyData): void {
         // playAudioLoop is supposedly deprecated. Should we ignore it?
         audioManagerFileStore.playAudio(property.audioLink, this.scene.getMapUrl(), property.volume);
@@ -506,7 +684,9 @@ export class AreasPropertiesListener {
                 this.coWebsitesActionTriggers.set(property.id, actionId);
                 let message = property.triggerMessage;
                 if (message === undefined) {
-                    message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.newTab() : get(LL).trigger.newTab();
+                    message = touchScreenManager.detectPrimaryTouchDevice()
+                        ? get(LL).trigger.mobile.newTab()
+                        : get(LL).trigger.newTab();
                 }
 
                 popupStore.addPopup(
@@ -565,7 +745,9 @@ export class AreasPropertiesListener {
         if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (!message) {
-                message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.cowebsite() : get(LL).trigger.cowebsite();
+                message = touchScreenManager.detectPrimaryTouchDevice()
+                    ? get(LL).trigger.mobile.cowebsite()
+                    : get(LL).trigger.cowebsite();
             }
 
             this.coWebsitesActionTriggers.set(property.id, actionId);
@@ -699,7 +881,8 @@ export class AreasPropertiesListener {
             const speakerZoneArea = gameManager
                 .getCurrentGameScene()
                 .getGameMap()
-                .getGameMapAreas()
+                .getWamFile()
+                ?.getGameMapAreas()
                 ?.getAreas()
                 .get(speakerZone.speakerZoneName);
             if (speakerZoneArea != undefined) speakerZoneAreas.push(speakerZoneArea);
@@ -709,7 +892,8 @@ export class AreasPropertiesListener {
             gameManager
                 .getCurrentGameScene()
                 .getGameMap()
-                .getGameMapAreas()
+                .getWamFile()
+                ?.getGameMapAreas()
                 ?.getAreas()
                 .forEach((area) => {
                     if (
@@ -805,7 +989,9 @@ export class AreasPropertiesListener {
         if (forceTrigger || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (message === undefined) {
-                message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.jitsiRoom() : get(LL).trigger.jitsiRoom();
+                message = touchScreenManager.detectPrimaryTouchDevice()
+                    ? get(LL).trigger.mobile.jitsiRoom()
+                    : get(LL).trigger.jitsiRoom();
             }
 
             popupStore.addPopup(
@@ -892,25 +1078,18 @@ export class AreasPropertiesListener {
             });
         }
 
-        //TODO : I18N the displayName
-        if (!property.livekitRoomConfig?.disableChat) {
-            const proximityRoom = this.scene.proximityChatRoom;
-            proximityRoom.setDisplayName(get(LL).mapEditor.properties.livekitProperties.label());
-            await proximityRoom.joinSpace(
-                roomName,
-                ["cameraState", "microphoneState", "screenShareState"],
-                true,
-                FilterType.ALL_USERS
-            );
-        } else {
-            const spaceRegistry = this.scene.spaceRegistry;
-            await spaceRegistry.joinSpace(
-                roomName,
-                FilterType.ALL_USERS,
-                ["cameraState", "microphoneState", "screenShareState"],
-                abortSignal
-            );
-        }
+        const proximityRoom = this.scene.proximityChatRoom;
+        proximityRoom.setDisplayName(get(LL).mapEditor.properties.livekitRoomProperty.label());
+        await proximityRoom.joinSpace(
+            roomName,
+            ["cameraState", "microphoneState", "screenShareState"],
+            true,
+            FilterType.ALL_USERS,
+            property.livekitRoomConfig?.disableChat ?? false,
+            abortSignal
+        );
+
+        analyticsClient.enteredMeetingRoom(roomName, this.scene.roomUrl);
     }
 
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
@@ -949,34 +1128,36 @@ export class AreasPropertiesListener {
     ): void {
         if (property.ownerId !== null) {
             canRequestVisitCardsStore.set(true);
-            this.displayPersonalAreaOwnerVisitCard(property.ownerId, areaData, area);
+            const isMyPersonalArea = property.ownerId === localUserStore.getLocalUser()?.uuid;
+            if (isMyPersonalArea) {
+                isInsidePersonalAreaStore.set(true);
+            } else {
+                this.displayPersonalAreaOwnerVisitCard(property.ownerId, areaData, area);
+            }
         } else if (property.accessClaimMode === PersonalAreaAccessClaimMode.enum.dynamic) {
             this.displayPersonalAreaClaimDialogBox(property, areaData, area);
         }
     }
 
     private displayPersonalAreaOwnerVisitCard(ownerId: string, areaData: AreaData, area?: Area) {
-        const connectedUserUUID = localUserStore.getLocalUser()?.uuid;
-        if (connectedUserUUID != ownerId) {
-            const connection = this.scene.connection;
-            if (connection && this.isPersonalAreaOwnerAway(ownerId, areaData)) {
-                if (ADMIN_URL) {
-                    connection
-                        .queryMember(ownerId)
-                        .then((member: Member) => {
-                            if (get(canRequestVisitCardsStore) === false) return;
-                            if (member?.visitCardUrl) {
-                                requestVisitCardsStore.set(member.visitCardUrl);
-                            }
-                            if (member?.chatID) {
-                                selectedChatIDRemotePlayerStore.set(member?.chatID);
-                            }
-                        })
-                        .catch((error) => console.error(error));
-                }
-
-                area?.highLightArea(true);
+        const connection = this.scene.connection;
+        if (connection && this.isPersonalAreaOwnerAway(ownerId, areaData)) {
+            if (ADMIN_URL) {
+                connection
+                    .queryMember(ownerId)
+                    .then((member: Member) => {
+                        if (get(canRequestVisitCardsStore) === false) return;
+                        if (member?.visitCardUrl) {
+                            requestVisitCardsStore.set(member.visitCardUrl);
+                        }
+                        if (member?.chatID) {
+                            selectedChatIDRemotePlayerStore.set(member?.chatID);
+                        }
+                    })
+                    .catch((error) => console.error(error));
             }
+
+            area?.highLightArea(true);
         }
     }
 
@@ -1103,7 +1284,8 @@ export class AreasPropertiesListener {
     }
 
     private handlePlayAudioPropertyOnLeave(): void {
-        audioManagerFileStore.unloadAudio();
+        if (get(audioManagerFileStore) != "") audioManagerVolumeStore.stopSound(true);
+        if (get(audioManagerFileStore) != "") audioManagerFileStore.unloadAudio();
         audioManagerVisibilityStore.set("hidden");
     }
 
@@ -1129,7 +1311,11 @@ export class AreasPropertiesListener {
         inJitsiStore.set(false);
     }
 
-    private handlePersonalAreaPropertyOnLeave(area?: Area): void {
+    private handlePersonalAreaPropertyOnLeave(property: PersonalAreaPropertyData, area?: Area): void {
+        const isMyPersonalArea = property.ownerId === localUserStore.getLocalUser()?.uuid;
+        if (isMyPersonalArea) {
+            isInsidePersonalAreaStore.set(false);
+        }
         // Reset this store to indicate that the user is no longer in the personal area and cannot request or display their business card.
         canRequestVisitCardsStore.set(false);
 
@@ -1145,16 +1331,8 @@ export class AreasPropertiesListener {
         const roomID = property.roomName.trim().length === 0 ? property.id : property.roomName;
         const roomName = Jitsi.slugifyJitsiRoomName(roomID, this.scene.roomUrl, false);
 
-        if (!property.livekitRoomConfig?.disableChat) {
-            proximityRoom.setDisplayName(get(LL).chat.proximity());
-            await proximityRoom.leaveSpace(roomName, true);
-        } else {
-            const spaceRegistry = this.scene.spaceRegistry;
-            const space = spaceRegistry.get(roomName);
-            if (space) {
-                await spaceRegistry.leaveSpace(space);
-            }
-        }
+        proximityRoom.setDisplayName(get(LL).chat.proximity());
+        await proximityRoom.leaveSpace(roomName, true);
 
         this._requestedMicrophoneStateSubscription?.();
         this._requestedCameraStateSubscription?.();
@@ -1301,56 +1479,111 @@ export class AreasPropertiesListener {
     ): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl).trim();
+            const proximityRoom = this.scene.proximityChatRoom;
+            const currentSpaceName = proximityRoom.getCurrentSpaceName();
+            const wasListener = get(isListenerStore);
 
-            let space: SpaceInterface | undefined;
-            const spaceRegistry = this.scene.spaceRegistry;
+            // Update stores first so the bubble closes and UI reflects "in a meeting" before stream logic.
+            isSpeakerStore.set(true);
+            isListenerStore.set(false);
 
-            if (property.chatEnabled) {
-                const proximityRoom = this.scene.proximityChatRoom;
+            try {
+                // If already in this space (as listener), just switch to speaker role.
+                if (currentSpaceName === uniqRoomName) {
+                    const space = proximityRoom.getCurrentSpace();
+                    if (space) {
+                        space.startStreaming();
+                        currentLiveStreamingSpaceStore.set(space);
+
+                        listenerWaitingMediaStore.set(undefined);
+                        listenerSharingCameraStore.set(false);
+
+                        // Update tracking
+                        this.activeMegaphoneZones.set(property.id, {
+                            spaceName: uniqRoomName,
+                            role: "speaker",
+                            propertyId: property.id,
+                            seeAttendees: property.seeAttendees,
+                            chatEnabled: property.chatEnabled,
+                            waitingLink: undefined,
+                        });
+                        return;
+                    }
+                }
+
+                // Otherwise, do the full join (stores already set above).
                 proximityRoom.setDisplayName(property.name);
-                await proximityRoom.joinSpace(
+                const space = await proximityRoom.joinSpace(
                     uniqRoomName,
                     ["cameraState", "microphoneState", "screenShareState"],
                     true,
-                    FilterType.LIVE_STREAMING_USERS
+                    property.seeAttendees
+                        ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK
+                        : FilterType.LIVE_STREAMING_USERS,
+                    !property.chatEnabled
                 );
-                space = spaceRegistry.get(uniqRoomName);
-            } else {
-                space = await spaceRegistry.joinSpace(
-                    uniqRoomName,
-                    FilterType.LIVE_STREAMING_USERS,
-                    ["cameraState", "microphoneState", "screenShareState"],
-                    abortSignal
-                );
-            }
 
-            if (space) {
                 space.startStreaming();
-            }
+                currentLiveStreamingSpaceStore.set(space);
+                isSpeakerStore.set(true);
 
-            currentLiveStreamingSpaceStore.set(space);
-            isSpeakerStore.set(true);
+                // Track this zone
+                this.activeMegaphoneZones.set(property.id, {
+                    spaceName: uniqRoomName,
+                    role: "speaker",
+                    propertyId: property.id,
+                    seeAttendees: property.seeAttendees,
+                    chatEnabled: property.chatEnabled,
+                    waitingLink: undefined,
+                });
+            } catch (e) {
+                isSpeakerStore.set(false);
+                isListenerStore.set(wasListener);
+                if (e instanceof AbortError) {
+                    return;
+                }
+                throw e;
+            }
         }
     }
 
     private async handleSpeakerMegaphonePropertyOnLeave(property: SpeakerMegaphonePropertyData): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
-            isSpeakerStore.set(false);
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl, false);
-            currentLiveStreamingSpaceStore.set(undefined);
 
-            const spaceRegistry = this.scene.spaceRegistry;
-            let space: SpaceInterface | undefined;
-            if (property.chatEnabled) {
-                const proximityRoom = this.scene.proximityChatRoom;
-                proximityRoom.setDisplayName(get(LL).chat.proximity());
-                await proximityRoom.leaveSpace(uniqRoomName, true);
-            } else {
-                space = spaceRegistry.get(uniqRoomName);
+            // Remove from tracking
+            this.activeMegaphoneZones.delete(property.id);
+
+            // Check if still in a listener zone for the same space
+            const remainingListenerZone = this.findActiveListenerZoneForSpace(uniqRoomName);
+
+            if (remainingListenerZone) {
+                // Switch back to listener role instead of leaving
+                const space = this.scene.proximityChatRoom.getCurrentSpace();
                 if (space) {
-                    await spaceRegistry.leaveSpace(space);
+                    space.stopStreaming();
+                    isSpeakerStore.set(false);
+                    isListenerStore.set(true);
+                    listenerWaitingMediaStore.set(remainingListenerZone.waitingLink);
+
+                    // Restore listener-specific state
+                    if (remainingListenerZone.seeAttendees) {
+                        space.startListenerStreaming();
+                        listenerSharingCameraStore.set(true);
+                    } else {
+                        listenerSharingCameraStore.set(false);
+                    }
+                    return;
                 }
             }
+
+            // Otherwise, do the full leave
+            isSpeakerStore.set(false);
+            currentLiveStreamingSpaceStore.set(undefined);
+
+            const proximityRoom = this.scene.proximityChatRoom;
+            proximityRoom.setDisplayName(get(LL).chat.proximity());
+            await proximityRoom.leaveSpace(uniqRoomName, true);
         }
     }
 
@@ -1358,38 +1591,82 @@ export class AreasPropertiesListener {
         property: ListenerMegaphonePropertyData,
         abortSignal: AbortSignal
     ): Promise<void> {
-        // TODO: change the user's availability status to prevent them from creating a bubble
         if (property.speakerZoneName !== undefined) {
-            const speakerZoneName = getSpeakerMegaphoneAreaName(
-                this.scene.getGameMap().getGameMapAreas()?.getAreas(),
+            const megaphoneAreaInfo = getSpeakerMegaphoneAreaInfo(
+                this.scene.getGameMap().getWamFile()?.getGameMapAreas().getAreas(),
                 property.speakerZoneName
             );
+
+            if (!megaphoneAreaInfo) {
+                return;
+            }
+
+            const { name: speakerZoneName, seeAttendees } = megaphoneAreaInfo;
+
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName.trim(), this.scene.roomUrl).trim();
-                const spaceRegistry = this.scene.spaceRegistry;
-                let space: SpaceInterface | undefined;
-                if (property.chatEnabled) {
-                    const proximityRoom = this.scene.proximityChatRoom;
-                    proximityRoom.setDisplayName(speakerZoneName);
-                    await proximityRoom.joinSpace(
-                        uniqRoomName,
-                        ["cameraState", "microphoneState", "screenShareState"],
-                        true,
-                        FilterType.LIVE_STREAMING_USERS
-                    );
-                    space = spaceRegistry.get(uniqRoomName);
-                } else {
-                    space = await spaceRegistry.joinSpace(
-                        uniqRoomName,
-                        FilterType.LIVE_STREAMING_USERS,
-                        ["cameraState", "microphoneState", "screenShareState"],
-                        abortSignal
-                    );
+                const proximityRoom = this.scene.proximityChatRoom;
+                const currentSpaceName = proximityRoom.getCurrentSpaceName();
+
+                isListenerStore.set(true);
+                // If already in this space (as speaker or listener), just update tracking
+                if (currentSpaceName === uniqRoomName) {
+                    // Check if we're already as speaker - speaker has priority, don't change role
+                    const existingSpeakerZone = this.findActiveSpeakerZoneForSpace(uniqRoomName);
+                    if (existingSpeakerZone) {
+                        // Just track this listener zone, but don't change the role
+                        this.activeMegaphoneZones.set(property.id, {
+                            spaceName: uniqRoomName,
+                            role: "listener",
+                            propertyId: property.id,
+                            seeAttendees,
+                            chatEnabled: property.chatEnabled,
+                            waitingLink: property.waitingLink,
+                        });
+                        return;
+                    }
+
+                    // Already in as listener, just update tracking
+                    this.activeMegaphoneZones.set(property.id, {
+                        spaceName: uniqRoomName,
+                        role: "listener",
+                        propertyId: property.id,
+                        seeAttendees,
+                        chatEnabled: property.chatEnabled,
+                        waitingLink: property.waitingLink,
+                    });
+                    return;
                 }
 
+                // Otherwise, do the full join
+                proximityRoom.setDisplayName(speakerZoneName);
+                const space = await proximityRoom.joinSpace(
+                    uniqRoomName,
+                    ["cameraState", "microphoneState", "screenShareState"],
+                    true,
+                    seeAttendees ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK : FilterType.LIVE_STREAMING_USERS,
+                    !property.chatEnabled
+                );
                 currentLiveStreamingSpaceStore.set(space);
-                isListenerStore.set(true);
                 listenerWaitingMediaStore.set(property.waitingLink);
+
+                listenerSharingCameraStore.set(seeAttendees);
+                // Use startListenerStreaming() instead of startStreaming()
+                // This enables streaming WITHOUT setting megaphoneState=true,
+                // so the listener remains invisible to other listeners
+                if (seeAttendees) {
+                    space.startListenerStreaming();
+                }
+
+                // Track this zone
+                this.activeMegaphoneZones.set(property.id, {
+                    spaceName: uniqRoomName,
+                    role: "listener",
+                    propertyId: property.id,
+                    seeAttendees,
+                    chatEnabled: property.chatEnabled,
+                    waitingLink: property.waitingLink,
+                });
             }
         }
     }
@@ -1397,27 +1674,66 @@ export class AreasPropertiesListener {
     private async handleListenerMegaphonePropertyOnLeave(property: ListenerMegaphonePropertyData): Promise<void> {
         if (property.speakerZoneName !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
-                this.scene.getGameMap().getGameMapAreas()?.getAreas(),
+                this.scene.getGameMap().getWamFile()?.getGameMapAreas().getAreas(),
                 property.speakerZoneName
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                if (property.chatEnabled) {
-                    const proximityRoom = this.scene.proximityChatRoom;
-                    proximityRoom.setDisplayName(get(LL).chat.proximity());
-                    await proximityRoom.leaveSpace(uniqRoomName, true);
-                } else {
-                    const spaceRegistry = this.scene.spaceRegistry;
-                    const space = spaceRegistry.get(uniqRoomName);
-                    if (space) {
-                        await spaceRegistry.leaveSpace(space);
-                    }
+
+                // Remove from tracking
+                this.activeMegaphoneZones.delete(property.id);
+
+                // Check if still in a speaker zone for the same space
+                const remainingSpeakerZone = this.findActiveSpeakerZoneForSpace(uniqRoomName);
+                if (remainingSpeakerZone) {
+                    // Still in speaker zone, don't leave the space
+                    return;
                 }
+
+                // Check if still in another listener zone for the same space
+                const remainingListenerZone = this.findActiveListenerZoneForSpace(uniqRoomName);
+                if (remainingListenerZone) {
+                    // Still in another listener zone, don't leave the space
+                    return;
+                }
+
+                const proximityRoom = this.scene.proximityChatRoom;
+                proximityRoom.setDisplayName(get(LL).chat.proximity());
+                await proximityRoom.leaveSpace(uniqRoomName, true);
+
                 currentLiveStreamingSpaceStore.set(undefined);
                 isListenerStore.set(false);
                 listenerWaitingMediaStore.set(undefined);
+                // Reset seeAttendees camera sharing state
+                listenerSharingCameraStore.set(false);
             }
         }
+    }
+
+    /**
+     * Finds an active listener zone for a given space name.
+     * Used to determine if we should switch roles instead of leaving the space.
+     */
+    private findActiveListenerZoneForSpace(spaceName: string): MegaphoneZoneState | undefined {
+        for (const zone of this.activeMegaphoneZones.values()) {
+            if (zone.spaceName === spaceName && zone.role === "listener") {
+                return zone;
+            }
+        }
+        return undefined;
+    }
+
+    /**
+     * Finds an active speaker zone for a given space name.
+     * Used to determine if we should switch roles instead of leaving the space.
+     */
+    private findActiveSpeakerZoneForSpace(spaceName: string): MegaphoneZoneState | undefined {
+        for (const zone of this.activeMegaphoneZones.values()) {
+            if (zone.spaceName === spaceName && zone.role === "speaker") {
+                return zone;
+            }
+        }
+        return undefined;
     }
 
     private handleExitPropertyOnEnter(url: string): void {
@@ -1472,7 +1788,9 @@ export class AreasPropertiesListener {
                 this.coWebsitesActionTriggers.set(property.id, actionId);
                 let message = property.triggerMessage;
                 if (message === undefined) {
-                    message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.newTab() : get(LL).trigger.newTab();
+                    message = touchScreenManager.detectPrimaryTouchDevice()
+                        ? get(LL).trigger.mobile.newTab()
+                        : get(LL).trigger.newTab();
                 }
 
                 popupStore.addPopup(
@@ -1506,7 +1824,9 @@ export class AreasPropertiesListener {
         if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (!message) {
-                message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.cowebsite() : get(LL).trigger.cowebsite();
+                message = touchScreenManager.detectPrimaryTouchDevice()
+                    ? get(LL).trigger.mobile.cowebsite()
+                    : get(LL).trigger.cowebsite();
             }
 
             this.coWebsitesActionTriggers.set(property.id, actionId);
@@ -1611,5 +1931,58 @@ export class AreasPropertiesListener {
          */
 
         this.coWebsitesActionTriggers.delete(property.id);
+    }
+
+    /**
+     * Cleans up all subscriptions and resources.
+     * Must be called when the AreasPropertiesListener is no longer needed to prevent memory leaks.
+     */
+    public destroy(): void {
+        // Unsubscribe from variable changes (inner subscription)
+        if (this._variableChangesSubscription) {
+            this._variableChangesSubscription();
+            this._variableChangesSubscription = undefined;
+        }
+
+        // Unsubscribe from area property variables manager store (outer subscription)
+        if (this._areaPropertyVariablesSubscription) {
+            this._areaPropertyVariablesSubscription();
+            this._areaPropertyVariablesSubscription = undefined;
+        }
+
+        // Clean up microphone/camera state subscriptions
+        if (this._requestedMicrophoneStateSubscription) {
+            this._requestedMicrophoneStateSubscription();
+            this._requestedMicrophoneStateSubscription = undefined;
+        }
+
+        if (this._requestedCameraStateSubscription) {
+            this._requestedCameraStateSubscription();
+            this._requestedCameraStateSubscription = undefined;
+        }
+
+        // Abort all pending operations
+        for (const abortController of this.abortControllers.values()) {
+            abortController.abort();
+        }
+        this.abortControllers.clear();
+
+        // Clean up action trigger callbacks
+        for (const callback of this.actionTriggerCallback.values()) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+        }
+        this.actionTriggerCallback.clear();
+
+        // Clean up co-websites
+        for (const coWebsiteOpen of this.openedCoWebsites.values()) {
+            if (coWebsiteOpen.coWebsite) {
+                coWebsites.remove(coWebsiteOpen.coWebsite);
+            }
+        }
+        this.openedCoWebsites.clear();
+        this.coWebsitesActionTriggers.clear();
+
+        // Reset lock-related stores
+        currentPlayerLockableAreasStore.set([]);
     }
 }

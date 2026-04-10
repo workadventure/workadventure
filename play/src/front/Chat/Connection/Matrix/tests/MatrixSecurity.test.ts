@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MatrixClient } from "matrix-js-sdk";
+import type { MatrixClient } from "matrix-js-sdk";
 import { writable } from "svelte/store";
 import { MatrixSecurity } from "../MatrixSecurity";
 

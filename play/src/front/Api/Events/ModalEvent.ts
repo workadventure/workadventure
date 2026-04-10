@@ -7,6 +7,7 @@ export const isModalEvent = z.object({
     position: z.enum(["right", "left", "center"]).optional().default("right"),
     allowApi: z.boolean().optional().default(false),
     allowFullScreen: z.boolean().optional().default(true),
+    closable: z.boolean().optional().default(true),
 });
 
 /**

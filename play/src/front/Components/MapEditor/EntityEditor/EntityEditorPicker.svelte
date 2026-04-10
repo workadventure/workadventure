@@ -4,14 +4,14 @@
     import { get } from "svelte/store";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
+    import type { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
+    import type { SelectableTag } from "../../../Stores/MapEditorStore";
     import {
         mapEditorDeleteCustomEntityEventStore,
         mapEditorEntityModeStore,
         mapEditorModifyCustomEntityEventStore,
         mapEditorSelectedEntityPrefabStore,
         mapEditorSelectedEntityStore,
-        SelectableTag,
         selectCategoryStore,
     } from "../../../Stores/MapEditorStore";
     import Input from "../../Input/Input.svelte";
@@ -213,7 +213,7 @@
         {:else}
             {#if pickedEntityVariant && pickedEntity}
                 <div
-                    class="relative flex flex-row gap-2 items-center justify-center border-b-blue-50 p-4 mb-2 min-h-[200px] bg-white/10 rounded-2xl w-full"
+                    class="fixed left-2 flex flex-row gap-2 items-center justify-center border-b-blue-50 p-4 mb-2 min-h-[200px] bg-white/20 backdrop-blur-xl rounded-2xl w-[calc(100%-16px)]"
                 >
                     {#if isEditingCustomEntity}
                         <CustomEntityEditionForm
@@ -272,7 +272,7 @@
                 </div>
             {/if}
             {#if !isEditingCustomEntity}
-                <div class="flex flex-col gap-2">
+                <div class="flex flex-col gap-2" class:mt-52={pickedEntityVariant && pickedEntity}>
                     {#if $selectCategoryStore}
                         <span class="font-bold text-lg">
                             {$selectCategoryStore}

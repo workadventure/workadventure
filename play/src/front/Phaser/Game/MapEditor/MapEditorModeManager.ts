@@ -1,10 +1,12 @@
 import * as Sentry from "@sentry/svelte";
-import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
-import { get, Unsubscriber } from "svelte/store";
-import { EditMapCommandMessage } from "@workadventure/messages";
+import type { AreaData, Command } from "@workadventure/map-editor";
+import { UpdateWAMSettingCommand } from "@workadventure/map-editor";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
+import type { EditMapCommandMessage } from "@workadventure/messages";
 import pLimit from "p-limit";
 import debug from "debug";
-import merge from "lodash/merge";
+import { deepmergeInto } from "deepmerge-ts";
 import type { RoomConnection } from "../../../Connection/RoomConnection";
 import type { GameScene } from "../GameScene";
 import {
@@ -16,13 +18,14 @@ import { mapEditorActivated, mapEditorActivatedForThematics } from "../../../Sto
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import LL from "../../../../i18n/i18n-svelte";
 import { gameManager } from "../GameManager";
+import { isInsidePersonalAreaStore, personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
 import { EntityEditorTool } from "./Tools/EntityEditorTool";
 import { WAMSettingsEditorTool } from "./Tools/WAMSettingsEditorTool";
-import { FrontCommandInterface } from "./Commands/FrontCommandInterface";
-import { FrontCommand } from "./Commands/FrontCommand";
+import type { FrontCommandInterface } from "./Commands/FrontCommandInterface";
+import type { FrontCommand } from "./Commands/FrontCommand";
 import { TrashEditorTool } from "./Tools/TrashEditorTool";
 import { ExplorerTool } from "./Tools/ExplorerTool";
 import { CloseTool } from "./Tools/CloseTool";
@@ -80,7 +83,11 @@ export class MapEditorModeManager {
 
     private isReverting: Promise<void> = Promise.resolve();
 
-    constructor(scene: GameScene) {
+    constructor(
+        scene: GameScene,
+        private _isInsidePersonalAreaStore = isInsidePersonalAreaStore,
+        private _personalAreaDataStore = personalAreaDataStore
+    ) {
         this.scene = scene;
 
         this.localCommandsHistory = [];
@@ -142,7 +149,7 @@ export class MapEditorModeManager {
                     this.currentCommandIndex += 1;
                 }
 
-                this.scene.getGameMap().updateLastCommandIdProperty(command.commandId);
+                this.scene.getGameMap().getWamFile()?.updateLastCommandIdProperty(command.commandId);
                 return;
             } catch (error) {
                 console.error(error);
@@ -158,7 +165,7 @@ export class MapEditorModeManager {
         return (this.currentRunningCommand = this.currentRunningCommand.then(async () => {
             try {
                 await command.execute();
-                this.scene.getGameMap().updateLastCommandIdProperty(command.commandId);
+                this.scene.getGameMap().getWamFile()?.updateLastCommandIdProperty(command.commandId);
                 return;
             } catch (error) {
                 console.error(error);
@@ -247,10 +254,10 @@ export class MapEditorModeManager {
         this.unsubscribeFromStores();
     }
 
-    public handleKeyDownEvent(event: KeyboardEvent): void {
+    public handleKeyDownEvent(event: KeyboardEvent): boolean {
         this.currentlyActiveTool?.handleKeyDownEvent(event);
         const mapEditorModeStoreValue = get(mapEditorModeStore);
-        if (!mapEditorModeStoreValue) return;
+        if (!mapEditorModeStoreValue) return false;
 
         const mapEditorModeActivated = get(mapEditorActivated);
         switch (event.key.toLowerCase()) {
@@ -312,9 +319,11 @@ export class MapEditorModeManager {
                 break;
             }
             default: {
+                return false;
                 break;
             }
         }
+        return true;
     }
 
     public subscribeToRoomConnection(connection: RoomConnection): void {
@@ -495,22 +504,22 @@ export class MapEditorModeManager {
         const gameMapFrontWrapper = gameManager.getCurrentGameScene().getGameMapFrontWrapper();
         for (const area of gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData") ?? []) {
             const property = area.areaData.properties.find((property) => property.type === "personalAreaPropertyData");
-            if (!property || property.ownerId !== userUUID) continue;
+            if (!property || (property.type === "personalAreaPropertyData" && property?.ownerId !== userUUID)) continue;
 
             // The user already has a personal area, revoke it
             const oldAreaDataToRevok = structuredClone(area.areaData);
             // Define the new name of the area
-            merge(area.areaData, {
+            deepmergeInto(area.areaData, {
                 name: get(LL).area.personalArea.claimDescription(),
             });
             // Define the new owner of the area
-            merge(property, {
+            deepmergeInto(property, {
                 ownerId: null,
             });
 
             this.executeCommand(
                 new UpdateAreaFrontCommand(
-                    this.getScene().getGameMap(),
+                    this.getScene().getGameMap().getWamFile()!,
                     area.areaData,
                     undefined,
                     oldAreaDataToRevok,
@@ -524,18 +533,18 @@ export class MapEditorModeManager {
         const property = areaDataToClaim.properties.find((property) => property.type === "personalAreaPropertyData");
         if (property) {
             // Define the new name of the area
-            merge(areaDataToClaim, {
+            deepmergeInto(areaDataToClaim, {
                 name: get(LL).area.personalArea.personalSpaceWithNames({ name: userName }),
             });
             // Define the new owner of the area
-            merge(property, {
+            deepmergeInto(property, {
                 ownerId: userUUID,
             });
         }
 
         this.executeCommand(
             new UpdateAreaFrontCommand(
-                this.getScene().getGameMap(),
+                this.getScene().getGameMap().getWamFile()!,
                 areaDataToClaim,
                 undefined,
                 oldAreaData,
@@ -543,5 +552,31 @@ export class MapEditorModeManager {
                 this.scene.getGameMapFrontWrapper()
             )
         ).catch((error) => console.error(error));
+        this._isInsidePersonalAreaStore.set(true);
+        this._personalAreaDataStore.set(areaDataToClaim);
+    }
+
+    public async unclaimPersonalArea(areaData: AreaData) {
+        const property = areaData.properties.find((property) => property.type === "personalAreaPropertyData");
+        if (!property) {
+            console.error("No area property data");
+            return;
+        }
+        deepmergeInto(property, {
+            name: get(LL).area.personalArea.claimDescription(),
+            ownerId: null,
+        });
+        await this.executeCommand(
+            new UpdateAreaFrontCommand(
+                this.getScene().getGameMap().getWamFile()!,
+                areaData,
+                undefined,
+                undefined,
+                this.editorTools.AreaEditor as AreaEditorTool,
+                this.scene.getGameMapFrontWrapper()
+            )
+        );
+        this._isInsidePersonalAreaStore.set(false);
+        this._personalAreaDataStore.set(null);
     }
 }

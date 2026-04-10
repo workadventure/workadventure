@@ -1,4 +1,5 @@
-import { Subject, Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
+import { Subject } from "rxjs";
 import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
@@ -301,6 +302,27 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         return queryWorkadventure({
             type: "getWoka",
             data: undefined,
+        });
+    }
+
+    /**
+     * Set the availability status of the current player.
+     *
+     * Supported statuses:
+     * - "ONLINE": Clear any custom status (default state)
+     * - "BUSY": Indicate the player is busy
+     * - "DO_NOT_DISTURB": Indicate the player does not want to be disturbed
+     * - "BACK_IN_A_MOMENT": Indicate the player is temporarily away
+     *
+     * {@link https://docs.workadventu.re/map-building/api-player.md#set-the-status-of-the-player | Website documentation}
+     *
+     * @param {string} status The status to set. Allowed values: "ONLINE", "BUSY", "DO_NOT_DISTURB", "BACK_IN_A_MOMENT"
+     * @returns {void}
+     */
+    public setStatus(status: "ONLINE" | "BUSY" | "DO_NOT_DISTURB" | "BACK_IN_A_MOMENT"): void {
+        sendToWorkadventure({
+            type: "setStatus",
+            data: { status },
         });
     }
 }

@@ -1,4 +1,4 @@
-import { EntityPrefab } from "@workadventure/map-editor";
+import type { EntityPrefab } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/svelte";
 
 export class EntityVariant {

@@ -1,12 +1,13 @@
 import path from "path";
 import fs from "fs/promises";
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import type { Request, Response, NextFunction } from "express";
+import { jwtVerify } from "jose";
 import z from "zod";
-import { AreaData, WAMFileFormat } from "@workadventure/map-editor";
+import type { AreaData } from "@workadventure/map-editor";
+import { WAMFileFormat } from "@workadventure/map-editor";
 import { fileSystem } from "../fileSystem";
-import { SECRET_KEY } from "../Enum/EnvironmentVariable";
-import { mapPathUsingDomain } from "./PathMapper";
+import { PATH_PREFIX, SECRET_KEY } from "../Enum/EnvironmentVariable";
+import { mapPathUsingDomainWithPrefix } from "./PathMapper";
 
 const AuthTokenData = z.object({
     wamUrl: z.string().url(),
@@ -25,14 +26,26 @@ export async function verifyJWT(req: Request, res: Response, next: NextFunction)
     }
 
     try {
-        const decoded = jwt.verify(token, SECRET_KEY ?? "");
+        const secret = new TextEncoder().encode(SECRET_KEY ?? "");
+        const decoded = (await jwtVerify(token, secret)).payload;
+
         const parsed = AuthTokenData.parse(decoded);
-        const url = req.protocol + "://" + req.get("host") + req.url.split("?")[0];
+        let pathPrefix = PATH_PREFIX ?? "";
+        if (!pathPrefix.endsWith("/")) {
+            pathPrefix += "/";
+        }
+
+        const forwardedHostHeader = req.headers["x-forwarded-host"];
+        const host =
+            (Array.isArray(forwardedHostHeader) ? forwardedHostHeader[0] : forwardedHostHeader) ?? req.get("host");
+
+        const url = new URL(
+            req.url.split("?")[0].substring(1),
+            new URL(pathPrefix, req.protocol + "://" + host)
+        ).toString();
 
         await verifyWam(parsed, url);
 
-        // eslint-disable-next-line require-atomic-updates
-        req.url = url;
         return next();
     } catch (err) {
         if (err instanceof z.ZodError) {
@@ -45,9 +58,8 @@ export async function verifyJWT(req: Request, res: Response, next: NextFunction)
 }
 
 async function verifyWam(jwt: AuthTokenData, url: string): Promise<void> {
-    console.info("Verifying WAM URL:", jwt.wamUrl);
     const parsedUrl = new URL(jwt.wamUrl);
-    const mapPath = mapPathUsingDomain(parsedUrl.pathname, parsedUrl.hostname);
+    const mapPath = mapPathUsingDomainWithPrefix(parsedUrl.pathname, parsedUrl.hostname);
 
     const test = await getAndCheckWamFile(mapPath, url);
 
@@ -95,41 +107,27 @@ async function getAndCheckWamFile(mapPath: string, url: string): Promise<AreaDat
     const INTERVAL = 2000;
     const TIMEOUT = 16000;
     const deadline = Date.now() + TIMEOUT;
+    const decodedUrl = decodeURI(url);
 
-    return new Promise((resolve, reject) => {
-        const poll = async () => {
-            try {
-                const wamString = await fileSystem.readFileAsString(mapPath);
-                const wam = WAMFileFormat.parse(JSON.parse(wamString));
+    const matchesUrl = (p: { type: string; link?: string | null }) =>
+        p.type === "openFile" && decodeURI(p.link ?? "") === decodedUrl;
 
-                const area = wam.areas.find((a) =>
-                    a.properties.some((p) => p.type === "openFile" && decodeURI(p.link ?? "") === decodeURI(url))
-                );
+    while (Date.now() < deadline) {
+        // eslint-disable-next-line no-await-in-loop
+        const wamString = await fileSystem.readFileAsString(mapPath);
+        const wam = WAMFileFormat.parse(JSON.parse(wamString));
 
-                const entity = Object.values(wam.entities).find((e) =>
-                    e.properties?.some((p) => p.type === "openFile" && decodeURI(p.link ?? "") === decodeURI(url))
-                );
+        const area = wam.areas.find((a) => a.properties.some(matchesUrl));
+        if (area) return area;
 
-                if (area) {
-                    clearInterval(interval);
-                    resolve(area);
-                } else if (entity) {
-                    clearInterval(interval);
-                    resolve("entity");
-                } else if (Date.now() >= deadline) {
-                    clearInterval(interval);
-                    reject(new Error(`No area or entity found with a matching file: ${url}`));
-                }
-            } catch (err) {
-                clearInterval(interval);
-                reject(err instanceof Error ? err : new Error(String(err)));
-            }
-        };
+        const entity = Object.values(wam.entities).find((e) => e.properties?.some(matchesUrl));
+        if (entity) return "entity";
 
-        const interval = setInterval(() => {
-            void poll();
-        }, INTERVAL);
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve) => {
+            setTimeout(resolve, INTERVAL);
+        });
+    }
 
-        void poll();
-    });
+    throw new Error(`No area or entity found with a matching file: ${url}`);
 }

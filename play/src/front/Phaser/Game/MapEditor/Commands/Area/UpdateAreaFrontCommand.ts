@@ -1,19 +1,20 @@
-import { AreaData, AtLeast, GameMap, UpdateAreaCommand } from "@workadventure/map-editor";
-import { AreaEditorTool } from "../../Tools/AreaEditorTool";
-import { FrontCommandInterface } from "../FrontCommandInterface";
-import { RoomConnection } from "../../../../../Connection/RoomConnection";
-import { GameMapFrontWrapper } from "../../../GameMap/GameMapFrontWrapper";
+import type { AreaData, AtLeast, WamFile } from "@workadventure/map-editor";
+import { UpdateAreaCommand } from "@workadventure/map-editor";
+import type { AreaEditorTool } from "../../Tools/AreaEditorTool";
+import type { FrontCommandInterface } from "../FrontCommandInterface";
+import type { RoomConnection } from "../../../../../Connection/RoomConnection";
+import type { GameMapFrontWrapper } from "../../../GameMap/GameMapFrontWrapper";
 
 export class UpdateAreaFrontCommand extends UpdateAreaCommand implements FrontCommandInterface {
     constructor(
-        gameMap: GameMap,
+        wamFile: WamFile,
         dataToModify: AtLeast<AreaData, "id">,
         commandId: string | undefined,
         oldConfig: AtLeast<AreaData, "id"> | undefined,
         private areaEditorTool: AreaEditorTool,
         private gameMapFrontWrapper: GameMapFrontWrapper
     ) {
-        super(gameMap, dataToModify, commandId, oldConfig);
+        super(wamFile, dataToModify, commandId, oldConfig);
     }
 
     public async execute(): Promise<void> {
@@ -27,7 +28,7 @@ export class UpdateAreaFrontCommand extends UpdateAreaCommand implements FrontCo
 
     public getUndoCommand(): UpdateAreaFrontCommand {
         return new UpdateAreaFrontCommand(
-            this.gameMap,
+            this.wamFile,
             this.oldConfig,
             undefined,
             this.newConfig,

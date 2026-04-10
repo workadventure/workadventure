@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ChatRoomMembershipManagement, ChatRoom } from "../../Connection/ChatConnection";
+    import type { ChatRoomMembershipManagement, ChatRoom } from "../../Connection/ChatConnection";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import Avatar from "../Avatar.svelte";

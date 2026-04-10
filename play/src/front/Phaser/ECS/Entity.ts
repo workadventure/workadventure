@@ -1,25 +1,29 @@
-import {
+import type {
     AtLeast,
     EntityData,
     EntityDataProperties,
     EntityDataProperty,
     EntityDescriptionPropertyData,
     EntityPrefab,
-    GameMapProperties,
     WAMEntityData,
 } from "@workadventure/map-editor";
-import merge from "lodash/merge";
+import { GameMapProperties } from "@workadventure/map-editor";
+import { deepmergeInto } from "deepmerge-ts";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-import { Unsubscriber, get } from "svelte/store";
-import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
+import type { ActionsMenuAction } from "../../Stores/ActionsMenuStore";
+import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsites } from "../../Stores/CoWebsiteStore";
-import { ActivatableInterface } from "../Game/ActivatableInterface";
+import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import { GameScene } from "../Game/GameScene";
-import { OutlineableInterface } from "../Game/OutlineableInterface";
+import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import { SpeechDomElement } from "../Entity/SpeechDomElement";
+import LL from "../../../i18n/i18n-svelte";
+import { DEBUG_MODE } from "../../Enum/EnvironmentVariable";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
@@ -32,9 +36,11 @@ export enum EntityEvent {
     PropertyActivated = "EntityEvent:PropertyActivated",
 }
 
+export const DEFAULT_ACTIVABLE_RADIUS = 14;
+
 // NOTE: Tiles-based entity for now. Individual images later on
 export class Entity extends Phaser.GameObjects.Image implements ActivatableInterface, OutlineableInterface {
-    public readonly activationRadius: number = 96;
+    public readonly activationRadius: number = DEFAULT_ACTIVABLE_RADIUS;
     private readonly outlineColorStore = createColorStore();
     private readonly outlineColorStoreUnsubscribe: Unsubscriber;
 
@@ -48,11 +54,10 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     private speechDomElement: SpeechDomElement | null = null;
 
-    private gameScene: GameScene;
+    private debugActivationZoneCircle: Phaser.GameObjects.Graphics | null = null;
 
     constructor(scene: GameScene, public readonly entityId: string, data: WAMEntityData, prefab: EntityPrefab) {
         super(scene, data.x, data.y, prefab.imagePath);
-        this.gameScene = scene;
         this.setOrigin(0);
 
         this.oldPosition = this.getPosition();
@@ -71,6 +76,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                 if (this.activatable) {
                     this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
                     this.scene.input.setDraggable(this);
+                    this.createDebugActivationZone();
                 }
             })
             .catch((error) => console.error(error));
@@ -85,18 +91,23 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         scene.getOutlineManager().add(this, () => {
             return this.getCurrentOutline();
         });
+
+        // Listen to drag events to update debug activation zone
+        this.on(Phaser.Input.Events.DRAG, () => {
+            this.updateDebugActivationZone();
+        });
     }
 
     public get description(): string | undefined {
-        const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
-            (p) => p.type === "entityDescriptionProperties"
+        const descriptionProperty = this.entityData.properties.find(
+            (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties"
         );
         return descriptionProperty?.description;
     }
 
     public get searchable(): boolean | undefined {
-        const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
-            (p) => p.type === "entityDescriptionProperties"
+        const descriptionProperty = this.entityData.properties.find(
+            (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties"
         );
         return descriptionProperty?.searchable;
     }
@@ -113,7 +124,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
      * This method is being used after command execution from outside and it will not trigger any emits
      */
     public updateEntity(dataToModify: Partial<WAMEntityData>): void {
-        merge(this.entityData, dataToModify);
+        deepmergeInto(this.entityData, dataToModify);
         // TODO: Find a way to update it without need of using conditions
         if (dataToModify.properties !== undefined) {
             this.entityData.properties = dataToModify.properties;
@@ -121,22 +132,66 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
         this.setPosition(this.entityData.x, this.entityData.y);
         this.oldPosition = this.getPosition();
+        const wasActivatable = this.activatable;
         this.activatable = this.hasAnyPropertiesSet();
         if (this.activatable) {
             this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
             this.scene.input.setDraggable(this);
-        } else if (!get(mapEditorModeStore)) {
-            this.disableInteractive();
+            if (!wasActivatable) {
+                this.createDebugActivationZone();
+            } else {
+                this.updateDebugActivationZone();
+            }
+        } else {
+            if (!get(mapEditorModeStore)) {
+                this.disableInteractive();
+            }
+            this.destroyDebugActivationZone();
         }
     }
 
     public destroy(): void {
         this.outlineColorStoreUnsubscribe();
+        this.destroyDebugActivationZone();
         super.destroy();
     }
 
     public getPosition(): { x: number; y: number } {
         return { x: this.x, y: this.y };
+    }
+
+    /**
+     * Returns the activation rectangle for this entity.
+     * The rectangle is centered on the entity's bounding box and extends by activationRadius on all sides.
+     */
+    public getActivationRectangle(): { x: number; y: number; width: number; height: number } {
+        // Entity position is top-left corner (setOrigin(0))
+        const entityRect = {
+            x: this.x,
+            y: this.y,
+            width: this.displayWidth,
+            height: this.displayHeight,
+        };
+
+        // Expand the rectangle by activationRadius on all sides
+        return {
+            x: entityRect.x - this.activationRadius,
+            y: entityRect.y - this.activationRadius,
+            width: entityRect.width + this.activationRadius * 2,
+            height: entityRect.height + this.activationRadius * 2,
+        };
+    }
+
+    /**
+     * Returns the collision rectangle for this entity (without activation radius).
+     */
+    public getCollisionRectangle(): { x: number; y: number; width: number; height: number } {
+        return {
+            x: this.x,
+            y: this.y,
+            width: this.displayWidth,
+            height: this.displayHeight,
+        };
     }
 
     public activate(): void {
@@ -243,17 +298,23 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     public updateProperty(changes: AtLeast<EntityDataProperty, "id">): void {
         const property = this.entityData.properties.find((property) => property.id === changes.id);
         if (property) {
-            merge(property, changes);
+            deepmergeInto(property, changes);
         }
         this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
 
         // Update activatable status
         if (this.updatePropertyActivableTimeOut) clearTimeout(this.updatePropertyActivableTimeOut);
         this.updatePropertyActivableTimeOut = setTimeout(() => {
+            const wasActivatable = this.activatable;
             this.activatable = this.hasAnyPropertiesSet();
             if (this.activatable) {
                 this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
                 this.scene.input.setDraggable(this);
+                if (!wasActivatable) {
+                    this.createDebugActivationZone();
+                }
+            } else {
+                this.destroyDebugActivationZone();
             }
         }, 500);
     }
@@ -300,13 +361,34 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     private toggleActionsMenu(): void {
-        if (get(actionsMenuStore) !== undefined) {
+        const previousActionsMenu = get(actionsMenuStore);
+        if (previousActionsMenu !== undefined) {
             actionsMenuStore.clear();
+            // If the previous actions menu is for the same entity, don't create a new one
+            if (previousActionsMenu.id === this.entityId) return;
+        }
+
+        // If there is only one action in the default actions menu, execute it
+        const defaultActionsMenu = this.getDefaultActionsMenuActions();
+        if (defaultActionsMenu.length === 1) {
+            const action = defaultActionsMenu[0].callback();
+            if (action instanceof Promise)
+                action.catch((error) => console.error("Error during executing the default action: " + error));
             return;
         }
-        const description = this.entityData.properties.find((p) => p.type === "entityDescriptionProperties");
-        actionsMenuStore.initialize(this.entityData.name ?? "", description?.description);
-        for (const action of this.getDefaultActionsMenuActions()) {
+
+        const description = this.entityData.properties.find(
+            (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties"
+        );
+        actionsMenuStore.initialize(
+            this.entityId,
+            this.entityData.name != undefined && this.entityData.name != ""
+                ? this.entityData.name
+                : this.prefab.name ?? "",
+            description?.description,
+            this.prefab.imagePath
+        );
+        for (const action of defaultActionsMenu) {
             actionsMenuStore.addAction(action);
         }
     }
@@ -473,6 +555,153 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         if (this.speechDomElement) {
             this.speechDomElement.destroy();
             this.speechDomElement = null;
+        }
+    }
+
+    // Get action button label from properties
+    get actionButtonLabel(): string {
+        if (this.entityData.properties.length === 0)
+            return get(LL).mapEditor.explorer.details.moveToEntity({ name: "" });
+        const property = this.entityData.properties.find((p) => p.type !== "entityDescriptionProperties");
+        if (!property) return get(LL).mapEditor.explorer.details.moveToEntity({ name: "" });
+
+        const properties = get(LL).mapEditor.properties;
+        let propertyKey = property.type as keyof typeof properties;
+
+        // If the property is an openWebsite and the application is not website, we need to use the application as the property key
+        if (propertyKey === "openWebsite" && "application" in property) {
+            const openWebsiteProperty = property as { application: string };
+            if (openWebsiteProperty.application != "website") {
+                propertyKey = openWebsiteProperty.application as keyof typeof properties;
+            }
+        }
+
+        const propertyTranslation = properties[propertyKey];
+        if (
+            propertyTranslation != undefined &&
+            "actionButtonLabel" in propertyTranslation &&
+            typeof (propertyTranslation as { actionButtonLabel?: unknown }).actionButtonLabel === "function"
+        ) {
+            return (propertyTranslation as { actionButtonLabel: () => string }).actionButtonLabel();
+        }
+        return get(LL).mapEditor.explorer.details.moveToEntity({ name: "" });
+    }
+
+    /**
+     * Creates a debug visualization of the activation zone around the entity
+     * Only visible when debug mode is enabled in localStorage
+     */
+    private createDebugActivationZone(): void {
+        if (!DEBUG_MODE || !this.activatable) {
+            return;
+        }
+
+        this.destroyDebugActivationZone();
+
+        this.debugActivationZoneCircle = this.scene.add.graphics();
+
+        // Get rectangles
+        const collisionRect = this.getCollisionRectangle();
+        const activationRect = this.getActivationRectangle();
+
+        // Draw activation zone rectangle (green)
+        this.debugActivationZoneCircle.lineStyle(2, 0x00ff00, 0.8); // Green rectangle with transparency
+        this.debugActivationZoneCircle.strokeRect(
+            activationRect.x,
+            activationRect.y,
+            activationRect.width,
+            activationRect.height
+        );
+
+        // Draw collision rectangle (blue)
+        this.debugActivationZoneCircle.lineStyle(2, 0x0000ff, 0.8); // Blue rectangle with transparency
+        this.debugActivationZoneCircle.strokeRect(
+            collisionRect.x,
+            collisionRect.y,
+            collisionRect.width,
+            collisionRect.height
+        );
+
+        // Draw center marker - red cross at the center of the collision rectangle
+        const centerX = collisionRect.x + collisionRect.width / 2;
+        const centerY = collisionRect.y + collisionRect.height / 2;
+        const crossSize = 12;
+        const crossThickness = 3;
+        this.debugActivationZoneCircle.lineStyle(crossThickness, 0xff0000, 1.0); // Red cross, fully opaque
+        // Horizontal line
+        this.debugActivationZoneCircle.lineBetween(centerX - crossSize, centerY, centerX + crossSize, centerY);
+        // Vertical line
+        this.debugActivationZoneCircle.lineBetween(centerX, centerY - crossSize, centerX, centerY + crossSize);
+
+        // Draw small filled circle at center for better visibility
+        const centerMarkerRadius = 3;
+        this.debugActivationZoneCircle.fillStyle(0xff0000, 1.0); // Red filled circle
+        this.debugActivationZoneCircle.fillCircle(centerX, centerY, centerMarkerRadius);
+
+        // Set depth above the entity so the visualization is visible
+        this.debugActivationZoneCircle.setDepth(this.depth + 1000); // Render above the entity
+        this.debugActivationZoneCircle.setScrollFactor(this.scrollFactorX, this.scrollFactorY);
+    }
+
+    /**
+     * Updates the position of the debug activation zone visualization
+     */
+    private updateDebugActivationZone(): void {
+        if (!DEBUG_MODE || !this.debugActivationZoneCircle || !this.activatable) {
+            return;
+        }
+
+        this.debugActivationZoneCircle.clear();
+
+        // Get rectangles
+        const collisionRect = this.getCollisionRectangle();
+        const activationRect = this.getActivationRectangle();
+
+        // Draw activation zone rectangle (green)
+        this.debugActivationZoneCircle.lineStyle(2, 0x00ff00, 0.8); // Green rectangle with transparency
+        this.debugActivationZoneCircle.strokeRect(
+            activationRect.x,
+            activationRect.y,
+            activationRect.width,
+            activationRect.height
+        );
+
+        // Draw collision rectangle (blue)
+        this.debugActivationZoneCircle.lineStyle(2, 0x0000ff, 0.8); // Blue rectangle with transparency
+        this.debugActivationZoneCircle.strokeRect(
+            collisionRect.x,
+            collisionRect.y,
+            collisionRect.width,
+            collisionRect.height
+        );
+
+        // Draw center marker - red cross at the center of the collision rectangle
+        const centerX = collisionRect.x + collisionRect.width / 2;
+        const centerY = collisionRect.y + collisionRect.height / 2;
+        const crossSize = 12;
+        const crossThickness = 3;
+        this.debugActivationZoneCircle.lineStyle(crossThickness, 0xff0000, 1.0); // Red cross, fully opaque
+        // Horizontal line
+        this.debugActivationZoneCircle.lineBetween(centerX - crossSize, centerY, centerX + crossSize, centerY);
+        // Vertical line
+        this.debugActivationZoneCircle.lineBetween(centerX, centerY - crossSize, centerX, centerY + crossSize);
+
+        // Draw small filled circle at center for better visibility
+        const centerMarkerRadius = 3;
+        this.debugActivationZoneCircle.fillStyle(0xff0000, 1.0); // Red filled circle
+        this.debugActivationZoneCircle.fillCircle(centerX, centerY, centerMarkerRadius);
+
+        // Set depth above the entity so the visualization is visible
+        this.debugActivationZoneCircle.setDepth(this.depth + 1000); // Ensure it stays above the entity
+    }
+
+    /**
+     * Destroys the debug activation zone circle
+     */
+    private destroyDebugActivationZone(): void {
+        if (this.debugActivationZoneCircle) {
+            this.debugActivationZoneCircle.destroy();
+            this.debugActivationZoneCircle = null;
         }
     }
 }

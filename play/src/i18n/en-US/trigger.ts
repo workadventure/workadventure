@@ -6,10 +6,11 @@ const trigger: BaseTranslation = {
     newTab: "[SPACE] to open new tab 👀",
     object: "[SPACE] to interact with it 👀",
     spaceKeyboard: "[SPACE]",
+    escapeKeyboard: "[ESCAPE]",
     mobile: {
         cowebsite: "👆 to open web site 👀",
         jitsiRoom: "👆 to enter Jitsi 👀",
-        newTab: "👆 to open web new tab 👀",
+        newTab: "👆 to open new tab 👀",
         object: "👆 to interact with it 👀",
     },
 };

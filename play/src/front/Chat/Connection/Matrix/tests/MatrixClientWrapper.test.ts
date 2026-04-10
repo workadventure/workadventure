@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ICreateClientOpts } from "matrix-js-sdk";
-import { MatrixClientWrapperInterface, MatrixLocalUserStore, MatrixClientWrapper } from "../MatrixClientWrapper";
+import type { ICreateClientOpts } from "matrix-js-sdk";
+import type { MatrixClientWrapperInterface, MatrixLocalUserStore } from "../MatrixClientWrapper";
+import { MatrixClientWrapper } from "../MatrixClientWrapper";
 
 // @vitest-environment jsdom
 vi.mock("../AccessSecretStorageDialog.svelte", () => {

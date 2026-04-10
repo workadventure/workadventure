@@ -1,4 +1,4 @@
-import { CompanionTextureCollection } from "@workadventure/messages";
+import type { CompanionTextureCollection } from "@workadventure/messages";
 import type { Application } from "express";
 import type { CompanionServiceInterface } from "../services/CompanionServiceInterface";
 import type { JWTTokenManager } from "../services/JWTTokenManager";

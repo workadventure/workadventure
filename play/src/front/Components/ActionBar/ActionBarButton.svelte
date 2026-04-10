@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher, getContext } from "svelte";
-    import { Action } from "svelte/action";
+    import type { Action } from "svelte/action";
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
     import { helpTextDisabledStore } from "../../Stores/MenuStore";
 
@@ -8,7 +8,8 @@
     export let tooltipTitle = "";
     export let tooltipDesc = "";
     export let disabledHelp = false;
-    export let state: "normal" | "active" | "forbidden" | "disabled" = "normal";
+    export let tooltipDelay = 500;
+    export let state: "normal" | "active" | "forbidden" | "disabled" | "disabledForbidden" = "normal";
     export let dataTestId: string | undefined = undefined;
     export let classList = "group";
     // Hide the icon in the action bar (displays only the label), and only displays the icon if we are in the responsive menu.
@@ -23,6 +24,9 @@
     export let desc = "";
     export let tooltipShortcuts: string[] = [];
     export let boldLabel = false;
+    export let wrapperDiv: HTMLElement | undefined = undefined;
+
+    const SLOTS = $$props.$$slots;
 
     // By default, the button will have a rounded corner on the left if it is the first of a div.
     // This behaviour can be overridden by setting the "first" prop to true or false explicitly.
@@ -46,9 +50,10 @@
     }>();
 
     function handleClick() {
-        if (state === "disabled") {
+        if (state === "disabled" || state === "disabledForbidden") {
             return;
         }
+        helpActive = false;
         dispatch("click");
     }
 
@@ -70,11 +75,13 @@
         class:pe-2={last === true}
         use:action
         style={styleVars}
+        bind:this={wrapperDiv}
     >
         <button
             type="button"
             class="h-12 @sm/actions:h-10 @xl/actions:h-12 p-1 m-0 rounded relative
                     {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
+                    {state === 'disabledForbidden' ? 'bg-danger opacity-70 cursor-not-allowed' : ''}
                     {state === 'normal' && !isGradient ? 'hover:bg-white/10 cursor-pointer' : ''}
                     {state === 'active' ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
                     {state === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
@@ -85,7 +92,7 @@
                 {bgColor && !isGradient ? 'bg-[var(--bg-color)]' : ''}
                 {textColor ? 'text-[var(--text-color)]' : 'text-neutral-100'}
                     flex items-center justify-center outline-none focus:outline-none gap-2 select-none"
-            disabled={state === "disabled"}
+            disabled={state === "disabled" || state === "disabledForbidden"}
             on:click|preventDefault={() => handleClick()}
             on:mouseenter={() => {
                 helpActive = true;
@@ -102,14 +109,23 @@
             {/if}
             {#if label}<span class={boldLabel ? "font-bold" : ""}>{label}</span>{/if}
         </button>
-        {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle != "" || tooltipDesc != "")}
-            <HelpTooltip title={tooltipTitle} helpMedia={media} {desc} shortcuts={tooltipShortcuts} />
+        {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc || SLOTS.tooltip)}
+            <HelpTooltip
+                title={tooltipTitle}
+                helpMedia={media}
+                {desc}
+                shortcuts={tooltipShortcuts}
+                delayBeforeAppear={tooltipDelay}
+            >
+                <slot name="tooltip" />
+            </HelpTooltip>
         {/if}
     </div>
 {:else}
     <button
         class="group flex p-2 gap-2 mb-1 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-start rounded select-none
                     {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
+                    {state === 'disabledForbidden' ? 'bg-danger opacity-70 cursor-not-allowed' : ''}
                     {state === 'active' && !isGradient ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
                     {state === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
                     {isGradient ? 'gradient overflow-hidden' : ''}
@@ -119,6 +135,8 @@
         use:action
         on:click={() => handleClick()}
         style={styleVars}
+        data-testid={dataTestId}
+        bind:this={wrapperDiv}
     >
         {#if hasImage}
             <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">

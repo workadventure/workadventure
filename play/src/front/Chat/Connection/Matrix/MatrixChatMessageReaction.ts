@@ -1,7 +1,11 @@
-import { EventType, MatrixEvent, RelationType, Room } from "matrix-js-sdk";
+import type { MatrixEvent, Room } from "matrix-js-sdk";
+import { EventType, RelationType } from "matrix-js-sdk";
 import { MapStore } from "@workadventure/store-utils";
-import { get, writable, Writable } from "svelte/store";
-import { ChatMessageReaction, ChatUser } from "../ChatConnection";
+import type { Writable } from "svelte/store";
+import { get, writable } from "svelte/store";
+import type { ComponentType, SvelteComponent } from "svelte";
+import type { ChatMessageReaction, ChatUser } from "../ChatConnection";
+import ReactionIcon from "../../Components/Room/ReactionIcon.svelte";
 import { chatUserFactory } from "./MatrixChatUser";
 
 type EventId = string;
@@ -83,5 +87,15 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
         } catch (error) {
             console.error(error);
         }
+    }
+
+    public get component(): { component: ComponentType<SvelteComponent>; props: Record<string, unknown> } {
+        return {
+            component: ReactionIcon,
+            props: {
+                key: this.key,
+                matrixClient: this.matrixRoom.client,
+            },
+        };
     }
 }

@@ -8,14 +8,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "Fermer",
     login: "Se connecter",
     //logout: "Se déconnecter",
-    map: "Carte",
+    map: "Outils",
+    participantListPlaceholder: "Liste des participants",
+    participantSendMessage: "Écrire un message",
+    participantInviteUser: "Inviter un utilisateur",
     startScreenSharing: "Partager mon écran",
     stopScreenSharing: "Arrêter le partage",
     screenSharingMode: "Mode partage d'écran",
-    focusMode: "Mode focus",
-    rightMode: "Passer les caméras à droite",
-    hideMode: "Réduire les caméras",
-    lightMode: "Thème clair",
     profil: "Mon nom",
     woka: "Mon avatar",
     companion: "Mon compagnon",
@@ -25,14 +24,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     test: "Tester",
     editCamMic: "Camera / micro",
     allSettings: "Tous les paramètres",
-    bo: "Back office",
+    installPwa: "Installer l'application web",
     globalMessage: "Envoyer un message global",
     mapEditor: "Éditer la carte",
     mapEditorMobileLocked: "L'éditeur de carte est verrouillé en mode mobile",
     mapEditorLocked: "L'éditeur de carte est verrouillé 🔐",
     app: "Applications",
     camera: {
-        disabled: "Votre caméra est désactivé",
+        disabled: "Votre caméra est désactivée",
         activate: "Activer votre camera",
         noDevices: "Aucune caméra trouvée",
         setBackground: "Définir le fond",
@@ -44,11 +43,18 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Votre micro est désactivé",
         activate: "Activer votre micro",
         noDevices: "Aucun micro trouvé",
+        noSoundWarning:
+            "Aucun son détecté sur votre micro. Un problème est possible; essayez de changer de micro dans les réglages.",
+        noSoundWarningPressEnter: "Aucun son détecté sur votre micro. Appuyez sur Entrée pour ouvrir les réglages.",
+        openSettings: "Ouvrir les réglages",
+        ignore: "Ignorer",
     },
     speaker: {
         disabled: "Votre haut-parleur est désactivé",
         activate: "Activer votre haut-parleur",
         noDevices: "Aucun haut-parleur trouvé",
+        noDevicesDesc:
+            "Le navigateur ne propose aucune sortie audio sélectionnable. Certains navigateurs limitent ce choix (par ex. Safari). Essayez un autre navigateur, reconnectez casque ou enceintes, vérifiez les réglages audio du système et les configurations de l’ordinateur.",
     },
     status: {
         ONLINE: "En ligne",
@@ -70,6 +76,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         microphone: "Microphone",
         speaker: "Sortie audio",
     },
+    background: {
+        settings: "Paramètres",
+        cameraBackground: "Fond de caméra",
+        noEffect: "Sans effet",
+        blur: "Flou",
+        blurSmall: "Flou léger",
+        blurMiddle: "Flou moyen",
+        blurHigh: "Flou fort",
+        images: "Images",
+        videos: "Vidéos",
+    },
     help: {
         chat: {
             title: "Envoyer un message par écrit",
@@ -85,19 +102,29 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         audioManager: {
             title: "Volume des sons ambiants",
-            desc: "Réglez le volume des sons d’ambiance de la carte (musique, bruitages).",
+            desc: "Réglez le volume des sons d'ambiance de la carte (musique, bruitages).",
+            pause: "Cliquez ici pour mettre en pause l'audio",
+            play: "Cliquez ici pour lire l'audio",
+            stop: "Cliquez ici pour arrêter l'audio",
         },
         audioManagerNotAllowed: {
             title: "Sons ambiants bloqués",
-            desc: "Votre navigateur a empêché la lecture des sons ambiants. Cliquez sur l’icône pour lancer la lecture.",
+            desc: "Votre navigateur a empêché la lecture des sons ambiants. Cliquez sur l'icône pour lancer la lecture.",
         },
         follow: {
             title: "Demander à vous suivre",
             desc: "Vous pouvez demander à un utilisateur de vous suivre, et si cette demande est acceptée, son Woka vous suivra automatiquement, établissant ainsi une connexion fluide.",
         },
         lock: {
-            title: "Verrouiller la bulle",
+            title: "Verrouiller la discussion",
             desc: "En activant cette fonctionnalité, vous garantissez que personne ne pourra rejoindre la discussion. Vous êtes maître de votre espace, et seules les personnes déjà présentes peuvent interagir.",
+            areaPickerTitle: "Choisir la zone à verrouiller/déverrouiller",
+            bubbleLabel: "Bulle de discussion",
+            unnamedArea: "Zone sans nom",
+        },
+        megaphone: {
+            title: "Arrêter le mégaphone",
+            desc: "Arrêtez la diffusion de votre message à tous les utilisateurs.",
         },
         mic: {
             title: "Activer/désactiver votre micro",
@@ -139,6 +166,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Liste de tâches",
             desc: "Gérez vos tâches du jour sans quitter votre espace de travail.",
         },
+        pictureInPicture: {
+            title: "Picture de Picture",
+            descDisabled:
+                "Malheureusement, cette fonctionnalité n'est pas disponible sur votre appareil ❌. Veuillez essayer d'utiliser un autre appareil ou navigateur, comme Chrome ou Edge, pour accéder à cette fonctionnalité.",
+            desc: "Vous pouvez utiliser la fonctionnalité picture in picture pour regarder une vidéo ou une présentation pendant que vous êtes dans une conversation. Cliquez simplement sur l'icône picture in picture et profitez de votre contenu.",
+        },
+        videoNotSupported: "Votre navigateur ne prend pas en charge la balise vidéo.",
     },
     listStatusTitle: {
         enable: "Changer de statut",
@@ -170,6 +204,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         highlightToolText: "Mettre en évidence",
         hideToolText: "Masquer",
         removeHighlightText: "Supprimer",
+    },
+    personalDesk: {
+        label: "Aller à mon bureau",
+        unclaim: "Libérer mon bureau",
+        errorNoUser: "Impossible de trouver vos informations utilisateur",
+        errorNotFound: "Vous n'avez pas encore de bureau personnel",
+        errorMoving: "Impossible d'atteindre votre bureau personnel",
+        errorUnclaiming: "Impossible de libérer votre bureau personnel",
     },
 };
 

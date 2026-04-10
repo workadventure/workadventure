@@ -1,6 +1,7 @@
 <script lang="ts">
     import { setContext } from "svelte";
-    import { openedMenuStore, roomListActivated } from "../../../Stores/MenuStore";
+    import { openedMenuStore, roomListActivated, userIsConnected } from "../../../Stores/MenuStore";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import ActionBarButton from "../ActionBarButton.svelte";
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
     import LL from "../../../../i18n/i18n-svelte";
@@ -21,14 +22,17 @@
     } from "../../../Stores/ModalStore";
     import { mapEditorModeStore } from "../../../Stores/MapEditorStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
-    import WorldIcon from "../../Icons/WorldIcon.svelte";
     import { userIsAdminStore } from "../../../Stores/GameStore";
+    import { showRecordingList } from "../../../Stores/RecordingStore";
+    import RecordingIcon from "../../Icons/RecordingIcon.svelte";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import { IconCalendar, IconCheckList } from "@wa-icons";
+    import { IconCalendar, IconCheckList, IconWorldSearch } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.
     // We use the context to decide how to render it.
     setContext("inMenu", true);
+
+    const recording = gameManager.currentStartedRoom.recording;
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -74,7 +78,23 @@
         label={$LL.actionbar.help.roomList.title()}
         state={$roomListActivated ? "normal" : "disabled"}
     >
-        <WorldIcon />
+        <IconWorldSearch font-size="16" class="text-white" />
+    </ActionBarButton>
+{/if}
+
+{#if recording?.buttonState !== "hidden" && $userIsConnected}
+    <ActionBarButton
+        classList="group/btn-recording-list"
+        on:click={() => {
+            analyticsClient.openedRecordingList();
+            $showRecordingList = true;
+            openedMenuStore.closeAll();
+        }}
+        label={$LL.recording.recordingList()}
+        state="normal"
+        dataTestId="recordingButton-list"
+    >
+        <RecordingIcon width="20" height="20" hoverClass="group-hover/btn-recording-list:text-red-500" />
     </ActionBarButton>
 {/if}
 

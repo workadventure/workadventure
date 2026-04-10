@@ -1,14 +1,13 @@
 import { get } from "svelte/store";
+import * as Sentry from "@sentry/svelte";
 import { Player } from "../Player/Player";
 import { RemotePlayer } from "../Entity/RemotePlayer";
-
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import type { GameScene } from "../Game/GameScene";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { isActivatable } from "../Game/ActivatableInterface";
 import { mapManagerActivated } from "../../Stores/MenuStore";
-import { Emoji } from "../../Stores/Utils/emojiSchema";
-import { emoteDataStore, emoteStore } from "../../Stores/EmoteStore";
+import { displayEmote, isEmoteIndex } from "../../Stores/EmoteStore";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
@@ -16,7 +15,9 @@ import { popupStore } from "../../Stores/PopupStore";
 import SayPopUp from "../../Components/PopUp/SayPopUp.svelte";
 import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
-import { Shortcut } from "./UserInputManager";
+import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
+import { localUserStore } from "../../Connection/LocalUserStore";
+import type { Shortcut } from "./UserInputManager";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -82,6 +83,17 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 description: get(LL).menu.shortcuts.openThinkPopup(),
                 ctrlKey: true,
             },
+            // Cmd (Mac) / Ctrl (Windows & Linux) + D
+            {
+                key: "D",
+                description: get(LL).menu.shortcuts.walkMyDesk(),
+                ctrlKey: true,
+            },
+            // F
+            {
+                key: "F",
+                description: get(LL).menu.shortcuts.follow(),
+            },
         ];
     }
 
@@ -124,11 +136,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
         }
         const camera = this.gameScene.getCameraManager().getCamera();
+        const worldPoint = camera.getWorldPoint(pointer.x, pointer.y);
         this.gameScene
             .moveTo(
                 {
-                    x: pointer.x + camera.scrollX,
-                    y: pointer.y + camera.scrollY,
+                    x: worldPoint.x,
+                    y: worldPoint.y,
                 },
                 true
             )
@@ -140,6 +153,24 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
 
     public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
+
+    private handleKeyF() {
+        const state = get(followStateStore);
+
+        if (state === "off" && this.gameScene.groups.size > 0) {
+            this.sendFollowRequest();
+        } else if (state === "active") {
+            followStateStore.set("ending");
+            this.gameScene.connection?.emitFollowAbort();
+            followUsersStore.stopFollowing();
+        }
+    }
+
+    public sendFollowRequest() {
+        this.gameScene.connection?.emitFollowRequest();
+        followRoleStore.set("leader");
+        followStateStore.set("active");
+    }
 
     private handleKeyC() {
         if (!this.gameScene.room.isChatEnabled) return;
@@ -172,7 +203,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         }
     }
     public handleKeyDownEvent(event: KeyboardEvent): KeyboardEvent {
-        this.gameScene.getMapEditorModeManager()?.handleKeyDownEvent(event);
+        const hasExecutedCommand = this.gameScene.getMapEditorModeManager()?.handleKeyDownEvent(event);
+        if (hasExecutedCommand) {
+            return event;
+        }
+
         switch (event.code) {
             case "KeyE": {
                 if (get(mapManagerActivated) == false) return event;
@@ -189,17 +224,44 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             case "KeyU":
                 this.handleKeyU();
                 break;
+            case "KeyD": {
+                // Handle Cmd (Mac) / Ctrl (Windows & Linux) + D for "walk my desk"
+                if (event.metaKey || event.ctrlKey) {
+                    // Prevent the shortcut from being triggered when typing in input fields
+                    if (
+                        event.target instanceof HTMLInputElement ||
+                        event.target instanceof HTMLTextAreaElement ||
+                        event.target instanceof HTMLSelectElement
+                    ) {
+                        return event;
+                    }
+                    event.preventDefault();
+                    this.gameScene.walkToPersonalDesk().catch((error) => {
+                        console.warn("Error walking to personal desk", error);
+                    });
+                }
+                break;
+            }
             case "Digit1":
             case "Digit2":
             case "Digit3":
             case "Digit4":
             case "Digit5":
             case "Digit6": {
-                const emoji: Emoji | null | undefined = get(emoteDataStore).get(Number(event.code.slice(-1)));
-                if (emoji) {
-                    analyticsClient.launchEmote(emoji);
-                    emoteStore.set(emoji);
+                // Extract the digit from event.code (e.g., "Digit1" -> 1)
+                const digit = event.code.replace("Digit", "");
+                const emoteIndex = Number.parseInt(digit, 10);
+
+                if (isEmoteIndex(emoteIndex)) {
+                    displayEmote(emoteIndex);
+                } else {
+                    console.warn(`Invalid emote index: ${emoteIndex}`);
+                    Sentry.captureException(new Error(`Invalid emote index: ${emoteIndex}`));
                 }
+                break;
+            }
+            case "KeyF": {
+                this.handleKeyF();
                 break;
             }
             default: {
@@ -238,6 +300,16 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
 
     public handleKeyUpEvent(event: KeyboardEvent): KeyboardEvent {
         switch (event.key) {
+            case "Escape": {
+                const dismissed = this.gameScene.CurrentPlayer.dismissNewMediaDevicePrompts((deviceId) => {
+                    localUserStore.addIgnoredNewMediaDeviceId(deviceId);
+                });
+                if (dismissed) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                break;
+            }
             // SPACE
             case " ": {
                 this.handleActivableEntity();

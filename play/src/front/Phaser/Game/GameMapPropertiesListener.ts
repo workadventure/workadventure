@@ -1,7 +1,8 @@
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import { AreaData, AreaDataProperties, GameMapProperties } from "@workadventure/map-editor";
+import type { AreaData, AreaDataProperties } from "@workadventure/map-editor";
+import { GameMapProperties } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { z } from "zod";
@@ -14,19 +15,23 @@ import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { bbbFactory } from "../../WebRtc/BBBFactory";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../Enum/EnvironmentVariable";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
-import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
+import {
+    audioManagerFileStore,
+    audioManagerVisibilityStore,
+    audioManagerVolumeStore,
+} from "../../Stores/AudioManagerStore";
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connection/Room";
 import { LL } from "../../../i18n/i18n-svelte";
 import { inBbbStore, inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../Stores/MediaStore";
-import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
-import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-import { Area } from "../Entity/Area";
+
+import type { Area } from "../Entity/Area";
 import { popupStore } from "../../Stores/PopupStore";
 import PopUpJitsi from "../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../Components/PopUp/PopUpTab.svelte";
 import PopUpCowebsite from "../../Components/PopUp/PopupCowebsite.svelte";
+import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
@@ -54,6 +59,7 @@ export class GameMapPropertiesListener {
     }
 
     register() {
+        // TODO: properly free those listeners.
         // Website on new tab
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
@@ -76,7 +82,7 @@ export class GameMapPropertiesListener {
                 if (forceTrigger || openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE);
                     if (message === undefined) {
-                        message = isMediaBreakpointUp("md")
+                        message = touchScreenManager.detectPrimaryTouchDevice()
                             ? get(LL).trigger.mobile.newTab()
                             : get(LL).trigger.newTab();
                     }
@@ -253,7 +259,7 @@ export class GameMapPropertiesListener {
             if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                 let message = allProps.get(GameMapProperties.JITSI_TRIGGER_MESSAGE);
                 if (message === undefined) {
-                    message = isMediaBreakpointUp("md")
+                    message = touchScreenManager.detectPrimaryTouchDevice()
                         ? get(LL).trigger.mobile.jitsiRoom()
                         : get(LL).trigger.jitsiRoom();
                 }
@@ -393,7 +399,9 @@ export class GameMapPropertiesListener {
                 // FIXME: maybe we can switch to "visible" only when the sound actually starts playing?
                 audioManagerVisibilityStore.set("visible");
             } else {
-                audioManagerFileStore.unloadAudio();
+                // Stop the audio if it is playing
+                if (get(audioManagerFileStore) != "") audioManagerVolumeStore.stopSound(true);
+                if (get(audioManagerFileStore) != "") audioManagerFileStore.unloadAudio();
                 audioManagerVisibilityStore.set("hidden");
             }
         });
@@ -417,26 +425,6 @@ export class GameMapPropertiesListener {
             }
             if (newValue) {
                 iframeListener.sendEnterEvent(newValue as string);
-            }
-        });
-
-        // Muc zone
-        this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.CHAT_NAME, (newValue, oldValue, allProps) => {
-            if (!this.scene.room.isChatEnabled) {
-                return;
-            }
-
-            const playUri = this.scene.roomUrl + "/";
-
-            if (oldValue !== undefined) {
-                iframeListener.sendLeaveMucEventToChatIframe(playUri + oldValue).catch((error) => console.error(error));
-                chatZoneLiveStore.set(false);
-            }
-            if (newValue !== undefined) {
-                iframeListener
-                    .sendJoinMucEventToChatIframe(playUri + newValue, newValue.toString(), "live", false)
-                    .catch((error) => console.error(error));
-                chatZoneLiveStore.set(true);
             }
         });
 
@@ -666,7 +654,7 @@ export class GameMapPropertiesListener {
 
         if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
             if (!websiteTriggerMessageProperty) {
-                websiteTriggerMessageProperty = isMediaBreakpointUp("md")
+                websiteTriggerMessageProperty = touchScreenManager.detectPrimaryTouchDevice()
                     ? get(LL).trigger.mobile.cowebsite()
                     : get(LL).trigger.cowebsite();
             }
@@ -782,7 +770,7 @@ export class GameMapPropertiesListener {
         );
         if (listenerZone && listenerZone.type === "string" && listenerZone.value !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
-                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas()?.getAreas(),
+                gameManager.getCurrentGameScene().getGameMap().getWamFile()?.getGameMapAreas().getAreas(),
                 listenerZone.value
             );
             if (speakerZoneName) {
@@ -806,7 +794,7 @@ export class GameMapPropertiesListener {
         );
         if (listenerZone && listenerZone.type === "string" && listenerZone.value !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
-                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas()?.getAreas(),
+                gameManager.getCurrentGameScene().getGameMap().getWamFile()?.getGameMapAreas().getAreas(),
                 listenerZone.value
             );
             if (speakerZoneName) {
@@ -957,5 +945,29 @@ export class GameMapPropertiesListener {
             console.warn('Invalid JSON found in property "' + propertyName + '" of the map:' + jsonString, e);
             return {};
         }
+    }
+
+    /**
+     * Cleans up all subscriptions and resources.
+     * Must be called when the GameMapPropertiesListener is no longer needed to prevent memory leaks.
+     */
+    public destroy(): void {
+        // Destroy the areas properties listener
+        this.areasPropertiesListener.destroy();
+
+        // Clean up action trigger callbacks
+        for (const callback of this.actionTriggerCallback.values()) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+        }
+        this.actionTriggerCallback.clear();
+
+        // Clean up co-websites
+        for (const coWebsiteOpen of this.coWebsitesOpenByPlace.values()) {
+            if (coWebsiteOpen.coWebsite) {
+                coWebsites.remove(coWebsiteOpen.coWebsite);
+            }
+        }
+        this.coWebsitesOpenByPlace.clear();
+        this.coWebsitesActionTriggerByPlace.clear();
     }
 }

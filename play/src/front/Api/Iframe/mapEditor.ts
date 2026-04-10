@@ -1,10 +1,11 @@
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
-import { WAMFileFormat } from "@workadventure/map-editor";
+import type { WAMFileFormat } from "@workadventure/map-editor";
 import type { ChangeAreaEvent } from "../Events/ChangeAreaEvent";
 import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
-import { MapEditorArea, toMapEditorArea } from "./MapEditor/MapEditorArea";
+import type { MapEditorArea } from "./MapEditor/MapEditorArea";
+import { toMapEditorArea } from "./MapEditor/MapEditorArea";
 
 const enterAreaStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
 const leaveAreaStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();

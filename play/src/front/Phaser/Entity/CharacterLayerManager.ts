@@ -1,4 +1,4 @@
-import { CharacterTextureMessage } from "@workadventure/messages";
+import type { CharacterTextureMessage } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";

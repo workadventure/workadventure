@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { WokaData } from "./WokaTypes";
+    import type { WokaData } from "./WokaTypes";
     import WokaImage from "./WokaImage.svelte";
 
     const dispatch = createEventDispatcher<{ rotate: { direction: number } }>();

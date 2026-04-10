@@ -26,6 +26,48 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "ブラウザの設定でポップアップを許可してください。",
         done: "OK",
     },
+    backgroundProcessing: {
+        failedToApply: "背景効果の適用に失敗しました",
+    },
+    duplicateUserConnected: {
+        title: "すでに接続されています",
+        message:
+            "このユーザーは別のタブまたはデバイスからすでにこのルームに接続しています。競合を避けるため、他のタブまたはウィンドウを閉じてください。",
+        confirmContinue: "理解しました、続ける",
+        dontRemindAgain: "このメッセージを再表示しない",
+    },
+    browserNotSupported: {
+        title: "😢 サポートされていないブラウザ",
+        message: "お使いのブラウザ（{browserName}）は、WorkAdventureでサポートされなくなりました。",
+        description:
+            "お使いのブラウザはWorkAdventureを実行するには古すぎます。続行するには、最新バージョンに更新してください。",
+        whatToDo: "何ができますか？",
+        option1: "{browserName}を最新バージョンに更新する",
+        option2: "WorkAdventureを終了して別のブラウザを使用する",
+        updateBrowser: "ブラウザを更新",
+        leave: "終了",
+    },
+    pwaInstall: {
+        title: "WorkAdventureをインストール",
+        description:
+            "より快適に使えるよう、アプリをインストールしましょう。すばやくアクセスでき、起動時に読み込まれ、アプリのように利用できます。",
+        descriptionIos: "より快適にすばやくアクセスできるよう、WorkAdventure をホーム画面に追加しましょう。",
+        feature1Title: "すばやくアクセス",
+        feature1Description: "スタートメニュー、Dock、またはデスクトップから WorkAdventure を起動できます。",
+        feature2Title: "専用のアプリウィンドウ",
+        feature2Description: "WorkAdventure をブラウザのタブから分けて、タスクバーですぐに見つけられます。",
+        feature3Title: "起動時に開始",
+        feature3Description: "デバイスの起動時に WorkAdventure を起動します。",
+        iosStepsTitle: "インストール方法",
+        iosStep1: "Safariの下部にある「共有」ボタン（四角と矢印）をタップします。",
+        iosStep2: "下にスクロールして「ホーム画面に追加」をタップします。",
+        iosStep3: "「追加」をタップして確認します。",
+        install: "WorkAdventureアプリをインストール",
+        installing: "インストール中…",
+        skip: "ブラウザで続ける",
+        continue: "ブラウザで続ける",
+        neverShowPage: "次回から表示しない",
+    },
 };
 
 export default warning;

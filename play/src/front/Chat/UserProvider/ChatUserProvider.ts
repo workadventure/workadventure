@@ -1,6 +1,7 @@
-import { derived, Readable, writable } from "svelte/store";
-import { ChatConnectionInterface, PartialChatUser } from "../Connection/ChatConnection";
-import { UserProviderInterface } from "./UserProviderInterface";
+import type { Readable } from "svelte/store";
+import { derived, writable } from "svelte/store";
+import type { ChatConnectionInterface, PartialChatUser } from "../Connection/ChatConnection";
+import type { UserProviderInterface } from "./UserProviderInterface";
 
 export class ChatUserProvider implements UserProviderInterface {
     users: Readable<PartialChatUser[]>;

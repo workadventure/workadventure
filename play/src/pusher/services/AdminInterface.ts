@@ -1,15 +1,16 @@
 import type {
     AdminApiData,
     ErrorApiData,
+    IceServer,
     MapDetailsData,
     MemberData,
     OauthRefreshToken,
     RoomRedirect,
+    Capabilities,
 } from "@workadventure/messages";
-import { Capabilities } from "@workadventure/messages";
-import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
-import { ShortMapDescriptionList } from "./ShortMapDescription";
-import { WorldChatMembersData } from "./WorldChatMembersData";
+import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import type { ShortMapDescriptionList } from "./ShortMapDescription";
+import type { WorldChatMembersData } from "./WorldChatMembersData";
 
 export interface AdminInterface {
     /**
@@ -141,5 +142,7 @@ export interface AdminInterface {
 
     updateChatId(userIdentifier: string, chatId: string, roomUrl: string): Promise<void>;
 
-    refreshOauthToken(token: string): Promise<OauthRefreshToken>;
+    refreshOauthToken(token: string, provider?: string, userIdentifier?: string): Promise<OauthRefreshToken>;
+
+    getIceServers(userId: number, userIdentifier: string, roomUrl: string): Promise<IceServer[]>;
 }

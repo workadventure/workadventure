@@ -1,0 +1,53 @@
+{{- if .Values.livekit.enabled -}}
+{{- $livekitServer := index .Values "livekit-server" | default dict -}}
+{{- $loadBalancer := index $livekitServer "loadBalancer" | default dict -}}
+{{- $lbType := index $loadBalancer "type" | default "disable" -}}
+{{- if and .Values.livekit.ingress.enabled (eq $lbType "disable") -}}
+{{- $livekitIngress := .Values.livekit.ingress | default dict -}}
+{{- $annotations := dict -}}
+{{- with .Values.ingress.annotationsRoot -}}
+{{- $annotations = merge $annotations . -}}
+{{- end -}}
+{{- with $livekitIngress.annotations -}}
+{{- $annotations = merge $annotations . -}}
+{{- end -}}
+{{- $ingressClassName := coalesce $livekitIngress.className .Values.ingress.className -}}
+{{- $tls := .Values.ingress.tls | default false -}}
+{{- if and (hasKey $livekitIngress "tls") (ne (index $livekitIngress "tls") nil) -}}
+{{- $tls = index $livekitIngress "tls" -}}
+{{- end -}}
+{{- $servicePort := index $loadBalancer "servicePort" | default 80 -}}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "workadventure.fullname" . }}-livekit
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+  {{- if gt (len $annotations) 0 }}
+  annotations:
+    {{- toYaml $annotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if $ingressClassName }}
+  ingressClassName: {{ $ingressClassName }}
+  {{- end }}
+  {{- if $tls }}
+  tls:
+    - hosts:
+        - {{ include "workadventure.livekitDomainName" . | quote }}
+      secretName: {{ coalesce $livekitIngress.secretName .Values.ingress.secretName (printf "%s-livekit-cert" (include "workadventure.fullname" .)) }}
+  {{- end }}
+  rules:
+    - host: {{ include "workadventure.livekitDomainName" . | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "workadventure.livekitServiceName" . }}
+                port:
+                  number: {{ $servicePort }}
+{{- end -}}
+{{- end -}}

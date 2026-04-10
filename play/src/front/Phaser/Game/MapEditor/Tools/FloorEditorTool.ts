@@ -1,7 +1,7 @@
-import { EditMapCommandMessage } from "@workadventure/messages";
-import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
-import { GameScene } from "../../GameScene";
-import { MapEditorModeManager } from "../MapEditorModeManager";
+import type { EditMapCommandMessage } from "@workadventure/messages";
+import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
+import type { GameScene } from "../../GameScene";
+import type { MapEditorModeManager } from "../MapEditorModeManager";
 import { MapEditorTool } from "./MapEditorTool";
 
 export class FloorEditorTool extends MapEditorTool {

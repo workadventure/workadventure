@@ -1,13 +1,17 @@
-import { get, Readable, derived, readable, writable } from "svelte/store";
+import type { Readable } from "svelte/store";
+import { get, derived, readable, writable } from "svelte/store";
 import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import { localUserStore } from "../Connection/LocalUserStore";
+import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import LL from "../../i18n/i18n-svelte";
+import type { Streamable, WebRtcStreamable } from "../Space/Streamable";
+import { VideoBox } from "../Space/VideoBox";
 import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
 import type {} from "../Api/Desktop";
-import { Streamable, WebRtcStreamable } from "./StreamableCollectionStore";
-import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
+import { screenShareStreamElementsStore } from "./PeerStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
+import { isLiveStreamingStore } from "./IsStreamingStore";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -27,13 +31,15 @@ function createRequestedScreenSharingState() {
 export const requestedScreenSharingState = createRequestedScreenSharingState();
 
 let currentStream: MediaStream | undefined = undefined;
+let screenSharingRequestId = 0;
 
 /**
- * Stops the camera from filming
+ * Stops the screen sharing (both video and audio tracks)
  */
 function stopScreenSharing(): void {
     if (currentStream) {
-        for (const track of currentStream.getVideoTracks()) {
+        // Stop all tracks (video and audio)
+        for (const track of currentStream.getTracks()) {
             track.stop();
         }
     }
@@ -43,19 +49,27 @@ function stopScreenSharing(): void {
 let previousComputedVideoConstraint: boolean | MediaTrackConstraints = false;
 let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;
 
-function createScreenShareBandwidthStore() {
-    const { subscribe, set } = writable<number | "unlimited">(localUserStore.getScreenShareBandwidth());
+function createScreenShareQualityStore() {
+    const { subscribe, set } = writable<VideoQualitySetting>(localUserStore.getScreenShareQuality());
 
     return {
         subscribe,
-        setBandwidth: (bandwidth: number | "unlimited") => {
-            set(bandwidth);
-            localUserStore.setScreenShareBandwidth(bandwidth);
+        setQuality: (quality: VideoQualitySetting) => {
+            set(quality);
+            localUserStore.setScreenShareQuality(quality);
         },
     };
 }
 
-export const screenShareBandwidthStore = createScreenShareBandwidthStore();
+/**
+ * A store containing the screen share quality setting.
+ */
+export const screenShareQualityStore = createScreenShareQualityStore();
+
+/**
+ * A store containing whether the screen sharing button should be displayed or hidden.
+ */
+export const screenSharingAvailableStore = isLiveStreamingStore;
 
 /**
  * A store containing the media constraints we want to apply.
@@ -66,7 +80,7 @@ export const screenSharingConstraintsStore = derived(
         myCameraStore,
         myMicrophoneStore,
         inExternalServiceStore,
-        videoStreamElementsStore,
+        screenSharingAvailableStore,
         screenShareStreamElementsStore,
         isSpeakerStore,
     ],
@@ -76,14 +90,15 @@ export const screenSharingConstraintsStore = derived(
             $myCameraStore,
             $myMicrophoneStore,
             $inExternalServiceStore,
-            $videoStreamElementsStore,
+            $screenSharingAvailableStore,
             $screenShareStreamElementsStore,
             $isSpeakerStore,
         ],
         set
     ) => {
         let currentVideoConstraint: boolean | MediaTrackConstraints = true;
-        let currentAudioConstraint: boolean | MediaTrackConstraints = false;
+        //TODO : passer a true si on veut que le son soit activé par défaut dans le screen sharing
+        let currentAudioConstraint: boolean | MediaTrackConstraints = true;
 
         // Disable screen sharing if the user requested so
         if (!$requestedScreenSharingState) {
@@ -97,12 +112,8 @@ export const screenSharingConstraintsStore = derived(
             currentAudioConstraint = false;
         }
 
-        // Disable screen sharing if no peers
-        if (
-            $videoStreamElementsStore.length === 0 &&
-            $screenShareStreamElementsStore.length === 0 &&
-            !$isSpeakerStore
-        ) {
+        // Disable screen sharing if not in a live streaming context and no active screen shares or speaker status
+        if (!$screenSharingAvailableStore && $screenShareStreamElementsStore.length === 0 && !$isSpeakerStore) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
@@ -150,6 +161,8 @@ async function getDesktopCapturerSources() {
     if (source === null) {
         return;
     }
+    // Note: getUserMedia with chromeMediaSource does not support audio capture.
+    // Audio is only available with getDisplayMedia when sharing a browser tab.
     return navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
@@ -168,6 +181,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
     screenSharingConstraintsStore,
     ($screenSharingConstraintsStore, set) => {
         const constraints = $screenSharingConstraintsStore;
+        const currentRequestId = ++screenSharingRequestId;
 
         if ($screenSharingConstraintsStore.video === false && $screenSharingConstraintsStore.audio === false) {
             stopScreenSharing();
@@ -180,10 +194,24 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
         }
 
         let currentStreamPromise: Promise<MediaStream>;
-        if (window.WAD?.getDesktopCapturerSources) {
+        // Prefer getDisplayMedia over getDesktopCapturerSources to support audio capture
+        // According to MDN: audio is optional, default is false
+        // Audio is only available for certain display surfaces (mainly browser tabs)
+        // See: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia
+        if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+            // Build constraints according to MDN specification
+            // video can be boolean or MediaTrackConstraints, default is true
+            // audio can be boolean or MediaTrackConstraints, default is false
+            const displayMediaConstraints: {
+                video: boolean | MediaTrackConstraints;
+                audio: boolean | MediaTrackConstraints;
+            } = {
+                video: !!constraints.video,
+                audio: !!constraints.audio,
+            };
+            currentStreamPromise = navigator.mediaDevices.getDisplayMedia(displayMediaConstraints);
+        } else if (window.WAD?.getDesktopCapturerSources) {
             currentStreamPromise = getDesktopCapturerSources();
-        } else if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-            currentStreamPromise = navigator.mediaDevices.getDisplayMedia({ constraints });
         } else {
             stopScreenSharing();
             set({
@@ -196,7 +224,17 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
         (async () => {
             try {
                 stopScreenSharing();
-                currentStream = await currentStreamPromise;
+                const stream = await currentStreamPromise;
+
+                // Ignore stale async completions from older requests.
+                if (currentRequestId !== screenSharingRequestId) {
+                    for (const track of stream.getTracks()) {
+                        track.stop();
+                    }
+                    return;
+                }
+
+                currentStream = stream;
 
                 // If stream ends (for instance if user clicks the stop screen sharing button in the browser), let's close the view
                 for (const track of currentStream.getTracks()) {
@@ -218,6 +256,9 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 });
                 return;
             } catch (e) {
+                if (currentRequestId !== screenSharingRequestId) {
+                    return;
+                }
                 currentStream = undefined;
                 requestedScreenSharingState.disableScreenSharing();
                 console.info("Error. Unable to share screen.", e);
@@ -230,18 +271,6 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
     }
 );
 
-/**
- * A store containing whether the screen sharing button should be displayed or hidden.
- */
-export const screenSharingAvailableStore = derived(videoStreamElementsStore, ($videoStreamElementsStore, set) => {
-    if (!navigator.getDisplayMedia && (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia)) {
-        set(false);
-        return;
-    }
-
-    set($videoStreamElementsStore.length !== 0);
-});
-
 export interface ScreenSharingLocalMedia {
     uniqueId: string;
     stream: MediaStream | undefined;
@@ -251,9 +280,18 @@ export interface ScreenSharingLocalMedia {
 /**
  * The representation of the screen sharing stream.
  */
-export const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, function start(set) {
+const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, function start(set) {
     const localMediaStreamStore = writable<MediaStream | undefined>(undefined);
     const mutedLocalMediaStreamStore = muteMediaStreamStore(localMediaStreamStore);
+
+    const hasAudio = derived(
+        localMediaStreamStore,
+        ($localMediaStreamStore) => ($localMediaStreamStore?.getAudioTracks().length ?? 0) > 0
+    );
+    const isMediaMuted = derived(
+        localMediaStreamStore,
+        ($localMediaStreamStore) => ($localMediaStreamStore?.getAudioTracks().length ?? 0) === 0
+    );
 
     const localMedia = {
         uniqueId: "localScreenSharingStream",
@@ -261,24 +299,28 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
             type: "webrtc" as const,
             streamStore: mutedLocalMediaStreamStore,
             isBlocked: writable(false),
+            setDimensions: () => {
+                // Local screen sharing does not support adaptive video (it's local)
+            },
         } satisfies WebRtcStreamable,
         spaceUserId: undefined,
-        hasAudio: writable(false),
+        hasAudio: hasAudio,
         hasVideo: writable(true),
-        isMuted: writable(true),
+        isMuted: isMediaMuted,
         name: writable(""),
         showVoiceIndicator: writable(false),
         statusStore: writable("connected"),
         volumeStore: writable(undefined),
         flipX: false,
-        muteAudio: true,
+        muteAudio: writable(true),
         displayMode: "fit" as const,
         displayInPictureInPictureMode: true,
         usePresentationMode: true,
-        once: (event: string, callback: (...args: unknown[]) => void) => {
-            callback();
-        },
         closeStreamable: () => {},
+        canCloseStreamable: () => false,
+        volume: writable(1),
+        videoType: "screenSharing",
+        webrtcStats: undefined,
     } satisfies Streamable;
 
     const unsubscribe = screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {
@@ -300,6 +342,24 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         unsubscribe();
     };
 });
+
+export const screenSharingLocalVideoBox: Readable<VideoBox | undefined> = derived(
+    [screenSharingLocalMedia],
+    ([$screenSharingLocalMedia], set) => {
+        if (!$screenSharingLocalMedia) {
+            set(undefined);
+            return undefined;
+        }
+
+        const videoBox = VideoBox.fromLocalStreamable($screenSharingLocalMedia, -1);
+
+        set(videoBox);
+
+        return () => {
+            videoBox.destroy();
+        };
+    }
+);
 
 export const showDesktopCapturerSourcePicker = writable(false);
 

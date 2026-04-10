@@ -1,5 +1,5 @@
 import { iframeListener } from "../../Api/IframeListener";
-import { PlayVideoEvent } from "../../Api/Events/Ui/PlayVideoEvent";
+import type { PlayVideoEvent } from "../../Api/Events/Ui/PlayVideoEvent";
 import { scriptingVideoStore } from "../../Stores/ScriptingVideoStore";
 
 /**

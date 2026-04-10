@@ -1,0 +1,54 @@
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
+
+const recording: DeepPartial<Translation["recording"]> = {
+    refresh: "Rafraîchir",
+    title: "Votre liste d'enregistrements",
+    noRecordings: "Aucun enregistrement trouvé",
+    errorFetchingRecordings: "Erreur lors de la récupération des enregistrements",
+    expireIn: "Expire dans {days} jour{s}",
+    expiresOn: "Expire le {date}",
+    download: "Télécharger",
+    close: "Fermer",
+    recordingList: "Enregistrements",
+    viewList: "Vue liste",
+    viewCards: "Vue cartes",
+    back: "Retour",
+    actions: "Actions",
+    contextMenu: {
+        openInNewTab: "Ouvrir dans un nouvel onglet",
+        delete: "Supprimer",
+    },
+    notification: {
+        deleteNotification: "Enregistrement supprimé avec succès",
+        deleteFailedNotification: "Échec de la suppression de l'enregistrement",
+        recordingStarted: "{name} a commencé un enregistrement.",
+        downloadFailedNotification: "Échec du téléchargement de l'enregistrement",
+        recordingComplete: "Enregistrement terminé",
+        recordingIsInProgress: "Enregistrement en cours",
+        recordingSaved: "Votre enregistrement a été enregistré avec succès.",
+        howToAccess: "Pour accéder à vos enregistrements :",
+        viewRecordings: "Voir les enregistrements",
+    },
+    actionbar: {
+        title: {
+            start: "Démarrer l'enregistrement",
+            stop: "Arrêter l'enregistrement",
+            inProgress: "Un enregistrement est en cours",
+        },
+        desc: {
+            needLogin: "Vous devez être connecté pour enregistrer.",
+            needPremium: "Vous devez être premium pour enregistrer.",
+            advert: "Tous les participants seront notifiés que vous démarrez un enregistrement.",
+            yourRecordInProgress: "Enregistrement en cours, cliquez pour l'arrêter.",
+            inProgress: "Un enregistrement est en cours",
+            notEnabled: "Les enregistrements sont désactivés pour ce monde.",
+        },
+        spacePicker: {
+            megaphone: "Enregistrer le mégaphone",
+            discussion: "Enregistrer la discussion",
+        },
+    },
+};
+
+export default recording;

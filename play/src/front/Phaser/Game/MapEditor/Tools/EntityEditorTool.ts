@@ -1,7 +1,8 @@
-import { AreaData, EntityData, WAMEntityData } from "@workadventure/map-editor";
+import type { AreaData, EntityData, WAMEntityData } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/svelte";
-import { EditMapCommandMessage } from "@workadventure/messages";
-import { get, Unsubscriber } from "svelte/store";
+import type { EditMapCommandMessage } from "@workadventure/messages";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
@@ -11,6 +12,7 @@ import {
     mapEditorEntityUploadEventStore,
     mapEditorModifyCustomEntityEventStore,
     mapEditorSelectedEntityStore,
+    mapEditorSelectedToolStore,
 } from "../../../../Stores/MapEditorStore";
 import { TexturesHelper } from "../../../Helpers/TexturesHelper";
 import { CopyEntityEventData, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
@@ -20,8 +22,10 @@ import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCo
 import { ModifyCustomEntityFrontCommand } from "../Commands/Entity/ModifyCustomEntityFrontCommand";
 import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCommand";
 import { UploadEntityFrontCommand } from "../Commands/Entity/UploadEntityFrontCommand";
-import { MapEditorModeManager } from "../MapEditorModeManager";
+import type { MapEditorModeManager } from "../MapEditorModeManager";
+import { EditorToolName } from "../MapEditorModeManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
+import { mapEditorActivated } from "../../../../Stores/MenuStore";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
 export class EntityEditorTool extends EntityRelatedEditorTool {
@@ -120,7 +124,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 // execute command locally
                 await this.mapEditorModeManager.executeLocalCommand(
                     new CreateEntityFrontCommand(
-                        this.scene.getGameMap(),
+                        this.scene.getGameMap().getWamFile()!,
                         createEntityMessage.id,
                         entityData,
                         commandId,
@@ -133,7 +137,12 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             case "deleteEntityMessage": {
                 const id = editMapCommandMessage.editMapMessage?.message.deleteEntityMessage.id;
                 await this.mapEditorModeManager.executeLocalCommand(
-                    new DeleteEntityFrontCommand(this.scene.getGameMap(), id, commandId, this.entitiesManager)
+                    new DeleteEntityFrontCommand(
+                        this.scene.getGameMap().getWamFile()!,
+                        id,
+                        commandId,
+                        this.entitiesManager
+                    )
                 );
                 break;
             }
@@ -141,7 +150,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 const modifyEntityMessage = editMapCommandMessage.editMapMessage?.message.modifyEntityMessage;
                 await this.mapEditorModeManager.executeLocalCommand(
                     new UpdateEntityFrontCommand(
-                        this.scene.getGameMap(),
+                        this.scene.getGameMap().getWamFile()!,
                         modifyEntityMessage.id,
                         {
                             ...modifyEntityMessage,
@@ -187,7 +196,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 await this.mapEditorModeManager.executeLocalCommand(
                     new DeleteCustomEntityFrontCommand(
                         deleteCustomEntityMessage,
-                        this.scene.getGameMap(),
+                        this.scene.getGameMap().getWamFile(),
                         this.entitiesManager,
                         this.scene.getEntitiesCollectionsManager()
                     )
@@ -282,7 +291,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         await this.mapEditorModeManager.executeCommand(
                             new DeleteCustomEntityFrontCommand(
                                 deleteCustomEntityMessage,
-                                this.scene.getGameMap(),
+                                this.scene.getGameMap().getWamFile(),
                                 this.entitiesManager,
                                 this.scene.getEntitiesCollectionsManager()
                             )
@@ -353,6 +362,13 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         }
 
         if (!this.entityPrefabPreview || !this.entityPrefab) {
+            // Check that the user can open map editor to edit an area
+            if (get(mapEditorActivated)) {
+                const areaEditorToolObjects = gameObjects.filter((obj) => obj instanceof AreaPreview);
+                if (areaEditorToolObjects.length > 0 && get(mapEditorSelectedToolStore) !== EditorToolName.AreaEditor) {
+                    this.scene.getMapEditorModeManager().equipTool(EditorToolName.AreaEditor);
+                }
+            }
             return;
         }
 
@@ -388,7 +404,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         this.mapEditorModeManager
             .executeCommand(
                 new CreateEntityFrontCommand(
-                    this.scene.getGameMap(),
+                    this.scene.getGameMap().getWamFile()!,
                     entityId,
                     entityData,
                     undefined,
@@ -486,7 +502,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         this.mapEditorModeManager
             .executeCommand(
                 new UpdateEntityFrontCommand(
-                    this.scene.getGameMap(),
+                    this.scene.getGameMap().getWamFile()!,
                     entityData.id,
                     {
                         ...entityData,
@@ -513,7 +529,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         this.mapEditorModeManager
             .executeCommand(
                 new CreateEntityFrontCommand(
-                    this.scene.getGameMap(),
+                    this.scene.getGameMap().getWamFile()!,
                     undefined,
                     entityData,
                     undefined,

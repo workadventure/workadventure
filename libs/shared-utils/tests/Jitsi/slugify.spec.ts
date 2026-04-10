@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Json } from "@workadventure/tiled-map-type-guard";
+import type { Json } from "@workadventure/tiled-map-type-guard";
 import { GameMapProperties } from "@workadventure/map-editor";
 import { slugifyJitsiRoomName } from "../../src/Jitsi/slugify";
 

@@ -1,5 +1,5 @@
-import { Readable } from "svelte/store";
-import { PartialAnyKindOfUser } from "../Connection/ChatConnection";
+import type { Readable } from "svelte/store";
+import type { PartialAnyKindOfUser } from "../Connection/ChatConnection";
 
 export interface UserProviderInterface {
     users: Readable<PartialAnyKindOfUser[]>;

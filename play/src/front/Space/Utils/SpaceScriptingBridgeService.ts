@@ -1,7 +1,7 @@
 import { FilterType } from "@workadventure/messages";
 import * as Sentry from "@sentry/svelte";
-import { SpaceInterface } from "../SpaceInterface";
-import { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
+import type { SpaceInterface } from "../SpaceInterface";
+import type { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
 import { iframeListener } from "../../Api/IframeListener";
 import { SpaceScriptingBridge } from "./SpaceScriptingBridge";
 
@@ -78,12 +78,14 @@ export class SpaceScriptingBridgeService {
         });
     }
 
-    private getFilterType(filterTypeValue: "everyone" | "streaming"): FilterType {
+    private getFilterType(filterTypeValue: "everyone" | "streaming" | "streamingWithFeedback"): FilterType {
         switch (filterTypeValue) {
             case "everyone":
                 return FilterType.ALL_USERS;
             case "streaming":
                 return FilterType.LIVE_STREAMING_USERS;
+            case "streamingWithFeedback":
+                return FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK;
         }
     }
 

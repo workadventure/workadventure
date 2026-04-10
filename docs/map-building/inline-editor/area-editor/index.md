@@ -36,6 +36,8 @@ You can trigger actions when a user enters an area. Available properties:
 - [Play a sound](play-sound.md)
 - [Restricted area](restricted-area.md)
 - [Personal area](personal-area.md)
+- [Lockable area](lockable-area.md)
+- [Maximum users](max-users-area.md)
 - [Matrix chat zone](matrix-chat-zone.md)
 - [Highlight](highlight.md)
 - [Jitsi meeting (deprecated)](jitsi.md)

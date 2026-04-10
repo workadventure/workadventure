@@ -1,4 +1,4 @@
-import { SpaceFilterMessage } from "@workadventure/messages";
+import type { SpaceFilterMessage } from "@workadventure/messages";
 
 export interface SpaceEventEmitterInterface {
     userLeaveSpace(spaceName: string): void;

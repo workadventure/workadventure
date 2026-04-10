@@ -1,4 +1,5 @@
-import { AreaData, GameMapProperties } from "@workadventure/map-editor";
+import type { AreaData } from "@workadventure/map-editor";
+import { GameMapProperties } from "@workadventure/map-editor";
 import { MathUtils } from "@workadventure/math-utils";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import type { PositionInterface } from "../../Connection/ConnexionModels";
@@ -17,7 +18,7 @@ export class StartPositionCalculator {
         startPositionName?: string
     ) {
         this.startPositionName = startPositionName || "";
-        this.initStartXAndStartY();
+        this.initStartXAndStartY(startPositionName);
     }
 
     public getStartPositionNames(): string[] {
@@ -57,7 +58,7 @@ export class StartPositionCalculator {
 
     public initStartXAndStartY(startPositionName?: string) {
         // If there is an init position passed
-        if (this.initPosition) {
+        if ((startPositionName == undefined || startPositionName == "") && this.initPosition != undefined) {
             this.startPosition = this.initPosition;
         } else {
             if (startPositionName) {

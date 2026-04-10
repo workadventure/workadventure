@@ -24,7 +24,6 @@
 
     onMount(() => {
         messageInput.focusInput();
-        console.debug("SayPopUp mounted, focusing input", type);
     });
 
     $: {

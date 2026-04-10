@@ -46,7 +46,7 @@ import { isButtonClickedEvent } from "./ButtonClickedEvent";
 import { isActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent";
 import { isHasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import { isWasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
-import { isAskPositionEvent } from "./AskPositionEvent";
+
 import { isLeaveMucEvent } from "./LeaveMucEvent";
 import { isJoinMucEvent } from "./JoinMucEvent";
 import { isMenuItemClickedEvent } from "./Ui/MenuItemClickedEvent";
@@ -70,6 +70,7 @@ import { isStartStreamInBubbleEvent } from "./ProximityMeeting/StartStreamInBubb
 import { isAppendPCMDataEvent } from "./ProximityMeeting/AppendPCMDataEvent";
 import { isWamMapDataEvent } from "./WamMapDataEvent";
 import { isPlayVideoEvent } from "./Ui/PlayVideoEvent";
+import { isSetStatusEvent } from "./SetStatusEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -257,14 +258,6 @@ export const isIframeEventWrapper = z.union([
         data: isDynamicAreaEvent,
     }),
     z.object({
-        type: z.literal("askPosition"),
-        data: isAskPositionEvent,
-    }),
-    z.object({
-        type: z.literal("openInviteMenu"),
-        data: z.undefined(),
-    }),
-    z.object({
         type: z.literal("login"),
         data: z.undefined(),
     }),
@@ -367,6 +360,10 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("stopListeningToStreamInBubble"),
         data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("setStatus"),
+        data: isSetStatusEvent,
     }),
 ]);
 

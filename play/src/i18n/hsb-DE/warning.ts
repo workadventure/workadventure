@@ -18,10 +18,57 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLostSubtitle: "zaso zwjazować",
     waitingConnectionTitle: "na zwisk čakać",
     waitingConnectionSubtitle: "zwjazać",
+    megaphoneNeeds:
+        "Zo by megafon wužiwał, dyrbiš swoju kameru abo swój mikrofon aktiwować abo swoju wobrazowku dźělić.",
+    mapEditorShortCut: "Při pospyšanju editora kartow wočinić je zmylk wustupił.",
+    mapEditorNotEnabled: "Editor kartow njeje na tutym swěće zmóžnjeny.",
+    backgroundProcessing: {
+        failedToApply: "Nałoženje pozadkowych efektow je so njeporadźiło",
+    },
     popupBlocked: {
         title: "Blokěrowanje wuskakowaceho wokna",
         content: "Prošu w browseru wuskakowace wokna za tutu stronu dowolić.",
         done: "Ok",
+    },
+    duplicateUserConnected: {
+        title: "Hižo zwjazany",
+        message:
+            "Tutón wužiwar je hižo z druheje rajtarki abo přistawa zwjazany z tutej rumu. Prošu začinjće druhu rajtarku abo wokno, zo by konflikty wobešli.",
+        confirmContinue: "Rozumju, pokročować",
+        dontRemindAgain: "Tutu powěsć wjace njepokazać",
+    },
+    browserNotSupported: {
+        title: "😢 Wobhladowak so njepodpěruje",
+        message: "Waš wobhladowak ({browserName}) so wjace njepodpěruje wot WorkAdventure.",
+        description:
+            "Waš wobhladowak je přestarši, zo by WorkAdventure wuwjedł. Prošu aktualizujće jón na najnowšu wersiju, zo byšće pokročowali.",
+        whatToDo: "Što móžeće činić?",
+        option1: "{browserName} na najnowšu wersiju aktualizować",
+        option2: "WorkAdventure wopušćić a druhi wobhladowak wužiwać",
+        updateBrowser: "Wobhladowak aktualizować",
+        leave: "Wopušćić",
+    },
+    pwaInstall: {
+        title: "WorkAdventure instalować",
+        description:
+            "Instalujće app za lěpše dožiwjenje: spěšny přistup, start při startowanju a dožiwjenje kaž w app.",
+        descriptionIos: "Přidajće WorkAdventure na swój startowy wobraz za lěpše dožiwjenje a spěšny přistup.",
+        feature1Title: "Spěšny přistup",
+        feature1Description: "Startujće WorkAdventure ze startoweho menija, Docka abo z desktopa.",
+        feature2Title: "Swójske wokno app",
+        feature2Description:
+            "Dźeržće WorkAdventure wot browserowych rajtarkow dźělene a namakajće jo spěšnje w swojej nadawkowej lajsće.",
+        feature3Title: "Z wašim kompjutorom startować",
+        feature3Description: "Startujće WorkAdventure, hdyž so waš grat startuje.",
+        iosStepsTitle: "Kak instalować",
+        iosStep1: "Tłóč na tłóčatko „Dźělić“ (kwadrat ze šipku) deleka w Safari.",
+        iosStep2: "Skuluj deleka a tłóč na „K startowemu wobrazowej přidać“.",
+        iosStep3: "Tłóč na „Přidać“, zo by wobkrućił.",
+        install: "WorkAdventure-app instalować",
+        installing: "Instaluje so…",
+        skip: "W wobhladowaku pokročować",
+        continue: "W wobhladowaku pokročować",
+        neverShowPage: "Hižo njeprašować",
     },
 };
 

@@ -1,4 +1,4 @@
-import { RoomApiServer as RoomApiServerInterface } from "@workadventure/messages/src/ts-proto-generated/room-api";
+import type { RoomApiServer as RoomApiServerInterface } from "@workadventure/messages/src/ts-proto-generated/room-api";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import * as Sentry from "@sentry/node";
 import { apiClientRepository } from "../pusher/services/ApiClientRepository";

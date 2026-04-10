@@ -4,6 +4,9 @@ import type { Translation } from "../i18n-types";
 const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     map: {
         refreshPrompt: "新しいバージョンの地図が検出されました。更新してください。",
+        deletePrompt: "このマップは削除されました",
+        deletePromptSubtitle: "このルームから切断されました。",
+        deletePromptDetails: "このマップはもう存在しないため、再読み込みしても復元されません。",
     },
     sideBar: {
         areaEditor: "エリアエディターツール",
@@ -22,21 +25,31 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         configureMyRoomActivated: "マイルームの設定",
     },
     properties: {
-        silentProperty: {
+        silent: {
             label: "静かに",
             description: "室内での会話は禁止です。",
+            actionButtonLabel: "お邪魔しない",
         },
-        textProperties: {
+        text: {
             label: "ヘッダーテキスト",
             placeholder: "オブジェクト殿接触時に表示されるテキストを入力してください。",
         },
-        focusableProperties: {
+        focusable: {
             label: "フォーカシング",
             description: "入室の際、このエリアにカメラの焦点を合わせる。",
             zoomMarginLabel: "ズームマージン",
             defaultButtonLabel: "フォーカス",
         },
-        jitsiProperties: {
+        highlight: {
+            label: "ハイライト",
+            description: "エリアに入ったときにハイライト効果を追加します。",
+            opacityLabel: "不透明度",
+            gradientWidthLabel: "グラデーション幅",
+            colorLabel: "色",
+            durationLabel: "トランジション時間（ミリ秒）",
+        },
+        jitsiRoomProperty: {
+            disabled: "Jitsi integration is disabled for this room ❌",
             label: "Jitsi ルーム",
             description: "入室時に Jitsi ミーティングを開始します。",
             roomNameLabel: "ルーム名",
@@ -58,12 +71,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 addConfig: "オプションの追加",
                 startWithAudioMuted: "マイクをミュートした状態で開始します",
                 startWithVideoMuted: "ビデオを閉じた状態で開始します",
+                disableChat: "チャットを無効化",
                 jitsiRoomAdminTag: "ミーティングルームのモデレータータグ",
                 cancel: "キャンセル",
                 validate: "有効",
             },
+            actionButtonLabel: "Jitsi ミーティングを開始",
         },
-        audioProperties: {
+        playAudio: {
             label: "オーディオファイルの再生",
             description: "音量調整可能な状態でオーディオを再生します。",
             volumeLabel: "音量",
@@ -71,8 +86,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "ミュージックの再生",
             error: "サウンドを読み込めませんでした",
+            actionButtonLabel: "ミュージックを再生",
         },
-        linkProperties: {
+        openWebsite: {
+            hideUrlLabel: "Hide URL",
             label: "リンクを開く",
             description: "WorkAdventure 内または新しいタブとしてウェブサイトを開きます。",
             linkLabel: "リンク URL",
@@ -97,17 +114,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             openPickerSelector: "ピッカーセレクターを開く",
             forcedInNewTab: "強制的に新しいタブで表示",
             openApplication: "アプリケーションを開く",
+            actionButtonLabel: "リンクを開く",
         },
         advancedOptions: "高度なオプション",
-        speakerMegaphoneProperties: {
+        speakerMegaphone: {
             label: "ポディウム",
             description:
                 "ポディウム（ステージ）上のユーザーは、対応する「オーディエンス」エリアのすべての参加者に話すことができます。",
             nameLabel: "名前",
             namePlaceholder: "メインステージ",
             disabled: "この部屋ではポディウムが無効になっています ❌",
+            actionButtonLabel: "ポディウムに参加",
         },
-        listenerMegaphoneProperties: {
+        listenerMegaphone: {
             label: "オーディエンス",
             description: "オーディエンスエリアのユーザーは、リンクされたポディウムのスピーカーを聞くことができます。",
             nameLabel: "ポディウム名",
@@ -118,10 +137,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingMedialLinkError: "ご提供いただいたリンクに問題があるようです。もう一度ご確認いただけますか？ 🙏",
             waitingMedialLinkHelp: "正しいリンクは「https://monlienmedia.com/…」です。",
             waitingSpeaker: "登壇者を待機中 🎤✨",
+            actionButtonLabel: "オーディエンスに参加",
         },
 
         chatEnabled: "専用チャットチャンネルを開設",
-        startProperties: {
+        seeAttendees: "参加者を表示",
+        start: {
             label: "入口エリア",
             description: "マップ内でスタートできる場所。",
             nameLabel: "入口エリア名",
@@ -129,58 +150,69 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             type: "スタートポジションのタイプ",
             defaultMenuItem: "デフォルトで使用",
             hashMenuItem: "URL に #[エリア名] が含まれている場合に使用",
+            infoAreaName:
+                "エリア名は出口エリアセレクターで使用されます。マップ上で一意である必要があり、スペースや特殊文字を含めることはできません。",
+            actionButtonLabel: "スタート地点へ移動",
         },
-        exitProperties: {
+        exit: {
             label: "出口エリア",
             description: "マップから別のマップに移動できる場所。",
             exitMap: "出口マップ",
             exitMapStartAreaName: "入口エリア名",
             defaultStartArea: "デフォルトの入口エリア",
+            actionButtonLabel: "出口へ移動",
         },
-        youtubeProperties: {
+        youtube: {
             label: "YouTube ビデオを開く",
             description: "WorkAdventure 内で YouTube ビデオを開くか、新しいタブとして開きます。",
             error: "有効な YouTube の URL を入力してください。",
             disabled: "YouTube との統合は無効です。",
+            actionButtonLabel: "YouTube ビデオを開く",
         },
-        googleDocsProperties: {
+        googleDocs: {
             label: "Google ドキュメントを開く",
             description: "WorkAdventure 内で Google ドキュメントを開くか、新しいタブとして開きます。",
             error: "有効な Google ドキュメントの URL を入力してください。",
             disabled: "Google ドキュメントとの統合は無効です。",
+            actionButtonLabel: "Google ドキュメントを開く",
         },
-        klaxoonProperties: {
+        klaxoon: {
             label: "Klaxoon を開く",
             description: "WorkAdventure 内で Klaxoon を開くか、新しいタブとして開きます。",
             error: "有効な Klaxoon の URL を入力してください。",
             disabled: "Klaxoon との統合は無効です。",
+            actionButtonLabel: "Klaxoon を開く",
         },
-        googleSheetsProperties: {
+        googleSheets: {
             label: "Google シートを開く",
             description: "WorkAdventure 内で Google シートを開くか、新しいタブとして開きます。",
             error: "有効な Google シートの URL を入力してください。",
             disabled: "Google シートとの統合は無効です。",
+            actionButtonLabel: "Google シートを開く",
         },
-        googleSlidesProperties: {
+        googleSlides: {
             label: "Google スライドを開く",
             description: "WorkAdventure 内で Google スライドを開くか、新しいタブとして開きます。",
             error: "有効な Google スライドの URL を入力してください。",
             disabled: "Google スライドとの統合は無効です。",
+            actionButtonLabel: "Google スライドを開く",
         },
-        eraserProperties: {
+        eraser: {
             label: "Eraser",
             description: "マップ上のすべての絵を消去します。",
             defaultButtonLabel: "消去",
             error: "有効な Eraser の URL を入力してください。",
             disabled: "Eraser との統合は無効です。",
+            actionButtonLabel: "描画を消去",
         },
-        googleDriveProperties: {
+        googleDrive: {
             label: "Google ドライブを開く",
             description: "WorkAdventure 内で Google ドライブを開くか、新しいタブとして開きます。",
             error: "有効な Google ドライブの URL を入力してください。",
             disabled: "Google ドライブとの統合は無効です。",
+            actionButtonLabel: "Google ドライブを開く",
         },
-        restrictedRightsProperties: {
+        restrictedRightsPropertyData: {
             label: "権限の追加",
             rightTitle: "ユーザータグによるアクセス権 / 編集権",
             rightDescription:
@@ -191,8 +223,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "アクセス権",
             rightReadDescription:
                 "アクセス権は、誰がそのエリアにアクセスできるかを定義します。これらのタグのいずれかに一致するユーザーは、エリアに入り、エリア内のオブジェクトを使用することができます。",
+            actionButtonLabel: "プライベートルームへ移動",
         },
-        personalAreaConfiguration: {
+        personalAreaPropertyData: {
             label: "パーソナルエリア",
             description:
                 "ユーザーはパーソナルエリアを自分のスペースとして主張することができます。管理者として、エリアの所有権を設定 / 取消することができます。",
@@ -206,19 +239,96 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "許可されたユーザー",
             owner: "所有者",
             revokeAccess: "アクセス権の取消",
+            actionButtonLabel: "個人デスクへ移動",
         },
-        excalidrawProperties: {
+        excalidraw: {
             label: "エクスカリドローを開く",
             description: "オープンソースの仮想手描き風ホワイトボード。共同作業とエンド・ツー・エンド暗号化に対応。",
             error: "有効なエクスカリドローの URL を入力してください。",
             disabled: "エクスカリドローとの統合は無効です。",
+            actionButtonLabel: "エクスカリドローを開く",
         },
-        cardsProperties: {
+        cards: {
             label: "カードを開く",
             description: "オンラインで、MS Teams で、モバイルで、素早く簡単に知識を共有できるソリューションです。",
             error: "有効なカードの URL を入力してください。",
             disabled: "カードとの統合は無効です。",
+            actionButtonLabel: "カードを開く",
         },
+        tldraw: {
+            label: "tldraw を開く",
+            description: "オンラインホワイトボード / 無限キャンバス SDK。",
+            error: "有効な tldraw の URL を入力してください。",
+            disabled: "tldraw との統合は無効です。",
+            actionButtonLabel: "tldraw を開く",
+        },
+        matrixRoomPropertyData: {
+            label: "Matrix ルームをリンク",
+            description: "Matrix ルームをエリアにリンク",
+            openAutomaticallyChatLabel: "チャットを自動的に開く",
+            roomNameLabel: "ルームの表示名",
+            roomNameLabelPlaceholder: "マイルーム",
+            defaultChatRoomAreaName: "ルームエリア",
+            actionButtonLabel: "チャットを開始",
+        },
+        tooltipPropertyData: {
+            label: "情報バブル",
+            description: "エリアに情報バブルを追加 ℹ️",
+            contentPlaceholder: "ここにコンテンツを書く ✍️",
+            duration: "期間（秒） ⏱️",
+            infinityDuration: "無限の期間 ⏱️",
+            actionButtonLabel: "情報バブルを見る",
+        },
+        openFile: {
+            label: "ファイルを開く",
+            description: "WorkAdventure 内でファイルを開く。",
+            error: "有効なファイルを入力してください",
+            disabled: "ファイル統合は無効です。",
+            fileUrlLabel: "ファイル URL",
+            uploadFile: {
+                title: "ファイルを追加",
+                description: "ドラッグ&ドロップまたはファイルを選択",
+                dragDrop: "ドラッグ&ドロップまたは",
+                chooseFile: "ファイルを選択",
+                errorOnFileFormat: "サポートされていないファイル形式",
+                errorOnFileNumber: "複数ファイルのドロップはサポートされていません",
+                errorOnFileSize: "ファイルが大きすぎます。最大サイズは {size} MB です",
+            },
+            hideUrlLabel: "URL を非表示",
+            actionButtonLabel: "ファイルを開く",
+        },
+        livekitRoomProperty: {
+            label: "ミーティングルーム",
+            description: "入室時にミーティングを開始。",
+            roomNameLabel: "ルーム名",
+            roomNamePlaceholder: "ルーム名",
+            highlightAreaOnEnter: "入室時にエリアを強調表示",
+            moreOptionsLabel: "その他のオプション",
+            livekitRoomConfig: {
+                addConfig: "オプションの追加",
+                startWithAudioMuted: "マイクをミュートした状態で開始",
+                startWithVideoMuted: "ビデオを閉じた状態で開始",
+                disableChat: "チャットを無効化",
+                livekitRoomAdminTag: "ミーティングルームのモデレータータグ",
+                cancel: "キャンセル",
+                validate: "有効",
+            },
+            actionButtonLabel: "ミーティングを開始",
+        },
+        maxUsersInAreaPropertyData: {
+            label: "最大ユーザー数",
+            description: "エリア内の最大ユーザー数を設定します。",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "ロック可能なエリア",
+            description: "エリアをロックして外部からの入場を防ぎます。",
+            lockLabel: "エリアをロック",
+            allowedTagsLabel: "ロック/ロック解除を許可するタグ",
+            allowedTagsInfo:
+                "これらのタグを持つユーザーのみがこのエリアをロックまたはロック解除できます。空のままにすると、すべてのユーザーに許可されます。",
+        },
+        noProperties: "プロパティが定義されていません",
     },
     areaEditor: {
         editInstructions: "エリアをクリックしてプロパティを変更します。",
@@ -228,6 +338,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "マイエリアは ...",
         areaSerchable: "探索モードで検索可能",
         addDescriptionField: "説明フィールドの追加",
+        clickAgainToSelectAnotherZone: "再度クリックして別のゾーンを選択できます",
         actionPopupOnPersonalAreaWithEntities: {
             title: "アクションが必要",
             description: "このパーソナルエリアには、1 つまたは複数のオブジェクトが含まれています。どうしますか？",
@@ -247,9 +358,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         header: {
             title: "マップにオブジェクトを追加",
             description: "検索、アップロード、または既存のオブジェクトを選択し、マップに追加します。",
+            choose: "オブジェクトを選択",
         },
         title: "オブジェクトの配置",
         editing: "編集中: {name}",
+        drop: "ファイルをどこにでもドロップ",
         itemPicker: {
             searchPlaceholder: "検索",
             backToSelectObject: "オブジェクトの選択に戻る",
@@ -275,6 +388,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             chooseFile: "ファイルを選択",
             errorOnFileFormat: "サポートされていないファイル形式",
             errorOnFileNumber: "複数ファイルのドロップには対応していません",
+            errorOnFileSize: "ファイルが大きすぎます。最大サイズは {size} MB です",
         },
         images: "画像",
         noImage: "画像なし",
@@ -302,6 +416,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             save: "保存",
             upload: "アップロード",
         },
+        errors: {
+            dragNotConnected: "ログインしていない、または権限がない場合は、ファイルをアップロードできません。",
+            dragNotAllowed: "このマップにファイルをアップロードする権限がありません",
+        },
     },
     settings: {
         loading: "読み込み",
@@ -316,14 +434,39 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 scope: "範囲",
                 world: "ワールド",
                 room: "ルーム",
+                notificationSound: "通知音",
+                notificationSoundNoSound: "音なし",
+                notificationSoundCustom: "カスタム",
+                enableSoundNotifications: "サウンド通知を有効にする",
                 rights: "権限",
                 rightsHelper:
                     "権限によって、誰がメガホンを利用できるかが決まります。空白のままにしておくと、誰でも利用することができます。設定した場合、これらの「タグ」のいずれかに一致するユーザーだけが利用することができます。",
+                audienceVideoFeedbackActivated: "オーディトリアムモード",
+                audienceVideoFeedbackActivatedDisabled: "オーディトリアムモード",
+                audienceVideoFeedbackActivatedHelper:
+                    "オーディトリアムモードが有効化されました：ルーム/ワールド内のすべてのユーザー（カメラとマイクが有効化されている）のカメラとマイクストリームを受信します。ただし、参加者は他の参加者を見ることができません。デフォルトでは無効です。",
                 error: {
                     title: "タイトルを入力してください",
                     save: {
                         success: "メガホン設定が保存されました",
                         fail: "メガホン設定保存時にエラーが発生しました",
+                    },
+                },
+            },
+        },
+        recording: {
+            title: "録画",
+            description: "バブルや会議室で録画を開始できるユーザーを設定します。",
+            inputs: {
+                rights: "権限",
+                rightsHelper:
+                    "これらのタグのいずれかを少なくとも1つ持つユーザーは録画を開始できます。空欄のままにすると、ログイン済みのユーザーなら誰でも許可されます。",
+                enableSounds: "録画の開始と停止時に音声通知を再生する",
+                enableSoundsHelper: "有効にすると、録画の開始または停止時にすべての参加者に音声通知が聞こえます。",
+                error: {
+                    save: {
+                        success: "録画設定を保存しました",
+                        fail: "録画設定の保存中にエラーが発生しました",
                     },
                 },
             },

@@ -1,7 +1,8 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { Unsubscriber, writable } from "svelte/store";
-    import {
+    import type { Unsubscriber } from "svelte/store";
+    import { writable } from "svelte/store";
+    import type {
         AreaDataPropertiesKeys,
         AreaDataProperty,
         EntityDataPropertiesKeys,
@@ -11,12 +12,12 @@
     import { mapEditorModeStore, mapExplorationObjectSelectedStore } from "../../Stores/MapEditorStore";
     import { Entity } from "../../Phaser/ECS/Entity";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
-    import AreaToolImg from "../images/icon-tool-area.png";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { warningMessageStore } from "../../Stores/ErrorStore";
+    import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 
     // Create type for component AddPropertyButton
     type AddPropertyButtonType = {
@@ -44,10 +45,24 @@
         // Make sure that if the user click on another object, the previous one is not selected anymore
         oldEntity = $mapExplorationObjectSelectedStore;
         mapExplorationObjectSelectedStoreSubscription = mapExplorationObjectSelectedStore.subscribe((value) => {
-            if (oldEntity instanceof Entity) oldEntity.setPointedToEditColor(0x000000);
+            if (oldEntity instanceof Entity) {
+                if (oldEntity.searchable === true) {
+                    oldEntity.setPointedToEditColor(0x000000);
+                } else {
+                    // Remove pointed to edit color
+                    oldEntity.removePointedToEditColor();
+                }
+            }
             if (oldEntity instanceof AreaPreview) oldEntity.setStrokeStyle(2, 0x000000);
             oldEntity = value;
-            if (value instanceof Entity) value.setPointedToEditColor(0xf9e82d);
+            if (value instanceof Entity) {
+                if (value.searchable === true) {
+                    value.setPointedToEditColor(0xf9e82d);
+                } else {
+                    // Remove pointed to edit color
+                    value.removePointedToEditColor();
+                }
+            }
             if (value instanceof AreaPreview) value.setStrokeStyle(2, 0xf9e82d);
 
             initPropertyComponents();
@@ -99,11 +114,24 @@
     }
 
     function close() {
-        if ($mapExplorationObjectSelectedStore instanceof Entity)
-            $mapExplorationObjectSelectedStore.setPointedToEditColor(0x000000);
+        if ($mapExplorationObjectSelectedStore instanceof Entity) {
+            if ($mapExplorationObjectSelectedStore.searchable === true) {
+                $mapExplorationObjectSelectedStore.setPointedToEditColor(0x000000);
+            } else {
+                // Remove pointed to edit color
+                $mapExplorationObjectSelectedStore.removePointedToEditColor();
+            }
+        }
         if ($mapExplorationObjectSelectedStore instanceof AreaPreview)
             $mapExplorationObjectSelectedStore.setStrokeStyle(2, 0x000000);
-        if (oldEntity instanceof Entity) oldEntity.setPointedToEditColor(0x000000);
+        if (oldEntity instanceof Entity) {
+            if (oldEntity.searchable === true) {
+                oldEntity.setPointedToEditColor(0x000000);
+            } else {
+                // Remove pointed to edit color
+                oldEntity.removePointedToEditColor();
+            }
+        }
         if (oldEntity instanceof AreaPreview) oldEntity.setStrokeStyle(2, 0x000000);
         mapExplorationObjectSelectedStore.set(undefined);
     }
@@ -117,7 +145,8 @@
                         x: $mapExplorationObjectSelectedStore.x,
                         y: $mapExplorationObjectSelectedStore.y,
                     },
-                    true
+                    true,
+                    WOKA_SPEED * 2.5
                 )
                 .catch((error) => {
                     console.warn("Error while moving to the entity or area", error);
@@ -135,6 +164,26 @@
             mapExplorationObjectSelectedStore.set(undefined);
         }
     }
+
+    $: actionButtonText =
+        $mapExplorationObjectSelectedStore instanceof Entity ||
+        $mapExplorationObjectSelectedStore instanceof AreaPreview
+            ? $mapExplorationObjectSelectedStore.actionButtonLabel
+            : "";
+
+    $: objectDisplayName = (() => {
+        if ($mapExplorationObjectSelectedStore instanceof Entity) {
+            const name = $mapExplorationObjectSelectedStore.getEntityData().name;
+            if (name != undefined && name != "") return name;
+            return $mapExplorationObjectSelectedStore.getPrefab().name;
+        }
+        if ($mapExplorationObjectSelectedStore instanceof AreaPreview) {
+            const name = $mapExplorationObjectSelectedStore.getAreaData().name;
+            if (name != undefined && name != "") return name;
+            return $mapExplorationObjectSelectedStore.nameFromProperties;
+        }
+        return "";
+    })();
 </script>
 
 <div class="absolute bottom-0 w-full h-fit flex flex-row justify-center">
@@ -144,13 +193,7 @@
     >
         {#if $mapExplorationObjectSelectedStore instanceof Entity}
             <div class="p-8 flex flex-col justify-center items-center">
-                {#if $mapExplorationObjectSelectedStore?.getEntityData().name}
-                    <h1 class="p-2">{$mapExplorationObjectSelectedStore?.getEntityData().name.toUpperCase()}</h1>
-                {:else}
-                    <h1 class="p-2 font-bold text-3xl">
-                        {$mapExplorationObjectSelectedStore?.getPrefab().name.toUpperCase()}
-                    </h1>
-                {/if}
+                <h1 class="p-2">{objectDisplayName.toUpperCase()}</h1>
                 <img
                     src={$mapExplorationObjectSelectedStore?.getPrefab().imagePath}
                     id={$mapExplorationObjectSelectedStore.entityId}
@@ -172,21 +215,16 @@
                     <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}
                         >{$LL.mapEditor.explorer.details.close()}
                     </button>
-                    <button class="btn btn-secondary w-full" on:click={goTo}>
-                        {$LL.mapEditor.explorer.details.moveToEntity({
-                            name: "",
-                        })}
+                    <button class="btn btn-secondary w-full whitespace-nowrap" on:click={goTo}>
+                        {actionButtonText}
                     </button>
                 </div>
             </div>
         {:else if $mapExplorationObjectSelectedStore instanceof AreaPreview}
             <div class="p-8 flex flex-col justify-center items-center">
-                {#if $mapExplorationObjectSelectedStore.getAreaData().name}
-                    <h1 class="p-2 font-bold text-3xl">
-                        {$mapExplorationObjectSelectedStore.getAreaData().name.toUpperCase()}
-                    </h1>
-                {/if}
-                <img src={AreaToolImg} alt="Object" class="w-32 h-32 mb-4" draggable="false" />
+                <h1 class="p-2 font-bold text-3xl">
+                    {objectDisplayName.toUpperCase()}
+                </h1>
                 <p class="p-0 m-0">
                     {description ?? $LL.mapEditor.explorer.noDescriptionFound()}
                 </p>
@@ -201,10 +239,8 @@
                     <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}>
                         {$LL.mapEditor.explorer.details.close()}
                     </button>
-                    <button class="btn btn-secondary w-full" on:click={goTo}>
-                        {$LL.mapEditor.explorer.details.moveToArea({
-                            name: "",
-                        })}
+                    <button class="btn btn-secondary w-full whitespace-nowrap" on:click={goTo}>
+                        {actionButtonText}
                     </button>
                 </div>
             </div>

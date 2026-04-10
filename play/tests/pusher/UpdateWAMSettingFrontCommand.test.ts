@@ -1,6 +1,12 @@
-import { describe, expect, it } from "vitest";
-import { WAMFileFormat } from "@workadventure/map-editor";
+import { describe, expect, it, vi } from "vitest";
+import { writable } from "svelte/store";
+import type { WAMFileFormat } from "@workadventure/map-editor";
 import { UpdateWAMSettingFrontCommand } from "../../src/front/Phaser/Game/MapEditor/Commands/WAM/UpdateWAMSettingFrontCommand";
+
+vi.mock("../../src/front/Stores/MegaphoneStore", () => ({
+    megaphoneCanBeUsedStore: writable(false),
+    megaphoneSpaceSettingsStore: writable(undefined),
+}));
 
 describe("Test UpdateWAMSettingFrontCommand", () => {
     const defaultWamFile: WAMFileFormat = {
@@ -24,9 +30,11 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
             {
                 message: {
                     $case: "updateMegaphoneSettingMessage",
-                    updateMegaphoneSettingMessage: dataToModify,
+                    updateMegaphoneSettingMessage: { settings: dataToModify },
                 },
             },
+            [],
+            "https://some-room-url.test",
             "test-uuid"
         );
         await command.execute();
@@ -40,5 +48,35 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
         } else {
             assert.fail("result.type is not UpdateWAMSettingCommand");
         }*/
+    });
+
+    it("should allow undo for recording settings", async () => {
+        const wamFile: WAMFileFormat = { ...defaultWamFile };
+        wamFile.settings = {
+            recording: {
+                enableSounds: false,
+                rights: ["tag-a"],
+            },
+        };
+        const command = new UpdateWAMSettingFrontCommand(
+            wamFile,
+            {
+                message: {
+                    $case: "updateRecordingSettingMessage",
+                    updateRecordingSettingMessage: {
+                        settings: {
+                            rights: ["tag-b"],
+                        },
+                    },
+                },
+            },
+            [],
+            "https://some-room-url.test",
+            "test-recording-uuid"
+        );
+        await command.execute();
+        const undoCommand = command.getUndoCommand();
+        await undoCommand.execute();
+        expect(wamFile.settings?.recording).toEqual({ enableSounds: false, rights: ["tag-a"] });
     });
 });

@@ -4,6 +4,8 @@
     "module": "CommonJS",
     "outDir": "./dist",
     "preserveValueImports": false,
+    // Until we manage to migrate the pusher to ES modules, we need to keep this false
+    "verbatimModuleSyntax": false,
   },
   "include": [
     "./src",

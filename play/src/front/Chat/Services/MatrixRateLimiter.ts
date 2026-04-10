@@ -1,6 +1,6 @@
 import { RateLimiter } from "limiter";
-import { Room } from "matrix-js-sdk";
-import { IHierarchyRoom } from "matrix-js-sdk/lib/@types/spaces";
+import type { Room } from "matrix-js-sdk";
+import type { IHierarchyRoom } from "matrix-js-sdk/lib/@types/spaces";
 
 export class MatrixRateLimiter {
     private static instance: MatrixRateLimiter;

@@ -37,6 +37,9 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         loggedIn: "Zwězany z:",
         saveSync: "Składowaś a synchronizěrowaś",
         logout: "Wótzjawiś",
+        back: "Slědk",
+        tokenPlaceholder: "Waš Discord-token",
+        loginWithQrCode: "Z QR-kodom se pśizjawiś",
         guilds: "Discord-serwery",
         guildExplain: "Wubjeŕśo kanale, kótarež cośo k Workadventure-chat-interfejsoju pśidaś.\n",
     },
@@ -51,6 +54,15 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         isSyncronized: "Z Outlook synchronizěrowany",
         popupScopeIsConnectedExplainText: "Sćo južo zwězany, klikniśo na tłocašk, aby se wótzjawił a znowego zwězał.",
         popupScopeIsConnectedButton: "Wótzjawiś",
+        popupErrorTitle: "⚠️ Synchronizěrowanje Outlook-abo Teams-modula jo se njeraźiło",
+        popupErrorDescription:
+            "Inicializaciske synchronizěrowanje Outlook-abo Teams-modula jo se njeraźiło. Aby zwězany był, wopytajśo se pšosym znowego zwězaś.",
+        popupErrorContactAdmin: "Jolic problem dalej eksistěrujo, pšosym stajśo se z wašym administratorom do zwiska.",
+        popupErrorShowMore: "Wěcej informacijow pokazaś",
+        popupErrorMoreInfo1:
+            "Móžo problem z pśizjawjeńskim procesom byś. Pšosym pśeglědajśo, lěc SSO Azure-dodawaŕ korektnje konfigurěrowany jo.",
+        popupErrorMoreInfo2:
+            'Pšosym pśeglědajśo, lěc wobcerk "offline_access" za SSO Azure-dodawaŕ zmóžnjony jo. Toś ten wobcerk jo trěbny, aby aktualizěrowański token dostał a Teams-abo Outlook-modul zwězany źaržał.',
     },
     google: {
         signIn: "Z Google se pśizjawiś",

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { TodoTaskInterface } from "@workadventure/shared-utils";
+    import type { TodoTaskInterface } from "@workadventure/shared-utils";
     export let task: TodoTaskInterface;
 
     export let oddColor: string | boolean = "odd:bg-white/10";
@@ -9,6 +9,7 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="flex flex-col text-left my-2 p-2 box-border hover:bg-white/15 transition-all {oddColor ?? ''} {evenColor ??
         ''} rounded-md"

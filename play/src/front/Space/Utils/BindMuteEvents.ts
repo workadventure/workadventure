@@ -1,7 +1,7 @@
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
-import { Subscription } from "rxjs";
-import { PrivateEvents, SpaceInterface } from "../SpaceInterface";
+import type { Subscription } from "rxjs";
+import type { PrivateEvents, SpaceInterface } from "../SpaceInterface";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import LL from "../../../i18n/i18n-svelte";

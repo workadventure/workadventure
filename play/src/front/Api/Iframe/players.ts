@@ -5,7 +5,7 @@ import { IframeApiContribution, queryWorkadventure } from "./IframeApiContributi
 import { apiCallback } from "./registeredCallbacks";
 import type { RemotePlayerInterface, RemotePlayerMoved } from "./Players/RemotePlayer";
 import { RemotePlayer } from "./Players/RemotePlayer";
-import { PublicPlayerState } from "./PublicPlayerState";
+import type { PublicPlayerState } from "./PublicPlayerState";
 
 export interface PlayerVariableChanged<V> {
     player: RemotePlayer;

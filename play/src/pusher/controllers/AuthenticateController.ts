@@ -1,12 +1,14 @@
 import fs from "fs";
 import { v4 } from "uuid";
-import { MeRequest, MeResponse, RegisterData } from "@workadventure/messages";
+import type { MeResponse, RegisterData } from "@workadventure/messages";
+import { MeRequest } from "@workadventure/messages";
 import { z } from "zod";
-import { JsonWebTokenError } from "jsonwebtoken";
+import { errors } from "jose";
 import Mustache from "mustache";
-import { Application } from "express";
+import type { Application } from "express";
 import Debug from "debug";
-import { AuthTokenData, jwtTokenManager } from "../services/JWTTokenManager";
+import type { AuthTokenData } from "../services/JWTTokenManager";
+import { jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
 import { DISABLE_ANONYMOUS, FRONT_URL, MATRIX_PUBLIC_URI, PUSHER_URL } from "../enums/EnvironmentVariable";
 import { adminService } from "../services/AdminService";
@@ -190,7 +192,7 @@ export class AuthenticateController extends BaseHttpController {
                 localStorageCharacterTextureIds = [localStorageCharacterTextureIds];
             }
             try {
-                const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token, false);
+                const authTokenData: AuthTokenData = await jwtTokenManager.verifyJWTToken(token, false);
 
                 //Get user data from Admin Back Office
                 //This is very important to create User Local in LocalStorage in WorkAdventure
@@ -240,11 +242,11 @@ export class AuthenticateController extends BaseHttpController {
                     } satisfies MeResponse);
                 } catch (err) {
                     console.warn("Error while checking token auth", err);
-                    throw new JsonWebTokenError("Invalid token");
+                    throw new errors.JWTInvalid("Invalid token");
                 }
                 return;
             } catch (err) {
-                if (err instanceof JsonWebTokenError) {
+                if (err instanceof errors.JWTInvalid || err instanceof errors.JWTExpired) {
                     res.status(401);
                     res.send("Invalid token");
                     return;
@@ -309,7 +311,7 @@ export class AuthenticateController extends BaseHttpController {
             if (!email) {
                 throw new Error("No email in the response");
             }
-            const authToken = jwtTokenManager.createAuthToken(
+            const authToken = await jwtTokenManager.createAuthToken(
                 email,
                 userInfo?.access_token,
                 userInfo?.username,
@@ -472,7 +474,7 @@ export class AuthenticateController extends BaseHttpController {
             const mapUrlStart = data.mapUrlStart;
             const matrixUserId = email ? matrixProvider.getBareMatrixIdFromEmail(email) : undefined;
 
-            const authToken = jwtTokenManager.createAuthToken(
+            const authToken = await jwtTokenManager.createAuthToken(
                 email || userUuid,
                 undefined,
                 undefined,
@@ -515,14 +517,15 @@ export class AuthenticateController extends BaseHttpController {
      *         description: Anonymous login is disabled at the configuration level (environment variable DISABLE_ANONYMOUS = true)
      */
     private anonymLogin(): void {
-        this.app.post("/anonymLogin", (req, res) => {
+        this.app.post("/anonymLogin", async (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
+            // We refuse the anonymous login if the anonymous mode is disabled AND that the default woka name is not set
             if (DISABLE_ANONYMOUS) {
                 res.status(403).send("");
                 return;
             } else {
                 const userUuid = v4();
-                const authToken = jwtTokenManager.createAuthToken(userUuid);
+                const authToken = await jwtTokenManager.createAuthToken(userUuid);
                 res.json({
                     authToken,
                     userUuid,
@@ -567,7 +570,7 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             }
             const { token, playUri } = query;
-            const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token, false);
+            const authTokenData: AuthTokenData = await jwtTokenManager.verifyJWTToken(token, false);
             if (authTokenData.accessToken == undefined) {
                 throw Error("Token cannot be checked on OpenID connect provider");
             }
@@ -648,7 +651,7 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             }
 
-            const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(query.token, false);
+            const authTokenData: AuthTokenData = await jwtTokenManager.verifyJWTToken(query.token, false);
             if (authTokenData.accessToken == undefined) {
                 throw Error("Cannot log out, no access token found.");
             }

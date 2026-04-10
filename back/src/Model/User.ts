@@ -1,8 +1,7 @@
-import { ServerDuplexStream } from "@grpc/grpc-js";
+import type { ServerDuplexStream } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
-import {
+import type {
     ApplicationMessage,
-    AvailabilityStatus,
     CharacterTextureMessage,
     CompanionTextureMessage,
     PusherToBackMessage,
@@ -10,18 +9,18 @@ import {
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SetPlayerVariableMessage,
-    SetPlayerVariableMessage_Scope,
     SubMessage,
 } from "@workadventure/messages";
-import { Movable } from "../Model/Movable";
-import { PositionNotifier } from "../Model/PositionNotifier";
-import { Zone } from "../Model/Zone";
+import { AvailabilityStatus, SetPlayerVariableMessage_Scope } from "@workadventure/messages";
+import type { Movable } from "../Model/Movable";
+import type { PositionNotifier } from "../Model/PositionNotifier";
+import type { Zone } from "../Model/Zone";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
 import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
-import { BrothersFinder } from "./BrothersFinder";
-import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
-import { Group } from "./Group";
-import { PointInterface } from "./Websocket/PointInterface";
+import type { BrothersFinder } from "./BrothersFinder";
+import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
+import type { Group } from "./Group";
+import type { PointInterface } from "./Websocket/PointInterface";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -59,8 +58,10 @@ export class User implements Movable, CustomJsonReplacerInterface {
         private voiceIndicatorShown?: boolean,
         public readonly activatedInviteUser?: boolean,
         public readonly applications?: ApplicationMessage[],
-        public readonly chatID?: string,
-        private sayMessage?: SayMessage
+        public chatID?: string,
+        private sayMessage?: SayMessage,
+        // Unique identifier for the browser tab, used to detect reconnections from the same tab
+        public readonly tabId?: string
     ) {
         this.listenedZones = new Set<Zone>();
 
@@ -90,7 +91,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
         activatedInviteUser?: boolean,
         applications?: ApplicationMessage[],
         chatID?: string,
-        sayMessage?: SayMessage
+        sayMessage?: SayMessage,
+        tabId?: string
     ): Promise<User> {
         const playersVariablesRepository = await getPlayersVariablesRepository();
         const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository, isLogged);
@@ -118,7 +120,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
             activatedInviteUser,
             applications,
             chatID,
-            sayMessage
+            sayMessage,
+            tabId
         );
     }
 
@@ -242,6 +245,10 @@ export class User implements Movable, CustomJsonReplacerInterface {
         const availabilityStatus = details.availabilityStatus;
         if (availabilityStatus && availabilityStatus !== this.availabilityStatus) {
             this.availabilityStatus = availabilityStatus;
+        }
+
+        if (details.chatID !== undefined) {
+            this.chatID = details.chatID;
         }
 
         const setVariable = details.setVariable;

@@ -1,30 +1,28 @@
 <script lang="ts">
     import { get } from "svelte/store";
     import { createEventDispatcher, onMount } from "svelte";
-    import { ChatRoom } from "../../../Connection/ChatConnection";
+    import type { ChatRoom } from "../../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../../Stores/ChatStore";
     import { ProximityChatRoom } from "../../../Connection/Proximity/ProximityChatRoom";
     import { chatInputFocusStore } from "../../../../Stores/ChatStore";
     import { IconLoader, IconPaperclip, IconX } from "@wa-icons";
 
     const dispatch = createEventDispatcher<{
+        filesSelected: FileList;
         fileUploaded: void;
     }>();
 
     let files: FileList | undefined = undefined;
+    let fileInputElement: HTMLInputElement;
     export let room: ChatRoom;
     const isProximityChatRoom = room instanceof ProximityChatRoom;
 
     $: {
-        if (files) {
-            room.sendFiles(files)
-                .then(() => {
-                    // Infinite loop is not possible because the first thing we do in the reactive statement is test for "files" not undefined.
-                    // eslint-disable-next-line svelte/infinite-reactive-loop
-                    files = undefined;
-                    unselectChatMessageToReplyIfSelected();
-                })
-                .catch((error) => console.error(error));
+        if (files && files.length > 0) {
+            dispatch("filesSelected", files);
+            dispatch("fileUploaded");
+            files = undefined;
+            fileInputElement.value = "";
         }
     }
 
@@ -59,6 +57,7 @@
         type="file"
         multiple
         bind:files
+        bind:this={fileInputElement}
         data-testid="uploadChatCustomAsset"
         on:focusin={focusChatInput}
         on:focusout={unfocusChatInput}

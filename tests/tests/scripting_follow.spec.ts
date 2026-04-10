@@ -1,20 +1,24 @@
-import {expect, test, webkit} from '@playwright/test';
-import {evaluateScript} from "./utils/scripting";
-import Map from './utils/map';
-import {publicTestMapUrl} from "./utils/urls";
-import { getPage } from './utils/auth';
+import { expect, test, webkit } from "@playwright/test";
+import { evaluateScript } from "./utils/scripting";
+import Map from "./utils/map";
+import { publicTestMapUrl } from "./utils/urls";
+import { getPage } from "./utils/auth";
 
-test.describe('Scripting follow functions', () => {
-    test('can trigger follow from script @nowebkit', async ({ browser}, { project }) => {
+test.describe("Scripting follow functions", () => {
+    test("can trigger follow from script @nowebkit", async ({ browser }, { project }) => {
         // It seems WebRTC fails to start on Webkit
-        test.skip(browser.browserType() === webkit, 'WebRTC fails to start on WebKit');
-        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"))
+        test.skip(browser.browserType() === webkit, "WebRTC fails to start on WebKit");
+        await using page = await getPage(
+            browser,
+            "Alice",
+            publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"),
+        );
         await Map.teleportToPosition(page, 32, 32);
 
-        await using page2 = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"));
+        await using page2 = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"));
         await Map.teleportToPosition(page2, 32, 32);
 
-        await expect(page.getByText('Bob')).toBeVisible();
+        await expect(page.getByText("Bob")).toBeVisible();
 
         const waitForFollowPromise = evaluateScript(page, async () => {
             return new Promise<void>((resolve) => {
@@ -70,7 +74,7 @@ test.describe('Scripting follow functions', () => {
             });
         });
 
-        await page2.getByRole('button', { name: 'Stop following' }).click();
+        await page2.getByRole("button", { name: "Stop following" }).click();
 
         await waitForUnfollowPromise;
 

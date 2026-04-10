@@ -1,4 +1,4 @@
-import { SpaceUser } from "@workadventure/messages";
+import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 
 export interface ICommunicationStrategy {
     addUser(user: SpaceUser): Promise<void>;
@@ -6,8 +6,17 @@ export interface ICommunicationStrategy {
     updateUser(user: SpaceUser): void;
     addUserToNotify(user: SpaceUser): Promise<void>;
     deleteUserFromNotify(user: SpaceUser): void;
-    initialize(users: ReadonlyMap<string, SpaceUser>, usersToNotify: ReadonlyMap<string, SpaceUser>): void;
+    initialize(users: ReadonlyMap<string, SpaceUser>, usersToNotify: ReadonlyMap<string, SpaceUser>): Promise<void>;
     addUserReady(userId: string): void;
     canSwitch(): boolean;
     cleanup(): void;
+    handleMeetingConnectionRestartMessage(
+        meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
+        senderUserId?: string
+    ): void;
+}
+
+export interface IRecordableStrategy extends ICommunicationStrategy {
+    startRecording(user: SpaceUser): Promise<void>;
+    stopRecording(): Promise<void>;
 }

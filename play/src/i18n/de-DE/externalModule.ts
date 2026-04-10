@@ -19,11 +19,14 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         buttonConnect: "Meine Teams verbinden 🚀",
     },
     discord: {
+        back: "Back",
+        tokenPlaceholder: "Ihr Discord-Token",
         integration: "INTEGRATION",
         explainText:
             "Durch die Verbindung Ihres Discord-Kontos hier können Sie Ihre Nachrichten direkt im Workadventure-Chat erhalten. Nach der Synchronisierung eines Servers erstellen wir die darin enthaltenen Räume, Sie müssen ihnen nur im Workadventure-Chat beitreten.",
         login: "Mit Discord verbinden",
         fetchingServer: "Ihre Discord-Server werden abgerufen... 👀",
+        loginWithQrCode: "Mit QR-Code anmelden",
         qrCodeTitle: "Scannen Sie den QR-Code mit Ihrer Discord-App, um sich anzumelden.",
         qrCodeExplainText:
             "Scannen Sie den QR-Code mit Ihrer Discord-App, um sich anzumelden. QR-Codes sind zeitlich begrenzt, manchmal müssen Sie einen neu generieren",
@@ -53,6 +56,15 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupScopeIsConnectedExplainText:
             "Sie sind bereits verbunden, bitte klicken Sie auf die Schaltfläche, um sich abzumelden und erneut zu verbinden.",
         popupScopeIsConnectedButton: "Abmelden",
+        popupErrorTitle: "⚠️ Die Synchronisierung des Outlook- oder Teams-Moduls ist fehlgeschlagen",
+        popupErrorDescription:
+            "Die Initialisierungssynchronisierung des Outlook- oder Teams-Moduls ist fehlgeschlagen. Um verbunden zu sein, versuchen Sie bitte, sich erneut zu verbinden.",
+        popupErrorContactAdmin: "Wenn das Problem weiterhin besteht, wenden Sie sich bitte an Ihren Administrator.",
+        popupErrorShowMore: "Weitere Informationen anzeigen",
+        popupErrorMoreInfo1:
+            "Es könnte ein Problem mit dem Anmeldevorgang geben. Bitte überprüfen Sie, ob der SSO Azure-Anbieter korrekt konfiguriert ist.",
+        popupErrorMoreInfo2:
+            'Bitte überprüfen Sie, ob der Bereich "offline_access" für den SSO Azure-Anbieter aktiviert ist. Dieser Bereich ist erforderlich, um das Aktualisierungstoken zu erhalten und das Teams- oder Outlook-Modul verbunden zu halten.',
     },
     google: {
         signIn: "Mit Google anmelden",

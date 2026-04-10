@@ -1,10 +1,10 @@
 import { EntityRawPrefab, mapCustomEntityDirectionToDirection, UploadEntityCommand } from "@workadventure/map-editor";
-import { UploadEntityMessage } from "@workadventure/messages";
-import { RoomConnection } from "../../../../../Connection/RoomConnection";
+import type { UploadEntityMessage } from "@workadventure/messages";
+import type { RoomConnection } from "../../../../../Connection/RoomConnection";
 import { gameManager } from "../../../GameManager";
-import { EntitiesManager } from "../../../GameMap/EntitiesManager";
-import { EntitiesCollectionsManager } from "../../EntitiesCollectionsManager";
-import { FrontCommand } from "../FrontCommand";
+import type { EntitiesManager } from "../../../GameMap/EntitiesManager";
+import type { EntitiesCollectionsManager } from "../../EntitiesCollectionsManager";
+import type { FrontCommand } from "../FrontCommand";
 import { DeleteCustomEntityFrontCommand } from "./DeleteCustomEntityFrontCommand";
 
 export class UploadEntityFrontCommand extends UploadEntityCommand implements FrontCommand {
@@ -41,7 +41,7 @@ export class UploadEntityFrontCommand extends UploadEntityCommand implements Fro
     getUndoCommand(): DeleteCustomEntityFrontCommand {
         return new DeleteCustomEntityFrontCommand(
             { id: this.uploadEntityMessage.id },
-            gameManager.getCurrentGameScene().getGameMap(),
+            gameManager.getCurrentGameScene().getGameMap().getWamFile(),
             this.entitiesManager,
             this.entitiesCollectionManager
         );

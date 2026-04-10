@@ -1,4 +1,5 @@
-import { createClient, RedisClientOptions } from "redis";
+import type { RedisClientOptions } from "redis";
+import { createClient } from "redis";
 import * as Sentry from "@sentry/node";
 import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT } from "../Enum/EnvironmentVariable";
 

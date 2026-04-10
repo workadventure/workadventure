@@ -1,12 +1,15 @@
-import { Room, EventType, EventTimeline } from "matrix-js-sdk";
-import { derived, get, Readable, writable, Writable } from "svelte/store";
+import type { Room } from "matrix-js-sdk";
+import { EventType, EventTimeline } from "matrix-js-sdk";
+import type { Readable, Writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
 
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
-import { Deferred } from "ts-deferred";
+import { Deferred } from "@workadventure/shared-utils";
 import { matrixRateLimiter } from "../../Services/MatrixRateLimiter";
-import { RoomFolder } from "../ChatConnection";
+import { ignoredSuggestedRoomIdsStore } from "../../Stores/ChatStore";
+import type { RoomFolder } from "../ChatConnection";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 
 export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
@@ -72,18 +75,21 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         );
 
         this.suggestedRooms = derived(
-            [this.allSuggestedRooms, this.rooms, this.invitations, this.folders],
-            ([$allSuggestedRooms, $rooms, $invitations, $folders]) => {
+            [this.allSuggestedRooms, this.rooms, this.invitations, this.folders, ignoredSuggestedRoomIdsStore],
+            ([$allSuggestedRooms, $rooms, $invitations, $folders, $ignoredIds]) => {
                 const existingIds = new Set([
                     ...$rooms.map((room) => room.id),
                     ...$invitations.map((room) => room.id),
                     ...$folders.map((folder) => folder.id),
                 ]);
-                return $allSuggestedRooms.filter((room) => !existingIds.has(room.id));
+                return $allSuggestedRooms.filter((room) => !existingIds.has(room.id) && !$ignoredIds.has(room.id));
             }
         );
 
-        this.joinableRooms = derived([this.availableRooms], ([$allChildRooms]) => $allChildRooms);
+        this.joinableRooms = derived(
+            [this.availableRooms, ignoredSuggestedRoomIdsStore],
+            ([$allChildRooms, $ignoredIds]) => $allChildRooms.filter((room) => !$ignoredIds.has(room.id))
+        );
 
         if (get(this.myMembership) === KnownMembership.Join) this.joinRoomDeferred.resolve();
     }
@@ -188,7 +194,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
 
             const parentFolder = parentFolders.filter((value) => value)[0];
 
-            if (!parentFolder) throw new Error("Parent folder not found");
+            if (!parentFolder) return undefined;
 
             return parentFolder;
         } catch (e) {

@@ -1,17 +1,17 @@
 import * as Sentry from "@sentry/svelte";
-import { FilterType } from "@workadventure/messages";
-import { Subscription } from "rxjs";
+import type { FilterType } from "@workadventure/messages";
+import type { Subscription } from "rxjs";
 import { z } from "zod";
-import { debounceTime, distinctUntilChanged } from "rxjs/operators";
 import { MapStore } from "@workadventure/store-utils";
-import { derived, Readable } from "svelte/store";
-import { SpaceInterface } from "../SpaceInterface";
+import type { Readable } from "svelte/store";
+import { derived } from "svelte/store";
+import type { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
-import { Space, VideoBox } from "../Space";
-import { RoomConnection } from "../../Connection/RoomConnection";
+import type { VideoBox } from "../VideoBox";
+import { Space } from "../Space";
+import type { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
-import { throttlingDetector as globalThrottlingDetector } from "../../Utils/ThrottlingDetector";
-import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
+import type { SpaceRegistryInterface } from "./SpaceRegistryInterface";
 /**
  * The subset of properties of RoomConnection that are used by the SpaceRegistry / Space / SpaceFilter class.
  * This interface has a single purpose: making the creation of test doubles easier in unit tests.
@@ -35,7 +35,7 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitUpdateSpaceMetadata"
     | "emitUpdateSpaceUserMessage"
     | "spaceDestroyedMessage"
-    | "emitRequestFullSync"
+    | "emitBackEvent"
 >;
 
 /**
@@ -44,6 +44,7 @@ export type RoomConnectionForSpacesInterface = Pick<
  */
 export class SpaceRegistry implements SpaceRegistryInterface {
     private spaces: MapStore<string, Space> = new MapStore<string, Space>();
+    public readonly spacesWithRecording: Readable<Space[]>;
     private leavingSpacesPromises: Map<string, Promise<void>> = new Map<string, Promise<void>>();
     private initSpaceUsersMessageStreamSubscription: Subscription;
     private addSpaceUserMessageStreamSubscription: Subscription;
@@ -131,10 +132,19 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return unsubscribe;*/
     });
 
+    public readonly isLiveStreamingAudioStore: Readable<boolean> = derived(this.spaces, ($spaces, set) => {
+        if ($spaces.size === 0) {
+            set(false);
+            return () => {};
+        }
+
+        const stores = Array.from($spaces.values(), (space) => space.isStreamingAudioStore);
+        return derived(stores, (list) => list.some(Boolean)).subscribe(set);
+    });
+
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
-        private connectStream = connectionManager.roomConnectionStream,
-        private throttlingDetector = globalThrottlingDetector
+        private connectStream = connectionManager.roomConnectionStream
     ) {
         this.initSpaceUsersMessageStreamSubscription = roomConnection.initSpaceUsersMessageStream.subscribe(
             (message) => {
@@ -143,9 +153,50 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     throw new Error("initSpaceUsersMessage is missing users");
                 }
 
-                this.spaces.get(message.spaceName)?.initUsers(message.users);
+                const space = this.spaces.get(message.spaceName);
+
+                if (!space) {
+                    console.error("Space does not exist", message.spaceName);
+                    return;
+                }
+
+                space.initUsers(message.users);
+                space.initMetadata(message.metadata);
             }
         );
+
+        this.spacesWithRecording = derived(this.spaces, ($spaces, set) => {
+            const spacesWithRecordingMap: Set<Space> = new Set();
+            const unsubscribers: (() => void)[] = [];
+
+            const updatePeers = () => {
+                spacesWithRecordingMap.clear();
+                if ($spaces.size === 0) {
+                    set(Array.from(spacesWithRecordingMap));
+                    return;
+                }
+                $spaces.forEach((space) => {
+                    const aggregatedDisplayRecordButtonStores = space.shouldDisplayRecordButton;
+                    const unsubscribeAggregated = aggregatedDisplayRecordButtonStores.subscribe(
+                        (shouldDisplayRecordButtonStore) => {
+                            if (shouldDisplayRecordButtonStore) {
+                                spacesWithRecordingMap.add(space);
+                            } else {
+                                spacesWithRecordingMap.delete(space);
+                            }
+                            set(Array.from(spacesWithRecordingMap));
+                        }
+                    );
+                    unsubscribers.push(unsubscribeAggregated);
+                });
+            };
+
+            updatePeers();
+
+            return () => {
+                unsubscribers.forEach((unsub) => unsub());
+            };
+        });
 
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user) {
@@ -239,8 +290,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.roomConnectionStreamSubscription = this.connectStream.subscribe((connection) => {
             // this.reconnect(connection).catch((e) => console.error(e));
         });
-
-        this.setupThrottlingDetection();
     }
 
     async joinSpace(
@@ -249,7 +298,9 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         propertiesToSync: string[],
         signal: AbortSignal,
         options?: {
-            metadata: Map<string, unknown>;
+            metadata?: Map<string, unknown>;
+            // True if the user is allowed to start/stop recording in the space. Defaults to false.
+            canRecord?: boolean;
         }
     ): Promise<SpaceInterface> {
         const leavingPromise = this.leavingSpacesPromises.get(spaceName);
@@ -304,24 +355,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return space;
     }
 
-    /*async reconnect(connection: RoomConnectionForSpacesInterface) {
-        this.roomConnection = connection;
-        const spacesArray = Array.from(this.spaces.values());
-        await Promise.all(
-            spacesArray.map(async (space) => {
-                await this.leaveSpace(space);
-                const newSpace = await Space.create(
-                    space.getName(),
-                    space.filterType,
-                    this.roomConnection,
-                    space.getPropertiesToSync(),
-                    space.getMetadata()
-                );
-                this.spaces.set(newSpace.getName(), newSpace);
-            })
-        );
-    }*/
-
     async destroy() {
         this.initSpaceUsersMessageStreamSubscription.unsubscribe();
         this.addSpaceUserMessageStreamSubscription.unsubscribe();
@@ -346,31 +379,5 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 console.warn(`Space "${space.getName()}" was not destroyed properly.`);
             })
         );
-
-        // Stop throttling detection and clean up resources
-        this.throttlingDetector.destroy();
-    }
-
-    private setupThrottlingDetection(): void {
-        const recoverySubscription = this.throttlingDetector.recoveryTriggered$
-            .pipe(debounceTime(1000), distinctUntilChanged())
-            .subscribe(() => {
-                console.info("[SpaceRegistry] 🎯 Recovery after throttling - resynchronizing Spaces");
-
-                const spaces = this.getAll();
-                spaces.forEach((space) => {
-                    console.debug(`[SpaceRegistry] Resync space: ${space.getName()}`);
-                    space.requestFullSync();
-                });
-            });
-
-        // Optionally: Subscribe to all events for debugging purposes
-        const eventsSubscription = this.throttlingDetector.events$.subscribe((event) => {
-            console.debug(`[SpaceRegistry] Throttling event: ${event.type}`, event);
-        });
-
-        // Store subscriptions for cleanup
-        this.roomConnectionStreamSubscription.add(recoverySubscription);
-        this.roomConnectionStreamSubscription.add(eventsSubscription);
     }
 }

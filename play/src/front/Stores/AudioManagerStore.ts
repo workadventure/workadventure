@@ -1,4 +1,5 @@
-import { get, Writable, writable } from "svelte/store";
+import type { Writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { Subject } from "rxjs";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { videoStreamElementsStore } from "./PeerStore";
@@ -11,6 +12,8 @@ export interface AudioManagerVolume {
     volumeReduced: boolean;
     loop: boolean;
     talking: boolean;
+    paused: boolean;
+    stopped: boolean;
 }
 
 function createAudioManagerVolumeStore() {
@@ -21,6 +24,8 @@ function createAudioManagerVolumeStore() {
         volumeReduced: false,
         loop: false,
         talking: false,
+        paused: false,
+        stopped: false,
     });
 
     return {
@@ -61,6 +66,21 @@ function createAudioManagerVolumeStore() {
                 return audioManagerVolume;
             });
         },
+        // Function to pause the sound
+        togglePause: (): void => {
+            update((audioManagerVolume: AudioManagerVolume) => {
+                audioManagerVolume.paused = !audioManagerVolume.paused;
+                return audioManagerVolume;
+            });
+        },
+
+        // Function to stop the sound
+        stopSound: (newStopped: boolean): void => {
+            update((audioManagerVolume: AudioManagerVolume) => {
+                audioManagerVolume.stopped = newStopped;
+                return audioManagerVolume;
+            });
+        },
     };
 }
 
@@ -79,13 +99,15 @@ function createAudioManagerFileStore() {
                     volume ? Math.min(volume, get(audioManagerVolumeStore).volume) : get(audioManagerVolumeStore).volume
                 );
                 audioManagerVolumeStore.setLoop(loop);
-
+                audioManagerVolumeStore.setMuted(false);
+                audioManagerVolumeStore.stopSound(false);
                 return file;
             });
         },
         unloadAudio: () => {
             update(() => {
                 audioManagerVolumeStore.setLoop(false);
+                audioManagerVolumeStore.setMuted(true);
                 activeSecondaryZoneActionBarStore.set(undefined);
                 return "";
             });

@@ -1,15 +1,14 @@
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
-import {
+import type {
     MetaTagsData,
     RequiredMetaTagsData,
     MapDetailsData,
-    isMapDetailsData,
     RoomRedirect,
-    isRoomRedirect,
     ErrorApiData,
 } from "@workadventure/messages";
-import { AxiosResponse } from "axios";
+import { isMapDetailsData, isRoomRedirect } from "@workadventure/messages";
+import type { AxiosResponse } from "axios";
 import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
 import { adminService } from "./AdminService";
 
@@ -28,9 +27,9 @@ export const MetaTagsDefaultValue: RequiredMetaTagsData = {
     ],
     manifestIcons: [
         {
-            src: "/static/images/favicons/favicon-512x512.svg",
+            src: "/static/images/favicons/icon-512x512.png",
             sizes: "512x512",
-            type: "image/svg",
+            type: "image/png",
         },
     ],
     appName: "WorkAdventure",

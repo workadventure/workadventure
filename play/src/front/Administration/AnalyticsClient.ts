@@ -1,6 +1,6 @@
 import type { PostHog } from "posthog-js";
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
-import { Emoji } from "../Stores/Utils/emojiSchema";
+import type { Emoji } from "../Stores/Utils/emojiSchema";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let window: any;
 
@@ -19,10 +19,10 @@ class AnalyticsClient {
         }
     }
 
-    identifyUser(uuid: string, email: string | null): void {
+    identifyUser(uuid: string, email: string | null, roomId: string | null): void {
         this.posthogPromise
             ?.then((posthog) => {
-                posthog.identify(uuid, { uuid, email, wa: true });
+                posthog.identify(uuid, { uuid, email, wa: true, roomId });
             })
             .catch((e) => console.error(e));
     }
@@ -76,14 +76,6 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    openBackOffice(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-opened-bo");
-            })
-            .catch((e) => console.error(e));
-    }
-
     clickOnCustomButton(id: string, label?: string, toolTip?: string, imageSrc?: string) {
         this.posthogPromise
             ?.then((posthog) => {
@@ -96,6 +88,14 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa-entered-jitsi", { roomName, roomId });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    enteredMeetingRoom(roomName: string, roomId: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-entered-meeting-room", { roomName, roomId });
             })
             .catch((e) => console.error(e));
     }
@@ -181,6 +181,30 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    retryConnectionWebRtc(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_retry_connection_webrtc");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    retryConnectionLivekit(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_retry_connection_livekit");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openBackgroundSettings(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_open_background_settings");
+            })
+            .catch((e) => console.error(e));
+    }
+
     selectCamera(): void {
         this.posthogPromise
             ?.then((posthog) => {
@@ -210,6 +234,16 @@ class AnalyticsClient {
             ?.then((posthog) => {
                 posthog.capture("wa_setting_microphone", {
                     checkbox: value,
+                });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    settingBackground(background: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_setting_background", {
+                    backgroundType: background,
                 });
             })
             .catch((e) => console.error(e));
@@ -333,14 +367,6 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    menuInvite(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_invite");
-            })
-            .catch((e) => console.error(e));
-    }
-
     menuChat(): void {
         this.posthogPromise
             ?.then((posthog) => {
@@ -451,6 +477,22 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_edit_woka");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    goToPersonalDesk(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_go_to_personal_desk");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    unclaimPersonalDesk(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_unclaim_personal_desk");
             })
             .catch((e) => console.error(e));
     }
@@ -951,6 +993,105 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_click_to_zoom_out");
+            })
+            .catch((e) => console.error(e));
+    }
+    clickPictureInPicture(open: boolean): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_click_picture_in_picture", { open });
+            })
+            .catch((e) => console.error(e));
+    }
+    goToUser(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_go_to_user");
+            })
+            .catch((e) => console.error(e));
+    }
+    showBusinessCard(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_show_business_card");
+            })
+            .catch((e) => console.error(e));
+    }
+    reportUser(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_report_user");
+            })
+            .catch((e) => console.error(e));
+    }
+    openWokaMenu(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_open_woka_menu");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    recordingStart(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_recording_start");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    recordingStop(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_recording_stop");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openedRecordingList(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_opened_recording_list");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    /** Web app install prompt analytics */
+    pwaInstallPromptShown(isIos: boolean): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_pwa_install_prompt_shown", { isIos });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    pwaInstallClick(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_pwa_install_click");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    pwaContinueInBrowserClick(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_pwa_continue_in_browser_click");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    pwaInstallOutcome(outcome: "accepted" | "dismissed"): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_pwa_install_outcome", { outcome });
+            })
+            .catch((e) => console.error(e));
+    }
+    pwaInstallFromProfileMenuClick(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_pwa_install_from_profile_menu_click");
             })
             .catch((e) => console.error(e));
     }

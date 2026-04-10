@@ -2,7 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import Select from "svelte-select";
     import LL from "../../../i18n/i18n-svelte";
-    import { InputTagOption } from "./InputTagOption";
+    import type { InputTagOption } from "./InputTagOption";
     import InfoButton from "./InfoButton.svelte";
     const dispatch = createEventDispatcher<{
         change: InputTagOption[] | undefined;
@@ -41,7 +41,7 @@
     }
 </script>
 
-<div class="flex flex-col pb-5 text-dark-purple">
+<div class="flex flex-col text-dark-purple">
     <div class="input-label" class:hidden={!label && !SLOTS.info && !optional}>
         {#if label}
             <label for="selector" class="text-white relative grow">

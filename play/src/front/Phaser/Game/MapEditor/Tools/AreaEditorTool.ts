@@ -1,28 +1,28 @@
-import { AreaData, AtLeast } from "@workadventure/map-editor";
+import type { AreaData, AtLeast } from "@workadventure/map-editor";
 import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { v4 as uuid } from "uuid";
 import { openModal } from "svelte-modals";
-import {
-    mapEditorAreaModeStore,
-    MapEditorAreaToolMode,
-    mapEditorSelectedAreaPreviewStore,
-} from "../../../../Stores/MapEditorStore";
+import type { MapEditorAreaToolMode } from "../../../../Stores/MapEditorStore";
+import { mapEditorAreaModeStore, mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
-import { CopyAreaEventData } from "../../GameMap/EntitiesManager";
+import { DEPTH_MAP_EDITOR_AREAS_INDEX } from "../../DepthIndexes";
+import type { CopyAreaEventData } from "../../GameMap/EntitiesManager";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
 import { CreateAreaFrontCommand } from "../Commands/Area/CreateAreaFrontCommand";
 import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
 import { UpdateAreaFrontCommand } from "../Commands/Area/UpdateAreaFrontCommand";
 import type { MapEditorModeManager } from "../MapEditorModeManager";
-import { Entity } from "../../../ECS/Entity";
+import type { Entity } from "../../../ECS/Entity";
 import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
 import ActionPopupOnPersonalAreaWithEntities from "../../../../Components/MapEditor/ActionPopupOnPersonalAreaWithEntities.svelte";
+import { SpeechDomElement } from "../../../Entity/SpeechDomElement";
+import { LL } from "../../../../../i18n/i18n-svelte";
 import { MapEditorTool } from "./MapEditorTool";
-import { TrashEditorTool } from "./TrashEditorTool";
+import type { TrashEditorTool } from "./TrashEditorTool";
 
 export class AreaEditorTool extends MapEditorTool {
     private scene: GameScene;
@@ -46,6 +46,9 @@ export class AreaEditorTool extends MapEditorTool {
 
     private shiftKey?: Phaser.Input.Keyboard.Key;
     private ctrlKey?: Phaser.Input.Keyboard.Key;
+
+    private tooltip?: SpeechDomElement;
+    private toolTipAlreadyPlayed: boolean = false;
 
     private selectedAreaPreviewStoreSubscriber!: Unsubscriber;
 
@@ -76,8 +79,8 @@ export class AreaEditorTool extends MapEditorTool {
 
         this.drawinNewAreaStartPos = undefined;
 
-        this.newAreaPreview = this.scene.add.graphics();
-        this.areaOldPositionPreview = this.scene.add.graphics();
+        this.newAreaPreview = this.scene.add.graphics().setDepth(DEPTH_MAP_EDITOR_AREAS_INDEX);
+        this.areaOldPositionPreview = this.scene.add.graphics().setDepth(DEPTH_MAP_EDITOR_AREAS_INDEX);
 
         this.subscribeToStores();
     }
@@ -107,6 +110,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.setAreaPreviewsVisibility(true);
         this.bindEventHandlers();
         this.changeAreaMode("ADD");
+        this.makeAllEntitiesInteractive();
         this.scene.markDirty();
     }
 
@@ -125,7 +129,7 @@ export class AreaEditorTool extends MapEditorTool {
                 // execute command locally
                 await this.mapEditorModeManager.executeLocalCommand(
                     new UpdateAreaFrontCommand(
-                        this.scene.getGameMap(),
+                        this.scene.getGameMap().getWamFile()!,
                         {
                             ...data,
                             properties: data.modifyProperties ? data.properties : undefined,
@@ -147,7 +151,7 @@ export class AreaEditorTool extends MapEditorTool {
                 // execute command locally
                 await this.mapEditorModeManager.executeLocalCommand(
                     new CreateAreaFrontCommand(
-                        this.scene.getGameMap(),
+                        this.scene.getGameMap().getWamFile()!,
                         config,
                         commandId,
                         this,
@@ -162,7 +166,7 @@ export class AreaEditorTool extends MapEditorTool {
                 // execute command locally
                 await this.mapEditorModeManager.executeLocalCommand(
                     new DeleteAreaFrontCommand(
-                        this.scene.getGameMap(),
+                        this.scene.getGameMap().getWamFile()!,
                         data.id,
                         commandId,
                         this,
@@ -177,7 +181,7 @@ export class AreaEditorTool extends MapEditorTool {
     public handleDeleteAreaFrontCommandExecution(areaId: string, editorTool?: AreaEditorTool | TrashEditorTool): void {
         const isPersonalArea = this.getIsPersonalArea(areaId);
         const deleteAreaCommand = new DeleteAreaFrontCommand(
-            this.scene.getGameMap(),
+            this.scene.getGameMap().getWamFile()!,
             areaId,
             undefined,
             editorTool ?? this,
@@ -198,7 +202,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private getIsPersonalArea(areaId: string): boolean {
-        return !!this.scene.getGameMap().getGameMapAreas()?.isPersonalArea(areaId);
+        return !!this.scene.getGameMap().getWamFile()?.getGameMapAreas().isPersonalArea(areaId);
     }
 
     private getEntitiesInsideArea(areaId: string): Map<string, Entity> {
@@ -339,6 +343,17 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        // Improve select mutliple zone and add tooltips to the areas to say "You can click again to select another zone"
+        if (this.active && gameObjects.length > 1 && this.toolTipAlreadyPlayed == false) {
+            if (this.tooltip == undefined)
+                this.playTooltip(
+                    get(LL).mapEditor.areaEditor.clickAgainToSelectAnotherZone(),
+                    pointer.worldX,
+                    pointer.worldY
+                );
+            else this.destroyTooltip();
+        }
+
         const mode = get(mapEditorAreaModeStore);
         const sortedAreaPreviews = gameObjects
             .filter((obj) => this.isAreaPreview(obj))
@@ -461,7 +476,7 @@ export class AreaEditorTool extends MapEditorTool {
     ): (AreaPreview | SizeAlteringSquare)[] {
         const areaPreviews = gameObjects.filter((obj) => this.isAreaPreview(obj));
         const sizeAlteringSquares = gameObjects.filter((obj) => this.isSizeAlteringSquare(obj));
-        return [...areaPreviews, ...sizeAlteringSquares];
+        return [...areaPreviews, ...sizeAlteringSquares] as (AreaPreview | SizeAlteringSquare)[];
     }
 
     private changeAreaMode(mode: MapEditorAreaToolMode, areaPreview?: AreaPreview): void {
@@ -548,7 +563,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.mapEditorModeManager
             .executeCommand(
                 new CreateAreaFrontCommand(
-                    this.scene.getGameMap(),
+                    this.scene.getGameMap().getWamFile()!,
                     {
                         id,
                         name: data.name,
@@ -573,7 +588,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.mapEditorModeManager
             .executeCommand(
                 new CreateAreaFrontCommand(
-                    this.scene.getGameMap(),
+                    this.scene.getGameMap().getWamFile()!,
                     {
                         id,
                         name: "",
@@ -631,14 +646,17 @@ export class AreaEditorTool extends MapEditorTool {
         oldData: AtLeast<AreaData, "id"> | undefined,
         removeEntities?: boolean
     ): void {
-        const gameMap = this.scene.getGameMap();
+        const wamFile = this.scene.getGameMap().getWamFile();
         if (removeEntities) {
             this.removeAreaEntities(newData.id);
+        }
+        if (!wamFile) {
+            return;
         }
         this.mapEditorModeManager
             .executeCommand(
                 new UpdateAreaFrontCommand(
-                    gameMap,
+                    wamFile,
                     newData,
                     undefined,
                     oldData,
@@ -650,12 +668,15 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private removeAreaEntities(areaId: string): void {
-        const gameMap = this.scene.getGameMap();
+        const wamFile = this.scene.getGameMap().getWamFile();
+        if (!wamFile) {
+            return;
+        }
         const entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
         const entitiesInsideArea = this.getEntitiesInsideArea(areaId);
         entitiesInsideArea.forEach((_, entityId) => {
             this.mapEditorModeManager
-                .executeCommand(new DeleteEntityFrontCommand(gameMap, entityId, undefined, entitiesManager))
+                .executeCommand(new DeleteEntityFrontCommand(wamFile, entityId, undefined, entitiesManager))
                 .catch((error) => console.error(error));
         });
     }
@@ -739,5 +760,32 @@ export class AreaEditorTool extends MapEditorTool {
 
     private isSizeAlteringSquare(obj: Phaser.GameObjects.GameObject): obj is SizeAlteringSquare {
         return obj instanceof SizeAlteringSquare;
+    }
+
+    private makeAllEntitiesInteractive() {
+        const entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
+        entitiesManager.makeAllEntitiesInteractive(false);
+    }
+
+    // Play text on the Image entity
+    private playTooltip(text: string, x: number, y: number): void {
+        if (this.toolTipAlreadyPlayed) return;
+        setTimeout(() => {
+            this.tooltip = new SpeechDomElement("info-tooltip", text, this.scene, x, y - 60, () =>
+                this.destroyTooltip()
+            );
+            this.scene.add.existing(this.tooltip);
+            // Need to put the element at the top because
+            // if the SpechDomElement is inside of the area, pointer mouse events will not triggered
+            this.tooltip.play(x, y - 20, 3000);
+        }, 10);
+    }
+
+    private destroyTooltip(): void {
+        if (this.tooltip == undefined || this.toolTipAlreadyPlayed) return;
+        // Check if the tooltip is in the scene
+        this.scene.sys.updateList.remove(this.tooltip);
+        this.tooltip.destroy();
+        this.toolTipAlreadyPlayed = true;
     }
 }

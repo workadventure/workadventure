@@ -1,7 +1,7 @@
 import { queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import { AbstractWorkadventureStateCommands } from "./AbstractState";
-import { RoomState } from "./RoomState";
+import type { RoomState } from "./RoomState";
 
 export class WorkadventureStateCommands extends AbstractWorkadventureStateCommands<RoomState> {
     public constructor() {

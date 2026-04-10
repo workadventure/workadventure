@@ -2,13 +2,22 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const mapEditor: DeepPartial<Translation["mapEditor"]> = {
+    map: {
+        refreshPrompt: "Nowa wersija kórty jo se namakała. Aktualizacija jo trěbna",
+        deletePrompt: "Toś ta kórta jo se wulašowała",
+        deletePromptSubtitle: "Sy se wót togo rumoja źělił.",
+        deletePromptDetails: "Aktualizěrowanje toś tu kórtu njewótnowi, dokulaž wěcej njeeksistěrujo.",
+    },
     sideBar: {
         areaEditor: "Areal wobźěłaś",
         entityEditor: "Entitu wobźěłaś",
         tileEditor: "Kachlu wobźěłaś",
+        configureMyRoom: "Mój rum konfigurěrowaś",
         trashEditor: "Zbórk",
+        exploreTheRoom: "Wobłuk wužiwaś",
         closeMapEditor: "Mapu zacyniś",
         mapManagerActivated: "Mapowy manager je aktiwěrowany",
+        mapExplorerActivated: "Pśeglěd kórty",
         exploreTheRoomActivated: "Wobłuk wužiwaś",
         areaEditorActivated: "Areal wobźěłaś",
         entityEditorActivated: "Entitu wobźěłaś",
@@ -16,21 +25,30 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         configureMyRoomActivated: "Mój rum wobźěłaś",
     },
     properties: {
-        silentProperty: {
+        silent: {
             label: "Śichy wobceŕk",
             description: "Rozgrona nutśi zakazaś.",
+            actionButtonLabel: "Njewobceŕaś",
         },
-        textProperties: {
+        text: {
             label: "Nadpismo",
             placeholder: "Napišćo how tekst, ako se pokažo, gaž z objektom interagěrujśo.",
         },
-        focusableProperties: {
+        focusable: {
             label: "Dajo se fokusěrowaś",
             description: "Fokusěrujśo kameru na ten areal, gaž stupijośo nutś.",
             zoomMarginLabel: "Zoom-marža",
             defaultButtonLabel: "Fokusěrowaś na",
         },
-        jitsiProperties: {
+        highlight: {
+            label: "Wuzběgnjenje",
+            description: "Pśidaś wuzběgnjeński efekt, gaž do areala stupijomy.",
+            opacityLabel: "Opacita",
+            gradientWidthLabel: "Šyrokosć gradienta",
+            colorLabel: "Barwa",
+            durationLabel: "Cas pśechoda (ms)",
+        },
+        jitsiRoomProperty: {
             label: "Jitsi-śpa",
             description: "Startujśo jitsi-konferencu, gaž stupijośo nutś.",
             jitsiUrl: "Jitsi-URL",
@@ -47,25 +65,32 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             triggerOnAction: "Akcijowy toast z powěsću pokazaś",
             closable: "Móžo se zacyniś",
             noPrefix: "Z drugimi śpami źěliś",
+            width: "Šyrokosć",
             jitsiRoomConfig: {
                 addConfig: "Opciju pśidaś",
                 startWithAudioMuted: "Startowaś z deaktiwěrowanym mikrofonom",
                 startWithVideoMuted: "Startowaś z deaktiwěrowaneju kameru",
+                disableChat: "Chat deaktiwěrowaś",
+                jitsiRoomAdminTag: "Moderatorowa toflicka za konferencnu śpu",
                 cancel: "Pśetergnuś",
                 validate: "Waliděrowaś",
             },
+            disabled: "Jitsi-integracia jo za toś ten rum znjemóžnjona ❌",
+            actionButtonLabel: "Jitsi-konferencu startowaś",
         },
-        audioProperties: {
+        playAudio: {
             label: "Zukowu dataju wótegraś",
             description: "Audio wótegraś z głosnosću, ak dajo se nastajiś.",
             audioLinkLabel: "Audiolink",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "Muziku wótegraś",
             volumeLabel: "Głosnosć",
+            error: "Zuk njedajo se zacytaś",
+            actionButtonLabel: "Muziku wótegraś",
         },
-        linkProperties: {
+        openWebsite: {
             label: "Link wótcyniś",
-            description: "Wótcyńśo link, gaž stupijośo nutś.",
+            description: "Wótcyńśo websedło w WorkAdventure abo we nowem woknje.",
             linkLabel: "Link-URL",
             newTabLabel: "We nowem woknje wótcyniś",
             trigger: "Interakcija",
@@ -81,103 +106,266 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             policy: "iFrame dowóliś",
             policyPlaceholder: "fullscreen",
             errorEmbeddableLink: "Link njedajo se zatwariś",
-            messageNotEmbeddableLink: "Ten link njedajo se zatwariś.",
+            messageNotEmbeddableLink: "Link njedajo se zatwariś. Móžo se jano we nowem woknje wótcyniś",
             warningEmbeddableLink: "Ten link njedajo se zatwariś.",
-            errorInvalidUrl: 'Njepłaśeca URL. Wóna musy se zachopiś z "http://" oder "https://".',
+            errorInvalidUrl: 'Prošu zapodaś płaśiwu URL (zachopiju se z "https://")',
             findOutMoreHere: "How zgónijośo wěcej",
             openPickerSelector: "Wuzwóleński wuběraŕ wótcyniś",
             forcedInNewTab: "W nowem woknje wótcyniś",
+            openApplication: "Aplikaciju wótcyniś",
+            hideUrlLabel: "URL schowaś",
+            actionButtonLabel: "Link wótcyniś",
         },
         advancedOptions: "Rozšyrjone opcije",
-        speakerMegaphoneProperties: {
+        speakerMegaphone: {
             label: "Podium",
             description:
                 'Wužywarje na podiumje (pódij) mógu wšym wobźělnikam w pśisłušnej "Publikum"-wobceŕku powědaś.',
             nameLabel: "Mě",
             namePlaceholder: "HłownePódij",
             disabled: "Podium jo za toś ten rum znjemóžnjony ❌",
+            actionButtonLabel: "K podiumoju pśipowjazaś",
         },
-        listenerMegaphoneProperties: {
+        listenerMegaphone: {
             label: "Publikum",
             description: "Wužywarje w publikumowem wobceŕku mógu powědarja na zwězanem podiumje słyšaś.",
             nameLabel: "Mě podiuma",
             disabled: "Publikum jo za toś ten rum znjemóžnjony ❌",
             namePlaceholder: "Mója pśisłuchaŕska cona",
             waitingMediaLinkLabel: "Media, kótara se pokazujo, nježli žywy pśenos se zachopje",
-            waitingMediaLinkPlaceholder: "https://www… (zapódajśo URL medijow)",
+            waitingMediaLinkPlaceholder: "https://www....",
             waitingMedialLinkError:
                 "Zda se, až jo problem z wótkazom, kótaryž sy pósłał. Prošu pśekontrolěruj jen hyšći raz. 🙏",
             waitingMedialLinkHelp: "Pšawy wótkaz by mjał byś 'https://monlienmedia.com/…'.",
             waitingSpeaker: "Caka se na powědarja 🎤✨",
+            actionButtonLabel: "K publikumoju pśipowjazaś",
         },
         chatEnabled: "Chat jo aktiwěrowany",
-        startProperties: {
+        seeAttendees: "Wobźělnikow pokazaś",
+        start: {
             label: "Startowy wobceŕk",
             description: "Městnosć, źož luźe se na kórśe zjawiju.",
             nameLabel: "Mě",
             namePlaceholder: "Startowy wobceŕk",
+            type: "Typ startoweje pozicije",
+            defaultMenuItem: "Pó standardźe wužywaś",
+            hashMenuItem: "Wužywaś, jolic URL wopśimujo #[mě-wobcerka]",
+            infoAreaName:
+                "Mě wobcerka se w wuběraku wuchodnego wobcerka wužywa. Musy na kórśe jadnore być a njesmě prozne znamuška abo specialne znamješki wopśimowaś.",
+            actionButtonLabel: "K startowemu wobcerkoju hyś",
         },
-        exitProperties: {
+        exit: {
             label: "Wuchod",
             description: "Městnosć, źož luźe kórtu spušćiju.",
             exitMap: "Kórtu spušćiś",
-            exitMapStartAreaName: "Startowy wobceŕk",
+            exitMapStartAreaName: "Mě startowego wobcerka",
+            defaultStartArea: "Standardowy startowy wobceŕk",
+            actionButtonLabel: "K wuchodoju hyś",
         },
-        youtubeProperties: {
+        youtube: {
             label: "YouTube-wideo wótcyniś",
-            description: "YouTube-wideo wótcyniś, gaž stupijośo nutś.",
+            description: "YouTube-wideo w WorkAdventure abo we nowem woknje wótcyniś.",
             error: "Prošu zapodaś płaćiwy YouTube-URL",
             disabled: "YouTube-wótcynjenje je deaktiwěrowane.",
+            actionButtonLabel: "YouTube-wideo wótcyniś",
         },
-        googleDocsProperties: {
+        googleDocs: {
             label: "Google Docs wótcyniś",
-            description: "Google Docs wótcyniś, gaž stupijośo nutś.",
+            description: "Google Docs w WorkAdventure abo we nowem woknje wótcyniś.",
             error: "Prošu zapodaś płaćiwy Google Docs-URL",
             disabled: "Google Docs-wótcynjenje je deaktiwěrowane.",
+            actionButtonLabel: "Google Docs wótcyniś",
         },
-        klaxoonProperties: {
+        klaxoon: {
             label: "Klaxoon wótcyniś",
-            description: "Klaxoon wótcyniś, gaž stupijośo nutś.",
+            description: "Klaxoon w WorkAdventure abo we nowem woknje wótcyniś.",
             error: "Prošu zapodaś płaćiwy Klaxoon-URL",
             disabled: "Klaxoon-wótcynjenje je deaktiwěrowane.",
+            actionButtonLabel: "Klaxoon wótcyniś",
         },
-        googleSheetsProperties: {
+        googleSheets: {
             label: "Google Sheets wótcyniś",
-            description: "Google Sheets wótcyniś, gaž stupijośo nutś.",
+            description: "Google Sheets w WorkAdventure abo we nowem woknje wótcyniś.",
             error: "Prošu zapodaś płaćiwy Google Sheets-URL",
             disabled: "Google Sheets-wótcynjenje je deaktiwěrowane.",
+            actionButtonLabel: "Google Sheets wótcyniś",
         },
-        googleSlidesProperties: {
+        googleSlides: {
             label: "Google Slides wótcyniś",
-            description: "Google Slides wótcyniś, gaž stupijośo nutś.",
+            description: "Google Slides w WorkAdventure abo we nowem woknje wótcyniś.",
             error: "Prošu zapodaś płaćiwy Google Slides-URL",
             disabled: "Google Slides-wótcynjenje je deaktiwěrowane.",
+            actionButtonLabel: "Google Slides wótcyniś",
         },
-        eraserProperties: {
-            label: "Eraser wótcyniś",
-            description: "Eraser wótcyniś, gaž stupijośo nutś.",
-            defaultButtonLabel: "Eraser",
-            error: "Prošu zapodaś płaćiwy Google Eraser-URL",
+        eraser: {
+            label: "Eraser",
+            description: "Wšykne kresby na kórśe wulašowaś.",
+            defaultButtonLabel: "Wulašowaś",
+            error: "Prošu zapodaś płaćiwy Eraser-URL",
             disabled: "Eraser-wótcynjenje je deaktiwěrowane.",
+            actionButtonLabel: "Kresby wulašowaś",
         },
-        googleDriveProperties: {
+        googleDrive: {
             label: "Google Drive wótcyniś",
-            description: "Google Drive wótcyniś, gaž stupijośo nutś.",
+            description: "Google Drive w WorkAdventure abo we nowem woknje wótcyniś.",
             error: "Prošu zapodaś płaćiwy Google Drive-URL",
             disabled: "Google Drive-wótcynjenje je deaktiwěrowane.",
+            actionButtonLabel: "Google Drive wótcyniś",
         },
+        restrictedRightsPropertyData: {
+            label: "Pšawa pśidaś",
+            rightTitle: "Pšawa pśistupa / wobźěłanja pśez wužywaŕsku toflicku",
+            rightDescription:
+                "Pšawa definěruju, chto móžo z wobcerkom interagěrowaś. Jolic wóstajijośo to prozne, móžo kuždy wón wužywaś. Jolic nastajijośo to, mógu jano wužywarje, kótarež maju nanejmjenjej jadnu z toś tych 'toflickow', wón wužywaś.",
+            rightWriteTitle: "Pšawa wobźěłanja",
+            rightWriteDescription:
+                "Pšawa wobźěłanja definěruju, chto móžo wobcerk změniś. Wužywarje, kótarež wótpowěduju jadnej z toś tych toflickow, mógu objekt w wobcerku napóraś, aktualizěrowaś abo wulašowaś.",
+            rightReadTitle: "Pšawa pśistupa",
+            rightReadDescription:
+                "Pšawa pśistupa definěruju, chto móžo z wobcerkom interagěrowaś. Wužywarje, kótarež wótpowěduju jadnej z toś tych toflickow, mógu do wobcerka stupiś a objekty w wobcerku wužywaś.",
+            actionButtonLabel: "K priwatnej śpě hyś",
+        },
+        personalAreaPropertyData: {
+            label: "Priwatny wobceŕk",
+            description:
+                "Wužywarje mógu priwatne wobcerki ako swójski rum wužywaś. Ako administrator móžośo wobcerkoju wopśimjeśe pódaś/wześ.",
+            accessClaimMode: "Modus pśizwolenja pśistupa",
+            dynamicAccessClaimMode: "Dinamiski",
+            staticAccessClaimMode: "Statiski",
+            dynamicAccessDescription: "Kuždy z pśiměrneju wužywaŕskimi toflickami móžo wopśimjeśe wobcerka wužywaś.",
+            staticAccessDescription: "Manuelnje wopśimjeśa wobcerka definěrowaś.",
+            allowedTags: "Dowólone wužywaŕske toflicki",
+            allowedUser: "Dowólony wužywaŕ",
+            owner: "Wopśimjeśaŕ",
+            revokeAccess: "Pśistup wześ",
+            actionButtonLabel: "K priwatnemu blidkoju hyś",
+        },
+        excalidraw: {
+            label: "Excalidraw wótcyniś",
+            description:
+                "Wótwórjony žrědłowy wirtuelny bjalośny tablicowy stil. Kolegatywny a wót kóńca do kóńca šifrowany.",
+            error: "Prošu zapodaś płaćiwy Excalidraw-URL",
+            disabled: "Excalidraw-wótcynjenje je deaktiwěrowane.",
+            actionButtonLabel: "Excalidraw wótcyniś",
+        },
+        cards: {
+            label: "Cards wótcyniś",
+            description:
+                "Nejsnazša a nejlažša rozwězanje, aby swójo wěźeńje w nejkšejšem casu źělił, online, na MS Teams a na mobilnem rěźe.",
+            error: "Prošu zapodaś płaćiwy Cards-URL",
+            disabled: "Cards-wótcynjenje je deaktiwěrowane.",
+            actionButtonLabel: "Cards wótcyniś",
+        },
+        tldraw: {
+            label: "tldraw wótcyniś",
+            description: "Online bjalośny tablicowy / njewobgranicowany canvas SDK.",
+            error: "Prošu zapodaś płaćiwy tldraw-URL",
+            disabled: "tldraw-wótcynjenje je deaktiwěrowane.",
+            actionButtonLabel: "tldraw wótcyniś",
+        },
+        matrixRoomPropertyData: {
+            label: "Matrix-śpu zwězaś",
+            description: "Matrix-śpu ze swójim wobcerkom zwězaś",
+            openAutomaticallyChatLabel: "Chat awtomatiski wótcyniś",
+            roomNameLabel: "Zwobraznjeńske mě śpy",
+            roomNameLabelPlaceholder: "Mója śpa",
+            defaultChatRoomAreaName: "Wobcerk śpy",
+            actionButtonLabel: "Chatowaś zachopiś",
+        },
+        tooltipPropertyData: {
+            label: "Info-bublina",
+            description: "Info-bublinu k swójomu wobcerkoju pśidaś ℹ️",
+            contentPlaceholder: "Napišćo how wopśimjeśe ✍️",
+            duration: "Cas (w sekundach) ⏱️",
+            infinityDuration: "Njewobgranicowany cas ⏱️",
+            actionButtonLabel: "Info-bublinu wiźeś",
+        },
+        openFile: {
+            label: "Dataju wótcyniś",
+            description: "Dataju w WorkAdventure wótcyniś.",
+            error: "Prošu zapodaś płaćiwu dataju",
+            disabled: "Datajowe wótcynjenje jo znjemóžnjone.",
+            fileUrlLabel: "Datajowa URL",
+            uploadFile: {
+                title: "Wašu dataju pśidaś",
+                description: "Śěgnuś a pušćiś abo wašu dataju wubraś",
+                dragDrop: "Śěgnuś a pušćiś abo",
+                chooseFile: "Dataju wubraś",
+                errorOnFileFormat: "Datajowy format se njepódpěra",
+                errorOnFileNumber: "Wěcejdatajowe pušćanje se njepódpěra",
+                errorOnFileSize: "Dataja jo pśewjelika, maksimalna wjelikosć jo {size} MB",
+            },
+            hideUrlLabel: "URL schowaś",
+            actionButtonLabel: "Dataju wótcyniś",
+        },
+        livekitRoomProperty: {
+            label: "Konferencna śpa",
+            description: "Konferencu startowaś, gaž stupijośo nutś.",
+            roomNameLabel: "Mě śpy",
+            roomNamePlaceholder: "Mě śpy",
+            highlightAreaOnEnter: "Wobcerk pśi nutśstupjenju wuzběgnuś",
+            moreOptionsLabel: "Wěcej opcijow",
+            livekitRoomConfig: {
+                addConfig: "Opciju pśidaś",
+                startWithAudioMuted: "Startowaś z deaktiwěrowanym mikrofonom",
+                startWithVideoMuted: "Startowaś z deaktiwěrowaneju kameru",
+                disableChat: "Chat deaktiwěrowaś",
+                livekitRoomAdminTag: "Moderatorowa toflicka za konferencnu śpu",
+                cancel: "Pśetergnuś",
+                validate: "Waliděrowaś",
+            },
+            actionButtonLabel: "Konferencu startowaś",
+        },
+        maxUsersInAreaPropertyData: {
+            label: "Maksimalna licba wužywarjow",
+            description: "Stajśo maksimalnu licbu wužywarjow w wobcerjeju.",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "Wobcerje, kótarež dajo se zawěriś",
+            description: "Wobcerje zawěriś, aby se woglědanje z wónkaźi zawoborowało.",
+            lockLabel: "Wobcerje zawěriś",
+            allowedTagsLabel: "Toflicki, kótarež směju zawěriś/wótcyniś",
+            allowedTagsInfo:
+                "Jano wužywarje z toś tymi toflickami mógu toś to wobcerje zawěriś abo wótcyniś. Wóstajśo prozne, aby wšym dowóliło.",
+        },
+        noProperties: "Žedne kakosći njejsu definěrowane",
     },
     areaEditor: {
         editInstructions: "Klikniśo na wobceŕk, aby jogo kakosći pśeměnili.",
         nameLabel: "Mě",
-        nameLabelPlaceholder: "Mě",
-        areaDescription: "Pśedpokładny opis",
-        areaDescriptionPlaceholder: "Pśedpokładny opis",
-        addDescriptionField: "Opis pśidaś",
+        nameLabelPlaceholder: "MójWobceŕk",
+        areaDescription: "Wopisanje",
+        areaDescriptionPlaceholder: "Mój wobceŕk jo...",
+        areaSerchable: "Pytajobny w modusu wužiwanja",
+        addDescriptionField: "Wopisanjowe pólo pśidaś",
+        clickAgainToSelectAnotherZone: "Móžośo znowego kliknuś, aby drugi wobcerk wubrał",
+        actionPopupOnPersonalAreaWithEntities: {
+            title: "Akcija jo trěbna",
+            description: "Toś ten priwatny wobceŕk wopśimujo jaden abo wěcej objektow. Cośo z nim/nimi cyniś?",
+            buttons: {
+                keep: "Wobchowaś",
+                remove: "Wótpóraś",
+                cancel: "Pśetergnuś",
+            },
+        },
+        nameHelpText: "Toś to zapódanje se wužywarjeju pokažo, jolic do wobcerka stupiju.",
+    },
+    areaEditorInstructions: {
+        title: "Kak to funkcioněrujo?",
+        description: "Cyrkajśo wobcerk na kórśe, aby nowy napórał.",
     },
     entityEditor: {
+        header: {
+            title: "Objekt k swójomu kórśeju pśidaś",
+            description: "Pytajśo, nagrajśo abo wubjeŕśo eksistěrujucy objekt a pśidajśo jen k kórśeju.",
+            choose: "Wubjeŕśo objekt",
+        },
+        title: "Waš objekt stajiś",
+        editing: "Wobźěłanje: {name}",
+        drop: "Pušććo swóju dataju góźi",
         itemPicker: {
-            searchPlaceholder: "Slěźiś",
+            searchPlaceholder: "Pytowaś",
             backToSelectObject: "Slědk k wuzwólonemu objektoju",
         },
         trashTool: {
@@ -186,13 +374,53 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deleteButton: "Wulašowaś",
         testInteractionButton: "Interakciju testowaś",
         buttonLabel: "Wopismo bublina",
-        editInstructions: "Klikniśo na objekt, aby jogo kakosći pśeměnili.",
+        editInstructions: "Klikniśo na entitu, aby jogo kakosći pśeměnili.",
         selectObject: "Klikniśo na objekt, aby jen wuzwólili",
-        objectName: "Mě",
-        objectNamePlaceholder: "Mě",
-        objectDescription: "Pśedpokładny opis",
-        objectDescriptionPlaceholder: "Pśedpokładny opis",
-        addDescriptionField: "Opis pśidaś",
+        objectName: "Mě objekta",
+        objectNamePlaceholder: "MójObjekt",
+        objectDescription: "Wopisanje objekta",
+        objectDescriptionPlaceholder: "Mój objekt jo...",
+        objectSearchable: "Pytajobny w modusu wužiwanja",
+        addDescriptionField: "Wopisanjowe pólo pśidaś",
+        uploadEntity: {
+            title: "Wašu wobraz pśidaś",
+            description: "Śěgnuś a pušćiś abo wašu wobraz wubraś, aby jen k kórśeju pśidał",
+            dragDrop: "Śěgnuś a pušćiś abo",
+            chooseFile: "Dataju wubraś",
+            errorOnFileFormat: "Datajowy format se njepódpěra",
+            errorOnFileNumber: "Wěcejdatajowe pušćanje se njepódpěra",
+            errorOnFileSize: "Dataja jo pśewjelika, maksimalna wjelikosć jo {size} MB",
+        },
+        images: "Wobraz{{s}}",
+        noImage: "Žedny wobraz",
+        customEntityEditorForm: {
+            imageName: "Mě wobrazka",
+            tags: "Toflicki",
+            writeTag: "Toflicku pisaś...",
+            objectType: "Typ objekta",
+            floatingObject: "Płujucego objekta",
+            floatingObjectDescription:
+                "Płujucego objekta dajo se lichotnje na kórśe stajiś. Inak buźo se na kórśowej gridźe wusměrjaś.",
+            depth: "Dłymokosć",
+            groundLevel: "Zemjowy rownina",
+            custom: "Swójski",
+            standing: "Stojacy",
+            collision: "Kolizija",
+            wokaAbove: "Woka górjejce",
+            wokaBelow: "Woka dołojce",
+        },
+        buttons: {
+            editEntity: "Wobźěłaś",
+            back: "Slědk",
+            cancel: "Pśetergnuś",
+            delete: "Wulašowaś",
+            save: "Składowaś",
+            upload: "Nagraś",
+        },
+        errors: {
+            dragNotConnected: "Njamóžośo dataje nagraś, jolic njejsćo pśizjawjony a njamajośo pšawa za to.",
+            dragNotAllowed: "Njamajośo pšawa, aby dataje na toś tu kórtu nagrał",
+        },
     },
     settings: {
         loading: "Lodujo se...",
@@ -202,15 +430,23 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             inputs: {
                 spaceName: "Mě śpy",
                 spaceNameHelper:
-                    "Mě śpy, źož megafon móžo se wužywaś. Gaž wóstajijośo to pólo prozne, ga móžo se wón we cełem swěśe wužywaś.",
+                    "Jolic cośo pśenos na wšykne wužywarje wusćełaś, kótarež su w rozdźělnych śpach, ale w samem swěśe, musyśo samsne mě śpy za wšykne nastajenja megafona w kuždej śpě nastajiś a wobcerjenje na 'Swět' stajiś.",
                 scope: "Wobcerjenje wužyśa",
                 world: "Swět",
                 room: "Śpa",
+                notificationSound: "Powěsćowy zwuk",
+                notificationSoundNoSound: "Bźez zwuka",
+                notificationSoundCustom: "Benutzerdefiniert",
+                enableSoundNotifications: "Tonbenachrichtigungen aktivieren",
                 rights: "Pšawa",
                 rightsHelper:
-                    "Pšawa, ako wužywaŕ musy měś, aby megafon wužywał. Gaž wóstajijośo to pólo prozne, ga buźo kuždy móc megafon wužywaś.",
+                    "Pšawa definěruju, chto móžo megafon wužywaś. Jolic wóstajijośo to prozne, móžo kuždy wón wužywaś. Jolic nastajijośo to, mógu jano wužywarje, kótarež maju jadnu z toś tych 'toflickow', wón wužywaś.",
+                audienceVideoFeedbackActivated: "Auditoriumowy modus zmóžnjony",
+                audienceVideoFeedbackActivatedDisabled: "Auditoriumowy modus znjemóžnjony",
+                audienceVideoFeedbackActivatedHelper:
+                    "Auditoriumowy modus zmóžnjony: Dostawaśo pśenosowanje kamery a mikrofona wšych wužywarjow (z zmóžnjoneju kameru a mikrofonom) w rumnje/swěśe. Ale wobźělnik njamóžo drugich wobźělnikow wiźeś. Pó standardźe znjemóžnjony.",
                 error: {
-                    title: "Zmólka",
+                    title: "Prošu zapodaś mě",
                     save: {
                         success: "Nastajenja megafona su zachowane",
                         fail: "Zmólka pśi zapisanju nastajenjow megafona",
@@ -218,6 +454,79 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 },
             },
         },
+        recording: {
+            title: "Nagrawanje",
+            description: "Konfigurěrujśo, chto móžo nagrawanje w bublinach a zmakanjowych rumach startowaś.",
+            inputs: {
+                rights: "Pšawa",
+                rightsHelper:
+                    "Kuždy, kótary ma nanejmjenjej jadnu z toś tych toflickow, móžo nagrawanje startowaś. Wóstajśo to prozne, aby se dowóliło kuždemu pśizjawjenemu wužywarju.",
+                enableSounds: "Zukowe warnowanje pśi zachopjeńju a zastajanju nagrawanja wótgraś",
+                enableSoundsHelper:
+                    "Gaž jo zmóžnjone, buźo wšykne wobźělniki zwukowe zdźělenje słyšaś, gaž nagrawanje zachopijo abo zastanjo.",
+                error: {
+                    save: {
+                        success: "Nastajenja nagrawanja su zachowane",
+                        fail: "Zmólka pśi zapisanju nastajenjow nagrawanja",
+                    },
+                },
+            },
+        },
+        room: {
+            title: "Nastajenja śpy",
+            description: "Wašu śpu konfigurěrowaś",
+            inputs: {
+                name: "Mě śpy",
+                description: "Wopisanje śpy",
+                tags: "Toflicki",
+                copyright: "Licenca śpy",
+                thumbnail: "Miniatura śpy",
+            },
+            helps: {
+                description: "Wopisanje kórty. Móžo se w socialnych seśach wužywaś, gaž se link k kórśe źěli.",
+                tags: "Lisćina toflickow. Móžo se wužywaś, aby pśistup k kórśe pódał.",
+                thumbnail:
+                    "URL k miniaturnemu wobrazu. Toś ten wobraz buźo se w socialnych seśach wužywaś, gaž se link k kórśe źěli.",
+                copyright:
+                    "Copyright-powěźeńka za toś tu kórtu. Móžo se link k licenci byś. Cynje toś teje kórty ako tilesety abo wobraze mógu swójski copyright měś.",
+            },
+            actions: {
+                save: "Składowaś",
+                confirm: "Wobkšuśiś",
+                success: "Nastajenja śpy su zachowane",
+                error: "Zmólka pśi zapisanju nastajenjow śpy",
+            },
+            confirmSave:
+                "Wobkšuśćo, až cośo změny k kórśe składowaś. To napórajo nowu wersiju kórty, wótzpórajo wšyknych grajaŕow a znowego zacyta kórtu za wšyknych grajaŕow.",
+        },
+    },
+    explorer: {
+        title: "Wobłuk wužiwaś",
+        description:
+            "Dowóliśo wobłuk wužiwaś. Móžośo se pó wobłuku hyś a z objektami interagěrowaś. 2 modusa stoje k dispoziciji: 'Wužiwanje' a 'Pytanje'. Modus 'Pytanje' wam pśedstaja, aby entity a wobcerki w wobłuku pytał abo filtrował. Modus 'Wužiwanje' wam dowólijo, lichotnje se pó wobłuku hyś.",
+        noEntitiesFound: "Žedna entita w wobłuku namakana 🙅‍♂️",
+        entitiesFound: "objekt{{s}} namakany",
+        noAreasFound: "Žedny wobceŕk w wobłuku namakany 🙅‍♀️",
+        areasFound: "wobceŕk{{s}} namakany",
+        noDescriptionFound: "Žedne wopisanje namakane 🫥",
+        details: {
+            close: "Zacyniś",
+            moveToEntity: "K entitě {name} hyś",
+            moveToArea: "K wobcerkoju {name} hyś",
+            errorMovingToObject: "Objekt hyšći njejo pśistupny 🚫",
+        },
+        zoomIn: "Pówětšyś +",
+        zoomOut: "Pómjeńšyś -",
+        showMyLocation: "Móju poziciju pokazaś",
+    },
+    listRoom: {
+        isFetching: "Lisćina śpow se wótwołujo... ⤵️",
+        noRoomFound: "Žedna śpa namakana 🙅‍♂️",
+        items: "{countEntity} entitow / {countArea} wobcerkow",
+        close: "Zacyniś",
+        movingToRoom: "Hyś k śpě: {roomNameSelected}... Do skóro... 🫡",
+        searchLabel: "Śpu pytaś",
+        searchPlaceholder: "Pśez klucowe słowa pisaś...",
     },
 };
 

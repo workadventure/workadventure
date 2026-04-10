@@ -1,18 +1,19 @@
-import { DeleteEntityCommand, GameMap } from "@workadventure/map-editor";
+import type { WamFile } from "@workadventure/map-editor";
+import { DeleteEntityCommand } from "@workadventure/map-editor";
 import pLimit from "p-limit";
-import { HookManager } from "../../Modules/HookManager";
+import type { HookManager } from "../../Modules/HookManager";
 
 const limit = pLimit(10);
 
 export class DeleteEntityMapStorageCommand extends DeleteEntityCommand {
     constructor(
-        gameMap: GameMap,
+        wamFile: WamFile,
         id: string,
         commandId: string | undefined,
         private hostName: string,
         private hookManager: HookManager
     ) {
-        super(gameMap, id, commandId);
+        super(wamFile, id, commandId);
     }
     public async execute(): Promise<void> {
         await super.execute();

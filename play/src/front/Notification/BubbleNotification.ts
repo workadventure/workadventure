@@ -1,4 +1,5 @@
-import { defaultOptions, NotificationWA, TIME_NOTIFYING_MILLISECOND } from "./Notification";
+import type { NotificationWA } from "./Notification";
+import { defaultOptions, TIME_NOTIFYING_MILLISECOND } from "./Notification";
 
 export class BubbleNotification implements NotificationWA {
     private static canSendNotification = true;

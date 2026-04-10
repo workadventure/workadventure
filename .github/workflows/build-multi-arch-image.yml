@@ -34,7 +34,6 @@ on:
         type: string
         default: ""
 
-
 jobs:
   build-amd-image:
     uses: ./.github/workflows/build-single-image.yml

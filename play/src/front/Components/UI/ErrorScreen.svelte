@@ -5,20 +5,20 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { connectionManager } from "../../Connection/ConnectionManager";
 
-    import reload from "../images/reload.png";
     import LL from "../../../i18n/i18n-svelte";
     import { userIsConnected } from "../../Stores/MenuStore";
 
     import logoImg from "../images/logo-min-white.png";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
     import errorGif from "./images/error.gif";
+    import { IconRefresh } from "@wa-icons";
 
     let errorScreen = $errorScreenStore;
 
     let logoErrorSrc = gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
 
     function click() {
-        if (errorScreen?.type === "unauthorized") void connectionManager.logout();
+        if (errorScreen?.type === "unauthorized") connectionManager.logout();
         else window.location.reload();
     }
     let details = errorScreen?.details ?? "";
@@ -46,7 +46,7 @@
 
 {#if $errorScreenStore}
     <main
-        class="errorScreen bg-contrast h-dvh pointer-events-auto w-full text-white text-center absolute flex flex-wrap items-center justify-center h-full top-0 left-0 right-0 mx-auto overflow-scroll py-5"
+        class="errorScreen bg-contrast pointer-events-auto w-full text-white text-center absolute flex flex-wrap items-center justify-center h-full top-0 left-0 right-0 mx-auto overflow-scroll py-5"
         style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}
         transition:fly={{ y: -200, duration: 500 }}
     >
@@ -87,13 +87,12 @@
             </p>
             <div class="flex gap-2">
                 {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
-                    <button type="button" class="btn-lg btn btn-light btn-border button" on:click={click}>
-                        {#if $errorScreenStore.type === "retry"}<img
-                                src={reload}
-                                alt=""
-                                class="reload mr-2 hover:"
-                                draggable="false"
-                            />{/if}
+                    <button
+                        type="button"
+                        class="btn-lg btn btn-light btn-border button flex items-center gap-2"
+                        on:click={click}
+                    >
+                        {#if $errorScreenStore.type === "retry"}<IconRefresh />{/if}
                         {$errorScreenStore.buttonTitle}
                     </button>
                     {#if $userIsConnected}

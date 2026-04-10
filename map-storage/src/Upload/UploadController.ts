@@ -1,31 +1,33 @@
 import * as fs from "fs";
 import path from "node:path";
 import { z, ZodError } from "zod";
-import { Express, Request } from "express";
+import type { Express, Request } from "express";
 import multer from "multer";
-import pLimit, { LimitFunction } from "p-limit";
+import type { LimitFunction } from "p-limit";
+import pLimit from "p-limit";
 import archiver from "archiver";
 import * as unzipper from "unzipper";
-import * as jsonpatch from "fast-json-patch";
-import { MapValidator, OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
+import type { Operation } from "rfc6902";
+import { applyPatch } from "rfc6902";
+import type { OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
+import { MapValidator } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { WAMFileFormat } from "@workadventure/map-editor";
 import { ZipFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/ZipFileFetcher";
 import { HttpFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/HttpFileFetcher";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
-import { Operation } from "fast-json-patch";
 import { generateErrorMessage } from "zod-error";
 import * as Sentry from "@sentry/node";
 import bodyParser from "body-parser";
-import { ITiledMap } from "@workadventure/tiled-map-type-guard";
+import type { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import axios from "axios";
 import { mapPath } from "../Services/PathMapper";
 import { ENTITY_COLLECTION_URLS, MAX_UNCOMPRESSED_SIZE, WAM_TEMPLATE_URL } from "../Enum/EnvironmentVariable";
 import { passportAuthenticator } from "../Services/Authentication";
 import { uploadDetector } from "../Services/UploadDetector";
-import { MapListService } from "../Services/MapListService";
+import type { MapListService } from "../Services/MapListService";
 import { mapsManager } from "../MapsManager";
 import { _axios } from "../Services/axiosInstance";
-import { FileSystemInterface } from "./FileSystemInterface";
+import type { FileSystemInterface } from "./FileSystemInterface";
 import { FileNotFoundError } from "./FileNotFoundError";
 
 const limit = pLimit(10);
@@ -441,12 +443,19 @@ export class UploadController {
                         content.metadata = {};
                     }
 
-                    const patchedContent = jsonpatch.applyPatch(
-                        content,
-                        req.body as Operation[],
-                        true,
-                        false
-                    ).newDocument;
+                    const patchedContent = structuredClone(content);
+                    const patchErrors = applyPatch(patchedContent, req.body as Operation[]);
+                    if (patchErrors.some(Boolean)) {
+                        console.error(
+                            `[${new Date().toISOString()}] Failed to apply patch on WAM file:`,
+                            patchErrors,
+                            typeof patchErrors
+                        );
+                        res.status(400).json({
+                            patch: patchErrors,
+                        });
+                        return;
+                    }
 
                     const patchedContentString = JSON.stringify(patchedContent);
                     const result = mapValidator.validateWAMFile(patchedContentString);
@@ -661,8 +670,8 @@ export class UploadController {
                 const isWamFile = filePath.endsWith(".wam");
 
                 if (isWamFile) {
-                    const gameMap = await mapsManager.getOrLoadGameMap(virtualPath);
-                    const areas = gameMap.getGameMapAreas()?.getAreas().values();
+                    const wamFile = await mapsManager.getOrLoadWamFile(virtualPath);
+                    const areas = wamFile.getGameMapAreas().getAreas().values();
 
                     if (areas) {
                         const promises = Array.from(areas).reduce((acc, currArea) => {
@@ -684,20 +693,20 @@ export class UploadController {
                             );
                         }
                     }
+
+                    mapsManager.clearAfterUpload(virtualPath);
                 }
 
                 await this.fileSystem.deleteFiles(virtualPath);
 
+                await this.mapListService.generateCacheFile(req.hostname);
+
                 if (isWamFile) {
-                    // FIXME: We should call the refresh for all WAM files deleted (in subdirectories too)
-                    uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
+                    await uploadDetector.delete(this.getFullUrlFromRequest(req)).catch((err) => {
                         console.error(`[${new Date().toISOString()}]`, err);
                         Sentry.captureException(err);
                     });
-                    //await this.mapListService.deleteWAMFileInCache(req.hostname, filePath);
                 }
-
-                await this.mapListService.generateCacheFile(req.hostname);
 
                 res.sendStatus(204);
             })().catch((e) => {

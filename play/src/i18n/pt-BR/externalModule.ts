@@ -36,6 +36,9 @@ const externalModule: BaseTranslation = {
         loggedIn: "Conectado com:",
         saveSync: "Salvar e sincronizar",
         logout: "Sair",
+        back: "Voltar",
+        tokenPlaceholder: "Seu token do Discord",
+        loginWithQrCode: "Entrar com código QR",
         guilds: "Servidores Discord",
         guildExplain: "Selecione os canais que você deseja adicionar à interface de chat do Workadventure.\n",
     },
@@ -50,6 +53,15 @@ const externalModule: BaseTranslation = {
         isSyncronized: "Sincronizado com Outlook",
         popupScopeIsConnectedExplainText: "Você já está conectado, clique no botão para fazer logout e reconectar.",
         popupScopeIsConnectedButton: "Logout",
+        popupErrorTitle: "⚠️ A sincronização do módulo Outlook ou Teams falhou",
+        popupErrorDescription:
+            "A sincronização de inicialização do módulo Outlook ou Teams falhou. Para estar conectado, tente reconectar.",
+        popupErrorContactAdmin: "Se o problema persistir, entre em contato com seu administrador.",
+        popupErrorShowMore: "Mostrar mais informações",
+        popupErrorMoreInfo1:
+            "Pode haver um problema com o processo de entrada. Verifique se o provedor SSO Azure está configurado corretamente.",
+        popupErrorMoreInfo2:
+            'Verifique se o escopo "offline_access" está habilitado para o provedor SSO Azure. Este escopo é necessário para obter o token de atualização e manter o módulo Teams ou Outlook conectado.',
     },
     google: {
         signIn: "Entrar com Google",
@@ -73,7 +85,7 @@ const externalModule: BaseTranslation = {
             errorExplain:
                 "Não se preocupe, você ainda pode participar de reuniões quando alguém compartilhar um link 🙏",
         },
-        popupScopeIsConnectedButton: "Logout",
+        popupScopeIsConnectedButton: "Sair",
         popupScopeIsConnectedExplainText: "Você já está conectado, clique no botão para fazer logout e reconectar.",
     },
     calendar: {
@@ -81,7 +93,7 @@ const externalModule: BaseTranslation = {
         joinMeeting: "Clique aqui para participar da reunião",
     },
     todoList: {
-        title: "To Do",
+        title: "A fazer",
         sentence: "Faça uma pausa 🙏 talvez um café ou chá? ☕",
     },
 };

@@ -4,6 +4,9 @@ import type { Translation } from "../i18n-types";
 const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     map: {
         refreshPrompt: "Nouvelle version de la carte détectée. Actualisation nécessaire",
+        deletePrompt: "Cette carte a été supprimée",
+        deletePromptSubtitle: "Vous avez été déconnecté de cette salle.",
+        deletePromptDetails: "Actualiser ne restaurera pas cette carte, car elle n'existe plus.",
     },
     sideBar: {
         areaEditor: "Outil d'édition de zone",
@@ -22,21 +25,22 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         configureMyRoomActivated: "Configuration de la salle activée",
     },
     properties: {
-        silentProperty: {
+        silent: {
             label: "Silent",
             description: "Ne permet pas les conversations à l'intérieur.",
+            actionButtonLabel: "Ne pas déranger",
         },
-        textProperties: {
+        text: {
             label: "Texte d'en-tête",
             placeholder: "Saisissez ici le texte qui sera affiché lors de l'interaction avec l'objet",
         },
-        focusableProperties: {
+        focusable: {
             label: "Focalisable",
             description: "Focaliser sur cette zone à l'entrée.",
             zoomMarginLabel: "Marge de Zoom",
             defaultButtonLabel: "Focaliser sur",
         },
-        highlightProperties: {
+        highlight: {
             label: "Mise en évidence",
             description: "Assombri l'extérieur de la zone pour la mettre en valeur.",
             opacityLabel: "Opacité",
@@ -44,7 +48,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             colorLabel: "Couleur",
             durationLabel: "Durée de la transition (en ms)",
         },
-        jitsiProperties: {
+        jitsiRoomProperty: {
             label: "Salle Jitsi",
             description: "Démarrer une réunion Jitsi à l'entrée.",
             jitsiUrl: "URL Jitsi",
@@ -72,8 +76,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 validate: "Valider",
             },
             disabled: "L'intégration Jitsi est désactivée sur ce salon ❌",
+            actionButtonLabel: "Démarrer une réunion Jitsi",
         },
-        audioProperties: {
+        playAudio: {
             label: "Jouer un fichier audio",
             description: "Jouer un audio avec un volume réglable.",
             audioLinkLabel: "Lien vers l'audio",
@@ -81,8 +86,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Jouer de la musique",
             volumeLabel: "Volume",
             error: "Impossible de charger le son",
+            actionButtonLabel: "Jouer de la musique",
         },
-        linkProperties: {
+        openWebsite: {
             label: "Ouvrir un lien",
             description: "Ouvrir un site web dans l'application ou dans un nouvel onglet.",
             linkLabel: "URL du Lien",
@@ -109,17 +115,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             forcedInNewTab: "Ouverture forcée dans un nouvel onglet",
             openApplication: "Ouvrir l'application",
             hideUrlLabel: "Masquer l'URL",
+            actionButtonLabel: "Ouvrir le lien",
         },
         advancedOptions: "Options avancées",
-        speakerMegaphoneProperties: {
+        speakerMegaphone: {
             label: "Podium",
             description:
                 'Les utilisateurs sur le podium (scène) peuvent parler à tous les participants dans la zone "Audience" correspondante.',
             nameLabel: "Nom du podium",
             namePlaceholder: "MonPodium",
             disabled: "Les podiums sont désactivés sur ce salon ❌",
+            actionButtonLabel: "Rejoindre le podium",
         },
-        listenerMegaphoneProperties: {
+        listenerMegaphone: {
             label: "Audience",
             description: "Les utilisateurs dans la zone d'audience peuvent entendre l'orateur sur le podium lié.",
             nameLabel: "Nom du podium attaché",
@@ -131,74 +139,88 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Il semble y avoir un problème avec le lien que vous avez fourni. Pourriez-vous le vérifier à nouveau ? 🙏",
             waitingMedialLinkHelp: "Le lien correct devrait être 'https://monlienmedia.com/…'.",
             waitingSpeaker: "En attente de l'orateur 🎤✨",
+            actionButtonLabel: "Rejoindre l'audience",
         },
         chatEnabled: "Chat activé",
-        startProperties: {
+        seeAttendees: "Voir les participants",
+        start: {
             label: "Zone de départ",
             description: "Où les joueurs apparaissent lorsqu'ils entrent dans la carte.",
             nameLabel: "Nom de la zone de départ",
             namePlaceholder: "MaZoneDeDépart",
             type: "Type de position de départ",
             defaultMenuItem: "Utiliser par défaut",
-            hashMenuItem: "Utiliser si l’URL contient #[nom de zone]",
+            hashMenuItem: "Utiliser si l'URL contient #[nom-de-zone]",
+            infoAreaName:
+                "Le nom de la zone sera utilisé dans le sélecteur de zone de sortie. Il doit être unique sur la carte et ne peut pas contenir d'espaces ou de caractères spéciaux.",
+            actionButtonLabel: "Aller au départ",
         },
-        exitProperties: {
+        exit: {
             label: "Zone de sortie",
             description: "Où les joueurs apparaissent lorsqu'ils quittent la carte.",
             exitMap: "Quitter la carte",
             exitMapStartAreaName: "Nom de la zone de départ",
             defaultStartArea: "Zone de départ par défaut",
+            actionButtonLabel: "Aller à la sortie",
         },
-        youtubeProperties: {
+        youtube: {
             label: "Ouvrir YouTube",
             description: "Ouvrir YouTube dans l'application ou dans un nouvel onglet.",
             error: "Veuillez entrer une URL YouTube valide",
             disabled: "L'intégration YouTube est désactivée.",
+            actionButtonLabel: "Ouvrir la vidéo YouTube",
         },
-        googleDocsProperties: {
+        googleDocs: {
             label: "Ouvrir Google Docs",
             description: "Ouvrir Google Docs dans l'application ou dans un nouvel onglet.",
             error: "Veuillez entrer une URL Google Docs valide",
             disabled: "L'intégration Google Docs est désactivée.",
+            actionButtonLabel: "Ouvrir Google Docs",
         },
-        klaxoonProperties: {
+        klaxoon: {
             label: "Ouvrir Klaxoon",
             description: "Ouvrir Klaxoon dans l'application ou dans un nouvel onglet.",
             error: "Veuillez entrer une URL Klaxoon valide",
             disabled: "L'intégration Klaxoon est désactivée.",
+            actionButtonLabel: "Ouvrir Klaxoon",
         },
-        googleSheetsProperties: {
+        googleSheets: {
             label: "Ouvrir Google Sheets",
             description: "Ouvrir Google Sheets dans l'application ou dans un nouvel onglet.",
             error: "Veuillez entrer une URL Google Sheets valide",
             disabled: "L'intégration Google Sheets est désactivée.",
+            actionButtonLabel: "Ouvrir Google Sheets",
         },
-        googleSlidesProperties: {
+        googleSlides: {
             label: "Ouvrir Google Slides",
             description: "Ouvrir Google Slides dans l'application ou dans un nouvel onglet.",
             error: "Veuillez entrer une URL Google Slides valide",
             disabled: "L'intégration Google Slides est désactivée.",
+            actionButtonLabel: "Ouvrir Google Slides",
         },
-        eraserProperties: {
+        eraser: {
             label: "Ouvrir Eraser",
             description: "Ouvrir Eraser dans l'application ou dans un nouvel onglet.",
             defaultButtonLabel: "Effacer",
             error: "Veuillez entrer une URL Eraser valide",
             disabled: "L'intégration Eraser est désactivée.",
+            actionButtonLabel: "Effacer les dessins",
         },
-        googleDriveProperties: {
+        googleDrive: {
             label: "Ouvrir Google Drive",
             description: "Ouvrir un lien Google Drive dans l'application ou dans un nouvel onglet.",
             error: "Veuillez entrer une URL Google Drive valide",
             disabled: "L'intégration Google Drive est désactivée.",
+            actionButtonLabel: "Ouvrir Google Drive",
         },
-        tldrawProperties: {
+        tldraw: {
             label: "Ouvrir tldraw",
             description: "Ouvrir tldraw dans l'application ou dans un nouvel onglet.",
             error: "Veuillez entrer une URL tldraw valide",
             disabled: "L'intégration tldraw est désactivée.",
+            actionButtonLabel: "Ouvrir tldraw",
         },
-        restrictedRightsProperties: {
+        restrictedRightsPropertyData: {
             label: "Ajouter des droits",
             rightTitle: "Droit d'accès et d'édition via les tags utilisateur",
             rightDescription:
@@ -209,8 +231,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "Droits d'accès",
             rightReadDescription:
                 "Les droits d'accès définissent qui peut interagir avec la zone. Les utilisateurs correspondant à l'un de ces tags peuvent entrer dans la zone et utiliser les objets qui s'y trouvent.",
+            actionButtonLabel: "Aller à la salle privée",
         },
-        personalAreaConfiguration: {
+        personalAreaPropertyData: {
             label: "Zone personnelle",
             description:
                 "La définition d'une zone personnelle permet à l'utilisateur de revendiquer cette zone comme son propre espace. En tant qu'administrateur, vous pouvez définir/révoquer un espace à un utilisateur.",
@@ -224,22 +247,26 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "Utilisateur autorisé",
             owner: "Propriétaire",
             revokeAccess: "Révoquer l'accès",
+            actionButtonLabel: "Aller au bureau personnel",
         },
-        excalidrawProperties: {
+        excalidraw: {
             label: "Ouvrir Excalidraw",
             description:
                 "Un outil de dessin à la main virtuel (preque comme un tableau blanc). Collaboratif et chiffré de bout en bout.",
             error: "Veuillez entrer une URL Excalidraw valide",
             disabled: "L'intégration Excalidraw est désactivée.",
+            actionButtonLabel: "Ouvrir Excalidraw",
         },
-        cardsProperties: {
+        cards: {
             label: "Ouvrir Cards",
             description:
                 "Simplifiez l'accès aux savoirs de vos équipes, clients et partenaires ! Format digeste, accessible sur tous supports.",
             error: "Veuillez entrer une URL Cards valide",
             disabled: "L'intégration Cards est désactivée.",
+            actionButtonLabel: "Ouvrir Cards",
         },
-        matrixProperties: {
+        matrixRoomPropertyData: {
+            actionButtonLabel: "Start chatting",
             label: "Lier un salon Matrix",
             description: "Lier un salon Matrix",
             openAutomaticallyChatLabel: "Ouvrir le chat automatiquement",
@@ -247,14 +274,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabelPlaceholder: "Mon Salon",
             defaultChatRoomAreaName: "Salon de zone",
         },
-        tooltipProperties: {
+        tooltipPropertyData: {
             label: "Info Bulle",
             description: "Afficher une info bulle lors de l'interaction avec l'objet ℹ️",
             contentPlaceholder: "Contenu de l'info bulle 📝",
             duration: "Duration (en secondes) ⏱️",
             infinityDuration: "Infini ⏱️",
+            actionButtonLabel: "Voir l'info bulle",
         },
-        openFileProperties: {
+        openFile: {
             label: "Ouvrir un fichier",
             description: "Ouvrir un fichier dans l'application.",
             error: "Veuillez entrer fichier valide",
@@ -270,8 +298,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileSize: "Fichier trop volumineux : la taille maximale est de {size} MB",
             },
             hideUrlLabel: "Masquer l'URL",
+            actionButtonLabel: "Ouvrir le fichier",
         },
-        livekitProperties: {
+        livekitRoomProperty: {
             label: "Salle de réunion",
             description: "Démarrer une réunion à l'entrée.",
             roomNameLabel: "Nom de la salle",
@@ -287,6 +316,20 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Annuler",
                 validate: "Valider",
             },
+            actionButtonLabel: "Démarrer une réunion",
+        },
+        maxUsersInAreaPropertyData: {
+            label: "Nombre maximum d'utilisateurs",
+            description: "Définir le nombre maximum d'utilisateurs dans la zone.",
+            placeholder: "Vide = pas de limite, 0 = fermé",
+        },
+        lockableAreaPropertyData: {
+            label: "Zone verrouillable",
+            description: "Verrouiller la zone pour empêcher l'entrée depuis l'extérieur.",
+            lockLabel: "Verrouiller la zone",
+            allowedTagsLabel: "Tags autorisés à verrouiller/déverrouiller",
+            allowedTagsInfo:
+                "Seuls les utilisateurs avec ces tags peuvent verrouiller ou déverrouiller cette zone. Laissez vide pour autoriser tout le monde.",
         },
         noProperties: "Aucune propriété définie",
     },
@@ -298,6 +341,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "Description de la zone",
         areaSerchable: "Recherchable dans le mode exploration",
         addDescriptionField: "Ajouter une description",
+        clickAgainToSelectAnotherZone: "Cliquer à nouveau pour sélectionner une autre zone",
         actionPopupOnPersonalAreaWithEntities: {
             title: "Action requise",
             description: "Cette zone personnelle contient un ou plusieurs objets. Que souhaitez-vous faire avec ?",
@@ -394,14 +438,40 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 scope: "Portée",
                 world: "Monde",
                 room: "Salle",
+                notificationSound: "Son de notification",
+                notificationSoundNoSound: "Aucun son",
+                notificationSoundCustom: "Personnalisé",
+                enableSoundNotifications: "Activer les notifications sonores",
                 rights: "Droits",
                 rightsHelper:
                     "Les droits définissent qui peut utiliser le megaphone. Si vous le laissez vide, tout le monde peut l'utiliser. Si vous le définissez, seuls les utilisateurs qui ont au moins l'un de ces 'tags' peuvent l'utiliser.",
+                audienceVideoFeedbackActivated: "Mode auditorium activé",
+                audienceVideoFeedbackActivatedDisabled: "Mode auditorium désactivé",
+                audienceVideoFeedbackActivatedHelper:
+                    "Mode auditorium activé : Recevez le flux caméra et microphone de tous les utilisateurs (avec caméra et microphone activés) dans la salle/monde. Mais le participant ne pourra pas voir les autres participants. Désactivé par défaut.",
                 error: {
                     title: "Veuillez entrer un nom",
                     save: {
                         success: "Paramètres enregstrés avec succès",
                         fail: "Une erreur est survenue lors de l'enregistrement des paramètres",
+                    },
+                },
+            },
+        },
+        recording: {
+            title: "Enregistrement",
+            description: "Configurer qui peut démarrer un enregistrement dans les bulles et les salles de réunion.",
+            inputs: {
+                rights: "Droits",
+                rightsHelper:
+                    "Toute personne ayant au moins l'un de ces tags peut démarrer un enregistrement. Laissez vide pour autoriser tout utilisateur connecté.",
+                enableSounds: "Jouer une notification sonore au démarrage et à l'arrêt de l'enregistrement",
+                enableSoundsHelper:
+                    "Lorsqu'activé, tous les participants entendront une notification sonore lorsqu'un enregistrement démarre ou s'arrête.",
+                error: {
+                    save: {
+                        success: "Paramètres d’enregistrement enregistrés",
+                        fail: "Erreur lors de l’enregistrement des paramètres d’enregistrement",
                     },
                 },
             },

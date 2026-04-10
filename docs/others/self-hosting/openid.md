@@ -23,7 +23,7 @@ Then, you need to configure these environment variables:
 There are additional environment variables which can be used to configure the OpenID login process further:
 - `OPENID_USERNAME_CLAIM` (*play container*): the claim attribute to be used as the username on login. (Default: username)
 - `OPENID_LOCALE_CLAIM`: (*play container*): the claim attribute to use used as the locale on login. (Default: locale)
-- `OPENID_SCOPE`: (*play container*): the OpenID scope identifiers to use (Default: openid email)
+- `OPENID_SCOPE`: (*play container*): the OpenID scope identifiers to use (Default: openid email profile)
 
 ## Complete flow
 

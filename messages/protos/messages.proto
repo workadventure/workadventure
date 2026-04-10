@@ -1,3 +1,4 @@
+
 syntax = "proto3";
 
 import "google/protobuf/wrappers.proto";
@@ -73,6 +74,22 @@ message CompanionTextureMessage {
   string id = 2;
 }
 
+// Wrapper for all messages destined to a specific zone
+message ZoneMessage {
+  int32 x = 1;
+  int32 y = 2;
+  oneof message {
+    UserJoinedZoneMessage userJoinedZoneMessage = 3;
+    GroupUpdateZoneMessage groupUpdateZoneMessage = 4;
+    UserMovedMessage userMovedMessage = 5;
+    GroupLeftZoneMessage groupLeftZoneMessage = 6;
+    UserLeftZoneMessage userLeftZoneMessage = 7;
+    EmoteEventMessage emoteEventMessage = 11;
+    PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 12;
+    GroupUsersUpdateMessage groupUsersUpdateMessage = 13;
+  }
+}
+
 /*********** CLIENT TO SERVER MESSAGES *************/
 
 message PingMessage {
@@ -94,7 +111,7 @@ message SetPlayerDetailsMessage {
   google.protobuf.BoolValue showVoiceIndicator = 5;
   AvailabilityStatus availabilityStatus = 6;
   SetPlayerVariableMessage setVariable = 7;
-  string chatID = 8;
+  google.protobuf.StringValue chatID = 8;
   SayMessage sayMessage = 9;
 }
 
@@ -114,8 +131,9 @@ message UserMovesMessage {
   ViewportMessage viewport = 2;
 }
 
-message WebRtcSignalToServerMessage {
+message WebRtcSignal {
   string signal = 2;
+  string connectionId = 3;
 }
 
 message ReportPlayerMessage {
@@ -195,14 +213,16 @@ message ErrorCommandMessage {
 message UpdateWAMSettingsMessage {
   oneof message {
     UpdateMegaphoneSettingMessage updateMegaphoneSettingMessage = 1;
+    UpdateRecordingSettingMessage updateRecordingSettingMessage = 2;
   }
 }
 
 message UpdateMegaphoneSettingMessage {
-  bool enabled = 1;
-  optional string title = 2;
-  optional string scope = 3;
-  repeated string rights = 4;
+  google.protobuf.Value settings = 1;
+}
+
+message UpdateRecordingSettingMessage {
+  google.protobuf.Value settings = 1;
 }
 
 message EditMapCommandMessage {
@@ -347,8 +367,11 @@ message ClientToServerMessage {
     UpdateChatIdMessage updateChatIdMessage = 42;
     PublicEventFrontToPusher publicEvent = 43;
     PrivateEventFrontToPusher privateEvent = 44;
+    BackEventFrontToPusherMessage backEvent = 47;
     LeaveChatRoomAreaMessage leaveChatRoomAreaMessage = 45;
-    RequestFullSyncMessage requestFullSyncMessage = 46;
+    MeetingInvitationRequestMessage meetingInvitationRequestMessage = 48;
+    MeetingInvitationResponseMessage meetingInvitationResponseMessage = 49;
+    SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 46;
   }
 }
 
@@ -378,6 +401,22 @@ message ItemEventMessage {
 message VariableMessage {
   string name = 1;
   string value = 2;
+}
+
+// Message to set/update a property variable attached to an area property
+message SetAreaPropertyVariableMessage {
+  string areaId = 1;
+  string propertyId = 2;
+  string key = 3;
+  string value = 4;
+}
+
+// Message for broadcasting property variable changes and initial state
+message AreaPropertyVariableMessage {
+  string areaId = 1;
+  string propertyId = 2;
+  string key = 3;
+  string value = 4;
 }
 
 message SetPlayerVariableMessage {
@@ -429,7 +468,7 @@ message QueryMessage {
     SendEventQuery sendEventQuery = 6;
     SearchMemberQuery searchMemberQuery = 7;
     GetMemberQuery getMemberQuery = 8;
-    TurnCredentialsQuery turnCredentialsQuery = 9;
+    IceServersQuery iceServersQuery = 9;
     ChatMembersQuery chatMembersQuery = 10;
     SearchTagsQuery searchTagsQuery = 11;
     OauthRefreshTokenQuery oauthRefreshTokenQuery = 12;
@@ -437,9 +476,15 @@ message QueryMessage {
     JoinSpaceQuery joinSpaceQuery = 14;
     LeaveSpaceQuery leaveSpaceQuery = 15;
     MapStorageJwtQuery mapStorageJwtQuery = 16;
+    GetRecordingsQuery getRecordingsQuery = 17;
+    DeleteRecordingQuery deleteRecordingQuery = 18;
+    GetSignedUrlQuery getSignedUrlQuery = 19;
   }
 }
 
+message GetSignedUrlQuery {
+  string key = 1;
+}
 message AbortQueryMessage {
   int32 id = 1;
 }
@@ -483,15 +528,14 @@ message GetMemberQuery {
   string uuid = 1;
 }
 
-message TurnCredentialsQuery {
-}
-
 message ChatMembersQuery {
   string searchText = 1;
 }
 
 message OauthRefreshTokenQuery {
   string tokenToRefresh = 1;
+  optional string provider = 2;
+  optional string userIdentifier = 3;
 }
 
 message  SearchTagsQuery{
@@ -512,6 +556,14 @@ message LeaveSpaceQuery{
   string spaceName = 1;
 }
 
+message GetRecordingsQuery {
+  optional string uuid = 2;
+}
+
+message DeleteRecordingQuery {
+  string recordingId = 1;
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -524,7 +576,7 @@ message AnswerMessage {
     SendEventAnswer sendEventAnswer = 8;
     SearchMemberAnswer searchMemberAnswer = 9;
     GetMemberAnswer getMemberAnswer = 10;
-    TurnCredentialsAnswer turnCredentialsAnswer = 11;
+    IceServersAnswer iceServersAnswer = 11;
     ChatMembersAnswer chatMembersAnswer = 12;
     SearchTagsAnswer searchTagsAnswer = 13;
     OauthRefreshTokenAnswer oauthRefreshTokenAnswer = 14;
@@ -532,6 +584,9 @@ message AnswerMessage {
     JoinSpaceAnswer joinSpaceAnswer = 16;
     LeaveSpaceAnswer leaveSpaceAnswer = 17;
     MapStorageJwtAnswer mapStorageJwtAnswer = 18;
+    GetRecordingsAnswer getRecordingsAnswer = 19;
+    DeleteRecordingAnswer deleteRecordingAnswer = 20;
+    GetSignedUrlAnswer getSignedUrlAnswer = 21;
   }
 }
 
@@ -607,6 +662,23 @@ message JoinSpaceAnswer{
 message LeaveSpaceAnswer{
 }
 
+message SearchTagsAnswer{
+  repeated string tags = 1;
+}
+
+message GetRecordingsAnswer {
+  repeated Recording recordings = 1;
+}
+
+message DeleteRecordingAnswer {
+  bool success = 1;
+  optional string errorMessage = 2;
+}
+
+message GetSignedUrlAnswer {
+  string signedUrl = 1;
+}
+
 message Member {
   string id = 1;
   optional string name = 2;
@@ -615,11 +687,18 @@ message Member {
   optional string chatID = 5;
 }
 
-message TurnCredentialsAnswer {
-  optional string webRtcUser = 1;
-  optional string webRtcPassword = 2;
+message IceServer {
+  repeated string urls = 1;
+  optional string username = 2;
+  optional string credential = 3;
+  optional string credentialType = 4;
 }
 
+message IceServersAnswer {
+  repeated IceServer iceServers = 1;
+}
+
+message IceServersQuery {}
 message ChatMember {
   string uuid = 1;
   optional string wokaName = 2;
@@ -628,8 +707,26 @@ message ChatMember {
   repeated string tags = 5;
 }
 
-message SearchTagsAnswer{
-  repeated string tags = 1;
+message Recording {
+  string timestamp = 1;
+  string baseFilename = 2;
+  VideoFile videoFile = 3;
+  repeated Thumbnail thumbnails = 4;
+}
+
+message VideoFile {
+  string key = 1;
+  string filename = 2;
+  optional uint64 size = 3;
+}
+
+message Thumbnail {
+  string key = 1;
+  string url = 2;
+  string filename = 3;
+  optional uint64 size = 4;
+  optional int32 sequenceNumber = 5;
+  optional int32 timestampSeconds = 6;
 }
 
 /*********** PUSHER TO BACK QUERYMESSAGES *************/
@@ -677,6 +774,7 @@ message RemoveSpaceUserAnswer {
   string spaceName = 1;
   string spaceUserId = 2;
 }
+
 /*********** SERVER TO CLIENT MESSAGES *************/
 
 message UserMovedMessage {
@@ -686,6 +784,12 @@ message UserMovedMessage {
 
 message MoveToPositionMessage{
   PositionMessage position = 1;
+}
+
+message LocatePositionMessage{
+  PositionMessage position = 1;
+  int32 userId = 2;
+  string userUuid = 3;
 }
 
 message SubMessage {
@@ -702,12 +806,9 @@ message SubMessage {
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     PingMessage pingMessage = 11;
     EditMapCommandMessage editMapCommandMessage = 13;
-    JoinMucRoomMessage joinMucRoomMessage = 14;
-    LeaveMucRoomMessage leaveMucRoomMessage = 15;
     AddSpaceUserMessage addSpaceUserMessage = 16;
     UpdateSpaceUserPusherToFrontMessage updateSpaceUserMessage = 17;
     RemoveSpaceUserPusherToFrontMessage removeSpaceUserMessage = 18;
-    MegaphoneSettings megaphoneSettingsMessage = 19;
     ReceivedEventMessage receivedEventMessage = 20;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 21;
     GroupUsersUpdateMessage groupUsersUpdateMessage = 24;
@@ -718,6 +819,8 @@ message SubMessage {
 
     SpaceDestroyedMessage spaceDestroyedMessage = 23;
     InitSpaceUsersMessage initSpaceUsersMessage = 25;
+    AreaPropertyVariableMessage areaPropertyVariableMessage = 26;
+    DuplicateUserConnectedMessage duplicateUserConnectedMessage = 27;
   }
 }
 
@@ -806,33 +909,25 @@ message RoomJoinedMessage {
   repeated VariableMessage playerVariable = 10;
   repeated ApplicationMessage applications = 11;
   EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
-  string webRtcUserName = 14;
-  string webRtcPassword = 15;
   bool canEdit = 16;
-  MegaphoneSettings megaphoneSettings = 17;
   CompanionTextureMessage companionTexture = 18;
-}
-
-message MegaphoneSettings{
-  bool enabled = 1;
-  optional string url = 2;
+  repeated AreaPropertyVariableMessage areaPropertyVariable = 19;
 }
 
 message WebRtcStartMessage {
   string userId = 1;
   bool initiator = 3;
-  string webRtcUserName = 4;
-  string webRtcPassword = 5;
+  string connectionId = 4;
+}
+
+message MeetingConnectionRestartMessage {
+  // Optional. Present for WebRTC reconnections to specify which peer to reconnect with.
+  // Absent for LiveKit reconnections, where no specific peer is targeted.
+  optional string userId = 1;
 }
 
 message WebRtcDisconnectMessage {
   string userId = 1;
-}
-
-message WebRtcSignalToClientMessage {
-  string signal = 2;
-  string webRtcUserName = 4;
-  string webRtcPassword = 5;
 }
 
 message TeleportMessageMessage{
@@ -856,6 +951,9 @@ message RefreshRoomMessage{
   string roomId = 1;
   int32 versionNumber = 2;
   optional int32 timeToRefresh = 4;
+}
+
+message DeleteMapMessage{
 }
 
 message WorldFullMessage{
@@ -884,6 +982,46 @@ message BanUserMessage{
 message AskPositionMessage{
   string userIdentifier = 1;
   string playUri = 2;
+  enum AskType {
+    MOVE = 0;
+    LOCATE = 1;
+  }
+  AskType askType = 3;
+  optional int32 userId = 4;
+}
+
+/** Sent by a user in a meeting to invite another user (by uuid) to join. */
+message MeetingInvitationRequestMessage {
+  string receiverUserUuid = 1;
+  optional int32 receiverUserId = 2;
+}
+
+/** Sent by the server to the invitee with sender info (accept/decline popup, and to walk to sender on accept). */
+message MeetingInvitationRequestReceivedMessage {
+  string senderUserUuid = 1;
+  string senderPlayUri = 2;
+  string senderName = 3;
+  optional int32 senderUserId = 4;
+}
+
+/** Sent by the invitee to accept or decline the invitation. */
+message MeetingInvitationResponseMessage {
+  bool accept = 1;
+  string requestSenderUserUuid = 2;
+}
+
+/** Sent by the server to the requester when the invitee has accepted or declined. */
+message MeetingInvitationResponseReceivedMessage {
+  bool accepted = 1;
+  string responderName = 2;
+}
+
+/** Send by the server to show invitation request limitation. */
+message MeetingInvitationRequestTooHighMessage {
+}
+
+/** Send a close request message when the user accepts or declines the invitation to clear the invitation if there are multiple users with the same account connected */
+message MeetingInvitationRequestClosedMessage {
 }
 
 // A request sent within a space to mute the audio of a specific user
@@ -907,15 +1045,14 @@ message MuteVideoForEverybodyPublicMessage {
 message KickOffUserPrivateMessage {
 }
 
-message RequestFullSyncMessage {
-  string spaceName = 1;
-  repeated SpaceUser users = 2;
-  string senderUserId = 3;
-}
-
 message PublicEventFrontToPusher {
   string spaceName = 1;
   SpaceEvent spaceEvent = 2;
+}
+
+message BackEventFrontToPusherMessage {
+  string spaceName = 1;
+  BackEvent backEvent = 2;
 }
 
 message PublicEvent {
@@ -939,10 +1076,8 @@ message PrivateSpaceEvent {
     MuteAudioPrivateMessage muteAudio = 2;
     KickOffUserPrivateMessage kickOffUser = 3;
     WebRtcStartMessage webRtcStartMessage = 4;
-    WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 5;
-    WebRtcSignalToClientMessage webRtcSignalToClientMessage = 6;
-    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 7;
-    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
+    WebRtcSignal webRtcSignal = 6;
+    WebRtcSignal webRtcScreenSharingSignal = 8;
     WebRtcDisconnectMessage webRtcDisconnectMessage = 9;
     CommunicationStrategyMessage communicationStrategyMessage = 10;
     SwitchMessage switchMessage = 11;
@@ -954,6 +1089,7 @@ message PrivateSpaceEvent {
     RemoveSpaceUserMessage removeSpaceUserMessage = 18;
     BlockUserMessage blockUserMessage = 20;
     UnblockUserMessage unblockUserMessage = 21;
+    MeetingConnectionRestartMessage meetingConnectionRestartMessage = 22;
   }
 }
 
@@ -993,6 +1129,18 @@ message SpaceIsTyping {
   bool isTyping = 1;
   repeated CharacterTextureMessage characterTextures = 2;
   optional string name = 3;
+}
+
+message BackEventMessage {
+  string spaceName = 1;
+  string senderUserId = 3;
+  BackEvent backEvent = 4;
+}
+
+message BackEvent {
+  oneof event {
+    MeetingConnectionRestartMessage meetingConnectionRestartMessage = 2;
+  }
 }
 
 message PrivateEvent {
@@ -1038,6 +1186,13 @@ message LeaveSpaceRequestMessage {
 }
 
 /**
+ * Sent to the client when the same user is already connected in this room (duplicate connection).
+ * The client should show a popup and offer to close the page.
+ */
+message DuplicateUserConnectedMessage {
+}
+
+/**
  * Messages going from back and pusher to the front
  */
 message ServerToClientMessage {
@@ -1059,6 +1214,7 @@ message ServerToClientMessage {
     FollowConfirmationMessage followConfirmationMessage = 22;
     FollowAbortMessage followAbortMessage = 23;
     InvalidCharacterTextureMessage invalidCharacterTextureMessage = 24;
+    DeleteMapMessage deleteMapMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     AnswerMessage answerMessage = 28;
     MoveToPositionMessage moveToPositionMessage = 31;
@@ -1066,6 +1222,12 @@ message ServerToClientMessage {
     JoinSpaceRequestMessage joinSpaceRequestMessage = 33;
     LeaveSpaceRequestMessage leaveSpaceRequestMessage = 34;
     ExternalModuleMessage externalModuleMessage = 35;
+    LocatePositionMessage locatePositionMessage = 36;
+    MeetingInvitationRequestReceivedMessage meetingInvitationRequestReceivedMessage = 37;
+    MeetingInvitationResponseReceivedMessage meetingInvitationResponseReceivedMessage = 38;
+    MeetingInvitationRequestTooHighMessage meetingInvitationRequestTooHighMessage = 39;
+    MeetingInvitationRequestClosedMessage meetingInvitationRequestClosedMessage = 40;
+    DuplicateUserConnectedMessage duplicateUserConnectedMessage = 41;
   }
 }
 
@@ -1090,6 +1252,10 @@ message JoinRoomMessage {
   google.protobuf.StringValue lastCommandId = 16;
   bool canEdit = 17;
   google.protobuf.StringValue chatID = 18;
+  // Unique identifier for the browser tab, used to detect reconnections from the same tab
+  // and kill stale connections immediately instead of waiting for ping timeout
+  //TODO : remove the optional when the tabId is always present in the query string (next version of the app )
+  optional string tabId = 19;
 }
 
 message UserJoinedZoneMessage {
@@ -1138,13 +1304,29 @@ message Zone {
   int32 y = 2;
 }
 
-message ZoneMessage {
-  string roomId = 1;
-  int32 x = 2;
-  int32 y = 3;
+message SubscribeZoneMessage {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+message UnsubscribeZoneMessage {
+  int32 x = 1;
+  int32 y = 2;
 }
 
 message RoomMessage {
+  string roomId = 1;
+}
+
+message PusherToBackRoomMessage {
+  oneof message {
+    InitRoomMessage initRoomMessage = 3;
+    SubscribeZoneMessage subscribeZoneMessage = 1;
+    UnsubscribeZoneMessage unsubscribeZoneMessage = 2;
+  }
+}
+
+message InitRoomMessage {
   string roomId = 1;
 }
 
@@ -1169,31 +1351,12 @@ message PusherToBackMessage {
     PingMessage pingMessage = 24;
     PublicEvent publicEvent = 30;
     PrivateEvent privateEvent = 31;
+    MeetingInvitationRequestMessage meetingInvitationRequestMessage = 32;
+    MeetingInvitationResponseMessage meetingInvitationResponseMessage = 33;
+    SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 34;
   }
 }
 
-
-message BatchToPusherMessage {
-  repeated SubToPusherMessage payload = 2;
-}
-
-message SubToPusherMessage {
-  oneof message {
-    UserJoinedZoneMessage userJoinedZoneMessage = 1;
-    GroupUpdateZoneMessage groupUpdateZoneMessage = 2;
-    UserMovedMessage userMovedMessage = 3;
-    GroupLeftZoneMessage groupLeftZoneMessage = 4;
-    UserLeftZoneMessage userLeftZoneMessage = 5;
-    ItemEventMessage itemEventMessage = 6;
-    SendUserMessage sendUserMessage = 7;
-    BanUserMessage banUserMessage = 8;
-    EmoteEventMessage emoteEventMessage = 9;
-    ErrorMessage errorMessage = 10;
-    PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 11;
-    EditMapCommandMessage editMapCommandMessage = 12;
-    GroupUsersUpdateMessage groupUsersUpdateMessage = 13;
-  }
-}
 
 message BatchToPusherRoomMessage {
   repeated SubToPusherRoomMessage payload = 2;
@@ -1201,12 +1364,14 @@ message BatchToPusherRoomMessage {
 
 message SubToPusherRoomMessage {
   oneof message {
+    // Room-wide messages
     VariableWithTagMessage variableMessage = 1;
     ErrorMessage errorMessage = 2;
     EditMapCommandMessage editMapCommandMessage = 3;
-    JoinMucRoomMessage joinMucRoomMessage = 4;
-    LeaveMucRoomMessage leaveMucRoomMessage = 5;
     ReceivedEventMessage receivedEventMessage = 6;
+    // Zone-specific messages (all grouped in ZoneMessage)
+    ZoneMessage zoneMessage = 7;
+    AreaPropertyVariableMessage areaPropertyVariableMessage = 8;
   }
 }
 
@@ -1269,6 +1434,10 @@ message MapStorageClearAfterUploadMessage {
   string wamUrl = 1;
 }
 
+message MapStorageDeleteMessage {
+  string wamUrl = 1;
+}
+
 // A message sent by an administrator to a recipient
 message AdminMessage {
   string message = 1;
@@ -1318,45 +1487,6 @@ message ExternalModuleMessage {
 }
 
 /********************************************************************************
- * Start Chat Messages
- ********************************************************************************/
-message ChatMessagePrompt{
-  string roomId = 1;
-  oneof message {
-    JoinMucRoomMessage joinMucRoomMessage = 2;
-    LeaveMucRoomMessage leaveMucRoomMessage = 3;
-  }
-}
-
-message JoinMucRoomMessage{
-  MucRoomDefinitionMessage mucRoomDefinitionMessage = 1;
-}
-
-message LeaveMucRoomMessage{
-  string url = 1;
-}
-message MucRoomDefinitionMessage {
-  string url = 1;
-  string name = 2;
-  string type = 3;
-  bool subscribe = 4;
-}
-
-message BanUserByUuidMessage{
-  string playUri = 1;
-  string uuidToBan = 2;
-  string name = 3;
-  string message = 4;
-}
-/*********************************************************************************
- * End Chat Messages
- *********************************************************************************/
-
-
-
-
-
-/********************************************************************************
  * Start Spaces messages
  ********************************************************************************/
 message PusherToBackSpaceMessage{
@@ -1365,7 +1495,7 @@ message PusherToBackSpaceMessage{
     LeaveSpaceMessage leaveSpaceMessage = 2;
     UpdateSpaceUserMessage updateSpaceUserMessage = 4;
     PingMessage pongMessage = 6;
-    UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 7;
+    UpdateSpaceMetadataPusherToBackMessage updateSpaceMetadataPusherToBackMessage = 7;
     // FIXME: the kick of message should be global to the room (unless we apply it on the world space???)
     KickOffMessage kickOffMessage = 8;
     PublicEvent publicEvent = 15;
@@ -1374,7 +1504,7 @@ message PusherToBackSpaceMessage{
     SpaceQueryMessage spaceQueryMessage = 18;
     AddSpaceUserToNotifyMessage addSpaceUserToNotifyMessage = 19;
     DeleteSpaceUserToNotifyMessage deleteSpaceUserToNotifyMessage = 20;
-    RequestFullSyncMessage requestFullSyncMessage = 21;
+    BackEventMessage backEvent = 22;
   }
 }
 
@@ -1401,14 +1531,15 @@ message JoinSpaceMessage{
   string spaceName = 1;
   repeated string propertiesToSync = 2;
   FilterType filterType = 3;
-  bool isRetry = 4;
   string world = 5;
 }
 
 enum FilterType{
   ALL_USERS = 0;
   LIVE_STREAMING_USERS = 1;
+  LIVE_STREAMING_USERS_WITH_FEEDBACK = 2;
 }
+
 message LeaveSpaceMessage{
   string spaceName = 1;
 }
@@ -1432,6 +1563,7 @@ message SpaceUser{
   string uuid = 16; // used
   google.protobuf.StringValue chatID = 17; // used
   bool showVoiceIndicator = 18;
+  bool attendeesState = 19;
 }
 
 /*message PartialSpaceUser{
@@ -1464,6 +1596,7 @@ message AddSpaceUserMessage{
 message InitSpaceUsersMessage{
   string spaceName = 1;
   repeated SpaceUser users = 2;
+  string metadata = 3;
 }
 
 /**
@@ -1494,6 +1627,12 @@ message RemoveSpaceUserPusherToFrontMessage{
 message UpdateSpaceMetadataMessage{
   string spaceName = 1;
   string metadata = 2;
+}
+
+message UpdateSpaceMetadataPusherToBackMessage{
+  string spaceName = 1;
+  string metadata = 2;
+  string senderId = 3;
 }
 
 /**

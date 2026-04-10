@@ -1,5 +1,5 @@
 import type { ModifiyWAMMetadataMessage } from "@workadventure/messages";
-import { WAMFileFormat } from "../../types";
+import type { WAMFileFormat } from "../../types";
 import { Command } from "../Command";
 
 export class UpdateWAMMetadataCommand extends Command {

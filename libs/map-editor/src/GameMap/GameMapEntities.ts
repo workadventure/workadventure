@@ -1,5 +1,5 @@
-import merge from "lodash/merge";
-import { WAMEntityData, WAMFileFormat } from "../types";
+import { deepmergeInto } from "deepmerge-ts";
+import type { WAMEntityData, WAMFileFormat } from "../types";
 
 export class GameMapEntities {
     private wam: WAMFileFormat;
@@ -42,7 +42,7 @@ export class GameMapEntities {
         if (!entity) {
             throw new Error(`Entity of id: ${id} does not exist!`);
         }
-        merge(entity, config);
+        deepmergeInto(entity, config);
         // TODO: Find a way to update it without need of using conditions
         if (config.properties !== undefined) {
             entity.properties = config.properties;

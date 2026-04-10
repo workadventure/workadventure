@@ -17,14 +17,19 @@
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { defautlNativeIntegrationAppName } from "@workadventure/shared-utils";
-    import { ChatRoom } from "../../Connection/ChatConnection";
+    import type { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
+    import { chatInputFocusStore, shouldDisableChatInProximityRoomStore } from "../../../Stores/ChatStore";
+    import { warningMessageStore } from "../../../Stores/ErrorStore";
     import LL from "../../../../i18n/i18n-svelte";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { connectionManager } from "../../../Connection/ConnectionManager";
-
+    import { localUserStore } from "../../../Connection/LocalUserStore";
+    import { MatrixChatRoom } from "../../Connection/Matrix/MatrixChatRoom";
+    import { draftMessageService } from "../../Services/DraftMessageService";
+    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
     import youtubeSvg from "../../../Components/images/applications/icon_youtube.svg";
     import klaxoonSvg from "../../../Components/images/applications/icon_klaxoon.svg";
     import googleDriveSvg from "../../../Components/images/applications/icon_google_drive.svg";
@@ -35,14 +40,9 @@
     import excalidrawSvg from "../../../Components/images/applications/icon_excalidraw.svg";
     import cardsPng from "../../../Components/images/applications/icon_cards.svg";
     import tldrawJpeg from "../../../Components/images/applications/icon_tldraw.jpeg";
-    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
-    import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
-    import { draftMessageService } from "../../Services/DraftMessageService";
-    import { MatrixChatRoom } from "../../Connection/Matrix/MatrixChatRoom";
-    import { localUserStore } from "../../../Connection/LocalUserStore";
-    import MessageInput from "./MessageInput.svelte";
-    import MessageFileInput from "./Message/MessageFileInput.svelte";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
+    import MessageFileInput from "./Message/MessageFileInput.svelte";
+    import MessageInput from "./MessageInput.svelte";
     import { IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
 
     export let room: ChatRoom;
@@ -98,11 +98,11 @@
             // message contains HTML tags. Actually, the only tags we allow are for the new line, ie. <br> tags.
             // We can turn those back into carriage returns.
             const messageToSend = message.replace(/<br>/g, "\n");
-            sendMessage(messageToSend);
+            sendMessage(messageToSend).catch((error) => console.error(error));
         }
     }
 
-    function sendMessage(messageToSend: string) {
+    async function sendMessage(messageToSend: string) {
         if (applicationProperty && applicationProperty.link.length !== 0) {
             room?.sendMessage(applicationProperty.link);
         }
@@ -113,14 +113,22 @@
         // send files
         if (files && files.length > 0) {
             if (!(room instanceof ProximityChatRoom)) {
+                const idsToSend = files.map((f) => f.id);
                 const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
                     fileListAcc.items.add(currentFile.file);
                     return fileListAcc;
                 }, new DataTransfer()).files;
 
-                room.sendFiles(fileList).catch((error) => console.error(error));
-                files = [];
-                filesPreview = [];
+                try {
+                    await room.sendFiles(fileList);
+                    files = files.filter((f) => !idsToSend.includes(f.id));
+                    filesPreview = filesPreview.filter((p) => !idsToSend.includes(p.id));
+                } catch (error) {
+                    console.error(error);
+                    warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), {
+                        closable: true,
+                    });
+                }
             }
         }
 
@@ -170,6 +178,11 @@
             replyingToMessageId: replyMessageId ?? null,
         });
         if (setTimeOutProperty) clearTimeout(setTimeOutProperty);
+        if (stopTypingTimeOutID) {
+            clearTimeout(stopTypingTimeOutID);
+            stopTypingTimeOutID = undefined;
+        }
+        room.stopTyping().catch((error) => console.error(error));
         closeEmojiPicker?.();
         closeEmojiPicker = undefined;
         selectedChatChatMessageToReplyUnsubscriber();
@@ -412,11 +425,13 @@
 </script>
 
 {#if files.length > 0 && !(room instanceof ProximityChatRoom)}
-    <div class="w-full p-1">
-        <div class="flex flex-row gap-2 w-full overflow-visible no-scroll-bar rounded-lg p-2 bg-contrast/80">
+    <div class="w-full min-w-0 p-1">
+        <div
+            class="flex flex-row flex-nowrap gap-2 w-full min-w-[200px] overflow-x-auto no-scroll-bar rounded-lg p-2 bg-contrast/80"
+        >
             {#each filesPreview as preview (preview.id)}
                 <div
-                    class="relative content-center {preview.type.includes('image')
+                    class="relative shrink-0 content-center {preview.type.includes('image')
                         ? 'w-20'
                         : 'w-28'} h-20 rounded-md backdrop-opacity-10 bg-white p-0.5"
                 >
@@ -484,7 +499,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.youtubeToolActivated
                         ? $LL.chat.form.application.youtube.description()
-                        : $LL.mapEditor.properties.youtubeProperties.disabled()}
+                        : $LL.mapEditor.properties.youtube.disabled()}
                 </p>
             </button>
 
@@ -500,7 +515,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.klaxoonToolActivated
                         ? $LL.chat.form.application.klaxoon.description()
-                        : $LL.mapEditor.properties.klaxoonProperties.disabled()}
+                        : $LL.mapEditor.properties.klaxoon.disabled()}
                 </p>
             </button>
 
@@ -516,7 +531,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.googleSheetsToolActivated
                         ? $LL.chat.form.application.googleSheets.description()
-                        : $LL.mapEditor.properties.googleSheetsProperties.disabled()}
+                        : $LL.mapEditor.properties.googleSheets.disabled()}
                 </p>
             </button>
 
@@ -532,7 +547,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.googleDocsToolActivated
                         ? $LL.chat.form.application.googleDocs.description()
-                        : $LL.mapEditor.properties.googleDocsProperties.disabled()}
+                        : $LL.mapEditor.properties.googleDocs.disabled()}
                 </p>
             </button>
 
@@ -548,7 +563,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.googleSheetsToolActivated
                         ? $LL.chat.form.application.googleSlides.description()
-                        : $LL.mapEditor.properties.googleSlidesProperties.disabled()}
+                        : $LL.mapEditor.properties.googleSlides.disabled()}
                 </p>
             </button>
 
@@ -564,7 +579,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.googleDriveToolActivated
                         ? $LL.chat.form.application.googleDrive.description()
-                        : $LL.mapEditor.properties.googleDriveProperties.disabled()}
+                        : $LL.mapEditor.properties.googleDrive.disabled()}
                 </p>
             </button>
 
@@ -580,7 +595,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.eraserToolActivated
                         ? $LL.chat.form.application.eraser.description()
-                        : $LL.mapEditor.properties.eraserProperties.disabled()}
+                        : $LL.mapEditor.properties.eraser.disabled()}
                 </p>
             </button>
 
@@ -596,7 +611,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.excalidrawToolActivated
                         ? $LL.chat.form.application.excalidraw.description()
-                        : $LL.mapEditor.properties.excalidrawProperties.disabled()}
+                        : $LL.mapEditor.properties.excalidraw.disabled()}
                 </p>
             </button>
 
@@ -612,7 +627,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.cardsToolActivated
                         ? $LL.chat.form.application.cards.description()
-                        : $LL.mapEditor.properties.cardsProperties.disabled()}
+                        : $LL.mapEditor.properties.cards.disabled()}
                 </p>
             </button>
 
@@ -628,7 +643,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.tldrawToolActivated
                         ? $LL.chat.form.application.tldraw.description()
-                        : $LL.mapEditor.properties.tldrawProperties.disabled()}
+                        : $LL.mapEditor.properties.tldraw.disabled()}
                 </p>
             </button>
         </div>
@@ -665,7 +680,14 @@
     </div>
 {/if}
 {#if fileAttachmentComponentOpened}
-    <MessageFileInput {room} on:fileUploaded={() => closeFileAttachmentComponent()} />
+    <MessageFileInput
+        {room}
+        on:filesSelected={(e) => {
+            handleFiles(e);
+            closeFileAttachmentComponent();
+        }}
+        on:fileUploaded={() => closeFileAttachmentComponent()}
+    />
 {/if}
 <div
     class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50 relative"
@@ -704,7 +726,7 @@
         {focusout}
         bind:message
         bind:messageInput
-        disabled={disabled && !isProximityChatRoom}
+        disabled={(disabled && !isProximityChatRoom) || ($shouldDisableChatInProximityRoomStore && isProximityChatRoom)}
         inputClass="message-input flex-grow !m-0 px-5 py-2.5 max-h-36 overflow-auto  h-full rounded-xl wa-searchbar block text-white placeholder:text-base border-light-purple border !bg-transparent resize-none border-none outline-none shadow-none focus:ring-0"
         dataText={$LL.chat.enter()}
         dataTestid="messageInput"
@@ -732,7 +754,7 @@
             data-testid="sendMessageButton"
             class="disabled:opacity-30 disabled:!cursor-none disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-none"
             disabled={applicationPropertyInProcessing}
-            on:click={() => sendMessage(message)}
+            on:click={() => sendMessage(message).catch((error) => console.error(error))}
         >
             <IconSend />
         </button>

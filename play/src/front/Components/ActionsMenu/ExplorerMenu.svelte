@@ -4,7 +4,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import LL from "../../../i18n/i18n-svelte";
-    import { IconFocusCentered, IconMap, IconMinus, IconPlus } from "@wa-icons";
+    import { IconFocusCentered, IconMapSearch, IconMinus, IconPlus } from "@wa-icons";
 
     function zoomIn() {
         analyticsClient.clickToZoomIn();
@@ -42,6 +42,7 @@
     <div class="flex flex-col justify-center gap-2">
         <div class="flex flex-col justify-center gap-1">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
                 on:click={zoomIn}
@@ -54,6 +55,7 @@
                 </div>
             </div>
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
                 on:click={zoomOut}
@@ -68,11 +70,12 @@
         </div>
         {#if $mapExplorationModeStore === false}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
                 on:click={openMapExplorer}
             >
-                <IconMap />
+                <IconMapSearch />
                 <div
                     class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
                 >
@@ -81,6 +84,7 @@
             </div>
         {:else}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
                 on:click={centerToUser}

@@ -23,6 +23,7 @@ const follow: DeepPartial<Translation["follow"]> = {
         yes: "haj",
         no: "ně",
     },
+    actionName: "Lokalizować",
 };
 
 export default follow;

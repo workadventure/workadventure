@@ -1,6 +1,7 @@
-import { get, Unsubscriber } from "svelte/store";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
-import { PositionMessage_Direction } from "@workadventure/messages";
+import { AskPositionMessage_AskType, PositionMessage_Direction } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
@@ -11,6 +12,7 @@ import { followStateStore, followRoleStore, followUsersStore } from "../../Store
 import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 import { visibilityStore } from "../../Stores/VisibilityStore";
 import { passStatusToOnline } from "../../Rules/StatusRules/statusChangerFunctions";
+import { localUserStore } from "../../Connection/LocalUserStore";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -32,7 +34,7 @@ export class Player extends Character {
         texturesPromise: CancelablePromise<string[]>,
         direction: PositionMessage_Direction,
         moving: boolean,
-        companionTexturePromise: CancelablePromise<string>
+        companionTexturePromise: CancelablePromise<string> | undefined
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companionTexturePromise, "me");
         //the current player model should be push away by other players to prevent conflict
@@ -56,14 +58,6 @@ export class Player extends Character {
     public moveUser(delta: number, activeUserInputEvents: ActiveEventList): void {
         const state = get(followStateStore);
         const role = get(followRoleStore);
-
-        if (activeUserInputEvents.get(UserInputEvent.Follow)) {
-            if (state === "off" && this.scene.groups.size > 0) {
-                this.sendFollowRequest();
-            } else if (state === "active") {
-                followStateStore.set("ending");
-            }
-        }
 
         if (this.pathToFollow && activeUserInputEvents.anyExcept(UserInputEvent.SpeedUp)) {
             this.finishFollowingPath(true);
@@ -318,6 +312,7 @@ export class Player extends Character {
         const oldY = this.y;
         this.x = x;
         this.y = y;
+
         // The 1.1 ratio to y is applied here because in path finding mode, the player often moves in diagonal.
         // In diagonal, the amount of x and y are almost equal. This produces a graphical glitch where on one frame,
         // the player goes left, and on the next frame, the player goes up. This is because the x and y are almost equal.
@@ -352,6 +347,18 @@ export class Player extends Character {
         this.finishFollowingPath(true);
         this.emit(hasMovedEventName, { moving: false, direction: this._lastDirection, x: this.x, y: this.y });
         this.scene.markDirty();
+    }
+
+    public get walkingSpeed(): number | undefined {
+        return this.pathWalkingSpeed;
+    }
+
+    public emitAskPosition(): void {
+        this.scene.connection?.emitAskPosition(
+            localUserStore.getLocalUser()?.uuid ?? "",
+            this.scene.roomUrl,
+            AskPositionMessage_AskType.LOCATE
+        );
     }
 
     destroy(): void {

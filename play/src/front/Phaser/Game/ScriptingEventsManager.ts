@@ -1,6 +1,6 @@
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { iframeListener } from "../../Api/IframeListener";
-import { SendEventEvent } from "../../Api/Events/SendEventEvent";
+import type { SendEventEvent } from "../../Api/Events/SendEventEvent";
 
 /**
  * Provides a bridge between scripts and the pusher server for events.
