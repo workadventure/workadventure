@@ -148,6 +148,13 @@ export async function getPage(
 
 async function skipOnboardingWhenShown(page: Page) {
     await page.addLocatorHandler(page.getByTestId("onboarding-button-welcome-skip"), async () => {
-        await page.getByTestId("onboarding-button-welcome-skip").click();
+        try {
+            await page.getByTestId("onboarding-button-welcome-skip").click();
+        } catch (e) {
+            if (e instanceof Error && e.message.includes("Target page, context or browser has been closed")) {
+                return;
+            }
+            throw e;
+        }
     });
 }
