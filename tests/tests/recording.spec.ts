@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import Map from "./utils/map";
 
 import { getPage } from "./utils/auth";
@@ -22,26 +23,6 @@ import {
 } from "./utils/recording";
 
 test.setTimeout(240_000);
-
-async function waitForRecordingToAppear(page: Page, index: number, maxRetries = 10) {
-    for (let i = 0; i < maxRetries; i++) {
-        let retry = false;
-        try {
-            await expect(page.getByTestId("recording-item-0")).toBeVisible({ timeout: 5000 });
-        } catch {
-            // If this fails, nothing to do, we will retry
-            retry = true;
-        }
-
-        if (!retry) {
-            break;
-        }
-
-        // eslint-disable-next-line playwright/no-wait-for-timeout
-        await page.waitForTimeout(6000);
-        await page.getByRole("button", { name: "Refresh" }).click();
-    }
-}
 
 async function openMegaphoneSettings(page: Page) {
     const configureMyRoomButton = page.locator(
@@ -215,73 +196,67 @@ test.describe("Recording test", () => {
     }) => {
         await resetWamMaps(request);
 
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
-        await Map.teleportToPosition(page, 4 * 32, 0);
-        await deleteAllRecordings(page);
+        // Admin1: megaphone broadcaster + map config
+        await using broadcaster = await getPage(browser, "Admin1", Map.url("empty"));
+        await Map.teleportToPosition(broadcaster, 4 * 32, 0);
+        await deleteAllRecordings(broadcaster);
 
-        // Let's enable the map editor
-        await Menu.openMapEditor(page);
-        await MapEditor.openConfigureMyRoom(page);
-        await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
+        await Menu.openMapEditor(broadcaster);
+        await MapEditor.openConfigureMyRoom(broadcaster);
+        await ConfigureMyRoom.selectMegaphoneItemInCMR(broadcaster);
+        await Megaphone.toggleMegaphone(broadcaster);
+        await Megaphone.isMegaphoneEnabled(broadcaster);
+        // Megaphone recording is off by default; enable it like "Megaphone recording permissions update without reload…".
+        await Megaphone.toggleMegaphoneRecording(broadcaster);
+        await Megaphone.megaphoneSave(broadcaster);
+        await Megaphone.isCorrectlySaved(broadcaster);
+        await Menu.closeMapEditorConfigureMyRoomPopUp(broadcaster);
 
-        // Enabling megaphone and settings default value
-        await Megaphone.toggleMegaphone(page);
-        await Megaphone.isMegaphoneEnabled(page);
-        await Megaphone.megaphoneSave(page);
-        // Wait for the megaphone settings to be saved
-        await Megaphone.isCorrectlySaved(page);
-        // Close the configuration popup
-        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
+        await Menu.clickSendGlobalMessage(broadcaster);
+        await Menu.clickStartLiveMessage(broadcaster);
+        await Menu.clickStartMegaphone(broadcaster);
+        await waitForMegaphoneToBeStreaming(broadcaster);
 
-        // Now, let's start the megaphone
-        await Menu.clickSendGlobalMessage(page);
-        await Menu.clickStartLiveMessage(page);
-        await Menu.clickStartMegaphone(page);
-        await waitForMegaphoneToBeStreaming(page);
+        // Admin2: records both spaces; Bob: visible tile so megaphone space is active
+        await using recorder = await getPage(browser, "Admin2", Map.url("empty"));
+        await Map.teleportToPosition(recorder, 4 * 32, 0);
 
-        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
-        await Map.teleportToPosition(page2, 4 * 32, 0);
+        await using participant = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(participant, 4 * 32, 0);
 
-        await using page3 = await getPage(browser, "Bob", Map.url("empty"));
-        await Map.teleportToPosition(page3, 4 * 32, 0);
+        await expect(recorder.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 30_000 });
+        await expect(recorder.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 30_000 });
 
-        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 30_000 });
-        await expect(page2.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 30_000 });
+        await openRecordingSpacePicker(recorder, "start");
+        await expectRecordingSpacePickerAction(recorder, "megaphone", "start");
+        await expectRecordingSpacePickerAction(recorder, "discussion", "start");
+        await clickRecordingSpacePickerAction(recorder, "megaphone", "start");
 
-        await openRecordingSpacePicker(page2, "start");
-        await expectRecordingSpacePickerAction(page2, "megaphone", "start");
-        await expectRecordingSpacePickerAction(page2, "discussion", "start");
-        await clickRecordingSpacePickerAction(page2, "megaphone", "start");
+        await openRecordingSpacePicker(recorder, "stop");
+        await clickRecordingSpacePickerAction(recorder, "discussion", "start");
 
-        await openRecordingSpacePicker(page2, "stop");
-        await clickRecordingSpacePickerAction(page2, "discussion", "start");
+        await waitForDualRecordingStopControls(recorder);
 
-        await waitForDualRecordingStopControls(page2);
+        // Allow the recording pipeline time to produce media for both spaces before stopping.
+        await recorder.waitForTimeout(5000);
 
-        // Register both spaces long enough for the recording backend to produce files.
-        // eslint-disable-next-line playwright/no-wait-for-timeout
-        await page2.waitForTimeout(5000);
+        await openRecordingSpacePicker(recorder, "stop");
+        await expectRecordingSpacePickerAction(recorder, "megaphone", "stop");
+        await expectRecordingSpacePickerAction(recorder, "discussion", "stop");
 
-        await openRecordingSpacePicker(page2, "stop");
-        await expectRecordingSpacePickerAction(page2, "megaphone", "stop");
-        await expectRecordingSpacePickerAction(page2, "discussion", "stop");
+        await clickRecordingSpacePickerAction(recorder, "discussion", "stop");
+        await closeRecordingCompletedToast(recorder);
 
-        await clickRecordingSpacePickerAction(page2, "discussion", "stop");
+        await openRecordingSpacePicker(recorder, "stop");
+        await expectRecordingSpacePickerAction(recorder, "megaphone", "stop");
+        await clickRecordingSpacePickerAction(recorder, "megaphone", "stop");
 
-        // Wait for the first stop to settle before stopping the second active recording.
-        await closeRecordingCompletedToast(page2);
+        await expect(recorder.getByTestId("recording-completed-modal")).toBeVisible();
+        await recorder.getByTestId("recording-completed-modal-open-recordings-list-button").click();
 
-        await openRecordingSpacePicker(page2, "stop");
-        await expectRecordingSpacePickerAction(page2, "megaphone", "stop");
-        await clickRecordingSpacePickerAction(page2, "megaphone", "stop");
-
-        // Wait for the second recording to complete, then open the recordings list.
-        await expect(page2.getByTestId("recording-completed-modal")).toBeVisible();
-        await page2.getByTestId("recording-completed-modal-open-recordings-list-button").click();
-
-        await waitForRecordingToAppear(page2, 1);
-        await expect(page2.getByTestId("recording-item-0")).toBeVisible();
-        await expect(page2.getByTestId("recording-item-1")).toBeVisible();
+        await waitForRecordingToAppear(recorder, 1);
+        await expect(recorder.getByTestId("recording-item-0")).toBeVisible();
+        await expect(recorder.getByTestId("recording-item-1")).toBeVisible();
     });
 
     test("Megaphone recording permissions update without reload and respect tags @oidc", async ({

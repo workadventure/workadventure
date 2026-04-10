@@ -55,6 +55,10 @@
     function getActionTestId(row: RecordingSpaceRow): string {
         return `recording-space-action-${row.action}`;
     }
+
+    function getRowTestId(row: RecordingSpaceRow): string {
+        return `recording-space-row-${row.kind}`;
+    }
 </script>
 
 <div
@@ -68,7 +72,7 @@
             !row.action
                 ? 'opacity-80'
                 : ''}"
-            data-testid="recording-space-option"
+            data-testid={getRowTestId(row)}
         >
             <div class="min-w-0 flex-1 flex flex-col gap-1">
                 <span class="text-sm font-semibold text-white" data-testid={getKindTestId(row)}>

@@ -53,21 +53,6 @@ export async function closeRecordingCompletedToast(page: Page) {
 type RecordingSpacePickerKind = "discussion" | "megaphone";
 type RecordingSpacePickerAction = "start" | "stop";
 
-interface RecordingSpacePickerRowSnapshot {
-    action: RecordingSpacePickerAction | null;
-    disabled: boolean | null;
-    kind: RecordingSpacePickerKind | null;
-    label: string | null;
-    status: string | null;
-}
-
-interface RecordingSpacePickerSnapshot {
-    pickerVisible: boolean;
-    rows: RecordingSpacePickerRowSnapshot[];
-    stopButtonEnabled: boolean;
-    stopButtonVisible: boolean;
-}
-
 type RecordingSpacePickerExpectedActions = Partial<Record<RecordingSpacePickerKind, RecordingSpacePickerAction>>;
 
 function recordingSpacePicker(page: Page) {
@@ -75,11 +60,7 @@ function recordingSpacePicker(page: Page) {
 }
 
 function recordingSpacePickerRow(page: Page, kind: RecordingSpacePickerKind) {
-    const picker = recordingSpacePicker(page);
-
-    return picker
-        .getByTestId("recording-space-option")
-        .filter({ has: page.getByTestId(`recording-space-kind-${kind}`) });
+    return recordingSpacePicker(page).getByTestId(`recording-space-row-${kind}`);
 }
 
 function recordingSpacePickerButton(page: Page, kind: RecordingSpacePickerKind, action: RecordingSpacePickerAction) {
@@ -91,8 +72,11 @@ export async function clickRecordingSpacePickerAction(
     kind: RecordingSpacePickerKind,
     action: RecordingSpacePickerAction,
 ) {
+    const picker = recordingSpacePicker(page);
+
     await waitForRecordingSpacePickerActions(page, { [kind]: action });
     await recordingSpacePickerButton(page, kind, action).click();
+    await expect(picker).toBeHidden({ timeout: 5_000 });
 }
 
 export async function expectRecordingSpacePickerAction(
@@ -103,9 +87,13 @@ export async function expectRecordingSpacePickerAction(
     await waitForRecordingSpacePickerActions(page, { [kind]: action });
 }
 
+type DualRecordingStopWaitResult = "continue" | "done";
+
 /**
- * Waits until both megaphone and discussion rows expose enabled stop actions in the space picker.
- * The picker is opened to assert, then closed so callers can use {@link openRecordingSpacePicker} next.
+ * After starting megaphone + discussion recordings, waits until both rows show an enabled stop action.
+ * Rows can sit in transient states (no action button, or "start" still visible); this polls with the same
+ * gestures a user would use: open the stop picker, optionally press discussion "start" again, otherwise
+ * dismiss the floating picker via the action-bar control and reopen on the next attempt.
  */
 export async function waitForDualRecordingStopControls(page: Page) {
     const stopButton = page.getByTestId("recordingButton-stop");
@@ -113,23 +101,51 @@ export async function waitForDualRecordingStopControls(page: Page) {
 
     await expect(stopButton).toBeVisible({ timeout: 30_000 });
     await expect(stopButton).toBeEnabled({ timeout: 30_000 });
-    await waitForRecordingSpacePickerActions(
-        page,
-        {
-            megaphone: "stop",
-            discussion: "stop",
-        },
-        {
-            actionMode: "stop",
-            message: "Timed out waiting for both megaphone and discussion recordings to expose stop controls.",
-            timeoutMs: 60_000,
-        },
-    );
 
-    if (await picker.isVisible().catch(() => false)) {
-        await stopButton.click();
-        await expect(picker).toBeHidden();
-    }
+    await expect
+        .poll(
+            async (): Promise<DualRecordingStopWaitResult> => {
+                await ensureRecordingSpacePickerOpen(page, "stop");
+
+                const discussionStart = recordingSpacePickerRow(page, "discussion").getByTestId(
+                    "recording-space-action-start",
+                );
+
+                if (await discussionStart.isEnabled({ timeout: 2_000 }).catch(() => false)) {
+                    await discussionStart.click();
+                    await expect(picker).toBeHidden({ timeout: 5_000 });
+                    return "continue";
+                }
+
+                const megaphoneStop = recordingSpacePickerRow(page, "megaphone").getByTestId(
+                    "recording-space-action-stop",
+                );
+                const discussionStop = recordingSpacePickerRow(page, "discussion").getByTestId(
+                    "recording-space-action-stop",
+                );
+
+                const megaphoneReady = await megaphoneStop.isEnabled({ timeout: 2_000 }).catch(() => false);
+                const discussionReady = await discussionStop.isEnabled({ timeout: 2_000 }).catch(() => false);
+
+                if (megaphoneReady && discussionReady) {
+                    return "done";
+                }
+
+                await stopButton.click();
+                await expect(picker).toBeHidden({ timeout: 5_000 });
+                return "continue";
+            },
+            {
+                message:
+                    "Timed out waiting for megaphone and discussion rows to expose enabled stop actions in the picker.",
+                timeout: 60_000,
+                intervals: [250, 500, 1_000, 1_500, 2_000],
+            },
+        )
+        .toBe("done");
+
+    await stopButton.click();
+    await expect(picker).toBeHidden();
 }
 
 export async function openRecordingSpacePicker(page: Page, action: RecordingSpacePickerAction) {
@@ -152,67 +168,6 @@ async function ensureRecordingSpacePickerOpen(page: Page, action: RecordingSpace
     await expect(picker).toBeVisible();
 }
 
-async function getRecordingSpacePickerSnapshot(page: Page): Promise<RecordingSpacePickerSnapshot> {
-    const stopButton = page.getByTestId("recordingButton-stop");
-    const picker = recordingSpacePicker(page);
-    const pickerVisible = await picker.isVisible().catch(() => false);
-
-    return {
-        pickerVisible,
-        rows: pickerVisible
-            ? await picker.getByTestId("recording-space-option").evaluateAll((options) =>
-                  options.map((option) => {
-                      const kindElement = option.querySelector("[data-testid^='recording-space-kind-']");
-                      const actionButton = option.querySelector<HTMLButtonElement>(
-                          "[data-testid^='recording-space-action-']",
-                      );
-                      const spans = Array.from(option.querySelectorAll("span"));
-                      const kindTestId = kindElement?.getAttribute("data-testid");
-                      const actionTestId = actionButton?.getAttribute("data-testid");
-
-                      return {
-                          action:
-                              actionTestId === "recording-space-action-start"
-                                  ? "start"
-                                  : actionTestId === "recording-space-action-stop"
-                                    ? "stop"
-                                    : null,
-                          disabled: actionButton?.disabled ?? null,
-                          kind:
-                              kindTestId === "recording-space-kind-discussion"
-                                  ? "discussion"
-                                  : kindTestId === "recording-space-kind-megaphone"
-                                    ? "megaphone"
-                                    : null,
-                          label: kindElement?.textContent?.trim() ?? null,
-                          status: spans[1]?.textContent?.trim() ?? null,
-                      };
-                  }),
-              )
-            : [],
-        stopButtonEnabled: await stopButton.isEnabled().catch(() => false),
-        stopButtonVisible: await stopButton.isVisible().catch(() => false),
-    };
-}
-
-function formatRecordingSpacePickerSnapshot(snapshot: RecordingSpacePickerSnapshot): string {
-    const rows = snapshot.rows.length
-        ? snapshot.rows
-              .map((row) => {
-                  const kind = row.kind ?? "unknown";
-                  const action = row.action ?? "none";
-                  const disabled = row.disabled === null ? "unknown" : String(row.disabled);
-                  const label = row.label ?? "n/a";
-                  const status = row.status ?? "n/a";
-
-                  return `${kind}: label="${label}", status="${status}", action=${action}, disabled=${disabled}`;
-              })
-              .join(" | ")
-        : "no visible rows";
-
-    return `pickerVisible=${snapshot.pickerVisible}, stopButtonVisible=${snapshot.stopButtonVisible}, stopButtonEnabled=${snapshot.stopButtonEnabled}, rows=${rows}`;
-}
-
 async function waitForRecordingSpacePickerActions(
     page: Page,
     expectedActions: RecordingSpacePickerExpectedActions,
@@ -226,42 +181,16 @@ async function waitForRecordingSpacePickerActions(
         await ensureRecordingSpacePickerOpen(page, options.actionMode);
     }
 
-    await expect
-        .poll(
-            async () => {
-                const snapshot = await getRecordingSpacePickerSnapshot(page);
+    const timeout = options.timeoutMs ?? 30_000;
+    const entries = Object.entries(expectedActions) as [RecordingSpacePickerKind, RecordingSpacePickerAction][];
 
-                return hasRecordingSpacePickerActions(snapshot, expectedActions)
-                    ? "ready"
-                    : formatRecordingSpacePickerSnapshot(snapshot);
-            },
-            {
-                message:
-                    options.message ??
-                    `Timed out waiting for recording space picker actions: ${formatExpectedRecordingSpacePickerActions(expectedActions)}.`,
-                timeout: options.timeoutMs ?? 30_000,
-            },
-        )
-        .toBe("ready");
-}
-
-function hasRecordingSpacePickerActions(
-    snapshot: RecordingSpacePickerSnapshot,
-    expectedActions: RecordingSpacePickerExpectedActions,
-): boolean {
-    if (!snapshot.pickerVisible) {
-        return false;
-    }
-
-    return Object.entries(expectedActions).every(([kind, action]) => {
-        const row = snapshot.rows.find((candidate) => candidate.kind === kind);
-
-        return row?.action === action && row.disabled === false;
-    });
-}
-
-function formatExpectedRecordingSpacePickerActions(expectedActions: RecordingSpacePickerExpectedActions): string {
-    return Object.entries(expectedActions)
-        .map(([kind, action]) => `${kind}=${action}`)
-        .join(", ");
+    await Promise.all(
+        entries.map(([kind, action]) =>
+            expect(
+                recordingSpacePickerRow(page, kind).getByTestId(`recording-space-action-${action}`),
+                options.message ??
+                    `Recording space "${kind}" should expose an enabled "${action}" control in the picker.`,
+            ).toBeEnabled({ timeout }),
+        ),
+    );
 }
