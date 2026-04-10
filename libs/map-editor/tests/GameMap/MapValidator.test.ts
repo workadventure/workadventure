@@ -1,5 +1,5 @@
-import path from "node:path";
-import * as fs from "fs";
+import path from "path";
+import fs from "fs";
 import { describe, expect, it } from "vitest";
 import type { ErrorType, MapValidation } from "../../src/GameMap/MapValidator";
 import { isFailure, MapValidator } from "../../src/GameMap/MapValidator";

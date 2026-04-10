@@ -1,12 +1,12 @@
-import * as fs from "fs";
-import path from "node:path";
+import fs from "fs";
+import path from "path";
 import { z, ZodError } from "zod";
 import type { Express, Request } from "express";
 import multer from "multer";
 import type { LimitFunction } from "p-limit";
 import pLimit from "p-limit";
 import archiver from "archiver";
-import * as unzipper from "unzipper";
+import { type File, type CentralDirectory, Open as UnzipperOpen } from "unzipper";
 import type { Operation } from "rfc6902";
 import { applyPatch } from "rfc6902";
 import type { OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
@@ -101,7 +101,7 @@ export class UploadController {
 
                 await limiter(async () => {
                     // Read the contents of the ZIP archive
-                    const zipDirectory = await unzipper.Open.file(zipFile.path);
+                    const zipDirectory = await UnzipperOpen.file(zipFile.path);
                     const zipEntries = zipDirectory.files.filter(
                         (zipEntry) => zipEntry.type !== "Directory" && this.filterFile(zipEntry.path)
                     );
@@ -496,11 +496,7 @@ export class UploadController {
         });
     }
 
-    private async createWAMFileIfMissing(
-        tmjKey: string,
-        zipEntry: unzipper.File,
-        zip: unzipper.CentralDirectory
-    ): Promise<void> {
+    private async createWAMFileIfMissing(tmjKey: string, zipEntry: File, zip: CentralDirectory): Promise<void> {
         const wamPath = tmjKey.slice().replace(".tmj", ".wam");
         if (!(await this.fileSystem.exist(wamPath))) {
             // Get the content of the file as a string

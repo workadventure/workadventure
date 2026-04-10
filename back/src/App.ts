@@ -1,7 +1,7 @@
 // lib/app.ts
 import type { Express } from "express";
 import express from "express";
-import * as grpc from "@grpc/grpc-js";
+import { Server, ServerCredentials } from "@grpc/grpc-js";
 import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services";
 import { SharedAdminApi } from "@workadventure/shared-utils/src/SharedAdminApi";
 import { DebugController } from "./Controller/DebugController";
@@ -62,7 +62,7 @@ class App {
     }
 
     public grpcListen(): void {
-        const server = new grpc.Server({
+        const server = new Server({
             "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
             "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
         });
@@ -83,7 +83,7 @@ class App {
         server.addService(RoomManagerService, roomManager);
         server.addService(SpaceManagerService, spaceManager);
 
-        server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err) => {
+        server.bindAsync(`0.0.0.0:${GRPC_PORT}`, ServerCredentials.createInsecure(), (err) => {
             if (err) {
                 throw err;
             }

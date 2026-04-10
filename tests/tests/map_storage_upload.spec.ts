@@ -1,4 +1,4 @@
-import * as fs from "fs";
+import fs from "fs";
 import type { APIResponse } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { createZipFromDirectory } from "./utils/zip";

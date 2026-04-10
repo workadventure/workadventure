@@ -1,4 +1,4 @@
-import path from "node:path";
+import path from "path";
 import type { Request } from "express";
 import { PATH_PREFIX, USE_DOMAIN_NAME_IN_PATH } from "../Enum/EnvironmentVariable";
 

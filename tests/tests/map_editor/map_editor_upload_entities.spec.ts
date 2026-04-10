@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
+import path from "path";
 import { expect, test } from "@playwright/test";
 import Map from "../utils/map";
 import EntityEditor from "../utils/map-editor/entityEditor";
