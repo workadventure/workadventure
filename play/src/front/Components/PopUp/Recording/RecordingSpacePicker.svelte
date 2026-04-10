@@ -47,6 +47,14 @@
     function getActionLabel(row: RecordingSpaceRow): string {
         return row.action === "stop" ? $LL.recording.actionbar.title.stop() : $LL.recording.actionbar.title.start();
     }
+
+    function getKindTestId(row: RecordingSpaceRow): string {
+        return `recording-space-kind-${row.kind}`;
+    }
+
+    function getActionTestId(row: RecordingSpaceRow): string {
+        return `recording-space-action-${row.action}`;
+    }
 </script>
 
 <div
@@ -54,16 +62,16 @@
     class="bg-contrast/80 backdrop-blur-md rounded-md shadow-lg p-2 max-w-96 overflow-auto flex flex-col gap-2"
     use:clickOutside={handleClose}
 >
-    {#each $rowsStore as row, index (row.spaceName)}
+    {#each $rowsStore as row (row.spaceName)}
         <div
             class="w-full rounded border border-white/10 bg-white/5 p-3 flex flex-row items-center gap-3 {row.disabled ||
             !row.action
                 ? 'opacity-80'
                 : ''}"
-            data-testid="recording-space-option-{index}"
+            data-testid="recording-space-option"
         >
             <div class="min-w-0 flex-1 flex flex-col gap-1">
-                <span class="text-sm font-semibold text-white">
+                <span class="text-sm font-semibold text-white" data-testid={getKindTestId(row)}>
                     {row.kind === "megaphone"
                         ? $LL.recording.actionbar.spacePicker.megaphone()
                         : $LL.recording.actionbar.spacePicker.discussion()}
@@ -74,6 +82,7 @@
             {#if row.action}
                 <button
                     type="button"
+                    data-testid={getActionTestId(row)}
                     class="shrink-0 rounded border px-2 py-1 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 {row.action ===
                     'stop'
                         ? 'border-red-400/60 text-red-200 hover:bg-red-500/10'

@@ -55,13 +55,11 @@ type RecordingSpacePickerAction = "start" | "stop";
 
 function recordingSpacePickerButton(page: Page, kind: RecordingSpacePickerKind, action: RecordingSpacePickerAction) {
     const picker = page.getByTestId("recording-space-picker");
-    const kindLabel = kind === "megaphone" ? "Megaphone" : "Discussion";
-    const actionLabel = action === "stop" ? "Stop" : "Start";
 
     return picker
-        .getByTestId(/recording-space-option-\d+/)
-        .filter({ has: page.getByText(kindLabel, { exact: true }) })
-        .getByRole("button", { name: actionLabel, exact: true });
+        .getByTestId("recording-space-option")
+        .filter({ has: page.getByTestId(`recording-space-kind-${kind}`) })
+        .getByTestId(`recording-space-action-${action}`);
 }
 
 export async function clickRecordingSpacePickerAction(
