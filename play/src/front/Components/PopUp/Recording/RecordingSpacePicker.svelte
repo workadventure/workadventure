@@ -1,10 +1,11 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
+    import type { Readable } from "svelte/store";
     import { clickOutside } from "svelte-outside";
     import { LL } from "../../../../i18n/i18n-svelte";
     import type { RecordingSpaceRow } from "../../ActionBar/MenuIcons/RecordingMenuUtils";
 
-    export let rows: RecordingSpaceRow[] = [];
+    export let rowsStore: Readable<RecordingSpaceRow[]>;
     export let onSelect: (row: RecordingSpaceRow) => void;
     export let onClose: (() => void) | undefined = undefined;
 
@@ -53,7 +54,7 @@
     class="bg-contrast/80 backdrop-blur-md rounded-md shadow-lg p-2 max-w-96 overflow-auto flex flex-col gap-2"
     use:clickOutside={handleClose}
 >
-    {#each rows as row, index (row.spaceName)}
+    {#each $rowsStore as row, index (row.spaceName)}
         <div
             class="w-full rounded border border-white/10 bg-white/5 p-3 flex flex-row items-center gap-3 {row.disabled ||
             !row.action

@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
+    import { writable } from "svelte/store";
     import { LL } from "../../../../i18n/i18n-svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import RecordingIcon from "../../Icons/RecordingIcon.svelte";
@@ -21,6 +22,7 @@
     const currentGameScene = gameManager.getCurrentGameScene();
     const spacesWithRecordingStore = currentGameScene.spaceRegistry.spacesWithRecording;
     const recording = gameManager.currentStartedRoom.recording;
+    const pickerRowsStore = writable<RecordingSpaceRow[]>([]);
     let closeFloatingUi: (() => void) | undefined = undefined;
     let triggerElement: HTMLElement | undefined = undefined;
     const roomAllowsStart = localUserStore.isLogged() && recording?.buttonState === "enabled";
@@ -57,7 +59,7 @@
         );
     }
 
-    function openSpacePicker(rows: RecordingSpaceRow[]): void {
+    function openSpacePicker(): void {
         if (closeFloatingUi) {
             closeSpacePicker();
             return;
@@ -71,7 +73,7 @@
             triggerElement,
             RecordingSpacePicker,
             {
-                rows,
+                rowsStore: pickerRowsStore,
                 onSelect: (row: RecordingSpaceRow) => {
                     applyRecordingAction(row);
                 },
@@ -97,7 +99,7 @@
             return;
         }
 
-        openSpacePicker(currentRows);
+        openSpacePicker();
     }
 
     $: currentRows = getRecordingSpaceRows(
@@ -106,6 +108,7 @@
         $recordingStore,
         roomAllowsStart
     );
+    $: pickerRowsStore.set(currentRows);
     $: actionableRows = getActionableRecordingRows(currentRows);
     $: hasActionableStart = actionableRows.some((row) => row.action === "start");
     $: hasOwnRecording = currentRows.some((row) => row.status === "recording-self");
