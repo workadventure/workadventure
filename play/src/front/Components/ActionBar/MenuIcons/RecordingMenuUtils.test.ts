@@ -93,4 +93,37 @@ describe("RecordingMenuUtils", () => {
 
         expect(getShouldDisplayRecordingButton([], [discussionSpace])).toBe(true);
     });
+
+    it("hides the recording button when the room policy marks it as hidden", () => {
+        const discussionSpace = createSpace("discussion-space");
+
+        expect(getShouldDisplayRecordingButton([], [discussionSpace], "hidden")).toBe(false);
+    });
+
+    it("keeps the recording button visible when the room policy is hidden but a recording is already active", () => {
+        const discussionSpace = createSpace("discussion-space", {
+            metadata: new Map([
+                [
+                    "recording",
+                    {
+                        recording: true,
+                        recorder: "alice-id",
+                    },
+                ],
+            ]),
+            recorderNamesById: {
+                "alice-id": "Alice",
+            },
+        });
+        const recordingState: RecordingState = {
+            recordingsBySpace: {},
+            requestStatesBySpace: {},
+            isRecording: false,
+            isCurrentUserRecorder: false,
+        };
+
+        const rows = getRecordingSpaceRows([discussionSpace], [], recordingState, false);
+
+        expect(getShouldDisplayRecordingButton(rows, [], "hidden")).toBe(true);
+    });
 });

@@ -1,3 +1,4 @@
+import type { RecordingButtonState } from "@workadventure/messages";
 import type { Readable } from "svelte/store";
 import { derived } from "svelte/store";
 
@@ -144,8 +145,13 @@ export function getActionableRecordingRows(rows: RecordingSpaceRow[]): Recording
 
 export function getShouldDisplayRecordingButton(
     rows: RecordingSpaceRow[],
-    recordableSpaces: SpaceInterface[]
+    recordableSpaces: SpaceInterface[],
+    roomButtonState?: RecordingButtonState
 ): boolean {
+    if (roomButtonState === "hidden") {
+        return rows.some((row) => row.status !== "available");
+    }
+
     return rows.length > 0 || recordableSpaces.length > 0;
 }
 
@@ -221,9 +227,10 @@ export function createRecordingMenuStateStore(
     options: {
         canStartRecording: boolean;
         isUserLoggedIn: boolean;
+        roomButtonState?: RecordingButtonState;
     }
 ): Readable<RecordingMenuState> {
-    const { canStartRecording, isUserLoggedIn } = options;
+    const { canStartRecording, isUserLoggedIn, roomButtonState } = options;
 
     return derived([spaceRegistry.spacesEligibleForRecording, recordingStore], ([$eligibleSpaces, $recordingState]) => {
         const allSpaces = spaceRegistry.getAll();
@@ -246,7 +253,7 @@ export function createRecordingMenuStateStore(
             hasOtherRecording,
             hasOwnRecording,
             hasPendingRequest,
-            shouldDisplayButton: getShouldDisplayRecordingButton(currentRows, $eligibleSpaces),
+            shouldDisplayButton: getShouldDisplayRecordingButton(currentRows, $eligibleSpaces, roomButtonState),
         };
     });
 }

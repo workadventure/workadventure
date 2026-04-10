@@ -30,6 +30,7 @@
     const recordingMenuState = createRecordingMenuStateStore(gameScene.spaceRegistry, {
         canStartRecording: localUserStore.isLogged() && recording?.buttonState === "enabled",
         isUserLoggedIn: localUserStore.isLogged(),
+        roomButtonState: recording?.buttonState,
     });
 
     // These menu items are displayed to the left of the camera/microphone icons.
