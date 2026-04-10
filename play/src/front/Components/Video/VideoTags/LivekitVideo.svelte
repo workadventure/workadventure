@@ -19,19 +19,20 @@
 
     let remoteVideoTrack: LivekitStreamable["remoteVideoTrack"];
     let activeMedia: LivekitStreamable | undefined;
+    let releaseVideoSubscription: (() => void) | undefined;
 
     $: remoteVideoTrack = media.remoteVideoTrack;
 
     $: {
         if (activeMedia !== media) {
-            activeMedia?.setVideoSubscribed(false);
+            releaseVideoSubscription?.();
             activeMedia = media;
-            media.setVideoSubscribed(true);
+            releaseVideoSubscription = media.acquireVideoSubscription();
         }
     }
 
     onDestroy(() => {
-        activeMedia?.setVideoSubscribed(false);
+        releaseVideoSubscription?.();
     });
 </script>
 

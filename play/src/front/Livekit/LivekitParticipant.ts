@@ -48,6 +48,8 @@ export class LiveKitParticipant {
     );
     private _isActiveSpeaker = writable<boolean>(false);
     private _muteAudioStore: Writable<boolean> = writable<boolean>(false);
+    private _cameraVideoSubscriptions = new Set<symbol>();
+    private _screenShareVideoSubscriptions = new Set<symbol>();
 
     private _cameraPublication: RemoteTrackPublication | undefined;
     private _microphonePublication: RemoteTrackPublication | undefined;
@@ -112,6 +114,38 @@ export class LiveKitParticipant {
         this.updateLivekitVideoStreamStore();
     }
 
+    private acquireVideoSubscription(type: "camera" | "screenShare"): () => void {
+        const subscriptions = type === "camera" ? this._cameraVideoSubscriptions : this._screenShareVideoSubscriptions;
+        const token = Symbol(type);
+        let released = false;
+
+        subscriptions.add(token);
+        if (subscriptions.size === 1) {
+            this.syncVideoSubscriptionState(type);
+        }
+
+        return () => {
+            if (released) {
+                return;
+            }
+
+            released = true;
+            subscriptions.delete(token);
+            if (subscriptions.size === 0) {
+                this.syncVideoSubscriptionState(type);
+            }
+        };
+    }
+
+    private syncVideoSubscriptionState(type: "camera" | "screenShare") {
+        if (type === "camera") {
+            this._cameraPublication?.setSubscribed(this._cameraVideoSubscriptions.size > 0);
+            return;
+        }
+
+        this._screenSharePublication?.setSubscribed(this._screenShareVideoSubscriptions.size > 0);
+    }
+
     private handleTrackPublished(publication: RemoteTrackPublication) {
         if (this.abortSignal.aborted) {
             return;
@@ -129,6 +163,7 @@ export class LiveKitParticipant {
             }
             this._cameraPublication = publication;
             this._hasVideo.set(!publication.isMuted);
+            this.syncVideoSubscriptionState("camera");
         } else if (publication.source === Track.Source.ScreenShare) {
             if (this._screenSharePublication && this._screenSharePublication !== publication) {
                 console.warn(
@@ -141,6 +176,7 @@ export class LiveKitParticipant {
             }
             this._screenSharePublication = publication;
             this._hasScreenShareVideo.set(!publication.isMuted);
+            this.syncVideoSubscriptionState("screenShare");
             this.refreshLivekitScreenShareStreamStore();
         } else if (publication.source === Track.Source.ScreenShareAudio) {
             if (this._screenShareAudioPublication && this._screenShareAudioPublication !== publication) {
@@ -352,7 +388,7 @@ export class LiveKitParticipant {
                 isBlocked: derived(this._blockedUsersStore, ($blockedUsersStore) =>
                     $blockedUsersStore.has(this._spaceUser.spaceUserId)
                 ),
-                setVideoSubscribed: (subscribed: boolean) => this._cameraPublication?.setSubscribed(subscribed),
+                acquireVideoSubscription: () => this.acquireVideoSubscription("camera"),
             } as LivekitStreamable,
             volumeStore: writable(undefined),
             volume: writable(this.defaultVolume),
@@ -386,7 +422,7 @@ export class LiveKitParticipant {
                 isBlocked: derived(this._blockedUsersStore, ($blockedUsersStore) =>
                     $blockedUsersStore.has(this._spaceUser.spaceUserId)
                 ),
-                setVideoSubscribed: (subscribed: boolean) => this._screenSharePublication?.setSubscribed(subscribed),
+                acquireVideoSubscription: () => this.acquireVideoSubscription("screenShare"),
             } as LivekitStreamable,
             volumeStore: writable(undefined),
             volume: writable(this.defaultVolume),
@@ -438,6 +474,8 @@ export class LiveKitParticipant {
             this._actualScreenShare = undefined;
         }
 
+        this._cameraVideoSubscriptions.clear();
+        this._screenShareVideoSubscriptions.clear();
         this._cameraPublication?.setSubscribed(false);
         this._microphonePublication?.setSubscribed(false);
         this._screenSharePublication?.setSubscribed(false);
