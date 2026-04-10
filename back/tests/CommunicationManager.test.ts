@@ -61,6 +61,7 @@ describe("CommunicationManager", () => {
         getAllUsers: () => users,
         getUsersInFilter: () => users,
         getUsersToNotify: () => [],
+        getRecordingState: () => ({ isRecording: false, recorder: null }),
         dispatchPrivateEvent: vi.fn(),
         dispatchPublicEvent: vi.fn().mockResolvedValue(undefined),
         getSpaceName: () => "test-space",
