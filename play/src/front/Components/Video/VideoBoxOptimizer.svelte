@@ -5,6 +5,7 @@
     import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
     import type { ObservableElement } from "../../Interfaces/ObservableElement";
     import type { TokenRemovalHandle } from "../../Utils/TokenBucket";
+    import type { DocumentPictureInPictureEvent } from "./PictureInPicture/PictureInPictureWindow";
     import { videoBoxVisibilityTokenBucket } from "./VideoBoxVisibilityTokenBucket";
 
     export let videoBox: VideoBox;
@@ -22,6 +23,31 @@
     $: isFirst = $orderStore === 0;
 
     $: isLast = $orderStore === $oneLineStreamableCollectionStore.length - 1;
+
+    let currentDocumentPictureInPictureWindow: Window | undefined;
+    let intersectionObserverRefreshTimeout: number | undefined;
+
+    function refreshIntersectionObserver() {
+        if (!videoBoxElement || !intersectionObserver) {
+            return;
+        }
+
+        intersectionObserver.unobserve(videoBoxElement);
+        intersectionObserver.observe(videoBoxElement);
+    }
+
+    function scheduleIntersectionObserverRefresh() {
+        if (intersectionObserverRefreshTimeout !== undefined) {
+            clearTimeout(intersectionObserverRefreshTimeout);
+        }
+
+        // PiP enter/pagehide can fire before the DOM node has been moved to its new document.
+        // Use setTimeout instead of requestAnimationFrame because the main document can be hidden when PiP closes.
+        intersectionObserverRefreshTimeout = window.setTimeout(() => {
+            intersectionObserverRefreshTimeout = undefined;
+            refreshIntersectionObserver();
+        }, 100);
+    }
 
     onMount(() => {
         if (!videoBoxElement) {
@@ -53,7 +79,37 @@
             }
         };
 
+        const handleDocumentPictureInPictureLeave = () => {
+            // The refresh will trigger only when the page becomes visible again.
+            // In case we close the PiP window without switching to the main page, this will not happen right away.
+            // In the meantime, we can assume the video is hidden.
+            isVisible = false;
+            scheduleIntersectionObserverRefresh();
+        };
+
+        const handleDocumentPictureInPictureEnter = (event: DocumentPictureInPictureEvent) => {
+            currentDocumentPictureInPictureWindow?.removeEventListener("pagehide", handleDocumentPictureInPictureLeave);
+            currentDocumentPictureInPictureWindow = event.window;
+            currentDocumentPictureInPictureWindow.addEventListener("pagehide", handleDocumentPictureInPictureLeave, {
+                once: true,
+            });
+            scheduleIntersectionObserverRefresh();
+        };
+
+        const documentPictureInPicture =
+            "documentPictureInPicture" in window ? window.documentPictureInPicture : undefined;
+
+        // When entering / leaving PiP, we noticed the intersection observer is not correctly updated.
+        // Here, we are adding some custom PiP tracking to force refreshing the intersection observer each time PiP
+        // is triggered.
+        documentPictureInPicture?.addEventListener("enter", handleDocumentPictureInPictureEnter);
+
         return () => {
+            documentPictureInPicture?.removeEventListener("enter", handleDocumentPictureInPictureEnter);
+            currentDocumentPictureInPictureWindow?.removeEventListener("pagehide", handleDocumentPictureInPictureLeave);
+            if (intersectionObserverRefreshTimeout !== undefined) {
+                clearTimeout(intersectionObserverRefreshTimeout);
+            }
             if (videoBoxElement) {
                 intersectionObserver?.unobserve(videoBoxElement);
             }
