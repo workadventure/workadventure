@@ -1,13 +1,13 @@
 #!/usr/bin/env tsx
 
-import { readFileSync } from "fs";
-import { resolve, dirname } from "path";
+import fs from "fs";
+import path from "path";
 import { fileURLToPath } from "url";
 import { extractEnvVariables } from "./extractor.js";
 import { generateMarkdown } from "./markdown-generator.js";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.dirname(__filename);
 
 async function main() {
     console.log("🔍 Checking environment variables documentation...");
@@ -26,11 +26,11 @@ async function main() {
     const expectedMarkdown = generateMarkdown(playVars, backVars, mapStorageVars);
 
     // Read current documentation
-    const docPath = resolve(__dirname, "../../../../docs/others/self-hosting/env-variables.md");
+    const docPath = path.resolve(__dirname, "../../../../docs/others/self-hosting/env-variables.md");
     let currentMarkdown: string;
 
     try {
-        currentMarkdown = readFileSync(docPath, "utf-8");
+        currentMarkdown = fs.readFileSync(docPath, "utf-8");
     } catch (error) {
         console.error(`\n❌ Error: Documentation file not found at ${docPath}`);
         console.error("   Run 'npm run generate-env-docs' to generate it.\n");

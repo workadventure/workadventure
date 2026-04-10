@@ -1,4 +1,4 @@
-import * as fs from "fs";
+import fs from "fs";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { WAMFileFormat } from "./types";
 import { wamFileMigration } from "./Migrations/WamFileMigration";

@@ -1,4 +1,4 @@
-import * as Phaser from "phaser";
+import Phaser from "phaser";
 globalThis.Phaser = Phaser;
 
 import type {
