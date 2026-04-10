@@ -1,6 +1,5 @@
 <script lang="ts">
     import { getContext } from "svelte";
-    import { derived } from "svelte/store";
 
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
@@ -11,9 +10,9 @@
     import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
     import { currentPlayerLockableAreasStore } from "../../../Stores/CurrentPlayerAreaLockStore";
     import { currentPlayerGroupLockStateStore } from "../../../Stores/CurrentPlayerGroupStore";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
     import LL from "../../../../i18n/i18n-svelte";
 
-    import { recordingStore } from "../../../Stores/RecordingStore";
     import AppsMenuItem from "./AppsMenuItem.svelte";
     import FollowMenuItem from "./FollowMenuItem.svelte";
     import EmojiMenuItem from "./EmojiMenuItem.svelte";
@@ -22,16 +21,16 @@
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import MegaphoneMenuItem from "./MegaphoneMenuItem.svelte";
     import RecordingMenuItem from "./RecordingMenuItem.svelte";
+    import { createRecordingMenuStateStore } from "./RecordingMenuUtils";
 
     const inProfileMenu = getContext("profileMenu");
 
     const gameScene = gameManager.getCurrentGameScene();
-    const spacesWithRecording = gameScene.spaceRegistry.spacesWithRecording;
-    const shouldDisplayRecordingButton = derived(
-        [spacesWithRecording],
-        ([$spacesWithRecording]) => $spacesWithRecording.length > 0
-    );
     const recording = gameManager.currentStartedRoom.recording;
+    const recordingMenuState = createRecordingMenuStateStore(gameScene.spaceRegistry, {
+        canStartRecording: localUserStore.isLogged() && recording?.buttonState === "enabled",
+        isUserLoggedIn: localUserStore.isLogged(),
+    });
 
     // These menu items are displayed to the left of the camera/microphone icons.
     // They switch automatically to the profile menu when the screen is small.
@@ -60,8 +59,8 @@
     <LockDiscussionMenuItem />
 {/if}
 
-{#if ($shouldDisplayRecordingButton && recording && recording.buttonState !== "hidden") || $recordingStore.isRecording}
-    <RecordingMenuItem />
+{#if $recordingMenuState.shouldDisplayButton}
+    <RecordingMenuItem {recordingMenuState} />
 {/if}
 
 {#if $requestedMegaphoneStore}

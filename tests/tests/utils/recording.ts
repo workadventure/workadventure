@@ -78,6 +78,25 @@ export async function expectRecordingSpacePickerAction(
     await expect(recordingSpacePickerButton(page, kind, action)).toBeEnabled();
 }
 
+/**
+ * Waits until both megaphone and discussion rows expose enabled stop actions in the space picker.
+ * The picker is opened to assert, then closed so callers can use {@link openRecordingSpacePicker} next.
+ */
+export async function waitForDualRecordingStopControls(page: Page) {
+    await expect(page.getByTestId("recordingButton-stop")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("recordingButton-stop")).toBeEnabled({ timeout: 30_000 });
+
+    await expect(async () => {
+        await page.getByTestId("recordingButton-stop").click();
+        await expect(page.getByTestId("recording-space-picker")).toBeVisible();
+        await expect(recordingSpacePickerButton(page, "megaphone", "stop")).toBeEnabled();
+        await expect(recordingSpacePickerButton(page, "discussion", "stop")).toBeEnabled();
+    }).toPass({ timeout: 60_000 });
+
+    await page.getByTestId("recordingButton-stop").click();
+    await expect(page.getByTestId("recording-space-picker")).toBeHidden();
+}
+
 export async function openRecordingSpacePicker(page: Page, action: RecordingSpacePickerAction) {
     await page.getByTestId(`recordingButton-${action}`).click();
     await expect(page.getByTestId("recording-space-picker")).toBeVisible();

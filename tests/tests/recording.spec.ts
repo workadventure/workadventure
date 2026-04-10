@@ -16,6 +16,7 @@ import {
     deleteAllRecordings,
     expectRecordingSpacePickerAction,
     openRecordingSpacePicker,
+    waitForDualRecordingStopControls,
     waitForMegaphoneToBeStreaming,
     waitForRecordingToAppear,
 } from "./utils/recording";
@@ -254,6 +255,8 @@ test.describe("Recording test", () => {
 
         await openRecordingSpacePicker(page2, "stop");
         await clickRecordingSpacePickerAction(page2, "discussion", "start");
+
+        await waitForDualRecordingStopControls(page2);
 
         // Register both spaces long enough for the recording backend to produce files.
         // eslint-disable-next-line playwright/no-wait-for-timeout

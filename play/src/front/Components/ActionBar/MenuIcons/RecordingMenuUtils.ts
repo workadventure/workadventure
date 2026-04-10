@@ -1,6 +1,13 @@
+import type { Readable } from "svelte/store";
+import { derived } from "svelte/store";
+
 import type { SpaceInterface } from "../../../Space/SpaceInterface";
+import type { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { recordingSchema } from "../../../Space/SpaceMetadataValidator";
 import type { RecordingState } from "../../../Stores/RecordingStore";
+import { recordingStore } from "../../../Stores/RecordingStore";
+
+export type SpaceRegistryForRecordingMenu = Pick<SpaceRegistryInterface, "getAll" | "spacesEligibleForRecording">;
 
 export type RecordingRowStatus = "available" | "starting" | "stopping" | "recording-self" | "recording-other";
 export type RecordingRowAction = "start" | "stop" | null;
@@ -60,7 +67,7 @@ export function getRecordingSpaceRows(
 ): RecordingSpaceRow[] {
     const recordableSpaceNames = new Set(recordableSpaces.map((space) => space.getName()));
 
-    return allSpaces
+    const rows = allSpaces
         .map((space) => {
             const spaceName = space.getName();
             const requestState = recordingState.requestStatesBySpace[spaceName];
@@ -127,17 +134,119 @@ export function getRecordingSpaceRows(
             };
         })
         .filter((row): row is RecordingSpaceRow => row !== null);
+
+    return rows;
 }
 
 export function getActionableRecordingRows(rows: RecordingSpaceRow[]): RecordingSpaceRow[] {
     return rows.filter((row) => row.action !== null && !row.disabled);
 }
 
-export function getDirectRecordingActionRow(rows: RecordingSpaceRow[]): RecordingSpaceRow | undefined {
+export function getShouldDisplayRecordingButton(
+    rows: RecordingSpaceRow[],
+    recordableSpaces: SpaceInterface[]
+): boolean {
+    return rows.length > 0 || recordableSpaces.length > 0;
+}
+
+/**
+ * Returns a row to apply immediately without opening the picker only when there is a single
+ * unambiguous target. If several spaces in the room can be recorded, starting must go through
+ * the picker so the user explicitly chooses — even when only one row is built yet (e.g. timing).
+ *
+ * Uses both `recordableSpaces` (store) and `allSpaces` (registry) so we still open the picker
+ * when multiple joined spaces are recordable even if `rows` temporarily collapses to one line.
+ */
+export function getDirectRecordingActionRow(
+    rows: RecordingSpaceRow[],
+    allSpaces: SpaceInterface[],
+    recordableSpaces: SpaceInterface[]
+): RecordingSpaceRow | undefined {
     const actionableRows = getActionableRecordingRows(rows);
     if (actionableRows.length !== 1 || rows.length !== 1) {
         return undefined;
     }
 
-    return actionableRows[0];
+    const candidate = actionableRows[0];
+
+    if (candidate.action === "start") {
+        const recordableNameSet = new Set(recordableSpaces.map((s) => s.getName()));
+        const joinedRecordableSpaces = allSpaces.filter((s) => recordableNameSet.has(s.getName()));
+        const forcePickerBecauseSeveralTargets = recordableSpaces.length > 1 || joinedRecordableSpaces.length > 1;
+
+        if (forcePickerBecauseSeveralTargets) {
+            return undefined;
+        }
+    }
+
+    return candidate;
+}
+
+export interface RecordingMenuState {
+    actionMode: "start" | "stop";
+    actionableRows: RecordingSpaceRow[];
+    buttonState: "disabled" | "normal" | "active";
+    currentRows: RecordingSpaceRow[];
+    directRow: RecordingSpaceRow | undefined;
+    hasActionableStart: boolean;
+    hasOtherRecording: boolean;
+    hasOwnRecording: boolean;
+    hasPendingRequest: boolean;
+    shouldDisplayButton: boolean;
+}
+
+function computeRecordingButtonState(
+    isLogged: boolean,
+    actionableRows: RecordingSpaceRow[],
+    hasOwnRecording: boolean
+): "disabled" | "normal" | "active" {
+    if (!isLogged) {
+        return "disabled";
+    }
+    if (actionableRows.length > 0) {
+        return hasOwnRecording ? "active" : "normal";
+    }
+    if (hasOwnRecording) {
+        return "active";
+    }
+    return "disabled";
+}
+
+/**
+ * Single derived pipeline for the recording action bar: registry spaces + recording store + room policy.
+ * Keeps row building and picker/direct-row logic in one place instead of many `$:` blocks in the component.
+ */
+export function createRecordingMenuStateStore(
+    spaceRegistry: SpaceRegistryForRecordingMenu,
+    options: {
+        canStartRecording: boolean;
+        isUserLoggedIn: boolean;
+    }
+): Readable<RecordingMenuState> {
+    const { canStartRecording, isUserLoggedIn } = options;
+
+    return derived([spaceRegistry.spacesEligibleForRecording, recordingStore], ([$eligibleSpaces, $recordingState]) => {
+        const allSpaces = spaceRegistry.getAll();
+        const currentRows = getRecordingSpaceRows(allSpaces, $eligibleSpaces, $recordingState, canStartRecording);
+        const actionableRows = getActionableRecordingRows(currentRows);
+        const directRow = getDirectRecordingActionRow(currentRows, allSpaces, $eligibleSpaces);
+        const hasOwnRecording = currentRows.some((row) => row.status === "recording-self");
+        const hasOtherRecording = currentRows.some((row) => row.status === "recording-other");
+        const hasPendingRequest = currentRows.some((row) => row.status === "starting" || row.status === "stopping");
+        const hasActionableStart = actionableRows.some((row) => row.action === "start");
+        const actionMode: RecordingMenuState["actionMode"] = hasOwnRecording ? "stop" : "start";
+
+        return {
+            actionMode,
+            actionableRows,
+            buttonState: computeRecordingButtonState(isUserLoggedIn, actionableRows, hasOwnRecording),
+            currentRows,
+            directRow,
+            hasActionableStart,
+            hasOtherRecording,
+            hasOwnRecording,
+            hasPendingRequest,
+            shouldDisplayButton: getShouldDisplayRecordingButton(currentRows, $eligibleSpaces),
+        };
+    });
 }

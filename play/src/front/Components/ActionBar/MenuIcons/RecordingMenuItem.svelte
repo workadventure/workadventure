@@ -1,31 +1,25 @@
 <script lang="ts">
+    import type { Readable } from "svelte/store";
     import { onDestroy } from "svelte";
-    import { writable } from "svelte/store";
+    import { derived, get } from "svelte/store";
     import { LL } from "../../../../i18n/i18n-svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import RecordingIcon from "../../Icons/RecordingIcon.svelte";
     import RecordingActiveIcon from "../../Icons/RecordingActiveIcon.svelte";
     import { recordingStore } from "../../../Stores/RecordingStore";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import RecordingSpacePicker from "../../PopUp/Recording/RecordingSpacePicker.svelte";
-    import type { RecordingSpaceRow } from "./RecordingMenuUtils";
-    import {
-        getActionableRecordingRows,
-        getDirectRecordingActionRow,
-        getRecordingSpaceRows,
-    } from "./RecordingMenuUtils";
+    import type { RecordingMenuState, RecordingSpaceRow } from "./RecordingMenuUtils";
     import { IconAlertTriangle } from "@wa-icons";
 
-    const currentGameScene = gameManager.getCurrentGameScene();
-    const spacesWithRecordingStore = currentGameScene.spaceRegistry.spacesWithRecording;
+    export let recordingMenuState: Readable<RecordingMenuState>;
+
     const recording = gameManager.currentStartedRoom.recording;
-    const pickerRowsStore = writable<RecordingSpaceRow[]>([]);
     let closeFloatingUi: (() => void) | undefined = undefined;
     let triggerElement: HTMLElement | undefined = undefined;
-    const roomAllowsStart = localUserStore.isLogged() && recording?.buttonState === "enabled";
 
     function closeSpacePicker(): void {
         closeFloatingUi?.();
@@ -73,7 +67,7 @@
             triggerElement,
             RecordingSpacePicker,
             {
-                rowsStore: pickerRowsStore,
+                rowsStore: derived(recordingMenuState, ($state) => $state.currentRows),
                 onSelect: (row: RecordingSpaceRow) => {
                     applyRecordingAction(row);
                 },
@@ -88,50 +82,24 @@
     }
 
     function requestRecording(): void {
-        if (actionableRows.length === 0) {
+        const state = get(recordingMenuState);
+
+        if (state.actionableRows.length === 0) {
             closeSpacePicker();
             return;
         }
 
-        const directRow = getDirectRecordingActionRow(currentRows);
-        if (directRow) {
-            applyRecordingAction(directRow);
+        if (state.directRow) {
+            applyRecordingAction(state.directRow);
             return;
         }
 
         openSpacePicker();
     }
 
-    $: currentRows = getRecordingSpaceRows(
-        currentGameScene.spaceRegistry.getAll(),
-        $spacesWithRecordingStore,
-        $recordingStore,
-        roomAllowsStart
-    );
-    $: pickerRowsStore.set(currentRows);
-    $: actionableRows = getActionableRecordingRows(currentRows);
-    $: hasActionableStart = actionableRows.some((row) => row.action === "start");
-    $: hasOwnRecording = currentRows.some((row) => row.status === "recording-self");
-    $: hasOtherRecording = currentRows.some((row) => row.status === "recording-other");
-    $: hasPendingRequest = currentRows.some((row) => row.status === "starting" || row.status === "stopping");
-    $: actionMode = hasOwnRecording ? "stop" : "start";
-
     onDestroy(() => {
         closeSpacePicker();
     });
-
-    $: buttonState = ((): "disabled" | "normal" | "active" => {
-        if (!localUserStore.isLogged()) {
-            return "disabled";
-        }
-        if (actionableRows.length > 0) {
-            return hasOwnRecording ? "active" : "normal";
-        }
-        if (hasOwnRecording) {
-            return "active";
-        }
-        return "disabled";
-    })();
 </script>
 
 <ActionBarButton
@@ -139,23 +107,25 @@
         requestRecording();
     }}
     classList="group/btn-recording"
-    tooltipTitle={hasOwnRecording
+    tooltipTitle={$recordingMenuState.hasOwnRecording
         ? $LL.recording.actionbar.title.stop()
-        : hasActionableStart
+        : $recordingMenuState.hasActionableStart
         ? $LL.recording.actionbar.title.start()
-        : hasOtherRecording
+        : $recordingMenuState.hasOtherRecording
         ? $LL.recording.actionbar.title.inProgress()
         : $LL.recording.actionbar.title.start()}
-    state={buttonState}
-    dataTestId="recordingButton-{actionMode}"
+    state={$recordingMenuState.buttonState}
+    dataTestId="recordingButton-{$recordingMenuState.actionMode}"
     media="./static/Videos/Record.mp4"
     tooltipDelay={0}
     bind:wrapperDiv={triggerElement}
 >
-    {#if hasOwnRecording}
+    {#if $recordingMenuState.hasOwnRecording}
         <RecordingActiveIcon width="40" height="40" />
     {:else}
-        <RecordingIcon status={hasPendingRequest || hasOtherRecording ? "active" : "idle"} />
+        <RecordingIcon
+            status={$recordingMenuState.hasPendingRequest || $recordingMenuState.hasOtherRecording ? "active" : "idle"}
+        />
     {/if}
 
     <div slot="tooltip" class="text-white relative">
@@ -164,11 +134,11 @@
                 <div class="text-xs italic opacity-80">
                     {$LL.recording.actionbar.desc.needLogin()}
                 </div>
-            {:else if !hasOwnRecording && recording?.buttonState === "disabled" && recording?.disabledReason}
+            {:else if !$recordingMenuState.hasOwnRecording && recording?.buttonState === "disabled" && recording?.disabledReason}
                 <div class="text-xs italic opacity-80">
                     {recording.disabledReason}
                 </div>
-            {:else if actionableRows.some((row) => row.action === "start")}
+            {:else if $recordingMenuState.actionableRows.some((row) => row.action === "start")}
                 <div class="text-sm text-whitepx-2 py-1">
                     <span class="mr-2 -translate-y-1">
                         <IconAlertTriangle />
@@ -177,7 +147,7 @@
                         {$LL.recording.actionbar.desc.advert()}
                     </span>
                 </div>
-            {:else if hasOwnRecording}
+            {:else if $recordingMenuState.hasOwnRecording}
                 <div class="text-sm text-white flex flex-row items-center gap-2 px-2 py-1">
                     <div class="bg-red-500 rounded-full min-w-4 min-h-4 animate-pulse" />
                     <div class="text-xs italic opacity-80">
