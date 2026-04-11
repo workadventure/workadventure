@@ -46,6 +46,16 @@ class Megaphone {
         await page.locator(".indicators > button").click();
     }
 
+    async toggleMegaphoneRecording(page: Page) {
+        await page.getByTestId("megaphone-recording-switch").click();
+    }
+
+    async megaphoneAddRecordingRights(page: Page, tag = "test") {
+        await expect(page.getByTestId("megaphone-recording-rights-input")).toBeVisible();
+        await page.getByTestId("megaphone-recording-rights-input").fill(tag.toLowerCase());
+        await page.getByTestId("megaphone-recording-rights-input").press("Enter");
+    }
+
     async megaphoneSave(page: Page) {
         await page.getByRole("button", { name: "Save" }).click();
     }

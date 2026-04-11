@@ -15,6 +15,10 @@ describe("WAM Setting", () => {
         rights: ["testRights"],
         scope: "testScope",
         audienceVideoFeedbackActivated: false,
+        recording: {
+            enabled: true,
+            rights: ["testRecordingRights"],
+        },
     };
     it("should change WAM file loaded when WAMSettingCommand received", async () => {
         const wamFile: WAMFileFormat = { ...defaultWamFile };

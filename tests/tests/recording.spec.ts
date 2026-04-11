@@ -34,6 +34,29 @@ async function waitForRecordingToAppear(page: Page, index: number, maxRetries = 
     }
 }
 
+async function openMegaphoneSettings(page: Page) {
+    const configureMyRoomButton = page.locator(
+        "section.side-bar-container .side-bar .tool-button button#WAMSettingsEditor",
+    );
+
+    if (!(await configureMyRoomButton.isVisible())) {
+        await Menu.openMapEditor(page);
+    }
+
+    await MapEditor.openConfigureMyRoom(page);
+    await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
+}
+
+async function saveMegaphoneSettings(page: Page, { closePopup = true }: { closePopup?: boolean } = {}) {
+    await Megaphone.megaphoneSave(page);
+    await Megaphone.isCorrectlySaved(page);
+    await expect(page.getByRole("button", { name: "Megaphone settings saved" })).toBeHidden();
+
+    if (closePopup) {
+        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
+    }
+}
+
 test.describe("Recording test", () => {
     test.beforeEach(
         "Ignore tests on mobilechromium because map editor not available for mobile devices",
@@ -196,38 +219,97 @@ test.describe("Recording test", () => {
         await expect(page2.getByTestId("recordingButton-start")).toBeVisible();
     });
 
-    test("Recording displays popup if megaphone and meeting are recordable @oidc", async ({ browser, request }) => {
+    test("Megaphone recording permissions update without reload and respect tags @oidc", async ({
+        browser,
+        request,
+    }) => {
         await resetWamMaps(request);
-        // Go to the empty map
+        const speakerPosition = { x: 4 * 32, y: 0 };
+        const adminListenerFarPosition = { x: 30 * 32, y: 0 };
+        const memberListenerFarPosition = { x: 30 * 32, y: 12 * 32 };
+
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await Map.teleportToPosition(page, speakerPosition.x, speakerPosition.y);
 
-        await Map.teleportToPosition(page, 4 * 32, 0);
-
-        // Let's enable the map editor
         await Menu.openMapEditor(page);
-        await MapEditor.openConfigureMyRoom(page);
-        await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
+        await openMegaphoneSettings(page);
 
-        // Enabling megaphone and settings default value
+        // Megaphone is usable, but megaphone recording is OFF by default.
         await Megaphone.toggleMegaphone(page);
         await Megaphone.isMegaphoneEnabled(page);
-        await Megaphone.megaphoneSave(page);
-        // Wait for the megaphone settings to be saved
-        await Megaphone.isCorrectlySaved(page);
-        // Close the configuration popup
-        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
+        await saveMegaphoneSettings(page);
 
-        // Now, let's start the megaphone
+        await using adminListener = await getPage(browser, "Admin2", Map.url("empty"));
+        await Map.teleportToPosition(adminListener, adminListenerFarPosition.x, adminListenerFarPosition.y);
+        await using memberListener = await getPage(browser, "Member1", Map.url("empty"));
+        await Map.teleportToPosition(memberListener, memberListenerFarPosition.x, memberListenerFarPosition.y);
+
+        // Start the megaphone and close the setup modal without stopping the stream.
         await Menu.clickSendGlobalMessage(page);
         await Menu.clickStartLiveMessage(page);
         await Menu.clickStartMegaphone(page);
+        await page.keyboard.press("Escape");
 
-        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
-        await Map.teleportToPosition(page2, 4 * 32, 0);
+        await expect(adminListener.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
+            timeout: 20_000,
+        });
+        await expect(memberListener.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
+            timeout: 20_000,
+        });
 
-        await page2.getByTestId("recordingButton-start").click();
+        // Switch OFF blocks megaphone recording, including for admins. Listeners are too far away for discussion recording.
+        await expect(adminListener.getByTestId("recordingButton-start")).toBeHidden();
+        await expect(memberListener.getByTestId("recordingButton-start")).toBeHidden();
 
-        await expect(page2.getByText("Record megaphone")).toBeVisible();
-        await expect(page2.getByText("Record discussion")).toBeVisible();
+        // Empty recording rights mean every logged user who can listen to the megaphone can record it.
+        await openMegaphoneSettings(page);
+        await Megaphone.toggleMegaphoneRecording(page);
+        await saveMegaphoneSettings(page, { closePopup: false });
+
+        await expect(adminListener.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible();
+        await expect(memberListener.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible();
+        await expect(adminListener.getByTestId("recordingButton-start")).toBeVisible();
+        await expect(memberListener.getByTestId("recordingButton-start")).toBeVisible();
+
+        // When a discussion and a recordable megaphone are both available, the picker contains both spaces.
+        await Map.teleportToPosition(adminListener, speakerPosition.x, speakerPosition.y);
+        await Map.teleportToPosition(memberListener, speakerPosition.x, speakerPosition.y);
+        await expect(adminListener.locator("#cameras-container").getByText("Member1", { exact: true })).toBeVisible({
+            timeout: 20_000,
+        });
+        await adminListener.getByTestId("recordingButton-start").click();
+        await expect(adminListener.getByTestId("recording-space-picker")).toBeVisible();
+        await expect(adminListener.getByText("Record megaphone")).toBeVisible();
+        await expect(adminListener.getByText("Record discussion")).toBeVisible();
+        await expect(adminListener.getByTestId("recording-space-option-0")).toBeVisible();
+        await expect(adminListener.getByTestId("recording-space-option-1")).toBeVisible();
+        await adminListener.getByTestId("recordingButton-start").click();
+        await expect(adminListener.getByTestId("recording-space-picker")).toBeHidden();
+
+        // A non-matching recording tag hides megaphone recording from the member, while admin bypasses tag lists.
+        await Map.teleportToPosition(adminListener, adminListenerFarPosition.x, adminListenerFarPosition.y);
+        await Map.teleportToPosition(memberListener, memberListenerFarPosition.x, memberListenerFarPosition.y);
+        await expect(adminListener.locator("#cameras-container").getByText("Member1", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+        await expect(memberListener.locator("#cameras-container").getByText("Admin2", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+        await expect(adminListener.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible();
+        await expect(memberListener.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible();
+        await Megaphone.megaphoneAddRecordingRights(page, "foo");
+        await saveMegaphoneSettings(page, { closePopup: false });
+
+        await expect(adminListener.getByTestId("recordingButton-start")).toBeVisible();
+        await expect(memberListener.getByTestId("recordingButton-start")).toBeHidden();
+        await expect(memberListener.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible();
+
+        // Adding the member tag applies immediately to the existing megaphone listener space.
+        await Megaphone.megaphoneAddRecordingRights(page, "member");
+        await saveMegaphoneSettings(page, { closePopup: false });
+
+        await expect(adminListener.getByTestId("recordingButton-start")).toBeVisible();
+        await expect(memberListener.getByTestId("recordingButton-start")).toBeVisible();
+        await expect(memberListener.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible();
     });
 });
