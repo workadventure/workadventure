@@ -21,6 +21,10 @@ import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
 import type { LivekitStreamable, Streamable } from "../Space/Streamable";
 
+// Maximize/minimize can briefly mount 2 video components for the same participant.
+// Delaying the final unsubscribe avoids sending a false->true bounce to LiveKit during that handoff.
+const VIDEO_UNSUBSCRIBE_DELAY_MS = 75;
+
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
     private _connectionQualityStore: Writable<ConnectionQuality>;
@@ -50,6 +54,10 @@ export class LiveKitParticipant {
     private _muteAudioStore: Writable<boolean> = writable<boolean>(false);
     private _cameraVideoSubscriptions = new Set<symbol>();
     private _screenShareVideoSubscriptions = new Set<symbol>();
+    private _cameraVideoSubscribed = false;
+    private _screenShareVideoSubscribed = false;
+    private _cameraUnsubscribeTimeout: ReturnType<typeof setTimeout> | undefined;
+    private _screenShareUnsubscribeTimeout: ReturnType<typeof setTimeout> | undefined;
 
     private _cameraPublication: RemoteTrackPublication | undefined;
     private _microphonePublication: RemoteTrackPublication | undefined;
@@ -121,7 +129,10 @@ export class LiveKitParticipant {
 
         subscriptions.add(token);
         if (subscriptions.size === 1) {
-            this.syncVideoSubscriptionState(type);
+            // A new viewer arrived before the delayed unsubscribe fired. Keep the current server-side
+            // subscription alive so layout churn does not trigger unnecessary LiveKit updates.
+            this.clearPendingVideoUnsubscribe(type);
+            this.setVideoSubscribed(type, true);
         }
 
         return () => {
@@ -132,18 +143,79 @@ export class LiveKitParticipant {
             released = true;
             subscriptions.delete(token);
             if (subscriptions.size === 0) {
-                this.syncVideoSubscriptionState(type);
+                this.scheduleVideoUnsubscribe(type);
             }
         };
     }
 
-    private syncVideoSubscriptionState(type: "camera" | "screenShare") {
-        if (type === "camera") {
-            this._cameraPublication?.setSubscribed(this._cameraVideoSubscriptions.size > 0);
+    private clearPendingVideoUnsubscribe(type: "camera" | "screenShare") {
+        const timeout = type === "camera" ? this._cameraUnsubscribeTimeout : this._screenShareUnsubscribeTimeout;
+        if (timeout === undefined) {
             return;
         }
 
-        this._screenSharePublication?.setSubscribed(this._screenShareVideoSubscriptions.size > 0);
+        clearTimeout(timeout);
+
+        if (type === "camera") {
+            this._cameraUnsubscribeTimeout = undefined;
+        } else {
+            this._screenShareUnsubscribeTimeout = undefined;
+        }
+    }
+
+    private scheduleVideoUnsubscribe(type: "camera" | "screenShare") {
+        this.clearPendingVideoUnsubscribe(type);
+
+        const timeout = setTimeout(() => {
+            if (type === "camera") {
+                this._cameraUnsubscribeTimeout = undefined;
+                if (this._cameraVideoSubscriptions.size === 0) {
+                    // Only unsubscribe if nobody reacquired the video during the short grace period.
+                    this.setVideoSubscribed("camera", false);
+                }
+                return;
+            }
+
+            this._screenShareUnsubscribeTimeout = undefined;
+            if (this._screenShareVideoSubscriptions.size === 0) {
+                // Only unsubscribe if nobody reacquired the screen share during the short grace period.
+                this.setVideoSubscribed("screenShare", false);
+            }
+        }, VIDEO_UNSUBSCRIBE_DELAY_MS);
+
+        if (type === "camera") {
+            this._cameraUnsubscribeTimeout = timeout;
+        } else {
+            this._screenShareUnsubscribeTimeout = timeout;
+        }
+    }
+
+    private setVideoSubscribed(type: "camera" | "screenShare", subscribed: boolean) {
+        if (type === "camera") {
+            if (this._cameraVideoSubscribed === subscribed) {
+                return;
+            }
+
+            this._cameraVideoSubscribed = subscribed;
+            this._cameraPublication?.setSubscribed(subscribed);
+            return;
+        }
+
+        if (this._screenShareVideoSubscribed === subscribed) {
+            return;
+        }
+
+        this._screenShareVideoSubscribed = subscribed;
+        this._screenSharePublication?.setSubscribed(subscribed);
+    }
+
+    private syncVideoSubscriptionState(type: "camera" | "screenShare") {
+        if (type === "camera") {
+            this._cameraPublication?.setSubscribed(this._cameraVideoSubscribed);
+            return;
+        }
+
+        this._screenSharePublication?.setSubscribed(this._screenShareVideoSubscribed);
     }
 
     private handleTrackPublished(publication: RemoteTrackPublication) {
@@ -474,8 +546,12 @@ export class LiveKitParticipant {
             this._actualScreenShare = undefined;
         }
 
+        this.clearPendingVideoUnsubscribe("camera");
+        this.clearPendingVideoUnsubscribe("screenShare");
         this._cameraVideoSubscriptions.clear();
         this._screenShareVideoSubscriptions.clear();
+        this._cameraVideoSubscribed = false;
+        this._screenShareVideoSubscribed = false;
         this._cameraPublication?.setSubscribed(false);
         this._microphonePublication?.setSubscribed(false);
         this._screenSharePublication?.setSubscribed(false);

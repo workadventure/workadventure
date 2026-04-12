@@ -18,10 +18,12 @@ describe("LiveKitParticipant", () => {
     });
 
     afterEach(() => {
+        vi.useRealTimers();
         vi.restoreAllMocks();
     });
 
     it("should keep the camera publication subscribed until the last lease is released", () => {
+        vi.useFakeTimers();
         const publication = createCameraPublication();
         const participant = createParticipant({ publications: [publication] });
         const media = participant.getStreamable().media as LivekitStreamable;
@@ -39,11 +41,16 @@ describe("LiveKitParticipant", () => {
         expect(publication.setSubscribed).toHaveBeenCalledTimes(1);
 
         releaseSecond();
+        expect(publication.setSubscribed).toHaveBeenCalledTimes(1);
+
+        vi.advanceTimersByTime(75);
+
         expect(publication.setSubscribed).toHaveBeenCalledTimes(2);
         expect(publication.setSubscribed).toHaveBeenLastCalledWith(false);
     });
 
     it("should ignore duplicate lease releases", () => {
+        vi.useFakeTimers();
         const publication = createCameraPublication();
         const participant = createParticipant({ publications: [publication] });
         const media = participant.getStreamable().media as LivekitStreamable;
@@ -54,12 +61,17 @@ describe("LiveKitParticipant", () => {
         release();
         release();
 
+        expect(publication.setSubscribed).toHaveBeenCalledTimes(1);
+
+        vi.advanceTimersByTime(75);
+
         expect(publication.setSubscribed).toHaveBeenCalledTimes(2);
         expect(publication.setSubscribed).toHaveBeenNthCalledWith(1, true);
         expect(publication.setSubscribed).toHaveBeenNthCalledWith(2, false);
     });
 
     it("should subscribe a newly published camera track when a lease is already active", () => {
+        vi.useFakeTimers();
         const participant = createParticipant({ publications: [] });
         const media = participant.getStreamable().media as LivekitStreamable;
         const publication = createCameraPublication();
@@ -72,6 +84,37 @@ describe("LiveKitParticipant", () => {
         expect(publication.setSubscribed).toHaveBeenCalledWith(true);
 
         release();
+        expect(publication.setSubscribed).toHaveBeenCalledTimes(1);
+
+        vi.advanceTimersByTime(75);
+
+        expect(publication.setSubscribed).toHaveBeenCalledTimes(2);
+        expect(publication.setSubscribed).toHaveBeenLastCalledWith(false);
+    });
+
+    it("should cancel a pending unsubscribe when the same video is reacquired quickly", () => {
+        vi.useFakeTimers();
+        const publication = createCameraPublication();
+        const participant = createParticipant({ publications: [publication] });
+        const media = participant.getStreamable().media as LivekitStreamable;
+
+        publication.setSubscribed.mockClear();
+
+        const releaseFirst = media.acquireVideoSubscription();
+        releaseFirst();
+
+        vi.advanceTimersByTime(50);
+        const releaseSecond = media.acquireVideoSubscription();
+
+        expect(publication.setSubscribed).toHaveBeenCalledTimes(1);
+        expect(publication.setSubscribed).toHaveBeenLastCalledWith(true);
+
+        vi.advanceTimersByTime(100);
+        expect(publication.setSubscribed).toHaveBeenCalledTimes(1);
+
+        releaseSecond();
+        vi.advanceTimersByTime(75);
+
         expect(publication.setSubscribed).toHaveBeenCalledTimes(2);
         expect(publication.setSubscribed).toHaveBeenLastCalledWith(false);
     });
