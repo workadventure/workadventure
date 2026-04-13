@@ -1156,14 +1156,12 @@ export const microphoneListStore = derived(deviceListStore, ($deviceListStore) =
 export const microphoneButtonHelpContextStore = derived(
     [microphoneAccessIssueStore, microphoneListStore, devicesNotLoaded],
     ([issue, mics, notLoaded]) => {
-        console.log("microphoneButtonHelpContextStore", issue, mics, notLoaded);
         if (issue === "permission_denied") {
             return "permission" as const;
         }
         if (issue === "no_device") {
             return "no_device" as const;
         }
-        console.log("mics", mics !== undefined && mics.length === 0);
         if (mics !== undefined && mics.length === 0) {
             return "no_device" as const;
         }

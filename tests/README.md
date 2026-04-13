@@ -54,10 +54,10 @@ npm run test-headed -- tests/[your_test_file.ts]
 
 ## Run on production like environment
 
-Start WorkAdventure with:
+Start WorkAdventure with (LiveKit overlay without host ports on `egress`, scaled to two workers for concurrent recordings):
 
 ```bash
-COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml up -d --build
+COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.e2e.yaml up -d --build --scale egress=2
 ```
 
 Start the tests with:
