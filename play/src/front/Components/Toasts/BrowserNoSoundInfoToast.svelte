@@ -36,8 +36,8 @@
     }
 
     onMount(() => {
-        // We need to check if the context still suspended or not.
-        // Unfortunelly, the onstatechange event is not triggered when the context is running.
+        // We need to check if the context is still suspended or not.
+        // Unfortunately, the onstatechange event is not triggered when the context is running.
         intervalId = setInterval(() => {
             if (!audioContextManager.verifyContextIsNotSuspended()) {
                 return;
