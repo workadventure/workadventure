@@ -78,6 +78,7 @@
     "eslint-plugin-import": "^2.27.5",
     "form-data": "^4.0.0",
     "jasmine": "^4.0.3",
-    "testcontainers": "^11.13.0"
+    "testcontainers": "^11.13.0",
+    "vitest": "^3.2.4"
   }
 }
