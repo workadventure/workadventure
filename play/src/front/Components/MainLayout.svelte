@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { onDestroy, onMount } from "svelte";
+    import { afterUpdate, onDestroy, onMount } from "svelte";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpNotificationSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
@@ -69,6 +69,38 @@
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
     import MeetingInvitationPopup from "./MeetingInvitation/MeetingInvitationPopup.svelte";
+    import ChevronLeftIcon from "./Icons/ChevronLeftIcon.svelte";
+
+    /** When false, the right-hand participant strip in highlight fullscreen is collapsed (toggle with the edge arrow). */
+    let highlightParticipantCamerasListOpen = true;
+
+    const HIGHLIGHT_FULLSCREEN_PARTICIPANT_LIST_AUTO_HIDE_MS = 5000;
+
+    let participantListAutoHideTimer: ReturnType<typeof setTimeout> | undefined;
+    let wasHighlightFullscreenActive = false;
+
+    /** On entering highlight fullscreen, show the list then auto-hide after 5s (uses existing slide animation). */
+    afterUpdate(() => {
+        const active = Boolean($highlightedEmbedScreen && $highlightFullScreen);
+        if (active && !wasHighlightFullscreenActive) {
+            highlightParticipantCamerasListOpen = true;
+            if (participantListAutoHideTimer) {
+                clearTimeout(participantListAutoHideTimer);
+            }
+            participantListAutoHideTimer = setTimeout(() => {
+                highlightParticipantCamerasListOpen = false;
+                participantListAutoHideTimer = undefined;
+            }, HIGHLIGHT_FULLSCREEN_PARTICIPANT_LIST_AUTO_HIDE_MS);
+        } else if (!active && wasHighlightFullscreenActive) {
+            if (participantListAutoHideTimer) {
+                clearTimeout(participantListAutoHideTimer);
+                participantListAutoHideTimer = undefined;
+            }
+            highlightParticipantCamerasListOpen = true;
+        }
+        wasHighlightFullscreenActive = active;
+    });
+
     const handleFocusInEvent = (event: FocusEvent) => {
         if (
             event.target instanceof HTMLInputElement ||
@@ -106,6 +138,9 @@
         document.removeEventListener("focusin", handleFocusInEvent);
         document.removeEventListener("focusout", handleFocusOutEvent);
         inputFormFocusStore.set(false);
+        if (participantListAutoHideTimer) {
+            clearTimeout(participantListAutoHideTimer);
+        }
     });
 
     $: marginLeft = $chatVisibilityStore ? $chatSidebarWidthStore : 0;
@@ -131,6 +166,44 @@
     {#if $highlightedEmbedScreen && $highlightFullScreen}
         <div class="w-full h-full fixed start-0 end-0 z-[310]">
             <MediaBox videoBox={$highlightedEmbedScreen} fullScreen={true} />
+        </div>
+        <!-- Fullscreen participant cameras list: slide + single edge toggle (same arrow, same spot) -->
+        <div class="absolute top-0 right-0 z-[320] h-full w-[250px] pointer-events-none" aria-hidden="false">
+            <div
+                id="highlightFullScreenParticipantCamerasList"
+                class="absolute inset-y-0 right-0 flex w-[250px] flex-col bg-contrast/50 backdrop-blur shadow-lg transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform"
+                class:translate-x-full={!highlightParticipantCamerasListOpen}
+                class:pointer-events-none={!highlightParticipantCamerasListOpen}
+                class:pointer-events-auto={highlightParticipantCamerasListOpen}
+            >
+                <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2">
+                    {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
+                        {#if videoBox.uniqueId !== $highlightedEmbedScreen?.uniqueId}
+                            <div class="h-[135px] w-full shrink-0">
+                                <MediaBox {videoBox} fullScreen={false} miniMode={true} />
+                            </div>
+                        {/if}
+                    {/each}
+                </div>
+            </div>
+
+            <button
+                type="button"
+                id="highlightFullScreenParticipantCamerasListToggle"
+                class="pointer-events-auto absolute right-0 top-1/2 z-[321] flex h-16 w-10 -translate-y-1/2 items-center justify-center rounded-l-lg border border-white/10 border-e-0 bg-contrast/50 shadow-md backdrop-blur transition-colors duration-200 hover:bg-white/10"
+                aria-expanded={highlightParticipantCamerasListOpen}
+                aria-controls="highlightFullScreenParticipantCamerasList"
+                aria-label={highlightParticipantCamerasListOpen ? "Hide participant list" : "Show participant list"}
+                data-testid="toggle-highlight-participant-cameras-list"
+                on:click={() => (highlightParticipantCamerasListOpen = !highlightParticipantCamerasListOpen)}
+            >
+                <span
+                    class="inline-flex transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                    class:rotate-180={highlightParticipantCamerasListOpen}
+                >
+                    <ChevronLeftIcon height="h-7" width="w-7" strokeWidth="2" />
+                </span>
+            </button>
         </div>
     {/if}
 
