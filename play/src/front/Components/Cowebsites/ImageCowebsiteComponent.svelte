@@ -1,5 +1,6 @@
 <script lang="ts">
     import { panzoom, type Options as PanZoomOptions } from "svelte-pan-zoom";
+    import { asError } from "catch-unknown";
     import type { ImageCoWebsite } from "../../WebRtc/CoWebsite/ImageCoWebsite";
     import LL from "../../../i18n/i18n-svelte";
     import { IconExternalLink, IconMinus, IconPlus } from "@wa-icons";
@@ -12,7 +13,6 @@
     let isLoading = false;
     let hasError = false;
     let loadedUrl: string | undefined;
-    let loadId = 0;
 
     function render(ctx: CanvasRenderingContext2D): void {
         if (!image) {
@@ -25,8 +25,6 @@
     }
 
     async function loadImage(nextUrl: string): Promise<void> {
-        const currentLoadId = ++loadId;
-
         isLoading = true;
         hasError = false;
         image = undefined;
@@ -34,24 +32,19 @@
         const nextImage = new Image();
         nextImage.decoding = "async";
 
-        const imageLoaded = await new Promise<boolean>((resolve) => {
-            nextImage.onload = () => resolve(true);
-            nextImage.onerror = () => resolve(false);
-            nextImage.src = nextUrl;
-        });
-
-        if (currentLoadId !== loadId) {
-            return;
-        }
-
-        isLoading = false;
-
-        if (!imageLoaded) {
+        try {
+            await new Promise<void>((resolve, reject) => {
+                nextImage.onload = () => resolve();
+                nextImage.onerror = (e) => reject(asError(e));
+                nextImage.src = nextUrl;
+            });
+            image = nextImage;
+        } catch (e) {
             hasError = true;
-            return;
+            throw e;
+        } finally {
+            isLoading = false;
         }
-
-        image = nextImage;
     }
 
     function dispatchWheelZoom(deltaY: number): void {
@@ -98,8 +91,9 @@
 
     $: if (imageUrl && imageUrl !== loadedUrl) {
         loadedUrl = imageUrl;
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        loadImage(imageUrl);
+        loadImage(imageUrl).catch((e) => {
+            console.error("Failed to load image co-website", e);
+        });
     }
 </script>
 

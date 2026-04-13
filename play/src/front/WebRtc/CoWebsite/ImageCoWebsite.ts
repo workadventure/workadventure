@@ -13,7 +13,13 @@ export function getImageCoWebsiteTitle(url: URL): string {
         return "Image";
     }
 
-    const decodedFilename = decodeURIComponent(filename);
+    let decodedFilename = filename;
+    try {
+        decodedFilename = decodeURIComponent(filename);
+    } catch {
+        decodedFilename = filename;
+    }
+
     return decodedFilename.replace(/\.[^.]+$/, "");
 }
 
@@ -28,6 +34,6 @@ export class ImageCoWebsite extends SimpleCoWebsite {
     }
 
     public getIcon(): string {
-        return this.getUrl().toString();
+        return "resources/icons/photo.svg";
     }
 }
