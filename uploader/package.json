@@ -9,7 +9,7 @@
     "dev": "tsx watch --inspect=0.0.0.0:9229 ./server.ts",
     "start": "tsx ./server.ts",
     "profile": "tsc && node --prof ./dist/server.js",
-    "test": "jest --forceExit --detectOpenHandles",
+    "test": "vitest run",
     "startTestServer": "tsx tests/testServer.ts",
     "lint": "eslint src/ . --ext .ts",
     "lint-fix": "eslint --fix src/ . --ext .ts"
@@ -56,9 +56,6 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@jest/globals": "^29.3.1",
-    "@jest/transform": "^29.3.1",
-    "@jest/types": "^29.3.1",
     "@testcontainers/minio": "^11.13.0",
     "@types/body-parser": "^1.19.2",
     "@types/busboy": "^0.3.2",
@@ -81,8 +78,6 @@
     "eslint-plugin-import": "^2.27.5",
     "form-data": "^4.0.0",
     "jasmine": "^4.0.3",
-    "jest": "^29.3.1",
-    "testcontainers": "^11.13.0",
-    "ts-jest": "^29.0.3"
+    "testcontainers": "^11.13.0"
   }
 }

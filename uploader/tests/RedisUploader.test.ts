@@ -3,7 +3,7 @@ import {ChildProcess} from "child_process"
 import axios from "axios";
 import {StartedTestContainer} from "testcontainers";
 import {createClient} from "redis";
-import {describe, expect, jest, it, beforeAll, afterAll} from '@jest/globals';
+import {describe, expect, vi, it, beforeAll, afterAll} from 'vitest';
 import {PLAY_URL} from "../src/Enum/EnvironmentVariable";
 import {verifyResponseHeaders} from "./utils/verifyResponseHeaders";
 import {uploadFile} from "./utils/uploadFile";
@@ -15,7 +15,7 @@ import startTestServer from "./startTestServer";
 
 const APP_PORT = 7373
 
-jest.mock('../src/Enum/EnvironmentVariable', () => ({
+vi.mock('../src/Enum/EnvironmentVariable', () => ({
     get PLAY_URL() {
         return "http://play.location"
     }
@@ -24,7 +24,7 @@ jest.mock('../src/Enum/EnvironmentVariable', () => ({
 describe("Redis Uploader tests", () => {
     let redisContainer:StartedTestContainer
     let server: ChildProcess| undefined;
-    jest.setTimeout(20000)
+    vi.setConfig({ testTimeout: 20000, hookTimeout: 20000 })
     const UPLOADER_URL = "http://localhost:7373"
     beforeAll(async ()=> {
         redisContainer = await new RedisContainer().start();
