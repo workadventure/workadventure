@@ -321,8 +321,8 @@ test.describe("Recording test", () => {
         await expect(adminListener.getByTestId("recording-space-picker")).toBeVisible();
         await expect(adminListener.getByText("Record megaphone")).toBeVisible();
         await expect(adminListener.getByText("Record discussion")).toBeVisible();
-        await expect(adminListener.getByTestId("recording-space-option-0")).toBeVisible();
-        await expect(adminListener.getByTestId("recording-space-option-1")).toBeVisible();
+        await expect(adminListener.getByTestId("recording-space-row-megaphone")).toBeVisible();
+        await expect(adminListener.getByTestId("recording-space-row-discussion")).toBeVisible();
         await adminListener.getByTestId("recordingButton-start").click();
         await expect(adminListener.getByTestId("recording-space-picker")).toBeHidden();
 
