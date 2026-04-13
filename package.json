@@ -26,9 +26,6 @@
     "@smarttools/eslint-plugin-rxjs": {
       "typescript": "5.8.3"
     },
-    "ts-jest": {
-      "typescript": "5.8.3"
-    },
     "ts-node": {
       "typescript": "5.8.3"
     },
