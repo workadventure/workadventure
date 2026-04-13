@@ -48,6 +48,9 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     imagePreview: {
         close: "閉じる",
+        label: "画像プレビュー",
+        loading: "画像を読み込み中...",
+        loadError: "この画像プレビューを読み込めません。",
         openInNewTab: "新しいタブで開く",
     },
     join: "参加",
