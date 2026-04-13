@@ -58,6 +58,7 @@ import {
 import { currentLiveStreamingSpaceStore } from "../../../Stores/MegaphoneStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
+import { getImageCoWebsiteTitle, ImageCoWebsite, isImageCoWebsiteUrl } from "../../../WebRtc/CoWebsite/ImageCoWebsite";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsites } from "../../../Stores/CoWebsiteStore";
@@ -1426,14 +1427,23 @@ export class AreasPropertiesListener {
 
         // Create the co-website to be opened
         const url = new URL(urlStr, this.scene.mapUrlFile);
-        const coWebsite = new SimpleCoWebsite(
-            url,
-            allowAPI ?? false,
-            property.policy,
-            property.width,
-            property.closable,
-            property.hideUrl
-        );
+        const coWebsite =
+            property.type === "openFile" && isImageCoWebsiteUrl(url)
+                ? new ImageCoWebsite(
+                      url,
+                      property.name ?? getImageCoWebsiteTitle(url),
+                      property.width,
+                      property.closable,
+                      property.hideUrl
+                  )
+                : new SimpleCoWebsite(
+                      url,
+                      allowAPI ?? false,
+                      property.policy,
+                      property.width,
+                      property.closable,
+                      property.hideUrl
+                  );
 
         coWebsiteOpen.coWebsite = coWebsite;
 
@@ -1849,14 +1859,23 @@ export class AreasPropertiesListener {
             } catch (e) {
                 console.error("Error on getWebsiteUrl: ", e);
             }
-            const coWebsite = new SimpleCoWebsite(
-                new URL(cowebsiteUrl, this.scene.mapUrlFile),
-                false,
-                property.policy,
-                property.width,
-                property.closable,
-                property.hideUrl
-            );
+            const imageUrl = new URL(cowebsiteUrl, this.scene.mapUrlFile);
+            const coWebsite = isImageCoWebsiteUrl(imageUrl)
+                ? new ImageCoWebsite(
+                      imageUrl,
+                      property.name ?? getImageCoWebsiteTitle(imageUrl),
+                      property.width,
+                      property.closable,
+                      property.hideUrl
+                  )
+                : new SimpleCoWebsite(
+                      imageUrl,
+                      false,
+                      property.policy,
+                      property.width,
+                      property.closable,
+                      property.hideUrl
+                  );
 
             coWebsiteOpen.coWebsite = coWebsite;
 

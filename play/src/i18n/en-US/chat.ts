@@ -46,6 +46,9 @@ const chat: BaseTranslation = {
     },
     imagePreview: {
         close: "Close",
+        label: "Image preview",
+        loading: "Loading image...",
+        loadError: "Unable to load this image preview.",
         openInNewTab: "Open in new tab",
     },
     join: "Join",
