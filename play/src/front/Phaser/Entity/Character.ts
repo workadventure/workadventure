@@ -5,7 +5,8 @@ import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventur
 import { SayMessageType, AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
 import { defaultWoka, Deferred } from "@workadventure/shared-utils";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { PlayerNameLabel } from "../Components/PlayerNameLabel";
+import type { PlayerNameLabel } from "../Components/PlayerNameLabel";
+import type { RemotePlayerNameLabelLayer } from "../Components/RemotePlayerNameLabelLayer";
 import { TalkIcon } from "../Components/TalkIcon";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import { createColorStore } from "../../Stores/OutlineColorStore";
@@ -40,6 +41,7 @@ export const PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX = "playtext-mediadevice-";
 export abstract class Character extends Container implements OutlineableInterface {
     private bubble: RenderTexture | null | DOMElement = null;
     private playerNameLabel: PlayerNameLabel | undefined;
+    private playerNameLabelLayer: RemotePlayerNameLabelLayer | undefined;
     private readonly talkIcon: TalkIcon;
     protected readonly speakerIcon: SpeakerIcon;
     public readonly playerName: string;
@@ -161,10 +163,12 @@ export abstract class Character extends Container implements OutlineableInterfac
                 return;
             }
 
-            this.playerNameLabel = new PlayerNameLabel(this.scene, 0, playerNameY, name);
+            this.playerNameLabelLayer = this.scene.getRemotePlayerNameLabelLayer();
+            this.playerNameLabel = this.playerNameLabelLayer.createLabel(name);
+            this.updatePlayerNameLabelPosition();
+
             this.playerNameLabel.setZoomCompensation(waScaleManager.zoomModifier);
             this.playerNameLabel.setAvailabilityStatus(this.availabilityStatus, true);
-            this.add(this.playerNameLabel);
             this.setOutline(get(this.outlineColorStore));
 
             this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
@@ -314,6 +318,13 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.playerNameLabel?.setZoomCompensation(zoomModifier);
     }
 
+    protected updatePlayerNameLabelPosition(): void {
+        if (!this.playerNameLabel) {
+            return;
+        }
+        this.playerNameLabel.setPosition(this.x, this.y + playerNameY);
+    }
+
     public getAvailabilityStatus() {
         return this.playerNameLabel?.availabilityStatus ?? this.availabilityStatus;
     }
@@ -432,6 +443,11 @@ export abstract class Character extends Container implements OutlineableInterfac
         }
         this.texturePromise?.cancel();
         this.list.forEach((objectContaining) => objectContaining.destroy());
+        if (this.playerNameLabel && this.playerNameLabelLayer) {
+            this.playerNameLabelLayer.removeLabel(this.playerNameLabel);
+        } else {
+            this.playerNameLabel?.destroy();
+        }
         this.outlineColorStoreUnsubscribe?.();
         this.destroyed = true;
         super.destroy();

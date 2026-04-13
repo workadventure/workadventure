@@ -1,23 +1,27 @@
 import { AvailabilityStatus } from "@workadventure/messages";
-import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import { MegaphoneIcon } from "./MegaphoneIcon";
 import { PlayerName } from "./PlayerName";
 import { PlayerStatusDot } from "./PlayerStatusDot";
-import DOMElement = Phaser.GameObjects.DOMElement;
 
 const iconGapSize = 3;
 
-export class PlayerNameLabel extends DOMElement {
+export class PlayerNameLabel {
     private readonly playerName: PlayerName;
     private readonly statusDot: PlayerStatusDot;
     private readonly megaphoneIcon: MegaphoneIcon;
     private readonly content: HTMLDivElement;
+    public readonly element: HTMLDivElement;
     private contentScale = 1;
+    private lastX = 0;
+    private lastY = 0;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, name: string) {
+    constructor(scene: Phaser.Scene, name: string) {
         const root = document.createElement("div");
-        super(scene, x, y, root);
-
+        root.style.position = "absolute";
+        root.style.left = "0";
+        root.style.top = "0";
+        root.style.transform = "translate(0px, 0px)";
+        root.style.transformOrigin = "0 0";
         root.style.pointerEvents = "none";
         root.style.userSelect = "none";
 
@@ -36,8 +40,16 @@ export class PlayerNameLabel extends DOMElement {
         root.append(flex);
         flex.append(this.statusDot.element, this.playerName.element, this.megaphoneIcon.element);
         this.content = flex;
+        this.element = root;
+    }
 
-        this.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
+    public setPosition(x: number, y: number): void {
+        if (this.lastX === x && this.lastY === y) {
+            return;
+        }
+        this.lastX = x;
+        this.lastY = y;
+        this.element.style.transform = `translate(${x}px, ${y}px)`;
     }
 
     public setZoomCompensation(zoomModifier: number): void {
@@ -68,5 +80,11 @@ export class PlayerNameLabel extends DOMElement {
 
     public get availabilityStatus(): AvailabilityStatus {
         return this.statusDot.availabilityStatus;
+    }
+
+    public destroy(): void {
+        if (this.element.parentElement) {
+            this.element.remove();
+        }
     }
 }

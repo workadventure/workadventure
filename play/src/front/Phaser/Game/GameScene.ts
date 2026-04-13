@@ -194,6 +194,7 @@ import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenO
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
 import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVariablesStore";
 import { isNotSuspendedAudioContextStore } from "../../Stores/AudioContextStore";
+import { RemotePlayerNameLabelLayer } from "../Components/RemotePlayerNameLabelLayer";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -362,6 +363,7 @@ export class GameScene extends DirtyScene {
     private playersEventDispatcher = new IframeEventDispatcher();
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
+    private remotePlayerNameLabelLayer?: RemotePlayerNameLabelLayer;
     private throttledSendViewportToServer_!: throttle<() => void>;
     private lastSentViewport: ViewportInterface | undefined;
     private serverViewportDebugGraphics: Phaser.GameObjects.Graphics | undefined;
@@ -637,6 +639,9 @@ export class GameScene extends DirtyScene {
         this.bindSceneEventHandlers();
 
         this.trackDirtyAnims();
+
+        this.remotePlayerNameLabelLayer = new RemotePlayerNameLabelLayer(this);
+        this.add.existing(this.remotePlayerNameLabelLayer);
 
         this.outlineManager = new OutlineManager(this);
         gameManager.gameSceneIsCreated(this);
@@ -1653,6 +1658,13 @@ export class GameScene extends DirtyScene {
 
     public getRemotePlayersRepository(): RemotePlayersRepository {
         return this.remotePlayersRepository;
+    }
+
+    public getRemotePlayerNameLabelLayer(): RemotePlayerNameLabelLayer {
+        if (!this.remotePlayerNameLabelLayer) {
+            throw new Error("Remote player name label layer not initialized");
+        }
+        return this.remotePlayerNameLabelLayer;
     }
 
     public getMapEditorModeManager(): MapEditorModeManager {

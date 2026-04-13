@@ -56,6 +56,9 @@ export class Player extends Character {
     }
 
     public moveUser(delta: number, activeUserInputEvents: ActiveEventList): void {
+        // The current player is moved by Arcade Physics, so we need to sync the label position every frame.
+        this.updatePlayerNameLabelPosition();
+
         const state = get(followStateStore);
         const role = get(followRoleStore);
 
@@ -261,6 +264,7 @@ export class Player extends Character {
             (this.currentPathSegmentDistanceFromStart / pathSegmentLength) * (segmentEndPos.y - segmentStartPos.y);
 
         this.moveToPos(newX, newY);
+        this.updatePlayerNameLabelPosition();
 
         this.emit(hasMovedEventName, { moving: true, direction: this._lastDirection, x: this.x, y: this.y });
         this.scene.markDirty();
@@ -338,12 +342,15 @@ export class Player extends Character {
         if (this.companion) {
             this.companion.setTarget(this.x, this.y, this._lastDirection);
         }
+
+        this.updatePlayerNameLabelPosition();
     }
 
     public teleportTo(x: number, y: number): void {
         this.x = x;
         this.y = y;
         this.setDepth(this.y + 16);
+        this.updatePlayerNameLabelPosition();
         this.finishFollowingPath(true);
         this.emit(hasMovedEventName, { moving: false, direction: this._lastDirection, x: this.x, y: this.y });
         this.scene.markDirty();

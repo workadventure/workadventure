@@ -87,6 +87,8 @@ export class RemotePlayer extends Character implements ActivatableInterface {
 
         this.setDepth(position.y); //this is to make sure the perspective (player models closer the bottom of the screen will appear in front of models nearer the top of the screen).
 
+        this.updatePlayerNameLabelPosition();
+
         if (this.companion) {
             this.companion.setTarget(position.x, position.y, position.direction);
         }
@@ -208,6 +210,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
 
         this.moveToPos(newX, newY);
         this.setDepth(this.y);
+        this.updatePlayerNameLabelPosition();
         this.scene.markDirty();
     }
 
@@ -235,6 +238,8 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         if (this.companion) {
             this.companion.setTarget(this.x, this.y, this._lastDirection);
         }
+
+        this.updatePlayerNameLabelPosition();
     }
 
     public getVisitCardUrl(): string | null {
