@@ -1,11 +1,48 @@
 import { Deferred } from "@workadventure/shared-utils";
 import * as Sentry from "@sentry/svelte";
 
-class UserActivationManager {
+export class UserActivationManager {
     private activationDeferred = new Deferred<void>();
+    private activated = false;
+    private activationCheckIntervalId: ReturnType<typeof setInterval> | undefined;
 
     private supportsActivation() {
+        if (typeof navigator === "undefined") {
+            return false;
+        }
+
         return "userActivation" in navigator;
+    }
+
+    private hasBeenActivated() {
+        return this.activated || (this.supportsActivation() && navigator.userActivation.hasBeenActive);
+    }
+
+    private startPollingActivation() {
+        if (this.activationCheckIntervalId !== undefined || !this.supportsActivation()) {
+            return;
+        }
+
+        this.activationCheckIntervalId = setInterval(() => {
+            if (!navigator.userActivation.hasBeenActive) {
+                return;
+            }
+
+            this.resolveActivation();
+        }, 500);
+    }
+
+    private resolveActivation() {
+        if (this.activated) {
+            return;
+        }
+
+        this.activated = true;
+        if (this.activationCheckIntervalId !== undefined) {
+            clearInterval(this.activationCheckIntervalId);
+            this.activationCheckIntervalId = undefined;
+        }
+        this.activationDeferred.resolve();
     }
 
     /**
@@ -18,10 +55,13 @@ class UserActivationManager {
         if (!this.supportsActivation()) {
             return;
         }
-        if (navigator.userActivation.hasBeenActive) {
+
+        if (this.hasBeenActivated()) {
+            this.resolveActivation();
             return;
         }
 
+        this.startPollingActivation();
         return this.activationDeferred.promise;
     }
 
@@ -35,7 +75,7 @@ class UserActivationManager {
             Sentry.captureMessage("notifyUserActivation called but userActivation.hasBeenActive is false");
         }
 
-        this.activationDeferred.resolve();
+        this.resolveActivation();
     }
 }
 
