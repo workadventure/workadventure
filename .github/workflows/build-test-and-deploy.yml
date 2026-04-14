@@ -356,7 +356,7 @@ jobs:
           docker image load --input /tmp/uploader.tar.gz
           docker image ls -a
       - name: Start WorkAdventure
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.e2e.yaml up -d --scale egress=2
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml up -d --scale egress=2
 
         
       - name: Upload test-map
@@ -379,13 +379,13 @@ jobs:
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
           IS_FORK: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
       - name: Display docker compose logs on failure
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.e2e.yaml logs
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml logs
         if: failure()
       - name: Display containers state
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.e2e.yaml ps
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml ps
         if: failure()
       - name: Side-load docker compose logs in the playwright report
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.e2e.yaml logs > tests/playwright-report/docker-compose.log
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml logs > tests/playwright-report/docker-compose.log
         if: failure()
       - uses: actions/upload-artifact@v4
         if: always()
