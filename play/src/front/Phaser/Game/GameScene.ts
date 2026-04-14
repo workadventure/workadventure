@@ -2071,6 +2071,7 @@ export class GameScene extends DirtyScene {
                                 `Error while waiting for Pusher to come back online: ${asError(e).message}`,
                                 e
                             );
+                            Sentry.captureException(e);
                             this.handleErrorAndCleanup(
                                 e,
                                 "CONNECTION_BROKEN",
