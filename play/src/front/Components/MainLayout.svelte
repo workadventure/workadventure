@@ -1,6 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { afterUpdate, onDestroy, onMount } from "svelte";
+    import { get } from "svelte/store";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpNotificationSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
@@ -36,7 +37,15 @@
     import { toastStore } from "../Stores/ToastStore";
     import { meetingInvitationRequestStore } from "../Stores/MeetingInvitationStore";
     import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
+    import { gameManager } from "../Phaser/Game/GameManager";
+    import { navChat } from "../Chat/Stores/ChatStore";
+    import { selectedRoomStore } from "../Chat/Stores/SelectRoomStore";
+    import { chatNotificationStore } from "../Stores/ProximityNotificationStore";
+    import { analyticsClient } from "../Administration/AnalyticsClient";
+    import { LL } from "../../i18n/i18n-svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
+    import ActionBarButton from "./ActionBar/ActionBarButton.svelte";
+    import { IconArrowsMinimize, IconMessageCircle2, IconUserPlus } from "@wa-icons";
 
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
@@ -83,6 +92,7 @@
     afterUpdate(() => {
         const active = Boolean($highlightedEmbedScreen && $highlightFullScreen);
         if (active && !wasHighlightFullscreenActive) {
+            chatVisibilityStore.set(false);
             highlightParticipantCamerasListOpen = true;
             if (participantListAutoHideTimer) {
                 clearTimeout(participantListAutoHideTimer);
@@ -148,6 +158,40 @@
         $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor
             ? $mapEditorSideBarWidthStore
             : 0;
+
+    function onHighlightFullscreenSendMessage() {
+        if (get(chatVisibilityStore) && get(navChat).key === "chat") {
+            chatVisibilityStore.set(false);
+            return;
+        }
+        const gameScene = gameManager.getCurrentGameScene();
+        const proximityChatRoom = gameScene.proximityChatRoom;
+        selectedRoomStore.set(proximityChatRoom);
+        navChat.switchToChat();
+        chatVisibilityStore.set(true);
+        proximityChatRoom.hasUnreadMessages.set(false);
+        proximityChatRoom.unreadMessagesCount.set(0);
+        chatNotificationStore.clearAll();
+        proximityChatRoom.unreadNotificationCount.set(0);
+        analyticsClient.openedChat();
+    }
+
+    function onHighlightFullscreenInviteUser() {
+        if (get(chatVisibilityStore) && get(navChat).key === "users") {
+            chatVisibilityStore.set(false);
+            return;
+        }
+        const gameScene = gameManager.getCurrentGameScene();
+        const proximityChatRoom = gameScene.proximityChatRoom;
+        selectedRoomStore.set(proximityChatRoom);
+        navChat.switchToUserList();
+        chatVisibilityStore.set(true);
+        analyticsClient.openUserList();
+    }
+
+    function exitHighlightFullscreen() {
+        highlightFullScreen.set(false);
+    }
 </script>
 
 <!-- Components ordered by z-index -->
@@ -184,6 +228,35 @@
                             </div>
                         {/if}
                     {/each}
+                </div>
+                <div
+                    class="flex-shrink-0 border-t border-white/20 mt-1 pt-1 pb-2 px-1 flex flex-col gap-0.5"
+                    data-testid="highlight-fullscreen-participant-list-actions"
+                >
+                    <ActionBarButton
+                        context="menu"
+                        label={$LL.actionbar.participantSendMessage()}
+                        on:click={onHighlightFullscreenSendMessage}
+                        dataTestId="highlight-fullscreen-send-message"
+                    >
+                        <IconMessageCircle2 font-size="20" />
+                    </ActionBarButton>
+                    <ActionBarButton
+                        context="menu"
+                        label={$LL.actionbar.participantInviteUser()}
+                        on:click={onHighlightFullscreenInviteUser}
+                        dataTestId="highlight-fullscreen-invite-user"
+                    >
+                        <IconUserPlus font-size="20" />
+                    </ActionBarButton>
+                    <ActionBarButton
+                        context="menu"
+                        label={$LL.actionbar.participantExitFullscreen()}
+                        on:click={exitHighlightFullscreen}
+                        dataTestId="highlight-fullscreen-exit"
+                    >
+                        <IconArrowsMinimize font-size="20" />
+                    </ActionBarButton>
                 </div>
             </div>
 

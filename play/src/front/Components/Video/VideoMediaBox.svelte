@@ -103,11 +103,21 @@
         );
     }
 
-    function toggleFullScreen() {
-        highlightFullScreen.update((current) => !current);
+    function setFullScreen() {
+        exitFullScreen();
+        removeHighlight();
+
+        setTimeout(() => {
+            highlightPeer();
+            highlightFullScreen.set(true);
+        }, 100);
     }
 
     function exitFullScreen() {
+        highlightFullScreen.set(false);
+    }
+
+    function removeHighlight() {
         highlightedEmbedScreen.removeHighlight();
     }
 
@@ -314,27 +324,32 @@
         {#if !inCameraContainer}
             <!-- The menu to go fullscreen -->
             <div
-                class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-50 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-20 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
             >
                 <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
-                    {#if !fullScreen}
+                    {#if !fullScreen && !$highlightFullScreen}
                         <button
                             class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
-                            on:click={exitFullScreen}
+                            on:click={removeHighlight}
                         >
                             <IconArrowsMinimize font-size="20" class="text-white" />
                         </button>
                     {/if}
-                    <button
-                        class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
-                        on:click={toggleFullScreen}
-                    >
-                        {#if fullScreen}
+                    {#if fullScreen}
+                        <button
+                            class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                            on:click={exitFullScreen}
+                        >
                             <IconArrowsMinimize font-size="20" class="text-white" />
-                        {:else}
+                        </button>
+                    {:else}
+                        <button
+                            class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                            on:click={setFullScreen}
+                        >
                             <IconArrowsMaximize font-size="20" class="text-white" />
-                        {/if}
-                    </button>
+                        </button>
+                    {/if}
                 </div>
             </div>
         {/if}

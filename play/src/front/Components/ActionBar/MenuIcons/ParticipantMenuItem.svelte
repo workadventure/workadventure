@@ -54,6 +54,11 @@
     }
 
     function onSendMessage() {
+        if (get(chatVisibilityStore) && get(navChat).key === "chat") {
+            chatVisibilityStore.set(false);
+            closeParticipantMenu();
+            return;
+        }
         const gameScene = gameManager.getCurrentGameScene();
         const proximityChatRoom = gameScene.proximityChatRoom;
         selectedRoomStore.set(proximityChatRoom);
@@ -68,6 +73,11 @@
     }
 
     function onInviteUser() {
+        if (get(chatVisibilityStore) && get(navChat).key === "users") {
+            chatVisibilityStore.set(false);
+            closeParticipantMenu();
+            return;
+        }
         const gameScene = gameManager.getCurrentGameScene();
         const proximityChatRoom = gameScene.proximityChatRoom;
         selectedRoomStore.set(proximityChatRoom);
