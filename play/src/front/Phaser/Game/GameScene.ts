@@ -367,6 +367,9 @@ export class GameScene extends DirtyScene {
     private serverViewportDebugGraphics: Phaser.GameObjects.Graphics | undefined;
     private playersDebugLogAlreadyDisplayed = false;
     private hideTimeout: ReturnType<typeof setTimeout> | undefined;
+    private readonly syncPlayerNameZoomsOnCameraUpdate = (): void => {
+        this.syncPlayerNameZooms();
+    };
     // The promise that will resolve to the current player textures. This will be available only after connection is established.
     private currentPlayerTexturesResolve!: (value: string[]) => void;
     private currentPlayerTexturesReject!: (reason: unknown) => void;
@@ -827,7 +830,9 @@ export class GameScene extends DirtyScene {
         this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
 
         biggestAvailableAreaStore.recompute();
+        this.cameraManager.on(CameraManagerEvent.CameraUpdate, this.syncPlayerNameZoomsOnCameraUpdate);
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
+        this.syncPlayerNameZooms();
         if (ENABLE_MAP_EDITOR) {
             this.mapEditorModeManager = new MapEditorModeManager(this);
         }
@@ -1177,6 +1182,7 @@ export class GameScene extends DirtyScene {
         this.isLiveStreamingUnsubscriber?.();
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
+        this.cameraManager?.off(CameraManagerEvent.CameraUpdate, this.syncPlayerNameZoomsOnCameraUpdate);
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this.gameMapPropertiesListener?.destroy();
@@ -1504,6 +1510,7 @@ export class GameScene extends DirtyScene {
     public onResize(): void {
         super.onResize();
         this.reposition(true);
+        this.syncPlayerNameZooms();
 
         this.throttledSendViewportToServer_();
     }
@@ -1634,6 +1641,14 @@ export class GameScene extends DirtyScene {
 
     public getCameraManager(): CameraManager {
         return this.cameraManager;
+    }
+
+    private syncPlayerNameZooms(): void {
+        const zoomModifier = waScaleManager.zoomModifier;
+        this.CurrentPlayer?.syncPlayerNameZoom(zoomModifier);
+        for (const player of this.MapPlayersByKey.values()) {
+            player.syncPlayerNameZoom(zoomModifier);
+        }
     }
 
     public getRemotePlayersRepository(): RemotePlayersRepository {
@@ -3906,6 +3921,7 @@ ${escapedMessage}
             player.setAvailabilityStatus(addPlayerData.availabilityStatus, true);
         }
         this.MapPlayersByKey.set(player.userId, player);
+        player.syncPlayerNameZoom(waScaleManager.zoomModifier);
         player.updatePosition(addPlayerData.position);
 
         player.on(Phaser.Input.Events.POINTER_OVER, () => {

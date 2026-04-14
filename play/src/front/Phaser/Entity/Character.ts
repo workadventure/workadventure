@@ -5,21 +5,20 @@ import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventur
 import { SayMessageType, AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
 import { defaultWoka, Deferred } from "@workadventure/shared-utils";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 import { TalkIcon } from "../Components/TalkIcon";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import type { PictureStore } from "../../Stores/PictureStore";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
-import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import type { GameScene } from "../Game/GameScene";
 import { Companion } from "../Companion/Companion";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
-import { MegaphoneIcon } from "../Components/MegaphoneIcon";
+import { waScaleManager } from "../Services/WaScaleManager";
 import { StringUtils } from "../../Utils/StringUtils";
+import { UsernameDisplay } from "../Components/UsernameDisplay";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
 import { SpeechDomElement } from "./SpeechDomElement";
@@ -29,7 +28,7 @@ import Sprite = Phaser.GameObjects.Sprite;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import RenderTexture = Phaser.GameObjects.RenderTexture;
 
-const playerNameY = -25;
+const playerNameY = -16;
 const interactiveRadius = 25;
 const DEFAULT_PLAYER_NAME_OUTLINE_COLOR = "#14304C";
 
@@ -43,14 +42,13 @@ export const PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX = "playtext-mediadevice-";
 export abstract class Character extends Container implements OutlineableInterface {
     private static nextPlayerNameTextureId = 0;
     private bubble: RenderTexture | null | DOMElement = null;
-    private playerNameSprite: Sprite | undefined;
+    private usernameDisplay: UsernameDisplay | undefined;
     private playerNameTextureKey: string | undefined;
     private playerNameFontSize: number | undefined;
     private playerNameOutlineColor: number | undefined;
     private readonly talkIcon: TalkIcon;
-    protected readonly statusDot: PlayerStatusDot;
     protected readonly speakerIcon: SpeakerIcon;
-    protected readonly megaphoneIcon: MegaphoneIcon;
+    private availabilityStatus: AvailabilityStatusType = AvailabilityStatus.ONLINE;
     public readonly playerName: string;
     public sprites: Map<string, Sprite>;
     protected _lastDirection: PositionMessage_Direction = PositionMessage_Direction.DOWN;
@@ -174,15 +172,11 @@ export abstract class Character extends Container implements OutlineableInterfac
             this.playerNameFontSize = StringUtils.containsNonLatinCharacters(name) ? 11 : 8;
             this.playerNameOutlineColor = get(this.outlineColorStore);
             this.playerNameTextureKey = this.createPlayerNameTexture(this.playerNameOutlineColor);
-            this.playerNameSprite = new Sprite(scene, 0, playerNameY, this.playerNameTextureKey);
-            this.playerNameSprite.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
-            this.add([this.playerNameSprite]);
-
-            // Reposition status dot and megaphone icon
-            this.statusDot.x = (this.playerNameSprite.getLeftCenter().x ?? 0) - 2;
-            this.megaphoneIcon.setX((this.playerNameSprite.getRightCenter().x ?? 0) + 2);
-            this.statusDot.visible = true;
-            this.megaphoneIcon.visible = true;
+            this.usernameDisplay = new UsernameDisplay(scene, 0, playerNameY, this.playerNameTextureKey);
+            this.usernameDisplay.setScale(this.getSpriteScale(waScaleManager.zoomModifier));
+            this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true);
+            this.usernameDisplay.showMegaphone(this.availabilityStatus === AvailabilityStatus.SPEAKER, true);
+            this.add(this.usernameDisplay);
 
             this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
                 this.updatePlayerNameTexture(color);
@@ -190,13 +184,9 @@ export abstract class Character extends Container implements OutlineableInterfac
             this.scene.markDirty();
         }, 0);
 
-        this.statusDot = new PlayerStatusDot(scene, 0, playerNameY - 1);
-        this.megaphoneIcon = new MegaphoneIcon(scene, 0, playerNameY - 1);
-        this.statusDot.visible = false;
-        this.megaphoneIcon.visible = false;
         this.talkIcon = new TalkIcon(scene, 0, -45);
         this.speakerIcon = new SpeakerIcon(scene, 0, -45);
-        this.add([this.talkIcon, this.speakerIcon, this.statusDot, this.megaphoneIcon]);
+        this.add([this.talkIcon, this.speakerIcon]);
 
         if (isClickable) {
             this.setInteractive({
@@ -247,6 +237,10 @@ export abstract class Character extends Container implements OutlineableInterfac
                     resolve(defaultWoka);
                 });
         });
+    }
+
+    private getSpriteScale(zoomModifier: number): number {
+        return Math.max(zoomModifier > 0 ? 0.8 / zoomModifier : 1, 1);
     }
 
     public setClickable(clickable = true): void {
@@ -324,16 +318,23 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     public setAvailabilityStatus(availabilityStatus: AvailabilityStatusType, instant = false): void {
-        this.statusDot.setAvailabilityStatus(availabilityStatus, instant);
-        if (this.getAvailabilityStatus() === AvailabilityStatus.SPEAKER) {
-            this.megaphoneIcon.show(true, false);
-        } else {
-            this.megaphoneIcon.show(false, false);
+        if (availabilityStatus !== AvailabilityStatus.UNCHANGED) {
+            this.availabilityStatus = availabilityStatus;
         }
+        this.usernameDisplay?.setAvailabilityStatus(availabilityStatus, instant);
+        this.usernameDisplay?.showMegaphone(this.availabilityStatus === AvailabilityStatus.SPEAKER, false);
+    }
+
+    public syncPlayerNameZoom(zoomModifier: number): void {
+        if (!this.usernameDisplay) {
+            return;
+        }
+
+        this.usernameDisplay.setScale(this.getSpriteScale(zoomModifier));
     }
 
     public getAvailabilityStatus() {
-        return this.statusDot.availabilityStatus;
+        return this.usernameDisplay?.getAvailabilityStatus() ?? this.availabilityStatus;
     }
 
     public addCompanion(texturePromise: CancelablePromise<string>): void {
@@ -580,6 +581,10 @@ export abstract class Character extends Container implements OutlineableInterfac
         const textureHeight = Math.max(1, Math.ceil(fontSize + fullOutlineThickness * 2));
 
         const texture = this.scene.textures.createCanvas(textureKey, textureWidth, textureHeight);
+        if (!texture) {
+            throw new Error("Could not create texture for player name");
+        }
+
         const context = texture.getContext();
         context.clearRect(0, 0, textureWidth, textureHeight);
         context.font = `${fontSize}px "Press Start 2P"`;
@@ -604,7 +609,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     private updatePlayerNameTexture(color: number | undefined) {
-        if (!this.playerNameSprite || this.playerNameOutlineColor === color) {
+        if (!this.usernameDisplay || this.playerNameOutlineColor === color) {
             return;
         }
         this.playerNameOutlineColor = color;
@@ -612,14 +617,13 @@ export abstract class Character extends Container implements OutlineableInterfac
         const nextTextureKey = this.createPlayerNameTexture(color);
         const previousTextureKey = this.playerNameTextureKey;
         this.playerNameTextureKey = nextTextureKey;
-        this.playerNameSprite.setTexture(nextTextureKey);
+        this.usernameDisplay.setPlayerNameTexture(nextTextureKey);
 
         if (previousTextureKey && this.scene.textures.exists(previousTextureKey)) {
             this.scene.textures.remove(previousTextureKey);
         }
 
-        this.statusDot.x = (this.playerNameSprite.getLeftCenter().x ?? 0) - 2;
-        this.megaphoneIcon.setX((this.playerNameSprite.getRightCenter().x ?? 0) + 2);
+        this.usernameDisplay.setScale(this.getSpriteScale(waScaleManager.zoomModifier));
         this.scene.markDirty();
     }
 
