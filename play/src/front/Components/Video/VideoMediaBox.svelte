@@ -36,6 +36,7 @@
 
     // The inCameraContainer is used to know if the VideoMediaBox is part of a series of video or if it is the highlighted video.
     let inCameraContainer: boolean = !!getContext("inCameraContainer");
+    let inHighlightFullscreenParticipantList: boolean = !!getContext("inHighlightFullscreenParticipantList");
 
     $: extendedSpaceUser = videoBox.spaceUser;
     $: megaphoneState = extendedSpaceUser?.reactiveUser.megaphoneState;
@@ -266,12 +267,15 @@
                 media={streamable?.media}
                 {videoEnabled}
                 status={effectiveStatus}
-                verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
+                verticalAlign={!inCameraContainer && !inHighlightFullscreenParticipantList && !fullScreen
+                    ? "top"
+                    : "center"}
                 isTalking={showVoiceIndicator}
                 flipX={streamable?.flipX}
-                cover={streamable?.displayMode === "cover" && (inCameraContainer || fullScreen)}
+                cover={streamable?.displayMode === "cover" &&
+                    (inCameraContainer || inHighlightFullscreenParticipantList || fullScreen)}
                 isBlocked={$isBlockedStore}
-                withBackground={(inCameraContainer &&
+                withBackground={((inCameraContainer || inHighlightFullscreenParticipantList) &&
                     effectiveStatus !== "connecting" &&
                     effectiveStatus !== "reconnecting") ||
                     $isBlockedStore}

@@ -224,7 +224,7 @@
                     {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
                         {#if videoBox.uniqueId !== $highlightedEmbedScreen?.uniqueId}
                             <div class="h-[135px] w-full shrink-0">
-                                <MediaBox {videoBox} fullScreen={false} />
+                                <MediaBox {videoBox} fullScreen={false} inHighlightFullscreenParticipantList={true} />
                             </div>
                         {/if}
                     {/each}
