@@ -6,7 +6,7 @@ export default function(env: {}) {
             ...process.env,
             ...env
         },
-        cwd: __dirname + "/..",
+        cwd: new URL("../", import.meta.url),
     });
     let stderr = "";
 

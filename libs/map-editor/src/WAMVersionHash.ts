@@ -1,7 +1,7 @@
 import fs from "fs";
 import crypto from "crypto";
 
-const fileBuffer = fs.readFileSync(__dirname + "/types.ts");
+const fileBuffer = fs.readFileSync(new URL("types.ts", import.meta.url));
 const hashSum = crypto.createHash("sha256");
 hashSum.update(fileBuffer);
 

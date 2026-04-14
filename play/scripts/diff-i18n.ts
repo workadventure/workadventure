@@ -13,8 +13,8 @@ const localeArgs = args.filter((arg) => !arg.startsWith("--"));
 const targetLocale = localeArgs[0];
 const sourceLocale = localeArgs[1] || "en-US";
 
-const srcDir = path.resolve(__dirname, `../src/i18n/${sourceLocale}`);
-const tgtDir = path.resolve(__dirname, `../src/i18n/${targetLocale}`);
+const srcDir = new URL(`../src/i18n/${sourceLocale}`, import.meta.url).pathname;
+const tgtDir = new URL(`../src/i18n/${targetLocale}`, import.meta.url).pathname;
 
 async function loadModule(file: string): Promise<unknown> {
     const mod = await import(file);
@@ -103,7 +103,7 @@ async function computeMissingCountsForLocale(
 }
 
 async function runDetailedCheck() {
-    const baseDir = path.resolve(__dirname, "../src/i18n");
+    const baseDir = new URL("../src/i18n", import.meta.url).pathname;
     let hasErrors = 0;
 
     console.log("=== RECENSEMENT COMPLET DES FICHIERS INCOMPLETS ===");
@@ -267,7 +267,7 @@ async function run() {
 
     // Summary mode when no target locale is provided
     if (!targetLocale) {
-        const baseDir = path.resolve(__dirname, "../src/i18n");
+        const baseDir = new URL("../src/i18n", import.meta.url).pathname;
         const locales = listLocaleDirs(baseDir, sourceLocale);
 
         if (locales.length === 0) {
@@ -352,4 +352,5 @@ async function run() {
     }
 }
 
+// eslint-disable-next-line no-void
 void run();

@@ -15,7 +15,7 @@ export function dockerCompose(command: string) {
     }
 
     return execSync("docker compose -f docker-compose.yaml " + param + " " + command, {
-        cwd: __dirname + "/../../../",
+        cwd: new URL("../../../", import.meta.url).pathname,
     });
 }
 

@@ -1,4 +1,3 @@
-import { resolve } from "path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
@@ -8,7 +7,7 @@ export default defineConfig({
         emptyOutDir: false,
         sourcemap: true,
         lib: {
-            entry: resolve(__dirname, "src/iframe_api.ts"),
+            entry: new URL("src/iframe_api.ts", import.meta.url).pathname,
             name: "iframe_api",
             formats: ["iife"],
             fileName: () => "iframe_api.js",

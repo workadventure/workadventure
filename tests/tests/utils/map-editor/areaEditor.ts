@@ -1,4 +1,3 @@
-import path from "path";
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import Menu from "../menu";
@@ -147,7 +146,7 @@ class AreaEditor {
         const fileChooserPromise = page.waitForEvent("filechooser");
         await page.locator(".map-editor .sidebar .properties-container span#chooseUpload").click();
         const fileChooser = await fileChooserPromise;
-        await fileChooser.setFiles(path.join(__dirname, `../../assets/lorem-ipsum.pdf`));
+        await fileChooser.setFiles(new URL(`../../assets/lorem-ipsum.pdf`, import.meta.url).pathname);
     }
 
     async deleteFile(page: Page) {
