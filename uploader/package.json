@@ -2,6 +2,7 @@
   "private": true,
   "name": "workadventureuploader",
   "version": "1.0.0",
+  "type": "module",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,7 +10,9 @@
     "dev": "tsx watch --inspect=0.0.0.0:9229 ./server.ts",
     "start": "tsx ./server.ts",
     "profile": "tsc && node --prof ./dist/server.js",
-    "test": "vitest run",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest watch --config vitest.config.ts",
+    "test:debug": "NODE_OPTIONS='--loader tsx' node --inspect-brk node_modules/.bin/vitest run --config vitest.config.ts --no-file-parallelism",
     "startTestServer": "tsx tests/testServer.ts",
     "lint": "eslint src/ . --ext .ts",
     "lint-fix": "eslint --fix src/ . --ext .ts"
@@ -52,7 +55,7 @@
     "qs": "^6.11.0",
     "redis": "^4.2.0",
     "tsx": "^4.7.1",
-    "typescript": "^5.7.2",
+    "typescript": "^5.8.3",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

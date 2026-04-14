@@ -2,13 +2,14 @@
   "name": "@workadventure/room-api-client",
   "version": "0.0.0-version-placeholder",
   "description": "Workadventure Room Api Client",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "/dist"
   ],
   "scripts": {
-    "ts-proto": "grpc_tools_node_protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./src/compiled_proto --ts_proto_opt=\"outputServices=nice-grpc,outputServices=generic-definitions,useExactTypes=false\" --proto_path=../../../messages/protos ../../../messages/protos/room-api.proto",
+    "ts-proto": "grpc_tools_node_protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./src/compiled_proto --ts_proto_opt=\"outputServices=nice-grpc,outputServices=generic-definitions,useExactTypes=false,esModuleInterop=true,importSuffix=.ts\" --proto_path=../../../messages/protos ../../../messages/protos/room-api.proto",
     "build": "tsc --build",
     "example-variables": "tsx ./src/example_variables.ts",
     "example-events": "tsx ./src/example_events.ts",
@@ -48,7 +49,7 @@
     "prettier": "^2.8.6",
     "ts-proto": "^2.4.2",
     "tsx": "^4.7.1",
-    "typescript": "^5.0.2"
+    "typescript": "^5.8.3"
   },
   "lint-staged": {
     "*.{js,ts}": [

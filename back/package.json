@@ -2,6 +2,7 @@
   "private": true,
   "name": "workadventureback",
   "version": "1.0.0",
+  "type": "module",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -85,7 +86,7 @@
     "eslint": "^9.35.0",
     "lint-staged": "^11.0.0",
     "prettier": "^2.8.1",
-    "typescript": "^5.7.2",
+    "typescript": "^5.8.3",
     "vitest": "^3.2.4",
     "vitest-mock-extended": "^3.1.0"
   },
