@@ -2,8 +2,7 @@
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
     "target": "ES2022",
-    "downlevelIteration": true,
-    "lib": ["ES2022", "DOM"],
+    "lib": ["ES2022", "ES2022.Error", "DOM"],
     "module": "esnext",
     "moduleResolution": "bundler",
 
