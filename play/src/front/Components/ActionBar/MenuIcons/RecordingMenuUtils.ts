@@ -233,6 +233,13 @@ export function createRecordingMenuStateStore(
     const { canStartRecording, isUserLoggedIn, roomButtonState } = options;
 
     return derived([spaceRegistry.spacesEligibleForRecording, recordingStore], ([$eligibleSpaces, $recordingState]) => {
+        // Snapshot of every joined space from the registry. This derived only subscribes to
+        // `spacesEligibleForRecording` and `recordingStore`, so we do not react to registry-wide
+        // membership changes by themselves. We still need the full list here because
+        // `spacesEligibleForRecording` is only “spaces where we may start recording”; rows must also
+        // reflect ongoing or pending recordings in spaces where starting is not allowed (e.g. another
+        // user’s recording). Those updates are driven by `recordingStore`, so there is no separate
+        // derived on all spaces—each run reads `getAll()` once alongside the reactive inputs above.
         const allSpaces = spaceRegistry.getAll();
         const currentRows = getRecordingSpaceRows(allSpaces, $eligibleSpaces, $recordingState, canStartRecording);
         const actionableRows = getActionableRecordingRows(currentRows);

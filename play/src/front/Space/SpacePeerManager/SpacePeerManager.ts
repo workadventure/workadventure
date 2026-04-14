@@ -623,6 +623,12 @@ export class SpacePeerManager {
     /**
      * Plays the recording start sound based on the current locale.
      */
+
+    /*
+     * TODO: ideally, we should play sounds in the GameScene and instead of having a playRecordingStartSound method,
+     * the spacePeerManager should dispatch a recording_started / recording_stopped event that can be listened
+     * by the GameScene.
+     */
     private playRecordingStartSound(): void {
         try {
             const currentLocale = get(locale);
