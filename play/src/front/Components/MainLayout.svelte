@@ -36,16 +36,15 @@
     import { showRecordingList } from "../Stores/RecordingStore";
     import { toastStore } from "../Stores/ToastStore";
     import { meetingInvitationRequestStore } from "../Stores/MeetingInvitationStore";
-    import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
     import { gameManager } from "../Phaser/Game/GameManager";
     import { navChat } from "../Chat/Stores/ChatStore";
     import { selectedRoomStore } from "../Chat/Stores/SelectRoomStore";
     import { chatNotificationStore } from "../Stores/ProximityNotificationStore";
     import { analyticsClient } from "../Administration/AnalyticsClient";
     import { LL } from "../../i18n/i18n-svelte";
+    import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import ActionBarButton from "./ActionBar/ActionBarButton.svelte";
-    import { IconArrowsMinimize, IconMessageCircle2, IconUserPlus } from "@wa-icons";
 
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
@@ -79,6 +78,7 @@
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
     import MeetingInvitationPopup from "./MeetingInvitation/MeetingInvitationPopup.svelte";
     import ChevronLeftIcon from "./Icons/ChevronLeftIcon.svelte";
+    import { IconArrowsMinimize, IconMessageCircle2, IconUserPlus } from "@wa-icons";
 
     /** When false, the right-hand participant strip in highlight fullscreen is collapsed (toggle with the edge arrow). */
     let highlightParticipantCamerasListOpen = true;
@@ -220,11 +220,11 @@
                 class:pointer-events-none={!highlightParticipantCamerasListOpen}
                 class:pointer-events-auto={highlightParticipantCamerasListOpen}
             >
-                <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2">
+                <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2 overflow-x-hidden">
                     {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
                         {#if videoBox.uniqueId !== $highlightedEmbedScreen?.uniqueId}
                             <div class="h-[135px] w-full shrink-0">
-                                <MediaBox {videoBox} fullScreen={false} miniMode={true} />
+                                <MediaBox {videoBox} fullScreen={false} />
                             </div>
                         {/if}
                     {/each}

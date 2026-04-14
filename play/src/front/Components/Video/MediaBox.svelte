@@ -9,7 +9,6 @@
 
     export let videoBox: VideoBox;
     export let fullScreen: boolean = false;
-    export let miniMode: boolean = false;
 
     const gameScene = gameManager.getCurrentGameScene();
 
@@ -26,5 +25,5 @@
 
 <div class="video-media-box pointer-events-auto media-container justify-center relative h-full w-full">
     <!-- in:fly={{ y: 50, duration: 150 }} -->
-    <VideoMediaBox {videoBox} {fullScreen} {miniMode} />
+    <VideoMediaBox {videoBox} {fullScreen} />
 </div>

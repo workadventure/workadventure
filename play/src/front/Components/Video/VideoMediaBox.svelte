@@ -321,7 +321,7 @@
             </CenteredVideo>
         {/if}
 
-        {#if !inCameraContainer}
+        {#if !inCameraContainer && videoEnabled}
             <!-- The menu to go fullscreen -->
             <div
                 class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-20 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
