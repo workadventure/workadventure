@@ -17,7 +17,7 @@ export async function waitForRecordingToAppear(page: Page, index: number, maxRet
 
         // eslint-disable-next-line playwright/no-wait-for-timeout
         await page.waitForTimeout(6000);
-        await page.getByRole("button", { name: "Refresh" }).click();
+        await page.getByRole("button", { name: "Refresh", exact: true }).click();
     }
 }
 
@@ -36,8 +36,9 @@ export async function deleteAllRecordings(page: Page) {
             .catch(() => false)
     ) {
         await page.getByTestId("recording-delete-0").click();
-        await expect(page.getByText("Recording deleted successfully")).toBeVisible();
-        await expect(page.getByText("Recording deleted successfully")).toBeHidden();
+        const deleteToast = page.getByText("Recording deleted successfully").last();
+        await expect(deleteToast).toBeVisible();
+        await expect(deleteToast).toBeHidden();
     }
 
     await page.getByTestId("close-recording-modal").click();

@@ -14,6 +14,7 @@ import type {
 import type { IStateLifecycleManager } from "../src/Model/Interfaces/IStateLifecycleManager";
 import { UserRegistry } from "../src/Model/Services/UserRegistry";
 import type { ICommunicationStrategy } from "../src/Model/Interfaces/ICommunicationStrategy";
+import type { IRecordingManager } from "../src/Model/RecordingManager";
 
 describe("CommunicationManager", () => {
     // Helper to create real SpaceUser objects
@@ -67,8 +68,33 @@ describe("CommunicationManager", () => {
         getSpaceName: () => "test-space",
         getPropertiesToSync: () => ["cameraState", "microphoneState"],
         updateMetadata: vi.fn().mockResolvedValue(undefined),
+        stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
         getUser: vi.fn(),
     });
+
+    const createRecordingManager = (): IRecordingManager & { mocks: Record<string, ReturnType<typeof vi.fn>> } => {
+        const mocks = {
+            getRecordingState: vi.fn().mockReturnValue({ isRecording: false, recorder: null }),
+            startRecording: vi.fn().mockResolvedValue(undefined),
+            stopRecording: vi.fn().mockResolvedValue(undefined),
+            stopRecordingByServer: vi.fn().mockResolvedValue(null),
+            stopRecordingIfRecorderMatches: vi.fn().mockResolvedValue(null),
+            handleAddUser: vi.fn(),
+            destroy: vi.fn(),
+        };
+
+        return {
+            getRecordingState: mocks.getRecordingState,
+            startRecording: mocks.startRecording,
+            stopRecording: mocks.stopRecording,
+            stopRecordingByServer: mocks.stopRecordingByServer,
+            stopRecordingIfRecorderMatches: mocks.stopRecordingIfRecorderMatches,
+            handleAddUser: mocks.handleAddUser,
+            isRecording: false,
+            destroy: mocks.destroy,
+            mocks,
+        };
+    };
 
     // Real policy implementation (simple, testable)
     const createPolicy = (
@@ -292,7 +318,7 @@ describe("CommunicationManager", () => {
 
             const user = createSpaceUser("user_1");
             userRegistry.addUser(user);
-            await manager.handleUserDeleted(user, false);
+            await manager.handleUserDeleted(user);
 
             expect(userRegistry.hasUser("user_1")).toBe(false);
         });
@@ -309,7 +335,7 @@ describe("CommunicationManager", () => {
             });
 
             const user = createSpaceUser("user_1");
-            await manager.handleUserDeleted(user, false);
+            await manager.handleUserDeleted(user);
 
             expect(state.mocks.handleUserDeleted).toHaveBeenCalledWith(user);
         });
@@ -326,7 +352,7 @@ describe("CommunicationManager", () => {
             });
 
             const user = createSpaceUser("user_1");
-            await manager.handleUserDeleted(user, false);
+            await manager.handleUserDeleted(user);
 
             expect(policy.mocks.shouldTransition).toHaveBeenCalledWith(CommunicationType.LIVEKIT, 0);
         });
@@ -510,7 +536,7 @@ describe("CommunicationManager", () => {
             });
 
             const user = createSpaceUser("user_1");
-            await manager.handleUserDeleted(user, false);
+            await manager.handleUserDeleted(user);
 
             expect(orchestrator.mocks.scheduleDelayedTransition).toHaveBeenCalledWith(
                 CommunicationType.WEBRTC,
@@ -616,7 +642,7 @@ describe("CommunicationManager", () => {
             });
 
             const user = createSpaceUser("user_2");
-            await manager.handleUserDeleted(user, false);
+            await manager.handleUserDeleted(user);
 
             // Should be called once for executeTransition, not for cancel
             expect(orchestrator.mocks.cancelPendingTransition).toHaveBeenCalledTimes(1);
@@ -645,6 +671,69 @@ describe("CommunicationManager", () => {
     });
 
     describe("delayed transition callback", () => {
+        it("should schedule a delayed WebRTC transition when the recorder leaves the space", async () => {
+            const space = createSpace();
+            const orchestrator = createOrchestrator();
+            const state = createState(CommunicationType.LIVEKIT);
+            const lifecycleManager = createLifecycleManager(state);
+            const recordingManager = createRecordingManager();
+            const policy = createPolicy(false);
+            const recorder = createSpaceUser("recorder_1");
+
+            recordingManager.mocks.stopRecordingIfRecorderMatches.mockResolvedValue(recorder);
+
+            const manager = new CommunicationManager(space, {
+                orchestrator,
+                lifecycleManager,
+                recordingManager,
+                policy,
+            });
+
+            const didStop = await manager.handleRecorderLeftSpace(recorder.spaceUserId);
+
+            expect(didStop).toBe(true);
+            expect(recordingManager.mocks.stopRecordingIfRecorderMatches).toHaveBeenCalledWith(recorder.spaceUserId);
+            expect(orchestrator.mocks.scheduleDelayedTransition).toHaveBeenCalled();
+
+            const transitionContext = orchestrator.mocks.scheduleDelayedTransition.mock.calls[0]?.[1] as
+                | {
+                      playUri: string;
+                      space: ICommunicationSpace;
+                      users: Map<string, SpaceUser>;
+                      usersToNotify: Map<string, SpaceUser>;
+                  }
+                | undefined;
+
+            expect(transitionContext).toBeDefined();
+            expect(transitionContext?.playUri).toBe(recorder.playUri);
+            expect(transitionContext?.space).toBe(space);
+            expect(transitionContext?.users).toBeInstanceOf(Map);
+            expect(transitionContext?.usersToNotify).toBeInstanceOf(Map);
+        });
+
+        it("should no-op when a server stop is requested and no recording is active", async () => {
+            const space = createSpace();
+            const orchestrator = createOrchestrator();
+            const state = createState(CommunicationType.LIVEKIT);
+            const lifecycleManager = createLifecycleManager(state);
+            const recordingManager = createRecordingManager();
+            const policy = createPolicy(false);
+
+            recordingManager.mocks.stopRecordingByServer.mockResolvedValue(null);
+
+            const manager = new CommunicationManager(space, {
+                orchestrator,
+                lifecycleManager,
+                recordingManager,
+                policy,
+            });
+
+            const didStop = await manager.handleServerStopRecording();
+
+            expect(didStop).toBe(false);
+            expect(orchestrator.mocks.scheduleDelayedTransition).not.toHaveBeenCalled();
+        });
+
         it("should transition when delayed transition callback is invoked and conditions are still valid", async () => {
             const space = createSpace([createSpaceUser("user_1")]);
             const orchestrator = createOrchestrator();
@@ -668,7 +757,7 @@ describe("CommunicationManager", () => {
             });
 
             const user = createSpaceUser("user_1");
-            await manager.handleUserDeleted(user, false);
+            await manager.handleUserDeleted(user);
 
             // Simulate delayed transition completing
             const newState = createState(CommunicationType.WEBRTC);
@@ -701,7 +790,7 @@ describe("CommunicationManager", () => {
             });
 
             const user = createSpaceUser("user_1");
-            await manager.handleUserDeleted(user, false);
+            await manager.handleUserDeleted(user);
 
             // Change conditions - transition no longer allowed
             policy.mocks.shouldTransition.mockReturnValue(false);

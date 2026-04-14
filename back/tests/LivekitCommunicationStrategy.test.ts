@@ -12,9 +12,9 @@ function createUser(spaceUserId: string): SpaceUser {
 }
 
 describe("LivekitCommunicationStrategy", () => {
-    it("stops recording through metadata when the last streaming user leaves", async () => {
+    it("stops recording through the server path when the last streaming user leaves", async () => {
         const dispatchPrivateEvent = vi.fn();
-        const updateMetadata = vi.fn().mockResolvedValue(undefined);
+        const stopRecordingByServer = vi.fn().mockResolvedValue(undefined);
 
         const space: ICommunicationSpace = {
             getAllUsers: () => [],
@@ -25,7 +25,8 @@ describe("LivekitCommunicationStrategy", () => {
             dispatchPublicEvent: vi.fn(),
             getSpaceName: () => "test-space",
             getPropertiesToSync: () => [],
-            updateMetadata,
+            updateMetadata: vi.fn().mockResolvedValue(undefined),
+            stopRecordingByServer,
             getUser: vi.fn(),
         };
 
@@ -53,15 +54,7 @@ describe("LivekitCommunicationStrategy", () => {
         strategy.deleteUser(streamer);
 
         await vi.waitFor(() => {
-            expect(updateMetadata).toHaveBeenCalledWith(
-                {
-                    recording: {
-                        recorder: "recorder-1",
-                        recording: false,
-                    },
-                },
-                "recorder-1"
-            );
+            expect(stopRecordingByServer).toHaveBeenCalled();
             expect(livekitService.deleteRoom).toHaveBeenCalledWith("test-space");
         });
     });
@@ -77,6 +70,7 @@ describe("LivekitCommunicationStrategy", () => {
             getSpaceName: () => "test-space",
             getPropertiesToSync: () => [],
             updateMetadata: vi.fn().mockResolvedValue(undefined),
+            stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
             getUser: vi.fn(),
         };
 
@@ -111,7 +105,7 @@ describe("LivekitCommunicationStrategy", () => {
             ).toBe(true);
         });
 
-        expect(space.updateMetadata).not.toHaveBeenCalled();
+        expect(space.stopRecordingByServer).not.toHaveBeenCalled();
         expect(livekitService.deleteRoom).not.toHaveBeenCalled();
     });
 });
