@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
-import { svelte } from "@sveltejs/vite-plugin-svelte";
-import sveltePreprocess from "svelte-preprocess";
+import { svelte, vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 
 // https://vitejs.dev/config/
 export default defineConfig((/*{ mode }*/) => {
@@ -27,7 +26,7 @@ export default defineConfig((/*{ mode }*/) => {
         },
         plugins: [
             svelte({
-                preprocess: sveltePreprocess(),
+                preprocess: vitePreprocess(),
                 onwarn(warning, defaultHandler) {
                     // don't warn on:
                     if (warning.code === "a11y-click-events-have-key-events") return;
