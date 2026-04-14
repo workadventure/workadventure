@@ -11,5 +11,6 @@ export type ICommunicationSpace = Pick<
     | "getSpaceName"
     | "getPropertiesToSync"
     | "updateMetadata"
+    | "stopRecordingByServer"
     | "getUser"
 >;

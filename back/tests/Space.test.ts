@@ -69,7 +69,7 @@ describe("Space with filter", () => {
         });
     });
     describe("addUser", () => {
-        it("should send user to the watcher if result of filter is true", async () => {
+        it("should send user to the watcher if result of filter is true", () => {
             const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
@@ -97,7 +97,7 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>()
             );
 
-            await space.addUser(watcher, spaceUser);
+            space.addUser(watcher, spaceUser);
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
             expect(mockWriteFunction).toHaveBeenCalledWith(
@@ -125,7 +125,7 @@ describe("Space with filter", () => {
                 })
             );
         });
-        it("should not send user to the watcher if result of filter is false", async () => {
+        it("should not send user to the watcher if result of filter is false", () => {
             const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
@@ -153,12 +153,12 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>()
             );
 
-            await space.addUser(watcher, spaceUser);
+            space.addUser(watcher, spaceUser);
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(0);
             expect(mockWriteFunction2).toHaveBeenCalledTimes(0);
         });
-        it.skip("should send remove user event if a error occurs ???", async () => {
+        it.skip("should send remove user event if a error occurs ???", () => {
             const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn().mockImplementation(() => {
                 throw new Error("test");
@@ -188,7 +188,7 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>()
             );
 
-            await space.addUser(watcher, spaceUser);
+            space.addUser(watcher, spaceUser);
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
             expect(mockWriteFunction2).toHaveBeenCalledTimes(0);
@@ -497,7 +497,7 @@ describe("Space with filter", () => {
     });
 
     describe("removeUser", () => {
-        it("should send remove user message to all watchers when user is removed and the filter result remains true", async () => {
+        it("should send remove user message to all watchers when user is removed and the filter result remains true", () => {
             const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
@@ -541,7 +541,7 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>([["foo_1", spaceUser]])
             );
 
-            await space.removeUser(watcher, "foo_1");
+            space.removeUser(watcher, "foo_1");
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
             expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
@@ -559,7 +559,7 @@ describe("Space with filter", () => {
             );
         });
 
-        it("should send remove user message to all watchers when user is removed and the filter result remains true", async () => {
+        it("should send remove user message to all watchers when user is removed and the filter result remains true", () => {
             const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
@@ -603,7 +603,7 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>([["foo_1", spaceUser]])
             );
 
-            await space.removeUser(watcher, "foo_1");
+            space.removeUser(watcher, "foo_1");
 
             // watcher1 should not have received the event because it no longer has any users in its list
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
@@ -633,7 +633,7 @@ describe("Space with filter", () => {
                 })
             );
         });
-        it("shouldn't send remove user message to all watchers when user is removed and the filter result becomes false", async () => {
+        it("shouldn't send remove user message to all watchers when user is removed and the filter result becomes false", () => {
             const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
@@ -676,7 +676,7 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>([["foo_1", spaceUser]])
             );
 
-            await space.removeUser(watcher, "foo_1");
+            space.removeUser(watcher, "foo_1");
 
             // watcher1 should not have received the event because it no longer has any users in its list
             expect(mockWriteFunction).not.toHaveBeenCalled();
@@ -807,6 +807,108 @@ describe("Space with filter", () => {
                 })
             );
         });
+
+        it("should accept recording metadata without recorder when starting a recording", async () => {
+            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
+            const write = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write,
+            });
+            const user = SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-test",
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", user]])
+            );
+
+            const startRecordingSpy = vi.spyOn(space, "startRecording").mockResolvedValue(undefined);
+            vi.spyOn(space, "getRecordingState").mockReturnValue({
+                isRecording: true,
+                recorder: "foo_1",
+            });
+
+            await space.updateMetadata(
+                {
+                    recording: {
+                        recording: true,
+                    },
+                },
+                "foo_1"
+            );
+
+            expect(startRecordingSpy).toHaveBeenCalledWith(user);
+            expect(write).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "updateSpaceMetadataMessage",
+                        updateSpaceMetadataMessage: {
+                            spaceName: "test",
+                            metadata: JSON.stringify({
+                                recording: {
+                                    recorder: "foo_1",
+                                    recording: true,
+                                },
+                            }),
+                        },
+                    },
+                })
+            );
+        });
+
+        it("should accept recording metadata without recorder when stopping a recording", async () => {
+            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
+            const write = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write,
+            });
+            const user = SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-test",
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", user]])
+            );
+
+            const stopRecordingSpy = vi.spyOn(space, "stopRecording").mockResolvedValue(undefined);
+            vi.spyOn(space, "getRecordingState").mockReturnValue({
+                isRecording: false,
+                recorder: null,
+            });
+
+            await space.updateMetadata(
+                {
+                    recording: {
+                        recording: false,
+                    },
+                },
+                "foo_1"
+            );
+
+            expect(stopRecordingSpy).toHaveBeenCalledWith(user);
+            expect(write).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "updateSpaceMetadataMessage",
+                        updateSpaceMetadataMessage: {
+                            spaceName: "test",
+                            metadata: JSON.stringify({
+                                recording: {
+                                    recorder: null,
+                                    recording: false,
+                                },
+                            }),
+                        },
+                    },
+                })
+            );
+        });
     });
 
     describe("dispatchPublicEvent", () => {
@@ -859,6 +961,208 @@ describe("Space with filter", () => {
                         $case: "publicEvent",
                         publicEvent: {
                             spaceName: "test",
+                        },
+                    },
+                })
+            );
+        });
+    });
+
+    describe("recording auto-stop", () => {
+        const createCommunicationManagerMock = () => ({
+            getRecordingState: vi.fn().mockReturnValue({ isRecording: false, recorder: null }),
+            handleUserAdded: vi.fn().mockResolvedValue(undefined),
+            handleUserDeleted: vi.fn().mockResolvedValue(undefined),
+            handleUserUpdated: vi.fn().mockResolvedValue(undefined),
+            handleStartRecording: vi.fn().mockResolvedValue(undefined),
+            handleStopRecording: vi.fn().mockResolvedValue(undefined),
+            handleRecorderLeftSpace: vi.fn().mockResolvedValue(false),
+            handleServerStopRecording: vi.fn().mockResolvedValue(false),
+            handleUserToNotifyAdded: vi.fn().mockResolvedValue(undefined),
+            handleUserToNotifyDeleted: vi.fn().mockResolvedValue(undefined),
+            handleMeetingConnectionRestartMessage: vi.fn(),
+            destroy: vi.fn(),
+        });
+
+        it("should not stop recording when the removed user is still present in usersToNotify", () => {
+            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
+            const communicationManager = createCommunicationManagerMock();
+            const watcher = mock<SpacesWatcher>({ id: "watcher-1", write: vi.fn() });
+            const watcher2 = mock<SpacesWatcher>({ id: "watcher-2", write: vi.fn() });
+            const user = SpaceUser.fromPartial({ spaceUserId: "foo_1", uuid: "uuid-test" });
+
+            (space as unknown as { communicationManager: typeof communicationManager }).communicationManager =
+                communicationManager;
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", user]])
+            );
+            (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+                watcher,
+                new Map<string, SpaceUser>()
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>()
+            );
+            (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+                watcher2,
+                new Map<string, SpaceUser>([["foo_1", user]])
+            );
+
+            space.removeUser(watcher, "foo_1");
+
+            expect(communicationManager.handleRecorderLeftSpace).not.toHaveBeenCalled();
+        });
+
+        it("should stop recording when removeUser removes the recorder from the last raw collection", async () => {
+            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
+            const communicationManager = createCommunicationManagerMock();
+            const write = vi.fn();
+            const watcher = mock<SpacesWatcher>({ id: "watcher-1", write });
+            const user = SpaceUser.fromPartial({ spaceUserId: "foo_1", uuid: "uuid-test" });
+
+            communicationManager.handleRecorderLeftSpace.mockResolvedValue(true);
+            (space as unknown as { communicationManager: typeof communicationManager }).communicationManager =
+                communicationManager;
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", user]])
+            );
+            (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+                watcher,
+                new Map<string, SpaceUser>([])
+            );
+
+            space.removeUser(watcher, "foo_1");
+
+            await vi.waitFor(() => {
+                expect(communicationManager.handleRecorderLeftSpace).toHaveBeenCalledWith("foo_1");
+                expect(write).toHaveBeenCalledWith(
+                    BackToPusherSpaceMessage.fromPartial({
+                        message: {
+                            $case: "updateSpaceMetadataMessage",
+                            updateSpaceMetadataMessage: {
+                                spaceName: "test",
+                                metadata: JSON.stringify({
+                                    recording: {
+                                        recorder: null,
+                                        recording: false,
+                                    },
+                                }),
+                            },
+                        },
+                    })
+                );
+            });
+        });
+
+        it("should stop recording when a userToNotify disappears from the last raw collection", () => {
+            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
+            const communicationManager = createCommunicationManagerMock();
+            const watcher = mock<SpacesWatcher>({ id: "watcher-1", write: vi.fn() });
+            const user = SpaceUser.fromPartial({ spaceUserId: "foo_1", uuid: "uuid-test" });
+
+            communicationManager.handleRecorderLeftSpace.mockResolvedValue(true);
+            (space as unknown as { communicationManager: typeof communicationManager }).communicationManager =
+                communicationManager;
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>()
+            );
+            (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", user]])
+            );
+
+            space.deleteUserToNotify(watcher, user);
+
+            expect(communicationManager.handleRecorderLeftSpace).toHaveBeenCalledWith("foo_1");
+        });
+
+        it("should stop recording only once when removing a watcher containing the user in both raw collections", () => {
+            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
+            const communicationManager = createCommunicationManagerMock();
+            const watcher = mock<SpacesWatcher>({ id: "watcher-1", write: vi.fn() });
+            const user = SpaceUser.fromPartial({ spaceUserId: "foo_1", uuid: "uuid-test" });
+
+            communicationManager.handleRecorderLeftSpace.mockResolvedValue(true);
+            (space as unknown as { communicationManager: typeof communicationManager }).communicationManager =
+                communicationManager;
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", user]])
+            );
+            (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", user]])
+            );
+
+            space.removeWatcher(watcher);
+
+            expect(communicationManager.handleRecorderLeftSpace).toHaveBeenCalledTimes(1);
+            expect(communicationManager.handleRecorderLeftSpace).toHaveBeenCalledWith("foo_1");
+        });
+
+        it("should not stop recording when removeWatcher removes one watcher but the user is still present elsewhere", () => {
+            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
+            const communicationManager = createCommunicationManagerMock();
+            const watcher = mock<SpacesWatcher>({ id: "watcher-1", write: vi.fn() });
+            const watcher2 = mock<SpacesWatcher>({ id: "watcher-2", write: vi.fn() });
+            const user = SpaceUser.fromPartial({ spaceUserId: "foo_1", uuid: "uuid-test" });
+
+            (space as unknown as { communicationManager: typeof communicationManager }).communicationManager =
+                communicationManager;
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", user]])
+            );
+            (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+                watcher,
+                new Map<string, SpaceUser>()
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>()
+            );
+            (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+                watcher2,
+                new Map<string, SpaceUser>([["foo_1", user]])
+            );
+
+            space.removeWatcher(watcher);
+
+            expect(communicationManager.handleRecorderLeftSpace).not.toHaveBeenCalled();
+        });
+
+        it("should publish a processed metadata snapshot when the server stops recording", async () => {
+            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
+            const communicationManager = createCommunicationManagerMock();
+            const write = vi.fn();
+            const watcher = mock<SpacesWatcher>({ id: "watcher-1", write });
+
+            communicationManager.handleServerStopRecording.mockResolvedValue(true);
+            (space as unknown as { communicationManager: typeof communicationManager }).communicationManager =
+                communicationManager;
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>()
+            );
+
+            await space.stopRecordingByServer();
+
+            expect(write).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "updateSpaceMetadataMessage",
+                        updateSpaceMetadataMessage: {
+                            spaceName: "test",
+                            metadata: JSON.stringify({
+                                recording: {
+                                    recorder: null,
+                                    recording: false,
+                                },
+                            }),
                         },
                     },
                 })
