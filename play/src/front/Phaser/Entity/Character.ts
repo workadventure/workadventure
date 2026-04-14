@@ -1,4 +1,3 @@
-import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import type { Unsubscriber, Readable } from "svelte/store";
 import { get, readable } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
@@ -25,7 +24,6 @@ import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager"
 import { SpeechBubble } from "./SpeechBubble";
 import { SpeechDomElement } from "./SpeechDomElement";
 import { ThinkingCloud } from "./ThinkingCloud";
-import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
 import DOMElement = Phaser.GameObjects.DOMElement;
@@ -33,6 +31,7 @@ import RenderTexture = Phaser.GameObjects.RenderTexture;
 
 const playerNameY = -25;
 const interactiveRadius = 25;
+const DEFAULT_PLAYER_NAME_OUTLINE_COLOR = "#14304C";
 
 export const CHARACTER_BODY_WIDTH = 16;
 export const CHARACTER_BODY_HEIGHT = 16;
@@ -42,8 +41,12 @@ export const CHARACTER_BODY_OFFSET_Y = 8;
 export const PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX = "playtext-mediadevice-";
 
 export abstract class Character extends Container implements OutlineableInterface {
+    private static nextPlayerNameTextureId = 0;
     private bubble: RenderTexture | null | DOMElement = null;
-    private playerNameText: Text | undefined;
+    private playerNameSprite: Sprite | undefined;
+    private playerNameTextureKey: string | undefined;
+    private playerNameFontSize: number | undefined;
+    private playerNameOutlineColor: number | undefined;
     private readonly talkIcon: TalkIcon;
     protected readonly statusDot: PlayerStatusDot;
     protected readonly speakerIcon: SpeakerIcon;
@@ -168,35 +171,23 @@ export abstract class Character extends Container implements OutlineableInterfac
 
             // Todo: Replace the font family with a better one
             // Use larger font size for non-Latin characters (Arabic, CJK, etc.) for better readability
-            const fontSize = StringUtils.containsNonLatinCharacters(name) ? "11px" : "8px";
-            this.playerNameText = new Text(scene, 0, playerNameY, name, {
-                fontFamily: '"Press Start 2P"',
-                fontSize,
-                strokeThickness: 2,
-                stroke: "#14304C",
-                metrics: {
-                    ascent: 20,
-                    descent: 10,
-                    fontSize: 35,
-                },
-            });
-
-            this.playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
-            this.add([this.playerNameText]);
+            this.playerNameFontSize = StringUtils.containsNonLatinCharacters(name) ? 11 : 8;
+            this.playerNameOutlineColor = get(this.outlineColorStore);
+            this.playerNameTextureKey = this.createPlayerNameTexture(this.playerNameOutlineColor);
+            this.playerNameSprite = new Sprite(scene, 0, playerNameY, this.playerNameTextureKey);
+            this.playerNameSprite.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
+            this.add([this.playerNameSprite]);
 
             // Reposition status dot and megaphone icon
-            this.statusDot.x = (this.playerNameText.getLeftCenter().x ?? 0) - 6;
-            this.megaphoneIcon.setX((this.playerNameText.getRightCenter().x ?? 0) + 8);
+            this.statusDot.x = (this.playerNameSprite.getLeftCenter().x ?? 0) - 2;
+            this.megaphoneIcon.setX((this.playerNameSprite.getRightCenter().x ?? 0) + 2);
             this.statusDot.visible = true;
             this.megaphoneIcon.visible = true;
 
-            scene.getOutlineManager().add(this.playerNameText, () => {
-                return this.getCurrentOutline();
-            });
-
             this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
-                this.setOutline(color);
+                this.updatePlayerNameTexture(color);
             });
+            this.scene.markDirty();
         }, 0);
 
         this.statusDot = new PlayerStatusDot(scene, 0, playerNameY - 1);
@@ -378,10 +369,6 @@ export abstract class Character extends Container implements OutlineableInterfac
         }
     }
 
-    private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
-        return this.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
-    }
-
     protected playAnimation(direction: PositionMessage_Direction, moving: boolean): void {
         if (this.invisible) return;
         for (const [texture, sprite] of this.sprites.entries()) {
@@ -460,6 +447,9 @@ export abstract class Character extends Container implements OutlineableInterfac
             if (this.scene) {
                 this.scene.sys.updateList.remove(sprite);
             }
+        }
+        if (this.playerNameTextureKey && this.scene.textures.exists(this.playerNameTextureKey)) {
+            this.scene.textures.remove(this.playerNameTextureKey);
         }
         this.texturePromise?.cancel();
         this.list.forEach((objectContaining) => objectContaining.destroy());
@@ -570,22 +560,67 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    private setOutline(color: number | undefined) {
-        if (!this.playerNameText) {
-            throw new Error("Player name text is not defined when setOuline is called");
+    private createPlayerNameTexture(outlineColor: number | undefined): string {
+        const textureKey = `player-name-${Character.nextPlayerNameTextureId++}`;
+        const fontSize = this.playerNameFontSize ?? 8;
+        const dynamicOutlineColor =
+            outlineColor === undefined ? undefined : `#${outlineColor.toString(16).padStart(6, "0")}`;
+        const strokeThickness = 2;
+        const outlineThickness = 2;
+
+        const measurementCanvas = document.createElement("canvas");
+        const measurementContext = measurementCanvas.getContext("2d");
+        if (!measurementContext) {
+            throw new Error("Could not create canvas context for player name texture");
         }
-        if (color === undefined) {
-            this.getOutlinePlugin()?.remove(this.playerNameText);
-        } else {
-            this.getOutlinePlugin()?.remove(this.playerNameText);
-            this.getOutlinePlugin()?.add(this.playerNameText, {
-                thickness: 2,
-                outlineColor: color,
-            });
+        measurementContext.font = `${fontSize}px "Press Start 2P"`;
+        const measuredWidth = measurementContext.measureText(this.playerName).width;
+        const fullOutlineThickness = strokeThickness + outlineThickness * 2;
+        const textureWidth = Math.max(1, Math.ceil(measuredWidth + fullOutlineThickness * 2));
+        const textureHeight = Math.max(1, Math.ceil(fontSize + fullOutlineThickness * 2));
+
+        const texture = this.scene.textures.createCanvas(textureKey, textureWidth, textureHeight);
+        const context = texture.getContext();
+        context.clearRect(0, 0, textureWidth, textureHeight);
+        context.font = `${fontSize}px "Press Start 2P"`;
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.lineJoin = "round";
+
+        if (dynamicOutlineColor) {
+            context.lineWidth = fullOutlineThickness;
+            context.strokeStyle = dynamicOutlineColor;
+            context.strokeText(this.playerName, textureWidth / 2, textureHeight / 2);
         }
 
-        //Using outline quickfix
-        this.scene.refreshSceneForOutline();
+        context.lineWidth = strokeThickness;
+        context.strokeStyle = DEFAULT_PLAYER_NAME_OUTLINE_COLOR;
+        context.fillStyle = "#ffffff";
+        context.strokeText(this.playerName, textureWidth / 2, textureHeight / 2);
+        context.fillText(this.playerName, textureWidth / 2, textureHeight / 2);
+        texture.refresh();
+
+        return textureKey;
+    }
+
+    private updatePlayerNameTexture(color: number | undefined) {
+        if (!this.playerNameSprite || this.playerNameOutlineColor === color) {
+            return;
+        }
+        this.playerNameOutlineColor = color;
+
+        const nextTextureKey = this.createPlayerNameTexture(color);
+        const previousTextureKey = this.playerNameTextureKey;
+        this.playerNameTextureKey = nextTextureKey;
+        this.playerNameSprite.setTexture(nextTextureKey);
+
+        if (previousTextureKey && this.scene.textures.exists(previousTextureKey)) {
+            this.scene.textures.remove(previousTextureKey);
+        }
+
+        this.statusDot.x = (this.playerNameSprite.getLeftCenter().x ?? 0) - 2;
+        this.megaphoneIcon.setX((this.playerNameSprite.getRightCenter().x ?? 0) + 2);
+        this.scene.markDirty();
     }
 
     private cancelPreviousEmote() {
@@ -663,10 +698,6 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public characterFarAwayOutline(): void {
         this.outlineColorStore.characterFarAway();
-    }
-
-    private getCurrentOutline(): { thickness: number; color?: number } {
-        return { thickness: 2, color: get(this.outlineColorStore) };
     }
 
     /**
