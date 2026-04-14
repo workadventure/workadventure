@@ -436,6 +436,15 @@ export const EnvironmentVariables = z.object({
     GOOGLE_DRIVE_PICKER_CLIENT_ID: z.string().optional().describe("Google OAuth2 client ID for Drive Picker"),
     GOOGLE_DRIVE_PICKER_API_KEY: z.string().optional().describe("Google API key for Drive Picker"),
     GOOGLE_DRIVE_PICKER_APP_ID: z.string().optional().describe("Google application ID for Drive Picker"),
+    LIVEKIT_PIXEL_DENSITY: z
+        .string()
+        .regex(/^\d*\.?\d+$/, { message: "Must be a positive number" })
+        .or(z.literal(""))
+        .optional()
+        .transform((val) => toNumber(val, 2 / 3))
+        .describe(
+            "Pixel density multiplier for LiveKit adaptive streams. 1 means LiveKit will use a better simulcast layer as soon as the video box is bigger than the stream. Lower values delay upgrades to larger simulcast layers. Defaults to 0.666666 (i.e. allow a 50% upscale of the video before switching to the higher simulcast layer)"
+        ),
     MATRIX_API_URI: z.string().optional().describe("Matrix homeserver API URI (internal)"),
     MATRIX_PUBLIC_URI: z.string().optional().describe("Matrix homeserver public URI"),
     MATRIX_ADMIN_USER: z.string().optional().describe("Matrix administrator username"),

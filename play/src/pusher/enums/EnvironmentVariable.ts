@@ -170,6 +170,7 @@ export const LIVEKIT_RECORDING_S3_ACCESS_KEY: string | undefined = env.LIVEKIT_R
 export const LIVEKIT_RECORDING_S3_SECRET_KEY: string | undefined = env.LIVEKIT_RECORDING_S3_SECRET_KEY;
 export const LIVEKIT_RECORDING_S3_BUCKET: string | undefined = env.LIVEKIT_RECORDING_S3_BUCKET;
 export const LIVEKIT_RECORDING_S3_REGION: string | undefined = env.LIVEKIT_RECORDING_S3_REGION;
+export const LIVEKIT_PIXEL_DENSITY: number = env.LIVEKIT_PIXEL_DENSITY;
 export const ENABLE_ISSUE_REPORT: boolean = env.ENABLE_ISSUE_REPORT || true;
 // Tutorial settings
 export const ENABLE_TUTORIAL: boolean = env.ENABLE_TUTORIAL ?? true;
@@ -191,6 +192,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     MAX_USERNAME_LENGTH: env.MAX_USERNAME_LENGTH,
     MAX_PER_GROUP: env.MAX_PER_GROUP,
     MAX_DISPLAYED_VIDEOS: env.MAX_DISPLAYED_VIDEOS,
+    LIVEKIT_PIXEL_DENSITY: env.LIVEKIT_PIXEL_DENSITY,
     NODE_ENV: env.NODE_ENV || "development",
     CONTACT_URL: env.CONTACT_URL,
     POSTHOG_API_KEY: env.POSTHOG_API_KEY,
