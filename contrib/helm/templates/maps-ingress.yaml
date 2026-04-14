@@ -21,7 +21,7 @@ spec:
   tls:
     - hosts:
         - {{ (include "workadventure.mapsDomainName" .) | quote }}
-      secretName: {{ .Values.maps.ingress.secretName | default (printf "%s-maps-cert" (include "workadventure.fullname" .)) }}
+      secretName: {{ .Values.maps.ingress.secretName | default .Values.ingress.secretName | default (printf "%s-maps-cert" (include "workadventure.fullname" .)) }}
   {{- end }}
   rules:
     - host: {{ (include "workadventure.mapsDomainName" .) | quote }}
