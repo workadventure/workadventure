@@ -30,6 +30,7 @@ import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore"
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPresets";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
@@ -87,6 +88,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room = new Room({
             adaptiveStream: {
                 pauseVideoInBackground: true,
+                pixelDensity: LIVEKIT_PIXEL_DENSITY,
             },
             dynacast: true,
             publishDefaults: {
