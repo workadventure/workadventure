@@ -1,5 +1,3 @@
-import { asError } from "catch-unknown";
-
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 
 /**
@@ -16,26 +14,4 @@ export function setTimeoutPromise(ms: number): Promise<never> {
  */
 export function raceTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
     return Promise.race([promise, setTimeoutPromise(ms)]);
-}
-
-/**
- * Same as raceTimeout, but clears the timeout when the wrapped promise settles first.
- */
-export function raceTimeoutAndCancelTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
-        const timeoutId = setTimeout(() => {
-            reject(new TimeoutError());
-        }, ms);
-
-        promise.then(
-            (value) => {
-                clearTimeout(timeoutId);
-                resolve(value);
-            },
-            (error) => {
-                clearTimeout(timeoutId);
-                reject(asError(error));
-            }
-        );
-    });
 }
