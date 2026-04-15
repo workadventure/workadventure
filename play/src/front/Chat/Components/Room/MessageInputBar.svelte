@@ -564,7 +564,7 @@
                 <img draggable="false" class="w-8" src={googleSlidesSvg} alt="info icon" />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleSlides.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                    {applicationManager.googleSheetsToolActivated
+                    {applicationManager.googleSlidesToolActivated
                         ? $LL.chat.form.application.googleSlides.description()
                         : $LL.mapEditor.properties.googleSlides.disabled()}
                 </p>
@@ -575,7 +575,7 @@
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("googleDrive")}
                 class:bg-secondary-800={applicationProperty?.name === "googleDrive"}
-                disabled={!applicationManager.googleSheetsToolActivated}
+                disabled={!applicationManager.googleDriveToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleDriveSvg} alt="info icon" />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleDrive.title()}</h2>
