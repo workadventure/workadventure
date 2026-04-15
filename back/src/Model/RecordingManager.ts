@@ -9,6 +9,7 @@ import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager
 import type { IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
 
 export interface IRecordingManager {
+    getRecordingState(): { isRecording: boolean; recorder: string | null };
     startRecording(user: SpaceUser): Promise<void>;
     stopRecording(user: SpaceUser): Promise<void>;
     handleAddUser(user: SpaceUser): void;
@@ -117,6 +118,13 @@ export class RecordingManager implements IRecordingManager {
                 user.spaceUserId
             );
         }
+    }
+
+    public getRecordingState(): { isRecording: boolean; recorder: string | null } {
+        return {
+            isRecording: this._isRecording,
+            recorder: this._user?.spaceUserId ?? null,
+        };
     }
 
     public get isRecording(): boolean {

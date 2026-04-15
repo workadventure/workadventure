@@ -1,12 +1,14 @@
 import * as Phaser from "phaser";
 globalThis.Phaser = Phaser;
 
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { FilterType } from "@workadventure/messages";
+import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { FilterType, type SpaceUser } from "@workadventure/messages";
 import { writable } from "svelte/store";
 import { Space } from "../Space";
 import { SpaceNameIsEmptyError } from "../Errors/SpaceError";
 import type { RoomConnection } from "../../Connection/RoomConnection";
+import { recordingStore } from "../../Stores/RecordingStore";
 
 // Mock the entire GameManager module
 vi.mock("../../Phaser/Game/GameManager", () => ({
@@ -115,10 +117,35 @@ const defaultRoomConnectionMock = {
     emitJoinSpace: vi.fn(),
     emitLeaveSpace: vi.fn(),
     emitAddSpaceFilter: vi.fn(),
+    emitRemoveSpaceFilter: vi.fn(),
 } as unknown as RoomConnection;
 
 const defaultPropertiesToSync = ["x", "y", "z"];
 const signal = new AbortController().signal;
+
+function createSpaceUser(overrides: Partial<SpaceUser> & Pick<SpaceUser, "spaceUserId">): SpaceUser {
+    return {
+        spaceUserId: overrides.spaceUserId,
+        name: overrides.name ?? "",
+        playUri: overrides.playUri ?? "",
+        color: overrides.color ?? "",
+        characterTextures: overrides.characterTextures ?? [],
+        isLogged: overrides.isLogged ?? false,
+        availabilityStatus: overrides.availabilityStatus ?? 0,
+        roomName: overrides.roomName,
+        visitCardUrl: overrides.visitCardUrl,
+        tags: overrides.tags ?? [],
+        cameraState: overrides.cameraState ?? false,
+        microphoneState: overrides.microphoneState ?? false,
+        screenSharingState: overrides.screenSharingState ?? false,
+        megaphoneState: overrides.megaphoneState ?? false,
+        jitsiParticipantId: overrides.jitsiParticipantId,
+        uuid: overrides.uuid ?? "",
+        chatID: overrides.chatID,
+        showVoiceIndicator: overrides.showVoiceIndicator ?? false,
+        attendeesState: overrides.attendeesState ?? false,
+    };
+}
 
 describe("Space test", () => {
     beforeAll(() => {
@@ -134,6 +161,12 @@ describe("Space test", () => {
 
     afterAll(() => {
         vi.restoreAllMocks();
+    });
+
+    afterEach(() => {
+        recordingStore.reset();
+        vi.useRealTimers();
+        vi.clearAllMocks();
     });
 
     it("should return a error when pass a empty string as spaceName", async () => {
@@ -221,6 +254,150 @@ describe("Space test", () => {
 
         expect(mockRoomConnection.emitLeaveSpace).toHaveBeenLastCalledWith(spaceName);
     });
+
+    it("should resolve waitForSpaceUser immediately when the user already exists", async () => {
+        const space = await Space.create(
+            "space-name",
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            signal,
+            {
+                metadata: new Map<string, unknown>(),
+            }
+        );
+        const addedUser = space.addUser(
+            createSpaceUser({
+                spaceUserId: "alice-id",
+                name: "Alice",
+            })
+        );
+
+        await expect(space.waitForSpaceUser("alice-id", 5_000)).resolves.toBe(addedUser);
+    });
+
+    it("should resolve waitForSpaceUser when the user joins later", async () => {
+        const space = await Space.create(
+            "space-name",
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            signal,
+            {
+                metadata: new Map<string, unknown>(),
+            }
+        );
+
+        const userPromise = space.waitForSpaceUser("alice-id", 5_000);
+        const addedUser = space.addUser(
+            createSpaceUser({
+                spaceUserId: "alice-id",
+                name: "Alice",
+            })
+        );
+
+        await expect(userPromise).resolves.toBe(addedUser);
+    });
+
+    it("should reject waitForSpaceUser when the user does not join before timeout", async () => {
+        vi.useFakeTimers();
+        const space = await Space.create(
+            "space-name",
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            signal,
+            {
+                metadata: new Map<string, unknown>(),
+            }
+        );
+
+        const userPromise = expect(space.waitForSpaceUser("missing-user", 5_000)).rejects.toBeInstanceOf(TimeoutError);
+
+        await vi.advanceTimersByTimeAsync(5_000);
+
+        await userPromise;
+    });
+    it("should show a named recording toast immediately when the recorder is already known", async () => {
+        const space = await Space.create(
+            "space-name",
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            signal,
+            {
+                metadata: new Map<string, unknown>(),
+            }
+        );
+        space.addUser(
+            createSpaceUser({
+                spaceUserId: "alice-id",
+                name: "Alice",
+            })
+        );
+        const showInfoPopupSpy = vi.spyOn(recordingStore, "showInfoPopup");
+        const showGenericInfoPopupSpy = vi.spyOn(recordingStore, "showGenericInfoPopup");
+
+        space.setMetadata(
+            new Map<string, unknown>([
+                [
+                    "recording",
+                    {
+                        recording: true,
+                        recorder: "alice-id",
+                    },
+                ],
+            ])
+        );
+
+        expect(showInfoPopupSpy).toHaveBeenCalledWith("Alice");
+        expect(showGenericInfoPopupSpy).not.toHaveBeenCalled();
+    });
+
+    it("should show a generic recording toast after timeout and not upgrade it later", async () => {
+        vi.useFakeTimers();
+        const space = await Space.create(
+            "space-name",
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            signal,
+            {
+                metadata: new Map<string, unknown>(),
+            }
+        );
+        const showInfoPopupSpy = vi.spyOn(recordingStore, "showInfoPopup");
+        const showGenericInfoPopupSpy = vi.spyOn(recordingStore, "showGenericInfoPopup");
+
+        space.setMetadata(
+            new Map<string, unknown>([
+                [
+                    "recording",
+                    {
+                        recording: true,
+                        recorder: "alice-id",
+                    },
+                ],
+            ])
+        );
+
+        await vi.advanceTimersByTimeAsync(5_000);
+
+        expect(showGenericInfoPopupSpy).toHaveBeenCalledTimes(1);
+        showInfoPopupSpy.mockClear();
+
+        space.addUser(
+            createSpaceUser({
+                spaceUserId: "alice-id",
+                name: "Alice",
+            })
+        );
+
+        await Promise.resolve();
+
+        expect(showInfoPopupSpy).not.toHaveBeenCalled();
+    });
+
     it("should add metadata when key is not in metadata map", async () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();

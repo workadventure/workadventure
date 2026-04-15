@@ -991,6 +991,54 @@ export class Space implements SpaceInterface {
         return this._users;
     }
 
+    public waitForSpaceUser(spaceUserId: SpaceUser["spaceUserId"], timeoutMs: number): Promise<SpaceUserExtended> {
+        const existingUser = this.getSpaceUserBySpaceUserId(spaceUserId);
+        if (existingUser) {
+            return Promise.resolve(existingUser);
+        }
+
+        return new Promise<SpaceUserExtended>((resolve, reject) => {
+            let settled = false;
+            const subscriptions: Subscription[] = [];
+
+            const finalize = (callback: () => void) => {
+                if (settled) {
+                    return;
+                }
+
+                settled = true;
+                if (timeout) {
+                    clearTimeout(timeout);
+                }
+                subscriptions.forEach((subscription) => subscription.unsubscribe());
+                callback();
+            };
+
+            const resolveIfMatches = (user: SpaceUserExtended) => {
+                if (user.spaceUserId !== spaceUserId) {
+                    return;
+                }
+
+                finalize(() => resolve(user));
+            };
+
+            subscriptions.push(this.observeUserJoined.subscribe((user) => resolveIfMatches(user)));
+            subscriptions.push(this.observeUserUpdated.subscribe((event) => resolveIfMatches(event.newUser)));
+
+            const timeout = setTimeout(() => {
+                finalize(() =>
+                    reject(new TimeoutError(`Timed out waiting for user "${spaceUserId}" in space "${this.name}"`))
+                );
+            }, timeoutMs);
+
+            const currentUser = this.getSpaceUserBySpaceUserId(spaceUserId);
+            if (currentUser) {
+                finalize(() => resolve(currentUser));
+                return;
+            }
+        });
+    }
+
     public isVideoSpace(): boolean {
         return this._propertiesToSync.some((prop) =>
             ["cameraState", "microphoneState", "screenSharingState"].includes(prop)

@@ -1,5 +1,5 @@
-import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import Map from "./utils/map";
 
 import { getPage } from "./utils/auth";
@@ -11,28 +11,18 @@ import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import Megaphone from "./utils/map-editor/megaphone";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
+import {
+    clickRecordingSpacePickerAction,
+    closeRecordingCompletedToast,
+    deleteAllRecordings,
+    expectRecordingSpacePickerAction,
+    openRecordingSpacePicker,
+    waitForDualRecordingStopControls,
+    waitForMegaphoneToBeStreaming,
+    waitForRecordingToAppear,
+} from "./utils/recording";
 
 test.setTimeout(240_000);
-
-async function waitForRecordingToAppear(page: Page, index: number, maxRetries = 10) {
-    for (let i = 0; i < maxRetries; i++) {
-        let retry = false;
-        try {
-            await expect(page.getByTestId("recording-item-0")).toBeVisible({ timeout: 5000 });
-        } catch {
-            // If this fails, nothing to do, we will retry
-            retry = true;
-        }
-
-        if (!retry) {
-            break;
-        }
-
-        // eslint-disable-next-line playwright/no-wait-for-timeout
-        await page.waitForTimeout(6000);
-        await page.getByRole("button", { name: "Refresh" }).click();
-    }
-}
 
 async function openMegaphoneSettings(page: Page) {
     const configureMyRoomButton = page.locator(
@@ -76,26 +66,7 @@ test.describe("Recording test", () => {
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
         await Map.teleportToPosition(page, 0, 0);
 
-        //TODO : delete all existing recordings
-        await page.getByTestId("apps-button").click();
-
-        // Ensure list view so delete buttons are directly visible (no need to open actions panel)
-        await page.evaluate(() => localStorage.setItem("wa-recordings-view-mode", "list"));
-        await page.getByTestId("recordingButton-list").click();
-
-        while (
-            // eslint-disable-next-line playwright/no-conditional-expect,playwright/missing-playwright-await
-            await expect(page.getByTestId("recording-item-0"))
-                .toBeVisible({ timeout: 3000 })
-                .then(() => true)
-                .catch(() => false)
-        ) {
-            await page.getByTestId("recording-delete-0").click();
-            await expect(page.getByText("Recording deleted successfully")).toBeVisible();
-            await expect(page.getByText("Recording deleted successfully")).toBeHidden();
-        }
-
-        await page.getByTestId("close-recording-modal").click();
+        await deleteAllRecordings(page);
 
         // Second browser
         await using page2 = await getPage(browser, "Bob", Map.url("empty"));
@@ -113,7 +84,7 @@ test.describe("Recording test", () => {
 
         await expect(page.getByTestId("recordingButton-stop")).toBeEnabled();
 
-        await expect(page2.getByTestId("recordingButton-stop")).toBeDisabled();
+        await expect(page2.getByTestId("recordingButton-start")).toBeDisabled();
 
         await page.getByTestId("recordingButton-stop").click();
 
@@ -217,6 +188,85 @@ test.describe("Recording test", () => {
         await expect(page.getByTestId("recordingButton-start")).toBeVisible();
         // The member (with the "member" tag) should now see the recording button
         await expect(page2.getByTestId("recordingButton-start")).toBeVisible();
+
+        await page.close();
+        await page2.close();
+        await page2.context().close();
+        await page.context().close();
+    });
+
+    test("Recording can run in megaphone and discussion spaces at the same time @oidc", async ({
+        browser,
+        request,
+    }) => {
+        await resetWamMaps(request);
+
+        // Admin1: megaphone broadcaster + map config
+        await using broadcaster = await getPage(browser, "Admin1", Map.url("empty"));
+        await Map.teleportToPosition(broadcaster, 4 * 32, 0);
+        await deleteAllRecordings(broadcaster);
+
+        await Menu.openMapEditor(broadcaster);
+        await MapEditor.openConfigureMyRoom(broadcaster);
+        await ConfigureMyRoom.selectMegaphoneItemInCMR(broadcaster);
+        await Megaphone.toggleMegaphone(broadcaster);
+        await Megaphone.isMegaphoneEnabled(broadcaster);
+        // Megaphone recording is off by default; enable it like "Megaphone recording permissions update without reload…".
+        await Megaphone.toggleMegaphoneRecording(broadcaster);
+        await Megaphone.megaphoneSave(broadcaster);
+        await Megaphone.isCorrectlySaved(broadcaster);
+        await Menu.closeMapEditorConfigureMyRoomPopUp(broadcaster);
+
+        await Menu.clickSendGlobalMessage(broadcaster);
+        await Menu.clickStartLiveMessage(broadcaster);
+        await Menu.clickStartMegaphone(broadcaster);
+        await waitForMegaphoneToBeStreaming(broadcaster);
+
+        // Admin2: records both spaces; Bob: visible tile so megaphone space is active
+        await using recorder = await getPage(browser, "Admin2", Map.url("empty"));
+        await Map.teleportToPosition(recorder, 4 * 32, 0);
+
+        await using participant = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(participant, 4 * 32, 0);
+
+        await expect(recorder.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 30_000 });
+        await expect(recorder.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 30_000 });
+
+        await openRecordingSpacePicker(recorder, "start");
+        await expectRecordingSpacePickerAction(recorder, "megaphone", "start");
+        await expectRecordingSpacePickerAction(recorder, "discussion", "start");
+        await clickRecordingSpacePickerAction(recorder, "megaphone", "start");
+
+        await openRecordingSpacePicker(recorder, "stop");
+        await clickRecordingSpacePickerAction(recorder, "discussion", "start");
+
+        await waitForDualRecordingStopControls(recorder);
+
+        // Allow the recording pipeline time to produce media for both spaces before stopping.
+        await recorder.waitForTimeout(5000);
+
+        await openRecordingSpacePicker(recorder, "stop");
+        await expectRecordingSpacePickerAction(recorder, "megaphone", "stop");
+        await expectRecordingSpacePickerAction(recorder, "discussion", "stop");
+
+        await clickRecordingSpacePickerAction(recorder, "discussion", "stop");
+        await closeRecordingCompletedToast(recorder);
+
+        await openRecordingSpacePicker(recorder, "stop");
+        await expectRecordingSpacePickerAction(recorder, "megaphone", "stop");
+        await clickRecordingSpacePickerAction(recorder, "megaphone", "stop");
+
+        await expect(recorder.getByTestId("recording-completed-modal")).toBeVisible();
+        await recorder.getByTestId("recording-completed-modal-open-recordings-list-button").click();
+
+        await waitForRecordingToAppear(recorder, 1);
+        await expect(recorder.getByTestId("recording-item-0")).toBeVisible();
+        await expect(recorder.getByTestId("recording-item-1")).toBeVisible();
+
+        await recorder.close();
+        await participant.close();
+        await participant.context().close();
+        await recorder.context().close();
     });
 
     test("Megaphone recording permissions update without reload and respect tags @oidc", async ({
@@ -281,8 +331,8 @@ test.describe("Recording test", () => {
         await expect(adminListener.getByTestId("recording-space-picker")).toBeVisible();
         await expect(adminListener.getByText("Record megaphone")).toBeVisible();
         await expect(adminListener.getByText("Record discussion")).toBeVisible();
-        await expect(adminListener.getByTestId("recording-space-option-0")).toBeVisible();
-        await expect(adminListener.getByTestId("recording-space-option-1")).toBeVisible();
+        await expect(adminListener.getByTestId("recording-space-row-megaphone")).toBeVisible();
+        await expect(adminListener.getByTestId("recording-space-row-discussion")).toBeVisible();
         await adminListener.getByTestId("recordingButton-start").click();
         await expect(adminListener.getByTestId("recording-space-picker")).toBeHidden();
 
@@ -311,5 +361,10 @@ test.describe("Recording test", () => {
         await expect(adminListener.getByTestId("recordingButton-start")).toBeVisible();
         await expect(memberListener.getByTestId("recordingButton-start")).toBeVisible();
         await expect(memberListener.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible();
+
+        await adminListener.close();
+        await memberListener.close();
+        await memberListener.context().close();
+        await adminListener.context().close();
     });
 });

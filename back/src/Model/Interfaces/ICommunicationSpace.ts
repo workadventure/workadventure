@@ -5,6 +5,7 @@ export type ICommunicationSpace = Pick<
     | "getAllUsers"
     | "getUsersInFilter"
     | "getUsersToNotify"
+    | "getRecordingState"
     | "dispatchPrivateEvent"
     | "dispatchPublicEvent"
     | "getSpaceName"

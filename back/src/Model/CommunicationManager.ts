@@ -129,6 +129,10 @@ export class CommunicationManager implements ICommunicationManager {
             new TransitionPolicy(MAX_USERS_FOR_WEBRTC, new LivekitAvailabilityService(), this._recordingManager);
     }
 
+    public getRecordingState(): { isRecording: boolean; recorder: string | null } {
+        return this._recordingManager.getRecordingState();
+    }
+
     public async handleUserAdded(user: SpaceUser): Promise<void> {
         this._recordingManager.handleAddUser(user);
         this.userRegistry.addUser(user);
