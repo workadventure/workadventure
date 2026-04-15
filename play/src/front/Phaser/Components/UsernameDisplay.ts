@@ -1,4 +1,5 @@
 import { AvailabilityStatus } from "@workadventure/messages";
+import { StringUtils } from "../../Utils/StringUtils";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import { MegaphoneIcon } from "./MegaphoneIcon";
 import { PlayerStatusDot } from "./PlayerStatusDot";
@@ -15,17 +16,13 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     private readonly statusDot: PlayerStatusDot;
     private readonly megaphoneIcon: MegaphoneIcon;
 
-    constructor(
-        scene: Phaser.Scene,
-        x: number,
-        y: number,
-        playerName: string,
-        playerNameFontSize: number,
-        outlineColor: number | undefined
-    ) {
+    constructor(scene: Phaser.Scene, x: number, y: number, playerName: string, outlineColor: number | undefined) {
         super(scene, x, y);
         this.playerName = playerName;
-        this.playerNameFontSize = playerNameFontSize;
+
+        // Todo: Replace the font family with a better one
+        // Use larger font size for non-Latin characters (Arabic, CJK, etc.) for better readability
+        this.playerNameFontSize = StringUtils.containsNonLatinCharacters(playerName) ? 11 : 8;
         this.playerNameOutlineColor = outlineColor;
         this.playerNameTextureKey = this.createPlayerNameTexture(outlineColor);
 

@@ -17,7 +17,7 @@ import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { waScaleManager } from "../Services/WaScaleManager";
-import { StringUtils } from "../../Utils/StringUtils";
+
 import { UsernameDisplay } from "../Components/UsernameDisplay";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
@@ -162,18 +162,8 @@ export abstract class Character extends Container implements OutlineableInterfac
                 return;
             }
 
-            // Todo: Replace the font family with a better one
-            // Use larger font size for non-Latin characters (Arabic, CJK, etc.) for better readability
-            const playerNameFontSize = StringUtils.containsNonLatinCharacters(name) ? 11 : 8;
             const playerNameOutlineColor = get(this.outlineColorStore);
-            this.usernameDisplay = new UsernameDisplay(
-                scene,
-                0,
-                playerNameY,
-                this.playerName,
-                playerNameFontSize,
-                playerNameOutlineColor
-            );
+            this.usernameDisplay = new UsernameDisplay(scene, 0, playerNameY, this.playerName, playerNameOutlineColor);
             this.usernameDisplay.setScale(this.getSpriteScale(waScaleManager.zoomModifier));
             this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true, true);
             this.add(this.usernameDisplay);
