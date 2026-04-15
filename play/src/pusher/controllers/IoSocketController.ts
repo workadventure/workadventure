@@ -1017,6 +1017,44 @@ export class IoSocketController {
                                             }
                                             break;
                                         }
+                                        case "startRecordingQuery": {
+                                            const localSpaceName =
+                                                message.message.queryMessage.query.startRecordingQuery.spaceName;
+                                            const worldSpaceName = `${socket.getUserData().world}.${localSpaceName}`;
+
+                                            await socketManager.handleStartRecording(socket, worldSpaceName, {
+                                                signal: abortController.signal,
+                                            });
+
+                                            answerMessage.answer = {
+                                                $case: "startRecordingAnswer",
+                                                startRecordingAnswer: {},
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            socket
+                                                .getUserData()
+                                                .queryAbortControllers.delete(message.message.queryMessage.id);
+                                            break;
+                                        }
+                                        case "stopRecordingQuery": {
+                                            const localSpaceName =
+                                                message.message.queryMessage.query.stopRecordingQuery.spaceName;
+                                            const worldSpaceName = `${socket.getUserData().world}.${localSpaceName}`;
+
+                                            await socketManager.handleStopRecording(socket, worldSpaceName, {
+                                                signal: abortController.signal,
+                                            });
+
+                                            answerMessage.answer = {
+                                                $case: "stopRecordingAnswer",
+                                                stopRecordingAnswer: {},
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            socket
+                                                .getUserData()
+                                                .queryAbortControllers.delete(message.message.queryMessage.id);
+                                            break;
+                                        }
                                         case "joinSpaceQuery": {
                                             const localSpaceName =
                                                 message.message.queryMessage.query.joinSpaceQuery.spaceName;

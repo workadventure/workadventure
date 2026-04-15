@@ -1,7 +1,8 @@
 import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
+import type { ManagedRecordingState } from "../RecordingManager";
 
 export interface ICommunicationManager {
-    getRecordingState(): { isRecording: boolean; recorder: string | null };
+    getRecordingState(): ManagedRecordingState;
     handleUserAdded(user: SpaceUser): Promise<void>;
     handleUserDeleted(user: SpaceUser): Promise<void>;
     handleUserUpdated(user: SpaceUser): Promise<void>;

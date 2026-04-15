@@ -259,57 +259,74 @@ export class SpacePeerManager {
 
             // Read enableSounds from WAM file settings (default to true if not specified)
             const enableSounds = gameManager.getCurrentGameScene().wamFile?.settings?.recording?.enableSounds ?? true;
+            const currentRecordingState = get(this._recordingStore).recordingsBySpace[spaceName];
+            const previousStatus = currentRecordingState?.status ?? "idle";
 
-            if (!recording.data.recording) {
+            if (recording.data.status === "idle") {
                 this.cancelPendingRecorderNameResolution(spaceName);
-                const currentRecordingState = get(this._recordingStore);
-                const recordingForCurrentSpace = currentRecordingState.recordingsBySpace[spaceName];
-                const wasRecorder = recordingForCurrentSpace?.isCurrentUserRecorder ?? false;
-                this._recordingStore.stopRecord(spaceName);
-                // If the user was not the recorder, play the recording complete notification
-                // The recorder will have complete popup shown when the recording is stopped
-                if (recordingForCurrentSpace && !wasRecorder) {
+                this._recordingStore.setRecordingState(spaceName, "idle", false, null, null);
+                this._recordingStore.syncInfoPopup();
+
+                if (
+                    currentRecordingState &&
+                    (previousStatus === "recording" || previousStatus === "stopping") &&
+                    !currentRecordingState.isCurrentUserRecorder
+                ) {
                     // Play notification that the recording is complete
                     this._notificationPlayingStore.playNotification(
                         get(LL).recording.notification.recordingComplete(),
                         "recording-stop"
                     );
                 }
-                // Play sound only if enableSounds is true (default to true if not specified)
-                if (enableSounds) {
-                    this.playRecordingStopSound();
+
+                if (currentRecordingState && (previousStatus === "recording" || previousStatus === "stopping")) {
+                    if (currentRecordingState.isCurrentUserRecorder) {
+                        this._recordingStore.showCompletedPopup();
+                    }
+                    if (enableSounds) {
+                        this.playRecordingStopSound();
+                    }
                 }
+
                 return;
             }
 
-            this.cancelPendingRecorderNameResolution(spaceName);
+            if (recording.data.status !== "recording") {
+                this.cancelPendingRecorderNameResolution(spaceName);
+            }
+
             const isRecorder = recording.data.recorder === this.space.mySpaceUserId;
             const recorderSpaceUserId = recording.data.recorder ?? null;
             const recorderName = this.getRecorderName(recorderSpaceUserId);
-            const shouldShowNamedInfoPopup = this.shouldShowRecorderInfoPopup(
+
+            this._recordingStore.setRecordingState(
                 spaceName,
+                recording.data.status,
                 isRecorder,
                 recorderSpaceUserId,
                 recorderName
             );
 
-            this._recordingStore.startRecord(spaceName, isRecorder, recorderSpaceUserId, recorderName);
-            // If the user is the recorder, play the recording in progress notification
-            // The user will see the recording in progress popup when the recording is started
-            if (isRecorder) {
-                // Play notification that the user is recording
-                this._notificationPlayingStore.playNotification(
-                    get(LL).recording.notification.recordingIsInProgress(),
-                    "recording-start"
-                );
-            } else if (recorderName === null) {
-                this.resolveRecorderNameWithTimeout(spaceName, recorderSpaceUserId);
-            } else if (shouldShowNamedInfoPopup) {
-                this._recordingStore.showInfoPopup(recorderName);
-            }
-            // Play sound only if enableSounds is true (default to true if not specified)
-            if (enableSounds) {
-                this.playRecordingStartSound();
+            const enteredConfirmedRecording =
+                recording.data.status === "recording" &&
+                previousStatus !== "recording" &&
+                previousStatus !== "stopping";
+
+            if (enteredConfirmedRecording) {
+                if (isRecorder) {
+                    this._notificationPlayingStore.playNotification(
+                        get(LL).recording.notification.recordingIsInProgress(),
+                        "recording-start"
+                    );
+                } else if (recorderName === null) {
+                    this.resolveRecorderNameWithTimeout(spaceName, recorderSpaceUserId);
+                } else {
+                    this._recordingStore.showInfoPopup(recorderName);
+                }
+
+                if (enableSounds) {
+                    this.playRecordingStartSound();
+                }
             }
         });
     }
@@ -348,7 +365,7 @@ export class SpacePeerManager {
                     return;
                 }
 
-                if (this.shouldShowRecorderInfoPopup(spaceName, false, recorderSpaceUserId, resolvedRecorderName)) {
+                if (this.shouldShowRecorderInfoPopup(spaceName, recorderSpaceUserId, resolvedRecorderName)) {
                     this._recordingStore.showInfoPopup(resolvedRecorderName);
                 }
                 this._recordingStore.setRecorderName(spaceName, recorderSpaceUserId, resolvedRecorderName);
@@ -398,19 +415,18 @@ export class SpacePeerManager {
 
     private shouldShowRecorderInfoPopup(
         spaceName: string,
-        isCurrentUserRecorder: boolean,
         recorderSpaceUserId: string | null,
         recorderName: string | null
     ): boolean {
-        if (isCurrentUserRecorder || recorderName === null) {
+        if (recorderName === null) {
             return false;
         }
 
         const currentRecordingState = get(this._recordingStore).recordingsBySpace[spaceName];
         return (
-            !currentRecordingState ||
-            currentRecordingState.isCurrentUserRecorder !== isCurrentUserRecorder ||
-            currentRecordingState.recorderSpaceUserId !== recorderSpaceUserId ||
+            currentRecordingState?.status === "recording" &&
+            !currentRecordingState.isCurrentUserRecorder &&
+            currentRecordingState.recorderSpaceUserId === recorderSpaceUserId &&
             currentRecordingState.recorderName !== recorderName
         );
     }
@@ -419,6 +435,7 @@ export class SpacePeerManager {
         const currentRecordingState = get(this._recordingStore).recordingsBySpace[spaceName];
         if (
             currentRecordingState &&
+            currentRecordingState.status === "recording" &&
             !currentRecordingState.isCurrentUserRecorder &&
             currentRecordingState.recorderSpaceUserId === recorderSpaceUserId &&
             currentRecordingState.recorderName === null

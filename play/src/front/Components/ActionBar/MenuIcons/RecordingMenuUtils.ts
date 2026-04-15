@@ -45,7 +45,7 @@ function getSpaceLiveRecordingState(space: SpaceInterface, recordingState: Recor
     const storeEntry = recordingState.recordingsBySpace[space.getName()];
     if (storeEntry) {
         return {
-            isRecording: true,
+            status: storeEntry.status,
             isCurrentUserRecorder: storeEntry.isCurrentUserRecorder,
             recorderName: getRecorderDisplayName(space, storeEntry.recorderSpaceUserId, storeEntry.recorderName),
             recorderSpaceUserId: storeEntry.recorderSpaceUserId,
@@ -53,9 +53,9 @@ function getSpaceLiveRecordingState(space: SpaceInterface, recordingState: Recor
     }
 
     const recordingMetadata = recordingSchema.safeParse(space.getMetadata().get("recording"));
-    if (!recordingMetadata.success || !recordingMetadata.data.recording) {
+    if (!recordingMetadata.success || recordingMetadata.data.status === "idle") {
         return {
-            isRecording: false,
+            status: "idle" as const,
             isCurrentUserRecorder: false,
             recorderName: null,
             recorderSpaceUserId: null,
@@ -65,8 +65,8 @@ function getSpaceLiveRecordingState(space: SpaceInterface, recordingState: Recor
     const recorderSpaceUserId = recordingMetadata.data.recorder ?? null;
 
     return {
-        isRecording: true,
-        isCurrentUserRecorder: false,
+        status: recordingMetadata.data.status,
+        isCurrentUserRecorder: recorderSpaceUserId === space.mySpaceUserId,
         recorderName: getRecorderDisplayName(space, recorderSpaceUserId, null),
         recorderSpaceUserId,
     };
@@ -116,7 +116,33 @@ export function getRecordingSpaceRows(
                 };
             }
 
-            if (liveRecordingState.isRecording) {
+            if (liveRecordingState.status === "starting") {
+                return {
+                    action: null,
+                    disabled: true,
+                    kind,
+                    recorderName: liveRecordingState.recorderName,
+                    recorderSpaceUserId: liveRecordingState.recorderSpaceUserId,
+                    space,
+                    spaceName,
+                    status: "starting" as const,
+                };
+            }
+
+            if (liveRecordingState.status === "stopping") {
+                return {
+                    action: null,
+                    disabled: true,
+                    kind,
+                    recorderName: liveRecordingState.recorderName,
+                    recorderSpaceUserId: liveRecordingState.recorderSpaceUserId,
+                    space,
+                    spaceName,
+                    status: "stopping" as const,
+                };
+            }
+
+            if (liveRecordingState.status === "recording") {
                 const isCurrentUserRecorder =
                     liveRecordingState.isCurrentUserRecorder || isCurrentUserRecorderFromMetadata;
                 return {
@@ -216,9 +242,13 @@ export interface RecordingMenuState {
 function computeRecordingButtonState(
     isLogged: boolean,
     actionableRows: RecordingSpaceRow[],
-    hasOwnRecording: boolean
+    hasOwnRecording: boolean,
+    hasPendingRequest: boolean
 ): "disabled" | "normal" | "active" {
     if (!isLogged) {
+        return "disabled";
+    }
+    if (hasPendingRequest) {
         return "disabled";
     }
     if (actionableRows.length > 0) {
@@ -261,7 +291,12 @@ export function createRecordingMenuStateStore(
         return {
             actionMode,
             actionableRows,
-            buttonState: computeRecordingButtonState(isUserLoggedIn, actionableRows, hasOwnRecording),
+            buttonState: computeRecordingButtonState(
+                isUserLoggedIn,
+                actionableRows,
+                hasOwnRecording,
+                hasPendingRequest
+            ),
             currentRows,
             directRow,
             hasActionableStart,

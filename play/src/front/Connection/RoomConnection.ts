@@ -63,6 +63,8 @@ import type {
     UploadFileMessage,
     MapStorageJwtAnswer,
     DeleteRecordingAnswer,
+    StartRecordingAnswer,
+    StopRecordingAnswer,
     PrivateEventPusherToFront,
     InitSpaceUsersMessage,
     NonUndefinedFields,
@@ -137,6 +139,7 @@ import { ConnectionClosedError } from "./ConnectionClosedError";
 
 // This must be greater than RoomManager's PING_INTERVAL
 const manualPingDelay = 100_000;
+const recordingQueryTimeoutMs = 60_000;
 
 export class RoomConnection implements RoomConnection {
     private static websocketFactory: null | ((url: string, protocols?: string[]) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -1814,6 +1817,46 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.deleteRecordingAnswer;
+    }
+
+    public async startRecording(spaceName: string): Promise<StartRecordingAnswer> {
+        const answer = await this.query(
+            {
+                $case: "startRecordingQuery",
+                startRecordingQuery: {
+                    spaceName,
+                },
+            },
+            {
+                timeout: recordingQueryTimeoutMs,
+            }
+        );
+
+        if (answer.$case !== "startRecordingAnswer") {
+            throw new Error("Unexpected answer");
+        }
+
+        return answer.startRecordingAnswer;
+    }
+
+    public async stopRecording(spaceName: string): Promise<StopRecordingAnswer> {
+        const answer = await this.query(
+            {
+                $case: "stopRecordingQuery",
+                stopRecordingQuery: {
+                    spaceName,
+                },
+            },
+            {
+                timeout: recordingQueryTimeoutMs,
+            }
+        );
+
+        if (answer.$case !== "stopRecordingAnswer") {
+            throw new Error("Unexpected answer");
+        }
+
+        return answer.stopRecordingAnswer;
     }
 
     public async getOauthRefreshToken(

@@ -7,7 +7,7 @@ import type { ICommunicationState } from "./Interfaces/ICommunicationState";
 import { CommunicationType } from "./Types/CommunicationTypes";
 import { WebRTCState } from "./States/WebRTCState";
 import { VoidState } from "./States/VoidState";
-import type { IRecordingManager } from "./RecordingManager";
+import type { IRecordingManager, ManagedRecordingState } from "./RecordingManager";
 import { RecordingManager } from "./RecordingManager";
 import { UserRegistry } from "./Services/UserRegistry";
 import { TransitionPolicy } from "./Policies/TransitionPolicy";
@@ -129,7 +129,7 @@ export class CommunicationManager implements ICommunicationManager {
             new TransitionPolicy(MAX_USERS_FOR_WEBRTC, new LivekitAvailabilityService(), this._recordingManager);
     }
 
-    public getRecordingState(): { isRecording: boolean; recorder: string | null } {
+    public getRecordingState(): ManagedRecordingState {
         return this._recordingManager.getRecordingState();
     }
 

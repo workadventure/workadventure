@@ -399,6 +399,14 @@ export class Space implements SpaceInterface {
         this._connection.emitUpdateSpaceMetadata(this.name, Object.fromEntries(metadata.entries()));
     }
 
+    public async startRecording(): Promise<void> {
+        await this._connection.startRecording(this.name);
+    }
+
+    public async stopRecording(): Promise<void> {
+        await this._connection.stopRecording(this.name);
+    }
+
     public observePublicEvent<K extends keyof PublicEventsObservables>(
         key: K
     ): NonNullable<PublicEventsObservables[K]> {
@@ -439,7 +447,7 @@ export class Space implements SpaceInterface {
             return;
         }
 
-        this._isRecordingStore.set(recording.data.recording);
+        this._isRecordingStore.set(recording.data.status !== "idle");
     }
 
     /**

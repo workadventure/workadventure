@@ -12,6 +12,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import RecordingSpacePicker from "../../PopUp/Recording/RecordingSpacePicker.svelte";
+    import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import type { RecordingMenuState, RecordingSpaceRow } from "./RecordingMenuUtils";
     import { IconAlertTriangle } from "@wa-icons";
 
@@ -26,31 +27,33 @@
         closeFloatingUi = undefined;
     }
 
-    function applyRecordingAction(row: RecordingSpaceRow): void {
+    async function applyRecordingAction(row: RecordingSpaceRow): Promise<void> {
         if (!row.action) {
             return;
         }
 
         closeSpacePicker();
 
-        if (row.action === "start") {
-            analyticsClient.recordingStart();
-            recordingStore.setRequestState(row.spaceName, "starting");
-        } else {
-            analyticsClient.recordingStop();
-            recordingStore.setRequestState(row.spaceName, "stopping");
-        }
+        const requestState = row.action === "start" ? "starting" : "stopping";
+        recordingStore.setRequestState(row.spaceName, requestState);
 
-        row.space.emitUpdateSpaceMetadata(
-            new Map([
-                [
-                    "recording",
-                    {
-                        recording: row.action === "start",
-                    },
-                ],
-            ])
-        );
+        try {
+            if (row.action === "start") {
+                analyticsClient.recordingStart();
+                await row.space.startRecording();
+            } else {
+                analyticsClient.recordingStop();
+                await row.space.stopRecording();
+            }
+        } catch (error) {
+            recordingStore.clearRequestState(row.spaceName);
+            console.error(`Failed to ${row.action} recording`, error);
+            notificationPlayingStore.playNotification(
+                row.action === "start"
+                    ? get(LL).recording.notification.startFailedNotification()
+                    : get(LL).recording.notification.stopFailedNotification()
+            );
+        }
     }
 
     function openSpacePicker(): void {
@@ -69,7 +72,9 @@
             {
                 rowsStore: derived(recordingMenuState, ($state) => $state.currentRows),
                 onSelect: (row: RecordingSpaceRow) => {
-                    applyRecordingAction(row);
+                    applyRecordingAction(row).catch((error) => {
+                        console.error(`Failed to apply recording action`, error);
+                    });
                 },
                 onClose: closeSpacePicker,
             },
@@ -81,7 +86,7 @@
         );
     }
 
-    function requestRecording(): void {
+    async function requestRecording(): Promise<void> {
         const state = get(recordingMenuState);
 
         if (state.actionableRows.length === 0) {
@@ -90,7 +95,7 @@
         }
 
         if (state.directRow) {
-            applyRecordingAction(state.directRow);
+            await applyRecordingAction(state.directRow);
             return;
         }
 
@@ -104,11 +109,15 @@
 
 <ActionBarButton
     on:click={() => {
-        requestRecording();
+        requestRecording().catch((error) => {
+            console.error(`Failed to request recording`, error);
+        });
     }}
     classList="group/btn-recording"
     tooltipTitle={$recordingMenuState.hasOwnRecording
         ? $LL.recording.actionbar.title.stop()
+        : $recordingMenuState.hasPendingRequest
+        ? $LL.recording.actionbar.title.inProgress()
         : $recordingMenuState.hasActionableStart
         ? $LL.recording.actionbar.title.start()
         : $recordingMenuState.hasOtherRecording
@@ -137,6 +146,13 @@
             {:else if !$recordingMenuState.hasOwnRecording && recording?.buttonState === "disabled" && recording?.disabledReason}
                 <div class="text-xs italic opacity-80">
                     {recording.disabledReason}
+                </div>
+            {:else if $recordingMenuState.hasPendingRequest}
+                <div class="text-sm text-white px-2 py-1 flex flex-row gap-2 items-center">
+                    <div class="bg-red-500 rounded-full w-4 h-4 max-w-4 max-h-4 animate-pulse" />
+                    <div class="text-xs italic opacity-80">
+                        {$LL.recording.actionbar.desc.inProgress()}
+                    </div>
                 </div>
             {:else if $recordingMenuState.actionableRows.some((row) => row.action === "start")}
                 <div class="text-sm text-whitepx-2 py-1">

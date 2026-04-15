@@ -12,7 +12,7 @@ function createUser(spaceUserId: string): SpaceUser {
 }
 
 describe("LivekitCommunicationStrategy", () => {
-    it("stops recording through the server path when the last streaming user leaves", async () => {
+    it("stops recording through the server path when the last streaming user leaves",async () => {
         const dispatchPrivateEvent = vi.fn();
         const stopRecordingByServer = vi.fn().mockResolvedValue(undefined);
 
@@ -20,12 +20,12 @@ describe("LivekitCommunicationStrategy", () => {
             getAllUsers: () => [],
             getUsersInFilter: () => [],
             getUsersToNotify: () => [],
-            getRecordingState: () => ({ isRecording: true, recorder: "recorder-1" }),
+            getRecordingState: () => ({ isRecording: true, recorder: "recorder-1", status: "recording" }),
             dispatchPrivateEvent,
             dispatchPublicEvent: vi.fn(),
             getSpaceName: () => "test-space",
             getPropertiesToSync: () => [],
-            updateMetadata: vi.fn().mockResolvedValue(undefined),
+            publishMetadata: vi.fn(),
             stopRecordingByServer,
             getUser: vi.fn(),
         };
@@ -64,12 +64,12 @@ describe("LivekitCommunicationStrategy", () => {
             getAllUsers: () => [],
             getUsersInFilter: () => [],
             getUsersToNotify: () => [],
-            getRecordingState: () => ({ isRecording: true, recorder: "recorder-1" }),
+            getRecordingState: () => ({ isRecording: true, recorder: "recorder-1", status: "recording" }),
             dispatchPrivateEvent: vi.fn(),
             dispatchPublicEvent: vi.fn(),
             getSpaceName: () => "test-space",
             getPropertiesToSync: () => [],
-            updateMetadata: vi.fn().mockResolvedValue(undefined),
+            publishMetadata: vi.fn(),
             stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
             getUser: vi.fn(),
         };
