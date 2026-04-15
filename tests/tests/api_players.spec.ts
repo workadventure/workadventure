@@ -535,10 +535,10 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         );
 
         // Ouvrir le Site A dans le premier onglet
-        page.locator(".siteA-page1");
+        //page.locator(".siteA-page1");
 
         // Ouvrir le Site B dans le deuxième onglet
-        page.locator(".siteB-page1");
+        //page.locator(".siteB-page1");
         // await page.frameLocator('iframe[name="cowebsite-frame"]').locator('text=Site B Page 1').waitFor();
 
         //Switching tabs and pages
