@@ -11,6 +11,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantListPlaceholder: "Lista de participantes",
     participantSendMessage: "Enviar un mensaje",
     participantInviteUser: "Invitar a un usuario",
+    participantExitFullscreen: "Salir de pantalla completa",
     profil: "Editar tu nombre",
     startScreenSharing: "Iniciar compartir pantalla",
     stopScreenSharing: "Detener compartir pantalla",
