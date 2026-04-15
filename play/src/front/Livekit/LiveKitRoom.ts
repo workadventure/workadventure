@@ -425,6 +425,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
             await this.localParticipant.publishTrack(this.localScreenSharingVideoTrack, screenSharePublishOptions);
         } else if (this.localScreenSharingVideoTrack.mediaStreamTrack.id === screenShareVideoTrack.id) {
+            // Note: this cannot really happen as we never pause the upstream. We unpublish the track instead.
             if (this.localScreenSharingVideoTrack.isUpstreamPaused) {
                 await this.localScreenSharingVideoTrack.resumeUpstream();
             }
@@ -446,6 +447,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     source: Track.Source.ScreenShareAudio,
                 });
             } else if (this.localScreenSharingAudioTrack.mediaStreamTrack.id === screenShareAudioTrack.id) {
+                // Note: this cannot really happen as we never pause the upstream. We unpublish the track instead.
                 if (this.localScreenSharingAudioTrack.isUpstreamPaused) {
                     await this.localScreenSharingAudioTrack.resumeUpstream();
                 }
@@ -470,30 +472,34 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
 
-        // Unpublish both video and audio screen share tracks
-        await Promise.all(
-            Array.from(this.localParticipant.trackPublications.values())
-                .filter(
-                    (publication) =>
-                        publication.track &&
-                        (publication.source === Track.Source.ScreenShare ||
-                            publication.source === Track.Source.ScreenShareAudio)
-                )
-                .map(async (publication) => {
-                    const track = publication.track;
-                    if (track) {
-                        // Note: for some reason, unpublishing / publishing a new track causes memory leaks.
-                        // Instead, we just pause the upstream of the track when unpublishing, and "replaceTrack" when publishing a new one.
-                        // await this.localParticipant?.unpublishTrack(track, false);
-                        await track.pauseUpstream();
-                    }
-                })
-        );
+        const localParticipant = this.localParticipant;
 
-        // Note: we don't clear local track references because of the memory leak issue mentioned above.
-        // We need to keep them to be able to replace the tracks when publishing a new screen share.
-        //this.localScreenSharingVideoTrack = undefined;
-        //this.localScreenSharingAudioTrack = undefined;
+        // Unpublish both video and audio screen share tracks
+        await Promise.all([
+            (async (): Promise<void> => {
+                if (this.localScreenSharingVideoTrack) {
+                    // Note: for some reason, unpublishing / publishing a new track causes memory leaks.
+                    await localParticipant.unpublishTrack(this.localScreenSharingVideoTrack, false);
+                    // We previously tried to just pause the upstream and "replaceTrack" when publishing a new one,
+                    // but this is causing issues with the egress CompositeRoom (that shows black boxes for paused streams)
+                    // await this.localScreenSharingVideoTrack.pauseUpstream();
+                }
+            })(),
+            (async (): Promise<void> => {
+                if (this.localScreenSharingAudioTrack) {
+                    // Note: for some reason, unpublishing / publishing a new track causes memory leaks.
+                    await localParticipant.unpublishTrack(this.localScreenSharingAudioTrack, false);
+                    // We previously tried to just pause the upstream and "replaceTrack" when publishing a new one,
+                    // but this is causing issues with the egress CompositeRoom (that shows black boxes for paused streams)
+                    // await this.localScreenSharingAudioTrack.pauseUpstream();
+                }
+            })(),
+        ]);
+
+        // Note: if we ever use "pauseUpstream" again instead of unpublishTrack, we should comment the clear of local track references
+        // because of the memory leak issue mentioned above. We need to keep them to be able to replace the tracks when publishing a new screen share.
+        this.localScreenSharingVideoTrack = undefined;
+        this.localScreenSharingAudioTrack = undefined;
     }
 
     /**
