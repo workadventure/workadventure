@@ -30,7 +30,6 @@ import RenderTexture = Phaser.GameObjects.RenderTexture;
 
 const playerNameY = -16;
 const interactiveRadius = 25;
-const DEFAULT_PLAYER_NAME_OUTLINE_COLOR = "#14304C";
 
 export const CHARACTER_BODY_WIDTH = 16;
 export const CHARACTER_BODY_HEIGHT = 16;
@@ -40,12 +39,8 @@ export const CHARACTER_BODY_OFFSET_Y = 8;
 export const PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX = "playtext-mediadevice-";
 
 export abstract class Character extends Container implements OutlineableInterface {
-    private static nextPlayerNameTextureId = 0;
     private bubble: RenderTexture | null | DOMElement = null;
     private usernameDisplay: UsernameDisplay | undefined;
-    private playerNameTextureKey: string | undefined;
-    private playerNameFontSize: number | undefined;
-    private playerNameOutlineColor: number | undefined;
     private readonly talkIcon: TalkIcon;
     protected readonly speakerIcon: SpeakerIcon;
     private availabilityStatus: AvailabilityStatusType = AvailabilityStatus.ONLINE;
@@ -169,17 +164,23 @@ export abstract class Character extends Container implements OutlineableInterfac
 
             // Todo: Replace the font family with a better one
             // Use larger font size for non-Latin characters (Arabic, CJK, etc.) for better readability
-            this.playerNameFontSize = StringUtils.containsNonLatinCharacters(name) ? 11 : 8;
-            this.playerNameOutlineColor = get(this.outlineColorStore);
-            this.playerNameTextureKey = this.createPlayerNameTexture(this.playerNameOutlineColor);
-            this.usernameDisplay = new UsernameDisplay(scene, 0, playerNameY, this.playerNameTextureKey);
+            const playerNameFontSize = StringUtils.containsNonLatinCharacters(name) ? 11 : 8;
+            const playerNameOutlineColor = get(this.outlineColorStore);
+            this.usernameDisplay = new UsernameDisplay(
+                scene,
+                0,
+                playerNameY,
+                this.playerName,
+                playerNameFontSize,
+                playerNameOutlineColor
+            );
             this.usernameDisplay.setScale(this.getSpriteScale(waScaleManager.zoomModifier));
-            this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true);
-            this.usernameDisplay.showMegaphone(this.availabilityStatus === AvailabilityStatus.SPEAKER, true);
+            this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true, true);
             this.add(this.usernameDisplay);
 
             this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
-                this.updatePlayerNameTexture(color);
+                this.usernameDisplay?.setPlayerNameOutlineColor(color);
+                this.scene.markDirty();
             });
             this.scene.markDirty();
         }, 0);
@@ -321,8 +322,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         if (availabilityStatus !== AvailabilityStatus.UNCHANGED) {
             this.availabilityStatus = availabilityStatus;
         }
-        this.usernameDisplay?.setAvailabilityStatus(availabilityStatus, instant);
-        this.usernameDisplay?.showMegaphone(this.availabilityStatus === AvailabilityStatus.SPEAKER, false);
+        this.usernameDisplay?.setAvailabilityStatus(availabilityStatus, instant, false);
     }
 
     public syncPlayerNameZoom(zoomModifier: number): void {
@@ -449,9 +449,6 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.scene.sys.updateList.remove(sprite);
             }
         }
-        if (this.playerNameTextureKey && this.scene.textures.exists(this.playerNameTextureKey)) {
-            this.scene.textures.remove(this.playerNameTextureKey);
-        }
         this.texturePromise?.cancel();
         this.list.forEach((objectContaining) => objectContaining.destroy());
         this.outlineColorStoreUnsubscribe?.();
@@ -559,72 +556,6 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.destroyEmote();
             },
         });
-    }
-
-    private createPlayerNameTexture(outlineColor: number | undefined): string {
-        const textureKey = `player-name-${Character.nextPlayerNameTextureId++}`;
-        const fontSize = this.playerNameFontSize ?? 8;
-        const dynamicOutlineColor =
-            outlineColor === undefined ? undefined : `#${outlineColor.toString(16).padStart(6, "0")}`;
-        const strokeThickness = 2;
-        const outlineThickness = 2;
-
-        const measurementCanvas = document.createElement("canvas");
-        const measurementContext = measurementCanvas.getContext("2d");
-        if (!measurementContext) {
-            throw new Error("Could not create canvas context for player name texture");
-        }
-        measurementContext.font = `${fontSize}px "Press Start 2P"`;
-        const measuredWidth = measurementContext.measureText(this.playerName).width;
-        const fullOutlineThickness = strokeThickness + outlineThickness * 2;
-        const textureWidth = Math.max(1, Math.ceil(measuredWidth + fullOutlineThickness * 2));
-        const textureHeight = Math.max(1, Math.ceil(fontSize + fullOutlineThickness * 2));
-
-        const texture = this.scene.textures.createCanvas(textureKey, textureWidth, textureHeight);
-        if (!texture) {
-            throw new Error("Could not create texture for player name");
-        }
-
-        const context = texture.getContext();
-        context.clearRect(0, 0, textureWidth, textureHeight);
-        context.font = `${fontSize}px "Press Start 2P"`;
-        context.textAlign = "center";
-        context.textBaseline = "middle";
-        context.lineJoin = "round";
-
-        if (dynamicOutlineColor) {
-            context.lineWidth = fullOutlineThickness;
-            context.strokeStyle = dynamicOutlineColor;
-            context.strokeText(this.playerName, textureWidth / 2, textureHeight / 2);
-        }
-
-        context.lineWidth = strokeThickness;
-        context.strokeStyle = DEFAULT_PLAYER_NAME_OUTLINE_COLOR;
-        context.fillStyle = "#ffffff";
-        context.strokeText(this.playerName, textureWidth / 2, textureHeight / 2);
-        context.fillText(this.playerName, textureWidth / 2, textureHeight / 2);
-        texture.refresh();
-
-        return textureKey;
-    }
-
-    private updatePlayerNameTexture(color: number | undefined) {
-        if (!this.usernameDisplay || this.playerNameOutlineColor === color) {
-            return;
-        }
-        this.playerNameOutlineColor = color;
-
-        const nextTextureKey = this.createPlayerNameTexture(color);
-        const previousTextureKey = this.playerNameTextureKey;
-        this.playerNameTextureKey = nextTextureKey;
-        this.usernameDisplay.setPlayerNameTexture(nextTextureKey);
-
-        if (previousTextureKey && this.scene.textures.exists(previousTextureKey)) {
-            this.scene.textures.remove(previousTextureKey);
-        }
-
-        this.usernameDisplay.setScale(this.getSpriteScale(waScaleManager.zoomModifier));
-        this.scene.markDirty();
     }
 
     private cancelPreviousEmote() {

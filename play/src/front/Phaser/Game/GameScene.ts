@@ -830,7 +830,6 @@ export class GameScene extends DirtyScene {
         this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
 
         biggestAvailableAreaStore.recompute();
-        this.cameraManager.on(CameraManagerEvent.CameraUpdate, this.syncPlayerNameZoomsOnCameraUpdate);
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
         this.syncPlayerNameZooms();
         if (ENABLE_MAP_EDITOR) {
