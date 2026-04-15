@@ -219,6 +219,8 @@
                 class:translate-x-full={!highlightParticipantCamerasListOpen}
                 class:pointer-events-none={!highlightParticipantCamerasListOpen}
                 class:pointer-events-auto={highlightParticipantCamerasListOpen}
+                class:invisible={!highlightParticipantCamerasListOpen}
+                class:visible={highlightParticipantCamerasListOpen}
             >
                 <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-2 overflow-x-hidden">
                     {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}

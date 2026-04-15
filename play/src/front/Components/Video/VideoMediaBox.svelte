@@ -350,6 +350,7 @@
                         <button
                             class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
                             on:click={setFullScreen}
+                            data-testid="highlight-enter-fullscreen-button"
                         >
                             <IconArrowsMaximize font-size="20" class="text-white" />
                         </button>
