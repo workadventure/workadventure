@@ -42,10 +42,6 @@ test.describe("Personal desk spawn on connect @oidc @nomobile @nowebkit", () => 
         await expect(memberPage.getByTestId("claimPersonalAreaButton")).toBeVisible({ timeout: 15_000 });
         await memberPage.getByTestId("claimPersonalAreaButton").click();
 
-        // Before reloading, let's wait just a little bit for the map edition event to be sent.
-        // eslint-disable-next-line playwright/no-wait-for-timeout
-        await memberPage.waitForTimeout(2000);
-
         // Reload to simulate a new connection: user should spawn at start then walk to desk
         await memberPage.reload();
 
