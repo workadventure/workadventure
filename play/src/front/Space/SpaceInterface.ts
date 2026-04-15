@@ -132,6 +132,7 @@ export interface SpaceInterface {
     readonly filterType: FilterType;
     get mySpaceUserId(): SpaceUser["spaceUserId"];
     getUsers(options?: { signal: AbortSignal }): Promise<Map<string, Readonly<SpaceUserExtended>>>;
+    waitForSpaceUser(spaceUserId: SpaceUser["spaceUserId"], timeoutMs: number): Promise<SpaceUserExtended>;
 
     readonly destroyed: boolean;
 }

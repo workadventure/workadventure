@@ -27,27 +27,6 @@
         handleClose();
     }
 
-    function getStatusLabel(row: RecordingSpaceRow): string {
-        switch (row.status) {
-            case "starting":
-                return `${$LL.recording.actionbar.title.start()}...`;
-            case "stopping":
-                return `${$LL.recording.actionbar.title.stop()}...`;
-            case "recording-self":
-                return $LL.recording.actionbar.desc.yourRecordInProgress();
-            case "recording-other":
-                return row.recorderName
-                    ? $LL.recording.notification.recordingStarted({ name: row.recorderName })
-                    : $LL.notification.recordingStarted();
-            case "available":
-                return $LL.recording.actionbar.desc.advert();
-        }
-    }
-
-    function getActionLabel(row: RecordingSpaceRow): string {
-        return row.action === "stop" ? $LL.recording.actionbar.title.stop() : $LL.recording.actionbar.title.start();
-    }
-
     function getKindTestId(row: RecordingSpaceRow): string {
         return `recording-space-kind-${row.kind}`;
     }
@@ -80,7 +59,23 @@
                         ? $LL.recording.actionbar.spacePicker.megaphone()
                         : $LL.recording.actionbar.spacePicker.discussion()}
                 </span>
-                <span class="text-xs text-white/70">{getStatusLabel(row)}</span>
+                <span class="text-xs text-white/70">
+                    {#if row.status === "starting"}
+                        {$LL.recording.actionbar.title.start()}...
+                    {:else if row.status === "stopping"}
+                        {$LL.recording.actionbar.title.stop()}...
+                    {:else if row.status === "recording-self"}
+                        {$LL.recording.actionbar.desc.yourRecordInProgress()}
+                    {:else if row.status === "recording-other"}
+                        {#if row.recorderName}
+                            {$LL.recording.notification.recordingStarted({ name: row.recorderName })}
+                        {:else}
+                            {$LL.notification.recordingStarted()}
+                        {/if}
+                    {:else}
+                        {$LL.recording.actionbar.desc.advert()}
+                    {/if}
+                </span>
             </div>
 
             {#if row.action}
@@ -94,7 +89,9 @@
                     disabled={row.disabled}
                     on:click={() => handleSelect(row)}
                 >
-                    {getActionLabel(row)}
+                    {row.action === "stop"
+                        ? $LL.recording.actionbar.title.stop()
+                        : $LL.recording.actionbar.title.start()}
                 </button>
             {/if}
         </div>

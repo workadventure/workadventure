@@ -88,6 +88,37 @@ describe("RecordingMenuUtils", () => {
         expect(rows[0]?.action).toBeNull();
     });
 
+    it("prefers the live space user name over the cached recorder name and falls back safely", () => {
+        const liveNameSpace = createSpace("live-name-space", {
+            recorderNamesById: {
+                "alice-id": "Alice",
+            },
+        });
+        const fallbackNameSpace = createSpace("fallback-name-space");
+        const recordingState: RecordingState = {
+            recordingsBySpace: {
+                "live-name-space": {
+                    isCurrentUserRecorder: false,
+                    recorderName: "Cached Alice",
+                    recorderSpaceUserId: "alice-id",
+                },
+                "fallback-name-space": {
+                    isCurrentUserRecorder: false,
+                    recorderName: "Cached Bob",
+                    recorderSpaceUserId: "bob-id",
+                },
+            },
+            requestStatesBySpace: {},
+            isRecording: true,
+            isCurrentUserRecorder: false,
+        };
+
+        const rows = getRecordingSpaceRows([liveNameSpace, fallbackNameSpace], [], recordingState, false);
+
+        expect(rows.find((row) => row.spaceName === "live-name-space")?.recorderName).toBe("Alice");
+        expect(rows.find((row) => row.spaceName === "fallback-name-space")?.recorderName).toBe("Cached Bob");
+    });
+
     it("keeps the recording button visible when a space is recordable but start is currently disabled", () => {
         const discussionSpace = createSpace("discussion-space");
 

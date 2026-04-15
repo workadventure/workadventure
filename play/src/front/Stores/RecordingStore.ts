@@ -77,8 +77,6 @@ function createRecordingStore() {
             recorderSpaceUserId: string | null,
             recorderName: string | null
         ) {
-            let shouldShowInfoPopup = false;
-
             update((state) => {
                 const currentSpaceRecording = state.recordingsBySpace[spaceName];
                 const hasPendingRequest = spaceName in state.requestStatesBySpace;
@@ -96,13 +94,6 @@ function createRecordingStore() {
                 const nextRequestStatesBySpace = { ...state.requestStatesBySpace };
                 delete nextRequestStatesBySpace[spaceName];
 
-                shouldShowInfoPopup =
-                    !isCurrentUser &&
-                    recorderName !== null &&
-                    (!currentSpaceRecording ||
-                        currentSpaceRecording.recorderSpaceUserId !== recorderSpaceUserId ||
-                        currentSpaceRecording.recorderName !== recorderName);
-
                 return buildState(
                     {
                         ...state.recordingsBySpace,
@@ -115,14 +106,8 @@ function createRecordingStore() {
                     nextRequestStatesBySpace
                 );
             });
-
-            if (shouldShowInfoPopup) {
-                this.showInfoPopup(recorderName);
-            }
         },
         setRecorderName(spaceName: string, recorderSpaceUserId: string | null, recorderName: string) {
-            let shouldShowInfoPopup = false;
-
             update((state) => {
                 const currentSpaceRecording = state.recordingsBySpace[spaceName];
 
@@ -135,8 +120,6 @@ function createRecordingStore() {
                     return state;
                 }
 
-                shouldShowInfoPopup = true;
-
                 return buildState(
                     {
                         ...state.recordingsBySpace,
@@ -148,10 +131,6 @@ function createRecordingStore() {
                     state.requestStatesBySpace
                 );
             });
-
-            if (shouldShowInfoPopup) {
-                this.showInfoPopup(recorderName);
-            }
         },
         stopRecord(spaceName: string) {
             let didRemoveRecording = false;

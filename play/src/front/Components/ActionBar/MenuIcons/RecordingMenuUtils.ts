@@ -29,13 +29,25 @@ function isMegaphoneSpace(space: SpaceInterface): boolean {
     return space.getMetadata().get("isMegaphoneSpace") === true;
 }
 
+function getRecorderDisplayName(
+    space: SpaceInterface,
+    recorderSpaceUserId: string | null,
+    fallbackRecorderName: string | null
+): string | null {
+    if (!recorderSpaceUserId) {
+        return fallbackRecorderName;
+    }
+
+    return space.getSpaceUserBySpaceUserId(recorderSpaceUserId)?.name ?? fallbackRecorderName;
+}
+
 function getSpaceLiveRecordingState(space: SpaceInterface, recordingState: RecordingState) {
     const storeEntry = recordingState.recordingsBySpace[space.getName()];
     if (storeEntry) {
         return {
             isRecording: true,
             isCurrentUserRecorder: storeEntry.isCurrentUserRecorder,
-            recorderName: storeEntry.recorderName,
+            recorderName: getRecorderDisplayName(space, storeEntry.recorderSpaceUserId, storeEntry.recorderName),
             recorderSpaceUserId: storeEntry.recorderSpaceUserId,
         };
     }
@@ -55,7 +67,7 @@ function getSpaceLiveRecordingState(space: SpaceInterface, recordingState: Recor
     return {
         isRecording: true,
         isCurrentUserRecorder: false,
-        recorderName: recorderSpaceUserId ? space.getSpaceUserBySpaceUserId(recorderSpaceUserId)?.name ?? null : null,
+        recorderName: getRecorderDisplayName(space, recorderSpaceUserId, null),
         recorderSpaceUserId,
     };
 }
@@ -233,13 +245,9 @@ export function createRecordingMenuStateStore(
     const { canStartRecording, isUserLoggedIn, roomButtonState } = options;
 
     return derived([spaceRegistry.spacesEligibleForRecording, recordingStore], ([$eligibleSpaces, $recordingState]) => {
-        // Snapshot of every joined space from the registry. This derived only subscribes to
-        // `spacesEligibleForRecording` and `recordingStore`, so we do not react to registry-wide
-        // membership changes by themselves. We still need the full list here because
-        // `spacesEligibleForRecording` is only “spaces where we may start recording”; rows must also
-        // reflect ongoing or pending recordings in spaces where starting is not allowed (e.g. another
-        // user’s recording). Those updates are driven by `recordingStore`, so there is no separate
-        // derived on all spaces—each run reads `getAll()` once alongside the reactive inputs above.
+        // Snapshot of every joined space from the registry. `spacesEligibleForRecording` only answers
+        // “can start recording here”; the menu must still include joined spaces with active or pending
+        // recording state even when starting is not allowed there, so each run reads `getAll()` too.
         const allSpaces = spaceRegistry.getAll();
         const currentRows = getRecordingSpaceRows(allSpaces, $eligibleSpaces, $recordingState, canStartRecording);
         const actionableRows = getActionableRecordingRows(currentRows);
