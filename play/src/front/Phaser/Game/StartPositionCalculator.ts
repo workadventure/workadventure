@@ -2,8 +2,11 @@ import type { AreaData } from "@workadventure/map-editor";
 import { GameMapProperties } from "@workadventure/map-editor";
 import { MathUtils } from "@workadventure/math-utils";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+
 import type { PositionInterface } from "../../Connection/ConnexionModels";
+import { localUserStore } from "../../Connection/LocalUserStore";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
+
 export class StartPositionCalculator {
     private startPositionName: string;
 
@@ -87,6 +90,22 @@ export class StartPositionCalculator {
                 startPosition = this.getStartPositionFromTile(this.startPositionName);
                 if (startPosition) {
                     return startPosition;
+                }
+            }
+
+            // If no start position in the URL, let's look if we have a personal desk first
+            const uuid = localUserStore.getLocalUser()?.uuid;
+            if (uuid) {
+                const personalArea = this.gameMapFrontWrapper
+                    .getGameMap()
+                    .getWamFile()
+                    ?.getGameMapAreas()
+                    .findPersonalArea(uuid);
+                if (personalArea) {
+                    return {
+                        x: personalArea.x + personalArea.width * 0.5,
+                        y: personalArea.y + personalArea.height * 0.5,
+                    };
                 }
             }
 

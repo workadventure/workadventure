@@ -370,6 +370,15 @@ export class GameMapAreas {
         return personalAreaRightPropertyData.ownerId === userUUID;
     }
 
+    public findPersonalArea(userUUID: string): AreaData | undefined {
+        for (const area of this.areas.values()) {
+            if (this.isAreaOwner(area, userUUID)) {
+                return area;
+            }
+        }
+        return undefined;
+    }
+
     private isUserHasReadAccessOnAreaByTags(area: AreaData, userTags: string[]): boolean {
         const areaRights = this.getAreaRightPropertyData(area);
         if (areaRights === undefined) {
