@@ -14,3 +14,23 @@ export async function resetWamMaps(request: APIRequestContext) {
     });
     expect(uploadFile1.ok()).toBeTruthy();
 }
+
+export async function uploadMap(request: APIRequestContext, mapFile: string, path: string): Promise<void> {
+    const normalizedPath = path.startsWith("maps/") ? path : `maps/${path}`;
+    const mapPath = normalizedPath.endsWith(".wam") ? normalizedPath : `${normalizedPath}.wam`;
+    const mapFileName = mapPath.split("/").at(-1) ?? mapPath;
+    const uploadFile = await request.put(new URL(mapPath, map_storage_url).toString(), {
+        multipart: {
+            file: {
+                name: mapFileName,
+                mimeType: "application/json",
+                buffer: await fs.promises.readFile(mapFile),
+            },
+        },
+    });
+    expect(uploadFile.ok()).toBeTruthy();
+}
+
+export async function uploadEmptyMap(request: APIRequestContext, path: string): Promise<void> {
+    return uploadMap(request, "../map-storage/tests/assets/maps/empty.wam", path);
+}

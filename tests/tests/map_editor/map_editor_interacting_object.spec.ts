@@ -2,13 +2,15 @@ import { expect, test } from "@playwright/test";
 import Map from "../utils/map";
 import AreaEditor from "../utils/map-editor/areaEditor";
 import EntityEditor from "../utils/map-editor/entityEditor";
-import { resetWamMaps } from "../utils/map-editor/uploader";
+import { uploadEmptyMap } from "../utils/map-editor/uploader";
 import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import { map_storage_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
 import { dismissDoNotDisturbInfoToast } from "../utils/doNotDisturbInfoToast";
+
+const mapUrl = Map.url("mapEditorInteractingObject");
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -27,8 +29,8 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
     // https://github.com/element-hq/synapse/issues/19303 - skip webkit due to synapse v1.144.0 OIDC issues
     test("Success to interact with area @nowebkit", async ({ browser, request }) => {
         // Go to the map
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorInteractingObject");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         // Create area on the map for the test
         await Menu.openMapEditor(page);
@@ -53,8 +55,8 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         test.skip(browserName === "webkit", "WebKit click up does not work here");
 
         // Go to the map
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorInteractingObject");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         // Create entity on the map for the test
         await Menu.openMapEditor(page);
@@ -77,7 +79,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         await page.context().close();
 
         // Open new page
-        const newPage = await getPage(browser, "User1", Map.url("empty"));
+        const newPage = await getPage(browser, "User1", mapUrl);
         await Menu.waitForMapLoad(newPage);
 
         // The screen take one second to be recalculated, so we need to wait for it
@@ -105,8 +107,8 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         test.skip(browserName === "webkit", "WebKit click up does not work here");
 
         // Go to the map
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorInteractingObject");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         // Create entity on the map for the test
         await Menu.openMapEditor(page);
@@ -122,7 +124,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         await Menu.closeMapEditor(page);
 
         // // Refresh the page to see the entity
-        // await page.goto(Map.url("empty"));
+        // await page.goto(mapUrl);
         // // Wait for the map to be loaded
         // await Menu.waitForMapLoad(page);
 
@@ -144,7 +146,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         expect(iframeSrcE).toContain("ipsum-lorem");
 
         // Refresh the page to create area
-        await page.goto(Map.url("empty"));
+        await page.goto(mapUrl);
         // Wait for the map to be loaded
         await Menu.waitForMapLoad(page);
 

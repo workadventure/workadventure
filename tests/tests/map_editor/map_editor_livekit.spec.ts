@@ -1,13 +1,15 @@
 import { expect, test } from "@playwright/test";
 import Map from "../utils/map";
 import AreaEditor from "../utils/map-editor/areaEditor";
-import { resetWamMaps } from "../utils/map-editor/uploader";
+import { uploadEmptyMap } from "../utils/map-editor/uploader";
 import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import { evaluateScript } from "../utils/scripting";
 import { map_storage_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
+
+const mapUrl = Map.url("mapEditorLivekit");
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -26,8 +28,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Successfully send message in meeting area @nofirefox", async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorLivekit");
+        await using page = await getPage(browser, "Admin1", mapUrl);
         //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
         //await page.reload();
 
@@ -39,7 +41,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 3 * 32);
 
-        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+        await using page2 = await getPage(browser, "Admin2", mapUrl);
 
         await Map.teleportToPosition(page2, 4 * 32, 3 * 32);
 
@@ -63,8 +65,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         browser,
         request,
     }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorLivekit");
+        await using page = await getPage(browser, "Admin1", mapUrl);
         //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
         //await page.reload();
 
@@ -77,7 +79,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 3 * 32);
 
-        await using page2 = await getPage(browser, "Bob", Map.url("empty"));
+        await using page2 = await getPage(browser, "Bob", mapUrl);
 
         await Map.teleportToPosition(page2, 4 * 32, 3 * 32);
 
@@ -111,8 +113,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     test("Successfully enter and leave space very quickly @nofirefox", async ({ browser, request }) => {
         // This test is testing the query abort mechanism when entering/leaving a space very quickly
 
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorLivekit");
+        await using page = await getPage(browser, "Admin1", mapUrl);
         //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
         //await page.reload();
 
@@ -157,7 +159,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Map.teleportToPosition(page, 4 * 32, 3 * 32);
 
         // Now let's see if Bob can see Admin1 properly
-        await using page2 = await getPage(browser, "Bob", Map.url("empty"));
+        await using page2 = await getPage(browser, "Bob", mapUrl);
 
         await Map.teleportToPosition(page2, 4 * 32, 3 * 32);
 

@@ -5,6 +5,9 @@ import Menu from "./utils/menu";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
 import Map from "./utils/map";
+import { uploadEmptyMap } from "./utils/map-editor/uploader";
+
+const mapUrl = Map.url("iframeScript");
 
 test.describe("Iframe API @nowebkit", () => {
     test.beforeEach(async ({ page }) => {
@@ -38,8 +41,9 @@ test.describe("Iframe API @nowebkit", () => {
         expect(parameter).toEqual("bar");
     });
 
-    test("disable and enable map editor @oidc", async ({ browser }) => {
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+    test("disable and enable map editor @oidc", async ({ browser, request }) => {
+        await uploadEmptyMap(request, "iframeScript");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         // Create a script to evaluate function to disable map editor
         await evaluateScript(page, async () => {

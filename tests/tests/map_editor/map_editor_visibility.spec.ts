@@ -4,6 +4,9 @@ import Menu from "../utils/menu";
 import { map_storage_url, publicTestMapUrl } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
+import { uploadEmptyMap } from "../utils/map-editor/uploader";
+
+const mapUrl = Map.url("mapEditorVisibility");
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -34,7 +37,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Assert map explorer visible for guest", async ({ browser, request }) => {
-        await using page = await getPage(browser, "Alice", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorVisibility");
+        await using page = await getPage(browser, "Alice", mapUrl);
 
         // Open the map editor
         await Menu.openMapExplorer(page);

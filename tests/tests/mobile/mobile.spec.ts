@@ -4,6 +4,9 @@ import Map from "../utils/map";
 import { play_url, publicTestMapUrl } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
+import { uploadEmptyMap } from "../utils/map-editor/uploader";
+
+const mapUrl = Map.url("mobile");
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -14,8 +17,9 @@ test.describe("Mobile @nowebkit @nodesktop", () => {
     test.beforeEach(async ({ page, browserName }) => {
         test.skip(!isMobile(page) || browserName === "webkit", "Run only on mobile Chromium");
     });
-    test("Successfully bubble discussion with mobile device", async ({ browser }) => {
-        await using page = await getPage(browser, "Bob", Map.url("empty"));
+    test("Successfully bubble discussion with mobile device", async ({ browser, request }) => {
+        await uploadEmptyMap(request, "mobile");
+        await using page = await getPage(browser, "Bob", mapUrl);
 
         const positionToDiscuss = {
             x: 3 * 32,
@@ -31,7 +35,7 @@ test.describe("Mobile @nowebkit @nodesktop", () => {
         await Menu.closeMenu(page);
 
         // Second browser
-        const pageAlice = await getPage(browser, "Alice", Map.url("empty"));
+        const pageAlice = await getPage(browser, "Alice", mapUrl);
         await pageAlice.evaluate(() => localStorage.setItem("debug", "*"));
 
         // Move Alice and create a bubble with another user
@@ -47,7 +51,7 @@ test.describe("Mobile @nowebkit @nodesktop", () => {
         await pageAlice.locator("#cameras-container").locator("button.full-screen-button").nth(1).click();
 
         // Second browser
-        const pageJohn = await getPage(browser, "John", Map.url("empty"));
+        const pageJohn = await getPage(browser, "John", mapUrl);
         await pageJohn.evaluate(() => localStorage.setItem("debug", "*"));
 
         // Move John and create a bubble with another user

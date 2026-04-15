@@ -2,13 +2,15 @@ import { expect, test } from "@playwright/test";
 import Map from "../utils/map";
 import AreaEditor from "../utils/map-editor/areaEditor";
 import EntityEditor from "../utils/map-editor/entityEditor";
-import { resetWamMaps } from "../utils/map-editor/uploader";
+import { uploadEmptyMap } from "../utils/map-editor/uploader";
 import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import { map_storage_url, maps_test_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
 import { assertLogMessage, startRecordLogs } from "../utils/log";
+
+const mapUrl = Map.url("mapEditorOpenWebsite");
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -30,8 +32,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         browser,
         request,
     }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorOpenWebsite");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
@@ -80,8 +82,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
             "Skip Klaxoon test on forked PR because the secret env variable is not set",
         );
 
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorOpenWebsite");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
@@ -112,8 +114,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         browser,
         request,
     }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorOpenWebsite");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
@@ -209,8 +211,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Successfully set GoogleWorkspace's application entity in the map editor", async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorOpenWebsite");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         // open map editor
         await Menu.openMapEditor(page);
@@ -279,8 +281,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Successfully set Klaxoon's application entity in the map editor @local", async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorOpenWebsite");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         // open map editor
         await Menu.openMapEditor(page);

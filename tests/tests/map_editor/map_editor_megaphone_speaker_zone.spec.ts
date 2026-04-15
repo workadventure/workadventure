@@ -3,12 +3,14 @@ import Map from "../utils/map";
 import AreaEditor from "../utils/map-editor/areaEditor";
 import ConfigureMyRoom from "../utils/map-editor/configureMyRoom";
 import Megaphone from "../utils/map-editor/megaphone";
-import { resetWamMaps } from "../utils/map-editor/uploader";
+import { uploadEmptyMap } from "../utils/map-editor/uploader";
 import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import { map_storage_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
+
+const mapUrl = Map.url("mapEditorMegaphoneSpeakerZone");
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -27,13 +29,13 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Successfully set the megaphone feature", async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorMegaphoneSpeakerZone");
+        await using page = await getPage(browser, "Admin1", mapUrl);
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
         await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
         // Second browser
-        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+        await using page2 = await getPage(browser, "Admin2", mapUrl);
 
         // await Menu.openMenuAdmin(page);
         await Menu.openMapEditor(page);
@@ -98,13 +100,13 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Successfully set the megaphone feature with auditorium option", async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorMegaphoneSpeakerZone");
+        await using page = await getPage(browser, "Admin1", mapUrl);
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
         await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
         // Second browser
-        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+        await using page2 = await getPage(browser, "Admin2", mapUrl);
 
         // await Menu.openMenuAdmin(page);
         await Menu.openMapEditor(page);
@@ -173,8 +175,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
     test('Successfully set "SpeakerZone" in the map editor', async ({ browser, request }) => {
         // skip the test, speaker zone with Jitsi is deprecated
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorMegaphoneSpeakerZone");
+        await using page = await getPage(browser, "Admin1", mapUrl);
         //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
         //await page.reload();
 
@@ -196,7 +198,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect(page.locator("#cameras-container").getByText("You")).toBeVisible();
 
         // Second browser
-        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+        await using page2 = await getPage(browser, "Admin2", mapUrl);
 
         await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
 
@@ -232,8 +234,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         browser,
         request,
     }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorMegaphoneSpeakerZone");
+        await using page = await getPage(browser, "Admin1", mapUrl);
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
@@ -259,8 +261,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
     test('Successfully set "SpeakerZone" with chat in the map editor', async ({ browser, request }) => {
         // skip the test, speaker zone with Jitsi is deprecated
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorMegaphoneSpeakerZone");
+        await using page = await getPage(browser, "Admin1", mapUrl);
         //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
         //await page.reload();
 
@@ -283,7 +285,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect(page.locator("#cameras-container").getByText("You")).toBeVisible();
 
         // Second browser
-        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+        await using page2 = await getPage(browser, "Admin2", mapUrl);
 
         await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
 
@@ -329,8 +331,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test('Successfully set "SpeakerZone" with see attendees option in the map editor', async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorMegaphoneSpeakerZone");
+        await using page = await getPage(browser, "Admin1", mapUrl);
         //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
         //await page.reload();
 
@@ -353,7 +355,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect(page.locator("#cameras-container").getByText("You")).toBeVisible();
 
         // Second browser
-        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+        await using page2 = await getPage(browser, "Admin2", mapUrl);
 
         await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
 
@@ -365,7 +367,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect(page.locator("#cameras-container").getByText("Admin2")).toBeVisible({ timeout: 20_000 });
         await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(2);
 
-        await using page3 = await getPage(browser, "John", Map.url("empty"));
+        await using page3 = await getPage(browser, "John", mapUrl);
         await Map.teleportToPosition(page3, 4 * 32, 7 * 32);
 
         // Admin2 can only see Admin1
@@ -416,24 +418,24 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Megaphone auditorium mode with 5 participants", async ({ browser, request }) => {
-        await resetWamMaps(request);
+        await uploadEmptyMap(request, "mapEditorMegaphoneSpeakerZone");
 
         // Create 5 browser pages with different users (using available test users)
         // Available users: Alice, Bob, Eve, Mallory, Admin1, Admin2, Member1, UserMatrix, UserLogin1, John, UserMatrix2, User1
         // Position each participant in different corners of the map to avoid proximity bubbles
-        await using pageSpeaker = await getPage(browser, "Admin1", Map.url("empty"));
+        await using pageSpeaker = await getPage(browser, "Admin1", mapUrl);
         await Map.teleportToPosition(pageSpeaker, 2 * 32, 2 * 32); // Top-left area
 
-        await using pageListener1 = await getPage(browser, "Admin2", Map.url("empty"));
+        await using pageListener1 = await getPage(browser, "Admin2", mapUrl);
         await Map.teleportToPosition(pageListener1, 8 * 32, 2 * 32); // Top-right area
 
-        await using pageListener2 = await getPage(browser, "Alice", Map.url("empty"));
+        await using pageListener2 = await getPage(browser, "Alice", mapUrl);
         await Map.teleportToPosition(pageListener2, 2 * 32, 8 * 32); // Bottom-left area
 
-        await using pageListener3 = await getPage(browser, "Bob", Map.url("empty"));
+        await using pageListener3 = await getPage(browser, "Bob", mapUrl);
         await Map.teleportToPosition(pageListener3, 8 * 32, 8 * 32); // Bottom-right area
 
-        await using pageListener4 = await getPage(browser, "John", Map.url("empty"));
+        await using pageListener4 = await getPage(browser, "John", mapUrl);
         await Map.teleportToPosition(pageListener4, 5 * 32, 5 * 32); // Center area
 
         const listeners = [
@@ -515,7 +517,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // ============================================================
 
         // Create a new listener that joins after the megaphone session has started
-        await using pageLateListener = await getPage(browser, "Eve", Map.url("empty"));
+        await using pageLateListener = await getPage(browser, "Eve", mapUrl);
 
         // The late listener should see the megaphone button
         await Menu.isThereMegaphoneButton(pageLateListener);
@@ -644,8 +646,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
      * - When they leave the attendees zone completely, they should disconnect from the space
      */
     test("Successfully handle nested speaker zone inside listener zone", async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorMegaphoneSpeakerZone");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         // Open map editor and create zones
         await Menu.openMapEditor(page);
@@ -669,7 +671,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(page);
 
         // Second browser - this will be the listener/speaker that tests nested zones
-        await using page2 = await getPage(browser, "Bob", Map.url("empty"));
+        await using page2 = await getPage(browser, "Bob", mapUrl);
 
         // Step 1: Teleport page2 (Bob) to the listener zone (but outside the podium)
         // Position (2, 7) is inside the listener zone but outside the podium zone

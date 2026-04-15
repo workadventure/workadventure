@@ -1,12 +1,14 @@
 import { expect, test } from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
 import Map from "./utils/map";
-import { resetWamMaps } from "./utils/map-editor/uploader";
+import { uploadEmptyMap } from "./utils/map-editor/uploader";
 import menu from "./utils/menu";
 import mapeditor from "./utils/mapeditor";
 import areaEditor from "./utils/map-editor/areaEditor";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
+
+const mapUrl = Map.url("scriptingArea");
 
 test.describe("Scripting for Map editor @oidc @nomobile @nowebkit", () => {
     test.beforeEach(
@@ -21,8 +23,8 @@ test.describe("Scripting for Map editor @oidc @nomobile @nowebkit", () => {
         test.skip(browserName === "webkit", "WebKit has issues with camera/microphone");
     });
     test("Scripting Area onEnter & onLeave", async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "scriptingArea");
+        await using page = await getPage(browser, "Admin1", mapUrl);
         await menu.openMapEditor(page);
         await mapeditor.openAreaEditor(page);
         await areaEditor.drawArea(page, { x: 0, y: 7 * 32 * 1.5 }, { x: 5 * 32 * 1.5, y: 9 * 32 * 1.5 });

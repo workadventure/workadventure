@@ -8,13 +8,15 @@ import {
     expectWebRtcConnectionsCountToBe,
     expectLivekitRoomsCountToBe,
 } from "./utils/webRtc";
-import { resetWamMaps } from "./utils/map-editor/uploader";
+import { uploadEmptyMap } from "./utils/map-editor/uploader";
 import AreaEditor from "./utils/map-editor/areaEditor";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import Megaphone from "./utils/map-editor/megaphone";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
 import AreaLivekit from "./utils/AreaLivekit";
+
+const mapUrl = Map.url("livekit");
 
 test.setTimeout(240_000);
 
@@ -211,13 +213,13 @@ test.describe("Meeting actions test", () => {
     });
 
     test("Should create and join livekit room only when there is a speaker @oidc", async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "livekit");
+        await using page = await getPage(browser, "Admin1", mapUrl);
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
         await Map.teleportToPosition(page, 0, 0);
 
         // Second browser
-        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+        await using page2 = await getPage(browser, "Admin2", mapUrl);
         await Map.teleportToPosition(page2, 4 * 32, 0);
 
         await Menu.openMapEditor(page);
@@ -234,16 +236,16 @@ test.describe("Meeting actions test", () => {
         await Menu.closeMapEditorConfigureMyRoomPopUp(page);
 
         // Go to the empty map
-        await using userAlice = await getPage(browser, "Alice", Map.url("empty"));
+        await using userAlice = await getPage(browser, "Alice", mapUrl);
 
         // Move user Alice to the meeting area
         await Map.teleportToPosition(userAlice, 8 * 32, 0);
 
         // Create and position 4 additional users
-        await using userBob = await getPage(browser, "Bob", Map.url("empty"));
+        await using userBob = await getPage(browser, "Bob", mapUrl);
         await Map.teleportToPosition(userBob, 0, 8 * 32);
 
-        await using userEve = await getPage(browser, "Eve", Map.url("empty"));
+        await using userEve = await getPage(browser, "Eve", mapUrl);
         await Map.teleportToPosition(userEve, 0, 4 * 32);
 
         await Menu.clickSendGlobalMessage(page);
@@ -319,8 +321,8 @@ test.describe("Meeting actions test", () => {
         browser,
         request,
     }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "livekit");
+        await using page = await getPage(browser, "Admin1", mapUrl);
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
         await Map.teleportToPosition(page, 0, 0);
 
@@ -354,10 +356,10 @@ test.describe("Meeting actions test", () => {
     });
 
     test("Should handle rapid transitions between podium and audience zones @oidc", async ({ browser, request }) => {
-        await resetWamMaps(request);
+        await uploadEmptyMap(request, "livekit");
 
         // Admin creates the zones and will be used as a speaker
-        await using speakerAdmin = await getPage(browser, "Admin1", Map.url("empty"));
+        await using speakerAdmin = await getPage(browser, "Admin1", mapUrl);
         await Map.teleportToPosition(speakerAdmin, 10 * 32, 10 * 32); // Temp position outside zones
 
         // Create podium zone (speaker zone) - positioned at y: 2-4 tiles
@@ -388,20 +390,20 @@ test.describe("Meeting actions test", () => {
         await Map.teleportToPosition(speakerAdmin, 4 * 32, 3 * 32);
 
         // Speaker 2 (Alice) in podium zone - only 2 speakers total
-        await using speakerAlice = await getPage(browser, "Alice", Map.url("empty"));
+        await using speakerAlice = await getPage(browser, "Alice", mapUrl);
         await Map.teleportToPosition(speakerAlice, 5 * 32, 3 * 32); // In podium zone
 
         // Audience members (more than speakers to trigger LiveKit)
         // User in audience (Eve) - static
-        await using audienceEve = await getPage(browser, "Eve", Map.url("empty"));
+        await using audienceEve = await getPage(browser, "Eve", mapUrl);
         await Map.teleportToPosition(audienceEve, 4 * 32, 6 * 32); // In audience zone
 
         // User in audience (John) - static
-        await using audienceJohn = await getPage(browser, "John", Map.url("empty"));
+        await using audienceJohn = await getPage(browser, "John", mapUrl);
         await Map.teleportToPosition(audienceJohn, 5 * 32, 6 * 32); // In audience zone
 
         // User in audience (Mallory) - static
-        await using audienceMallory = await getPage(browser, "Mallory", Map.url("empty"));
+        await using audienceMallory = await getPage(browser, "Mallory", mapUrl);
         await Map.teleportToPosition(audienceMallory, 6 * 32, 6 * 32); // In audience zone
 
         // Verify speakers see each other
@@ -420,7 +422,7 @@ test.describe("Meeting actions test", () => {
         await expectLivekitConnectionsCountToBe(speakerAdmin, 1);
 
         // User who will rapidly switch between zones (Bob)
-        await using switchingUserPage = await getPage(browser, "Bob", Map.url("empty"));
+        await using switchingUserPage = await getPage(browser, "Bob", mapUrl);
 
         // Position in audience zone
         const audiencePosition = { x: 7 * 32, y: 6 * 32 };

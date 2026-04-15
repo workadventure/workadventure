@@ -5,12 +5,14 @@ import Map from "./utils/map";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
 
-import { resetWamMaps } from "./utils/map-editor/uploader";
+import { uploadEmptyMap } from "./utils/map-editor/uploader";
 
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import Megaphone from "./utils/map-editor/megaphone";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
+
+const mapUrl = Map.url("recording");
 
 test.setTimeout(240_000);
 
@@ -70,9 +72,9 @@ test.describe("Recording test", () => {
     );
 
     test("Recording should start and stop correctly @oidc", async ({ browser, request }) => {
-        await resetWamMaps(request);
+        await uploadEmptyMap(request, "recording");
         // Go to the empty map
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await using page = await getPage(browser, "Admin1", mapUrl);
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
         await Map.teleportToPosition(page, 0, 0);
 
@@ -98,7 +100,7 @@ test.describe("Recording test", () => {
         await page.getByTestId("close-recording-modal").click();
 
         // Second browser
-        await using page2 = await getPage(browser, "Bob", Map.url("empty"));
+        await using page2 = await getPage(browser, "Bob", mapUrl);
         await Map.teleportToPosition(page2, 0, 0);
 
         await expect(page.getByTestId("recordingButton-start")).toBeEnabled();
@@ -131,7 +133,7 @@ test.describe("Recording test", () => {
         await page.getByTestId("recordingButton-start").click();
 
         // Second browser
-        await using page3 = await getPage(browser, "Alice", Map.url("empty"));
+        await using page3 = await getPage(browser, "Alice", mapUrl);
         await Map.teleportToPosition(page3, 0, 0);
         // Wait for moving to the new position
         // eslint-disable-next-line playwright/no-wait-for-timeout
@@ -178,9 +180,9 @@ test.describe("Recording test", () => {
     });
 
     test("Recording configuration @oidc", async ({ browser, request }) => {
-        await resetWamMaps(request);
+        await uploadEmptyMap(request, "recording");
         // Go to the empty map
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await using page = await getPage(browser, "Admin1", mapUrl);
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
         await Map.teleportToPosition(page, 0, 0);
 
@@ -194,7 +196,7 @@ test.describe("Recording test", () => {
         await page.getByRole("button", { name: "Save" }).click();
 
         // Now, let's start a recording to see if the rights are correctly applied.
-        await using page2 = await getPage(browser, "Member1", Map.url("empty"));
+        await using page2 = await getPage(browser, "Member1", mapUrl);
         await Map.teleportToPosition(page2, 0, 0);
 
         // The admin can still see the recording button
@@ -223,12 +225,12 @@ test.describe("Recording test", () => {
         browser,
         request,
     }) => {
-        await resetWamMaps(request);
+        await uploadEmptyMap(request, "recording");
         const speakerPosition = { x: 4 * 32, y: 0 };
         const adminListenerFarPosition = { x: 30 * 32, y: 0 };
         const memberListenerFarPosition = { x: 30 * 32, y: 12 * 32 };
 
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await using page = await getPage(browser, "Admin1", mapUrl);
         await Map.teleportToPosition(page, speakerPosition.x, speakerPosition.y);
 
         await Menu.openMapEditor(page);
@@ -239,9 +241,9 @@ test.describe("Recording test", () => {
         await Megaphone.isMegaphoneEnabled(page);
         await saveMegaphoneSettings(page);
 
-        await using adminListener = await getPage(browser, "Admin2", Map.url("empty"));
+        await using adminListener = await getPage(browser, "Admin2", mapUrl);
         await Map.teleportToPosition(adminListener, adminListenerFarPosition.x, adminListenerFarPosition.y);
-        await using memberListener = await getPage(browser, "Member1", Map.url("empty"));
+        await using memberListener = await getPage(browser, "Member1", mapUrl);
         await Map.teleportToPosition(memberListener, memberListenerFarPosition.x, memberListenerFarPosition.y);
 
         // Start the megaphone and close the setup modal without stopping the stream.
