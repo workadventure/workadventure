@@ -3,15 +3,24 @@ import z from "zod";
 export const spaceMetadataValidator: Map<
     string,
     {
-        schema: z.ZodObject<z.ZodRawShape>;
+        schema: z.ZodType<unknown>;
         shouldSkipInitialValueFunction: (value: unknown) => boolean;
     }
 > = new Map();
 
-export const recordingSchema = z.object({
-    recording: z.boolean(),
-    recorder: z.string().optional().nullable(),
-});
+const recordingStatusSchema = z.enum(["idle", "starting", "recording", "stopping"]);
+
+export const recordingSchema = z
+    .object({
+        recording: z.boolean(),
+        recorder: z.string().optional().nullable(),
+        status: recordingStatusSchema.optional(),
+    })
+    .transform((value) => ({
+        recording: value.recording,
+        recorder: value.recorder ?? null,
+        status: value.status ?? (value.recording ? "recording" : "idle"),
+    }));
 
 export type recordingValidator = z.infer<typeof recordingSchema>;
 
@@ -22,6 +31,6 @@ spaceMetadataValidator.set("recording", {
         if (!result.success) {
             return true;
         }
-        return !result.data.recording;
+        return result.data.status === "idle";
     },
 });

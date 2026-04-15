@@ -118,6 +118,8 @@ const defaultRoomConnectionMock = {
     emitLeaveSpace: vi.fn(),
     emitAddSpaceFilter: vi.fn(),
     emitRemoveSpaceFilter: vi.fn(),
+    startRecording: vi.fn(),
+    stopRecording: vi.fn(),
 } as unknown as RoomConnection;
 
 const defaultPropertiesToSync = ["x", "y", "z"];
@@ -396,6 +398,57 @@ describe("Space test", () => {
         await Promise.resolve();
 
         expect(showInfoPopupSpy).not.toHaveBeenCalled();
+    });
+
+    it("should not show a recording toast while the recording is only starting", async () => {
+        const space = await Space.create(
+            "space-name",
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            signal,
+            {
+                metadata: new Map<string, unknown>(),
+            }
+        );
+
+        const showInfoPopupSpy = vi.spyOn(recordingStore, "showInfoPopup");
+        const showGenericInfoPopupSpy = vi.spyOn(recordingStore, "showGenericInfoPopup");
+
+        space.setMetadata(
+            new Map<string, unknown>([
+                [
+                    "recording",
+                    {
+                        recording: false,
+                        recorder: "alice-id",
+                        status: "starting",
+                    },
+                ],
+            ])
+        );
+
+        expect(showInfoPopupSpy).not.toHaveBeenCalled();
+        expect(showGenericInfoPopupSpy).not.toHaveBeenCalled();
+    });
+
+    it("should forward startRecording and stopRecording to the room connection", async () => {
+        const space = await Space.create(
+            "space-name",
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            signal,
+            {
+                metadata: new Map<string, unknown>(),
+            }
+        );
+
+        await space.startRecording();
+        await space.stopRecording();
+
+        expect(defaultRoomConnectionMock.startRecording).toHaveBeenCalledWith("space-name");
+        expect(defaultRoomConnectionMock.stopRecording).toHaveBeenCalledWith("space-name");
     });
 
     it("should add metadata when key is not in metadata map", async () => {

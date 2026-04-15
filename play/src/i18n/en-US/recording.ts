@@ -21,6 +21,8 @@ const recording: BaseTranslation = {
     notification: {
         deleteNotification: "Recording deleted successfully",
         deleteFailedNotification: "Failed to delete recording",
+        startFailedNotification: "Failed to start recording",
+        stopFailedNotification: "Failed to stop recording",
         recordingStarted: "{name} has started a recording.",
         downloadFailedNotification: "Failed to download recording",
         recordingComplete: "Recording complete",

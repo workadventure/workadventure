@@ -718,6 +718,10 @@ export class SocketManager {
                 case "enterChatRoomAreaQuery": {
                     break;
                 }
+                case "startRecordingQuery":
+                case "stopRecordingQuery": {
+                    throw new Error("Recording queries should be handled by the pusher");
+                }
                 default: {
                     const _exhaustiveCheck: never = queryCase;
                 }
@@ -1517,10 +1521,7 @@ export class SocketManager {
         }
 
         if (space) {
-            space.updateMetadata(isMetadata.data, updateSpaceMetadataMessage.senderId).catch((error) => {
-                console.error("Error updating metadata", error);
-                Sentry.captureException(error);
-            });
+            space.publishMetadata(isMetadata.data);
         }
     }
 
@@ -1692,7 +1693,7 @@ export class SocketManager {
         clientEventsEmitter.deleteSpaceSubject.next(space);
     }
 
-    handleSpaceQueryMessage(pusher: SpacesWatcher, spaceQueryMessage: SpaceQueryMessage) {
+    async handleSpaceQueryMessage(pusher: SpacesWatcher, spaceQueryMessage: SpaceQueryMessage) {
         const space = this.spaces.get(spaceQueryMessage.spaceName);
 
         if (!space) {
@@ -1706,7 +1707,7 @@ export class SocketManager {
         }
 
         try {
-            const answer = space.handleQuery(pusher, spaceQueryMessage);
+            const answer = await space.handleQuery(pusher, spaceQueryMessage);
             pusher.write({
                 message: {
                     $case: "spaceAnswerMessage",

@@ -204,20 +204,29 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             throw new Error("Sender socket not found");
         }
 
+        const processedMetadata: { [key: string]: unknown } = {};
+
         for (const key in metadata) {
-            metadata[key] = this._metadataProcessor.processMetadata(
+            const processedValue = this._metadataProcessor.processMetadata(
                 key,
                 metadata[key],
                 senderSocket.getUserData(),
                 senderId
             );
+            if (processedValue !== undefined) {
+                processedMetadata[key] = processedValue;
+            }
+        }
+
+        if (Object.keys(processedMetadata).length === 0) {
+            return;
         }
 
         this.forwardMessageToSpaceBack({
             $case: "updateSpaceMetadataPusherToBackMessage",
             updateSpaceMetadataPusherToBackMessage: {
                 spaceName: this._space.name,
-                metadata: JSON.stringify(metadata),
+                metadata: JSON.stringify(processedMetadata),
                 senderId,
             },
         });

@@ -32,6 +32,8 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitAddSpaceFilter"
     | "emitLeaveSpace"
     | "emitJoinSpace"
+    | "startRecording"
+    | "stopRecording"
     | "emitUpdateSpaceMetadata"
     | "emitUpdateSpaceUserMessage"
     | "spaceDestroyedMessage"
