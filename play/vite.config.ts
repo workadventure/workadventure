@@ -64,7 +64,7 @@ export default defineConfig(({ mode }) => {
         resolve: {
             alias: {
                 events: "events",
-                "@wa-icons": "./src/front/Components/Icons.ts",
+                "@wa-icons": new URL("./src/front/Components/Icons.ts", import.meta.url).pathname,
             },
         },
         test: {
