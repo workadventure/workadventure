@@ -243,7 +243,7 @@ test.describe("Meeting actions test @nomobile @nowebkit", () => {
 
         // Exit fullscreen
         await page.getByTestId("highlight-fullscreen-exit").click();
-        await expect(page.getByTestId("highlight-fullscreen-participant-list-panel")).toBeHidden({ timeout: 10_000 });
+        await expect(page.locator("#highlightFullScreenParticipantCamerasList")).toBeHidden({ timeout: 10_000 });
 
         await userBob.context().close();
         await page.context().close();
