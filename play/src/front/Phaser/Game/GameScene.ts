@@ -1181,7 +1181,6 @@ export class GameScene extends DirtyScene {
         this.isLiveStreamingUnsubscriber?.();
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
-        this.cameraManager?.off(CameraManagerEvent.CameraUpdate, this.syncPlayerNameZoomsOnCameraUpdate);
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this.gameMapPropertiesListener?.destroy();
