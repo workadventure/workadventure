@@ -312,13 +312,12 @@ describe("Space test", () => {
             }
         );
 
-        const userPromise = space.waitForSpaceUser("missing-user", 5_000);
+        const userPromise = expect(space.waitForSpaceUser("missing-user", 5_000)).rejects.toBeInstanceOf(TimeoutError);
 
         await vi.advanceTimersByTimeAsync(5_000);
 
-        await expect(userPromise).rejects.toBeInstanceOf(TimeoutError);
+        await userPromise;
     });
-
     it("should show a named recording toast immediately when the recorder is already known", async () => {
         const space = await Space.create(
             "space-name",
