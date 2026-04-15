@@ -2,12 +2,14 @@ import { expect, test } from "@playwright/test";
 import Map from "../utils/map";
 import AreaEditor from "../utils/map-editor/areaEditor";
 import EntityEditor from "../utils/map-editor/entityEditor";
-import { resetWamMaps } from "../utils/map-editor/uploader";
+import { uploadEmptyMap } from "../utils/map-editor/uploader";
 import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import { map_storage_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
+
+const mapUrl = Map.url("mapEditorSearchable");
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -26,8 +28,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Successfully set searchable feature for entity and zone", async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorSearchable");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         // Open the map editor
         await Menu.openMapEditor(page);

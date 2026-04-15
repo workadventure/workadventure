@@ -1,13 +1,15 @@
 import { expect, test } from "@playwright/test";
 import Map from "../utils/map";
 import AreaEditor from "../utils/map-editor/areaEditor";
-import { resetWamMaps } from "../utils/map-editor/uploader";
+import { uploadEmptyMap } from "../utils/map-editor/uploader";
 import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import { evaluateScript } from "../utils/scripting";
 import { map_storage_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
+
+const mapUrl = Map.url("mapEditorStartExit");
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -26,8 +28,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Successfully set start area in the map editor", async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorStartExit");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
@@ -40,8 +42,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Successfully set and working exit area in the map editor", async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorStartExit");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);

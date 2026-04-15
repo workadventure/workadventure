@@ -3,12 +3,14 @@ import * as path from "path";
 import { expect, test } from "@playwright/test";
 import Map from "../utils/map";
 import EntityEditor from "../utils/map-editor/entityEditor";
-import { resetWamMaps } from "../utils/map-editor/uploader";
+import { uploadEmptyMap } from "../utils/map-editor/uploader";
 import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import { map_storage_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
+
+const mapUrl = Map.url("mapEditorUploadEntities");
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -27,8 +29,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Successfully upload a custom entity", async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorUploadEntities");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         // open map editor
         await Menu.openMapEditor(page);
@@ -46,14 +48,14 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Successfully upload and use custom entity in the map", async ({ browser, request }) => {
-        await resetWamMaps(request);
+        await uploadEmptyMap(request, "mapEditorUploadEntities");
 
         // First browser + moved woka
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await using page = await getPage(browser, "Admin1", mapUrl);
         await Map.teleportToPosition(page, 0, 0);
 
         // Second browser
-        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+        await using page2 = await getPage(browser, "Admin2", mapUrl);
 
         // open map editor
         await page.bringToFront();
@@ -97,15 +99,15 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Successfully upload and use custom entity with odd size in the map", async ({ browser, request }) => {
-        await resetWamMaps(request);
+        await uploadEmptyMap(request, "mapEditorUploadEntities");
 
         // First browser + moved woka
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await using page = await getPage(browser, "Admin1", mapUrl);
         await Map.teleportToPosition(page, 0, 0);
 
         // Second browser
         const newBrowser = await browser.newContext();
-        await using page2 = await getPage(browser, "Admin1", Map.url("empty"));
+        await using page2 = await getPage(browser, "Admin1", mapUrl);
 
         // open map editor
         await page.bringToFront();
@@ -155,14 +157,14 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
     test("Successfully upload and edit asset name", async ({ browser, request }) => {
         // Init wam file
-        await resetWamMaps(request);
+        await uploadEmptyMap(request, "mapEditorUploadEntities");
 
         // First browser + moved woka
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await using page = await getPage(browser, "Admin1", mapUrl);
         await Map.teleportToPosition(page, 0, 0);
 
         // Second browser
-        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+        await using page2 = await getPage(browser, "Admin2", mapUrl);
 
         // open map editor on both pages
         await Menu.openMapEditor(page);
@@ -200,15 +202,15 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Successfully upload and remove custom entity", async ({ browser, request }) => {
-        await resetWamMaps(request);
+        await uploadEmptyMap(request, "mapEditorUploadEntities");
 
         // First browser + moved woka
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         await Map.teleportToPosition(page, 0, 0);
 
         // Second browser
-        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+        await using page2 = await getPage(browser, "Admin2", mapUrl);
 
         // open map editor on both pages
         await Menu.openMapEditor(page);
@@ -238,8 +240,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("drop PDF file onto canvas inside #game", async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorUploadEntities");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         // Prepare file
         const filePath = path.join(__dirname, "../assets/lorem-ipsum.pdf");

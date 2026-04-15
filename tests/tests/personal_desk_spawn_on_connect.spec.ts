@@ -1,10 +1,12 @@
 import { expect, test } from "@playwright/test";
 import Map from "./utils/map";
-import { resetWamMaps } from "./utils/map-editor/uploader";
+import { uploadEmptyMap } from "./utils/map-editor/uploader";
 import Menu from "./utils/menu";
 import AreaAccessRights from "./utils/areaAccessRights";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
+
+const mapUrl = Map.url("personalDeskSpawnOnConnect");
 
 test.setTimeout(240_000);
 test.describe("Personal desk spawn on connect @oidc @nomobile @nowebkit", () => {
@@ -22,12 +24,12 @@ test.describe("Personal desk spawn on connect @oidc @nomobile @nowebkit", () => 
         // Then: Member1 spawns at start, then automatically walks to their personal desk.
         // We assert: after reload and enough time, the user is inside their personal desk (button "Walk to my desk" is disabled).
 
-        await resetWamMaps(request);
+        await uploadEmptyMap(request, "personalDeskSpawnOnConnect");
 
         const areaCenterX = 4 * 32 * 1.5;
         const areaCenterY = 4 * 32 * 1.5;
 
-        await using adminPage = await getPage(browser, "Admin1", Map.url("empty"));
+        await using adminPage = await getPage(browser, "Admin1", mapUrl);
 
         await Menu.openMapEditor(adminPage);
         await AreaAccessRights.openAreaEditorAndAddPersonalAreaWithDynamicClaim(adminPage);
@@ -35,7 +37,7 @@ test.describe("Personal desk spawn on connect @oidc @nomobile @nowebkit", () => 
 
         await adminPage.context().close();
 
-        await using memberPage = await getPage(browser, "Member1", Map.url("empty"));
+        await using memberPage = await getPage(browser, "Member1", mapUrl);
 
         await Map.teleportToPosition(memberPage, areaCenterX, areaCenterY);
 

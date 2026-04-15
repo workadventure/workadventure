@@ -1,12 +1,14 @@
 import { test } from "@playwright/test";
 import Map from "../utils/map";
 import AreaEditor from "../utils/map-editor/areaEditor";
-import { resetWamMaps } from "../utils/map-editor/uploader";
+import { uploadEmptyMap } from "../utils/map-editor/uploader";
 import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import { map_storage_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
+
+const mapUrl = Map.url("mapEditorHighlight");
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -25,8 +27,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("highlight property", async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorHighlight");
+        await using page = await getPage(browser, "Admin1", mapUrl);
         // Open the map editor
         await Menu.openMapExplorer(page);
         await MapEditor.openAreaEditor(page);

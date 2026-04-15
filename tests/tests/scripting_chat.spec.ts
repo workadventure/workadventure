@@ -2,10 +2,12 @@ import { expect, test } from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
 import Chat from "./utils/chat";
 import Map from "./utils/map";
-import { resetWamMaps } from "./utils/map-editor/uploader";
+import { uploadEmptyMap } from "./utils/map-editor/uploader";
 
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
+
+const mapUrl = Map.url("scriptingChat");
 
 test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
     test.beforeEach(
@@ -14,12 +16,12 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
         async ({ browserName, request, page }) => {
             //WebKit has issue with camera
             test.skip(browserName === "webkit" || isMobile(page), "Skip on WebKit and mobile");
-            await resetWamMaps(request);
+            await uploadEmptyMap(request, "scriptingChat");
             //await chatUtils.resetMatrixDatabase();
         },
     );
     test("can open / close chat + start / stop typing @chat", async ({ browser }) => {
-        await using page = await getPage(browser, "Bob", Map.url("empty"));
+        await using page = await getPage(browser, "Bob", mapUrl);
         //await oidcMatrixUserLogin(page, false);
 
         // Test open chat scripting
@@ -72,7 +74,7 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
     });
 
     test("can send message to bubble users @chat", async ({ browser }) => {
-        await using bob = await getPage(browser, "Bob", Map.url("empty"));
+        await using bob = await getPage(browser, "Bob", mapUrl);
         //await oidcMatrixUserLogin(bob, false);
         // test to send bubble message when entering proximity meeting
         await evaluateScript(bob, async () => {
@@ -91,7 +93,7 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
         await Map.teleportToPosition(bob, 32, 32);
 
         // Open new page for alice
-        await using alice = await getPage(browser, "Alice", Map.url("empty"));
+        await using alice = await getPage(browser, "Alice", mapUrl);
         //await oidcMemberTagLogin(alice, false);
 
         const chatMessageReceivedPromise = evaluateScript(alice, async () => {
@@ -139,7 +141,7 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
         expect(chatMessageReceived.event.author).toBeDefined();
 
         // Let's add a third user, Charlie, to test the welcome message
-        await using charlie = await getPage(browser, "Charlie", Map.url("empty"));
+        await using charlie = await getPage(browser, "Charlie", mapUrl);
         await Map.teleportToPosition(charlie, 32, 32);
 
         await expect(alice.getByText("Charlie joined the discussion")).toBeVisible();

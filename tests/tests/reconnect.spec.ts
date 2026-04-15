@@ -4,6 +4,9 @@ import Map from "./utils/map";
 import Menu from "./utils/menu";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
+import { uploadEmptyMap } from "./utils/map-editor/uploader";
+
+const mapUrl = Map.url("reconnect");
 
 test.setTimeout(180_000);
 test.describe("Connection @nomobile @nowebkit", () => {
@@ -35,8 +38,12 @@ test.describe("Connection @nomobile @nowebkit", () => {
         await page.context().close();
     });
 
-    test("can succeed on WAM file even if WorkAdventure starts while pusher is down @slow", async ({ browser }) => {
-        await using page = await getPage(browser, "Alice", Map.url("empty"));
+    test("can succeed on WAM file even if WorkAdventure starts while pusher is down @slow", async ({
+        browser,
+        request,
+    }) => {
+        await uploadEmptyMap(request, "reconnect");
+        await using page = await getPage(browser, "Alice", mapUrl);
 
         //Simulation of offline network
         await page.context().setOffline(true);

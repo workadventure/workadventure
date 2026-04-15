@@ -1,12 +1,14 @@
 import { expect, test } from "@playwright/test";
 import Map from "../utils/map";
 import AreaEditor from "../utils/map-editor/areaEditor";
-import { resetWamMaps } from "../utils/map-editor/uploader";
+import { uploadEmptyMap } from "../utils/map-editor/uploader";
 import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import { map_storage_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
+
+const mapUrl = Map.url("mapEditorMaxUsersInArea");
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -28,8 +30,8 @@ test.describe("Map editor max users in area @oidc @nomobile @nowebkit", () => {
         browser,
         request,
     }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorMaxUsersInArea");
+        await using page = await getPage(browser, "Admin1", mapUrl);
         const areaLeftBoundX = 1 * 32 * 1.5;
 
         // Create an area next to spawn and set max users to 1.
@@ -48,7 +50,7 @@ test.describe("Map editor max users in area @oidc @nomobile @nowebkit", () => {
         await Map.teleportToPosition(page, 4 * 32 * 1.5, 4 * 32 * 1.5);
 
         // Alice cannot enter while Admin is inside.
-        await using page2 = await getPage(browser, "Alice", Map.url("empty"));
+        await using page2 = await getPage(browser, "Alice", mapUrl);
         const aliceStartPosition = await Map.getPosition(page2);
         await Map.walkTo(page2, "ArrowRight", 1000);
 

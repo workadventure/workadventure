@@ -1,10 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { resetWamMaps } from "../utils/map-editor/uploader";
+import { uploadEmptyMap } from "../utils/map-editor/uploader";
 import Map from "../utils/map";
 import { oidcMatrixUserLogin } from "../utils/oidc";
 import { getPage } from "../utils/auth";
 import ChatUtils from "./chatUtils";
 import matrixApi from "./matrixApi";
+
+const mapUrl = Map.url("matrixChatModeration");
 
 test.setTimeout(120000);
 
@@ -15,8 +17,8 @@ test.describe("chat moderation @matrix @nowebkit", () => {
         async ({ browserName, request, page }) => {
             // WebKit has issue with camera
             test.skip(browserName === "webkit", "WebKit has issues with camera/microphone");
-            await resetWamMaps(request);
-            await page.goto(Map.url("empty"));
+            await uploadEmptyMap(request, "matrixChatModeration");
+            await page.goto(mapUrl);
             await ChatUtils.resetMatrixDatabase();
         },
     );
@@ -26,7 +28,7 @@ test.describe("chat moderation @matrix @nowebkit", () => {
     });
 
     test("should create a public chat room and verify admin permissions", async ({ browser }) => {
-        await using page = await getPage(browser, "Alice", Map.url("empty"));
+        await using page = await getPage(browser, "Alice", mapUrl);
         await oidcMatrixUserLogin(page);
         await ChatUtils.openChat(page);
         await ChatUtils.openCreateRoomDialog(page);
@@ -62,7 +64,7 @@ test.describe("chat moderation @matrix @nowebkit", () => {
     test("should manage participants and permissions in public chat room", async ({ browser }, testInfo) => {
         test.skip(testInfo.project.name === "mobilefirefox", "Skip on mobile Firefox");
 
-        await using page = await getPage(browser, "Alice", Map.url("empty"));
+        await using page = await getPage(browser, "Alice", mapUrl);
         await oidcMatrixUserLogin(page);
         await ChatUtils.openChat(page);
         await ChatUtils.openCreateRoomDialog(page);

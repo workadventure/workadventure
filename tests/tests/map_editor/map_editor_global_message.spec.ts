@@ -2,12 +2,14 @@ import { expect, test } from "@playwright/test";
 import Map from "../utils/map";
 import ConfigureMyRoom from "../utils/map-editor/configureMyRoom";
 import Megaphone from "../utils/map-editor/megaphone";
-import { resetWamMaps } from "../utils/map-editor/uploader";
+import { uploadEmptyMap } from "../utils/map-editor/uploader";
 import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import { map_storage_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
+
+const mapUrl = Map.url("mapEditorGlobalMessage");
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -26,14 +28,14 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Successfully test global message text and sound feature", async ({ browser, request }) => {
-        await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await uploadEmptyMap(request, "mapEditorGlobalMessage");
+        await using page = await getPage(browser, "Admin1", mapUrl);
 
         // Move user and not create discussion with the second user
         await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
         // Second browser
-        await using page2 = await getPage(browser, "Bob", Map.url("empty"));
+        await using page2 = await getPage(browser, "Bob", mapUrl);
 
         // Open the map editor and configure the megaphone to have access to the global message
         await Menu.openMapEditor(page);

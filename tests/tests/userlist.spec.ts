@@ -4,6 +4,9 @@ import { publicTestMapUrl } from "./utils/urls";
 import chatUtils from "./utils/chat";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
+import { uploadEmptyMap } from "./utils/map-editor/uploader";
+
+const mapUrl = Map.url("userlist");
 
 test.describe("Walk to @nomobile @nowebkit", () => {
     test.beforeEach(async ({ page, browserName }) => {
@@ -66,18 +69,20 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
         page,
         browser,
         browserName,
+        request,
     }, { project }) => {
         test.skip(isMobile(page) || browserName === "webkit", "Skip on mobile or WebKit");
+        await uploadEmptyMap(request, "userlist");
 
         // Alice is not connected
-        await using userAlice = await getPage(browser, "Alice", Map.url("empty"));
+        await using userAlice = await getPage(browser, "Alice", mapUrl);
         const alicePosition = {
             x: 4 * 32,
             y: 5 * 32,
         };
         await Map.teleportToPosition(userAlice, alicePosition.x, alicePosition.y);
 
-        await using userUserLogin1 = await getPage(browser, "Member1", Map.url("empty"));
+        await using userUserLogin1 = await getPage(browser, "Member1", mapUrl);
         await chatUtils.open(userUserLogin1, false);
         await chatUtils.slideToUsers(userUserLogin1);
         // Click on chat button

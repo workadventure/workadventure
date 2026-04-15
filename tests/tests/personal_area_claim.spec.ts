@@ -1,10 +1,12 @@
 import { expect, test } from "@playwright/test";
 import Map from "./utils/map";
-import { resetWamMaps } from "./utils/map-editor/uploader";
+import { uploadEmptyMap } from "./utils/map-editor/uploader";
 import Menu from "./utils/menu";
 import AreaAccessRights from "./utils/areaAccessRights";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
+
+const mapUrl = Map.url("personalAreaClaim");
 
 test.setTimeout(240_000);
 test.describe("Personal area claim @oidc @nomobile @nowebkit", () => {
@@ -21,20 +23,20 @@ test.describe("Personal area claim @oidc @nomobile @nowebkit", () => {
         // When: Alice enters, claims it, then leaves. Joe then enters the same area.
         // Then: The claim popup must NOT be displayed (area is already claimed by Alice).
 
-        await resetWamMaps(request);
+        await uploadEmptyMap(request, "personalAreaClaim");
 
         const areaCenterX = 4 * 32 * 1.5;
         const areaCenterY = 4 * 32 * 1.5;
         const outsideX = 15 * 32 * 1.5;
         const outsideY = 15 * 32 * 1.5;
 
-        await using adminPage = await getPage(browser, "Admin1", Map.url("empty"));
+        await using adminPage = await getPage(browser, "Admin1", mapUrl);
 
         await Menu.openMapEditor(adminPage);
         await AreaAccessRights.openAreaEditorAndAddPersonalAreaWithDynamicClaim(adminPage);
         await Menu.closeMapEditor(adminPage);
 
-        await using memberPage = await getPage(browser, "Member1", Map.url("empty"));
+        await using memberPage = await getPage(browser, "Member1", mapUrl);
 
         await Map.teleportToPosition(memberPage, areaCenterX, areaCenterY);
 

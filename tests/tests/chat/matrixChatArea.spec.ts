@@ -6,7 +6,7 @@ import AreaEditor from "../utils/map-editor/areaEditor";
 import Map from "../utils/map";
 import { hideNoCamera } from "../utils/hideNoCamera";
 import { oidcMatrixUserLogin, oidcMemberTagLogin } from "../utils/oidc";
-import { resetWamMaps } from "../utils/map-editor/uploader";
+import { uploadEmptyMap } from "../utils/map-editor/uploader";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
 import chatUtils from "./chatUtils";
@@ -17,6 +17,8 @@ async function hideNoCameraIfWebkit(page: Page, browserName: string) {
     }
 }
 
+const mapUrl = Map.url("matrixChatArea");
+
 test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
     test.beforeEach(
         "Ignore tests on mobilechromium because map editor not available for mobile devices",
@@ -24,7 +26,7 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
             // Map Editor not available on mobile / WebKit has issue with camera
             test.skip(isMobile(page) || project.name === "webkit", "Skip on mobile or WebKit");
             await chatUtils.resetMatrixDatabase();
-            await resetWamMaps(request);
+            await uploadEmptyMap(request, "matrixChatArea");
         },
     );
 
@@ -37,7 +39,7 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         browser,
     }) => {
         //await page.evaluate(() => localStorage.setItem('debug', '*'));
-        await using page = await getPage(browser, "Alice", Map.url("empty"));
+        await using page = await getPage(browser, "Alice", mapUrl);
         await oidcMatrixUserLogin(page);
 
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
@@ -61,7 +63,7 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
     });
 
     test("it should automatically close the chat when the user leaves the area", async ({ browser, browserName }) => {
-        await using page = await getPage(browser, "Alice", Map.url("empty"));
+        await using page = await getPage(browser, "Alice", mapUrl);
         await oidcMatrixUserLogin(page);
 
         await hideNoCameraIfWebkit(page, browserName);
@@ -91,7 +93,7 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         browser,
         browserName,
     }) => {
-        await using page = await getPage(browser, "Alice", Map.url("empty"));
+        await using page = await getPage(browser, "Alice", mapUrl);
         await oidcMatrixUserLogin(page);
 
         await hideNoCameraIfWebkit(page, browserName);
@@ -110,7 +112,7 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
 
         await expect(page.getByTestId("closeChatButton")).toBeVisible();
 
-        await page.goto(Map.url("empty"));
+        await page.goto(mapUrl);
         await chatUtils.openChat(page);
         await chatUtils.openRoomAreaList(page);
 
@@ -123,7 +125,7 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         browser,
         browserName,
     }) => {
-        await using page = await getPage(browser, "Alice", Map.url("empty"));
+        await using page = await getPage(browser, "Alice", mapUrl);
         await oidcMatrixUserLogin(page);
 
         await hideNoCameraIfWebkit(page, browserName);
@@ -164,7 +166,7 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
     });
 
     test("it shouldn't be moderator in room when he don't have a admin tag", async ({ browserName, browser }) => {
-        await using page = await getPage(browser, "Alice", Map.url("empty"));
+        await using page = await getPage(browser, "Alice", mapUrl);
         await oidcMatrixUserLogin(page);
 
         await hideNoCameraIfWebkit(page, browserName);
@@ -181,7 +183,7 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         await Menu.closeMapEditor(page);
 
         await page.context().close();
-        await using page2 = await getPage(browser, "Bob", Map.url("empty"));
+        await using page2 = await getPage(browser, "Bob", mapUrl);
         await oidcMemberTagLogin(page2);
 
         await hideNoCameraIfWebkit(page2, browserName);
