@@ -41,10 +41,10 @@ class AreaEditor {
     }
 
     async addProperty(page: Page, property: string) {
-        page.locator(".map-editor");
-        page.locator(".map-editor .sidebar");
-        page.locator(".map-editor .sidebar .item-picker-container");
-        page.locator("select#speakerZoneSelector");
+        //page.locator(".map-editor");
+        //page.locator(".map-editor .sidebar");
+        //page.locator(".map-editor .sidebar .item-picker-container");
+        //page.locator("select#speakerZoneSelector");
         await page.getByTestId(property).click();
     }
 
