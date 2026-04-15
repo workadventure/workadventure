@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "downlevelIteration": true,
-    "lib": ["ES2020"],
+    "lib": ["ES2022", "ES2022.Error"],
     "module": "esnext",
     "moduleResolution": "bundler",
 
