@@ -1,4 +1,4 @@
-import { expect, test, describe } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import Map from "./utils/map";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
@@ -259,7 +259,7 @@ test.describe("Meeting actions test @nomobile @nowebkit", () => {
     await page.context().close();
   });*/
 
-    describe("Block Users @nofirefox", () => {
+    test.describe("Block Users @nofirefox", () => {
         test("Block users @nofirefox", async ({ browser }) => {
             // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
             test.skip(
