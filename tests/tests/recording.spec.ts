@@ -269,6 +269,107 @@ test.describe("Recording test", () => {
         await recorder.context().close();
     });
 
+    test("Recording auto-stops on recorder leave, then on megaphone source stop, in a single end-to-end flow @oidc", async ({
+        browser,
+        request,
+    }) => {
+        await resetWamMaps(request);
+
+        // Same "far" tile as other recording tests: out of proximity / discussion, still in megaphone listen range.
+        const farListenerPosition = { x: 30 * 32, y: 0 };
+        const megaphoneSpeakerPosition = { x: 4 * 32, y: 0 };
+
+        // One Admin2 session: leave discussion by moving away (no second login), then reuse for megaphone recording.
+        // A third user stays in proximity so the conversation does not end when the recorder leaves—only the recording should stop.
+        await using recorder = await getPage(browser, "Admin2", Map.url("empty"));
+        await deleteAllRecordings(recorder);
+        await Map.teleportToPosition(recorder, 0, 0);
+
+        await using broadcaster = await getPage(browser, "Admin1", Map.url("empty"));
+        await Map.teleportToPosition(broadcaster, 0, 0);
+
+        await using discussionPeer = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(discussionPeer, 0, 0);
+
+        await expect(recorder.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(recorder.locator("#cameras-container").getByText("Bob", { exact: true })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(recorder.getByTestId("recordingButton-start")).toBeEnabled();
+        await recorder.getByTestId("recordingButton-start").click();
+        await expect(broadcaster.getByTestId("recording-started-modal")).toBeVisible({ timeout: 30_000 });
+        await expect(discussionPeer.getByTestId("recording-started-modal")).toBeVisible({ timeout: 30_000 });
+
+        // Give the discussion recording enough time to produce media before the recorder leaves the space.
+        await recorder.waitForTimeout(5000);
+
+        await Map.teleportToPosition(recorder, farListenerPosition.x, farListenerPosition.y);
+        await recorder.waitForTimeout(1000);
+
+        await expect(recorder.getByTestId("recordingButton-stop")).toBeHidden({ timeout: 30_000 });
+        await expect(broadcaster.getByTestId("recordingButton-stop")).toBeHidden({ timeout: 30_000 });
+        await expect(broadcaster.getByTestId("recordingButton-start")).toBeEnabled();
+        await expect(discussionPeer.getByTestId("recordingButton-stop")).toBeHidden({ timeout: 30_000 });
+        await expect(discussionPeer.getByTestId("recordingButton-start")).toBeHidden();
+
+        await expect(broadcaster.locator("#cameras-container").getByText("Bob", { exact: true })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(discussionPeer.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        // After leaving the conversation, the finished discussion recording should appear in the list.
+        await recorder.getByTestId("apps-button").click();
+        await recorder.getByTestId("recordingButton-list").click();
+        await waitForRecordingToAppear(recorder, 0);
+        await expect(recorder.getByTestId("recording-item-0")).toBeVisible();
+        await recorder.getByTestId("close-recording-modal").click();
+
+        await Map.teleportToPosition(broadcaster, megaphoneSpeakerPosition.x, megaphoneSpeakerPosition.y);
+
+        await Menu.openMapEditor(broadcaster);
+        await MapEditor.openConfigureMyRoom(broadcaster);
+        await ConfigureMyRoom.selectMegaphoneItemInCMR(broadcaster);
+        await Megaphone.toggleMegaphone(broadcaster);
+        await Megaphone.isMegaphoneEnabled(broadcaster);
+        await Megaphone.toggleMegaphoneRecording(broadcaster);
+        await Megaphone.megaphoneSave(broadcaster);
+        await Megaphone.isCorrectlySaved(broadcaster);
+        await Menu.closeMapEditorConfigureMyRoomPopUp(broadcaster);
+
+        await Menu.clickSendGlobalMessage(broadcaster);
+        await Menu.clickStartLiveMessage(broadcaster);
+        await Menu.clickStartMegaphone(broadcaster);
+        await waitForMegaphoneToBeStreaming(broadcaster);
+
+        await expect(recorder.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(recorder.getByTestId("recordingButton-start")).toBeEnabled();
+
+        await recorder.getByTestId("recordingButton-start").click();
+        await expect(recorder.getByTestId("recordingButton-stop")).toBeEnabled({ timeout: 30_000 });
+
+        // Give the megaphone recording enough time to produce media before the source stops.
+        await recorder.waitForTimeout(5000);
+
+        await broadcaster.getByRole("button", { name: "Stop megaphone" }).click();
+
+        await expect(recorder.getByTestId("recording-completed-modal")).toBeVisible({ timeout: 30_000 });
+        await recorder.getByTestId("recording-completed-modal-open-recordings-list-button").click();
+
+        await waitForRecordingToAppear(recorder, 1);
+        await expect(recorder.getByTestId("recording-item-0")).toBeVisible();
+        await expect(recorder.getByTestId("recording-item-1")).toBeVisible();
+
+        await recorder.getByTestId("close-recording-modal").click();
+        await expect(recorder.getByTestId("recordingButton-stop")).toBeHidden({ timeout: 30_000 });
+        await expect(recorder.getByTestId("recordingButton-start")).toBeHidden();
+    });
+
     test("Megaphone recording permissions update without reload and respect tags @oidc", async ({
         browser,
         request,

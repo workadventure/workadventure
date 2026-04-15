@@ -6,7 +6,7 @@ import type { Space } from "./Space";
 export const metadataProcessor = new MetadataProcessor();
 
 const recordingMetadataSchema = z.object({
-    recorder: z.string(),
+    recorder: z.string().optional().nullable(),
     recording: z.boolean(),
 });
 

@@ -11,9 +11,10 @@ import type { IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
 export interface IRecordingManager {
     getRecordingState(): { isRecording: boolean; recorder: string | null };
     startRecording(user: SpaceUser): Promise<void>;
-    stopRecording(user: SpaceUser): Promise<void>;
+    stopRecording(user: SpaceUser): Promise<SpaceUser | null>;
+    stopRecordingByServer(): Promise<SpaceUser | null>;
+    stopRecordingIfRecorderMatches(spaceUserId: string): Promise<SpaceUser | null>;
     handleAddUser(user: SpaceUser): void;
-    handleRemoveUser(user: SpaceUser): Promise<void>;
     isRecording: boolean;
     destroy(): void;
 }
@@ -77,16 +78,41 @@ export class RecordingManager implements IRecordingManager {
         await this.executeRecording(recordableState, user);
     }
 
-    public async stopRecording(user: SpaceUser): Promise<void> {
+    public async stopRecording(user: SpaceUser): Promise<SpaceUser | null> {
         if (!this._isRecording) {
             console.warn("No recording is currently active.");
-            return;
+            return null;
         }
 
         if (this._user?.spaceUserId !== user.spaceUserId) {
             throw new Error("User is not the one recording");
         }
 
+        return this.stopCurrentRecording();
+    }
+
+    public async stopRecordingByServer(): Promise<SpaceUser | null> {
+        if (!this._isRecording) {
+            return null;
+        }
+
+        return this.stopCurrentRecording();
+    }
+
+    public async stopRecordingIfRecorderMatches(spaceUserId: string): Promise<SpaceUser | null> {
+        if (this._user?.spaceUserId !== spaceUserId) {
+            return null;
+        }
+
+        return this.stopRecordingByServer();
+    }
+
+    private async stopCurrentRecording(): Promise<SpaceUser | null> {
+        if (!this._user) {
+            return null;
+        }
+
+        const recorder = this._user;
         const currentState = this._lifecycleManager.getCurrentState();
 
         if (this.isRecordableState(currentState)) {
@@ -95,29 +121,11 @@ export class RecordingManager implements IRecordingManager {
 
         this._isRecording = false;
         this._user = undefined;
+        return recorder;
     }
 
     public handleAddUser(user: SpaceUser): void {
-        // Does nothing. Here for symmetry with handleRemoveUser.
-    }
-
-    public async handleRemoveUser(user: SpaceUser): Promise<void> {
-        if (!this._isRecording) {
-            return;
-        }
-
-        if (this._user === user) {
-            await this.stopRecording(user);
-            await this._space.updateMetadata(
-                {
-                    recording: {
-                        recorder: user.spaceUserId,
-                        recording: false,
-                    },
-                },
-                user.spaceUserId
-            );
-        }
+        // Does nothing. Here for symmetry with deletion hooks.
     }
 
     public getRecordingState(): { isRecording: boolean; recorder: string | null } {

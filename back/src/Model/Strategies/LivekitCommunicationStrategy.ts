@@ -19,24 +19,6 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
 
     constructor(private space: ICommunicationSpace, private livekitService: LiveKitService) {}
 
-    private async stopRecordingAndNotifyIfNeeded(): Promise<void> {
-        const recordingState = this.space.getRecordingState();
-
-        if (!recordingState.isRecording || !recordingState.recorder) {
-            return;
-        }
-
-        await this.space.updateMetadata(
-            {
-                recording: {
-                    recorder: recordingState.recorder,
-                    recording: false,
-                },
-            },
-            recordingState.recorder
-        );
-    }
-
     /**
      * Queues an operation for a specific user to ensure sequential execution.
      * This prevents race conditions when addUser/deleteUser are called in rapid succession.
@@ -143,7 +125,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
 
             if (this.streamingUsers.size === 0) {
                 try {
-                    await this.stopRecordingAndNotifyIfNeeded();
+                    await this.space.stopRecordingByServer();
                 } catch (error) {
                     console.error(`Error stopping recording for space ${this.space.getSpaceName()}:`, error);
                     Sentry.captureException(error);
