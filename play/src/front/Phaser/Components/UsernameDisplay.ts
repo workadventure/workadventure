@@ -118,7 +118,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         const nextTextureKey = this.createPlayerNameTexture(outlineColor);
         const previousTextureKey = this.playerNameTextureKey;
         this.playerNameTextureKey = nextTextureKey;
-        this.setPlayerNameTexture(nextTextureKey);
+        this.playerNameSprite.setTexture(nextTextureKey);
 
         if (previousTextureKey && this.scene.textures.exists(previousTextureKey)) {
             this.scene.textures.remove(previousTextureKey);
