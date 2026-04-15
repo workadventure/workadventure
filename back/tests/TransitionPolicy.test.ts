@@ -17,7 +17,7 @@ describe("TransitionPolicy", () => {
             recorder: null,
         }),
         startRecording: () => Promise.resolve(),
-        stopRecording: () => Promise.resolve(),
+        stopRecording: () => Promise.resolve(null),
         stopRecordingByServer: () => Promise.resolve(null),
         stopRecordingIfRecorderMatches: () => Promise.resolve(null),
         handleAddUser: () => {},

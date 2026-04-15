@@ -307,8 +307,11 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public async handleStopRecording(user: SpaceUser): Promise<void> {
-        await this._recordingManager.stopRecording(user);
-        this.scheduleTransitionAfterRecordingStops(user);
+        const stoppedRecorder = await this._recordingManager.stopRecording(user);
+        if (!stoppedRecorder) {
+            return;
+        }
+        this.scheduleTransitionAfterRecordingStops(stoppedRecorder);
     }
 
     public async handleRecorderLeftSpace(spaceUserId: string): Promise<boolean> {

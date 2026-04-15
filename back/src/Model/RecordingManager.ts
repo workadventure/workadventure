@@ -11,7 +11,7 @@ import type { IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
 export interface IRecordingManager {
     getRecordingState(): { isRecording: boolean; recorder: string | null };
     startRecording(user: SpaceUser): Promise<void>;
-    stopRecording(user: SpaceUser): Promise<void>;
+    stopRecording(user: SpaceUser): Promise<SpaceUser | null>;
     stopRecordingByServer(): Promise<SpaceUser | null>;
     stopRecordingIfRecorderMatches(spaceUserId: string): Promise<SpaceUser | null>;
     handleAddUser(user: SpaceUser): void;
@@ -78,17 +78,17 @@ export class RecordingManager implements IRecordingManager {
         await this.executeRecording(recordableState, user);
     }
 
-    public async stopRecording(user: SpaceUser): Promise<void> {
+    public async stopRecording(user: SpaceUser): Promise<SpaceUser | null> {
         if (!this._isRecording) {
             console.warn("No recording is currently active.");
-            return;
+            return null;
         }
 
         if (this._user?.spaceUserId !== user.spaceUserId) {
             throw new Error("User is not the one recording");
         }
 
-        await this.stopCurrentRecording();
+        return this.stopCurrentRecording();
     }
 
     public async stopRecordingByServer(): Promise<SpaceUser | null> {
