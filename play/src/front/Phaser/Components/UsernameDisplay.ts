@@ -1,6 +1,7 @@
 import { AvailabilityStatus } from "@workadventure/messages";
 import { StringUtils } from "../../Utils/StringUtils";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
+import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
 import { MegaphoneIcon } from "./MegaphoneIcon";
 import { PlayerStatusDot } from "./PlayerStatusDot";
 
@@ -15,6 +16,9 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     private playerNameOutlineColor: number | undefined;
     private readonly statusDot: PlayerStatusDot;
     private readonly megaphoneIcon: MegaphoneIcon;
+    private readonly onZoomChanged = (zoomModifier: number): void => {
+        this.setScale(this.getDisplayScale(zoomModifier));
+    };
 
     constructor(scene: Phaser.Scene, x: number, y: number, playerName: string, outlineColor: number | undefined) {
         super(scene, x, y);
@@ -38,42 +42,12 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         this.reflow();
 
         this.scene.add.existing(this);
+        this.onZoomChanged(waScaleManager.zoomModifier);
+        this.scene.game.events.on(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
     }
 
-    private showMegaphone(show = true, forceClose = false): void {
-        this.megaphoneIcon.visible = show;
-        this.megaphoneIcon.show(show, forceClose);
-        this.reflow();
-    }
-
-    public setPlayerNameTexture(playerNameTextureKey: string): void {
-        this.playerNameSprite.setTexture(playerNameTextureKey);
-        this.reflow();
-    }
-
-    public setPlayerNameOutlineColor(outlineColor: number | undefined): void {
-        if (this.playerNameOutlineColor === outlineColor) {
-            return;
-        }
-        this.playerNameOutlineColor = outlineColor;
-
-        const nextTextureKey = this.createPlayerNameTexture(outlineColor);
-        const previousTextureKey = this.playerNameTextureKey;
-        this.playerNameTextureKey = nextTextureKey;
-        this.setPlayerNameTexture(nextTextureKey);
-
-        if (previousTextureKey && this.scene.textures.exists(previousTextureKey)) {
-            this.scene.textures.remove(previousTextureKey);
-        }
-    }
-
-    public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant = false, forceClose = false): void {
-        this.statusDot.setAvailabilityStatus(availabilityStatus, instant);
-        this.showMegaphone(availabilityStatus === AvailabilityStatus.SPEAKER, forceClose);
-    }
-
-    public getAvailabilityStatus(): AvailabilityStatus {
-        return this.statusDot.availabilityStatus;
+    private getDisplayScale(zoomModifier: number): number {
+        return Math.max(zoomModifier > 0 ? 0.8 / zoomModifier : 1, 1);
     }
 
     private reflow(): void {
@@ -129,7 +103,39 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         return textureKey;
     }
 
+    private showMegaphone(show = true, forceClose = false): void {
+        this.megaphoneIcon.visible = show;
+        this.megaphoneIcon.show(show, forceClose);
+        this.reflow();
+    }
+
+    public setPlayerNameOutlineColor(outlineColor: number | undefined): void {
+        if (this.playerNameOutlineColor === outlineColor) {
+            return;
+        }
+        this.playerNameOutlineColor = outlineColor;
+
+        const nextTextureKey = this.createPlayerNameTexture(outlineColor);
+        const previousTextureKey = this.playerNameTextureKey;
+        this.playerNameTextureKey = nextTextureKey;
+        this.setPlayerNameTexture(nextTextureKey);
+
+        if (previousTextureKey && this.scene.textures.exists(previousTextureKey)) {
+            this.scene.textures.remove(previousTextureKey);
+        }
+    }
+
+    public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant = false, forceClose = false): void {
+        this.statusDot.setAvailabilityStatus(availabilityStatus, instant);
+        this.showMegaphone(availabilityStatus === AvailabilityStatus.SPEAKER, forceClose);
+    }
+
+    public getAvailabilityStatus(): AvailabilityStatus {
+        return this.statusDot.availabilityStatus;
+    }
+
     public override destroy(fromScene?: boolean): void {
+        this.scene.game.events.off(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
         if (this.playerNameTextureKey && this.scene.textures.exists(this.playerNameTextureKey)) {
             this.scene.textures.remove(this.playerNameTextureKey);
         }

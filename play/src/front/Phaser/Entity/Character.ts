@@ -16,7 +16,6 @@ import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
-import { waScaleManager } from "../Services/WaScaleManager";
 
 import { UsernameDisplay } from "../Components/UsernameDisplay";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
@@ -164,7 +163,6 @@ export abstract class Character extends Container implements OutlineableInterfac
 
             const playerNameOutlineColor = get(this.outlineColorStore);
             this.usernameDisplay = new UsernameDisplay(scene, 0, playerNameY, this.playerName, playerNameOutlineColor);
-            this.usernameDisplay.setScale(this.getSpriteScale(waScaleManager.zoomModifier));
             this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true, true);
             this.add(this.usernameDisplay);
 
@@ -228,10 +226,6 @@ export abstract class Character extends Container implements OutlineableInterfac
                     resolve(defaultWoka);
                 });
         });
-    }
-
-    private getSpriteScale(zoomModifier: number): number {
-        return Math.max(zoomModifier > 0 ? 0.8 / zoomModifier : 1, 1);
     }
 
     public setClickable(clickable = true): void {
@@ -313,14 +307,6 @@ export abstract class Character extends Container implements OutlineableInterfac
             this.availabilityStatus = availabilityStatus;
         }
         this.usernameDisplay?.setAvailabilityStatus(availabilityStatus, instant, false);
-    }
-
-    public syncPlayerNameZoom(zoomModifier: number): void {
-        if (!this.usernameDisplay) {
-            return;
-        }
-
-        this.usernameDisplay.setScale(this.getSpriteScale(zoomModifier));
     }
 
     public getAvailabilityStatus() {
