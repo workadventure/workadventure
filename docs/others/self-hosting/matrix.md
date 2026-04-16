@@ -128,6 +128,17 @@ play:
     MATRIX_ADMIN_PASSWORD: ""
 ```
 
+## Custom Matrix homeservers (not the reference Synapse setup)
+
+WorkAdventure is tested against a **Synapse**-style stack with **OpenID Connect** configured as described above. If you use **another Matrix server** (Dendrite, Conduit, commercial hosting, etc.) or a **heavily customized Synapse**, be aware that:
+
+1. **The same OIDC issuer** must be trusted by both WorkAdventure and the Matrix server, and user mapping to stable Matrix IDs must be consistent; mismatches break login or room membership.
+2. **Profile APIs** (`/profile` display name and avatar) must behave per the Matrix spec. WorkAdventure syncs the in-game name and WOKA image to the user’s **global Matrix profile**; servers that restrict profile updates or media uploads may cause avatars or names not to match in chat.
+3. **E2E encryption** uses the matrix-js-sdk **Rust crypto** path; very old or unusual server configurations might surface interoperability issues—check client and server logs if sync or decryption fails.
+4. **Federation** is not required for WorkAdventure’s own flows, but if you federate users across rooms, ensure your homeserver’s federation and identity settings match your expectations.
+
+**If something fails:** verify `MATRIX_PUBLIC_URI` / `MATRIX_API_URI` from both browser and server, confirm OIDC client registration (separate clients for WA and Matrix), and compare with a known-good Synapse setup from this repo’s `docker-compose` example. For application-level behaviour, see [Matrix developer notes](../contributing/matrix-dev.md).
+
 ## Developer notes
 
 If you are looking for a developer description of the WorkAdventure / Matrix integration, you can find it in the 

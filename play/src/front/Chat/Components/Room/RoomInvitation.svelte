@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { defaultColor } from "@workadventure/shared-utils";
     import type { ChatRoomMembershipManagement, ChatRoom } from "../../Connection/ChatConnection";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
@@ -9,6 +10,7 @@
     export let room: ChatRoom & ChatRoomMembershipManagement;
     let roomName = room.name;
     let loadingInvitation = false;
+    $: peerAvatarColorStore = room.avatarFallbackColor;
 
     function joinRoom() {
         loadingInvitation = true;
@@ -38,11 +40,16 @@
 </script>
 
 <div
-    class="text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer p-2 test-userinvitation"
+    class="wa-chat-item text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer px-2 py-2 test-userinvitation"
     data-testid="userInvitation"
 >
-    <div class="relative">
-        <Avatar pictureStore={room.pictureStore} fallbackName={$roomName} />
+    <div class="relative shrink-0">
+        <Avatar
+            compact
+            pictureStore={room.pictureStore}
+            fallbackName={$roomName}
+            color={room.type === "direct" ? $peerAvatarColorStore ?? defaultColor : null}
+        />
     </div>
     <div class="m-0 grow text-sm font-bold">
         {$roomName}

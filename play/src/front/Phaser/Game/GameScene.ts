@@ -1927,7 +1927,8 @@ export class GameScene extends DirtyScene {
                             userProviders.push(worldUserProvider);
                         }
 
-                        this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
+                        const merger = new UserProviderMerger(userProviders);
+                        this._userProviderMergerDeferred.resolve(merger);
                     })
                     .catch((e) => {
                         const errorMessage = "Failed to get chatConnection from gameManager : " + e;

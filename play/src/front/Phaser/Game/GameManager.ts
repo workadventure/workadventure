@@ -216,6 +216,7 @@ export class GameManager {
 
     public setPlayerName(name: string): void {
         this.playerName = name;
+        localUserStore.notifyPlayerDisplayNameChanged(name);
         Sentry.setUser({
             id: localUserStore.getLocalUser()?.uuid ?? undefined,
             email: localUserStore.getLocalUser()?.email ?? undefined,

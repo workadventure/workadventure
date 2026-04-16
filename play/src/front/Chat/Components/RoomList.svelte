@@ -26,11 +26,16 @@
     import ChatHeader from "./ChatHeader.svelte";
     import RequireConnection from "./requireConnection.svelte";
     import RefreshChat from "./RefreshChat.svelte";
-    import { IconChevronUp, IconCloudLock, IconRefresh } from "@wa-icons";
+    import { IconChevronUp, IconCloudLock, IconPlus, IconRefresh } from "@wa-icons";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
-    const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
+    const gameScene = gameManager.getCurrentGameScene();
+    /** Same condition as opening the user list from the chat header. */
+    const showDirectMessageUserListButton =
+        gameScene.room.isChatOnlineListEnabled || gameScene.room.isChatDisconnectedListEnabled;
+
+    const proximityChatRoom = gameScene.proximityChatRoom;
     const chat = gameManager.chatConnection;
     const shouldRetrySendingEvents = chat.shouldRetrySendingEvents;
 
@@ -252,11 +257,11 @@
                             class="group relative m-0 px-3 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
                             on:click={toggleDisplayRoomInvitations}
                         >
-                            <div class="text-sm font-bold tracking-widest uppercase grow text-start">
+                            <div class="text-white text-sm font-bold tracking-widest uppercase grow text-start">
                                 {$LL.chat.invitations()}
                             </div>
                             <button
-                                class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                                class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
                             >
                                 <IconChevronUp
                                     class={`transform transition ${!displayRoomInvitations ? "" : "rotate-180"}`}
@@ -272,23 +277,39 @@
                         {/if}
                     {/if}
 
-                    <button
-                        class="group relative px-3 m-0 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
-                        on:click={toggleDisplayDirectRooms}
+                    <div
+                        class="group relative px-3 m-0 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex items-center gap-1 border border-solid border-x-0 border-t border-b-0 border-white/10"
                     >
-                        <div class="flex items-center space-x-2 m-0 p-0 grow">
-                            <div class="text-sm font-bold tracking-widest uppercase grow text-start">
+                        <button
+                            type="button"
+                            class="flex items-center min-w-0 flex-1 text-start m-0 p-0 h-full bg-transparent border-0 cursor-pointer text-inherit rounded-none appearance-none"
+                            on:click={toggleDisplayDirectRooms}
+                        >
+                            <div class="text-white text-sm font-bold tracking-widest uppercase truncate">
                                 {$LL.chat.people()}
                             </div>
+                        </button>
+                        {#if showDirectMessageUserListButton}
                             <button
-                                class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                                type="button"
+                                data-testid="directMessageOpenUserList"
+                                class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white shrink-0 m-0"
+                                aria-label={$LL.chat.users()}
+                                title={$LL.chat.users()}
+                                on:click|stopPropagation={() => navChat.switchToUserList()}
                             >
-                                <IconChevronUp
-                                    class={`transform transition ${!displayDirectRooms ? "" : "rotate-180"}`}
-                                />
+                                <IconPlus />
                             </button>
-                        </div>
-                    </button>
+                        {/if}
+                        <button
+                            type="button"
+                            class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white shrink-0 m-0"
+                            aria-expanded={displayDirectRooms}
+                            on:click|stopPropagation={toggleDisplayDirectRooms}
+                        >
+                            <IconChevronUp class={`transform transition ${!displayDirectRooms ? "" : "rotate-180"}`} />
+                        </button>
+                    </div>
 
                     {#if displayDirectRooms}
                         <div class="flex flex-col px-2 pb-2">
@@ -308,13 +329,13 @@
                             data-testid="roomAccordeon"
                         >
                             <div class="flex items-center space-x-2 grow m-0 p-0">
-                                <div class="text-sm font-bold tracking-widest uppercase grow text-start">
+                                <div class="text-white text-sm font-bold tracking-widest uppercase grow text-start">
                                     {$LL.chat.rooms()}
                                 </div>
                             </div>
                             <CreateRoomOrFolderOption parentID={undefined} parentName="" folder={undefined} />
                             <button
-                                class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                                class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
                             >
                                 <IconChevronUp class={`transform transition ${!displayRooms ? "" : "rotate-180"}`} />
                             </button>

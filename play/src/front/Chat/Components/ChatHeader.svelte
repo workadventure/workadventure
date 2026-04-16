@@ -9,6 +9,7 @@
     import type { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
     import { hideActionBarStoreBecauseOfChatBar } from "../ChatSidebarWidthStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
+    import { hasMatrixChatCapabilities } from "../Connection/ChatConnection";
     import OnlineUsersCount from "./OnlineUsersCount.svelte";
     import ChatActionMenu from "./ChatActionMenu.svelte";
     import { IconMessageCircle2, IconUsers } from "@wa-icons";
@@ -130,6 +131,7 @@
             {searchActive}
             hasCloseChat={$hideActionBarStoreBecauseOfChatBar}
             hasSearch={$chatStatusStore !== "OFFLINE" && !isInSpecificDiscussion}
+            matrixChatConnection={hasMatrixChatCapabilities(chat) ? chat : undefined}
             on:toggleSearch={handleToggleSearch}
         />
     </div>

@@ -29,11 +29,13 @@ import {
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
+import { defaultWoka } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { canAcceptVerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { asError } from "catch-unknown";
+
 import type {
     ChatConnectionInterface,
     ChatRoom,
@@ -41,25 +43,33 @@ import type {
     ChatUser,
     ConnectionStatus,
     CreateRoomOptions,
+    MatrixChatCapabilities,
+    MatrixPeerProfileDiagnostics,
+    MatrixUserSettingsDiagnostics,
 } from "../ChatConnection";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
+import { currentPlayerWokaStore } from "../../../Stores/CurrentPlayerWokaStore";
 import LL from "../../../../i18n/i18n-svelte";
 import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
 import { MatrixRateLimiter } from "../../Services/MatrixRateLimiter";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import type { MatrixSecurity } from "./MatrixSecurity";
 import { matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
 import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
+import {
+    pushLocalWokaAndNameToMatrixProfile,
+    syncWokaAvatarToMatrixProfileOnWokaChange,
+} from "./services/WaMatrixProfileService";
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
-export const defaultWoka =
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
-export const defaultColor = "#626262";
 
-export class MatrixChatConnection implements ChatConnectionInterface {
+export type { MatrixPeerProfileDiagnostics, MatrixUserSettingsDiagnostics } from "../ChatConnection";
+
+export class MatrixChatConnection implements ChatConnectionInterface, MatrixChatCapabilities {
     private readonly roomList: MapStore<string, MatrixChatRoom>;
     private client: MatrixClient | undefined;
     private handleRoom: (room: Room) => void;
@@ -71,6 +81,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private handleUserPresence: (event: MatrixEvent | undefined, user: User) => void;
     private handleVerificationRequestReceived: (request: VerificationRequest) => void;
     private statusUnsubscriber: Unsubscriber | undefined;
+    private wokaAvatarMatrixSyncUnsubscriber: Unsubscriber | undefined;
+    private displayNameMatrixSyncUnsubscriber: (() => void) | undefined;
+    private displayNameMatrixSyncDebounceTimer: ReturnType<typeof setTimeout> | undefined;
     private isClientReady = false;
     private usersStatus: MapStore<string, AvailabilityStatus>;
     private userIdsNeedingPresenceUpdate = new Set();
@@ -293,11 +306,150 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             await this.startMatrixClient();
             this.isGuest.set(this.client.isGuest());
             this.rebuildSpaceHierarchy();
+            await this.syncMatrixGlobalProfileFromLocalWokaAndName();
+            this.attachWokaAvatarMatrixSync();
+            this.attachDisplayNameMatrixSync();
         } catch (error) {
             this.connectionStatus.set("OFFLINE");
             console.error(error);
             Sentry.captureException(error);
         }
+    }
+
+    /**
+     * When the in-game WOKA changes, upload it to the Matrix content repo and set the Matrix profile avatar.
+     */
+    private attachWokaAvatarMatrixSync(): void {
+        if (!this.client || this.wokaAvatarMatrixSyncUnsubscriber) {
+            return;
+        }
+
+        const trySync = async (wokaSrc: string | undefined) => {
+            if (!this.client) {
+                return;
+            }
+            await syncWokaAvatarToMatrixProfileOnWokaChange(this.client, wokaSrc);
+        };
+
+        this.wokaAvatarMatrixSyncUnsubscriber = currentPlayerWokaStore.subscribe((src) => {
+            trySync(src).catch(() => undefined);
+        });
+    }
+
+    /**
+     * When the in-game display name changes, push it to the Matrix profile (debounced; coalesces with
+     * {@link #attachWokaAvatarMatrixSync} flows).
+     */
+    private attachDisplayNameMatrixSync(): void {
+        if (this.displayNameMatrixSyncUnsubscriber) {
+            return;
+        }
+        const schedule = () => {
+            if (this.displayNameMatrixSyncDebounceTimer !== undefined) {
+                clearTimeout(this.displayNameMatrixSyncDebounceTimer);
+            }
+            this.displayNameMatrixSyncDebounceTimer = setTimeout(() => {
+                this.displayNameMatrixSyncDebounceTimer = undefined;
+                this.syncMatrixGlobalProfileFromLocalWokaAndName().catch(() => undefined);
+            }, 400);
+        };
+        this.displayNameMatrixSyncUnsubscriber = localUserStore.subscribeDisplayNameChange(() => {
+            schedule();
+        });
+    }
+
+    /** Exposes the synced Matrix client (e.g. chat tint resolution via {@link getMatrixClientForChatTint}). */
+    getMatrixClient(): MatrixClient | undefined {
+        return this.client;
+    }
+
+    /**
+     * Loads Matrix profile and local game state for the settings UI.
+     */
+    async getMatrixUserSettingsDiagnostics(): Promise<MatrixUserSettingsDiagnostics | undefined> {
+        if (!this.client || this.client.isGuest()) {
+            return undefined;
+        }
+        const userId = this.client.getSafeUserId();
+        if (!userId) {
+            return undefined;
+        }
+        const homeserverUrl = this.client.getHomeserverUrl();
+        let profileDisplayName: string | undefined;
+        let profileAvatarMxc: string | undefined;
+        try {
+            const profile = await this.client.getProfileInfo(userId);
+            profileDisplayName = profile.displayname?.trim();
+            profileAvatarMxc = profile.avatar_url;
+        } catch {
+            /* profile fetch can fail on restricted networks */
+        }
+        const profileAvatarPreviewUrl = profileAvatarMxc
+            ? this.client.mxcUrlToHttp(profileAvatarMxc, 96, 96) ?? undefined
+            : undefined;
+        const localDisplayName = localUserStore.getDisplayNameForMatrixProfile();
+        const localWoka = get(currentPlayerWokaStore);
+        const hasCustomWoka = Boolean(localWoka && localWoka !== defaultWoka);
+        const profileNameNorm = profileDisplayName?.trim();
+        const nameMismatch = Boolean(
+            localDisplayName &&
+                (profileNameNorm === undefined || profileNameNorm === "" || localDisplayName !== profileNameNorm)
+        );
+        const avatarMissingOnProfile = Boolean(hasCustomWoka && !profileAvatarMxc);
+        const profileNeedsSync = nameMismatch || avatarMissingOnProfile;
+
+        return {
+            matrixUserId: userId,
+            homeserverUrl,
+            profileDisplayName,
+            profileAvatarMxc,
+            profileAvatarPreviewUrl,
+            localDisplayName,
+            profileNeedsSync,
+        };
+    }
+
+    /**
+     * Loads Matrix profile for another user (debug UI only).
+     */
+    async getMatrixPeerProfileDiagnostics(matrixUserId: string): Promise<MatrixPeerProfileDiagnostics | undefined> {
+        if (!this.client || this.client.isGuest()) {
+            return undefined;
+        }
+        const homeserverUrl = this.client.getHomeserverUrl();
+        let profileDisplayName: string | undefined;
+        let profileAvatarMxc: string | undefined;
+        try {
+            const profile = await this.client.getProfileInfo(matrixUserId);
+            profileDisplayName = profile.displayname;
+            profileAvatarMxc = profile.avatar_url;
+        } catch {
+            /* profile fetch can fail */
+        }
+        const profileAvatarPreviewUrl = profileAvatarMxc
+            ? this.client.mxcUrlToHttp(profileAvatarMxc, 96, 96) ?? undefined
+            : undefined;
+
+        return {
+            matrixUserId,
+            homeserverUrl,
+            profileDisplayName,
+            profileAvatarMxc,
+            profileAvatarPreviewUrl,
+        };
+    }
+
+    /**
+     * Pushes the in-game display name and WOKA image to the Matrix global profile (`/profile`).
+     */
+    async syncMatrixGlobalProfileFromLocalWokaAndName(): Promise<void> {
+        if (!this.client || this.client.isGuest()) {
+            return;
+        }
+        await pushLocalWokaAndNameToMatrixProfile(this.client, {
+            localDisplayName: localUserStore.getDisplayNameForMatrixProfile(),
+            wokaImageSrc: get(currentPlayerWokaStore),
+        });
     }
 
     private setPresence(status: AvailabilityStatus): void {
@@ -1250,6 +1402,18 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client?.off(UserEvent.Presence, this.handleUserPresence);
         this.client?.off(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
         if (this.statusUnsubscriber) this.statusUnsubscriber();
+        if (this.wokaAvatarMatrixSyncUnsubscriber) {
+            this.wokaAvatarMatrixSyncUnsubscriber();
+            this.wokaAvatarMatrixSyncUnsubscriber = undefined;
+        }
+        if (this.displayNameMatrixSyncDebounceTimer !== undefined) {
+            clearTimeout(this.displayNameMatrixSyncDebounceTimer);
+            this.displayNameMatrixSyncDebounceTimer = undefined;
+        }
+        if (this.displayNameMatrixSyncUnsubscriber) {
+            this.displayNameMatrixSyncUnsubscriber();
+            this.displayNameMatrixSyncUnsubscriber = undefined;
+        }
     }
     async destroy(): Promise<void> {
         await this.client?.logout(true);

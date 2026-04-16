@@ -61,6 +61,12 @@ The Matrix integration is used through the [matrix-js-sdk](https://github.com/ma
 WorkAdventure relies on the new "Rust crypto" implementation of the matrix-js-sdk, so encoding does not
 need the legacy Olm library.
 
+## `ChatConnectionInterface` and Matrix-specific APIs
+
+The generic chat API is `ChatConnectionInterface` (`play/.../ChatConnection.ts`). Matrix-only features (Matrix client access, profile sync, diagnostics) are grouped in **`MatrixChatCapabilities`** and exposed as **optional** members on `ChatConnectionInterface` so `VoidChatConnection` does not implement them.
+
+At runtime, use **`hasMatrixChatCapabilities(connection)`** to narrow the connection before calling Matrix methods—avoid `instanceof MatrixChatConnection` in UI code so the design stays backend-agnostic and easier to test.
+
 ## Login flow
 
 The login flow to Matrix happens just  after the login to WorkAdventure.

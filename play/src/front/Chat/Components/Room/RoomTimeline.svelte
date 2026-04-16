@@ -305,7 +305,7 @@
             <div class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10">
                 {#if chatRoomsEnableInAdmin}
                     <button
-                        class="back-roomlist p-3 hover:bg-white/10 rounded-2xl aspect-square w-12"
+                        class="back-roomlist p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white shrink-0"
                         data-testid="chatBackward"
                         on:click={goBackAndClearSelectedChatMessage}
                     >
@@ -316,13 +316,13 @@
                         {/if}
                     </button>
                 {:else}
-                    <div class="p-3 rounded-2xl aspect-square w-12" />
+                    <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" />
                 {/if}
-                <div class="text-md font-bold h-5 grow text-center" data-testid="roomName">
+                <div class="text-sm font-bold min-w-0 grow text-center px-2 truncate" data-testid="roomName">
                     {$roomName}
                 </div>
 
-                <div class="p-3 rounded-2xl aspect-square w-12" />
+                <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" aria-hidden="true" />
             </div>
             {#if shouldDisplayLoader}
                 <div class="flex justify-center items-center w-full pb-1 bg-transparent">
@@ -375,7 +375,7 @@
                     <li class="last:pb-3" data-event-id={item.kind === "message" ? item.message.id : undefined}>
                         {#if item.kind === "separator"}
                             <div class="flex justify-center items-center pt-3 pb-1 px-6">
-                                <span class="text-xs min-w-32 text-center bold block opacity-50 py-1.5 px-3"
+                                <span class="text-xs font-condensed min-w-32 text-center block opacity-75 py-1.5 px-3"
                                     >{item.label}</span
                                 >
                             </div>
@@ -386,6 +386,7 @@
                                 on:updateMessageBody={onUpdateMessageBody}
                                 message={item.message}
                                 showHeader={item.showHeader}
+                                membersForMessageAvatars={room.membersForMessageAvatars}
                             />
                         {/if}
                     </li>
