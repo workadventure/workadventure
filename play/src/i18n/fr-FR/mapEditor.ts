@@ -445,6 +445,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Droits",
                 rightsHelper:
                     "Les droits définissent qui peut utiliser le megaphone. Si vous le laissez vide, tout le monde peut l'utiliser. Si vous le définissez, seuls les utilisateurs qui ont au moins l'un de ces 'tags' peuvent l'utiliser.",
+                recording: {
+                    title: "Enregistrement",
+                    enable: "Activer l'enregistrement du megaphone",
+                    enableHelper:
+                        "Lorsqu'il est désactivé, les utilisateurs ne peuvent pas démarrer un enregistrement dans le megaphone. Les enregistrements en cours peuvent toujours être arrêtés.",
+                    rights: "Droits d'enregistrement",
+                    rightsHelper:
+                        "Toute personne ayant au moins l'un de ces tags peut enregistrer le megaphone, si elle peut déjà enregistrer et utiliser le megaphone. Laissez vide pour ne pas ajouter de restriction.",
+                },
                 audienceVideoFeedbackActivated: "Mode auditorium activé",
                 audienceVideoFeedbackActivatedDisabled: "Mode auditorium désactivé",
                 audienceVideoFeedbackActivatedHelper:

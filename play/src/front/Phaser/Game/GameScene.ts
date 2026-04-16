@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/svelte";
 import type { Subscription } from "rxjs";
-import { TimeoutError } from "rxjs";
+import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import Phaser from "phaser";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
@@ -32,6 +32,7 @@ import {
 } from "@workadventure/map-editor";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import Debug from "debug";
+import { asError } from "catch-unknown";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { urlManager } from "../../Url/UrlManager";
@@ -116,7 +117,7 @@ import {
     speakerSelectedStore,
 } from "../../Stores/MediaStore";
 import NoMicrophoneSoundToast from "../../Components/Toasts/NoMicrophoneSoundToast.svelte";
-import DoNotDisturbInfoToast from "../../Components/Toasts/DoNotDisturbInfoToast.svelte";
+import BrowserNoSoundInfoToast from "../../Components/Toasts/BrowserNoSoundInfoToast.svelte";
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { toastStore } from "../../Stores/ToastStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
@@ -160,7 +161,7 @@ import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
-import { audioContextManager } from "../../WebRtc/AudioContextManager";
+import { AUDIO_CONTEXT_TOAST_UUID, audioContextManager } from "../../WebRtc/AudioContextManager";
 import { notificationManager } from "../../Notification/NotificationManager";
 import { noMicrophoneSoundWarningVisibleStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
 import type { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
@@ -2071,7 +2072,11 @@ export class GameScene extends DirtyScene {
                             this.createSuccessorGameScene(true, true);
                         })
                         .catch((e) => {
-                            console.error("Error while waiting for Pusher to come back online", e);
+                            console.error(
+                                `Error while waiting for Pusher to come back online: ${asError(e).message}`,
+                                e
+                            );
+                            Sentry.captureException(e);
                             this.handleErrorAndCleanup(
                                 e,
                                 "CONNECTION_BROKEN",
@@ -2243,6 +2248,11 @@ export class GameScene extends DirtyScene {
                         audienceVideoFeedbackActivated:
                             this.getGameMap().getWamFile()?.getWam()?.settings?.megaphone
                                 ?.audienceVideoFeedbackActivated ?? false,
+                        canRecord: WAMSettingsUtils.canStartRecordingMegaphone(
+                            this.getGameMap().getWamFile()?.getWam()?.settings,
+                            this.connection.getAllTags(),
+                            localUserStore.isLogged()
+                        ),
                     });
                 }
                 megaphoneCanBeUsedStore.set(
@@ -2335,7 +2345,7 @@ export class GameScene extends DirtyScene {
                     if (!hasNotification && !isPWAInstalled) {
                         console.warn("Audio context is suspended. Please allow the page to play audio.");
                         // Show a toast to the user to allow the page to play audio.
-                        toastStore.addToast(DoNotDisturbInfoToast, {}, "do-not-disturb-info-toast");
+                        toastStore.addToast(BrowserNoSoundInfoToast, {}, AUDIO_CONTEXT_TOAST_UUID);
                         let timeoutId: ReturnType<typeof setTimeout> | undefined = undefined;
                         let isNotSuspendedAudioContextStoreSubscription: Unsubscriber | undefined = undefined;
                         // Verify that the audio context is not suspended before the timeout expires

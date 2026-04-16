@@ -14,7 +14,6 @@
     import loaderImg from "../images/loader.svg";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
-    import { userActivationManager } from "../../Stores/UserActivationStore";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
     import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
     import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
@@ -37,6 +36,7 @@
 
     // The inCameraContainer is used to know if the VideoMediaBox is part of a series of video or if it is the highlighted video.
     let inCameraContainer: boolean = !!getContext("inCameraContainer");
+    let inHighlightFullscreenParticipantList: boolean = !!getContext("inHighlightFullscreenParticipantList");
 
     $: extendedSpaceUser = videoBox.spaceUser;
     $: megaphoneState = extendedSpaceUser?.reactiveUser.megaphoneState;
@@ -50,13 +50,11 @@
     $: hasVideoStore = streamable?.hasVideo;
     $: hasAudioStore = streamable?.hasAudio;
     $: isMutedStore = streamable?.isMuted;
-    $: muteAudioStore = streamable?.muteAudio;
     $: volumeMeterStore = streamable?.volumeStore;
     $: showVoiceIndicatorStore = streamable?.showVoiceIndicator;
     $: isBlockedStore = streamable?.media?.isBlocked;
     $: volumeStore = streamable?.volume;
     $: volumeMeter = $volumeMeterStore;
-    $: muteAudio = muteAudioStore ? $muteAudioStore : false;
     $: webRtcStatsStore = $displayVideoQualityStore ? streamable?.webrtcStats : undefined;
     $: webRtcStats = $webRtcStatsStore;
 
@@ -106,11 +104,21 @@
         );
     }
 
-    function toggleFullScreen() {
-        highlightFullScreen.update((current) => !current);
+    function setFullScreen() {
+        exitFullScreen();
+        removeHighlight();
+
+        setTimeout(() => {
+            highlightPeer();
+            highlightFullScreen.set(true);
+        }, 100);
     }
 
     function exitFullScreen() {
+        highlightFullScreen.set(false);
+    }
+
+    function removeHighlight() {
         highlightedEmbedScreen.removeHighlight();
     }
 
@@ -259,12 +267,15 @@
                 media={streamable?.media}
                 {videoEnabled}
                 status={effectiveStatus}
-                verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
+                verticalAlign={!inCameraContainer && !inHighlightFullscreenParticipantList && !fullScreen
+                    ? "top"
+                    : "center"}
                 isTalking={showVoiceIndicator}
                 flipX={streamable?.flipX}
-                cover={streamable?.displayMode === "cover" && (inCameraContainer || fullScreen)}
+                cover={streamable?.displayMode === "cover" &&
+                    (inCameraContainer || inHighlightFullscreenParticipantList || fullScreen)}
                 isBlocked={$isBlockedStore}
-                withBackground={(inCameraContainer &&
+                withBackground={((inCameraContainer || inHighlightFullscreenParticipantList) &&
                     effectiveStatus !== "connecting" &&
                     effectiveStatus !== "reconnecting") ||
                     $isBlockedStore}
@@ -314,30 +325,36 @@
             </CenteredVideo>
         {/if}
 
-        {#if !inCameraContainer}
+        {#if !inCameraContainer && videoEnabled}
             <!-- The menu to go fullscreen -->
             <div
-                class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-50 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-20 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
             >
                 <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
-                    {#if !fullScreen}
+                    {#if !fullScreen && !$highlightFullScreen}
                         <button
                             class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
-                            on:click={exitFullScreen}
+                            on:click={removeHighlight}
                         >
                             <IconArrowsMinimize font-size="20" class="text-white" />
                         </button>
                     {/if}
-                    <button
-                        class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
-                        on:click={toggleFullScreen}
-                    >
-                        {#if fullScreen}
+                    {#if fullScreen}
+                        <button
+                            class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                            on:click={exitFullScreen}
+                        >
                             <IconArrowsMinimize font-size="20" class="text-white" />
-                        {:else}
+                        </button>
+                    {:else}
+                        <button
+                            class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                            on:click={setFullScreen}
+                            data-testid="highlight-enter-fullscreen-button"
+                        >
                             <IconArrowsMaximize font-size="20" class="text-white" />
-                        {/if}
-                    </button>
+                        </button>
+                    {/if}
                 </div>
             </div>
         {/if}

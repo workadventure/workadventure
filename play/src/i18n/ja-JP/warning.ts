@@ -50,17 +50,23 @@ const warning: DeepPartial<Translation["warning"]> = {
     pwaInstall: {
         title: "WorkAdventureをインストール",
         description:
-            "アプリをインストールして、より快適に：読み込みが速く、すばやくアクセスでき、アプリのような体験ができます。",
-        descriptionIos: "ホーム画面にWorkAdventureを追加して、より快適に素早くアクセスできます。",
+            "より快適に使えるよう、アプリをインストールしましょう。すばやくアクセスでき、起動時に読み込まれ、アプリのように利用できます。",
+        descriptionIos: "より快適にすばやくアクセスできるよう、WorkAdventure をホーム画面に追加しましょう。",
+        feature1Title: "すばやくアクセス",
+        feature1Description: "スタートメニュー、Dock、またはデスクトップから WorkAdventure を起動できます。",
+        feature2Title: "専用のアプリウィンドウ",
+        feature2Description: "WorkAdventure をブラウザのタブから分けて、タスクバーですぐに見つけられます。",
+        feature3Title: "起動時に開始",
+        feature3Description: "デバイスの起動時に WorkAdventure を起動します。",
         iosStepsTitle: "インストール方法",
         iosStep1: "Safariの下部にある「共有」ボタン（四角と矢印）をタップします。",
         iosStep2: "下にスクロールして「ホーム画面に追加」をタップします。",
         iosStep3: "「追加」をタップして確認します。",
-        install: "WorkAdventure ウェブアプリをインストール",
+        install: "WorkAdventureアプリをインストール",
         installing: "インストール中…",
         skip: "ブラウザで続ける",
         continue: "ブラウザで続ける",
-        neverShowPage: "このページを今後表示しない",
+        neverShowPage: "次回から表示しない",
     },
 };
 

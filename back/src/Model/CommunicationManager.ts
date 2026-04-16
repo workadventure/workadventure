@@ -129,6 +129,10 @@ export class CommunicationManager implements ICommunicationManager {
             new TransitionPolicy(MAX_USERS_FOR_WEBRTC, new LivekitAvailabilityService(), this._recordingManager);
     }
 
+    public getRecordingState(): { isRecording: boolean; recorder: string | null } {
+        return this._recordingManager.getRecordingState();
+    }
+
     public async handleUserAdded(user: SpaceUser): Promise<void> {
         this._recordingManager.handleAddUser(user);
         this.userRegistry.addUser(user);
@@ -138,16 +142,12 @@ export class CommunicationManager implements ICommunicationManager {
         await this.evaluateAndHandleTransition(user);
     }
 
-    public async handleUserDeleted(user: SpaceUser, shouldStopRecording: boolean): Promise<void> {
+    public async handleUserDeleted(user: SpaceUser): Promise<void> {
         this.userRegistry.deleteUser(user.spaceUserId);
         this.cancelPendingTransitionIfNeeded();
 
         await this.lifecycleManager.getCurrentState().handleUserDeleted(user);
         await this.evaluateAndHandleTransition(user);
-        //TODO : revoir le fonctionnement du recordingManager pour le delete user
-        if (shouldStopRecording) {
-            await this._recordingManager.handleRemoveUser(user);
-        }
     }
 
     public async handleUserUpdated(user: SpaceUser): Promise<void> {
@@ -303,13 +303,38 @@ export class CommunicationManager implements ICommunicationManager {
     }
     public async handleStartRecording(user: SpaceUser): Promise<void> {
         this.cancelPendingTransitionIfNeeded();
-        //TODO : faire comme pour le add et le delete user si besoin on return un state
         await this._recordingManager.startRecording(user);
     }
 
     public async handleStopRecording(user: SpaceUser): Promise<void> {
-        await this._recordingManager.stopRecording(user);
+        const stoppedRecorder = await this._recordingManager.stopRecording(user);
+        if (!stoppedRecorder) {
+            return;
+        }
+        this.scheduleTransitionAfterRecordingStops(stoppedRecorder);
+    }
 
+    public async handleRecorderLeftSpace(spaceUserId: string): Promise<boolean> {
+        const stoppedRecorder = await this._recordingManager.stopRecordingIfRecorderMatches(spaceUserId);
+        if (!stoppedRecorder) {
+            return false;
+        }
+
+        this.scheduleTransitionAfterRecordingStops(stoppedRecorder);
+        return true;
+    }
+
+    public async handleServerStopRecording(): Promise<boolean> {
+        const stoppedRecorder = await this._recordingManager.stopRecordingByServer();
+        if (!stoppedRecorder) {
+            return false;
+        }
+
+        this.scheduleTransitionAfterRecordingStops(stoppedRecorder);
+        return true;
+    }
+
+    private scheduleTransitionAfterRecordingStops(user: SpaceUser): void {
         const context: TransitionContext = {
             space: this.space,
             users: this.userRegistry.getUsers(),
@@ -317,11 +342,8 @@ export class CommunicationManager implements ICommunicationManager {
             playUri: user.playUri,
         };
         this.scheduleDelayedTransitionWithValidation(CommunicationType.WEBRTC, context);
-
-        return;
     }
 
-    //TODO : voir si on garde ces methodes ou on passer
     public destroy(): void {
         this._recordingManager.destroy();
     }

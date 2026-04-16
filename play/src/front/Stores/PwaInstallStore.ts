@@ -69,8 +69,15 @@ export function continuePwaInBrowser(): void {
 
 export function neverShowPwaPage(): void {
     markPwaPromptNeverShow();
+    pwaInstallProfileMenuEligibleStore.set(false);
     gameManager.completePwaInstall();
 }
 
 /** True while the Phaser PwaInstallScene is active (Svelte full-screen UI). */
 export const pwaInstallSceneVisibleStore = writable(false);
+
+/**
+ * Result of `shouldShowPwaInstallSceneAsync` during GameManager.init (single call per load).
+ * `undefined` until init reaches that step; `false` when install is not offered (e.g. already installed).
+ */
+export const pwaInstallProfileMenuEligibleStore = writable<boolean | undefined>(undefined);

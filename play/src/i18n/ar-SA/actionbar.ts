@@ -11,6 +11,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantListPlaceholder: "قائمة المشاركين",
     participantSendMessage: "إرسال رسالة",
     participantInviteUser: "دعوة مستخدم",
+    participantExitFullscreen: "الخروج من وضع ملء الشاشة",
     profil: "تحرير اسمك",
     startScreenSharing: "بدء مشاركة الشاشة",
     stopScreenSharing: "إيقاف مشاركة الشاشة",
@@ -50,6 +51,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "مكبر الصوت معطل",
         activate: "قم بتنشيط مكبر الصوت",
         noDevices: "لم يتم العثور على جهاز مكبر صوت",
+        noDevicesDesc:
+            "لا يعرض المتصفح أي مخرجات صوت يمكن اختيارها. بعض المتصفحات تقتصر على ذلك (مثل Safari). جرّب متصفحًا آخر، أو أعد توصيل سماعات الرأس أو السماعات، أو تحقق من إعدادات صوت النظام وإعدادات الجهاز (الخصوصية، الأجهزة).",
     },
     status: {
         ONLINE: "متصل",

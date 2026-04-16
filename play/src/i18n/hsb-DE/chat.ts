@@ -48,6 +48,9 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     imagePreview: {
         close: "Začinić",
+        label: "Wobrazowy přehlad",
+        loading: "Wobraz so začituje...",
+        loadError: "Tutón wobrazowy přehlad njeda so začitać.",
         openInNewTab: "W nowym rajtarku woteworić",
     },
     join: "Přizamknyć",
@@ -85,7 +88,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         away: "njepřitomny",
         back_in_a_moment: "Wróćo so za moment",
         do_not_disturb: "Njewobroćeć",
-        click_to_become_available: "Klikńće, zo byšće zaso k dispoziciji był a z druhimi rěčeć.",
         busy: "Zajaty",
         unavailable: "njesteji k dispoziciji",
         meeting: "W zasedanju",

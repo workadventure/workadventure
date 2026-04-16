@@ -48,6 +48,7 @@ export interface SpaceInterface {
     getName(): string;
     setMetadata(metadata: Map<string, unknown>): void;
     getMetadata(): Map<string, unknown>;
+    setCanRecord(canRecord: boolean): void;
     //stopWatching(spaceFilter: SpaceFilterInterface): void;
     observeMetadataProperty(key: string): Subject<unknown>;
     observePublicEvent<K extends keyof PublicEventsObservables>(key: K): NonNullable<PublicEventsObservables[K]>;
@@ -131,6 +132,7 @@ export interface SpaceInterface {
     readonly filterType: FilterType;
     get mySpaceUserId(): SpaceUser["spaceUserId"];
     getUsers(options?: { signal: AbortSignal }): Promise<Map<string, Readonly<SpaceUserExtended>>>;
+    waitForSpaceUser(spaceUserId: SpaceUser["spaceUserId"], timeoutMs: number): Promise<SpaceUserExtended>;
 
     readonly destroyed: boolean;
 }

@@ -4,6 +4,8 @@
     import { coWebsiteRatio, coWebsites, fullScreenCowebsite } from "../../Stores/CoWebsiteStore";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
     import SimpleCowebsiteComponent from "../Cowebsites/SimpleCowebsiteComponent.svelte";
+    import ImageCowebsiteComponent from "../Cowebsites/ImageCowebsiteComponent.svelte";
+    import { ImageCoWebsite } from "../../WebRtc/CoWebsite/ImageCoWebsite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
@@ -280,6 +282,8 @@
                     />
                 {:else if coWebsite instanceof VideoCoWebsite}
                     <VideoCowebsiteComponent actualCowebsite={coWebsite} visible={coWebsite === activeCowebsite} />
+                {:else if coWebsite instanceof ImageCoWebsite}
+                    <ImageCowebsiteComponent actualCowebsite={coWebsite} visible={coWebsite === activeCowebsite} />
                 {:else if coWebsite instanceof SimpleCoWebsite}
                     <SimpleCowebsiteComponent
                         actualCowebsite={coWebsite}

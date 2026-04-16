@@ -11,6 +11,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantListPlaceholder: "Llista de participants",
     participantSendMessage: "Enviar un missatge",
     participantInviteUser: "Convidar un usuari",
+    participantExitFullscreen: "Sortir de la pantalla completa",
     profil: "Editar el teu nom",
     startScreenSharing: "Iniciar compartir pantalla",
     stopScreenSharing: "Aturar compartir pantalla",
@@ -51,6 +52,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "El teu altaveu està desactivat",
         activate: "Activar el teu altaveu",
         noDevices: "No s'ha trobat cap dispositiu d'altaveu",
+        noDevicesDesc:
+            "El navegador no mostra cap sortida d'àudio seleccionable. Alguns navegadors ho limiten (per exemple Safari). Prova un altre navegador, torna a connectar auriculars o altaveus, revisa la configuració de so del sistema i la configuració de l'ordinador.",
     },
     status: {
         ONLINE: "En línia",

@@ -15,6 +15,7 @@ import { localUserStore } from "../Connection/LocalUserStore";
 import { soundManager } from "../Phaser/Game/SoundManager";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { megaphoneSpaceSettingsStore, megaphoneSpaceStore } from "../Stores/MegaphoneStore";
+import type { MegaphoneSpaceSettings } from "../Stores/MegaphoneStore";
 import { resolveUrlPlaceholders } from "../Utils/UrlPlaceholderResolver";
 
 const broadcastServiceLogger = debug("BroadcastService");
@@ -24,6 +25,7 @@ export class BroadcastService {
     private broadcastSpaces: SpaceInterface[] = [];
     private unsubscribes: Subscription[] = [];
     private megaphoneSpaceSettingsStoreUnsubscribe: Unsubscriber;
+    private megaphoneSpaceSettings: MegaphoneSpaceSettings | undefined;
 
     constructor(
         private spaceRegistry: SpaceRegistryInterface,
@@ -34,6 +36,21 @@ export class BroadcastService {
         // Listen for changes in WAM settings to update the recording capability in existing spaces
         this.megaphoneSpaceSettingsStoreUnsubscribe = megaphoneSpaceSettingsStore.subscribe((newSpaceSettings) => {
             const oldMegaphoneSpace = get(megaphoneSpaceStore);
+            const oldSpaceSettings = this.megaphoneSpaceSettings;
+
+            if (oldMegaphoneSpace) {
+                oldMegaphoneSpace.setCanRecord(newSpaceSettings?.canRecord ?? false);
+            }
+
+            if (
+                oldMegaphoneSpace &&
+                newSpaceSettings !== undefined &&
+                oldSpaceSettings?.spaceName === newSpaceSettings.spaceName &&
+                oldSpaceSettings.audienceVideoFeedbackActivated === newSpaceSettings.audienceVideoFeedbackActivated
+            ) {
+                this.megaphoneSpaceSettings = newSpaceSettings;
+                return;
+            }
 
             // Handle existing megaphone space
             if (oldMegaphoneSpace) {
@@ -47,11 +64,13 @@ export class BroadcastService {
             if (newSpaceSettings !== undefined) {
                 const spaceName = newSpaceSettings.spaceName;
                 const audienceVideoFeedbackActivated = newSpaceSettings.audienceVideoFeedbackActivated;
+                this.megaphoneSpaceSettings = newSpaceSettings;
                 this.joinSpace(
                     spaceName,
                     this.abortSignal,
                     audienceVideoFeedbackActivated,
-                    new Map([["isMegaphoneSpace", true]])
+                    new Map([["isMegaphoneSpace", true]]),
+                    newSpaceSettings.canRecord
                 )
                     .then((space) => {
                         megaphoneSpaceStore.set(space);
@@ -61,6 +80,9 @@ export class BroadcastService {
                         // Comment this out to avoid spamming Sentry with errors when joining spaces
                         // Sentry.captureException(e);
                     });
+            } else {
+                this.megaphoneSpaceSettings = undefined;
+                megaphoneSpaceStore.set(undefined);
             }
         });
     }
@@ -77,7 +99,8 @@ export class BroadcastService {
         spaceName: string,
         abortSignal: AbortSignal,
         audienceVideoFeedbackActivated = false,
-        metadata: Map<string, unknown> = new Map()
+        metadata: Map<string, unknown> = new Map(),
+        canRecord = WAMSettingsUtils.canStartRecordingMegaphone(this.wamSettings, this.tags, localUserStore.isLogged())
     ): Promise<SpaceInterface> {
         const spaceNameSlugify = slugify(spaceName);
 
@@ -90,11 +113,7 @@ export class BroadcastService {
             : ["screenSharing", "cameraState", "microphoneState", "megaphoneState"];
 
         const space = await this.spaceRegistry.joinSpace(spaceNameSlugify, filterType, watchFields, abortSignal, {
-            canRecord: WAMSettingsUtils.canStartRecordingMegaphone(
-                this.wamSettings,
-                this.tags,
-                localUserStore.isLogged()
-            ),
+            canRecord,
             metadata,
         });
 

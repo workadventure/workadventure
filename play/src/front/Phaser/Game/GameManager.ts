@@ -1,6 +1,7 @@
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
+import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Room } from "../../Connection/Room";
@@ -22,7 +23,7 @@ import { gameSceneIsLoadedStore, waitForGameSceneStore } from "../../Stores/Game
 import { myCameraStore } from "../../Stores/MyMediaStore";
 import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
-import { pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallStore";
+import { pwaInstallProfileMenuEligibleStore, pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallStore";
 import { hasCapability } from "../../Connection/Capabilities";
 import type { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
@@ -35,6 +36,7 @@ import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
 import type { WokaData } from "../../Components/Woka/WokaTypes";
 import { generateRandomName } from "../../Utils/RandomNameGenerator";
 import { shouldShowPwaInstallSceneAsync } from "../../Utils/PwaInstallEligibility";
+import { raceTimeout } from "../../Utils/PromiseUtils";
 import { GameScene } from "./GameScene";
 /**
  * This class should be responsible for any scene starting/stopping
@@ -149,11 +151,32 @@ export class GameManager {
 
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
-        if (
-            this.playerName &&
-            localUserStore.getAuthToken() &&
-            (await shouldShowPwaInstallSceneAsync({ bypassPwa: this.startRoom.bypassPwa }))
-        ) {
+        let shouldShowPwaInstall = false;
+        pwaInstallProfileMenuEligibleStore.set(shouldShowPwaInstall);
+
+        const pwaInstallEligibilityPromise = shouldShowPwaInstallSceneAsync({
+            bypassPwa: this.startRoom.bypassPwa,
+        })
+            .then((isEligible) => {
+                pwaInstallProfileMenuEligibleStore.set(isEligible);
+                return isEligible;
+            })
+            .catch((error) => {
+                console.error("Error while checking if PWA install should be shown", error);
+                Sentry.captureException(error);
+                return false;
+            });
+
+        try {
+            shouldShowPwaInstall = await raceTimeout(pwaInstallEligibilityPromise, 1500);
+        } catch (error) {
+            if (!(error instanceof TimeoutError)) {
+                console.error("Error while checking if PWA install should be shown", error);
+                Sentry.captureException(error);
+            }
+        }
+
+        if (this.playerName && localUserStore.getAuthToken() && shouldShowPwaInstall) {
             return PwaInstallSceneName;
         } else if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
             return LoginSceneName;

@@ -38,6 +38,7 @@ if (typeof window !== "undefined" && window.env === undefined) {
         MAX_USERNAME_LENGTH: 20,
         MAX_PER_GROUP: 4,
         MAX_DISPLAYED_VIDEOS: 4,
+        LIVEKIT_PIXEL_DENSITY: 2 / 3,
         NODE_ENV: "test",
         CONTACT_URL: undefined,
         POSTHOG_API_KEY: undefined,

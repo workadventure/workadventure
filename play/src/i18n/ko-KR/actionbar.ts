@@ -11,6 +11,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantListPlaceholder: "참가자 목록",
     participantSendMessage: "메시지 보내기",
     participantInviteUser: "사용자 초대",
+    participantExitFullscreen: "전체 화면 종료",
     profil: "이름 편집",
     startScreenSharing: "화면 공유 시작",
     stopScreenSharing: "화면 공유 중지",
@@ -52,6 +53,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "스피커가 비활성화되어 있습니다",
         activate: "스피커 활성화",
         noDevices: "사용 가능한 스피커 장치를 찾을 수 없습니다",
+        noDevicesDesc:
+            "브라우저에 선택 가능한 오디오 출력이 표시되지 않습니다. 일부 브라우저는 이를 제한합니다(예: Safari). 다른 브라우저를 시도하거나 헤드폰이나 스피커를 다시 연결하거나, 시스템 음향 설정과 컴퓨터 설정(개인 정보 보호, 장치)을 확인하세요.",
     },
     status: {
         ONLINE: "온라인",

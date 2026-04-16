@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount, tick } from "svelte";
     import { z } from "zod";
     import Debug from "debug";
     import { isInRemoteConversation, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
@@ -127,25 +127,30 @@
 
         window.documentPictureInPicture
             .requestWindow(options)
-            .then((newPipWindow: Window) => {
+            .then(async (newPipWindow: Window) => {
                 // Picture in picture is possible
                 // we store the window to start the picture in picture mode
                 // the builder listen the pipWindow and will start the dom building
                 pipWindow = newPipWindow;
 
-                // Listen the event when the user wants to close the picture in picture mode
-                pipWindow.addEventListener("pagehide", destroyPictureInPictureComponent);
-
                 copySteelSheet(pipWindow);
                 pipWindow.document.body.style.display = "flex";
+                pipWindow.document.body.style.flexDirection = "column";
                 pipWindow.document.body.style.justifyContent = "center";
                 pipWindow.document.body.style.alignItems = "start";
                 pipWindow.document.body.style.height = "100vh";
                 pipWindow.document.body.style.width = "100%";
-                pipWindow.document.createAttribute("data-testid").value = "windowPictureInPicture";
+                pipWindow.document.body.setAttribute("data-testid", "windowPictureInPicture");
+
+                // IMPORTANT: append *before* activePictureInPictureStore + tick.
+                // documentPictureInPicture 'enter' / LiveKit may run isElementInPiP immediately;
+                // if <video> nodes are not under pipWin.document yet, contains(el) is false.
                 pipWindow.document.body.append(divElement);
 
                 activePictureInPictureStore.set(true);
+                await tick();
+
+                pipWindow.addEventListener("pagehide", destroyPictureInPictureComponent);
             })
             .catch((error: Error) => {
                 debug("Picture-in-Picture is not supported", error);

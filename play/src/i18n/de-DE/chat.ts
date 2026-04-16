@@ -48,6 +48,9 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     imagePreview: {
         close: "Schließen",
+        label: "Bildvorschau",
+        loading: "Bild wird geladen...",
+        loadError: "Diese Bildvorschau konnte nicht geladen werden.",
         openInNewTab: "In neuem Tab öffnen",
     },
     join: "Beitreten",
@@ -85,7 +88,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         away: "Abwesend",
         back_in_a_moment: "Komme gleich zurück",
         do_not_disturb: "Nicht stören",
-        click_to_become_available: "Klicken Sie, um wieder verfügbar zu werden und mit anderen zu chatten.",
         busy: "Beschäftigt",
         unavailable: "Nicht verfügbar",
         meeting: "In Besprechung",

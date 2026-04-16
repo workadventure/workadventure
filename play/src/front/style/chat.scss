@@ -255,3 +255,51 @@
     content: "";
     @apply absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full;
 }
+
+
+.response .message-bubble p:last-of-type {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+}
+.message-bubble *:first-child {
+    margin-top: 0;
+}
+.message-bubble *:last-child {
+    margin-bottom: 0;
+}
+.message-bubble a {
+    text-decoration: underline;
+    opacity: 0.75;
+}
+pre {
+    margin: 0;
+}
+.message-bubble pre code {
+    display: block;
+    background-color: #303030;
+}
+.message-bubble code {
+    width: 100%;
+    padding: 0.25em 0.5em;
+    border-radius: 8px;
+    overflow-x: auto;
+    padding: 0.2em 0.5em;
+}
+::-webkit-scrollbar {
+    width: 2px;
+    height: 6px;
+}
+
+/* Track */
+/* Track */
+::-webkit-scrollbar-track {
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 3px;
+}
