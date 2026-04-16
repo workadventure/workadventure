@@ -437,16 +437,16 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     maxFramerate: preset.fps,
                 };
 
-            await this.localParticipant.publishTrack(this.localScreenSharingVideoTrack, screenSharePublishOptions);
-        } else if (this.localScreenSharingVideoTrack.mediaStreamTrack.id === screenShareVideoTrack.id) {
-            // Note: this cannot really happen as we never pause the upstream. We unpublish the track instead.
-            if (this.localScreenSharingVideoTrack.isUpstreamPaused) {
-                await this.localScreenSharingVideoTrack.resumeUpstream();
-            }
-        } else {
-            await this.localScreenSharingVideoTrack.replaceTrack(screenShareVideoTrack, {
-                userProvidedTrack: true,
-            });
+                await this.localParticipant.publishTrack(this.localScreenSharingVideoTrack, screenSharePublishOptions);
+            } else if (this.localScreenSharingVideoTrack.mediaStreamTrack.id === screenShareVideoTrack.id) {
+                // Note: this cannot really happen as we never pause the upstream. We unpublish the track instead.
+                if (this.localScreenSharingVideoTrack.isUpstreamPaused) {
+                    await this.localScreenSharingVideoTrack.resumeUpstream();
+                }
+            } else {
+                await this.localScreenSharingVideoTrack.replaceTrack(screenShareVideoTrack, {
+                    userProvidedTrack: true,
+                });
 
                 if (this.localScreenSharingVideoTrack.isUpstreamPaused) {
                     await this.localScreenSharingVideoTrack.resumeUpstream();
@@ -457,18 +457,18 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 if (!this.localScreenSharingAudioTrack) {
                     this.localScreenSharingAudioTrack = new LocalAudioTrack(screenShareAudioTrack);
 
-                await this.localParticipant.publishTrack(this.localScreenSharingAudioTrack, {
-                    source: Track.Source.ScreenShareAudio,
-                });
-            } else if (this.localScreenSharingAudioTrack.mediaStreamTrack.id === screenShareAudioTrack.id) {
-                // Note: this cannot really happen as we never pause the upstream. We unpublish the track instead.
-                if (this.localScreenSharingAudioTrack.isUpstreamPaused) {
-                    await this.localScreenSharingAudioTrack.resumeUpstream();
-                }
-            } else {
-                await this.localScreenSharingAudioTrack.replaceTrack(screenShareAudioTrack, {
-                    userProvidedTrack: true,
-                });
+                    await this.localParticipant.publishTrack(this.localScreenSharingAudioTrack, {
+                        source: Track.Source.ScreenShareAudio,
+                    });
+                } else if (this.localScreenSharingAudioTrack.mediaStreamTrack.id === screenShareAudioTrack.id) {
+                    // Note: this cannot really happen as we never pause the upstream. We unpublish the track instead.
+                    if (this.localScreenSharingAudioTrack.isUpstreamPaused) {
+                        await this.localScreenSharingAudioTrack.resumeUpstream();
+                    }
+                } else {
+                    await this.localScreenSharingAudioTrack.replaceTrack(screenShareAudioTrack, {
+                        userProvidedTrack: true,
+                    });
 
                     if (this.localScreenSharingAudioTrack.isUpstreamPaused) {
                         await this.localScreenSharingAudioTrack.resumeUpstream();
