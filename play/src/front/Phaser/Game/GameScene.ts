@@ -195,6 +195,7 @@ import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenO
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
 import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVariablesStore";
 import { isNotSuspendedAudioContextStore } from "../../Stores/AudioContextStore";
+import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -385,6 +386,7 @@ export class GameScene extends DirtyScene {
     private spaceScriptingBridgeService: SpaceScriptingBridgeService | undefined;
     private allUserSpace: SpaceInterface | undefined;
     private isLiveStreamingUnsubscriber: Unsubscriber | undefined;
+    private shouldPublishScreenShareUnsubscriber: Unsubscriber | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
     private _worldUserCounter: ForwardableStore<number> = new ForwardableStore(0);
@@ -1176,6 +1178,7 @@ export class GameScene extends DirtyScene {
         this.outlineManager?.clear();
         this.userInputManager?.destroy();
         this.isLiveStreamingUnsubscriber?.();
+        this.shouldPublishScreenShareUnsubscriber?.();
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
@@ -2617,6 +2620,14 @@ export class GameScene extends DirtyScene {
                 this.disableVoiceIndicator();
             }
         });
+
+        this.shouldPublishScreenShareUnsubscriber = this.spaceRegistry.shouldPublishScreenShareStore.subscribe(
+            (shouldPublish) => {
+                if (!shouldPublish && get(requestedScreenSharingState)) {
+                    requestedScreenSharingState.disableScreenSharing();
+                }
+            }
+        );
 
         // Subscribe to bubble sound changes
         this.unsubscribers.push(

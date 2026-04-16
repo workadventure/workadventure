@@ -291,11 +291,7 @@ export class Space implements SpaceInterface {
         this._isListenerStreamingStore = writable(false);
 
         // Condition for ALL_USERS filter type with video properties
-        const isAllUsersVideoSpace =
-            filterType === FilterType.ALL_USERS &&
-            (this._propertiesToSync.includes("cameraState") ||
-                this._propertiesToSync.includes("microphoneState") ||
-                this._propertiesToSync.includes("screenSharingState"));
+        const isAllUsersVideoSpace = filterType === FilterType.ALL_USERS && this.isVideoSpace();
 
         // Derived store: true if speaker OR listener streaming is active, or if ALL_USERS video space
         this._isStreamingStore = derived(
@@ -309,7 +305,10 @@ export class Space implements SpaceInterface {
             return isAllUsersVideoSpace || $isSpeakerStreaming;
         });
         this.shouldPublishScreenShareStore = derived([this._isSpeakerStreamingStore], ([$isSpeakerStreaming]) => {
-            return !(this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && !$isSpeakerStreaming);
+            return (
+                !(this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && !$isSpeakerStreaming) &&
+                this.isVideoSpace()
+            );
         });
 
         this.observeSyncBlockUser = this.observePrivateEvent("blockUserMessage").subscribe((message) => {
