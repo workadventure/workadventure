@@ -518,7 +518,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     remoteUserNotConnected: "Utilisateur non connecté. Impossible d'envoyer un message.",
     matrixSettings: {
         title: "Matrix & WorkAdventure",
-        subtitle: "Votre identité et les données synchronisées pour le chat",
+        subtitle: "Votre identité de chat et votre profil Matrix",
         close: "Fermer",
         identitySection: "Identité",
         matrixUserId: "Identifiant Matrix",
@@ -526,21 +526,21 @@ const chat: DeepPartial<Translation["chat"]> = {
         copy: "Copier",
         copied: "Copié",
         profileSection: "Profil Matrix",
-        accountDataSection: "account_data WorkAdventure",
+        accountDataSection: "WorkAdventure (dans le jeu)",
         displayName: "Nom d’affichage",
         avatar: "Avatar (MXC)",
         localName: "Nom dans le jeu",
         waDisplayName: "Nom WA (fr.workadventure.wa_display_name)",
         waAvatar: "Avatar WA (fr.workadventure.wa_avatar)",
         needsSyncHint:
-            "Le nom local ou le WOKA peut ne pas correspondre à l’account_data. Utilisez Synchroniser pour mettre à jour.",
-        upToDateHint: "L’account_data est aligné avec votre nom et votre WOKA (ou rien à synchroniser).",
-        syncButton: "Synchroniser account_data (nom + image WOKA)",
+            "Le nom local ou le WOKA peut ne pas correspondre à votre profil Matrix. Utilisez Synchroniser pour mettre à jour.",
+        upToDateHint: "Votre profil Matrix est aligné avec votre nom et votre WOKA (ou rien à synchroniser).",
+        syncButton: "Synchroniser le profil Matrix (nom + image WOKA)",
         syncing: "Synchronisation…",
         removeProfileImagesButton: "Supprimer les images de profil",
         removingProfileImages: "Suppression…",
         removeProfileImagesHint:
-            "Supprime la photo de profil Matrix et l’avatar WorkAdventure du chat. Votre WOKA en jeu ne change pas ; utilisez Synchroniser pour le publier à nouveau.",
+            "Supprime la photo de profil Matrix. Votre WOKA en jeu ne change pas ; utilisez Synchroniser pour le publier à nouveau.",
         loadError: "Impossible de charger les paramètres Matrix.",
         notConnected: "Matrix n’est pas connecté ou vous êtes invité.",
         clearSuggestedRoomsHint:
@@ -561,7 +561,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuItemDebugTag: "debug",
         title: "Profil Matrix",
         subtitle:
-            "Vue en lecture seule du profil Matrix et des account_data WorkAdventure de cet utilisateur. Visible uniquement si DEBUG_MODE est activé.",
+            "Vue en lecture seule du profil Matrix de cet utilisateur. Visible uniquement si DEBUG_MODE est activé.",
         loadError: "Impossible de charger le profil Matrix de cet utilisateur.",
     },
 };

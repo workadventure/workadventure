@@ -35,7 +35,7 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import type { VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { canAcceptVerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { asError } from "catch-unknown";
-import Debug from "debug";
+
 import type {
     ChatConnectionInterface,
     ChatRoom,
@@ -51,7 +51,6 @@ import LL from "../../../../i18n/i18n-svelte";
 import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
 import { MatrixRateLimiter } from "../../Services/MatrixRateLimiter";
-import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import type { MatrixSecurity } from "./MatrixSecurity";
@@ -59,38 +58,22 @@ import { matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
 import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
 import {
-    clearLastSyncedWokaAvatarHashForMatrixUser,
-    clearWaAvatarHttpCachesForUser,
-    deleteWaAvatarFromMatrixAccountData,
-    fetchWaAvatarMxcFromUserAccountDataRemote,
-    fetchWaDisplayNameFromUserAccountDataRemote,
-    readWaAvatarMxcFromMatrixAccountData,
-    readWaDisplayNameFromMatrixAccountData,
-    setWaAvatarAccountDataHttpCacheForUser,
-    setWaDisplayNameAccountDataCacheForUser,
     pushLocalWokaAndNameToMatrixProfile,
     syncWokaAvatarToMatrixProfileOnWokaChange,
-    WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE,
-    WORKADVENTURE_WA_DISPLAY_NAME_ACCOUNT_DATA_TYPE,
-    writeWaDisplayNameToMatrixAccountData,
 } from "./services/WaMatrixProfileService";
-
-const debug = Debug("matrix");
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
 
-/** Snapshot for the Matrix chat settings UI (profile vs account_data vs local game state). */
+/** Snapshot for the Matrix chat settings UI (Matrix profile vs local game state). */
 export type MatrixUserSettingsDiagnostics = {
     matrixUserId: string;
     homeserverUrl: string;
     profileDisplayName: string | undefined;
     profileAvatarMxc: string | undefined;
     profileAvatarPreviewUrl: string | undefined;
-    accountDataWaDisplayName: string | undefined;
-    accountDataWaAvatarMxc: string | undefined;
-    accountDataWaAvatarPreviewUrl: string | undefined;
     localDisplayName: string | undefined;
-    accountDataNeedsSync: boolean;
+    /** True when the in-game name or custom WOKA is not reflected on the Matrix profile. */
+    profileNeedsSync: boolean;
 };
 
 /** Read-only snapshot for another Matrix user (debug tooling). */
@@ -100,9 +83,6 @@ export type MatrixPeerProfileDiagnostics = {
     profileDisplayName: string | undefined;
     profileAvatarMxc: string | undefined;
     profileAvatarPreviewUrl: string | undefined;
-    accountDataWaDisplayName: string | undefined;
-    accountDataWaAvatarMxc: string | undefined;
-    accountDataWaAvatarPreviewUrl: string | undefined;
 };
 
 export const defaultWoka =
@@ -122,10 +102,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private handleVerificationRequestReceived: (request: VerificationRequest) => void;
     private statusUnsubscriber: Unsubscriber | undefined;
     private wokaAvatarMatrixSyncUnsubscriber: Unsubscriber | undefined;
-    private waDisplayNameAccountDataUnsubscriber: Unsubscriber | undefined;
-    /** When the space / user list changes, re-fetch peer `fr.workadventure.*` account_data from the homeserver. */
-    private userListPeerAccountDataUnsubscriber: Unsubscriber | undefined;
-    private userListPeerAccountDataDebounceTimer: ReturnType<typeof setTimeout> | undefined;
+    private displayNameMatrixSyncUnsubscriber: (() => void) | undefined;
+    private displayNameMatrixSyncDebounceTimer: ReturnType<typeof setTimeout> | undefined;
     private isClientReady = false;
     private usersStatus: MapStore<string, AvailabilityStatus>;
     private userIdsNeedingPresenceUpdate = new Set();
@@ -341,43 +319,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         });
     }
 
-    /**
-     * Call from {@link GameScene} once {@link UserProviderMerger} is ready so Matrix peer account_data
-     * stays aligned with space / connected-user list updates.
-     */
-    bindUserListAccountDataRefresh(merger: UserProviderMerger): void {
-        this.unbindUserListAccountDataRefresh();
-        this.userListPeerAccountDataUnsubscriber = merger.usersByRoomStore.subscribe((usersByRoom) => {
-            if (this.userListPeerAccountDataDebounceTimer !== undefined) {
-                clearTimeout(this.userListPeerAccountDataDebounceTimer);
-            }
-            this.userListPeerAccountDataDebounceTimer = setTimeout(() => {
-                this.userListPeerAccountDataDebounceTimer = undefined;
-                const ids = new Set<string>();
-                for (const { users } of usersByRoom.values()) {
-                    for (const u of users) {
-                        const cid = u.chatId;
-                        if (typeof cid === "string" && cid.startsWith("@")) {
-                            ids.add(cid);
-                        }
-                    }
-                }
-                this.refreshPeersWaAccountDataFromServer(Array.from(ids)).catch(() => undefined);
-            }, 400);
-        });
-    }
-
-    private unbindUserListAccountDataRefresh(): void {
-        if (this.userListPeerAccountDataDebounceTimer !== undefined) {
-            clearTimeout(this.userListPeerAccountDataDebounceTimer);
-            this.userListPeerAccountDataDebounceTimer = undefined;
-        }
-        if (this.userListPeerAccountDataUnsubscriber) {
-            this.userListPeerAccountDataUnsubscriber();
-            this.userListPeerAccountDataUnsubscriber = undefined;
-        }
-    }
-
     async init(): Promise<void> {
         try {
             this.client = await this.clientPromise;
@@ -385,8 +326,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             await this.startMatrixClient();
             this.isGuest.set(this.client.isGuest());
             this.rebuildSpaceHierarchy();
+            await this.syncMatrixGlobalProfileFromLocalWokaAndName();
             this.attachWokaAvatarMatrixSync();
-            this.attachWaDisplayNameAccountDataSync();
+            this.attachDisplayNameMatrixSync();
         } catch (error) {
             this.connectionStatus.set("OFFLINE");
             console.error(error);
@@ -395,8 +337,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     /**
-     * Uploads the in-game WOKA image to Matrix content and stores the MXC in account_data (`fr.workadventure.wa_avatar`),
-     * without overwriting the Matrix profile avatar.
+     * When the in-game WOKA changes, upload it to the Matrix content repo and set the Matrix profile avatar.
      */
     private attachWokaAvatarMatrixSync(): void {
         if (!this.client || this.wokaAvatarMatrixSyncUnsubscriber) {
@@ -410,58 +351,40 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             await syncWokaAvatarToMatrixProfileOnWokaChange(this.client, wokaSrc);
         };
 
-        trySync(get(currentPlayerWokaStore)).catch(() => undefined);
         this.wokaAvatarMatrixSyncUnsubscriber = currentPlayerWokaStore.subscribe((src) => {
             trySync(src).catch(() => undefined);
         });
     }
 
     /**
-     * Persists the WorkAdventure display name in Matrix account_data and drives chat background color (matrixWaDisplayNameForColorStore).
+     * When the in-game display name changes, push it to the Matrix profile (debounced; coalesces with
+     * {@link #attachWokaAvatarMatrixSync} flows).
      */
-    private attachWaDisplayNameAccountDataSync(): void {
-        if (!this.client || this.client.isGuest() || this.waDisplayNameAccountDataUnsubscriber) {
+    private attachDisplayNameMatrixSync(): void {
+        if (this.displayNameMatrixSyncUnsubscriber) {
             return;
         }
-
-        this.syncWaDisplayNameAccountDataWithLocal().catch(() => undefined);
-
-        if (!this.client || this.client.isGuest()) {
-            return;
-        }
-        const localName = localUserStore.getName()?.trim();
-        if (!localName) {
-            return;
-        }
-        writeWaDisplayNameToMatrixAccountData(this.client, localName).catch((error) => {
-            console.warn("Failed to sync WA display name to Matrix account_data", error);
-            Sentry.captureException(error);
+        const schedule = () => {
+            if (this.displayNameMatrixSyncDebounceTimer !== undefined) {
+                clearTimeout(this.displayNameMatrixSyncDebounceTimer);
+            }
+            this.displayNameMatrixSyncDebounceTimer = setTimeout(() => {
+                this.displayNameMatrixSyncDebounceTimer = undefined;
+                this.syncMatrixGlobalProfileFromLocalWokaAndName().catch(() => undefined);
+            }, 400);
+        };
+        this.displayNameMatrixSyncUnsubscriber = localUserStore.subscribeDisplayNameChange(() => {
+            schedule();
         });
     }
 
-    private async syncWaDisplayNameAccountDataWithLocal(): Promise<void> {
-        if (!this.client || this.client.isGuest()) {
-            return;
-        }
-        const localName = localUserStore.getName()?.trim();
-        const remoteName = readWaDisplayNameFromMatrixAccountData(this.client);
-        if (localName && localName !== remoteName) {
-            try {
-                await writeWaDisplayNameToMatrixAccountData(this.client, localName);
-            } catch (error) {
-                console.warn("Failed to push WA display name to Matrix account_data", error);
-                Sentry.captureException(error);
-            }
-        }
-    }
-
-    /** Exposes the synced client (e.g. chat tint / `account_data` reads from {@link getMatrixClientForChatTint}). */
+    /** Exposes the synced Matrix client (e.g. chat tint resolution via {@link getMatrixClientForChatTint}). */
     getMatrixClient(): MatrixClient | undefined {
         return this.client;
     }
 
     /**
-     * Loads Matrix profile + WorkAdventure account_data for the settings UI.
+     * Loads Matrix profile and local game state for the settings UI.
      */
     async getMatrixUserSettingsDiagnostics(): Promise<MatrixUserSettingsDiagnostics | undefined> {
         if (!this.client || this.client.isGuest()) {
@@ -476,7 +399,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         let profileAvatarMxc: string | undefined;
         try {
             const profile = await this.client.getProfileInfo(userId);
-            profileDisplayName = profile.displayname;
+            profileDisplayName = profile.displayname?.trim();
             profileAvatarMxc = profile.avatar_url;
         } catch {
             /* profile fetch can fail on restricted networks */
@@ -484,17 +407,16 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const profileAvatarPreviewUrl = profileAvatarMxc
             ? this.client.mxcUrlToHttp(profileAvatarMxc, 96, 96) ?? undefined
             : undefined;
-        const accountDataWaDisplayName = readWaDisplayNameFromMatrixAccountData(this.client);
-        const accountDataWaAvatarMxc = readWaAvatarMxcFromMatrixAccountData(this.client);
-        const accountDataWaAvatarPreviewUrl = accountDataWaAvatarMxc
-            ? this.client.mxcUrlToHttp(accountDataWaAvatarMxc, 96, 96) ?? undefined
-            : undefined;
-        const localDisplayName = localUserStore.getName()?.trim();
+        const localDisplayName = localUserStore.getDisplayNameForMatrixProfile();
         const localWoka = get(currentPlayerWokaStore);
         const hasCustomWoka = Boolean(localWoka && localWoka !== sharedDefaultWoka);
-        const nameMismatch = Boolean(localDisplayName && localDisplayName !== accountDataWaDisplayName);
-        const avatarMissingInAccountData = Boolean(hasCustomWoka && !accountDataWaAvatarMxc);
-        const accountDataNeedsSync = nameMismatch || avatarMissingInAccountData;
+        const profileNameNorm = profileDisplayName?.trim();
+        const nameMismatch = Boolean(
+            localDisplayName &&
+                (profileNameNorm === undefined || profileNameNorm === "" || localDisplayName !== profileNameNorm)
+        );
+        const avatarMissingOnProfile = Boolean(hasCustomWoka && !profileAvatarMxc);
+        const profileNeedsSync = nameMismatch || avatarMissingOnProfile;
 
         return {
             matrixUserId: userId,
@@ -502,16 +424,13 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             profileDisplayName,
             profileAvatarMxc,
             profileAvatarPreviewUrl,
-            accountDataWaDisplayName,
-            accountDataWaAvatarMxc,
-            accountDataWaAvatarPreviewUrl,
             localDisplayName,
-            accountDataNeedsSync,
+            profileNeedsSync,
         };
     }
 
     /**
-     * Loads Matrix profile + WorkAdventure account_data for another user (GET profile + peer account_data; debug UI only).
+     * Loads Matrix profile for another user (debug UI only).
      */
     async getMatrixPeerProfileDiagnostics(matrixUserId: string): Promise<MatrixPeerProfileDiagnostics | undefined> {
         if (!this.client || this.client.isGuest()) {
@@ -531,67 +450,26 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             ? this.client.mxcUrlToHttp(profileAvatarMxc, 96, 96) ?? undefined
             : undefined;
 
-        const [accountDataWaDisplayName, accountDataWaAvatarMxc] = await Promise.all([
-            fetchWaDisplayNameFromUserAccountDataRemote(this.client, matrixUserId),
-            fetchWaAvatarMxcFromUserAccountDataRemote(this.client, matrixUserId),
-        ]);
-        const accountDataWaAvatarPreviewUrl = accountDataWaAvatarMxc
-            ? this.client.mxcUrlToHttp(accountDataWaAvatarMxc, 96, 96) ?? undefined
-            : undefined;
-
         return {
             matrixUserId,
             homeserverUrl,
             profileDisplayName,
             profileAvatarMxc,
             profileAvatarPreviewUrl,
-            accountDataWaDisplayName,
-            accountDataWaAvatarMxc,
-            accountDataWaAvatarPreviewUrl,
         };
     }
 
     /**
-     * Pushes local WorkAdventure name and WOKA image into Matrix account_data (does not change the Matrix profile avatar).
-     */
-    async syncMatrixAccountDataFromLocalGameState(): Promise<void> {
-        if (!this.client || this.client.isGuest()) {
-            return;
-        }
-        await this.syncWaDisplayNameAccountDataWithLocal();
-        await syncWokaAvatarToMatrixProfileOnWokaChange(this.client, get(currentPlayerWokaStore));
-    }
-
-    /**
-     * Sets the Matrix global profile display name and avatar from the in-game name and current WOKA
-     * (standard `/profile`, e.g. visible in Element). Distinct from {@link syncMatrixAccountDataFromLocalGameState}.
+     * Pushes the in-game display name and WOKA image to the Matrix global profile (`/profile`).
      */
     async syncMatrixGlobalProfileFromLocalWokaAndName(): Promise<void> {
         if (!this.client || this.client.isGuest()) {
             return;
         }
         await pushLocalWokaAndNameToMatrixProfile(this.client, {
-            localDisplayName: localUserStore.getName() ?? undefined,
+            localDisplayName: localUserStore.getDisplayNameForMatrixProfile(),
             wokaImageSrc: get(currentPlayerWokaStore),
         });
-    }
-
-    /**
-     * Clears the Matrix profile avatar and WorkAdventure `fr.workadventure.wa_avatar` account_data.
-     * Does not change the in-game WOKA; use {@link syncMatrixAccountDataFromLocalGameState} to publish again.
-     */
-    async clearMatrixProfileImages(): Promise<void> {
-        if (!this.client || this.client.isGuest()) {
-            return;
-        }
-        const userId = this.client.getSafeUserId();
-        if (!userId) {
-            return;
-        }
-        await this.client.setAvatarUrl("");
-        await deleteWaAvatarFromMatrixAccountData(this.client);
-        clearLastSyncedWokaAvatarHashForMatrixUser(userId);
-        clearWaAvatarHttpCachesForUser(userId);
     }
 
     private setPresence(status: AvailabilityStatus): void {
@@ -754,102 +632,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }, [] as string[]);
     }
 
-    /** After WA avatar account_data sync, refresh the current user’s MatrixChatRoomMember rows so chat UI picks up the new MXC. */
-    private refreshSelfMemberAvatarsInAllChatRooms(): void {
-        if (!this.client) {
-            return;
-        }
-        const myId = this.client.getUserId();
-        if (!myId) {
-            return;
-        }
-        const refreshRoom = (room: MatrixChatRoom) => {
-            get(room.members)
-                .filter((m) => m.id === myId)
-                .forEach((m) => m.refreshAvatarFromRoomMember());
-        };
-        this.roomList.forEach((room) => refreshRoom(room));
-        const visitFolder = (folder: MatrixRoomFolder) => {
-            folder.roomList.forEach((room) => refreshRoom(room));
-            folder.folderList.forEach((sub) => visitFolder(sub));
-        };
-        this.roomFolders.forEach((folder) => visitFolder(folder));
-    }
-
-    /** Re-fetch `fr.workadventure.wa_display_name` / `wa_avatar` for peers and refresh chat avatars / tint. */
-    private async refreshPeersWaAccountDataFromServer(matrixUserIds: string[]): Promise<void> {
-        if (!this.client || this.client.isGuest()) {
-            return;
-        }
-        const myId = this.client.getUserId();
-        const targets = matrixUserIds.filter((id) => id.startsWith("@") && id !== myId);
-        if (targets.length === 0) {
-            return;
-        }
-        debug("refresh peer WA account_data after user list update (%d matrix user(s))", targets.length);
-        await Promise.allSettled(
-            targets.map(async (uid) => {
-                try {
-                    const [name, mxc] = await Promise.all([
-                        fetchWaDisplayNameFromUserAccountDataRemote(this.client!, uid),
-                        fetchWaAvatarMxcFromUserAccountDataRemote(this.client!, uid),
-                    ]);
-                    if (name?.trim()) {
-                        setWaDisplayNameAccountDataCacheForUser(uid, name);
-                    } else {
-                        setWaDisplayNameAccountDataCacheForUser(uid, "");
-                    }
-                    if (mxc?.startsWith("mxc://")) {
-                        const http = this.client!.mxcUrlToHttp(mxc, 96, 96);
-                        if (http) {
-                            setWaAvatarAccountDataHttpCacheForUser(uid, http);
-                        }
-                    } else {
-                        clearWaAvatarHttpCachesForUser(uid);
-                    }
-                    this.refreshMemberAvatarsInAllChatRoomsForUser(uid);
-                } catch (e) {
-                    debug("refresh peer WA account_data failed userId=%s %o", uid, e);
-                }
-            })
-        );
-    }
-
-    private refreshMemberAvatarsInAllChatRoomsForUser(matrixUserId: string): void {
-        const refreshRoom = (room: MatrixChatRoom) => {
-            get(room.members)
-                .filter((m) => m.id === matrixUserId)
-                .forEach((m) => m.refreshAvatarFromRoomMember());
-        };
-        this.roomList.forEach((room) => refreshRoom(room));
-        const visitFolder = (folder: MatrixRoomFolder) => {
-            folder.roomList.forEach((room) => refreshRoom(room));
-            folder.folderList.forEach((sub) => visitFolder(sub));
-        };
-        this.roomFolders.forEach((folder) => visitFolder(folder));
-    }
-
     private onAccountDataEvent(event: MatrixEvent) {
-        if (event.getType() === WORKADVENTURE_WA_DISPLAY_NAME_ACCOUNT_DATA_TYPE) {
-            const content = event.getContent();
-            const remote = content?.name?.trim();
-            const local = localUserStore.getName()?.trim();
-            debug(
-                "sync account_data event %s (self only over /sync) remoteName=%s localName=%s",
-                WORKADVENTURE_WA_DISPLAY_NAME_ACCOUNT_DATA_TYPE,
-                remote ?? "",
-                local ?? ""
-            );
-            return;
-        }
-        if (event.getType() === WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE) {
-            debug(
-                "sync account_data event %s (self only over /sync) → refresh self avatars in rooms",
-                WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE
-            );
-            this.refreshSelfMemberAvatarsInAllChatRooms();
-            return;
-        }
         if (event.getType() === "m.push_rules") {
             const content = event.getContent();
 
@@ -1643,11 +1426,14 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             this.wokaAvatarMatrixSyncUnsubscriber();
             this.wokaAvatarMatrixSyncUnsubscriber = undefined;
         }
-        if (this.waDisplayNameAccountDataUnsubscriber) {
-            this.waDisplayNameAccountDataUnsubscriber();
-            this.waDisplayNameAccountDataUnsubscriber = undefined;
+        if (this.displayNameMatrixSyncDebounceTimer !== undefined) {
+            clearTimeout(this.displayNameMatrixSyncDebounceTimer);
+            this.displayNameMatrixSyncDebounceTimer = undefined;
         }
-        this.unbindUserListAccountDataRefresh();
+        if (this.displayNameMatrixSyncUnsubscriber) {
+            this.displayNameMatrixSyncUnsubscriber();
+            this.displayNameMatrixSyncUnsubscriber = undefined;
+        }
     }
     async destroy(): Promise<void> {
         await this.client?.logout(true);

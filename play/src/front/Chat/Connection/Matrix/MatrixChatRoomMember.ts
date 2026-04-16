@@ -2,19 +2,13 @@ import type { MatrixClient, MatrixEvent, RoomMember } from "matrix-js-sdk";
 import { RoomMemberEvent, UserEvent } from "matrix-js-sdk";
 import type { Readable, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
-import Debug from "debug";
+
 import type { ChatRoomMember, ChatRoomMembership, memberTypingInformation } from "../ChatConnection";
 import { ChatPermissionLevel } from "../ChatConnection";
 import type { PictureStore } from "../../../Stores/PictureStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { localUserStore } from "../../../Connection/LocalUserStore";
-import {
-    readWaDisplayNameFromMatrixAccountData,
-    resolveChatUserColor,
-    resolveDirectMessagePeerAvatarUrl,
-} from "./services/WaMatrixProfileService";
-
-const debug = Debug("matrix");
+import { resolveChatUserColor, resolveDirectMessagePeerAvatarUrl } from "./services/WaMatrixProfileService";
 
 export class MatrixChatRoomMember implements ChatRoomMember {
     private handleRoomMemberMembership = this.onRoomMemberMembership.bind(this);
@@ -74,7 +68,8 @@ export class MatrixChatRoomMember implements ChatRoomMember {
         if (myUserId && this.id === myUserId) {
             this.waDisplayNameIfDifferent = derived([this.name], ([matrixName]) => {
                 const waName =
-                    localUserStore.getName()?.trim() || readWaDisplayNameFromMatrixAccountData(this.matrixClient);
+                    localUserStore.getDisplayNameForMatrixProfile() ||
+                    this.matrixClient.getUser(this.id)?.displayName?.trim();
                 const m = (matrixName ?? "").trim();
                 const w = (waName ?? "").trim();
                 if (!m || !w || m === w) {

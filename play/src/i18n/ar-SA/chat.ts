@@ -515,7 +515,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     remoteUserNotConnected: "المستخدم غير مصدق. لا يمكن إرسال الرسالة.", // User not authenticated. Cannot send message.
     matrixSettings: {
         title: "Matrix & WorkAdventure",
-        subtitle: "Your chat identity and synced data",
+        subtitle: "Your chat identity and Matrix profile",
         close: "Close",
         identitySection: "Identity",
         matrixUserId: "Matrix user ID",
@@ -523,20 +523,20 @@ const chat: DeepPartial<Translation["chat"]> = {
         copy: "Copy",
         copied: "Copied",
         profileSection: "Matrix profile",
-        accountDataSection: "WorkAdventure account_data",
+        accountDataSection: "WorkAdventure (in-game)",
         displayName: "Display name",
         avatar: "Avatar (MXC)",
         localName: "Local game name",
         waDisplayName: "WA name (fr.workadventure.wa_display_name)",
         waAvatar: "WA avatar (fr.workadventure.wa_avatar)",
-        needsSyncHint: "Your local name or WOKA may be out of sync with account_data. Use Sync to update.",
-        upToDateHint: "account_data matches your local game name and WOKA (or nothing to sync).",
-        syncButton: "Sync account_data (name + WOKA image)",
+        needsSyncHint: "Your local name or WOKA may differ from your Matrix profile. Use Sync to update.",
+        upToDateHint: "Your Matrix profile matches your local game name and WOKA (or there is nothing to sync).",
+        syncButton: "Sync Matrix profile (name + WOKA image)",
         syncing: "Syncing…",
         removeProfileImagesButton: "Remove profile images",
         removingProfileImages: "Removing…",
         removeProfileImagesHint:
-            "Removes your Matrix profile photo and WorkAdventure chat avatar. Your in-game WOKA is unchanged; use Sync to publish it again.",
+            "Removes your Matrix profile photo. Your in-game WOKA is unchanged; use Sync to publish it again.",
         loadError: "Could not load Matrix settings.",
         notConnected: "Matrix is not connected or you are a guest.",
         clearSuggestedRoomsHint:
@@ -556,8 +556,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuItemTitle: "Matrix profile",
         menuItemDebugTag: "debug",
         title: "Matrix profile",
-        subtitle:
-            "Read-only view of this user’s Matrix profile and WorkAdventure account_data. Shown only when DEBUG_MODE is on.",
+        subtitle: "Read-only view of this user’s Matrix profile. Shown only when DEBUG_MODE is on.",
         loadError: "Could not load this user’s Matrix profile.",
     },
 };

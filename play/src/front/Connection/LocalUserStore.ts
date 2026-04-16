@@ -86,7 +86,49 @@ interface PlayerVariable {
 class LocalUserStore {
     private jwt: JwtAuthToken | undefined;
     private name: string | undefined;
+    /** Last in-session display name (from {@link #setName} or {@link #notifyPlayerDisplayNameChanged}). */
+    private latestSessionDisplayName: string | undefined;
     private displayNameListeners = new Set<(name: string) => void>();
+
+    private emitDisplayNameListeners(name: string): void {
+        for (const listener of this.displayNameListeners) {
+            try {
+                listener(name);
+            } catch (e) {
+                console.error("LocalUserStore displayName listener", e);
+            }
+        }
+    }
+
+    /**
+     * Subscribe to display name changes (persisted name via {@link #setName} or session updates via
+     * {@link #notifyPlayerDisplayNameChanged}).
+     */
+    subscribeDisplayNameChange(listener: (name: string) => void): () => void {
+        this.displayNameListeners.add(listener);
+        return () => {
+            this.displayNameListeners.delete(listener);
+        };
+    }
+
+    /**
+     * Notifies display name listeners without persisting to localStorage (e.g. when the name is set
+     * on the game manager only after a successful server-side save).
+     */
+    notifyPlayerDisplayNameChanged(name: string): void {
+        const trimmed = name.trim();
+        this.latestSessionDisplayName = trimmed;
+        this.emitDisplayNameListeners(trimmed);
+    }
+
+    /**
+     * Effective display name for Matrix profile sync: in-session name (including OpenID / API flows
+     * that only update the game manager) or persisted {@link #getName}.
+     */
+    getDisplayNameForMatrixProfile(): string | undefined {
+        const s = this.latestSessionDisplayName?.trim() || this.getName()?.trim();
+        return s || undefined;
+    }
 
     saveUser(localUser: LocalUser) {
         localStorage.setItem("localUser", JSON.stringify(localUser));
@@ -99,14 +141,9 @@ class LocalUserStore {
 
     setName(name: string): void {
         this.name = name;
+        this.latestSessionDisplayName = name.trim();
         localStorage.setItem(playerNameKey, name);
-        for (const listener of this.displayNameListeners) {
-            try {
-                listener(name);
-            } catch (e) {
-                console.error("LocalUserStore displayName listener", e);
-            }
-        }
+        this.emitDisplayNameListeners(name);
     }
 
     getName(): string | null {

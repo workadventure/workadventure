@@ -154,33 +154,6 @@
                             </div>
                         </div>
                     </section>
-
-                    <section class="flex flex-col gap-2">
-                        <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50">
-                            {$LL.chat.matrixSettings.accountDataSection()}
-                        </h3>
-                        <div class="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
-                            <div class="flex justify-between gap-2">
-                                <span class="text-white/60">{$LL.chat.matrixSettings.waDisplayName()}</span>
-                                <span class="text-right text-white/90">{snapshot.accountDataWaDisplayName ?? "—"}</span>
-                            </div>
-                            <div class="mt-2 flex items-start justify-between gap-2 border-t border-white/10 pt-2">
-                                <span class="shrink-0 text-white/60">{$LL.chat.matrixSettings.waAvatar()}</span>
-                                <div class="flex min-w-0 flex-1 flex-col items-end gap-1">
-                                    {#if snapshot.accountDataWaAvatarPreviewUrl}
-                                        <img
-                                            src={snapshot.accountDataWaAvatarPreviewUrl}
-                                            alt=""
-                                            class="h-12 w-12 rounded-lg object-cover"
-                                        />
-                                    {/if}
-                                    <span class="break-all text-right text-xs text-white/70"
-                                        >{snapshot.accountDataWaAvatarMxc ?? "—"}</span
-                                    >
-                                </div>
-                            </div>
-                        </div>
-                    </section>
                 </div>
             {/if}
         </div>
