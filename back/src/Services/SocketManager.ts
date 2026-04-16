@@ -716,7 +716,7 @@ export class SocketManager {
                 case "deleteRecordingQuery":
                 case "getSignedUrlQuery":
                 case "startRecordingQuery":
-                case "stopRecordingQuery": 
+                case "stopRecordingQuery":
                 case "enterChatRoomAreaQuery": {
                     break;
                 }

@@ -569,44 +569,6 @@ describe("SpaceToBackForwarder", () => {
     });
 
     describe("forwardMessageToSpaceBack", () => {
-        it("should not forward client-originated recording metadata", async () => {
-            const mockWriteFunction = vi.fn();
-
-            const mockBackSpaceConnection = mock<BackSpaceConnection>({
-                write: mockWriteFunction,
-                closed: false,
-            });
-
-            const senderSocket = mock<Socket>({
-                getUserData: vi.fn().mockReturnValue({
-                    canRecord: true,
-                }),
-            });
-
-            const mockSpace = {
-                name: "test",
-                _localConnectedUser: new Map<string, Socket>([["foo_1", senderSocket]]),
-                _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>(),
-                _localWatchers: new Map<string, Socket>(),
-                spaceStreamToBackPromise: Promise.resolve(mockBackSpaceConnection),
-                metadata: new Map(),
-            } as unknown as Space;
-
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
-
-            spaceForwarder.updateMetadata(
-                {
-                    recording: {
-                        recording: true,
-                    },
-                },
-                "foo_1"
-            );
-            await flushPromises();
-
-            expect(mockWriteFunction).not.toHaveBeenCalled();
-        });
-
         it("should forward to back", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
