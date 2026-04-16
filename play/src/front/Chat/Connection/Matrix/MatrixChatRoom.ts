@@ -752,7 +752,7 @@ export class MatrixChatRoom
             (member) => directRoomsPerUsers && directRoomsPerUsers[member.userId]?.includes(this.id)
         );
 
-        if (isDirectBasedOnRoomData || members.length === 1 || members.length === 2) {
+        if (isDirectBasedOnRoomData || members.length === 2) {
             return "direct";
         }
 
