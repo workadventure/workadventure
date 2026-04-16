@@ -11,6 +11,13 @@ export type MatrixResolvedImageMedia = {
     cleanup: () => void;
 };
 
+export type MatrixResolvedAttachmentMedia = {
+    sourceUrl: string | undefined;
+    isEncrypted: boolean;
+    error: MediaErrorKind | undefined;
+    cleanup: () => void;
+};
+
 type BlobUrlRegistry = {
     createFromBuffer: (buffer: ArrayBuffer, mimeType: string | undefined) => string;
     cleanup: () => void;
@@ -89,6 +96,19 @@ function toMediaEventContent(content: IContent): MediaEventContent | undefined {
         return undefined;
     }
     if (content.msgtype !== "m.image") {
+        return undefined;
+    }
+    return content as MediaEventContent;
+}
+
+function toAttachmentMediaEventContent(content: IContent): MediaEventContent | undefined {
+    if (typeof content !== "object" || content === null) {
+        return undefined;
+    }
+    if (typeof content.body !== "string") {
+        return undefined;
+    }
+    if (content.msgtype !== "m.file" && content.msgtype !== "m.audio" && content.msgtype !== "m.video") {
         return undefined;
     }
     return content as MediaEventContent;
@@ -225,6 +245,64 @@ export async function resolveImageMediaFromEvent(
         return {
             sourceUrl: undefined,
             thumbnailUrl: undefined,
+            isEncrypted: true,
+            error: error instanceof MediaDownloadError ? "download" : "decrypt",
+            cleanup: blobRegistry.cleanup,
+        };
+    }
+}
+
+export async function resolveAttachmentMediaFromEvent(
+    event: MatrixEvent,
+    client: MatrixClient,
+    signal: AbortSignal
+): Promise<MatrixResolvedAttachmentMedia> {
+    const rawContent = event.getOriginalContent();
+    const content = toAttachmentMediaEventContent(rawContent);
+    const blobRegistry = createBlobUrlRegistry();
+    if (content === undefined) {
+        return {
+            sourceUrl: undefined,
+            isEncrypted: false,
+            error: "download",
+            cleanup: blobRegistry.cleanup,
+        };
+    }
+
+    if (!isEncryptedImageContent(content)) {
+        return {
+            isEncrypted: false,
+            sourceUrl: getHttpUrl(client, content.url ?? content.file?.url),
+            error: undefined,
+            cleanup: blobRegistry.cleanup,
+        };
+    }
+
+    try {
+        const encryptedSourceFile = content.file;
+        if (encryptedSourceFile === undefined) {
+            return {
+                sourceUrl: undefined,
+                isEncrypted: true,
+                error: "download",
+                cleanup: blobRegistry.cleanup,
+            };
+        }
+        const sourceUrl = await resolveEncryptedBlobUrl(
+            client,
+            encryptedSourceFile,
+            content.info?.mimetype,
+            blobRegistry,
+            signal
+        );
+        return { sourceUrl, isEncrypted: true, error: undefined, cleanup: blobRegistry.cleanup };
+    } catch (error) {
+        if (isAbortError(error)) {
+            blobRegistry.cleanup();
+            throw error;
+        }
+        return {
+            sourceUrl: undefined,
             isEncrypted: true,
             error: error instanceof MediaDownloadError ? "download" : "decrypt",
             cleanup: blobRegistry.cleanup,
