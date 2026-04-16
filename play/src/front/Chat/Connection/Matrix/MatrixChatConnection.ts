@@ -29,7 +29,7 @@ import {
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
-import { defaultWoka as sharedDefaultWoka } from "@workadventure/shared-utils";
+import { defaultWoka } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
@@ -43,6 +43,9 @@ import type {
     ChatUser,
     ConnectionStatus,
     CreateRoomOptions,
+    MatrixChatCapabilities,
+    MatrixPeerProfileDiagnostics,
+    MatrixUserSettingsDiagnostics,
 } from "../ChatConnection";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
@@ -64,32 +67,9 @@ import {
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
 
-/** Snapshot for the Matrix chat settings UI (Matrix profile vs local game state). */
-export type MatrixUserSettingsDiagnostics = {
-    matrixUserId: string;
-    homeserverUrl: string;
-    profileDisplayName: string | undefined;
-    profileAvatarMxc: string | undefined;
-    profileAvatarPreviewUrl: string | undefined;
-    localDisplayName: string | undefined;
-    /** True when the in-game name or custom WOKA is not reflected on the Matrix profile. */
-    profileNeedsSync: boolean;
-};
+export type { MatrixPeerProfileDiagnostics, MatrixUserSettingsDiagnostics } from "../ChatConnection";
 
-/** Read-only snapshot for another Matrix user (debug tooling). */
-export type MatrixPeerProfileDiagnostics = {
-    matrixUserId: string;
-    homeserverUrl: string;
-    profileDisplayName: string | undefined;
-    profileAvatarMxc: string | undefined;
-    profileAvatarPreviewUrl: string | undefined;
-};
-
-export const defaultWoka =
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
-export const defaultColor = "#626262";
-
-export class MatrixChatConnection implements ChatConnectionInterface {
+export class MatrixChatConnection implements ChatConnectionInterface, MatrixChatCapabilities {
     private readonly roomList: MapStore<string, MatrixChatRoom>;
     private client: MatrixClient | undefined;
     private handleRoom: (room: Room) => void;
@@ -409,7 +389,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             : undefined;
         const localDisplayName = localUserStore.getDisplayNameForMatrixProfile();
         const localWoka = get(currentPlayerWokaStore);
-        const hasCustomWoka = Boolean(localWoka && localWoka !== sharedDefaultWoka);
+        const hasCustomWoka = Boolean(localWoka && localWoka !== defaultWoka);
         const profileNameNorm = profileDisplayName?.trim();
         const nameMismatch = Boolean(
             localDisplayName &&

@@ -1,7 +1,7 @@
 import type { Readable, Writable } from "svelte/store";
 import type { AvailabilityStatus } from "@workadventure/messages";
 import type { MapStore } from "@workadventure/store-utils";
-import type { StateEvents } from "matrix-js-sdk";
+import type { MatrixClient, StateEvents } from "matrix-js-sdk";
 import type { ComponentType, SvelteComponent } from "svelte";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { PictureStore } from "../../Stores/PictureStore";
@@ -193,6 +193,38 @@ export interface CreateRoomOptions {
 
 export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";
 
+/** Snapshot for the Matrix chat settings UI (Matrix profile vs local game state). */
+export type MatrixUserSettingsDiagnostics = {
+    matrixUserId: string;
+    homeserverUrl: string;
+    profileDisplayName: string | undefined;
+    profileAvatarMxc: string | undefined;
+    profileAvatarPreviewUrl: string | undefined;
+    localDisplayName: string | undefined;
+    /** True when the in-game name or custom WOKA is not reflected on the Matrix profile. */
+    profileNeedsSync: boolean;
+};
+
+/** Read-only snapshot for another Matrix user (debug tooling). */
+export type MatrixPeerProfileDiagnostics = {
+    matrixUserId: string;
+    homeserverUrl: string;
+    profileDisplayName: string | undefined;
+    profileAvatarMxc: string | undefined;
+    profileAvatarPreviewUrl: string | undefined;
+};
+
+/**
+ * Matrix-specific operations exposed by the Matrix chat backend.
+ * Use {@link hasMatrixChatCapabilities} to narrow a {@link ChatConnectionInterface}.
+ */
+export interface MatrixChatCapabilities {
+    getMatrixClient(): MatrixClient | undefined;
+    syncMatrixGlobalProfileFromLocalWokaAndName(): Promise<void>;
+    getMatrixUserSettingsDiagnostics(): Promise<MatrixUserSettingsDiagnostics | undefined>;
+    getMatrixPeerProfileDiagnostics(matrixUserId: string): Promise<MatrixPeerProfileDiagnostics | undefined>;
+}
+
 export type userId = number;
 export type ChatId = string & { __chatIdBrand: never };
 export type UserUuid = string & { __userUuidBrand: never };
@@ -232,6 +264,22 @@ export interface ChatConnectionInterface {
     nbUnreadRoomsMessages: Readable<number>;
     nbUnreadDirectRoomsMessages: Readable<number>;
     nbUnreadInvitationsMessages: Readable<number>;
+
+    /**
+     * Matrix backend only — see {@link MatrixChatCapabilities}.
+     * Prefer `hasMatrixChatCapabilities(connection)` before calling.
+     */
+    getMatrixClient?: () => MatrixClient | undefined;
+    syncMatrixGlobalProfileFromLocalWokaAndName?: () => Promise<void>;
+    getMatrixUserSettingsDiagnostics?: () => Promise<MatrixUserSettingsDiagnostics | undefined>;
+    getMatrixPeerProfileDiagnostics?: (matrixUserId: string) => Promise<MatrixPeerProfileDiagnostics | undefined>;
+}
+
+/** Chat connection backed by Matrix (narrows with {@link hasMatrixChatCapabilities}). */
+export type MatrixChatConnectionLike = ChatConnectionInterface & MatrixChatCapabilities;
+
+export function hasMatrixChatCapabilities(connection: ChatConnectionInterface): connection is MatrixChatConnectionLike {
+    return typeof connection.getMatrixClient === "function";
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

@@ -10,6 +10,8 @@
         ChatRoomModeration,
         ChatRoom,
         ChatUser,
+        hasMatrixChatCapabilities,
+        type MatrixChatConnectionLike,
     } from "../../../Connection/ChatConnection";
     import { isMatrixChatEnabledStore } from "../../../../Stores/ChatStore";
     import { notificationPlayingStore } from "../../../../Stores/NotificationStore";
@@ -21,7 +23,6 @@
     import { scriptUtils } from "../../../../Api/ScriptUtils";
     import type { UserProviderMerger } from "../../../UserProviderMerger/UserProviderMerger";
     import { DEBUG_MODE } from "../../../../Enum/EnvironmentVariable";
-    import { MatrixChatConnection } from "../../../Connection/Matrix/MatrixChatConnection";
     import MatrixPeerProfileDebugModal from "../../MatrixPeerProfileDebugModal.svelte";
     import RoomOption from "./RoomOption.svelte";
     import {
@@ -46,10 +47,10 @@
 
     const { connection } = gameManager.getCurrentGameScene();
 
-    function matrixConnectionFromGameManager(): MatrixChatConnection | undefined {
+    function matrixConnectionFromGameManager(): MatrixChatConnectionLike | undefined {
         try {
             const c = gameManager.chatConnection;
-            return c instanceof MatrixChatConnection ? c : undefined;
+            return hasMatrixChatCapabilities(c) ? c : undefined;
         } catch {
             return undefined;
         }
@@ -134,10 +135,7 @@
         return usersList;
     })();
 
-    $: matrixChatUser =
-        room.type === "direct"
-            ? members.find((u) => u.id !== localUserStore.getChatId())
-            : undefined;
+    $: matrixChatUser = room.type === "direct" ? members.find((u) => u.id !== localUserStore.getChatId()) : undefined;
 
     $: chatUser = usersWithRoomPlayUri.find((u) => u.chatId === matrixChatUser?.id);
     $: isInTheSameMap = chatUser?.playUri === gameManager.getCurrentGameScene().roomUrl;
@@ -188,10 +186,7 @@
     $: matrixChatConnection = $isMatrixChatEnabledStore ? matrixConnectionFromGameManager() : undefined;
 
     $: showMatrixPeerProfileDebug =
-        DEBUG_MODE &&
-        matrixChatConnection !== undefined &&
-        room.type === "direct" &&
-        Boolean(matrixChatUser?.id);
+        DEBUG_MODE && matrixChatConnection !== undefined && room.type === "direct" && Boolean(matrixChatUser?.id);
 
     function openMatrixPeerProfileDebug() {
         if (!matrixChatConnection || matrixChatUser?.id === undefined) {

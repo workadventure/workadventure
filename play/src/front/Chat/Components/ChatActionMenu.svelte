@@ -1,7 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { openModal } from "svelte-modals";
-    import type { MatrixChatConnection } from "../Connection/Matrix/MatrixChatConnection";
+    import type { MatrixChatConnectionLike } from "../Connection/ChatConnection";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import MatrixChatSettingsModal from "./MatrixChatSettingsModal.svelte";
@@ -10,7 +10,7 @@
     export let hasCloseChat;
     export let searchActive = false;
     /** When set, shows a Matrix account / settings control next to search. */
-    export let matrixChatConnection: MatrixChatConnection | undefined = undefined;
+    export let matrixChatConnection: MatrixChatConnectionLike | undefined = undefined;
 
     let menuOpen = false;
 
@@ -130,7 +130,10 @@
                 <IconSettings font-size="20" />
             </button>
         {/if}
-        <button class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50" on:click={handleToggleSearch}>
+        <button
+            class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50"
+            on:click={handleToggleSearch}
+        >
             {#if !searchActive}
                 <IconSearch font-size="20" />
             {:else}

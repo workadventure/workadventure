@@ -1,9 +1,9 @@
 <script lang="ts">
+    import { defaultColor } from "@workadventure/shared-utils";
     import type { ChatRoomMembershipManagement, ChatRoom } from "../../Connection/ChatConnection";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import Avatar from "../Avatar.svelte";
-    import { defaultColor } from "../../Connection/Matrix/MatrixChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { IconLoader } from "@wa-icons";
 

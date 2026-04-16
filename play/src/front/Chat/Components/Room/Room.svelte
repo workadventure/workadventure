@@ -1,5 +1,6 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
+    import { defaultColor } from "@workadventure/shared-utils";
     import type {
         ChatRoom,
         ChatRoomMembershipManagement,
@@ -8,7 +9,6 @@
     } from "../../Connection/ChatConnection";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
-    import { defaultColor } from "../../Connection/Matrix/MatrixChatConnection";
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
     import RoomMenu from "./RoomMenu/RoomMenu.svelte";

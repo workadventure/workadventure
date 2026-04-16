@@ -1,12 +1,12 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { closeModal } from "svelte-modals";
-    import type { MatrixChatConnection, MatrixPeerProfileDiagnostics } from "../Connection/Matrix/MatrixChatConnection";
+    import type { MatrixChatConnectionLike, MatrixPeerProfileDiagnostics } from "../Connection/ChatConnection";
     import ButtonClose from "../../Components/Input/ButtonClose.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { IconLoader } from "@wa-icons";
 
-    export let connection: MatrixChatConnection;
+    export let connection: MatrixChatConnectionLike;
     /** Matrix user ID (@user:server) */
     export let matrixUserId: string;
     /** Optional label (e.g. WA username) for the dialog title */

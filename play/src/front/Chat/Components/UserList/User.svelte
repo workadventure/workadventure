@@ -2,13 +2,13 @@
     import { AskPositionMessage_AskType, AvailabilityStatus } from "@workadventure/messages";
     import * as Sentry from "@sentry/svelte";
     import highlightWords from "highlight-words";
+    import { defaultColor } from "@workadventure/shared-utils";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { availabilityStatusStore } from "../../../Stores/MediaStore";
     import { getColorHexOfStatus } from "../../../Utils/AvailabilityStatus";
     import type { ChatUser } from "../../Connection/ChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
-    import { defaultColor } from "../../Connection/Matrix/MatrixChatConnection";
     import { resolveChatUserColor } from "../../Connection/Matrix/services/WaMatrixProfileService";
     import { getMatrixClientForChatTint, openDirectChatRoom } from "../../Utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";

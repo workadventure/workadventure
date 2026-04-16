@@ -1,11 +1,11 @@
 <script lang="ts">
+    import { defaultColor } from "@workadventure/shared-utils";
     import LL from "../../../../i18n/i18n-svelte";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import type { ChatRoomMember, ChatRoomMembership, ChatRoomModeration } from "../../Connection/ChatConnection";
     import { ChatPermissionLevel } from "../../Connection/ChatConnection";
     import Select from "../../../Components/Input/Select.svelte";
     import Avatar from "../Avatar.svelte";
-    import { defaultColor } from "../../Connection/Matrix/MatrixChatConnection";
     import { IconLoader, IconCheck, IconForbid, IconClock, IconPoint, IconMail, IconDoorExit } from "@wa-icons";
     export let member: ChatRoomMember;
     export let room: ChatRoomModeration;

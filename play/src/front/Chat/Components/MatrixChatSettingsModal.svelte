@@ -2,17 +2,14 @@
     import { onDestroy, onMount } from "svelte";
     import { scale } from "svelte/transition";
     import { closeModal } from "svelte-modals";
-    import type {
-        MatrixChatConnection,
-        MatrixUserSettingsDiagnostics,
-    } from "../Connection/Matrix/MatrixChatConnection";
+    import type { MatrixChatConnectionLike, MatrixUserSettingsDiagnostics } from "../Connection/ChatConnection";
     import ButtonClose from "../../Components/Input/ButtonClose.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { clearIgnoredSuggestedRooms } from "../Stores/ChatStore";
     import { DEBUG_MODE } from "../../Enum/EnvironmentVariable";
     import { IconCheck, IconLoader } from "@wa-icons";
 
-    export let connection: MatrixChatConnection;
+    export let connection: MatrixChatConnectionLike;
 
     type MatrixFooterAction = "clearSuggested" | "syncAccount";
 
