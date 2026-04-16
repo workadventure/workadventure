@@ -2,13 +2,17 @@
 
 <script lang="ts">
     //import { fly } from "svelte/transition";
-    import { onMount, onDestroy } from "svelte";
+    import { onMount, onDestroy, setContext } from "svelte";
     import type { VideoBox } from "../../Space/VideoBox";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import VideoMediaBox from "./VideoMediaBox.svelte";
 
     export let videoBox: VideoBox;
     export let fullScreen: boolean = false;
+
+    // This context is used to know if the VideoMediaBox is part of the highlight fullscreen participant list.
+    export let inHighlightFullscreenParticipantList: boolean = false;
+    setContext("inHighlightFullscreenParticipantList", inHighlightFullscreenParticipantList);
 
     const gameScene = gameManager.getCurrentGameScene();
 

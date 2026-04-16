@@ -16,6 +16,7 @@ import type { ActionsMenuAction } from "../../Stores/ActionsMenuStore";
 import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
+import { getImageCoWebsiteTitle, ImageCoWebsite, isImageCoWebsiteUrl } from "../../WebRtc/CoWebsite/ImageCoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsites } from "../../Stores/CoWebsiteStore";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
@@ -512,13 +513,21 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                                     propertyValue: link,
                                 });
                             } else {
-                                const coWebsite = new SimpleCoWebsite(
-                                    new URL(link),
-                                    false, // No need for API in file viewer
-                                    property.policy,
-                                    property.width,
-                                    property.closable
-                                );
+                                const url = new URL(link);
+                                const coWebsite = isImageCoWebsiteUrl(url)
+                                    ? new ImageCoWebsite(
+                                          url,
+                                          property.name ?? getImageCoWebsiteTitle(url),
+                                          property.width,
+                                          property.closable
+                                      )
+                                    : new SimpleCoWebsite(
+                                          url,
+                                          false, // No need for API in file viewer
+                                          property.policy,
+                                          property.width,
+                                          property.closable
+                                      );
                                 try {
                                     coWebsites.add(coWebsite);
                                 } catch (error) {

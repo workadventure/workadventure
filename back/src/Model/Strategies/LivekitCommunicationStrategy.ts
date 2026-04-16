@@ -124,6 +124,13 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
             }
 
             if (this.streamingUsers.size === 0) {
+                try {
+                    await this.space.stopRecordingByServer();
+                } catch (error) {
+                    console.error(`Error stopping recording for space ${this.space.getSpaceName()}:`, error);
+                    Sentry.captureException(error);
+                }
+
                 this.createRoomPromise = null;
                 for (const receivingUser of this.receivingUsers.values()) {
                     this.sendLivekitDisconnectMessage(receivingUser);

@@ -48,6 +48,9 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     imagePreview: {
         close: "Fermer",
+        label: "Aperçu de l'image",
+        loading: "Chargement de l'image...",
+        loadError: "Impossible de charger cet aperçu de l'image.",
         openInNewTab: "Ouvrir dans un nouvel onglet",
     },
     join: "Rejoindre",

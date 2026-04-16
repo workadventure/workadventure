@@ -8,6 +8,7 @@ import {
 import type { UpdateWAMSettingsMessage } from "@workadventure/messages/src/ts-proto-generated/messages";
 import type { FrontCommandInterface } from "../FrontCommandInterface";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
+import { localUserStore } from "../../../../../Connection/LocalUserStore";
 import { megaphoneCanBeUsedStore, megaphoneSpaceSettingsStore } from "../../../../../Stores/MegaphoneStore";
 
 export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implements FrontCommandInterface {
@@ -62,9 +63,8 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
         await super.execute();
 
         const message: UpdateWAMSettingsMessage["message"] = this.updateWAMSettingsMessage.message;
-        if (message?.$case === "updateMegaphoneSettingMessage") {
-            const megaphoneSettingsMessage = message.updateMegaphoneSettingMessage;
-            const megaphoneSettings = MegaphoneSettings.optional().parse(megaphoneSettingsMessage.settings);
+        if (message?.$case === "updateMegaphoneSettingMessage" || message?.$case === "updateRecordingSettingMessage") {
+            const megaphoneSettings = MegaphoneSettings.optional().parse(this.wam.settings?.megaphone);
 
             megaphoneCanBeUsedStore.set(WAMSettingsUtils.canUseMegaphone(this.wam.settings, this.userTags));
 
@@ -79,6 +79,11 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
                 megaphoneSpaceSettingsStore.set({
                     spaceName: megaphoneSpaceName,
                     audienceVideoFeedbackActivated: megaphoneSettings.audienceVideoFeedbackActivated ?? false,
+                    canRecord: WAMSettingsUtils.canStartRecordingMegaphone(
+                        this.wam.settings,
+                        this.userTags,
+                        localUserStore.isLogged()
+                    ),
                 });
             }
         }

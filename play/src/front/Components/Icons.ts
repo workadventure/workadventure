@@ -146,3 +146,4 @@ export { default as IconSPlayertop } from "~icons/tabler/player-stop";
 export { default as IconNetworkOff } from "~icons/tabler/network-off";
 export { default as IconLayoutGrid } from "~icons/tabler/layout-grid";
 export { default as IconList } from "~icons/tabler/list";
+export { default as IconPhoto } from "~icons/tabler/photo";

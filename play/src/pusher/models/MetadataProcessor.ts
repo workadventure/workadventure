@@ -1,6 +1,6 @@
 import type { SocketData } from "./Websocket/SocketData";
 
-type MetadataProcessorFunction = (value: unknown, senderSocketData: SocketData) => unknown;
+type MetadataProcessorFunction = (value: unknown, senderSocketData: SocketData, senderSpaceUserId: string) => unknown;
 export class MetadataProcessor {
     private metadataProcessors = new Map<string, MetadataProcessorFunction>();
 
@@ -8,10 +8,15 @@ export class MetadataProcessor {
         this.metadataProcessors.set(key, processor);
     }
 
-    public processMetadata(key: string, value: unknown, senderSocketData: SocketData): unknown {
+    public processMetadata(
+        key: string,
+        value: unknown,
+        senderSocketData: SocketData,
+        senderSpaceUserId: string
+    ): unknown {
         const processor = this.metadataProcessors.get(key);
         if (processor) {
-            return processor(value, senderSocketData);
+            return processor(value, senderSocketData, senderSpaceUserId);
         }
         return value;
     }

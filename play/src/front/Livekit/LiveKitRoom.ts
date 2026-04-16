@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { FilterType } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
-import type { LocalParticipant, Participant, TrackPublishOptions } from "livekit-client";
+import type { LocalParticipant, Participant, RemoteParticipant, TrackPublishOptions } from "livekit-client";
 import {
     BackupCodecPolicy,
     LocalAudioTrack,
@@ -30,6 +30,7 @@ import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore"
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPresets";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
@@ -49,7 +50,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private room: Room | undefined;
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
     // Stores LiveKit participants that connected before their corresponding spaceUser was available
-    private pendingParticipants: Map<string, Participant> = new Map();
+    private pendingParticipants: Map<string, RemoteParticipant> = new Map();
     private localParticipant: LocalParticipant | undefined;
     private localScreenSharingVideoTrack: LocalVideoTrack | undefined;
     private localScreenSharingAudioTrack: LocalAudioTrack | undefined;
@@ -87,6 +88,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room = new Room({
             adaptiveStream: {
                 pauseVideoInBackground: true,
+                pixelDensity: LIVEKIT_PIXEL_DENSITY,
             },
             dynacast: true,
             publishDefaults: {
@@ -132,7 +134,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         this.handleRoomEvents();
         await room.connect(this.serverUrl, this.token, {
-            autoSubscribe: true,
+            autoSubscribe: false,
         });
         if (this.abortSignal.aborted) {
             await room.disconnect();
@@ -423,6 +425,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
             await this.localParticipant.publishTrack(this.localScreenSharingVideoTrack, screenSharePublishOptions);
         } else if (this.localScreenSharingVideoTrack.mediaStreamTrack.id === screenShareVideoTrack.id) {
+            // Note: this cannot really happen as we never pause the upstream. We unpublish the track instead.
             if (this.localScreenSharingVideoTrack.isUpstreamPaused) {
                 await this.localScreenSharingVideoTrack.resumeUpstream();
             }
@@ -444,6 +447,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     source: Track.Source.ScreenShareAudio,
                 });
             } else if (this.localScreenSharingAudioTrack.mediaStreamTrack.id === screenShareAudioTrack.id) {
+                // Note: this cannot really happen as we never pause the upstream. We unpublish the track instead.
                 if (this.localScreenSharingAudioTrack.isUpstreamPaused) {
                     await this.localScreenSharingAudioTrack.resumeUpstream();
                 }
@@ -468,30 +472,34 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
 
-        // Unpublish both video and audio screen share tracks
-        await Promise.all(
-            Array.from(this.localParticipant.trackPublications.values())
-                .filter(
-                    (publication) =>
-                        publication.track &&
-                        (publication.source === Track.Source.ScreenShare ||
-                            publication.source === Track.Source.ScreenShareAudio)
-                )
-                .map(async (publication) => {
-                    const track = publication.track;
-                    if (track) {
-                        // Note: for some reason, unpublishing / publishing a new track causes memory leaks.
-                        // Instead, we just pause the upstream of the track when unpublishing, and "replaceTrack" when publishing a new one.
-                        // await this.localParticipant?.unpublishTrack(track, false);
-                        await track.pauseUpstream();
-                    }
-                })
-        );
+        const localParticipant = this.localParticipant;
 
-        // Note: we don't clear local track references because of the memory leak issue mentioned above.
-        // We need to keep them to be able to replace the tracks when publishing a new screen share.
-        //this.localScreenSharingVideoTrack = undefined;
-        //this.localScreenSharingAudioTrack = undefined;
+        // Unpublish both video and audio screen share tracks
+        await Promise.all([
+            (async (): Promise<void> => {
+                if (this.localScreenSharingVideoTrack) {
+                    // Note: for some reason, unpublishing / publishing a new track causes memory leaks.
+                    await localParticipant.unpublishTrack(this.localScreenSharingVideoTrack, false);
+                    // We previously tried to just pause the upstream and "replaceTrack" when publishing a new one,
+                    // but this is causing issues with the egress CompositeRoom (that shows black boxes for paused streams)
+                    // await this.localScreenSharingVideoTrack.pauseUpstream();
+                }
+            })(),
+            (async (): Promise<void> => {
+                if (this.localScreenSharingAudioTrack) {
+                    // Note: for some reason, unpublishing / publishing a new track causes memory leaks.
+                    await localParticipant.unpublishTrack(this.localScreenSharingAudioTrack, false);
+                    // We previously tried to just pause the upstream and "replaceTrack" when publishing a new one,
+                    // but this is causing issues with the egress CompositeRoom (that shows black boxes for paused streams)
+                    // await this.localScreenSharingAudioTrack.pauseUpstream();
+                }
+            })(),
+        ]);
+
+        // Note: if we ever use "pauseUpstream" again instead of unpublishTrack, we should comment the clear of local track references
+        // because of the memory leak issue mentioned above. We need to keep them to be able to replace the tracks when publishing a new screen share.
+        this.localScreenSharingVideoTrack = undefined;
+        this.localScreenSharingAudioTrack = undefined;
     }
 
     /**
@@ -538,7 +546,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room.on(RoomEvent.ParticipantConnected, this.boundHandleParticipantConnected);
         this.room.on(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
         this.room.on(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
-        this.room.on(RoomEvent.ParticipantActive, this.boundHandleParticipantConnected);
         this.room.on(RoomEvent.Disconnected, this.boundHandleDisconnected);
     }
 
@@ -631,7 +638,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         });
     }
 
-    private handleParticipantConnected(participant: Participant) {
+    private handleParticipantConnected(participant: RemoteParticipant) {
         if (this.abortSignal.aborted) {
             return;
         }
@@ -662,7 +669,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
      * Creates a LiveKitParticipant and adds it to the participants map
      */
     private createLiveKitParticipant(
-        participant: Participant,
+        participant: RemoteParticipant,
         spaceUser: ReturnType<SpaceInterface["getSpaceUserBySpaceUserId"]>
     ) {
         if (!spaceUser) {
@@ -805,7 +812,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.room?.off(RoomEvent.ParticipantConnected, this.boundHandleParticipantConnected);
             this.room?.off(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
             this.room?.off(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
-            this.room?.off(RoomEvent.ParticipantActive, this.boundHandleParticipantConnected);
             this.room?.off(RoomEvent.Disconnected, this.boundHandleDisconnected);
             this.leaveRoom();
         } finally {

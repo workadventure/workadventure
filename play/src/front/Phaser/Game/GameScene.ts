@@ -32,6 +32,7 @@ import {
 } from "@workadventure/map-editor";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import Debug from "debug";
+import { asError } from "catch-unknown";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { urlManager } from "../../Url/UrlManager";
@@ -2066,7 +2067,11 @@ export class GameScene extends DirtyScene {
                             this.createSuccessorGameScene(true, true);
                         })
                         .catch((e) => {
-                            console.error("Error while waiting for Pusher to come back online", e);
+                            console.error(
+                                `Error while waiting for Pusher to come back online: ${asError(e).message}`,
+                                e
+                            );
+                            Sentry.captureException(e);
                             this.handleErrorAndCleanup(
                                 e,
                                 "CONNECTION_BROKEN",
@@ -2238,6 +2243,11 @@ export class GameScene extends DirtyScene {
                         audienceVideoFeedbackActivated:
                             this.getGameMap().getWamFile()?.getWam()?.settings?.megaphone
                                 ?.audienceVideoFeedbackActivated ?? false,
+                        canRecord: WAMSettingsUtils.canStartRecordingMegaphone(
+                            this.getGameMap().getWamFile()?.getWam()?.settings,
+                            this.connection.getAllTags(),
+                            localUserStore.isLogged()
+                        ),
                     });
                 }
                 megaphoneCanBeUsedStore.set(

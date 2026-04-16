@@ -45,6 +45,9 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     imagePreview: {
         close: "关闭",
+        label: "图片预览",
+        loading: "正在加载图片...",
+        loadError: "无法加载此图片预览。",
         openInNewTab: "在新标签页中打开",
     },
     join: "加入",

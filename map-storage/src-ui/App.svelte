@@ -84,6 +84,13 @@
 <main>
     <h1>WorkAdventure MapStorage</h1>
 
+    <div style="background-color: #ff7700; color: black; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
+        Warning! This UI is deprecated. Use it for tests only. To upload a map to the map-storage, use the <a
+            target="_blank"
+            href="https://docs.workadventu.re/map-building/tiled-editor/publish/wa-hosted">map starter kit</a
+        >.
+    </div>
+
     {#await responsePromise}
         <p>Loading maps list...</p>
     {:then json}
