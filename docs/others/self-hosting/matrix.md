@@ -128,22 +128,6 @@ play:
     MATRIX_ADMIN_PASSWORD: ""
 ```
 
-### WorkAdventure `account_data` and `M_FORBIDDEN` (403)
-
-The WorkAdventure play client stores optional fields in Matrix **account data** (for example `fr.workadventure.wa_display_name` and `fr.workadventure.wa_avatar`). Your own client receives updates for **your** account data over the normal Matrix sync.
-
-Reading **another** user’s account data uses `GET /_matrix/client/v3/user/{userId}/account_data/{type}`. On **default Synapse**, that request returns **403** with `errcode: M_FORBIDDEN` when `userId` is not the logged-in user. That is expected: account data is private unless the homeserver is configured to allow it.
-
-If you see this in browser logs while debugging (`debug=matrix`), it does not mean the integration is broken: the UI **falls back** to the Matrix profile avatar and the in-world WOKA image from the game merger.
-
-To expose WorkAdventure-specific account data to other users on your homeserver, you need **server-side** support: stock Synapse does not allow it.
-
-### WorkAdventure Docker Compose (this repository)
-
-The `synapse` service uses `synapse/start.sh`, which runs `apply_workadventure_account_data_patch.py` before Synapse starts. That script patches the installed Synapse `AccountDataServlet.on_GET` so that types starting with `fr.workadventure.` can be read by any authenticated user on the **same** homeserver (development convenience; see `synapse/README-WORKADVENTURE-ACCOUNT-DATA.md`).
-
-If you deploy Synapse yourself, either reuse that patch after each Synapse upgrade or implement an equivalent policy.
-
 ## Developer notes
 
 If you are looking for a developer description of the WorkAdventure / Matrix integration, you can find it in the 
