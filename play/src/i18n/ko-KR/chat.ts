@@ -47,6 +47,9 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     imagePreview: {
         close: "닫기",
+        label: "이미지 미리보기",
+        loading: "이미지 불러오는 중...",
+        loadError: "이 이미지 미리보기를 불러올 수 없습니다.",
         openInNewTab: "새 탭에서 열기",
     },
     join: "참가",

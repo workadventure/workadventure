@@ -20,7 +20,7 @@ spec:
   tls:
     - hosts:
         - {{ (include "workadventure.uploaderDomainName" .) | quote }}
-      secretName: {{ .Values.uploader.ingress.secretName | default (printf "%s-uploader-cert" (include "workadventure.fullname" .)) }}
+      secretName: {{ .Values.uploader.ingress.secretName | default .Values.ingress.secretName | default (printf "%s-uploader-cert" (include "workadventure.fullname" .)) }}
   {{- end }}
   rules:
     - host: {{ (include "workadventure.uploaderDomainName" .) | quote }}

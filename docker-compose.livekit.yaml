@@ -22,10 +22,6 @@ services:
   egress:
     image: livekit/egress:v1.9.0
     #restart: unless-stopped
-    ports:
-      - "8080:8080" # Egress API
-      - "8081:8081" # Egress Health
-      - "7980:7980" # Template port
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.egress.rule=Host(`egress.workadventure.localhost`)"
@@ -124,3 +120,4 @@ services:
       LIVEKIT_RECORDING_S3_SECRET_KEY: "$LIVEKIT_RECORDING_S3_SECRET_KEY"
       LIVEKIT_RECORDING_S3_REGION: "$LIVEKIT_RECORDING_S3_REGION"
       LIVEKIT_RECORDING_S3_BUCKET: "$LIVEKIT_RECORDING_S3_BUCKET"
+      LIVEKIT_PIXEL_DENSITY: "${LIVEKIT_PIXEL_DENSITY:-}"

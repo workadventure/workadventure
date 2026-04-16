@@ -1003,7 +1003,7 @@ export class GameMapFrontWrapper {
         if (possiblePositions.length > 0) {
             return MathUtils.randomFromArray(possiblePositions);
         }
-        throw new Error("No possible position found");
+        throw new Error(`No possible position found, layer "${layerName}" is empty`);
     }
 
     public getTiledObjectProperty(

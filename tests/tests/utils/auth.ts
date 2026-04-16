@@ -75,6 +75,7 @@ async function createUser(
     await dismissDuplicateUserConnectedModalIfShown(page);
     await dismissPwaInstallScreenIfShown(page);
     await dismissDoNotDisturbInfoToast(page);
+    await skipOnboardingWhenShown(page);
 
     if (browser.browserType().name() !== "webkit") {
         await Menu.expectButtonState(page, "microphone-button", "normal");
@@ -139,10 +140,21 @@ export async function getPage(
     await dismissPwaInstallScreenIfShown(page, true);
     await dismissDuplicateUserConnectedModalIfShown(page, true);
     await dismissDoNotDisturbInfoToast(page);
+    await skipOnboardingWhenShown(page);
 
-    await page.addLocatorHandler(page.getByTestId("onboarding-button-welcome-skip"), async () => {
-        await page.getByTestId("onboarding-button-welcome-skip").click();
-    });
     await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
     return page;
+}
+
+async function skipOnboardingWhenShown(page: Page) {
+    await page.addLocatorHandler(page.getByTestId("onboarding-button-welcome-skip"), async () => {
+        try {
+            await page.getByTestId("onboarding-button-welcome-skip").click();
+        } catch (e) {
+            if (e instanceof Error && e.message.includes("Target page, context or browser has been closed")) {
+                return;
+            }
+            throw e;
+        }
+    });
 }

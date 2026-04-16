@@ -48,6 +48,9 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     imagePreview: {
         close: "Začinić",
+        label: "Wobrazowy přehlad",
+        loading: "Wobraz so začituje...",
+        loadError: "Tutón wobrazowy přehlad njeda so začitać.",
         openInNewTab: "W nowym rajtarku woteworić",
     },
     join: "Přizamknyć",

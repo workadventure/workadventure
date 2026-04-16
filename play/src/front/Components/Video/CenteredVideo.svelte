@@ -174,7 +174,7 @@
                     />
                 {:else if media?.type === "livekit"}
                     <LivekitVideo
-                        remoteVideoTrack={media.remoteVideoTrack}
+                        {media}
                         {onLoadVideoElement}
                         style={"width: " +
                             Math.ceil(videoWidth) +

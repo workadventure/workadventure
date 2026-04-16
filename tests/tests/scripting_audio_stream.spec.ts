@@ -6,6 +6,11 @@ import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
 import Menu from "./utils/menu";
+import {
+    expectLivekitConnectionsCountToBe,
+    expectWebRtcConnectionsCountToBe,
+    getLivekitConnectionsCount,
+} from "./utils/webRtc";
 
 async function playAudioStream(page: Page, frequency: number) {
     // Test play sound scripting
@@ -83,6 +88,7 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
         // This test does not depend on the browser. Let's only run it in Chromium.
         test.skip(browserName !== "chromium" || isMobile(page), "Run only on Chromium and skip on mobile");
     });
+
     test("can play and listen to streams @scripting", async ({ browser }, { project }) => {
         // This test runs only on Chrome
         // Firefox fails it because the sample rate must be equal to the microphone sample rate
@@ -166,6 +172,7 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
 
         // Let's restart the audio buffer
         await playAudioStream(page, 330);
+        await expect.poll(() => getLivekitConnectionsCount(alice2), { timeout: 35_000 }).toBeGreaterThan(0);
         await hasAudioStream(alice2);
 
         // Now, let's disconnect eve to force the switch back to WebRTC
@@ -173,7 +180,11 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
         await eve.context().close();
 
         // Let's wait for eve to be disconnected
-        await expect(alice2.getByText("eve")).toBeHidden();
+        await expect(alice2.getByText("Eve", { exact: true })).toBeHidden();
+
+        // Wait for the delayed LiveKit -> WebRTC fallback before asserting audio again.
+        await expectLivekitConnectionsCountToBe(alice2, 0, 35_000);
+        await expectWebRtcConnectionsCountToBe(alice2, 2, 35_000);
 
         // After disconnect, alice2 should still receive the sound through WebRTC
         await hasAudioStream(alice2);

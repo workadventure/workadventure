@@ -10,6 +10,7 @@ const actionbar: BaseTranslation = {
     participantListPlaceholder: "Participants list",
     participantSendMessage: "Send a message",
     participantInviteUser: "Invite a user",
+    participantExitFullscreen: "Exit fullscreen",
     profil: "Edit your name",
     startScreenSharing: "Start screen sharing",
     stopScreenSharing: "Stop screen sharing",

@@ -956,7 +956,13 @@ class ConnectionManager {
             if (typeof response.data === "string" && response.data === "pong") {
                 return;
             }
-            throw new AxiosError("Ping did not return pong", "EPING", response.config, response.request, response);
+            throw new AxiosError(
+                `Ping did not return pong. Got: ${String(response.data).substring(0, 1024)}`,
+                "EPING",
+                response.config,
+                response.request,
+                response
+            );
         });
     }
 }

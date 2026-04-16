@@ -205,7 +205,12 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         }
 
         for (const key in metadata) {
-            metadata[key] = this._metadataProcessor.processMetadata(key, metadata[key], senderSocket.getUserData());
+            metadata[key] = this._metadataProcessor.processMetadata(
+                key,
+                metadata[key],
+                senderSocket.getUserData(),
+                senderId
+            );
         }
 
         this.forwardMessageToSpaceBack({

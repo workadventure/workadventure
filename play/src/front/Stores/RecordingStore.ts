@@ -3,49 +3,208 @@ import RecordingCompletedModal from "../Components/PopUp/Recording/RecordingComp
 import RecordingStartedToast from "../Components/PopUp/Recording/RecordingStartedToast.svelte";
 import { toastStore } from "./ToastStore";
 
-interface RecordingState {
+export type RecordingRequestState = "starting" | "stopping";
+
+export interface RecordingSpaceState {
+    isCurrentUserRecorder: boolean;
+    recorderName: string | null;
+    recorderSpaceUserId: string | null;
+}
+
+export interface RecordingState {
+    recordingsBySpace: Record<string, RecordingSpaceState>;
+    requestStatesBySpace: Record<string, RecordingRequestState>;
     isRecording: boolean;
     isCurrentUserRecorder: boolean;
-    currentUserRecorderName: string;
 }
 
 const initialState: RecordingState = {
+    recordingsBySpace: {},
+    requestStatesBySpace: {},
     isRecording: false,
     isCurrentUserRecorder: false,
-    currentUserRecorderName: "unknown",
 };
+
+function buildState(
+    recordingsBySpace: Record<string, RecordingSpaceState>,
+    requestStatesBySpace: Record<string, RecordingRequestState>
+): RecordingState {
+    const recordings = Object.values(recordingsBySpace);
+
+    return {
+        recordingsBySpace,
+        requestStatesBySpace,
+        isRecording: recordings.length > 0,
+        isCurrentUserRecorder: recordings.some((recording) => recording.isCurrentUserRecorder),
+    };
+}
+
+function getFirstOtherRecording(
+    recordingsBySpace: Record<string, RecordingSpaceState>
+): RecordingSpaceState | undefined {
+    const otherRecordings = Object.values(recordingsBySpace).filter((recording) => !recording.isCurrentUserRecorder);
+    return otherRecordings.find((recording) => recording.recorderName !== null) ?? otherRecordings[0];
+}
 
 function createRecordingStore() {
     const { subscribe, update, set } = writable<RecordingState>(initialState);
 
     return {
         subscribe,
-        isRecording: initialState.isRecording,
-        isCurrentUserRecorder: initialState.isCurrentUserRecorder,
-        startRecord(isCurrentUser: boolean = false, recorderName: string) {
-            update((state) => ({
-                ...state,
-                isRecording: true,
-                isCurrentUserRecorder: isCurrentUser,
-                currentUserRecorderName: recorderName,
-            }));
-
-            if (!isCurrentUser) this.showInfoPopup(recorderName);
+        setRequestState(spaceName: string, requestState: RecordingRequestState) {
+            update((state) =>
+                buildState(state.recordingsBySpace, {
+                    ...state.requestStatesBySpace,
+                    [spaceName]: requestState,
+                })
+            );
         },
-        stopRecord(wasRecorder: boolean = false) {
-            const wasCurrentUserRecorder = wasRecorder;
-            update((state) => ({
-                ...state,
-                isRecording: false,
-                isCurrentUserRecorder: false,
-            }));
-            this.hideInfoPopup();
-            if (wasCurrentUserRecorder) {
+        clearRequestState(spaceName: string) {
+            update((state) => {
+                if (!(spaceName in state.requestStatesBySpace)) {
+                    return state;
+                }
+
+                const nextRequestStatesBySpace = { ...state.requestStatesBySpace };
+                delete nextRequestStatesBySpace[spaceName];
+
+                return buildState(state.recordingsBySpace, nextRequestStatesBySpace);
+            });
+        },
+        startRecord(
+            spaceName: string,
+            isCurrentUser: boolean = false,
+            recorderSpaceUserId: string | null,
+            recorderName: string | null
+        ) {
+            update((state) => {
+                const currentSpaceRecording = state.recordingsBySpace[spaceName];
+                const hasPendingRequest = spaceName in state.requestStatesBySpace;
+
+                if (
+                    currentSpaceRecording &&
+                    currentSpaceRecording.isCurrentUserRecorder === isCurrentUser &&
+                    currentSpaceRecording.recorderName === recorderName &&
+                    currentSpaceRecording.recorderSpaceUserId === recorderSpaceUserId &&
+                    !hasPendingRequest
+                ) {
+                    return state;
+                }
+
+                const nextRequestStatesBySpace = { ...state.requestStatesBySpace };
+                delete nextRequestStatesBySpace[spaceName];
+
+                return buildState(
+                    {
+                        ...state.recordingsBySpace,
+                        [spaceName]: {
+                            isCurrentUserRecorder: isCurrentUser,
+                            recorderName,
+                            recorderSpaceUserId,
+                        },
+                    },
+                    nextRequestStatesBySpace
+                );
+            });
+        },
+        setRecorderName(spaceName: string, recorderSpaceUserId: string | null, recorderName: string) {
+            update((state) => {
+                const currentSpaceRecording = state.recordingsBySpace[spaceName];
+
+                if (
+                    !currentSpaceRecording ||
+                    currentSpaceRecording.isCurrentUserRecorder ||
+                    currentSpaceRecording.recorderSpaceUserId !== recorderSpaceUserId ||
+                    currentSpaceRecording.recorderName === recorderName
+                ) {
+                    return state;
+                }
+
+                return buildState(
+                    {
+                        ...state.recordingsBySpace,
+                        [spaceName]: {
+                            ...currentSpaceRecording,
+                            recorderName,
+                        },
+                    },
+                    state.requestStatesBySpace
+                );
+            });
+        },
+        stopRecord(spaceName: string) {
+            let didRemoveRecording = false;
+            let wasCurrentUserRecorder = false;
+            let nextOtherRecording: RecordingSpaceState | undefined;
+
+            update((state) => {
+                const currentSpaceRecording = state.recordingsBySpace[spaceName];
+                const hasPendingRequest = spaceName in state.requestStatesBySpace;
+
+                if (!currentSpaceRecording && !hasPendingRequest) {
+                    return state;
+                }
+
+                const nextRecordingsBySpace = { ...state.recordingsBySpace };
+                const nextRequestStatesBySpace = { ...state.requestStatesBySpace };
+
+                if (currentSpaceRecording) {
+                    didRemoveRecording = true;
+                    wasCurrentUserRecorder = currentSpaceRecording.isCurrentUserRecorder;
+                    delete nextRecordingsBySpace[spaceName];
+                }
+
+                delete nextRequestStatesBySpace[spaceName];
+                nextOtherRecording = getFirstOtherRecording(nextRecordingsBySpace);
+
+                return buildState(nextRecordingsBySpace, nextRequestStatesBySpace);
+            });
+
+            if (nextOtherRecording) {
+                this.showInfoPopup(nextOtherRecording.recorderName);
+            } else {
+                this.hideInfoPopup();
+            }
+
+            if (didRemoveRecording && wasCurrentUserRecorder) {
                 this.showCompletedPopup();
             }
         },
-        showInfoPopup(recorderName: string) {
+        removeSpace(spaceName: string) {
+            let didRemoveState = false;
+            let nextOtherRecording: RecordingSpaceState | undefined;
+
+            update((state) => {
+                if (!(spaceName in state.recordingsBySpace) && !(spaceName in state.requestStatesBySpace)) {
+                    return state;
+                }
+
+                const nextRecordingsBySpace = { ...state.recordingsBySpace };
+                const nextRequestStatesBySpace = { ...state.requestStatesBySpace };
+
+                delete nextRecordingsBySpace[spaceName];
+                delete nextRequestStatesBySpace[spaceName];
+                didRemoveState = true;
+                nextOtherRecording = getFirstOtherRecording(nextRecordingsBySpace);
+
+                return buildState(nextRecordingsBySpace, nextRequestStatesBySpace);
+            });
+
+            if (!didRemoveState) {
+                return;
+            }
+
+            if (nextOtherRecording) {
+                this.showInfoPopup(nextOtherRecording.recorderName);
+            } else {
+                this.hideInfoPopup();
+            }
+        },
+        showInfoPopup(recorderName: string | null) {
             toastStore.addToast(RecordingStartedToast, { recorderName }, "recording-started-toast");
+        },
+        showGenericInfoPopup() {
+            this.showInfoPopup(null);
         },
         hideInfoPopup() {
             toastStore.removeToast("recording-started-toast");
@@ -58,6 +217,8 @@ function createRecordingStore() {
         },
         reset() {
             set(initialState);
+            this.hideInfoPopup();
+            this.hideCompletedPopup();
         },
     };
 }

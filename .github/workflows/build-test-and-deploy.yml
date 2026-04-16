@@ -356,7 +356,9 @@ jobs:
           docker image load --input /tmp/uploader.tar.gz
           docker image ls -a
       - name: Start WorkAdventure
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml up -d
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml up -d --scale egress=2
+
+        
       - name: Upload test-map
         run: sleep 5 && npm run upload-test-map
         working-directory: map-storage
@@ -377,7 +379,7 @@ jobs:
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
           IS_FORK: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
       - name: Display docker compose logs on failure
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml logs
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml logs
         if: failure()
       - name: Display containers state
         run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml ps
@@ -611,7 +613,7 @@ jobs:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
         working-directory: contrib/docker
       - name: Start WorkAdventure
-        run: docker compose -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml up -d
+        run: docker compose -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml up -d --scale egress=2
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker

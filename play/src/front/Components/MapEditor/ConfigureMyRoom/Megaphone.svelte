@@ -21,7 +21,10 @@
 
     let enabled: boolean = currentMegaphoneSettings?.enabled ?? false;
     const oldRights: string[] = currentMegaphoneSettings?.rights ?? [];
+    const oldRecordingRights: string[] = currentMegaphoneSettings?.recording?.rights ?? [];
     let rights: InputTagOption[] = [];
+    let recordingEnabled: boolean = currentMegaphoneSettings?.recording?.enabled ?? false;
+    let recordingRights: InputTagOption[] = [];
     let title: string = currentMegaphoneSettings?.title ?? "MyMegaphone";
     let scope: string = currentMegaphoneSettings?.scope ?? "WORLD";
     let enableSoundNotifications: boolean = currentMegaphoneSettings?.enableSoundNotifications ?? true;
@@ -60,6 +63,7 @@
             title: "",
         },
     };
+    let tagsPromise: Promise<InputTagOption[]> | undefined;
 
     async function save(): Promise<string> {
         if (loading) {
@@ -89,6 +93,10 @@
                         audienceVideoFeedbackActivated: audienceVideoFeedbackActivated,
                         notificationSoundUrl,
                         enableSoundNotifications,
+                        recording: {
+                            enabled: recordingEnabled,
+                            rights: (recordingRights || []).map((right) => right.value),
+                        },
                     } satisfies MegaphoneSettings,
                 },
             });
@@ -103,13 +111,24 @@
     async function getTags(): Promise<InputTagOption[]> {
         loading = true;
         rights = oldRights.map((right) => ({ value: right, label: right.toLocaleUpperCase(), created: undefined }));
+        recordingRights = oldRecordingRights.map((right) => ({
+            value: right,
+            label: right.toLocaleUpperCase(),
+            created: undefined,
+        }));
         const _tags = ((await gameManager.getCurrentGameScene().connection?.queryRoomTags()) ?? []).concat(
-            oldRights ?? []
+            oldRights ?? [],
+            oldRecordingRights ?? []
         );
         loading = false;
         return _tags
             .filter((item, index) => _tags.indexOf(item) === index)
             .map((tag) => ({ value: tag, label: tag.toLocaleUpperCase(), created: undefined }));
+    }
+
+    function ensureTags(): Promise<InputTagOption[]> {
+        tagsPromise ??= getTags();
+        return tagsPromise;
     }
 
     function resolveNotificationSoundUrl(rawUrl: string): string {
@@ -173,7 +192,7 @@
                 disabled={loading}
             />
         {/if}
-        {#await getTags()}
+        {#await ensureTags()}
             <PureLoader size={12} color="lighter-purple" customClass="h-full" />
         {:then tags}
             <InputTags
@@ -212,6 +231,42 @@
             <IconInfoCircle font-size="18" />
             {$LL.mapEditor.settings.megaphone.inputs.audienceVideoFeedbackActivatedHelper()}
         </p>
+        <div class="space-y-4">
+            <div class="flex cursor-pointer items-center relative">
+                <InputSwitch
+                    id="megaphone-recording-switch"
+                    bind:value={recordingEnabled}
+                    label={$LL.mapEditor.settings.megaphone.inputs.recording.enable()}
+                    labelPosition="right"
+                    disabled={loading}
+                />
+            </div>
+            <p class="help-text">
+                <IconInfoCircle font-size="18" />
+                {$LL.mapEditor.settings.megaphone.inputs.recording.enableHelper()}
+            </p>
+            {#if recordingEnabled}
+                {#await ensureTags()}
+                    <PureLoader size={12} color="lighter-purple" customClass="h-full" />
+                {:then tags}
+                    <InputTags
+                        label={$LL.mapEditor.settings.megaphone.inputs.recording.rights()}
+                        options={tags ?? []}
+                        bind:value={recordingRights}
+                        testId="megaphone-recording-rights-input"
+                    />
+                    <p class="help-text">
+                        <IconInfoCircle font-size="18" />
+                        {$LL.mapEditor.settings.megaphone.inputs.recording.rightsHelper()}
+                    </p>
+                {:catch error}
+                    <p class="help-text text-danger-800">
+                        <IconInfoCircle font-size="18" />
+                        {error}
+                    </p>
+                {/await}
+            {/if}
+        </div>
     </div>
 {/if}
 <ButtonState promise={save} initialText={$LL.menu.settings.save()} loadingText="Saving" />
