@@ -21,6 +21,17 @@ class ChatUtils {
         return `RoomTest_${Math.floor(Math.random() * 10000)}`;
     }
 
+    /**
+     * Extracts a Matrix room id (`!opaque:server`) from the manage-participants room label text.
+     */
+    public parseMatrixRoomIdFromRoomLabelText(text: string): string {
+        const match = text.match(/![^\s]+:[^\s]+/);
+        if (!match) {
+            throw new Error(`Could not parse Matrix room ID from room label (got: ${JSON.stringify(text)})`);
+        }
+        return match[0];
+    }
+
     public async resetMatrixDatabase() {
         await MatrixApi.resetMatrixUsers();
     }

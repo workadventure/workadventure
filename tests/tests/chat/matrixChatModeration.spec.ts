@@ -112,8 +112,9 @@ test.describe("chat moderation @matrix @nowebkit", () => {
         await expect(page.getByTestId("@admin:matrix.workadventure.localhost-inviteButton")).toBeAttached();
         await page.getByTestId("@admin:matrix.workadventure.localhost-inviteButton").click();
 
-        let roomId = await page.getByTestId("roomID").textContent();
-        roomId = roomId.replace("Room ID : ", "");
+        const roomId = ChatUtils.parseMatrixRoomIdFromRoomLabelText(
+            (await page.getByTestId("roomID").textContent())?.trim() ?? "",
+        );
 
         await matrixApi.acceptRoomInvitations(roomId);
 
