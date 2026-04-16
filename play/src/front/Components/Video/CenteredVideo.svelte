@@ -5,6 +5,7 @@
     import MegaphoneIcon from "../Icons/MegaphoneIcon.svelte";
     import type { Streamable } from "../../Space/Streamable";
     import type { VideoBoxStatus } from "../../Space/VideoBox";
+    import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import WebRtcVideo from "./VideoTags/WebRtcVideo.svelte";
     import LivekitVideo from "./VideoTags/LivekitVideo.svelte";
     import ScriptingVideo from "./VideoTags/ScriptingVideo.svelte";
@@ -109,9 +110,12 @@
     class="h-full w-full relative {(!cover || videoRatio < 1) && withBackground ? 'bg-contrast/80 rounded-lg' : ''}"
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
+    class:flex={$activePictureInPictureStore}
+    class:flex-col={$activePictureInPictureStore}
+    class:justify-center={$activePictureInPictureStore}
 >
     {#if media?.type === "component"}
-        <div class="absolute inset-0 flex justify-center items-center overflow-hidden">
+        <div class="group/centered-video absolute inset-0 flex justify-center items-center overflow-hidden">
             <svelte:component
                 this={media.component}
                 width={containerWidth ?? 320}
@@ -235,7 +239,7 @@
 
         <!-- This div represents an overlay on top of the video -->
         <div
-            class={"absolute border-solid " +
+            class={"group/centered-video absolute border-solid " +
                 ((videoEnabled || !withBackground) && !isBlocked ? "" : "bg-contrast/80 backdrop-blur")}
             class:w-full={!videoEnabled || displayNoVideoWarning || isBlocked || status !== "connected"}
             class:h-full={!videoEnabled || displayNoVideoWarning || isBlocked || status !== "connected"}
