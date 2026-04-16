@@ -4,13 +4,13 @@
     import { get } from "svelte/store";
     import type { Readable } from "svelte/store";
     import { AskPositionMessage_AskType } from "@workadventure/messages";
-    import type {
-        ChatRoomMembershipManagement,
-        ChatRoomNotificationControl,
-        ChatRoomModeration,
-        ChatRoom,
-        ChatUser,
+    import {
         hasMatrixChatCapabilities,
+        type ChatRoom,
+        type ChatRoomMembershipManagement,
+        type ChatRoomModeration,
+        type ChatRoomNotificationControl,
+        type ChatUser,
         type MatrixChatConnectionLike,
     } from "../../../Connection/ChatConnection";
     import { isMatrixChatEnabledStore } from "../../../../Stores/ChatStore";
