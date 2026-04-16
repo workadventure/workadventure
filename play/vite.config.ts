@@ -1,5 +1,5 @@
 import { basename } from "path";
-import { readFileSync } from "node:fs";
+import fs from "fs";
 import { defineConfig, loadEnv } from "vite";
 import { svelte, vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
@@ -125,7 +125,7 @@ function mediapipe_workaround() {
         name: "mediapipe_workaround",
         load(id: string) {
             if (basename(id) === "selfie_segmentation.js") {
-                let code = readFileSync(id, "utf-8");
+                let code = fs.readFileSync(id, "utf-8");
                 code += "exports.SelfieSegmentation = SelfieSegmentation;";
                 return { code };
             } else {
