@@ -85,12 +85,6 @@
         }
         chatSearchBarValue.set("");
         joignableRoom.set([]);
-
-        userProviderMergerPromise
-            .then((userProviderMerger) => {
-                return userProviderMerger.setFilter("");
-            })
-            .catch((e) => console.error(e));
     });
 </script>
 
