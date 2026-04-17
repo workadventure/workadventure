@@ -1342,6 +1342,8 @@ export class IoSocketController {
 
     private sendAnswerMessage(socket: WebSocket<SocketData>, answerMessage: AnswerMessage) {
         if (socket.getUserData().disconnecting) {
+            // Avoid leaking Map entries when we bail out before scheduling the delayed delete below.
+            socket.getUserData().queryAbortControllers.delete(answerMessage.id);
             return;
         }
         // We don't delete the abort controller right away because between the moment where we send the answer
