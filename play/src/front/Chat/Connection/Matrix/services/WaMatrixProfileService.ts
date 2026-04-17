@@ -137,6 +137,8 @@ export async function pushLocalWokaAndNameToMatrixProfile(
             console.warn("pushLocalWokaAndNameToMatrixProfile: setDisplayName failed", error);
             Sentry.captureException(error);
         }
+    } else {
+        debug("Matrix sync WOKA→Matrix profile skipped: display name already set userId=%s", userId);
     }
 
     const wokaSrc = options.wokaImageSrc;
