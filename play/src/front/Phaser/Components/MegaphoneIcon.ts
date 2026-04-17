@@ -27,8 +27,19 @@ export class MegaphoneIcon extends Phaser.GameObjects.Image {
         this.showAnimation(show, forceClose);
     }
 
-    public setX(value?: number): this {
-        this.defaultPosition.x = value || 0;
+    public setPosition(x: number, y: number): this {
+        this.defaultPosition = { x, y };
+        super.setPosition(x, y);
+        if (this.showAnimationTween) {
+            this.showAnimationTween?.stop();
+            this.showAnimationTween = undefined;
+            this.showAnimation(true, false);
+        }
+        return this;
+    }
+
+    public setX(value: number): this {
+        this.defaultPosition.x = value;
         super.setX(value);
         if (this.showAnimationTween) {
             this.showAnimationTween?.stop();

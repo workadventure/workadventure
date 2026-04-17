@@ -6,6 +6,7 @@ import ScaleManager = Phaser.Scale.ScaleManager;
 
 export enum WaScaleManagerEvent {
     RefreshFocusOnTarget = "wa-scale-manager:refresh-focus-on-target",
+    ZoomChanged = "wa-scale-manager:zoom-changed",
 }
 
 export type WaScaleManagerFocusTarget = { x: number; y: number; width?: number; height?: number };
@@ -16,6 +17,7 @@ export class WaScaleManager {
     private game!: Game;
     private actualZoom = 1;
     private _saveZoom = 1;
+    private lastEmittedZoomModifier: number | undefined;
 
     private focusTarget?: WaScaleManagerFocusTarget;
 
@@ -23,9 +25,20 @@ export class WaScaleManager {
         this.hdpiManager = new HdpiManager(minGamePixelsNumber, absoluteMinPixelNumber);
     }
 
+    private emitZoomChangedIfNeeded(): void {
+        const zoomModifier = this.hdpiManager.zoomModifier;
+        if (this.lastEmittedZoomModifier === zoomModifier) {
+            return;
+        }
+
+        this.lastEmittedZoomModifier = zoomModifier;
+        this.game.events.emit(WaScaleManagerEvent.ZoomChanged, zoomModifier);
+    }
+
     public setGame(game: Game): void {
         this.scaleManager = game.scale;
         this.game = game;
+        this.lastEmittedZoomModifier = this.hdpiManager.zoomModifier;
     }
 
     public applyNewSize(camera?: Phaser.Cameras.Scene2D.Camera) {
@@ -71,6 +84,7 @@ export class WaScaleManager {
             }
         }
 
+        this.emitZoomChangedIfNeeded();
         this.game.markDirty();
     }
 
