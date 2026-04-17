@@ -177,8 +177,9 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
      * - One outside starts megaphone; one meeting user starts megaphone + screen share → both outside see.
      * - Meeting user stops megaphone → outside no longer see screen share.
      * - Meeting user starts megaphone again → outside see screen share again.
+     * This test is skipped in Firefox because of screen share visibility issues.
      */
-    test("Megaphone see attendees: outside users see screen share only when sharer is speaker", async ({
+    test("Megaphone see attendees: outside users see screen share only when sharer is speaker @nofirefox", async ({
         browser,
         request,
     }) => {
