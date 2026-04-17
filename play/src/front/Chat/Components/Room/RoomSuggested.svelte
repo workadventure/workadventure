@@ -44,11 +44,11 @@
 </script>
 
 <div
-    class="text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded-md hover:!cursor-pointer p-2"
+    class="wa-chat-item text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer px-2 py-2"
     data-testid="userInvitation"
 >
-    <div class="relative">
-        <Avatar pictureStore={roomInformation.pictureStore} fallbackName={roomName} />
+    <div class="relative shrink-0">
+        <Avatar compact pictureStore={roomInformation.pictureStore} fallbackName={roomName} />
     </div>
     <div class="m-0 grow text-sm font-bold">
         {roomName}

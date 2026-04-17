@@ -6,15 +6,24 @@
     export let fallbackName = "A";
     export let color: string | null = null;
     export let isChatAvatar = false;
+    /**
+     * Compact: 28×28px, `rounded-md` — same as user list rows and chat room rows (Room.svelte, User.svelte).
+     * Default: 40×40px, `rounded-sm` — message thread avatars.
+     */
+    export let compact = false;
 
     let forceFallback = false;
+
+    $: sizeClass = compact
+        ? "h-7 w-7 min-h-[1.75rem] min-w-[1.75rem] shrink-0 rounded-md overflow-hidden"
+        : "h-10 w-10 min-h-10 min-w-10 shrink-0 rounded-sm overflow-hidden";
 </script>
 
 {#if $pictureStore && !forceFallback}
     <img
         src={$pictureStore}
         alt="User avatar"
-        class="rounded-sm object-contain bg-white h-10 w-10"
+        class="object-contain object-center bg-white {sizeClass}"
         draggable="false"
         style:background-color={`${color ? color : `${getColorByString(fallbackName)}`}`}
         on:error={(event) => {
@@ -25,7 +34,7 @@
 {:else}
     <div
         class:chatAvatar={isChatAvatar}
-        class="rounded-sm h-10 w-10 text-center uppercase text-white flex items-center justify-center font-bold aspect-square"
+        class="text-center uppercase text-white flex items-center justify-center font-bold aspect-square {sizeClass}"
         draggable="false"
         style:background-color={`${color ? color : getColorByString(fallbackName)}`}
     >

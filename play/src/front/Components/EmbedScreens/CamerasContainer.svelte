@@ -438,7 +438,7 @@
         class:flex-wrap={!isOnOneLine}
         class:content-start={!isOnOneLine}
         class:justify-start={isOnOneLine}
-        class:justify-center={!isOnOneLine}
+        class:justify-center={!isOnOneLine || $activePictureInPictureStore}
         class:whitespace-nowrap={isOnOneLine}
         class:relative={true}
         class:overflow-x-auto={isOnOneLine && oneLineMode === "horizontal"}

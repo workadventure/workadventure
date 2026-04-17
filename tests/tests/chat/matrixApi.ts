@@ -30,6 +30,15 @@ interface MatrixUsersResponse {
     name: string;
 }
 
+interface MatrixPublicRoomsChunkRoom {
+    name: string;
+    room_id: string;
+}
+
+interface MatrixPublicRoomsResponse {
+    chunk: MatrixPublicRoomsChunkRoom[];
+}
+
 const matrixLogin: MatrixLoginBody = {
     type: "m.login.password",
     identifier: {
@@ -42,13 +51,23 @@ const matrixLogin: MatrixLoginBody = {
 class MatrixApi {
     private adminLoginToken: string;
 
+    /**
+     * Matrix room IDs must be percent-encoded when used in URL paths (see Matrix Client-Server API).
+     */
+    private encodeRoomIdForPath(roomId: string): string {
+        return encodeURIComponent(roomId);
+    }
+
+    private async ensureAdminAccessToken(): Promise<void> {
+        if (!this.adminLoginToken) {
+            const adminLoginResponse = await axios.post<MatrixLoginResponse>(LOGIN_ENDPOINT, matrixLogin);
+            this.adminLoginToken = adminLoginResponse.data.access_token;
+        }
+    }
+
     public async resetMatrixUsers() {
         try {
-            if (!this.adminLoginToken) {
-                const adminLoginResponse = await axios.post<MatrixLoginResponse>(LOGIN_ENDPOINT, matrixLogin);
-                const { access_token } = adminLoginResponse.data;
-                this.adminLoginToken = access_token;
-            }
+            await this.ensureAdminAccessToken();
 
             const users = await this.getUsers();
             await this.deactivateAndActivateUsers(users);
@@ -112,16 +131,17 @@ class MatrixApi {
 
     public async acceptAllInvitations(alias: string) {
         try {
-            const publicRoomsResponse = await axios.get(
+            await this.ensureAdminAccessToken();
+            const publicRoomsResponse = await axios.get<MatrixPublicRoomsResponse>(
                 `${matrix_server_url}/_matrix/client/r0/publicRooms`,
                 this.getAuthenticatedHeader(),
             );
 
-            const room = publicRoomsResponse.data.chunk.find((room) => room.name === alias);
+            const room = publicRoomsResponse.data.chunk.find((r) => r.name === alias);
 
             if (room) {
                 await axios.post(
-                    `${matrix_server_url}/_matrix/client/r0/join/${room.room_id}`,
+                    `${matrix_server_url}/_matrix/client/r0/join/${this.encodeRoomIdForPath(room.room_id)}`,
                     {},
                     this.getAuthenticatedHeader(),
                 );
@@ -134,8 +154,9 @@ class MatrixApi {
     public async acceptRoomInvitations(roomId: string) {
         if (roomId) {
             try {
+                await this.ensureAdminAccessToken();
                 await axios.post(
-                    `${matrix_server_url}/_matrix/client/r0/join/${roomId}`,
+                    `${matrix_server_url}/_matrix/client/r0/join/${this.encodeRoomIdForPath(roomId)}`,
                     {},
                     this.getAuthenticatedHeader(),
                 );
@@ -147,8 +168,9 @@ class MatrixApi {
 
     public async getMemberPowerLevel(roomId: string): Promise<number> {
         try {
+            await this.ensureAdminAccessToken();
             const powerLevelsResponse = await axios.get(
-                `${matrix_server_url}/_matrix/client/r0/rooms/${roomId}/state/m.room.power_levels/`,
+                `${matrix_server_url}/_matrix/client/r0/rooms/${this.encodeRoomIdForPath(roomId)}/state/m.room.power_levels/`,
                 this.getAuthenticatedHeader(),
             );
 
@@ -160,6 +182,7 @@ class MatrixApi {
 
     public async overrideRateLimitForUser(userId: string) {
         try {
+            await this.ensureAdminAccessToken();
             const response = await axios.post(
                 `${matrix_server_url}/_synapse/admin/v1/users/${userId}/override_ratelimit`,
                 {

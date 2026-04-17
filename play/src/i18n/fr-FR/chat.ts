@@ -516,6 +516,54 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     remoteUserNotConnected: "Utilisateur non connecté. Impossible d'envoyer un message.",
+    matrixSettings: {
+        title: "Matrix & WorkAdventure",
+        subtitle: "Votre identité de chat et votre profil Matrix",
+        close: "Fermer",
+        identitySection: "Identité",
+        matrixUserId: "Identifiant Matrix",
+        homeserver: "Serveur Matrix (homeserver)",
+        copy: "Copier",
+        copied: "Copié",
+        profileSection: "Profil Matrix",
+        accountDataSection: "WorkAdventure (dans le jeu)",
+        displayName: "Nom d’affichage",
+        avatar: "Avatar (MXC)",
+        localName: "Nom dans le jeu",
+        waDisplayName: "Nom WA (fr.workadventure.wa_display_name)",
+        waAvatar: "Avatar WA (fr.workadventure.wa_avatar)",
+        needsSyncHint:
+            "Le nom local ou le WOKA peut ne pas correspondre à votre profil Matrix. Utilisez Synchroniser pour mettre à jour.",
+        upToDateHint: "Votre profil Matrix est aligné avec votre nom et votre WOKA (ou rien à synchroniser).",
+        syncButton: "Synchroniser le profil Matrix (nom + image WOKA)",
+        syncing: "Synchronisation…",
+        removeProfileImagesButton: "Supprimer les images de profil",
+        removingProfileImages: "Suppression…",
+        removeProfileImagesHint:
+            "Supprime la photo de profil Matrix. Votre WOKA en jeu ne change pas ; utilisez Synchroniser pour le publier à nouveau.",
+        loadError: "Impossible de charger les paramètres Matrix.",
+        notConnected: "Matrix n’est pas connecté ou vous êtes invité.",
+        clearSuggestedRoomsHint:
+            "Réinitialise la liste des salles Matrix masquées dans les suggestions et les listes joignables (stockée dans ce navigateur).",
+        clearSuggestedRoomsButton: "Réafficher les salles suggérées masquées",
+        publishWokaToMatrixProfileHint:
+            "Définit le nom d’affichage et l’avatar du profil Matrix à partir de votre nom en jeu et de votre WOKA (visible dans Element et les autres clients Matrix).",
+        publishWokaToMatrixProfileButton: "Appliquer le nom et l’image WOKA au profil Matrix",
+        publishWokaToMatrixProfilePublishing: "Mise à jour du profil…",
+        publishWokaToMatrixProfileConfirmWarning:
+            "Cette action remplace le nom d’affichage et l’avatar de votre profil Matrix sur le serveur. Un nom ou une photo définis ailleurs (par ex. dans Element) seront écrasés. Ne continuez que si vous acceptez que votre nom WorkAdventure et votre WOKA deviennent votre profil Matrix public.",
+        publishWokaToMatrixProfileCancelButton: "Annuler",
+        publishWokaToMatrixProfileConfirmActionButton: "Écraser et appliquer",
+        actionDone: "Terminé",
+    },
+    matrixPeerProfileDebug: {
+        menuItemTitle: "Profil Matrix",
+        menuItemDebugTag: "debug",
+        title: "Profil Matrix",
+        subtitle:
+            "Vue en lecture seule du profil Matrix de cet utilisateur. Visible uniquement si DEBUG_MODE est activé.",
+        loadError: "Impossible de charger le profil Matrix de cet utilisateur.",
+    },
 };
 
 export default chat;

@@ -1,7 +1,7 @@
 import type { Readable, Writable } from "svelte/store";
 import type { AvailabilityStatus } from "@workadventure/messages";
 import type { MapStore } from "@workadventure/store-utils";
-import type { StateEvents } from "matrix-js-sdk";
+import type { MatrixClient, StateEvents } from "matrix-js-sdk";
 import type { ComponentType, SvelteComponent } from "svelte";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { PictureStore } from "../../Stores/PictureStore";
@@ -59,6 +59,12 @@ export interface ChatRoomMember {
     membership: Readable<ChatRoomMembership>;
     permissionLevel: Readable<ChatPermissionLevel>;
     pictureStore?: PictureStore;
+    /** User list / merger color for Avatar letter & image background (Matrix rooms). */
+    readonly avatarFallbackColor?: Readable<string | undefined>;
+    /**
+     * Matrix: WorkAdventure name (own user: account_data; others: merger) shown in parens only when it differs from the Matrix display name.
+     */
+    readonly waDisplayNameIfDifferent?: Readable<string | undefined>;
 }
 export interface ChatRoom {
     readonly id: string;
@@ -67,6 +73,16 @@ export interface ChatRoom {
     readonly hasUnreadMessages: Readable<boolean>;
     readonly unreadNotificationCount: Readable<number>;
     readonly pictureStore: PictureStore;
+    /** Direct rooms: peer user color from the same source as the user list (UserProviderMerger), for Avatar background. */
+    readonly avatarFallbackColor: Readable<string | undefined>;
+    /**
+     * Matrix rooms: member picture stores (Matrix profile first, then WOKA fallback — same as DM rows).
+     * When set, timelines resolve the sender avatar from the matching member id.
+     * Distinct from {@link ChatRoomMembershipManagement.members} typing on folder/room management APIs.
+     */
+    readonly membersForMessageAvatars?: Readable<readonly ChatRoomMember[]>;
+    /** Direct Matrix rooms: peer WA display name when it differs from Matrix name (for DM row subtitle). */
+    readonly peerWaDisplayNameIfDifferent?: Readable<string | undefined>;
     readonly messages: Readable<readonly ChatMessage[]>;
     readonly sendMessage: (message: string) => void;
     readonly sendFiles: (files: FileList) => Promise<void>;
@@ -97,6 +113,8 @@ export interface ChatRoomNotificationControl {
 
 export interface ChatRoomModeration {
     readonly id: string;
+    /** True when the current user is room admin (Matrix power level). Used to gate invite / kick / ban / role changes in the UI. */
+    readonly isCurrentUserRoomAdmin: Readable<boolean>;
     readonly inviteUsers: (userIds: string[]) => Promise<void>;
     readonly hasPermissionTo: (action: ModerationAction, member?: ChatRoomMember) => Readable<boolean>;
     readonly hasPermissionForRoomStateEvent: (eventType: keyof StateEvents) => Readable<boolean>;
@@ -175,6 +193,38 @@ export interface CreateRoomOptions {
 
 export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";
 
+/** Snapshot for the Matrix chat settings UI (Matrix profile vs local game state). */
+export type MatrixUserSettingsDiagnostics = {
+    matrixUserId: string;
+    homeserverUrl: string;
+    profileDisplayName: string | undefined;
+    profileAvatarMxc: string | undefined;
+    profileAvatarPreviewUrl: string | undefined;
+    localDisplayName: string | undefined;
+    /** True when the in-game name or custom WOKA is not reflected on the Matrix profile. */
+    profileNeedsSync: boolean;
+};
+
+/** Read-only snapshot for another Matrix user (debug tooling). */
+export type MatrixPeerProfileDiagnostics = {
+    matrixUserId: string;
+    homeserverUrl: string;
+    profileDisplayName: string | undefined;
+    profileAvatarMxc: string | undefined;
+    profileAvatarPreviewUrl: string | undefined;
+};
+
+/**
+ * Matrix-specific operations exposed by the Matrix chat backend.
+ * Use {@link hasMatrixChatCapabilities} to narrow a {@link ChatConnectionInterface}.
+ */
+export interface MatrixChatCapabilities {
+    getMatrixClient(): MatrixClient | undefined;
+    syncMatrixGlobalProfileFromLocalWokaAndName(): Promise<void>;
+    getMatrixUserSettingsDiagnostics(): Promise<MatrixUserSettingsDiagnostics | undefined>;
+    getMatrixPeerProfileDiagnostics(matrixUserId: string): Promise<MatrixPeerProfileDiagnostics | undefined>;
+}
+
 export type userId = number;
 export type ChatId = string & { __chatIdBrand: never };
 export type UserUuid = string & { __userUuidBrand: never };
@@ -214,6 +264,22 @@ export interface ChatConnectionInterface {
     nbUnreadRoomsMessages: Readable<number>;
     nbUnreadDirectRoomsMessages: Readable<number>;
     nbUnreadInvitationsMessages: Readable<number>;
+
+    /**
+     * Matrix backend only — see {@link MatrixChatCapabilities}.
+     * Prefer `hasMatrixChatCapabilities(connection)` before calling.
+     */
+    getMatrixClient?: () => MatrixClient | undefined;
+    syncMatrixGlobalProfileFromLocalWokaAndName?: () => Promise<void>;
+    getMatrixUserSettingsDiagnostics?: () => Promise<MatrixUserSettingsDiagnostics | undefined>;
+    getMatrixPeerProfileDiagnostics?: (matrixUserId: string) => Promise<MatrixPeerProfileDiagnostics | undefined>;
+}
+
+/** Chat connection backed by Matrix (narrows with {@link hasMatrixChatCapabilities}). */
+export type MatrixChatConnectionLike = ChatConnectionInterface & MatrixChatCapabilities;
+
+export function hasMatrixChatCapabilities(connection: ChatConnectionInterface): connection is MatrixChatConnectionLike {
+    return typeof connection.getMatrixClient === "function";
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

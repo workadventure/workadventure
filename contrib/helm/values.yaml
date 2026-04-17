@@ -138,6 +138,8 @@ livekit:
 # LiveKit upstream chart passthrough values.
 # See: https://github.com/livekit/livekit-helm/tree/master/livekit-server
 livekit-server:
+  image:
+    tag: "v1.10.1"
   storeKeysInSecret:
     enabled: true
     # This value is evaluated by the upstream chart using `tpl`.
@@ -158,6 +160,8 @@ livekit-server:
 # LiveKit Egress upstream chart passthrough values.
 # See: https://github.com/livekit/livekit-helm/tree/master/egress
 livekit-egress:
+  image:
+    tag: "v1.12.0"
   egress:
     # Required when livekit.egress.enabled=true.
     # Must match `livekit.credentials.apiKey`.

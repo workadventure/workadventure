@@ -65,6 +65,11 @@ export function ignoreSuggestedRoom(roomId: string): void {
     });
 }
 
+export function clearIgnoredSuggestedRooms(): void {
+    localUserStore.clearIgnoredSuggestedRoomIds();
+    ignoredSuggestedRoomIdsStore.set(new Set());
+}
+
 export function initializeChatVisibilitySubscription() {
     const unsubscriber = chatVisibilityStore.subscribe((visible) => {
         const selectedRoom = get(selectedRoomStore);

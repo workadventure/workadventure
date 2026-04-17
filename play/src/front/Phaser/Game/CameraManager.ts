@@ -4,11 +4,10 @@ import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
 import type { Player } from "../Player/Player";
 import { hasMovedEventName } from "../Player/Player";
-import type { WaScaleManagerFocusTarget, WaScaleManager } from "../Services/WaScaleManager";
+import type { WaScaleManager, WaScaleManagerFocusTarget } from "../Services/WaScaleManager";
 import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
-import { debugZoom } from "../../Utils/Debuggers";
 import type { RemotePlayer } from "../Entity/RemotePlayer";
 import type { GameScene } from "./GameScene";
 import Clamp = Phaser.Math.Clamp;
@@ -77,21 +76,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private targetZoomModifier: number | undefined;
     private targetDirection: "zoom_out" | "zoom_in" | undefined;
     private cameraZoomSpeed = 1;
-    private _resistanceStartZoomLevel = 0.6;
     private _resistanceEndZoomLevel = 0.3;
-    // The resistance strength is the speed at which the camera will go back to the resistance start zoom level.
-    private _resistanceStrength = 1;
-    // The callback to be called when the resistance zone is overcome
-    private resistanceCallback?: () => void;
+    // The callback used to update camera animation state in explorer mode and zoom in/zoom out
     private animateCallback: (time: number, delta: number) => void;
-    // The date when the resistance wall was broken
-    private wallDownDate = 0;
-    private resistanceZoneEnterDate = 0;
     private cameraSpeed: { x: number; y: number } | undefined;
-    // If set to false, the resistance wall will never be active
-    private enableResistanceWall = false;
-    private resistanceRadiusAroundWoka: number | undefined;
-    private player: Player | undefined;
 
     // The point of the scene the explorer mode is focusing on.
     private explorerFocusOn: { x: number; y: number } = { x: 0, y: 0 };
@@ -139,16 +127,17 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         });
 
         // Set zoom out to the maximum possible value
-        const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(
+        this.waScaleManager.maxZoomOut = this.waScaleManager.getTargetZoomModifierFor(
             this.mapSize.width,
             this.mapSize.height
         );
-        this.waScaleManager.maxZoomOut = targetZoomModifier;
         this.targetZoomModifier = undefined;
     }
 
     public destroy(): void {
-        this.cancelRunningTweens();
+        this.cancelFollowTween();
+        this.cancelOffsetTween();
+
         this.scene.game.events.off(WaScaleManagerEvent.RefreshFocusOnTarget);
         this.camera.off("followupdate", this.onFollowUpdate);
         this.unsubscribeMapEditorModeStore();
@@ -168,7 +157,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         if (this.cameraMode === CameraMode.Focus) {
             return;
         }
-        this.cancelRunningTweens();
+        this.cancelFollowTween();
         this.setCameraMode(CameraMode.Positioned);
         this.waScaleManager.saveZoom();
         this.camera.stopFollow();
@@ -211,7 +200,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
      * @param duration Time for the transition im MS. If set to 0, transition will occur immediately
      */
     public enterFocusMode(focusOn: WaScaleManagerFocusTarget, margin = 0, duration = 1000): void {
-        this.cancelRunningTweens();
+        this.cancelFollowTween();
         this.setCameraMode(CameraMode.Focus);
         this.waScaleManager.saveZoom();
         this.waScaleManager.setFocusTarget(focusOn);
@@ -251,7 +240,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     public leaveFocusMode(player: Player, duration = 0): void {
-        this.cancelRunningTweens();
+        this.cancelFollowTween();
         this.waScaleManager.setFocusTarget();
         this.unlockCameraWithDelay(duration);
         this.startFollowPlayer(player, duration);
@@ -294,7 +283,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         duration = 0,
         targetZoomLevel: number | undefined = undefined
     ): void {
-        this.cancelRunningTweens();
+        this.cancelFollowTween();
 
         const offset = { ...this.camera.followOffset };
         this.playerToFollow = player;
@@ -344,7 +333,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },
             onComplete: () => {
-                this.camera.startFollow(player, true, 1, 1, offset.x, offset.y);
+                this.camera.startFollow(player, true, 1, 1, this.camera.followOffset.x, this.camera.followOffset.y);
                 this.animationInProgress = false;
                 this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
                 this.startFollowTween = undefined;
@@ -394,6 +383,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         const followOffsetX = (xCenter - game.offsetWidth / 2) / this.scene.scale.zoom;
         const followOffsetY = (yCenter - game.offsetHeight / 2) / this.scene.scale.zoom;
 
+        this.cancelOffsetTween();
+
         if (instant) {
             this.camera.setFollowOffset(followOffsetX, followOffsetY);
             this.scene.markDirty();
@@ -403,7 +394,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         const oldFollowOffsetX = this.camera.followOffset.x;
         const oldFollowOffsetY = this.camera.followOffset.y;
 
-        this.cancelRunningTweens();
         this.animationInProgress = true;
         this.cameraOffsetCurrentTween = this.scene.tweens.addCounter({
             from: 0,
@@ -566,32 +556,24 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.setCameraMode(CameraMode.Follow);
     }
 
-    public triggerMaxZoomOutAnimation(): void {
-        const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(
-            this.mapSize.width,
-            this.mapSize.height
-        );
-
-        this.cancelRunningTweens();
-        this.centerCameraOn({ x: this.mapSize.width / 2, y: this.mapSize.height / 2 }, targetZoomModifier);
-    }
-
     private stopPan(): void {
         this.camera.panEffect.reset();
     }
 
-    private cancelRunningTweens(): void {
-        this.stopTween(this.restoreZoomTween);
-        this.restoreZoomTween = undefined;
-
+    private cancelFollowTween(): void {
         this.stopTween(this.startFollowTween);
         this.startFollowTween = undefined;
 
-        this.stopTween(this.cameraOffsetCurrentTween);
-        this.cameraOffsetCurrentTween = undefined;
-
         this.stopPan();
         this.animationInProgress = false;
+
+        this.stopTween(this.restoreZoomTween);
+        this.restoreZoomTween = undefined;
+    }
+
+    private cancelOffsetTween(): void {
+        this.stopTween(this.cameraOffsetCurrentTween);
+        this.cameraOffsetCurrentTween = undefined;
     }
 
     private stopTween(tween: Phaser.Tweens.Tween | undefined): void {
@@ -618,97 +600,13 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     /**
      * Zooms the camera by a factor passed in parameter.
-     * Is the final zoom level is greater than the max zoom level, an animation will slowly bring back the camera to the max zoom level
-     * (if no animation is currently running)
-     *
-     * Also, this supports the notion of "WALL".
-     * The wall can be "in-place" or "broken". When the wall is in place, it is NOT possible to pass the resistance zone.
-     * We do this by altering the zoom factor to make it slower as we are getting closer to the resistance zone end.
-     *
-     * When we get out of the resistance zone OR if we are in the resistance zone but zoom towards the start of the zone,
-     * we break the wall for 10 seconds.
      */
     public zoomByFactor(zoomFactor: number, smooth: boolean): void {
-        const wallBroken = Date.now() - this.wallDownDate < 10000 || this.enableResistanceWall === false;
-        if (
-            this.isBetween(
-                this.waScaleManager.zoomModifier,
-                this._resistanceStartZoomLevel,
-                this._resistanceEndZoomLevel
-            )
-        ) {
-            if (
-                !wallBroken &&
-                ((this._resistanceEndZoomLevel < this._resistanceStartZoomLevel && zoomFactor < 1) ||
-                    (this.resistanceEndZoomLevel > this.resistanceStartZoomLevel && zoomFactor > 1))
-            ) {
-                // Let's alter the zoom factor to make it slower if we are in the resistance zone.
-                //const maxZoomFactor = this._resistanceEndZoomLevel / this.waScaleManager.zoomModifier;
-                const lambda =
-                    5 / ((this.resistanceEndZoomLevel - this.resistanceStartZoomLevel) * this._resistanceEndZoomLevel);
-
-                const resultZoom =
-                    this.resistanceEndZoomLevel - 1 / (lambda * this.waScaleManager.zoomModifier * zoomFactor);
-                zoomFactor = resultZoom / this.waScaleManager.zoomModifier;
-            } else {
-                // We zoom in the opposite direction, let's break the wall for 10 seconds.
-                this.wallDownDate = Date.now();
-                debugZoom("Resistance wall is broken because we scrolled towards the start of the resistance zone");
-            }
-        }
-
         if (!smooth) {
             waScaleManager.setZoomModifier(this.waScaleManager.zoomModifier * zoomFactor, this.camera);
         } else {
             this.animateToZoomLevel(this.waScaleManager.zoomModifier * zoomFactor);
         }
-
-        if (this.animationInProgress) {
-            // Let's not trigger the resistance if the zoom in or out originates from an animation.
-            return;
-        }
-
-        if (!this.resistanceCallback) {
-            // If there is no resistance configured, let's return.
-            return;
-        }
-
-        if (
-            this.isBetween(
-                this.waScaleManager.zoomModifier,
-                this._resistanceStartZoomLevel,
-                this._resistanceEndZoomLevel
-            ) &&
-            this.isCameraWithinWokaRadius()
-        ) {
-            if (!this.resistZoomCallback) {
-                this.resistZoomCallback = this.resistZoom.bind(this);
-                this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.resistZoomCallback);
-                this.resistanceZoneEnterDate = Date.now();
-            }
-        }
-    }
-
-    private isCameraWithinWokaRadius(): boolean {
-        if (this.resistanceRadiusAroundWoka === undefined || !this.player) {
-            return true;
-        }
-        const cameraCenter = {
-            x: this.camera.worldView.x + this.camera.worldView.width / 2,
-            y: this.camera.worldView.y + this.camera.worldView.height / 2,
-        };
-        const distance = Math.sqrt(
-            Math.pow(cameraCenter.x - this.player.x, 2) + Math.pow(cameraCenter.y - this.player.y, 2)
-        );
-        return distance < this.resistanceRadiusAroundWoka;
-    }
-
-    /**
-     * Returns true if the value is between the two bounds (strictly).
-     * The 2 bounds can be in any order.
-     */
-    private isBetween(value: number, bound1: number, bound2: number): boolean {
-        return (value > bound1 && value < bound2) || (value > bound2 && value < bound1);
     }
 
     private animateToZoomLevel(targetZoomModifier: number): void {
@@ -808,129 +706,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         }
 
         this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
-    }
-
-    private resistZoomCallback: ((time: number, delta: number) => void) | undefined;
-    private resistZoom(time: number, delta: number): void {
-        if (this.animationInProgress) {
-            return;
-        }
-        // If we are out of resistance zone, let's stop the resistance.
-        if (
-            !this.isBetween(
-                this.waScaleManager.zoomModifier,
-                this._resistanceStartZoomLevel,
-                this._resistanceEndZoomLevel
-            )
-        ) {
-            this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.resistZoomCallback);
-            this.resistZoomCallback = undefined;
-            this.scene.removeWhiteMask();
-            if (
-                this.resistanceCallback &&
-                ((this._resistanceStartZoomLevel < this._resistanceEndZoomLevel &&
-                    this.waScaleManager.zoomModifier > this._resistanceEndZoomLevel) ||
-                    (this._resistanceEndZoomLevel < this._resistanceStartZoomLevel &&
-                        this.waScaleManager.zoomModifier < this._resistanceEndZoomLevel))
-            ) {
-                this.resistanceCallback();
-                this.wallDownDate = 0;
-                this.resistanceZoneEnterDate = 0;
-                debugZoom("We passed through resistance zone. Resistance wall is back up");
-                debugZoom("this._resistanceStartZoomLevel", this._resistanceStartZoomLevel);
-                debugZoom("this._resistanceEndZoomLevel", this._resistanceEndZoomLevel);
-                debugZoom("this.waScaleManager.zoomModifier", this.waScaleManager.zoomModifier);
-            } else {
-                this.wallDownDate = Date.now();
-                this.resistanceZoneEnterDate = 0;
-                debugZoom("Resistance wall is broken because we left the resistance zone");
-                debugZoom("this._resistanceStartZoomLevel", this._resistanceStartZoomLevel);
-                debugZoom("this._resistanceEndZoomLevel", this._resistanceEndZoomLevel);
-                debugZoom("this.waScaleManager.zoomModifier", this.waScaleManager.zoomModifier);
-            }
-
-            return;
-        }
-
-        // Let's calculate the new zoom level
-        // Our target point is 10% before the resistance zone
-        const targetZoom =
-            this._resistanceStartZoomLevel - (this._resistanceEndZoomLevel - this._resistanceStartZoomLevel) * 0.1;
-
-        const newZoom =
-            (this.targetZoomModifier ?? this.waScaleManager.zoomModifier) +
-            (((targetZoom - (this.targetZoomModifier ?? this.waScaleManager.zoomModifier)) * delta) / 250) *
-                this._resistanceStrength;
-        //this.targetZoomModifier = newZoom;
-
-        this.animateToZoomLevel(newZoom);
-
-        // If the wall is not broken and we spent more than 2 seconds in the resistance zone, let's break the wall.
-        if (this.wallDownDate === 0 && Date.now() - this.resistanceZoneEnterDate > 2000) {
-            this.wallDownDate = Date.now();
-            debugZoom("Resistance wall is broken because we spent 2 seconds in the resistance zone");
-        }
-
-        // The alpha is calculated based on the distance between the current zoom level and the resistance zone
-        // The closer we are to the resistance zone, the more the alpha is important.
-        // We apply a "sqrt" function to make the white layer appear gently if we are close to the start of the resistance
-        // zone and faster as we are closer to the end of the resistance zone.
-        const alpha = Clamp(
-            1 -
-                Math.sqrt(
-                    (this.waScaleManager.zoomModifier - this._resistanceEndZoomLevel) /
-                        (this._resistanceStartZoomLevel - this._resistanceEndZoomLevel)
-                ),
-            0,
-            1
-        );
-
-        this.scene.applyWhiteMask(alpha);
-    }
-
-    /**
-     * Set the resistance zone for the zoom level. The resistance zone is a zone where the camera will resist to zoom in or out.
-     * If the resistance zone is overcome, the callback will be called.
-     *
-     * There can be only one resistance zone at a time.
-     *
-     * @param startZoomLevel
-     * @param endZoomLevel
-     * @param strength
-     * @param callback
-     * @param enableResistanceWall
-     * @param resistanceRadiusAroundWoka If set, the resistance is enabled ONLY if the camera is within this radius around the woka
-     * @param player
-     */
-    public setResistanceZone(
-        startZoomLevel: number,
-        endZoomLevel: number,
-        strength: number,
-        callback: () => void,
-        enableResistanceWall: boolean,
-        resistanceRadiusAroundWoka: number | undefined,
-        player: Player
-    ): void {
-        this._resistanceStartZoomLevel = startZoomLevel;
-        this._resistanceEndZoomLevel = endZoomLevel;
-        this._resistanceStrength = strength;
-        this.enableResistanceWall = enableResistanceWall;
-        this.resistanceRadiusAroundWoka = resistanceRadiusAroundWoka;
-        this.player = player;
-
-        this.resistanceCallback = callback;
-    }
-
-    public disableResistanceZone(): void {
-        this.scene.removeWhiteMask();
-        if (this.resistZoomCallback) {
-            this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.resistZoomCallback);
-            this.resistZoomCallback = undefined;
-        }
-    }
-
-    get resistanceStartZoomLevel(): number {
-        return this._resistanceStartZoomLevel;
     }
 
     get resistanceEndZoomLevel(): number {

@@ -220,7 +220,7 @@ import { IframeEventDispatcher } from "./IframeEventDispatcher";
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { SayManager } from "./Say/SayManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
-import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_DEBUG_SERVER_VIEWPORT, DEPTH_WHITE_MASK } from "./DepthIndexes";
+import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_DEBUG_SERVER_VIEWPORT } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { FollowManager } from "./FollowManager";
 import { InviteManager } from "./InviteManager";
@@ -1927,7 +1927,8 @@ export class GameScene extends DirtyScene {
                             userProviders.push(worldUserProvider);
                         }
 
-                        this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
+                        const merger = new UserProviderMerger(userProviders);
+                        this._userProviderMergerDeferred.resolve(merger);
                     })
                     .catch((e) => {
                         const errorMessage = "Failed to get chatConnection from gameManager : " + e;
@@ -4150,43 +4151,6 @@ ${escapedMessage}
 
     get sceneReadyToStartPromise(): Promise<void> {
         return this.sceneReadyToStartDeferred.promise;
-    }
-
-    private whiteMask: Phaser.GameObjects.Graphics | undefined;
-
-    /**
-     * Applies a white mask on top of the screen with the given alpha value.
-     * Useful for the zoom out resistance effect.
-     */
-    public applyWhiteMask(alpha: number): void {
-        if (!this.whiteMask) {
-            this.whiteMask = this.add.graphics();
-        }
-
-        this.whiteMask.clear();
-        this.whiteMask.fillStyle(0xffffff, alpha);
-        const camera = this.cameras.main;
-        //this.whiteMask.fillRect(camera.scrollX, camera.scrollY, camera.width, camera.height);
-        // Let's apply some margin because in the zoom process, the camera will move
-        this.whiteMask.fillRect(
-            camera.scrollX - camera.width * 0.5,
-            camera.scrollY - camera.height * 0.5,
-            camera.width * 2,
-            camera.height * 2
-        );
-        this.whiteMask.setDepth(DEPTH_WHITE_MASK);
-    }
-
-    public removeWhiteMask(): void {
-        if (!this.whiteMask) {
-            return;
-        }
-        this.whiteMask.destroy();
-        this.whiteMask = undefined;
-    }
-
-    private disableCameraResistance(): void {
-        this.cameraManager.disableResistanceZone();
     }
 
     private proximityChatRoomPromise(): Promise<ProximityChatRoom> {
