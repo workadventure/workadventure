@@ -84,12 +84,10 @@ export class RecordingManager implements IRecordingManager {
                 return null;
             }
             case "starting": {
-                await this.requestStopAfterStart();
-                return this._user;
+                return this.requestStopAfterStart();
             }
             case "recording": {
-                await this.runStop();
-                return this._user;
+                return this.runStop();
             }
             case "stopping": {
                 if (this._stopPromise) {
