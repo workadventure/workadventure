@@ -306,7 +306,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             await this.startMatrixClient();
             this.isGuest.set(this.client.isGuest());
             this.rebuildSpaceHierarchy();
-            await this.syncMatrixGlobalProfileFromLocalWokaAndName();
+            await this.syncMatrixGlobalProfileFromLocalWokaAndName(false);
             this.attachWokaAvatarMatrixSync();
             this.attachDisplayNameMatrixSync();
         } catch (error) {
@@ -350,7 +350,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             }
             this.displayNameMatrixSyncDebounceTimer = setTimeout(() => {
                 this.displayNameMatrixSyncDebounceTimer = undefined;
-                this.syncMatrixGlobalProfileFromLocalWokaAndName().catch(() => undefined);
+                this.syncMatrixGlobalProfileFromLocalWokaAndName(false).catch(() => undefined);
             }, 400);
         };
         this.displayNameMatrixSyncUnsubscriber = localUserStore.subscribeDisplayNameChange(() => {
@@ -442,13 +442,14 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     /**
      * Pushes the in-game display name and WOKA image to the Matrix global profile (`/profile`).
      */
-    async syncMatrixGlobalProfileFromLocalWokaAndName(): Promise<void> {
+    async syncMatrixGlobalProfileFromLocalWokaAndName(forceSync: boolean): Promise<void> {
         if (!this.client || this.client.isGuest()) {
             return;
         }
         await pushLocalWokaAndNameToMatrixProfile(this.client, {
             localDisplayName: localUserStore.getDisplayNameForMatrixProfile(),
             wokaImageSrc: get(currentPlayerWokaStore),
+            forceSync,
         });
     }
 

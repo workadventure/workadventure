@@ -101,7 +101,7 @@ async function fetchWokaImageAsBlob(src: string): Promise<Blob | undefined> {
  */
 export async function pushLocalWokaAndNameToMatrixProfile(
     client: MatrixClient,
-    options: { localDisplayName: string | undefined; wokaImageSrc: string | undefined }
+    options: { localDisplayName: string | undefined; wokaImageSrc: string | undefined; forceSync: boolean }
 ): Promise<void> {
     if (client.isGuest()) {
         return;
@@ -111,24 +111,28 @@ export async function pushLocalWokaAndNameToMatrixProfile(
         return;
     }
 
+    const matrixUser = client.getUser(userId);
     const name = options.localDisplayName?.trim();
-    if (name) {
+    if ((name && name !== matrixUser?.displayName?.trim()) || (name && options.forceSync)) {
         try {
             await client.setDisplayName(name);
             debug("Matrix global profile: display name set userId=%s", userId);
         } catch (error) {
             console.warn("pushLocalWokaAndNameToMatrixProfile: setDisplayName failed", error);
             Sentry.captureException(error);
-            throw error;
         }
     }
 
-    const wokaSrc = options.wokaImageSrc;
-    if (!wokaSrc || wokaSrc === defaultWoka) {
-        debug("Matrix global profile: avatar skipped (no custom WOKA) userId=%s", userId);
+    if (matrixUser?.avatarUrl && !options.forceSync) {
+        debug("Matrix global profile: avatar skipped (profile already has an image) userId=%s", userId);
         return;
     }
 
+    const wokaSrc = options.wokaImageSrc;
+    if (!wokaSrc) {
+        debug("Matrix global profile: avatar skipped (no custom WOKA) userId=%s", userId);
+        return;
+    }
     try {
         const blob = await fetchWokaImageAsBlob(wokaSrc);
         if (!blob || blob.size === 0) {

@@ -57,7 +57,7 @@
     async function syncAccountData() {
         syncing = true;
         try {
-            await connection.syncMatrixGlobalProfileFromLocalWokaAndName();
+            await connection.syncMatrixGlobalProfileFromLocalWokaAndName(true);
             await loadDiagnostics();
             flashSuccess("syncAccount");
         } catch (e) {
