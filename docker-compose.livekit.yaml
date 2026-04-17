@@ -20,7 +20,7 @@ services:
         condition: service_started
 
   egress:
-    image: livekit/egress:v1.9.0
+    image: livekit/egress:v1.12.0
     #restart: unless-stopped
     labels:
       - "traefik.enable=true"
