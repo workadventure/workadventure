@@ -10,14 +10,14 @@
         analyticsClient.clickToZoomIn();
 
         const cameraManager = gameManager.getCurrentGameScene().getCameraManager();
-        cameraManager.zoomByFactor(1.2, true);
+        cameraManager.zoomByFactor(1.2, 500);
     }
 
     function zoomOut() {
         analyticsClient.clickToZoomOut();
 
         const cameraManager = gameManager.getCurrentGameScene().getCameraManager();
-        cameraManager.zoomByFactor(0.8, true);
+        cameraManager.zoomByFactor(1 / 1.2, 500);
     }
 
     function openMapExplorer() {

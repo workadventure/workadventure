@@ -2,35 +2,15 @@ import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { Easing } from "../../types";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
-import type { Player } from "../Player/Player";
-import { hasMovedEventName } from "../Player/Player";
+import type { Character } from "../Entity/Character";
+import { hasMovedEventName, type Player } from "../Player/Player";
 import type { WaScaleManager, WaScaleManagerFocusTarget } from "../Services/WaScaleManager";
-import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
+import { WaScaleManagerEvent } from "../Services/WaScaleManager";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
 import type { RemotePlayer } from "../Entity/RemotePlayer";
 import type { GameScene } from "./GameScene";
 import Clamp = Phaser.Math.Clamp;
-
-export enum CameraMode {
-    /**
-     * Camera looks at certain point but is not locked and will start following the player on his movement
-     */
-    Positioned = "Positioned",
-    /**
-     * Camera is actively following the player
-     */
-    Follow = "Follow",
-    /**
-     * Camera is focusing on certain point and will not break this focus even on player movement
-     */
-    Focus = "Focus",
-
-    /**
-     * Camera is free and can be moved anywhere on the map by the user (only in the exploration mode)
-     */
-    Exploration = "Exploration",
-}
 
 export enum CameraManagerEvent {
     CameraUpdate = "CameraUpdate",
@@ -44,6 +24,25 @@ export interface CameraManagerEventCameraUpdateData {
     zoom: number;
 }
 
+type FocusCameraAnimation = {
+    type: "focus";
+    onInterrupt: () => void;
+};
+
+type SpeedCameraAnimation = {
+    type: "speed";
+    speedX: number;
+    speedY: number;
+    onComplete: () => void;
+    onInterrupt: () => void;
+};
+
+type CameraAnimation = FocusCameraAnimation | SpeedCameraAnimation;
+
+type ZoomAnimation = {
+    onInterrupt: () => void;
+};
+
 /**
  * The CameraManager is responsible for managing the camera in the game.
  * It allows to set the camera to follow the player, to focus on a specific point or to be in exploration mode.
@@ -55,40 +54,29 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private camera: Phaser.Cameras.Scene2D.Camera;
     private waScaleManager: WaScaleManager;
 
-    private cameraMode: CameraMode = CameraMode.Positioned;
-
-    private restoreZoomTween?: Phaser.Tweens.Tween;
-    private startFollowTween?: Phaser.Tweens.Tween;
+    private cameraAnimation: CameraAnimation | undefined;
+    private zoomAnimation: ZoomAnimation | undefined;
 
     private playerToFollow?: Player | RemotePlayer;
-    private cameraLocked: boolean;
     private zoomLocked: boolean;
 
     private readonly EDITOR_MODE_SCROLL_SPEED: number = 5;
 
-    private unsubscribeMapEditorModeStore: () => void;
+    private readonly unsubscribeMapEditorModeStore: () => void;
 
-    // Whether a pan or tween effect is in progress
-    private animationInProgress = false;
-    // Are we yet arrived to targetZoomModifier?
-    private targetReachInProgress = false;
-    // The target zoom we should reach. Each step, we get closer to this target.
-    private targetZoomModifier: number | undefined;
-    private targetDirection: "zoom_out" | "zoom_in" | undefined;
-    private cameraZoomSpeed = 1;
     private _resistanceEndZoomLevel = 0.3;
-    // The callback used to update camera animation state in explorer mode and zoom in/zoom out
-    private animateCallback: (time: number, delta: number) => void;
-    private cameraSpeed: { x: number; y: number } | undefined;
 
     // The point of the scene the explorer mode is focusing on.
     private explorerFocusOn: { x: number; y: number } = { x: 0, y: 0 };
-    // If set, the camera will move toward this target.
-    private explorerFocusOnTarget: { x: number; y: number; zoom: number } | undefined;
-    private focusTargetSpeed = 0.2;
 
     // The tween for the camera offset
     private cameraOffsetCurrentTween?: Phaser.Tweens.Tween;
+
+    // The box we should center the camera on (expressed in screen pixels, not game pixels).
+    private cameraOffsetBox: Box | undefined;
+
+    // Target follow offset for the camera, expressed in game pixels.
+    private targetFollowOffset: { x: number; y: number } | undefined;
 
     constructor(
         private scene: GameScene,
@@ -96,10 +84,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         waScaleManager: WaScaleManager
     ) {
         super();
-        this.animateCallback = this.animate.bind(this);
 
         this.camera = scene.cameras.main;
-        this.cameraLocked = false;
         this.zoomLocked = false;
 
         this.waScaleManager = waScaleManager;
@@ -119,24 +105,22 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             }
         });
 
-        this.scene.cameras.main.on(Phaser.Cameras.Scene2D.Events.PAN_START, () => {
-            this.animationInProgress = true;
-        });
-        this.scene.cameras.main.on(Phaser.Cameras.Scene2D.Events.PAN_COMPLETE, () => {
-            this.animationInProgress = false;
-        });
-
         // Set zoom out to the maximum possible value
         this.waScaleManager.maxZoomOut = this.waScaleManager.getTargetZoomModifierFor(
             this.mapSize.width,
             this.mapSize.height
         );
-        this.targetZoomModifier = undefined;
+
+        this.scene.game.events.on(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
     }
 
+    private readonly onZoomChanged = (): void => {
+        this.doUpdateCameraOffset(true);
+    };
+
     public destroy(): void {
-        this.cancelFollowTween();
         this.cancelOffsetTween();
+        this.scene.game.events.off(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
 
         this.scene.game.events.off(WaScaleManagerEvent.RefreshFocusOnTarget);
         this.camera.off("followupdate", this.onFollowUpdate);
@@ -148,64 +132,88 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         return this.camera;
     }
 
+    private animateToFocus(
+        target: Character | { x: number; y: number },
+        duration: number,
+        callback?: () => void
+    ): void {
+        this.cameraAnimation?.onInterrupt();
+        const origin = {
+            x: this.camera.scrollX + this.camera.width / 2 + this.camera.followOffset.x,
+            y: this.camera.scrollY + this.camera.height / 2 + this.camera.followOffset.y,
+        };
+        this.explorerFocusOn = { ...origin };
+
+        this.camera.startFollow(
+            this.explorerFocusOn,
+            true,
+            1,
+            1,
+            this.camera.followOffset.x,
+            this.camera.followOffset.y
+        );
+
+        // Note: if duration = 0, the addCounter onUpdate is directly triggered to the "1" progress value.
+        const followTween = this.scene.tweens.addCounter({
+            from: 0,
+            to: 1,
+            duration,
+            ease: Easing.SineEaseOut,
+            onUpdate: (tween: Phaser.Tweens.Tween) => {
+                const progress = tween.getValue() ?? 0;
+                const shiftX = (target.x - origin.x) * progress;
+                const shiftY = (target.y - origin.y) * progress;
+                this.explorerFocusOn.x = origin.x + shiftX;
+                this.explorerFocusOn.y = origin.y + shiftY;
+
+                this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
+            },
+            onComplete: () => {
+                this.camera.startFollow(target, true, 1, 1, this.camera.followOffset.x, this.camera.followOffset.y);
+                this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
+                callback?.();
+                this.setFollowMode();
+            },
+        });
+
+        this.cameraAnimation = {
+            type: "focus",
+            onInterrupt: () => {
+                followTween.stop();
+                followTween.destroy();
+            },
+        };
+    }
+
     /**
-     * Set camera view to specific destination without changing current camera mode. Won't work if camera mode is set to Focus.
+     * Set camera view to specific destination without changing current camera mode.
      * @param setTo Viewport on which the camera should set the position
      * @param duration Time for the transition im MS. If set to 0, transition will occur immediately
      */
     public setPosition(setTo: WaScaleManagerFocusTarget, duration = 1000): void {
-        if (this.cameraMode === CameraMode.Focus) {
-            return;
-        }
-        this.cancelFollowTween();
-        this.setCameraMode(CameraMode.Positioned);
         this.waScaleManager.saveZoom();
         this.camera.stopFollow();
 
         const currentZoomModifier = this.waScaleManager.zoomModifier;
         const zoomModifierChange = this.getZoomModifierChange(setTo.width, setTo.height);
 
-        if (duration === 0) {
-            this.waScaleManager.zoomModifier = currentZoomModifier + zoomModifierChange;
-            this.camera.centerOn(setTo.x, setTo.y);
-            this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
-            this.playerToFollow?.once(hasMovedEventName, () => {
-                if (this.playerToFollow) {
-                    this.startFollowPlayer(this.playerToFollow, duration);
-                }
-            });
-            return;
-        }
-        this.stopPan();
-        this.camera.pan(setTo.x, setTo.y, duration, Easing.SineEaseOut, true, (camera, progress, x, y) => {
-            if (this.cameraMode === CameraMode.Positioned) {
-                if (zoomModifierChange !== 0) {
-                    this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
-                }
-                this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
-            }
-            if (progress === 1) {
-                this.playerToFollow?.once(hasMovedEventName, () => {
-                    if (this.playerToFollow) {
-                        this.startFollowPlayer(this.playerToFollow, duration);
-                    }
-                });
+        this.animateToFocus(setTo, duration, () => {});
+        this.animateToZoomLevel(currentZoomModifier + zoomModifierChange, duration);
+
+        this.playerToFollow?.once(hasMovedEventName, () => {
+            if (this.playerToFollow) {
+                this.startFollowPlayer(this.playerToFollow, duration);
             }
         });
     }
 
     /**
      * Set camera to focus mode. As long as the camera is in the Focus mode, its view cannot be changed.
-     * @param setTo Viewport on which the camera should focus on
-     * @param duration Time for the transition im MS. If set to 0, transition will occur immediately
      */
     public enterFocusMode(focusOn: WaScaleManagerFocusTarget, margin = 0, duration = 1000): void {
-        this.cancelFollowTween();
-        this.setCameraMode(CameraMode.Focus);
         this.waScaleManager.saveZoom();
         this.waScaleManager.setFocusTarget(focusOn);
 
-        this.cameraLocked = false;
         this.zoomLocked = false;
 
         //Set the camera to focus on the given point
@@ -214,35 +222,15 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             y: focusOn.y,
         };
 
-        this.camera.startFollow(focusPoint, true);
-        this.playerToFollow = undefined;
-
         const currentZoomModifier = this.waScaleManager.zoomModifier;
         const zoomModifierChange = this.getZoomModifierChange(focusOn.width, focusOn.height, 1 + margin);
 
-        if (duration === 0) {
-            this.waScaleManager.zoomModifier = currentZoomModifier + zoomModifierChange;
-            this.camera.centerOn(focusOn.x, focusOn.y);
-            this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
-            return;
-        }
-        this.stopPan();
-        this.camera.pan(focusOn.x, focusOn.y, duration, Easing.SineEaseOut, true, (camera, progress, x, y) => {
-            if (zoomModifierChange) {
-                this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
-            }
-            if (progress === 1) {
-                // NOTE: Making sure the last action will be centering after zoom change
-                this.camera.centerOn(focusOn.x, focusOn.y);
-            }
-            this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
-        });
+        this.animateToFocus(focusPoint, duration, () => {});
+        this.animateToZoomLevel(currentZoomModifier + zoomModifierChange, duration);
     }
 
     public leaveFocusMode(player: Player, duration = 0): void {
-        this.cancelFollowTween();
         this.waScaleManager.setFocusTarget();
-        this.unlockCameraWithDelay(duration);
         this.startFollowPlayer(player, duration);
         this.restoreZoom(duration);
     }
@@ -278,68 +266,11 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         }
     }
 
-    public startFollowPlayer(
-        player: Player | RemotePlayer,
-        duration = 0,
-        targetZoomLevel: number | undefined = undefined
-    ): void {
-        this.cancelFollowTween();
-
-        const offset = { ...this.camera.followOffset };
+    public startFollowPlayer(player: Player | RemotePlayer, duration = 0): void {
         this.playerToFollow = player;
 
-        this.setCameraMode(CameraMode.Follow);
-        if (duration === 0) {
-            this.camera.startFollow(player, true, 1, 1, offset.x, offset.y);
-            this.scene.markDirty();
-            this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
-            return;
-        }
-
-        this.cameraLocked = false;
-
-        this.explorerFocusOn = {
-            x: this.camera.scrollX + this.camera.width / 2 + offset.x,
-            y: this.camera.scrollY + this.camera.height / 2 + offset.y,
-        };
-        this.camera.startFollow(this.explorerFocusOn, true, 1, 1, offset.x, offset.y);
-
-        const oldPos = { ...this.explorerFocusOn };
-        const startZoomModifier = this.waScaleManager.zoomModifier;
-        this.animationInProgress = true;
-        this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.animateCallback);
-        this.targetReachInProgress = false;
-        this.explorerFocusOnTarget = undefined;
-        this.stopPan();
-        this.startFollowTween = this.scene.tweens.addCounter({
-            from: 0,
-            to: 1,
-            duration,
-            ease: Easing.SineEaseOut,
-            onUpdate: (tween: Phaser.Tweens.Tween) => {
-                if (!this.playerToFollow) {
-                    return;
-                }
-                const progress = tween.getValue() ?? 0;
-                const shiftX = (this.playerToFollow.x - oldPos.x) * progress;
-                const shiftY = (this.playerToFollow.y - oldPos.y) * progress;
-                this.explorerFocusOn.x = oldPos.x + shiftX;
-                this.explorerFocusOn.y = oldPos.y + shiftY;
-                if (targetZoomLevel !== undefined) {
-                    this.waScaleManager.zoomModifier =
-                        (targetZoomLevel - startZoomModifier) * progress + startZoomModifier;
-                }
-
-                this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
-            },
-            onComplete: () => {
-                this.camera.startFollow(player, true, 1, 1, this.camera.followOffset.x, this.camera.followOffset.y);
-                this.animationInProgress = false;
-                this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
-                this.startFollowTween = undefined;
-                this.setFollowMode();
-            },
-        });
+        this.animateToFocus(player, duration, () => {});
+        return;
     }
 
     /**
@@ -367,62 +298,94 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     /**
-     * Updates the offset of the character compared to the center of the screen according to the layout manager
-     * (tries to put the character in the center of the remaining space if there is a discussion going on.
+     * Takes the camera offset box (expressed in screen pixels) and update the targetFollowOffset (expressed in game pixels),
+     * according to the current zoom level.
      */
-    public updateCameraOffset(box: Box, instant = false): void {
-        if (this.cameraMode !== CameraMode.Follow || box.xEnd === undefined || box.yEnd === undefined) {
-            return;
+    private updateTargetFollowOffset(): { x: number; y: number } {
+        const box = this.cameraOffsetBox;
+        if (!box) {
+            return this.targetFollowOffset ?? { x: 0, y: 0 };
         }
         const xCenter = (box.xEnd - box.xStart) / 2 + box.xStart;
         const yCenter = (box.yEnd - box.yStart) / 2 + box.yStart;
 
-        const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
+        const game = HtmlUtils.querySelectorOrFail<HTMLDivElement>("#game");
 
         // Let's put this in Game coordinates by applying the zoom level:
-        const followOffsetX = (xCenter - game.offsetWidth / 2) / this.scene.scale.zoom;
-        const followOffsetY = (yCenter - game.offsetHeight / 2) / this.scene.scale.zoom;
+        this.targetFollowOffset = {
+            x: (xCenter - game.offsetWidth / 2) / this.scene.scale.zoom / this.camera.zoom,
+            y: (yCenter - game.offsetHeight / 2) / this.scene.scale.zoom / this.camera.zoom,
+        };
+        return this.targetFollowOffset;
+    }
 
-        this.cancelOffsetTween();
-
-        if (instant) {
-            this.camera.setFollowOffset(followOffsetX, followOffsetY);
-            this.scene.markDirty();
+    /**
+     * Updates the offset of the character compared to the center of the screen according to the layout manager
+     * (tries to put the character in the center of the remaining space if there is a discussion going on).
+     */
+    public updateCameraOffset(box: Box, instant = false): void {
+        if (box.xEnd === undefined || box.yEnd === undefined) {
             return;
         }
+
+        if (
+            this.cameraOffsetBox &&
+            box.xStart === this.cameraOffsetBox.xStart &&
+            box.yStart === this.cameraOffsetBox.yStart &&
+            box.xEnd === this.cameraOffsetBox.xEnd &&
+            box.yEnd === this.cameraOffsetBox.yEnd
+        ) {
+            return;
+        }
+
+        this.cameraOffsetBox = box;
+        this.doUpdateCameraOffset(instant);
+    }
+
+    public doUpdateCameraOffset(instant = false): void {
+        const targetFollowOffset = this.updateTargetFollowOffset();
+
+        if (instant) {
+            if (!this.cameraOffsetCurrentTween) {
+                this.camera.setFollowOffset(targetFollowOffset.x, targetFollowOffset.y);
+                this.scene.markDirty();
+                return;
+            } else {
+                // If we are requested to update the offset immediately, but we are in the middle of an animation of the offset,
+                // let's keep the animation playing and simply update the offset.
+                return;
+            }
+        }
+
+        this.cancelOffsetTween();
 
         const oldFollowOffsetX = this.camera.followOffset.x;
         const oldFollowOffsetY = this.camera.followOffset.y;
 
-        this.animationInProgress = true;
         this.cameraOffsetCurrentTween = this.scene.tweens.addCounter({
             from: 0,
             to: 1,
             duration: 500,
             ease: Easing.QuadEaseOut,
-            onStart: () => {
-                this.animationInProgress = true;
-            },
             onUpdate: (tween) => {
                 const progress = tween.getValue() ?? 0;
-                const newOffsetX = oldFollowOffsetX + (followOffsetX - oldFollowOffsetX) * progress;
-                const newOffsetY = oldFollowOffsetY + (followOffsetY - oldFollowOffsetY) * progress;
+                if (!this.targetFollowOffset) {
+                    console.warn("No more target for follow offset during animation");
+                    return;
+                }
+                const newOffsetX = oldFollowOffsetX + (this.targetFollowOffset.x - oldFollowOffsetX) * progress;
+                const newOffsetY = oldFollowOffsetY + (this.targetFollowOffset.y - oldFollowOffsetY) * progress;
                 this.camera.setFollowOffset(newOffsetX, newOffsetY);
                 this.scene.markDirty();
             },
             onComplete: () => {
-                this.animationInProgress = false;
                 this.cameraOffsetCurrentTween = undefined;
             },
         });
     }
 
-    public isCameraLocked(): boolean {
-        return this.cameraLocked;
-    }
-
     public isZoomLocked(): boolean {
-        return this.isCameraLocked() || this.zoomLocked;
+        return this.zoomLocked;
     }
 
     private getZoomModifierChange(width?: number, height?: number, multiplier = 1): number {
@@ -437,12 +400,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         return targetZoomModifier - currentZoomModifier;
     }
 
-    public unlockCameraWithDelay(delay: number): void {
-        this.scene.time.delayedCall(delay, () => {
-            this.cameraLocked = false;
-        });
-    }
-
     public defineNewCameraBounds(width: number, height: number): void {
         this.camera.setBounds(-width, -height, width * 3, height * 3, false);
     }
@@ -455,35 +412,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.zoomLocked = false;
     }
 
-    private setCameraMode(mode: CameraMode): void {
-        if (this.cameraMode === mode) {
-            return;
-        }
-        this.cameraMode = mode;
-    }
-
     private restoreZoom(duration = 0): void {
-        if (duration === 0) {
-            this.waScaleManager.zoomModifier = this.waScaleManager.getSaveZoom();
-            return;
-        }
-        this.animationInProgress = true;
-        this.stopTween(this.restoreZoomTween);
-        this.restoreZoomTween = undefined;
-        this.restoreZoomTween = this.scene.tweens.addCounter({
-            from: this.waScaleManager.zoomModifier,
-            to: this.waScaleManager.getSaveZoom(),
-            duration,
-            ease: Easing.SineEaseOut,
-            onUpdate: (tween: Phaser.Tweens.Tween) => {
-                this.waScaleManager.zoomModifier = tween.getValue() ?? 0;
-                this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
-            },
-            onComplete: () => {
-                this.animationInProgress = false;
-                this.restoreZoomTween = undefined;
-            },
-        });
+        this.animateToZoomLevel(this.waScaleManager.getSaveZoom(), duration);
     }
 
     private initCamera() {
@@ -524,10 +454,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     // Create function to define the camera on exploration mode. The camera can be moved anywhere on the map. The camera is not locked on the player. The camera can be zoomed in and out. The camera can be moved with the mouse. The camera can be moved with the keyboard. The camera can be moved with the touchpad.
     public setExplorationMode(): void {
-        this.cameraLocked = false;
-        //this.stopFollow();
-        this.setCameraMode(CameraMode.Exploration);
-
         this.camera.setFollowOffset(0, 0);
 
         this.camera.setBounds(
@@ -543,32 +469,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             y: this.camera.scrollY + this.camera.height / 2,
         };
         this.camera.startFollow(this.explorerFocusOn, true);
-
-        // Center the camera on the player
-        //this.scene.cameras.main.centerOn(this.scene.CurrentPlayer.x, this.scene.CurrentPlayer.y);
-
-        //const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(mapWidth, mapHeight);
-        //this.waScaleManager.maxZoomOut = targetZoomModifier;
     }
 
     public setFollowMode(): void {
         this.scene.reposition();
-        this.setCameraMode(CameraMode.Follow);
-    }
-
-    private stopPan(): void {
-        this.camera.panEffect.reset();
-    }
-
-    private cancelFollowTween(): void {
-        this.stopTween(this.startFollowTween);
-        this.startFollowTween = undefined;
-
-        this.stopPan();
-        this.animationInProgress = false;
-
-        this.stopTween(this.restoreZoomTween);
-        this.restoreZoomTween = undefined;
     }
 
     private cancelOffsetTween(): void {
@@ -586,140 +490,95 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     public centerCameraOn(position: { x: number; y: number }, zoom?: number): void {
-        this.explorerFocusOnTarget = {
-            ...position,
-            zoom: zoom ?? this.waScaleManager.zoomModifier,
-        };
-
-        if (zoom === undefined && this.waScaleManager.zoomModifier < this._resistanceEndZoomLevel) {
-            this.explorerFocusOnTarget.zoom = this._resistanceEndZoomLevel;
+        this.animateToFocus(position, 1000);
+        if (zoom) {
+            this.animateToZoomLevel(zoom, 1000);
         }
-
-        this.startAnimation();
     }
 
     /**
      * Zooms the camera by a factor passed in parameter.
      */
-    public zoomByFactor(zoomFactor: number, smooth: boolean): void {
-        if (!smooth) {
-            waScaleManager.setZoomModifier(this.waScaleManager.zoomModifier * zoomFactor, this.camera);
-        } else {
-            this.animateToZoomLevel(this.waScaleManager.zoomModifier * zoomFactor);
-        }
+    public zoomByFactor(zoomFactor: number, duration: number, callback?: () => void): void {
+        this.animateToZoomLevel(this.waScaleManager.zoomModifier * zoomFactor, duration, callback);
     }
 
-    private animateToZoomLevel(targetZoomModifier: number): void {
-        this.targetZoomModifier = targetZoomModifier;
-        this.targetDirection = this.targetZoomModifier > this.waScaleManager.zoomModifier ? "zoom_in" : "zoom_out";
-        this.startAnimation();
-    }
+    private animateToZoomLevel(targetZoomModifier: number, duration: number, callback?: () => void): void {
+        this.zoomAnimation?.onInterrupt();
 
-    private startAnimation() {
-        if (!this.targetReachInProgress) {
-            this.targetReachInProgress = true;
-            this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.animateCallback);
-        }
-    }
+        const zoomTween = this.scene.tweens.addCounter({
+            from: this.waScaleManager.zoomModifier,
+            to: targetZoomModifier,
+            duration,
+            ease: Easing.SineEaseOut,
+            onUpdate: (tween: Phaser.Tweens.Tween) => {
+                this.waScaleManager.setZoomModifier(tween.getValue() ?? 0, this.camera);
 
-    private animate(time: number, delta: number): void {
-        if (this.animationInProgress) {
+                this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
+            },
+            onComplete: () => {
+                callback?.();
+            },
+        });
+
+        this.zoomAnimation = {
+            onInterrupt: () => {
+                zoomTween.stop();
+                zoomTween.destroy();
+            },
+        };
+    }
+    private animate = (time: number, delta: number): void => {
+        const cameraSpeed = this.cameraAnimation;
+        if (cameraSpeed?.type !== "speed") {
+            console.warn(
+                "Camera animation is not in speed mode but animate callback is called. This should not happen."
+            );
             return;
         }
-        if (this.targetZoomModifier !== undefined) {
-            let targetZoomModifier;
-            if (this.targetDirection === "zoom_in") {
-                targetZoomModifier = this.targetZoomModifier * 1.01;
-            } else {
-                targetZoomModifier = this.targetZoomModifier / 1.01;
-            }
 
-            let newZoom =
-                this.waScaleManager.zoomModifier +
-                (((targetZoomModifier - this.waScaleManager.zoomModifier) * delta) / 100) * this.cameraZoomSpeed;
+        this.explorerFocusOn.x += (cameraSpeed.speedX * delta) / 400;
+        this.explorerFocusOn.y += (cameraSpeed.speedY * delta) / 400;
 
-            if (this.targetDirection === "zoom_in" && newZoom > this.targetZoomModifier) {
-                newZoom = this.targetZoomModifier;
-                this.targetZoomModifier = undefined;
-            } else if (this.targetDirection === "zoom_out" && newZoom <= this.targetZoomModifier) {
-                newZoom = this.targetZoomModifier;
-                this.targetZoomModifier = undefined;
-            }
+        this.explorerFocusOn.x = Clamp(this.explorerFocusOn.x, 0, this.mapSize.width);
+        this.explorerFocusOn.y = Clamp(this.explorerFocusOn.y, 0, this.mapSize.height);
 
-            waScaleManager.setZoomModifier(newZoom, this.camera);
-            if (this.waScaleManager.isMaximumZoomInReached) {
-                this.targetZoomModifier = undefined;
-            }
-            if (this.waScaleManager.isMaximumZoomOutReached) {
-                this.targetZoomModifier = undefined;
-            }
-        }
-
-        // Let's move the camera according to the speed
-        if (this.cameraSpeed) {
-            this.explorerFocusOn.x += (this.cameraSpeed.x * delta) / 400;
-            this.explorerFocusOn.y += (this.cameraSpeed.y * delta) / 400;
-
-            this.explorerFocusOn.x = Clamp(this.explorerFocusOn.x, 0, this.mapSize.width);
-            this.explorerFocusOn.y = Clamp(this.explorerFocusOn.y, 0, this.mapSize.height);
-
-            // Now, let's slow down the camera a bit
-            this.cameraSpeed.x *= 1 - delta / 500;
-            this.cameraSpeed.y *= 1 - delta / 500;
-            if (Math.pow(this.cameraSpeed.x, 2) + Math.pow(this.cameraSpeed.y, 2) < 20) {
-                this.cameraSpeed = undefined;
-            }
-        }
-
-        if (this.explorerFocusOnTarget) {
-            let newZoom =
-                this.waScaleManager.zoomModifier +
-                (((this.explorerFocusOnTarget.zoom - this.waScaleManager.zoomModifier) * delta) / 100) *
-                    this.focusTargetSpeed;
-
-            let x =
-                this.explorerFocusOn.x +
-                (((this.explorerFocusOnTarget.x - this.explorerFocusOn.x) * delta) / 100) * this.focusTargetSpeed;
-            let y =
-                this.explorerFocusOn.y +
-                (((this.explorerFocusOnTarget.y - this.explorerFocusOn.y) * delta) / 100) * this.focusTargetSpeed;
-
-            if (Math.abs(this.explorerFocusOnTarget.x - x) < 1 && Math.abs(this.explorerFocusOnTarget.y - y) < 1) {
-                x = this.explorerFocusOnTarget.x;
-                y = this.explorerFocusOnTarget.y;
-                newZoom = this.explorerFocusOnTarget.zoom;
-                this.explorerFocusOnTarget = undefined;
-            }
-
-            waScaleManager.zoomModifier = newZoom;
-            this.explorerFocusOn.x = x;
-            this.explorerFocusOn.y = y;
-        }
-
-        if (
-            this.cameraSpeed === undefined &&
-            this.targetZoomModifier === undefined &&
-            this.explorerFocusOnTarget === undefined
-        ) {
-            this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.animateCallback);
-            this.targetReachInProgress = false;
+        // Now, let's slow down the camera a bit
+        cameraSpeed.speedX *= 1 - delta / 500;
+        cameraSpeed.speedY *= 1 - delta / 500;
+        if (Math.pow(cameraSpeed.speedX, 2) + Math.pow(cameraSpeed.speedY, 2) < 20) {
+            cameraSpeed.onComplete();
         }
 
         this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
-    }
+    };
 
     get resistanceEndZoomLevel(): number {
         return this._resistanceEndZoomLevel;
     }
 
     setSpeed(speed: { x: number; y: number }) {
-        this.cameraSpeed = speed;
-        this.explorerFocusOnTarget = undefined;
-        this.startAnimation();
+        this.cameraAnimation?.onInterrupt();
+
+        this.cameraAnimation = {
+            type: "speed",
+            speedX: speed.x,
+            speedY: speed.y,
+            onComplete: () => {
+                this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.animate);
+            },
+            onInterrupt: () => {
+                this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.animate);
+            },
+        };
+
+        this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.animate);
     }
 
     stopSpeed() {
-        this.cameraSpeed = undefined;
+        if (this.cameraAnimation?.type === "speed") {
+            this.cameraAnimation.onInterrupt();
+        }
     }
 
     scrollCamera(x: number, y: number): void {
@@ -728,8 +587,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
         this.explorerFocusOn.x = Clamp(this.explorerFocusOn.x, 0, this.mapSize.width);
         this.explorerFocusOn.y = Clamp(this.explorerFocusOn.y, 0, this.mapSize.height);
-
-        this.explorerFocusOnTarget = undefined;
 
         this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
         this.scene.markDirty();
