@@ -256,7 +256,11 @@
         id="main-container"
         bind:this={gameContainer}
     >
-        <div id="game" class="relative {$fullScreenCowebsite ? 'hidden' : ''}" bind:this={gameDiv}>
+        <div
+            id="game"
+            class="relative flex-1 overflow-hidden {$fullScreenCowebsite ? 'hidden' : ''}"
+            bind:this={gameDiv}
+        >
             <GameOverlay {game} />
         </div>
         {#if $coWebsites.length > 0}
