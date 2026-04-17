@@ -1096,8 +1096,10 @@ export class Space implements SpaceInterface {
     }
 
     /**
-     * In see-attendees space (LIVE_STREAMING_USERS_WITH_FEEDBACK), listeners only see speakers' screen share.
-     * Speakers see everyone's screen share. Used only for screen share boxes, not for camera video boxes.
+     * Determines whether a remote user's screen share box should be shown.
+     * In see-attendees spaces (LIVE_STREAMING_USERS_WITH_FEEDBACK), only remote speakers'
+     * screen shares are displayed. Remote listeners' screen shares are hidden.
+     * Used only for screen share boxes, not for camera video boxes.
      */
     private shouldShowRemoteUserScreenShare(user: SpaceUser): boolean {
         if (this.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
