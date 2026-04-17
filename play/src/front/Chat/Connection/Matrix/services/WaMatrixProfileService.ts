@@ -14,11 +14,6 @@ import type { UserProviderMerger } from "../../../UserProviderMerger/UserProvide
 const debug = Debug("matrix");
 
 let syncChain: Promise<unknown> = Promise.resolve();
-const lastSyncedWokaAvatarContentHashByMatrixUserId = new Map<string, string>();
-
-export function clearLastSyncedWokaAvatarHashForMatrixUser(matrixUserId: string): void {
-    lastSyncedWokaAvatarContentHashByMatrixUserId.delete(matrixUserId);
-}
 
 export type SyncWokaAvatarToMatrixResult = "synced" | "unchanged" | "skipped_no_woka" | "skipped_guest" | "failed";
 
@@ -52,22 +47,28 @@ async function runSyncWokaAvatarToMatrixGlobalProfile(
     }
 
     try {
-        const blob = await fetchWokaImageAsBlob(wokaImageSrc);
+        const matrixProfile = await client.getProfileInfo(userId);
+        const blob = await fetchWokaImageAsBlob(client, wokaImageSrc);
         if (!blob || blob.size === 0) {
             return "skipped_no_woka";
         }
 
-        const hash = await sha256HexOfBlob(blob);
-        if (lastSyncedWokaAvatarContentHashByMatrixUserId.get(userId) === hash) {
-            debug("sync WOKA→Matrix profile unchanged (hash) userId=%s", userId);
-            return "unchanged";
+        if (matrixProfile?.avatar_url != undefined && matrixProfile.avatar_url != "") {
+            const hashNewWoka = await sha256HexOfBlob(blob);
+            const blobOldWoka = await fetchWokaImageAsBlob(client, matrixProfile.avatar_url);
+            if (blobOldWoka) {
+                const hashOldWoka = await sha256HexOfBlob(blobOldWoka);
+                if (hashNewWoka === hashOldWoka) {
+                    debug("Matrix sync WOKA→Matrix profile skipped: avatar already set userId=%s", userId);
+                    return "unchanged";
+                }
+            }
         }
 
         const mime = blob.type && blob.type !== "application/octet-stream" ? blob.type : "image/png";
         const upload = await client.uploadContent(blob, { type: mime, name: "avatar.png" });
 
         await client.setAvatarUrl(upload.content_uri);
-        lastSyncedWokaAvatarContentHashByMatrixUserId.set(userId, hash);
         debug("sync WOKA→Matrix profile avatar set userId=%s content_uri=%s", userId, upload.content_uri);
         return "synced";
     } catch (error) {
@@ -86,13 +87,28 @@ async function sha256HexOfBlob(blob: Blob): Promise<string> {
         .join("");
 }
 
-async function fetchWokaImageAsBlob(src: string): Promise<Blob | undefined> {
+/**
+ * Fetch image bytes for hashing or upload. Supports http(s), data:, and Matrix mxc:
+ * (resolved via the client's homeserver media endpoint — raw fetch cannot use mxc:).
+ */
+async function fetchWokaImageAsBlob(client: MatrixClient, src: string): Promise<Blob | undefined> {
     try {
-        const response = await fetch(src);
+        const url = matrixOrPlainUrlToHttp(client, src);
+        if (!url) {
+            return undefined;
+        }
+        const response = await fetch(url);
         return response.ok ? response.blob() : undefined;
     } catch {
         return undefined;
     }
+}
+
+function matrixOrPlainUrlToHttp(client: MatrixClient, src: string): string | undefined {
+    if (src.startsWith("mxc:")) {
+        return client.mxcUrlToHttp(src) ?? undefined;
+    }
+    return src;
 }
 
 /**
@@ -101,7 +117,7 @@ async function fetchWokaImageAsBlob(src: string): Promise<Blob | undefined> {
  */
 export async function pushLocalWokaAndNameToMatrixProfile(
     client: MatrixClient,
-    options: { localDisplayName: string | undefined; wokaImageSrc: string | undefined }
+    options: { localDisplayName: string | undefined; wokaImageSrc: string | undefined; forceSync: boolean }
 ): Promise<void> {
     if (client.isGuest()) {
         return;
@@ -111,26 +127,44 @@ export async function pushLocalWokaAndNameToMatrixProfile(
         return;
     }
 
+    const matrixProfile = await client.getProfileInfo(userId);
     const name = options.localDisplayName?.trim();
-    if (name) {
+    if ((name && name !== matrixProfile?.displayname?.trim()) || (name && options.forceSync)) {
         try {
             await client.setDisplayName(name);
             debug("Matrix global profile: display name set userId=%s", userId);
         } catch (error) {
             console.warn("pushLocalWokaAndNameToMatrixProfile: setDisplayName failed", error);
             Sentry.captureException(error);
-            throw error;
         }
+    } else {
+        debug("Matrix sync WOKA→Matrix profile skipped: display name already set userId=%s", userId);
     }
 
     const wokaSrc = options.wokaImageSrc;
-    if (!wokaSrc || wokaSrc === defaultWoka) {
+    if (!wokaSrc) {
         debug("Matrix global profile: avatar skipped (no custom WOKA) userId=%s", userId);
         return;
     }
-
     try {
-        const blob = await fetchWokaImageAsBlob(wokaSrc);
+        const blob = await fetchWokaImageAsBlob(client, wokaSrc);
+        if (!blob || blob.size === 0) {
+            debug("Matrix global profile: avatar skipped (empty blob) userId=%s", userId);
+            return;
+        }
+        if (matrixProfile?.avatar_url != undefined && matrixProfile.avatar_url != "") {
+            const hashNewWoka = await sha256HexOfBlob(blob);
+
+            const blobOldWoka = await fetchWokaImageAsBlob(client, matrixProfile.avatar_url);
+            if (blobOldWoka) {
+                const hashOldWoka = await sha256HexOfBlob(blobOldWoka);
+                if (hashNewWoka === hashOldWoka && !options.forceSync) {
+                    debug("Matrix sync WOKA→Matrix profile skipped: avatar already set userId=%s", userId);
+                    return;
+                }
+            }
+        }
+
         if (!blob || blob.size === 0) {
             debug("Matrix global profile: avatar skipped (empty blob) userId=%s", userId);
             return;
@@ -138,8 +172,6 @@ export async function pushLocalWokaAndNameToMatrixProfile(
         const mime = blob.type && blob.type !== "application/octet-stream" ? blob.type : "image/png";
         const upload = await client.uploadContent(blob, { type: mime, name: "avatar.png" });
         await client.setAvatarUrl(upload.content_uri);
-        const hash = await sha256HexOfBlob(blob);
-        lastSyncedWokaAvatarContentHashByMatrixUserId.set(userId, hash);
         debug("Matrix global profile: avatar set userId=%s mxc=%s", userId, upload.content_uri);
     } catch (error) {
         console.warn("pushLocalWokaAndNameToMatrixProfile: setAvatarUrl failed", error);
