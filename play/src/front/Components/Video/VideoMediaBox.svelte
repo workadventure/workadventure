@@ -19,6 +19,7 @@
     import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import { blackListManager } from "../../WebRtc/BlackListManager";
+    import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -303,7 +304,13 @@
                 </UserName>
 
                 {#if effectiveStatus === "connected" && $hasAudioStore && !$isBlockedStore}
-                    <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
+                    <div
+                        class="z-[251] absolute p-2 right-1 white"
+                        class:top-1={videoEnabled}
+                        class:top-0={!videoEnabled}
+                        class:text-white={$activePictureInPictureStore}
+                        class:opacity-20={$activePictureInPictureStore}
+                    >
                         {#if !$isMutedStore}
                             <SoundMeterWidget
                                 volume={volumeMeter}
@@ -322,41 +329,41 @@
                 {#if webRtcStats}
                     <WebRtcStats {webRtcStats} />
                 {/if}
-            </CenteredVideo>
-        {/if}
 
-        {#if !inCameraContainer && videoEnabled}
-            <!-- The menu to go fullscreen -->
-            <div
-                class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-20 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
-            >
-                <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
-                    {#if !fullScreen && !$highlightFullScreen}
-                        <button
-                            class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
-                            on:click={removeHighlight}
-                        >
-                            <IconArrowsMinimize font-size="20" class="text-white" />
-                        </button>
-                    {/if}
-                    {#if fullScreen}
-                        <button
-                            class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
-                            on:click={exitFullScreen}
-                        >
-                            <IconArrowsMinimize font-size="20" class="text-white" />
-                        </button>
-                    {:else}
-                        <button
-                            class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
-                            on:click={setFullScreen}
-                            data-testid="highlight-enter-fullscreen-button"
-                        >
-                            <IconArrowsMaximize font-size="20" class="text-white" />
-                        </button>
-                    {/if}
-                </div>
-            </div>
+                <!-- The menu to go fullscreen -->
+                {#if !inCameraContainer && videoEnabled}
+                    <div
+                        class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 hover:!opacity-100 group-hover/centered-video:opacity-20 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                    >
+                        <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
+                            {#if !fullScreen && !$highlightFullScreen}
+                                <button
+                                    class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
+                                    on:click={removeHighlight}
+                                >
+                                    <IconArrowsMinimize font-size="20" class="text-white" />
+                                </button>
+                            {/if}
+                            {#if fullScreen}
+                                <button
+                                    class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                                    on:click={exitFullScreen}
+                                >
+                                    <IconArrowsMinimize font-size="20" class="text-white" />
+                                </button>
+                            {:else}
+                                <button
+                                    class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                                    on:click={setFullScreen}
+                                    data-testid="highlight-enter-fullscreen-button"
+                                >
+                                    <IconArrowsMaximize font-size="20" class="text-white" />
+                                </button>
+                            {/if}
+                        </div>
+                    </div>
+                {/if}
+            </CenteredVideo>
         {/if}
     </div>
 

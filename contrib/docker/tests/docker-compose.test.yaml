@@ -39,7 +39,7 @@ services:
     environment:
       NODE_TLS_REJECT_UNAUTHORIZED: "0"
   livekit:
-    image: livekit/livekit-server:v1.8.4
+    image: livekit/livekit-server:v1.10.1
     command: --config /etc/livekit/config.yaml
     ports:
       - "7881:7881" # WebRTC TCP
@@ -66,7 +66,7 @@ services:
         condition: service_started
 
   egress:
-    image: livekit/egress:v1.9.0
+    image: livekit/egress:v1.12.0
     #restart: unless-stopped
     environment:
       EGRESS_CONFIG_FILE: /etc/egress/config.yaml

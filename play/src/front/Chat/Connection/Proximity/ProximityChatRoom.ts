@@ -101,6 +101,7 @@ export class ProximityChatRoom implements ChatRoom {
     unreadMessagesCount = writable(0);
     unreadNotificationCount = writable(0);
     pictureStore = readable(undefined);
+    avatarFallbackColor = readable(undefined);
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
     messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>> = new MapStore();
     hasPreviousMessage = writable(false);

@@ -58,7 +58,7 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
         await chatUtils.slideToUsers(userBob);
         await chatUtils.UL_sendMessage(userBob, "Admin1");
 
-        await expect(userBob.getByTestId("roomName")).toHaveText("John Doe");
+        await expect(userBob.getByTestId("roomName")).toHaveText("Admin1");
         await adminPage.context().close();
     });
 

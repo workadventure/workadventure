@@ -47,14 +47,16 @@
 </script>
 
 <div
-    class="text-md flex gap-2 flex-row items-center hover:bg-white hover:bg-opacity-10 hover:rounded hover:!cursor-pointer p-1"
+    class="wa-chat-item text-md flex gap-2 flex-row items-center hover:bg-white hover:bg-opacity-10 hover:rounded hover:!cursor-pointer px-2 py-2"
 >
-    <div class="relative">
-        <Avatar pictureStore={readable(undefined)} fallbackName={room.name} />
+    <div class="relative shrink-0">
+        <Avatar compact pictureStore={readable(undefined)} fallbackName={room.name} />
     </div>
-    <div>
+    <div class="min-w-0">
         {#each chunks as chunk (chunk.key)}
-            <span class:text-light-blue={chunk.match} class="cursor-default">{chunk.text}</span>
+            <span class:text-light-blue={chunk.match} class="cursor-default text-sm font-bold text-white/75"
+                >{chunk.text}</span
+            >
         {/each}
     </div>
 </div>

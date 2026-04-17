@@ -516,6 +516,52 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     remoteUserNotConnected: "Gebruiker niet ingelogd. Kan bericht niet verzenden.",
+    matrixSettings: {
+        title: "Matrix & WorkAdventure",
+        subtitle: "Your chat identity and Matrix profile",
+        close: "Close",
+        identitySection: "Identity",
+        matrixUserId: "Matrix user ID",
+        homeserver: "Homeserver",
+        copy: "Copy",
+        copied: "Copied",
+        profileSection: "Matrix profile",
+        accountDataSection: "WorkAdventure (in-game)",
+        displayName: "Display name",
+        avatar: "Avatar (MXC)",
+        localName: "Local game name",
+        waDisplayName: "WA name (fr.workadventure.wa_display_name)",
+        waAvatar: "WA avatar (fr.workadventure.wa_avatar)",
+        needsSyncHint: "Your local name or WOKA may differ from your Matrix profile. Use Sync to update.",
+        upToDateHint: "Your Matrix profile matches your local game name and WOKA (or there is nothing to sync).",
+        syncButton: "Sync Matrix profile (name + WOKA image)",
+        syncing: "Syncing…",
+        removeProfileImagesButton: "Remove profile images",
+        removingProfileImages: "Removing…",
+        removeProfileImagesHint:
+            "Removes your Matrix profile photo. Your in-game WOKA is unchanged; use Sync to publish it again.",
+        loadError: "Could not load Matrix settings.",
+        notConnected: "Matrix is not connected or you are a guest.",
+        clearSuggestedRoomsHint:
+            "Clears the list of Matrix rooms you hid from suggested / joinable lists (stored in this browser).",
+        clearSuggestedRoomsButton: "Reset hidden suggested rooms",
+        publishWokaToMatrixProfileHint:
+            "Sets your Matrix profile display name and avatar from your in-game name and WOKA (visible in Matrix clients such as Element).",
+        publishWokaToMatrixProfileButton: "Apply WOKA name & picture to Matrix profile",
+        publishWokaToMatrixProfilePublishing: "Updating profile…",
+        publishWokaToMatrixProfileConfirmWarning:
+            "This replaces your Matrix profile display name and avatar on the server. Any name or photo set elsewhere (e.g. in Element) will be overwritten. Continue only if you want your WorkAdventure name and WOKA to become your public Matrix profile.",
+        publishWokaToMatrixProfileCancelButton: "Cancel",
+        publishWokaToMatrixProfileConfirmActionButton: "Overwrite and apply",
+        actionDone: "Done",
+    },
+    matrixPeerProfileDebug: {
+        menuItemTitle: "Matrix profile",
+        menuItemDebugTag: "debug",
+        title: "Matrix profile",
+        subtitle: "Read-only view of this user’s Matrix profile. Shown only when DEBUG_MODE is on.",
+        loadError: "Could not load this user’s Matrix profile.",
+    },
 };
 
 export default chat;
