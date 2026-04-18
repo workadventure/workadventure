@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import { evaluateScript } from "./scripting";
 import { RENDERER_MODE } from "./environment";
 import { play_url } from "./urls";
+import { clickCoordinates } from "./gameCoordinates";
 
 class Map {
     async walkTo(page: Page, key: string, delay = 0) {
@@ -9,7 +10,7 @@ class Map {
     }
 
     async rightClickToPosition(page: Page, x: number, y: number, delay = 0) {
-        await page.mouse.click(x, y, { delay, button: "right" });
+        await clickCoordinates(page, { x, y }, { delay, button: "right" });
     }
 
     async walkToPosition(page: Page, x: number, y: number) {

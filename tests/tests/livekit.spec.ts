@@ -363,20 +363,12 @@ test.describe("Meeting actions test", () => {
         // Create podium zone (speaker zone) - positioned at y: 2-4 tiles
         await Menu.openMapEditor(speakerAdmin);
         await MapEditor.openAreaEditor(speakerAdmin);
-        await AreaEditor.drawArea(
-            speakerAdmin,
-            { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 },
-            { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 },
-        );
+        await AreaEditor.drawArea(speakerAdmin, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(speakerAdmin, "speakerMegaphone");
         await AreaEditor.setPodiumNameProperty(speakerAdmin, `${browser.browserType().name()}RapidTestZone`);
 
         // Create audience zone (listener zone) - positioned at y: 5-7 tiles (adjacent to podium)
-        await AreaEditor.drawArea(
-            speakerAdmin,
-            { x: 1 * 32 * 1.5, y: 5 * 32 * 1.5 },
-            { x: 9 * 32 * 1.5, y: 7 * 32 * 1.5 },
-        );
+        await AreaEditor.drawArea(speakerAdmin, { x: 1 * 32, y: 5 * 32 }, { x: 9 * 32, y: 7 * 32 });
         await AreaEditor.addProperty(speakerAdmin, "listenerMegaphone");
         await AreaEditor.setMatchingPodiumZoneProperty(
             speakerAdmin,

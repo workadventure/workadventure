@@ -33,7 +33,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         // Create area on the map for the test
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 8 * 32, y: 8 * 32 }, { x: 10 * 32, y: 10 * 32 });
         await AreaEditor.setAreaName(page, "MyLinkZone");
         await AreaEditor.addProperty(page, "openWebsite");
         await AreaEditor.setOpenLinkProperty(page, "https://workadventu.re", "Show action toast with message");
@@ -60,10 +60,10 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         await Menu.openMapEditor(page);
         await MapEditor.openEntityEditor(page);
         await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32);
         await EntityEditor.clearEntitySelection(page);
-        // await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.45);
+        // await EntityEditor.moveAndClick(page, 1, 8.5 * 32);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 - 10);
         await EntityEditor.setEntityName(page, "My Open Link");
         await EntityEditor.addProperty(page, "openWebsite");
         await EntityEditor.setOpenLinkProperty(page, "https://workadventu.re");
@@ -84,7 +84,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         //eslint-disable-next-line playwright/no-wait-for-timeout
         await newPage.waitForTimeout(1000);
         // Move to the entity
-        await EntityEditor.moveAndRightClick(newPage, 0, 8.5 * 32 * 1.5);
+        await EntityEditor.moveAndRightClick(newPage, 0, 8.5 * 32);
 
         // Wait for the text to be visible
         try {
@@ -92,7 +92,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         } catch (error) {
             console.error("Error waiting for text to be visible", error);
             // Try again once
-            await EntityEditor.moveAndRightClick(newPage, 0, 8.5 * 32 * 1.5);
+            await EntityEditor.moveAndRightClick(newPage, 0, 8.5 * 32);
             //eslint-disable-next-line playwright/no-conditional-expect
             await expect(newPage.getByText("SPACE to interact with it 👀")).toBeVisible();
         }
@@ -112,10 +112,10 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         await Menu.openMapEditor(page);
         await MapEditor.openEntityEditor(page);
         await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32);
         await EntityEditor.clearEntitySelection(page);
-        // await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.45);
+        // await EntityEditor.moveAndClick(page, 1, 8.5 * 32);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 - 10);
         await EntityEditor.setEntityName(page, "My Open Link");
         await EntityEditor.addProperty(page, "openFile");
         await EntityEditor.setOpenFileProperty(page);
@@ -127,7 +127,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         // await Menu.waitForMapLoad(page);
 
         // Move to the entity
-        await EntityEditor.moveAndRightClick(page, 0, 8.5 * 32 * 1.5);
+        await EntityEditor.moveAndRightClick(page, 0, 8.5 * 32);
 
         // Wait for the text to be visible
         await expect(page.getByText("SPACE to interact with it 👀")).toBeVisible({ timeout: 30000 });
@@ -154,7 +154,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         // Create area on the map for the test
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 8 * 32, y: 8 * 32 }, { x: 10 * 32, y: 10 * 32 });
         await AreaEditor.setAreaName(page, "MyLinkZone");
         await AreaEditor.addProperty(page, "openFile");
         await AreaEditor.setOpenFileProperty(page, "Show immediately on enter");
@@ -188,7 +188,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
 
         // Now let's check Entity PDF file deletion
         await page.keyboard.press("e");
-        await EntityEditor.moveAndClick(page, 16, 600);
+        await EntityEditor.moveAndClick(page, 16, 600, "browser");
         await page.keyboard.press("Delete");
 
         // Check if the PDF files from entity iframe are accessible

@@ -1,6 +1,8 @@
 import * as path from "path";
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import type { CoordinateSpace } from "../gameCoordinates";
+import { moveMouseToCoordinates } from "../gameCoordinates";
 
 class EntityEditor {
     async selectEntity(page: Page, nb: number, search?: string) {
@@ -50,19 +52,21 @@ class EntityEditor {
         return page.getByTestId("entity-item").nth(0);
     }
 
-    async moveAndClick(page: Page, x: number, y: number) {
+    async moveAndClick(page: Page, x: number, y: number, coordinateSpace: CoordinateSpace = "game") {
         await this.wait2Frames(page);
-        await page.mouse.move(x, y);
-        await page.mouse.move(x, y);
+        const coordinates = { x, y };
+        const browserCoordinates = await moveMouseToCoordinates(page, coordinates, coordinateSpace);
+        await page.mouse.move(browserCoordinates.x, browserCoordinates.y);
         await page.mouse.down({ button: "left" });
         await page.mouse.up({ button: "left" });
         await this.wait2Frames(page);
     }
 
-    async moveAndRightClick(page: Page, x: number, y: number) {
+    async moveAndRightClick(page: Page, x: number, y: number, coordinateSpace: CoordinateSpace = "game") {
         await this.wait2Frames(page);
-        await page.mouse.move(x, y);
-        await page.mouse.move(x, y);
+        const coordinates = { x, y };
+        const browserCoordinates = await moveMouseToCoordinates(page, coordinates, coordinateSpace);
+        await page.mouse.move(browserCoordinates.x, browserCoordinates.y);
         await page.mouse.down({ button: "right" });
         await page.mouse.up({ button: "right" });
         await this.wait2Frames(page);

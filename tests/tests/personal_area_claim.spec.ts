@@ -23,10 +23,10 @@ test.describe("Personal area claim @oidc @nomobile @nowebkit", () => {
 
         await resetWamMaps(request);
 
-        const areaCenterX = 4 * 32 * 1.5;
-        const areaCenterY = 4 * 32 * 1.5;
-        const outsideX = 15 * 32 * 1.5;
-        const outsideY = 15 * 32 * 1.5;
+        const areaCenterX = 4 * 32;
+        const areaCenterY = 4 * 32;
+        const outsideX = 15 * 32;
+        const outsideY = 15 * 32;
 
         await using adminPage = await getPage(browser, "Admin1", Map.url("empty"));
 

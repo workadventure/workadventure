@@ -30,7 +30,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Open the map editor
         await Menu.openMapExplorer(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 0 * 32 * 1.5, y: 5 * 32 * 1.5 }, { x: 5 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 0 * 32, y: 5 * 32 }, { x: 5 * 32, y: 9 * 32 });
         await AreaEditor.addProperty(page, "highlight");
 
         await page.getByRole("slider", { name: "Opacity : 60 %" }).fill("0.3");

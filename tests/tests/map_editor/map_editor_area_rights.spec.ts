@@ -10,6 +10,7 @@ import AreaAccessRights from "../utils/areaAccessRights";
 import { evaluateScript } from "../utils/scripting";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
+import { clickCoordinates } from "../utils/gameCoordinates";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -76,11 +77,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         //Need to wait for player move action
         // eslint-disable-next-line
         await page.waitForTimeout(1000);
-        await page.mouse.click(
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
-            { button: "right" },
-        );
+        await clickCoordinates(page, AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea, { button: "right" });
         //Need to wait for player move action
         // eslint-disable-next-line
         await page.waitForTimeout(1000);
@@ -449,11 +446,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
 
         // Add a second area
         await Menu.openMapEditor(page);
-        await AreaAccessRights.openAreaEditorAndAddArea(
-            page,
-            { x: 1 * 32 * 1.5, y: 9 * 32 * 1.5 },
-            { x: 9 * 32 * 1.5, y: 10 * 32 * 1.5 },
-        );
+        await AreaAccessRights.openAreaEditorAndAddArea(page, { x: 1 * 32, y: 9 * 32 }, { x: 9 * 32, y: 10 * 32 });
         await page.getByTestId("personalAreaPropertyData").click();
         await Menu.closeMapEditor(page);
 

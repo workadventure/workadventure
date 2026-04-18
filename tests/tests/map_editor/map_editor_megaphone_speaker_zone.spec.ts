@@ -181,10 +181,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         // await expect(page.locator('canvas')).toBeVisible();
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "speakerMegaphone");
         await AreaEditor.setPodiumNameProperty(page, `${browser.browserType().name()}SpeakerZone`);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 6 * 32 }, { x: 9 * 32, y: 9 * 32 });
         await AreaEditor.addProperty(page, "listenerMegaphone");
         await AreaEditor.setMatchingPodiumZoneProperty(
             page,
@@ -236,7 +236,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "speakerMegaphone");
         await AreaEditor.setPodiumNameProperty(
             page,
@@ -244,7 +244,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
             false,
             false,
         );
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 6 * 32 }, { x: 9 * 32, y: 9 * 32 });
         await AreaEditor.addProperty(page, "listenerMegaphone");
         await AreaEditor.setMatchingPodiumZoneProperty(
             page,
@@ -267,10 +267,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         // await expect(page.locator('canvas')).toBeVisible();
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "speakerMegaphone");
         await AreaEditor.setPodiumNameProperty(page, `${browser.browserType().name()}SpeakerZone`, true);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 6 * 32 }, { x: 9 * 32, y: 9 * 32 });
         await AreaEditor.addProperty(page, "listenerMegaphone");
         await AreaEditor.setMatchingPodiumZoneProperty(
             page,
@@ -337,10 +337,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         // await expect(page.locator('canvas')).toBeVisible();
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "speakerMegaphone");
         await AreaEditor.setPodiumNameProperty(page, `${browser.browserType().name()}SpeakerZone`, true, true);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 6 * 32 }, { x: 9 * 32, y: 9 * 32 });
         await AreaEditor.addProperty(page, "listenerMegaphone");
         await AreaEditor.setMatchingPodiumZoneProperty(
             page,
@@ -653,13 +653,13 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Draw a smaller speaker zone (podium) INSIDE the listener zone
         // Zone covers from (3,6) to (7,8) in tile coordinates - completely inside the listener zone
-        await AreaEditor.drawArea(page, { x: 3 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 7 * 32 * 1.5, y: 8 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 3 * 32, y: 6 * 32 }, { x: 7 * 32, y: 8 * 32 });
         await AreaEditor.addProperty(page, "speakerMegaphone");
         await AreaEditor.setPodiumNameProperty(page, `${browser.browserType().name()}NestedPodium`);
 
         // Draw a large listener zone (attendees) - this will contain the speaker zone
         // Zone covers from (1,5) to (9,9) in tile coordinates
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 5 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 5 * 32 }, { x: 9 * 32, y: 9 * 32 });
         await AreaEditor.addProperty(page, "listenerMegaphone");
         await AreaEditor.setMatchingPodiumZoneProperty(
             page,

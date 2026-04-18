@@ -45,7 +45,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 8 * 32, y: 8 * 32 }, { x: 10 * 32, y: 10 * 32 });
         await AreaEditor.addProperty(page, "exitAreaProperty");
         await AreaEditor.setExitProperty(page, "maps/start_defined.wam", "MyStartZone");
         await Menu.closeMapEditor(page);

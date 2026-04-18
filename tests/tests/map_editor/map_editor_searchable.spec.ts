@@ -34,7 +34,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Area
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
         await AreaEditor.setAreaName(page, "My Focusable Zone");
         await AreaEditor.setAreaDescription(
             page,
@@ -46,9 +46,9 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Entity
         await MapEditor.openEntityEditor(page);
         await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5 - 15);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 - 10);
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5 - 15);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 - 10);
         await EntityEditor.setEntityName(page, "My Play Audio Entity");
         await EntityEditor.setEntityDescription(
             page,

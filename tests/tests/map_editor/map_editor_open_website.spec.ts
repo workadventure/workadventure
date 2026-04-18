@@ -35,7 +35,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 8 * 32, y: 8 * 32 }, { x: 10 * 32, y: 10 * 32 });
         await AreaEditor.setAreaName(page, "My app zone");
 
         await AreaEditor.addProperty(page, "openWebsite");
@@ -85,7 +85,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 8 * 32, y: 8 * 32 }, { x: 10 * 32, y: 10 * 32 });
         await AreaEditor.setAreaName(page, "My app zone");
 
         // add property Klaxoon
@@ -117,7 +117,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 8 * 32, y: 8 * 32 }, { x: 10 * 32, y: 10 * 32 });
 
         await AreaEditor.setAreaName(page, "My app zone");
 
@@ -218,11 +218,11 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // select entity and push it into the map
         await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5 - 15);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 - 10);
 
         // quit object selector
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5 - 15);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 - 10);
 
         // add property Google Docs
         await EntityEditor.addProperty(page, "openWebsiteGoogleDocs");
@@ -264,7 +264,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(page);
 
         // click on the object and open popup
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5 - 15);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 - 10);
 
         // check if the popup with application is opened and can be close
         await expect(page.getByRole("button", { name: "Open Google Drive" })).toBeVisible();
@@ -288,11 +288,11 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // select entity and push it into the map
         await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5 - 15);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 - 10);
 
         // quit object selector
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5 - 15);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 - 10);
 
         // add property Klaxoon
         await EntityEditor.addProperty(page, "openWebsiteKlaxoon");
@@ -307,7 +307,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(page);
 
         // click on the object and open popup
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5 - 15);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 - 10);
 
         // check if the cowebsite is opened
         await expect(page.locator("#cowebsites-container")).toBeVisible();
