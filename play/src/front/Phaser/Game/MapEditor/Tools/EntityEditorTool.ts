@@ -28,6 +28,8 @@ import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { mapEditorActivated } from "../../../../Stores/MenuStore";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
+const ENTITY_EDITOR_AREA_PREVIEW_DEPTH = -1;
+
 export class EntityEditorTool extends EntityRelatedEditorTool {
     private handleUpdateEntity: (entityData: EntityData) => void;
     private handleCopyEntity: (data: CopyEntityEventData) => void;
@@ -353,7 +355,9 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         pointer: Phaser.Input.Pointer,
         gameObjects: Phaser.GameObjects.GameObject[]
     ): void {
-        if (get(mapEditorEntityModeStore) === "EDIT" && gameObjects.length === 0) {
+        const clickedAreaPreview = this.isAreaPreviewClicked(pointer, gameObjects);
+
+        if (get(mapEditorEntityModeStore) === "EDIT" && gameObjects.length === 0 && !clickedAreaPreview) {
             mapEditorEntityModeStore.set("ADD");
             if (document.activeElement instanceof HTMLElement) {
                 document.activeElement.blur();
@@ -364,8 +368,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             // Check that the user can open map editor to edit an area
             if (get(mapEditorActivated)) {
-                const areaEditorToolObjects = gameObjects.filter((obj) => obj instanceof AreaPreview);
-                if (areaEditorToolObjects.length > 0 && get(mapEditorSelectedToolStore) !== EditorToolName.AreaEditor) {
+                if (clickedAreaPreview && get(mapEditorSelectedToolStore) !== EditorToolName.AreaEditor) {
                     this.scene.getMapEditorModeManager().equipTool(EditorToolName.AreaEditor);
                 }
             }
@@ -458,6 +461,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             this.shiftKey,
             this.ctrlKey
         );
+        areaPreview.setDepth(ENTITY_EDITOR_AREA_PREVIEW_DEPTH);
+        areaPreview.disableInteractive();
         this.areaPreviews.push(areaPreview);
         return areaPreview;
     }
@@ -480,6 +485,18 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         return Array.from(areasPreview.values()).filter((area: AreaData) => {
             return x >= area.x && x <= area.x + area.width && y >= area.y && y <= area.y + area.height;
         });
+    }
+
+    private isAreaPreviewClicked(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): boolean {
+        if (gameObjects.some((obj) => obj instanceof AreaPreview)) {
+            return true;
+        }
+
+        if (gameObjects.length > 0) {
+            return false;
+        }
+
+        return this.getAreasFromPosition(pointer.worldX, pointer.worldY).length > 0;
     }
 
     private canEntityBePlaced(): boolean {
