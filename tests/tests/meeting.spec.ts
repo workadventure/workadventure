@@ -267,7 +267,7 @@ test.describe("Meeting actions test @nomobile @nowebkit", () => {
     // Create a new area
     await Mapeditor.openAreaEditor(page);
     // Draw the area
-    await AreaEditor.drawArea(page, {x: 0*32*1.5, y: 5}, {x: 9*32*1.5, y: 4*32*1.5});
+    await AreaEditor.drawArea(page, {x: 0*32, y: 5}, {x: 9*32, y: 4*32});
     // Add a property Speaker zone to create new Jitsi meeting zone
     await AreaEditor.addProperty(page, 'Speaker zone');
     // Set the speaker zone property

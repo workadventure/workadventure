@@ -25,7 +25,7 @@ test.describe("Scripting for Map editor @oidc @nomobile @nowebkit", () => {
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
         await menu.openMapEditor(page);
         await mapeditor.openAreaEditor(page);
-        await areaEditor.drawArea(page, { x: 0, y: 7 * 32 * 1.5 }, { x: 5 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await areaEditor.drawArea(page, { x: 0, y: 7 * 32 }, { x: 5 * 32, y: 9 * 32 });
         await areaEditor.setAreaName(page, "MyZone");
 
         await evaluateScript(page, () => {

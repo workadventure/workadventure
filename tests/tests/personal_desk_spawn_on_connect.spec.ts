@@ -24,8 +24,8 @@ test.describe("Personal desk spawn on connect @oidc @nomobile @nowebkit", () => 
 
         await resetWamMaps(request);
 
-        const areaCenterX = 4 * 32 * 1.5;
-        const areaCenterY = 4 * 32 * 1.5;
+        const areaCenterX = 4 * 32;
+        const areaCenterY = 4 * 32;
 
         await using adminPage = await getPage(browser, "Admin1", Map.url("empty"));
 

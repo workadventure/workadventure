@@ -30,12 +30,12 @@ test.describe("Map editor max users in area @oidc @nomobile @nowebkit", () => {
     }) => {
         await resetWamMaps(request);
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
-        const areaLeftBoundX = 1 * 32 * 1.5;
+        const areaLeftBoundX = 1 * 32;
 
         // Create an area next to spawn and set max users to 1.
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 7 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 10 * 32, y: 7 * 32 });
         await AreaEditor.addProperty(page, "maxUsersInAreaPropertyData");
 
         const maxUsersInput = page.locator("#maxUsersInArea");
@@ -45,7 +45,7 @@ test.describe("Map editor max users in area @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(page);
 
         // Admin enters the area and occupies the only available spot.
-        await Map.teleportToPosition(page, 4 * 32 * 1.5, 4 * 32 * 1.5);
+        await Map.teleportToPosition(page, 4 * 32, 4 * 32);
 
         // Alice cannot enter while Admin is inside.
         await using page2 = await getPage(browser, "Alice", Map.url("empty"));
