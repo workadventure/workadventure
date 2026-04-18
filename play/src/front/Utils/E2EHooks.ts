@@ -15,56 +15,12 @@ interface E2ECoordinateOptions {
     tolerance?: number;
 }
 
-interface E2ECameraAnimationState {
-    fade: boolean;
-    flash: boolean;
-    pan: boolean;
-    rotate: boolean;
-    shake: boolean;
-    zoom: boolean;
-    any: boolean;
-}
-
-interface E2ECoordinateSnapshot extends Coordinates {
-    game: Coordinates;
-    camera: {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-        scrollX: number;
-        scrollY: number;
-        zoomX: number;
-        zoomY: number;
-        rotation: number;
-        worldView: {
-            x: number;
-            y: number;
-            width: number;
-            height: number;
-        };
-        animations: E2ECameraAnimationState;
-    };
-    canvas: {
-        left: number;
-        top: number;
-        width: number;
-        height: number;
-        internalWidth: number;
-        internalHeight: number;
-        scaleX: number;
-        scaleY: number;
-    };
-    roundTrip: Coordinates;
-}
-
 interface CameraEffectWithIsRunning {
     isRunning?: boolean;
 }
 
 interface CameraWithTransform extends Phaser.Cameras.Scene2D.Camera {
     matrix: Phaser.GameObjects.Components.TransformMatrix;
-    rotation: number;
 }
 
 const DEFAULT_COORDINATE_STABILITY_TIMEOUT_MS = 10_000;
@@ -89,26 +45,19 @@ function isEffectRunning(effect: CameraEffectWithIsRunning | undefined): boolean
     return effect?.isRunning === true;
 }
 
-function getCameraAnimationState(camera: Phaser.Cameras.Scene2D.Camera): E2ECameraAnimationState {
-    const animations = {
-        fade: isEffectRunning(camera.fadeEffect),
-        flash: isEffectRunning(camera.flashEffect),
-        pan: isEffectRunning(camera.panEffect),
-        rotate: isEffectRunning(camera.rotateToEffect),
-        shake: isEffectRunning(camera.shakeEffect),
-        zoom: isEffectRunning(camera.zoomEffect),
-        any: false,
-    };
+function hasRunningCameraEffect(camera: Phaser.Cameras.Scene2D.Camera): boolean {
+    return (
+        isEffectRunning(camera.fadeEffect) ||
+        isEffectRunning(camera.flashEffect) ||
+        isEffectRunning(camera.panEffect) ||
+        isEffectRunning(camera.rotateToEffect) ||
+        isEffectRunning(camera.shakeEffect) ||
+        isEffectRunning(camera.zoomEffect)
+    );
+}
 
-    animations.any =
-        animations.fade ||
-        animations.flash ||
-        animations.pan ||
-        animations.rotate ||
-        animations.shake ||
-        animations.zoom;
-
-    return animations;
+function currentCameraHasRunningEffect(): boolean {
+    return hasRunningCameraEffect(gameManager.getCurrentGameScene().getCameraManager().getCamera());
 }
 
 function getGameCanvas(): HTMLCanvasElement {
@@ -121,7 +70,7 @@ function getGameCanvas(): HTMLCanvasElement {
     return canvas;
 }
 
-function getGameToBrowserCoordinatesSnapshot(gameCoordinates: Coordinates): E2ECoordinateSnapshot {
+function getGameToBrowserCoordinatesSnapshot(gameCoordinates: Coordinates): Coordinates {
     const scene = gameManager.getCurrentGameScene();
     const camera = scene.getCameraManager().getCamera();
     const cameraWithTransform = camera as CameraWithTransform;
@@ -164,42 +113,6 @@ function getGameToBrowserCoordinatesSnapshot(gameCoordinates: Coordinates): E2EC
     return {
         x,
         y,
-        game: {
-            x: gameCoordinates.x,
-            y: gameCoordinates.y,
-        },
-        camera: {
-            x: camera.x,
-            y: camera.y,
-            width: camera.width,
-            height: camera.height,
-            scrollX: camera.scrollX,
-            scrollY: camera.scrollY,
-            zoomX: camera.zoomX,
-            zoomY: camera.zoomY,
-            rotation: cameraWithTransform.rotation,
-            worldView: {
-                x: camera.worldView.x,
-                y: camera.worldView.y,
-                width: camera.worldView.width,
-                height: camera.worldView.height,
-            },
-            animations: getCameraAnimationState(camera),
-        },
-        canvas: {
-            left: canvasRect.left,
-            top: canvasRect.top,
-            width: canvasRect.width,
-            height: canvasRect.height,
-            internalWidth: canvasInternalWidth,
-            internalHeight: canvasInternalHeight,
-            scaleX,
-            scaleY,
-        },
-        roundTrip: {
-            x: roundTrip.x,
-            y: roundTrip.y,
-        },
     };
 }
 
@@ -218,12 +131,14 @@ async function gameToBrowserCoordinates(
 
     const waitForStableCoordinates = async (): Promise<Coordinates> => {
         const firstSnapshot = getGameToBrowserCoordinatesSnapshot(gameCoordinates);
+        const cameraWasAnimating = currentCameraHasRunningEffect();
 
         await waitForNextFrame();
 
         const secondSnapshot = getGameToBrowserCoordinatesSnapshot(gameCoordinates);
         const coordinatesAreStable = areCoordinatesClose(firstSnapshot, secondSnapshot, tolerance);
-        const cameraIsStable = !firstSnapshot.camera.animations.any && !secondSnapshot.camera.animations.any;
+        const cameraIsAnimating = currentCameraHasRunningEffect();
+        const cameraIsStable = !cameraWasAnimating && !cameraIsAnimating;
 
         if (coordinatesAreStable && cameraIsStable) {
             return {
@@ -238,6 +153,8 @@ async function gameToBrowserCoordinates(
                     JSON.stringify({
                         firstSnapshot,
                         secondSnapshot,
+                        cameraWasAnimating,
+                        cameraIsAnimating,
                         tolerance,
                     })
             );
