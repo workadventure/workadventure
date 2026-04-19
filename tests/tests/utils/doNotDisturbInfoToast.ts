@@ -8,11 +8,12 @@ import type { Page } from "@playwright/test";
 export async function dismissDoNotDisturbInfoToast(page: Page, timeoutMs: number = 5_000): Promise<void> {
     const onlineButton = page.getByTestId("do-not-disturb-activate");
     const microphone = page.getByTestId("microphone-button");
-    await Promise.race([
-        onlineButton.waitFor({ state: "visible", timeout: timeoutMs }),
-        microphone.waitFor({ state: "visible", timeout: timeoutMs }),
-    ]);
-    if (await onlineButton.isVisible()) {
+    const visibleControl = await Promise.race([
+        onlineButton.waitFor({ state: "visible", timeout: timeoutMs }).then(() => "online" as const),
+        microphone.waitFor({ state: "visible", timeout: timeoutMs }).then(() => "microphone" as const),
+    ]).catch(() => undefined);
+
+    if (visibleControl === "online") {
         await onlineButton.click();
     }
 }
