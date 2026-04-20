@@ -6,7 +6,7 @@ import type { Readable } from "svelte/store";
 import type { SpaceInterface } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { CommunicationMessageType } from "../Space/SpacePeerManager/CommunicationMessageType";
-import { streamingMegaphoneStore } from "../Stores/MediaStore";
+import { streamingMegaphoneStore, type LocalStreamStoreValue } from "../Stores/MediaStore";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 import { LiveKitRoom } from "./LiveKitRoom";
 
@@ -27,6 +27,7 @@ export class LivekitConnection {
         private space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
+        private _screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>,
         private _streamingMegaphoneStore = streamingMegaphoneStore
     ) {
         this.initialize();
@@ -43,7 +44,8 @@ export class LivekitConnection {
             this.space,
             this._streamableSubjects,
             this._blockedUsersStore,
-            shutdownAbortSignal
+            shutdownAbortSignal,
+            this._screenSharingLocalStreamStore
         );
         this._streamingMegaphoneStore.set(true);
         return this.livekitRoom;

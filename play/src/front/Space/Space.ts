@@ -102,6 +102,7 @@ export class Space implements SpaceInterface {
     private readonly _isStreamingAudioStore: Readable<boolean>;
     private readonly _canRecordStore: Writable<boolean>;
     private readonly _isRecordingStore: Writable<boolean> = writable(false);
+    public readonly shouldPublishScreenShareStore: Readable<boolean>;
     private readonly observeSyncBlockUser: Subscription;
     private readonly observeSyncUnblockUser: Subscription;
     private readonly onBlockSubscribe: Subscription;
@@ -259,6 +260,31 @@ export class Space implements SpaceInterface {
 
         this._blockedUsersStore.set(this._blackListManager.getBlackListedUsers());
 
+        // Initialize speaker and listener streaming stores
+        this._isSpeakerStreamingStore = writable(false);
+        this._isListenerStreamingStore = writable(false);
+
+        // Condition for ALL_USERS filter type with video properties
+        const isAllUsersVideoSpace = filterType === FilterType.ALL_USERS && this.isVideoSpace();
+
+        // Derived store: true if speaker OR listener streaming is active, or if ALL_USERS video space
+        this._isStreamingStore = derived(
+            [this._isSpeakerStreamingStore, this._isListenerStreamingStore],
+            ([$isSpeakerStreaming, $isListenerStreaming]) => {
+                return isAllUsersVideoSpace || $isSpeakerStreaming || $isListenerStreaming;
+            }
+        );
+
+        this._isStreamingAudioStore = derived([this._isSpeakerStreamingStore], ([$isSpeakerStreaming]) => {
+            return isAllUsersVideoSpace || $isSpeakerStreaming;
+        });
+        this.shouldPublishScreenShareStore = derived([this._isSpeakerStreamingStore], ([$isSpeakerStreaming]) => {
+            return (
+                !(this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && !$isSpeakerStreaming) &&
+                this.isVideoSpace()
+            );
+        });
+
         this._peerManager = new SpacePeerManager(this, this._allBlockedUsersStore);
         this.registerPeerManagerEventHandlers();
 
@@ -278,29 +304,6 @@ export class Space implements SpaceInterface {
         });
         this.observeSyncUserRemoved = this.observePrivateEvent("removeSpaceUserMessage").subscribe((message) => {
             this.removeUser(message.removeSpaceUserMessage.spaceUserId);
-        });
-
-        // Initialize speaker and listener streaming stores
-        this._isSpeakerStreamingStore = writable(false);
-        this._isListenerStreamingStore = writable(false);
-
-        // Condition for ALL_USERS filter type with video properties
-        const isAllUsersVideoSpace =
-            filterType === FilterType.ALL_USERS &&
-            (this._propertiesToSync.includes("cameraState") ||
-                this._propertiesToSync.includes("microphoneState") ||
-                this._propertiesToSync.includes("screenSharingState"));
-
-        // Derived store: true if speaker OR listener streaming is active, or if ALL_USERS video space
-        this._isStreamingStore = derived(
-            [this._isSpeakerStreamingStore, this._isListenerStreamingStore],
-            ([$isSpeakerStreaming, $isListenerStreaming]) => {
-                return isAllUsersVideoSpace || $isSpeakerStreaming || $isListenerStreaming;
-            }
-        );
-
-        this._isStreamingAudioStore = derived([this._isSpeakerStreamingStore], ([$isSpeakerStreaming]) => {
-            return isAllUsersVideoSpace || $isSpeakerStreaming;
         });
 
         this.observeSyncBlockUser = this.observePrivateEvent("blockUserMessage").subscribe((message) => {
@@ -810,9 +813,6 @@ export class Space implements SpaceInterface {
                 this.allScreenShareStreamStore.delete(userToUpdate.spaceUserId);
             }
         }
-        /*if (this._setUsers) {
-            this._setUsers(this._users);
-        }*/
     }
 
     private extendSpaceUser(user: SpaceUser): SpaceUserExtended {
@@ -959,6 +959,14 @@ export class Space implements SpaceInterface {
     }
 
     /**
+     * In megaphone see-attendees space (LIVE_STREAMING_USERS_WITH_FEEDBACK), only the speaker should publish screen share.
+     * Returns true when the local user may publish/send screen share, false when they are a listener in see-attendees mode.
+     */
+    public shouldPublishScreenShare(): boolean {
+        return get(this.shouldPublishScreenShareStore);
+    }
+
+    /**
      * Returns a promise that resolves to the current list of users in the space.
      * The promise will only resolve once the initial list of users has been received from the server.
      * After that, the promise will resolve immediately with the current list of users.
@@ -1074,9 +1082,11 @@ export class Space implements SpaceInterface {
         if (this.filterType === FilterType.ALL_USERS) {
             throw new Error("Cannot start streaming in a ALL_USERS space because everyone is always streaming");
         }
+
         this.emitUpdateUser({
             megaphoneState: true,
         });
+
         this._isSpeakerStreamingStore.set(true);
     }
 
@@ -1306,38 +1316,6 @@ export class Space implements SpaceInterface {
             videoBox.setNewStreamable(peer);
 
             this._highlightedEmbedScreenStore.highlight(videoBox);
-        });
-    }
-
-    private subscribeToConnectionStateChanges(
-        existingSubscription: Subscription | undefined,
-        observable: Observable<{ type: "reset" | "add" | "remove"; userId?: string }>,
-        store: Writable<Set<string>>
-    ): Subscription {
-        existingSubscription?.unsubscribe();
-
-        return observable.subscribe((event) => {
-            if (event.type === "reset") {
-                store.set(new Set<string>());
-                return;
-            }
-
-            const userId = event.userId;
-            if (!userId) {
-                console.error("subscribeToConnectionStateChanges : event has no userId", event);
-                Sentry.captureMessage("subscribeToConnectionStateChanges : event has no userId");
-                return;
-            }
-
-            store.update((connections) => {
-                const newSet = new Set(connections);
-                if (event.type === "add") {
-                    newSet.add(userId);
-                } else {
-                    newSet.delete(userId);
-                }
-                return newSet;
-            });
         });
     }
 }

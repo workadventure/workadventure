@@ -22,6 +22,7 @@ import { audioContextManager } from "../../WebRtc/AudioContextManager";
 import LL, { locale } from "../../../i18n/i18n-svelte";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import type { Streamable } from "../Streamable";
+import { deriveSwitchStore } from "../../Stores/InterruptorStore";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
@@ -108,7 +109,8 @@ export interface PeerFactoryInterface {
     create(
         space: SpaceInterface,
         streamableSubjects: StreamableSubjects,
-        blockedUsersStore: Readable<Set<string>>
+        blockedUsersStore: Readable<Set<string>>,
+        screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>
     ): SimplePeerConnectionInterface;
 }
 export class SpacePeerManager {
@@ -116,6 +118,8 @@ export class SpacePeerManager {
 
     private _communicationState: ICommunicationState;
     private _toFinalizeState: ICommunicationState | undefined;
+
+    private readonly _effectiveScreenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>;
 
     private readonly _videoPeerAdded = new Subject<Streamable>();
     public readonly videoPeerAdded = this._videoPeerAdded.asObservable();
@@ -151,12 +155,17 @@ export class SpacePeerManager {
         blockedUsersStore: Readable<Set<string>>,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private cameraStateStore: Readable<boolean> = requestedCameraState,
-        private screenSharingStateStore: Readable<LocalStreamStoreValue> = screenSharingLocalStreamStore,
+        _screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStreamStore,
         _bindMuteEventsToSpace: (space: SpaceInterface) => void = bindMuteEventsToSpace,
         private _notificationPlayingStore = notificationPlayingStore,
         private _recordingStore = recordingStore
     ) {
         this._communicationState = new DefaultCommunicationState();
+
+        this._effectiveScreenSharingLocalStreamStore = deriveSwitchStore(
+            _screenSharingLocalStreamStore,
+            this.space.shouldPublishScreenShareStore
+        );
 
         this.rxJsUnsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.SWITCH_MESSAGE).subscribe((message) => {
@@ -175,12 +184,18 @@ export class SpacePeerManager {
 
                 // create factory for the new state instead of creating the state directly ?
                 if (message.switchMessage.strategy === CommunicationType.WEBRTC) {
-                    this._communicationState = new WebRTCState(this.space, this._streamableSubjects, blockedUsersStore);
+                    this._communicationState = new WebRTCState(
+                        this.space,
+                        this._streamableSubjects,
+                        blockedUsersStore,
+                        this._effectiveScreenSharingLocalStreamStore
+                    );
                 } else if (message.switchMessage.strategy === CommunicationType.LIVEKIT) {
                     this._communicationState = new LivekitState(
                         this.space,
                         this._streamableSubjects,
-                        blockedUsersStore
+                        blockedUsersStore,
+                        this._effectiveScreenSharingLocalStreamStore
                     );
                 } else {
                     console.error("Unknown communication strategy: " + message.switchMessage.strategy);
@@ -446,8 +461,8 @@ export class SpacePeerManager {
         );
 
         this.unsubscribes.push(
-            this.screenSharingStateStore.subscribe((state) => {
-                if (state.type === "success" && state.stream) {
+            this._effectiveScreenSharingLocalStreamStore.subscribe((state) => {
+                if (state?.type === "success" && state.stream) {
                     this.space.emitUpdateUser({
                         screenSharingState: true,
                     });

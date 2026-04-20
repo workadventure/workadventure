@@ -112,6 +112,7 @@ export interface SpaceInterface {
     readonly isStreamingStore: Readable<boolean>;
 
     readonly isStreamingAudioStore: Readable<boolean>;
+    readonly shouldPublishScreenShareStore: Readable<boolean>;
 
     /**
      * Use this observer to get a description of new users.
@@ -133,6 +134,12 @@ export interface SpaceInterface {
     get mySpaceUserId(): SpaceUser["spaceUserId"];
     getUsers(options?: { signal: AbortSignal }): Promise<Map<string, Readonly<SpaceUserExtended>>>;
     waitForSpaceUser(spaceUserId: SpaceUser["spaceUserId"], timeoutMs: number): Promise<SpaceUserExtended>;
+
+    /**
+     * In megaphone see-attendees space (LIVE_STREAMING_USERS_WITH_FEEDBACK), only the speaker should publish screen share.
+     * Returns true when the local user may publish/send screen share, false when they are a listener in see-attendees mode.
+     */
+    shouldPublishScreenShare(): boolean;
 
     readonly destroyed: boolean;
 }
