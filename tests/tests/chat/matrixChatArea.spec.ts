@@ -190,7 +190,7 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         await expect(page2.getByTestId("closeChatButton")).toBeVisible();
 
         await page2.addLocatorHandler(page2.getByTestId("closeModal"), async () => {
-            try{
+            try {
                 await page2.getByTestId("closeModal").click();
             } catch {
                 // Ignore error
