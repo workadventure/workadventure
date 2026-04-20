@@ -61,6 +61,8 @@ export interface SpaceInterface {
     emitBackEvent(message: NonNullable<BackEventMessage["backEvent"]>): void;
     emitUpdateUser(spaceUser: SpaceUserUpdate): void;
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
+    startRecording(): Promise<void>;
+    stopRecording(): Promise<void>;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
     watchInitSpaceUsersMessage(): Observable<InitSpaceUsersMessage>;
     videoStreamStore: Readable<Map<string, VideoBox>>;

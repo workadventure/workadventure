@@ -35,6 +35,7 @@ const debug = Debug("space");
 export interface SpaceInterface {
     forwarder: SpaceToBackForwarderInterface;
     dispatcher: SpaceToFrontDispatcherInterface;
+    query: Query;
     initSpace(): void;
     name: string;
     handleWatch(watcher: Socket): Promise<void>;

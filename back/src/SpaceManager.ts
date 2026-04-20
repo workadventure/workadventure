@@ -71,7 +71,9 @@ const spaceManager = {
                         break;
                     }
                     case "spaceQueryMessage": {
-                        socketManager.handleSpaceQueryMessage(pusher, message.message.spaceQueryMessage);
+                        socketManager.handleSpaceQueryMessage(pusher, message.message.spaceQueryMessage).catch((e) => {
+                            console.error("Error while handling space query message", e);
+                        });
                         break;
                     }
                     case "addSpaceUserToNotifyMessage": {

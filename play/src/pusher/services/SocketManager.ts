@@ -79,6 +79,7 @@ export type Socket = WebSocket<SocketData>;
 export type SocketUpgradeFailed = WebSocket<UpgradeFailedData>;
 
 export class SocketManager implements ZoneEventListener {
+    private static readonly RECORDING_QUERY_TIMEOUT_MS = 60_000;
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
     private spaces: Map<string, SpaceInterface> = new Map<string, SpaceInterface>();
 
@@ -1402,6 +1403,48 @@ export class SocketManager implements ZoneEventListener {
         };
     }
 
+    async handleStartRecording(client: Socket, spaceName: string, options: { signal: AbortSignal }): Promise<void> {
+        const { socketData, space } = await this.getValidatedRecordingSpace(client, spaceName);
+        const answer = await space.query.send(
+            {
+                $case: "startSpaceRecordingQuery",
+                startSpaceRecordingQuery: {
+                    spaceName,
+                    spaceUserId: socketData.spaceUserId,
+                },
+            },
+            {
+                signal: options.signal,
+                timeout: SocketManager.RECORDING_QUERY_TIMEOUT_MS,
+            }
+        );
+
+        if (answer.$case !== "startSpaceRecordingAnswer") {
+            throw new Error("Unexpected answer");
+        }
+    }
+
+    async handleStopRecording(client: Socket, spaceName: string, options: { signal: AbortSignal }): Promise<void> {
+        const { socketData, space } = await this.getValidatedRecordingSpace(client, spaceName);
+        const answer = await space.query.send(
+            {
+                $case: "stopSpaceRecordingQuery",
+                stopSpaceRecordingQuery: {
+                    spaceName,
+                    spaceUserId: socketData.spaceUserId,
+                },
+            },
+            {
+                signal: options.signal,
+                timeout: SocketManager.RECORDING_QUERY_TIMEOUT_MS,
+            }
+        );
+
+        if (answer.$case !== "stopSpaceRecordingAnswer") {
+            throw new Error("Unexpected answer");
+        }
+    }
+
     async handleGetSignedUrlQuery(client: Socket, key: string): Promise<GetSignedUrlAnswer> {
         const { userUuid } = client.getUserData();
 
@@ -1413,6 +1456,31 @@ export class SocketManager implements ZoneEventListener {
         const signedUrl = await RecordingService.getSignedUrl(key);
         return {
             signedUrl,
+        };
+    }
+
+    private async getValidatedRecordingSpace(
+        client: Socket,
+        spaceName: string
+    ): Promise<{ socketData: SocketData; space: SpaceInterface }> {
+        await this.checkClientIsPartOfSpace(client, spaceName);
+
+        const socketData = client.getUserData();
+        if (!socketData.canRecord) {
+            throw new Error("You are not allowed to record");
+        }
+        if (!socketData.spaceUserId) {
+            throw new Error("Space user id not found");
+        }
+
+        const space = this.spaces.get(spaceName);
+        if (!space) {
+            throw new Error(`Trying to record a space that does not exist: "${spaceName}"`);
+        }
+
+        return {
+            socketData,
+            space,
         };
     }
 
