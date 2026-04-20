@@ -72,13 +72,17 @@
         );*/
     });
 
-    const directRoomsUnsubscriber = rooms.subscribe((rooms) => openRoomsIfCollapsedBeforeNewRoom(rooms));
+    const directRoomsUnsubscriber = directRooms.subscribe((directRooms) =>
+        openDirectRoomsIfCollapsedBeforeNewRoom(directRooms)
+    );
+    const roomsUnsubscriber = rooms.subscribe((rooms) => openRoomsIfCollapsedBeforeNewRoom(rooms));
     const roomInvitationsUnsubscriber = roomInvitations.subscribe((roomInvitations) =>
         openRoomInvitationsIfCollapsedBeforeNewRoom(roomInvitations)
     );
 
     onDestroy(() => {
         directRoomsUnsubscriber();
+        roomsUnsubscriber();
         roomInvitationsUnsubscriber();
         //if (proximityChatRoomHasUserInProximityChatSubscribtion) proximityChatRoomHasUserInProximityChatSubscribtion();
         //if (proximityChatRoomHasUnreadMessagesSubscribtion) proximityChatRoomHasUnreadMessagesSubscribtion();
@@ -99,6 +103,12 @@
     function openRoomsIfCollapsedBeforeNewRoom(rooms: ChatRoom[]) {
         if (rooms.length !== 0 && displayRooms === false) {
             displayRooms = true;
+        }
+    }
+
+    function openDirectRoomsIfCollapsedBeforeNewRoom(directRooms: ChatRoom[]) {
+        if (directRooms.length !== 0 && displayDirectRooms === false) {
+            displayDirectRooms = true;
         }
     }
 

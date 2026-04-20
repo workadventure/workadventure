@@ -30,19 +30,16 @@ class MatrixProvider {
     private accessTokenPromise: Promise<string> | undefined;
     private roomAreaFolderName = slugify("current visited room");
     private roomAreaFolderID: string | undefined;
+    private roomAreaFolderIDPromise: Promise<string> | undefined;
 
     constructor() {
         this.overrideRateLimitForAdminAccount().catch((error) => {
             console.error("Failed to override admin account ratelimit:", error);
         });
 
-        this.createChatFolderAreaAndSetID()
-            .then((roomID) => {
-                this.roomAreaFolderID = roomID;
-            })
-            .catch((error) => {
-                console.error("Failed to create chat folder for room area:", error);
-            });
+        this.getRoomAreaFolderID().catch((error) => {
+            console.error("Failed to create chat folder for room area:", error);
+        });
     }
 
     private async getAxios(): Promise<AxiosInstance> {
@@ -235,6 +232,7 @@ class MatrixProvider {
     }
 
     async createRoomForArea(): Promise<string> {
+        const roomAreaFolderID = MATRIX_DOMAIN ? await this.getRoomAreaFolderID() : undefined;
         const options: ICreateRoomOpts = {
             visibility: Visibility.Private,
             initial_state: [
@@ -250,10 +248,10 @@ class MatrixProvider {
             },
         };
 
-        if (this.roomAreaFolderID && MATRIX_DOMAIN) {
+        if (roomAreaFolderID && MATRIX_DOMAIN) {
             options.initial_state?.push({
                 type: EventType.SpaceParent,
-                state_key: this.roomAreaFolderID,
+                state_key: roomAreaFolderID,
                 content: {
                     via: [MATRIX_DOMAIN],
                 },
@@ -373,6 +371,26 @@ class MatrixProvider {
         }
     }
 
+    private async getRoomAreaFolderID(): Promise<string> {
+        if (this.roomAreaFolderID) {
+            return this.roomAreaFolderID;
+        }
+
+        if (!this.roomAreaFolderIDPromise) {
+            this.roomAreaFolderIDPromise = this.createChatFolderAreaAndSetID()
+                .then((roomAreaFolderID) => {
+                    this.roomAreaFolderID = roomAreaFolderID;
+                    return roomAreaFolderID;
+                })
+                .catch((error) => {
+                    this.roomAreaFolderIDPromise = undefined;
+                    throw error;
+                });
+        }
+
+        return this.roomAreaFolderIDPromise;
+    }
+
     private async getChatFolderAreaID(): Promise<string | undefined> {
         const axiosInstance = await this.getAxios();
         const response = await axiosInstance.get(
@@ -386,18 +404,18 @@ class MatrixProvider {
     }
 
     async AddRoomToFolder(roomID: string): Promise<string> {
-        if (!this.roomAreaFolderID) {
-            console.error(new Error(`Failed to add room : ${roomID} to room area folder `));
+        if (!MATRIX_DOMAIN) {
             return roomID;
         }
 
+        const roomAreaFolderID = await this.getRoomAreaFolderID();
         const roomLinkContent = {
             via: [MATRIX_DOMAIN],
         };
 
         const axiosInstance = await this.getAxios();
         const response = await axiosInstance.put(
-            `_matrix/client/r0/rooms/${this.roomAreaFolderID}/state/m.space.child/${roomID}`,
+            `_matrix/client/r0/rooms/${roomAreaFolderID}/state/m.space.child/${roomID}`,
             roomLinkContent
         );
         if (response.status === 200) {
