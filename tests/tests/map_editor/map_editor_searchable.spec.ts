@@ -45,10 +45,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Entity
         await MapEditor.openEntityEditor(page);
-        await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 1, 6.5 * 32 - 10);
+        await EntityEditor.selectEntity(page, 0, "coffee");
+        await EntityEditor.moveAndClick(page, 1 * 32, 6.5 * 32);
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 1, 6.5 * 32 - 10);
+        await EntityEditor.moveAndClick(page, 1 * 32, 6.5 * 32);
         await EntityEditor.setEntityName(page, "My Play Audio Entity");
         await EntityEditor.setEntityDescription(
             page,

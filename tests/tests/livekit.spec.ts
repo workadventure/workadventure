@@ -326,22 +326,14 @@ test.describe("Meeting actions test", () => {
 
         await AreaLivekit.openAreaEditorAndAddAreaLivekit(page, true, true);
 
-        await Map.teleportToPosition(
-            page,
-            AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.x,
-            AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.y,
-        );
+        await Map.teleportToPosition(page, AreaLivekit.entityPositionInArea.x, AreaLivekit.entityPositionInArea.y);
 
         await Map.teleportToPosition(page, 0, 0);
 
         await Menu.expectButtonState(page, "microphone-button", "normal");
         await Menu.expectButtonState(page, "camera-button", "normal");
 
-        await Map.teleportToPosition(
-            page,
-            AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.x,
-            AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.y,
-        );
+        await Map.teleportToPosition(page, AreaLivekit.entityPositionInArea.x, AreaLivekit.entityPositionInArea.y);
 
         await page.getByTestId("camera-button").click();
 
