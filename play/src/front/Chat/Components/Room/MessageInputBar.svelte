@@ -149,7 +149,9 @@
     }
 
     function onInputHandler() {
-        if (message == "" || message == undefined) {
+        // We remove the <br> tags and the whitespace to check if the message is empty
+        const messageToSend = message.replace(/<br>/g, "").trim();
+        if (messageToSend == "" || messageToSend == undefined) {
             if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
             room.stopTyping().catch((error) => console.error(error));
         }
