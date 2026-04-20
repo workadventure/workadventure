@@ -7,8 +7,8 @@ export const AuthTokenData = z.object({
     accessToken: z.string().optional(),
     username: z.string().optional(),
     locale: z.string().optional(),
-    tags: z.preprocess(
-        (val) => {
+    tags: z
+        .preprocess((val) => {
             if (typeof val === "string") {
                 try {
                     return JSON.parse(val);
@@ -17,16 +17,15 @@ export const AuthTokenData = z.object({
                 }
             }
             return val;
-        },
-        z.string().array()
-    ).optional(),
+        }, z.string().array())
+        .optional(),
     matrixUserId: z.string().optional(),
 });
 export type AuthTokenData = z.infer<typeof AuthTokenData>;
 
 export const AccessTokenData = z.object({
-    tags: z.preprocess(
-        (val) => {
+    tags: z
+        .preprocess((val) => {
             if (typeof val === "string") {
                 try {
                     return JSON.parse(val);
@@ -35,9 +34,8 @@ export const AccessTokenData = z.object({
                 }
             }
             return val;
-        },
-        z.string().array()
-    ).optional(),
+        }, z.string().array())
+        .optional(),
 });
 export type AccessTokenData = z.infer<typeof AccessTokenData>;
 
