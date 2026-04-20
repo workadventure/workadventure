@@ -6,14 +6,12 @@ import type { SignalData } from "@workadventure/simple-peer";
 import { asError } from "catch-unknown";
 import { raceTimeout } from "../Utils/PromiseUtils";
 import type { WebRtcSignalReceivedMessageInterface } from "../Connection/ConnexionModels";
-import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { localStreamStoreForPublishing, type LocalStreamStoreValue } from "../Stores/MediaStore";
 import { RetryWithBackoff } from "../Utils/RetryWithBackoff";
 import { warningMessageStore } from "../Stores/ErrorStore";
-import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import LL from "../../i18n/i18n-svelte";
 import { RemotePeer } from "./RemotePeer";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
@@ -58,21 +56,16 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     // Delayed reset for attempt counter - keeps history if connection is unstable
     private readonly attemptResetTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
     private readonly ATTEMPT_RESET_DELAY_MS = 60_000; // Wait 60 seconds of stable connection before resetting attempts
-    private readonly effectiveScreenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>;
 
     constructor(
         private _space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
-        private _screenSharingLocalStreamStore = screenSharingLocalStreamStore,
+        private _screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>,
         private _analyticsClient = analyticsClient,
         private _customWebRTCLogger = customWebRTCLogger,
         private _localStreamStore = localStreamStoreForPublishing
     ) {
-        this.effectiveScreenSharingLocalStreamStore = deriveSwitchStore(
-            this._screenSharingLocalStreamStore,
-            this._space.shouldPublishScreenShareStore
-        );
         // Initialize retry manager with 30 attempts, backoff up to 15 seconds
         this.retryManager = new RetryWithBackoff({
             maxAttempts: 30,
@@ -81,17 +74,24 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             backoffMultiplier: 1.2,
         });
 
+        let isStreaming: boolean = false;
+
         this._unsubscribers.push(
-            this.effectiveScreenSharingLocalStreamStore.subscribe((streamResult) => {
-                if (streamResult?.type === "error") {
+            this._screenSharingLocalStreamStore.subscribe((streamResult) => {
+                if (streamResult && streamResult.type === "error") {
+                    // Let's ignore screen sharing errors, we will deal with those in a different way.
                     return;
                 }
-                const stream = streamResult?.stream;
-                if (stream) {
-                    this.sendLocalScreenSharingStream(stream);
-                    return;
+
+                if (streamResult && streamResult.stream !== undefined) {
+                    isStreaming = true;
+                    this.sendLocalScreenSharingStream(streamResult.stream);
+                } else {
+                    if (isStreaming) {
+                        this.stopLocalScreenSharingStream();
+                        isStreaming = false;
+                    }
                 }
-                this.stopLocalScreenSharingStream();
             })
         );
 
@@ -256,11 +256,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 // eslint-disable-next-line listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener
                 peer.on("connect", () => {
                     const streamResult = get(this._screenSharingLocalStreamStore);
-                    if (
-                        streamResult.type === "success" &&
-                        streamResult.stream !== undefined &&
-                        this._space.shouldPublishScreenShare()
-                    ) {
+                    if (streamResult && streamResult.type === "success" && streamResult.stream !== undefined) {
                         this.sendLocalScreenSharingStreamToUser(user.userId, streamResult.stream);
                     }
 
@@ -688,7 +684,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     'Could not find peer whose ID is "' + data.userId + '" in receiveWebrtcScreenSharingSignal'
                 );
                 this._customWebRTCLogger.info("Attempt to create new peer connection");
-                if (stream && this._space.shouldPublishScreenShare()) {
+                if (stream) {
                     this.sendLocalScreenSharingStreamToUser(data.userId, stream);
                 }
             }
@@ -698,21 +694,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             //Comment this peer connection because if we delete and try to reshare screen, the RTCPeerConnection send renegotiate event. This array will be removed when user left circle discussion
             //await this.receiveWebrtcScreenSharingSignal(data, spaceUser);
         }
-    }
-
-    /**
-     * Syncs screen share send state with the effective publish permissions.
-     * If no effective stream is available, unpublish all local screen sharing peers.
-     */
-    async syncScreenSharePublishState(): Promise<void> {
-        const streamValue = get(this.effectiveScreenSharingLocalStreamStore);
-        const stream = streamValue?.type === "success" ? streamValue.stream : undefined;
-        if (stream) {
-            this.sendLocalScreenSharingStream(stream);
-            return Promise.resolve();
-        }
-        this.stopLocalScreenSharingStream();
-        return Promise.resolve();
     }
 
     /**

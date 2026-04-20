@@ -260,32 +260,6 @@ export class Space implements SpaceInterface {
 
         this._blockedUsersStore.set(this._blackListManager.getBlackListedUsers());
 
-        this._peerManager = new SpacePeerManager(this, this._allBlockedUsersStore);
-        this.registerPeerManagerEventHandlers();
-
-        this.observeSyncUserAdded = this.observePrivateEvent("addSpaceUserMessage").subscribe((message) => {
-            if (!message.addSpaceUserMessage.user) {
-                console.error("addSpaceUserMessage is missing a user");
-                return;
-            }
-            this.addUser(message.addSpaceUserMessage.user);
-        });
-        this.observeSyncUserUpdated = this.observePrivateEvent("updateSpaceUserMessage").subscribe((message) => {
-            if (!message.updateSpaceUserMessage.user || !message.updateSpaceUserMessage.updateMask) {
-                console.error("updateSpaceUserMessage is missing a user or an updateMask");
-                return;
-            }
-            this.updateUserData(message.updateSpaceUserMessage.user, message.updateSpaceUserMessage.updateMask).catch(
-                (error) => {
-                    console.error("An error occurred while updating user data", error);
-                    Sentry.captureException(error);
-                }
-            );
-        });
-        this.observeSyncUserRemoved = this.observePrivateEvent("removeSpaceUserMessage").subscribe((message) => {
-            this.removeUser(message.removeSpaceUserMessage.spaceUserId);
-        });
-
         // Initialize speaker and listener streaming stores
         this._isSpeakerStreamingStore = writable(false);
         this._isListenerStreamingStore = writable(false);
@@ -309,6 +283,27 @@ export class Space implements SpaceInterface {
                 !(this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && !$isSpeakerStreaming) &&
                 this.isVideoSpace()
             );
+        });
+
+        this._peerManager = new SpacePeerManager(this, this._allBlockedUsersStore);
+        this.registerPeerManagerEventHandlers();
+
+        this.observeSyncUserAdded = this.observePrivateEvent("addSpaceUserMessage").subscribe((message) => {
+            if (!message.addSpaceUserMessage.user) {
+                console.error("addSpaceUserMessage is missing a user");
+                return;
+            }
+            this.addUser(message.addSpaceUserMessage.user);
+        });
+        this.observeSyncUserUpdated = this.observePrivateEvent("updateSpaceUserMessage").subscribe((message) => {
+            if (!message.updateSpaceUserMessage.user || !message.updateSpaceUserMessage.updateMask) {
+                console.error("updateSpaceUserMessage is missing a user or an updateMask");
+                return;
+            }
+            this.updateUserData(message.updateSpaceUserMessage.user, message.updateSpaceUserMessage.updateMask);
+        });
+        this.observeSyncUserRemoved = this.observePrivateEvent("removeSpaceUserMessage").subscribe((message) => {
+            this.removeUser(message.removeSpaceUserMessage.spaceUserId);
         });
 
         this.observeSyncBlockUser = this.observePrivateEvent("blockUserMessage").subscribe((message) => {
@@ -669,7 +664,7 @@ export class Space implements SpaceInterface {
                         );
                     }
 
-                    if (user.screenSharingState && this.shouldShowRemoteUserScreenShare(user)) {
+                    if (user.screenSharingState) {
                         const screenShareVideoBox = this.getEmptyVideoBox(extendSpaceUser, true);
                         const screenShareStreamable = this.spacePeerManager.getScreenSharingForUser(user.spaceUserId);
                         if (screenShareStreamable) {
@@ -751,7 +746,7 @@ export class Space implements SpaceInterface {
         }
     }
 
-    async updateUserData(newData: SpaceUser, updateMask: string[]): Promise<void> {
+    updateUserData(newData: SpaceUser, updateMask: string[]): void {
         if (!newData.spaceUserId && newData.spaceUserId !== "") return;
 
         const userToUpdate = this._users.get(newData.spaceUserId);
@@ -805,36 +800,10 @@ export class Space implements SpaceInterface {
                     this.applyMuteAudioToStreamable(streamable, userToUpdate);
                 }
             }
-            // When a remote user becomes listener and we are listener, remove their screen share box only (listeners don't see other listeners' screen share)
-            if (!this.shouldShowRemoteUserScreenShare(userToUpdate)) {
-                this.allScreenShareStreamStore.get(userToUpdate.spaceUserId)?.destroy();
-                this.allScreenShareStreamStore.delete(userToUpdate.spaceUserId);
-            } else if (
-                userToUpdate.screenSharingState &&
-                !this.allScreenShareStreamStore.get(userToUpdate.spaceUserId)
-            ) {
-                // Remote user became speaker (or we became speaker): create screen share box if they share and we don't have one yet
-                const screenShareVideoBox = this.getEmptyVideoBox(userToUpdate, true);
-                const streamable = this._peerManager.getScreenSharingForUser(userToUpdate.spaceUserId);
-                if (streamable) {
-                    this.applyMuteAudioToStreamable(streamable, userToUpdate);
-                    screenShareVideoBox.setNewStreamable(streamable);
-                }
-                this.allScreenShareStreamStore.set(userToUpdate.spaceUserId, screenShareVideoBox);
-                this._highlightedEmbedScreenStore.highlight(screenShareVideoBox);
-            }
-        }
-        if (maskedNewData.megaphoneState !== undefined && userToUpdate.spaceUserId === this._mySpaceUserId) {
-            try {
-                await this._peerManager.syncScreenSharePublishState();
-            } catch (error) {
-                console.error("An error occurred while syncing screen share publish state", error);
-                Sentry.captureException(error);
-            }
         }
 
         if (maskedNewData.screenSharingState !== undefined && userToUpdate.spaceUserId !== this._mySpaceUserId) {
-            if (maskedNewData.screenSharingState && this.shouldShowRemoteUserScreenShare(userToUpdate)) {
+            if (maskedNewData.screenSharingState) {
                 const videoBox = this.getEmptyVideoBox(userToUpdate, true);
                 const streamable = this._peerManager.getScreenSharingForUser(userToUpdate.spaceUserId);
                 if (streamable) {
@@ -844,14 +813,11 @@ export class Space implements SpaceInterface {
 
                 this.allScreenShareStreamStore.set(userToUpdate.spaceUserId, videoBox);
                 this._highlightedEmbedScreenStore.highlight(videoBox);
-            } else if (!maskedNewData.screenSharingState) {
+            } else {
                 this.allScreenShareStreamStore.get(userToUpdate.spaceUserId)?.destroy();
                 this.allScreenShareStreamStore.delete(userToUpdate.spaceUserId);
             }
         }
-        /*if (this._setUsers) {
-            this._setUsers(this._users);
-        }*/
     }
 
     private extendSpaceUser(user: SpaceUser): SpaceUserExtended {
@@ -1096,20 +1062,6 @@ export class Space implements SpaceInterface {
     }
 
     /**
-     * Determines whether a remote user's screen share box should be shown.
-     * In see-attendees spaces (LIVE_STREAMING_USERS_WITH_FEEDBACK), only remote speakers'
-     * screen shares are displayed. Remote listeners' screen shares are hidden.
-     * Used only for screen share boxes, not for camera video boxes.
-     */
-    private shouldShowRemoteUserScreenShare(user: SpaceUser): boolean {
-        if (this.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
-            return true;
-        }
-
-        return user.megaphoneState === true;
-    }
-
-    /**
      * Applies the muteAudio logic to a streamable based on the user's state.
      */
     private applyMuteAudioToStreamable(streamable: Streamable, user: SpaceUser): void {
@@ -1131,7 +1083,7 @@ export class Space implements SpaceInterface {
      * Start streaming the local camera and microphone to other users in the space as a speaker.
      * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
      */
-    public startStreaming(): void {
+    public startStreaming() {
         if (this.filterType === FilterType.ALL_USERS) {
             throw new Error("Cannot start streaming in a ALL_USERS space because everyone is always streaming");
         }
@@ -1147,7 +1099,7 @@ export class Space implements SpaceInterface {
      * Stop streaming the local camera and microphone to other users in the space as a speaker.
      * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
      */
-    public stopStreaming(): void {
+    public stopStreaming() {
         if (this.filterType === FilterType.ALL_USERS) {
             throw new Error("Cannot stop streaming in a ALL_USERS space because everyone is always streaming");
         }
@@ -1369,38 +1321,6 @@ export class Space implements SpaceInterface {
             videoBox.setNewStreamable(peer);
 
             this._highlightedEmbedScreenStore.highlight(videoBox);
-        });
-    }
-
-    private subscribeToConnectionStateChanges(
-        existingSubscription: Subscription | undefined,
-        observable: Observable<{ type: "reset" | "add" | "remove"; userId?: string }>,
-        store: Writable<Set<string>>
-    ): Subscription {
-        existingSubscription?.unsubscribe();
-
-        return observable.subscribe((event) => {
-            if (event.type === "reset") {
-                store.set(new Set<string>());
-                return;
-            }
-
-            const userId = event.userId;
-            if (!userId) {
-                console.error("subscribeToConnectionStateChanges : event has no userId", event);
-                Sentry.captureMessage("subscribeToConnectionStateChanges : event has no userId");
-                return;
-            }
-
-            store.update((connections) => {
-                const newSet = new Set(connections);
-                if (event.type === "add") {
-                    newSet.add(userId);
-                } else {
-                    newSet.delete(userId);
-                }
-                return newSet;
-            });
         });
     }
 }

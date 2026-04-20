@@ -1,6 +1,7 @@
 import type { Readable } from "svelte/store";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import type { SpaceInterface } from "../SpaceInterface";
+import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
 import type {
     SimplePeerConnectionInterface,
     PeerFactoryInterface,
@@ -12,9 +13,10 @@ export const defaultPeerFactory: PeerFactoryInterface = {
     create: (
         _space: SpaceInterface,
         _streamableSubjects: StreamableSubjects,
-        _blockedUsersStore: Readable<Set<string>>
+        _blockedUsersStore: Readable<Set<string>>,
+        _screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>
     ) => {
-        const peer = new SimplePeer(_space, _streamableSubjects, _blockedUsersStore);
+        const peer = new SimplePeer(_space, _streamableSubjects, _blockedUsersStore, _screenSharingLocalStreamStore);
         return peer;
     },
 };
@@ -26,9 +28,15 @@ export class WebRTCState implements ICommunicationState {
         private _space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
         _blockedUsersStore: Readable<Set<string>>,
+        _screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>,
         private _peerFactory: PeerFactoryInterface = defaultPeerFactory
     ) {
-        this._peer = this._peerFactory.create(this._space, this._streamableSubjects, _blockedUsersStore);
+        this._peer = this._peerFactory.create(
+            this._space,
+            this._streamableSubjects,
+            _blockedUsersStore,
+            _screenSharingLocalStreamStore
+        );
     }
 
     destroy() {
@@ -45,10 +53,6 @@ export class WebRTCState implements ICommunicationState {
 
     dispatchStream(mediaStream: MediaStream): void {
         this._peer.dispatchStream(mediaStream);
-    }
-
-    async syncScreenSharePublishState(): Promise<void> {
-        await this._peer.syncScreenSharePublishState();
     }
 
     blockRemoteUser(userId: string): void {
