@@ -1519,7 +1519,10 @@ export class SocketManager {
         }
 
         if (space) {
-            space.publishMetadata(isMetadata.data);
+            space.updateMetadata(isMetadata.data, updateSpaceMetadataMessage.senderId).catch((error) => {
+                console.error("Error updating metadata", error);
+                Sentry.captureException(error);
+            });
         }
     }
 

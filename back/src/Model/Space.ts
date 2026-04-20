@@ -26,6 +26,7 @@ import { CommunicationManager } from "./CommunicationManager";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ManagedRecordingState } from "./RecordingManager";
+import { metadataProcessor } from "./MetadataProcessorInit";
 
 const debug = Debug("space");
 
@@ -261,26 +262,23 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         }
     }
 
-    public publishMetadata(metadata: { [key: string]: unknown }) {
-        if (Object.keys(metadata).length === 0) {
-            return;
+    public async updateMetadata(metadata: { [key: string]: unknown }, senderId: string) {
+        const processedMetadata: { [key: string]: unknown } = {};
+        const promises: Promise<void>[] = [];
+
+        for (const key in metadata) {
+            promises.push(
+                metadataProcessor.processMetadata(key, metadata[key], senderId, this).then((processedValue) => {
+                    if (processedValue !== undefined) {
+                        processedMetadata[key] = processedValue;
+                    }
+                })
+            );
         }
 
-        for (const [key, value] of Object.entries(metadata)) {
-            this.metadata.set(key, value);
-        }
+        await Promise.allSettled(promises);
 
-        this.notifyWatchers({
-            message: {
-                $case: "updateSpaceMetadataMessage",
-                updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
-                    spaceName: this.name,
-                    metadata: JSON.stringify(metadata),
-                }),
-            },
-        });
-
-        debug(`${this.name} : metadata => updated`);
+        this.publishMetadata(processedMetadata);
     }
 
     private filterOneUser(user: SpaceUser): boolean {
@@ -760,6 +758,28 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     public destroy() {
         this.communicationManager.destroy();
         debug(`${this.name} => destroyed`);
+    }
+
+    public publishMetadata(metadata: { [key: string]: unknown }): void {
+        if (Object.keys(metadata).length === 0) {
+            return;
+        }
+
+        for (const [key, value] of Object.entries(metadata)) {
+            this.metadata.set(key, value);
+        }
+
+        this.notifyWatchers({
+            message: {
+                $case: "updateSpaceMetadataMessage",
+                updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
+                    spaceName: this.name,
+                    metadata: JSON.stringify(metadata),
+                }),
+            },
+        });
+
+        debug(`${this.name} : metadata => updated`);
     }
 
     private async stopRecordingIfUserCompletelyLeftSpace(spaceUserId: string): Promise<void> {
