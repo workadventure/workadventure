@@ -319,7 +319,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await EntityEditor.moveAndClick(
             page2,
             AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
+            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y - 10,
         );
 
         await expect(page2.getByTestId("openWebsite")).toBeHidden();
@@ -440,27 +440,27 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
 
         // Add a first area
         await Menu.openMapEditor(page);
-        await AreaAccessRights.openAreaEditorAndAddArea(page);
+        await AreaAccessRights.openAreaEditorAndAddArea(page, { x: 1 * 32, y: 1 * 32 }, { x: 3 * 32, y: 3 * 32 });
         await page.getByTestId("personalAreaPropertyData").click();
         await Menu.closeMapEditor(page);
 
         // Add a second area
         await Menu.openMapEditor(page);
-        await AreaAccessRights.openAreaEditorAndAddArea(page, { x: 1 * 32, y: 9 * 32 }, { x: 9 * 32, y: 10 * 32 });
+        await AreaAccessRights.openAreaEditorAndAddArea(page, { x: 1 * 32, y: 4 * 32 }, { x: 3 * 32, y: 6 * 32 });
         await page.getByTestId("personalAreaPropertyData").click();
         await Menu.closeMapEditor(page);
 
         // Try to claim the area
-        await Map.walkToPosition(page, 6 * 32 + 10, 3 * 32 + 10);
+        await Map.teleportToPosition(page, 2 * 32, 2 * 32);
         await page.getByTestId("claimPersonalAreaButton").click();
 
         // Check if the second area is claimable
-        await Map.walkToPosition(page, 6 * 32 + 10, 9 * 32 + 10);
+        await Map.teleportToPosition(page, 2 * 32, 5 * 32);
         await expect(page.getByText("You already have a personal area")).toBeAttached();
         await expect(page.getByTestId("claimPersonalAreaReplaceConfirmButton")).toBeVisible();
 
         // Check if the first area is not claimable
-        await Map.walkToPosition(page, 6 * 32 + 10, 3 * 32 + 10);
+        await Map.teleportToPosition(page, 2 * 32, 2 * 32);
         await expect(page.getByTestId("claimPersonalAreaButton")).not.toBeAttached();
         await page.close();
         await page.context().close();

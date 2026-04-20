@@ -11,11 +11,11 @@ interface Coordinates {
 class AreaLivekit {
     private areaSize: { topLeft: Coordinates; bottomRight: Coordinates } = {
         topLeft: { x: 1, y: 2 * 32 },
-        bottomRight: { x: 9 * 32, y: 4 * 32 },
+        bottomRight: { x: 7 * 32, y: 4 * 32 },
     };
 
     public entityPositionInArea: Coordinates = { x: 4 * 32, y: 3 * 32 };
-    public entityPositionOutsideArea: Coordinates = { x: 6 * 32, y: 8 * 32 };
+    public entityPositionOutsideArea: Coordinates = { x: 6 * 32, y: 6 * 32 };
 
     public mouseCoordinatesToClickOnEntityInsideArea = {
         x: this.entityPositionInArea.x + 10,

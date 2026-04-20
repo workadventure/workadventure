@@ -35,7 +35,7 @@ test.describe("Map editor max users in area @oidc @nomobile @nowebkit", () => {
         // Create an area next to spawn and set max users to 1.
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 10 * 32, y: 7 * 32 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 6 * 32, y: 7 * 32 });
         await AreaEditor.addProperty(page, "maxUsersInAreaPropertyData");
 
         const maxUsersInput = page.locator("#maxUsersInArea");

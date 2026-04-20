@@ -13,11 +13,11 @@ interface Coordinates {
 class AreaAccessRights {
     private areaSize: { topLeft: Coordinates; bottomRight: Coordinates } = {
         topLeft: { x: 1 * 32, y: 2 * 32 },
-        bottomRight: { x: 9 * 32, y: 7 * 32 },
+        bottomRight: { x: 7 * 32, y: 7 * 32 },
     };
 
     public entityPositionInArea: Coordinates = { x: 4 * 32, y: 4 * 32 };
-    public entityPositionOutsideArea: Coordinates = { x: 8 * 32, y: 8 * 32 };
+    public entityPositionOutsideArea: Coordinates = { x: 4 * 32, y: 8 * 32 };
 
     public mouseCoordinatesToClickOnEntityInsideArea = {
         x: this.entityPositionInArea.x + 10,
@@ -62,7 +62,7 @@ class AreaAccessRights {
         await EntityEditor.moveAndClick(
             page,
             this.mouseCoordinatesToClickOnEntityOutsideArea.x,
-            this.mouseCoordinatesToClickOnEntityOutsideArea.y,
+            this.mouseCoordinatesToClickOnEntityOutsideArea.y - 10,
         );
         // Check that the cowebsite is opened
         await expect(page.locator("#cowebsites-container")).toBeVisible();
@@ -88,7 +88,7 @@ class AreaAccessRights {
         await EntityEditor.moveAndClick(
             page,
             this.mouseCoordinatesToClickOnEntityInsideArea.x,
-            this.mouseCoordinatesToClickOnEntityInsideArea.y,
+            this.mouseCoordinatesToClickOnEntityInsideArea.y - 10,
         );
         // Check that the cowebsite is opened
         await expect(page.locator("#cowebsites-container")).toBeVisible();
