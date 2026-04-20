@@ -94,14 +94,24 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
         this.bindEventHandlers();
 
+        // TODO: we need to improve this with a big derived (a store containing the mapEditorModeStore,
+        // one store containing if we are in a focus mode or not (and if we can exit the focus mode by
+        // moving the avatar), one listening to the zoom level
+
         // Subscribe to map editor mode store to change camera bounds when the map editor is opened or closed
         this.unsubscribeMapEditorModeStore = mapEditorModeStore.subscribe((isOpened) => {
             // Define new bounds for camera if the map editor is opened
             if (isOpened) {
-                this.camera.setBounds(0, 0, this.mapSize.width * 2, this.mapSize.height);
+                //this.camera.setBounds(0, 0, this.mapSize.width * 2, this.mapSize.height);
+                this.camera.setBounds(
+                    -this.mapSize.width,
+                    -this.mapSize.height,
+                    this.mapSize.width * 3,
+                    this.mapSize.height * 3
+                );
             } else {
                 // We set the bounds back after a call to start following the player
-                //this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
+                this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
             }
         });
 
@@ -170,7 +180,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             },
             onComplete: () => {
                 this.camera.startFollow(target, true, 1, 1, this.camera.followOffset.x, this.camera.followOffset.y);
-                this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
+                //this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
                 callback?.();
                 this.setFollowMode();
             },
@@ -400,9 +410,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         return targetZoomModifier - currentZoomModifier;
     }
 
-    public defineNewCameraBounds(width: number, height: number): void {
+    /*public defineNewCameraBounds(width: number, height: number): void {
         this.camera.setBounds(-width, -height, width * 3, height * 3, false);
-    }
+    }*/
 
     public lockZoom(): void {
         this.zoomLocked = true;
@@ -456,13 +466,13 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     public setExplorationMode(): void {
         this.camera.setFollowOffset(0, 0);
 
-        this.camera.setBounds(
-            -this.mapSize.width,
-            -this.mapSize.height,
-            this.mapSize.width * 3,
-            this.mapSize.height * 3,
-            false
-        );
+        // this.camera.setBounds(
+        //     -this.mapSize.width,
+        //     -this.mapSize.height,
+        //     this.mapSize.width * 3,
+        //     this.mapSize.height * 3,
+        //     false
+        // );
 
         this.explorerFocusOn = {
             x: this.camera.scrollX + this.camera.width / 2,
