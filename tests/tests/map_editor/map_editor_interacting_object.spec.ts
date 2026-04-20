@@ -59,11 +59,11 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         // Create entity on the map for the test
         await Menu.openMapEditor(page);
         await MapEditor.openEntityEditor(page);
-        await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32);
+        await EntityEditor.selectEntity(page, 0, "coffee");
+        await EntityEditor.moveAndClick(page, 1 * 32, 7.5 * 32);
         await EntityEditor.clearEntitySelection(page);
-        // await EntityEditor.moveAndClick(page, 1, 8.5 * 32);
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 - 10);
+        // await EntityEditor.moveAndClick(page, 1 * 32, 8.5 * 32);
+        await EntityEditor.moveAndClick(page, 1 * 32, 7.5 * 32);
         await EntityEditor.setEntityName(page, "My Open Link");
         await EntityEditor.addProperty(page, "openWebsite");
         await EntityEditor.setOpenLinkProperty(page, "https://workadventu.re");
@@ -84,7 +84,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         //eslint-disable-next-line playwright/no-wait-for-timeout
         await newPage.waitForTimeout(1000);
         // Move to the entity
-        await EntityEditor.moveAndRightClick(newPage, 0, 8.5 * 32);
+        await EntityEditor.moveAndRightClick(newPage, 1 * 32, 7.5 * 32 - 30);
 
         // Wait for the text to be visible
         try {
@@ -92,7 +92,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         } catch (error) {
             console.error("Error waiting for text to be visible", error);
             // Try again once
-            await EntityEditor.moveAndRightClick(newPage, 0, 8.5 * 32);
+            await EntityEditor.moveAndRightClick(newPage, 1 * 32, 7.5 * 32 - 30);
             //eslint-disable-next-line playwright/no-conditional-expect
             await expect(newPage.getByText("SPACE to interact with it 👀")).toBeVisible();
         }
@@ -111,11 +111,11 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         // Create entity on the map for the test
         await Menu.openMapEditor(page);
         await MapEditor.openEntityEditor(page);
-        await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 1, 6.5 * 32);
+        await EntityEditor.selectEntity(page, 0, "coffee");
+        await EntityEditor.moveAndClick(page, 1 * 32, 7.5 * 32);
         await EntityEditor.clearEntitySelection(page);
-        // await EntityEditor.moveAndClick(page, 1, 6.5 * 32);
-        await EntityEditor.moveAndClick(page, 1, 6.5 * 32 - 10);
+        // await EntityEditor.moveAndClick(page, 1 * 32, 7.5 * 32);
+        await EntityEditor.moveAndClick(page, 1 * 32, 7.5 * 32);
         await EntityEditor.setEntityName(page, "My Open Link");
         await EntityEditor.addProperty(page, "openFile");
         await EntityEditor.setOpenFileProperty(page);
@@ -126,8 +126,8 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         // // Wait for the map to be loaded
         // await Menu.waitForMapLoad(page);
 
-        // Move to the entity
-        await EntityEditor.moveAndRightClick(page, 0, 6.5 * 32);
+        // Move to the entity (slightly above)
+        await EntityEditor.moveAndRightClick(page, 1 * 32, 7.5 * 32 - 30);
 
         // Wait for the text to be visible
         await expect(page.getByText("SPACE to interact with it 👀")).toBeVisible({ timeout: 30000 });
@@ -188,7 +188,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
 
         // Now let's check Entity PDF file deletion
         await page.keyboard.press("e");
-        await EntityEditor.moveAndClick(page, 1, 6.5 * 32 - 10);
+        await EntityEditor.moveAndClick(page, 1 * 32, 7.5 * 32);
         await page.keyboard.press("Delete");
 
         // Check if the PDF files from entity iframe are accessible

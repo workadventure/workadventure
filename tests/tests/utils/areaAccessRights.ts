@@ -19,16 +19,6 @@ class AreaAccessRights {
     public entityPositionInArea: Coordinates = { x: 4 * 32, y: 4 * 32 };
     public entityPositionOutsideArea: Coordinates = { x: 4 * 32, y: 8 * 32 };
 
-    public mouseCoordinatesToClickOnEntityInsideArea = {
-        x: this.entityPositionInArea.x + 10,
-        y: this.entityPositionInArea.y,
-    };
-
-    public mouseCoordinatesToClickOnEntityOutsideArea = {
-        x: this.entityPositionOutsideArea.x + 10,
-        y: this.entityPositionOutsideArea.y,
-    };
-
     async openAreaEditorAndAddAreaWithRights(page: Page, writeRights: string[] = [], readRights: string[] = []) {
         await MapEditor.openAreaEditor(page);
         await AreaEditor.drawArea(page, this.areaSize.topLeft, this.areaSize.bottomRight);
@@ -48,22 +38,14 @@ class AreaAccessRights {
 
     async openEntityEditorAndAddEntityWithOpenLinkPropertyOutsideArea(page: Page) {
         await MapEditor.openEntityEditor(page);
-        await EntityEditor.selectEntity(page, 0, "small table");
+        await EntityEditor.selectEntity(page, 0, "coffee");
         await EntityEditor.moveAndClick(page, this.entityPositionOutsideArea.x, this.entityPositionOutsideArea.y);
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(
-            page,
-            this.mouseCoordinatesToClickOnEntityOutsideArea.x,
-            this.mouseCoordinatesToClickOnEntityOutsideArea.y,
-        );
+        await EntityEditor.moveAndClick(page, this.entityPositionOutsideArea.x, this.entityPositionOutsideArea.y);
         await EntityEditor.addProperty(page, "openWebsite");
         await page.getByPlaceholder("https://workadventu.re").first().fill("https://workadventu.re");
         await Menu.closeMapEditor(page);
-        await EntityEditor.moveAndClick(
-            page,
-            this.mouseCoordinatesToClickOnEntityOutsideArea.x,
-            this.mouseCoordinatesToClickOnEntityOutsideArea.y - 10,
-        );
+        await EntityEditor.moveAndClick(page, this.entityPositionOutsideArea.x, this.entityPositionOutsideArea.y);
         // Check that the cowebsite is opened
         await expect(page.locator("#cowebsites-container")).toBeVisible();
         // Check that the url of website is visible
@@ -74,22 +56,14 @@ class AreaAccessRights {
 
     async openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(page: Page) {
         await MapEditor.openEntityEditor(page);
-        await EntityEditor.selectEntity(page, 0, "small table");
+        await EntityEditor.selectEntity(page, 0, "coffee");
         await EntityEditor.moveAndClick(page, this.entityPositionInArea.x, this.entityPositionInArea.y);
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(
-            page,
-            this.mouseCoordinatesToClickOnEntityInsideArea.x,
-            this.mouseCoordinatesToClickOnEntityInsideArea.y,
-        );
+        await EntityEditor.moveAndClick(page, this.entityPositionInArea.x, this.entityPositionInArea.y);
         await EntityEditor.addProperty(page, "openWebsite");
         await page.getByPlaceholder("https://workadventu.re").first().fill("https://workadventu.re");
         await Menu.closeMapEditor(page);
-        await EntityEditor.moveAndClick(
-            page,
-            this.mouseCoordinatesToClickOnEntityInsideArea.x,
-            this.mouseCoordinatesToClickOnEntityInsideArea.y - 10,
-        );
+        await EntityEditor.moveAndClick(page, this.entityPositionInArea.x, this.entityPositionInArea.y);
         // Check that the cowebsite is opened
         await expect(page.locator("#cowebsites-container")).toBeVisible();
         // Check that the url of website is visible

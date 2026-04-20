@@ -17,7 +17,7 @@ class AreaLivekit {
     public entityPositionInArea: Coordinates = { x: 4 * 32, y: 3 * 32 };
     public entityPositionOutsideArea: Coordinates = { x: 6 * 32, y: 6 * 32 };
 
-    public mouseCoordinatesToClickOnEntityInsideArea = {
+    public entityPositionInArea = {
         x: this.entityPositionInArea.x + 10,
         y: this.entityPositionInArea.y - 16,
     };
