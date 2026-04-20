@@ -1,4 +1,3 @@
-version: "3.6"
 services:
   reverse-proxy:
     image: traefik:v3.6.1
@@ -37,7 +36,7 @@ services:
       - ENABLE_MAP_EDITOR
       - MAP_EDITOR_ALLOWED_USERS
       - MAP_EDITOR_ALLOW_ALL_USERS
-      - PUSHER_URL=https://${DOMAIN}/
+      - PUSHER_URL=https://${DOMAIN}
       - ICON_URL=/icon
       - TURN_SERVER
       - TURN_USER
@@ -302,7 +301,7 @@ services:
       PATH_PREFIX: "/map-storage"
       ENTITY_COLLECTION_URLS: "https://${DOMAIN}/collections/FurnitureCollection.json,https://${DOMAIN}/collections/OfficeCollection.json"
       MAP_STORAGE_API_TOKEN: "${MAP_STORAGE_API_TOKEN:-${SECRET_KEY}}"
-      PUSHER_URL: "https://${DOMAIN}/"
+      PUSHER_URL: "https://${DOMAIN}"
     volumes:
       - map-storage-data:/maps
     labels:
