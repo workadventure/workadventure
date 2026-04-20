@@ -65,11 +65,11 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Select uploaded entity and move it to the map
         await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName());
-        await EntityEditor.moveAndClick(page, 2 * 32, 8.5 * 32);
+        await EntityEditor.moveAndClick(page, 5 * 32, 2.5 * 32);
 
         // Add open link interaction on uploaded asset
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 2 * 32, 8.5 * 32 - 11);
+        await EntityEditor.moveAndClick(page, 5 * 32, 2.5 * 32 - 11);
         await EntityEditor.addProperty(page, "openWebsite");
 
         // fill link
@@ -79,8 +79,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(page);
 
         // click on the object and open popup on both pages
-        await EntityEditor.moveAndClick(page, 2 * 32, 8.5 * 32 - 11);
-        await EntityEditor.moveAndClick(page2, 2 * 32, 8.5 * 32 - 11);
+        await EntityEditor.moveAndClick(page, 5 * 32, 2.5 * 32 - 11);
+        await EntityEditor.moveAndClick(page2, 5 * 32, 2.5 * 32 - 11);
 
         // Check if the cowebsite is opened
         await expect(page.locator("#cowebsites-container")).toBeVisible();
@@ -117,11 +117,11 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Select uploaded entity and move it to the map
         await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName() + "OddSize");
-        await EntityEditor.moveAndClick(page, 6 * 32, 10 * 32, "browser");
+        await EntityEditor.moveAndClick(page, 4 * 32, 3.5 * 32);
 
         // Add open link interaction on uploaded asset
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 6 * 32, 10 * 32, "browser");
+        await EntityEditor.moveAndClick(page, 4 * 32, 3.5 * 32);
         await EntityEditor.addProperty(page, "openWebsite");
 
         // fill link
@@ -133,10 +133,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByTestId("camera-container").waitFor({ state: "detached" });
 
         // click on the object and open popup on both pages
-        await EntityEditor.moveAndClick(page, 6 * 32, 10 * 32, "browser");
+        await EntityEditor.moveAndClick(page, 4 * 32, 3.5 * 32);
 
         await page2.getByTestId("camera-container").waitFor({ state: "detached" });
-        await EntityEditor.moveAndClick(page2, 6 * 32, 10 * 32, "browser");
+        await EntityEditor.moveAndClick(page2, 4 * 32, 3.5 * 32);
 
         // Check if the cowebsite is opened
         await expect(page.locator("#cowebsites-container")).toBeVisible();

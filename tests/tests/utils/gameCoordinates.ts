@@ -7,6 +7,9 @@ export interface Coordinates {
 
 export type CoordinateSpace = "game" | "browser";
 
+/**
+ * Transform Phaser game coordinates to browser coordinates (where 0,0 is the top left corner of the browser viewport)
+ */
 export async function gameToBrowserCoordinates(page: Page, coordinates: Coordinates): Promise<Coordinates> {
     return page.evaluate((coordinates) => {
         const hooks = (
@@ -19,6 +22,20 @@ export async function gameToBrowserCoordinates(page: Page, coordinates: Coordina
 
         return hooks.gameToBrowserCoordinates(coordinates);
     }, coordinates);
+}
+
+/**
+ * Transform Phaser game coordinates to canvas coordinates (where 0,0 is the top left corner of the canvas), and
+ * where pixels are browser pixels (useful to decide where to click on the canvas)
+ */
+export async function gameToBrowserCanvasCoordinates(page: Page, coordinates: Coordinates): Promise<Coordinates> {
+    const browserCoordinates = await gameToBrowserCoordinates(page, coordinates);
+    const canvasCoordinates = await page.locator("#game canvas").boundingBox();
+
+    return {
+        x: browserCoordinates.x - canvasCoordinates.x,
+        y: browserCoordinates.y - canvasCoordinates.y,
+    };
 }
 
 export async function coordinatesToBrowserCoordinates(

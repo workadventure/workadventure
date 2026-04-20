@@ -31,7 +31,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 13 * 32, y: 0 }, { x: 15 * 32, y: 2 * 32 });
+        await AreaEditor.drawArea(page, { x: 0 * 32, y: 0 }, { x: 2 * 32, y: 2 * 32 });
         await AreaEditor.setAreaName(page, "MyStartZone");
         await AreaEditor.addProperty(page, "startAreaProperty");
         await Menu.closeMapEditor(page);
@@ -45,13 +45,13 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 8 * 32, y: 8 * 32 }, { x: 10 * 32, y: 10 * 32 });
+        await AreaEditor.drawArea(page, { x: 4 * 32, y: 4 * 32 }, { x: 6 * 32, y: 6 * 32 });
         await AreaEditor.addProperty(page, "exitAreaProperty");
         await AreaEditor.setExitProperty(page, "maps/start_defined.wam", "MyStartZone");
         await Menu.closeMapEditor(page);
 
         try {
-            await Map.teleportToPosition(page, 9 * 32, 9 * 32);
+            await Map.teleportToPosition(page, 5 * 32, 5 * 32);
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (_) {
             // evaluateScript will throw an error if the script frame unloaded because of page change
