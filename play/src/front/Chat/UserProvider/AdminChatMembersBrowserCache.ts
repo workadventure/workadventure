@@ -17,21 +17,16 @@ export type AdminChatMembersBrowserCacheOptions = {
  * Entries expire after {@link AdminChatMembersBrowserCacheOptions.ttlMs}.
  */
 export class AdminChatMembersBrowserCache {
-    private readonly ttlMs: number;
     private memory: { members: ChatMember[]; cachedAt: number } | undefined;
-
-    constructor(private readonly options: AdminChatMembersBrowserCacheOptions = {}) {
-        this.ttlMs = options.ttlMs ?? DEFAULT_TTL_MS;
-    }
 
     /** Returns cached members if still fresh, otherwise `undefined`. */
     get(): ChatMember[] | undefined {
         const now = Date.now();
-        if (this.memory !== undefined && now - this.memory.cachedAt < this.ttlMs) {
+        if (this.memory !== undefined && now - this.memory.cachedAt < DEFAULT_TTL_MS) {
             return this.memory.members;
         }
         const persisted = this.readPersisted();
-        if (persisted !== undefined && now - persisted.cachedAt < this.ttlMs) {
+        if (persisted !== undefined && now - persisted.cachedAt < DEFAULT_TTL_MS) {
             this.memory = persisted;
             return persisted.members;
         }
@@ -46,7 +41,7 @@ export class AdminChatMembersBrowserCache {
     }
 
     private getStorageKey(): string {
-        const scope = this.options.scopeKey ?? (typeof window !== "undefined" ? window.location.pathname : "");
+        const scope = typeof window !== "undefined" ? window.location.pathname : "";
         return SESSION_STORAGE_KEY_PREFIX + scope;
     }
 
@@ -61,7 +56,7 @@ export class AdminChatMembersBrowserCache {
                 return undefined;
             }
             const parsed = JSON.parse(raw) as { ts: number; members: ChatMember[] };
-            if (Date.now() - parsed.ts > this.ttlMs) {
+            if (Date.now() - parsed.ts > DEFAULT_TTL_MS) {
                 sessionStorage.removeItem(key);
                 return undefined;
             }
