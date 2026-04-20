@@ -1782,13 +1782,16 @@ export class RoomConnection implements RoomConnection {
         return answer.getMemberAnswer.member;
     }
 
-    public async queryChatMembers(searchText: string): Promise<ChatMembersAnswer> {
-        const answer = await this.query({
-            $case: "chatMembersQuery",
-            chatMembersQuery: {
-                searchText,
+    public async queryChatMembers(searchText: string, signal?: AbortSignal): Promise<ChatMembersAnswer> {
+        const answer = await this.query(
+            {
+                $case: "chatMembersQuery",
+                chatMembersQuery: {
+                    searchText,
+                },
             },
-        });
+            { signal }
+        );
         if (answer.$case !== "chatMembersAnswer") {
             throw new Error("Unexpected answer");
         }
