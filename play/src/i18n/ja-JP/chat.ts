@@ -219,7 +219,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         openCoWebsite: "共同ウェブサイトで開く",
         loadingAttachment: "Loading attachment...",
         attachmentDownloadError: "Unable to download this attachment.",
-        attachmentDecryptError: "Unable to decrypt this attachment.",
+        attachmentDecryptError: "この添付ファイルを復号できません。",
         copy: "リンクをコピーする",
         tooBig: "{fileName} は大きすぎます {maxFileSize}。",
         notLogged: "ファイルをアップロードするにはログインする必要があります。",

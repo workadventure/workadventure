@@ -16,6 +16,12 @@
     </div>
 {:else if $content.url !== undefined}
     <audio controls src={$content.url} class="max-w-full min-w-96 block p-2" />
+{:else}
+    <div class="text-xs text-white/80 px-2 py-2">
+        {$content.mediaErrorKind === "decrypt"
+            ? $LL.chat.file.attachmentDecryptError()
+            : $LL.chat.file.attachmentDownloadError()}
+    </div>
 {/if}
 
 <style>

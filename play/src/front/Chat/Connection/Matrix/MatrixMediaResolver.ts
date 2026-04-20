@@ -84,7 +84,7 @@ function isAbortError(error: unknown): boolean {
     return error instanceof DOMException && error.name === "AbortError";
 }
 
-function isEncryptedImageContent(content: MediaEventContent): boolean {
+function isEncryptedMediaContent(content: MediaEventContent): boolean {
     return content.file !== undefined;
 }
 
@@ -177,7 +177,7 @@ export async function resolveImageMediaFromEvent(
         };
     }
 
-    if (!isEncryptedImageContent(content)) {
+    if (!isEncryptedMediaContent(content)) {
         const thumbnailUrl = (
             content.info as
                 | {
@@ -269,7 +269,7 @@ export async function resolveAttachmentMediaFromEvent(
         };
     }
 
-    if (!isEncryptedImageContent(content)) {
+    if (!isEncryptedMediaContent(content)) {
         return {
             isEncrypted: false,
             sourceUrl: getHttpUrl(client, content.url ?? content.file?.url),

@@ -217,7 +217,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         openCoWebsite: "فتح في الموقع المشترك",
         loadingAttachment: "Loading attachment...",
         attachmentDownloadError: "Unable to download this attachment.",
-        attachmentDecryptError: "Unable to decrypt this attachment.",
+        attachmentDecryptError: "تعذر فك تشفير هذا المرفق.",
         copy: "نسخ الرابط",
         tooBig: "{fileName} كبير جدًا {maxFileSize}.",
         notLogged: "تحتاج إلى تسجيل الدخول لتحميل ملف.",

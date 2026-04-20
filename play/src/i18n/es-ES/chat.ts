@@ -218,7 +218,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         openCoWebsite: "Abrir en co-website",
         loadingAttachment: "Loading attachment...",
         attachmentDownloadError: "Unable to download this attachment.",
-        attachmentDecryptError: "Unable to decrypt this attachment.",
+        attachmentDecryptError: "No se puede descifrar este archivo adjunto.",
         copy: "copiar el enlace",
         tooBig: "{fileName} es demasiado grande {maxFileSize}.",
         notLogged: "Necesita iniciar sesión para subir un archivo.",
