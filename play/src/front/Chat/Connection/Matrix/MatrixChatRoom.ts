@@ -40,6 +40,7 @@ import { PollStartEvent } from "matrix-js-sdk/lib/extensible_events_v1/PollStart
 import type { Poll } from "matrix-js-sdk/lib/models/poll";
 import { PollEvent } from "matrix-js-sdk/lib/models/poll";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
+
 import type {
     ChatRoom,
     ChatRoomMember,
@@ -65,6 +66,7 @@ import { chatNotificationStore } from "../../../Stores/ProximityNotificationStor
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { MatrixChatMessage } from "./MatrixChatMessage";
+import { MatrixChatPoll } from "./MatrixChatPoll";
 import { MatrixChatPoll } from "./MatrixChatPoll";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
