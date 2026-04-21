@@ -91,6 +91,7 @@ export interface ChatRoom {
     readonly peerWaDisplayNameIfDifferent?: Readable<string | undefined>;
     readonly activateVisibleProfileSync?: () => () => void;
     readonly messages: Readable<readonly ChatMessage[]>;
+    readonly timelineItems: Readable<readonly ChatTimelineItem[]>;
     readonly sendMessage: (message: string) => void;
     readonly sendFiles: (files: FileList) => Promise<void>;
     readonly setTimelineAsRead: () => void;
@@ -160,6 +161,64 @@ export interface ChatMessageReaction {
     readonly reacted: Readable<boolean>;
     readonly component: { component: ComponentType<SvelteComponent>; props: Record<string, unknown> };
 }
+
+export type ChatPollKind = "open" | "closed";
+
+export type ChatPollAnswer = {
+    id: string;
+    text: string;
+    votes: number;
+    percentage: number;
+    isWinning: boolean;
+};
+
+export type ChatPollState = {
+    question: string;
+    kind: ChatPollKind;
+    answers: ChatPollAnswer[];
+    maxSelections: number;
+    isEnded: boolean;
+    hasVoted: boolean;
+    myAnswerIds: string[];
+    resultsVisible: boolean;
+    totalVotes: number;
+    spoiledVotes: number;
+    closingMessage?: string;
+    undecryptableRelationsCount: number;
+};
+
+export interface ChatPollItem {
+    id: string;
+    sender: AnyKindOfUser | undefined;
+    date: Date | null;
+    state: Readable<ChatPollState>;
+    canVote: Readable<boolean>;
+    canEnd: Readable<boolean>;
+    canDelete: Readable<boolean>;
+    vote: (answerIds: string[]) => Promise<void>;
+    end: () => Promise<void>;
+    remove: () => Promise<void>;
+}
+
+export type ChatTimelineItem =
+    | {
+          kind: "message";
+          id: string;
+          date: Date | null;
+          message: ChatMessage;
+      }
+    | {
+          kind: "system";
+          id: string;
+          date: Date | null;
+          message: ChatMessage;
+      }
+    | {
+          kind: "poll";
+          id: string;
+          date: Date | null;
+          poll: ChatPollItem;
+      };
 
 export type ChatMessageType = "proximity" | "text" | "incoming" | "outcoming" | "image" | "file" | "audio" | "video";
 export type ChatMessageContent = {
