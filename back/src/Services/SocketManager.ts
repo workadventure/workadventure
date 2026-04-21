@@ -1729,7 +1729,7 @@ export class SocketManager {
         }
     }
 
-    async handleRecordingWebhook(request: HandleRecordingWebhookRequest): Promise<void> {
+    handleRecordingWebhook(request: HandleRecordingWebhookRequest): void {
         const space = this.spaces.get(request.spaceName);
         if (!space) {
             console.warn(
@@ -1738,7 +1738,7 @@ export class SocketManager {
             return;
         }
 
-        await space.handleRecordingWebhook(request);
+        space.handleRecordingWebhook(request);
     }
 
     handleAddSpaceUserToNotifyMessage(pusher: SpacesWatcher, addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage) {

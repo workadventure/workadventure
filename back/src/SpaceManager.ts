@@ -9,7 +9,6 @@ import Debug from "debug";
 import type { sendUnaryData, ServerDuplexStream, ServerUnaryCall } from "@grpc/grpc-js";
 import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import * as Sentry from "@sentry/node";
-import { asError } from "catch-unknown";
 import { socketManager } from "./Services/SocketManager";
 import { SpacesWatcher } from "./Model/SpacesWatcher";
 
@@ -137,14 +136,8 @@ const spaceManager = {
         callback: sendUnaryData<Empty>
     ): void => {
         const request = call.request;
-        socketManager
-            .handleRecordingWebhook(request)
-            .then(() => {
-                callback(null, {});
-            })
-            .catch((error) => {
-                callback(asError(error));
-            });
+        socketManager.handleRecordingWebhook(request);
+        callback(null, {});
     },
 } satisfies SpaceManagerServer;
 
