@@ -81,6 +81,7 @@ export class DarkenOutsideAreaEffect {
         const pipeline = pp as DarkenOutsideAreaPipeline;
         // push initial uniforms on next onPreRender
         pipeline.setFeather(this._feather);
+        pipeline.setZoomLevel(this.camera.zoom);
         pipeline.setColor(this._color);
         return pipeline;
     }
@@ -131,6 +132,7 @@ export class DarkenOutsideAreaEffect {
         const syGL = cam.height - (syTop + sh);
 
         this.pipeline.setScreenRect(sx, syGL, sw, sh);
+        this.pipeline.setZoomLevel(cam.zoom);
         // feather/darkness are set via setters or tweens
     }
 
