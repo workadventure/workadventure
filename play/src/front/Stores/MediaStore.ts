@@ -711,6 +711,10 @@ async function runRawStreamUpdate(
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia(newConstraints);
+            if (generation !== rawStreamGeneration) {
+                stream.getTracks().forEach((track) => track.stop());
+                return nextConstraints;
+            }
             if (currentStream) {
                 const oldStream = currentStream;
                 if (oldStream.getVideoTracks().length > 0) {
