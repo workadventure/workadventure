@@ -406,6 +406,7 @@ export class LiveKitParticipant {
 
         // New Stream
         this._actualVideo = this.getVideoStream();
+        console.warn("LIVEKIT VIDEOPEERADDED",  this._actualVideo);
         this._streamableSubjects.videoPeerAdded.next(this._actualVideo);
     }
 

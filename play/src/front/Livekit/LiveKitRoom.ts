@@ -82,6 +82,12 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     public async prepareConnection(): Promise<Room> {
+        /*await new Promise((resolve) => {
+            setTimeout(() => {
+                resolve();
+            }, 3000);
+        });*/
+
         this.room = new Room({
             adaptiveStream: {
                 pauseVideoInBackground: true,
