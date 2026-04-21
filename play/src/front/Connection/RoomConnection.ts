@@ -886,8 +886,13 @@ export class RoomConnection implements RoomConnection {
                 $case: "joinRoomFrontMessage",
                 joinRoomFrontMessage: {
                     name,
-                    positionMessage: position,
-                    viewportMessage: viewport,
+                    positionMessage: this.toPositionMessage(
+                        position.x,
+                        position.y,
+                        position.direction,
+                        position.moving
+                    ),
+                    viewportMessage: this.toViewportMessage(viewport),
                     availabilityStatus,
                     tabId,
                 },
