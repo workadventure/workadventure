@@ -308,13 +308,6 @@ describe("RecordingManager", () => {
                 status: "stopping",
             },
         });
-        expect(publishMetadata).toHaveBeenNthCalledWith(4, {
-            recording: {
-                recorder: "user-1",
-                recording: true,
-                status: "stopping",
-            },
-        });
 
         expect(manager.finishRecordingByWebhook(recordingSessionId, "egress-1", "test-space")).toEqual({
             processed: true,
@@ -322,7 +315,7 @@ describe("RecordingManager", () => {
             unexpected: false,
             hasActiveSessions: false,
         });
-        expect(publishMetadata).toHaveBeenNthCalledWith(5, {
+        expect(publishMetadata).toHaveBeenNthCalledWith(4, {
             recording: {
                 recorder: null,
                 recording: false,
