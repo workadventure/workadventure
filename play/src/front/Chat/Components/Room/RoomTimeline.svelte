@@ -1,8 +1,9 @@
 <script lang="ts">
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
-    import { get } from "svelte/store";
+    import { get, readable, type Readable } from "svelte/store";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import type { ChatMessage, ChatRoom } from "../../Connection/ChatConnection";
+    import type { ChatMessage, ChatRoom, ChatTimelineItem } from "../../Connection/ChatConnection";
+    import type { PictureStore } from "../../../Stores/PictureStore";
     import getCloseImg from "../../images/get-close.png";
     import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
     import { intentionallyClosedChatDuringMeetingStore } from "../../../Stores/ChatStore";
@@ -14,6 +15,7 @@
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
+    import PollCard from "./PollCard.svelte";
     import TypingUsers from "./TypingUsers.svelte";
     import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox } from "@wa-icons";
 
@@ -38,22 +40,44 @@
     const gameScene = gameManager.getCurrentGameScene();
     const chatRoomsEnableInAdmin = gameScene.room.isChatEnabled;
     const direction = document.documentElement.getAttribute("dir") || "ltr";
+    const emptyTimelineItems = readable<readonly ChatTimelineItem[]>([]);
+    const emptyRoomName = readable("");
+    const emptyTypingMembers = readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>>([]);
 
-    $: messages = room?.messages;
-    $: roomName = room?.name;
-    $: typingMembers = room.typingMembers;
+    let timelineItems: Readable<readonly ChatTimelineItem[]> = emptyTimelineItems;
+    let roomName: Readable<string> = emptyRoomName;
+    let typingMembers: Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>> =
+        emptyTypingMembers;
+
+    function getTimelineItemsStore(currentRoom: ChatRoom | undefined): Readable<readonly ChatTimelineItem[]> {
+        return currentRoom?.timelineItems ?? emptyTimelineItems;
+    }
+
+    function getRoomNameStore(currentRoom: ChatRoom | undefined): Readable<string> {
+        return currentRoom?.name ?? emptyRoomName;
+    }
+
+    function getTypingMembersStore(
+        currentRoom: ChatRoom | undefined
+    ): Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>> {
+        return currentRoom?.typingMembers ?? emptyTypingMembers;
+    }
+
+    $: timelineItems = getTimelineItemsStore(room);
+    $: roomName = getRoomNameStore(room);
+    $: typingMembers = getTypingMembersStore(room);
 
     type RenderItem =
         | { kind: "separator"; key: string; label: string }
-        | { kind: "message"; key: string; message: ChatMessage; showHeader: boolean };
+        | { kind: "item"; key: string; timelineItem: ChatTimelineItem; showHeader: boolean };
 
     function isValidDate(d: Date) {
         return d instanceof Date && !Number.isNaN(d.getTime());
     }
 
-    function getMessageDate(message: ChatMessage): Date | undefined {
-        if (message?.date && isValidDate(message.date)) {
-            return message.date;
+    function getTimelineItemDate(timelineItem: ChatTimelineItem): Date | undefined {
+        if (timelineItem?.date && isValidDate(timelineItem.date)) {
+            return timelineItem.date;
         }
         return undefined;
     }
@@ -88,10 +112,10 @@
         const out: RenderItem[] = [];
         let lastDayKey: string | null = null;
         let previousMessage: ChatMessage | undefined = undefined;
-        const messageList = $messages ?? [];
+        const currentTimelineItems = $timelineItems ?? [];
 
-        for (const msg of messageList) {
-            const d = getMessageDate(msg);
+        for (const timelineItem of currentTimelineItems) {
+            const d = getTimelineItemDate(timelineItem);
             let insertedSeparator = false;
 
             if (d && isValidDate(d)) {
@@ -111,22 +135,26 @@
                 previousMessage = undefined;
             }
 
+            const currentMessage = timelineItem.kind === "message" ? timelineItem.message : undefined;
             const previousMessageUserId = previousMessage?.sender?.spaceUserId ?? previousMessage?.sender?.chatId;
-            const currentMessageUserId = msg.sender?.spaceUserId ?? msg.sender?.chatId;
+            const currentMessageUserId = currentMessage?.sender?.spaceUserId ?? currentMessage?.sender?.chatId;
             const timeDiff =
-                msg.date && previousMessage?.date ? msg.date.getTime() - previousMessage.date.getTime() : Infinity;
+                currentMessage?.date && previousMessage?.date
+                    ? currentMessage.date.getTime() - previousMessage.date.getTime()
+                    : Infinity;
             const isRepeatedSender =
+                !!currentMessage &&
                 !!previousMessageUserId &&
                 previousMessageUserId === currentMessageUserId &&
                 timeDiff < TIME_GAP_THRESHOLD;
 
             out.push({
-                kind: "message",
-                key: `msg-${msg.id}`,
-                message: msg,
+                kind: "item",
+                key: `${timelineItem.kind}-${timelineItem.id}`,
+                timelineItem,
                 showHeader: !isRepeatedSender,
             });
-            previousMessage = msg;
+            previousMessage = currentMessage;
         }
 
         return out;
@@ -272,13 +300,15 @@
     }
 
     function onUpdateMessageBody(event: CustomEvent) {
-        const messageList = get(messages);
+        const currentTimelineItems = get(timelineItems);
+        const lastTimelineItem = currentTimelineItems[currentTimelineItems.length - 1];
+        const lastMessage = lastTimelineItem?.kind === "message" ? lastTimelineItem.message : undefined;
         if (
             autoScroll ||
             (event.detail != undefined &&
-                messageList.length > 0 &&
-                event.detail.id === messageList[messageList.length - 1].id &&
-                messageList[messageList.length - 1].sender?.chatId === myChatID)
+                lastMessage &&
+                event.detail.id === lastMessage.id &&
+                lastMessage.sender?.chatId === myChatID)
         ) {
             scrollToMessageListBottom();
         }
@@ -336,11 +366,11 @@
             on:scroll={handleScroll}
         >
             <ul
-                class="list-none p-0 flex-1 flex flex-col max-w-full max-h-full pt-10 gap-1 {$messages.length === 0
+                class="list-none p-0 flex-1 flex flex-col max-w-full max-h-full pt-10 gap-1 {$timelineItems.length === 0
                     ? 'items-center justify-center pb-4'
                     : 'max-w-6xl'}"
             >
-                {#if $messages.length === 0}
+                {#if $timelineItems.length === 0}
                     {#if room instanceof ProximityChatRoom}
                         <li class="text-center px-3 max-w-md">
                             <img draggable="false" src={getCloseImg} alt="Discussion bubble" />
@@ -372,19 +402,21 @@
                     {/if}
                 {/if}
                 {#each renderItems as item (item.key)}
-                    <li class="last:pb-3" data-event-id={item.kind === "message" ? item.message.id : undefined}>
+                    <li class="last:pb-3" data-event-id={item.kind === "item" ? item.timelineItem.id : undefined}>
                         {#if item.kind === "separator"}
                             <div class="flex justify-center items-center pt-3 pb-1 px-6">
                                 <span class="text-xs font-condensed min-w-32 text-center block opacity-75 py-1.5 px-3"
                                     >{item.label}</span
                                 >
                             </div>
-                        {:else if item.message.type === "outcoming" || item.message.type === "incoming"}
-                            <MessageSystem message={item.message} />
+                        {:else if item.timelineItem.kind === "system"}
+                            <MessageSystem message={item.timelineItem.message} />
+                        {:else if item.timelineItem.kind === "poll"}
+                            <PollCard poll={item.timelineItem.poll} />
                         {:else}
                             <Message
                                 on:updateMessageBody={onUpdateMessageBody}
-                                message={item.message}
+                                message={item.timelineItem.message}
                                 showHeader={item.showHeader}
                                 membersForMessageAvatars={room.membersForMessageAvatars}
                             />

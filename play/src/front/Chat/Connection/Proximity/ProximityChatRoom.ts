@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/svelte";
 import Debug from "debug";
 import { ForwardableStore, MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import type { Readable, Writable, Unsubscriber } from "svelte/store";
-import { get, readable, writable } from "svelte/store";
+import { derived, get, readable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import type { Subscription } from "rxjs";
 import type { CharacterTextureMessage } from "@workadventure/messages";
@@ -19,6 +19,7 @@ import type {
     ChatMessageContent,
     ChatMessageReaction,
     ChatMessageType,
+    ChatTimelineItem,
     ChatRoom,
 } from "../ChatConnection";
 import LL, { locale } from "../../../../i18n/i18n-svelte";
@@ -103,6 +104,25 @@ export class ProximityChatRoom implements ChatRoom {
     pictureStore = readable(undefined);
     avatarFallbackColor = readable(undefined);
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
+    timelineItems: Readable<readonly ChatTimelineItem[]> = derived(this.messages, ($messages) => {
+        return $messages.map((message): ChatTimelineItem => {
+            if (message.type === "incoming" || message.type === "outcoming") {
+                return {
+                    kind: "system",
+                    id: message.id,
+                    date: message.date,
+                    message,
+                };
+            }
+
+            return {
+                kind: "message",
+                id: message.id,
+                date: message.date,
+                message,
+            };
+        });
+    });
     messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>> = new MapStore();
     hasPreviousMessage = writable(false);
     isEncrypted = writable(false);
