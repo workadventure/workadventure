@@ -5,7 +5,7 @@ import { writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { MapStore } from "@workadventure/store-utils";
 import type { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from "../ChatConnection";
-import { chatUserFactory } from "./MatrixChatUser";
+import { chatUserFactoryFromRoom } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
 import { resolveAttachmentMediaFromEvent, resolveImageMediaFromEvent } from "./MatrixMediaResolver";
@@ -72,13 +72,8 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     private getSender() {
-        let messageUser;
         const senderUserId = this.event.getSender();
-        if (senderUserId) {
-            const matrixUser = this.room.client.getUser(senderUserId);
-            messageUser = matrixUser ? chatUserFactory(matrixUser, this.room.client) : undefined;
-        }
-        return messageUser;
+        return senderUserId ? chatUserFactoryFromRoom(this.room, senderUserId) : undefined;
     }
 
     private initMessageContent(): Writable<ChatMessageContent> {

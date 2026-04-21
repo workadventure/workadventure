@@ -14,6 +14,7 @@
 
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import { openModal } from "svelte-modals";
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { defaultNativeIntegrationAppName } from "@workadventure/shared-utils";
@@ -28,6 +29,7 @@
     import { MatrixChatRoom } from "../../Connection/Matrix/MatrixChatRoom";
     import { draftMessageService } from "../../Services/DraftMessageService";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import MatrixPollCreateDialog from "../MatrixPollCreateDialog.svelte";
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
     import youtubeSvg from "../../../Components/images/applications/icon_youtube.svg";
     import klaxoonSvg from "../../../Components/images/applications/icon_klaxoon.svg";
@@ -42,7 +44,7 @@
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
-    import { IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
+    import { IconList, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
 
     export let room: ChatRoom;
     export let disabled = false;
@@ -278,6 +280,17 @@
         applicationComponentOpened = false;
         applicationProperty = undefined;
     }
+
+    function openPollCreationModal() {
+        if (!(room instanceof MatrixChatRoom)) {
+            return;
+        }
+
+        applicationComponentOpened = false;
+        applicationProperty = undefined;
+        fileAttachmentComponentOpened = false;
+        openModal(MatrixPollCreateDialog, { room });
+    }
     // This function open the application part to propose to the user to add a new application or close application part
     function toggleApplicationComponent() {
         applicationComponentOpened = !applicationComponentOpened;
@@ -485,6 +498,19 @@
                     {fileAttachementEnabled && !isProximityChatRoom
                         ? $LL.chat.fileAttachment.description()
                         : $LL.chat.fileAttachment.featureComingSoon()}
+                </p>
+            </button>
+
+            <button
+                data-testid="createPollButton"
+                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                on:click={openPollCreationModal}
+                disabled={!(room instanceof MatrixChatRoom)}
+            >
+                <IconList font-size={32} />
+                <h2 class="text-sm p-0 m-0">{$LL.chat.poll.title()}</h2>
+                <p class="text-xs p-0 m-0 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                    {room instanceof MatrixChatRoom ? $LL.chat.poll.create.description() : $LL.chat.disabled()}
                 </p>
             </button>
         </div>

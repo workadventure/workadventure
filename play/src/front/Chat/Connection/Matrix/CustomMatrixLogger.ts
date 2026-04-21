@@ -36,6 +36,11 @@ export class CustomLogger implements Logger {
     }
 
     error(...msg: unknown[]): void {
+        if (typeof msg[0] === "string" && msg[0].startsWith("Got room state event for unknown room ")) {
+            this.debugLogger(this.namespace, ...msg);
+            return;
+        }
+
         console.error(this.namespace, ...msg);
     }
 }
