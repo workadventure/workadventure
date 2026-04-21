@@ -187,7 +187,8 @@ export class MatrixChatRoom
         this.polls = new SearchableArrayStore((item: MatrixChatPoll) => item.id);
         this.timelineItems = derived([this.messages, this.polls], ([$messages, $polls]) => {
             const timelineItems: ChatTimelineItem[] = [
-                ...$messages.map(
+                ...Array.from(
+                    $messages,
                     (message): ChatTimelineItem => ({
                         kind: "message",
                         id: message.id,
@@ -195,7 +196,8 @@ export class MatrixChatRoom
                         message,
                     })
                 ),
-                ...$polls.map(
+                ...Array.from(
+                    $polls,
                     (poll): ChatTimelineItem => ({
                         kind: "poll",
                         id: poll.id,

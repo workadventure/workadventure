@@ -20,6 +20,7 @@
 
     $: hasSelectionChanged = !haveSameSelection(localSelection, $state.myAnswerIds);
     $: canSubmitVote = $canVote && hasSelectionChanged && !isSubmittingVote;
+    $: hasPendingSelection = hasSelectionChanged && localSelection.length > 0;
     $: senderDisplayName =
         poll.sender?.username && poll.sender.username !== poll.sender.chatId ? poll.sender.username : undefined;
 
@@ -108,10 +109,6 @@
         }
     }
 
-    function isSelected(answerId: string) {
-        return localSelection.includes(answerId);
-    }
-
     function answerBarStyle(answer: ChatPollAnswer) {
         return `width: ${Math.max(answer.percentage, answer.votes > 0 ? 8 : 0)}%`;
     }
@@ -156,11 +153,19 @@
 
         <div class="mt-4 flex flex-col gap-2">
             {#each $state.answers as answer (answer.id)}
+                {@const selected = localSelection.includes(answer.id)}
+                {@const pendingSelection = hasPendingSelection && selected}
                 <button
+                    type="button"
                     data-testid={`pollAnswer-${answer.id}`}
-                    class={`poll-answer text-left rounded-xl border border-white/10 px-3 py-3 relative overflow-hidden ${
-                        isSelected(answer.id) ? "bg-white/10 border-white/30" : ""
-                    } ${$state.isEnded ? "cursor-default" : ""}`}
+                    aria-pressed={selected}
+                    class={`poll-answer text-left rounded-xl border px-3 py-3 relative overflow-hidden ${
+                        !selected
+                            ? "border-white/10 hover:border-white/30 hover:bg-white/[0.06] active:border-light-blue/60 active:bg-light-blue/10 active:scale-[0.985]"
+                            : pendingSelection
+                            ? "poll-answer-pending border-light-blue bg-light-blue/15 shadow-[0_0_0_2px_rgba(113,206,255,0.3),0_14px_34px_rgba(64,153,255,0.22)]"
+                            : "border-white/30 bg-white/10"
+                    } ${$state.isEnded ? "cursor-default" : "hover:-translate-y-[1px]"}`}
                     disabled={$state.isEnded}
                     on:click={() => toggleAnswer(answer.id)}
                 >
@@ -175,15 +180,21 @@
                     <div class="relative z-10 flex items-center justify-between gap-4">
                         <div class="flex items-center gap-2 min-w-0">
                             <div
-                                class={`h-5 w-5 shrink-0 rounded-full border border-white/20 flex items-center justify-center ${
-                                    isSelected(answer.id) ? "bg-white/20" : ""
+                                class={`h-5 w-5 shrink-0 rounded-full border flex items-center justify-center transition-all duration-150 ${
+                                    !selected
+                                        ? "border-white/20"
+                                        : pendingSelection
+                                        ? "border-light-blue bg-light-blue text-dark-purple shadow-[0_0_12px_rgba(113,206,255,0.4)]"
+                                        : "border-white/30 bg-white/20"
                                 }`}
                             >
-                                {#if isSelected(answer.id)}
+                                {#if selected}
                                     <IconCheck font-size={14} />
                                 {/if}
                             </div>
-                            <span class="truncate">{answer.text}</span>
+                            <span class={`truncate ${pendingSelection ? "font-semibold text-light-blue" : ""}`}
+                                >{answer.text}</span
+                            >
                         </div>
                         {#if $state.resultsVisible}
                             <div class="text-xs text-white/70 shrink-0">{answer.votes} ({answer.percentage}%)</div>
@@ -227,12 +238,14 @@
                 {#if !$state.isEnded}
                     <button
                         data-testid="submitPollVoteButton"
-                        class="btn btn-light btn-border"
+                        class={`btn ${canSubmitVote ? "btn-secondary poll-submit-ready" : "btn-light btn-border"}`}
                         disabled={!canSubmitVote}
                         on:click={submitVote}
                     >
                         {#if isSubmittingVote}
                             <IconLoader class="animate-[spin_2s_linear_infinite] mr-2" font-size={16} />
+                        {:else if canSubmitVote}
+                            <IconCheck class="mr-2" font-size={16} />
                         {/if}
                         {$state.hasVoted ? $LL.chat.poll.updateVote() : $LL.chat.poll.vote()}
                     </button>
@@ -286,6 +299,33 @@
     }
 
     .poll-answer {
-        transition: border-color 0.15s ease, background-color 0.15s ease;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        will-change: transform, border-color, background-color, box-shadow;
+        transition: transform 0.08s ease, border-color 0.08s ease, background-color 0.08s ease, box-shadow 0.08s ease;
+    }
+
+    .poll-answer:not(:disabled):active {
+        transform: scale(0.985);
+    }
+
+    @keyframes poll-submit-ready-pop {
+        0%,
+        100% {
+            transform: scale(1);
+        }
+        40% {
+            transform: scale(1.02);
+        }
+    }
+
+    .poll-answer-pending {
+        box-shadow: 0 0 0 2px rgba(146, 142, 187, 0.28), 0 14px 34px rgba(146, 142, 187, 0.22);
+    }
+
+    .poll-submit-ready {
+        box-shadow: 0 10px 24px rgba(146, 142, 187, 0.24);
+        animation: poll-submit-ready-pop 0.5s cubic-bezier(0.34, 1.25, 0.64, 1);
     }
 </style>
