@@ -239,7 +239,9 @@ export class SpacePeerManager {
                 if (streamable.spaceUserId === undefined) {
                     throw new Error("Received a video peer with undefined spaceUserId");
                 }
-                this.videoPeers.delete(streamable.spaceUserId);
+                if (this.videoPeers.get(streamable.spaceUserId) === streamable) {
+                    this.videoPeers.delete(streamable.spaceUserId);
+                }
             })
         );
 
@@ -257,7 +259,9 @@ export class SpacePeerManager {
                 if (streamable.spaceUserId === undefined) {
                     throw new Error("Received a screen-sharing peer with undefined spaceUserId");
                 }
-                this.screenSharingPeers.delete(streamable.spaceUserId);
+                if (this.screenSharingPeers.get(streamable.spaceUserId) === streamable) {
+                    this.screenSharingPeers.delete(streamable.spaceUserId);
+                }
             })
         );
 

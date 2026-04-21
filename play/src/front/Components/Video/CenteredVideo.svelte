@@ -1,6 +1,7 @@
 <svelte:options immutable={true} />
 
 <script lang="ts">
+    import { createEventDispatcher } from "svelte";
     import LL from "../../../i18n/i18n-svelte";
     import MegaphoneIcon from "../Icons/MegaphoneIcon.svelte";
     import type { Streamable } from "../../Space/Streamable";
@@ -35,6 +36,11 @@
     export let withBackground = false;
     export let isBlocked = false;
     export let status: VideoBoxStatus = "connecting";
+
+    const dispatch = createEventDispatcher<{
+        video: undefined;
+        noVideo: undefined;
+    }>();
 
     // If true, the video box is a megaphone space
     export let isMegaphoneSpace = false;
@@ -171,9 +177,11 @@
                         bind:videoHeight={videoStreamHeight}
                         on:noVideo={() => {
                             displayNoVideoWarning = true;
+                            dispatch("noVideo");
                         }}
                         on:video={() => {
                             displayNoVideoWarning = false;
+                            dispatch("video");
                         }}
                     />
                 {:else if media?.type === "livekit"}
@@ -195,9 +203,11 @@
                         bind:videoHeight={videoStreamHeight}
                         on:noVideo={() => {
                             displayNoVideoWarning = true;
+                            dispatch("noVideo");
                         }}
                         on:video={() => {
                             displayNoVideoWarning = false;
+                            dispatch("video");
                         }}
                     />
                 {:else if media?.type === "scripting"}
