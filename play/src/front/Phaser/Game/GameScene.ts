@@ -4202,7 +4202,8 @@ ${escapedMessage}
             return;
         }
 
-        this.cameraManager.zoomByFactor(zoomFactor, smooth ? 250 : 0);
+        const time = zoomFactor > 1 ? (zoomFactor - 1) * 250 : (1 / zoomFactor - 1) * 250;
+        this.cameraManager.zoomByFactor(zoomFactor, smooth ? time : 0);
     }
 
     get room(): Room {
