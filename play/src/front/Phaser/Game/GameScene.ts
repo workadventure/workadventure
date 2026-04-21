@@ -3093,12 +3093,14 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.showLayerStream.subscribe((layerEvent) => {
                 this.gameMapFrontWrapper.setLayerVisibility(layerEvent.name, true);
+                this.markDirty();
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.hideLayerStream.subscribe((layerEvent) => {
                 this.gameMapFrontWrapper.setLayerVisibility(layerEvent.name, false);
+                this.markDirty();
             })
         );
 
