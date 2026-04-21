@@ -362,7 +362,7 @@ export class IoSocketController {
                         try {
                             try {
                                 const memberTagsFromToken = userData.tags;
-                                // eslint-disable-next-line require-atomic-updates -- false positive: awaited value does not depend on a prior write
+                                // eslint-disable-next-line require-atomic-updates -- tags are captured before await; assignment is direct (no read-modify-write)
                                 userData = await adminService.fetchMemberDataByUuid(
                                     userIdentifier,
                                     tokenData?.accessToken,
