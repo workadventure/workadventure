@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { RecordingWebhookPhase } from "@workadventure/messages";
 import { EgressStatus } from "livekit-server-sdk";
+
+vi.mock("../enums/EnvironmentVariable", () => import("../../../tests/pusher/mocks/pusherEnvironmentVariableMock"));
+
 import { LivekitWebhookService } from "./LivekitWebhookService";
 
 describe("LivekitWebhookService", () => {
