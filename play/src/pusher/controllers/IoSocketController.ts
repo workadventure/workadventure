@@ -290,7 +290,7 @@ export class IoSocketController {
                                 // If the response points to nowhere, don't attempt an upgrade
                                 return;
                             }
-                            return res.cork(() => {
+                            res.cork(() => {
                                 res.upgrade(
                                     {
                                         rejected: true,
@@ -316,6 +316,7 @@ export class IoSocketController {
                                     context
                                 );
                             });
+                            return;
                         }
 
                         const characterTextureIds: string[] =
@@ -362,7 +363,6 @@ export class IoSocketController {
                         try {
                             try {
                                 const memberTagsFromToken = userData.tags;
-                                // eslint-disable-next-line require-atomic-updates -- tags are captured before await; assignment is direct (no read-modify-write)
                                 userData = await adminService.fetchMemberDataByUuid(
                                     userIdentifier,
                                     tokenData?.accessToken,
@@ -376,7 +376,7 @@ export class IoSocketController {
                                 );
 
                                 if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
-                                    return res.cork(() => {
+                                    res.cork(() => {
                                         res.upgrade(
                                             {
                                                 rejected: true,
@@ -389,9 +389,10 @@ export class IoSocketController {
                                             context
                                         );
                                     });
+                                    return;
                                 }
                                 if (userData.status === "ok" && !userData.isCompanionTextureValid) {
-                                    return res.cork(() => {
+                                    res.cork(() => {
                                         res.upgrade(
                                             {
                                                 rejected: true,
@@ -404,6 +405,7 @@ export class IoSocketController {
                                             context
                                         );
                                     });
+                                    return;
                                 }
 
                                 if (userData.status !== "ok") {
@@ -412,12 +414,13 @@ export class IoSocketController {
                                         return;
                                     }
 
-                                    return res.cork(() => {
+                                    const errorData = userData;
+                                    res.cork(() => {
                                         res.upgrade(
                                             {
                                                 rejected: true,
                                                 reason: "error",
-                                                error: userData,
+                                                error: errorData,
                                             } satisfies UpgradeFailedData,
                                             websocketKey,
                                             websocketProtocol,
@@ -425,6 +428,7 @@ export class IoSocketController {
                                             context
                                         );
                                     });
+                                    return;
                                 }
                             } catch (err) {
                                 if (upgradeAborted.aborted) {
