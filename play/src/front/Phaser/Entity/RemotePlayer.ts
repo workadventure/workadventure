@@ -85,7 +85,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         this.setX(position.x);
         this.setY(position.y);
 
-        this.setDepth(position.y); //this is to make sure the perspective (player models closer the bottom of the screen will appear in front of models nearer the top of the screen).
+        this.setDepth(position.y + 16); //this is to make sure the perspective (player models closer the bottom of the screen will appear in front of models nearer the top of the screen).
 
         if (this.companion) {
             this.companion.setTarget(position.x, position.y, position.direction);
@@ -187,7 +187,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             if (this.pathToFollow.length === 1) {
                 this.x = this.pathToFollow[0].x;
                 this.y = this.pathToFollow[0].y;
-                this.setDepth(this.y);
+                this.setDepth(this.y + 16);
                 this.finishFollowingPath();
                 return;
             }
@@ -207,7 +207,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             (this.currentPathSegmentDistanceFromStart / pathSegmentLength) * (segmentEndPos.y - segmentStartPos.y);
 
         this.moveToPos(newX, newY);
-        this.setDepth(this.y);
         this.scene.markDirty();
     }
 
@@ -216,6 +215,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         const oldY = this.y;
         this.x = x;
         this.y = y;
+        this.setDepth(this.y + 16);
 
         if (Math.abs(x - oldX) > Math.abs((y - oldY) * 1.1)) {
             if (x < oldX) {

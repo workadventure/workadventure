@@ -807,7 +807,7 @@ export class GameScene extends DirtyScene {
         // We create the player and position it on the map before connecting to the room to avoid any delay in the player
         // display when the connection is established. The player will be moved to the correct position when we
         // now the exact start position (after receiving the map updates)
-        this.createCurrentPlayer({ x: 0, y: 0 });
+        this.createCurrentPlayer();
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
 
         this.tryMovePlayerWithMoveToParameter();
@@ -1844,12 +1844,6 @@ export class GameScene extends DirtyScene {
      * Initializes the connection to Pusher.
      */
     private connect(): void {
-        const camera = this.cameraManager.getCamera();
-        // camera.preRender() must be called before accessing worldView to ensure it's up to date, because it won't be set up until the first render.
-        // See: https://docs.phaser.io/phaser/concepts/cameras#world-view
-        // @ts-ignore preRender is protected, but the Phaser docs advertises this, so we ignore the warning.
-        camera.preRender();
-
         connectionManager
             .connectToRoomSocket(
                 this.roomUrl,
@@ -1875,8 +1869,7 @@ export class GameScene extends DirtyScene {
                     urlManager.getStartPositionNameFromUrl()
                 );
 
-                this.CurrentPlayer.x = startPosition.x;
-                this.CurrentPlayer.y = startPosition.y;
+                this.CurrentPlayer.teleportTo(startPosition.x, startPosition.y);
                 this.cameraManager.startFollowPlayer(this.CurrentPlayer);
 
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
@@ -2197,9 +2190,6 @@ export class GameScene extends DirtyScene {
             throw new Error("No connection found when joining room");
         }
 
-        const camera = this.cameraManager.getCamera();
-        const worldView = camera.worldView;
-
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
         }
@@ -2212,12 +2202,7 @@ export class GameScene extends DirtyScene {
                 direction: PositionMessage_Direction.DOWN,
                 moving: false,
             },
-            {
-                left: worldView.x,
-                top: worldView.y,
-                right: worldView.right,
-                bottom: worldView.bottom,
-            },
+            this.getViewport(true),
             get(availabilityStatusStore),
             connectionManager.tabId
         );
@@ -3825,13 +3810,14 @@ ${escapedMessage}
         }
     }
 
-    private createCurrentPlayer(startPosition: PositionInterface) {
+    private createCurrentPlayer() {
         //TODO create animation moving between exit and start
         try {
             this.CurrentPlayer = new Player(
                 this,
-                startPosition.x,
-                startPosition.y,
+                // We start creating the player before we know its exact position in order to start lazy loading the texture.
+                0,
+                0,
                 this.playerName,
                 this.currentPlayerTexturesPromise,
                 PositionMessage_Direction.DOWN,
@@ -3891,27 +3877,43 @@ ${escapedMessage}
     private doPushPlayerPosition(event: HasPlayerMovedInterface): void {
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
+
+        this.connection?.sharePosition(event.x, event.y, event.direction, event.moving, this.getViewport());
+        iframeListener.hasPlayerMoved(event);
+    }
+
+    private getViewport(forceRecomputeCamera = false): ViewportInterface {
+        if (!this.scene.scene.renderer) {
+            const x = this.lastMoveEventSent?.x ?? this.CurrentPlayer.x;
+            const y = this.lastMoveEventSent?.y ?? this.CurrentPlayer.y;
+
+            // In the very special case where we have no renderer, the viewport will not move along the Woka.
+            // We need to adjust it manually. We set it to something very large to make sure the Woka sees
+            // everything around (useful for bots, even if so far, it is a trick)
+            return {
+                left: x - 3_000,
+                top: y - 3_000,
+                right: x + 3_000,
+                bottom: y + 3_000,
+            };
+        }
+
         const camera = this.cameras.main;
+
+        if (forceRecomputeCamera) {
+            // When calling this before the first render, camera.preRender() must be called before accessing worldView to ensure it's up to date.
+            // See: https://docs.phaser.io/phaser/concepts/cameras#world-view
+            // @ts-ignore preRender is protected, but the Phaser docs advertises this, so we ignore the warning.
+            camera.preRender();
+        }
+
         const worldView = camera.worldView;
-        let viewport = {
+        return {
             left: worldView.x,
             top: worldView.y,
             right: worldView.right,
             bottom: worldView.bottom,
         };
-        if (!this.scene.scene.renderer) {
-            // In the very special case where we have no renderer, the viewport will not move along the Woka.
-            // We need to adjust it manually. We set it to something very large to make sure the Woka sees
-            // everything around (useful for bots, even if so far, it is a trick)
-            viewport = {
-                left: event.x - 3_000,
-                top: event.y - 3_000,
-                right: event.x + 3_000,
-                bottom: event.y + 3_000,
-            };
-        }
-        this.connection?.sharePosition(event.x, event.y, event.direction, event.moving, viewport);
-        iframeListener.hasPlayerMoved(event);
     }
 
     private doAddPlayer(addPlayerData: AddPlayerInterface): void {
