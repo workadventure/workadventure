@@ -362,7 +362,8 @@ export class IoSocketController {
                         try {
                             try {
                                 const memberTagsFromToken = userData.tags;
-                                const fetchedUserData = await adminService.fetchMemberDataByUuid(
+                                // eslint-disable-next-line require-atomic-updates -- false positive: awaited value does not depend on a prior write
+                                userData = await adminService.fetchMemberDataByUuid(
                                     userIdentifier,
                                     tokenData?.accessToken,
                                     roomId,
@@ -373,8 +374,6 @@ export class IoSocketController {
                                     memberTagsFromToken,
                                     chatID
                                 );
-                                // eslint-disable-next-line require-atomic-updates
-                                userData = fetchedUserData;
 
                                 if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
                                     return res.cork(() => {
