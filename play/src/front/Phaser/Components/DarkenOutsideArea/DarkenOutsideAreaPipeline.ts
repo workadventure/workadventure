@@ -9,6 +9,7 @@ export class DarkenOutsideAreaPipeline extends Phaser.Renderer.WebGL.Pipelines.P
     private _feather = 24; // pixels
     private _darkness = 0.6; // 0..1
     private _color = new Phaser.Display.Color(0, 0, 0);
+    private _zoom: number = 1;
 
     constructor(game: Phaser.Game) {
         super({
@@ -55,7 +56,7 @@ export class DarkenOutsideAreaPipeline extends Phaser.Renderer.WebGL.Pipelines.P
     /** Called each frame before rendering to push current uniforms. */
     onPreRender(): void {
         this.set4f("uRect", this._rect.x, this._rect.y, this._rect.z, this._rect.w);
-        this.set1f("uFeather", this._feather);
+        this.set1f("uFeather", this._feather * this._zoom);
         this.set1f("uDarkness", this._darkness);
         this.set3f("uColor", this._color.redGL, this._color.greenGL, this._color.blueGL);
     }
@@ -68,6 +69,10 @@ export class DarkenOutsideAreaPipeline extends Phaser.Renderer.WebGL.Pipelines.P
     /** Feather (pixels). */
     setFeather(pixels: number): void {
         this._feather = pixels;
+    }
+
+    setZoomLevel(zoom: number): void {
+        this._zoom = zoom;
     }
 
     /** Darkness intensity [0..1]. */
