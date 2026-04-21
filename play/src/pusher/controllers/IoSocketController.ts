@@ -76,16 +76,18 @@ export class IoSocketController {
                 const websocketProtocol = req.getHeader("sec-websocket-protocol");
                 const websocketExtensions = req.getHeader("sec-websocket-extensions");
 
-                res.upgrade<AdminSocketData>(
-                    {
-                        adminConnections: new Map(),
-                        disconnecting: false,
-                    },
-                    websocketKey,
-                    websocketProtocol,
-                    websocketExtensions,
-                    context
-                );
+                res.cork(() => {
+                    res.upgrade<AdminSocketData>(
+                        {
+                            adminConnections: new Map(),
+                            disconnecting: false,
+                        },
+                        websocketKey,
+                        websocketProtocol,
+                        websocketExtensions,
+                        context
+                    );
+                });
             },
             open: (ws) => {
                 console.info(
@@ -288,30 +290,32 @@ export class IoSocketController {
                                 // If the response points to nowhere, don't attempt an upgrade
                                 return;
                             }
-                            return res.upgrade(
-                                {
-                                    rejected: true,
-                                    reason: "error",
-                                    error: {
-                                        status: "error",
-                                        type: "retry",
-                                        title: "Please refresh",
-                                        subtitle: "New version available",
-                                        image: "/resources/icons/new_version.png",
-                                        imageLogo: "/static/images/logo.png",
-                                        code: "NEW_VERSION",
-                                        details:
-                                            "A new version of WorkAdventure is available. Please refresh your window",
-                                        canRetryManual: true,
-                                        buttonTitle: "Refresh",
-                                        timeToRetry: 999999,
-                                    },
-                                } satisfies UpgradeFailedData,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
+                            return res.cork(() => {
+                                res.upgrade(
+                                    {
+                                        rejected: true,
+                                        reason: "error",
+                                        error: {
+                                            status: "error",
+                                            type: "retry",
+                                            title: "Please refresh",
+                                            subtitle: "New version available",
+                                            image: "/resources/icons/new_version.png",
+                                            imageLogo: "/static/images/logo.png",
+                                            code: "NEW_VERSION",
+                                            details:
+                                                "A new version of WorkAdventure is available. Please refresh your window",
+                                            canRetryManual: true,
+                                            buttonTitle: "Refresh",
+                                            timeToRetry: 999999,
+                                        },
+                                    } satisfies UpgradeFailedData,
+                                    websocketKey,
+                                    websocketProtocol,
+                                    websocketExtensions,
+                                    context
+                                );
+                            });
                         }
 
                         const characterTextureIds: string[] =
@@ -357,7 +361,8 @@ export class IoSocketController {
 
                         try {
                             try {
-                                userData = await adminService.fetchMemberDataByUuid(
+                                const memberTagsFromToken = userData.tags;
+                                const fetchedUserData = await adminService.fetchMemberDataByUuid(
                                     userIdentifier,
                                     tokenData?.accessToken,
                                     roomId,
@@ -365,35 +370,41 @@ export class IoSocketController {
                                     characterTextureIds,
                                     companionTextureId,
                                     locale,
-                                    userData.tags,
+                                    memberTagsFromToken,
                                     chatID
                                 );
+                                // eslint-disable-next-line require-atomic-updates
+                                userData = fetchedUserData;
 
                                 if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
-                                    return res.upgrade(
-                                        {
-                                            rejected: true,
-                                            reason: "invalidTexture",
-                                            entityType: "character",
-                                        } satisfies UpgradeFailedInvalidTexture,
-                                        websocketKey,
-                                        websocketProtocol,
-                                        websocketExtensions,
-                                        context
-                                    );
+                                    return res.cork(() => {
+                                        res.upgrade(
+                                            {
+                                                rejected: true,
+                                                reason: "invalidTexture",
+                                                entityType: "character",
+                                            } satisfies UpgradeFailedInvalidTexture,
+                                            websocketKey,
+                                            websocketProtocol,
+                                            websocketExtensions,
+                                            context
+                                        );
+                                    });
                                 }
                                 if (userData.status === "ok" && !userData.isCompanionTextureValid) {
-                                    return res.upgrade(
-                                        {
-                                            rejected: true,
-                                            reason: "invalidTexture",
-                                            entityType: "companion",
-                                        } satisfies UpgradeFailedInvalidTexture,
-                                        websocketKey,
-                                        websocketProtocol,
-                                        websocketExtensions,
-                                        context
-                                    );
+                                    return res.cork(() => {
+                                        res.upgrade(
+                                            {
+                                                rejected: true,
+                                                reason: "invalidTexture",
+                                                entityType: "companion",
+                                            } satisfies UpgradeFailedInvalidTexture,
+                                            websocketKey,
+                                            websocketProtocol,
+                                            websocketExtensions,
+                                            context
+                                        );
+                                    });
                                 }
 
                                 if (userData.status !== "ok") {
@@ -402,17 +413,19 @@ export class IoSocketController {
                                         return;
                                     }
 
-                                    return res.upgrade(
-                                        {
-                                            rejected: true,
-                                            reason: "error",
-                                            error: userData,
-                                        } satisfies UpgradeFailedData,
-                                        websocketKey,
-                                        websocketProtocol,
-                                        websocketExtensions,
-                                        context
-                                    );
+                                    return res.cork(() => {
+                                        res.upgrade(
+                                            {
+                                                rejected: true,
+                                                reason: "error",
+                                                error: userData,
+                                            } satisfies UpgradeFailedData,
+                                            websocketKey,
+                                            websocketProtocol,
+                                            websocketExtensions,
+                                            context
+                                        );
+                                    });
                                 }
                             } catch (err) {
                                 if (upgradeAborted.aborted) {
@@ -485,14 +498,16 @@ export class IoSocketController {
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
-                        res.upgrade<ConnectingSocketData>(
-                            socketData,
-                            /* Spell these correctly */
-                            websocketKey,
-                            websocketProtocol,
-                            websocketExtensions,
-                            context
-                        );
+                        res.cork(() => {
+                            res.upgrade<ConnectingSocketData>(
+                                socketData,
+                                /* Spell these correctly */
+                                websocketKey,
+                                websocketProtocol,
+                                websocketExtensions,
+                                context
+                            );
+                        });
                     } catch (e) {
                         if (e instanceof Error) {
                             if (!(e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired)) {
@@ -503,38 +518,42 @@ export class IoSocketController {
                                 // If the response points to nowhere, don't attempt an upgrade
                                 return;
                             }
-                            res.upgrade(
-                                {
-                                    rejected: true,
-                                    reason:
-                                        e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired
-                                            ? tokenInvalidException
-                                            : null,
-                                    message: e.message,
-                                    roomId,
-                                } satisfies UpgradeFailedData,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
+                            res.cork(() => {
+                                res.upgrade(
+                                    {
+                                        rejected: true,
+                                        reason:
+                                            e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired
+                                                ? tokenInvalidException
+                                                : null,
+                                        message: e.message,
+                                        roomId,
+                                    } satisfies UpgradeFailedData,
+                                    websocketKey,
+                                    websocketProtocol,
+                                    websocketExtensions,
+                                    context
+                                );
+                            });
                         } else {
                             if (upgradeAborted.aborted) {
                                 // If the response points to nowhere, don't attempt an upgrade
                                 return;
                             }
-                            res.upgrade(
-                                {
-                                    rejected: true,
-                                    reason: null,
-                                    message: "500 Internal Server Error",
-                                    roomId,
-                                } satisfies UpgradeFailedData,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
+                            res.cork(() => {
+                                res.upgrade(
+                                    {
+                                        rejected: true,
+                                        reason: null,
+                                        message: "500 Internal Server Error",
+                                        roomId,
+                                    } satisfies UpgradeFailedData,
+                                    websocketKey,
+                                    websocketProtocol,
+                                    websocketExtensions,
+                                    context
+                                );
+                            });
                         }
                     }
                 })().catch((e) => {
