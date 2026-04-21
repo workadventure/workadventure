@@ -515,19 +515,41 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     private animateToZoomLevel(targetZoomModifier: number, duration: number, callback?: () => void): void {
         this.zoomAnimation?.onInterrupt();
+        const startZoomModifier = this.waScaleManager.zoomModifier;
+        const startDate = Date.now();
 
         const zoomTween = this.scene.tweens.addCounter({
-            from: this.waScaleManager.zoomModifier,
+            from: startZoomModifier,
             to: targetZoomModifier,
             duration,
             ease: Easing.SineEaseOut,
             onUpdate: (tween: Phaser.Tweens.Tween) => {
-                this.waScaleManager.setZoomModifier(tween.getValue() ?? 0, this.camera);
-
+                this.waScaleManager.setZoomModifier(tween.getValue() ?? 0, this.camera, true);
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },
             onComplete: () => {
+                this.waScaleManager.setZoomModifier(targetZoomModifier, this.camera, false);
                 callback?.();
+            },
+            onStop: () => {
+                // If we are using the trackpad to zoom, we will receive a LOT of calls to
+                // animateToZoomLevel. Some calls will even trigger before the first onUpdate. In this case,
+                // the tween value is not set at all (0).
+                // In this very special case, we want to compute the value of the Tween manually.
+
+                let elapsedTime = Date.now() - startDate;
+                if (elapsedTime > duration) {
+                    elapsedTime = 1;
+                }
+                let value;
+                if (duration !== 0) {
+                    value = (elapsedTime / duration) * (targetZoomModifier - startZoomModifier) + startZoomModifier;
+                } else {
+                    value = targetZoomModifier;
+                }
+
+                this.waScaleManager.setZoomModifier(value, this.camera, true);
+                this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },
         });
 
