@@ -120,12 +120,7 @@ function parseResponseEvent(event: MatrixEvent, pollStartEvent: PollStartEvent):
             typeof rawContent[M_POLL_RESPONSE.altName] === "object"
                 ? rawContent[M_POLL_RESPONSE.altName]
                 : undefined);
-        if (
-            rawResponse &&
-            "answers" in rawResponse &&
-            Array.isArray(rawResponse.answers) &&
-            rawResponse.answers.length === 0
-        ) {
+        if (isEmptyPollResponse(rawResponse)) {
             return {
                 answerIds: [],
                 spoiled: false,
@@ -148,4 +143,16 @@ function parseResponseEvent(event: MatrixEvent, pollStartEvent: PollStartEvent):
             spoiled: true,
         };
     }
+}
+
+function isEmptyPollResponse(rawResponse: unknown): boolean {
+    if (!rawResponse || typeof rawResponse !== "object" || Array.isArray(rawResponse)) {
+        return false;
+    }
+
+    if (!("answers" in rawResponse)) {
+        return Object.keys(rawResponse).length === 0;
+    }
+
+    return rawResponse.answers == null || (Array.isArray(rawResponse.answers) && rawResponse.answers.length === 0);
 }
