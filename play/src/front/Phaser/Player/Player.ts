@@ -297,7 +297,10 @@ export class Player extends Character {
         }
         passStatusToOnline();
         this.playAnimation(this._lastDirection, true);
-        this.setDepth(this.y + 16);
+        this.scene.physics.world.once(Phaser.Physics.Arcade.Events.WORLD_STEP, () => {
+            // We wait for the physics engine to recompute the correct player position, then we update the depth.
+            this.setDepth(body.position.y + 16);
+        });
 
         if (this.companion) {
             this.companion.setTarget(this.x, this.y, this._lastDirection);
