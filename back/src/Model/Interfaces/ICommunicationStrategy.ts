@@ -1,4 +1,5 @@
 import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
+import type { RecordingStartInfo } from "../Services/LivekitService";
 
 export interface ICommunicationStrategy {
     addUser(user: SpaceUser): Promise<void>;
@@ -17,6 +18,6 @@ export interface ICommunicationStrategy {
 }
 
 export interface IRecordableStrategy extends ICommunicationStrategy {
-    startRecording(user: SpaceUser): Promise<void>;
-    stopRecording(): Promise<void>;
+    startRecording(user: SpaceUser, recordingSessionId: string): Promise<RecordingStartInfo>;
+    stopRecording(egressId?: string): Promise<void>;
 }

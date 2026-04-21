@@ -28,6 +28,7 @@ const recording: DeepPartial<Translation["recording"]> = {
         downloadFailedNotification: "Sćehnjenje nagraća njeje so poradźiło",
         recordingComplete: "Nagraće dokónčene",
         recordingIsInProgress: "Nagraće běži",
+        unexpectedlyStoppedNotification: "Nagraće je so njewočakowanje zastajiło",
         recordingSaved: "Waše nagraće je so wuspěšnje składowało.",
         howToAccess: "Zo byšće na waše nagraća přistupował:",
         viewRecordings: "Nagraća pokazać",

@@ -12,3 +12,7 @@ redis:
   username: ""
   password: ""
   db: 2
+webhook:
+    api_key: devkey
+    urls: 
+        - "http://play.workadventure.localhost/livekit/egress/webhook"

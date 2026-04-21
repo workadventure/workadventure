@@ -1,9 +1,15 @@
 import type { SpaceManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { v4 as uuid } from "uuid";
-import type { BackToPusherSpaceMessage, PusherToBackSpaceMessage } from "@workadventure/messages";
+import type {
+    BackToPusherSpaceMessage,
+    HandleRecordingWebhookRequest,
+    PusherToBackSpaceMessage,
+} from "@workadventure/messages";
 import Debug from "debug";
-import type { ServerDuplexStream } from "@grpc/grpc-js";
+import type { sendUnaryData, ServerDuplexStream, ServerUnaryCall } from "@grpc/grpc-js";
+import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import * as Sentry from "@sentry/node";
+import { asError } from "catch-unknown";
 import { socketManager } from "./Services/SocketManager";
 import { SpacesWatcher } from "./Model/SpacesWatcher";
 
@@ -124,6 +130,20 @@ const spaceManager = {
                 pusher.end();
                 debug("watchSpace => ended %s", pusher.id);
                 call.end();
+            });
+    },
+    handleRecordingWebhook: (
+        call: ServerUnaryCall<HandleRecordingWebhookRequest, Empty>,
+        callback: sendUnaryData<Empty>
+    ): void => {
+        const request = call.request;
+        socketManager
+            .handleRecordingWebhook(request)
+            .then(() => {
+                callback(null, {});
+            })
+            .catch((error) => {
+                callback(asError(error));
             });
     },
 } satisfies SpaceManagerServer;

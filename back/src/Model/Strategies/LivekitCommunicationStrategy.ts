@@ -2,7 +2,7 @@ import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/
 import * as Sentry from "@sentry/node";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
-import type { LiveKitService } from "../Services/LivekitService";
+import type { LiveKitService, RecordingStartInfo } from "../Services/LivekitService";
 
 export class LivekitCommunicationStrategy implements IRecordableStrategy {
     private usersReady: Set<string> = new Set();
@@ -267,17 +267,17 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
             Sentry.captureException(error);
         });
     }
-    async startRecording(user: SpaceUser): Promise<void> {
+    async startRecording(user: SpaceUser, recordingSessionId: string): Promise<RecordingStartInfo> {
         if (!this.createRoomPromise) {
             console.warn("Room not created yet");
             Sentry.captureMessage("[LivekitCommunicationStrategy] Room not created yet when starting recording");
-            return;
+            throw new Error("Livekit room not created yet");
         }
 
         await this.createRoomPromise;
-        await this.livekitService.startRecording(this.space.getSpaceName(), user, user.uuid);
+        return await this.livekitService.startRecording(this.space.getSpaceName(), user, user.uuid, recordingSessionId);
     }
-    async stopRecording(): Promise<void> {
-        await this.livekitService.stopRecording();
+    async stopRecording(egressId?: string): Promise<void> {
+        await this.livekitService.stopRecording(egressId);
     }
 }
