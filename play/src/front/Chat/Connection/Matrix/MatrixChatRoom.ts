@@ -730,7 +730,34 @@ export class MatrixChatRoom
         return;
     }
 
+    /**
+     * True when this room is linked to a Matrix space (`m.space.parent`), e.g. map area chats created
+     * under the room-area folder. Those rooms must stay "multiple" in the WA UI even with only two
+     * members (user + admin bot); the old `members.length === 2` heuristic would wrongly list them as DMs.
+     */
+    private hasMatrixSpaceParent(): boolean {
+        const events =
+            this.matrixRoom
+                .getLiveTimeline()
+                ?.getState(EventTimeline.FORWARDS)
+                ?.getStateEvents(EventType.SpaceParent) ?? [];
+        return events.some((ev) => Boolean(ev.getStateKey()));
+    }
+
+    /** `m.room.create` content `is_direct` (Matrix-native DM flag). */
+    private isRoomCreatedAsDirect(): boolean {
+        const events =
+            this.matrixRoom.getLiveTimeline()?.getState(EventTimeline.FORWARDS)?.getStateEvents(EventType.RoomCreate) ??
+            [];
+        const ev = events.find((e) => e.getStateKey() === "") ?? events[0];
+        return ev?.getContent()?.is_direct === true;
+    }
+
     private getMatrixRoomType(): "direct" | "multiple" {
+        if (this.hasMatrixSpaceParent()) {
+            return "multiple";
+        }
+
         const dmInviter = this.matrixRoom.getDMInviter();
         if (dmInviter) {
             return "direct";
@@ -752,7 +779,7 @@ export class MatrixChatRoom
             (member) => directRoomsPerUsers && directRoomsPerUsers[member.userId]?.includes(this.id)
         );
 
-        if (isDirectBasedOnRoomData || members.length === 2) {
+        if (isDirectBasedOnRoomData || (members.length === 2 && this.isRoomCreatedAsDirect())) {
             return "direct";
         }
 
