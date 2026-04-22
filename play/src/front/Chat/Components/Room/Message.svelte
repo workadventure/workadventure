@@ -1,15 +1,22 @@
 <script lang="ts">
     import type { ComponentType } from "svelte";
     import { createEventDispatcher } from "svelte";
-    import { derived } from "svelte/store";
+    import { derived, readable } from "svelte/store";
     import type { Readable } from "svelte/store";
-    import type { ChatMessage, ChatMessageType, ChatRoomMember } from "../../Connection/ChatConnection";
+    import type {
+        ChatMessage,
+        ChatMessageType,
+        ChatRoomMember,
+        ChatThreadSummary,
+    } from "../../Connection/ChatConnection";
     import LL, { locale } from "../../../../i18n/i18n-svelte";
     import Avatar from "../Avatar.svelte";
 
     import { resolveChatUserColor } from "../../Connection/Matrix/services/WaMatrixProfileService";
     import { getMatrixClientForChatTint } from "../../Utils";
-    import { selectedChatMessageToEdit } from "../../Stores/ChatStore";
+    import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
+    import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+    import { isThreadPanelEnabledStore, selectedThreadStore } from "../../Stores/SelectedThreadStore";
     import MessageOptions from "./MessageOptions.svelte";
     import MessageImage from "./Message/MessageImage.svelte";
     import MessageText from "./Message/MessageText.svelte";
@@ -20,6 +27,7 @@
     import MessageReactions from "./MessageReactions.svelte";
     import MessageIncoming from "./Message/MessageIncoming.svelte";
     import MessageOutcoming from "./Message/MessageOutcoming.svelte";
+    import ThreadSummary from "./ThreadSummary.svelte";
     import { IconTrash } from "@wa-icons";
 
     export let message: ChatMessage;
@@ -27,6 +35,8 @@
     export let showHeader = true;
     /** Matrix rooms: member avatars follow Matrix profile (same pipeline as DM row / room list). */
     export let membersForMessageAvatars: Readable<readonly ChatRoomMember[]> | undefined = undefined;
+    /** Root message reply preview; hide inside an open thread timeline (main room only). */
+    export let showThreadSummary = true;
 
     let messageRef: HTMLDivElement | undefined;
 
@@ -73,6 +83,7 @@
             return Array.from($reactions.values()).filter((reaction) => reaction.users.size > 0);
         }
     );
+    const emptyThreadSummary = readable<ChatThreadSummary | null>(null);
 
     $: messageSenderAvatarColor = resolveChatUserColor(
         message.sender?.chatId ?? "",
@@ -88,6 +99,27 @@
     $: messageAvatarPictureStore = memberForSender?.pictureStore ?? message.sender?.pictureStore;
     $: waParensStore = memberForSender?.waDisplayNameIfDifferent;
     $: waDisplayNameParens = waParensStore ? $waParensStore : undefined;
+    $: threadSummary = message.threadSummary ?? emptyThreadSummary;
+    $: hasThreadSummary =
+        showThreadSummary && replyDepth === 0 && !isQuotedMessage && !!$threadSummary && $threadSummary.replyCount > 0;
+
+    async function openThread() {
+        const thread = await message.openThread?.();
+        if (!thread) {
+            return;
+        }
+
+        selectedChatMessageToReply.set(null);
+
+        if ($isThreadPanelEnabledStore) {
+            selectedRoomStore.set(thread.parentRoom);
+            selectedThreadStore.set(thread);
+            return;
+        }
+
+        selectedThreadStore.clear();
+        selectedRoomStore.set(thread);
+    }
 </script>
 
 <div
@@ -201,8 +233,12 @@
                         ? 'right-2 bg-contrast/80'
                         : 'right-6 bg-secondary/80'}"
                 >
-                    <MessageOptions {message} {messageRef} />
+                    <MessageOptions {message} {messageRef} onOpenThread={openThread} />
                 </div>
+            {/if}
+
+            {#if hasThreadSummary && $threadSummary}
+                <ThreadSummary summary={$threadSummary} on:openThread={openThread} />
             {/if}
         </div>
     </div>

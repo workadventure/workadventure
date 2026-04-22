@@ -1,13 +1,14 @@
 import { get, writable } from "svelte/store";
-import type { ChatRoom } from "../Connection/ChatConnection";
+import type { ChatConversation } from "../Connection/ChatConnection";
 import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
+import { selectedThreadStore } from "./SelectedThreadStore";
 
 const createSelectedRoomStore = () => {
-    const { subscribe, update } = writable<ChatRoom | undefined>(undefined);
+    const { subscribe, update } = writable<ChatConversation | undefined>(undefined);
     let isOpen = false;
 
-    const customSet = (value: ChatRoom | undefined) => {
+    const customSet = (value: ChatConversation | undefined) => {
         update((currentValue) => {
             if (currentValue !== value && value && get(value.isEncrypted) && !isOpen && get(chatVisibilityStore)) {
                 isOpen = true;
@@ -21,6 +22,7 @@ const createSelectedRoomStore = () => {
                     });
             }
 
+            selectedThreadStore.syncWithRoom(value);
             return value;
         });
     };

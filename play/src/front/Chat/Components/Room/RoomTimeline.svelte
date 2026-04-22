@@ -2,7 +2,7 @@
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { get, readable, type Readable } from "svelte/store";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import type { ChatMessage, ChatRoom, ChatTimelineItem } from "../../Connection/ChatConnection";
+    import type { ChatConversation, ChatMessage, ChatTimelineItem } from "../../Connection/ChatConnection";
     import type { PictureStore } from "../../../Stores/PictureStore";
     import getCloseImg from "../../images/get-close.png";
     import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
@@ -19,7 +19,10 @@
     import TypingUsers from "./TypingUsers.svelte";
     import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox } from "@wa-icons";
 
-    export let room: ChatRoom;
+    export let room: ChatConversation;
+    export let backAction: (() => void) | undefined = undefined;
+    export let backButtonTestId = "chatBackward";
+    export let timelineTestId = "roomTimeline";
 
     const chatConnection = gameManager.chatConnection;
     const shouldRetrySendingEvents = chatConnection.shouldRetrySendingEvents;
@@ -49,16 +52,16 @@
     let typingMembers: Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>> =
         emptyTypingMembers;
 
-    function getTimelineItemsStore(currentRoom: ChatRoom | undefined): Readable<readonly ChatTimelineItem[]> {
+    function getTimelineItemsStore(currentRoom: ChatConversation | undefined): Readable<readonly ChatTimelineItem[]> {
         return currentRoom?.timelineItems ?? emptyTimelineItems;
     }
 
-    function getRoomNameStore(currentRoom: ChatRoom | undefined): Readable<string> {
+    function getRoomNameStore(currentRoom: ChatConversation | undefined): Readable<string> {
         return currentRoom?.name ?? emptyRoomName;
     }
 
     function getTypingMembersStore(
-        currentRoom: ChatRoom | undefined
+        currentRoom: ChatConversation | undefined
     ): Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>> {
         return currentRoom?.typingMembers ?? emptyTypingMembers;
     }
@@ -227,7 +230,16 @@
 
     function goBackAndClearSelectedChatMessage() {
         selectedChatMessageToReply.set(null);
-        selectedRoomStore.set(undefined);
+        if (backAction) {
+            backAction();
+            shouldRestoreChatStateStore.set(false);
+            return;
+        }
+        if (room.conversationKind === "thread" && room.parentRoom) {
+            selectedRoomStore.set(room.parentRoom);
+        } else {
+            selectedRoomStore.set(undefined);
+        }
         shouldRestoreChatStateStore.set(false);
 
         if (room instanceof ProximityChatRoom) {
@@ -326,7 +338,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="flex flex-col flex-auto h-full w-full max-w-full"
-    data-testid="roomTimeline"
+    data-testid={timelineTestId}
     on:dragover|preventDefault
     on:drop|preventDefault|stopPropagation={onDropFiles}
 >
@@ -336,7 +348,7 @@
                 {#if chatRoomsEnableInAdmin}
                     <button
                         class="back-roomlist p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white shrink-0"
-                        data-testid="chatBackward"
+                        data-testid={backButtonTestId}
                         on:click={goBackAndClearSelectedChatMessage}
                     >
                         {#if direction === "rtl"}
@@ -419,6 +431,7 @@
                                 message={item.timelineItem.message}
                                 showHeader={item.showHeader}
                                 membersForMessageAvatars={room.membersForMessageAvatars}
+                                showThreadSummary={room.conversationKind === "room"}
                             />
                         {/if}
                     </li>

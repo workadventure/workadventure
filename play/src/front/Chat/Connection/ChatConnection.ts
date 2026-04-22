@@ -66,11 +66,13 @@ export interface ChatRoomMember {
      */
     readonly waDisplayNameIfDifferent?: Readable<string | undefined>;
 }
-export interface ChatRoom {
+export interface ChatConversation {
     readonly id: string;
     readonly name: Readable<string>;
     /** Reactive: DM vs group can change (e.g. after ban/leave changes active member count). */
     readonly type: Readable<"direct" | "multiple">;
+    readonly conversationKind: "room" | "thread";
+    readonly parentRoom?: ChatRoom;
     readonly hasUnreadMessages: Readable<boolean>;
     readonly unreadNotificationCount: Readable<number>;
     readonly pictureStore: PictureStore;
@@ -97,6 +99,19 @@ export interface ChatRoom {
     readonly stopTyping: () => Promise<object>;
     readonly isRoomFolder: boolean;
     readonly lastMessageTimestamp: number;
+    readonly getMessageById?: (messageId: string) => Promise<ChatMessage | undefined>;
+}
+
+export interface ChatRoom extends ChatConversation {
+    readonly conversationKind: "room";
+    readonly openThread?: (rootMessageId: string) => Promise<ChatThread | undefined>;
+    readonly threads?: Readable<readonly ChatThreadSummary[]>;
+}
+
+export interface ChatThread extends ChatConversation {
+    readonly conversationKind: "thread";
+    readonly parentRoom: ChatRoom;
+    readonly rootMessage: Readable<ChatMessage | undefined>;
 }
 
 export interface ChatRoomMembershipManagement {
@@ -145,6 +160,8 @@ export interface ChatMessage {
     isModified: Readable<boolean>;
     addReaction: (reaction: string) => Promise<void>;
     canDelete: Readable<boolean>;
+    threadSummary?: Readable<ChatThreadSummary | null>;
+    openThread?: () => Promise<ChatThread | undefined>;
 }
 
 export interface ChatMessageReaction {
@@ -156,6 +173,17 @@ export interface ChatMessageReaction {
 }
 
 export type ChatPollKind = "open" | "closed";
+
+export type ChatThreadSummary = {
+    rootMessageId: string;
+    rootMessagePreview?: string;
+    rootMessageSenderName?: string;
+    replyCount: number;
+    lastReplyPreview?: string;
+    lastReplySenderName?: string;
+    currentUserParticipated: boolean;
+    lastActivityTimestamp: number;
+};
 
 export type ChatPollCreateOptions = {
     question: string;

@@ -15,6 +15,7 @@ import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
 import type {
     AnyKindOfUser,
+    ChatConversation,
     ChatMessage,
     ChatMessageContent,
     ChatMessageReaction,
@@ -97,6 +98,7 @@ const MAX_PARTICIPANTS_FOR_SOUND_NOTIFICATIONS = 5;
 
 export class ProximityChatRoom implements ChatRoom {
     id = "proximity";
+    conversationKind = "room" as const;
     name = writable("Proximity Chat");
     type = readable<"direct" | "multiple">("multiple");
     hasUnreadMessages = writable(false);
@@ -132,7 +134,7 @@ export class ProximityChatRoom implements ChatRoom {
     private _currentMeetingParticipantsStore = writable<MeetingParticipant[]>([]);
     public readonly currentMeetingParticipantsStore: Readable<MeetingParticipant[]> =
         this._currentMeetingParticipantsStore;
-    currentMatrixRoom: ChatRoom | undefined;
+    currentMatrixRoom: ChatConversation | undefined;
     currentChatVisibility = false;
 
     private unknownUser = {
