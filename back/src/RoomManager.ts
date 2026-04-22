@@ -48,7 +48,7 @@ const PONG_TIMEOUT = 70000; // PONG_TIMEOUT is > 1 minute because of Chrome heav
 const PING_INTERVAL = 80000;
 
 const roomManager = {
-    joinRoom: (call: UserSocket): void => {
+    connectToRoom: (call: UserSocket): void => {
         let room: GameRoom | null = null;
         let user: User | null = null;
         let pongTimeoutId: NodeJS.Timeout | undefined;
@@ -69,21 +69,41 @@ const roomManager = {
 
                 try {
                     if (room === null || user === null) {
-                        if (message.message.$case === "joinRoomMessage") {
+                        if (message.message.$case === "connectToRoomMessage") {
                             socketManager
-                                .handleJoinRoom(call, message.message.joinRoomMessage)
-                                .then(({ room: gameRoom, user: myUser }) => {
+                                .handleConnectToRoom(call, message.message.connectToRoomMessage)
+                                .then((gameRoom) => {
                                     if (call.writable) {
                                         room = gameRoom;
+                                    } else {
+                                        // Connection may have been closed before the init was finished, so we have to manually disconnect the user.
+                                        socketManager.cleanupRoomIfEmpty(gameRoom);
+                                    }
+                                })
+                                .catch((e) => {
+                                    console.error("message handleConnectToRoom error: ", e);
+                                    Sentry.captureException(e);
+                                    emitError(call, e);
+                                    call.end();
+                                });
+                        } else if (message.message.$case === "joinRoomMessage") {
+                            if (room === null) {
+                                console.error("joinRoomMessage received before connectToRoomMessage");
+                                Sentry.captureMessage("joinRoomMessage received before connectToRoomMessage");
+                                emitError(call, new Error("joinRoomMessage received before connectToRoomMessage"));
+                                call.end();
+                                return;
+                            }
+                            socketManager
+                                .handleJoinRoom(call, room, message.message.joinRoomMessage)
+                                .then((myUser) => {
+                                    if (call.writable) {
                                         user = myUser;
                                     } else {
                                         // Connection may have been closed before the init was finished, so we have to manually disconnect the user.
-                                        // TODO: Remove this debug line
-                                        console.info(
-                                            "message handleJoinRoom connection have been closed before. Check 'call.writable': ",
-                                            call.writable
-                                        );
-                                        socketManager.leaveRoom(gameRoom, myUser);
+                                        if (room) {
+                                            socketManager.leaveRoom(room, myUser);
+                                        }
                                     }
                                 })
                                 .catch((e) => {
@@ -92,10 +112,15 @@ const roomManager = {
                                     emitError(call, e);
                                 });
                         } else if (message.message.$case !== "pingMessage") {
-                            throw new Error("The first message sent MUST be of type JoinRoomMessage");
+                            throw new Error(
+                                `The first message sent MUST be of type ConnectToRoomMessage and the second message joinRoomMessage. Got ${message.message.$case}`
+                            );
                         }
                     } else {
                         switch (message.message.$case) {
+                            case "connectToRoomMessage": {
+                                throw new Error("Cannot call ConnectToRoomMessage twice!");
+                            }
                             case "joinRoomMessage": {
                                 throw new Error("Cannot call JoinRoomMessage twice!");
                             }
@@ -466,7 +491,7 @@ const roomManager = {
                                 Sentry.captureException(e);
                             });
                     } else {
-                        throw new Error("The first message sent MUST be of type JoinRoomMessage");
+                        throw new Error("The first message sent MUST be of type subscribeToRoom");
                     }
                 }
             } catch (e) {

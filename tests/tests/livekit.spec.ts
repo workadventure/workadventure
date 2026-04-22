@@ -326,22 +326,14 @@ test.describe("Meeting actions test", () => {
 
         await AreaLivekit.openAreaEditorAndAddAreaLivekit(page, true, true);
 
-        await Map.teleportToPosition(
-            page,
-            AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.x,
-            AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.y,
-        );
+        await Map.teleportToPosition(page, AreaLivekit.entityPositionInArea.x, AreaLivekit.entityPositionInArea.y);
 
         await Map.teleportToPosition(page, 0, 0);
 
         await Menu.expectButtonState(page, "microphone-button", "normal");
         await Menu.expectButtonState(page, "camera-button", "normal");
 
-        await Map.teleportToPosition(
-            page,
-            AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.x,
-            AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.y,
-        );
+        await Map.teleportToPosition(page, AreaLivekit.entityPositionInArea.x, AreaLivekit.entityPositionInArea.y);
 
         await page.getByTestId("camera-button").click();
 
@@ -358,25 +350,16 @@ test.describe("Meeting actions test", () => {
 
         // Admin creates the zones and will be used as a speaker
         await using speakerAdmin = await getPage(browser, "Admin1", Map.url("empty"));
-        await Map.teleportToPosition(speakerAdmin, 10 * 32, 10 * 32); // Temp position outside zones
 
         // Create podium zone (speaker zone) - positioned at y: 2-4 tiles
         await Menu.openMapEditor(speakerAdmin);
         await MapEditor.openAreaEditor(speakerAdmin);
-        await AreaEditor.drawArea(
-            speakerAdmin,
-            { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 },
-            { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 },
-        );
+        await AreaEditor.drawArea(speakerAdmin, { x: 1 * 32, y: 2 * 32 }, { x: 7 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(speakerAdmin, "speakerMegaphone");
         await AreaEditor.setPodiumNameProperty(speakerAdmin, `${browser.browserType().name()}RapidTestZone`);
 
         // Create audience zone (listener zone) - positioned at y: 5-7 tiles (adjacent to podium)
-        await AreaEditor.drawArea(
-            speakerAdmin,
-            { x: 1 * 32 * 1.5, y: 5 * 32 * 1.5 },
-            { x: 9 * 32 * 1.5, y: 7 * 32 * 1.5 },
-        );
+        await AreaEditor.drawArea(speakerAdmin, { x: 1 * 32, y: 5 * 32 }, { x: 7 * 32, y: 7 * 32 });
         await AreaEditor.addProperty(speakerAdmin, "listenerMegaphone");
         await AreaEditor.setMatchingPodiumZoneProperty(
             speakerAdmin,
@@ -385,24 +368,24 @@ test.describe("Meeting actions test", () => {
         await Menu.closeMapEditor(speakerAdmin);
 
         // Move Admin to podium zone as speaker 1
-        await Map.teleportToPosition(speakerAdmin, 4 * 32, 3 * 32);
+        await Map.teleportToPosition(speakerAdmin, 2 * 32, 3 * 32);
 
         // Speaker 2 (Alice) in podium zone - only 2 speakers total
         await using speakerAlice = await getPage(browser, "Alice", Map.url("empty"));
-        await Map.teleportToPosition(speakerAlice, 5 * 32, 3 * 32); // In podium zone
+        await Map.teleportToPosition(speakerAlice, 4 * 32, 3 * 32); // In podium zone
 
         // Audience members (more than speakers to trigger LiveKit)
         // User in audience (Eve) - static
         await using audienceEve = await getPage(browser, "Eve", Map.url("empty"));
-        await Map.teleportToPosition(audienceEve, 4 * 32, 6 * 32); // In audience zone
+        await Map.teleportToPosition(audienceEve, 3 * 32, 6 * 32); // In audience zone
 
         // User in audience (John) - static
         await using audienceJohn = await getPage(browser, "John", Map.url("empty"));
-        await Map.teleportToPosition(audienceJohn, 5 * 32, 6 * 32); // In audience zone
+        await Map.teleportToPosition(audienceJohn, 4 * 32, 6 * 32); // In audience zone
 
         // User in audience (Mallory) - static
         await using audienceMallory = await getPage(browser, "Mallory", Map.url("empty"));
-        await Map.teleportToPosition(audienceMallory, 6 * 32, 6 * 32); // In audience zone
+        await Map.teleportToPosition(audienceMallory, 5 * 32, 6 * 32); // In audience zone
 
         // Verify speakers see each other
         await expect(speakerAdmin.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 20_000 });
@@ -423,8 +406,8 @@ test.describe("Meeting actions test", () => {
         await using switchingUserPage = await getPage(browser, "Bob", Map.url("empty"));
 
         // Position in audience zone
-        const audiencePosition = { x: 7 * 32, y: 6 * 32 };
-        const podiumPosition = { x: 4 * 32, y: 3 * 32 };
+        const audiencePosition = { x: 6 * 32, y: 6 * 32 };
+        const podiumPosition = { x: 3 * 32, y: 3 * 32 };
 
         // Initial position: audience zone
         await Map.teleportToPosition(switchingUserPage, audiencePosition.x, audiencePosition.y);

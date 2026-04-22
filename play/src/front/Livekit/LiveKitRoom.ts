@@ -18,10 +18,7 @@ import type { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
 import { localStreamStoreForPublishing, speakerSelectedStore, videoQualityStore } from "../Stores/MediaStore";
-import {
-    screenShareQualityStore,
-    screenSharingLocalStreamStore as screenSharingLocalStream,
-} from "../Stores/ScreenSharingStore";
+import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrainedPreferenceStore";
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
@@ -73,7 +70,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
         private abortSignal: AbortSignal,
-        private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStream,
+        private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>,
         private speakerDeviceIdStore: Readable<string | undefined> = speakerSelectedStore,
         private _livekitRoomCounter: LivekitRoomCounter = {
             increment: incrementLivekitRoomCount,
@@ -373,7 +370,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         );
     }
 
-    private queueScreenShareUpdate(stream: LocalStreamStoreValue): void {
+    private queueScreenShareUpdate(stream: LocalStreamStoreValue | undefined): void {
         this.screenShareUpdateQueue = this.screenShareUpdateQueue
             .then(() => this.handleScreenShareUpdate(stream))
             .catch((err) => {
@@ -382,8 +379,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             });
     }
 
-    private async handleScreenShareUpdate(stream: LocalStreamStoreValue): Promise<void> {
-        const streamResult = stream.type === "success" ? stream.stream : undefined;
+    private async handleScreenShareUpdate(stream: LocalStreamStoreValue | undefined): Promise<void> {
+        const streamResult = stream?.type === "success" ? stream.stream : undefined;
 
         if (!this.localParticipant) {
             console.error("Local participant not found");

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, expect, it, vi } from "vitest";
 import { JoinRoomMessage, PositionMessage_Direction, RoomJoinedMessage } from "@workadventure/messages";
-import { GameRoom } from "../src/Model/GameRoom";
 import type { ConnectCallback, DisconnectCallback } from "../src/Model/GameRoom";
+import { GameRoom } from "../src/Model/GameRoom";
 import { Point } from "../src/Model/Websocket/MessageUserPosition";
 import type { Group } from "../src/Model/Group";
 import type { User, UserSocket } from "../src/Model/User";
@@ -33,7 +33,6 @@ function createJoinRoomMessage(uuid: string, x: number, y: number, tabId?: strin
         userUuid: uuid,
         IPAddress: "10.0.0.2",
         name: "foo",
-        roomId: "_/global/test.json",
         positionMessage: {
             x,
             y,

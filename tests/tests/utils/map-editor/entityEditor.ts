@@ -1,6 +1,7 @@
 import { fileURLToPath } from "url";
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { gameToBrowserCanvasCoordinates } from "../gameCoordinates";
 
 class EntityEditor {
     async selectEntity(page: Page, nb: number, search?: string) {
@@ -52,19 +53,24 @@ class EntityEditor {
 
     async moveAndClick(page: Page, x: number, y: number) {
         await this.wait2Frames(page);
-        await page.mouse.move(x, y);
-        await page.mouse.move(x, y);
-        await page.mouse.down({ button: "left" });
-        await page.mouse.up({ button: "left" });
+        const coordinates = { x, y };
+        const browserCoordinates = await gameToBrowserCanvasCoordinates(page, coordinates);
+        await page.locator("#game canvas").click({
+            position: browserCoordinates,
+        });
+
         await this.wait2Frames(page);
     }
 
     async moveAndRightClick(page: Page, x: number, y: number) {
         await this.wait2Frames(page);
-        await page.mouse.move(x, y);
-        await page.mouse.move(x, y);
-        await page.mouse.down({ button: "right" });
-        await page.mouse.up({ button: "right" });
+        const coordinates = { x, y };
+        const browserCoordinates = await gameToBrowserCanvasCoordinates(page, coordinates);
+        await page.locator("#game canvas").click({
+            position: browserCoordinates,
+            button: "right",
+        });
+
         await this.wait2Frames(page);
     }
 

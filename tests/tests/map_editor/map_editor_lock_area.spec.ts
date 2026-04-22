@@ -7,6 +7,7 @@ import Menu from "../utils/menu";
 import { map_storage_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
+import EntityEditor from "../utils/map-editor/entityEditor";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -30,17 +31,17 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
     }) => {
         await resetWamMaps(request);
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
-        const areaLeftBoundX = 1 * 32 * 1.5;
+        const areaLeftBoundX = 1 * 32;
 
         // Create an area just to the right of the spawn and make it lockable.
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 7 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 1 * 32 }, { x: 7 * 32, y: 7 * 32 });
         await AreaEditor.addProperty(page, "lockableAreaPropertyData");
         await Menu.closeMapEditor(page);
 
         // Move admin in the area and lock it.
-        await Map.teleportToPosition(page, 4 * 32 * 1.5, 4 * 32 * 1.5);
+        await Map.teleportToPosition(page, 4 * 32, 4 * 32);
         await expect(page.getByTestId("lock-button")).toBeVisible();
         await page.getByTestId("lock-button").click();
         await expect(page.getByTestId("lock-button")).toHaveClass(/bg-danger/);
@@ -82,6 +83,7 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         expect(alicePositionAfterAutoUnlock.x).toBeGreaterThan(areaLeftBoundX);
 
         // Alice locks the area again.
+        await Map.teleportToPosition(page2, 4 * 32, 4 * 32);
         await expect(page2.getByTestId("lock-button")).toBeVisible();
         await page2.getByTestId("lock-button").click();
         await expect(page2.getByTestId("lock-button")).toHaveClass(/bg-danger/);
@@ -99,12 +101,7 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         await Map.teleportToPosition(page, 0, 3 * 32);
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await page.locator("canvas").click({
-            position: {
-                x: 260,
-                y: 223,
-            },
-        });
+        await EntityEditor.moveAndClick(page, 4 * 32, 4 * 32);
         await expect(page.getByText("Tags allowed to lock/unlock")).toBeVisible();
         const lockableTagsInput = page.getByPlaceholder("Select rights").first();
         await lockableTagsInput.click();
@@ -117,7 +114,7 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         await expect(page2.getByTestId("lock-button")).toHaveClass(/opacity-50/);
 
         // Admin goes back to the area and locks it.
-        await Map.teleportToPosition(page, 4 * 32 * 1.5, 4 * 32 * 1.5);
+        await Map.teleportToPosition(page, 6 * 32, 2 * 32);
         await expect(page.getByTestId("lock-button")).toBeVisible();
         await page.getByTestId("lock-button").click();
         await expect(page.getByTestId("lock-button")).toHaveClass(/bg-danger/);
@@ -126,25 +123,15 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         // left in the area after the move, so it should be automatically unlocked and Alice should be able to enter it again.
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await page.locator("canvas").click({
-            position: {
-                x: 260,
-                y: 223,
-            },
-        });
+        await EntityEditor.moveAndClick(page, 4 * 32, 4 * 32);
         await expect(page.getByText("Tags allowed to lock/unlock")).toBeVisible();
 
-        await AreaEditor.moveArea(
-            page,
-            { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 },
-            { x: 10 * 32 * 1.5, y: 7 * 32 * 1.5 },
-            { x: 0, y: 5 * 32 * 1.5 },
-        );
+        await AreaEditor.moveArea(page, { x: 1 * 32, y: 1 * 32 }, { x: 7 * 32, y: 2 * 32 }, { x: 0, y: 5 * 32 });
         await Menu.closeMapEditor(page);
 
         await Map.walkTo(page2, "ArrowDown", 2000);
         const alicePositionAfterAreaMove = await Map.getPosition(page2);
-        expect(alicePositionAfterAreaMove.y).toBeGreaterThan(6 * 32 * 1.5);
+        expect(alicePositionAfterAreaMove.y).toBeGreaterThan(6 * 32);
         await expect(page2.getByText("This area is locked. You cannot enter.")).toBeHidden();
 
         await page2.context().close();

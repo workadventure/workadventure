@@ -32,6 +32,8 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitAddSpaceFilter"
     | "emitLeaveSpace"
     | "emitJoinSpace"
+    | "startRecording"
+    | "stopRecording"
     | "emitUpdateSpaceMetadata"
     | "emitUpdateSpaceUserMessage"
     | "spaceDestroyedMessage"
@@ -54,7 +56,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private proximityPublicMessageEventSubscription: Subscription;
     private proximityPrivateMessageEventSubscription: Subscription;
     private spaceDestroyedMessageSubscription: Subscription;
-    private roomConnectionStreamSubscription: Subscription;
 
     public readonly videoStreamStore: Readable<Map<string, VideoBox>> = derived(this.spaces, ($spaces, set) => {
         if ($spaces.size === 0) {
@@ -118,18 +119,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
         const stores = Array.from($spaces.values(), (space) => space.isStreamingStore);
         return derived(stores, (list) => list.some(Boolean)).subscribe(set);
-
-        /*const spaceStores = Array.from($spaces.values()).map((space) => space.isStreamingStore);
-
-        const combinedStore = derived(spaceStores, (isStreamingList) => {
-            return isStreamingList.some((isStreaming) => isStreaming);
-        });
-
-        const unsubscribe = combinedStore.subscribe((result) => {
-            set(result);
-        });
-
-        return unsubscribe;*/
     });
 
     public readonly isLiveStreamingAudioStore: Readable<boolean> = derived(this.spaces, ($spaces, set) => {
@@ -139,6 +128,16 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         }
 
         const stores = Array.from($spaces.values(), (space) => space.isStreamingAudioStore);
+        return derived(stores, (list) => list.some(Boolean)).subscribe(set);
+    });
+
+    public readonly shouldPublishScreenShareStore: Readable<boolean> = derived(this.spaces, ($spaces, set) => {
+        if ($spaces.size === 0) {
+            set(false);
+            return () => {};
+        }
+
+        const stores = Array.from($spaces.values(), (space) => space.shouldPublishScreenShareStore);
         return derived(stores, (list) => list.some(Boolean)).subscribe(set);
     });
 
@@ -267,10 +266,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 space.onDisconnect();
             }
         });
-
-        this.roomConnectionStreamSubscription = this.connectStream.subscribe((connection) => {
-            // this.reconnect(connection).catch((e) => console.error(e));
-        });
     }
 
     async joinSpace(
@@ -345,7 +340,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.proximityPublicMessageEventSubscription.unsubscribe();
         this.proximityPrivateMessageEventSubscription.unsubscribe();
         this.spaceDestroyedMessageSubscription.unsubscribe();
-        this.roomConnectionStreamSubscription.unsubscribe();
 
         await Promise.all(Array.from(this.leavingSpacesPromises.values()));
         this.leavingSpacesPromises.clear();

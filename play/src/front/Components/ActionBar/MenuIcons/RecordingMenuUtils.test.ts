@@ -88,6 +88,34 @@ describe("RecordingMenuUtils", () => {
         expect(rows[0]?.action).toBeNull();
     });
 
+    it("reflects pending recording metadata from the server", () => {
+        const discussionSpace = createSpace("discussion-space", {
+            metadata: new Map([
+                [
+                    "recording",
+                    {
+                        recording: false,
+                        recorder: "alice-id",
+                        status: "starting",
+                    },
+                ],
+            ]),
+        });
+        const recordingState: RecordingState = {
+            recordingsBySpace: {},
+            requestStatesBySpace: {},
+            isRecording: false,
+            isCurrentUserRecorder: false,
+        };
+
+        const rows = getRecordingSpaceRows([discussionSpace], [], recordingState, false);
+
+        expect(rows).toHaveLength(1);
+        expect(rows[0]?.status).toBe("starting");
+        expect(rows[0]?.disabled).toBe(true);
+        expect(rows[0]?.action).toBeNull();
+    });
+
     it("prefers the live space user name over the cached recorder name and falls back safely", () => {
         const liveNameSpace = createSpace("live-name-space", {
             recorderNamesById: {
@@ -98,11 +126,13 @@ describe("RecordingMenuUtils", () => {
         const recordingState: RecordingState = {
             recordingsBySpace: {
                 "live-name-space": {
+                    status: "recording",
                     isCurrentUserRecorder: false,
                     recorderName: "Cached Alice",
                     recorderSpaceUserId: "alice-id",
                 },
                 "fallback-name-space": {
+                    status: "recording",
                     isCurrentUserRecorder: false,
                     recorderName: "Cached Bob",
                     recorderSpaceUserId: "bob-id",

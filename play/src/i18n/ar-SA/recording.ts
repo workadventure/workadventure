@@ -22,6 +22,8 @@ const recording: DeepPartial<Translation["recording"]> = {
     notification: {
         deleteNotification: "تم حذف التسجيل بنجاح",
         deleteFailedNotification: "فشل حذف التسجيل",
+        startFailedNotification: "فشل بدء التسجيل",
+        stopFailedNotification: "فشل إيقاف التسجيل",
         recordingStarted: "{name} بدأ تسجيلاً.",
         downloadFailedNotification: "فشل تحميل التسجيل",
         recordingComplete: "اكتمل التسجيل",

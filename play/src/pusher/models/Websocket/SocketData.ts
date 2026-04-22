@@ -12,7 +12,6 @@ import type {
     SubMessage,
 } from "@workadventure/messages";
 import type { PusherRoom } from "../PusherRoom";
-import type { PointInterface } from "./PointInterface";
 import type { ViewportInterface } from "./ViewportMessage";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
@@ -24,7 +23,11 @@ export interface BackSpaceConnection extends BackSpaceConnection_ {
 
 export type SpaceName = string;
 
-export type SocketData = {
+/**
+ * The data attached to a socket in "connecting" state (i.e. when the websocket connection is established but the
+ * JoinRoomFrontMessage was not received yet)
+ */
+export type ConnectingSocketData = {
     rejected: false;
     disconnecting: boolean;
     token: string;
@@ -33,15 +36,9 @@ export type SocketData = {
     userUuid: string; // Admin UUID
     isLogged: boolean;
     ipAddress: string;
-    name: string;
     characterTextures: CharacterTextureMessage[];
     companionTexture?: CompanionTextureMessage;
-    position: PointInterface;
-    viewport: ViewportInterface;
-    availabilityStatus: AvailabilityStatus;
     lastCommandId?: string;
-    // Unique identifier for the browser tab, used to detect reconnections from the same tab
-    tabId: string | undefined;
     messages: unknown[];
     tags: string[];
     visitCardUrl: string | null;
@@ -69,4 +66,12 @@ export type SocketData = {
     queryAbortControllers: Map<number, AbortController>;
     canRecord: boolean;
     keepAliveInterval: NodeJS.Timeout | undefined;
+};
+
+export type SocketData = ConnectingSocketData & {
+    name: string;
+    viewport: ViewportInterface;
+    availabilityStatus: AvailabilityStatus;
+    // Unique identifier for the browser tab, used to detect reconnections from the same tab
+    tabId: string | undefined;
 };

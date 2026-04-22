@@ -191,7 +191,11 @@ export class ExplorerTool implements MapEditorTool {
         }
 
         // Restore camera mode
-        cameraManager.startFollowPlayer(this.scene.CurrentPlayer, 1000, targetZoom);
+        cameraManager.startFollowPlayer(this.scene.CurrentPlayer, 1000);
+        if (targetZoom) {
+            const targetZoomFactor = targetZoom / waScaleManager.zoomModifier;
+            cameraManager.zoomByFactor(targetZoomFactor, 1000);
+        }
 
         // Make all entities non interactive
         this.setAllEntitiesNotInteractive();
@@ -266,9 +270,6 @@ export class ExplorerTool implements MapEditorTool {
 
         // Mark the scene as dirty
         this.scene.markDirty();
-
-        // Create flash animation
-        this.scene.cameras.main.flash();
 
         // Listen to camera updates
         // We need to update the viewport when the camera is updated to ensure the viewport is always up to date

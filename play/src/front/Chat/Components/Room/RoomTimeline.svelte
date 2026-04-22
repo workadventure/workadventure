@@ -397,8 +397,9 @@
         {#if $typingMembers.length > 0}
             <TypingUsers typingMembers={$typingMembers} />
         {/if}
-
-        <MessageInputBar disabled={$shouldRetrySendingEvents} {room} bind:this={messageInputBarRef} />
+        {#key room}
+            <MessageInputBar disabled={$shouldRetrySendingEvents} {room} bind:this={messageInputBarRef} />
+        {/key}
     {/if}
 </div>
 

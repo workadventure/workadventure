@@ -10,12 +10,20 @@
 
     import logoImg from "../images/logo-min-white.png";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
+    import type { Room } from "../../Connection/Room";
     import errorGif from "./images/error.gif";
     import { IconRefresh } from "@wa-icons";
 
     let errorScreen = $errorScreenStore;
 
-    let logoErrorSrc = gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
+    let startRoom: Room | undefined;
+    try {
+        startRoom = gameManager?.currentStartedRoom;
+    } catch {
+        startRoom = undefined;
+    }
+
+    let logoErrorSrc = startRoom?.loginSceneLogo ?? logoImg;
 
     function click() {
         if (errorScreen?.type === "unauthorized") connectionManager.logout();
@@ -33,8 +41,7 @@
     }
 
     function getBackgroundColor() {
-        if (!gameManager.currentStartedRoom) return undefined;
-        return gameManager.currentStartedRoom.backgroundColor;
+        return startRoom?.backgroundColor;
     }
 
     function logout() {
@@ -63,10 +70,9 @@
                     />
                 {/if}
             </div>
-
             <div class="icon">
                 <img
-                    src={errorScreen?.image ?? gameManager?.currentStartedRoom?.errorSceneLogo ?? errorGif}
+                    src={errorScreen?.image ?? startRoom?.errorSceneLogo ?? errorGif}
                     alt="Error"
                     style="height:125px; max-width:100%;"
                     draggable="false"

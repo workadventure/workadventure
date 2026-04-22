@@ -62,19 +62,19 @@ describe("CommunicationManager", () => {
         getAllUsers: () => users,
         getUsersInFilter: () => users,
         getUsersToNotify: () => [],
-        getRecordingState: () => ({ isRecording: false, recorder: null }),
+        getRecordingState: () => ({ isRecording: false, recorder: null, status: "idle" }),
         dispatchPrivateEvent: vi.fn(),
         dispatchPublicEvent: vi.fn().mockResolvedValue(undefined),
         getSpaceName: () => "test-space",
         getPropertiesToSync: () => ["cameraState", "microphoneState"],
-        updateMetadata: vi.fn().mockResolvedValue(undefined),
+        publishMetadata: vi.fn(),
         stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
         getUser: vi.fn(),
     });
 
     const createRecordingManager = (): IRecordingManager & { mocks: Record<string, ReturnType<typeof vi.fn>> } => {
         const mocks = {
-            getRecordingState: vi.fn().mockReturnValue({ isRecording: false, recorder: null }),
+            getRecordingState: vi.fn().mockReturnValue({ isRecording: false, recorder: null, status: "idle" }),
             startRecording: vi.fn().mockResolvedValue(undefined),
             stopRecording: vi.fn().mockResolvedValue(undefined),
             stopRecordingByServer: vi.fn().mockResolvedValue(null),

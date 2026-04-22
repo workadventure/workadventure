@@ -15,6 +15,7 @@ describe("TransitionPolicy", () => {
         getRecordingState: () => ({
             isRecording,
             recorder: null,
+            status: isRecording ? "recording" : "idle",
         }),
         startRecording: () => Promise.resolve(),
         stopRecording: () => Promise.resolve(null),

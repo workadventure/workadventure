@@ -25,7 +25,7 @@ import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessa
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
-import type { SocketData, SpaceName } from "../models/Websocket/SocketData";
+import type { ConnectingSocketData, SocketData, SpaceName } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
 import { ClientAbortError } from "../models/ClientAbortError";
 import { ClientNotPartOfSpaceError, UserAlreadyAddedInSpaceError } from "../models/SpaceValidationErrors";
@@ -76,16 +76,18 @@ export class IoSocketController {
                 const websocketProtocol = req.getHeader("sec-websocket-protocol");
                 const websocketExtensions = req.getHeader("sec-websocket-extensions");
 
-                res.upgrade<AdminSocketData>(
-                    {
-                        adminConnections: new Map(),
-                        disconnecting: false,
-                    },
-                    websocketKey,
-                    websocketProtocol,
-                    websocketExtensions,
-                    context
-                );
+                res.cork(() => {
+                    res.upgrade<AdminSocketData>(
+                        {
+                            adminConnections: new Map(),
+                            disconnecting: false,
+                        },
+                        websocketKey,
+                        websocketProtocol,
+                        websocketExtensions,
+                        context
+                    );
+                });
             },
             open: (ws) => {
                 console.info(
@@ -219,7 +221,7 @@ export class IoSocketController {
     }
 
     ioConnection(): void {
-        this.app.ws<SocketData | UpgradeFailedData>("/ws/room", {
+        this.app.ws<ConnectingSocketData | UpgradeFailedData>("/ws/room", {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
             idleTimeout: SOCKET_IDLE_TIMER,
@@ -241,25 +243,14 @@ export class IoSocketController {
                         context,
                         z.object({
                             roomId: z.string(),
-                            name: z.string(),
                             characterTextureIds: z.union([z.string(), z.string().array()]).optional(),
-                            x: z.coerce.number(),
-                            y: z.coerce.number(),
-                            top: z.coerce.number(),
-                            bottom: z.coerce.number(),
-                            left: z.coerce.number(),
-                            right: z.coerce.number(),
                             companionTextureId: z.string().optional(),
-                            availabilityStatus: z.coerce.number(),
                             lastCommandId: z.string().optional(),
                             version: z.string(),
                             chatID: z.string(),
                             roomName: z.string(),
                             cameraState: z.string().transform((val) => val === "true"),
                             microphoneState: z.string().transform((val) => val === "true"),
-                            // tabId is optional because it is not always present in the query string
-                            //TODO : remove the optional when the tabId is always present in the query string (next version of the app )
-                            tabId: z.string().optional(),
                         })
                     );
 
@@ -283,21 +274,12 @@ export class IoSocketController {
 
                     const {
                         roomId,
-                        x,
-                        y,
-                        top,
-                        bottom,
-                        left,
-                        right,
-                        name,
-                        availabilityStatus,
                         lastCommandId,
                         version,
                         companionTextureId,
                         roomName,
                         cameraState,
                         microphoneState,
-                        tabId,
                     } = query;
 
                     const chatID = query.chatID ? query.chatID : undefined;
@@ -308,30 +290,33 @@ export class IoSocketController {
                                 // If the response points to nowhere, don't attempt an upgrade
                                 return;
                             }
-                            return res.upgrade(
-                                {
-                                    rejected: true,
-                                    reason: "error",
-                                    error: {
-                                        status: "error",
-                                        type: "retry",
-                                        title: "Please refresh",
-                                        subtitle: "New version available",
-                                        image: "/resources/icons/new_version.png",
-                                        imageLogo: "/static/images/logo.png",
-                                        code: "NEW_VERSION",
-                                        details:
-                                            "A new version of WorkAdventure is available. Please refresh your window",
-                                        canRetryManual: true,
-                                        buttonTitle: "Refresh",
-                                        timeToRetry: 999999,
-                                    },
-                                } satisfies UpgradeFailedData,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
+                            res.cork(() => {
+                                res.upgrade(
+                                    {
+                                        rejected: true,
+                                        reason: "error",
+                                        error: {
+                                            status: "error",
+                                            type: "retry",
+                                            title: "Please refresh",
+                                            subtitle: "New version available",
+                                            image: "/resources/icons/new_version.png",
+                                            imageLogo: "/static/images/logo.png",
+                                            code: "NEW_VERSION",
+                                            details:
+                                                "A new version of WorkAdventure is available. Please refresh your window",
+                                            canRetryManual: true,
+                                            buttonTitle: "Refresh",
+                                            timeToRetry: 999999,
+                                        },
+                                    } satisfies UpgradeFailedData,
+                                    websocketKey,
+                                    websocketProtocol,
+                                    websocketExtensions,
+                                    context
+                                );
+                            });
+                            return;
                         }
 
                         const characterTextureIds: string[] =
@@ -377,6 +362,7 @@ export class IoSocketController {
 
                         try {
                             try {
+                                const memberTagsFromToken = userData.tags;
                                 userData = await adminService.fetchMemberDataByUuid(
                                     userIdentifier,
                                     tokenData?.accessToken,
@@ -385,35 +371,41 @@ export class IoSocketController {
                                     characterTextureIds,
                                     companionTextureId,
                                     locale,
-                                    userData.tags,
+                                    memberTagsFromToken,
                                     chatID
                                 );
 
                                 if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
-                                    return res.upgrade(
-                                        {
-                                            rejected: true,
-                                            reason: "invalidTexture",
-                                            entityType: "character",
-                                        } satisfies UpgradeFailedInvalidTexture,
-                                        websocketKey,
-                                        websocketProtocol,
-                                        websocketExtensions,
-                                        context
-                                    );
+                                    res.cork(() => {
+                                        res.upgrade(
+                                            {
+                                                rejected: true,
+                                                reason: "invalidTexture",
+                                                entityType: "character",
+                                            } satisfies UpgradeFailedInvalidTexture,
+                                            websocketKey,
+                                            websocketProtocol,
+                                            websocketExtensions,
+                                            context
+                                        );
+                                    });
+                                    return;
                                 }
                                 if (userData.status === "ok" && !userData.isCompanionTextureValid) {
-                                    return res.upgrade(
-                                        {
-                                            rejected: true,
-                                            reason: "invalidTexture",
-                                            entityType: "companion",
-                                        } satisfies UpgradeFailedInvalidTexture,
-                                        websocketKey,
-                                        websocketProtocol,
-                                        websocketExtensions,
-                                        context
-                                    );
+                                    res.cork(() => {
+                                        res.upgrade(
+                                            {
+                                                rejected: true,
+                                                reason: "invalidTexture",
+                                                entityType: "companion",
+                                            } satisfies UpgradeFailedInvalidTexture,
+                                            websocketKey,
+                                            websocketProtocol,
+                                            websocketExtensions,
+                                            context
+                                        );
+                                    });
+                                    return;
                                 }
 
                                 if (userData.status !== "ok") {
@@ -422,17 +414,21 @@ export class IoSocketController {
                                         return;
                                     }
 
-                                    return res.upgrade(
-                                        {
-                                            rejected: true,
-                                            reason: "error",
-                                            error: userData,
-                                        } satisfies UpgradeFailedData,
-                                        websocketKey,
-                                        websocketProtocol,
-                                        websocketExtensions,
-                                        context
-                                    );
+                                    const errorData = userData;
+                                    res.cork(() => {
+                                        res.upgrade(
+                                            {
+                                                rejected: true,
+                                                reason: "error",
+                                                error: errorData,
+                                            } satisfies UpgradeFailedData,
+                                            websocketKey,
+                                            websocketProtocol,
+                                            websocketExtensions,
+                                            context
+                                        );
+                                    });
+                                    return;
                                 }
                             } catch (err) {
                                 if (upgradeAborted.aborted) {
@@ -461,7 +457,7 @@ export class IoSocketController {
                             return;
                         }
 
-                        const socketData: SocketData = {
+                        const socketData: ConnectingSocketData = {
                             rejected: false,
                             disconnecting: false,
                             token: token && typeof token === "string" ? token : "",
@@ -470,24 +466,9 @@ export class IoSocketController {
                             userUuid: userData.userUuid,
                             isLogged,
                             ipAddress,
-                            name,
                             characterTextures,
                             companionTexture,
-                            position: {
-                                x: x,
-                                y: y,
-                                direction: "down",
-                                moving: false,
-                            },
-                            viewport: {
-                                top,
-                                right,
-                                bottom,
-                                left,
-                            },
-                            availabilityStatus,
                             lastCommandId,
-                            tabId,
                             messages: [],
                             tags: memberTags,
                             visitCardUrl: memberVisitCardUrl,
@@ -520,14 +501,16 @@ export class IoSocketController {
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
-                        res.upgrade<SocketData>(
-                            socketData,
-                            /* Spell these correctly */
-                            websocketKey,
-                            websocketProtocol,
-                            websocketExtensions,
-                            context
-                        );
+                        res.cork(() => {
+                            res.upgrade<ConnectingSocketData>(
+                                socketData,
+                                /* Spell these correctly */
+                                websocketKey,
+                                websocketProtocol,
+                                websocketExtensions,
+                                context
+                            );
+                        });
                     } catch (e) {
                         if (e instanceof Error) {
                             if (!(e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired)) {
@@ -538,38 +521,42 @@ export class IoSocketController {
                                 // If the response points to nowhere, don't attempt an upgrade
                                 return;
                             }
-                            res.upgrade(
-                                {
-                                    rejected: true,
-                                    reason:
-                                        e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired
-                                            ? tokenInvalidException
-                                            : null,
-                                    message: e.message,
-                                    roomId,
-                                } satisfies UpgradeFailedData,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
+                            res.cork(() => {
+                                res.upgrade(
+                                    {
+                                        rejected: true,
+                                        reason:
+                                            e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired
+                                                ? tokenInvalidException
+                                                : null,
+                                        message: e.message,
+                                        roomId,
+                                    } satisfies UpgradeFailedData,
+                                    websocketKey,
+                                    websocketProtocol,
+                                    websocketExtensions,
+                                    context
+                                );
+                            });
                         } else {
                             if (upgradeAborted.aborted) {
                                 // If the response points to nowhere, don't attempt an upgrade
                                 return;
                             }
-                            res.upgrade(
-                                {
-                                    rejected: true,
-                                    reason: null,
-                                    message: "500 Internal Server Error",
-                                    roomId,
-                                } satisfies UpgradeFailedData,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
+                            res.cork(() => {
+                                res.upgrade(
+                                    {
+                                        rejected: true,
+                                        reason: null,
+                                        message: "500 Internal Server Error",
+                                        roomId,
+                                    } satisfies UpgradeFailedData,
+                                    websocketKey,
+                                    websocketProtocol,
+                                    websocketExtensions,
+                                    context
+                                );
+                            });
                         }
                     }
                 })().catch((e) => {
@@ -613,7 +600,7 @@ export class IoSocketController {
                         emitInBatch(socket, payload);
                     };
 
-                    await socketManager.handleJoinRoom(socket);
+                    await socketManager.handleConnectToRoom(socket);
 
                     //get data information and show messages
                     if (socketData.messages && Array.isArray(socketData.messages)) {
@@ -730,6 +717,10 @@ export class IoSocketController {
                         }
 
                         switch (message.message.$case) {
+                            case "joinRoomFrontMessage": {
+                                await socketManager.handleJoinRoom(socket, message.message.joinRoomFrontMessage);
+                                break;
+                            }
                             case "viewportMessage": {
                                 socketManager.handleViewport(socket, message.message.viewportMessage);
                                 break;
@@ -1015,6 +1006,44 @@ export class IoSocketController {
                                                 };
                                                 this.sendAnswerMessage(socket, answerMessage);
                                             }
+                                            break;
+                                        }
+                                        case "startRecordingQuery": {
+                                            const localSpaceName =
+                                                message.message.queryMessage.query.startRecordingQuery.spaceName;
+                                            const worldSpaceName = `${socket.getUserData().world}.${localSpaceName}`;
+
+                                            await socketManager.handleStartRecording(socket, worldSpaceName, {
+                                                signal: abortController.signal,
+                                            });
+
+                                            answerMessage.answer = {
+                                                $case: "startRecordingAnswer",
+                                                startRecordingAnswer: {},
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            socket
+                                                .getUserData()
+                                                .queryAbortControllers.delete(message.message.queryMessage.id);
+                                            break;
+                                        }
+                                        case "stopRecordingQuery": {
+                                            const localSpaceName =
+                                                message.message.queryMessage.query.stopRecordingQuery.spaceName;
+                                            const worldSpaceName = `${socket.getUserData().world}.${localSpaceName}`;
+
+                                            await socketManager.handleStopRecording(socket, worldSpaceName, {
+                                                signal: abortController.signal,
+                                            });
+
+                                            answerMessage.answer = {
+                                                $case: "stopRecordingAnswer",
+                                                stopRecordingAnswer: {},
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            socket
+                                                .getUserData()
+                                                .queryAbortControllers.delete(message.message.queryMessage.id);
                                             break;
                                         }
                                         case "joinSpaceQuery": {
@@ -1304,6 +1333,8 @@ export class IoSocketController {
 
     private sendAnswerMessage(socket: WebSocket<SocketData>, answerMessage: AnswerMessage) {
         if (socket.getUserData().disconnecting) {
+            // Avoid leaking Map entries when we bail out before scheduling the delayed delete below.
+            socket.getUserData().queryAbortControllers.delete(answerMessage.id);
             return;
         }
         // We don't delete the abort controller right away because between the moment where we send the answer

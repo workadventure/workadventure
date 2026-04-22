@@ -48,7 +48,7 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         await Menu.openMapEditor(page);
 
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 8 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "matrixRoomPropertyData");
         await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
@@ -71,7 +71,7 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         await Menu.openMapEditor(page);
 
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 8 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "matrixRoomPropertyData");
         await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
@@ -101,7 +101,7 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         await Menu.openMapEditor(page);
 
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 8 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "matrixRoomPropertyData");
         await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
@@ -133,7 +133,7 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         await Menu.openMapEditor(page);
 
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 8 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "matrixRoomPropertyData");
 
         //TODO : find a better way to wait for the room to be created
@@ -174,7 +174,7 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         await Menu.openMapEditor(page);
 
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 8 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "matrixRoomPropertyData");
         await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
@@ -190,7 +190,11 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         await expect(page2.getByTestId("closeChatButton")).toBeVisible();
 
         await page2.addLocatorHandler(page2.getByTestId("closeModal"), async () => {
-            await page2.getByTestId("closeModal").click();
+            try {
+                await page2.getByTestId("closeModal").click();
+            } catch {
+                // Ignore error
+            }
         });
 
         await page2.getByTestId("chatBackward").click();

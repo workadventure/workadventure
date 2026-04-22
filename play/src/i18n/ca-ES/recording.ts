@@ -22,6 +22,8 @@ const recording: DeepPartial<Translation["recording"]> = {
     notification: {
         deleteNotification: "Enregistrament eliminat correctament",
         deleteFailedNotification: "Error en eliminar l'enregistrament",
+        startFailedNotification: "Error en iniciar l'enregistrament",
+        stopFailedNotification: "Error en aturar l'enregistrament",
         recordingStarted: "{name} ha començat un enregistrament.",
         downloadFailedNotification: "Error en descarregar l'enregistrament",
         recordingComplete: "Enregistrament completat",

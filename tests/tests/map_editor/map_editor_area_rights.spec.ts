@@ -10,6 +10,7 @@ import AreaAccessRights from "../utils/areaAccessRights";
 import { evaluateScript } from "../utils/scripting";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
+import { clickCoordinates } from "../utils/gameCoordinates";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -76,11 +77,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         //Need to wait for player move action
         // eslint-disable-next-line
         await page.waitForTimeout(1000);
-        await page.mouse.click(
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
-            { button: "right" },
-        );
+        await clickCoordinates(page, AreaAccessRights.entityPositionInArea, { button: "right" });
         //Need to wait for player move action
         // eslint-disable-next-line
         await page.waitForTimeout(1000);
@@ -131,8 +128,8 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         //await page.pause();
         await EntityEditor.moveAndClick(
             page2,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
+            AreaAccessRights.entityPositionInArea.x,
+            AreaAccessRights.entityPositionInArea.y,
         );
 
         await expect(page2.getByTestId("openWebsite")).toBeHidden();
@@ -166,8 +163,8 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         // to read the object
         await EntityEditor.moveAndClick(
             page2,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
+            AreaAccessRights.entityPositionInArea.x,
+            AreaAccessRights.entityPositionInArea.y,
         );
 
         // Check if the cowebsite is opened
@@ -234,17 +231,17 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await page2.getByTestId("cameras-container").waitFor({ state: "detached" });
         await Menu.openMapEditor(page2);
         //await MapEditor.openEntityEditor(page2);
-        await EntityEditor.selectEntity(page2, 0, "small table");
+        await EntityEditor.selectEntity(page2, 0, "coffee");
         await EntityEditor.moveAndClick(
             page2,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
+            AreaAccessRights.entityPositionInArea.x,
+            AreaAccessRights.entityPositionInArea.y,
         );
         await EntityEditor.clearEntitySelection(page2);
         await EntityEditor.moveAndClick(
             page2,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
+            AreaAccessRights.entityPositionInArea.x,
+            AreaAccessRights.entityPositionInArea.y,
         );
         await expect(page2.getByTestId("openWebsite")).toBeAttached();
 
@@ -313,16 +310,16 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await MapEditor.openTrashEditor(page2);
         await EntityEditor.moveAndClick(
             page2,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
+            AreaAccessRights.entityPositionInArea.x,
+            AreaAccessRights.entityPositionInArea.y,
         );
         // Note: we need to use the "close button" in the tools bar because the other close button is minified.
         await page2.getByTestId("closeMapEditorButton").click();
         //await Menu.closeMapEditor(page2);
         await EntityEditor.moveAndClick(
             page2,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
+            AreaAccessRights.entityPositionInArea.x,
+            AreaAccessRights.entityPositionInArea.y - 10,
         );
 
         await expect(page2.getByTestId("openWebsite")).toBeHidden();
@@ -389,17 +386,17 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await page2.getByTestId("claimPersonalAreaButton").click();
 
         await Menu.openMapEditor(page2);
-        await EntityEditor.selectEntity(page2, 0, "small table");
+        await EntityEditor.selectEntity(page2, 0, "coffee");
         await EntityEditor.moveAndClick(
             page2,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
+            AreaAccessRights.entityPositionInArea.x,
+            AreaAccessRights.entityPositionInArea.y,
         );
         await EntityEditor.clearEntitySelection(page2);
         await EntityEditor.moveAndClick(
             page2,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
-            AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
+            AreaAccessRights.entityPositionInArea.x,
+            AreaAccessRights.entityPositionInArea.y,
         );
         //await expect(page2.getByTestId("openWebsite")).toBeAttached();
         await page2.close();
@@ -443,31 +440,27 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
 
         // Add a first area
         await Menu.openMapEditor(page);
-        await AreaAccessRights.openAreaEditorAndAddArea(page);
+        await AreaAccessRights.openAreaEditorAndAddArea(page, { x: 1 * 32, y: 1 * 32 }, { x: 3 * 32, y: 3 * 32 });
         await page.getByTestId("personalAreaPropertyData").click();
         await Menu.closeMapEditor(page);
 
         // Add a second area
         await Menu.openMapEditor(page);
-        await AreaAccessRights.openAreaEditorAndAddArea(
-            page,
-            { x: 1 * 32 * 1.5, y: 9 * 32 * 1.5 },
-            { x: 9 * 32 * 1.5, y: 10 * 32 * 1.5 },
-        );
+        await AreaAccessRights.openAreaEditorAndAddArea(page, { x: 1 * 32, y: 4 * 32 }, { x: 3 * 32, y: 6 * 32 });
         await page.getByTestId("personalAreaPropertyData").click();
         await Menu.closeMapEditor(page);
 
         // Try to claim the area
-        await Map.walkToPosition(page, 6 * 32 + 10, 3 * 32 + 10);
+        await Map.teleportToPosition(page, 2 * 32, 2 * 32);
         await page.getByTestId("claimPersonalAreaButton").click();
 
         // Check if the second area is claimable
-        await Map.walkToPosition(page, 6 * 32 + 10, 9 * 32 + 10);
+        await Map.teleportToPosition(page, 2 * 32, 5 * 32);
         await expect(page.getByText("You already have a personal area")).toBeAttached();
         await expect(page.getByTestId("claimPersonalAreaReplaceConfirmButton")).toBeVisible();
 
         // Check if the first area is not claimable
-        await Map.walkToPosition(page, 6 * 32 + 10, 3 * 32 + 10);
+        await Map.teleportToPosition(page, 2 * 32, 2 * 32);
         await expect(page.getByTestId("claimPersonalAreaButton")).not.toBeAttached();
         await page.close();
         await page.context().close();

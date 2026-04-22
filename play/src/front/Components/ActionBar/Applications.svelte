@@ -14,16 +14,17 @@
     import cardsPng from "../images/applications/icon_cards.svg";
     import tldrawsJpeg from "../images/applications/icon_tldraw.jpeg";
     import { helpSettingsPopupBlockedStore } from "../../Stores/HelpSettingsPopupBlockedStore";
-    import { connectionManager } from "../../Connection/ConnectionManager";
     import { LL } from "../../../i18n/i18n-svelte";
     import Tooltip from "../Util/Tooltip.svelte";
     import { openedMenuStore } from "../../Stores/MenuStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     //let unsubscriptionSecondaryZoneMenuStore: Unsubscriber | null = null;
+    const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
     function klaxoonButtonHandler() {
-        if (!connectionManager.klaxoonToolClientId) return;
-        KlaxoonService.openKlaxoonActivityPicker(connectionManager.klaxoonToolClientId, (payload: KlaxoonEvent) => {
+        if (!applicationManager.klaxoonToolClientId) return;
+        KlaxoonService.openKlaxoonActivityPicker(applicationManager.klaxoonToolClientId, (payload: KlaxoonEvent) => {
             if (!payload.url) return;
             const openNewTab = window.open(payload.url, "_blank");
             if (!openNewTab || openNewTab.closed || typeof openNewTab.closed == "undefined") {
@@ -34,12 +35,12 @@
 
     function oneApplicationIsActivated() {
         return (
-            connectionManager.klaxoonToolActivated ||
-            connectionManager.googleDriveToolActivated ||
-            connectionManager.googleDocsToolActivated ||
-            connectionManager.googleSheetsToolActivated ||
-            connectionManager.googleSlidesToolActivated ||
-            connectionManager.eraserToolActivated
+            applicationManager.klaxoonToolActivated ||
+            applicationManager.googleDriveToolActivated ||
+            applicationManager.googleDocsToolActivated ||
+            applicationManager.googleSheetsToolActivated ||
+            applicationManager.googleSlidesToolActivated ||
+            applicationManager.eraserToolActivated
         );
     }
 
@@ -81,7 +82,7 @@
         style="margin-bottom: 4.5rem; height: auto;"
     >
         <div class="bottom-action-bar">
-            {#if connectionManager.klaxoonToolActivated}
+            {#if applicationManager.klaxoonToolActivated}
                 <div class="bottom-action-section flex animate">
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.klaxoon.label()} />
@@ -91,7 +92,7 @@
                                 openedMenuStore.close("appMenu");
                             }}
                             id="button-app-klaxoon"
-                            disabled={!connectionManager.klaxoonToolActivated}
+                            disabled={!applicationManager.klaxoonToolActivated}
                         >
                             <img draggable="false" src={klaxoonImg} style="padding: 2px" alt="Klaxoon" />
                         </button>
@@ -99,7 +100,7 @@
                 </div>
             {/if}
             <div class="bottom-action-section flex animate">
-                {#if connectionManager.googleDriveToolActivated}
+                {#if applicationManager.googleDriveToolActivated}
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleDrive.label()} />
                         <button
@@ -108,13 +109,13 @@
                                 openedMenuStore.close("appMenu");
                             }}
                             id="button-app-klaxoon"
-                            disabled={!connectionManager.googleDriveToolActivated}
+                            disabled={!applicationManager.googleDriveToolActivated}
                         >
                             <img draggable="false" src={googleDriveSvg} style="padding: 2px" alt="Goodle Doc" />
                         </button>
                     </div>
                 {/if}
-                {#if connectionManager.googleDocsToolActivated}
+                {#if applicationManager.googleDocsToolActivated}
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleDocs.label()} />
                         <button
@@ -123,13 +124,13 @@
                                 openedMenuStore.close("appMenu");
                             }}
                             id="button-app-klaxoon"
-                            disabled={!connectionManager.googleDocsToolActivated}
+                            disabled={!applicationManager.googleDocsToolActivated}
                         >
                             <img draggable="false" src={googleDocsSvg} style="padding: 2px" alt="Goodle Doc" />
                         </button>
                     </div>
                 {/if}
-                {#if connectionManager.googleSheetsToolActivated}
+                {#if applicationManager.googleSheetsToolActivated}
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleSheets.label()} />
                         <button
@@ -138,13 +139,13 @@
                                 openedMenuStore.close("appMenu");
                             }}
                             id="button-app-klaxoon"
-                            disabled={!connectionManager.googleSheetsToolActivated}
+                            disabled={!applicationManager.googleSheetsToolActivated}
                         >
                             <img draggable="false" src={googleSheetsSvg} style="padding: 2px" alt="Google Sheet" />
                         </button>
                     </div>
                 {/if}
-                {#if connectionManager.googleSlidesToolActivated}
+                {#if applicationManager.googleSlidesToolActivated}
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleSlides.label()} />
                         <button
@@ -153,13 +154,13 @@
                                 openedMenuStore.close("appMenu");
                             }}
                             id="button-app-klaxoon"
-                            disabled={!connectionManager.googleSlidesToolActivated}
+                            disabled={!applicationManager.googleSlidesToolActivated}
                         >
                             <img draggable="false" src={googleSlidesSvg} style="padding: 2px" alt="Google Slide" />
                         </button>
                     </div>
                 {/if}
-                {#if connectionManager.eraserToolActivated}
+                {#if applicationManager.eraserToolActivated}
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.eraser.label()} />
                         <button
@@ -168,13 +169,13 @@
                                 openedMenuStore.close("appMenu");
                             }}
                             id="button-app-klaxoon"
-                            disabled={!connectionManager.eraserToolActivated}
+                            disabled={!applicationManager.eraserToolActivated}
                         >
                             <img draggable="false" src={eraserSvg} style="padding: 2px" alt="Eraser" />
                         </button>
                     </div>
                 {/if}
-                {#if connectionManager.excalidrawToolActivated}
+                {#if applicationManager.excalidrawToolActivated}
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.excalidraw.label()} />
                         <button
@@ -183,13 +184,13 @@
                                 openedMenuStore.close("appMenu");
                             }}
                             id="button-app-klaxoon"
-                            disabled={!connectionManager.excalidrawToolActivated}
+                            disabled={!applicationManager.excalidrawToolActivated}
                         >
                             <img draggable="false" src={excalidrawSvg} style="padding: 2px" alt="Excalidraw" />
                         </button>
                     </div>
                 {/if}
-                {#if connectionManager.cardsToolActivated}
+                {#if applicationManager.cardsToolActivated}
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.cards.label()} />
                         <button
@@ -198,13 +199,13 @@
                                 openedMenuStore.close("appMenu");
                             }}
                             id="button-app-klaxoon"
-                            disabled={!connectionManager.cardsToolActivated}
+                            disabled={!applicationManager.cardsToolActivated}
                         >
                             <img draggable="false" src={cardsPng} style="padding: 2px" alt="Excalidraw" />
                         </button>
                     </div>
                 {/if}
-                {#if connectionManager.tldrawToolActivated}
+                {#if applicationManager.tldrawToolActivated}
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.tldraw.label()} />
                         <button
@@ -213,7 +214,7 @@
                                 openedMenuStore.close("appMenu");
                             }}
                             id="button-app-tldraw"
-                            disabled={!connectionManager.tldrawToolActivated}
+                            disabled={!applicationManager.tldrawToolActivated}
                         >
                             <img draggable="false" src={tldrawsJpeg} style="padding: 2px" alt="tldraw" />
                         </button>

@@ -25,6 +25,7 @@ import type { EventProcessor } from "./EventProcessor";
 import { CommunicationManager } from "./CommunicationManager";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
+import type { ManagedRecordingState } from "./RecordingManager";
 import { metadataProcessor } from "./MetadataProcessorInit";
 
 const debug = Debug("space");
@@ -277,7 +278,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
         await Promise.allSettled(promises);
 
-        this.publishProcessedMetadata(processedMetadata);
+        this.publishMetadata(processedMetadata);
     }
 
     private filterOneUser(user: SpaceUser): boolean {
@@ -574,10 +575,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         this.users.set(watcher, new Map<string, SpaceUser>(users.map((user) => [user.spaceUserId, user])));
     }
 
-    public handleQuery(
+    public async handleQuery(
         watcher: SpacesWatcher,
         spaceQueryMessage: SpaceQueryMessage
-    ): Pick<SpaceAnswerMessage, "answer"> {
+    ): Promise<Pick<SpaceAnswerMessage, "answer">> {
         try {
             if (!spaceQueryMessage.query) {
                 throw new Error("SpaceQueryMessage has no query");
@@ -616,6 +617,38 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                                 spaceName: this.name,
                                 spaceUserId: spaceQueryMessage.query.removeSpaceUserQuery.spaceUserId,
                             },
+                        },
+                    };
+                }
+                case "startSpaceRecordingQuery": {
+                    const { spaceUserId } = spaceQueryMessage.query.startSpaceRecordingQuery;
+                    const user = this.getUser(spaceUserId);
+
+                    if (!user) {
+                        throw new Error(`Could not find user ${spaceUserId} in space ${this.name}`);
+                    }
+
+                    await this.startRecording(user);
+                    return {
+                        answer: {
+                            $case: "startSpaceRecordingAnswer",
+                            startSpaceRecordingAnswer: {},
+                        },
+                    };
+                }
+                case "stopSpaceRecordingQuery": {
+                    const { spaceUserId } = spaceQueryMessage.query.stopSpaceRecordingQuery;
+                    const user = this.getUser(spaceUserId);
+
+                    if (!user) {
+                        throw new Error(`Could not find user ${spaceUserId} in space ${this.name}`);
+                    }
+
+                    await this.stopRecording(user);
+                    return {
+                        answer: {
+                            $case: "stopSpaceRecordingAnswer",
+                            stopSpaceRecordingAnswer: {},
                         },
                     };
                 }
@@ -717,19 +750,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         await this.communicationManager.handleStopRecording(user);
     }
     public async stopRecordingByServer(): Promise<void> {
-        const didStop = await this.communicationManager.handleServerStopRecording();
-        if (!didStop) {
-            return;
-        }
-
-        this.publishProcessedMetadata({
-            recording: {
-                recorder: null,
-                recording: false,
-            },
-        });
+        await this.communicationManager.handleServerStopRecording();
     }
-    public getRecordingState(): { isRecording: boolean; recorder: string | null } {
+    public getRecordingState(): ManagedRecordingState {
         return this.communicationManager.getRecordingState();
     }
     public destroy() {
@@ -737,7 +760,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         debug(`${this.name} => destroyed`);
     }
 
-    private publishProcessedMetadata(metadata: { [key: string]: unknown }): void {
+    public publishMetadata(metadata: { [key: string]: unknown }): void {
         if (Object.keys(metadata).length === 0) {
             return;
         }
@@ -768,13 +791,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         if (!didStop) {
             return;
         }
-
-        this.publishProcessedMetadata({
-            recording: {
-                recorder: null,
-                recording: false,
-            },
-        });
     }
 
     private isUserStillPresentInSpace(spaceUserId: string): boolean {

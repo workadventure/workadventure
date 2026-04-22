@@ -1083,7 +1083,7 @@ export class AreasPropertiesListener {
         proximityRoom.setDisplayName(get(LL).mapEditor.properties.livekitRoomProperty.label());
         await proximityRoom.joinSpace(
             roomName,
-            ["cameraState", "microphoneState", "screenShareState"],
+            ["cameraState", "microphoneState", "screenSharingState"],
             true,
             FilterType.ALL_USERS,
             property.livekitRoomConfig?.disableChat ?? false,
@@ -1525,7 +1525,7 @@ export class AreasPropertiesListener {
                 proximityRoom.setDisplayName(property.name);
                 const space = await proximityRoom.joinSpace(
                     uniqRoomName,
-                    ["cameraState", "microphoneState", "screenShareState"],
+                    ["cameraState", "microphoneState", "screenSharingState"],
                     true,
                     property.seeAttendees
                         ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK
@@ -1571,7 +1571,12 @@ export class AreasPropertiesListener {
                 // Switch back to listener role instead of leaving
                 const space = this.scene.proximityChatRoom.getCurrentSpace();
                 if (space) {
-                    space.stopStreaming();
+                    try {
+                        space.stopStreaming();
+                    } catch (error) {
+                        console.error("An error occurred while stopping streaming", error);
+                        Sentry.captureException(error);
+                    }
                     isSpeakerStore.set(false);
                     isListenerStore.set(true);
                     listenerWaitingMediaStore.set(remainingListenerZone.waitingLink);
@@ -1652,7 +1657,7 @@ export class AreasPropertiesListener {
                 proximityRoom.setDisplayName(speakerZoneName);
                 const space = await proximityRoom.joinSpace(
                     uniqRoomName,
-                    ["cameraState", "microphoneState", "screenShareState"],
+                    ["cameraState", "microphoneState", "screenSharingState"],
                     true,
                     seeAttendees ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK : FilterType.LIVE_STREAMING_USERS,
                     !property.chatEnabled

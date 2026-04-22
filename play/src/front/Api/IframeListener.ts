@@ -1,4 +1,5 @@
 import { Subject } from "rxjs";
+import * as Sentry from "@sentry/svelte";
 import { availabilityStatusToJSON } from "@workadventure/messages";
 import type { BanEvent, ChatEvent } from "@workadventure/shared-utils";
 import { KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
@@ -18,6 +19,7 @@ import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore";
 import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connection/ConnectionManager";
 
+import { gameManager } from "../Phaser/Game/GameManager";
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
 import type { OpenTabEvent } from "./Events/OpenTabEvent";
@@ -307,324 +309,334 @@ class IframeListener {
                     return;
                 }
 
-                if (isIframeMessagePortWrapper(payload)) {
-                    const queryId = payload.id;
-                    const port = message.ports[0];
-                    if (!port) {
-                        console.error("Received a message with messagePort=true but no port was provided.");
-                        return;
-                    }
+                (async () => {
+                    // Let's wait for the current gameScene to be ready. This way, we are sure all listeners are in place before attempting dispatching an event.
+                    await gameManager.getCurrentGameScene().sceneReadyToStartPromise;
 
-                    const messagePort = new CheckedWorkAdventureMessagePort(port, payload.type);
+                    if (isIframeMessagePortWrapper(payload)) {
+                        const queryId = payload.id;
+                        const port = message.ports[0];
+                        if (!port) {
+                            console.error("Received a message with messagePort=true but no port was provided.");
+                            return;
+                        }
 
-                    if (!message.source) {
-                        throw new Error("Message is missing a source");
-                    }
-                    // If the calling iframe is closed, we need to close the message port
-                    this.onIframeCloseEvent(message.source, () => {
-                        messagePort.onCloseIframe();
-                    });
+                        const messagePort = new CheckedWorkAdventureMessagePort(port, payload.type);
 
-                    const answerer = this.openMessagePortAnswerers[payload.type] as
-                        | OpenMessagePortAnswererCallback<keyof IframeMessagePortMap>
-                        | undefined;
-                    if (answerer === undefined) {
-                        const errorMsg =
-                            'The iFrame sent an open port message of type "' +
-                            payload.type +
-                            '" but there is no service configured to answer these messages.';
-                        console.error(errorMsg);
-                        iframe.contentWindow?.postMessage(
-                            {
-                                id: queryId,
-                                type: payload.type,
-                                error: errorMsg,
-                            } as IframeErrorAnswerEvent,
-                            "*"
-                        );
-                        return;
-                    }
-
-                    const errorHandler = (reason: unknown) => {
-                        console.error(
-                            "An error occurred while responding to an iFrame open port message query.",
-                            reason
-                        );
-                        const error = asError(reason);
-                        const reasonMsg = error.message;
-
-                        iframe?.contentWindow?.postMessage(
-                            {
-                                id: queryId,
-                                messagePort: true,
-                                error: reasonMsg,
-                            } as IframeErrorMessagePortEvent,
-                            "*"
-                        );
-                    };
-
-                    try {
-                        Promise.resolve(answerer(payload.data, messagePort, message.source))
-                            .then((value) => {
-                                iframe?.contentWindow?.postMessage(
-                                    {
-                                        id: queryId,
-                                        messagePort: true,
-                                    } satisfies IframeSuccessMessagePortEvent,
-                                    "*"
-                                );
-                            })
-                            .catch(errorHandler);
-                    } catch (reason) {
-                        errorHandler(reason);
-                    }
-                } else if (isIframeQueryWrapper(payload)) {
-                    const queryId = payload.id;
-                    const query = payload.query;
-
-                    const answerer = this.answerers[query.type] as AnswererCallback<keyof IframeQueryMap> | undefined;
-                    if (answerer === undefined) {
-                        const errorMsg =
-                            'The iFrame sent a message of type "' +
-                            query.type +
-                            '" but there is no service configured to answer these messages.';
-                        console.error(errorMsg);
-                        iframe.contentWindow?.postMessage(
-                            {
-                                id: queryId,
-                                type: query.type,
-                                error: errorMsg,
-                            } as IframeErrorAnswerEvent,
-                            "*"
-                        );
-                        return;
-                    }
-
-                    const errorHandler = (reason: unknown) => {
-                        console.error("An error occurred while responding to an iFrame query.", reason);
-                        const error = asError(reason);
-                        const reasonMsg = error.message;
-
-                        iframe?.contentWindow?.postMessage(
-                            {
-                                id: queryId,
-                                type: query.type,
-                                error: reasonMsg,
-                            } as IframeErrorAnswerEvent,
-                            "*"
-                        );
-                    };
-
-                    try {
-                        Promise.resolve(answerer(query.data, message.source))
-                            .then((value) => {
-                                iframe?.contentWindow?.postMessage(
-                                    {
-                                        id: queryId,
-                                        type: query.type,
-                                        data: value,
-                                    },
-                                    "*"
-                                );
-                            })
-                            .catch(errorHandler);
-                    } catch (reason) {
-                        errorHandler(reason);
-                    }
-                } else if (lookingLikeEvent.success) {
-                    const iframeEventGuarded = isIframeEventWrapper.safeParse(lookingLikeEvent.data);
-
-                    if (!iframeEventGuarded.success) {
-                        console.error(
-                            `Invalid event "${lookingLikeEvent.data.type}" received from Iframe: `,
-                            lookingLikeEvent.data,
-                            iframeEventGuarded.error.issues
-                        );
-                        return;
-                    }
-
-                    const iframeEvent = iframeEventGuarded.data;
-
-                    if (iframeEvent.type === "showLayer") {
-                        this._showLayerStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "hideLayer") {
-                        this._hideLayerStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "setProperty") {
-                        this._setPropertyStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "setAreaProperty") {
-                        this._setAreaPropertyStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "cameraSet") {
-                        this._cameraSetStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "cameraFollowPlayer") {
-                        this._cameraFollowPlayerStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "chat") {
-                        this._chatMessageStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "startWriting") {
-                        this._startTypingProximityMessageStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "stopWriting") {
-                        this._stopTypingProximityMessageStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "startListeningToStreamInBubble") {
-                        this._startListeningToStreamInBubbleStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "stopListeningToStreamInBubble") {
-                        this._stopListeningToStreamInBubbleStream.next();
-                    } else if (iframeEvent.type === "openChat") {
-                        this._openChatStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "closeChat") {
-                        this._closeChatStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "addPersonnalMessage") {
-                        this._addPersonnalMessageStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "newChatMessageWritingStatus") {
-                        this._newChatMessageWritingStatusStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "openPopup") {
-                        this._openPopupStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "closePopup") {
-                        this._closePopupStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "openTab") {
-                        scriptUtils.openTab(iframeEvent.data.url);
-                    } else if (iframeEvent.type === "goToPage") {
-                        scriptUtils.goToPage(iframeEvent.data.url);
-                    } else if (iframeEvent.type === "loadPage") {
-                        this._loadPageStream.next(iframeEvent.data.url);
-                    } else if (iframeEvent.type === "playSound") {
-                        this._playSoundStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "stopSound") {
-                        this._stopSoundStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "loadSound") {
-                        this._loadSoundStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "disablePlayerControls") {
-                        this._disablePlayerControlStream.next(message.source);
-                    } else if (iframeEvent.type === "restorePlayerControls") {
-                        this._enablePlayerControlStream.next(message.source);
-                    } else if (iframeEvent.type === "turnOffMicrophone") {
-                        this._turnOffMicrophoneStream.next();
-                    } else if (iframeEvent.type === "turnOffWebcam") {
-                        this._turnOffWebcamStream.next();
-                    } else if (iframeEvent.type === "disableMicrophone") {
-                        this._disableMicrophoneStream.next();
-                    } else if (iframeEvent.type === "restoreMicrophone") {
-                        this._restoreMicrophoneStream.next();
-                    } else if (iframeEvent.type === "disableWebcam") {
-                        this._disableWebcamStream.next();
-                    } else if (iframeEvent.type === "restoreWebcam") {
-                        this._restoreWebcamStream.next();
-                    } else if (iframeEvent.type === "disablePlayerProximityMeeting") {
-                        this._disablePlayerProximityMeetingStream.next();
-                    } else if (iframeEvent.type === "restorePlayerProximityMeeting") {
-                        this._enablePlayerProximityMeetingStream.next();
-                    } else if (iframeEvent.type === "displayBubble") {
-                        this._displayBubbleStream.next();
-                    } else if (iframeEvent.type === "removeBubble") {
-                        this._removeBubbleStream.next();
-                    } else if (iframeEvent.type == "onPlayerMove") {
-                        this.sendPlayerMove = true;
-                    } else if (iframeEvent.type == "addActionsMenuKeyToRemotePlayer") {
-                        this._addActionsMenuKeyToRemotePlayerStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type == "removeActionsMenuKeyFromRemotePlayer") {
-                        this._removeActionsMenuKeyFromRemotePlayerEvent.next(iframeEvent.data);
-                    } else if (iframeEvent.type == "onCameraUpdate") {
-                        this._trackCameraUpdateStream.next();
-                    } else if (iframeEvent.type == "setTiles") {
-                        this._setTilesStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type == "modifyEmbeddedWebsite") {
-                        this._modifyEmbeddedWebsiteStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type == "modifyArea") {
-                        this._modifyAreaStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type == "modifyUIWebsite") {
-                        this._modifyUIWebsiteStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type == "registerMenu") {
-                        const dataName = iframeEvent.data.name;
                         if (!message.source) {
                             throw new Error("Message is missing a source");
                         }
-                        this.iframeCloseCallbacks.get(message.source)?.add(() => {
-                            handleMenuUnregisterEvent(dataName);
+                        // If the calling iframe is closed, we need to close the message port
+                        this.onIframeCloseEvent(message.source, () => {
+                            messagePort.onCloseIframe();
                         });
 
-                        foundSrc = this.getBaseUrl(foundSrc, message.source);
-
-                        handleMenuRegistrationEvent(
-                            iframeEvent.data.name,
-                            iframeEvent.data.iframe,
-                            iframeEvent.data.key,
-                            foundSrc,
-                            iframeEvent.data.options
-                        );
-                    } else if (iframeEvent.type == "unregisterMenu") {
-                        handleMenuUnregisterEvent(iframeEvent.data.key);
-                    } else if (iframeEvent.type == "openMenu") {
-                        handleOpenMenuEvent(iframeEvent.data.key);
-                    } else if (iframeEvent.type == "login") {
-                        analyticsClient.login();
-                        window.location.href = "/login";
-                    } else if (iframeEvent.type == "redirectPricing") {
-                        if (connectionManager.currentRoom && connectionManager.currentRoom.pricingUrl) {
-                            window.location.href = connectionManager.currentRoom.pricingUrl;
+                        const answerer = this.openMessagePortAnswerers[payload.type] as
+                            | OpenMessagePortAnswererCallback<keyof IframeMessagePortMap>
+                            | undefined;
+                        if (answerer === undefined) {
+                            const errorMsg =
+                                'The iFrame sent an open port message of type "' +
+                                payload.type +
+                                '" but there is no service configured to answer these messages.';
+                            console.error(errorMsg);
+                            iframe.contentWindow?.postMessage(
+                                {
+                                    id: queryId,
+                                    type: payload.type,
+                                    error: errorMsg,
+                                } as IframeErrorAnswerEvent,
+                                "*"
+                            );
+                            return;
                         }
-                    } else if (iframeEvent.type == "refresh") {
-                        window.location.reload();
-                    } else if (iframeEvent.type == "showBusinessCard") {
-                        requestVisitCardsStore.set(iframeEvent.data.visitCardUrl);
-                    } else if (iframeEvent.type == "openModal") {
-                        modalIframeStore.set(iframeEvent.data);
-                        modalVisibilityStore.set(true);
-                    } else if (iframeEvent.type == "closeModal") {
-                        // Get modal and send close event to trigger close event
-                        const modalIframe = get(modalIframeStore);
-                        if (modalIframe) iframeListener.sendModalCloseTriggered(modalIframe);
 
-                        // Close modal
-                        modalVisibilityStore.set(false);
-                        modalIframeStore.set(null);
-                    } else if (iframeEvent.type == "addButtonActionBar") {
-                        this._addButtonActionBarStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type == "removeButtonActionBar") {
-                        this._removeButtonActionBarStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type == "openBanner") {
-                        warningBannerStore.activateWarningContainer(iframeEvent.data.timeToClose);
-                        bannerStore.set(iframeEvent.data);
-                    } else if (iframeEvent.type == "closeBanner") {
-                        warningBannerStore.set(false);
-                        bannerStore.set(null);
-                    } else if (iframeEvent.type == KLAXOON_ACTIVITY_PICKER_EVENT) {
-                        // dispacth event on windows
-                        const event = new MessageEvent(
-                            "AcitivityPickerFromWorkAdventure",
-                            message as unknown as MessageEventInit<unknown>
-                        );
-                        window.dispatchEvent(event);
-                    } else if (iframeEvent.type == "banUser") {
-                        this._banPlayerIframeEvent.next(iframeEvent.data);
-                    } else if (iframeEvent.type == "disableMapEditor") {
-                        this._mapEditorStream.next(false);
-                    } else if (iframeEvent.type == "restoreMapEditor") {
-                        this._mapEditorStream.next(true);
-                    } else if (iframeEvent.type == "disableScreenSharing") {
-                        this._screenSharingStream.next(false);
-                    } else if (iframeEvent.type == "restoreScreenSharing") {
-                        this._screenSharingStream.next(true);
-                    } else if (iframeEvent.type == "disableRightClick") {
-                        this._rightClickStream.next(false);
-                    } else if (iframeEvent.type == "restoreRightClick") {
-                        this._rightClickStream.next(true);
-                    } else if (iframeEvent.type == "disableWheelZoom") {
-                        this._wheelZoomStream.next(false);
-                    } else if (iframeEvent.type == "restoreWheelZoom") {
-                        this._wheelZoomStream.next(true);
-                    } else if (iframeEvent.type == "disableInviteUserButton") {
-                        this._inviteUserButtonStream.next(false);
-                    } else if (iframeEvent.type == "restoreInviteUserButton") {
-                        this._inviteUserButtonStream.next(true);
-                    } else if (iframeEvent.type == "disableRoomList") {
-                        this._roomListStream.next(false);
-                    } else if (iframeEvent.type == "restoreRoomList") {
-                        this._roomListStream.next(true);
-                    } else if (iframeEvent.type == "setStatus") {
-                        this._setStatusStream.next(iframeEvent.data.status);
-                    } else {
-                        // Keep the line below. It will throw an error if we forget to handle one of the possible values.
-                        const _exhaustiveCheck: never = iframeEvent;
+                        const errorHandler = (reason: unknown) => {
+                            console.error(
+                                "An error occurred while responding to an iFrame open port message query.",
+                                reason
+                            );
+                            const error = asError(reason);
+                            const reasonMsg = error.message;
+
+                            iframe?.contentWindow?.postMessage(
+                                {
+                                    id: queryId,
+                                    messagePort: true,
+                                    error: reasonMsg,
+                                } as IframeErrorMessagePortEvent,
+                                "*"
+                            );
+                        };
+
+                        try {
+                            Promise.resolve(answerer(payload.data, messagePort, message.source))
+                                .then((value) => {
+                                    iframe?.contentWindow?.postMessage(
+                                        {
+                                            id: queryId,
+                                            messagePort: true,
+                                        } satisfies IframeSuccessMessagePortEvent,
+                                        "*"
+                                    );
+                                })
+                                .catch(errorHandler);
+                        } catch (reason) {
+                            errorHandler(reason);
+                        }
+                    } else if (isIframeQueryWrapper(payload)) {
+                        const queryId = payload.id;
+                        const query = payload.query;
+
+                        const answerer = this.answerers[query.type] as
+                            | AnswererCallback<keyof IframeQueryMap>
+                            | undefined;
+                        if (answerer === undefined) {
+                            const errorMsg =
+                                'The iFrame sent a message of type "' +
+                                query.type +
+                                '" but there is no service configured to answer these messages.';
+                            console.error(errorMsg);
+                            iframe.contentWindow?.postMessage(
+                                {
+                                    id: queryId,
+                                    type: query.type,
+                                    error: errorMsg,
+                                } as IframeErrorAnswerEvent,
+                                "*"
+                            );
+                            return;
+                        }
+
+                        const errorHandler = (reason: unknown) => {
+                            console.error("An error occurred while responding to an iFrame query.", reason);
+                            const error = asError(reason);
+                            const reasonMsg = error.message;
+
+                            iframe?.contentWindow?.postMessage(
+                                {
+                                    id: queryId,
+                                    type: query.type,
+                                    error: reasonMsg,
+                                } as IframeErrorAnswerEvent,
+                                "*"
+                            );
+                        };
+
+                        try {
+                            Promise.resolve(answerer(query.data, message.source))
+                                .then((value) => {
+                                    iframe?.contentWindow?.postMessage(
+                                        {
+                                            id: queryId,
+                                            type: query.type,
+                                            data: value,
+                                        },
+                                        "*"
+                                    );
+                                })
+                                .catch(errorHandler);
+                        } catch (reason) {
+                            errorHandler(reason);
+                        }
+                    } else if (lookingLikeEvent.success) {
+                        const iframeEventGuarded = isIframeEventWrapper.safeParse(lookingLikeEvent.data);
+
+                        if (!iframeEventGuarded.success) {
+                            console.error(
+                                `Invalid event "${lookingLikeEvent.data.type}" received from Iframe: `,
+                                lookingLikeEvent.data,
+                                iframeEventGuarded.error.issues
+                            );
+                            return;
+                        }
+
+                        const iframeEvent = iframeEventGuarded.data;
+
+                        if (iframeEvent.type === "showLayer") {
+                            this._showLayerStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "hideLayer") {
+                            this._hideLayerStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "setProperty") {
+                            this._setPropertyStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "setAreaProperty") {
+                            this._setAreaPropertyStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "cameraSet") {
+                            this._cameraSetStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "cameraFollowPlayer") {
+                            this._cameraFollowPlayerStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "chat") {
+                            this._chatMessageStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "startWriting") {
+                            this._startTypingProximityMessageStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "stopWriting") {
+                            this._stopTypingProximityMessageStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "startListeningToStreamInBubble") {
+                            this._startListeningToStreamInBubbleStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "stopListeningToStreamInBubble") {
+                            this._stopListeningToStreamInBubbleStream.next();
+                        } else if (iframeEvent.type === "openChat") {
+                            this._openChatStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "closeChat") {
+                            this._closeChatStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "addPersonnalMessage") {
+                            this._addPersonnalMessageStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "newChatMessageWritingStatus") {
+                            this._newChatMessageWritingStatusStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "openPopup") {
+                            this._openPopupStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "closePopup") {
+                            this._closePopupStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "openTab") {
+                            scriptUtils.openTab(iframeEvent.data.url);
+                        } else if (iframeEvent.type === "goToPage") {
+                            scriptUtils.goToPage(iframeEvent.data.url);
+                        } else if (iframeEvent.type === "loadPage") {
+                            this._loadPageStream.next(iframeEvent.data.url);
+                        } else if (iframeEvent.type === "playSound") {
+                            this._playSoundStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "stopSound") {
+                            this._stopSoundStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "loadSound") {
+                            this._loadSoundStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "disablePlayerControls") {
+                            this._disablePlayerControlStream.next(message.source);
+                        } else if (iframeEvent.type === "restorePlayerControls") {
+                            this._enablePlayerControlStream.next(message.source);
+                        } else if (iframeEvent.type === "turnOffMicrophone") {
+                            this._turnOffMicrophoneStream.next();
+                        } else if (iframeEvent.type === "turnOffWebcam") {
+                            this._turnOffWebcamStream.next();
+                        } else if (iframeEvent.type === "disableMicrophone") {
+                            this._disableMicrophoneStream.next();
+                        } else if (iframeEvent.type === "restoreMicrophone") {
+                            this._restoreMicrophoneStream.next();
+                        } else if (iframeEvent.type === "disableWebcam") {
+                            this._disableWebcamStream.next();
+                        } else if (iframeEvent.type === "restoreWebcam") {
+                            this._restoreWebcamStream.next();
+                        } else if (iframeEvent.type === "disablePlayerProximityMeeting") {
+                            this._disablePlayerProximityMeetingStream.next();
+                        } else if (iframeEvent.type === "restorePlayerProximityMeeting") {
+                            this._enablePlayerProximityMeetingStream.next();
+                        } else if (iframeEvent.type === "displayBubble") {
+                            this._displayBubbleStream.next();
+                        } else if (iframeEvent.type === "removeBubble") {
+                            this._removeBubbleStream.next();
+                        } else if (iframeEvent.type == "onPlayerMove") {
+                            this.sendPlayerMove = true;
+                        } else if (iframeEvent.type == "addActionsMenuKeyToRemotePlayer") {
+                            this._addActionsMenuKeyToRemotePlayerStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type == "removeActionsMenuKeyFromRemotePlayer") {
+                            this._removeActionsMenuKeyFromRemotePlayerEvent.next(iframeEvent.data);
+                        } else if (iframeEvent.type == "onCameraUpdate") {
+                            this._trackCameraUpdateStream.next();
+                        } else if (iframeEvent.type == "setTiles") {
+                            this._setTilesStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type == "modifyEmbeddedWebsite") {
+                            this._modifyEmbeddedWebsiteStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type == "modifyArea") {
+                            this._modifyAreaStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type == "modifyUIWebsite") {
+                            this._modifyUIWebsiteStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type == "registerMenu") {
+                            const dataName = iframeEvent.data.name;
+                            if (!message.source) {
+                                throw new Error("Message is missing a source");
+                            }
+                            this.iframeCloseCallbacks.get(message.source)?.add(() => {
+                                handleMenuUnregisterEvent(dataName);
+                            });
+
+                            foundSrc = this.getBaseUrl(foundSrc, message.source);
+
+                            handleMenuRegistrationEvent(
+                                iframeEvent.data.name,
+                                iframeEvent.data.iframe,
+                                iframeEvent.data.key,
+                                foundSrc,
+                                iframeEvent.data.options
+                            );
+                        } else if (iframeEvent.type == "unregisterMenu") {
+                            handleMenuUnregisterEvent(iframeEvent.data.key);
+                        } else if (iframeEvent.type == "openMenu") {
+                            handleOpenMenuEvent(iframeEvent.data.key);
+                        } else if (iframeEvent.type == "login") {
+                            analyticsClient.login();
+                            window.location.href = "/login";
+                        } else if (iframeEvent.type == "redirectPricing") {
+                            if (connectionManager.currentRoom && connectionManager.currentRoom.pricingUrl) {
+                                window.location.href = connectionManager.currentRoom.pricingUrl;
+                            }
+                        } else if (iframeEvent.type == "refresh") {
+                            window.location.reload();
+                        } else if (iframeEvent.type == "showBusinessCard") {
+                            requestVisitCardsStore.set(iframeEvent.data.visitCardUrl);
+                        } else if (iframeEvent.type == "openModal") {
+                            modalIframeStore.set(iframeEvent.data);
+                            modalVisibilityStore.set(true);
+                        } else if (iframeEvent.type == "closeModal") {
+                            // Get modal and send close event to trigger close event
+                            const modalIframe = get(modalIframeStore);
+                            if (modalIframe) iframeListener.sendModalCloseTriggered(modalIframe);
+
+                            // Close modal
+                            modalVisibilityStore.set(false);
+                            modalIframeStore.set(null);
+                        } else if (iframeEvent.type == "addButtonActionBar") {
+                            this._addButtonActionBarStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type == "removeButtonActionBar") {
+                            this._removeButtonActionBarStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type == "openBanner") {
+                            warningBannerStore.activateWarningContainer(iframeEvent.data.timeToClose);
+                            bannerStore.set(iframeEvent.data);
+                        } else if (iframeEvent.type == "closeBanner") {
+                            warningBannerStore.set(false);
+                            bannerStore.set(null);
+                        } else if (iframeEvent.type == KLAXOON_ACTIVITY_PICKER_EVENT) {
+                            // dispacth event on windows
+                            const event = new MessageEvent(
+                                "AcitivityPickerFromWorkAdventure",
+                                message as unknown as MessageEventInit<unknown>
+                            );
+                            window.dispatchEvent(event);
+                        } else if (iframeEvent.type == "banUser") {
+                            this._banPlayerIframeEvent.next(iframeEvent.data);
+                        } else if (iframeEvent.type == "disableMapEditor") {
+                            this._mapEditorStream.next(false);
+                        } else if (iframeEvent.type == "restoreMapEditor") {
+                            this._mapEditorStream.next(true);
+                        } else if (iframeEvent.type == "disableScreenSharing") {
+                            this._screenSharingStream.next(false);
+                        } else if (iframeEvent.type == "restoreScreenSharing") {
+                            this._screenSharingStream.next(true);
+                        } else if (iframeEvent.type == "disableRightClick") {
+                            this._rightClickStream.next(false);
+                        } else if (iframeEvent.type == "restoreRightClick") {
+                            this._rightClickStream.next(true);
+                        } else if (iframeEvent.type == "disableWheelZoom") {
+                            this._wheelZoomStream.next(false);
+                        } else if (iframeEvent.type == "restoreWheelZoom") {
+                            this._wheelZoomStream.next(true);
+                        } else if (iframeEvent.type == "disableInviteUserButton") {
+                            this._inviteUserButtonStream.next(false);
+                        } else if (iframeEvent.type == "restoreInviteUserButton") {
+                            this._inviteUserButtonStream.next(true);
+                        } else if (iframeEvent.type == "disableRoomList") {
+                            this._roomListStream.next(false);
+                        } else if (iframeEvent.type == "restoreRoomList") {
+                            this._roomListStream.next(true);
+                        } else if (iframeEvent.type == "setStatus") {
+                            this._setStatusStream.next(iframeEvent.data.status);
+                        } else {
+                            // Keep the line below. It will throw an error if we forget to handle one of the possible values.
+                            const _exhaustiveCheck: never = iframeEvent;
+                        }
                     }
-                }
+                })().catch((reason) => {
+                    console.error("An error occurred while receiving an Iframe message.", reason);
+                    Sentry.captureException(reason);
+                });
             },
             false
         );

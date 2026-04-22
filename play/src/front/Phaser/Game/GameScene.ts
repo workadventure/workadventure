@@ -12,23 +12,26 @@ import { ForwardableStore, MapStore } from "@workadventure/store-utils";
 import { MathUtils } from "@workadventure/math-utils";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "@workadventure/shared-utils";
-import type { GroupUsersUpdateMessage } from "@workadventure/messages";
 import {
     AvailabilityStatus,
     availabilityStatusToJSON,
     ErrorScreenMessage,
     FilterType,
+    type GroupUsersUpdateMessage,
     PositionMessage_Direction,
 } from "@workadventure/messages";
 import { z } from "zod";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
-import { type AreaData, type EntityPrefabType, type WAMFileFormat, WAMSettingsUtils } from "@workadventure/map-editor";
 import {
+    type AreaData,
     ENTITIES_FOLDER_PATH_NO_PREFIX,
     ENTITY_COLLECTION_FILE,
     EntityPermissions,
+    type EntityPrefabType,
     GameMap,
     GameMapProperties,
+    type WAMFileFormat,
+    WAMSettingsUtils,
 } from "@workadventure/map-editor";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import Debug from "debug";
@@ -171,7 +174,7 @@ import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMe
 import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
 import { resetAllStatusStoreExcept } from "../../Rules/StatusRules/statusChangerFunctions";
-import { isActivatedStore as isCalendarActiveStore, calendarEventsStore } from "../../Stores/CalendarStore";
+import { calendarEventsStore, isActivatedStore as isCalendarActiveStore } from "../../Stores/CalendarStore";
 import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../../Stores/TodoListStore";
 import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
 import type { ExtensionModule } from "../../ExternalModule/ExtensionModule";
@@ -185,7 +188,7 @@ import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEn
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import { ScriptLoadedError } from "../../Api/ScriptLoadedError";
-import { videoStreamStore, screenShareStreamStore } from "../../Stores/PeerStore";
+import { screenShareStreamStore, videoStreamStore } from "../../Stores/PeerStore";
 import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
@@ -194,7 +197,9 @@ import { ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
 import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVariablesStore";
+import { ApplicationManager } from "../../Chat/Applications/ApplicationManager";
 import { isNotSuspendedAudioContextStore } from "../../Stores/AudioContextStore";
+import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -294,7 +299,11 @@ export class GameScene extends DirtyScene {
     public readonly superLoad: SuperLoaderPlugin;
     private initPosition?: PositionInterface;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
-    private connectionAnswerPromiseDeferred: Deferred<RoomJoinedMessageInterface>;
+    // Promise resolved when we receive the first message of the roomConnection (RoomConnectedMessage)
+    private connectionAnswerPromiseDeferred: Deferred<void>;
+    private roomJoinedPromiseDeferred: Deferred<RoomJoinedMessageInterface>;
+    // true is soon as the roomConnection received the "roomJoined" message.
+    private hasJoinedRoom: boolean = false;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromiseDeferred: Deferred<void>;
     // A promise that will resolve when the scene is ready to start (all assets have been loaded and the connection to the room is established)
@@ -381,10 +390,12 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureResolve = resolve;
         this.currentCompanionTextureReject = reject;
     });
+    private _applicationManager: ApplicationManager | undefined;
     private _spaceRegistry: SpaceRegistryInterface | undefined;
     private spaceScriptingBridgeService: SpaceScriptingBridgeService | undefined;
     private allUserSpace: SpaceInterface | undefined;
     private isLiveStreamingUnsubscriber: Unsubscriber | undefined;
+    private shouldPublishScreenShareUnsubscriber: Unsubscriber | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
     private _worldUserCounter: ForwardableStore<number> = new ForwardableStore(0);
@@ -423,7 +434,8 @@ export class GameScene extends DirtyScene {
         this.entitiesCollectionsManager = new EntitiesCollectionsManager();
 
         this.createPromiseDeferred = new Deferred<void>();
-        this.connectionAnswerPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
+        this.connectionAnswerPromiseDeferred = new Deferred<void>();
+        this.roomJoinedPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
         this.loader = new Loader(this);
         this.superLoad = new SuperLoaderPlugin(this);
     }
@@ -763,40 +775,19 @@ export class GameScene extends DirtyScene {
         // TODO: Dynamic areas should be exclusively managed on the front side
         this.areaManager = new DynamicAreaManager(this.gameMapFrontWrapper);
 
-        // If the initial position is no set, get the personal desk position if exists
-        let initPosition_ = this.initPosition;
-        if (initPosition_ === undefined) {
-            // Get the personal desk position from the map
-            const areas = this.gameMapFrontWrapper.getGameMap().getWamFile()?.getGameMapAreas().getAreas() ?? [];
-            for (const [, area] of areas) {
-                const personalAreaPropertyData = area.properties.find(
-                    (property) =>
-                        property.type === "personalAreaPropertyData" &&
-                        property.ownerId === localUserStore.getLocalUser()?.uuid
-                );
-                if (personalAreaPropertyData) {
-                    initPosition_ = {
-                        x: area.x + area.width * 0.5,
-                        y: area.y + area.height * 0.5,
-                    };
-                    break;
-                }
-            }
-        }
-
         this.startPositionCalculator = new StartPositionCalculator(
             this.gameMapFrontWrapper,
             this.mapFile,
-            initPosition_,
+            this.initPosition,
             urlManager.getStartPositionNameFromUrl()
         );
-
-        //add entities
-        this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
 
         //create input to move
         this.userInputManager = new UserInputManager(this, new GameSceneUserInputHandler(this));
         mediaManager.setUserInputManager(this.userInputManager);
+
+        //add entities
+        this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
 
         if (localUserStore.getFullscreen()) {
             document
@@ -813,7 +804,9 @@ export class GameScene extends DirtyScene {
         this.subscribeToGameMapChanged();
         this.subscribeToEntitiesManagerObservables();
 
-        //notify game manager can to create currentUser in map
+        // We create the player and position it on the map before connecting to the room to avoid any delay in the player
+        // display when the connection is established. The player will be moved to the correct position when we
+        // now the exact start position (after receiving the map updates)
         this.createCurrentPlayer();
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
 
@@ -828,7 +821,6 @@ export class GameScene extends DirtyScene {
         this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
 
         biggestAvailableAreaStore.recompute();
-        this.cameraManager.startFollowPlayer(this.CurrentPlayer);
         if (ENABLE_MAP_EDITOR) {
             this.mapEditorModeManager = new MapEditorModeManager(this);
         }
@@ -958,9 +950,6 @@ export class GameScene extends DirtyScene {
                 debug("Loading process: Scripts loaded");
                 return results;
             }),
-            this.CurrentPlayer.getTextureLoadedPromise().then(() =>
-                debug("Loading process: Current player texture ready")
-            ) as Promise<unknown>,
             this.gameMapFrontWrapper.initializedPromise.promise.then(() =>
                 debug("Loading process: Game map initialized")
             ),
@@ -1003,11 +992,19 @@ export class GameScene extends DirtyScene {
                             }
                         }
 
-                        this.initUserPermissionsOnEntity();
-                        this.hide(false);
-                        gameSceneIsLoadedStore.set(true);
-                        this.sceneReadyToStartDeferred.resolve();
-                        this.initializeAreaManager();
+                        this.joinRoom()
+                            .then(() => {
+                                this.initUserPermissionsOnEntity();
+                                this.hide(false);
+                                gameSceneIsLoadedStore.set(true);
+                                this.sceneReadyToStartDeferred.resolve();
+                                this.initializeAreaManager();
+                            })
+                            .catch((e) => {
+                                console.error("Error while joining the room", e);
+                                Sentry.captureException(e);
+                                errorScreenStore.setException(e);
+                            });
                     })
                     .catch((e) => {
                         console.error("Promise.allSettled should never error", e);
@@ -1022,11 +1019,12 @@ export class GameScene extends DirtyScene {
 
         gameManager
             .getChatConnection()
-            .then(() => {
+            .then(async () => {
                 const connection = this.connection;
                 const chatId = localUserStore.getChatId();
                 const email: string | null = localUserStore.getLocalUser()?.email || null;
                 if (email && chatId && connection) {
+                    await this.roomJoinedPromiseDeferred.promise;
                     connection.emitUpdateChatId(email, chatId);
                     connection.emitPlayerChatID(chatId);
                 }
@@ -1035,10 +1033,6 @@ export class GameScene extends DirtyScene {
                 console.error(e);
                 Sentry.captureException(e);
             });
-
-        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
-            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
-        }
 
         if (this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
             this._focusFx = new DarkenOutsideAreaEffect(this, this.cameras.main, {
@@ -1113,9 +1107,11 @@ export class GameScene extends DirtyScene {
             forceRefreshChatStore.forceRefresh();
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
-            this.startPositionCalculator.initStartXAndStartY(urlManager.getStartPositionNameFromUrl());
-            this.CurrentPlayer.x = this.startPositionCalculator.startPosition.x;
-            this.CurrentPlayer.y = this.startPositionCalculator.startPosition.y;
+            const startPosition = this.startPositionCalculator.computeStartPosition(
+                urlManager.getStartPositionNameFromUrl()
+            );
+            this.CurrentPlayer.x = startPosition.x;
+            this.CurrentPlayer.y = startPosition.y;
             this.CurrentPlayer.finishFollowingPath(true);
             // clear properties in case we are moved on the same layer / area in order to trigger them
             this.gameMapFrontWrapper.clearCurrentProperties();
@@ -1176,6 +1172,7 @@ export class GameScene extends DirtyScene {
         this.outlineManager?.clear();
         this.userInputManager?.destroy();
         this.isLiveStreamingUnsubscriber?.();
+        this.shouldPublishScreenShareUnsubscriber?.();
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
@@ -1305,7 +1302,9 @@ export class GameScene extends DirtyScene {
         this.dirty = false;
         this.currentTick = time;
 
-        this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
+        if (this.hasJoinedRoom) {
+            this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
+        }
         if (this.mapEditorModeManager?.isActive()) {
             this.mapEditorModeManager.update(time, delta);
         }
@@ -1793,7 +1792,7 @@ export class GameScene extends DirtyScene {
                     .then(async () => {
                         itemFactory.create(this);
 
-                        const roomJoinedAnswer = await this.connectionAnswerPromiseDeferred.promise;
+                        const roomJoinedAnswer = await this.roomJoinedPromiseDeferred.promise;
 
                         for (const object of objectsOfType) {
                             // TODO: we should pass here a factory to create sprites (maybe?)
@@ -1845,42 +1844,18 @@ export class GameScene extends DirtyScene {
      * Initializes the connection to Pusher.
      */
     private connect(): void {
-        const camera = this.cameraManager.getCamera();
-        // camera.preRender() must be called before accessing worldView to ensure it's up to date, because it won't be set up until the first render.
-        // See: https://docs.phaser.io/phaser/concepts/cameras#world-view
-        // @ts-ignore preRender is protected, but the Phaser docs advertises this, so we ignore the warning.
-        camera.preRender();
-        const worldView = camera.worldView;
-
         connectionManager
             .connectToRoomSocket(
                 this.roomUrl,
                 this.playerName,
                 gameManager.getCharacterTextureIds() ?? [],
-                {
-                    ...this.startPositionCalculator.startPosition,
-                },
-                {
-                    left: worldView.x,
-                    top: worldView.y,
-                    right: worldView.right,
-                    bottom: worldView.bottom,
-                },
                 gameManager.getCompanionTextureId(),
-                get(availabilityStatusStore),
                 this.getGameMap().getWamFile()?.getLastCommandId()
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
 
-                // Initialize TURN credentials manager
-                iceServersManager.init(this.connection, this.abortController.signal);
-
-                gameManager.setCharacterTextureIds(onConnect.room.characterTextures.map((texture) => texture.id));
-                gameManager.setCompanionTextureId(onConnect.room?.companionTexture?.id ?? null);
-
-                this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
-                const commandsToApply = onConnect.room.commandsToApply;
+                const commandsToApply = onConnect.roomConnectedMessage.editMapCommandsArrayMessage?.editMapCommands;
                 if (commandsToApply) {
                     try {
                         await this.mapEditorModeManager?.updateMapToNewest(commandsToApply);
@@ -1890,74 +1865,24 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
+                const startPosition = this.startPositionCalculator.computeStartPosition(
+                    urlManager.getStartPositionNameFromUrl()
+                );
+
+                this.CurrentPlayer.teleportTo(startPosition.x, startPosition.y);
+                this.cameraManager.startFollowPlayer(this.CurrentPlayer);
+
+                this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
+
                 this._spaceRegistry = new SpaceRegistry(this.connection);
                 this.spaceScriptingBridgeService = new SpaceScriptingBridgeService(this._spaceRegistry);
 
                 videoStreamStore.forward(this._spaceRegistry.videoStreamStore);
                 screenShareStreamStore.forward(this._spaceRegistry.screenShareStreamStore);
-                let worldUserProvider: WorldUserProvider | undefined;
-                this._spaceRegistry
-                    .joinSpace(
-                        WORLD_SPACE_NAME,
-                        FilterType.ALL_USERS,
-                        ["availabilityStatus", "chatID"],
-                        this.abortController.signal
-                    )
-                    .then((space) => {
-                        this.allUserSpace = space;
-                        worldUserProvider = new WorldUserProvider(space);
-                        this._worldUserCounter.forward(worldUserProvider.userCount);
-                        return gameManager.getChatConnection();
-                    })
-                    .then((chatConnection) => {
-                        this._chatConnection = chatConnection;
-                        const connection = this.connection;
-                        const allUserSpace = this.allUserSpace;
-
-                        const userProviders: UserProviderInterface[] = [];
-
-                        if (ENABLE_CHAT_DISCONNECTED_LIST && this._room.isChatDisconnectedListEnabled) {
-                            if (connection) {
-                                userProviders.push(new AdminUserProvider(connection));
-                            }
-                            userProviders.push(new ChatUserProvider(chatConnection));
-                        }
-
-                        if (allUserSpace && this._room.isChatOnlineListEnabled && worldUserProvider) {
-                            userProviders.push(worldUserProvider);
-                        }
-
-                        const merger = new UserProviderMerger(userProviders);
-                        this._userProviderMergerDeferred.resolve(merger);
-                    })
-                    .catch((e) => {
-                        const errorMessage = "Failed to get chatConnection from gameManager : " + e;
-                        console.error(errorMessage);
-                    });
 
                 this.initExtensionModule();
 
                 this.tryOpenMapEditorWithToolEditorParameter();
-
-                this.subscribeToStores();
-
-                lazyLoadPlayerCharacterTextures(this.superLoad, onConnect.room.characterTextures)
-                    .then((textures) => {
-                        this.currentPlayerTexturesResolve(textures);
-                    })
-                    .catch((e) => {
-                        this.currentPlayerTexturesReject(e);
-                    });
-
-                if (onConnect.room.companionTexture) {
-                    lazyLoadPlayerCompanionTexture(this.superLoad, onConnect.room.companionTexture)
-                        .then((texture) => {
-                            this.currentCompanionTextureResolve(texture);
-                        })
-                        .catch((e) => {
-                            this.currentCompanionTextureReject(e);
-                        });
-                }
 
                 playersStore.connectToRoomConnection(this.connection);
                 userIsAdminStore.set(this.connection.hasTag("admin"));
@@ -2132,19 +2057,6 @@ export class GameScene extends DirtyScene {
 
                 // Set up manager of audio streams received by the scripting API (useful for bots)
 
-                this._proximityChatRoom = new ProximityChatRoom(
-                    this.connection.getSpaceUserId(),
-                    this._spaceRegistry,
-                    iframeListener,
-                    this.remotePlayersRepository,
-                    this,
-                    this.wamFile?.settings,
-                    this.connection.getAllTags()
-                );
-
-                this._proximityChatRoomDeferred.resolve(this._proximityChatRoom);
-                this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoom);
-
                 this.scriptingVideoManager = new ScriptingVideoManager();
 
                 this._sayManager = new SayManager(this.connection, this.CurrentPlayer);
@@ -2166,98 +2078,6 @@ export class GameScene extends DirtyScene {
                 // Set up locate manager
                 this.locateManager = new LocateManager(this, this.cameraManager, this.connection);
 
-                // Set up variables manager
-                this.sharedVariablesManager = new SharedVariablesManager(
-                    this.connection,
-                    this.gameMapFrontWrapper,
-                    onConnect.room.variables
-                );
-
-                // Set up area property variables manager
-                this.areaPropertyVariablesManager = new AreaPropertyVariablesManager(
-                    this.connection,
-                    onConnect.room.areaPropertyVariables
-                );
-                areaPropertyVariablesManagerStore.set(this.areaPropertyVariablesManager);
-
-                const playerVariables: Map<string, unknown> = onConnect.room.playerVariables;
-                // If the user is not logged, we initialize the variables with variables from the local storage
-                if (!localUserStore.isLogged()) {
-                    if (this._room.group) {
-                        for (const [key, { isPublic, value }] of localUserStore
-                            .getAllUserProperties(this._room.group)
-                            .entries()) {
-                            if (isPublic) {
-                                this.connection?.emitPlayerSetVariable({
-                                    key,
-                                    value,
-                                    persist: false,
-                                    public: true,
-                                    scope: "world",
-                                });
-                            }
-                            playerVariables.set(key, value);
-                        }
-                    }
-
-                    for (const [key, { isPublic, value }] of localUserStore
-                        .getAllUserProperties(this._room.id)
-                        .entries()) {
-                        if (isPublic) {
-                            this.connection?.emitPlayerSetVariable({
-                                key,
-                                value,
-                                persist: false,
-                                public: true,
-                                scope: "room",
-                            });
-                        }
-                        playerVariables.set(key, value);
-                    }
-                }
-                this.playerVariablesManager = new PlayerVariablesManager(
-                    this.connection,
-                    this.playersEventDispatcher,
-                    playerVariables,
-                    this._room.id,
-                    this._room.group ?? undefined
-                );
-
-                const broadcastService = new BroadcastService(
-                    this._spaceRegistry,
-                    this.wamFile?.settings,
-                    this.connection.getAllTags(),
-                    this.abortController.signal
-                );
-                this._broadcastService = broadcastService;
-
-                const megaphoneSpaceName = WAMSettingsUtils.getMegaphoneUrl(
-                    this.getGameMap().getWamFile()?.getWam()?.settings,
-                    new URL(this.roomUrl).host,
-                    this.roomUrl
-                );
-                if (!megaphoneSpaceName) {
-                    megaphoneSpaceSettingsStore.set(undefined);
-                } else {
-                    megaphoneSpaceSettingsStore.set({
-                        spaceName: megaphoneSpaceName,
-                        audienceVideoFeedbackActivated:
-                            this.getGameMap().getWamFile()?.getWam()?.settings?.megaphone
-                                ?.audienceVideoFeedbackActivated ?? false,
-                        canRecord: WAMSettingsUtils.canStartRecordingMegaphone(
-                            this.getGameMap().getWamFile()?.getWam()?.settings,
-                            this.connection.getAllTags(),
-                            localUserStore.isLogged()
-                        ),
-                    });
-                }
-                megaphoneCanBeUsedStore.set(
-                    WAMSettingsUtils.canUseMegaphone(
-                        this.getGameMap().getWamFile()?.getWam()?.settings,
-                        this.connection.getAllTags()
-                    )
-                );
-
                 // The errorMessageStream is completed in the RoomConnection. No need to unsubscribe.
 
                 // this.connection.errorMessageStream.subscribe((errorMessage) => {
@@ -2265,7 +2085,7 @@ export class GameScene extends DirtyScene {
                 //     //warningMessageStore.addWarningMessage(errorMessage.message);
                 // });
 
-                this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
+                this.connectionAnswerPromiseDeferred.resolve();
                 // Analyze tags to find if we are admin. If yes, show console.
 
                 const error = get(errorScreenStore);
@@ -2320,15 +2140,6 @@ export class GameScene extends DirtyScene {
 
                 this.emoteManager = new EmoteManager(this, this.connection);
 
-                // Check WebRtc connection
-                try {
-                    checkCoturnServer().catch((err) => {
-                        console.error("Check coturn server error: ", err);
-                    });
-                } catch (err) {
-                    console.error("Check coturn server exception: ", err);
-                }
-
                 // Check the audio context of the current page
                 if (!audioContextManager.verifyContextIsNotSuspended()) {
                     // Check if there has notification permission
@@ -2368,6 +2179,232 @@ export class GameScene extends DirtyScene {
                 gameSceneStore.set(this);
             })
             .catch((e) => console.error(e));
+    }
+
+    /**
+     * Send the emitJoinRoom message to the server, wait for the answer and initialize all objects depending on the server
+     * answer.
+     */
+    private async joinRoom() {
+        if (!this.connection) {
+            throw new Error("No connection found when joining room");
+        }
+
+        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
+            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+        }
+
+        this.connection.emitJoinRoom(
+            this.playerName,
+            {
+                x: this.CurrentPlayer.x,
+                y: this.CurrentPlayer.y,
+                direction: PositionMessage_Direction.DOWN,
+                moving: false,
+            },
+            this.getViewport(true),
+            get(availabilityStatusStore),
+            connectionManager.tabId
+        );
+
+        // TODO: what happens if we never receive the room joined message?
+        // TODO: can we turn emitJoinRoom into a query?
+        const room = await this.connection.roomJoinedPromise;
+        this.hasJoinedRoom = true;
+
+        const allPromises: PromiseLike<void>[] = [];
+
+        // Initialize TURN credentials manager
+        iceServersManager.init(this.connection, this.abortController.signal);
+
+        gameManager.setCharacterTextureIds(room.characterTextures.map((texture) => texture.id));
+        gameManager.setCompanionTextureId(room?.companionTexture?.id ?? null);
+
+        this._applicationManager = new ApplicationManager(room.applications);
+
+        allPromises.push(
+            lazyLoadPlayerCharacterTextures(this.superLoad, room.characterTextures)
+                .then((textures) => {
+                    this.currentPlayerTexturesResolve(textures);
+                })
+                .catch((e) => {
+                    this.currentPlayerTexturesReject(e);
+                })
+        );
+
+        if (room.companionTexture) {
+            allPromises.push(
+                lazyLoadPlayerCompanionTexture(this.superLoad, room.companionTexture)
+                    .then((texture) => {
+                        this.currentCompanionTextureResolve(texture);
+                    })
+                    .catch((e) => {
+                        this.currentCompanionTextureReject(e);
+                    })
+            );
+        }
+
+        // Set up variables manager
+        this.sharedVariablesManager = new SharedVariablesManager(
+            this.connection,
+            this.gameMapFrontWrapper,
+            room.variables
+        );
+
+        // Set up area property variables manager
+        this.areaPropertyVariablesManager = new AreaPropertyVariablesManager(
+            this.connection,
+            room.areaPropertyVariables
+        );
+        areaPropertyVariablesManagerStore.set(this.areaPropertyVariablesManager);
+
+        const playerVariables: Map<string, unknown> = room.playerVariables;
+
+        // If the user is not logged, we initialize the variables with variables from the local storage
+        if (!localUserStore.isLogged()) {
+            if (this._room.group) {
+                for (const [key, { isPublic, value }] of localUserStore
+                    .getAllUserProperties(this._room.group)
+                    .entries()) {
+                    if (isPublic) {
+                        this.connection?.emitPlayerSetVariable({
+                            key,
+                            value,
+                            persist: false,
+                            public: true,
+                            scope: "world",
+                        });
+                    }
+                    playerVariables.set(key, value);
+                }
+            }
+
+            for (const [key, { isPublic, value }] of localUserStore.getAllUserProperties(this._room.id).entries()) {
+                if (isPublic) {
+                    this.connection?.emitPlayerSetVariable({
+                        key,
+                        value,
+                        persist: false,
+                        public: true,
+                        scope: "room",
+                    });
+                }
+                playerVariables.set(key, value);
+            }
+        }
+        this.playerVariablesManager = new PlayerVariablesManager(
+            this.connection,
+            this.playersEventDispatcher,
+            playerVariables,
+            this._room.id,
+            this._room.group ?? undefined
+        );
+
+        if (this._spaceRegistry === undefined) {
+            throw new Error("Space registry is undefined when joining room");
+        }
+
+        let worldUserProvider: WorldUserProvider | undefined;
+        this._spaceRegistry
+            .joinSpace(
+                WORLD_SPACE_NAME,
+                FilterType.ALL_USERS,
+                ["availabilityStatus", "chatID"],
+                this.abortController.signal
+            )
+            .then((space) => {
+                this.allUserSpace = space;
+                worldUserProvider = new WorldUserProvider(space);
+                this._worldUserCounter.forward(worldUserProvider.userCount);
+                return gameManager.getChatConnection();
+            })
+            .then((chatConnection) => {
+                this._chatConnection = chatConnection;
+                const connection = this.connection;
+                const allUserSpace = this.allUserSpace;
+
+                const userProviders: UserProviderInterface[] = [];
+
+                if (ENABLE_CHAT_DISCONNECTED_LIST && this._room.isChatDisconnectedListEnabled) {
+                    if (connection) {
+                        userProviders.push(new AdminUserProvider(connection));
+                    }
+                    userProviders.push(new ChatUserProvider(chatConnection));
+                }
+
+                if (allUserSpace && this._room.isChatOnlineListEnabled && worldUserProvider) {
+                    userProviders.push(worldUserProvider);
+                }
+
+                this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
+            })
+            .catch((e) => {
+                const errorMessage = "Failed to get chatConnection from gameManager : " + e;
+                console.error(errorMessage);
+            });
+
+        this._proximityChatRoom = new ProximityChatRoom(
+            this.connection.getSpaceUserId(),
+            this._spaceRegistry,
+            iframeListener,
+            this.remotePlayersRepository,
+            this,
+            this.wamFile?.settings,
+            this.connection.getAllTags()
+        );
+
+        this._proximityChatRoomDeferred.resolve(this._proximityChatRoom);
+        this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoom);
+
+        // Check WebRtc connection
+        try {
+            checkCoturnServer().catch((err) => {
+                console.error("Check coturn server error: ", err);
+            });
+        } catch (err) {
+            console.error("Check coturn server exception: ", err);
+        }
+
+        const broadcastService = new BroadcastService(
+            this._spaceRegistry,
+            this.wamFile?.settings,
+            this.connection.getAllTags(),
+            this.abortController.signal
+        );
+        this._broadcastService = broadcastService;
+
+        const megaphoneSpaceName = WAMSettingsUtils.getMegaphoneUrl(
+            this.getGameMap().getWamFile()?.getWam()?.settings,
+            new URL(this.roomUrl).host,
+            this.roomUrl
+        );
+        if (!megaphoneSpaceName) {
+            megaphoneSpaceSettingsStore.set(undefined);
+        } else {
+            megaphoneSpaceSettingsStore.set({
+                spaceName: megaphoneSpaceName,
+                audienceVideoFeedbackActivated:
+                    this.getGameMap().getWamFile()?.getWam()?.settings?.megaphone?.audienceVideoFeedbackActivated ??
+                    false,
+                canRecord: WAMSettingsUtils.canStartRecordingMegaphone(
+                    this.getGameMap().getWamFile()?.getWam()?.settings,
+                    this.connection.getAllTags(),
+                    localUserStore.isLogged()
+                ),
+            });
+        }
+        megaphoneCanBeUsedStore.set(
+            WAMSettingsUtils.canUseMegaphone(
+                this.getGameMap().getWamFile()?.getWam()?.settings,
+                this.connection.getAllTags()
+            )
+        );
+
+        this.subscribeToStores();
+
+        await Promise.all(allPromises);
+
+        this.roomJoinedPromiseDeferred.resolve(room);
     }
 
     private initExtensionModule() {
@@ -2618,6 +2655,14 @@ export class GameScene extends DirtyScene {
                 this.disableVoiceIndicator();
             }
         });
+
+        this.shouldPublishScreenShareUnsubscriber = this.spaceRegistry.shouldPublishScreenShareStore.subscribe(
+            (shouldPublish) => {
+                if (!shouldPublish && get(requestedScreenSharingState)) {
+                    requestedScreenSharingState.disableScreenSharing();
+                }
+            }
+        );
 
         // Subscribe to bubble sound changes
         this.unsubscribers.push(
@@ -3033,12 +3078,14 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.showLayerStream.subscribe((layerEvent) => {
                 this.gameMapFrontWrapper.setLayerVisibility(layerEvent.name, true);
+                this.markDirty();
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.hideLayerStream.subscribe((layerEvent) => {
                 this.gameMapFrontWrapper.setLayerVisibility(layerEvent.name, false);
+                this.markDirty();
             })
         );
 
@@ -3161,7 +3208,7 @@ ${escapedMessage}
         iframeListener.registerAnswerer("getState", async (query, source): Promise<GameStateEvent> => {
             // The sharedVariablesManager is not instantiated before the connection is established. So we need to wait
             // for the connection to send back the answer.
-            await this.connectionAnswerPromiseDeferred.promise;
+            await this.roomJoinedPromiseDeferred.promise;
             return {
                 playerId: this.connection?.getUserId(),
                 mapUrl: this.mapUrlFile,
@@ -3770,8 +3817,9 @@ ${escapedMessage}
         try {
             this.CurrentPlayer = new Player(
                 this,
-                this.startPositionCalculator.startPosition.x,
-                this.startPositionCalculator.startPosition.y,
+                // We start creating the player before we know its exact position in order to start lazy loading the texture.
+                0,
+                0,
                 this.playerName,
                 this.currentPlayerTexturesPromise,
                 PositionMessage_Direction.DOWN,
@@ -3831,27 +3879,43 @@ ${escapedMessage}
     private doPushPlayerPosition(event: HasPlayerMovedInterface): void {
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
+
+        this.connection?.sharePosition(event.x, event.y, event.direction, event.moving, this.getViewport());
+        iframeListener.hasPlayerMoved(event);
+    }
+
+    private getViewport(forceRecomputeCamera = false): ViewportInterface {
+        if (!this.scene.scene.renderer) {
+            const x = this.lastMoveEventSent?.x ?? this.CurrentPlayer.x;
+            const y = this.lastMoveEventSent?.y ?? this.CurrentPlayer.y;
+
+            // In the very special case where we have no renderer, the viewport will not move along the Woka.
+            // We need to adjust it manually. We set it to something very large to make sure the Woka sees
+            // everything around (useful for bots, even if so far, it is a trick)
+            return {
+                left: x - 3_000,
+                top: y - 3_000,
+                right: x + 3_000,
+                bottom: y + 3_000,
+            };
+        }
+
         const camera = this.cameras.main;
+
+        if (forceRecomputeCamera) {
+            // When calling this before the first render, camera.preRender() must be called before accessing worldView to ensure it's up to date.
+            // See: https://docs.phaser.io/phaser/concepts/cameras#world-view
+            // @ts-ignore preRender is protected, but the Phaser docs advertises this, so we ignore the warning.
+            camera.preRender();
+        }
+
         const worldView = camera.worldView;
-        let viewport = {
+        return {
             left: worldView.x,
             top: worldView.y,
             right: worldView.right,
             bottom: worldView.bottom,
         };
-        if (!this.scene.scene.renderer) {
-            // In the very special case where we have no renderer, the viewport will not move along the Woka.
-            // We need to adjust it manually. We set it to something very large to make sure the Woka sees
-            // everything around (useful for bots, even if so far, it is a trick)
-            viewport = {
-                left: event.x - 3_000,
-                top: event.y - 3_000,
-                right: event.x + 3_000,
-                bottom: event.y + 3_000,
-            };
-        }
-        this.connection?.sharePosition(event.x, event.y, event.direction, event.moving, viewport);
-        iframeListener.hasPlayerMoved(event);
     }
 
     private doAddPlayer(addPlayerData: AddPlayerInterface): void {
@@ -4142,7 +4206,8 @@ ${escapedMessage}
             return;
         }
 
-        this.cameraManager.zoomByFactor(zoomFactor, smooth);
+        const time = zoomFactor > 1 ? (zoomFactor - 1) * 250 : (1 / zoomFactor - 1) * 250;
+        this.cameraManager.zoomByFactor(zoomFactor, smooth ? time : 0);
     }
 
     get room(): Room {
@@ -4159,6 +4224,13 @@ ${escapedMessage}
         }
 
         return this._proximityChatRoomDeferred.promise;
+    }
+
+    get applicationManager(): ApplicationManager {
+        if (!this._applicationManager) {
+            throw new Error("_applicationManager not yet initialized");
+        }
+        return this._applicationManager;
     }
 
     get spaceRegistry(): SpaceRegistryInterface {

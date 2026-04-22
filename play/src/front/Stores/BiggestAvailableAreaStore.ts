@@ -139,11 +139,11 @@ function createBiggestAvailableAreaStore() {
     return {
         subscribe,
         recompute: () => {
-            const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
+            const gameContainer = HtmlUtils.querySelectorOrFail<HTMLDivElement>("#game");
 
             const gameSize = {
-                width: game.offsetWidth,
-                height: game.offsetHeight,
+                width: gameContainer.offsetWidth,
+                height: gameContainer.offsetHeight,
             };
 
             const blockingElements = Array.from(document.getElementsByClassName("screen-blocker"));

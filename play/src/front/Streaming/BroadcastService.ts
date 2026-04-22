@@ -109,8 +109,8 @@ export class BroadcastService {
             : FilterType.LIVE_STREAMING_USERS;
 
         const watchFields = audienceVideoFeedbackActivated
-            ? ["screenSharing", "cameraState", "microphoneState", "megaphoneState", "attendeesState"]
-            : ["screenSharing", "cameraState", "microphoneState", "megaphoneState"];
+            ? ["screenSharingState", "cameraState", "microphoneState", "megaphoneState", "attendeesState"]
+            : ["screenSharingState", "cameraState", "microphoneState", "megaphoneState"];
 
         const space = await this.spaceRegistry.joinSpace(spaceNameSlugify, filterType, watchFields, abortSignal, {
             canRecord,

@@ -6,11 +6,10 @@ import type { SignalData } from "@workadventure/simple-peer";
 import { asError } from "catch-unknown";
 import { raceTimeout } from "../Utils/PromiseUtils";
 import type { WebRtcSignalReceivedMessageInterface } from "../Connection/ConnexionModels";
-import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
-import { localStreamStoreForPublishing } from "../Stores/MediaStore";
+import { localStreamStoreForPublishing, type LocalStreamStoreValue } from "../Stores/MediaStore";
 import { RetryWithBackoff } from "../Utils/RetryWithBackoff";
 import { warningMessageStore } from "../Stores/ErrorStore";
 import LL from "../../i18n/i18n-svelte";
@@ -62,7 +61,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         private _space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
-        private _screenSharingLocalStreamStore = screenSharingLocalStreamStore,
+        private _screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>,
         private _analyticsClient = analyticsClient,
         private _customWebRTCLogger = customWebRTCLogger,
         private _localStreamStore = localStreamStoreForPublishing
@@ -84,7 +83,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     return;
                 }
 
-                if (streamResult.stream !== undefined) {
+                if (streamResult && streamResult.stream !== undefined) {
                     isStreaming = true;
                     this.sendLocalScreenSharingStream(streamResult.stream);
                 } else {
@@ -257,7 +256,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 // eslint-disable-next-line listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener
                 peer.on("connect", () => {
                     const streamResult = get(this._screenSharingLocalStreamStore);
-                    if (streamResult.type === "success" && streamResult.stream !== undefined) {
+                    if (streamResult && streamResult.type === "success" && streamResult.stream !== undefined) {
                         this.sendLocalScreenSharingStreamToUser(user.userId, streamResult.stream);
                     }
 

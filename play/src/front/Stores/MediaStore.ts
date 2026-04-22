@@ -711,6 +711,12 @@ async function runRawStreamUpdate(
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia(newConstraints);
+            if (generation !== rawStreamGeneration) {
+                // A newer update is queued/running: discard this stale stream so devices are released immediately.
+                // The returned constraints are ignored by caller for stale generations.
+                stream.getTracks().forEach((track) => track.stop());
+                return nextConstraints;
+            }
             if (currentStream) {
                 const oldStream = currentStream;
                 if (oldStream.getVideoTracks().length > 0) {

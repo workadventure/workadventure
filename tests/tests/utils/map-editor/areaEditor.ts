@@ -2,6 +2,9 @@ import { fileURLToPath } from "url";
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import Menu from "../menu";
+import { gameToBrowserCoordinates, moveMouseToCoordinates } from "../gameCoordinates";
+
+const CAMERA_PREVIEW_BROWSER_HEIGHT = 5 * 32 * 1.5;
 
 class AreaEditor {
     async selectMegaphoneItemInCMR(page: Page) {
@@ -11,17 +14,23 @@ class AreaEditor {
     async drawArea(page: Page, topLeft: { x: number; y: number }, bottomRight: { x: number; y: number }) {
         await page.mouse.move(1, 1);
         let cameraTurnedOff = false;
+        let browserTopLeft = await gameToBrowserCoordinates(page, topLeft);
+        let browserBottomRight = await gameToBrowserCoordinates(page, bottomRight);
+
         // If the area is towards the top of the screen, we turn off camera,
-        if (bottomRight.y < 5 * 32 * 1.5 || topLeft.y < 5 * 32 * 1.5) {
+        if (browserBottomRight.y < CAMERA_PREVIEW_BROWSER_HEIGHT || browserTopLeft.y < CAMERA_PREVIEW_BROWSER_HEIGHT) {
             await Menu.turnOffCamera(page);
             cameraTurnedOff = true;
-            await expect(page.getByText("You")).toBeHidden({
+            await expect(page.locator("#cameras-container").getByText("You", { exact: true })).toBeHidden({
                 timeout: 20_000,
             });
+            browserTopLeft = await gameToBrowserCoordinates(page, topLeft);
+            browserBottomRight = await gameToBrowserCoordinates(page, bottomRight);
         }
-        await page.mouse.move(topLeft.x, topLeft.y);
+
+        await page.mouse.move(browserTopLeft.x, browserTopLeft.y);
         await page.mouse.down();
-        await page.mouse.move(bottomRight.x, bottomRight.y);
+        await page.mouse.move(browserBottomRight.x, browserBottomRight.y);
         await page.mouse.up();
 
         if (cameraTurnedOff) {
@@ -35,9 +44,12 @@ class AreaEditor {
         bottomRight: { x: number; y: number },
         moveBy: { x: number; y: number },
     ) {
-        await page.mouse.move((topLeft.x + bottomRight.x) / 2, (topLeft.y + bottomRight.y) / 2);
+        const center = { x: (topLeft.x + bottomRight.x) / 2, y: (topLeft.y + bottomRight.y) / 2 };
+        const target = { x: center.x + moveBy.x, y: center.y + moveBy.y };
+
+        await moveMouseToCoordinates(page, center);
         await page.mouse.down();
-        await page.mouse.move((topLeft.x + bottomRight.x) / 2 + moveBy.x, (topLeft.y + bottomRight.y) / 2 + moveBy.y);
+        await moveMouseToCoordinates(page, target);
         await page.mouse.up();
     }
 

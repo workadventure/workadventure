@@ -35,14 +35,14 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 4 * 32, y: 4 * 32 }, { x: 6 * 32, y: 6 * 32 });
         await AreaEditor.setAreaName(page, "My app zone");
 
         await AreaEditor.addProperty(page, "openWebsite");
         await page.getByRole("textbox", { name: "Link URL" }).fill(maps_test_url + "iframe.php");
         await page.getByText("Link URL").click();
 
-        await Map.teleportToPosition(page, 9 * 32, 9 * 32);
+        await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
         // Let's check a warning message is displayed in the logs saying the Allow API checkbox is not checked
         startRecordLogs(page);
@@ -60,7 +60,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // eslint-disable-next-line playwright/no-force-option
         await page.locator("#allowAPI").check({ force: true });
 
-        await Map.teleportToPosition(page, 9 * 32, 9 * 32);
+        await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
         await page
             .locator('iframe[title="Cowebsite"]')
@@ -85,7 +85,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 4 * 32, y: 4 * 32 }, { x: 6 * 32, y: 6 * 32 });
         await AreaEditor.setAreaName(page, "My app zone");
 
         // add property Klaxoon
@@ -100,7 +100,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // check if the iframe activity picker is opened
         const popupPromise = page.waitForEvent("popup");
-        await Map.teleportToPosition(page, 9 * 32, 9 * 32);
+        await Map.teleportToPosition(page, 5 * 32, 5 * 32);
         await popupPromise;
 
         // TODO make same test with object editor
@@ -117,7 +117,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 4 * 32, y: 4 * 32 }, { x: 6 * 32, y: 6 * 32 });
 
         await AreaEditor.setAreaName(page, "My app zone");
 
@@ -192,7 +192,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(page);
 
         // teleport on the area position and open the popup
-        await Map.teleportToPosition(page, 9 * 32, 9 * 32);
+        await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
         // check if the iframe was opened and button thumbnail is visible
         await page.getByTestId("tab1").getByText("Docs", { exact: true }).click();
@@ -217,12 +217,12 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await MapEditor.openEntityEditor(page);
 
         // select entity and push it into the map
-        await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5 - 15);
+        await EntityEditor.selectEntity(page, 0, "coffee");
+        await EntityEditor.moveAndClick(page, 1.5 * 32, 3.5 * 32);
 
         // quit object selector
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5 - 15);
+        await EntityEditor.moveAndClick(page, 1.5 * 32, 3.5 * 32);
 
         // add property Google Docs
         await EntityEditor.addProperty(page, "openWebsiteGoogleDocs");
@@ -264,7 +264,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(page);
 
         // click on the object and open popup
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5 - 15);
+        await EntityEditor.moveAndClick(page, 1.5 * 32, 3.5 * 32);
 
         // check if the popup with application is opened and can be close
         await expect(page.getByRole("button", { name: "Open Google Drive" })).toBeVisible();
@@ -287,12 +287,12 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await MapEditor.openEntityEditor(page);
 
         // select entity and push it into the map
-        await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5 - 15);
+        await EntityEditor.selectEntity(page, 0, "coffee");
+        await EntityEditor.moveAndClick(page, 1.5 * 32, 3.5 * 32);
 
         // quit object selector
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5 - 15);
+        await EntityEditor.moveAndClick(page, 1.5 * 32, 3.5 * 32);
 
         // add property Klaxoon
         await EntityEditor.addProperty(page, "openWebsiteKlaxoon");
@@ -307,7 +307,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(page);
 
         // click on the object and open popup
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5 - 15);
+        await EntityEditor.moveAndClick(page, 1.5 * 32, 3.5 * 32);
 
         // check if the cowebsite is opened
         await expect(page.locator("#cowebsites-container")).toBeVisible();
