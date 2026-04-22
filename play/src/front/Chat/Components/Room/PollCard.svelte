@@ -18,67 +18,50 @@
         localSelection = [...$state.myAnswerIds];
     }
 
-    $: hasSelectionChanged = !haveSameSelection(localSelection, $state.myAnswerIds);
-    $: canSubmitVote = $canVote && hasSelectionChanged && !isSubmittingVote;
-    $: hasPendingSelection = hasSelectionChanged && localSelection.length > 0;
     $: senderDisplayName =
         poll.sender?.username && poll.sender.username !== poll.sender.chatId ? poll.sender.username : undefined;
 
-    function toggleAnswer(answerId: string) {
-        if ($state.isEnded) {
+    function computeNextSelection(answerId: string): string[] {
+        if ($state.maxSelections === 1) {
+            return localSelection[0] === answerId ? [] : [answerId];
+        }
+
+        if (localSelection.includes(answerId)) {
+            return localSelection.filter((existingAnswerId) => existingAnswerId !== answerId);
+        }
+
+        if (localSelection.length >= $state.maxSelections) {
+            return [...localSelection.slice(1), answerId];
+        }
+
+        return [...localSelection, answerId];
+    }
+
+    async function voteFromAnswerClick(answerId: string) {
+        if ($state.isEnded || !$canVote || isSubmittingVote) {
             return;
         }
 
         errorMessage = undefined;
-        isDirty = true;
+        const nextSelection = computeNextSelection(answerId);
 
-        if ($state.maxSelections === 1) {
-            localSelection = localSelection[0] === answerId ? [] : [answerId];
-            return;
-        }
-
-        if (localSelection.includes(answerId)) {
-            localSelection = localSelection.filter((existingAnswerId) => existingAnswerId !== answerId);
-            return;
-        }
-
-        if (localSelection.length >= $state.maxSelections) {
-            localSelection = [...localSelection.slice(1), answerId];
-            return;
-        }
-
-        localSelection = [...localSelection, answerId];
-    }
-
-    async function submitVote() {
-        if (!canSubmitVote) {
+        if (haveSameSelection(nextSelection, $state.myAnswerIds)) {
             return;
         }
 
         isSubmittingVote = true;
-        errorMessage = undefined;
+        isDirty = true;
+        localSelection = [...nextSelection];
+
         try {
-            await poll.vote(localSelection);
+            await poll.vote(nextSelection);
             isDirty = false;
         } catch (error) {
             console.error("Failed to submit poll vote", error);
             errorMessage = $LL.chat.poll.submitError();
-        } finally {
-            isSubmittingVote = false;
-        }
-    }
-
-    async function clearVote() {
-        isSubmittingVote = true;
-        errorMessage = undefined;
-        try {
-            await poll.vote([]);
-            localSelection = [];
             isDirty = false;
-        } catch (error) {
-            console.error("Failed to clear poll vote", error);
-            errorMessage = $LL.chat.poll.submitError();
         } finally {
+            // eslint-disable-next-line require-atomic-updates
             isSubmittingVote = false;
         }
     }
@@ -154,7 +137,6 @@
         <div class="mt-4 flex flex-col gap-2">
             {#each $state.answers as answer (answer.id)}
                 {@const selected = localSelection.includes(answer.id)}
-                {@const pendingSelection = hasPendingSelection && selected}
                 <button
                     type="button"
                     data-testid={`pollAnswer-${answer.id}`}
@@ -162,12 +144,10 @@
                     class={`poll-answer text-left rounded-xl border px-3 py-3 relative overflow-hidden ${
                         !selected
                             ? "border-white/10 hover:border-white/30 hover:bg-white/[0.06] active:border-light-blue/60 active:bg-light-blue/10 active:scale-[0.985]"
-                            : pendingSelection
-                            ? "poll-answer-pending border-light-blue bg-light-blue/15 shadow-[0_0_0_2px_rgba(113,206,255,0.3),0_14px_34px_rgba(64,153,255,0.22)]"
                             : "border-white/30 bg-white/10"
-                    } ${$state.isEnded ? "cursor-default" : "hover:-translate-y-[1px]"}`}
-                    disabled={$state.isEnded}
-                    on:click={() => toggleAnswer(answer.id)}
+                    } ${$state.isEnded || !$canVote ? "cursor-default" : "hover:-translate-y-[1px]"}`}
+                    disabled={$state.isEnded || !$canVote || isSubmittingVote}
+                    on:click={() => voteFromAnswerClick(answer.id)}
                 >
                     {#if $state.resultsVisible}
                         <div
@@ -181,20 +161,14 @@
                         <div class="flex items-center gap-2 min-w-0">
                             <div
                                 class={`h-5 w-5 shrink-0 rounded-full border flex items-center justify-center transition-all duration-150 ${
-                                    !selected
-                                        ? "border-white/20"
-                                        : pendingSelection
-                                        ? "border-light-blue bg-light-blue text-dark-purple shadow-[0_0_12px_rgba(113,206,255,0.4)]"
-                                        : "border-white/30 bg-white/20"
+                                    selected ? "border-white/30 bg-white/20" : "border-white/20"
                                 }`}
                             >
                                 {#if selected}
                                     <IconCheck font-size={14} />
                                 {/if}
                             </div>
-                            <span class={`truncate ${pendingSelection ? "font-semibold text-light-blue" : ""}`}
-                                >{answer.text}</span
-                            >
+                            <span class="truncate">{answer.text}</span>
                         </div>
                         {#if $state.resultsVisible}
                             <div class="text-xs text-white/70 shrink-0">{answer.votes} ({answer.percentage}%)</div>
@@ -235,43 +209,18 @@
 
         {#if !$state.isEnded || $canDelete}
             <div class="mt-4 flex flex-wrap gap-2">
-                {#if !$state.isEnded}
+                {#if !$state.isEnded && $canEnd}
                     <button
-                        data-testid="submitPollVoteButton"
-                        class={`btn ${canSubmitVote ? "btn-secondary poll-submit-ready" : "btn-light btn-border"}`}
-                        disabled={!canSubmitVote}
-                        on:click={submitVote}
+                        data-testid="endPollButton"
+                        class="btn btn-danger"
+                        disabled={isEndingPoll}
+                        on:click={endPoll}
                     >
-                        {#if isSubmittingVote}
+                        {#if isEndingPoll}
                             <IconLoader class="animate-[spin_2s_linear_infinite] mr-2" font-size={16} />
-                        {:else if canSubmitVote}
-                            <IconCheck class="mr-2" font-size={16} />
                         {/if}
-                        {$state.hasVoted ? $LL.chat.poll.updateVote() : $LL.chat.poll.vote()}
+                        {$LL.chat.poll.end.cta()}
                     </button>
-                    {#if $state.hasVoted}
-                        <button
-                            data-testid="clearPollVoteButton"
-                            class="btn btn-light btn-border"
-                            disabled={isSubmittingVote}
-                            on:click={clearVote}
-                        >
-                            {$LL.chat.poll.removeVote()}
-                        </button>
-                    {/if}
-                    {#if $canEnd}
-                        <button
-                            data-testid="endPollButton"
-                            class="btn btn-danger"
-                            disabled={isEndingPoll}
-                            on:click={endPoll}
-                        >
-                            {#if isEndingPoll}
-                                <IconLoader class="animate-[spin_2s_linear_infinite] mr-2" font-size={16} />
-                            {/if}
-                            {$LL.chat.poll.end.cta()}
-                        </button>
-                    {/if}
                 {/if}
                 {#if $canDelete}
                     <button
@@ -308,24 +257,5 @@
 
     .poll-answer:not(:disabled):active {
         transform: scale(0.985);
-    }
-
-    @keyframes poll-submit-ready-pop {
-        0%,
-        100% {
-            transform: scale(1);
-        }
-        40% {
-            transform: scale(1.02);
-        }
-    }
-
-    .poll-answer-pending {
-        box-shadow: 0 0 0 2px rgba(146, 142, 187, 0.28), 0 14px 34px rgba(146, 142, 187, 0.22);
-    }
-
-    .poll-submit-ready {
-        box-shadow: 0 10px 24px rgba(146, 142, 187, 0.24);
-        animation: poll-submit-ready-pop 0.5s cubic-bezier(0.34, 1.25, 0.64, 1);
     }
 </style>
