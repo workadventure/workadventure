@@ -1864,9 +1864,9 @@ export class GameScene extends DirtyScene {
                 );
 
                 this.createCurrentPlayer(startPosition);
-                this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
 
-                this.cameraManager.startFollowPlayer(this.CurrentPlayer);
+                this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
+                this.cameraManager.startFollowPlayer(this.CurrentPlayer, 0);
 
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
 
