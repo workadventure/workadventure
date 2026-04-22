@@ -6,6 +6,7 @@
     import { IconChevronRight, IconChevronLeft } from "@wa-icons";
 
     export let tag: string;
+    export let displayTag = tag;
     export let entitiesPrefabsVariants: EntityVariant[];
 
     const dispatch = createEventDispatcher<{
@@ -31,7 +32,7 @@
                 />
             </div>
             <div class="tag">
-                <p class="m-0">{`${tag.charAt(0).toUpperCase()}${tag.slice(1)}`}</p>
+                <p class="m-0">{`${displayTag.charAt(0).toUpperCase()}${displayTag.slice(1)}`}</p>
             </div>
             <div class="entitiesCount">
                 {entitiesPrefabsVariants.length}

@@ -388,6 +388,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         images: "صورة{{s}}", // Image{{s}}
         noImage: "لا توجد صورة", // No image
+        mostUsedCategoryLabel: "الأكثر استخدامًا", // Most used
         customEntityEditorForm: {
             imageName: "اسم الصورة", // Image name
             tags: "وسوم", // Tags

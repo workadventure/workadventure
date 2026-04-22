@@ -386,6 +386,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         images: "图像{{s}}",
         noImage: "无图像",
+        mostUsedCategoryLabel: "最常用",
         customEntityEditorForm: {
             imageName: "图像名称",
             tags: "标签",

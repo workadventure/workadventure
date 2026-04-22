@@ -395,6 +395,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         images: "Bild{{s}}",
         noImage: "Kein Bild",
+        mostUsedCategoryLabel: "Meistverwendet",
         customEntityEditorForm: {
             imageName: "Bildname",
             tags: "Tags",

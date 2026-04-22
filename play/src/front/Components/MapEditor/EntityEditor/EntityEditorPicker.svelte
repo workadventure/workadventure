@@ -27,6 +27,8 @@
 
     const entitiesCollectionsManager = gameManager.getCurrentGameScene().getEntitiesCollectionsManager();
     const entitiesPrefabsVariants = entitiesCollectionsManager.getEntitiesPrefabsVariantStore();
+    const MOST_USED_CATEGORY = "__workadventure_most_used";
+    const MOST_USED_CATEGORY_LIMIT = 12;
 
     let pickedEntity: EntityPrefab | undefined = undefined;
     let pickedEntityVariant: EntityVariant | undefined = undefined;
@@ -124,10 +126,58 @@
                 (entityPrefabVariant) => entityPrefabVariant.defaultPrefab.type === "Custom"
             ),
         };
+        const mostUsedEntitiesPrefabsVariants = getMostUsedEntitiesPrefabsVariants(entitiesPrefabsVariants);
+
         return {
+            ...(mostUsedEntitiesPrefabsVariants.length > 0
+                ? { [MOST_USED_CATEGORY]: mostUsedEntitiesPrefabsVariants }
+                : {}),
             ...customEntitiesPrefabsVariants,
             ...Object.fromEntries(Object.entries(entitiesPrefabsVariantsGroupedByTag).sort()),
         };
+    }
+
+    function getMostUsedEntitiesPrefabsVariants(entitiesPrefabsVariants: EntityVariant[]): EntityVariant[] {
+        const entities = gameManager
+            .getCurrentGameScene()
+            .getGameMap()
+            .getWamFile()
+            ?.getGameMapEntities()
+            .getEntities();
+
+        if (!entities) {
+            return [];
+        }
+
+        const usageCountByPrefabId = Object.values(entities).reduce((usageCount, entity) => {
+            usageCount.set(entity.prefabRef.id, (usageCount.get(entity.prefabRef.id) ?? 0) + 1);
+            return usageCount;
+        }, new Map<string, number>());
+
+        return entitiesPrefabsVariants
+            .map((entityPrefabVariant) => ({
+                entityPrefabVariant,
+                count: entityPrefabVariant.prefabIds.reduce(
+                    (count, prefabId) => count + (usageCountByPrefabId.get(prefabId) ?? 0),
+                    0
+                ),
+            }))
+            .filter(({ count }) => count > 0)
+            .sort((a, b) => {
+                if (a.count !== b.count) {
+                    return b.count - a.count;
+                }
+                return a.entityPrefabVariant.defaultPrefab.name.localeCompare(b.entityPrefabVariant.defaultPrefab.name);
+            })
+            .slice(0, MOST_USED_CATEGORY_LIMIT)
+            .map(({ entityPrefabVariant }) => entityPrefabVariant);
+    }
+
+    function getCategoryLabel(tag: SelectableTag): string | undefined {
+        if (tag === MOST_USED_CATEGORY) {
+            return $LL.mapEditor.entityEditor.mostUsedCategoryLabel();
+        }
+        return tag;
     }
 
     function getEntitiesPrefabsVariantsFilteredByTag(
@@ -150,6 +200,11 @@
                 (entityPrefabVariant) =>
                     entityPrefabVariant.defaultPrefab.type === "Custom" &&
                     entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm)
+            );
+        }
+        if (tag === MOST_USED_CATEGORY) {
+            return getMostUsedEntitiesPrefabsVariants(entitiesPrefabsVariants).filter((entityPrefabVariant) =>
+                entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
         return entitiesPrefabsVariants.filter(
@@ -206,6 +261,7 @@
                             onSelectedTag(event.detail);
                         }}
                         {tag}
+                        displayTag={getCategoryLabel(tag) ?? tag}
                         {entitiesPrefabsVariants}
                     />
                 {/each}
@@ -275,7 +331,7 @@
                 <div class="flex flex-col gap-2" class:mt-52={pickedEntityVariant && pickedEntity}>
                     {#if $selectCategoryStore}
                         <span class="font-bold text-lg">
-                            {$selectCategoryStore}
+                            {getCategoryLabel($selectCategoryStore)}
                         </span>
                     {/if}
                     <EntitiesGrid

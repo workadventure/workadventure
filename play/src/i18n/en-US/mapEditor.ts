@@ -389,6 +389,7 @@ const mapEditor: BaseTranslation = {
         },
         images: "Image{{s}}",
         noImage: "No image",
+        mostUsedCategoryLabel: "Most used",
         customEntityEditorForm: {
             imageName: "Image name",
             tags: "Tags",
