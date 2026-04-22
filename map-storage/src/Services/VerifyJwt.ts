@@ -9,9 +9,20 @@ import { fileSystem } from "../fileSystem";
 import { PATH_PREFIX, SECRET_KEY } from "../Enum/EnvironmentVariable";
 import { mapPathUsingDomainWithPrefix } from "./PathMapper";
 
+function parseTagsBeforeValidation(rawTags: unknown): unknown {
+    if (typeof rawTags === "string") {
+        try {
+            return JSON.parse(rawTags);
+        } catch {
+            return [];
+        }
+    }
+    return rawTags;
+}
+
 const AuthTokenData = z.object({
     wamUrl: z.string().url(),
-    tags: z.array(z.string()).optional(),
+    tags: z.preprocess(parseTagsBeforeValidation, z.array(z.string())).optional(),
 });
 type AuthTokenData = z.infer<typeof AuthTokenData>;
 

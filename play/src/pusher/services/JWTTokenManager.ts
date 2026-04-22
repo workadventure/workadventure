@@ -2,40 +2,29 @@ import { jwtVerify, SignJWT, errors } from "jose";
 import z from "zod";
 import { ADMIN_SOCKETS_TOKEN, SECRET_KEY } from "../enums/EnvironmentVariable";
 
+function parseTagsBeforeValidation(rawTags: unknown): unknown {
+    if (typeof rawTags === "string") {
+        try {
+            return JSON.parse(rawTags);
+        } catch {
+            return [];
+        }
+    }
+    return rawTags;
+}
+
 export const AuthTokenData = z.object({
     identifier: z.string(), //will be a email if logged in or an uuid if anonymous
     accessToken: z.string().optional(),
     username: z.string().optional(),
     locale: z.string().optional(),
-    tags: z
-        .preprocess((val) => {
-            if (typeof val === "string") {
-                try {
-                    return JSON.parse(val);
-                } catch {
-                    return [val];
-                }
-            }
-            return val;
-        }, z.string().array())
-        .optional(),
+    tags: z.preprocess(parseTagsBeforeValidation, z.string().array()).optional(),
     matrixUserId: z.string().optional(),
 });
 export type AuthTokenData = z.infer<typeof AuthTokenData>;
 
 export const AccessTokenData = z.object({
-    tags: z
-        .preprocess((val) => {
-            if (typeof val === "string") {
-                try {
-                    return JSON.parse(val);
-                } catch {
-                    return [val];
-                }
-            }
-            return val;
-        }, z.string().array())
-        .optional(),
+    tags: z.preprocess(parseTagsBeforeValidation, z.string().array()).optional(),
 });
 export type AccessTokenData = z.infer<typeof AccessTokenData>;
 
