@@ -24,6 +24,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     constructor(scene: Phaser.Scene, x: number, y: number, playerName: string, outlineColor: number | undefined) {
         super(scene, x, y);
         this.playerName = playerName;
+        this.setDepth(DEPTH_INGAME_TEXT_INDEX);
 
         // Todo: Replace the font family with a better one
         // Use larger font size for non-Latin characters (Arabic, CJK, etc.) for better readability

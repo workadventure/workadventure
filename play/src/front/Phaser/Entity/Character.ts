@@ -61,6 +61,9 @@ export abstract class Character extends Container implements OutlineableInterfac
     private outlineColorStoreUnsubscribe: Unsubscriber | undefined;
     private texturePromise: CancelablePromise<string[] | void> | undefined;
     private destroyed = false;
+    private readonly updateUsernameDisplayPosition = (): void => {
+        this.usernameDisplay?.setPosition(this.x, this.y + playerNameY);
+    };
 
     /**
      * A deferred promise that resolves when the texture of the character is actually displayed.
@@ -162,9 +165,15 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
 
             const playerNameOutlineColor = get(this.outlineColorStore);
-            this.usernameDisplay = new UsernameDisplay(scene, 0, playerNameY, this.playerName, playerNameOutlineColor);
+            this.usernameDisplay = new UsernameDisplay(
+                scene,
+                this.x,
+                this.y + playerNameY,
+                this.playerName,
+                playerNameOutlineColor
+            );
             this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true, true);
-            this.add(this.usernameDisplay);
+            this.scene.events.on(Phaser.Scenes.Events.POST_UPDATE, this.updateUsernameDisplayPosition);
 
             this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
                 this.usernameDisplay?.setPlayerNameOutlineColor(color);
@@ -420,6 +429,8 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     destroy(): void {
+        this.scene.events.off(Phaser.Scenes.Events.POST_UPDATE, this.updateUsernameDisplayPosition);
+        this.usernameDisplay?.destroy();
         for (const sprite of this.sprites.values()) {
             if (this.scene) {
                 this.scene.sys.updateList.remove(sprite);
