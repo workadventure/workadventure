@@ -78,7 +78,6 @@ async function voteForAnswer(page: Page, answer: string) {
         .getByTestId("pollCard")
         .getByRole("button", { name: new RegExp(escapeRegExp(answer)) })
         .click();
-    await page.getByTestId("submitPollVoteButton").click();
 }
 
 async function expectParticipantsCount(page: Page, count: number) {
@@ -129,7 +128,7 @@ test.describe("Matrix chat polls @oidc @matrix @nowebkit", () => {
         await expectParticipantsCount(page, 1);
         await expectPollResult(page, "Pizza", 1, 100);
 
-        await page.getByTestId("clearPollVoteButton").click();
+        await voteForAnswer(page, "Pizza");
         await expectParticipantsCount(page, 0);
 
         await voteForAnswer(page, "Pizza");
