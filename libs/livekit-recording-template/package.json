@@ -1,0 +1,27 @@
+{
+  "name": "@workadventure/livekit-recording-template",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Custom LiveKit Room Composite egress template (React)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:mosaic": "vite --open '/?devMosaic=1'",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@livekit/egress-sdk": "^0.2.1",
+    "livekit-client": "^2.16.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "~5.8.3",
+    "vite": "^5.4.21"
+  }
+}

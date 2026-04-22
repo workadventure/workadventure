@@ -201,6 +201,7 @@ services:
       - LIVEKIT_RECORDING_S3_REGION
       - LIVEKIT_RECORDING_S3_BUCKET
       - LIVEKIT_RECORDING_S3_CDN_ENDPOINT
+      - LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL
     labels:
       traefik.enable: "true"
       traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes: "/api"

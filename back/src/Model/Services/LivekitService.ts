@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import type { SpaceUser } from "@workadventure/messages";
-import type { CreateOptions, EgressInfo, EncodedOutputs } from "livekit-server-sdk";
+import type { CreateOptions, EgressInfo, EncodedOutputs, RoomCompositeOptions } from "livekit-server-sdk";
 import {
     RoomServiceClient,
     AccessToken,
@@ -20,6 +20,7 @@ import {
     LIVEKIT_RECORDING_S3_ACCESS_KEY,
     LIVEKIT_RECORDING_S3_SECRET_KEY,
     LIVEKIT_RECORDING_S3_REGION,
+    LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL,
 } from "../../Enum/EnvironmentVariable";
 
 const debug = Debug("LivekitService");
@@ -196,9 +197,16 @@ export class LiveKitService {
                 images: thumbnailOutput,
             };
 
-            const result = await this.egressClient.startRoomCompositeEgress(this.getHashedRoomName(roomName), outputs, {
-                layout,
-            });
+            const roomCompositeOptions: RoomCompositeOptions = { layout };
+            if (LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL) {
+                roomCompositeOptions.customBaseUrl = LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL;
+            }
+
+            const result = await this.egressClient.startRoomCompositeEgress(
+                this.getHashedRoomName(roomName),
+                outputs,
+                roomCompositeOptions
+            );
 
             this.currentRecordingInformation = result;
         } catch (error) {

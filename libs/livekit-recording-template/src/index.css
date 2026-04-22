@@ -1,0 +1,215 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+.recording-template {
+    position: relative;
+    height: 100%;
+    min-height: 100%;
+    background: #0f1115;
+    color: #e6e6e6;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.recording-template--error {
+    align-items: stretch;
+    justify-content: flex-start;
+    /* Keep message readable under the overlay header */
+    padding-top: 44px;
+    box-sizing: border-box;
+}
+
+.recording-template--error .recording-template__error {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.recording-template__verification-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    padding: 8px 12px;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    background: linear-gradient(90deg, rgba(13, 148, 136, 0.92), rgba(15, 118, 110, 0.92));
+    color: #ecfeff;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+}
+
+.recording-template__mosaic {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    gap: 6px;
+    padding: 6px;
+    box-sizing: border-box;
+}
+
+.recording-template__mosaic--empty {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    background: #0a0c10;
+}
+
+.recording-template__cell--mosaic {
+    position: relative;
+    display: block;
+    background: #000;
+    border-radius: 4px;
+    overflow: hidden;
+    min-width: 0;
+    min-height: 0;
+}
+
+.recording-template__cell--mosaic .recording-template__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.recording-template__error {
+    margin: 0;
+    padding: 16px;
+    max-width: 40rem;
+    font-family: system-ui, sans-serif;
+    line-height: 1.5;
+}
+
+/* --- Dev mosaic tester (?devMosaic=1) --- */
+
+.dev-mosaic-tester {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: #0f1115;
+    color: #e6e6e6;
+}
+
+.dev-mosaic-tester__toolbar {
+    flex-shrink: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 10px 12px;
+    background: #161a22;
+    border-bottom: 1px solid #2a3142;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+}
+
+.dev-mosaic-tester__title {
+    margin-right: 4px;
+}
+
+.dev-mosaic-tester__hint {
+    opacity: 0.75;
+    font-size: 12px;
+}
+
+.dev-mosaic-tester__count {
+    min-width: 2ch;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+}
+
+.dev-mosaic-tester__meta {
+    margin-left: auto;
+    opacity: 0.65;
+    font-size: 12px;
+}
+
+.dev-mosaic-tester__btn {
+    cursor: pointer;
+    border: 1px solid #3d4a63;
+    border-radius: 6px;
+    padding: 4px 12px;
+    background: #252b38;
+    color: inherit;
+    font-size: 15px;
+    line-height: 1.2;
+}
+
+.dev-mosaic-tester__btn:hover:not(:disabled) {
+    background: #323a4d;
+}
+
+.dev-mosaic-tester__btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.dev-mosaic-tester__btn--ghost {
+    padding-inline: 10px;
+    font-size: 13px;
+}
+
+.dev-mosaic-tester__stage {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.dev-mosaic-tester__empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+}
+
+.dev-mosaic-tester__empty p {
+    margin: 0;
+    max-width: 22rem;
+    line-height: 1.5;
+    opacity: 0.85;
+}
+
+.dev-mosaic-fake-cell {
+    position: relative;
+}
+
+.dev-mosaic-fake-cell__badge {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    z-index: 2;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #f8fafc;
+    background: rgba(0, 0, 0, 0.55);
+    text-shadow: none;
+    pointer-events: none;
+}
