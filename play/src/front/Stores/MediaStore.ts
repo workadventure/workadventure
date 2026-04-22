@@ -957,8 +957,9 @@ export const localStreamStore = derived<
 );
 
 /**
- * When (unavailable status + in background settings), we expose the local stream without video tracks
- * so that LiveKit/WebRTC do not publish camera; preview in BackgroundSettingsPanel still uses localStreamStore.
+ * We expose the local stream without video tracks when the camera is not effectively publishable
+ * or when background settings must hide video while unavailable, so that LiveKit/WebRTC do not
+ * publish camera; preview in BackgroundSettingsPanel still uses localStreamStore.
  */
 export const localStreamStoreForPublishing = derived<
     [

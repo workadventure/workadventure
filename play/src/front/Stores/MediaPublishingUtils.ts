@@ -5,7 +5,15 @@ export function getSynchronizedCameraState(
     requestedCameraState: boolean,
     cameraPermissionState: BrowserMediaPermissionState
 ): boolean {
-    return requestedCameraState && cameraPermissionState === "granted";
+    if (!requestedCameraState) {
+        return false;
+    }
+
+    if (cameraPermissionState === null) {
+        return true;
+    }
+
+    return cameraPermissionState === "granted";
 }
 
 export function getLocalStreamForPublishing(
