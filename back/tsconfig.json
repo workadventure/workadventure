@@ -6,7 +6,6 @@
 
     "sourceMap": true,
     "inlineSources": true,
-    "noEmit": true,
     "outDir": "./dist",
 
     "strict": true,
@@ -20,6 +19,6 @@
     "sourceRoot": "/",
   },
   "exclude": [
-    "eslint.config.mjs",
+    "eslint.config.js",
   ]
 }

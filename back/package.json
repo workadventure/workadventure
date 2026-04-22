@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "type": "module",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "dev": "tsx watch --inspect=0.0.0.0:9229 src/server.ts",
     "runprod": "tsx src/server.ts",

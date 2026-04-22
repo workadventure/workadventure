@@ -1,4 +1,5 @@
 import fs from "fs/promises";
+import { fileURLToPath } from "url";
 import type { Request, Response, NextFunction } from "express";
 import { jwtVerify } from "jose";
 import z from "zod";
@@ -88,7 +89,7 @@ async function verifyWam(jwt: AuthTokenData, url: string): Promise<void> {
 }
 
 async function sendHtmlError(res: Response, message: string, statusCode: number = 403) {
-    const errorFilePath = new URL("../../src-ui/error.html", import.meta.url);
+    const errorFilePath = fileURLToPath(new URL("../../src-ui/error.html", import.meta.url));
 
     try {
         let html = await fs.readFile(errorFilePath, "utf-8");

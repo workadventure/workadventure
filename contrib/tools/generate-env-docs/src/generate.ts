@@ -1,7 +1,6 @@
 #!/usr/bin/env tsx
 
-import { writeFileSync } from "fs";
-import { resolve, dirname } from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import { extractEnvVariables } from "./extractor.js";
 import { generateMarkdown } from "./markdown-generator.js";
@@ -28,8 +27,8 @@ async function main() {
     const markdown = generateMarkdown(playVars, backVars, mapStorageVars);
 
     // Write to file
-    const outputPath = new URL("../../../../docs/others/self-hosting/env-variables.md", import.meta.url);
-    writeFileSync(outputPath, markdown, "utf-8");
+    const outputPath = fileURLToPath(new URL("../../../../docs/others/self-hosting/env-variables.md", import.meta.url));
+    fs.writeFileSync(outputPath, markdown, "utf-8");
 
     console.log(`\n✅ Documentation generated successfully!`);
     console.log(`   Output: ${outputPath}`);

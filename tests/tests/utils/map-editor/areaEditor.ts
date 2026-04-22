@@ -1,3 +1,4 @@
+import { fileURLToPath } from "url";
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import Menu from "../menu";
@@ -41,10 +42,6 @@ class AreaEditor {
     }
 
     async addProperty(page: Page, property: string) {
-        //page.locator(".map-editor");
-        //page.locator(".map-editor .sidebar");
-        //page.locator(".map-editor .sidebar .item-picker-container");
-        //page.locator("select#speakerZoneSelector");
         await page.getByTestId(property).click();
     }
 
@@ -146,7 +143,7 @@ class AreaEditor {
         const fileChooserPromise = page.waitForEvent("filechooser");
         await page.locator(".map-editor .sidebar .properties-container span#chooseUpload").click();
         const fileChooser = await fileChooserPromise;
-        await fileChooser.setFiles(new URL(`../../assets/lorem-ipsum.pdf`, import.meta.url).pathname);
+        await fileChooser.setFiles(fileURLToPath(new URL(`../../assets/lorem-ipsum.pdf`, import.meta.url)));
     }
 
     async deleteFile(page: Page) {

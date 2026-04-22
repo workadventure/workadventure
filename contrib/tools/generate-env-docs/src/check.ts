@@ -1,7 +1,6 @@
 #!/usr/bin/env tsx
 
 import fs from "fs";
-import path from "path";
 import { fileURLToPath } from "url";
 import { extractEnvVariables } from "./extractor.js";
 import { generateMarkdown } from "./markdown-generator.js";
@@ -23,7 +22,7 @@ async function main() {
     const expectedMarkdown = generateMarkdown(playVars, backVars, mapStorageVars);
 
     // Read current documentation
-    const docPath = new URL("../../../../docs/others/self-hosting/env-variables.md", import.meta.url);
+    const docPath = fileURLToPath(new URL("../../../../docs/others/self-hosting/env-variables.md", import.meta.url));
     let currentMarkdown: string;
 
     try {

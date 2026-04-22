@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
 // Usage:
 //  - Single comparison: tsx scripts/diff-i18n.ts <target-locale> [source-locale]
@@ -13,8 +14,8 @@ const localeArgs = args.filter((arg) => !arg.startsWith("--"));
 const targetLocale = localeArgs[0];
 const sourceLocale = localeArgs[1] || "en-US";
 
-const srcDir = new URL(`../src/i18n/${sourceLocale}`, import.meta.url).pathname;
-const tgtDir = new URL(`../src/i18n/${targetLocale}`, import.meta.url).pathname;
+const srcDir = fileURLToPath(new URL(`../src/i18n/${sourceLocale}`, import.meta.url));
+const tgtDir = fileURLToPath(new URL(`../src/i18n/${targetLocale}`, import.meta.url));
 
 async function loadModule(file: string): Promise<unknown> {
     const mod = await import(file);
@@ -103,7 +104,7 @@ async function computeMissingCountsForLocale(
 }
 
 async function runDetailedCheck() {
-    const baseDir = new URL("../src/i18n", import.meta.url).pathname;
+    const baseDir = path.resolve(import.meta.url, "../src/i18n");
     let hasErrors = 0;
 
     console.log("=== RECENSEMENT COMPLET DES FICHIERS INCOMPLETS ===");
@@ -267,7 +268,7 @@ async function run() {
 
     // Summary mode when no target locale is provided
     if (!targetLocale) {
-        const baseDir = new URL("../src/i18n", import.meta.url).pathname;
+        const baseDir = path.resolve(import.meta.url, "../src/i18n");
         const locales = listLocaleDirs(baseDir, sourceLocale);
 
         if (locales.length === 0) {
