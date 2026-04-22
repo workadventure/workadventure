@@ -202,11 +202,10 @@ export class Player extends Character {
         this.playAnimation(this._lastDirection, true);
         this.scene.physics.world.once(Phaser.Physics.Arcade.Events.WORLD_STEP, () => {
             // We wait for the physics engine to recompute the correct player position, then we update the depth.
-            this.setDepth(body.position.y + 16);
-            this.updateUsernameDisplayPosition(
-                body.position.x + body.width / 2 - body.offset.x,
-                body.position.y + body.height / 2 - body.offset.y
-            );
+            const bodyY = body.position.y + body.height / 2 - body.offset.y;
+
+            this.setDepth(bodyY + 16);
+            this.updateUsernameDisplayPosition(body.position.x + body.width / 2 - body.offset.x, bodyY);
         });
 
         if (this.companion) {
