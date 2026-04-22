@@ -6,6 +6,7 @@ import { MegaphoneIcon } from "./MegaphoneIcon";
 import { PlayerStatusDot } from "./PlayerStatusDot";
 
 const DEFAULT_PLAYER_NAME_OUTLINE_COLOR = "#14304C";
+const CORRECTION_RATE = 0.75;
 
 export class UsernameDisplay extends Phaser.GameObjects.Container {
     private static nextPlayerNameTextureId = 0;
@@ -47,7 +48,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     }
 
     private getDisplayScale(zoomModifier: number): number {
-        return Math.max(zoomModifier > 0 ? 0.8 / zoomModifier : 1, 1);
+        return Math.max(zoomModifier > 0 ? CORRECTION_RATE / zoomModifier : 1, 1);
     }
 
     private reflow(): void {
