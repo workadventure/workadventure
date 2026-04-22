@@ -256,7 +256,6 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             const { rooms: allRooms } = await matrixRateLimiter.getRoomHierarchy(this.room, 100, 1, false);
 
             const { rooms: suggestedRoomsData } = await matrixRateLimiter.getRoomHierarchy(this.room, 100, 2, true);
-
             const localRooms = this.room.client.getRooms();
 
             const suggestedRooms: { name: string; id: string; avatarUrl: string }[] = [];

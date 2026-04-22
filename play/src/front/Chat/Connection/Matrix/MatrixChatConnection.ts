@@ -203,7 +203,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
         this.folders = derived(
             [this.roomFolders, ...Array.from(this.roomFolders.values()).map((folder) => folder.myMembership)],
-            (folderList) => {
+            () => {
                 return Array.from(this.roomFolders.values()).filter(
                     (folder) => get(folder.myMembership) === KnownMembership.Join
                 );
@@ -604,9 +604,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
 
     private getParentRoomID(room: Room): string[] {
-        return (
-            room.getLiveTimeline().getState(EventTimeline.FORWARDS)?.getStateEvents(EventType.SpaceParent) || []
-        ).reduce((acc, currentMatrixEvent) => {
+        const parentIDs =
+            room.getLiveTimeline().getState(EventTimeline.FORWARDS)?.getStateEvents(EventType.SpaceParent) || [];
+        return parentIDs.reduce((acc, currentMatrixEvent) => {
             const parentID = currentMatrixEvent.getStateKey();
             if (parentID) acc.push(parentID);
             return acc;
@@ -731,7 +731,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private async tryAddRoomToParentFolder(room: Room, parentRoomID: string): Promise<boolean> {
         try {
             const parentFolder = await this.findParentFolder(parentRoomID);
-
             if (!parentFolder) {
                 const parentRoom = this.client?.getRoom(parentRoomID);
                 if (parentRoom) {
@@ -792,9 +791,55 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         rootList.set(roomId, new RoomClass(room));
     }
 
+    /**
+     * Re-syncs each joined space folder from local `m.space.child` state so invited/joined
+     * children appear under the right folder before {@link #manageRoomOrFolder} runs.
+     */
+    private refreshJoinedFolderSubtree(folder: MatrixRoomFolder): void {
+        if (get(folder.myMembership) !== KnownMembership.Join) {
+            return;
+        }
+        folder.getChildren();
+        for (const childFolder of folder.folderList.values()) {
+            this.refreshJoinedFolderSubtree(childFolder);
+        }
+    }
+
+    private refreshAllJoinedFoldersChildren(): void {
+        for (const rootFolder of this.roomFolders.values()) {
+            this.refreshJoinedFolderSubtree(rootFolder);
+        }
+    }
+
+    private isRoomUnderFolder(roomId: string, folder: MatrixRoomFolder): boolean {
+        if (folder.roomList.has(roomId)) {
+            return true;
+        }
+        for (const subFolder of folder.folderList.values()) {
+            if (this.isRoomUnderFolder(roomId, subFolder)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** True if this chat room id is already attached under any root space folder tree. */
+    private isRoomUnderAnyFolder(roomId: string): boolean {
+        for (const rootFolder of this.roomFolders.values()) {
+            if (this.isRoomUnderFolder(roomId, rootFolder)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private handleOrphanRoom(room: Room): void {
         if (room.isSpaceRoom()) {
             this.createAndAddNewRootFolder(room);
+            return;
+        }
+
+        if (this.isRoomUnderAnyFolder(room.roomId)) {
             return;
         }
 
@@ -879,11 +924,11 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
     private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined): void {
         const { roomId } = room;
-
         if (membership !== prevMembership && membership === KnownMembership.Join) {
             this.roomList.delete(roomId);
             this.roomFolders.delete(roomId);
 
+            this.refreshAllJoinedFoldersChildren();
             this.manageRoomOrFolder(room).catch((e) => {
                 console.error("Failed to manageRoomOrFolder :", e);
             });
@@ -913,6 +958,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
                     this.roomList.delete(room.roomId);
                     this.roomFolders.delete(room.roomId);
+                    this.refreshAllJoinedFoldersChildren();
                     this.manageRoomOrFolder(room).catch((e) => {
                         console.error("Failed to manageRoomOrFolder : ", e);
                     });
