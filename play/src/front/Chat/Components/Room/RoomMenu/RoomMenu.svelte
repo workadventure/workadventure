@@ -39,6 +39,7 @@
     } from "@wa-icons";
 
     export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomNotificationControl & ChatRoomModeration;
+    const roomType = room.type;
     const areNotificationsMuted = room.areNotificationsMuted;
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
     let hideOptions = true;
@@ -138,7 +139,7 @@
         return usersList;
     })();
 
-    $: matrixChatUser = room.type === "direct" ? members.find((u) => u.id !== localUserStore.getChatId()) : undefined;
+    $: matrixChatUser = $roomType === "direct" ? members.find((u) => u.id !== localUserStore.getChatId()) : undefined;
 
     $: chatUser = usersWithRoomPlayUri.find((u) => u.chatId === matrixChatUser?.id);
     $: isInTheSameMap = chatUser?.playUri === gameManager.getCurrentGameScene().roomUrl;
@@ -189,7 +190,7 @@
     $: matrixChatConnection = $isMatrixChatEnabledStore ? matrixConnectionFromGameManager() : undefined;
 
     $: showMatrixPeerProfileDebug =
-        DEBUG_MODE && matrixChatConnection !== undefined && room.type === "direct" && Boolean(matrixChatUser?.id);
+        DEBUG_MODE && matrixChatConnection !== undefined && $roomType === "direct" && Boolean(matrixChatUser?.id);
 
     function openMatrixPeerProfileDebug() {
         if (!matrixChatConnection || matrixChatUser?.id === undefined) {
@@ -219,7 +220,7 @@
     class:absolute={optionButtonRef !== undefined}
     class:hidden={hideOptions}
 >
-    {#if room.type === "direct"}
+    {#if $roomType === "direct"}
         <!-- Create Room Option to talk to the user -->
         <RoomOption
             IconComponent={IconCamera}
