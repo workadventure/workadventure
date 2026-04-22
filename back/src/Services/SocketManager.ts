@@ -80,7 +80,7 @@ import { eventProcessor } from "../Model/EventProcessorInit";
 import { gaugeManager } from "./GaugeManager";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { getMapStorageClient } from "./MapStorageClient";
-import { emitError } from "./MessageHelpers";
+import { emitError, endUserConnectionWithReason } from "./MessageHelpers";
 import { cpuTracker } from "./CpuTracker";
 
 const debug = Debug("socketmanager");
@@ -897,8 +897,7 @@ export class SocketManager {
         setTimeout(() => {
             // Let's leave the room now.
             room.leave(user);
-            // Let's close the connection when the user is banned.
-            user.socket.end();
+            endUserConnectionWithReason(user.socket, `User was banned: ${banUserMessageToSend.message}`);
         }, 10000);
     }
 
@@ -1124,7 +1123,7 @@ export class SocketManager {
                     type: "banned",
                 },
             });
-            recipient.socket.end();
+            endUserConnectionWithReason(recipient.socket, `User was banned: ${message}`);
         }
     }
 
