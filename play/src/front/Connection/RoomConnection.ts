@@ -771,6 +771,10 @@ export class RoomConnection implements RoomConnection {
                         this._externalModuleMessage.next(message.externalModuleMessage);
                         break;
                     }
+                    case "backConnectionCloseReasonMessage": {
+                        console.warn("Received an internal back connection close reason message on the front.");
+                        break;
+                    }
                     default: {
                         // Security check: if we forget a "case", the line below will catch the error at compile-time.
                         const _exhaustiveCheck: never = message;
