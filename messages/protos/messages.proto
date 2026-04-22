@@ -1235,6 +1235,15 @@ message DuplicateUserConnectedMessage {
 }
 
 /**
+ * Internal message sent by the back to the pusher just before closing the
+ * joinRoom stream. The pusher must consume it and never forward it to the
+ * front.
+ */
+message BackConnectionCloseReasonMessage {
+  string reason = 1;
+}
+
+/**
  * Messages going from back and pusher to the front
  */
 message ServerToClientMessage {
@@ -1271,6 +1280,7 @@ message ServerToClientMessage {
     MeetingInvitationRequestTooHighMessage meetingInvitationRequestTooHighMessage = 39;
     MeetingInvitationRequestClosedMessage meetingInvitationRequestClosedMessage = 40;
     DuplicateUserConnectedMessage duplicateUserConnectedMessage = 41;
+    BackConnectionCloseReasonMessage backConnectionCloseReasonMessage = 42;
   }
 }
 
