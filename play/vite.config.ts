@@ -1,4 +1,5 @@
-import { basename } from "path";
+import path from "path";
+import { fileURLToPath } from "url";
 import fs from "fs";
 import { defineConfig, loadEnv } from "vite";
 import { svelte, vitePreprocess } from "@sveltejs/vite-plugin-svelte";
@@ -64,7 +65,7 @@ export default defineConfig(({ mode }) => {
         resolve: {
             alias: {
                 events: "events",
-                "@wa-icons": "./src/front/Components/Icons.ts",
+                "@wa-icons": fileURLToPath(new URL("./src/front/Components/Icons.ts", import.meta.url)),
             },
         },
         test: {
@@ -124,7 +125,7 @@ function mediapipe_workaround() {
     return {
         name: "mediapipe_workaround",
         load(id: string) {
-            if (basename(id) === "selfie_segmentation.js") {
+            if (path.basename(id) === "selfie_segmentation.js") {
                 let code = fs.readFileSync(id, "utf-8");
                 code += "exports.SelfieSegmentation = SelfieSegmentation;";
                 return { code };

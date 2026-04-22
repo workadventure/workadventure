@@ -29,7 +29,7 @@ export async function deleteAllRecordings(page: Page) {
     await page.getByTestId("recordingButton-list").click();
 
     while (
-        // eslint-disable-next-line playwright/no-conditional-expect,playwright/missing-playwright-await
+        // eslint-disable-next-line playwright/no-conditional-expect
         await expect(page.getByTestId("recording-item-0"))
             .toBeVisible({ timeout: 3000 })
             .then(() => true)
