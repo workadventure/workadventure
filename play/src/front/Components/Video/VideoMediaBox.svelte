@@ -31,9 +31,12 @@
     export let videoBox: VideoBox; // If true, and if there is no video, the height of the video box will be 11rem
     export let miniMode = false;
     $: streamableStore = videoBox.streamable;
+    $: streamablesStore = videoBox.streamables;
     $: effectiveStatusStore = videoBox.statusStore;
     $: effectiveStatus = $effectiveStatusStore;
-    $: streamable = $streamableStore;
+    $: streamableEntries = $streamablesStore;
+    $: activeStreamableEntry = streamableEntries.find((entry) => !entry.isPending);
+    $: streamable = activeStreamableEntry?.streamable ?? $streamableStore;
 
     // The inCameraContainer is used to know if the VideoMediaBox is part of a series of video or if it is the highlighted video.
     let inCameraContainer: boolean = !!getContext("inCameraContainer");
@@ -262,108 +265,131 @@
             </div>
         {/if}
 
-        {#if showAfterDelay && streamable?.media}
-            <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
-            <CenteredVideo
-                media={streamable?.media}
-                {videoEnabled}
-                status={effectiveStatus}
-                verticalAlign={!inCameraContainer && !inHighlightFullscreenParticipantList && !fullScreen
-                    ? "top"
-                    : "center"}
-                isTalking={showVoiceIndicator}
-                flipX={streamable?.flipX}
-                cover={streamable?.displayMode === "cover" &&
-                    (inCameraContainer || inHighlightFullscreenParticipantList || fullScreen)}
-                isBlocked={$isBlockedStore}
-                withBackground={((inCameraContainer || inHighlightFullscreenParticipantList) &&
-                    effectiveStatus !== "connecting" &&
-                    effectiveStatus !== "reconnecting") ||
-                    $isBlockedStore}
-                isMegaphoneSpace={(isMegaphoneSpace && $megaphoneState) || isLocalUserStreamingMegaphone}
-            >
-                <UserName
-                    name={name ?? "unknown"}
-                    picture={pictureStore}
-                    isPlayingAudio={showVoiceIndicator}
-                    isCameraDisabled={(!videoEnabled && !miniMode) || effectiveStatus !== "connected"}
-                    isBlocked={$isBlockedStore}
-                    position={videoEnabled && !$isBlockedStore && effectiveStatus === "connected"
-                        ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
-                        : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
-                    grayscale={effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
+        {#if showAfterDelay}
+            {#each streamableEntries as streamableEntry (streamableEntry.id)}
+                <div
+                    class="absolute inset-0"
+                    class:pointer-events-none={streamableEntry.isPending}
+                    style={streamableEntry.isPending ? "opacity: 0" : undefined}
                 >
-                    {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local"}
-                        <div
-                            class="flex items-center justify-center picture-in-picture:hidden"
-                            bind:this={userMenuButton}
-                        >
-                            <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
-                        </div>
-                    {/if}
-                </UserName>
-
-                {#if effectiveStatus === "connected" && $hasAudioStore && !$isBlockedStore}
-                    <div
-                        class="z-[251] absolute p-2 right-1 white"
-                        class:top-1={videoEnabled}
-                        class:top-0={!videoEnabled}
-                        class:text-white={$activePictureInPictureStore}
-                        class:opacity-20={$activePictureInPictureStore}
+                    <CenteredVideo
+                        media={streamableEntry.streamable.media}
+                        videoEnabled={streamableEntry.isPending ? true : videoEnabled}
+                        status={streamableEntry.isPending ? "connected" : effectiveStatus}
+                        verticalAlign={!inCameraContainer && !inHighlightFullscreenParticipantList && !fullScreen
+                            ? "top"
+                            : "center"}
+                        isTalking={streamableEntry.isPending ? false : showVoiceIndicator}
+                        flipX={streamableEntry.streamable.flipX}
+                        cover={streamableEntry.streamable.displayMode === "cover" &&
+                            (inCameraContainer || inHighlightFullscreenParticipantList || fullScreen)}
+                        isBlocked={streamableEntry.isPending ? false : $isBlockedStore}
+                        withBackground={streamableEntry.isPending
+                            ? false
+                            : ((inCameraContainer || inHighlightFullscreenParticipantList) &&
+                                  effectiveStatus !== "connecting" &&
+                                  effectiveStatus !== "reconnecting") ||
+                              $isBlockedStore}
+                        isMegaphoneSpace={streamableEntry.isPending
+                            ? false
+                            : (isMegaphoneSpace && $megaphoneState) || isLocalUserStreamingMegaphone}
+                        on:video={() => {
+                            setTimeout(() => {
+                                if (streamableEntry.isPending) {
+                                    videoBox.markPendingStreamableReady(streamableEntry.id);
+                                }
+                                // Even by waiting the first frame, we see a first glitch.
+                                // Maybe the first LiveKit frame is not correctly rendered?
+                                // We noticed waiting a bit makes the glitch disappear.
+                            }, 200);
+                        }}
                     >
-                        {#if !$isMutedStore}
-                            <SoundMeterWidget
-                                volume={volumeMeter}
-                                cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
-                                barColor="white"
-                            />
-                        {:else if streamable.videoType === "video"}
-                            <IconMicrophoneOff
-                                aria-label={$LL.video.user_is_muted({ name: name ?? "unknown" })}
-                                data-testid={$LL.video.user_is_muted({ name: name ?? "unknown" })}
-                                class="[filter:drop-shadow(0_0_3px_rgb(0,0,0))_drop-shadow(0_0_6px_rgb(0,0,0))_drop-shadow(0_0_9px_rgb(0,0,0))]"
-                            />
+                        {#if !streamableEntry.isPending}
+                            <UserName
+                                name={name ?? "unknown"}
+                                picture={pictureStore}
+                                isPlayingAudio={showVoiceIndicator}
+                                isCameraDisabled={(!videoEnabled && !miniMode) || effectiveStatus !== "connected"}
+                                isBlocked={$isBlockedStore}
+                                position={videoEnabled && !$isBlockedStore && effectiveStatus === "connected"
+                                    ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
+                                    : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
+                                grayscale={effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
+                            >
+                                {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local"}
+                                    <div
+                                        class="flex items-center justify-center picture-in-picture:hidden"
+                                        bind:this={userMenuButton}
+                                    >
+                                        <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
+                                    </div>
+                                {/if}
+                            </UserName>
+
+                            {#if effectiveStatus === "connected" && $hasAudioStore && !$isBlockedStore}
+                                <div
+                                    class="z-[251] absolute p-2 right-1 white"
+                                    class:top-1={videoEnabled}
+                                    class:top-0={!videoEnabled}
+                                    class:text-white={$activePictureInPictureStore}
+                                    class:opacity-20={$activePictureInPictureStore}
+                                >
+                                    {#if !$isMutedStore}
+                                        <SoundMeterWidget
+                                            volume={volumeMeter}
+                                            cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
+                                            barColor="white"
+                                        />
+                                    {:else if streamable?.videoType === "video"}
+                                        <IconMicrophoneOff
+                                            aria-label={$LL.video.user_is_muted({ name: name ?? "unknown" })}
+                                            data-testid={$LL.video.user_is_muted({ name: name ?? "unknown" })}
+                                            class="[filter:drop-shadow(0_0_3px_rgb(0,0,0))_drop-shadow(0_0_6px_rgb(0,0,0))_drop-shadow(0_0_9px_rgb(0,0,0))]"
+                                        />
+                                    {/if}
+                                </div>
+                            {/if}
+                            {#if webRtcStats}
+                                <WebRtcStats {webRtcStats} />
+                            {/if}
+
+                            <!-- The menu to go fullscreen -->
+                            {#if !inCameraContainer && videoEnabled}
+                                <div
+                                    class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 hover:!opacity-100 group-hover/centered-video:opacity-20 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                                >
+                                    <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
+                                        {#if !fullScreen && !$highlightFullScreen}
+                                            <button
+                                                class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
+                                                on:click={removeHighlight}
+                                            >
+                                                <IconArrowsMinimize font-size="20" class="text-white" />
+                                            </button>
+                                        {/if}
+                                        {#if fullScreen}
+                                            <button
+                                                class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                                                on:click={exitFullScreen}
+                                            >
+                                                <IconArrowsMinimize font-size="20" class="text-white" />
+                                            </button>
+                                        {:else}
+                                            <button
+                                                class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                                                on:click={setFullScreen}
+                                                data-testid="highlight-enter-fullscreen-button"
+                                            >
+                                                <IconArrowsMaximize font-size="20" class="text-white" />
+                                            </button>
+                                        {/if}
+                                    </div>
+                                </div>
+                            {/if}
                         {/if}
-                    </div>
-                {/if}
-                {#if webRtcStats}
-                    <WebRtcStats {webRtcStats} />
-                {/if}
-
-                <!-- The menu to go fullscreen -->
-                {#if !inCameraContainer && videoEnabled}
-                    <div
-                        class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 hover:!opacity-100 group-hover/centered-video:opacity-20 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
-                    >
-                        <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
-                            {#if !fullScreen && !$highlightFullScreen}
-                                <button
-                                    class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
-                                    on:click={removeHighlight}
-                                >
-                                    <IconArrowsMinimize font-size="20" class="text-white" />
-                                </button>
-                            {/if}
-                            {#if fullScreen}
-                                <button
-                                    class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
-                                    on:click={exitFullScreen}
-                                >
-                                    <IconArrowsMinimize font-size="20" class="text-white" />
-                                </button>
-                            {:else}
-                                <button
-                                    class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
-                                    on:click={setFullScreen}
-                                    data-testid="highlight-enter-fullscreen-button"
-                                >
-                                    <IconArrowsMaximize font-size="20" class="text-white" />
-                                </button>
-                            {/if}
-                        </div>
-                    </div>
-                {/if}
-            </CenteredVideo>
+                    </CenteredVideo>
+                </div>
+            {/each}
         {/if}
     </div>
 

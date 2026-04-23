@@ -1279,20 +1279,14 @@ export class Space implements SpaceInterface {
                 return;
             }
 
-            try {
-                const previousStreamable = get(videoBox.streamable);
-                previousStreamable?.closeStreamable();
-            } catch (e) {
-                console.error("Error while closing previous streamable", e);
-                Sentry.captureException(e);
-            }
-
             // Apply muteAudio for seeAttendees feature
             const user = this._users.get(spaceUserId);
             if (user) {
                 this.applyMuteAudioToStreamable(peer, user);
             }
-            videoBox.setNewStreamable(peer);
+            videoBox.setNewStreamable(peer, {
+                waitForFirstFrame: this.shouldWaitForFirstFrameDuringTransition(user, false),
+            });
         });
 
         this.observeScreenSharingPeerAdded?.unsubscribe();
@@ -1321,9 +1315,22 @@ export class Space implements SpaceInterface {
             if (user) {
                 this.applyMuteAudioToStreamable(peer, user);
             }
-            videoBox.setNewStreamable(peer);
+            videoBox.setNewStreamable(peer, {
+                waitForFirstFrame: this.shouldWaitForFirstFrameDuringTransition(user, true),
+            });
 
             this._highlightedEmbedScreenStore.highlight(videoBox);
         });
+    }
+
+    private shouldWaitForFirstFrameDuringTransition(
+        user: SpaceUserExtended | undefined,
+        isScreenSharing: boolean
+    ): boolean {
+        if (!user) {
+            return false;
+        }
+
+        return isScreenSharing ? get(user.reactiveUser.screenSharingState) : get(user.reactiveUser.cameraState);
     }
 }
