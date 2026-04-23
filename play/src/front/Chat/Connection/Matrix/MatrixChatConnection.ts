@@ -36,6 +36,7 @@ import type { VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { canAcceptVerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { asError } from "catch-unknown";
 
+import Debug from "debug";
 import type {
     ChatConnectionInterface,
     ChatRoom,
@@ -53,7 +54,6 @@ import { currentPlayerWokaStore } from "../../../Stores/CurrentPlayerWokaStore";
 import LL from "../../../../i18n/i18n-svelte";
 import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
-import { MatrixRateLimiter } from "../../Services/MatrixRateLimiter";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import type { MatrixSecurity } from "./MatrixSecurity";
@@ -64,6 +64,8 @@ import {
     pushLocalWokaAndNameToMatrixProfile,
     syncWokaAvatarToMatrixProfileOnWokaChange,
 } from "./services/WaMatrixProfileService";
+
+const debug = Debug("MatrixChatConnection");
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
 
@@ -87,7 +89,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private isClientReady = false;
     private usersStatus: MapStore<string, AvailabilityStatus>;
     private userIdsNeedingPresenceUpdate = new Set();
-    private matrixRateLimiter: MatrixRateLimiter;
     nbUnreadInvitationsMessages: Readable<number>;
     nbUnreadDirectRoomsMessages: Readable<number>;
     nbUnreadRoomsMessages: Readable<number>;
@@ -126,7 +127,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     ) {
         this.connectionStatus = writable("CONNECTING");
         this.roomList = new AutoDestroyingMapStore<string, MatrixChatRoom>();
-        this.matrixRateLimiter = MatrixRateLimiter.getInstance();
         this.clientPromise = clientPromise;
         this.directRooms = this.createJoinedRoomsReadable(
             (room) => get(room.myMembership) === KnownMembership.Join && get(room.type) === "direct"
@@ -337,6 +337,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             await this.syncMatrixGlobalProfileFromLocalWokaAndName(false);
             this.attachWokaAvatarMatrixSync();
             this.attachDisplayNameMatrixSync();
+
+            // Refresh all joined folders children to ensure the UI is up to date
+            this.refreshAllJoinedFoldersChildren();
         } catch (error) {
             this.connectionStatus.set("OFFLINE");
             console.error(error);
@@ -823,19 +826,37 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
      * Re-syncs each joined space folder from local `m.space.child` state so invited/joined
      * children appear under the right folder before {@link #manageRoomOrFolder} runs.
      */
-    private refreshJoinedFolderSubtree(folder: MatrixRoomFolder): void {
+    /**
+     * Re-reads `m.space.child` for a joined folder and recurses into child folders.
+     * @param targetRoomId When set, stops recursing once this room id appears under `folder` (including nested folders).
+     * @returns true if `targetRoomId` was found under this subtree (only meaningful when `targetRoomId` is set).
+     */
+    private refreshJoinedFolderSubtree(folder: MatrixRoomFolder, targetRoomId?: string): boolean {
         if (get(folder.myMembership) !== KnownMembership.Join) {
-            return;
+            return false;
         }
         folder.getChildren();
-        for (const childFolder of folder.folderList.values()) {
-            this.refreshJoinedFolderSubtree(childFolder);
+        if (targetRoomId && this.isRoomUnderFolder(targetRoomId, folder)) {
+            return true;
         }
+        for (const childFolder of folder.folderList.values()) {
+            if (this.refreshJoinedFolderSubtree(childFolder, targetRoomId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    private refreshAllJoinedFoldersChildren(): void {
+    /**
+     * Refreshes space-folder children from Matrix state for every root folder.
+     * @param targetRoomId Optional: when the goal is to place one room after join/invite, pass its id to stop
+     * after that room is found under a folder tree (avoids walking unrelated roots when found early).
+     */
+    private refreshAllJoinedFoldersChildren(targetRoomId?: string): void {
         for (const rootFolder of this.roomFolders.values()) {
-            this.refreshJoinedFolderSubtree(rootFolder);
+            if (this.refreshJoinedFolderSubtree(rootFolder, targetRoomId)) {
+                return;
+            }
         }
     }
 
@@ -951,12 +972,21 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
 
     private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined): void {
+        debug(
+            "Receive an event to update the membership of the room or folder :",
+            room.name,
+            room.roomId,
+            membership,
+            prevMembership
+        );
         const { roomId } = room;
         if (membership !== prevMembership && membership === KnownMembership.Join) {
             this.roomList.delete(roomId);
             this.roomFolders.delete(roomId);
 
-            this.refreshAllJoinedFoldersChildren();
+            if (this.client?.isInitialSyncComplete()) {
+                this.refreshAllJoinedFoldersChildren(roomId);
+            }
             this.manageRoomOrFolder(room).catch((e) => {
                 console.error("Failed to manageRoomOrFolder :", e);
             });
@@ -986,7 +1016,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
                     this.roomList.delete(room.roomId);
                     this.roomFolders.delete(room.roomId);
-                    this.refreshAllJoinedFoldersChildren();
+                    if (this.client?.isInitialSyncComplete()) {
+                        this.refreshAllJoinedFoldersChildren(room.roomId);
+                    }
                     this.manageRoomOrFolder(room).catch((e) => {
                         console.error("Failed to manageRoomOrFolder : ", e);
                     });
