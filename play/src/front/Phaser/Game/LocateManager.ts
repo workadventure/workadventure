@@ -43,10 +43,14 @@ export class LocateManager {
         let previouslyFollowedRemotePlayer: number | undefined = undefined;
         // Subscribe to woka menu store to stop following the remote player when the woka menu is closed.
         this.wokaMenuStoreUnsubscriber = wokaMenuStore.subscribe((value) => {
-            if (value === undefined) {
+            if (value === undefined && previouslyFollowedRemotePlayer !== undefined) {
                 this.cameraManager.stopFollowRemotePlayer();
                 previouslyFollowedRemotePlayer = undefined;
-            } else if (value.userId !== undefined && value.userId !== previouslyFollowedRemotePlayer) {
+            } else if (
+                value !== undefined &&
+                value.userId !== undefined &&
+                value.userId !== previouslyFollowedRemotePlayer
+            ) {
                 this.cameraManager.followRemotePlayer(value.userId);
                 previouslyFollowedRemotePlayer = value.userId;
             }
