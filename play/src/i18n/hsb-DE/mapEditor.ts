@@ -392,6 +392,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         images: "Wobraz{{s}}",
         noImage: "Žadyn wobraz",
+        specialTags: {
+            customLabel: "Swójski",
+            mostUsedLabel: "Najhusćišo wužiwane",
+        },
         customEntityEditorForm: {
             imageName: "mjeno wobrazka",
             tags: "Toflicki",

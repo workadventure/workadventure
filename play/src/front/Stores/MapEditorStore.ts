@@ -85,7 +85,16 @@ export const mapExplorationEntitiesStore = writable<Map<string, Entity>>(new Map
 export const mapExplorationAreasStore = writable<Map<string, AreaPreview> | undefined>(new Map());
 export const mapEditorAskToClaimPersonalAreaStore = writable<AreaData | undefined>(undefined);
 
-export type SelectableTag = string | undefined;
+export type CategoryTag =
+    | {
+          kind: "tag";
+          tag: string;
+      }
+    | {
+          kind: "special";
+          tag: "most_used" | "custom";
+      };
+export type SelectableTag = CategoryTag | undefined;
 export const selectCategoryStore = writable<SelectableTag>(undefined);
 
 export const mapEditorRestrictedPropertiesStore = writable<string[]>([]);
