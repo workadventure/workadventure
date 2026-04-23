@@ -69,7 +69,8 @@ export interface ChatRoomMember {
 export interface ChatRoom {
     readonly id: string;
     readonly name: Readable<string>;
-    readonly type: "direct" | "multiple";
+    /** Reactive: DM vs group can change (e.g. after ban/leave changes active member count). */
+    readonly type: Readable<"direct" | "multiple">;
     readonly hasUnreadMessages: Readable<boolean>;
     readonly unreadNotificationCount: Readable<number>;
     readonly pictureStore: PictureStore;

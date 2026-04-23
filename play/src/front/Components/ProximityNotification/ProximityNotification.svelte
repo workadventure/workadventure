@@ -10,6 +10,7 @@
 
     export let notification: ProximityNotification;
 
+    const roomType = notification.room.type;
     $: roomName = notification.room.name;
 
     const NOTIFICATION_DURATION = 10000; // 10 seconds
@@ -89,7 +90,7 @@
             class="font-bold mb-1 text-base text-white truncate font-['Roboto_Condensed'] tracking-normal align-middle"
         >
             {notification.userName}
-            {#if notification.room.type !== "direct"}
+            {#if $roomType !== "direct"}
                 {$LL.chat.notification.in()}
                 {$roomName}
             {/if}
