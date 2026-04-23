@@ -77,6 +77,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private static readonly spaceReconciliationDelaysMs = [0, 100, 300, 700, 1500];
     private readonly roomList: MapStore<string, MatrixChatRoom>;
     private client: MatrixClient | undefined;
+    private handleSync: (state: SyncState, prevState: SyncState | null, res?: { error?: unknown }) => void;
     private handleRoom: (room: Room) => void;
     private handleDeleteRoom: (roomId: string) => void;
     private handleMyMembership: (room: Room, membership: string, prevMembership: string | undefined) => void;
@@ -291,6 +292,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.handleMyMembership = this.onRoomEventMembership.bind(this);
         this.handleRoomStateEvent = this.onRoomStateEvent.bind(this);
         this.handleName = this.onRoomNameEvent.bind(this);
+        this.handleSync = this.onClientSync.bind(this);
         this.handleAccountDataEvent = this.onAccountDataEvent.bind(this);
         this.handleUserPresence = this.onUserPresenceEvent.bind(this);
         this.handleVerificationRequestReceived = this.onVerificationRequestReceived.bind(this);
@@ -507,35 +509,37 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         }
     }
 
+    private onClientSync(state: SyncState, prevState: SyncState | null, res?: { error?: unknown }): void {
+        if (!this.client) return;
+        switch (state) {
+            case SyncState.Prepared:
+                this.connectionStatus.set("ONLINE");
+                this.isClientReady = true;
+                break;
+            case SyncState.Error:
+                this.connectionStatus.set("ON_ERROR");
+                if (res?.error) {
+                    console.error("Matrix sync error (previous state: ", prevState, "): ", res.error);
+                    Sentry.captureException(res.error);
+                }
+                break;
+            case SyncState.Reconnecting:
+                this.connectionStatus.set("CONNECTING");
+                break;
+            case SyncState.Stopped:
+                this.connectionStatus.set("OFFLINE");
+                break;
+            case SyncState.Syncing:
+                if (get(this.connectionStatus) !== "ONLINE" && this.isClientReady) {
+                    this.connectionStatus.set("ONLINE");
+                }
+                break;
+        }
+    }
+
     async startMatrixClient() {
         if (!this.client) return;
-        this.client.on(ClientEvent.Sync, (state, prevState, res) => {
-            if (!this.client) return;
-            switch (state) {
-                case SyncState.Prepared:
-                    this.connectionStatus.set("ONLINE");
-                    this.isClientReady = true;
-                    break;
-                case SyncState.Error:
-                    this.connectionStatus.set("ON_ERROR");
-                    if (res?.error) {
-                        console.error("Matrix sync error (previous state: ", prevState, "): ", res?.error);
-                        Sentry.captureException(res?.error);
-                    }
-                    break;
-                case SyncState.Reconnecting:
-                    this.connectionStatus.set("CONNECTING");
-                    break;
-                case SyncState.Stopped:
-                    this.connectionStatus.set("OFFLINE");
-                    break;
-                case SyncState.Syncing:
-                    if (get(this.connectionStatus) !== "ONLINE" && this.isClientReady) {
-                        this.connectionStatus.set("ONLINE");
-                    }
-                    break;
-            }
-        });
+        this.client.on(ClientEvent.Sync, this.handleSync);
 
         this.client.on(ClientEvent.Room, this.handleRoom);
         this.client.on(ClientEvent.DeleteRoom, this.handleDeleteRoom);
@@ -1172,6 +1176,11 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
 
     private async findRoomOrFolder(roomId: string): Promise<MatrixRoomFolder | MatrixChatRoom | undefined> {
+        const managedNode = this.findManagedNodeById(roomId);
+        if (managedNode) {
+            return managedNode;
+        }
+
         const roomInRoomList = this.roomList.get(roomId);
         if (roomInRoomList) {
             return roomInRoomList;
@@ -1296,11 +1305,14 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                     // Only notify for "live" invitations (after initial sync). Avoids notifying for existing invites on load (plan: live vs historical).
                     if (client.isInitialSyncComplete()) {
                         const roomName = room.name?.trim() || get(LL).chat.roomInvitation.unknownRoom();
-                        const chatRoom = new MatrixChatRoom(room);
                         chatNotificationStore.addNotification(
                             get(LL).chat.roomInvitation.notificationTitle(),
                             get(LL).chat.roomInvitation.notification({ roomName }),
-                            chatRoom,
+                            {
+                                roomId: room.roomId,
+                                roomName,
+                                roomType: "multiple",
+                            },
                             undefined,
                             false
                         );
@@ -1714,16 +1726,34 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         return user && user.some((user) => user.id === address);
     }
 
-    getRoomByID(roomId: string): ChatRoom {
-        if (!this.client) {
-            throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
-        }
-        const room = this.client.getRoom(roomId);
-        if (!room) {
-            throw new Error("Room not found");
+    private findManagedNodeById(roomId: string): MatrixRoomFolder | MatrixChatRoom | undefined {
+        const room = this.roomList.get(roomId);
+        if (room) {
+            return room;
         }
 
-        return new MatrixChatRoom(room);
+        const folder = this.roomFolders.get(roomId);
+        if (folder) {
+            return folder;
+        }
+
+        for (const rootFolder of this.roomFolders.values()) {
+            const node = rootFolder.findLoadedNode(roomId);
+            if (node) {
+                return node;
+            }
+        }
+
+        return undefined;
+    }
+
+    getRoomByID(roomId: string): ChatRoom {
+        const managedNode = this.findManagedNodeById(roomId);
+        if (!managedNode) {
+            throw new Error("Managed room not found");
+        }
+
+        return managedNode;
     }
 
     private rebuildSpaceHierarchy() {
@@ -1773,6 +1803,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.clearRootLists();
 
         const client = this.client;
+        client?.off(ClientEvent.Sync, this.handleSync);
         client?.off(ClientEvent.Room, this.handleRoom);
         client?.off(ClientEvent.DeleteRoom, this.handleDeleteRoom);
         client?.off(RoomEvent.MyMembership, this.handleMyMembership);

@@ -3,6 +3,8 @@ import type {
     EmojiMapping,
     GeneratedSecretStorageKey,
     KeyBackupInfo,
+    ShowSasCallbacks,
+    Verifier,
     VerificationRequest,
 } from "matrix-js-sdk/lib/crypto-api";
 import { VerificationRequestEvent, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
@@ -286,59 +288,138 @@ export class MatrixSecurity {
             });
 
             const doneVerificationDeferred = new Deferred<void>();
+            let verifier: Verifier | undefined;
+            let startVerificationSettled = false;
+            let doneVerificationSettled = false;
+            let isVerificationFlowCleanedUp = false;
 
-            verificationRequest.on(VerificationRequestEvent.Change, () => {
+            const resolveStartVerification = (verificationEmojiProps: VerificationEmojiDialogProps) => {
+                if (startVerificationSettled) {
+                    return;
+                }
+                startVerificationSettled = true;
+                startVerificationDeferred.resolve(verificationEmojiProps);
+            };
+
+            const rejectStartVerification = (error: Error) => {
+                if (startVerificationSettled) {
+                    return;
+                }
+                startVerificationSettled = true;
+                startVerificationDeferred.reject(error);
+            };
+
+            const resolveDoneVerification = () => {
+                if (doneVerificationSettled) {
+                    return;
+                }
+                doneVerificationSettled = true;
+                doneVerificationDeferred.resolve();
+            };
+
+            const rejectDoneVerification = (error: Error) => {
+                if (doneVerificationSettled) {
+                    return;
+                }
+                doneVerificationSettled = true;
+                doneVerificationDeferred.reject(error);
+            };
+
+            const cleanupVerificationFlow = () => {
+                if (isVerificationFlowCleanedUp) {
+                    return;
+                }
+                isVerificationFlowCleanedUp = true;
+                verificationRequest.off(VerificationRequestEvent.Change, handleVerificationRequestChange);
+                verifier?.off(VerifierEvent.ShowSas, handleVerifierShowSas);
+                verifier = undefined;
+                this.isVerifyingDevice = false;
+            };
+
+            const handleVerifierShowSas = (showSasCallbacks: ShowSasCallbacks) => {
+                const emojis = showSasCallbacks.sas.emoji;
+                const confirmationCallback = async () => {
+                    await showSasCallbacks.confirm();
+                };
+                const mismatchCallback = () => {
+                    //TODO : use showSasCallbacks.mismatch(); after matris-js-sdk update
+                    //showSasCallbacks.mismatch();
+                    return verificationRequest.cancel({ reason: "m.mismatched_sas" });
+                };
+
+                if (!emojis || this.isVerifyingDevice) return;
+
+                this.isVerifyingDevice = true;
+
+                resolveStartVerification({
+                    emojis,
+                    confirmationCallback,
+                    mismatchCallback,
+                    donePromise: doneVerificationDeferred.promise,
+                    isThisDeviceVerification: verificationRequest.initiatedByMe,
+                });
+            };
+
+            const attachVerifier = (nextVerifier: Verifier) => {
+                if (verifier === nextVerifier) {
+                    return;
+                }
+
+                verifier?.off(VerifierEvent.ShowSas, handleVerifierShowSas);
+                verifier = nextVerifier;
+                verifier.on(VerifierEvent.ShowSas, handleVerifierShowSas);
+                verifier.verify().catch((error) => {
+                    const verificationError =
+                        error instanceof Error ? error : new Error("Failed to verify this device");
+                    rejectStartVerification(verificationError);
+                    rejectDoneVerification(verificationError);
+                    cleanupVerificationFlow();
+                });
+            };
+
+            const handleVerificationRequestChange = () => {
                 if (verificationRequest.phase === Phase.Started) {
-                    const verifier = verificationRequest.verifier;
+                    const nextVerifier = verificationRequest.verifier;
 
-                    if (!verifier) throw new Error("Verifier is undefined");
+                    if (!nextVerifier) {
+                        const verifierError = new Error("Verifier is undefined");
+                        rejectStartVerification(verifierError);
+                        rejectDoneVerification(verifierError);
+                        cleanupVerificationFlow();
+                        return;
+                    }
 
                     switch (verificationRequest.chosenMethod) {
                         case VerificationMethod.Sas:
-                            verifier.on(VerifierEvent.ShowSas, (showSasCallbacks) => {
-                                const emojis = showSasCallbacks.sas.emoji;
-                                const confirmationCallback = async () => {
-                                    await showSasCallbacks.confirm();
-                                };
-                                const mismatchCallback = () => {
-                                    //TODO : use showSasCallbacks.mismatch(); after matris-js-sdk update
-                                    //showSasCallbacks.mismatch();
-                                    return verificationRequest.cancel({ reason: "m.mismatched_sas" });
-                                };
-
-                                if (!emojis || this.isVerifyingDevice) return;
-
-                                this.isVerifyingDevice = true;
-
-                                startVerificationDeferred.resolve({
-                                    emojis,
-                                    confirmationCallback,
-                                    mismatchCallback,
-                                    donePromise: doneVerificationDeferred.promise,
-                                    isThisDeviceVerification: verificationRequest.initiatedByMe,
-                                });
-                            });
-
-                            verifier.verify().catch((error) => {
-                                doneVerificationDeferred.reject(error);
-                            });
-                            break;
-                        default:
-                            throw new Error("The chosen verification method is not implemented");
+                            attachVerifier(nextVerifier);
+                            return;
+                        default: {
+                            const unsupportedMethodError = new Error(
+                                "The chosen verification method is not implemented"
+                            );
+                            rejectStartVerification(unsupportedMethodError);
+                            rejectDoneVerification(unsupportedMethodError);
+                            cleanupVerificationFlow();
+                            return;
+                        }
                     }
                 }
 
                 if (verificationRequest.phase === Phase.Done) {
-                    doneVerificationDeferred.resolve();
-                    this.isVerifyingDevice = false;
+                    resolveDoneVerification();
                     this.isEncryptionRequiredAndNotSet.set(false);
+                    cleanupVerificationFlow();
                 }
 
                 if (verificationRequest.phase === Phase.Cancelled) {
-                    doneVerificationDeferred.reject(new Error("verification request cancelled"));
-                    this.isVerifyingDevice = false;
+                    const cancellationError = new Error("verification request cancelled");
+                    rejectStartVerification(cancellationError);
+                    rejectDoneVerification(cancellationError);
+                    cleanupVerificationFlow();
                 }
-            });
+            };
+
+            verificationRequest.on(VerificationRequestEvent.Change, handleVerificationRequestChange);
         } catch (error) {
             console.error("Failed to verify this device", error);
         }
