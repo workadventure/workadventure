@@ -1,19 +1,24 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import type { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
+    import type { CategoryTag } from "../../../Stores/MapEditorStore";
     import LL from "../../../../i18n/i18n-svelte";
     import EntityImage from "./EntityItem/EntityImage.svelte";
     import { IconChevronRight, IconChevronLeft } from "@wa-icons";
 
-    export let tag: string;
-    export let displayTag = tag;
+    export let tag: CategoryTag;
+    export let label: string | undefined;
     export let entitiesPrefabsVariants: EntityVariant[];
 
     const dispatch = createEventDispatcher<{
-        onSelectedTag: string;
+        onSelectedTag: CategoryTag;
     }>();
 
     const isRtl = document.dir === "rtl";
+
+    function format(text: string): string {
+        return `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+    }
 </script>
 
 {#if entitiesPrefabsVariants.length !== 0}
@@ -32,7 +37,7 @@
                 />
             </div>
             <div class="tag">
-                <p class="m-0">{`${displayTag.charAt(0).toUpperCase()}${displayTag.slice(1)}`}</p>
+                <p class="m-0">{label ? format(label) : format(tag.tag)}</p>
             </div>
             <div class="entitiesCount">
                 {entitiesPrefabsVariants.length}
