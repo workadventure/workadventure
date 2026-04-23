@@ -218,6 +218,9 @@ By default:
 - `livekit-egress.egress.ws_url` points to `ws://workadventure-livekit-server:80` (a service alias managed by this chart)
 - `livekit-egress.egress.redis.address` points to `workadventure-livekit-redis:6379` with DB `2`
 
+Optional: deploy the **custom room-composite template** (static UI used by egress) in-cluster by setting `livekit.recordingTemplate.enabled: true`.
+The chart then adds a small nginx `Deployment` / `Service` and injects `LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL` into `back` with an internal HTTP URL, unless you already set that variable in `commonEnv`, `back.env`, or secrets. The default image `thecodingmachine/workadventure-livekit-recording-template` is built in CI ([`build-test-and-deploy.yml`](../../.github/workflows/build-test-and-deploy.yml), job `build-livekit-recording-template`); override `livekit.recordingTemplate.image` if you use another registry. Local build: `docker build -f libs/livekit-recording-template/Dockerfile -t your-registry/livekit-recording-template:tag .` from the repo root.
+
 See the [Meeting Recording documentation](../../docs/others/self-hosting/recording.md) for detailed setup instructions.
 
 **Sample configuration:**
@@ -226,6 +229,8 @@ See the [Meeting Recording documentation](../../docs/others/self-hosting/recordi
 livekit:
   enabled: true
   egress:
+    enabled: true
+  recordingTemplate:
     enabled: true
   credentials:
     # The egress chart requires explicit values.

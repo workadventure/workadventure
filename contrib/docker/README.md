@@ -30,6 +30,7 @@ In this docker-compose file, you will find:
 - A back container (NodeJS) that shares your rooms information
 - A map-storage container (NodeJS) that serves your maps and provides map-editing features
 - An icon container to fetch the favicon of sites imported in iframes
+- A **livekit-recording-template** container (nginx) that serves the custom LiveKit egress room-composite web UI when you use LiveKit recording (see *Enabling meeting recording* below)
 - A Redis server to store values from variables originating from the Scripting API
 
 ```mermaid
@@ -198,6 +199,8 @@ When OpenID is configured, you should set up a list of restricted users [allowed
 WorkAdventure supports recording meetings using Livekit Egress. Recordings are stored in an S3-compatible storage bucket.
 
 To enable this feature, you will need to configure Livekit Egress and provide S3 credentials in the `.env` file.
+
+`docker-compose.prod.yaml` includes a **`livekit-recording-template`** service (nginx serving the static room-composite UI from `libs/livekit-recording-template`). The image **`thecodingmachine/workadventure-livekit-recording-template`** is built and published like the other WorkAdventure images by the GitHub Actions workflow [`.github/workflows/build-test-and-deploy.yml`](../../.github/workflows/build-test-and-deploy.yml) (job `build-livekit-recording-template`), using `libs/livekit-recording-template/Dockerfile` with the monorepo root as build context. Locally you can run `docker compose build livekit-recording-template` from `contrib/docker` (compose `context: ../..`) or `docker build -f libs/livekit-recording-template/Dockerfile -t … .` from the repo root. By default, `back` uses `LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL=http://livekit-recording-template` so egress can load the template over the Docker network; override in `.env` if you host the template elsewhere.
 
 You can follow the [Meeting Recording documentation](../../docs/others/self-hosting/recording.md) to learn how to set this up.
 

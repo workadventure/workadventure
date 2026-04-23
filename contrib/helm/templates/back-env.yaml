@@ -3,6 +3,7 @@
 {{- $commonSecretEnv := .Values.commonSecretEnv | default dict -}}
 {{- $backSecretEnv := .Values.back.secretEnv | default dict -}}
 {{- $livekitHostDefined := or (or (hasKey $commonEnv "LIVEKIT_HOST") (hasKey $backEnv "LIVEKIT_HOST")) (or (hasKey $commonSecretEnv "LIVEKIT_HOST") (hasKey $backSecretEnv "LIVEKIT_HOST")) -}}
+{{- $recordingTemplateUrlDefined := or (or (hasKey $commonEnv "LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL") (hasKey $backEnv "LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL")) (or (hasKey $commonSecretEnv "LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL") (hasKey $backSecretEnv "LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL")) -}}
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -18,6 +19,9 @@ data:
   PUBLIC_MAP_STORAGE_URL: {{ include "workadventure.mapStorageUrl" . | quote }}
   {{- if and .Values.livekit.enabled (not $livekitHostDefined) }}
   LIVEKIT_HOST: {{ include "workadventure.livekitHost" . | quote }}
+  {{- end }}
+  {{- if and .Values.livekit.enabled .Values.livekit.egress.enabled .Values.livekit.recordingTemplate.enabled (not $recordingTemplateUrlDefined) }}
+  LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL: {{ include "workadventure.livekitRecordingTemplateInternalUrl" . | quote }}
   {{- end }}
 
   {{- range $key, $val := .Values.commonEnv }}
