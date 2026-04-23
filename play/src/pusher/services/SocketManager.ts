@@ -276,12 +276,13 @@ export class SocketManager implements ZoneEventListener {
                     if (!socketData.disconnecting) {
                         const connectionCloseReason =
                             backConnectionCloseReason ?? "No close reason received from back server.";
-                        console.warn(
-                            `Connection lost to back server '${apiClient.getChannel().getTarget()}' for room '${
-                                socketData.roomId
-                            }' and user '${socketData.userUuid}'/'${socketData.name}'. Reason: ${connectionCloseReason}`
-                        );
-                        this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
+                        const message = `Connection lost to back server '${apiClient
+                            .getChannel()
+                            .getTarget()}' for room '${socketData.roomId}' and user '${socketData.userUuid}'/'${
+                            socketData.name
+                        }'. Reason: ${connectionCloseReason}`;
+                        console.warn(message);
+                        this.closeWebsocketConnection(client, 1011, message);
                     }
                 })
                 .on("error", (err: Error) => {
