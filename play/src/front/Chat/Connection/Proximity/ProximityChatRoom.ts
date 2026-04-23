@@ -96,7 +96,7 @@ const MAX_PARTICIPANTS_FOR_SOUND_NOTIFICATIONS = 5;
 export class ProximityChatRoom implements ChatRoom {
     id = "proximity";
     name = writable("Proximity Chat");
-    type: "direct" | "multiple" = "multiple";
+    type = readable<"direct" | "multiple">("multiple");
     hasUnreadMessages = writable(false);
     unreadMessagesCount = writable(0);
     unreadNotificationCount = writable(0);

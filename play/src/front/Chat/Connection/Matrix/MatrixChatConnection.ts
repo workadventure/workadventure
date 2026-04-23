@@ -1,5 +1,5 @@
 import type { Readable, Unsubscriber, Writable } from "svelte/store";
-import { derived, get, writable } from "svelte/store";
+import { derived, get, readable, writable } from "svelte/store";
 import type {
     EmittedEvents,
     ICreateRoomOpts,
@@ -128,11 +128,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.roomList = new AutoDestroyingMapStore<string, MatrixChatRoom>();
         this.matrixRateLimiter = MatrixRateLimiter.getInstance();
         this.clientPromise = clientPromise;
-        this.directRooms = derived(this.roomList, (roomList) => {
-            return Array.from(roomList.values()).filter(
-                (room) => get(room.myMembership) === KnownMembership.Join && room.type === "direct"
-            );
-        });
+        this.directRooms = this.createJoinedRoomsReadable(
+            (room) => get(room.myMembership) === KnownMembership.Join && get(room.type) === "direct"
+        );
 
         this.directRoomsUsers = derived(
             [this.directRooms, this.statusStore],
@@ -179,11 +177,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             }
         );
 
-        this.rooms = derived(this.roomList, (roomList) => {
-            return Array.from(roomList.values()).filter(
-                (room) => get(room.myMembership) === KnownMembership.Join && room.type === "multiple"
-            );
-        });
+        this.rooms = this.createJoinedRoomsReadable(
+            (room) => get(room.myMembership) === KnownMembership.Join && get(room.type) === "multiple"
+        );
 
         this.hasUnreadMessages = derived(
             this.roomList,
@@ -296,6 +292,38 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
         this.statusUnsubscriber = this.statusStore.subscribe((status: AvailabilityStatus) => {
             this.setPresence(status);
+        });
+    }
+
+    /**
+     * Recomputes when the room list changes or when any room's membership / DM-vs-group {@link MatrixChatRoom.type}
+     * changes (so UI lists move rooms between Direct messages and Group conversations).
+     */
+    private createJoinedRoomsReadable(predicate: (room: MatrixChatRoom) => boolean): Readable<MatrixChatRoom[]> {
+        return readable<MatrixChatRoom[]>([], (set) => {
+            let childUnsubs: Unsubscriber[] = [];
+            const clearChildSubs = () => {
+                childUnsubs.forEach((u) => u());
+                childUnsubs = [];
+            };
+            const listRooms = () => Array.from(get(this.roomList).values());
+            const bump = () => {
+                set(listRooms().filter(predicate));
+            };
+            const rewireRoomSignals = () => {
+                clearChildSubs();
+                for (const room of listRooms()) {
+                    childUnsubs.push(room.myMembership.subscribe(bump));
+                    childUnsubs.push(room.type.subscribe(bump));
+                }
+                bump();
+            };
+            const unsubList = this.roomList.subscribe(rewireRoomSignals);
+            rewireRoomSignals();
+            return () => {
+                unsubList();
+                clearChildSubs();
+            };
         });
     }
 
@@ -1179,7 +1207,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                     .filter((member) => member.id && ["join", "invite"].includes(get(member.membership)))
                     .map((member) => member.id);
                 return (
-                    room.type === "direct" &&
+                    get(room.type) === "direct" &&
                     memberIDs.some((memberId) => memberId === userID && memberIDs.length === 2)
                 );
             })
