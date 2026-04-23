@@ -54,7 +54,6 @@ import { currentPlayerWokaStore } from "../../../Stores/CurrentPlayerWokaStore";
 import LL from "../../../../i18n/i18n-svelte";
 import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
-import { MatrixRateLimiter } from "../../Services/MatrixRateLimiter";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import type { MatrixSecurity } from "./MatrixSecurity";
@@ -88,16 +87,8 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private displayNameMatrixSyncUnsubscriber: (() => void) | undefined;
     private displayNameMatrixSyncDebounceTimer: ReturnType<typeof setTimeout> | undefined;
     private isClientReady = false;
-    /**
-     * When false, {@link #refreshAllJoinedFoldersChildren} must not run from membership handlers.
-     * Matrix emits {@link RoomEvent.MyMembership} for every room during the first sync; refreshing
-     * the whole folder tree on each event overloads the client. Set to true only after
-     * {@link #init} has rebuilt the space hierarchy and run one full folder refresh.
-     */
-    private allowJoinedFolderChildrenRefresh = false;
     private usersStatus: MapStore<string, AvailabilityStatus>;
     private userIdsNeedingPresenceUpdate = new Set();
-    private matrixRateLimiter: MatrixRateLimiter;
     nbUnreadInvitationsMessages: Readable<number>;
     nbUnreadDirectRoomsMessages: Readable<number>;
     nbUnreadRoomsMessages: Readable<number>;
@@ -136,7 +127,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     ) {
         this.connectionStatus = writable("CONNECTING");
         this.roomList = new AutoDestroyingMapStore<string, MatrixChatRoom>();
-        this.matrixRateLimiter = MatrixRateLimiter.getInstance();
         this.clientPromise = clientPromise;
         this.directRooms = this.createJoinedRoomsReadable(
             (room) => get(room.myMembership) === KnownMembership.Join && get(room.type) === "direct"
@@ -350,7 +340,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
             // Refresh all joined folders children to ensure the UI is up to date
             this.refreshAllJoinedFoldersChildren();
-            this.allowJoinedFolderChildrenRefresh = true;
         } catch (error) {
             this.connectionStatus.set("OFFLINE");
             console.error(error);
@@ -864,7 +853,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
      * after that room is found under a folder tree (avoids walking unrelated roots when found early).
      */
     private refreshAllJoinedFoldersChildren(targetRoomId?: string): void {
-        console.log("Matrix => refreshAllJoinedFoldersChildren", targetRoomId);
         for (const rootFolder of this.roomFolders.values()) {
             if (this.refreshJoinedFolderSubtree(rootFolder, targetRoomId)) {
                 return;
@@ -996,7 +984,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             this.roomList.delete(roomId);
             this.roomFolders.delete(roomId);
 
-            if (this.allowJoinedFolderChildrenRefresh) {
+            if (this.client?.isInitialSyncComplete()) {
                 this.refreshAllJoinedFoldersChildren(roomId);
             }
             this.manageRoomOrFolder(room).catch((e) => {
@@ -1028,7 +1016,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
                     this.roomList.delete(room.roomId);
                     this.roomFolders.delete(room.roomId);
-                    if (this.allowJoinedFolderChildrenRefresh) {
+                    if (this.client?.isInitialSyncComplete()) {
                         this.refreshAllJoinedFoldersChildren(room.roomId);
                     }
                     this.manageRoomOrFolder(room).catch((e) => {
