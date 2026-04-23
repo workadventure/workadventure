@@ -79,16 +79,4 @@ describe("LivekitWebhookService", () => {
             statusCode: 401,
         });
     });
-
-    it("rejects missing recordingSessionId query parameters", async () => {
-        const service = new LivekitWebhookService({ getSpaceClient: vi.fn() }, 1024, "api-key", "api-secret", () => ({
-            receive: vi.fn(),
-        }));
-
-        await expect(
-            service.handleWebhook(Buffer.from("{}"), "jwt-token", "space-name", undefined)
-        ).rejects.toMatchObject({
-            statusCode: 400,
-        });
-    });
 });

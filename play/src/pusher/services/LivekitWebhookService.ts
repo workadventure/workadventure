@@ -1,30 +1,19 @@
 import { Metadata } from "@grpc/grpc-js";
-import {
-    HandleRecordingWebhookRequest,
-    RecordingWebhookPhase,
-    type HandleRecordingWebhookRequest as HandleRecordingWebhookRequestType,
-} from "@workadventure/messages";
+import { HandleRecordingWebhookRequest, RecordingWebhookPhase } from "@workadventure/messages";
+import type { SpaceManagerClient } from "@workadventure/messages/src/ts-proto-generated/services";
 import { EgressStatus, WebhookReceiver, type WebhookEvent } from "livekit-server-sdk";
 import { GRPC_MAX_MESSAGE_SIZE, LIVEKIT_API_KEY, LIVEKIT_API_SECRET } from "../enums/EnvironmentVariable";
 import { apiClientRepository } from "./ApiClientRepository";
 
 type ForwardedWebhookEvent = Extract<WebhookEvent["event"], "egress_started" | "egress_ended">;
 
-interface SpaceManagerClientLike {
-    handleRecordingWebhook(
-        request: HandleRecordingWebhookRequestType,
-        metadata: Metadata,
-        callback: (error: Error | null) => void
-    ): unknown;
-}
+type SpaceManagerClientLike = Pick<SpaceManagerClient, "handleRecordingWebhook">;
 
-interface ApiClientRepositoryLike {
+type ApiClientRepositoryLike = {
     getSpaceClient(spaceName: string, grpcMaxMessageSize: number): Promise<SpaceManagerClientLike>;
-}
+};
 
-interface WebhookReceiverLike {
-    receive(body: string, authHeader?: string): Promise<WebhookEvent>;
-}
+type WebhookReceiverLike = Pick<WebhookReceiver, "receive">;
 
 type CreateWebhookReceiver = (apiKey: string, apiSecret: string) => WebhookReceiverLike;
 
@@ -52,20 +41,12 @@ export class LivekitWebhookService {
     async handleWebhook(
         rawBody: Buffer,
         authHeader: string | undefined,
-        spaceName: string | undefined,
-        recordingSessionId: string | undefined
+        spaceName: string,
+        recordingSessionId: string
     ): Promise<"forwarded" | "ignored"> {
         const webhookReceiver = this.webhookReceiver;
         if (!webhookReceiver) {
             throw new LivekitWebhookHttpError("LiveKit webhook receiver is not configured", 500);
-        }
-
-        if (!spaceName) {
-            throw new LivekitWebhookHttpError("Missing space query parameter", 400);
-        }
-
-        if (!recordingSessionId) {
-            throw new LivekitWebhookHttpError("Missing recordingSessionId query parameter", 400);
         }
 
         if (!Buffer.isBuffer(rawBody) || rawBody.length === 0) {
