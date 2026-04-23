@@ -361,12 +361,28 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                 );
             });
 
+        const childIds = new Set(children.map((c) => c.roomId));
+
+        for (const id of Array.from(this.roomList.keys())) {
+            if (!childIds.has(id)) {
+                this.roomList.delete(id);
+            }
+        }
+        for (const id of Array.from(this.folderList.keys())) {
+            if (!childIds.has(id)) {
+                this.folderList.delete(id);
+            }
+        }
+
         children.forEach((child) => {
             if (child.isSpaceRoom()) {
-                const spaceFolder = new MatrixRoomFolder(child);
-                this.folderList.set(child.roomId, spaceFolder);
+                let spaceFolder = this.folderList.get(child.roomId);
+                if (!spaceFolder) {
+                    spaceFolder = new MatrixRoomFolder(child);
+                    this.folderList.set(child.roomId, spaceFolder);
+                }
                 spaceFolder.init();
-            } else {
+            } else if (!this.roomList.has(child.roomId)) {
                 this.roomList.set(child.roomId, new MatrixChatRoom(child));
             }
         });
