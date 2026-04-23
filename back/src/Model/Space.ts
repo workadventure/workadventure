@@ -8,6 +8,7 @@ import type {
     PublicEvent,
     SpaceAnswerMessage,
     SpaceQueryMessage,
+    SpaceRecordingLayoutMode,
     SpaceUser,
 } from "@workadventure/messages";
 import {
@@ -621,14 +622,14 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                     };
                 }
                 case "startSpaceRecordingQuery": {
-                    const { spaceUserId } = spaceQueryMessage.query.startSpaceRecordingQuery;
+                    const { spaceUserId, layoutMode } = spaceQueryMessage.query.startSpaceRecordingQuery;
                     const user = this.getUser(spaceUserId);
 
                     if (!user) {
                         throw new Error(`Could not find user ${spaceUserId} in space ${this.name}`);
                     }
 
-                    await this.startRecording(user);
+                    await this.startRecording(user, layoutMode);
                     return {
                         answer: {
                             $case: "startSpaceRecordingAnswer",
@@ -738,9 +739,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         return this._nbPublishers;
     }
 
-    public async startRecording(user: SpaceUser) {
+    public async startRecording(user: SpaceUser, layoutMode?: SpaceRecordingLayoutMode) {
         try {
-            await this.communicationManager.handleStartRecording(user);
+            await this.communicationManager.handleStartRecording(user, layoutMode);
         } catch (error) {
             Sentry.captureException(error);
             throw error; // Re-throw the error to be handled by the caller

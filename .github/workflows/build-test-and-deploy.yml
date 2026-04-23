@@ -90,6 +90,20 @@ jobs:
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
       context: ./
 
+  build-livekit-recording-template:
+    uses: ./.github/workflows/build-multi-arch-image.yml
+    secrets: inherit
+    with:
+      ghcr-dev-build-image-name: "ghcr.io/workadventure/livekit-recording-template-dev-build"
+      ghcr-image-name: "ghcr.io/workadventure/livekit-recording-template"
+      dockerio-image-name: "thecodingmachine/workadventure-livekit-recording-template"
+      final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
+      dockerfile: libs/livekit-recording-template/Dockerfile
+      short_name: livekit-recording-template
+      # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
+      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
+      context: ./
+
   push-to-sentry:
     runs-on: ubuntu-latest
     #if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
@@ -555,6 +569,7 @@ jobs:
       - build-maps
       - build-uploader
       - build-map-storage
+      - build-livekit-recording-template
     timeout-minutes: 60
     runs-on: ubuntu-24.04
     steps:
@@ -672,6 +687,7 @@ jobs:
       - build-maps
       - build-uploader
       - build-map-storage
+      - build-livekit-recording-template
     runs-on: ubuntu-24.04
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas')) }}
 
@@ -1041,6 +1057,18 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           organization: workadventure
           container: uploader-dev-build
+          dry-run: false # Dry-run first, then change to `false`
+          keep-younger-than: 7 # days
+          keep-last: 5
+          prune-untagged: true
+          prune-tags-regexes: ".*"
+
+      - name: Prune livekit-recording-template
+        uses: vlaurin/action-ghcr-prune@v0.6.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          organization: workadventure
+          container: livekit-recording-template-dev-build
           dry-run: false # Dry-run first, then change to `false`
           keep-younger-than: 7 # days
           keep-last: 5

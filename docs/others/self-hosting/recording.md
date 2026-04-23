@@ -53,6 +53,7 @@ Configure the following environment variables to enable recording:
 | `LIVEKIT_RECORDING_S3_SECRET_KEY` | Yes | The S3 secret access key |
 | `LIVEKIT_RECORDING_S3_BUCKET` | Yes | The S3 bucket name |
 | `LIVEKIT_RECORDING_S3_REGION` | Yes | The S3 region (e.g., `us-east-1`, `eu-west-1`) |
+| `LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL` | No | Base URL of the [custom Room Composite template](https://docs.livekit.io/home/egress/custom-template/) (static site). Must be reachable from the **egress** service (not only from the browser). When unset, LiveKit uses its built-in template. |
 
 ## Configuration Examples
 

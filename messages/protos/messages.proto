@@ -567,8 +567,17 @@ message DeleteRecordingQuery {
   string recordingId = 1;
 }
 
+/** Layout for LiveKit room-composite egress (custom recording template). */
+enum SpaceRecordingLayoutMode {
+  UNSPECIFIED = 0;
+  GRID = 1;
+  SPEAKERFOCUS = 2;
+  FULLSCREEN = 3;
+}
+
 message StartRecordingQuery {
   string spaceName = 1;
+  SpaceRecordingLayoutMode layoutMode = 2;
 }
 
 message StopRecordingQuery {
@@ -775,6 +784,7 @@ message RemoveSpaceUserQuery {
 message StartSpaceRecordingQuery {
   string spaceName = 1;
   string spaceUserId = 2;
+  SpaceRecordingLayoutMode layoutMode = 3;
 }
 
 message StopSpaceRecordingQuery {

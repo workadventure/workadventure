@@ -97,7 +97,7 @@ describe("RecordingManager", () => {
 
         await manager.startRecording(user);
 
-        expect(mocks.handleStartRecording).toHaveBeenCalledWith(user);
+        expect(mocks.handleStartRecording).toHaveBeenCalledWith(user, undefined);
         expect(publishMetadata).toHaveBeenNthCalledWith(1, {
             recording: {
                 recorder: "user-1",

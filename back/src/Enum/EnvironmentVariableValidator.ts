@@ -165,6 +165,15 @@ Note that anonymous players don't have any TTL limit because their data is store
     LIVEKIT_RECORDING_S3_SECRET_KEY: z.string().optional().describe("The S3 secret key for Livekit recording."),
     LIVEKIT_RECORDING_S3_REGION: z.string().optional().describe("The S3 region for Livekit recording."),
     LIVEKIT_RECORDING_S3_BUCKET: z.string().optional().describe("The S3 bucket for Livekit recording."),
+    LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe(
+            "Base URL of the Room Composite egress web UI (custom template). Must be reachable from the egress service (e.g. http://livekit-recording-template in Docker). Passed to StartRoomCompositeEgress as custom_base_url."
+        ),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

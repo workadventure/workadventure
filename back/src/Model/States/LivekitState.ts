@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/node";
-import type { SpaceUser } from "@workadventure/messages";
+import type { SpaceRecordingLayoutMode, SpaceUser } from "@workadventure/messages";
 import { CommunicationType } from "../Types/CommunicationTypes";
 import { LivekitCommunicationStrategy } from "../Strategies/LivekitCommunicationStrategy";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
@@ -61,9 +61,9 @@ export class LivekitState
         }
     }
 
-    async handleStartRecording(user: SpaceUser): Promise<void> {
+    async handleStartRecording(user: SpaceUser, layoutMode?: SpaceRecordingLayoutMode): Promise<void> {
         this._isRecording = true;
-        await this._currentStrategy.startRecording(user).catch((error) => {
+        await this._currentStrategy.startRecording(user, layoutMode).catch((error) => {
             this._isRecording = false;
             console.error("Error starting recording:", error);
             throw new Error("Failed to start recording");

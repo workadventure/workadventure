@@ -79,6 +79,23 @@ livekit:
     # with the same values.
     enabled: false
 
+  # Deploy the custom room-composite web template (nginx + static build of libs/livekit-recording-template).
+  # When enabled with LiveKit egress, back receives LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL pointing at this Service,
+  # unless you set LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL in back.env / commonEnv / secrets.
+  recordingTemplate:
+    enabled: false
+    replicaCount: 1
+    image:
+      repository: thecodingmachine/workadventure-livekit-recording-template
+      pullPolicy: IfNotPresent
+      tag: ""
+    service:
+      port: 80
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    resources: {}
+
   ingress:
     # Enable ingress for LiveKit signaling endpoint.
     # This ingress is only created when `livekit-server.loadBalancer.type=disable`.

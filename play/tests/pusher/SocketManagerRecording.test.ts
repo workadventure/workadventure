@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
+import { SpaceRecordingLayoutMode } from "@workadventure/messages";
 
 vi.mock("../../src/pusher/enums/EnvironmentVariable", () => import("./mocks/pusherEnvironmentVariableMock"));
 
@@ -67,7 +68,10 @@ describe("SocketManager recording queries", () => {
 
         (manager as unknown as { spaces: Map<string, SpaceInterface> }).spaces.set("world.space-name", space);
 
-        await manager.handleStartRecording(client, "world.space-name", { signal });
+        await manager.handleStartRecording(client, "world.space-name", {
+            signal,
+            layoutMode: SpaceRecordingLayoutMode.UNSPECIFIED,
+        });
         await manager.handleStopRecording(client, "world.space-name", { signal });
 
         expect(querySend).toHaveBeenNthCalledWith(
@@ -77,6 +81,7 @@ describe("SocketManager recording queries", () => {
                 startSpaceRecordingQuery: {
                     spaceName: "world.space-name",
                     spaceUserId: "space-user-1",
+                    layoutMode: SpaceRecordingLayoutMode.UNSPECIFIED,
                 },
             },
             {

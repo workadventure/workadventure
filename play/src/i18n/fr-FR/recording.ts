@@ -50,6 +50,19 @@ const recording: DeepPartial<Translation["recording"]> = {
             megaphone: "Enregistrer le mégaphone",
             discussion: "Enregistrer la discussion",
         },
+        layoutPicker: {
+            title: "Mise en page de l'enregistrement",
+            subtitle: "Choisissez comment cadrer les participants dans la vidéo.",
+            gridLabel: "Grille",
+            gridDesc: "Vue mosaïque avec tous les participants.",
+            speakerLabel: "Intervenant & partage d'écran",
+            speakerDesc:
+                "Grande vue pour le dernier partage d'écran ou l'intervenant actif ; les autres dans une colonne à droite.",
+            fullscreenLabel: "Fullscreen",
+            fullscreenDesc: "Une vue complète sur votre caméra ou votre screen share.",
+            confirm: "Démarrer l'enregistrement",
+            cancel: "Annuler",
+        },
     },
 };
 

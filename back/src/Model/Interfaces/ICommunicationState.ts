@@ -1,4 +1,4 @@
-import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
+import type { MeetingConnectionRestartMessage, SpaceRecordingLayoutMode, SpaceUser } from "@workadventure/messages";
 import type { ICommunicationStrategy, IRecordableStrategy } from "./ICommunicationStrategy";
 
 export interface StateTransitionResult<T extends ICommunicationStrategy> {
@@ -23,6 +23,6 @@ export interface ICommunicationState<T extends ICommunicationStrategy> {
 }
 
 export interface IRecordableState<T extends IRecordableStrategy> extends ICommunicationState<T> {
-    handleStartRecording(user: SpaceUser): Promise<void>;
+    handleStartRecording(user: SpaceUser, layoutMode?: SpaceRecordingLayoutMode): Promise<void>;
     handleStopRecording(): Promise<void>;
 }

@@ -450,7 +450,7 @@ describe("Space test", () => {
         await space.startRecording();
         await space.stopRecording();
 
-        expect(startRecordingSpy).toHaveBeenCalledWith("space-name");
+        expect(startRecordingSpy).toHaveBeenCalledWith("space-name", undefined);
         expect(stopRecordingSpy).toHaveBeenCalledWith("space-name");
     });
 

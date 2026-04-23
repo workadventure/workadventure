@@ -1,0 +1,146 @@
+import { useEffect, useMemo, useState } from "react";
+import { RoomContext } from "@livekit/components-react";
+import { Room } from "livekit-client";
+
+import { usePublicationsOrderedByActiveSpeakers } from "../hooks/usePublicationsOrderedByActiveSpeakers";
+import { useRemoteVideoPublications } from "../hooks/useRemoteVideoPublications";
+import { type EgressConnectionParams, readEgressConnectionParams } from "../recording/readEgressConnectionParams";
+import { RECORDING_LAYOUT_LIVEKIT_FULLSCREEN, RECORDING_LAYOUT_SPEAKER } from "../recording/recordingLayoutIds";
+import { useSignalRecordingReady } from "../recording/useSignalRecordingReady";
+import { RecordingLivekitFullscreenLayout } from "./RecordingLivekitFullscreenLayout";
+import { RecordingSpeakerLayout } from "./RecordingSpeakerLayout";
+import { RecordingVideoMosaic } from "./RecordingVideoMosaic";
+
+type BootstrapState =
+    | { status: "idle" }
+    | { status: "error"; message: string }
+    | { status: "ready"; params: EgressConnectionParams };
+
+export type RecordingRoomTemplateProps = {
+    /**
+     * When omitted, reads LiveKit egress `url` / `token` / `layout` from the page query string once.
+     * For stable behavior, memoize this object in the parent when it is derived from props/state.
+     */
+    connection?: EgressConnectionParams;
+};
+
+/**
+ * Minimal LiveKit Room Composite template: connects as the egress recorder, lays out remote
+ * video tracks in a responsive grid, then signals readiness to the egress recorder.
+ */
+export function RecordingRoomTemplate({ connection: connectionProp }: RecordingRoomTemplateProps): JSX.Element {
+    const [bootstrap, setBootstrap] = useState<BootstrapState>({ status: "idle" });
+    const [room, setRoom] = useState<Room | undefined>();
+    const [showVerificationBar, setShowVerificationBar] = useState(false);
+
+    useEffect(() => {
+        document.title = "WorkAdventure · custom LiveKit recording template";
+    }, []);
+
+    const connectionKey = useMemo(() => {
+        if (connectionProp === undefined) {
+            return "__from_window_location__";
+        }
+        return `${connectionProp.serverUrl}\u0000${connectionProp.token}\u0000${connectionProp.layout}`;
+    }, [connectionProp]);
+
+    useEffect(() => {
+        if (connectionKey === "__from_window_location__") {
+            try {
+                setBootstrap({ status: "ready", params: readEgressConnectionParams() });
+            } catch (err) {
+                const message = err instanceof Error ? err.message : "Missing LiveKit egress parameters";
+                setBootstrap({ status: "error", message });
+            }
+            return;
+        }
+        if (!connectionProp) {
+            return;
+        }
+        setBootstrap({ status: "ready", params: connectionProp });
+    }, [connectionKey, connectionProp]);
+
+    useEffect(() => {
+        if (bootstrap.status !== "ready") {
+            return;
+        }
+        const { serverUrl, token } = bootstrap.params;
+        if (!serverUrl || !token) {
+            setBootstrap({ status: "error", message: "Missing serverUrl or token" });
+            return;
+        }
+
+        const livekitRoom = new Room({
+            adaptiveStream: true,
+            dynacast: true,
+        });
+
+        let cancelled = false;
+
+        livekitRoom
+            .connect(serverUrl, token)
+            .then(() => {
+                if (!cancelled) {
+                    setRoom(livekitRoom);
+                    setShowVerificationBar(true);
+                    setTimeout(() => {
+                        setShowVerificationBar(false);
+                    }, 5000);
+                }
+            })
+            .catch((err: unknown) => {
+                if (!cancelled) {
+                    setBootstrap({
+                        status: "error",
+                        message: err instanceof Error ? err.message : "Failed to connect to LiveKit",
+                    });
+                }
+            });
+
+        return () => {
+            cancelled = true;
+            setRoom(undefined);
+            livekitRoom.disconnect().catch(() => {});
+        };
+    }, [bootstrap]);
+
+    useSignalRecordingReady(room);
+
+    const rawPublications = useRemoteVideoPublications(room);
+    const publications = usePublicationsOrderedByActiveSpeakers(room, rawPublications);
+
+    if (bootstrap.status === "error") {
+        return (
+            <div className="recording-template recording-template--error">
+                <p className="recording-template__error">{bootstrap.message}</p>
+            </div>
+        );
+    }
+
+    const layout = bootstrap.status === "ready" ? bootstrap.params.layout : undefined;
+    const useSpeakerLayout = layout === RECORDING_LAYOUT_SPEAKER;
+    const useLivekitFullscreen = layout === RECORDING_LAYOUT_LIVEKIT_FULLSCREEN;
+
+    return (
+        <div className="recording-template" data-layout={layout}>
+            {showVerificationBar && (
+                <header className="recording-template__verification-bar">
+                    <span>
+                        Recording strated at {new Date().toLocaleString()} - the layout used is {layout}
+                    </span>
+                </header>
+            )}
+            {useLivekitFullscreen && room ? (
+                <RoomContext.Provider value={room}>
+                    <RecordingLivekitFullscreenLayout />
+                </RoomContext.Provider>
+            ) : useLivekitFullscreen ? (
+                <div className="recording-template__mosaic recording-template__mosaic--empty" />
+            ) : useSpeakerLayout ? (
+                <RecordingSpeakerLayout room={room} publications={publications} />
+            ) : (
+                <RecordingVideoMosaic publications={publications} />
+            )}
+        </div>
+    );
+}

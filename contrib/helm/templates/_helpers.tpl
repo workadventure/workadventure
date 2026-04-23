@@ -196,6 +196,10 @@ https://{{ .Values.domainName }}/maps
 {{- end -}}
 {{- end -}}
 
+{{- define "workadventure.livekitRecordingTemplateInternalUrl" -}}
+http://{{ include "workadventure.fullname" . }}-livekit-recording-template:{{ .Values.livekit.recordingTemplate.service.port }}
+{{- end }}
+
 {{- define "workadventure.livekitCredentialsSecretName" -}}
 {{- $defaultSecretName := printf "%s-livekit-credentials" .Release.Name -}}
 {{- $livekitServer := index .Values "livekit-server" | default dict -}}

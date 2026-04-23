@@ -20,6 +20,7 @@ import type {
     PrivateEventPusherToFront,
     BackEventFrontToPusherMessage,
     InitSpaceUsersMessage,
+    SpaceRecordingLayoutMode,
 } from "@workadventure/messages";
 import { FilterType } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
@@ -402,8 +403,8 @@ export class Space implements SpaceInterface {
         this._connection.emitUpdateSpaceMetadata(this.name, Object.fromEntries(metadata.entries()));
     }
 
-    public async startRecording(): Promise<void> {
-        await this._connection.startRecording(this.name);
+    public async startRecording(layoutMode?: SpaceRecordingLayoutMode): Promise<void> {
+        await this._connection.startRecording(this.name, layoutMode);
     }
 
     public async stopRecording(): Promise<void> {

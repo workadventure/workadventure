@@ -201,6 +201,7 @@ services:
       - LIVEKIT_RECORDING_S3_REGION
       - LIVEKIT_RECORDING_S3_BUCKET
       - LIVEKIT_RECORDING_S3_CDN_ENDPOINT
+      - LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL=${LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL:-http://livekit-recording-template}
     labels:
       traefik.enable: "true"
       traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes: "/api"
@@ -215,6 +216,28 @@ services:
       traefik.http.routers.back-ssl.tls: "true"
       traefik.http.routers.back-ssl.tls.certresolver: "myresolver"
     restart: ${RESTART_POLICY}
+
+  # Static LiveKit room-composite template (libs/livekit-recording-template). Used when LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL
+  # points here (default in back). Build: docker compose build livekit-recording-template
+  livekit-recording-template:
+    build:
+      context: ../..
+      dockerfile: libs/livekit-recording-template/Dockerfile
+    image: thecodingmachine/workadventure-livekit-recording-template:${VERSION}
+    restart: ${RESTART_POLICY}
+    labels:
+      traefik.enable: "true"
+      traefik.http.middlewares.strip-livekit-recording-template-prefix.stripprefix.prefixes: "/livekit-recording-template"
+      traefik.http.routers.livekit-recording-template.middlewares: "strip-livekit-recording-template-prefix@docker"
+      traefik.http.routers.livekit-recording-template.rule: "Host(`${DOMAIN}`) && PathPrefix(`/livekit-recording-template`)"
+      traefik.http.routers.livekit-recording-template.entryPoints: "web"
+      traefik.http.services.livekit-recording-template.loadbalancer.server.port: "80"
+      traefik.http.routers.livekit-recording-template-ssl.middlewares: "strip-livekit-recording-template-prefix@docker"
+      traefik.http.routers.livekit-recording-template-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/livekit-recording-template`)"
+      traefik.http.routers.livekit-recording-template-ssl.entryPoints: "websecure"
+      traefik.http.routers.livekit-recording-template-ssl.service: "livekit-recording-template"
+      traefik.http.routers.livekit-recording-template-ssl.tls: "true"
+      traefik.http.routers.livekit-recording-template-ssl.tls.certresolver: "myresolver"
 
   uploader:
     image: thecodingmachine/workadventure-uploader:${VERSION}

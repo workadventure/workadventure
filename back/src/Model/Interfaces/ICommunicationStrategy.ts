@@ -1,4 +1,4 @@
-import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
+import type { MeetingConnectionRestartMessage, SpaceRecordingLayoutMode, SpaceUser } from "@workadventure/messages";
 
 export interface ICommunicationStrategy {
     addUser(user: SpaceUser): Promise<void>;
@@ -17,6 +17,6 @@ export interface ICommunicationStrategy {
 }
 
 export interface IRecordableStrategy extends ICommunicationStrategy {
-    startRecording(user: SpaceUser): Promise<void>;
+    startRecording(user: SpaceUser, layoutMode?: SpaceRecordingLayoutMode): Promise<void>;
     stopRecording(): Promise<void>;
 }

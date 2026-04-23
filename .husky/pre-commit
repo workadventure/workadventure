@@ -49,3 +49,7 @@ npm run precommit
 cd contrib/tools/generate-env-docs || exit
 npm run generate
 )
+(
+cd libs/livekit-recording-template || exit
+npm run precommit
+)

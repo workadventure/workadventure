@@ -1,0 +1,45 @@
+{
+  "name": "@workadventure/livekit-recording-template",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Custom LiveKit Room Composite egress template (React)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:mosaic": "vite --open '/?devMosaic=1'",
+    "dev:speaker": "vite --open '/?devSpeaker=1'",
+    "dev:fullscreen": "vite --open '/?devFullscreen=1'",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json",
+    "lint": "eslint src/",
+    "lint-fix": "eslint --fix src/",
+    "pretty": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "pretty-check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
+    "precommit": "lint-staged",
+    "check": "npm run typecheck && npm run lint && npm run pretty-check",
+    "preview": "vite preview"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
+    "*.css": ["prettier --write"]
+  },
+  "dependencies": {
+    "@livekit/components-react": "^2.9.20",
+    "@livekit/components-styles": "^1.2.0",
+    "@livekit/egress-sdk": "^0.2.1",
+    "livekit-client": "^2.16.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@workadventure/eslint-config": "1.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.35.0",
+    "lint-staged": "^12.3.7",
+    "prettier": "^2.8.2",
+    "typescript": "~5.8.3",
+    "vite": "^5.4.21"
+  }
+}

@@ -1,0 +1,19 @@
+{{- if and .Values.livekit.enabled .Values.livekit.egress.enabled .Values.livekit.recordingTemplate.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "workadventure.fullname" . }}-livekit-recording-template
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    role: livekit-recording-template
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.livekit.recordingTemplate.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "workadventure.selectorLabels" . | nindent 4 }}
+    role: livekit-recording-template
+{{- end }}

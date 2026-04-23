@@ -52,6 +52,19 @@ services:
         condition: service_started
       livekit:
         condition: service_started
+      livekit-recording-template:
+        condition: service_started
+
+  # Static build of libs/livekit-recording-template (run: npm run build --workspace=@workadventure/livekit-recording-template)
+  livekit-recording-template:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./libs/livekit-recording-template/dist:/usr/share/nginx/html:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.livekit-recording-template.rule=Host(`livekit-recording-template.workadventure.localhost`)"
+      - "traefik.http.routers.livekit-recording-template.entryPoints=web"
+      - "traefik.http.services.livekit-recording-template.loadbalancer.server.port=80"
 
   rustfs-livekit:
     image: rustfs/rustfs:1.0.0-alpha.83
@@ -97,11 +110,14 @@ services:
         aliases:
           - "livekit.workadventure.localhost"
           - "egress.workadventure.localhost"
+          - "livekit-recording-template.workadventure.localhost"
 
   back:
     depends_on:
       rustfs-livekit-init:
         condition: service_completed_successfully
+      livekit-recording-template:
+        condition: service_started
     environment:
       LIVEKIT_HOST: "$LIVEKIT_HOST"
       LIVEKIT_API_KEY: "$LIVEKIT_API_KEY"
@@ -112,6 +128,7 @@ services:
       LIVEKIT_RECORDING_S3_SECRET_KEY: "$LIVEKIT_RECORDING_S3_SECRET_KEY"
       LIVEKIT_RECORDING_S3_REGION: "$LIVEKIT_RECORDING_S3_REGION"
       LIVEKIT_RECORDING_S3_BUCKET: "$LIVEKIT_RECORDING_S3_BUCKET"
+      LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL: "${LIVEKIT_RECORDING_CUSTOM_TEMPLATE_URL:-http://livekit-recording-template}"
   play:
     environment:
       LIVEKIT_RECORDING_S3_ENDPOINT: "$LIVEKIT_RECORDING_S3_ENDPOINT"

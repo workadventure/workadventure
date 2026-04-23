@@ -1,0 +1,52 @@
+{{- if and .Values.livekit.enabled .Values.livekit.egress.enabled .Values.livekit.recordingTemplate.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "workadventure.fullname" . }}-livekit-recording-template
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    role: livekit-recording-template
+spec:
+  replicas: {{ .Values.livekit.recordingTemplate.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "workadventure.selectorLabels" . | nindent 6 }}
+      role: livekit-recording-template
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.forceRedeploy }}
+        forceRedeploy: {{ randAlphaNum 10 | quote }}
+        {{- end }}
+        {{- with .Values.livekit.recordingTemplate.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "workadventure.selectorLabels" . | nindent 8 }}
+        role: livekit-recording-template
+    spec:
+      {{- if or .Values.imageCredentials.enabled .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- if .Values.imageCredentials.enabled }}
+        - name: {{ include "workadventure.fullname" . }}-pull-secret
+        {{- end }}
+        {{- with .Values.imagePullSecrets }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      serviceAccountName: {{ include "workadventure.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.livekit.recordingTemplate.podSecurityContext | nindent 8 }}
+      containers:
+        - name: livekit-recording-template
+          securityContext:
+            {{- toYaml .Values.livekit.recordingTemplate.securityContext | nindent 12 }}
+          image: "{{ .Values.livekit.recordingTemplate.image.repository }}:{{ .Values.livekit.recordingTemplate.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.livekit.recordingTemplate.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.livekit.recordingTemplate.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.livekit.recordingTemplate.resources | nindent 12 }}
+{{- end }}
