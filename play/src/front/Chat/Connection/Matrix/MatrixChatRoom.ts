@@ -125,6 +125,7 @@ export class MatrixChatRoom
     private currentUserRoomMember: RoomMember | undefined;
     private currentUserPermissionLevel: Writable<ChatPermissionLevel | undefined> = writable(undefined);
     private handleCurrentUserRoomMemberPowerLevel = this.onCurrentUserRoomMemberPowerLevel.bind(this);
+    private destroyed = false;
 
     constructor(
         private matrixRoom: Room,
@@ -1096,6 +1097,11 @@ export class MatrixChatRoom
     }
 
     destroy() {
+        if (this.destroyed) {
+            return;
+        }
+        this.destroyed = true;
+
         this.stopVisibleProfileSync();
         this.currentUserRoomMember?.off(RoomMemberEvent.PowerLevel, this.handleCurrentUserRoomMemberPowerLevel);
         this.currentUserRoomMember = undefined;
@@ -1107,13 +1113,22 @@ export class MatrixChatRoom
         this.matrixRoom.off(RoomEvent.MyMembership, this.handleMyMembership);
         this.matrixRoom.off(RoomStateEvent.NewMember, this.handleNewMember);
         this.matrixRoom.off(RoomEvent.UnreadNotifications, this.updateUnreadNotificationCount);
-        get(this.members).forEach((member) => {
+
+        const members = get(this.members);
+        members.forEach((member) => {
             member.destroy();
         });
+        this.members.set([]);
+
         this.messages.forEach((message) => {
-            message.relations?.destroy();
             message.destroy();
         });
+        this.messages.clear();
+        this.notSentEvents.clear();
+        this.inMemoryEventsContent.clear();
+        this.hasUnreadMessages.set(false);
+        this.unreadNotificationCount.set(0);
+        this.hasPreviousMessage.set(false);
     }
 
     startTyping(): Promise<object> {
