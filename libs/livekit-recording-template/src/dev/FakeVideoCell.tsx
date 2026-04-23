@@ -5,8 +5,8 @@ export type FakeVideoCellProps = {
     index: number;
     /** Grille mosaïque : obligatoire si `variant` vaut `mosaic` (défaut). */
     placement?: MosaicTilePlacement;
-    /** `mosaic` : tuile grille ; `speaker-*` : zone principale ou rail (sans grille). */
-    variant?: "mosaic" | "speaker-main" | "speaker-sidebar";
+    /** `mosaic` : tuile grille ; `speaker-*` : zone principale ou rail ; `livekit-fullscreen` : plein écran (dev). */
+    variant?: "mosaic" | "speaker-main" | "speaker-sidebar" | "livekit-fullscreen";
 };
 
 const W = 1280;
@@ -81,6 +81,8 @@ export function FakeVideoCell({ index, placement, variant = "mosaic" }: FakeVide
             ? "recording-template__cell recording-template__cell--speaker-main dev-mosaic-fake-cell"
             : variant === "speaker-sidebar"
             ? "recording-template__cell recording-template__cell--speaker-sidebar dev-mosaic-fake-cell"
+            : variant === "livekit-fullscreen"
+            ? "recording-template__cell recording-template__cell--livekit-fullscreen-dev dev-mosaic-fake-cell"
             : "recording-template__cell recording-template__cell--mosaic dev-mosaic-fake-cell";
 
     const mosaicStyle =

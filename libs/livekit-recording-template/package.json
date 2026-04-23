@@ -8,11 +8,14 @@
     "dev": "vite",
     "dev:mosaic": "vite --open '/?devMosaic=1'",
     "dev:speaker": "vite --open '/?devSpeaker=1'",
+    "dev:fullscreen": "vite --open '/?devFullscreen=1'",
     "build": "vite build",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@livekit/components-react": "^2.9.20",
+    "@livekit/components-styles": "^1.2.0",
     "@livekit/egress-sdk": "^0.2.1",
     "livekit-client": "^2.16.1",
     "react": "^18.3.1",

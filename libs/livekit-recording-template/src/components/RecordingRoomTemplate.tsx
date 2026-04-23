@@ -5,9 +5,11 @@ import { RECORDING_TEMPLATE_VERIFICATION_TITLE } from "../recording/recordingTem
 import { useSignalRecordingReady } from "../recording/useSignalRecordingReady";
 import { useRemoteVideoPublications } from "../hooks/useRemoteVideoPublications";
 import { usePublicationsOrderedByActiveSpeakers } from "../hooks/usePublicationsOrderedByActiveSpeakers";
+import { RoomContext } from "@livekit/components-react";
 import { RecordingVideoMosaic } from "./RecordingVideoMosaic";
 import { RecordingSpeakerLayout } from "./RecordingSpeakerLayout";
-import { RECORDING_LAYOUT_SPEAKER } from "../recording/recordingLayoutIds";
+import { RecordingLivekitFullscreenLayout } from "./RecordingLivekitFullscreenLayout";
+import { RECORDING_LAYOUT_LIVEKIT_FULLSCREEN, RECORDING_LAYOUT_SPEAKER } from "../recording/recordingLayoutIds";
 
 type BootstrapState =
     | { status: "idle" }
@@ -113,11 +115,18 @@ export function RecordingRoomTemplate({ connection: connectionProp }: RecordingR
 
     const layout = bootstrap.status === "ready" ? bootstrap.params.layout : undefined;
     const useSpeakerLayout = layout === RECORDING_LAYOUT_SPEAKER;
+    const useLivekitFullscreen = layout === RECORDING_LAYOUT_LIVEKIT_FULLSCREEN;
 
     return (
         <div className="recording-template" data-layout={layout}>
             <header className="recording-template__verification-bar">{RECORDING_TEMPLATE_VERIFICATION_TITLE}</header>
-            {useSpeakerLayout ? (
+            {useLivekitFullscreen && room ? (
+                <RoomContext.Provider value={room}>
+                    <RecordingLivekitFullscreenLayout />
+                </RoomContext.Provider>
+            ) : useLivekitFullscreen ? (
+                <div className="recording-template__mosaic recording-template__mosaic--empty" />
+            ) : useSpeakerLayout ? (
                 <RecordingSpeakerLayout room={room} publications={publications} />
             ) : (
                 <RecordingVideoMosaic publications={publications} />

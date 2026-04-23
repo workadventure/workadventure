@@ -27,7 +27,7 @@
     aria-labelledby="recording-layout-dialog-title"
 >
     <div
-        class="w-full max-w-md rounded-lg border border-white/15 bg-contrast/95 p-5 shadow-2xl backdrop-blur-md text-white"
+        class="w-full max-w-lg rounded-lg border border-white/15 bg-contrast/95 p-5 shadow-2xl backdrop-blur-md text-white"
     >
         <h2 id="recording-layout-dialog-title" class="mb-3 text-lg font-semibold">
             {$LL.recording.actionbar.layoutPicker.title()}
@@ -52,6 +52,17 @@
                     <span class="block text-sm font-medium">{$LL.recording.actionbar.layoutPicker.speakerLabel()}</span>
                     <span class="mt-1 block text-xs text-white/70"
                         >{$LL.recording.actionbar.layoutPicker.speakerDesc()}</span
+                    >
+                </span>
+            </label>
+            <label class="flex cursor-pointer flex-row gap-3 rounded border border-white/10 bg-white/5 p-3">
+                <input type="radio" bind:group={choice} value={SpaceRecordingLayoutMode.FULLSCREEN} class="mt-1" />
+                <span>
+                    <span class="block text-sm font-medium"
+                        >{$LL.recording.actionbar.layoutPicker.fullscreenLabel()}</span
+                    >
+                    <span class="mt-1 block text-xs text-white/70"
+                        >{$LL.recording.actionbar.layoutPicker.fullscreenDesc()}</span
                     >
                 </span>
             </label>

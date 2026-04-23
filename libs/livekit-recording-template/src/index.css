@@ -91,6 +91,48 @@ body,
     background: #0a0c10;
 }
 
+.recording-template__livekit-fullscreen {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    padding-top: 44px;
+    box-sizing: border-box;
+}
+
+.recording-template__livekit-fullscreen .lk-video-track,
+.recording-template__livekit-fullscreen video {
+    max-width: 100%;
+    max-height: 100%;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Dev : une tuile factice dans la même zone que VideoTrack (plein écran). */
+.recording-template__cell--livekit-fullscreen-dev {
+    position: relative;
+    flex: 1;
+    align-self: stretch;
+    width: 100%;
+    min-height: 0;
+    min-width: 0;
+    background: #000;
+}
+
+.recording-template__cell--livekit-fullscreen-dev .recording-template__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
 .recording-template__speaker {
     flex: 1;
     min-height: 0;

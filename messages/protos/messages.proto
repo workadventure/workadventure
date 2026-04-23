@@ -572,6 +572,7 @@ enum SpaceRecordingLayoutMode {
   UNSPECIFIED = 0;
   GRID = 1;
   SPEAKER = 2;
+  FULLSCREEN = 3;
 }
 
 message StartRecordingQuery {
