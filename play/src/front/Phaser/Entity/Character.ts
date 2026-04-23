@@ -16,6 +16,7 @@ import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
+import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 
 import { UsernameDisplay } from "../Components/UsernameDisplay";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
@@ -36,6 +37,8 @@ export const CHARACTER_BODY_OFFSET_X = 0;
 export const CHARACTER_BODY_OFFSET_Y = 8;
 
 export const PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX = "playtext-mediadevice-";
+
+export type PathFollowResult = { x: number; y: number; cancelled: boolean };
 
 export abstract class Character extends Container implements OutlineableInterface {
     private bubble: RenderTexture | null | DOMElement = null;
@@ -61,6 +64,10 @@ export abstract class Character extends Container implements OutlineableInterfac
     private outlineColorStoreUnsubscribe: Unsubscriber | undefined;
     private texturePromise: CancelablePromise<string[] | void> | undefined;
     private destroyed = false;
+    protected pathToFollow?: { x: number; y: number }[];
+    protected pathWalkingSpeed?: number;
+    private currentPathSegmentDistanceFromStart = 0;
+    private pathFollowingResolve?: (result: PathFollowResult) => void;
 
     /**
      * A deferred promise that resolves when the texture of the character is actually displayed.
@@ -162,9 +169,14 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
 
             const playerNameOutlineColor = get(this.outlineColorStore);
-            this.usernameDisplay = new UsernameDisplay(scene, 0, playerNameY, this.playerName, playerNameOutlineColor);
+            this.usernameDisplay = new UsernameDisplay(
+                scene,
+                this.x,
+                this.y + playerNameY,
+                this.playerName,
+                playerNameOutlineColor
+            );
             this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true, true);
-            this.add(this.usernameDisplay);
 
             this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
                 this.usernameDisplay?.setPlayerNameOutlineColor(color);
@@ -370,9 +382,130 @@ export abstract class Character extends Container implements OutlineableInterfac
         return body;
     }
 
+    protected updateUsernameDisplayPosition(x = this.x, y = this.y): void {
+        this.usernameDisplay?.setPosition(x, y + playerNameY);
+    }
+
+    setPosition(x: number, y: number): this {
+        super.setPosition(x, y);
+        this.setDepth(this.y + 16);
+        this.updateUsernameDisplayPosition();
+        return this;
+    }
+
     stop() {
         this.getBody().setVelocity(0, 0);
         this.playAnimation(this._lastDirection, false);
+    }
+
+    protected setPathToFollow(path: { x: number; y: number }[], speed?: number): Promise<PathFollowResult> {
+        const isPreviousPathInProgress = this.isFollowingPath();
+        this.pathToFollow = this.adjustPathToColliderBounds(path);
+        this.pathToFollow.unshift({ x: this.x, y: this.y });
+        this.pathWalkingSpeed = speed;
+        this.currentPathSegmentDistanceFromStart = 0;
+
+        return new Promise((resolve) => {
+            this.pathFollowingResolve?.call(this, { x: this.x, y: this.y, cancelled: isPreviousPathInProgress });
+            this.pathFollowingResolve = resolve;
+        });
+    }
+
+    public finishFollowingPath(cancelled = false): void {
+        this.pathToFollow = undefined;
+        this.pathWalkingSpeed = undefined;
+        this.currentPathSegmentDistanceFromStart = 0;
+        this.stop();
+
+        const resolve = this.pathFollowingResolve;
+        this.pathFollowingResolve = undefined;
+        resolve?.({ x: this.x, y: this.y, cancelled });
+    }
+
+    protected isFollowingPath(): boolean {
+        return this.pathToFollow !== undefined || this.pathFollowingResolve !== undefined;
+    }
+
+    protected getPathWalkingSpeed(): number {
+        return this.pathWalkingSpeed ?? WOKA_SPEED;
+    }
+
+    protected adjustPathToColliderBounds(path: { x: number; y: number }[]): { x: number; y: number }[] {
+        const body = this.getBody();
+        return path.map((step) => ({
+            x: step.x,
+            y: step.y - body.height / 2 - body.offset.y,
+        }));
+    }
+
+    protected followPath(delta: number): void {
+        if (this.pathToFollow !== undefined && this.pathToFollow.length === 1) {
+            this.finishFollowingPath();
+            return;
+        }
+        if (!this.pathToFollow) {
+            return;
+        }
+
+        let segmentStartPos = this.pathToFollow[0];
+        let segmentEndPos = this.pathToFollow[1];
+        let xDistance = segmentEndPos.x - segmentStartPos.x;
+        let yDistance = segmentEndPos.y - segmentStartPos.y;
+        let pathSegmentLength = Math.sqrt(xDistance * xDistance + yDistance * yDistance);
+
+        this.currentPathSegmentDistanceFromStart += (this.getPathWalkingSpeed() * delta * 20) / 1000;
+
+        while (this.currentPathSegmentDistanceFromStart >= pathSegmentLength) {
+            this.currentPathSegmentDistanceFromStart -= pathSegmentLength;
+            this.pathToFollow.shift();
+
+            if (this.pathToFollow.length === 1) {
+                this.setPosition(this.pathToFollow[0].x, this.pathToFollow[0].y);
+                this.finishFollowingPath();
+                return;
+            }
+
+            segmentStartPos = this.pathToFollow[0];
+            segmentEndPos = this.pathToFollow[1];
+            xDistance = segmentEndPos.x - segmentStartPos.x;
+            yDistance = segmentEndPos.y - segmentStartPos.y;
+            pathSegmentLength = Math.sqrt(xDistance * xDistance + yDistance * yDistance);
+        }
+
+        const newX =
+            segmentStartPos.x +
+            (this.currentPathSegmentDistanceFromStart / pathSegmentLength) * (segmentEndPos.x - segmentStartPos.x);
+        const newY =
+            segmentStartPos.y +
+            (this.currentPathSegmentDistanceFromStart / pathSegmentLength) * (segmentEndPos.y - segmentStartPos.y);
+
+        this.moveToPathPosition(newX, newY);
+        this.scene.markDirty();
+    }
+
+    protected moveToPathPosition(x: number, y: number): void {
+        const oldX = this.x;
+        const oldY = this.y;
+        this.setPosition(x, y);
+
+        // In path finding mode, diagonal movement can make x and y deltas almost equal.
+        // Biasing y prevents the animation from flickering between horizontal and vertical directions.
+        if (Math.abs(x - oldX) > Math.abs((y - oldY) * 1.1)) {
+            if (x < oldX) {
+                this._lastDirection = PositionMessage_Direction.LEFT;
+            } else if (x > oldX) {
+                this._lastDirection = PositionMessage_Direction.RIGHT;
+            }
+        } else {
+            if (y < oldY) {
+                this._lastDirection = PositionMessage_Direction.UP;
+            } else if (y > oldY) {
+                this._lastDirection = PositionMessage_Direction.DOWN;
+            }
+        }
+
+        this.playAnimation(this._lastDirection, true);
+        this.companion?.setTarget(this.x, this.y, this._lastDirection);
     }
 
     say(text: string, type: SayMessageType) {
@@ -420,6 +553,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     destroy(): void {
+        this.usernameDisplay?.destroy();
         for (const sprite of this.sprites.values()) {
             if (this.scene) {
                 this.scene.sys.updateList.remove(sprite);

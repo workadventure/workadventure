@@ -6,6 +6,7 @@ import { MegaphoneIcon } from "./MegaphoneIcon";
 import { PlayerStatusDot } from "./PlayerStatusDot";
 
 const DEFAULT_PLAYER_NAME_OUTLINE_COLOR = "#14304C";
+const CORRECTION_RATE = 0.75;
 
 export class UsernameDisplay extends Phaser.GameObjects.Container {
     private static nextPlayerNameTextureId = 0;
@@ -23,6 +24,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     constructor(scene: Phaser.Scene, x: number, y: number, playerName: string, outlineColor: number | undefined) {
         super(scene, x, y);
         this.playerName = playerName;
+        this.setDepth(DEPTH_INGAME_TEXT_INDEX);
 
         // Todo: Replace the font family with a better one
         // Use larger font size for non-Latin characters (Arabic, CJK, etc.) for better readability
@@ -47,7 +49,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     }
 
     private getDisplayScale(zoomModifier: number): number {
-        return Math.max(zoomModifier > 0 ? 0.8 / zoomModifier : 1, 1);
+        return Math.max(zoomModifier > 0 ? CORRECTION_RATE / zoomModifier : 1, 1);
     }
 
     private reflow(): void {
