@@ -58,7 +58,10 @@ export function getMosaicLayoutPlan(n: number): MosaicLayoutPlan {
             return {
                 templateColumns: "repeat(2, minmax(0, 1fr))",
                 templateRows: templateRowsFromWeights([1]),
-                tiles: [{ gridColumn: "1", gridRow: "1" }, { gridColumn: "2", gridRow: "1" }],
+                tiles: [
+                    { gridColumn: "1", gridRow: "1" },
+                    { gridColumn: "2", gridRow: "1" },
+                ],
             };
         case 3:
             // Top row max span 6, bottom full width span 12 → min-height ratio 1 : 2 for 16:9

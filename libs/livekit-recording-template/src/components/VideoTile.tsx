@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { useEffect, useRef } from "react";
-import { RemoteTrackPublication, Track } from "livekit-client";
+import type { RemoteTrackPublication } from "livekit-client";
+import { Track } from "livekit-client";
 import type { MosaicTilePlacement } from "../layout/mosaicLayoutPlans";
 
 export type VideoTileProps = {

@@ -62,7 +62,7 @@ export function FakeVideoCell({ index, placement, variant = "mosaic" }: FakeVide
 
         const stream = canvas.captureStream(30);
         video.srcObject = stream;
-        void video.play().catch(() => {});
+        video.play().catch(() => {});
 
         return () => {
             stopped = true;

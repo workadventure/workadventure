@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { type RemoteTrackPublication, Room, RoomEvent, Track } from "livekit-client";
+import { type RemoteTrackPublication, type Room, RoomEvent, Track } from "livekit-client";
 import { participantIdentityForPublication } from "./participantIdentityForPublication";
 
 function isScreenShare(pub: RemoteTrackPublication): boolean {
@@ -39,7 +39,11 @@ function comparePublications(
     return a.trackSid.localeCompare(b.trackSid);
 }
 
-function sortPublications(room: Room, publications: RemoteTrackPublication[], activeIdentities: readonly string[]): RemoteTrackPublication[] {
+function sortPublications(
+    room: Room,
+    publications: RemoteTrackPublication[],
+    activeIdentities: readonly string[]
+): RemoteTrackPublication[] {
     if (publications.length <= 1) {
         return publications;
     }

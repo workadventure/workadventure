@@ -75,22 +75,44 @@ export function DevFullscreenTester(): JSX.Element {
                 >
                     +
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setIndex(0)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setIndex(0)}
+                >
                     1
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setIndex(2)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setIndex(2)}
+                >
                     3
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setIndex(4)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setIndex(4)}
+                >
                     5
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setIndex(8)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setIndex(8)}
+                >
                     9
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setIndex(15)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setIndex(15)}
+                >
                     16
                 </button>
-                <span className="dev-mosaic-tester__meta">slot {index + 1}/{MAX_FULLSCREEN_INDEX + 1}</span>
+                <span className="dev-mosaic-tester__meta">
+                    slot {index + 1}/{MAX_FULLSCREEN_INDEX + 1}
+                </span>
             </header>
 
             <div className="dev-mosaic-tester__stage">

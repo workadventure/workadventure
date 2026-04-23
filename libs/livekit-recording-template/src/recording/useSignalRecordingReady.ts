@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 import EgressHelper from "@livekit/egress-sdk";
-import { Room, Track } from "livekit-client";
+import { type Room, Track } from "livekit-client";
 
 const POLL_MS = 100;
 const FRAME_DECODE_TIMEOUT_MS = 5000;
 
-function hasDecodedVideoFrames(track: { getRTCStatsReport: () => Promise<RTCStatsReport | undefined> }): Promise<boolean> {
+function hasDecodedVideoFrames(track: {
+    getRTCStatsReport: () => Promise<RTCStatsReport | undefined>;
+}): Promise<boolean> {
     return track.getRTCStatsReport().then((stats) => {
         if (!stats) {
             return false;
@@ -37,10 +39,10 @@ export function useSignalRecordingReady(room: Room | undefined): void {
 
         const startedAt = Date.now();
         const intervalId = window.setInterval(() => {
-            void (async () => {
+            const poll = async (): Promise<void> => {
                 let hasSubscribedTracks = false;
                 let hasVideoTracks = false;
-                let hasDecodedFrames = false;
+                const videoTracks: Array<{ getRTCStatsReport: () => Promise<RTCStatsReport | undefined> }> = [];
 
                 for (const participant of room.remoteParticipants.values()) {
                     for (const publication of participant.trackPublications.values()) {
@@ -49,12 +51,13 @@ export function useSignalRecordingReady(room: Room | undefined): void {
                         }
                         if (publication.kind === Track.Kind.Video && publication.track) {
                             hasVideoTracks = true;
-                            if (await hasDecodedVideoFrames(publication.track)) {
-                                hasDecodedFrames = true;
-                            }
+                            videoTracks.push(publication.track);
                         }
                     }
                 }
+
+                const decodedFlags = await Promise.all(videoTracks.map((t) => hasDecodedVideoFrames(t)));
+                const hasDecodedFrames = decodedFlags.some(Boolean);
 
                 const elapsed = Date.now() - startedAt;
                 let shouldStart = false;
@@ -70,7 +73,9 @@ export function useSignalRecordingReady(room: Room | undefined): void {
                     EgressHelper.startRecording();
                     window.clearInterval(intervalId);
                 }
-            })();
+            };
+
+            poll().catch(() => {});
         }, POLL_MS);
 
         return () => {

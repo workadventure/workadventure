@@ -88,28 +88,60 @@ export function DevMosaicTester(): JSX.Element {
                 >
                     +
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setCount(0)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setCount(0)}
+                >
                     0
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setCount(1)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setCount(1)}
+                >
                     1
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setCount(3)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setCount(3)}
+                >
                     3
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setCount(5)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setCount(5)}
+                >
                     5
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setCount(8)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setCount(8)}
+                >
                     8
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setCount(9)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setCount(9)}
+                >
                     9
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setCount(12)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setCount(12)}
+                >
                     12
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setCount(16)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setCount(16)}
+                >
                     16
                 </button>
                 <span className="dev-mosaic-tester__meta">max {MAX_MOSAIC_VIDEOS} · flux canvas</span>

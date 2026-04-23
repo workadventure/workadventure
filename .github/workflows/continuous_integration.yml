@@ -219,6 +219,40 @@ jobs:
           git diff --exit-code
         working-directory: "libs/map-editor"
 
+  continuous-integration-livekit-recording-template:
+    name: "Continuous Integration LiveKit Recording Template"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: "Install dependencies"
+        run: npm ci --workspace=@workadventure/livekit-recording-template
+
+      - name: "Typecheck"
+        run: npm run typecheck
+        working-directory: "libs/livekit-recording-template"
+
+      - name: "Lint"
+        run: npm run lint
+        working-directory: "libs/livekit-recording-template"
+
+      - name: "Pretty"
+        run: npm run pretty-check
+        working-directory: "libs/livekit-recording-template"
+
+      - name: "Build"
+        run: npm run build
+        working-directory: "libs/livekit-recording-template"
+
   continuous-integration-lib-store-utils:
     name: "Continuous Integration Store Utils"
 

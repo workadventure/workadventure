@@ -75,19 +75,39 @@ export function DevSpeakerTester(): JSX.Element {
                 >
                     +
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setCount(1)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setCount(1)}
+                >
                     1
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setCount(3)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setCount(3)}
+                >
                     3
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setCount(5)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setCount(5)}
+                >
                     5
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setCount(9)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setCount(9)}
+                >
                     9
                 </button>
-                <button type="button" className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost" onClick={() => setCount(17)}>
+                <button
+                    type="button"
+                    className="dev-mosaic-tester__btn dev-mosaic-tester__btn--ghost"
+                    onClick={() => setCount(17)}
+                >
                     17
                 </button>
                 <span className="dev-mosaic-tester__meta">rail {sidebarCount}/16</span>

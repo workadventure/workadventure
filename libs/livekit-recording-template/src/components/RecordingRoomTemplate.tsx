@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
+import { RoomContext } from "@livekit/components-react";
 import { Room } from "livekit-client";
+
+import { usePublicationsOrderedByActiveSpeakers } from "../hooks/usePublicationsOrderedByActiveSpeakers";
+import { useRemoteVideoPublications } from "../hooks/useRemoteVideoPublications";
 import { type EgressConnectionParams, readEgressConnectionParams } from "../recording/readEgressConnectionParams";
+import { RECORDING_LAYOUT_LIVEKIT_FULLSCREEN, RECORDING_LAYOUT_SPEAKER } from "../recording/recordingLayoutIds";
 import { RECORDING_TEMPLATE_VERIFICATION_TITLE } from "../recording/recordingTemplateVerification";
 import { useSignalRecordingReady } from "../recording/useSignalRecordingReady";
-import { useRemoteVideoPublications } from "../hooks/useRemoteVideoPublications";
-import { usePublicationsOrderedByActiveSpeakers } from "../hooks/usePublicationsOrderedByActiveSpeakers";
-import { RoomContext } from "@livekit/components-react";
-import { RecordingVideoMosaic } from "./RecordingVideoMosaic";
-import { RecordingSpeakerLayout } from "./RecordingSpeakerLayout";
 import { RecordingLivekitFullscreenLayout } from "./RecordingLivekitFullscreenLayout";
-import { RECORDING_LAYOUT_LIVEKIT_FULLSCREEN, RECORDING_LAYOUT_SPEAKER } from "../recording/recordingLayoutIds";
+import { RecordingSpeakerLayout } from "./RecordingSpeakerLayout";
+import { RecordingVideoMosaic } from "./RecordingVideoMosaic";
 
 type BootstrapState =
     | { status: "idle" }
@@ -76,7 +77,7 @@ export function RecordingRoomTemplate({ connection: connectionProp }: RecordingR
 
         let cancelled = false;
 
-        void livekitRoom
+        livekitRoom
             .connect(serverUrl, token)
             .then(() => {
                 if (!cancelled) {
@@ -95,7 +96,7 @@ export function RecordingRoomTemplate({ connection: connectionProp }: RecordingR
         return () => {
             cancelled = true;
             setRoom(undefined);
-            void livekitRoom.disconnect();
+            livekitRoom.disconnect().catch(() => {});
         };
     }, [bootstrap]);
 
@@ -107,7 +108,9 @@ export function RecordingRoomTemplate({ connection: connectionProp }: RecordingR
     if (bootstrap.status === "error") {
         return (
             <div className="recording-template recording-template--error">
-                <header className="recording-template__verification-bar">{RECORDING_TEMPLATE_VERIFICATION_TITLE}</header>
+                <header className="recording-template__verification-bar">
+                    {RECORDING_TEMPLATE_VERIFICATION_TITLE}
+                </header>
                 <p className="recording-template__error">{bootstrap.message}</p>
             </div>
         );

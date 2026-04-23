@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { RemoteTrackPublication, Room, RoomEvent, Track } from "livekit-client";
+import type { RemoteTrackPublication, Room } from "livekit-client";
+import { RoomEvent, Track } from "livekit-client";
 import { participantIdentityForPublication } from "./participantIdentityForPublication";
 
 function isScreenShare(pub: RemoteTrackPublication): boolean {

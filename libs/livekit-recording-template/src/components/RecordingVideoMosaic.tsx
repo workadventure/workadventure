@@ -33,11 +33,7 @@ export function RecordingVideoMosaic({ publications }: RecordingVideoMosaicProps
     return (
         <div className="recording-template__mosaic" style={gridStyle}>
             {visible.map((publication, index) => (
-                <VideoTile
-                    key={publication.trackSid}
-                    publication={publication}
-                    mosaicPlacement={plan.tiles[index]}
-                />
+                <VideoTile key={publication.trackSid} publication={publication} mosaicPlacement={plan.tiles[index]} />
             ))}
         </div>
     );

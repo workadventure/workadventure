@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { RemoteTrackPublication, Room, RoomEvent, Track } from "livekit-client";
+import type { RemoteTrackPublication, Room } from "livekit-client";
+import { RoomEvent, Track } from "livekit-client";
 
 function collectRemoteVideoPublications(room: Room): RemoteTrackPublication[] {
     const publications: RemoteTrackPublication[] = [];
@@ -11,7 +12,7 @@ function collectRemoteVideoPublications(room: Room): RemoteTrackPublication[] {
             if (!publication.isSubscribed || !publication.track) {
                 continue;
             }
-            publications.push(publication as RemoteTrackPublication);
+            publications.push(publication);
         }
     }
     return publications;
