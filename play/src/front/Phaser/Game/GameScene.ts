@@ -1110,8 +1110,7 @@ export class GameScene extends DirtyScene {
             const startPosition = this.startPositionCalculator.computeStartPosition(
                 urlManager.getStartPositionNameFromUrl()
             );
-            this.CurrentPlayer.x = startPosition.x;
-            this.CurrentPlayer.y = startPosition.y;
+            this.CurrentPlayer.setPosition(startPosition.x, startPosition.y);
             this.CurrentPlayer.finishFollowingPath(true);
             // clear properties in case we are moved on the same layer / area in order to trigger them
             this.gameMapFrontWrapper.clearCurrentProperties();
