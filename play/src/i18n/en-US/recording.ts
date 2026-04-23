@@ -56,9 +56,8 @@ const recording: BaseTranslation = {
             gridDesc: "Mosaic view with all participants.",
             speakerLabel: "Speaker & screen share",
             speakerDesc: "Large view for the latest screen share or the active speaker; others in a side column.",
-            fullscreenLabel: "Fullscreen (LiveKit)",
-            fullscreenDesc:
-                "One participant at a time using LiveKit VideoTrack (same idea as the official single-speaker layout).",
+            fullscreenLabel: "Fullscreen",
+            fullscreenDesc: "A full view of your camera or screen share.",
             confirm: "Start recording",
             cancel: "Cancel",
         },

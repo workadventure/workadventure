@@ -47,7 +47,7 @@
                 </span>
             </label>
             <label class="flex cursor-pointer flex-row gap-3 rounded border border-white/10 bg-white/5 p-3">
-                <input type="radio" bind:group={choice} value={SpaceRecordingLayoutMode.SPEAKER} class="mt-1" />
+                <input type="radio" bind:group={choice} value={SpaceRecordingLayoutMode.SPEAKERFOCUS} class="mt-1" />
                 <span>
                     <span class="block text-sm font-medium">{$LL.recording.actionbar.layoutPicker.speakerLabel()}</span>
                     <span class="mt-1 block text-xs text-white/70"

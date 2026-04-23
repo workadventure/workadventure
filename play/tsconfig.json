@@ -32,7 +32,8 @@
     "paths": {
       "@wa-icons": ["./src/front/Components/Icons.ts"]
     },
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "disableSizeLimit": true
   },
   "exclude": [
     "dist",

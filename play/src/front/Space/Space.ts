@@ -20,9 +20,9 @@ import type {
     PrivateEventPusherToFront,
     BackEventFrontToPusherMessage,
     InitSpaceUsersMessage,
-    FilterType,
-    type SpaceRecordingLayoutMode,
+    SpaceRecordingLayoutMode,
 } from "@workadventure/messages";
+import { FilterType } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import z from "zod";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";

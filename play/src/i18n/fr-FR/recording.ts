@@ -58,9 +58,8 @@ const recording: DeepPartial<Translation["recording"]> = {
             speakerLabel: "Intervenant & partage d'écran",
             speakerDesc:
                 "Grande vue pour le dernier partage d'écran ou l'intervenant actif ; les autres dans une colonne à droite.",
-            fullscreenLabel: "Plein écran (LiveKit)",
-            fullscreenDesc:
-                "Un participant à la fois avec le composant VideoTrack LiveKit (équivalent au mode single-speaker du template officiel).",
+            fullscreenLabel: "Fullscreen",
+            fullscreenDesc: "Une vue complète sur votre caméra ou votre screen share.",
             confirm: "Démarrer l'enregistrement",
             cancel: "Annuler",
         },
