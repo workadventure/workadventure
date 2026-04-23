@@ -7,7 +7,6 @@ export {
 export type { MosaicLayoutPlan, MosaicTilePlacement } from "./layout/mosaicLayoutPlans";
 export { RecordingVideoMosaic } from "./components/RecordingVideoMosaic";
 export type { RecordingVideoMosaicProps } from "./components/RecordingVideoMosaic";
-export { RECORDING_TEMPLATE_VERIFICATION_TITLE } from "./recording/recordingTemplateVerification";
 export type { EgressConnectionParams } from "./recording/readEgressConnectionParams";
 export { readEgressConnectionParams } from "./recording/readEgressConnectionParams";
 export { RecordingRoomTemplate } from "./components/RecordingRoomTemplate";

@@ -6,7 +6,6 @@ import { usePublicationsOrderedByActiveSpeakers } from "../hooks/usePublications
 import { useRemoteVideoPublications } from "../hooks/useRemoteVideoPublications";
 import { type EgressConnectionParams, readEgressConnectionParams } from "../recording/readEgressConnectionParams";
 import { RECORDING_LAYOUT_LIVEKIT_FULLSCREEN, RECORDING_LAYOUT_SPEAKER } from "../recording/recordingLayoutIds";
-import { RECORDING_TEMPLATE_VERIFICATION_TITLE } from "../recording/recordingTemplateVerification";
 import { useSignalRecordingReady } from "../recording/useSignalRecordingReady";
 import { RecordingLivekitFullscreenLayout } from "./RecordingLivekitFullscreenLayout";
 import { RecordingSpeakerLayout } from "./RecordingSpeakerLayout";
@@ -32,9 +31,10 @@ export type RecordingRoomTemplateProps = {
 export function RecordingRoomTemplate({ connection: connectionProp }: RecordingRoomTemplateProps): JSX.Element {
     const [bootstrap, setBootstrap] = useState<BootstrapState>({ status: "idle" });
     const [room, setRoom] = useState<Room | undefined>();
+    const [showVerificationBar, setShowVerificationBar] = useState(false);
 
     useEffect(() => {
-        document.title = RECORDING_TEMPLATE_VERIFICATION_TITLE;
+        document.title = "WorkAdventure · custom LiveKit recording template";
     }, []);
 
     const connectionKey = useMemo(() => {
@@ -82,6 +82,10 @@ export function RecordingRoomTemplate({ connection: connectionProp }: RecordingR
             .then(() => {
                 if (!cancelled) {
                     setRoom(livekitRoom);
+                    setShowVerificationBar(true);
+                    setTimeout(() => {
+                        setShowVerificationBar(false);
+                    }, 5000);
                 }
             })
             .catch((err: unknown) => {
@@ -108,9 +112,6 @@ export function RecordingRoomTemplate({ connection: connectionProp }: RecordingR
     if (bootstrap.status === "error") {
         return (
             <div className="recording-template recording-template--error">
-                <header className="recording-template__verification-bar">
-                    {RECORDING_TEMPLATE_VERIFICATION_TITLE}
-                </header>
                 <p className="recording-template__error">{bootstrap.message}</p>
             </div>
         );
@@ -122,7 +123,13 @@ export function RecordingRoomTemplate({ connection: connectionProp }: RecordingR
 
     return (
         <div className="recording-template" data-layout={layout}>
-            <header className="recording-template__verification-bar">{RECORDING_TEMPLATE_VERIFICATION_TITLE}</header>
+            {showVerificationBar && (
+                <header className="recording-template__verification-bar">
+                    <span>
+                        Recording strated at {new Date().toLocaleString()} - the layout used is {layout}
+                    </span>
+                </header>
+            )}
             {useLivekitFullscreen && room ? (
                 <RoomContext.Provider value={room}>
                     <RecordingLivekitFullscreenLayout />
