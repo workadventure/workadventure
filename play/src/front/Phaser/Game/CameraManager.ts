@@ -148,6 +148,13 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         callback?: () => void
     ): void {
         this.cameraAnimation?.onInterrupt();
+
+        if (duration === 0) {
+            this.camera.startFollow(target, true, 1, 1, this.camera.followOffset.x, this.camera.followOffset.y);
+            callback?.();
+            this.setFollowMode();
+        }
+
         const origin = {
             x: this.camera.scrollX + this.camera.width / 2 + this.camera.followOffset.x,
             y: this.camera.scrollY + this.camera.height / 2 + this.camera.followOffset.y,
@@ -180,7 +187,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             },
             onComplete: () => {
                 this.camera.startFollow(target, true, 1, 1, this.camera.followOffset.x, this.camera.followOffset.y);
-                //this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
                 callback?.();
                 this.setFollowMode();
             },
