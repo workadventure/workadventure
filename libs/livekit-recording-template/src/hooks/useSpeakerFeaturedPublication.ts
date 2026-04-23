@@ -1,18 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { RemoteTrackPublication, Room, RoomEvent, Track } from "livekit-client";
+import { participantIdentityForPublication } from "./participantIdentityForPublication";
 
 function isScreenShare(pub: RemoteTrackPublication): boolean {
     return pub.source === Track.Source.ScreenShare;
-}
-
-function participantIdentityForPublication(room: Room, publication: RemoteTrackPublication): string | undefined {
-    for (const participant of room.remoteParticipants.values()) {
-        const pub = participant.getTrackPublicationBySid(publication.trackSid);
-        if (pub === publication) {
-            return participant.identity;
-        }
-    }
-    return undefined;
 }
 
 /**

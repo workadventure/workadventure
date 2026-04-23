@@ -4,6 +4,7 @@ import { type EgressConnectionParams, readEgressConnectionParams } from "../reco
 import { RECORDING_TEMPLATE_VERIFICATION_TITLE } from "../recording/recordingTemplateVerification";
 import { useSignalRecordingReady } from "../recording/useSignalRecordingReady";
 import { useRemoteVideoPublications } from "../hooks/useRemoteVideoPublications";
+import { usePublicationsOrderedByActiveSpeakers } from "../hooks/usePublicationsOrderedByActiveSpeakers";
 import { RecordingVideoMosaic } from "./RecordingVideoMosaic";
 import { RecordingSpeakerLayout } from "./RecordingSpeakerLayout";
 import { RECORDING_LAYOUT_SPEAKER } from "../recording/recordingLayoutIds";
@@ -98,7 +99,8 @@ export function RecordingRoomTemplate({ connection: connectionProp }: RecordingR
 
     useSignalRecordingReady(room);
 
-    const publications = useRemoteVideoPublications(room);
+    const rawPublications = useRemoteVideoPublications(room);
+    const publications = usePublicationsOrderedByActiveSpeakers(room, rawPublications);
 
     if (bootstrap.status === "error") {
         return (
