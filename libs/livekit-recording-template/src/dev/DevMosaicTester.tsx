@@ -23,7 +23,7 @@ function readInitialCount(): number {
 
 /**
  * Outil de mise en page : tuiles factices, même grille que l’enregistrement.
- * Activer en dev : `npm run dev` puis ouvrir `/?devMosaic=1` (ou `npm run dev:mosaic`).
+ * Activer en dev : `npm run dev` puis `/?devMosaic=1` (ou `npm run dev:mosaic`). Speaker : `/?devSpeaker=1` / `npm run dev:speaker`.
  */
 export function DevMosaicTester(): JSX.Element {
     const [count, setCount] = useState(readInitialCount);

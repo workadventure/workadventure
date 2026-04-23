@@ -5,6 +5,8 @@ import { RECORDING_TEMPLATE_VERIFICATION_TITLE } from "../recording/recordingTem
 import { useSignalRecordingReady } from "../recording/useSignalRecordingReady";
 import { useRemoteVideoPublications } from "../hooks/useRemoteVideoPublications";
 import { RecordingVideoMosaic } from "./RecordingVideoMosaic";
+import { RecordingSpeakerLayout } from "./RecordingSpeakerLayout";
+import { RECORDING_LAYOUT_SPEAKER } from "../recording/recordingLayoutIds";
 
 type BootstrapState =
     | { status: "idle" }
@@ -108,11 +110,16 @@ export function RecordingRoomTemplate({ connection: connectionProp }: RecordingR
     }
 
     const layout = bootstrap.status === "ready" ? bootstrap.params.layout : undefined;
+    const useSpeakerLayout = layout === RECORDING_LAYOUT_SPEAKER;
 
     return (
         <div className="recording-template" data-layout={layout}>
             <header className="recording-template__verification-bar">{RECORDING_TEMPLATE_VERIFICATION_TITLE}</header>
-            <RecordingVideoMosaic publications={publications} />
+            {useSpeakerLayout ? (
+                <RecordingSpeakerLayout room={room} publications={publications} />
+            ) : (
+                <RecordingVideoMosaic publications={publications} />
+            )}
         </div>
     );
 }

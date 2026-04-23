@@ -21,6 +21,22 @@ body,
     display: flex;
     flex-direction: column;
     min-height: 0;
+    overflow: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.recording-template::-webkit-scrollbar {
+    display: none;
+}
+
+.recording-template * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.recording-template *::-webkit-scrollbar {
+    display: none;
 }
 
 .recording-template--error {
@@ -75,6 +91,81 @@ body,
     background: #0a0c10;
 }
 
+.recording-template__speaker {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    padding: 6px;
+    box-sizing: border-box;
+}
+
+.recording-template__speaker-main {
+    flex: 0 0 88%;
+    min-width: 0;
+    min-height: 0;
+    position: relative;
+}
+
+.recording-template__speaker-rail {
+    flex: 0 0 12%;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+    overflow: hidden;
+}
+
+.recording-template__cell--speaker-main {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    border-radius: 4px;
+    overflow: hidden;
+    min-width: 0;
+    min-height: 0;
+}
+
+.recording-template__cell--speaker-main .recording-template__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    background: #000;
+}
+
+/* Hauteur = largeur du rail × 9/16 ; pas d’étirement vertical quand peu de tuiles. */
+.recording-template__cell--speaker-sidebar {
+    position: relative;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    background: #000;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.recording-template__cell--speaker-sidebar .recording-template__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
 .recording-template__cell--mosaic {
     position: relative;
     display: block;
@@ -102,7 +193,7 @@ body,
     line-height: 1.5;
 }
 
-/* --- Dev mosaic tester (?devMosaic=1) --- */
+/* --- Dev testers : ?devMosaic=1 (mosaic) · ?devSpeaker=1 (speaker 88/12) --- */
 
 .dev-mosaic-tester {
     height: 100%;

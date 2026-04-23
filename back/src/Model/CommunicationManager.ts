@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/node";
-import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
+import type { MeetingConnectionRestartMessage, SpaceRecordingLayoutMode, SpaceUser } from "@workadventure/messages";
 import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
@@ -301,9 +301,9 @@ export class CommunicationManager implements ICommunicationManager {
             .getCurrentState()
             .handleMeetingConnectionRestartMessage(meetingConnectionRestartMessage, senderUserId);
     }
-    public async handleStartRecording(user: SpaceUser): Promise<void> {
+    public async handleStartRecording(user: SpaceUser, layoutMode?: SpaceRecordingLayoutMode): Promise<void> {
         this.cancelPendingTransitionIfNeeded();
-        await this._recordingManager.startRecording(user);
+        await this._recordingManager.startRecording(user, layoutMode);
     }
 
     public async handleStopRecording(user: SpaceUser): Promise<void> {

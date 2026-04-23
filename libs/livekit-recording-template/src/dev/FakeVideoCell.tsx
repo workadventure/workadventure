@@ -3,7 +3,10 @@ import type { MosaicTilePlacement } from "../layout/mosaicLayoutPlans";
 
 export type FakeVideoCellProps = {
     index: number;
-    placement: MosaicTilePlacement;
+    /** Grille mosaïque : obligatoire si `variant` vaut `mosaic` (défaut). */
+    placement?: MosaicTilePlacement;
+    /** `mosaic` : tuile grille ; `speaker-*` : zone principale ou rail (sans grille). */
+    variant?: "mosaic" | "speaker-main" | "speaker-sidebar";
 };
 
 const W = 1280;
@@ -12,7 +15,7 @@ const H = 720;
 /**
  * Flux vidéo local de test (canvas + captureStream) pour valider object-fit / grille sans LiveKit.
  */
-export function FakeVideoCell({ index, placement }: FakeVideoCellProps): JSX.Element {
+export function FakeVideoCell({ index, placement, variant = "mosaic" }: FakeVideoCellProps): JSX.Element {
     const videoRef = useRef<HTMLVideoElement>(null);
     const rafRef = useRef(0);
 
@@ -72,16 +75,28 @@ export function FakeVideoCell({ index, placement }: FakeVideoCellProps): JSX.Ele
         };
     }, [index]);
 
+    const isMosaic = variant === "mosaic";
+    const cellClass =
+        variant === "speaker-main"
+            ? "recording-template__cell recording-template__cell--speaker-main dev-mosaic-fake-cell"
+            : variant === "speaker-sidebar"
+            ? "recording-template__cell recording-template__cell--speaker-sidebar dev-mosaic-fake-cell"
+            : "recording-template__cell recording-template__cell--mosaic dev-mosaic-fake-cell";
+
+    const mosaicStyle =
+        isMosaic && placement
+            ? {
+                  gridColumn: placement.gridColumn,
+                  gridRow: placement.gridRow,
+                  minWidth: 0,
+                  minHeight: 0,
+              }
+            : isMosaic
+            ? { minWidth: 0, minHeight: 0 }
+            : undefined;
+
     return (
-        <div
-            className="recording-template__cell recording-template__cell--mosaic dev-mosaic-fake-cell"
-            style={{
-                gridColumn: placement.gridColumn,
-                gridRow: placement.gridRow,
-                minWidth: 0,
-                minHeight: 0,
-            }}
-        >
+        <div className={cellClass} style={mosaicStyle}>
             <video ref={videoRef} className="recording-template__video" muted playsInline autoPlay />
             <span className="dev-mosaic-fake-cell__badge" aria-hidden>
                 {index + 1}

@@ -46,7 +46,7 @@ import type {
     ConnectToRoomMessage,
     JoinRoomFrontMessage,
 } from "@workadventure/messages";
-import { noUndefined, ServerToClientMessage } from "@workadventure/messages";
+import { noUndefined, ServerToClientMessage, SpaceRecordingLayoutMode } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
@@ -1455,7 +1455,11 @@ export class SocketManager implements ZoneEventListener {
         };
     }
 
-    async handleStartRecording(client: Socket, spaceName: string, options: { signal: AbortSignal }): Promise<void> {
+    async handleStartRecording(
+        client: Socket,
+        spaceName: string,
+        options: { signal: AbortSignal; layoutMode?: SpaceRecordingLayoutMode }
+    ): Promise<void> {
         const { socketData, space } = await this.getValidatedRecordingSpace(client, spaceName);
         const answer = await space.query.send(
             {
@@ -1463,6 +1467,7 @@ export class SocketManager implements ZoneEventListener {
                 startSpaceRecordingQuery: {
                     spaceName,
                     spaceUserId: socketData.spaceUserId,
+                    layoutMode: options.layoutMode ?? SpaceRecordingLayoutMode.UNSPECIFIED,
                 },
             },
             {

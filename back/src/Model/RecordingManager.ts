@@ -1,4 +1,4 @@
-import type { SpaceUser } from "@workadventure/messages";
+import type { SpaceRecordingLayoutMode, SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
@@ -18,7 +18,7 @@ export interface ManagedRecordingState {
 
 export interface IRecordingManager {
     getRecordingState(): ManagedRecordingState;
-    startRecording(user: SpaceUser): Promise<void>;
+    startRecording(user: SpaceUser, layoutMode?: SpaceRecordingLayoutMode): Promise<void>;
     stopRecording(user: SpaceUser): Promise<SpaceUser | null>;
     stopRecordingByServer(): Promise<SpaceUser | null>;
     stopRecordingIfRecorderMatches(spaceUserId: string): Promise<SpaceUser | null>;
@@ -41,10 +41,10 @@ export class RecordingManager implements IRecordingManager {
         private readonly _lifecycleManager: IStateLifecycleManager
     ) {}
 
-    public async startRecording(user: SpaceUser): Promise<void> {
+    public async startRecording(user: SpaceUser, layoutMode?: SpaceRecordingLayoutMode): Promise<void> {
         switch (this._status) {
             case "idle": {
-                return this.runStart(user);
+                return this.runStart(user, layoutMode);
             }
             case "starting": {
                 if (this._user?.spaceUserId === user.spaceUserId && this._startPromise) {
@@ -146,8 +146,8 @@ export class RecordingManager implements IRecordingManager {
         });
     }
 
-    private async runStart(user: SpaceUser): Promise<void> {
-        const promise = this.performStart(user);
+    private async runStart(user: SpaceUser, layoutMode?: SpaceRecordingLayoutMode): Promise<void> {
+        const promise = this.performStart(user, layoutMode);
         this._startPromise = promise;
 
         try {
@@ -159,7 +159,7 @@ export class RecordingManager implements IRecordingManager {
         }
     }
 
-    private async performStart(user: SpaceUser): Promise<void> {
+    private async performStart(user: SpaceUser, layoutMode?: SpaceRecordingLayoutMode): Promise<void> {
         this._user = user;
         this._status = "starting";
         this._stopAfterStartRequested = false;
@@ -169,9 +169,9 @@ export class RecordingManager implements IRecordingManager {
             const currentState = this._lifecycleManager.getCurrentState();
 
             if (this.isRecordableState(currentState)) {
-                await currentState.handleStartRecording(user);
+                await currentState.handleStartRecording(user, layoutMode);
             } else {
-                await this.switchToLivekitAndRecord(user);
+                await this.switchToLivekitAndRecord(user, layoutMode);
             }
 
             this._status = "recording";
@@ -261,7 +261,7 @@ export class RecordingManager implements IRecordingManager {
         }
     }
 
-    private async switchToLivekitAndRecord(user: SpaceUser): Promise<void> {
+    private async switchToLivekitAndRecord(user: SpaceUser, layoutMode?: SpaceRecordingLayoutMode): Promise<void> {
         const recordableState = await this._transitionOrchestrator.executeImmediateTransition(
             CommunicationType.LIVEKIT,
             {
@@ -277,7 +277,7 @@ export class RecordingManager implements IRecordingManager {
         }
 
         await this._lifecycleManager.transitionTo(recordableState);
-        await recordableState.handleStartRecording(user);
+        await recordableState.handleStartRecording(user, layoutMode);
     }
 
     private publishState(): void {

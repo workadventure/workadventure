@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "dev:mosaic": "vite --open '/?devMosaic=1'",
+    "dev:speaker": "vite --open '/?devSpeaker=1'",
     "build": "vite build",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json",
     "preview": "vite preview"

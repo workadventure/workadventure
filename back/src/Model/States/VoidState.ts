@@ -1,4 +1,4 @@
-import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
+import type { MeetingConnectionRestartMessage, SpaceRecordingLayoutMode, SpaceUser } from "@workadventure/messages";
 import type { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState";
 import { CommunicationType } from "../Types/CommunicationTypes";
 import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
@@ -41,7 +41,7 @@ export class VoidState implements ICommunicationState<ICommunicationStrategy> {
     ): Promise<StateTransitionResult<ICommunicationStrategy> | ICommunicationState<ICommunicationStrategy> | void> {
         return Promise.resolve();
     }
-    handleStartRecording(): void {
+    handleStartRecording(_user?: SpaceUser, _layoutMode?: SpaceRecordingLayoutMode): void {
         return;
     }
     handleStopRecording(): void {

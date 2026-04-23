@@ -6,6 +6,7 @@ import {
     noUndefined,
     ServerToClientMessage as ServerToClientMessageTsProto,
     ServerToClientMessage,
+    SpaceRecordingLayoutMode,
 } from "@workadventure/messages";
 import { errors } from "jose";
 import * as Sentry from "@sentry/node";
@@ -1009,12 +1010,16 @@ export class IoSocketController {
                                             break;
                                         }
                                         case "startRecordingQuery": {
-                                            const localSpaceName =
-                                                message.message.queryMessage.query.startRecordingQuery.spaceName;
+                                            const startRecordingQuery =
+                                                message.message.queryMessage.query.startRecordingQuery;
+                                            const localSpaceName = startRecordingQuery.spaceName;
                                             const worldSpaceName = `${socket.getUserData().world}.${localSpaceName}`;
+                                            const layoutMode =
+                                                startRecordingQuery.layoutMode ?? SpaceRecordingLayoutMode.UNSPECIFIED;
 
                                             await socketManager.handleStartRecording(socket, worldSpaceName, {
                                                 signal: abortController.signal,
+                                                layoutMode,
                                             });
 
                                             answerMessage.answer = {

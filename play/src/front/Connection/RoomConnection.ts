@@ -89,6 +89,7 @@ import {
     SetPlayerVariableMessage_Scope,
     UpdateSpaceMetadataMessage,
     SpaceUser,
+    SpaceRecordingLayoutMode,
     LeaveChatRoomAreaMessage,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
@@ -1852,12 +1853,16 @@ export class RoomConnection implements RoomConnection {
         return answer.deleteRecordingAnswer;
     }
 
-    public async startRecording(spaceName: string): Promise<StartRecordingAnswer> {
+    public async startRecording(
+        spaceName: string,
+        layoutMode: SpaceRecordingLayoutMode = SpaceRecordingLayoutMode.UNSPECIFIED
+    ): Promise<StartRecordingAnswer> {
         const answer = await this.query(
             {
                 $case: "startRecordingQuery",
                 startRecordingQuery: {
                     spaceName,
+                    layoutMode,
                 },
             },
             {

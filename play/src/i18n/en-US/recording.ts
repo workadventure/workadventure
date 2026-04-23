@@ -49,6 +49,16 @@ const recording: BaseTranslation = {
             megaphone: "Record megaphone",
             discussion: "Record discussion",
         },
+        layoutPicker: {
+            title: "Recording layout",
+            subtitle: "Choose how the recording will frame participants.",
+            gridLabel: "Grid",
+            gridDesc: "Mosaic view with all participants.",
+            speakerLabel: "Speaker & screen share",
+            speakerDesc: "Large view for the latest screen share or the active speaker; others in a side column.",
+            confirm: "Start recording",
+            cancel: "Cancel",
+        },
     },
 };
 

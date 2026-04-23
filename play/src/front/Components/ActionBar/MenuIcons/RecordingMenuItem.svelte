@@ -2,6 +2,7 @@
     import type { Readable } from "svelte/store";
     import { onDestroy } from "svelte";
     import { derived, get } from "svelte/store";
+    import type { SpaceRecordingLayoutMode } from "@workadventure/messages";
     import { LL } from "../../../../i18n/i18n-svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import RecordingIcon from "../../Icons/RecordingIcon.svelte";
@@ -13,6 +14,7 @@
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import RecordingSpacePicker from "../../PopUp/Recording/RecordingSpacePicker.svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
+    import RecordingStartLayoutDialog from "../../PopUp/Recording/RecordingStartLayoutDialog.svelte";
     import type { RecordingMenuState, RecordingSpaceRow } from "./RecordingMenuUtils";
     import { IconAlertTriangle } from "@wa-icons";
 
@@ -22,9 +24,37 @@
     let closeFloatingUi: (() => void) | undefined = undefined;
     let triggerElement: HTMLElement | undefined = undefined;
 
+    let layoutPickerOpen = false;
+    let pendingStartRow: RecordingSpaceRow | undefined;
+
     function closeSpacePicker(): void {
         closeFloatingUi?.();
         closeFloatingUi = undefined;
+    }
+
+    function cancelStartLayout(): void {
+        layoutPickerOpen = false;
+        pendingStartRow = undefined;
+    }
+
+    async function confirmStartLayout(layout: SpaceRecordingLayoutMode): Promise<void> {
+        layoutPickerOpen = false;
+        const row = pendingStartRow;
+        pendingStartRow = undefined;
+        if (!row?.action || row.action !== "start") {
+            return;
+        }
+
+        recordingStore.setRequestState(row.spaceName, "starting");
+
+        try {
+            analyticsClient.recordingStart();
+            await row.space.startRecording(layout);
+        } catch (error) {
+            recordingStore.clearRequestState(row.spaceName);
+            console.error(`Failed to start recording`, error);
+            notificationPlayingStore.playNotification(get(LL).recording.notification.startFailedNotification());
+        }
     }
 
     async function applyRecordingAction(row: RecordingSpaceRow): Promise<void> {
@@ -34,25 +64,21 @@
 
         closeSpacePicker();
 
-        const requestState = row.action === "start" ? "starting" : "stopping";
-        recordingStore.setRequestState(row.spaceName, requestState);
+        if (row.action === "start") {
+            pendingStartRow = row;
+            layoutPickerOpen = true;
+            return;
+        }
+
+        recordingStore.setRequestState(row.spaceName, "stopping");
 
         try {
-            if (row.action === "start") {
-                analyticsClient.recordingStart();
-                await row.space.startRecording();
-            } else {
-                analyticsClient.recordingStop();
-                await row.space.stopRecording();
-            }
+            analyticsClient.recordingStop();
+            await row.space.stopRecording();
         } catch (error) {
             recordingStore.clearRequestState(row.spaceName);
-            console.error(`Failed to ${row.action} recording`, error);
-            notificationPlayingStore.playNotification(
-                row.action === "start"
-                    ? get(LL).recording.notification.startFailedNotification()
-                    : get(LL).recording.notification.stopFailedNotification()
-            );
+            console.error(`Failed to stop recording`, error);
+            notificationPlayingStore.playNotification(get(LL).recording.notification.stopFailedNotification());
         }
     }
 
@@ -104,8 +130,20 @@
 
     onDestroy(() => {
         closeSpacePicker();
+        cancelStartLayout();
     });
 </script>
+
+{#if layoutPickerOpen}
+    <RecordingStartLayoutDialog
+        on:confirm={(e) => {
+            confirmStartLayout(e.detail).catch((error) => {
+                console.error(`Failed to start recording after layout choice`, error);
+            });
+        }}
+        on:cancel={cancelStartLayout}
+    />
+{/if}
 
 <ActionBarButton
     on:click={() => {
