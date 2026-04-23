@@ -242,7 +242,6 @@ import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
 
 const MOUSE_WHEEL_ZOOM_RATE = 0.2;
-const MOUSE_WHEEL_ZOOM_OUT_RATE_BOOST = 1.1;
 const MOUSE_WHEEL_ZOOM_REFERENCE_LEVEL = 1.75;
 
 export interface GameSceneInitInterface {
@@ -4194,9 +4193,7 @@ ${escapedMessage}
         // Explanation of the formula: to Zoom x 2, we need a delta of 200
         // Question: Why 200 ? For mac usage, it's too slow
         const zoomRate =
-            MOUSE_WHEEL_ZOOM_RATE *
-            Math.max(MOUSE_WHEEL_ZOOM_REFERENCE_LEVEL / waScaleManager.zoomModifier, 1) **
-                MOUSE_WHEEL_ZOOM_OUT_RATE_BOOST;
+            MOUSE_WHEEL_ZOOM_RATE * Math.max(MOUSE_WHEEL_ZOOM_REFERENCE_LEVEL / waScaleManager.zoomModifier, 1);
         let zoomFactor = Math.exp((-deltaY * zoomRate * Math.log(2)) /* / 200 */ / 100);
 
         // Sometimes, deltaY can be really high (this happens when the browser is lagging for 1 second or so)
