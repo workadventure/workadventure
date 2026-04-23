@@ -104,6 +104,7 @@ export class MatrixChatRoom
     private readonly userProviderMergerStore = writable<UserProviderMerger | undefined>(undefined);
     private dmMergerUsersByRoomUnsub: (() => void) | undefined;
     private dmMergerRoomTypeUnsub: (() => void) | undefined;
+    private destroyed = false;
 
     constructor(
         private matrixRoom: Room,
@@ -912,6 +913,11 @@ export class MatrixChatRoom
     }
 
     destroy() {
+        if (this.destroyed) {
+            return;
+        }
+        this.destroyed = true;
+
         this.dmMergerUsersByRoomUnsub?.();
         this.dmMergerUsersByRoomUnsub = undefined;
         this.matrixRoom.currentState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
@@ -922,13 +928,22 @@ export class MatrixChatRoom
         this.matrixRoom.off(RoomEvent.MyMembership, this.handleMyMembership);
         this.matrixRoom.off(RoomStateEvent.NewMember, this.handleNewMember);
         this.matrixRoom.off(RoomEvent.UnreadNotifications, this.updateUnreadNotificationCount);
-        get(this.members).forEach((member) => {
+
+        const members = get(this.members);
+        members.forEach((member) => {
             member.destroy();
         });
+        this.members.set([]);
+
         this.messages.forEach((message) => {
-            message.relations?.destroy();
             message.destroy();
         });
+        this.messages.clear();
+        this.notSentEvents.clear();
+        this.inMemoryEventsContent.clear();
+        this.hasUnreadMessages.set(false);
+        this.unreadNotificationCount.set(0);
+        this.hasPreviousMessage.set(false);
     }
 
     startTyping(): Promise<object> {

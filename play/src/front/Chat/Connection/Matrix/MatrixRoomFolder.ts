@@ -107,6 +107,65 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         super.destroy();
     }
 
+    setRoomNode(room: MatrixChatRoom): void {
+        const existingRoom = this.roomList.get(room.id);
+        if (existingRoom && existingRoom !== room) {
+            existingRoom.destroy();
+        }
+        this.roomList.delete(room.id);
+
+        const existingFolder = this.folderList.get(room.id);
+        if (existingFolder) {
+            existingFolder.destroy();
+        }
+        this.folderList.delete(room.id);
+
+        this.roomList.set(room.id, room);
+    }
+
+    setFolderNode(folder: MatrixRoomFolder): void {
+        const existingFolder = this.folderList.get(folder.id);
+        if (existingFolder && existingFolder !== folder) {
+            existingFolder.destroy();
+        }
+        this.folderList.delete(folder.id);
+
+        const existingRoom = this.roomList.get(folder.id);
+        if (existingRoom) {
+            existingRoom.destroy();
+        }
+        this.roomList.delete(folder.id);
+
+        this.folderList.set(folder.id, folder);
+    }
+
+    private deleteRoomNode(id: string): boolean {
+        const existingRoom = this.roomList.get(id);
+        if (!existingRoom) {
+            return false;
+        }
+        existingRoom.destroy();
+        this.roomList.delete(id);
+        return true;
+    }
+
+    private deleteFolderNode(id: string): boolean {
+        const existingFolder = this.folderList.get(id);
+        if (!existingFolder) {
+            return false;
+        }
+        existingFolder.destroy();
+        this.folderList.delete(id);
+        return true;
+    }
+
+    private clearNodes(): void {
+        Array.from(this.roomList.values()).forEach((room) => room.destroy());
+        this.roomList.clear();
+        Array.from(this.folderList.values()).forEach((folder) => folder.destroy());
+        this.folderList.clear();
+    }
+
     init() {
         try {
             if (get(this.myMembership) === KnownMembership.Join) {
@@ -161,16 +220,14 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     async deleteNode(id: string): Promise<boolean> {
         try {
             await this.loadRoomsAndFolderPromise.promise;
-            const roomNode = this.roomList.get(id);
-            if (roomNode) {
-                roomNode.destroy();
-                return this.roomList.delete(id);
+            const isDeletedInRoomList = this.deleteRoomNode(id);
+            if (isDeletedInRoomList) {
+                return true;
             }
 
-            const folderNode = this.folderList.get(id);
-            if (folderNode) {
-                folderNode.destroy();
-                return this.folderList.delete(id);
+            const isDeletedInFolderList = this.deleteFolderNode(id);
+            if (isDeletedInFolderList) {
+                return true;
             }
 
             const deleteNodePromise = Array.from(this.folderList.values()).map((folder) => {
@@ -255,14 +312,14 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                 if (!childRoom || roomId === this.id) return;
 
                 if (childRoom.isSpaceRoom()) {
-                    this.folderList.set(childRoom.roomId, new MatrixRoomFolder(childRoom));
+                    this.setFolderNode(new MatrixRoomFolder(childRoom));
                 } else {
                     const matrixChatRoom = new MatrixChatRoom(childRoom);
                     if (
                         get(matrixChatRoom.myMembership) === KnownMembership.Join ||
                         get(matrixChatRoom.myMembership) === KnownMembership.Invite
                     ) {
-                        this.roomList.set(childRoom.roomId, matrixChatRoom);
+                        this.setRoomNode(matrixChatRoom);
                     }
                 }
             });
@@ -406,5 +463,12 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                 this.roomList.set(child.roomId, new MatrixChatRoom(child));
             }
         });
+    }
+
+    override destroy() {
+        this.clearNodes();
+        this.availableRooms.set([]);
+        this.allSuggestedRooms.set([]);
+        super.destroy();
     }
 }

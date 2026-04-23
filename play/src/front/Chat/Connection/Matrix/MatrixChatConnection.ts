@@ -131,7 +131,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity
     ) {
         this.connectionStatus = writable("CONNECTING");
-        this.roomList = new AutoDestroyingMapStore<string, MatrixChatRoom>();
+        this.roomList = new MapStore<string, MatrixChatRoom>();
         this.clientPromise = clientPromise;
         this.directRooms = this.createJoinedRoomsReadable(
             (room) => get(room.myMembership) === KnownMembership.Join && get(room.type) === "direct"
@@ -672,6 +672,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
 
     private detachRoomFromRootLists(roomId: string): void {
+        this.roomList.get(roomId)?.destroy();
+        this.roomFolders.get(roomId)?.destroy();
+
         this.roomList.delete(roomId);
         this.roomFolders.delete(roomId);
     }
@@ -906,33 +909,73 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         });
     }
 
-    private async moveRoomToParentFolder(room: Room, parentID: string): Promise<boolean> {
-        const isSpaceRoom = room.isSpaceRoom();
-        const parentFolder = await this.findParentFolder(parentID);
+    private setRootRoom(room: MatrixChatRoom): void {
+        const roomId = room.id;
+        const existingRoom = this.roomList.get(roomId);
+        if (existingRoom && existingRoom !== room) {
+            existingRoom.destroy();
+        }
+        this.roomList.delete(roomId);
 
-        if (!parentFolder) {
+        const existingFolder = this.roomFolders.get(roomId);
+        if (existingFolder) {
+            existingFolder.destroy();
+        }
+        this.roomFolders.delete(roomId);
+
+        this.roomList.set(roomId, room);
+    }
+
+    private setRootFolder(folder: MatrixRoomFolder): void {
+        const folderId = folder.id;
+        const existingFolder = this.roomFolders.get(folderId);
+        if (existingFolder && existingFolder !== folder) {
+            existingFolder.destroy();
+        }
+        this.roomFolders.delete(folderId);
+
+        const existingRoom = this.roomList.get(folderId);
+        if (existingRoom) {
+            existingRoom.destroy();
+        }
+        this.roomList.delete(folderId);
+
+        this.roomFolders.set(folderId, folder);
+    }
+
+    private deleteRootRoom(roomId: string): boolean {
+        const existingRoom = this.roomList.get(roomId);
+        if (!existingRoom) {
             return false;
         }
-
-        this.addRoomToFolder(room, parentFolder, isSpaceRoom);
+        existingRoom.destroy();
+        this.roomList.delete(roomId);
         return true;
     }
-    private addRoomToFolder(room: Room, targetFolder: MatrixRoomFolder, isSpaceRoom: boolean): void {
-        if (isSpaceRoom) {
-            if (targetFolder.folderList.has(room.roomId)) {
-                return;
-            }
-            const newFolder = new MatrixRoomFolder(room);
-            targetFolder.folderList.set(room.roomId, newFolder);
 
-            newFolder.init();
-        } else {
-            if (targetFolder.roomList.has(room.roomId)) {
-                return;
-            }
-            targetFolder.roomList.set(room.roomId, new MatrixChatRoom(room));
+    private deleteRootFolder(roomId: string): boolean {
+        const existingFolder = this.roomFolders.get(roomId);
+        if (!existingFolder) {
+            return false;
         }
+        existingFolder.destroy();
+        this.roomFolders.delete(roomId);
+        return true;
     }
+
+    private removeFromRootLists(roomId: string): void {
+        this.deleteRootRoom(roomId);
+        this.deleteRootFolder(roomId);
+    }
+
+    private clearRootLists(): void {
+        Array.from(this.roomList.values()).forEach((room) => room.destroy());
+        this.roomList.clear();
+        Array.from(this.roomFolders.values()).forEach((folder) => folder.destroy());
+        this.roomFolders.clear();
+    }
+
+
     private async manageRoomOrFolder(room: Room): Promise<void> {
         const parentsIds = this.getParentRoomID(room);
 
@@ -994,13 +1037,13 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             let roomFolder = parentFolder.folderList.get(roomId);
             if (!roomFolder) {
                 roomFolder = new MatrixRoomFolder(room);
-                parentFolder.folderList.set(roomId, roomFolder);
+                parentFolder.setFolderNode(roomFolder);
             }
             await roomFolder.refreshRooms();
             roomFolder.init();
         } else {
             if (!parentFolder.roomList.has(roomId)) {
-                parentFolder.roomList.set(roomId, new MatrixChatRoom(room));
+                parentFolder.setRoomNode(new MatrixChatRoom(room));
             }
         }
 
@@ -1151,7 +1194,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private createAndAddNewRootFolder(room: Room): void {
         if (this.roomFolders.get(room.roomId)) return;
         const newFolder = new MatrixRoomFolder(room);
-        this.roomFolders.set(newFolder.id, newFolder);
+        this.setRootFolder(newFolder);
         newFolder.init();
 
         newFolder
@@ -1161,8 +1204,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                     return;
                 }
                 roomIDs.forEach((roomID) => {
-                    this.roomList.delete(roomID);
-                    this.roomFolders.delete(roomID);
+                    this.removeFromRootLists(roomID);
                 });
             })
             .catch((e) => {
@@ -1172,7 +1214,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
     private createAndAddNewRootRoom(room: Room): MatrixChatRoom {
         const newRoom = new MatrixChatRoom(room);
-        this.roomList.set(newRoom.id, newRoom);
+        this.setRootRoom(newRoom);
         if (get(selectedRoomStore)?.id === newRoom.id) {
             selectedRoomStore.set(newRoom);
         }
@@ -1184,11 +1226,12 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         });
     }
     private async deleteRoom(roomId: string) {
-        const isRootRoom = this.roomList.delete(roomId);
+        const isRootRoom = this.deleteRootRoom(roomId);
         if (isRootRoom) {
             return;
         }
-        const isRootFolder = this.roomFolders.delete(roomId);
+
+        const isRootFolder = this.deleteRootFolder(roomId);
 
         if (isRootFolder) {
             return;
@@ -1351,7 +1394,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                     await this.waitForNextSync();
                     return result;
                 } catch {
-                    this.roomFolders.delete(result.room_id);
+                    this.deleteRootFolder(result.room_id);
                     return Promise.reject(new Error(get(LL).chat.addRoomToFolderError()));
                 }
             }
@@ -1688,8 +1731,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         if (!client) return;
 
         this.roomFolders.forEach((folder) => {
-            this.roomFolders.delete(folder.id);
+            folder.destroy();
         });
+        this.roomFolders.clear();
         const visibleSpaces = client.getVisibleRooms().filter((room) => room.isSpaceRoom());
 
         visibleSpaces.forEach((space) => {
@@ -1697,14 +1741,13 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             //TODO: maybe delay init until folder is opened
             spaceFolder.init();
             if (this.getParentRoomID(space).length === 0) {
-                this.roomFolders.set(spaceFolder.id, spaceFolder);
+                this.setRootFolder(spaceFolder);
                 // Process room IDs asynchronously without blocking
                 spaceFolder
                     .getRoomsIdInNode()
                     .then((roomIDs) => {
                         roomIDs.forEach((roomID) => {
-                            this.roomList.delete(roomID);
-                            this.roomFolders.delete(roomID);
+                            this.removeFromRootLists(roomID);
                         });
                     })
                     .catch((error) => {
@@ -1727,17 +1770,21 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
     clearListener() {
         this.clearRoomPlacementRetries();
-        this.roomList.forEach((room) => {
-            this.roomList.delete(room.id);
-        });
-        this.client?.off(ClientEvent.Room, this.handleRoom);
-        this.client?.off(ClientEvent.DeleteRoom, this.handleDeleteRoom);
-        this.client?.off(RoomEvent.MyMembership, this.handleMyMembership);
-        this.client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
-        this.client?.off(RoomEvent.Name, this.handleName);
-        this.client?.off(UserEvent.Presence, this.handleUserPresence);
-        this.client?.off(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
-        if (this.statusUnsubscriber) this.statusUnsubscriber();
+        this.clearRootLists();
+
+        const client = this.client;
+        client?.off(ClientEvent.Room, this.handleRoom);
+        client?.off(ClientEvent.DeleteRoom, this.handleDeleteRoom);
+        client?.off(RoomEvent.MyMembership, this.handleMyMembership);
+        client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
+        client?.off(RoomEvent.Name, this.handleName);
+        client?.off(ClientEvent.AccountData, this.handleAccountDataEvent);
+        client?.off(UserEvent.Presence, this.handleUserPresence);
+        client?.off(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
+        if (this.statusUnsubscriber) {
+            this.statusUnsubscriber();
+            this.statusUnsubscriber = undefined;
+        }
         if (this.wokaAvatarMatrixSyncUnsubscriber) {
             this.wokaAvatarMatrixSyncUnsubscriber();
             this.wokaAvatarMatrixSyncUnsubscriber = undefined;
@@ -1750,15 +1797,13 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             this.displayNameMatrixSyncUnsubscriber();
             this.displayNameMatrixSyncUnsubscriber = undefined;
         }
+        this.userIdsNeedingPresenceUpdate.clear();
     }
     async destroy(): Promise<void> {
-        await this.client?.logout(true);
-    }
-}
-
-class AutoDestroyingMapStore<K, V extends Required<{ destroy: () => void }>> extends MapStore<K, V> {
-    override delete(key: K): boolean {
-        this.get(key)?.destroy();
-        return super.delete(key);
+        const client = this.client;
+        this.clearListener();
+        this.client = undefined;
+        this.isClientReady = false;
+        await client?.logout(true);
     }
 }
