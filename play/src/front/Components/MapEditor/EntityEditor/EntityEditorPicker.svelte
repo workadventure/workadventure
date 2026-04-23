@@ -106,7 +106,7 @@
         isEditingCustomEntity = isEditing;
     }
 
-    function getEntitiesPrefabsVariantsGroupedByTagWithCustomFirst(
+    function getForEntitiesPrefabsVariantsWithCategories(
         entitiesPrefabsVariants: EntityVariant[]
     ): { category: CategoryTag; entitiesPrefabsVariants: EntityVariant[] }[] {
         const entitiesPrefabsVariantsGroupedByTag = entitiesPrefabsVariants.reduce(
@@ -276,7 +276,7 @@
     <div class="flex-1 overflow-auto">
         {#if $selectCategoryStore === undefined && searchTerm === ""}
             <ul class="list-none !p-0 min-w-full">
-                {#each getEntitiesPrefabsVariantsGroupedByTagWithCustomFirst($entitiesPrefabsVariants) as { category, entitiesPrefabsVariants } (`${category.kind}-${category.tag}`)}
+                {#each getForEntitiesPrefabsVariantsWithCategories($entitiesPrefabsVariants) as { category, entitiesPrefabsVariants } (`${category.kind}-${category.tag}`)}
                     <TagListItem
                         on:onSelectedTag={(event) => {
                             onSelectedTag(event.detail);
