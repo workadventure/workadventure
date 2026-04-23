@@ -9,7 +9,7 @@ export const LIVEKIT_RECORDING_LAYOUT_LIVEKIT_FULLSCREEN = "wa-livekit-fullscree
  * {@link SpaceRecordingLayoutMode.UNSPECIFIED} is treated like grid for older clients.
  */
 export function livekitRecordingTemplateLayout(layoutMode: SpaceRecordingLayoutMode | undefined): string {
-    if (layoutMode === SpaceRecordingLayoutMode.SPEAKER) {
+    if (layoutMode === SpaceRecordingLayoutMode.SPEAKERFOCUS) {
         return LIVEKIT_RECORDING_LAYOUT_SPEAKER;
     }
     if (layoutMode === SpaceRecordingLayoutMode.FULLSCREEN) {
