@@ -1,17 +1,19 @@
 <script lang="ts">
     import { fade } from "svelte/transition";
     import { onMount } from "svelte";
+    import { get } from "svelte/store";
     import type { ProximityNotification } from "../../Stores/ProximityNotificationStore";
     import { chatNotificationStore } from "../../Stores/ProximityNotificationStore";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
     import { navChat } from "../../Chat/Stores/ChatStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
 
     export let notification: ProximityNotification;
 
-    const roomType = notification.room.type;
-    $: roomName = notification.room.name;
+    $: roomType = notification.room ? get(notification.room.type) : notification.roomType ?? "multiple";
+    $: roomName = notification.room ? get(notification.room.name) : notification.roomName;
 
     const NOTIFICATION_DURATION = 10000; // 10 seconds
 
@@ -25,14 +27,22 @@
         };
     });
 
-    function handleClick() {
+    async function handleClick() {
         chatNotificationStore.clearAll();
 
         chatVisibilityStore.set(true);
         navChat.switchToChat();
 
         if (notification.openRoomOnClick !== false) {
-            const room = notification.room;
+            let room = notification.room;
+            if (!room && notification.roomId) {
+                const chatConnection = await gameManager.getChatConnection();
+                room = chatConnection.getRoomByID(notification.roomId);
+            }
+            if (!room) {
+                selectedRoomStore.set(undefined);
+                return;
+            }
             room.setTimelineAsRead();
             selectedRoomStore.set(room);
 
@@ -45,6 +55,15 @@
         } else {
             // Open the chat on the main chat panel
             selectedRoomStore.set(undefined);
+        }
+    }
+
+    function handleKeyboardClick(event: KeyboardEvent) {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleClick().catch((error) => {
+                console.error("Failed to handle chat notification click", error);
+            });
         }
     }
 
@@ -75,12 +94,7 @@
     on:click={handleClick}
     role="button"
     tabindex="0"
-    on:keydown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            handleClick();
-        }
-    }}
+    on:keydown={handleKeyboardClick}
     out:fade={{ duration: 150 }}
 >
     <div class="mt-1 text-white text-xl flex-shrink-0">💬</div>
@@ -90,9 +104,9 @@
             class="font-bold mb-1 text-base text-white truncate font-['Roboto_Condensed'] tracking-normal align-middle"
         >
             {notification.userName}
-            {#if $roomType !== "direct"}
+            {#if roomType !== "direct"}
                 {$LL.chat.notification.in()}
-                {$roomName}
+                {roomName}
             {/if}
         </div>
         <div

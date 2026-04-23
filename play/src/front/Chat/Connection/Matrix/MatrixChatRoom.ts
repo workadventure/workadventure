@@ -466,6 +466,9 @@ export class MatrixChatRoom
                 return;
             }
             this.dmMergerUsersByRoomUnsub = merger.usersByRoomStore.subscribe(() => {
+                                   if (this.destroyed) {
+                        return;
+                    }
                 this.directRoomPeerAvatarStore?.refresh().catch(() => undefined);
                 const myUserId = this.matrixRoom.client.getUserId();
                 get(this.members)
@@ -488,7 +491,13 @@ export class MatrixChatRoom
         if (this.matrixRoom.hasEncryptionStateEvent()) {
             await this.matrixRoom.decryptAllEvents();
         }
+        if (this.destroyed) {
+            return;
+        }
         await this.timelineWindow.load();
+        if (this.destroyed) {
+            return;
+        }
         const events = this.timelineWindow.getEvents();
 
         const decryptMessagesPromises: Promise<MatrixChatMessage | undefined>[] = [];
@@ -499,6 +508,10 @@ export class MatrixChatRoom
 
         const result = await Promise.all(decryptMessagesPromises);
         const messages = result.filter((message): message is MatrixChatMessage => message !== undefined);
+        if (this.destroyed) {
+            messages.forEach((message) => message.destroy());
+            return;
+        }
         this.messages.push(...messages);
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
     }
@@ -515,10 +528,16 @@ export class MatrixChatRoom
         event: MatrixEvent,
         messages: SearchableArrayStore<string, MatrixChatMessage>
     ): Promise<MatrixChatMessage | undefined> {
+        if (this.destroyed) {
+            return undefined;
+        }
         if (event.isEncrypted()) {
             await this.matrixRoom.client.decryptEventIfNeeded(event).catch(() => {
                 console.error("Failed to decrypt");
             });
+        }
+        if (this.destroyed) {
+            return undefined;
         }
         if (event.getType() === "m.room.message" && !this.isEventReplacingExistingOne(event)) {
             this.addEventContentInMemory(event);
@@ -828,6 +847,9 @@ export class MatrixChatRoom
         if (get(this.hasPreviousMessage)) {
             const existingEventsBeforePagination = this.timelineWindow.getEvents();
             await this.timelineWindow.paginate(Direction.Backward, 8);
+            if (this.destroyed) {
+                return;
+            }
             this.timelineWindow.unpaginate(existingEventsBeforePagination.length, false);
             const tempMatrixChatMessages: Promise<MatrixChatMessage | undefined>[] = [];
             this.timelineWindow.getEvents().forEach((event) => {
@@ -837,9 +859,13 @@ export class MatrixChatRoom
             const result = await Promise.all(tempMatrixChatMessages);
 
             const messages = result.filter((message): message is MatrixChatMessage => message !== undefined);
+            if (this.destroyed) {
+                messages.forEach((message) => message.destroy());
+                return;
+            }
             this.messages.unshift(...messages);
             this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
-            if (messages.length === 0) {
+            if (messages.length === 0 && !this.destroyed) {
                 await this.loadMorePreviousMessages();
             }
         }
@@ -1105,6 +1131,8 @@ export class MatrixChatRoom
         this.stopVisibleProfileSync();
         this.currentUserRoomMember?.off(RoomMemberEvent.PowerLevel, this.handleCurrentUserRoomMemberPowerLevel);
         this.currentUserRoomMember = undefined;
+        this.dmMergerRoomTypeUnsub?.();
+        this.dmMergerRoomTypeUnsub = undefined;
         this.matrixRoom.currentState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
         this.matrixRoom.off(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);
@@ -1305,6 +1333,9 @@ export class MatrixChatRoom
             this.matrixRoom.getUnfilteredTimelineSet(),
             messageId
         );
+        if (this.destroyed) {
+            return undefined;
+        }
         const event = timeline?.getEvents().find((ev) => ev.getId() === messageId);
         if (event) {
             return new MatrixChatMessage(event, this.matrixRoom);

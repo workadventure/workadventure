@@ -17,7 +17,7 @@ export class MatrixChatMessage implements ChatMessage {
     isMyMessage: boolean;
     date: Date | null;
     isQuotedMessage: boolean | undefined;
-    quotedMessage: ChatMessage | undefined;
+    quotedMessage: MatrixChatMessage | undefined;
     type: ChatMessageType;
     isDeleted: Writable<boolean>;
     isModified: Writable<boolean>;
@@ -92,6 +92,13 @@ export class MatrixChatMessage implements ChatMessage {
         this.loadAttachmentMediaIfNeeded();
     }
 
+    private setQuotedMessage(quotedMessage: MatrixChatMessage | undefined): void {
+        if (this.quotedMessage && this.quotedMessage !== quotedMessage) {
+            this.quotedMessage.destroy();
+        }
+        this.quotedMessage = quotedMessage;
+    }
+
     private getMessageContent(): ChatMessageContent {
         const unsigned = this.event.getUnsigned();
         const relation = unsigned["m.relations"];
@@ -108,12 +115,14 @@ export class MatrixChatMessage implements ChatMessage {
         const quotedMessage = this.getQuotedMessage();
 
         if (quotedMessage !== undefined && content.formatted_body) {
-            this.quotedMessage = quotedMessage;
+            this.setQuotedMessage(quotedMessage);
             return {
                 body: content.formatted_body.replace(/^(<mx-reply>).*(<\/mx-reply>)/, ""),
                 url: undefined,
             };
         }
+
+        this.setQuotedMessage(undefined);
 
         if (this.type === "image") {
             return {
@@ -241,7 +250,7 @@ export class MatrixChatMessage implements ChatMessage {
         });
     }
 
-    private getQuotedMessage() {
+    private getQuotedMessage(): MatrixChatMessage | undefined {
         const replyEventId = this.event.replyEventId;
         if (replyEventId) {
             const replyToEvent = this.room.findEventById(replyEventId);

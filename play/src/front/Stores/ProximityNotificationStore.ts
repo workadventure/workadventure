@@ -2,12 +2,21 @@ import { writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import type { ChatRoom } from "../Chat/Connection/ChatConnection";
 
+type NotificationNavigationTarget = {
+    roomId: string;
+    roomName: string;
+    roomType?: "direct" | "multiple";
+};
+
 export interface ProximityNotification {
     id: string;
     userName: string;
     message: string;
     messageId?: string;
-    room: ChatRoom;
+    room?: ChatRoom;
+    roomId?: string;
+    roomName?: string;
+    roomType?: "direct" | "multiple";
     /** When false, click only opens the chat panel (e.g. for room invitations). Default true. */
     openRoomOnClick?: boolean;
 }
@@ -23,7 +32,7 @@ function createChatNotificationStore() {
         addNotification: (
             userName: string,
             message: string,
-            room: ChatRoom,
+            target: ChatRoom | NotificationNavigationTarget,
             messageId?: string,
             openRoomOnClick = true
         ): string => {
@@ -33,7 +42,21 @@ function createChatNotificationStore() {
                 const filteredNotifications = messageId
                     ? notifications.filter((n) => n.messageId !== messageId)
                     : notifications;
-                return [...filteredNotifications, { id, userName, message, messageId, room, openRoomOnClick }];
+                return [
+                    ...filteredNotifications,
+                    {
+                        id,
+                        userName,
+                        message,
+                        messageId,
+                        openRoomOnClick,
+                        ...("setTimelineAsRead" in target
+                            ? {
+                                  room: target,
+                              }
+                            : target),
+                    },
+                ];
             });
             return id;
         },
