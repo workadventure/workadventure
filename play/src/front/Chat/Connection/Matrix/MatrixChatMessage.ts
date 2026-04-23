@@ -39,6 +39,7 @@ export class MatrixChatMessage implements ChatMessage {
     private attachmentMediaCleanup: () => void = () => undefined;
     private attachmentMediaAbortController: AbortController | undefined;
     private readonly decryptedListener = () => this.updateMessageContentOnDecryptedEvent();
+    private destroyed = false;
 
     constructor(
         private event: MatrixEvent,
@@ -335,11 +336,25 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     destroy() {
+        if (this.destroyed) {
+            return;
+        }
+        this.destroyed = true;
+
         this.event.off(MatrixEventEvent.Decrypted, this.decryptedListener);
+        this.relations?.destroy();
+        this.relations = undefined;
+        this.quotedMessage?.destroy();
+        this.quotedMessage = undefined;
+        this.reactions.clear();
         this.imageMediaAbortController?.abort();
         this.imageMediaCleanup();
+        this.imageMediaAbortController = undefined;
+        this.imageMediaCleanup = () => undefined;
         this.attachmentMediaAbortController?.abort();
         this.attachmentMediaCleanup();
+        this.attachmentMediaAbortController = undefined;
+        this.attachmentMediaCleanup = () => undefined;
     }
 
     public getMatrixEvent(): MatrixEvent {
