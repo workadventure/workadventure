@@ -72,11 +72,12 @@ import { adminService } from "./AdminService";
 import type { ShortMapDescription } from "./ShortMapDescription";
 import { matrixProvider } from "./MatrixProvider";
 import RecordingService from "./RecordingService";
+import type { PusherWebSocket } from "./PusherWebSocket";
 
 const debug = Debug("socket");
 
 export type AdminSocket = WebSocket<AdminSocketData>;
-export type Socket = WebSocket<SocketData>;
+export type Socket = PusherWebSocket;
 export type SocketUpgradeFailed = WebSocket<UpgradeFailedData>;
 
 export class SocketManager implements ZoneEventListener {

@@ -2,14 +2,13 @@ import { z } from "zod";
 import type { AnswerMessage, CompanionDetail, ErrorApiData, SubMessage, WokaDetail } from "@workadventure/messages";
 import {
     apiVersionHash,
-    ClientToServerMessage,
     noUndefined,
     ServerToClientMessage as ServerToClientMessageTsProto,
     ServerToClientMessage,
 } from "@workadventure/messages";
 import { errors } from "jose";
 import * as Sentry from "@sentry/node";
-import type { TemplatedApp, WebSocket } from "uWebSockets.js";
+import type { TemplatedApp } from "uWebSockets.js";
 import { asError } from "catch-unknown";
 import Debug from "debug";
 import { AxiosError } from "axios";
@@ -17,7 +16,7 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
-import type { Socket, SocketUpgradeFailed } from "../services/SocketManager";
+import type { Socket } from "../services/SocketManager";
 import { socketManager } from "../services/SocketManager";
 import { ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../enums/EnvironmentVariable";
 import type { AdminSocketData } from "../models/Websocket/AdminSocketData";
@@ -25,10 +24,11 @@ import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessa
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
-import type { ConnectingSocketData, SocketData, SpaceName } from "../models/Websocket/SocketData";
+import type { ConnectingSocketData, SpaceName } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
 import { ClientAbortError } from "../models/ClientAbortError";
 import { ClientNotPartOfSpaceError, UserAlreadyAddedInSpaceError } from "../models/SpaceValidationErrors";
+import { PusherRoomSocketController } from "../services/PusherRoomSocketController";
 
 const debug = Debug("pusher:requests");
 
@@ -54,6 +54,8 @@ type UpgradeFailedInvalidTexture = {
 export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData | UpgradeFailedInvalidTexture;
 
 export class IoSocketController {
+    private readonly roomSocketController: PusherRoomSocketController;
+
     constructor(private readonly app: TemplatedApp) {
         // Global handler for unhandled Promises
         // The listener never needs to be removed, because we are in a singleton that is never destroyed.
@@ -62,6 +64,8 @@ export class IoSocketController {
             console.error("Unhandled Rejection at:", promise, "reason:", reason);
             Sentry.captureException(reason);
         });
+
+        this.roomSocketController = new PusherRoomSocketController(this.app);
 
         this.ioConnection();
         if (ADMIN_SOCKETS_TOKEN) {
@@ -221,7 +225,7 @@ export class IoSocketController {
     }
 
     ioConnection(): void {
-        this.app.ws<ConnectingSocketData | UpgradeFailedData>("/ws/room", {
+        this.roomSocketController.ws("/ws/room", {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
             idleTimeout: SOCKET_IDLE_TIMER,
@@ -565,36 +569,10 @@ export class IoSocketController {
                 });
             },
             /* Handlers */
-            open: (ws) => {
+            open: (socket) => {
                 (async () => {
-                    const socketData = ws.getUserData();
+                    const socketData = socket.getUserData();
                     debug("WebSocket connection established");
-                    if (socketData.rejected === true) {
-                        const socket = ws as SocketUpgradeFailed;
-                        // If there is a room in the error, let's check if we need to clean it.
-                        if ("roomId" in socketData) {
-                            socketManager.deleteRoomIfEmptyFromId(socketData.roomId);
-                        }
-
-                        if (socketData.reason === tokenInvalidException) {
-                            socketManager.emitTokenExpiredMessage(socket);
-                        } else if (socketData.reason === "error") {
-                            socketManager.emitErrorScreenMessage(socket, socketData.error);
-                        } else if (socketData.reason === "invalidTexture") {
-                            if (socketData.entityType === "character") {
-                                socketManager.emitInvalidCharacterTextureMessage(socket);
-                            } else {
-                                socketManager.emitInvalidCompanionTextureMessage(socket);
-                            }
-                        } else {
-                            socketManager.emitConnectionErrorMessage(socket, socketData.message.toString());
-                        }
-                        ws.end(1000, "Error message sent");
-                        return;
-                    }
-
-                    // Mandatory for typing hint
-                    const socket = ws as Socket;
 
                     socketData.emitInBatch = (payload: SubMessage): void => {
                         emitInBatch(socket, payload);
@@ -703,14 +681,13 @@ export class IoSocketController {
                     console.error(e);
                 });
             },
-            message: (ws, arrayBuffer): void => {
-                const socket = ws as Socket;
+            message: (socket, message): void => {
                 Sentry.withIsolationScope(() => {
-                    Sentry.setTag("userUuid", socket.getUserData().userUuid);
-                    Sentry.setTag("roomId", socket.getUserData().roomId);
-                    Sentry.setTag("world", socket.getUserData().world);
+                    const userData = socket.getUserData();
+                    Sentry.setTag("userUuid", userData.userUuid);
+                    Sentry.setTag("roomId", userData.roomId);
+                    Sentry.setTag("world", userData.world);
                     (async () => {
-                        const message = ClientToServerMessage.decode(new Uint8Array(arrayBuffer));
                         if (!message.message) {
                             console.warn("Empty message received.");
                             return;
@@ -739,9 +716,7 @@ export class IoSocketController {
                             }
                             case "addSpaceFilterMessage": {
                                 if (message.message.addSpaceFilterMessage.spaceFilterMessage !== undefined)
-                                    message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName = `${
-                                        socket.getUserData().world
-                                    }.${message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName}`;
+                                    message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName = `${userData.world}.${message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName}`;
                                 await socketManager.handleAddSpaceFilterMessage(
                                     socket,
                                     noUndefined(message.message.addSpaceFilterMessage)
@@ -750,9 +725,7 @@ export class IoSocketController {
                             }
                             case "removeSpaceFilterMessage": {
                                 if (message.message.removeSpaceFilterMessage.spaceFilterMessage !== undefined)
-                                    message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName = `${
-                                        socket.getUserData().world
-                                    }.${message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName}`;
+                                    message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName = `${userData.world}.${message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName}`;
                                 socketManager.handleRemoveSpaceFilterMessage(
                                     socket,
                                     noUndefined(message.message.removeSpaceFilterMessage)
@@ -782,9 +755,7 @@ export class IoSocketController {
                                     return;
                                 }
 
-                                message.message.updateSpaceMetadataMessage.spaceName = `${socket.getUserData().world}.${
-                                    message.message.updateSpaceMetadataMessage.spaceName
-                                }`;
+                                message.message.updateSpaceMetadataMessage.spaceName = `${userData.world}.${message.message.updateSpaceMetadataMessage.spaceName}`;
 
                                 socketManager.handleUpdateSpaceMetadata(
                                     socket,
@@ -794,9 +765,7 @@ export class IoSocketController {
                                 break;
                             }
                             case "updateSpaceUserMessage": {
-                                message.message.updateSpaceUserMessage.spaceName = `${socket.getUserData().world}.${
-                                    message.message.updateSpaceUserMessage.spaceName
-                                }`;
+                                message.message.updateSpaceUserMessage.spaceName = `${userData.world}.${message.message.updateSpaceUserMessage.spaceName}`;
 
                                 await socketManager.handleUpdateSpaceUser(
                                     socket,
@@ -825,9 +794,10 @@ export class IoSocketController {
                                         id: message.message.queryMessage.id,
                                     };
                                     const abortController = new AbortController();
-                                    socket
-                                        .getUserData()
-                                        .queryAbortControllers.set(message.message.queryMessage.id, abortController);
+                                    userData.queryAbortControllers.set(
+                                        message.message.queryMessage.id,
+                                        abortController
+                                    );
                                     switch (message.message.queryMessage.query?.$case) {
                                         case "roomTagsQuery": {
                                             await socketManager.handleRoomTagsQuery(
@@ -1011,7 +981,7 @@ export class IoSocketController {
                                         case "startRecordingQuery": {
                                             const localSpaceName =
                                                 message.message.queryMessage.query.startRecordingQuery.spaceName;
-                                            const worldSpaceName = `${socket.getUserData().world}.${localSpaceName}`;
+                                            const worldSpaceName = `${userData.world}.${localSpaceName}`;
 
                                             await socketManager.handleStartRecording(socket, worldSpaceName, {
                                                 signal: abortController.signal,
@@ -1022,15 +992,13 @@ export class IoSocketController {
                                                 startRecordingAnswer: {},
                                             };
                                             this.sendAnswerMessage(socket, answerMessage);
-                                            socket
-                                                .getUserData()
-                                                .queryAbortControllers.delete(message.message.queryMessage.id);
+                                            userData.queryAbortControllers.delete(message.message.queryMessage.id);
                                             break;
                                         }
                                         case "stopRecordingQuery": {
                                             const localSpaceName =
                                                 message.message.queryMessage.query.stopRecordingQuery.spaceName;
-                                            const worldSpaceName = `${socket.getUserData().world}.${localSpaceName}`;
+                                            const worldSpaceName = `${userData.world}.${localSpaceName}`;
 
                                             await socketManager.handleStopRecording(socket, worldSpaceName, {
                                                 signal: abortController.signal,
@@ -1041,17 +1009,13 @@ export class IoSocketController {
                                                 stopRecordingAnswer: {},
                                             };
                                             this.sendAnswerMessage(socket, answerMessage);
-                                            socket
-                                                .getUserData()
-                                                .queryAbortControllers.delete(message.message.queryMessage.id);
+                                            userData.queryAbortControllers.delete(message.message.queryMessage.id);
                                             break;
                                         }
                                         case "joinSpaceQuery": {
                                             const localSpaceName =
                                                 message.message.queryMessage.query.joinSpaceQuery.spaceName;
-                                            message.message.queryMessage.query.joinSpaceQuery.spaceName = `${
-                                                socket.getUserData().world
-                                            }.${message.message.queryMessage.query.joinSpaceQuery.spaceName}`;
+                                            message.message.queryMessage.query.joinSpaceQuery.spaceName = `${userData.world}.${message.message.queryMessage.query.joinSpaceQuery.spaceName}`;
                                             await socketManager.handleJoinSpace(
                                                 socket,
                                                 message.message.queryMessage.query.joinSpaceQuery.spaceName,
@@ -1066,7 +1030,7 @@ export class IoSocketController {
                                             answerMessage.answer = {
                                                 $case: "joinSpaceAnswer",
                                                 joinSpaceAnswer: {
-                                                    spaceUserId: socket.getUserData().spaceUserId,
+                                                    spaceUserId: userData.spaceUserId,
                                                 },
                                             };
                                             this.sendAnswerMessage(socket, answerMessage);
@@ -1074,9 +1038,7 @@ export class IoSocketController {
                                             break;
                                         }
                                         case "leaveSpaceQuery": {
-                                            message.message.queryMessage.query.leaveSpaceQuery.spaceName = `${
-                                                socket.getUserData().world
-                                            }.${message.message.queryMessage.query.leaveSpaceQuery.spaceName}`;
+                                            message.message.queryMessage.query.leaveSpaceQuery.spaceName = `${userData.world}.${message.message.queryMessage.query.leaveSpaceQuery.spaceName}`;
                                             await socketManager.handleLeaveSpace(
                                                 socket,
                                                 message.message.queryMessage.query.leaveSpaceQuery.spaceName
@@ -1101,16 +1063,13 @@ export class IoSocketController {
                                             break;
                                         }
                                         default: {
-                                            socket
-                                                .getUserData()
-                                                .queryAbortControllers.delete(message.message.queryMessage.id);
+                                            userData.queryAbortControllers.delete(message.message.queryMessage.id);
                                             socketManager.forwardMessageToBack(socket, message.message);
                                         }
                                     }
                                 } catch (error) {
                                     const err = asError(error);
                                     const queryType = message.message.queryMessage.query?.$case ?? "unknown";
-                                    const userData = socket.getUserData();
                                     // If the error is due to an abort, don't log it as an error
                                     if (!(err instanceof AbortError)) {
                                         console.error(
@@ -1148,14 +1107,14 @@ export class IoSocketController {
                                         },
                                     };
                                     this.sendAnswerMessage(socket, answerMessage);
-                                    socket.getUserData().queryAbortControllers.delete(message.message.queryMessage.id);
+                                    userData.queryAbortControllers.delete(message.message.queryMessage.id);
                                 }
                                 break;
                             }
                             case "abortQueryMessage": {
-                                const abortController = socket
-                                    .getUserData()
-                                    .queryAbortControllers.get(message.message.abortQueryMessage.id);
+                                const abortController = userData.queryAbortControllers.get(
+                                    message.message.abortQueryMessage.id
+                                );
                                 if (abortController) {
                                     debug(`Aborting query with id ${message.message.abortQueryMessage.id} locally`);
                                     abortController.abort(new ClientAbortError());
@@ -1188,67 +1147,6 @@ export class IoSocketController {
                                 socketManager.forwardMessageToBack(socket, message.message);
                                 break;
                             }
-                            // case "muteParticipantIdMessage": {
-                            //     message.message.muteParticipantIdMessage.spaceName = `${socket.getUserData().world}.${
-                            //         message.message.muteParticipantIdMessage.spaceName
-                            //     }`;
-                            //     socketManager.handleMuteParticipantIdMessage(
-                            //         socket,
-                            //         message.message.muteParticipantIdMessage.spaceName,
-                            //         message.message.muteParticipantIdMessage.mutedUserUuid,
-                            //         message.message
-                            //     );
-                            //     break;
-                            // }
-                            // case "muteVideoParticipantIdMessage": {
-                            //     message.message.muteVideoParticipantIdMessage.spaceName = `${socket.getUserData().world}.${
-                            //         message.message.muteVideoParticipantIdMessage.spaceName
-                            //     }`;
-                            //
-                            //     socketManager.handleMuteVideoParticipantIdMessage(
-                            //         socket,
-                            //         message.message.muteVideoParticipantIdMessage.spaceName,
-                            //         message.message.muteVideoParticipantIdMessage.mutedUserUuid,
-                            //         message.message
-                            //     );
-                            //     break;
-                            // }
-                            // case "kickOffUserMessage": {
-                            //     message.message.kickOffUserMessage.spaceName = `${socket.getUserData().world}.${
-                            //         message.message.kickOffUserMessage.spaceName
-                            //     }`;
-                            //     socketManager.handleKickOffSpaceUserMessage(
-                            //         socket,
-                            //         message.message.kickOffUserMessage.spaceName,
-                            //         message.message.kickOffUserMessage.userId,
-                            //         message.message
-                            //     );
-                            //     break;
-                            // }
-                            // case "muteEveryBodyParticipantMessage": {
-                            //     message.message.muteEveryBodyParticipantMessage.spaceName = `${
-                            //         socket.getUserData().world
-                            //     }.${message.message.muteEveryBodyParticipantMessage.spaceName}`;
-                            //     socketManager.handleMuteEveryBodyParticipantMessage(
-                            //         socket,
-                            //         message.message.muteEveryBodyParticipantMessage.spaceName,
-                            //         message.message.muteEveryBodyParticipantMessage.senderUserId,
-                            //         message.message
-                            //     );
-                            //     break;
-                            // }
-                            // case "muteVideoEveryBodyParticipantMessage": {
-                            //     message.message.muteVideoEveryBodyParticipantMessage.spaceName = `${
-                            //         socket.getUserData().world
-                            //     }.${message.message.muteVideoEveryBodyParticipantMessage.spaceName}`;
-                            //     socketManager.handleMuteVideoEveryBodyParticipantMessage(
-                            //         socket,
-                            //         message.message.muteVideoEveryBodyParticipantMessage.spaceName,
-                            //         message.message.muteVideoEveryBodyParticipantMessage.userId,
-                            //         message.message
-                            //     );
-                            //     break;
-                            // }
                             case "banPlayerMessage": {
                                 await socketManager.handleBanPlayerMessage(socket, message.message.banPlayerMessage);
                                 break;
@@ -1295,7 +1193,7 @@ export class IoSocketController {
                         console.error("An error occurred while processing a message: ", e);
 
                         try {
-                            if (!socket.getUserData().disconnecting) {
+                            if (!userData.disconnecting) {
                                 socket.send(
                                     ServerToClientMessage.encode({
                                         message: {
@@ -1315,23 +1213,16 @@ export class IoSocketController {
                     });
                 });
             },
-            drain: (ws) => {
-                console.info("WebSocket backpressure: " + ws.getBufferedAmount());
+            drain: (socket) => {
+                console.info("WebSocket backpressure: " + socket.getBufferedAmount());
             },
-            close: (ws) => {
-                const socketData = ws.getUserData();
-
-                if (socketData.rejected === true) {
-                    return;
-                }
-
-                const socket = ws as Socket;
+            close: (socket) => {
                 socketManager.cleanupSocket(socket);
             },
         });
     }
 
-    private sendAnswerMessage(socket: WebSocket<SocketData>, answerMessage: AnswerMessage) {
+    private sendAnswerMessage(socket: Socket, answerMessage: AnswerMessage) {
         if (socket.getUserData().disconnecting) {
             // Avoid leaking Map entries when we bail out before scheduling the delayed delete below.
             socket.getUserData().queryAbortControllers.delete(answerMessage.id);
