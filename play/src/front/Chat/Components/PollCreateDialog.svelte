@@ -1,30 +1,31 @@
 <script lang="ts">
     import { closeModal } from "svelte-modals";
-    import type { MatrixChatRoom } from "../Connection/Matrix/MatrixChatRoom";
+    import type { ChatPollCreationCapability, ChatPollKind } from "../Connection/ChatConnection";
     import Popup from "../../Components/Modal/Popup.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { IconLoader, IconPlus, IconTrash } from "@wa-icons";
 
-    export let room: MatrixChatRoom;
+    export let pollCreation: ChatPollCreationCapability;
 
-    const MAX_QUESTION_LENGTH = 340;
-    const MAX_ANSWER_LENGTH = 340;
-    const MAX_ANSWERS = 20;
-    const MIN_ANSWERS = 2;
+    const limits = pollCreation.limits;
+    const canCreatePoll = pollCreation.canCreate;
+    const supportedKinds = pollCreation.supportedKinds;
 
     let question = "";
-    let visibility: "open" | "closed" = "open";
-    let answers = ["", ""];
+    let selectedKind: ChatPollKind = supportedKinds[0] ?? "open";
+    let answers = Array.from({ length: limits.minAnswers }, () => "");
     let errorMessage: string | undefined;
     let isSubmitting = false;
 
     $: normalizedAnswers = answers.map((answer) => answer.trim()).filter((answer) => answer.length > 0);
-    $: canAddAnswer = answers.length < MAX_ANSWERS;
-    $: hasInvalidAnswerLength = answers.some((answer) => answer.length > MAX_ANSWER_LENGTH);
+    $: canAddAnswer = answers.length < limits.maxAnswers;
+    $: hasInvalidAnswerLength = answers.some((answer) => answer.length > limits.answerMaxLength);
     $: canSubmit =
+        $canCreatePoll &&
+        supportedKinds.length > 0 &&
         question.trim().length > 0 &&
-        question.length <= MAX_QUESTION_LENGTH &&
-        normalizedAnswers.length >= MIN_ANSWERS &&
+        question.length <= limits.questionMaxLength &&
+        normalizedAnswers.length >= limits.minAnswers &&
         !hasInvalidAnswerLength &&
         !isSubmitting;
 
@@ -37,7 +38,7 @@
     }
 
     function removeAnswer(index: number) {
-        if (answers.length <= MIN_ANSWERS) {
+        if (answers.length <= limits.minAnswers) {
             return;
         }
 
@@ -54,7 +55,11 @@
 
         isSubmitting = true;
         try {
-            await room.createPoll(question.trim(), normalizedAnswers, visibility);
+            await pollCreation.create({
+                question: question.trim(),
+                answers: normalizedAnswers,
+                kind: selectedKind,
+            });
             closeModal();
         } catch (error) {
             console.error("Failed to create poll", error);
@@ -76,11 +81,11 @@
                 id="poll-question"
                 bind:value={question}
                 rows={3}
-                maxlength={MAX_QUESTION_LENGTH}
+                maxlength={limits.questionMaxLength}
                 class="wa-searchbar block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 resize-none outline-none shadow-none focus:ring-0 focus:border-white/20"
                 placeholder={$LL.chat.poll.create.questionPlaceholder()}
             />
-            <div class="mt-1 text-xs text-white/50 text-right">{question.length}/{MAX_QUESTION_LENGTH}</div>
+            <div class="mt-1 text-xs text-white/50 text-right">{question.length}/{limits.questionMaxLength}</div>
         </div>
 
         <div class="w-full">
@@ -98,13 +103,13 @@
                         <input
                             data-testid={`createPollAnswerInput-${index}`}
                             bind:value={answers[index]}
-                            maxlength={MAX_ANSWER_LENGTH}
+                            maxlength={limits.answerMaxLength}
                             class="wa-searchbar block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none shadow-none focus:ring-0 focus:border-white/20"
                             placeholder={$LL.chat.poll.create.answerPlaceholder({ index: index + 1 })}
                         />
                         <button
                             class="btn btn-light btn-ghost btn-sm mt-1"
-                            disabled={answers.length <= MIN_ANSWERS}
+                            disabled={answers.length <= limits.minAnswers}
                             on:click={() => removeAnswer(index)}
                         >
                             <IconTrash font-size={16} />
@@ -114,35 +119,41 @@
             </div>
 
             <div class="mt-1 text-xs text-white/50">
-                {$LL.chat.poll.create.answerCount({ count: normalizedAnswers.length, max: MAX_ANSWERS })}
+                {$LL.chat.poll.create.answerCount({ count: normalizedAnswers.length, max: limits.maxAnswers })}
             </div>
         </div>
 
-        <div class="w-full">
-            <div class="text-sm font-bold mb-2">{$LL.chat.poll.create.visibility()}</div>
-            <div class="grid grid-cols-2 gap-2">
-                <button
-                    data-testid="createPollVisibilityOpen"
-                    class={`rounded-xl border border-white/10 p-3 text-left ${
-                        visibility === "open" ? "bg-white/10 border-white/30" : ""
-                    }`}
-                    on:click={() => (visibility = "open")}
-                >
-                    <div class="font-bold">{$LL.chat.poll.kind.open()}</div>
-                    <div class="text-xs text-white/60 mt-1">{$LL.chat.poll.create.openDescription()}</div>
-                </button>
-                <button
-                    data-testid="createPollVisibilityClosed"
-                    class={`rounded-xl border border-white/10 p-3 text-left ${
-                        visibility === "closed" ? "bg-white/10 border-white/30" : ""
-                    }`}
-                    on:click={() => (visibility = "closed")}
-                >
-                    <div class="font-bold">{$LL.chat.poll.kind.closed()}</div>
-                    <div class="text-xs text-white/60 mt-1">{$LL.chat.poll.create.closedDescription()}</div>
-                </button>
+        {#if supportedKinds.length > 1}
+            <div class="w-full">
+                <div class="text-sm font-bold mb-2">{$LL.chat.poll.create.visibility()}</div>
+                <div class="grid grid-cols-2 gap-2">
+                    {#if supportedKinds.includes("open")}
+                        <button
+                            data-testid="createPollVisibilityOpen"
+                            class={`rounded-xl border border-white/10 p-3 text-left ${
+                                selectedKind === "open" ? "bg-white/10 border-white/30" : ""
+                            }`}
+                            on:click={() => (selectedKind = "open")}
+                        >
+                            <div class="font-bold">{$LL.chat.poll.kind.open()}</div>
+                            <div class="text-xs text-white/60 mt-1">{$LL.chat.poll.create.openDescription()}</div>
+                        </button>
+                    {/if}
+                    {#if supportedKinds.includes("closed")}
+                        <button
+                            data-testid="createPollVisibilityClosed"
+                            class={`rounded-xl border border-white/10 p-3 text-left ${
+                                selectedKind === "closed" ? "bg-white/10 border-white/30" : ""
+                            }`}
+                            on:click={() => (selectedKind = "closed")}
+                        >
+                            <div class="font-bold">{$LL.chat.poll.kind.closed()}</div>
+                            <div class="text-xs text-white/60 mt-1">{$LL.chat.poll.create.closedDescription()}</div>
+                        </button>
+                    {/if}
+                </div>
             </div>
-        </div>
+        {/if}
 
         {#if errorMessage}
             <div class="w-full rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-200">{errorMessage}</div>

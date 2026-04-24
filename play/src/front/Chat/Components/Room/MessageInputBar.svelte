@@ -14,11 +14,12 @@
 
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import { readable } from "svelte/store";
     import { openModal } from "svelte-modals";
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { defaultNativeIntegrationAppName } from "@workadventure/shared-utils";
-    import type { ChatRoom } from "../../Connection/ChatConnection";
+    import { hasChatRoomPollCreation, type ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { chatInputFocusStore, shouldDisableChatInProximityRoomStore } from "../../../Stores/ChatStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
@@ -29,7 +30,7 @@
     import { MatrixChatRoom } from "../../Connection/Matrix/MatrixChatRoom";
     import { draftMessageService } from "../../Services/DraftMessageService";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
-    import MatrixPollCreateDialog from "../MatrixPollCreateDialog.svelte";
+    import PollCreateDialog from "../PollCreateDialog.svelte";
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
     import youtubeSvg from "../../../Components/images/applications/icon_youtube.svg";
     import klaxoonSvg from "../../../Components/images/applications/icon_klaxoon.svg";
@@ -62,6 +63,11 @@
     let fileAttachementEnabled = false;
     let applicationProperty: ApplicationProperty | undefined = undefined;
     const isProximityChatRoom = room instanceof ProximityChatRoom;
+    const cannotCreatePoll = readable(false);
+    let pollCreation = hasChatRoomPollCreation(room) ? room.pollCreation : undefined;
+    let canCreatePoll = cannotCreatePoll;
+    $: pollCreation = hasChatRoomPollCreation(room) ? room.pollCreation : undefined;
+    $: canCreatePoll = pollCreation?.canCreate ?? cannotCreatePoll;
     let replyMessageId: string | null = null;
     const draftId = `${room.id}-${localUserStore.getChatId() ?? "0"}`;
 
@@ -282,14 +288,14 @@
     }
 
     function openPollCreationModal() {
-        if (!(room instanceof MatrixChatRoom)) {
+        if (!pollCreation || !$canCreatePoll) {
             return;
         }
 
         applicationComponentOpened = false;
         applicationProperty = undefined;
         fileAttachmentComponentOpened = false;
-        openModal(MatrixPollCreateDialog, { room });
+        openModal(PollCreateDialog, { pollCreation });
     }
     // This function open the application part to propose to the user to add a new application or close application part
     function toggleApplicationComponent() {
@@ -505,12 +511,12 @@
                 data-testid="createPollButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={openPollCreationModal}
-                disabled={!(room instanceof MatrixChatRoom)}
+                disabled={!pollCreation || !$canCreatePoll}
             >
                 <IconList font-size={32} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.poll.title()}</h2>
                 <p class="text-xs p-0 m-0 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                    {room instanceof MatrixChatRoom ? $LL.chat.poll.create.description() : $LL.chat.disabled()}
+                    {pollCreation && $canCreatePoll ? $LL.chat.poll.create.description() : $LL.chat.disabled()}
                 </p>
             </button>
         </div>
