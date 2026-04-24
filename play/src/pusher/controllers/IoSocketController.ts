@@ -235,8 +235,9 @@ export class IoSocketController {
                 roomName: z.string(),
                 cameraState: z.string().transform((val) => val === "true"),
                 microphoneState: z.string().transform((val) => val === "true"),
+                tabId: z.string(),
             }),
-            upgrade: async ({ query, request, isAborted, upgrade, failUpgrade }) => {
+            upgrade: async ({ query, request, isAborted, upgrade }) => {
                 debug(
                     `FrontController => [${request.method}] ${request.url} — IP: ${
                         request.ipAddress
@@ -259,7 +260,7 @@ export class IoSocketController {
                             // If the response points to nowhere, don't attempt an upgrade
                             return;
                         }
-                        failUpgrade({
+                        upgrade({
                             rejected: true,
                             reason: "error",
                             error: {
@@ -336,7 +337,7 @@ export class IoSocketController {
                             );
 
                             if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
-                                failUpgrade({
+                                upgrade({
                                     rejected: true,
                                     reason: "invalidTexture",
                                     entityType: "character",
@@ -344,7 +345,7 @@ export class IoSocketController {
                                 return;
                             }
                             if (userData.status === "ok" && !userData.isCompanionTextureValid) {
-                                failUpgrade({
+                                upgrade({
                                     rejected: true,
                                     reason: "invalidTexture",
                                     entityType: "companion",
@@ -359,7 +360,7 @@ export class IoSocketController {
                                 }
 
                                 const errorData = userData;
-                                failUpgrade({
+                                upgrade({
                                     rejected: true,
                                     reason: "error",
                                     error: errorData,
@@ -392,6 +393,8 @@ export class IoSocketController {
                         /* You must not upgrade now */
                         return;
                     }
+
+                    console.info(`Upgrading connection to WebSocket for tab ${query.tabId}`);
 
                     const socketData: ConnectingSocketData = {
                         rejected: false,
@@ -430,6 +433,7 @@ export class IoSocketController {
                         roomName,
                         microphoneState,
                         cameraState,
+                        tabId: query.tabId,
                         attendeesState: false,
                         queryAbortControllers: new Map<number, AbortController>(),
                         canRecord: userData.canRecord ?? false,
@@ -448,7 +452,7 @@ export class IoSocketController {
                             // If the response points to nowhere, don't attempt an upgrade
                             return;
                         }
-                        failUpgrade({
+                        upgrade({
                             rejected: true,
                             reason:
                                 e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired
@@ -462,7 +466,7 @@ export class IoSocketController {
                             // If the response points to nowhere, don't attempt an upgrade
                             return;
                         }
-                        failUpgrade({
+                        upgrade({
                             rejected: true,
                             reason: null,
                             message: "500 Internal Server Error",

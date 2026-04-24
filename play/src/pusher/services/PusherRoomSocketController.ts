@@ -18,8 +18,7 @@ type UpgradeContext<TQuery> = {
         token: string;
     };
     isAborted: () => boolean;
-    upgrade: (data: ConnectingSocketData) => void;
-    failUpgrade: (data: UpgradeFailedData) => void;
+    upgrade: (data: ConnectingSocketData | UpgradeFailedData) => void;
 };
 
 type UpgradeHandler<TQuery> = (context: UpgradeContext<TQuery>) => void | Promise<void>;
@@ -40,10 +39,15 @@ type RoomWsConfig<TQueryValidator extends ZodObject<ZodRawShape>> = {
     drain?: DrainHandler;
 };
 
+type WebSocketContext = {
+    socket: PusherWebSocket;
+    clientLastReceivedNonce?: number;
+    clientLastSentNonce?: number;
+};
+
 export class PusherRoomSocketController {
     private readonly wrappersBySocket = new WeakMap<RawSocket, PusherWebSocket>();
-
-    private fakeDisconnection = false;
+    private readonly contextByTabKey = new Map<string, WebSocketContext>();
 
     public constructor(private readonly app: TemplatedApp) {}
 
@@ -106,7 +110,7 @@ export class PusherRoomSocketController {
         path: string,
         config: RoomWsConfig<TQueryValidator>
     ): void {
-        this.app.ws<ClientToServerMessage | ConnectingSocketData | UpgradeFailedData>(path, {
+        this.app.ws<ConnectingSocketData>(path, {
             idleTimeout: config.idleTimeout,
             maxPayloadLength: config.maxPayloadLength,
             maxBackpressure: config.maxBackpressure,
@@ -128,6 +132,18 @@ export class PusherRoomSocketController {
                 const urlSearchParams = new URLSearchParams(req.getQuery());
 
                 try {
+                    const tabContext = this.contextByTabKey.get(query.tabId);
+                    if (tabContext) {
+                        tabContext.clientLastReceivedNonce = this.parseReconnectNonce(
+                            urlSearchParams.get("lastReceivedNonce") ?? undefined,
+                            "lastReceivedNonce"
+                        );
+                        tabContext.clientLastSentNonce = this.parseReconnectNonce(
+                            urlSearchParams.get("lastSentNonce") ?? undefined,
+                            "lastSentNonce"
+                        );
+                    }
+
                     Promise.resolve(
                         config.upgrade({
                             query,
@@ -141,20 +157,6 @@ export class PusherRoomSocketController {
                             isAborted: () => upgradeAborted.aborted,
                             upgrade: (data) => {
                                 res.cork(() => {
-                                    data.reconnectLastReceivedNonce = this.parseReconnectNonce(
-                                        urlSearchParams.get("lastReceivedNonce") ?? undefined,
-                                        "lastReceivedNonce"
-                                    );
-                                    data.reconnectLastSentNonce = this.parseReconnectNonce(
-                                        urlSearchParams.get("lastSentNonce") ?? undefined,
-                                        "lastSentNonce"
-                                    );
-
-                                    res.upgrade(data, websocketKey, websocketProtocol, websocketExtensions, context);
-                                });
-                            },
-                            failUpgrade: (data) => {
-                                res.cork(() => {
                                     res.upgrade(data, websocketKey, websocketProtocol, websocketExtensions, context);
                                 });
                             },
@@ -163,24 +165,39 @@ export class PusherRoomSocketController {
                         console.error(e);
                     });
                 } catch (e) {
+                    console.error(e);
                     const details = e instanceof Error ? e.message : "Invalid websocket query parameters";
                     this.rejectWithBadRequest(res, req, context, details);
                 }
             },
             open: (ws) => {
-                if ((ws.getUserData() as { rejected?: boolean }).rejected === true) {
+                const socketData = ws.getUserData();
+                const rawSocket = ws as unknown as RawSocket;
+
+                const tabId = socketData.tabId;
+                const context = this.contextByTabKey.get(tabId);
+                if (context) {
+                    context.socket.replaceSocket(
+                        rawSocket,
+                        context.clientLastReceivedNonce!,
+                        context.clientLastSentNonce!
+                    );
+                    this.wrappersBySocket.set(rawSocket, context.socket);
+                    Promise.resolve(config.open(context.socket)).catch((e) => {
+                        console.error(e);
+                    });
                     return;
                 }
-                const rawSocket = ws as unknown as RawSocket;
+
                 const socket = this.getOrCreateWrapper(rawSocket);
+                this.contextByTabKey.set(tabId, {
+                    socket: this.getOrCreateWrapper(rawSocket),
+                });
                 Promise.resolve(config.open(socket)).catch((e) => {
                     console.error(e);
                 });
             },
             message: (ws, arrayBuffer) => {
-                if ((ws.getUserData() as { rejected?: boolean }).rejected === true) {
-                    return;
-                }
                 const rawSocket = ws as unknown as RawSocket;
                 const socket = this.getOrCreateWrapper(rawSocket);
 
@@ -201,9 +218,6 @@ export class PusherRoomSocketController {
                 if (!config.drain) {
                     return;
                 }
-                if ((ws.getUserData() as { rejected?: boolean }).rejected === true) {
-                    return;
-                }
                 const rawSocket = ws as unknown as RawSocket;
                 const socket = this.getOrCreateWrapper(rawSocket);
                 Promise.resolve(config.drain(socket)).catch((e) => {
@@ -211,27 +225,23 @@ export class PusherRoomSocketController {
                 });
             },
             close: (ws) => {
-                if ((ws.getUserData() as { rejected?: boolean }).rejected === true) {
-                    return;
-                }
+                const socketData = ws.getUserData();
                 const rawSocket = ws as unknown as RawSocket;
                 const socket = this.wrappersBySocket.get(rawSocket);
                 if (!socket) {
                     return;
                 }
-
-                if (this.fakeDisconnection) {
-                    this.fakeDisconnection = false;
-                    this.wrappersBySocket.delete(rawSocket);
-                    return;
-                }
+                this.wrappersBySocket.delete(rawSocket);
 
                 Promise.resolve(config.close(socket))
                     .catch((e) => {
                         console.error(e);
                     })
                     .finally(() => {
-                        this.wrappersBySocket.delete(rawSocket);
+                        const tabId = socketData.tabId;
+                        if (this.contextByTabKey.get(tabId)?.socket === socket) {
+                            this.contextByTabKey.delete(tabId);
+                        }
                     });
             },
         });

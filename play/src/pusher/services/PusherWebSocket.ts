@@ -69,4 +69,22 @@ export class PusherWebSocket {
     public closeTransport(code: number, reason: string): void {
         this.socket.end(code, reason);
     }
+
+    public replaceSocket(newSocket: RawSocket, clientLastReceivedNonce: number, clientLastSentNonce: number): void {
+        const previousSocket = this.socket;
+        const previousSocketData = previousSocket.getUserData();
+        const newSocketData = newSocket.getUserData();
+
+        console.log(`[PusherWebSocket] Attempting reconnection`);
+
+        // Keep logical connection state (room/back stream/subscriptions) while swapping only the transport.
+        Object.assign(newSocketData, previousSocketData, {
+            disconnecting: false,
+        });
+
+        this.socket = newSocket;
+
+        // Close the old transport only after rebinding so the logical connection keeps running.
+        previousSocket.end(1012, "Replaced by a reconnected socket");
+    }
 }

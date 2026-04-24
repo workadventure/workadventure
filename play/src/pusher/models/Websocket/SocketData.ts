@@ -61,14 +61,13 @@ export type ConnectingSocketData = {
     roomName: string;
     microphoneState: boolean;
     cameraState: boolean;
+    // Unique identifier for the browser tab, captured as early as websocket upgrade.
+    tabId: string;
     attendeesState: boolean;
     // The abort controllers for each queries received
     queryAbortControllers: Map<number, AbortController>;
     canRecord: boolean;
     keepAliveInterval: NodeJS.Timeout | undefined;
-    // Nonce values reported by the front when reconnecting unexpectedly.
-    reconnectLastReceivedNonce?: number;
-    reconnectLastSentNonce?: number;
 };
 
 export type SocketData = ConnectingSocketData & {

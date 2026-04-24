@@ -307,6 +307,7 @@ export class RoomConnection implements RoomConnection {
         params.set("roomName", gameManager.currentStartedRoom.roomName ?? "");
         params.set("cameraState", get(requestedCameraState) ? "true" : "false");
         params.set("microphoneState", get(requestedMicrophoneState) ? "true" : "false");
+        params.set("tabId", connectionManager.tabId);
         // TODO: check if the screenSharingState variable is used
         params.set("screenSharingState", get(requestedScreenSharingState) ? "true" : "false");
 
@@ -851,8 +852,7 @@ export class RoomConnection implements RoomConnection {
         name: string,
         position: PositionMessageTsProto,
         viewport: ViewportInterface,
-        availabilityStatus: AvailabilityStatus,
-        tabId: string
+        availabilityStatus: AvailabilityStatus
     ): void {
         this.send({
             message: {
@@ -867,7 +867,6 @@ export class RoomConnection implements RoomConnection {
                     ),
                     viewportMessage: this.toViewportMessage(viewport),
                     availabilityStatus,
-                    tabId,
                 },
             },
         });

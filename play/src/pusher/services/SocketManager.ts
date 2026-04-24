@@ -338,7 +338,6 @@ export class SocketManager implements ZoneEventListener {
         socketData.viewport = message.viewportMessage;
         socketData.name = message.name;
         socketData.availabilityStatus = message.availabilityStatus;
-        socketData.tabId = message.tabId;
 
         const streamToBack = socketData.backConnection;
         if (!streamToBack) {

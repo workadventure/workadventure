@@ -1316,9 +1316,6 @@ message JoinRoomFrontMessage {
   ViewportMessage viewportMessage = 2;
   string name = 3;
   AvailabilityStatus availabilityStatus = 6;
-  // Unique identifier for the browser tab, used to detect reconnections from the same tab
-  // and kill stale connections immediately instead of waiting for ping timeout
-  string tabId = 8;
 }
 
 /**
