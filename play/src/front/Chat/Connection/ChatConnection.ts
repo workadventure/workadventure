@@ -157,6 +157,31 @@ export interface ChatMessageReaction {
 
 export type ChatPollKind = "open" | "closed";
 
+export type ChatPollCreateOptions = {
+    question: string;
+    answers: string[];
+    kind: ChatPollKind;
+    threadId?: string;
+};
+
+export type ChatPollCreationLimits = {
+    questionMaxLength: number;
+    answerMaxLength: number;
+    minAnswers: number;
+    maxAnswers: number;
+};
+
+export interface ChatPollCreationCapability {
+    readonly canCreate: Readable<boolean>;
+    readonly supportedKinds: readonly ChatPollKind[];
+    readonly limits: ChatPollCreationLimits;
+    readonly create: (options: ChatPollCreateOptions) => Promise<void>;
+}
+
+export interface ChatRoomPollCreation {
+    readonly pollCreation: ChatPollCreationCapability;
+}
+
 export type ChatPollAnswer = {
     id: string;
     text: string;
@@ -340,6 +365,16 @@ export type MatrixChatConnectionLike = ChatConnectionInterface & MatrixChatCapab
 
 export function hasMatrixChatCapabilities(connection: ChatConnectionInterface): connection is MatrixChatConnectionLike {
     return typeof connection.getMatrixClient === "function";
+}
+
+export function hasChatRoomPollCreation(room: ChatRoom): room is ChatRoom & ChatRoomPollCreation {
+    const candidate = room as ChatRoom & Partial<ChatRoomPollCreation>;
+    return (
+        candidate.pollCreation !== undefined &&
+        typeof candidate.pollCreation.create === "function" &&
+        typeof candidate.pollCreation.canCreate?.subscribe === "function" &&
+        Array.isArray(candidate.pollCreation.supportedKinds)
+    );
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

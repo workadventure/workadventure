@@ -47,6 +47,9 @@ import type {
     ChatRoomMembershipManagement,
     ChatRoomModeration,
     ChatRoomNotificationControl,
+    ChatRoomPollCreation,
+    ChatPollCreationCapability,
+    ChatPollKind,
     ChatTimelineItem,
     memberTypingInformation,
 } from "../ChatConnection";
@@ -74,7 +77,12 @@ type EventId = string;
 type ModerationAction = "ban" | "kick" | "invite" | "redact";
 
 export class MatrixChatRoom
-    implements ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration, ChatRoomNotificationControl
+    implements
+        ChatRoom,
+        ChatRoomMembershipManagement,
+        ChatRoomModeration,
+        ChatRoomNotificationControl,
+        ChatRoomPollCreation
 {
     readonly id: string;
     readonly name: Writable<string>;
@@ -87,6 +95,7 @@ export class MatrixChatRoom
     messages: SearchableArrayStore<string, MatrixChatMessage>;
     polls: SearchableArrayStore<string, MatrixChatPoll>;
     timelineItems: Readable<readonly ChatTimelineItem[]>;
+    readonly pollCreation: ChatPollCreationCapability;
     members: Writable<MatrixChatRoomMember[]>;
     /** Same stores as {@link members}, for {@link ChatRoom.membersForMessageAvatars} (timeline avatars). */
     readonly membersForMessageAvatars: Readable<readonly ChatRoomMember[]>;
@@ -164,6 +173,17 @@ export class MatrixChatRoom
         );
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.polls = new SearchableArrayStore((item: MatrixChatPoll) => item.id);
+        this.pollCreation = {
+            canCreate: readable(true),
+            supportedKinds: ["open", "closed"],
+            limits: {
+                questionMaxLength: 340,
+                answerMaxLength: 340,
+                minAnswers: 2,
+                maxAnswers: 20,
+            },
+            create: ({ question, answers, kind, threadId }) => this.createPoll(question, answers, kind, threadId),
+        };
         this.timelineItems = derived([this.messages, this.polls], ([$messages, $polls]) => {
             const timelineItems: ChatTimelineItem[] = [
                 ...Array.from(
@@ -822,12 +842,7 @@ export class MatrixChatRoom
             });
     }
 
-    async createPoll(
-        question: string,
-        answers: string[],
-        visibility: "open" | "closed",
-        threadId?: string
-    ): Promise<void> {
+    async createPoll(question: string, answers: string[], visibility: ChatPollKind, threadId?: string): Promise<void> {
         const pollKind = visibility === "open" ? M_POLL_KIND_DISCLOSED : M_POLL_KIND_UNDISCLOSED;
         const event = PollStartEvent.from(question, answers, pollKind).serialize();
         await this.matrixRoom.client.sendEvent(
