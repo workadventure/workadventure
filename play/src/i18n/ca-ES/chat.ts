@@ -211,6 +211,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     replyTo: "Respondre a",
     thread: {
         panelTitle: "Tots els fils",
+        tabLabel: "Fils",
         empty: "Encara no hi ha fils",
         defaultPreview: "Fil",
         replySingular: "1 resposta",
@@ -386,6 +387,18 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "Moderador",
         },
         sendInvitationsSuccessNotification: "Invitacions enviades correctament",
+    },
+    roomPanel: {
+        toggleOpen: "Obre el tauler de la sala",
+        toggleClose: "Tanca el tauler de la sala",
+        sections: {
+            threads: "Fils",
+            polls: "Enquestes",
+            participants: "Participants",
+        },
+        pollsEmpty: "Encara no hi ha enquestes",
+        participantsEmpty: "Encara no hi ha participants",
+        pollWinner: "Resposta capdavantera: {answer}",
     },
     roomMenu: {
         leaveRoom: {

@@ -211,6 +211,7 @@ const chat: BaseTranslation = {
     replyTo: "Reply to",
     thread: {
         panelTitle: "All threads",
+        tabLabel: "Threads",
         empty: "No threads yet",
         defaultPreview: "Thread",
         replySingular: "1 reply",
@@ -386,6 +387,18 @@ const chat: BaseTranslation = {
             MODERATOR: "Moderator",
         },
         sendInvitationsSuccessNotification: "Invitations sent successfully",
+    },
+    roomPanel: {
+        toggleOpen: "Open room panel",
+        toggleClose: "Close room panel",
+        sections: {
+            threads: "Threads",
+            polls: "Polls",
+            participants: "Participants",
+        },
+        pollsEmpty: "No polls yet",
+        participantsEmpty: "No participants yet",
+        pollWinner: "Leading answer: {answer}",
     },
     roomMenu: {
         leaveRoom: {

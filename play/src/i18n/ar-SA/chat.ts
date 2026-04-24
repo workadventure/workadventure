@@ -210,6 +210,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     replyTo: "رد على",
     thread: {
         panelTitle: "جميع المواضيع",
+        tabLabel: "المواضيع",
         empty: "لا توجد مواضيع بعد",
         defaultPreview: "موضوع",
         replySingular: "رد واحد",
@@ -385,6 +386,18 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "مشرف",
         },
         sendInvitationsSuccessNotification: "تم إرسال الدعوات بنجاح",
+    },
+    roomPanel: {
+        toggleOpen: "فتح لوحة الغرفة",
+        toggleClose: "إغلاق لوحة الغرفة",
+        sections: {
+            threads: "المواضيع",
+            polls: "الاستطلاعات",
+            participants: "المشاركون",
+        },
+        pollsEmpty: "لا توجد استطلاعات بعد",
+        participantsEmpty: "لا يوجد مشاركون بعد",
+        pollWinner: "الإجابة المتصدرة: {answer}",
     },
     roomMenu: {
         leaveRoom: {

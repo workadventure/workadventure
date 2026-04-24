@@ -212,6 +212,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     replyTo: "Wótegroniś na",
     thread: {
         panelTitle: "Wše nitki",
+        tabLabel: "Nitki",
         empty: "Hyšći žedna nitka",
         defaultPreview: "Nitka",
         replySingular: "1 wótegron",
@@ -387,6 +388,18 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "Moderator",
         },
         sendInvitationsSuccessNotification: "Pśepšosynka/pśepšosynki pósłana/pósłane",
+    },
+    roomPanel: {
+        toggleOpen: "Panel śpy wócyniś",
+        toggleClose: "Panel śpy zacyniś",
+        sections: {
+            threads: "Nitki",
+            polls: "Wótběgi",
+            participants: "Wobźělniki",
+        },
+        pollsEmpty: "Hyšći žeden wótběg",
+        participantsEmpty: "Hyšći žedne wobźělniki",
+        pollWinner: "Wjeduce wótegrono: {answer}",
     },
     roomMenu: {
         leaveRoom: {

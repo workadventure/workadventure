@@ -212,6 +212,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     replyTo: "返信先",
     thread: {
         panelTitle: "すべてのスレッド",
+        tabLabel: "スレッド",
         empty: "スレッドはまだありません",
         defaultPreview: "スレッド",
         replySingular: "返信 1 件",
@@ -387,6 +388,18 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "モデレーター",
         },
         sendInvitationsSuccessNotification: "招待を送信しました",
+    },
+    roomPanel: {
+        toggleOpen: "ルームパネルを開く",
+        toggleClose: "ルームパネルを閉じる",
+        sections: {
+            threads: "スレッド",
+            polls: "投票",
+            participants: "参加者",
+        },
+        pollsEmpty: "投票はまだありません",
+        participantsEmpty: "参加者はまだいません",
+        pollWinner: "現在のトップ回答: {answer}",
     },
     roomMenu: {
         leaveRoom: {

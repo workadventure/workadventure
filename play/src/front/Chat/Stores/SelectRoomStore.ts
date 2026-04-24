@@ -3,6 +3,7 @@ import type { ChatConversation } from "../Connection/ChatConnection";
 import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { selectedThreadStore } from "./SelectedThreadStore";
+import { roomSidePanelStore } from "./RoomSidePanelStore";
 
 const createSelectedRoomStore = () => {
     const { subscribe, update } = writable<ChatConversation | undefined>(undefined);
@@ -22,6 +23,7 @@ const createSelectedRoomStore = () => {
                     });
             }
 
+            roomSidePanelStore.syncWithRoom(value);
             selectedThreadStore.syncWithRoom(value);
             return value;
         });

@@ -33,7 +33,7 @@ export class MatrixChatThread implements ChatThread {
     readonly conversationKind = "thread" as const;
     readonly parentRoom: MatrixChatRoom;
     readonly name: Readable<string>;
-    readonly type: "multiple" | "direct";
+    readonly type: Readable<"multiple" | "direct">;
     readonly hasUnreadMessages: Writable<boolean>;
     readonly unreadNotificationCount: Writable<number>;
     readonly pictureStore: PictureStore;

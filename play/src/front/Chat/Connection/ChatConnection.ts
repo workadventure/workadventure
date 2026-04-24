@@ -405,4 +405,27 @@ export function hasChatRoomPollCreation(room: ChatRoom): room is ChatRoom & Chat
     );
 }
 
+export function hasChatRoomMembershipManagement(
+    conversation: ChatConversation | undefined
+): conversation is ChatRoom & ChatRoomMembershipManagement {
+    const candidate = conversation as (ChatRoom & Partial<ChatRoomMembershipManagement>) | undefined;
+    return (
+        candidate?.conversationKind === "room" &&
+        typeof candidate.members?.subscribe === "function" &&
+        typeof candidate.joinRoom === "function" &&
+        typeof candidate.leaveRoom === "function"
+    );
+}
+
+export function hasChatRoomModeration(
+    conversation: ChatConversation | undefined
+): conversation is ChatRoom & ChatRoomModeration {
+    const candidate = conversation as (ChatRoom & Partial<ChatRoomModeration>) | undefined;
+    return (
+        candidate?.conversationKind === "room" &&
+        typeof candidate.isCurrentUserRoomAdmin?.subscribe === "function" &&
+        typeof candidate.hasPermissionTo === "function"
+    );
+}
+
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

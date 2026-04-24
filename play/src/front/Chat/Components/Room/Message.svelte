@@ -17,6 +17,7 @@
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { isThreadPanelEnabledStore, selectedThreadStore } from "../../Stores/SelectedThreadStore";
+    import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
     import MessageOptions from "./MessageOptions.svelte";
     import MessageImage from "./Message/MessageImage.svelte";
     import MessageText from "./Message/MessageText.svelte";
@@ -113,6 +114,7 @@
 
         if ($isThreadPanelEnabledStore) {
             selectedRoomStore.set(thread.parentRoom);
+            roomSidePanelStore.open("threads");
             selectedThreadStore.set(thread);
             return;
         }

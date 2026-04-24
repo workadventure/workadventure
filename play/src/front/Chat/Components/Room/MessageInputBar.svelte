@@ -19,7 +19,7 @@
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { defaultNativeIntegrationAppName } from "@workadventure/shared-utils";
-    import { hasChatRoomPollCreation, type ChatConversation } from "../../Connection/ChatConnection";
+    import { hasChatRoomPollCreation, type ChatConversation, type ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { chatInputFocusStore, shouldDisableChatInProximityRoomStore } from "../../../Stores/ChatStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
@@ -63,9 +63,20 @@
     let applicationProperty: ApplicationProperty | undefined = undefined;
     const isProximityChatRoom = room instanceof ProximityChatRoom;
     const cannotCreatePoll = readable(false);
-    let pollCreation = hasChatRoomPollCreation(room) ? room.pollCreation : undefined;
+
+    function getPollCreationCapability(currentRoom: ChatConversation) {
+        if (currentRoom.conversationKind !== "room") {
+            return undefined;
+        }
+
+        const roomConversation = currentRoom as ChatRoom;
+
+        return hasChatRoomPollCreation(roomConversation) ? roomConversation.pollCreation : undefined;
+    }
+
+    let pollCreation = getPollCreationCapability(room);
     let canCreatePoll = cannotCreatePoll;
-    $: pollCreation = hasChatRoomPollCreation(room) ? room.pollCreation : undefined;
+    $: pollCreation = getPollCreationCapability(room);
     $: canCreatePoll = pollCreation?.canCreate ?? cannotCreatePoll;
     let replyMessageId: string | null = null;
     const draftId = `${room.id}-${localUserStore.getChatId() ?? "0"}`;

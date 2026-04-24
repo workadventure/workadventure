@@ -212,6 +212,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     replyTo: "Responder para",
     thread: {
         panelTitle: "Todas as threads",
+        tabLabel: "Threads",
         empty: "Ainda não há threads",
         defaultPreview: "Thread",
         replySingular: "1 resposta",
@@ -387,6 +388,18 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "Moderador",
         },
         sendInvitationsSuccessNotification: "Convites enviados com sucesso",
+    },
+    roomPanel: {
+        toggleOpen: "Abrir painel da sala",
+        toggleClose: "Fechar painel da sala",
+        sections: {
+            threads: "Threads",
+            polls: "Enquetes",
+            participants: "Participantes",
+        },
+        pollsEmpty: "Ainda não há enquetes",
+        participantsEmpty: "Ainda não há participantes",
+        pollWinner: "Resposta na liderança: {answer}",
     },
     roomMenu: {
         leaveRoom: {

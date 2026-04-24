@@ -213,6 +213,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     replyTo: "대상에게 답장",
     thread: {
         panelTitle: "모든 스레드",
+        tabLabel: "스레드",
         empty: "아직 스레드가 없습니다",
         defaultPreview: "스레드",
         replySingular: "답글 1개",
@@ -388,6 +389,18 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "중재자",
         },
         sendInvitationsSuccessNotification: "초대가 성공적으로 전송되었습니다",
+    },
+    roomPanel: {
+        toggleOpen: "방 패널 열기",
+        toggleClose: "방 패널 닫기",
+        sections: {
+            threads: "스레드",
+            polls: "투표",
+            participants: "참가자",
+        },
+        pollsEmpty: "아직 투표가 없습니다",
+        participantsEmpty: "아직 참가자가 없습니다",
+        pollWinner: "현재 선두 응답: {answer}",
     },
     roomMenu: {
         leaveRoom: {

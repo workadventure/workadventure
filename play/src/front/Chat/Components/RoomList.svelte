@@ -7,7 +7,14 @@
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
     import { isThreadPanelEnabledStore, selectedThreadStore } from "../Stores/SelectedThreadStore";
-    import type { ChatConversation, ChatRoom, ChatThread } from "../Connection/ChatConnection";
+    import { roomSidePanelStore } from "../Stores/RoomSidePanelStore";
+    import {
+        hasChatRoomMembershipManagement,
+        hasChatRoomModeration,
+        type ChatConversation,
+        type ChatRoom,
+        type ChatThread,
+    } from "../Connection/ChatConnection";
     import { INITIAL_SIDEBAR_WIDTH, loginTokenErrorStore } from "../../Stores/ChatStore";
     import { userIsConnected } from "../../Stores/MenuStore";
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
@@ -27,7 +34,8 @@
     import ChatHeader from "./ChatHeader.svelte";
     import RequireConnection from "./requireConnection.svelte";
     import RefreshChat from "./RefreshChat.svelte";
-    import ThreadPanel from "./Room/ThreadPanel.svelte";
+    import RoomSidePanel from "./Room/RoomSidePanel.svelte";
+    import { getRoomSidePanelPlacement, shouldShowRoomSidePanelToggle, shouldShowRoomTimeline } from "./RoomListLayout";
     import { IconChevronUp, IconCloudLock, IconPlus, IconRefresh } from "@wa-icons";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
@@ -148,14 +156,6 @@
         proximityChatRoom.unreadNotificationCount.set(0);
     }
 
-    function isThreadEnabledRoom(conversation: ChatConversation | undefined): conversation is ChatRoom {
-        return (
-            conversation?.conversationKind === "room" &&
-            "openThread" in conversation &&
-            typeof conversation.openThread === "function"
-        );
-    }
-
     function isThreadConversation(conversation: ChatConversation | undefined): conversation is ChatThread {
         return conversation?.conversationKind === "thread";
     }
@@ -172,19 +172,30 @@
 
     $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
     $: displayThreeColumnLayout = sideBarWidth >= THREAD_PANEL_LAYOUT_LIMIT;
-    $: selectedRoomWithThreads = isThreadEnabledRoom($selectedRoomStore) ? $selectedRoomStore : undefined;
-    $: showThreadPanel = displayThreeColumnLayout && selectedRoomWithThreads !== undefined;
-    $: isThreadPanelEnabledStore.set(showThreadPanel);
+    $: selectedRoomWithSidePanel =
+        hasChatRoomMembershipManagement($selectedRoomStore) && hasChatRoomModeration($selectedRoomStore)
+            ? $selectedRoomStore
+            : undefined;
+    $: hasSelectedRoomWithSidePanel = selectedRoomWithSidePanel !== undefined;
+    $: showRoomSidePanelToggle = shouldShowRoomSidePanelToggle(hasSelectedRoomWithSidePanel);
+    $: roomSidePanelPlacement = getRoomSidePanelPlacement({
+        canDisplayThirdColumn: displayThreeColumnLayout,
+        hasCompatibleRoom: hasSelectedRoomWithSidePanel,
+        isOpen: $roomSidePanelStore.isOpen,
+    });
+    $: showRoomSidePanelInThirdColumn = roomSidePanelPlacement === "third-column";
+    $: showRoomSidePanelInTimelineColumn = roomSidePanelPlacement === "timeline-column";
+    $: isThreadPanelEnabledStore.set(hasSelectedRoomWithSidePanel);
     $: if (displayThreeColumnLayout && isThreadConversation($selectedRoomStore)) {
         const selectedThread = $selectedRoomStore;
         selectedRoomStore.set(selectedThread.parentRoom);
         selectedThreadStore.set(selectedThread);
     }
-    $: if (!showThreadPanel && $selectedThreadStore) {
+    $: if (!hasSelectedRoomWithSidePanel && $selectedThreadStore) {
         selectedRoomStore.set($selectedThreadStore);
         selectedThreadStore.clear();
     }
-    $: roomListGridClass = showThreadPanel
+    $: roomListGridClass = showRoomSidePanelInThirdColumn
         ? "grid-cols-[335px_minmax(0,1fr)_360px]"
         : sideBarWidth > INITIAL_SIDEBAR_WIDTH * 2 && $navChat.key === "chat"
         ? "grid-cols-[auto_minmax(0,1fr)]"
@@ -397,7 +408,11 @@
     {/if}
     {#if $selectedRoomStore !== undefined}
         <div class="overflow-y-auto min-w-0">
-            <RoomTimeline room={$selectedRoomStore} />
+            {#if showRoomSidePanelInTimelineColumn && selectedRoomWithSidePanel}
+                <RoomSidePanel room={selectedRoomWithSidePanel} showCloseButton closeOnTimelineFocus />
+            {:else if shouldShowRoomTimeline(roomSidePanelPlacement)}
+                <RoomTimeline room={$selectedRoomStore} {showRoomSidePanelToggle} />
+            {/if}
         </div>
     {:else if $selectedRoomStore === undefined && sideBarWidth >= CHAT_LAYOUT_LIMIT}
         <div class="flex flex-col flex-1 ps-4 items-center pt-8">
@@ -411,9 +426,9 @@
         </div>
     {/if}
 
-    {#if showThreadPanel && selectedRoomWithThreads}
+    {#if showRoomSidePanelInThirdColumn && selectedRoomWithSidePanel}
         <div class="overflow-y-auto min-w-0 border border-solid border-y-0 border-r-0 border-white/10">
-            <ThreadPanel room={selectedRoomWithThreads} />
+            <RoomSidePanel room={selectedRoomWithSidePanel} />
         </div>
     {/if}
 

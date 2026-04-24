@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { afterUpdate, beforeUpdate, onMount } from "svelte";
+    import { afterUpdate, beforeUpdate, onMount, tick } from "svelte";
     import { get, readable, type Readable } from "svelte/store";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import type { ChatConversation, ChatMessage, ChatTimelineItem } from "../../Connection/ChatConnection";
@@ -8,6 +8,12 @@
     import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
     import { intentionallyClosedChatDuringMeetingStore } from "../../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+    import { hideActionBarStoreBecauseOfChatBar } from "../../ChatSidebarWidthStore";
+    import {
+        roomSidePanelStore,
+        roomTimelineFocusStore,
+        type RoomTimelineFocusRequest,
+    } from "../../Stores/RoomSidePanelStore";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
@@ -17,12 +23,14 @@
     import MessageSystem from "./MessageSystem.svelte";
     import PollCard from "./PollCard.svelte";
     import TypingUsers from "./TypingUsers.svelte";
-    import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox } from "@wa-icons";
+    import { shouldReserveFloatingCloseButtonSpace } from "./RoomTimelineHeaderLayout";
+    import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox, IconTableOptions } from "@wa-icons";
 
     export let room: ChatConversation;
     export let backAction: (() => void) | undefined = undefined;
     export let backButtonTestId = "chatBackward";
     export let timelineTestId = "roomTimeline";
+    export let showRoomSidePanelToggle = false;
 
     const chatConnection = gameManager.chatConnection;
     const shouldRetrySendingEvents = chatConnection.shouldRetrySendingEvents;
@@ -39,6 +47,7 @@
     let scrollTimer: ReturnType<typeof setTimeout>;
     let shouldDisplayLoader = false;
     let messageInputBarRef: MessageInputBar;
+    let lastTimelineFocusSequence = 0;
 
     const gameScene = gameManager.getCurrentGameScene();
     const chatRoomsEnableInAdmin = gameScene.room.isChatEnabled;
@@ -69,6 +78,13 @@
     $: timelineItems = getTimelineItemsStore(room);
     $: roomName = getRoomNameStore(room);
     $: typingMembers = getTypingMembersStore(room);
+    $: shouldReserveHeaderEndSpace = shouldReserveFloatingCloseButtonSpace(
+        $hideActionBarStoreBecauseOfChatBar,
+        showRoomSidePanelToggle
+    );
+    $: if ($roomTimelineFocusStore) {
+        focusTimelineEvent($roomTimelineFocusStore).catch((error) => console.error(error));
+    }
 
     type RenderItem =
         | { kind: "separator"; key: string; label: string }
@@ -166,9 +182,7 @@
     onMount(() => {
         initMessages()
             .catch((error) => console.error(error))
-            .finally(() => {
-                scrollToMessageListBottom();
-            });
+            .finally(() => focusPendingTimelineRequestOrScrollToBottom().catch((error) => console.error(error)));
     });
 
     async function initMessages() {
@@ -192,11 +206,27 @@
 
         try {
             await loadMessages();
-            scrollToMessageListBottom();
             setFirstListItem();
         } catch (error) {
             console.error(`Failed to load messages: ${error}`);
         }
+    }
+
+    function hasPendingTimelineFocusRequest(
+        request: RoomTimelineFocusRequest | undefined
+    ): request is RoomTimelineFocusRequest {
+        return request !== undefined && request.roomId === room.id && request.sequence > lastTimelineFocusSequence;
+    }
+
+    async function focusPendingTimelineRequestOrScrollToBottom() {
+        const pendingFocusRequest = get(roomTimelineFocusStore);
+
+        if (hasPendingTimelineFocusRequest(pendingFocusRequest)) {
+            await focusTimelineEvent(pendingFocusRequest);
+            return;
+        }
+
+        scrollToMessageListBottom();
     }
 
     beforeUpdate(() => {
@@ -333,6 +363,29 @@
             } as CustomEvent<FileList>);
         }
     }
+
+    async function focusTimelineEvent(request: RoomTimelineFocusRequest) {
+        if (!hasPendingTimelineFocusRequest(request)) {
+            return;
+        }
+
+        await tick();
+
+        const target = Array.from(messageListRef?.querySelectorAll<HTMLLIElement>("li[data-event-id]") ?? []).find(
+            (element) => element.dataset.eventId === request.eventId
+        );
+
+        if (!target) {
+            return;
+        }
+
+        lastTimelineFocusSequence = request.sequence;
+        target.scrollIntoView({ block: "center", behavior: "smooth" });
+        target.classList.remove("highlight-message");
+        // // Force the highlight animation to restart when the same poll is clicked again.
+        // target.offsetWidth;
+        target.classList.add("highlight-message");
+    }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -344,7 +397,11 @@
 >
     {#if room !== undefined}
         <div class="flex flex-col gap-2">
-            <div class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10">
+            <div
+                class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10 {shouldReserveHeaderEndSpace
+                    ? 'pe-14'
+                    : ''}"
+            >
                 {#if chatRoomsEnableInAdmin}
                     <button
                         class="back-roomlist p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white shrink-0"
@@ -364,7 +421,24 @@
                     {$roomName}
                 </div>
 
-                <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" aria-hidden="true" />
+                {#if showRoomSidePanelToggle}
+                    <button
+                        type="button"
+                        class="p-3 rounded aspect-square w-12 h-12 shrink-0 !text-white hover:bg-white/10 {$roomSidePanelStore.isOpen
+                            ? 'bg-white/10'
+                            : ''}"
+                        data-testid="toggleRoomSidePanelButton"
+                        title={$roomSidePanelStore.isOpen
+                            ? $LL.chat.roomPanel.toggleClose()
+                            : $LL.chat.roomPanel.toggleOpen()}
+                        aria-pressed={$roomSidePanelStore.isOpen}
+                        on:click={() => roomSidePanelStore.toggle()}
+                    >
+                        <IconTableOptions font-size="20" />
+                    </button>
+                {:else}
+                    <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" aria-hidden="true" />
+                {/if}
             </div>
             {#if shouldDisplayLoader}
                 <div class="flex justify-center items-center w-full pb-1 bg-transparent">

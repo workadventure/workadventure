@@ -209,6 +209,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     replyTo: "回复",
     thread: {
         panelTitle: "所有话题串",
+        tabLabel: "话题串",
         empty: "暂无话题串",
         defaultPreview: "话题串",
         replySingular: "1 条回复",
@@ -384,6 +385,18 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "版主",
         },
         sendInvitationsSuccessNotification: "邀请发送成功",
+    },
+    roomPanel: {
+        toggleOpen: "打开房间面板",
+        toggleClose: "关闭房间面板",
+        sections: {
+            threads: "话题串",
+            polls: "投票",
+            participants: "参与者",
+        },
+        pollsEmpty: "暂无投票",
+        participantsEmpty: "暂无参与者",
+        pollWinner: "当前领先答案：{answer}",
     },
     roomMenu: {
         leaveRoom: {
