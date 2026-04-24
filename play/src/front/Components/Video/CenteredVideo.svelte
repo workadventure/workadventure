@@ -1,6 +1,7 @@
 <svelte:options immutable={true} />
 
 <script lang="ts">
+    import { createEventDispatcher } from "svelte";
     import LL from "../../../i18n/i18n-svelte";
     import MegaphoneIcon from "../Icons/MegaphoneIcon.svelte";
     import type { Streamable } from "../../Space/Streamable";
@@ -39,7 +40,22 @@
     // If true, the video box is a megaphone space
     export let isMegaphoneSpace = false;
 
+    const dispatch = createEventDispatcher<{
+        video: undefined;
+        noVideo: undefined;
+    }>();
+
     function onLoadVideoElement() {}
+
+    function handleVideo(): void {
+        displayNoVideoWarning = false;
+        dispatch("video");
+    }
+
+    function handleNoVideo(): void {
+        displayNoVideoWarning = true;
+        dispatch("noVideo");
+    }
 
     let containerWidth: number;
     let containerHeight: number;
@@ -169,12 +185,8 @@
                         className="absolute block object-fill"
                         bind:videoWidth={videoStreamWidth}
                         bind:videoHeight={videoStreamHeight}
-                        on:noVideo={() => {
-                            displayNoVideoWarning = true;
-                        }}
-                        on:video={() => {
-                            displayNoVideoWarning = false;
-                        }}
+                        on:noVideo={handleNoVideo}
+                        on:video={handleVideo}
                     />
                 {:else if media?.type === "livekit"}
                     <LivekitVideo
@@ -193,12 +205,8 @@
                         className="absolute block object-fill"
                         bind:videoWidth={videoStreamWidth}
                         bind:videoHeight={videoStreamHeight}
-                        on:noVideo={() => {
-                            displayNoVideoWarning = true;
-                        }}
-                        on:video={() => {
-                            displayNoVideoWarning = false;
-                        }}
+                        on:noVideo={handleNoVideo}
+                        on:video={handleVideo}
                     />
                 {:else if media?.type === "scripting"}
                     <ScriptingVideo
