@@ -27,7 +27,7 @@ export class WorkAdventureWebSocket {
     private reconnectAttempted = false;
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
-    private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array>(
+    private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
         WorkAdventureWebSocket.DISCONNECTION_RETENTION_MS
     );
 
@@ -67,7 +67,11 @@ export class WorkAdventureWebSocket {
     }
 
     private handleOpenEvent = (): void => {
+        const isReconnection = this.reconnectAttempted;
         this.reconnectAttempted = false;
+        if (isReconnection) {
+            this.replayStoredOutgoingMessages();
+        }
         const event = new Event("open");
         this.onopen?.call(this, event);
     };
@@ -136,10 +140,16 @@ export class WorkAdventureWebSocket {
     }
 
     private reconnect(): void {
-        console.log(`[WorkAdventureWebSocket] Attempting reconnection`);
-
         this.socket = this.createSocket();
         this.bindSocketListeners(this.socket);
+    }
+
+    private replayStoredOutgoingMessages(): void {
+        const storedMessages = this.outgoingMessagesStore.getAfter(0);
+
+        for (const { payload } of storedMessages) {
+            this.socket.send(payload);
+        }
     }
 
     private shouldReconnect(event: CloseEvent): boolean {

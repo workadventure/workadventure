@@ -209,6 +209,9 @@ export class PusherRoomSocketController {
                     ws.end(1003, "Invalid message format");
                     return;
                 }
+                if (!message) {
+                    return;
+                }
 
                 Promise.resolve(config.message(socket, message)).catch((e) => {
                     console.error(e);

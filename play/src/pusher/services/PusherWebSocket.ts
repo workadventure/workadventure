@@ -17,7 +17,7 @@ export class PusherWebSocket {
     private socket: RawSocket;
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
-    private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array>(
+    private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
         PusherWebSocket.DISCONNECTION_RETENTION_MS
     );
 
@@ -41,7 +41,7 @@ export class PusherWebSocket {
         return this.socket.send(payloadWithNonce, true);
     }
 
-    public decodeIncomingMessage(payload: ArrayBuffer | ArrayBufferView): ClientToServerMessage {
+    public decodeIncomingMessage(payload: ArrayBuffer | ArrayBufferView): ClientToServerMessage | undefined {
         const bytes =
             payload instanceof ArrayBuffer
                 ? new Uint8Array(payload)
@@ -49,6 +49,9 @@ export class PusherWebSocket {
         const frame = FrontToPusherWebSocketMessage.decode(bytes);
         if (!frame.message) {
             throw new Error("Invalid websocket payload: missing client message");
+        }
+        if (frame.nonce <= this.lastReceivedNonce) {
+            return undefined;
         }
         this.lastReceivedNonce = frame.nonce;
         return frame.message;
@@ -83,14 +86,19 @@ export class PusherWebSocket {
         const previousSocketData = previousSocket.getUserData();
         const newSocketData = newSocket.getUserData();
 
-        console.log(`[PusherWebSocket] Attempting reconnection`);
-
         // Keep logical connection state (room/back stream/subscriptions) while swapping only the transport.
         Object.assign(newSocketData, previousSocketData, {
             disconnecting: false,
         });
 
         this.socket = newSocket;
+
+        const messagesToReplay = this.outgoingMessagesStore.getAfter(clientLastReceivedNonce);
+        for (const { payload } of messagesToReplay) {
+            this.socket.send(payload, true);
+        }
+
+        this.outgoingMessagesStore.clear();
 
         // Close the old transport only after rebinding so the logical connection keeps running.
         previousSocket.end(1012, "Replaced by a reconnected socket");
