@@ -791,17 +791,15 @@ export class Space implements SpaceInterface {
         if (maskedNewData.megaphoneState !== undefined && userToUpdate.spaceUserId !== this._mySpaceUserId) {
             const videoBox = this.allVideoStreamStore.get(userToUpdate.spaceUserId);
             if (videoBox) {
-                const streamable = get(videoBox.streamable);
-                if (streamable) {
+                videoBox.applyToAllStreamables((streamable) => {
                     this.applyMuteAudioToStreamable(streamable, userToUpdate);
-                }
+                });
             }
             const screenShareVideoBox = this.allScreenShareStreamStore.get(userToUpdate.spaceUserId);
             if (screenShareVideoBox) {
-                const streamable = get(screenShareVideoBox.streamable);
-                if (streamable) {
+                screenShareVideoBox.applyToAllStreamables((streamable) => {
                     this.applyMuteAudioToStreamable(streamable, userToUpdate);
-                }
+                });
             }
         }
 

@@ -318,6 +318,16 @@ export class VideoBox {
         }
     }
 
+    public applyToAllStreamables(callback: (streamable: Streamable) => void): void {
+        if (this.activeStreamableEntry) {
+            callback(this.activeStreamableEntry.streamable);
+        }
+
+        if (this.pendingStreamableEntry) {
+            callback(this.pendingStreamableEntry.streamable);
+        }
+    }
+
     // TODO: check in details where this is used and if we should not apply this to both streamables.
     public get streamable(): Readable<Streamable | undefined> {
         return this._streamable;
