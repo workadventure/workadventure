@@ -1,5 +1,10 @@
 import * as Sentry from "@sentry/node";
-import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
+import {
+    RecordingWebhookPhase,
+    type HandleRecordingWebhookRequest,
+    type MeetingConnectionRestartMessage,
+    type SpaceUser,
+} from "@workadventure/messages";
 import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
@@ -307,31 +312,62 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public async handleStopRecording(user: SpaceUser): Promise<void> {
-        const stoppedRecorder = await this._recordingManager.stopRecording(user);
-        if (!stoppedRecorder) {
-            return;
-        }
-        this.scheduleTransitionAfterRecordingStops(stoppedRecorder);
+        await this._recordingManager.stopRecording(user);
     }
 
     public async handleRecorderLeftSpace(spaceUserId: string): Promise<boolean> {
         const stoppedRecorder = await this._recordingManager.stopRecordingIfRecorderMatches(spaceUserId);
-        if (!stoppedRecorder) {
-            return false;
-        }
-
-        this.scheduleTransitionAfterRecordingStops(stoppedRecorder);
-        return true;
+        return stoppedRecorder !== null;
     }
 
     public async handleServerStopRecording(): Promise<boolean> {
         const stoppedRecorder = await this._recordingManager.stopRecordingByServer();
-        if (!stoppedRecorder) {
-            return false;
-        }
+        return stoppedRecorder !== null;
+    }
 
-        this.scheduleTransitionAfterRecordingStops(stoppedRecorder);
-        return true;
+    public handleRecordingWebhook(request: HandleRecordingWebhookRequest): void {
+        switch (request.phase) {
+            case RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_STARTED: {
+                this._recordingManager.confirmRecordingStartedByWebhook(
+                    request.recordingSessionId,
+                    request.egressId,
+                    request.roomName
+                );
+                return;
+            }
+            case RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED: {
+                const result = this._recordingManager.finishRecordingByWebhook(
+                    request.recordingSessionId,
+                    request.egressId,
+                    request.roomName
+                );
+                if (!result.processed || !result.recorder) {
+                    return;
+                }
+
+                if (result.unexpected) {
+                    this.space.dispatchPrivateEvent({
+                        spaceName: this.space.getSpaceName(),
+                        receiverUserId: result.recorder.spaceUserId,
+                        senderUserId: result.recorder.spaceUserId,
+                        spaceEvent: {
+                            event: {
+                                $case: "recordingUnexpectedlyStoppedMessage",
+                                recordingUnexpectedlyStoppedMessage: {},
+                            },
+                        },
+                    });
+                }
+
+                if (!result.hasActiveSessions) {
+                    this.scheduleTransitionAfterRecordingStops(result.recorder);
+                }
+                return;
+            }
+            case RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_UNSPECIFIED:
+            case RecordingWebhookPhase.UNRECOGNIZED:
+                return;
+        }
     }
 
     private scheduleTransitionAfterRecordingStops(user: SpaceUser): void {

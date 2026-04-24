@@ -226,6 +226,17 @@ export class SpacePeerManager {
         );
 
         this.rxJsUnsubscribers.push(
+            this.space
+                .observePrivateEvent(CommunicationMessageType.RECORDING_UNEXPECTEDLY_STOPPED_MESSAGE)
+                .subscribe(() => {
+                    this._notificationPlayingStore.playNotification(
+                        get(LL).recording.notification.unexpectedlyStoppedNotification(),
+                        "recording-stop"
+                    );
+                })
+        );
+
+        this.rxJsUnsubscribers.push(
             this.videoPeerAdded.subscribe((streamable) => {
                 if (streamable.spaceUserId === undefined) {
                     throw new Error("Received a video peer with undefined spaceUserId");

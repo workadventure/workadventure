@@ -49,6 +49,7 @@ import type {
     SetAreaPropertyVariableMessage,
     BackEventMessage,
     ConnectToRoomMessage,
+    HandleRecordingWebhookRequest,
 } from "@workadventure/messages";
 import {
     AnswerMessage,
@@ -1725,6 +1726,18 @@ export class SocketManager {
             Sentry.captureException("Error while handling space query");
             return;
         }
+    }
+
+    handleRecordingWebhook(request: HandleRecordingWebhookRequest): void {
+        const space = this.spaces.get(request.spaceName);
+        if (!space) {
+            console.warn(
+                `Received recording webhook for missing space ${request.spaceName} (${request.egressId}). Ignoring.`
+            );
+            return;
+        }
+
+        space.handleRecordingWebhook(request);
     }
 
     handleAddSpaceUserToNotifyMessage(pusher: SpacesWatcher, addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage) {

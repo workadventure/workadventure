@@ -31,6 +31,7 @@ import { WokaService } from "./services/WokaService";
 import { UserController } from "./controllers/UserController";
 import { MatrixRoomAreaController } from "./controllers/MatrixRoomAreaController";
 import { LocalScriptController } from "./controllers/LocalScriptController";
+import { LivekitWebhookController } from "./controllers/LivekitWebhookController";
 
 class App {
     private readonly app: Application;
@@ -40,6 +41,9 @@ class App {
     constructor() {
         this.websocketApp = uWebsockets.App();
         this.app = express();
+
+        // LiveKit webhooks must receive the raw body for signature verification; register before express.json().
+        new LivekitWebhookController(this.app);
 
         this.app.use(express.json());
         this.app.use(express.urlencoded());

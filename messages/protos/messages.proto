@@ -814,6 +814,24 @@ message StartSpaceRecordingAnswer {
 message StopSpaceRecordingAnswer {
 }
 
+enum RecordingWebhookPhase {
+  RECORDING_WEBHOOK_PHASE_UNSPECIFIED = 0;
+  RECORDING_WEBHOOK_PHASE_STARTED = 1;
+  RECORDING_WEBHOOK_PHASE_ENDED = 2;
+}
+
+message HandleRecordingWebhookRequest {
+  string spaceName = 1;
+  string eventId = 2;
+  string recordingSessionId = 3;
+  string egressId = 4;
+  string roomName = 5;
+  RecordingWebhookPhase phase = 6;
+  string status = 7;
+  string error = 8;
+  int64 createdAt = 9;
+}
+
 /*********** SERVER TO CLIENT MESSAGES *************/
 
 message UserMovedMessage {
@@ -1087,6 +1105,9 @@ message MuteVideoForEverybodyPublicMessage {
 message KickOffUserPrivateMessage {
 }
 
+message RecordingUnexpectedlyStoppedPrivateMessage {
+}
+
 message PublicEventFrontToPusher {
   string spaceName = 1;
   SpaceEvent spaceEvent = 2;
@@ -1132,6 +1153,7 @@ message PrivateSpaceEvent {
     BlockUserMessage blockUserMessage = 20;
     UnblockUserMessage unblockUserMessage = 21;
     MeetingConnectionRestartMessage meetingConnectionRestartMessage = 22;
+    RecordingUnexpectedlyStoppedPrivateMessage recordingUnexpectedlyStoppedMessage = 23;
   }
 }
 

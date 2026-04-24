@@ -35,6 +35,7 @@ service RoomManager {
  */
 service SpaceManager {
   rpc watchSpace(stream PusherToBackSpaceMessage) returns (stream BackToPusherSpaceMessage);
+  rpc handleRecordingWebhook(HandleRecordingWebhookRequest) returns (google.protobuf.Empty);
 }
 
 /**
