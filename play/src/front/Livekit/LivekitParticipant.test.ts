@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { Subject } from "rxjs";
 import { writable } from "svelte/store";
 import { ConnectionQuality, Track, type RemoteParticipant, type RemoteTrackPublication } from "livekit-client";
-import type { SpaceUserExtended } from "../Space/SpaceInterface";
+import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import type { LivekitStreamable, Streamable } from "../Space/Streamable";
 import { LiveKitParticipant } from "./LivekitParticipant";
@@ -150,6 +150,8 @@ function createParticipant({ publications }: { publications: RemoteTrackPublicat
     return new LiveKitParticipant(
         participant,
         spaceUser,
+        { getName: () => "world.space", emitVideoQualityReport: vi.fn() } as unknown as SpaceInterface,
+        "wss://livekit.example.com",
         streamableSubjects,
         writable(new Set<string>()),
         new AbortController().signal

@@ -104,6 +104,7 @@ export const LIVEKIT_PIXEL_DENSITY = 2 / 3;
 export const ENABLE_ISSUE_REPORT = true;
 export const ENABLE_TUTORIAL = true;
 export const GRPC_MAX_MESSAGE_SIZE = 20 * 1024 * 1024;
+export const VIDEO_ANALYTICS_ENABLED = false;
 
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: false,
@@ -168,6 +169,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     GRPC_MAX_MESSAGE_SIZE,
     TURN_CREDENTIALS_RENEWAL_TIME,
     BACKGROUND_TRANSFORMER_ENGINE: "selfie-segmentation",
+    VIDEO_ANALYTICS_ENABLED,
     DEFAULT_WOKA_NAME,
     DEFAULT_WOKA_TEXTURE,
     SKIP_CAMERA_PAGE,

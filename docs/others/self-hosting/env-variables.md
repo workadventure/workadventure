@@ -61,6 +61,7 @@ Environment variables for the Play service (frontend and pusher).
 | `ENABLE_ISSUE_REPORT` | No | Whether the feature 'issue report' is enabled or not on this room. Defaults to true. |
 | `ENABLE_TUTORIAL` | No | Whether the onboarding tutorial is enabled or not on this room. Defaults to true. |
 | `ENABLE_OPENAPI_ENDPOINT` | No | Enable/disable the OpenAPI documentation endpoint. Defaults to false |
+| `VIDEO_ANALYTICS_ENABLED` | No | Enable/disable video quality analytics telemetry. Defaults to false |
 | `START_ROOM_URL` | No | Default room URL where users start when accessing the platform |
 | `DEBUG_MODE` | No | Enable debug mode with additional console logging. Defaults to false |
 | `UPLOADER_URL` | Yes | URL of the file uploader service |

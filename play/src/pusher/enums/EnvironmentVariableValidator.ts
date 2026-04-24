@@ -273,6 +273,9 @@ export const EnvironmentVariables = z.object({
     ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe("Enable/disable the OpenAPI documentation endpoint. Defaults to false"),
+    VIDEO_ANALYTICS_ENABLED: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe("Enable/disable video quality analytics telemetry. Defaults to false"),
     START_ROOM_URL: z.string().optional().describe("Default room URL where users start when accessing the platform"),
 
     // Front related environment variables
