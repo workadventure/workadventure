@@ -1,6 +1,8 @@
 import type { TemplatedApp, HttpResponse, HttpRequest, us_socket_context_t } from "uWebSockets.js";
 import type { ClientToServerMessage } from "@workadventure/messages";
 import type { ZodObject, ZodRawShape, infer as ZodInfer } from "zod";
+import * as Sentry from "@sentry/node";
+import { asError } from "catch-unknown";
 import type { ConnectingSocketData } from "../models/Websocket/SocketData";
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
 import type { Socket } from "./SocketManager";
@@ -61,7 +63,7 @@ export class PusherRoomSocketController {
         return wrapper;
     }
 
-    private rejectWithBadRequest(
+    private rejectWithInternalError(
         res: HttpResponse,
         req: HttpRequest,
         context: us_socket_context_t,
@@ -79,10 +81,10 @@ export class PusherRoomSocketController {
                     error: {
                         status: "error",
                         type: "error",
-                        title: "400 Bad Request",
+                        title: "500 Internal Server Error",
                         subtitle: "Something wrong happened while connecting!",
                         image: "",
-                        code: "WS_BAD_REQUEST",
+                        code: "internal_error",
                         details,
                     },
                 } satisfies UpgradeFailedData,
@@ -115,23 +117,23 @@ export class PusherRoomSocketController {
             maxPayloadLength: config.maxPayloadLength,
             maxBackpressure: config.maxBackpressure,
             upgrade: (res, req, context) => {
-                const upgradeAborted = { aborted: false };
+                (async () => {
+                    const upgradeAborted = { aborted: false };
 
-                res.onAborted(() => {
-                    upgradeAborted.aborted = true;
-                });
+                    res.onAborted(() => {
+                        upgradeAborted.aborted = true;
+                    });
 
-                const query = validateWebsocketQuery(req, res, context, config.queryValidator);
-                if (query === undefined) {
-                    return;
-                }
+                    const query = validateWebsocketQuery(req, res, context, config.queryValidator);
+                    if (query === undefined) {
+                        return;
+                    }
 
-                const websocketKey = req.getHeader("sec-websocket-key");
-                const websocketProtocol = req.getHeader("sec-websocket-protocol");
-                const websocketExtensions = req.getHeader("sec-websocket-extensions");
-                const urlSearchParams = new URLSearchParams(req.getQuery());
+                    const websocketKey = req.getHeader("sec-websocket-key");
+                    const websocketProtocol = req.getHeader("sec-websocket-protocol");
+                    const websocketExtensions = req.getHeader("sec-websocket-extensions");
+                    const urlSearchParams = new URLSearchParams(req.getQuery());
 
-                try {
                     const tabContext = this.contextByTabKey.get(query.tabId);
                     if (tabContext) {
                         tabContext.clientLastReceivedNonce = this.parseReconnectNonce(
@@ -144,56 +146,63 @@ export class PusherRoomSocketController {
                         );
                     }
 
-                    Promise.resolve(
-                        config.upgrade({
-                            query,
-                            request: {
-                                method: req.getMethod(),
-                                url: req.getUrl(),
-                                ipAddress: req.getHeader("x-forwarded-for"),
-                                locale: req.getHeader("accept-language"),
-                                token: websocketProtocol,
-                            },
-                            isAborted: () => upgradeAborted.aborted,
-                            upgrade: (data) => {
-                                res.cork(() => {
-                                    res.upgrade(data, websocketKey, websocketProtocol, websocketExtensions, context);
-                                });
-                            },
-                        })
-                    ).catch((e) => {
-                        console.error(e);
+                    await config.upgrade({
+                        query,
+                        request: {
+                            method: req.getMethod(),
+                            url: req.getUrl(),
+                            ipAddress: req.getHeader("x-forwarded-for"),
+                            locale: req.getHeader("accept-language"),
+                            token: websocketProtocol,
+                        },
+                        isAborted: () => upgradeAborted.aborted,
+                        upgrade: (data) => {
+                            if (upgradeAborted.aborted) {
+                                // If the response points to nowhere, don't attempt an upgrade
+                                return;
+                            }
+
+                            res.cork(() => {
+                                res.upgrade(data, websocketKey, websocketProtocol, websocketExtensions, context);
+                            });
+                        },
                     });
-                } catch (e) {
+                })().catch((e) => {
+                    Sentry.captureException(e);
                     console.error(e);
-                    const details = e instanceof Error ? e.message : "Invalid websocket query parameters";
-                    this.rejectWithBadRequest(res, req, context, details);
-                }
+                    this.rejectWithInternalError(res, req, context, asError(e).message);
+                });
             },
             open: (ws) => {
-                const socketData = ws.getUserData();
-                const rawSocket = ws as unknown as RawSocket;
+                (async () => {
+                    const socketData = ws.getUserData();
+                    const rawSocket = ws as unknown as RawSocket;
 
-                const tabId = socketData.tabId;
-                const context = this.contextByTabKey.get(tabId);
-                if (context) {
-                    context.socket.replaceSocket(
-                        rawSocket,
-                        context.clientLastReceivedNonce!,
-                        context.clientLastSentNonce!
-                    );
-                    this.wrappersBySocket.set(rawSocket, context.socket);
-                    Promise.resolve(config.open(context.socket)).catch((e) => {
-                        console.error(e);
+                    const tabId = socketData.tabId;
+                    const context = this.contextByTabKey.get(tabId);
+                    if (context) {
+                        const replaced = context.socket.replaceSocket(
+                            rawSocket,
+                            context.clientLastReceivedNonce!,
+                            context.clientLastSentNonce!
+                        );
+
+                        if (replaced) {
+                            this.wrappersBySocket.set(rawSocket, context.socket);
+                            Promise.resolve(config.open(context.socket)).catch((e) => {
+                                console.error(e);
+                            });
+                            return;
+                        }
+                    }
+
+                    const socket = this.getOrCreateWrapper(rawSocket);
+                    this.contextByTabKey.set(tabId, {
+                        socket: this.getOrCreateWrapper(rawSocket),
                     });
-                    return;
-                }
-
-                const socket = this.getOrCreateWrapper(rawSocket);
-                this.contextByTabKey.set(tabId, {
-                    socket: this.getOrCreateWrapper(rawSocket),
-                });
-                Promise.resolve(config.open(socket)).catch((e) => {
+                    await config.open(socket);
+                })().catch((e) => {
+                    Sentry.captureException(e);
                     console.error(e);
                 });
             },

@@ -408,7 +408,6 @@ export class IoSocketController {
                         characterTextures,
                         companionTexture,
                         lastCommandId,
-                        messages: [],
                         tags: memberTags,
                         visitCardUrl: memberVisitCardUrl,
                         userRoomToken: memberUserRoomToken,
@@ -443,149 +442,108 @@ export class IoSocketController {
                     /* This immediately calls open handler, you must not use res after this call */
                     upgrade(socketData);
                 } catch (e) {
-                    if (e instanceof Error) {
-                        if (!(e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired)) {
-                            Sentry.captureException(e);
-                            console.error(e);
-                        }
-                        if (isAborted()) {
-                            // If the response points to nowhere, don't attempt an upgrade
-                            return;
-                        }
+                    if (e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired) {
                         upgrade({
                             rejected: true,
-                            reason:
-                                e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired
-                                    ? tokenInvalidException
-                                    : null,
+                            reason: tokenInvalidException,
                             message: e.message,
                             roomId,
                         } satisfies UpgradeFailedData);
-                    } else {
-                        if (isAborted()) {
-                            // If the response points to nowhere, don't attempt an upgrade
-                            return;
-                        }
-                        upgrade({
-                            rejected: true,
-                            reason: null,
-                            message: "500 Internal Server Error",
-                            roomId,
-                        } satisfies UpgradeFailedData);
+                        return;
                     }
+                    throw e;
                 }
             },
             /* Handlers */
-            open: (socket) => {
-                (async () => {
-                    const socketData = socket.getUserData();
-                    debug("WebSocket connection established");
+            open: async (socket) => {
+                const socketData = socket.getUserData();
+                debug("WebSocket connection established");
 
-                    socketData.emitInBatch = (payload: SubMessage): void => {
-                        emitInBatch(socket, payload);
-                    };
+                // TODO: move the batching mechanism inside the PusherWebSocket
+                socketData.emitInBatch = (payload: SubMessage): void => {
+                    emitInBatch(socket, payload);
+                };
 
-                    await socketManager.handleConnectToRoom(socket);
+                await socketManager.handleConnectToRoom(socket);
 
-                    //get data information and show messages
-                    if (socketData.messages && Array.isArray(socketData.messages)) {
-                        socketData.messages.forEach((c: unknown) => {
-                            const messageToSend = z.object({ type: z.string(), message: z.string() }).parse(c);
-                            if (!socketData.disconnecting) {
-                                socket.send({
-                                    message: {
-                                        $case: "sendUserMessage",
-                                        sendUserMessage: {
-                                            type: messageToSend.type,
-                                            message: messageToSend.message,
-                                        },
-                                    },
-                                });
-                            }
-                        });
+                // Let's send a ping to keep the connection alive. Note: there is ANOTHER ping/pong mechanism
+                // at the application level, between the front and the back. This other mechanism is in charge
+                // of shutting down the connection when idle. However, because of limitations in the browser
+                // (heavy throttling of setTimeout when tab is in background), that mechanism cannot manage
+                // ping delays lower than 1 minute.
+                // Because there are proxies and load balancers on the path that might cut the connection if
+                // idle for more than ~30 seconds, we need this additional ping/pong mechanism here at the
+                // pusher WebSocket level.
+
+                // TODO: move the keep-alive mechanism inside the PusherWebSocket
+                socketData.keepAliveInterval = setInterval(() => {
+                    if (!socketData.disconnecting) {
+                        socket.ping();
                     }
+                }, 25000); // Every 25 seconds
 
-                    // Let's send a ping to keep the connection alive. Note: there is ANOTHER ping/pong mechanism
-                    // at the application level, between the front and the back. This other mechanism is in charge
-                    // of shutting down the connection when idle. However, because of limitations in the browser
-                    // (heavy throttling of setTimeout when tab is in background), that mechanism cannot manage
-                    // ping delays lower than 1 minute.
-                    // Because there are proxies and load balancers on the path that might cut the connection if
-                    // idle for more than ~30 seconds, we need this additional ping/pong mechanism here at the
-                    // pusher WebSocket level.
+                // Performance test
+                /*
+                const positionMessage = new PositionMessage();
+                positionMessage.setMoving(true);
+                positionMessage.setX(300);
+                positionMessage.setY(300);
+                positionMessage.setDirection(PositionMessage.Direction.DOWN);
 
-                    socketData.keepAliveInterval = setInterval(() => {
-                        if (!socketData.disconnecting) {
-                            socket.ping();
-                        }
-                    }, 25000); // Every 25 seconds
+                const userMovedMessage = new UserMovedMessage();
+                userMovedMessage.setUserid(1);
+                userMovedMessage.setPosition(positionMessage);
 
-                    // Performance test
-                    /*
-                    const positionMessage = new PositionMessage();
-                    positionMessage.setMoving(true);
-                    positionMessage.setX(300);
-                    positionMessage.setY(300);
-                    positionMessage.setDirection(PositionMessage.Direction.DOWN);
+                const subMessage = new SubMessage();
+                subMessage.setUsermovedmessage(userMovedMessage);
 
-                    const userMovedMessage = new UserMovedMessage();
-                    userMovedMessage.setUserid(1);
-                    userMovedMessage.setPosition(positionMessage);
+                const startTimestamp2 = Date.now();
+                for (let i = 0; i < 100000; i++) {
+                    const batchMessage = new BatchMessage();
+                    batchMessage.setEvent("");
+                    batchMessage.setPayloadList([
+                        subMessage
+                    ]);
 
-                    const subMessage = new SubMessage();
-                    subMessage.setUsermovedmessage(userMovedMessage);
+                    const serverToClientMessage = new ServerToClientMessage();
+                    serverToClientMessage.setBatchmessage(batchMessage);
 
-                    const startTimestamp2 = Date.now();
-                    for (let i = 0; i < 100000; i++) {
-                        const batchMessage = new BatchMessage();
-                        batchMessage.setEvent("");
-                        batchMessage.setPayloadList([
-                            subMessage
-                        ]);
+                    client.send(serverToClientMessage.serializeBinary().buffer, true);
+                }
+                const endTimestamp2 = Date.now();
 
-                        const serverToClientMessage = new ServerToClientMessage();
-                        serverToClientMessage.setBatchmessage(batchMessage);
-
-                        client.send(serverToClientMessage.serializeBinary().buffer, true);
-                    }
-                    const endTimestamp2 = Date.now();
-
-                    const startTimestamp = Date.now();
-                    for (let i = 0; i < 100000; i++) {
-                        // Let's do a performance test!
-                        const bytes = ServerToClientMessageTsProto.encode({
-                            message: {
-                                $case: "batchMessage",
-                                batchMessage: {
-                                    event: '',
-                                    payload: [
-                                        {
-                                            message: {
-                                                $case: "userMovedMessage",
-                                                userMovedMessage: {
-                                                    userId: 1,
-                                                    position: {
-                                                        moving: true,
-                                                        x: 300,
-                                                        y: 300,
-                                                        direction: PositionMessage_Direction.DOWN,
-                                                    }
+                const startTimestamp = Date.now();
+                for (let i = 0; i < 100000; i++) {
+                    // Let's do a performance test!
+                    const bytes = ServerToClientMessageTsProto.encode({
+                        message: {
+                            $case: "batchMessage",
+                            batchMessage: {
+                                event: '',
+                                payload: [
+                                    {
+                                        message: {
+                                            $case: "userMovedMessage",
+                                            userMovedMessage: {
+                                                userId: 1,
+                                                position: {
+                                                    moving: true,
+                                                    x: 300,
+                                                    y: 300,
+                                                    direction: PositionMessage_Direction.DOWN,
                                                 }
                                             }
                                         }
-                                    ]
-                                }
+                                    }
+                                ]
                             }
-                        }).finish();
+                        }
+                    }).finish();
 
-                        client.send(bytes);
-                    }
-                    const endTimestamp = Date.now();
-                    */
-                })().catch((e) => {
-                    Sentry.captureException(e);
-                    console.error(e);
-                });
+                    client.send(bytes);
+                }
+                const endTimestamp = Date.now();
+                */
             },
             message: (socket, message): void => {
                 Sentry.withIsolationScope(() => {

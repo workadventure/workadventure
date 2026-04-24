@@ -29,7 +29,7 @@ export type SpaceName = string;
  */
 export type ConnectingSocketData = {
     rejected: false;
-    disconnecting: boolean;
+    disconnecting: boolean; // TODO: move the connection status management inside the PusherRoomSocketController
     token: string;
     roomId: string;
     userId?: number; // User Id served by the back
@@ -39,7 +39,6 @@ export type ConnectingSocketData = {
     characterTextures: CharacterTextureMessage[];
     companionTexture?: CompanionTextureMessage;
     lastCommandId?: string;
-    messages: unknown[];
     tags: string[];
     visitCardUrl: string | null;
     userRoomToken: string | undefined;

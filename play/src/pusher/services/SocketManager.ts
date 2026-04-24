@@ -533,6 +533,7 @@ export class SocketManager implements ZoneEventListener {
 
         socketData.disconnecting = true;
 
+        // TODO: move the keep-alive mechanism inside the PusherWebSocket
         if (socketData.keepAliveInterval) {
             clearInterval(socketData.keepAliveInterval);
             socketData.keepAliveInterval = undefined;

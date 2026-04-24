@@ -5,6 +5,7 @@ import {
     type ServerToClientMessage,
     type ClientToServerMessage,
 } from "@workadventure/messages";
+import * as Sentry from "@sentry/node";
 import { NoncedMessageStore } from "../../common/NoncedMessageStore";
 
 import type { SocketData } from "../models/Websocket/SocketData";
@@ -81,7 +82,37 @@ export class PusherWebSocket {
         this.socket.end(code, reason);
     }
 
-    public replaceSocket(newSocket: RawSocket, clientLastReceivedNonce: number, clientLastSentNonce: number): void {
+    public replaceSocket(newSocket: RawSocket, clientLastReceivedNonce: number, clientLastSentNonce: number): boolean {
+        const socketData = this.socket.getUserData();
+        console.info(
+            `Replacing WebSocket transport for user ${socketData.userUuid} on tab ${socketData.tabId} (lastReceivedNonce=${clientLastReceivedNonce}, lastSentNonce=${clientLastSentNonce})`
+        );
+
+        if (!this.outgoingMessagesStore.hasEveryNonceAfter(clientLastReceivedNonce, clientLastSentNonce)) {
+            console.warn(
+                `Cannot replace WebSocket transport for user ${socketData.userUuid} on tab ${
+                    socketData.tabId
+                }: server is missing messages to replay (lastReceivedNonce=${clientLastReceivedNonce}, lastSentNonce=${clientLastSentNonce}, oldestStoredNonce=${
+                    this.outgoingMessagesStore.getAll()[0]?.nonce
+                })`
+            );
+            Sentry.captureMessage(
+                `Cannot replace WebSocket transport for user ${socketData.userUuid} on tab ${
+                    socketData.tabId
+                }: server is missing messages to replay (lastReceivedNonce=${clientLastReceivedNonce}, lastSentNonce=${clientLastSentNonce}, oldestStoredNonce=${
+                    this.outgoingMessagesStore.getAll()[0]?.nonce
+                })`,
+                {
+                    tags: {
+                        userUuid: socketData.userUuid,
+                        tabId: socketData.tabId,
+                    },
+                }
+            );
+            newSocket.end(1008, "Cannot replace socket: server is missing messages to replay");
+            return false;
+        }
+
         const previousSocket = this.socket;
         const previousSocketData = previousSocket.getUserData();
         const newSocketData = newSocket.getUserData();
@@ -101,6 +132,8 @@ export class PusherWebSocket {
         this.outgoingMessagesStore.clear();
 
         // Close the old transport only after rebinding so the logical connection keeps running.
-        previousSocket.end(1012, "Replaced by a reconnected socket");
+        previousSocket.end(1008, "Replaced by a reconnected socket");
+
+        return true;
     }
 }
