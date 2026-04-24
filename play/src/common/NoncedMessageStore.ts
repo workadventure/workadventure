@@ -24,6 +24,11 @@ export class NoncedMessageStore<TPayload> {
         });
     }
 
+    public getAll(): NoncedMessage<TPayload>[] {
+        this.pruneExpired();
+        return this.messages.map(({ nonce, payload }) => ({ nonce, payload }));
+    }
+
     public getAfter(nonce: number): NoncedMessage<TPayload>[] {
         this.pruneExpired();
         return this.messages
@@ -40,24 +45,6 @@ export class NoncedMessageStore<TPayload> {
         this.pruneExpired();
         if (latestSentNonce <= lastReceivedNonce) return true;
         return this.has(lastReceivedNonce + 1);
-    }
-
-    public clearThrough(nonce: number): void {
-        this.pruneExpired();
-        if (this.messages.length === 0) {
-            return;
-        }
-
-        const firstIndexToKeep = this.messages.findIndex((message) => message.nonce > nonce);
-        if (firstIndexToKeep === -1) {
-            this.messages.length = 0;
-            return;
-        }
-        if (firstIndexToKeep === 0) {
-            return;
-        }
-
-        this.messages.splice(0, firstIndexToKeep);
     }
 
     public clear(): void {

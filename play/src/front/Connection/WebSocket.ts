@@ -145,7 +145,7 @@ export class WorkAdventureWebSocket {
     }
 
     private replayStoredOutgoingMessages(): void {
-        const storedMessages = this.outgoingMessagesStore.getAfter(0);
+        const storedMessages = this.outgoingMessagesStore.getAll();
 
         for (const { payload } of storedMessages) {
             this.socket.send(payload);
