@@ -235,6 +235,7 @@ export class SocketManager implements ZoneEventListener {
             debug("Calling connectToRoom '" + socketData.roomId + "'");
             const apiClient = await apiClientRepository.getClient(socketData.roomId, GRPC_MAX_MESSAGE_SIZE);
             streamToBack = apiClient.connectToRoom();
+            let backConnectionCloseReason: string | undefined;
 
             client.getUserData().backConnection = streamToBack;
 
@@ -259,6 +260,10 @@ export class SocketManager implements ZoneEventListener {
                             this.refreshRoomData(refreshMessage.roomId, refreshMessage.versionNumber);
                             break;
                         }
+                        case "backConnectionCloseReasonMessage": {
+                            backConnectionCloseReason = message.message.backConnectionCloseReasonMessage.reason;
+                            return;
+                        }
                     }
 
                     // Let's pass data over from the back to the client.
@@ -269,12 +274,14 @@ export class SocketManager implements ZoneEventListener {
                 .on("end", () => {
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                     if (!socketData.disconnecting) {
+                        const connectionCloseReason =
+                            backConnectionCloseReason ?? "No close reason received from back server.";
                         console.warn(
                             `Connection lost to back server '${apiClient.getChannel().getTarget()}' for room '${
                                 socketData.roomId
-                            }' and user '${socketData.userUuid}'/'${socketData.name}'`
+                            }' and user '${socketData.userUuid}'/'${socketData.name}'. Reason: ${connectionCloseReason}`
                         );
-                        this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
+                        this.closeWebsocketConnection(client, 1011, `Back lost: ${connectionCloseReason}`);
                     }
                 })
                 .on("error", (err: Error) => {

@@ -18,13 +18,7 @@ export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
 
 export class Player extends Character {
-    private pathToFollow?: { x: number; y: number }[];
-    // Number of pixels the player has walked on the current path segment
-    private currentPathSegmentDistanceFromStart = 0;
-    private followingPathPromiseResolve?: (result: { x: number; y: number; cancelled: boolean }) => void;
-    private pathWalkingSpeed?: number;
     private readonly unsubscribeVisibilityStore: Unsubscriber;
-    //private readonly unsubscribeLayoutManagerActionStore: Unsubscriber;
 
     constructor(
         Scene: GameScene,
@@ -46,13 +40,6 @@ export class Player extends Character {
                 this.finishFollowingPath(true);
             }
         });
-
-        /*this.unsubscribeLayoutManagerActionStore = layoutManagerActionStore.subscribe((actions) => {
-            this.destroyAllText();
-            actions.forEach((action) => {
-                this.playText(action.uuid, `${action.message}`, -1, action.callback, undefined, action.type);
-            });
-        });*/
     }
 
     public moveUser(delta: number, activeUserInputEvents: ActiveEventList): void {
@@ -99,21 +86,12 @@ export class Player extends Character {
         this.scene.connection?.emitFollowConfirmation(get(followUsersStore)[0]);
     }
 
-    public async setPathToFollow(
+    public setPathToFollow(
         path: { x: number; y: number }[],
         speed?: number
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
         this.getBody().setDirectControl(true);
-        const isPreviousPathInProgress = this.pathToFollow !== undefined && this.pathToFollow.length > 0;
-        // take collider offset into consideration
-        this.pathToFollow = this.adjustPathToFollowToColliderBounds(path);
-        this.pathToFollow.unshift({ x: this.x, y: this.y });
-        this.pathWalkingSpeed = speed;
-        this.currentPathSegmentDistanceFromStart = 0;
-        return new Promise((resolve) => {
-            this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled: isPreviousPathInProgress });
-            this.followingPathPromiseResolve = resolve;
-        });
+        return super.setPathToFollow(path, speed);
     }
 
     public getCurrentPathDestinationPoint(): { x: number; y: number } | undefined {
@@ -123,30 +101,8 @@ export class Player extends Character {
         return this.pathToFollow[this.pathToFollow.length - 1];
     }
 
-    public finishFollowingPath(cancelled = false): void {
-        let wasFollowing = false;
-        if (this.pathToFollow || this.followingPathPromiseResolve) {
-            wasFollowing = true;
-        }
-        this.pathToFollow = undefined;
-        this.pathWalkingSpeed = undefined;
-        this.currentPathSegmentDistanceFromStart = 0;
-        this.stop();
-        this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled });
-        this.getBody().setDirectControl(false);
-        if (wasFollowing) {
-            this.emit(hasMovedEventName, { moving: false, direction: this._lastDirection, x: this.x, y: this.y });
-        }
-    }
-
     private deduceSpeed(speedUp: boolean, followMode: boolean): number {
         return this.pathWalkingSpeed ? this.pathWalkingSpeed : speedUp && !followMode ? 2.5 * WOKA_SPEED : WOKA_SPEED;
-    }
-
-    private adjustPathToFollowToColliderBounds(path: { x: number; y: number }[]): { x: number; y: number }[] {
-        return path.map((step) => {
-            return { x: step.x, y: step.y - this.getBody().height / 2 - this.getBody().offset.y };
-        });
     }
 
     private inputStep(activeEvents: ActiveEventList, x: number, y: number) {
@@ -217,59 +173,6 @@ export class Player extends Character {
         return this.getMovementDirection(xDistance, yDistance, distance);
     }
 
-    private followPath(delta: number): void {
-        if (this.pathToFollow !== undefined && this.pathToFollow.length === 1) {
-            this.finishFollowingPath();
-        }
-        if (!this.pathToFollow) {
-            return;
-        }
-        let segmentStartPos = this.pathToFollow[0];
-        let segmentEndPos = this.pathToFollow[1];
-
-        // Compute movement direction
-        let xDistance = segmentEndPos.x - segmentStartPos.x;
-        let yDistance = segmentEndPos.y - segmentStartPos.y;
-        let pathSegmentLength = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
-
-        this.currentPathSegmentDistanceFromStart += (this.deduceSpeed(false, false) * delta * 20) / 1000;
-
-        while (this.currentPathSegmentDistanceFromStart >= pathSegmentLength) {
-            this.currentPathSegmentDistanceFromStart -= pathSegmentLength;
-
-            this.pathToFollow.shift();
-            if (this.pathToFollow.length === 1) {
-                this.x = this.pathToFollow[0].x;
-                this.y = this.pathToFollow[0].y;
-                this.finishFollowingPath();
-                return;
-            }
-            segmentStartPos = this.pathToFollow[0];
-            segmentEndPos = this.pathToFollow[1];
-
-            // Compute movement direction
-            xDistance = segmentEndPos.x - segmentStartPos.x;
-            yDistance = segmentEndPos.y - segmentStartPos.y;
-            pathSegmentLength = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
-        }
-
-        const newX =
-            segmentStartPos.x +
-            (this.currentPathSegmentDistanceFromStart / pathSegmentLength) * (segmentEndPos.x - segmentStartPos.x);
-        const newY =
-            segmentStartPos.y +
-            (this.currentPathSegmentDistanceFromStart / pathSegmentLength) * (segmentEndPos.y - segmentStartPos.y);
-
-        this.moveToPos(newX, newY);
-
-        this.emit(hasMovedEventName, { moving: true, direction: this._lastDirection, x: this.x, y: this.y });
-        this.scene.markDirty();
-        /*if (distance < 200) {
-            this.pathToFollow.shift();
-        }
-        return this.getMovementDirection(xDistance, yDistance, distance);*/
-    }
-
     private getMovementDirection(xDistance: number, yDistance: number, distance: number): [number, number] {
         return [xDistance / Math.sqrt(distance), yDistance / Math.sqrt(distance)];
     }
@@ -299,7 +202,10 @@ export class Player extends Character {
         this.playAnimation(this._lastDirection, true);
         this.scene.physics.world.once(Phaser.Physics.Arcade.Events.WORLD_STEP, () => {
             // We wait for the physics engine to recompute the correct player position, then we update the depth.
-            this.setDepth(body.position.y + 16);
+            const bodyY = body.position.y + body.height / 2 - body.offset.y;
+
+            this.setDepth(bodyY + 16);
+            this.updateUsernameDisplayPosition(body.position.x + body.width / 2 - body.offset.x, bodyY);
         });
 
         if (this.companion) {
@@ -307,46 +213,31 @@ export class Player extends Character {
         }
     }
 
-    /**
-     * Moves the character to the given position.
-     */
-    private moveToPos(x: number, y: number) {
-        const oldX = this.x;
-        const oldY = this.y;
-        this.x = x;
-        this.y = y;
-
-        // The 1.1 ratio to y is applied here because in path finding mode, the player often moves in diagonal.
-        // In diagonal, the amount of x and y are almost equal. This produces a graphical glitch where on one frame,
-        // the player goes left, and on the next frame, the player goes up. This is because the x and y are almost equal.
-        // To fix this, we apply a ratio of 1.1 to y to make sure that the player goes up/down when the y and x are almost equal.
-        if (Math.abs(x - oldX) > Math.abs((y - oldY) * 1.1)) {
-            if (x < oldX) {
-                this._lastDirection = PositionMessage_Direction.LEFT;
-            } else if (x > oldX) {
-                this._lastDirection = PositionMessage_Direction.RIGHT;
-            }
-        } else {
-            if (y < oldY) {
-                this._lastDirection = PositionMessage_Direction.UP;
-            } else if (y > oldY) {
-                this._lastDirection = PositionMessage_Direction.DOWN;
-            }
-        }
-        passStatusToOnline();
-        this.playAnimation(this._lastDirection, true);
-
-        this.setDepth(this.y + 16);
-
-        if (this.companion) {
-            this.companion.setTarget(this.x, this.y, this._lastDirection);
+    protected onPathFinished(wasFollowing: boolean): void {
+        this.getBody().setDirectControl(false);
+        if (wasFollowing) {
+            this.emit(hasMovedEventName, { moving: false, direction: this._lastDirection, x: this.x, y: this.y });
         }
     }
 
+    protected followPath(delta: number): void {
+        super.followPath(delta);
+        this.emit(hasMovedEventName, { moving: true, direction: this._lastDirection, x: this.x, y: this.y });
+    }
+
+    protected moveToPathPosition(x: number, y: number): void {
+        passStatusToOnline();
+        super.moveToPathPosition(x, y);
+    }
+
+    public finishFollowingPath(cancelled = false): void {
+        const wasFollowing = this.isFollowingPath();
+        super.finishFollowingPath(cancelled);
+        this.onPathFinished(wasFollowing);
+    }
+
     public teleportTo(x: number, y: number): void {
-        this.x = x;
-        this.y = y;
-        this.setDepth(this.y + 16);
+        this.setPosition(x, y);
         this.finishFollowingPath(true);
         this.emit(hasMovedEventName, { moving: false, direction: this._lastDirection, x: this.x, y: this.y });
         this.scene.markDirty();
@@ -366,7 +257,6 @@ export class Player extends Character {
 
     destroy(): void {
         this.unsubscribeVisibilityStore();
-        //this.unsubscribeLayoutManagerActionStore();
         super.destroy();
     }
 }

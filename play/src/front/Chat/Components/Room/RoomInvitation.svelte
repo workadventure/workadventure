@@ -8,6 +8,7 @@
     import { IconLoader } from "@wa-icons";
 
     export let room: ChatRoom & ChatRoomMembershipManagement;
+    const roomType = room.type;
     let roomName = room.name;
     let loadingInvitation = false;
     $: peerAvatarColorStore = room.avatarFallbackColor;
@@ -48,7 +49,7 @@
             compact
             pictureStore={room.pictureStore}
             fallbackName={$roomName}
-            color={room.type === "direct" ? $peerAvatarColorStore ?? defaultColor : null}
+            color={$roomType === "direct" ? $peerAvatarColorStore ?? defaultColor : null}
         />
     </div>
     <div class="m-0 grow text-sm font-bold">

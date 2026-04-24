@@ -8,7 +8,10 @@ import { ChatPermissionLevel } from "../ChatConnection";
 import type { PictureStore } from "../../../Stores/PictureStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { localUserStore } from "../../../Connection/LocalUserStore";
-import { resolveChatUserColor, resolveDirectMessagePeerAvatarUrl } from "./services/WaMatrixProfileService";
+import { resolveChatUserColor } from "./services/WaMatrixProfileService";
+import { matrixAvatarProfile } from "./services/MatrixAvatarProfile";
+
+const singletonMapTimeOutGetAvatar = new Map<string, NodeJS.Timeout>();
 
 export class MatrixChatRoomMember implements ChatRoomMember {
     private handleRoomMemberMembership = this.onRoomMemberMembership.bind(this);
@@ -34,7 +37,8 @@ export class MatrixChatRoomMember implements ChatRoomMember {
         this.name = writable(this.roomMember.name);
         this.membership = writable(this.roomMember.membership);
         this.permissionLevel = writable(MatrixChatRoomMember.getPermissionLevel(this.roomMember.powerLevelNorm));
-        this.pictureStore = writable(this.computeAvatarUrl());
+        this.pictureStore = writable(undefined);
+        this.refreshAvatarFromRoomMember();
         this.startHandlingChatRoomMemberEvents();
         const matrixUser = this.matrixClient.getUser(this.id);
         if (matrixUser) {
@@ -119,13 +123,16 @@ export class MatrixChatRoomMember implements ChatRoomMember {
         this.refreshAvatarFromRoomMember();
     }
 
-    private computeAvatarUrl(): string | undefined {
-        const http = this.roomMember.getAvatarUrl(this.baseUrl, 96, 96, "scale", false, false);
-        return resolveDirectMessagePeerAvatarUrl(this.id, http ?? undefined, this.matrixClient, this.mergerContext);
-    }
-
     refreshAvatarFromRoomMember(): void {
-        this.pictureStore.set(this.computeAvatarUrl());
+        const avatarUrl = matrixAvatarProfile.getAvatarUrl(
+            this.id,
+            this.roomMember,
+            this.baseUrl,
+            this.matrixClient,
+            this.mergerContext
+        );
+        if (avatarUrl == undefined) return;
+        this.pictureStore.set(avatarUrl);
     }
 
     private onMatrixUserAvatar(): void {
@@ -189,6 +196,11 @@ export class MatrixChatRoomMember implements ChatRoomMember {
         const matrixUser = this.matrixClient.getUser(this.id);
         if (matrixUser) {
             matrixUser.off(UserEvent.AvatarUrl, this.handleMatrixUserAvatar);
+        }
+        const timeout = singletonMapTimeOutGetAvatar.get(this.id);
+        if (timeout) {
+            clearTimeout(timeout);
+            singletonMapTimeOutGetAvatar.delete(this.id);
         }
     }
 }

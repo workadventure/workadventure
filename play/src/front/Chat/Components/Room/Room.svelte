@@ -16,6 +16,7 @@
 
     export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
 
+    const roomType = room.type;
     let hasUnreadMessage = room.hasUnreadMessages;
     const roomUnreadCount = room.unreadNotificationCount;
     let roomName = room.name;
@@ -49,7 +50,7 @@
             compact
             pictureStore={room.pictureStore}
             fallbackName={$roomName}
-            color={room.type === "direct" ? $peerAvatarColorStore ?? defaultColor : null}
+            color={$roomType === "direct" ? $peerAvatarColorStore ?? defaultColor : null}
         />
 
         {#if $isEncrypted}

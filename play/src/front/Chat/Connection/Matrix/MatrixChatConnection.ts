@@ -1,5 +1,5 @@
 import type { Readable, Unsubscriber, Writable } from "svelte/store";
-import { derived, get, writable } from "svelte/store";
+import { derived, get, readable, writable } from "svelte/store";
 import type {
     EmittedEvents,
     ICreateRoomOpts,
@@ -36,6 +36,7 @@ import type { VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { canAcceptVerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { asError } from "catch-unknown";
 
+import Debug from "debug";
 import type {
     ChatConnectionInterface,
     ChatRoom,
@@ -53,7 +54,6 @@ import { currentPlayerWokaStore } from "../../../Stores/CurrentPlayerWokaStore";
 import LL from "../../../../i18n/i18n-svelte";
 import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
-import { MatrixRateLimiter } from "../../Services/MatrixRateLimiter";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import type { MatrixSecurity } from "./MatrixSecurity";
@@ -64,6 +64,8 @@ import {
     pushLocalWokaAndNameToMatrixProfile,
     syncWokaAvatarToMatrixProfileOnWokaChange,
 } from "./services/WaMatrixProfileService";
+
+const debug = Debug("MatrixChatConnection");
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
 
@@ -87,7 +89,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private isClientReady = false;
     private usersStatus: MapStore<string, AvailabilityStatus>;
     private userIdsNeedingPresenceUpdate = new Set();
-    private matrixRateLimiter: MatrixRateLimiter;
     nbUnreadInvitationsMessages: Readable<number>;
     nbUnreadDirectRoomsMessages: Readable<number>;
     nbUnreadRoomsMessages: Readable<number>;
@@ -126,13 +127,10 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     ) {
         this.connectionStatus = writable("CONNECTING");
         this.roomList = new AutoDestroyingMapStore<string, MatrixChatRoom>();
-        this.matrixRateLimiter = MatrixRateLimiter.getInstance();
         this.clientPromise = clientPromise;
-        this.directRooms = derived(this.roomList, (roomList) => {
-            return Array.from(roomList.values()).filter(
-                (room) => get(room.myMembership) === KnownMembership.Join && room.type === "direct"
-            );
-        });
+        this.directRooms = this.createJoinedRoomsReadable(
+            (room) => get(room.myMembership) === KnownMembership.Join && get(room.type) === "direct"
+        );
 
         this.directRoomsUsers = derived(
             [this.directRooms, this.statusStore],
@@ -179,11 +177,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             }
         );
 
-        this.rooms = derived(this.roomList, (roomList) => {
-            return Array.from(roomList.values()).filter(
-                (room) => get(room.myMembership) === KnownMembership.Join && room.type === "multiple"
-            );
-        });
+        this.rooms = this.createJoinedRoomsReadable(
+            (room) => get(room.myMembership) === KnownMembership.Join && get(room.type) === "multiple"
+        );
 
         this.hasUnreadMessages = derived(
             this.roomList,
@@ -203,7 +199,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
         this.folders = derived(
             [this.roomFolders, ...Array.from(this.roomFolders.values()).map((folder) => folder.myMembership)],
-            (folderList) => {
+            () => {
                 return Array.from(this.roomFolders.values()).filter(
                     (folder) => get(folder.myMembership) === KnownMembership.Join
                 );
@@ -299,6 +295,38 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         });
     }
 
+    /**
+     * Recomputes when the room list changes or when any room's membership / DM-vs-group {@link MatrixChatRoom.type}
+     * changes (so UI lists move rooms between Direct messages and Group conversations).
+     */
+    private createJoinedRoomsReadable(predicate: (room: MatrixChatRoom) => boolean): Readable<MatrixChatRoom[]> {
+        return readable<MatrixChatRoom[]>([], (set) => {
+            let childUnsubs: Unsubscriber[] = [];
+            const clearChildSubs = () => {
+                childUnsubs.forEach((u) => u());
+                childUnsubs = [];
+            };
+            const listRooms = () => Array.from(get(this.roomList).values());
+            const bump = () => {
+                set(listRooms().filter(predicate));
+            };
+            const rewireRoomSignals = () => {
+                clearChildSubs();
+                for (const room of listRooms()) {
+                    childUnsubs.push(room.myMembership.subscribe(bump));
+                    childUnsubs.push(room.type.subscribe(bump));
+                }
+                bump();
+            };
+            const unsubList = this.roomList.subscribe(rewireRoomSignals);
+            rewireRoomSignals();
+            return () => {
+                unsubList();
+                clearChildSubs();
+            };
+        });
+    }
+
     async init(): Promise<void> {
         try {
             this.client = await this.clientPromise;
@@ -309,6 +337,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             await this.syncMatrixGlobalProfileFromLocalWokaAndName(false);
             this.attachWokaAvatarMatrixSync();
             this.attachDisplayNameMatrixSync();
+
+            // Refresh all joined folders children to ensure the UI is up to date
+            this.refreshAllJoinedFoldersChildren();
         } catch (error) {
             this.connectionStatus.set("OFFLINE");
             console.error(error);
@@ -604,9 +635,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
 
     private getParentRoomID(room: Room): string[] {
-        return (
-            room.getLiveTimeline().getState(EventTimeline.FORWARDS)?.getStateEvents(EventType.SpaceParent) || []
-        ).reduce((acc, currentMatrixEvent) => {
+        const parentIDs =
+            room.getLiveTimeline().getState(EventTimeline.FORWARDS)?.getStateEvents(EventType.SpaceParent) || [];
+        return parentIDs.reduce((acc, currentMatrixEvent) => {
             const parentID = currentMatrixEvent.getStateKey();
             if (parentID) acc.push(parentID);
             return acc;
@@ -731,7 +762,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private async tryAddRoomToParentFolder(room: Room, parentRoomID: string): Promise<boolean> {
         try {
             const parentFolder = await this.findParentFolder(parentRoomID);
-
             if (!parentFolder) {
                 const parentRoom = this.client?.getRoom(parentRoomID);
                 if (parentRoom) {
@@ -792,9 +822,73 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         rootList.set(roomId, new RoomClass(room));
     }
 
+    /**
+     * Re-syncs each joined space folder from local `m.space.child` state so invited/joined
+     * children appear under the right folder before {@link #manageRoomOrFolder} runs.
+     */
+    /**
+     * Re-reads `m.space.child` for a joined folder and recurses into child folders.
+     * @param targetRoomId When set, stops recursing once this room id appears under `folder` (including nested folders).
+     * @returns true if `targetRoomId` was found under this subtree (only meaningful when `targetRoomId` is set).
+     */
+    private refreshJoinedFolderSubtree(folder: MatrixRoomFolder, targetRoomId?: string): boolean {
+        if (get(folder.myMembership) !== KnownMembership.Join) {
+            return false;
+        }
+        folder.getChildren();
+        if (targetRoomId && this.isRoomUnderFolder(targetRoomId, folder)) {
+            return true;
+        }
+        for (const childFolder of folder.folderList.values()) {
+            if (this.refreshJoinedFolderSubtree(childFolder, targetRoomId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Refreshes space-folder children from Matrix state for every root folder.
+     * @param targetRoomId Optional: when the goal is to place one room after join/invite, pass its id to stop
+     * after that room is found under a folder tree (avoids walking unrelated roots when found early).
+     */
+    private refreshAllJoinedFoldersChildren(targetRoomId?: string): void {
+        for (const rootFolder of this.roomFolders.values()) {
+            if (this.refreshJoinedFolderSubtree(rootFolder, targetRoomId)) {
+                return;
+            }
+        }
+    }
+
+    private isRoomUnderFolder(roomId: string, folder: MatrixRoomFolder): boolean {
+        if (folder.roomList.has(roomId)) {
+            return true;
+        }
+        for (const subFolder of folder.folderList.values()) {
+            if (this.isRoomUnderFolder(roomId, subFolder)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** True if this chat room id is already attached under any root space folder tree. */
+    private isRoomUnderAnyFolder(roomId: string): boolean {
+        for (const rootFolder of this.roomFolders.values()) {
+            if (this.isRoomUnderFolder(roomId, rootFolder)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private handleOrphanRoom(room: Room): void {
         if (room.isSpaceRoom()) {
             this.createAndAddNewRootFolder(room);
+            return;
+        }
+
+        if (this.isRoomUnderAnyFolder(room.roomId)) {
             return;
         }
 
@@ -878,12 +972,21 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
 
     private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined): void {
+        debug(
+            "Receive an event to update the membership of the room or folder :",
+            room.name,
+            room.roomId,
+            membership,
+            prevMembership
+        );
         const { roomId } = room;
-
         if (membership !== prevMembership && membership === KnownMembership.Join) {
             this.roomList.delete(roomId);
             this.roomFolders.delete(roomId);
 
+            if (this.client?.isInitialSyncComplete()) {
+                this.refreshAllJoinedFoldersChildren(roomId);
+            }
             this.manageRoomOrFolder(room).catch((e) => {
                 console.error("Failed to manageRoomOrFolder :", e);
             });
@@ -913,6 +1016,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
                     this.roomList.delete(room.roomId);
                     this.roomFolders.delete(room.roomId);
+                    if (this.client?.isInitialSyncComplete()) {
+                        this.refreshAllJoinedFoldersChildren(room.roomId);
+                    }
                     this.manageRoomOrFolder(room).catch((e) => {
                         console.error("Failed to manageRoomOrFolder : ", e);
                     });
@@ -1179,7 +1285,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                     .filter((member) => member.id && ["join", "invite"].includes(get(member.membership)))
                     .map((member) => member.id);
                 return (
-                    room.type === "direct" &&
+                    get(room.type) === "direct" &&
                     memberIDs.some((memberId) => memberId === userID && memberIDs.length === 2)
                 );
             })

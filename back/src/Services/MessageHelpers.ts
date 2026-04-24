@@ -34,6 +34,21 @@ export function emitError(Client: UserSocket, error: unknown): void {
     console.warn(message);
 }
 
+export function endUserConnectionWithReason(Client: UserSocket, reason: string): void {
+    if (Client.writable) {
+        Client.write({
+            message: {
+                $case: "backConnectionCloseReasonMessage",
+                backConnectionCloseReasonMessage: {
+                    reason,
+                },
+            },
+        });
+    }
+
+    Client.end();
+}
+
 export function emitErrorOnAdminSocket(Client: AdminSocket, error: unknown): void {
     const message = getMessageFromError(error);
 

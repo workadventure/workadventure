@@ -49,6 +49,7 @@ import type {
     SetAreaPropertyVariableMessage,
     BackEventMessage,
     ConnectToRoomMessage,
+    HandleRecordingWebhookRequest,
 } from "@workadventure/messages";
 import {
     AnswerMessage,
@@ -81,7 +82,7 @@ import { eventProcessor } from "../Model/EventProcessorInit";
 import { gaugeManager } from "./GaugeManager";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { getMapStorageClient } from "./MapStorageClient";
-import { emitError } from "./MessageHelpers";
+import { emitError, endUserConnectionWithReason } from "./MessageHelpers";
 import { cpuTracker } from "./CpuTracker";
 
 const debug = Debug("socketmanager");
@@ -901,8 +902,7 @@ export class SocketManager {
         setTimeout(() => {
             // Let's leave the room now.
             room.leave(user);
-            // Let's close the connection when the user is banned.
-            user.socket.end();
+            endUserConnectionWithReason(user.socket, `User was banned: ${banUserMessageToSend.message}`);
         }, 10000);
     }
 
@@ -1128,7 +1128,7 @@ export class SocketManager {
                     type: "banned",
                 },
             });
-            recipient.socket.end();
+            endUserConnectionWithReason(recipient.socket, `User was banned: ${message}`);
         }
     }
 
@@ -1726,6 +1726,18 @@ export class SocketManager {
             Sentry.captureException("Error while handling space query");
             return;
         }
+    }
+
+    handleRecordingWebhook(request: HandleRecordingWebhookRequest): void {
+        const space = this.spaces.get(request.spaceName);
+        if (!space) {
+            console.warn(
+                `Received recording webhook for missing space ${request.spaceName} (${request.egressId}). Ignoring.`
+            );
+            return;
+        }
+
+        space.handleRecordingWebhook(request);
     }
 
     handleAddSpaceUserToNotifyMessage(pusher: SpacesWatcher, addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage) {

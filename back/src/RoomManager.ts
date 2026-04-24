@@ -29,7 +29,12 @@ import type { Empty } from "@workadventure/messages/src/ts-proto-generated/googl
 import * as Sentry from "@sentry/node";
 import { asError } from "catch-unknown";
 import { socketManager } from "./Services/SocketManager";
-import { emitError, emitErrorOnAdminSocket, emitErrorOnRoomSocket } from "./Services/MessageHelpers";
+import {
+    emitError,
+    emitErrorOnAdminSocket,
+    emitErrorOnRoomSocket,
+    endUserConnectionWithReason,
+} from "./Services/MessageHelpers";
 import type { User, UserSocket } from "./Model/User";
 import type { GameRoom } from "./Model/GameRoom";
 import { Admin } from "./Model/Admin";
@@ -245,7 +250,7 @@ const roomManager = {
                     );
                     Sentry.captureException(e);
                     emitError(call, e);
-                    call.end();
+                    closeConnection(`Error while handling joinRoom message: ${asError(e).message}`);
                 }
             })().catch((e) => {
                 console.error(e);
@@ -253,7 +258,7 @@ const roomManager = {
             });
         });
 
-        const closeConnection = () => {
+        const closeConnection = (reason?: string) => {
             if (user !== null && room !== null) {
                 socketManager.leaveRoom(room, user);
             }
@@ -264,7 +269,11 @@ const roomManager = {
                 clearTimeout(pongTimeoutId);
                 pongTimeoutId = undefined;
             }
-            call.end();
+            if (reason !== undefined) {
+                endUserConnectionWithReason(call, reason);
+            } else {
+                call.end();
+            }
             room = null;
             user = null;
         };
@@ -320,16 +329,17 @@ const roomManager = {
                     "at : ",
                     today.toLocaleString("en-GB")
                 );
+                const reason =
+                    "Connection lost with user. The user did not send a pong message in time. You should never see this message in the browser.";
                 call.write({
                     message: {
                         $case: "errorMessage",
                         errorMessage: {
-                            message:
-                                "Connection lost with user. The user did not send a pong message in time. You should never see this message in the browser.",
+                            message: reason,
                         },
                     },
                 });
-                closeConnection();
+                closeConnection(reason);
             }, PONG_TIMEOUT);
         }, PING_INTERVAL);
     },

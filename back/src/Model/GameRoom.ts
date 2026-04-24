@@ -54,7 +54,7 @@ import type { EventSocket, RoomSocket, VariableSocket } from "../RoomManager";
 import { adminApi } from "../Services/AdminApi";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { getMapStorageClient } from "../Services/MapStorageClient";
-import { emitError, emitErrorOnRoomSocket } from "../Services/MessageHelpers";
+import { emitError, emitErrorOnRoomSocket, endUserConnectionWithReason } from "../Services/MessageHelpers";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { VariableError } from "../Services/VariableError";
 import { VariablesManager } from "../Services/VariablesManager";
@@ -252,7 +252,7 @@ export class GameRoom implements BrothersFinder {
                     deleteMapMessage: {},
                 },
             });
-            user.socket.end();
+            endUserConnectionWithReason(user.socket, "Map was deleted.");
         });
     }
 
@@ -292,8 +292,10 @@ export class GameRoom implements BrothersFinder {
                 );
                 // Remove the stale user from the room
                 this.leave(existingUser);
-                // Close the stale connection
-                existingUser.socket.end();
+                endUserConnectionWithReason(
+                    existingUser.socket,
+                    `A new connection from the same browser tab replaced this connection for user ${joinRoomMessage.userUuid}.`
+                );
             }
         }
 

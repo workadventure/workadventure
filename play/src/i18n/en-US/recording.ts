@@ -27,6 +27,7 @@ const recording: BaseTranslation = {
         downloadFailedNotification: "Failed to download recording",
         recordingComplete: "Recording complete",
         recordingIsInProgress: "Recording is in progress",
+        unexpectedlyStoppedNotification: "Recording stopped unexpectedly",
         recordingSaved: "Your recording has been saved successfully.",
         howToAccess: "To access your recordings:",
         viewRecordings: "View Recordings",
