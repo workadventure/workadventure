@@ -10,7 +10,6 @@ type StoredNoncedMessage<TPayload> = NoncedMessage<TPayload> & {
 export class NoncedMessageStore<TPayload> {
     private readonly messages: StoredNoncedMessage<TPayload>[] = [];
     private readonly retentionMs: number;
-    private retentionActive: boolean = false;
 
     public constructor(retentionMs?: number) {
         this.retentionMs = retentionMs ?? 30_000;
@@ -19,22 +18,20 @@ export class NoncedMessageStore<TPayload> {
     public add(nonce: number, payload: TPayload): void {
         this.pruneExpired();
 
-        if (this.retentionActive) {
-            if (!Number.isInteger(nonce) || nonce < 0) {
-                throw new Error(`Invalid nonce ${nonce}: expected a nonnegative integer`);
-            }
-
-            const lastNonce = this.messages[this.messages.length - 1]?.nonce;
-            if (lastNonce !== undefined && nonce <= lastNonce) {
-                throw new Error(`Invalid nonce ${nonce}: expected strictly greater than previous nonce ${lastNonce}`);
-            }
-
-            this.messages.push({
-                nonce,
-                payload,
-                storedAt: Date.now(),
-            });
+        if (!Number.isInteger(nonce) || nonce < 0) {
+            throw new Error(`Invalid nonce ${nonce}: expected a nonnegative integer`);
         }
+
+        const lastNonce = this.messages[this.messages.length - 1]?.nonce;
+        if (lastNonce !== undefined && nonce <= lastNonce) {
+            throw new Error(`Invalid nonce ${nonce}: expected strictly greater than previous nonce ${lastNonce}`);
+        }
+
+        this.messages.push({
+            nonce,
+            payload,
+            storedAt: Date.now(),
+        });
     }
 
     public getAfter(nonce: number): NoncedMessage<TPayload>[] {
@@ -100,15 +97,6 @@ export class NoncedMessageStore<TPayload> {
 
     public clear(): void {
         this.messages.length = 0;
-    }
-
-    public beginDisconnectionRetention(): void {
-        this.retentionActive = true;
-        this.pruneExpired();
-    }
-
-    public endDisconnectionRetention(): void {
-        this.retentionActive = false;
     }
 
     private pruneExpired(): void {

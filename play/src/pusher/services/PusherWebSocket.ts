@@ -23,7 +23,6 @@ export class PusherWebSocket {
 
     public constructor(socket: RawSocket) {
         this.socket = socket;
-        this.outgoingMessagesStore.beginDisconnectionRetention();
     }
 
     public getUserData(): SocketData {

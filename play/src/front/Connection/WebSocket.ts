@@ -68,14 +68,12 @@ export class WorkAdventureWebSocket {
 
     private handleOpenEvent = (): void => {
         this.reconnectAttempted = false;
-        this.outgoingMessagesStore.endDisconnectionRetention();
         const event = new Event("open");
         this.onopen?.call(this, event);
     };
 
     private handleCloseEvent = (event: CloseEvent): void => {
         this.detachSocketListeners(this.socket);
-        this.outgoingMessagesStore.beginDisconnectionRetention();
 
         if (!this.manuallyClosed && this.shouldReconnect(event)) {
             this.reconnectAttempted = true;
