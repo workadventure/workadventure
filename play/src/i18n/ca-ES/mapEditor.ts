@@ -393,6 +393,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         images: "Imatge{{s}}",
         noImage: "Sense imatge",
+        specialTags: {
+            customLabel: "Personalitzat",
+            mostUsedLabel: "Més utilitzats",
+        },
         customEntityEditorForm: {
             imageName: "Nom de la imatge",
             tags: "Etiquetes",
@@ -442,6 +446,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Drets",
                 rightsHelper:
                     "Els drets defineixen qui pot utilitzar el megàfon. Si el deixeu buit, qualsevol persona el pot utilitzar. Si el configureu, només els usuaris que tenen una d'aquestes 'etiquetes' el poden utilitzar.",
+                recording: {
+                    title: "Enregistrament",
+                    enable: "Activa l'enregistrament del megàfon",
+                    enableHelper:
+                        "Quan està desactivat, els usuaris no poden iniciar un enregistrament al megàfon. Els enregistraments existents encara es poden aturar.",
+                    rights: "Drets d'enregistrament",
+                    rightsHelper:
+                        "Qualsevol persona amb almenys una d'aquestes etiquetes pot enregistrar el megàfon, si ja pot enregistrar i utilitzar el megàfon. Deixeu-ho buit per no afegir cap restricció addicional.",
+                },
                 audienceVideoFeedbackActivated: "Mode auditori activat",
                 audienceVideoFeedbackActivatedDisabled: "Mode auditori desactivat",
                 audienceVideoFeedbackActivatedHelper:

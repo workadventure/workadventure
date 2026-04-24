@@ -21,8 +21,38 @@ const camera: DeepPartial<Translation["camera"]> = {
         allow: "Webcam zwóliś",
         continue: "Dalej mimo kamery",
         screen: {
-            firefox: "/resources/help-setting-camera-permission/de-DE-chrome.png",
+            firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",
+        },
+        tooltip: {
+            permissionDeniedTitle: "Kamerowy pśistup jo se blokěrował",
+            permissionDeniedDesc:
+                "Waš browser jo pśistup kamerje za toś ten bok wótpokazał. Zwóliśo jen pśez adresowe pólo (šlosk abo symbol kamery) abo w nastajenjach sedła. Wobraz wótpowědujo wašomu browseroju.",
+            noDeviceTitle: "Žedna wužywajobna kamera",
+            noDeviceDesc:
+                "Browser namakujo žednu kameru, kótaruž móžośo wužywaś. Wopytajśo drugi browser, pśekontrolěrujśo zwisk kamery, pśekontrolěrujśo konfiguraciju kompjutra (datowy škit, graty) abo startujśo kompjuter znowego, jolic hardware by měł funkcioněrowaś.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/de-DE-chrome.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
+        microphoneTooltip: {
+            permissionDeniedTitle: "Mikrofonowy pśistup jo se blokěrował",
+            permissionDeniedDesc:
+                "Waš browser jo pśistup mikrofonoju za toś ten bok wótpokazał. Zwóliśo jen pśez adresowe pólo (šlosk abo symbol mikrofona) abo w nastajenjach sedła. Wobraz wótpowědujo wašomu browseroju.",
+            noDeviceTitle: "Žeden wužywajobny mikrofon",
+            noDeviceDesc:
+                "Browser namakujo žeden mikrofon, kótaryž móžośo wužywaś. Wopytajśo drugi browser, pśekontrolěrujśo mikrofon, pśekontrolěrujśo konfiguraciju kompjutra (datowy škit, graty) abo startujśo kompjuter znowego, jolic hardware by měł funkcioněrowaś.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/de-DE-chrome.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
         },
     },
     webrtc: {

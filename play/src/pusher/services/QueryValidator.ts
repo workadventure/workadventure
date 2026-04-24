@@ -70,25 +70,27 @@ export function validateWebsocketQuery<T extends ZodObject<ZodRawShape>>(
         const websocketProtocol = req.getHeader("sec-websocket-protocol");
         const websocketExtensions = req.getHeader("sec-websocket-extensions");
 
-        res.upgrade(
-            {
-                rejected: true,
-                reason: "error",
-                error: {
-                    status: "error",
-                    type: "error",
-                    title: "400 Bad Request",
-                    subtitle: "Something wrong happened while connecting!",
-                    image: "",
-                    code: "WS_BAD_REQUEST",
-                    details: messages.join("\n"),
-                },
-            } satisfies UpgradeFailedData,
-            websocketKey,
-            websocketProtocol,
-            websocketExtensions,
-            context
-        );
+        res.cork(() => {
+            res.upgrade(
+                {
+                    rejected: true,
+                    reason: "error",
+                    error: {
+                        status: "error",
+                        type: "error",
+                        title: "400 Bad Request",
+                        subtitle: "Something wrong happened while connecting!",
+                        image: "",
+                        code: "WS_BAD_REQUEST",
+                        details: messages.join("\n"),
+                    },
+                } satisfies UpgradeFailedData,
+                websocketKey,
+                websocketProtocol,
+                websocketExtensions,
+                context
+            );
+        });
         return undefined;
     }
 }

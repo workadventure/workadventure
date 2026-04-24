@@ -30,7 +30,7 @@
     import cardPng from "../../images/applications/icon_cards.svg";
     import tldrawJpeg from "../../images/applications/icon_tldraw.jpeg";
     import pickerSvg from "../../images/applications/picker.svg";
-    import { connectionManager } from "../../../Connection/ConnectionManager";
+
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
     import Tooltip from "../../Util/Tooltip.svelte";
     import InputTags from "../../Input/InputTags.svelte";
@@ -111,6 +111,8 @@
         close: undefined;
     }>();
 
+    const applicationManager = gameManager.getCurrentGameScene().applicationManager;
+
     function shouldDisplayAdvancedOption(): boolean {
         return !!(property.policy || property.allowAPI || !property.closable || property.width || property.newTab);
     }
@@ -183,7 +185,7 @@
                 } else if (property.application == "klaxoon") {
                     property.link = KlaxoonService.getKlaxoonEmbedUrl(
                         new URL(property.link),
-                        connectionManager.klaxoonToolClientId
+                        applicationManager.klaxoonToolClientId
                     );
                 } else if (property.application == "cards") {
                     property.link = CardsService.getCardsLink(new URL(property.link), localUserStore.getAuthToken());
@@ -211,8 +213,8 @@
                 if (property.application != "website") mediaLink.linkMatchWithApplicationIdOrName(property.application);
 
                 const embedLink = await mediaLink.getEmbedLink({
-                    klaxoonId: connectionManager.klaxoonToolClientId,
-                    excalidrawDomains: connectionManager.excalidrawToolDomains,
+                    klaxoonId: applicationManager.klaxoonToolClientId,
+                    excalidrawDomains: applicationManager.excalidrawToolDomains,
                 });
                 if (embedLink != property.link) property.link = embedLink;
 
@@ -386,7 +388,7 @@
 
     function openKlaxoonActivityPicker() {
         if (
-            !connectionManager.klaxoonToolClientId ||
+            !applicationManager.klaxoonToolClientId ||
             property.type !== "openWebsite" ||
             property.application !== "klaxoon"
         ) {
@@ -394,11 +396,11 @@
             return;
         }
         windowKlaxoonActivityPicker = KlaxoonService.openKlaxoonActivityPicker(
-            connectionManager.klaxoonToolClientId,
+            applicationManager.klaxoonToolClientId,
             (payload: KlaxoonEvent) => {
                 property.link = KlaxoonService.getKlaxoonEmbedUrl(
                     new URL(payload.url),
-                    connectionManager.klaxoonToolClientId
+                    applicationManager.klaxoonToolClientId
                 );
                 property.poster = payload.imageUrl ?? undefined;
                 property.buttonLabel = payload.title ?? undefined;

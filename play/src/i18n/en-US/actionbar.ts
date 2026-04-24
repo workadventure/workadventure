@@ -10,6 +10,7 @@ const actionbar: BaseTranslation = {
     participantListPlaceholder: "Participants list",
     participantSendMessage: "Send a message",
     participantInviteUser: "Invite a user",
+    participantExitFullscreen: "Exit fullscreen",
     profil: "Edit your name",
     startScreenSharing: "Start screen sharing",
     stopScreenSharing: "Stop screen sharing",
@@ -51,6 +52,8 @@ const actionbar: BaseTranslation = {
         disabled: "Your speaker is disabled",
         activate: "Activate your speaker",
         noDevices: "No speaker device found",
+        noDevicesDesc:
+            "Your browser does not list any selectable audio output. Some browsers limit this (for example Safari). Try another browser, reconnect headphones or speakers, check your system sound settings and your computer's configuration (privacy, devices).",
     },
     status: {
         ONLINE: "Online",

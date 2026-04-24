@@ -54,7 +54,7 @@ import type { EventSocket, RoomSocket, VariableSocket } from "../RoomManager";
 import { adminApi } from "../Services/AdminApi";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { getMapStorageClient } from "../Services/MapStorageClient";
-import { emitError, emitErrorOnRoomSocket } from "../Services/MessageHelpers";
+import { emitError, emitErrorOnRoomSocket, endUserConnectionWithReason } from "../Services/MessageHelpers";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { VariableError } from "../Services/VariableError";
 import { VariablesManager } from "../Services/VariablesManager";
@@ -252,7 +252,7 @@ export class GameRoom implements BrothersFinder {
                     deleteMapMessage: {},
                 },
             });
-            user.socket.end();
+            endUserConnectionWithReason(user.socket, "Map was deleted.");
         });
     }
 
@@ -280,9 +280,6 @@ export class GameRoom implements BrothersFinder {
         }
         const position = ProtobufUtils.toPointInterface(positionMessage);
 
-        // Check if the same user (same uuid) is already connected in this room (another tab/device)
-        const sameUserAlreadyConnected = (this.getUsersByUuid(joinRoomMessage.userUuid)?.size ?? 0) >= 1;
-
         // Check if there's a stale connection from the same browser tab and kill it immediately
         // This prevents "ghost" users appearing when a user reconnects after a network disruption
         const tabId = joinRoomMessage.tabId;
@@ -295,10 +292,15 @@ export class GameRoom implements BrothersFinder {
                 );
                 // Remove the stale user from the room
                 this.leave(existingUser);
-                // Close the stale connection
-                existingUser.socket.end();
+                endUserConnectionWithReason(
+                    existingUser.socket,
+                    `A new connection from the same browser tab replaced this connection for user ${joinRoomMessage.userUuid}.`
+                );
             }
         }
+
+        // Same-tab reconnections should not be reported as duplicate sessions.
+        const sameUserAlreadyConnected = (this.getUsersByUuid(joinRoomMessage.userUuid)?.size ?? 0) >= 1;
 
         this.nextUserId++;
         const user = await User.create(

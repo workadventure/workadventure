@@ -16,7 +16,7 @@
     import type { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import type { ExplorerTool } from "../../Phaser/Game/MapEditor/Tools/ExplorerTool";
     import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
-    import { connectionManager } from "../../Connection/ConnectionManager";
+
     import { mapExplorerSearchinputFocusStore } from "../../Stores/UserInputStore";
     import Input from "../Input/Input.svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -28,6 +28,8 @@
     let selectFilters = writable<Array<string>>(new Array<string>());
     let entitiesListFiltered = writable<Map<string, Entity>>(new Map());
     let areasListFiltered = writable<Map<string, AreaPreview>>(new Map());
+
+    const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
     onMount(() => {
         init();
@@ -48,6 +50,7 @@
             // Check filter by properties
             if ($selectFilters.length == 0) {
                 $entitiesListFiltered.set(key, entity);
+                entityListActive = true;
                 continue;
             } else {
                 // Check if the entity has the selected properties
@@ -56,8 +59,10 @@
                         entity
                             .getProperties()
                             .find((p) => p.type === filter || (p as OpenWebsitePropertyData).application === filter)
-                    )
+                    ) {
                         $entitiesListFiltered.set(key, entity);
+                        entityListActive = true;
+                    }
                 }
             }
         }
@@ -72,6 +77,7 @@
                 // Check filter by properties
                 if ($selectFilters.length == 0) {
                     $areasListFiltered.set(key, area);
+                    areaListActive = true;
                     continue;
                 } else {
                     // Check if the area has the selected properties
@@ -80,8 +86,10 @@
                             area
                                 .getProperties()
                                 .find((p) => p.type === filter || (p as OpenWebsitePropertyData).application === filter)
-                        )
+                        ) {
                             $areasListFiltered.set(key, area);
+                            areaListActive = true;
+                        }
                     }
                 }
             }
@@ -335,7 +343,7 @@
                 }}
             />
 
-            {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
+            {#each applicationManager.applications as app, index (`my-own-app-${index}`)}
                 <AddPropertyButtonWrapper
                     property="openWebsite"
                     subProperty={app.name}
@@ -347,8 +355,11 @@
         </div>
 
         <div class="flex flex-col gap-2">
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 class="group entities p-2 rounded flex flex-row justify-between items-center cursor-pointer hover:bg-white/10 transition-all"
+                on:click={toggleEntityList}
             >
                 <div class="flex flex-row items-center justify-start gap-2">
                     <img
@@ -376,7 +387,7 @@
                 <button
                     class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
                     data-testid="toggleFolderEntity"
-                    on:click={toggleEntityList}
+                    on:click|stopPropagation={toggleEntityList}
                 >
                     <IconChevronUp class={`transform transition ${!entityListActive ? "" : "rotate-180"}`} />
                 </button>
@@ -424,8 +435,11 @@
                 </div>
             {/if}
 
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 class="group areas p-2 rounded flex flex-row justify-between items-center cursor-pointer hover:bg-white/10 transition-all"
+                on:click={toggleAreaList}
             >
                 <div class="flex flex-row items-center justify-start gap-2">
                     <img draggable="false" class="w-10 h-auto pointer-events-none" src={AreaToolImg} alt="link icon" />
@@ -447,7 +461,7 @@
                 <button
                     class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
                     data-testid="toggleFolderArea"
-                    on:click={toggleAreaList}
+                    on:click|stopPropagation={toggleAreaList}
                 >
                     <IconChevronUp class={`transform transition ${!areaListActive ? "" : "rotate-180"}`} />
                 </button>

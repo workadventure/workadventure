@@ -34,7 +34,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         // await expect(page.locator('canvas')).toBeVisible();
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "livekitRoomProperty");
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 3 * 32);
@@ -71,7 +71,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         // await expect(page.locator('canvas')).toBeVisible();
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "livekitRoomProperty");
         await page.getByRole("textbox", { name: "Room Name", exact: true }).fill("foobar");
         await Menu.closeMapEditor(page);
@@ -119,7 +119,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         // await expect(page.locator('canvas')).toBeVisible();
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "livekitRoomProperty");
         await page.getByRole("textbox", { name: "Room Name", exact: true }).fill("foobar");
         await Menu.closeMapEditor(page);

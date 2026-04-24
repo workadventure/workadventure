@@ -392,6 +392,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         images: "画像",
         noImage: "画像なし",
+        specialTags: {
+            customLabel: "カスタム",
+            mostUsedLabel: "よく使うもの",
+        },
         customEntityEditorForm: {
             imageName: "画像名",
             tags: "タグ",
@@ -441,6 +445,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "権限",
                 rightsHelper:
                     "権限によって、誰がメガホンを利用できるかが決まります。空白のままにしておくと、誰でも利用することができます。設定した場合、これらの「タグ」のいずれかに一致するユーザーだけが利用することができます。",
+                recording: {
+                    title: "録画",
+                    enable: "メガホンの録画を有効にする",
+                    enableHelper:
+                        "無効にすると、ユーザーはメガホンで録画を開始できません。進行中の録画は引き続き停止できます。",
+                    rights: "録画権限",
+                    rightsHelper:
+                        "すでに録画とメガホンの利用が許可されている場合、これらのタグのいずれかを持つユーザーがメガホンを録画できます。追加の制限をしない場合は空白にしてください。",
+                },
                 audienceVideoFeedbackActivated: "オーディトリアムモード",
                 audienceVideoFeedbackActivatedDisabled: "オーディトリアムモード",
                 audienceVideoFeedbackActivatedHelper:

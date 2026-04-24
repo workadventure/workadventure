@@ -14,12 +14,12 @@
     import loaderImg from "../images/loader.svg";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
-    import { userActivationManager } from "../../Stores/UserActivationStore";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
     import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
     import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import { blackListManager } from "../../WebRtc/BlackListManager";
+    import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -37,6 +37,7 @@
 
     // The inCameraContainer is used to know if the VideoMediaBox is part of a series of video or if it is the highlighted video.
     let inCameraContainer: boolean = !!getContext("inCameraContainer");
+    let inHighlightFullscreenParticipantList: boolean = !!getContext("inHighlightFullscreenParticipantList");
 
     $: extendedSpaceUser = videoBox.spaceUser;
     $: megaphoneState = extendedSpaceUser?.reactiveUser.megaphoneState;
@@ -50,13 +51,11 @@
     $: hasVideoStore = streamable?.hasVideo;
     $: hasAudioStore = streamable?.hasAudio;
     $: isMutedStore = streamable?.isMuted;
-    $: muteAudioStore = streamable?.muteAudio;
     $: volumeMeterStore = streamable?.volumeStore;
     $: showVoiceIndicatorStore = streamable?.showVoiceIndicator;
     $: isBlockedStore = streamable?.media?.isBlocked;
     $: volumeStore = streamable?.volume;
     $: volumeMeter = $volumeMeterStore;
-    $: muteAudio = muteAudioStore ? $muteAudioStore : false;
     $: webRtcStatsStore = $displayVideoQualityStore ? streamable?.webrtcStats : undefined;
     $: webRtcStats = $webRtcStatsStore;
 
@@ -106,11 +105,21 @@
         );
     }
 
-    function toggleFullScreen() {
-        highlightFullScreen.update((current) => !current);
+    function setFullScreen() {
+        exitFullScreen();
+        removeHighlight();
+
+        setTimeout(() => {
+            highlightPeer();
+            highlightFullScreen.set(true);
+        }, 100);
     }
 
     function exitFullScreen() {
+        highlightFullScreen.set(false);
+    }
+
+    function removeHighlight() {
         highlightedEmbedScreen.removeHighlight();
     }
 
@@ -180,7 +189,7 @@
 
     $: updateShowAfterDelay(effectiveStatus, isReconnecting);
 
-    function highlightPeer(videoBox: VideoBox) {
+    function highlightPeer() {
         highlightedEmbedScreen.highlight(videoBox);
         analyticsClient.pinMeetingAction();
         window.focus();
@@ -259,12 +268,15 @@
                 media={streamable?.media}
                 {videoEnabled}
                 status={effectiveStatus}
-                verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
+                verticalAlign={!inCameraContainer && !inHighlightFullscreenParticipantList && !fullScreen
+                    ? "top"
+                    : "center"}
                 isTalking={showVoiceIndicator}
                 flipX={streamable?.flipX}
-                cover={streamable?.displayMode === "cover" && (inCameraContainer || fullScreen)}
+                cover={streamable?.displayMode === "cover" &&
+                    (inCameraContainer || inHighlightFullscreenParticipantList || fullScreen)}
                 isBlocked={$isBlockedStore}
-                withBackground={(inCameraContainer &&
+                withBackground={((inCameraContainer || inHighlightFullscreenParticipantList) &&
                     effectiveStatus !== "connecting" &&
                     effectiveStatus !== "reconnecting") ||
                     $isBlockedStore}
@@ -292,7 +304,13 @@
                 </UserName>
 
                 {#if effectiveStatus === "connected" && $hasAudioStore && !$isBlockedStore}
-                    <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
+                    <div
+                        class="z-[251] absolute p-2 right-1 white"
+                        class:top-1={videoEnabled}
+                        class:top-0={!videoEnabled}
+                        class:text-white={$activePictureInPictureStore}
+                        class:opacity-20={$activePictureInPictureStore}
+                    >
                         {#if !$isMutedStore}
                             <SoundMeterWidget
                                 volume={volumeMeter}
@@ -311,67 +329,51 @@
                 {#if webRtcStats}
                     <WebRtcStats {webRtcStats} />
                 {/if}
-            </CenteredVideo>
-        {/if}
 
-        {#if !inCameraContainer}
-            <!-- The menu to go fullscreen -->
-            <div
-                class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-50 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
-            >
-                <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
-                    {#if !fullScreen}
-                        <button
-                            class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
-                            on:click={exitFullScreen}
-                        >
-                            <IconArrowsMinimize font-size="20" class="text-white" />
-                        </button>
-                    {/if}
-                    <button
-                        class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
-                        on:click={toggleFullScreen}
+                <!-- The menu to go fullscreen -->
+                {#if !inCameraContainer && videoEnabled}
+                    <div
+                        class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 hover:!opacity-100 group-hover/centered-video:opacity-20 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
                     >
-                        {#if fullScreen}
-                            <IconArrowsMinimize font-size="20" class="text-white" />
-                        {:else}
-                            <IconArrowsMaximize font-size="20" class="text-white" />
-                        {/if}
-                    </button>
-                </div>
-            </div>
+                        <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
+                            {#if !fullScreen && !$highlightFullScreen}
+                                <button
+                                    class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
+                                    on:click={removeHighlight}
+                                >
+                                    <IconArrowsMinimize font-size="20" class="text-white" />
+                                </button>
+                            {/if}
+                            {#if fullScreen}
+                                <button
+                                    class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                                    on:click={exitFullScreen}
+                                >
+                                    <IconArrowsMinimize font-size="20" class="text-white" />
+                                </button>
+                            {:else}
+                                <button
+                                    class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                                    on:click={setFullScreen}
+                                    data-testid="highlight-enter-fullscreen-button"
+                                >
+                                    <IconArrowsMaximize font-size="20" class="text-white" />
+                                </button>
+                            {/if}
+                        </div>
+                    </div>
+                {/if}
+            </CenteredVideo>
         {/if}
     </div>
 
     {#if inCameraContainer && videoEnabled && $isBlockedStore === false}
-        {#await userActivationManager.waitForUserActivation()}
-            <!-- Waiting for user activation; nothing to show -->
-        {:then}
-            <button
-                class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
-                on:click={() => highlightPeer(videoBox)}
-            >
-                <IconArrowsMaximize font-size="20" class="text-white" />
-            </button>
-        {/await}
-    {/if}
-    {#if !muteAudio}
-        {#await userActivationManager.waitForUserActivation()}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
-            <div
-                class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
-                on:click={() => {
-                    userActivationManager.notifyUserActivation();
-                }}
-            >
-                <div class="text-center">
-                    <div class="text-lg text-white bold">{$LL.video.click_to_unmute()}</div>
-                </div>
-            </div>
-        {:then}
-            <!-- Nothing to do, the audio element is unmuted by the userActivationManager -->
-        {/await}
+        <button
+            class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
+            on:click={highlightPeer}
+        >
+            <IconArrowsMaximize font-size="20" class="text-white" />
+        </button>
     {/if}
 
     {#if isCurrentUserBlackListed}

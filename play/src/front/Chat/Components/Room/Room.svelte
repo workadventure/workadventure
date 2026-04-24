@@ -1,5 +1,6 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
+    import { defaultColor } from "@workadventure/shared-utils";
     import type {
         ChatRoom,
         ChatRoomMembershipManagement,
@@ -15,6 +16,7 @@
 
     export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
 
+    const roomType = room.type;
     let hasUnreadMessage = room.hasUnreadMessages;
     const roomUnreadCount = room.unreadNotificationCount;
     let roomName = room.name;
@@ -27,10 +29,13 @@
     });
 
     $: isSelected = $selectedRoomStore?.id === room.id;
+    $: peerAvatarColorStore = room.avatarFallbackColor;
+    $: peerWaParensStore = room.peerWaDisplayNameIfDifferent;
+    $: peerWaDisplayNameParens = peerWaParensStore ? $peerWaParensStore : undefined;
 </script>
 
 <div
-    class="group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer p-2 cursor-pointer w-full"
+    class="wa-chat-item group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer w-full"
     class:bg-white={isSelected}
     class:bg-opacity-10={isSelected}
     class:rounded={isSelected}
@@ -40,21 +45,28 @@
     tabindex="0"
     data-testid={$roomName}
 >
-    <div class="relative">
-        <Avatar pictureStore={room.pictureStore} fallbackName={$roomName} />
+    <div class="relative shrink-0">
+        <Avatar
+            compact
+            pictureStore={room.pictureStore}
+            fallbackName={$roomName}
+            color={$roomType === "direct" ? $peerAvatarColorStore ?? defaultColor : null}
+        />
 
         {#if $isEncrypted}
             <EncryptionBadge />
         {/if}
     </div>
-    <div class="m-0 flex-1 text-start">
+    <div class="m-0 flex-1 min-w-0 text-start">
         {#each chunks as chunk (chunk.key)}
             <span
                 class="{chunk.match ? 'text-light-blue' : ''} {$hasUnreadMessage
-                    ? 'text-white font-bold'
-                    : 'text-white/75'} cursor-default text-sm">{chunk.text}</span
+                    ? 'text-white'
+                    : 'text-white/75'} cursor-default text-sm font-bold">{chunk.text}</span
             >
-        {/each}
+        {/each}{#if peerWaDisplayNameParens}<span class="text-xs font-normal opacity-75 ml-0.5"
+                >({peerWaDisplayNameParens})</span
+            >{/if}
     </div>
     {#if $areNotificationsMuted}
         <IconBellOff font-size="12" class="opacity-50" />

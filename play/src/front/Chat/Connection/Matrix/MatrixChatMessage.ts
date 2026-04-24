@@ -8,7 +8,7 @@ import type { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from 
 import { chatUserFactory } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
-import { resolveImageMediaFromEvent } from "./MatrixMediaResolver";
+import { resolveAttachmentMediaFromEvent, resolveImageMediaFromEvent } from "./MatrixMediaResolver";
 
 export class MatrixChatMessage implements ChatMessage {
     id: string;
@@ -26,6 +26,8 @@ export class MatrixChatMessage implements ChatMessage {
     readonly canDelete: Writable<boolean>;
     private imageMediaCleanup: () => void = () => undefined;
     private imageMediaAbortController: AbortController | undefined;
+    private attachmentMediaCleanup: () => void = () => undefined;
+    private attachmentMediaAbortController: AbortController | undefined;
     private readonly decryptedListener = () => this.updateMessageContentOnDecryptedEvent();
 
     constructor(private event: MatrixEvent, private room: Room, isQuotedMessage?: boolean) {
@@ -64,6 +66,7 @@ export class MatrixChatMessage implements ChatMessage {
 
         event.on(MatrixEventEvent.Decrypted, this.decryptedListener);
         this.loadImageMediaIfNeeded();
+        this.loadAttachmentMediaIfNeeded();
 
         this.initReactions();
     }
@@ -85,6 +88,7 @@ export class MatrixChatMessage implements ChatMessage {
     private updateMessageContentOnDecryptedEvent() {
         this.content.set(this.getMessageContent());
         this.loadImageMediaIfNeeded();
+        this.loadAttachmentMediaIfNeeded();
     }
 
     private getMessageContent(): ChatMessageContent {
@@ -119,8 +123,12 @@ export class MatrixChatMessage implements ChatMessage {
             };
         }
 
-        if (this.type !== "text") {
-            return { body: content.body, url: this.room.client.mxcUrlToHttp(content.url) ?? undefined };
+        if (this.type === "file" || this.type === "audio" || this.type === "video") {
+            return {
+                body: content.body,
+                url: this.room.client.mxcUrlToHttp(content.url ?? content.file?.url) ?? undefined,
+                mediaState: content.file !== undefined ? "loading" : "ready",
+            };
         }
 
         return { body: content.body, url: undefined };
@@ -154,6 +162,52 @@ export class MatrixChatMessage implements ChatMessage {
                 ...content,
                 url: media.sourceUrl,
                 thumbnailUrl: media.thumbnailUrl ?? media.sourceUrl,
+                mediaErrorKind: media.error,
+                mediaState: media.error ? "error" : "ready",
+            }));
+        } catch (error) {
+            if (error instanceof DOMException && error.name === "AbortError") {
+                return;
+            }
+            this.content.update((content) => ({
+                ...content,
+                mediaState: "error",
+                mediaErrorKind: "download",
+            }));
+        }
+    }
+
+    private loadAttachmentMediaIfNeeded() {
+        if (this.type !== "file" && this.type !== "audio" && this.type !== "video") {
+            return;
+        }
+        const rawContent = this.event.getOriginalContent();
+        if (typeof rawContent !== "object" || rawContent === null || rawContent.file === undefined) {
+            return;
+        }
+        this.attachmentMediaAbortController?.abort();
+        this.attachmentMediaCleanup();
+
+        const abortController = new AbortController();
+        this.attachmentMediaAbortController = abortController;
+
+        this.resolveAttachmentMedia(abortController.signal).catch(() => undefined);
+    }
+
+    private async resolveAttachmentMedia(signal: AbortSignal): Promise<void> {
+        this.content.update((content) => ({ ...content, mediaState: "loading", mediaErrorKind: undefined }));
+
+        try {
+            const media = await resolveAttachmentMediaFromEvent(this.event, this.room.client, signal);
+            if (signal.aborted) {
+                media.cleanup();
+                return;
+            }
+
+            this.attachmentMediaCleanup = media.cleanup;
+            this.content.update((content) => ({
+                ...content,
+                url: media.sourceUrl,
                 mediaErrorKind: media.error,
                 mediaState: media.error ? "error" : "ready",
             }));
@@ -271,5 +325,7 @@ export class MatrixChatMessage implements ChatMessage {
         this.event.off(MatrixEventEvent.Decrypted, this.decryptedListener);
         this.imageMediaAbortController?.abort();
         this.imageMediaCleanup();
+        this.attachmentMediaAbortController?.abort();
+        this.attachmentMediaCleanup();
     }
 }

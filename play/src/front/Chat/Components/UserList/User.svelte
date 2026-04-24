@@ -2,19 +2,20 @@
     import { AskPositionMessage_AskType, AvailabilityStatus } from "@workadventure/messages";
     import * as Sentry from "@sentry/svelte";
     import highlightWords from "highlight-words";
+    import { defaultColor } from "@workadventure/shared-utils";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { availabilityStatusStore } from "../../../Stores/MediaStore";
     import { getColorHexOfStatus } from "../../../Utils/AvailabilityStatus";
     import type { ChatUser } from "../../Connection/ChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
-    import { defaultColor, defaultWoka } from "../../Connection/Matrix/MatrixChatConnection";
-    import { openDirectChatRoom } from "../../Utils";
+    import { resolveChatUserColor } from "../../Connection/Matrix/services/WaMatrixProfileService";
+    import { getMatrixClientForChatTint, openDirectChatRoom } from "../../Utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
+    import Avatar from "../Avatar.svelte";
     import UserActionButton from "./UserActionButton.svelte";
-    import ImageWithFallback from "./ImageWithFallback.svelte";
     import { IconLoader, IconSend } from "@wa-icons";
 
     export let user: ChatUser;
@@ -24,6 +25,12 @@
     let showRoomCreationInProgress = false;
 
     $: ({ chatId, availabilityStatus, username = "", color, isAdmin, pictureStore } = user);
+
+    /** Tint: local name, Matrix `account_data`, or peer cache — deps keep the row in sync. */
+    $: resolvedAvatarColor =
+        chatId !== undefined && chatId !== ""
+            ? resolveChatUserColor(chatId, color, getMatrixClientForChatTint()) ?? defaultColor
+            : defaultColor;
 
     $: isMe = user.chatId === localUserStore.getChatId() || user.uuid === localUserStore.getLocalUser()?.uuid;
 
@@ -73,21 +80,18 @@
         // Track the open woka menu action
         analyticsClient.openWokaMenu();
 
-        const currentScerne = gameManager.getCurrentGameScene();
+        const currentScene = gameManager.getCurrentGameScene();
 
-        // Il user is in view port and represented by remote player, use it to activate the woka menu
-        const remotePlayerData = currentScerne.getRemotePlayersRepository().getPlayerByUuid(user.uuid);
+        const remotePlayerData = currentScene.getRemotePlayersRepository().getPlayerByUuid(user.uuid);
         if (remotePlayerData != undefined) {
-            // Get the actual RemotePlayer sprite from MapPlayersByKey using userId
-            const remotePlayer = currentScerne.MapPlayersByKey.get(remotePlayerData.userId);
+            const remotePlayer = currentScene.MapPlayersByKey.get(remotePlayerData.userId);
             if (remotePlayer != undefined) {
                 remotePlayer.activate();
                 return;
             }
         }
 
-        // If the user isn't in the view port, emit the ask position message to the server
-        currentScerne.connection?.emitAskPosition(
+        currentScene.connection?.emitAskPosition(
             user.uuid ?? "",
             user.playUri ?? "",
             AskPositionMessage_AskType.LOCATE
@@ -109,17 +113,10 @@
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
-                class="relative wa-avatar {!$userStatus ? 'opacity-50' : ''} cursor-pointer w-7 h-7 rounded-md"
-                style={`background-color: ${color ?? defaultColor}`}
+                class="relative shrink-0 wa-avatar {!$userStatus ? 'opacity-50' : ''} cursor-pointer"
                 on:click|stopPropagation={openWokaMenu}
             >
-                <div class="w-7 h-7 rounded-md overflow-hidden">
-                    <div
-                        class="translate-y-[3px] -translate-x-[3px] group-hover/chatItem:translate-y-[0] transition-all"
-                    >
-                        <ImageWithFallback classes="w-8 h-8" src={$pictureStore} alt="Avatar" fallback={defaultWoka} />
-                    </div>
-                </div>
+                <Avatar compact {pictureStore} fallbackName={username || "?"} color={resolvedAvatarColor} />
             </div>
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -158,13 +155,11 @@
                         {$LL.chat.you()}
                     {:else if $userStatus}
                         <div class="flex items-center brightness-150" style="color:{getColorHexOfStatus($userStatus)}">
-                            {#if $userStatus}
-                                <div
-                                    class="rounded-full me-1 h-1.5 w-1.5"
-                                    style="background:{getColorHexOfStatus($userStatus)}"
-                                />
-                            {/if}
-                            {getNameOfAvailabilityStatus($userStatus ?? 0)}
+                            <div
+                                class="rounded-full me-1 h-1.5 w-1.5"
+                                style="background:{getColorHexOfStatus($userStatus)}"
+                            />
+                            {getNameOfAvailabilityStatus($userStatus)}
                         </div>
                     {:else}
                         {$LL.chat.userList.disconnected()}

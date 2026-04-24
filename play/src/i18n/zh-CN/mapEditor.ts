@@ -386,6 +386,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         images: "图像{{s}}",
         noImage: "无图像",
+        specialTags: {
+            customLabel: "自定义",
+            mostUsedLabel: "最常用",
+        },
         customEntityEditorForm: {
             imageName: "图像名称",
             tags: "标签",
@@ -433,6 +437,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "权限",
                 rightsHelper:
                     '权限定义谁可以使用扩音器。如果留空，任何人都可以使用它。如果设置，只有具有这些"标签"之一的用户才能使用它。',
+                recording: {
+                    title: "录制",
+                    enable: "启用扩音器录制",
+                    enableHelper: "禁用后，用户无法在扩音器中开始录制。正在进行的录制仍然可以停止。",
+                    rights: "录制权限",
+                    rightsHelper:
+                        "如果用户已经可以录制并使用扩音器，拥有这些标签中至少一个的用户可以录制扩音器。留空则不添加额外限制。",
+                },
                 audienceVideoFeedbackActivated: "礼堂模式",
                 audienceVideoFeedbackActivatedDisabled: "礼堂模式",
                 audienceVideoFeedbackActivatedHelper:

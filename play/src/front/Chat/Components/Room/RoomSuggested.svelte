@@ -6,6 +6,7 @@
     import Avatar from "../Avatar.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import type { PictureStore } from "../../../Stores/PictureStore";
+    import { ignoreSuggestedRoom } from "../../Stores/ChatStore";
     import { IconLoader } from "@wa-icons";
 
     export let roomInformation: { name: string; id: string; pictureStore: PictureStore };
@@ -34,14 +35,20 @@
             warningMessageStore.addWarningMessage($LL.chat.failedToJoinRoom());
         }
     }
+
+    function onIgnoreClick(event: MouseEvent) {
+        event.stopPropagation();
+        event.preventDefault();
+        ignoreSuggestedRoom(roomInformation.id);
+    }
 </script>
 
 <div
-    class="text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded-md hover:!cursor-pointer p-2"
+    class="wa-chat-item text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer px-2 py-2"
     data-testid="userInvitation"
 >
-    <div class="relative">
-        <Avatar pictureStore={roomInformation.pictureStore} fallbackName={roomName} />
+    <div class="relative shrink-0">
+        <Avatar compact pictureStore={roomInformation.pictureStore} fallbackName={roomName} />
     </div>
     <div class="m-0 grow text-sm font-bold">
         {roomName}
@@ -51,7 +58,15 @@
             <IconLoader class="animate-spin" />
         </div>
     {:else}
-        <div class="flex gap-1">
+        <div class="flex gap-1 flex-wrap justify-end">
+            <button
+                type="button"
+                class="border border-solid border-white/35 text-white/80 hover:bg-white/10 rounded text-xs py-1 px-2 m-0"
+                data-testid="ignoreSuggestedRoomButton"
+                on:click={onIgnoreClick}
+            >
+                {$LL.chat.ignoreSuggestedRoom()}
+            </button>
             <button
                 class="border border-solid border-success text-success hover:bg-success-400/10 rounded text-xs py-1 px-2 m-0"
                 data-testid="acceptInvitationButton"

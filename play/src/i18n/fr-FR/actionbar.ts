@@ -12,6 +12,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantListPlaceholder: "Liste des participants",
     participantSendMessage: "Écrire un message",
     participantInviteUser: "Inviter un utilisateur",
+    participantExitFullscreen: "Quitter le mode plein écran",
     startScreenSharing: "Partager mon écran",
     stopScreenSharing: "Arrêter le partage",
     screenSharingMode: "Mode partage d'écran",
@@ -31,7 +32,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     mapEditorLocked: "L'éditeur de carte est verrouillé 🔐",
     app: "Applications",
     camera: {
-        disabled: "Votre caméra est désactivé",
+        disabled: "Votre caméra est désactivée",
         activate: "Activer votre camera",
         noDevices: "Aucune caméra trouvée",
         setBackground: "Définir le fond",
@@ -53,6 +54,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Votre haut-parleur est désactivé",
         activate: "Activer votre haut-parleur",
         noDevices: "Aucun haut-parleur trouvé",
+        noDevicesDesc:
+            "Le navigateur ne propose aucune sortie audio sélectionnable. Certains navigateurs limitent ce choix (par ex. Safari). Essayez un autre navigateur, reconnectez casque ou enceintes, vérifiez les réglages audio du système et les configurations de l’ordinateur.",
     },
     status: {
         ONLINE: "En ligne",

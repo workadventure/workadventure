@@ -392,6 +392,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         images: "Wobraz{{s}}",
         noImage: "Žadyn wobraz",
+        specialTags: {
+            customLabel: "Swójski",
+            mostUsedLabel: "Najhusćišo wužiwane",
+        },
         customEntityEditorForm: {
             imageName: "mjeno wobrazka",
             tags: "Toflicki",
@@ -440,6 +444,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "prawa",
                 rightsHelper:
                     "Prawa definěruja, štó móže megafon wužiwać. Jeli wostajiće to prózdne, móže kóždy wón wužiwać. Jeli nastajiće to, móža jenož wužiwarjo, kotřiž maja jednu z tutych 'toflickow', wón wužiwać.",
+                recording: {
+                    title: "Nagraće",
+                    enable: "Nagraće megafona zmóžnić",
+                    enableHelper:
+                        "Hdyž je znjemóžnjene, wužiwarjo njemóža nagraće w megafonje započeć. Běžace nagraća hodźa so dale zastajić.",
+                    rights: "Prawa za nagraće",
+                    rightsHelper:
+                        "Kóždy z znajmjeńša jednym z tutych tofličkow móže megafon nahrać, jeli smě hižo nagrać a megafon wužiwać. Wostajće prózdne, zo njepřidaće žane dalše wobmjezowanje.",
+                },
                 audienceVideoFeedbackActivated: "Auditoriumowy modus zmóžnjeny",
                 audienceVideoFeedbackActivatedDisabled: "Auditoriumowy modus znjemóžnjeny",
                 audienceVideoFeedbackActivatedHelper:

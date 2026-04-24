@@ -14,7 +14,6 @@ import { clientEventsEmitter } from "../services/ClientEventsEmitter";
 import type { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
 import type { EventProcessor } from "./EventProcessor";
 import type { SocketData } from "./Websocket/SocketData";
-import { metadataProcessor } from "./MetadataProcessorInit";
 import {
     SpaceUserIdNotFoundError,
     UserAlreadyAddedInSpaceError,
@@ -42,8 +41,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
     constructor(
         private readonly _space: Space,
         private readonly eventProcessor: EventProcessor,
-        private readonly _clientEventsEmitter = clientEventsEmitter,
-        private readonly _metadataProcessor = metadataProcessor
+        private readonly _clientEventsEmitter = clientEventsEmitter
     ) {}
     async registerUser(client: Socket, filterType: FilterType): Promise<void> {
         const socketData = client.getUserData();
@@ -202,10 +200,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         const senderSocket = this._space._localConnectedUser.get(senderId);
         if (!senderSocket) {
             throw new Error("Sender socket not found");
-        }
-
-        for (const key in metadata) {
-            metadata[key] = this._metadataProcessor.processMetadata(key, metadata[key], senderSocket.getUserData());
         }
 
         this.forwardMessageToSpaceBack({

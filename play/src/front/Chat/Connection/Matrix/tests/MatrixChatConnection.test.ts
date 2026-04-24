@@ -29,11 +29,12 @@ vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
     };
 });
 
-vi.mock("../../../../Enum/EnvironmentVariable.ts", () => {
-    return {
+vi.mock("../../../../Enum/EnvironmentVariable.ts", async (importOriginal) => {
+    const actual = await importOriginal();
+    return Object.assign({}, actual, {
         MATRIX_ADMIN_USER: "admin",
         MATRIX_DOMAIN: "domain",
-    };
+    });
 });
 
 vi.mock("../../../Stores/ChatStore.ts", () => {
@@ -73,22 +74,22 @@ describe("MatrixChatConnection", () => {
     describe("Constructor", () => {
         const directChatRoom = {
             id: "directChatRoom",
-            type: "direct",
+            type: readable("direct"),
             myMembership: readable(KnownMembership.Join),
         } as unknown as MatrixChatRoom;
         const InviteDirectChatRoom = {
             id: "InviteDirectChatRoom",
-            type: "direct",
+            type: readable("direct"),
             myMembership: readable(KnownMembership.Invite),
         } as unknown as MatrixChatRoom;
         const multipleChatRoom = {
             id: "multipleChatRoom",
-            type: "multiple",
+            type: readable("multiple"),
             myMembership: readable(KnownMembership.Join),
         } as unknown as MatrixChatRoom;
         const InviteMultipleChatRoom = {
             id: "InviteMultipleChatRoom",
-            type: "multiple",
+            type: readable("multiple"),
             myMembership: readable(KnownMembership.Invite),
         } as unknown as MatrixChatRoom;
 

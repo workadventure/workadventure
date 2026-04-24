@@ -391,6 +391,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         images: "이미지{{s}}",
         noImage: "이미지가 없습니다",
+        specialTags: {
+            customLabel: "사용자 정의",
+            mostUsedLabel: "자주 사용됨",
+        },
         customEntityEditorForm: {
             imageName: "이미지 이름",
             tags: "태그",
@@ -440,6 +444,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "사용 권한",
                 rightsHelper:
                     "확성기를 누가 사용할 수 있는지 정의합니다. 비워 두면 누구나 사용할 수 있고, 태그를 지정하면 해당 태그를 가진 사용자만 사용할 수 있습니다.",
+                recording: {
+                    title: "녹화",
+                    enable: "확성기 녹화 사용",
+                    enableHelper:
+                        "비활성화하면 사용자가 확성기에서 녹화를 시작할 수 없습니다. 진행 중인 녹화는 계속 중지할 수 있습니다.",
+                    rights: "녹화 권한",
+                    rightsHelper:
+                        "이미 녹화와 확성기 사용이 허용된 경우, 이 태그 중 하나 이상을 가진 사용자가 확성기를 녹화할 수 있습니다. 추가 제한을 적용하지 않으려면 비워 두세요.",
+                },
                 audienceVideoFeedbackActivated: "강당 모드",
                 audienceVideoFeedbackActivatedDisabled: "강당 모드",
                 audienceVideoFeedbackActivatedHelper:

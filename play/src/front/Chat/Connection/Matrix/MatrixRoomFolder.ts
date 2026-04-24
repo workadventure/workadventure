@@ -8,6 +8,7 @@ import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { Deferred } from "@workadventure/shared-utils";
 import { matrixRateLimiter } from "../../Services/MatrixRateLimiter";
+import { ignoredSuggestedRoomIdsStore } from "../../Stores/ChatStore";
 import type { RoomFolder } from "../ChatConnection";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 
@@ -74,20 +75,35 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         );
 
         this.suggestedRooms = derived(
-            [this.allSuggestedRooms, this.rooms, this.invitations, this.folders],
-            ([$allSuggestedRooms, $rooms, $invitations, $folders]) => {
+            [this.allSuggestedRooms, this.rooms, this.invitations, this.folders, ignoredSuggestedRoomIdsStore],
+            ([$allSuggestedRooms, $rooms, $invitations, $folders, $ignoredIds]) => {
                 const existingIds = new Set([
                     ...$rooms.map((room) => room.id),
                     ...$invitations.map((room) => room.id),
                     ...$folders.map((folder) => folder.id),
                 ]);
-                return $allSuggestedRooms.filter((room) => !existingIds.has(room.id));
+                return $allSuggestedRooms.filter((room) => !existingIds.has(room.id) && !$ignoredIds.has(room.id));
             }
         );
 
-        this.joinableRooms = derived([this.availableRooms], ([$allChildRooms]) => $allChildRooms);
+        this.joinableRooms = derived(
+            [this.availableRooms, ignoredSuggestedRoomIdsStore],
+            ([$allChildRooms, $ignoredIds]) => $allChildRooms.filter((room) => !$ignoredIds.has(room.id))
+        );
 
         if (get(this.myMembership) === KnownMembership.Join) this.joinRoomDeferred.resolve();
+    }
+
+    override destroy(): void {
+        for (const id of Array.from(this.folderList.keys())) {
+            this.folderList.get(id)?.destroy();
+            this.folderList.delete(id);
+        }
+        for (const id of Array.from(this.roomList.keys())) {
+            this.roomList.get(id)?.destroy();
+            this.roomList.delete(id);
+        }
+        super.destroy();
     }
 
     init() {
@@ -144,14 +160,16 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     async deleteNode(id: string): Promise<boolean> {
         try {
             await this.loadRoomsAndFolderPromise.promise;
-            const isDeletedInRoomList = this.roomList.delete(id);
-            if (isDeletedInRoomList) {
-                return true;
+            const roomNode = this.roomList.get(id);
+            if (roomNode) {
+                roomNode.destroy();
+                return this.roomList.delete(id);
             }
 
-            const isDeletedInFolderList = this.folderList.delete(id);
-            if (isDeletedInFolderList) {
-                return true;
+            const folderNode = this.folderList.get(id);
+            if (folderNode) {
+                folderNode.destroy();
+                return this.folderList.delete(id);
             }
 
             const deleteNodePromise = Array.from(this.folderList.values()).map((folder) => {
@@ -252,7 +270,6 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             const { rooms: allRooms } = await matrixRateLimiter.getRoomHierarchy(this.room, 100, 1, false);
 
             const { rooms: suggestedRoomsData } = await matrixRateLimiter.getRoomHierarchy(this.room, 100, 2, true);
-
             const localRooms = this.room.client.getRooms();
 
             const suggestedRooms: { name: string; id: string; avatarUrl: string }[] = [];
@@ -358,12 +375,30 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                 );
             });
 
+        const childIds = new Set(children.map((c) => c.roomId));
+
+        for (const id of Array.from(this.roomList.keys())) {
+            if (!childIds.has(id)) {
+                this.roomList.get(id)?.destroy();
+                this.roomList.delete(id);
+            }
+        }
+        for (const id of Array.from(this.folderList.keys())) {
+            if (!childIds.has(id)) {
+                this.folderList.get(id)?.destroy();
+                this.folderList.delete(id);
+            }
+        }
+
         children.forEach((child) => {
             if (child.isSpaceRoom()) {
-                const spaceFolder = new MatrixRoomFolder(child);
-                this.folderList.set(child.roomId, spaceFolder);
+                let spaceFolder = this.folderList.get(child.roomId);
+                if (!spaceFolder) {
+                    spaceFolder = new MatrixRoomFolder(child);
+                    this.folderList.set(child.roomId, spaceFolder);
+                }
                 spaceFolder.init();
-            } else {
+            } else if (!this.roomList.has(child.roomId)) {
                 this.roomList.set(child.roomId, new MatrixChatRoom(child));
             }
         });

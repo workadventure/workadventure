@@ -438,7 +438,7 @@
         class:flex-wrap={!isOnOneLine}
         class:content-start={!isOnOneLine}
         class:justify-start={isOnOneLine}
-        class:justify-center={!isOnOneLine}
+        class:justify-center={!isOnOneLine || $activePictureInPictureStore}
         class:whitespace-nowrap={isOnOneLine}
         class:relative={true}
         class:overflow-x-auto={isOnOneLine && oneLineMode === "horizontal"}
@@ -527,7 +527,7 @@
         {#if canScrollTop}
             <button
                 type="button"
-                class="scroll-indicator scroll-indicator-top scroll-indicator-button opacity-10 group-hover/cameras-container:opacity-100"
+                class="absolute scroll-indicator scroll-indicator-top scroll-indicator-button opacity-10 group-hover/cameras-container:opacity-100"
                 aria-label="Scroll up to see more cameras"
                 on:click={scrollCamerasUp}
             >
@@ -540,7 +540,7 @@
         {#if canScrollBottom}
             <button
                 type="button"
-                class="scroll-indicator scroll-indicator-bottom scroll-indicator-button h-fit w-fit opacity-40 group-hover/cameras-container:opacity-100"
+                class="absolute scroll-indicator scroll-indicator-bottom scroll-indicator-button h-fit w-fit opacity-40 group-hover/cameras-container:opacity-100"
                 aria-label="Scroll down to see more cameras"
                 on:click={scrollCamerasDown}
             >

@@ -395,6 +395,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         images: "Bild{{s}}",
         noImage: "Kein Bild",
+        specialTags: {
+            customLabel: "Benutzerdefiniert",
+            mostUsedLabel: "Meistverwendet",
+        },
         customEntityEditorForm: {
             imageName: "Bildname",
             tags: "Tags",
@@ -445,6 +449,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Rechte",
                 rightsHelper:
                     "Die Rechte, die ein Benutzer haben muss, um das Megaphon zu verwenden. Wenn Sie es leer lassen, kann jeder das Megaphon verwenden.",
+                recording: {
+                    title: "Aufnahme",
+                    enable: "Megaphon-Aufnahme aktivieren",
+                    enableHelper:
+                        "Wenn deaktiviert, können Benutzer keine Aufnahme im Megaphon starten. Laufende Aufnahmen können weiterhin beendet werden.",
+                    rights: "Aufnahmerechte",
+                    rightsHelper:
+                        "Jeder mit mindestens einem dieser Tags kann das Megaphon aufnehmen, wenn er bereits aufnehmen und das Megaphon verwenden darf. Leer lassen, um keine zusätzliche Einschränkung hinzuzufügen.",
+                },
                 audienceVideoFeedbackActivated: "Auditorium-Modus aktiviert",
                 audienceVideoFeedbackActivatedDisabled: "Auditorium-Modus deaktiviert",
                 audienceVideoFeedbackActivatedHelper:

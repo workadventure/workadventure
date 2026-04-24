@@ -10,6 +10,7 @@ const actionbar: BaseTranslation = {
     participantListPlaceholder: "Lista de participantes",
     participantSendMessage: "Enviar mensagem",
     participantInviteUser: "Convidar usuário",
+    participantExitFullscreen: "Sair da tela cheia",
     profil: "Editar seu nome",
     startScreenSharing: "Iniciar compartilhamento de tela",
     stopScreenSharing: "Parar compartilhamento de tela",
@@ -55,6 +56,8 @@ const actionbar: BaseTranslation = {
         disabled: "Seu alto-falante está desabilitado",
         activate: "Ativar seu alto-falante",
         noDevices: "Nenhum dispositivo de alto-falante encontrado",
+        noDevicesDesc:
+            "O navegador não lista nenhuma saída de áudio selecionável. Alguns navegadores limitam isso (por exemplo Safari). Tente outro navegador, reconecte fones ou alto-falantes, verifique as configurações de som do sistema e as configurações do computador (privacidade, dispositivos).",
     },
     status: {
         ONLINE: "Online",

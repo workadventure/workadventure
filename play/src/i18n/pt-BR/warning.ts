@@ -48,17 +48,24 @@ const warning: BaseTranslation = {
     pwaInstall: {
         title: "Instalar WorkAdventure",
         description:
-            "Instale o aplicativo para uma melhor experiência: carregamento mais rápido, acesso rápido e experiência de aplicativo.",
-        descriptionIos: "Adicione o WorkAdventure à tela inicial para uma melhor experiência e acesso rápido.",
+            "Instale o app para ter uma experiência melhor: acesso rápido, inicialização automática e uma experiência de app.",
+        descriptionIos: "Adicione o WorkAdventure à Tela de Início para ter uma experiência melhor e acesso rápido.",
+        feature1Title: "Acesso rápido",
+        feature1Description: "Abra o WorkAdventure pelo menu Iniciar, Dock ou área de trabalho.",
+        feature2Title: "Janela dedicada do app",
+        feature2Description:
+            "Mantenha o WorkAdventure separado das abas do navegador e encontre o WorkAdventure rapidamente na barra de tarefas.",
+        feature3Title: "Iniciar com o computador",
+        feature3Description: "Abra o WorkAdventure quando o dispositivo iniciar.",
         iosStepsTitle: "Como instalar",
         iosStep1: "Toque no botão Compartilhar (quadrado com seta) na parte inferior do Safari.",
         iosStep2: 'Role para baixo e toque em "Adicionar à Tela Inicial".',
         iosStep3: 'Toque em "Adicionar" para confirmar.',
-        install: "Instalar o aplicativo web do WorkAdventure",
+        install: "Instalar o app WorkAdventure",
         installing: "Instalando…",
         skip: "Continuar no navegador",
         continue: "Continuar no navegador",
-        neverShowPage: "Nao mostrar esta pagina novamente",
+        neverShowPage: "Não perguntar novamente",
     },
 };
 

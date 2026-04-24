@@ -2,14 +2,15 @@
     import { createEventDispatcher } from "svelte";
     import type { ListenerMegaphonePropertyData } from "@workadventure/map-editor";
     import { SpeakerMegaphonePropertyData } from "@workadventure/map-editor";
-    import { MediaLinkManager } from "@workadventure/shared-utils";
+
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import Select from "../../Input/Select.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import { IconEar } from "../../Icons";
     import Input from "../../Input/Input.svelte";
-    import { connectionManager } from "../../../Connection/ConnectionManager";
+
+    import { getEmbedLink } from "../../../Utils/EmbedLink";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: ListenerMegaphonePropertyData;
@@ -55,11 +56,7 @@
             return;
         }
         try {
-            const mediaLink = new MediaLinkManager(property.waitingLink);
-            const embedLink = await mediaLink.getEmbedLink({
-                klaxoonId: connectionManager.klaxoonToolClientId,
-                excalidrawDomains: connectionManager.excalidrawToolDomains,
-            });
+            const embedLink = await getEmbedLink(property.waitingLink);
             if (property.waitingLink != embedLink) property.waitingLink = embedLink;
         } catch {
             linkError = true;

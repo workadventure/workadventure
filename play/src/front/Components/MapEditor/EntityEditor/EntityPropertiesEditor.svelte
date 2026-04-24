@@ -13,13 +13,16 @@
     import AddPropertyButtonWrapper from "../PropertyEditor/AddPropertyButtonWrapper.svelte";
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
-    import { connectionManager } from "../../../Connection/ConnectionManager";
+
     import { IconChevronDown, IconArrowLeft } from "../../Icons";
     import Input from "../../Input/Input.svelte";
     import TextArea from "../../Input/TextArea.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import OpenFilePropertyEditor from "../PropertyEditor/OpenFilePropertyEditor.svelte";
     import type { Entity } from "../../../Phaser/ECS/Entity";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
+
+    const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -369,7 +372,7 @@
             />
         </div>
         <div class="properties-buttons flex flex-row flex-wrap m-2">
-            {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
+            {#each applicationManager.applications as app, index (`my-own-app-${index}`)}
                 <AddPropertyButtonWrapper
                     property="openWebsite"
                     subProperty={app.name}

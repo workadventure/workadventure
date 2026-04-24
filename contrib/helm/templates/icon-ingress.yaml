@@ -20,7 +20,7 @@ spec:
   tls:
     - hosts:
         - {{ (include "workadventure.iconDomainName" .) | quote }}
-      secretName: {{ .Values.icon.ingress.secretName | default (printf "%s-icon-cert" (include "workadventure.fullname" .)) }}
+      secretName: {{ .Values.icon.ingress.secretName | default .Values.ingress.secretName | default (printf "%s-icon-cert" (include "workadventure.fullname" .)) }}
   {{- end }}
   rules:
     - host: {{ (include "workadventure.iconDomainName" .) | quote }}

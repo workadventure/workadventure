@@ -5,7 +5,7 @@ import { getPage } from "./utils/auth";
 import Menu from "./utils/menu";
 import { ensureWebAppInstallMenuEligibility } from "./utils/pwaInstall";
 
-test.describe("Web App install from profile menu @nodesktop", () => {
+test.describe("Web App install from profile menu @nodesktop @nowebkit @nofirefox", () => {
     test("opens the Web App install screen when clicking Install Web App in the profile menu", async ({ browser }) => {
         await using page = await getPage(
             browser,

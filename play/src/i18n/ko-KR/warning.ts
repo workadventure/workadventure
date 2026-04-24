@@ -48,17 +48,24 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     pwaInstall: {
         title: "WorkAdventure 설치",
-        description: "더 나은 경험을 위해 앱을 설치하세요: 더 빠른 로딩, 빠른 액세스, 앱과 같은 경험.",
-        descriptionIos: "더 나은 경험과 빠른 액세스를 위해 WorkAdventure를 홈 화면에 추가하세요.",
+        description:
+            "더 나은 경험을 위해 앱을 설치하세요. 빠른 접근, 시작 시 자동 실행, 앱과 같은 사용 경험을 제공합니다.",
+        descriptionIos: "더 나은 경험과 빠른 접근을 위해 WorkAdventure를 홈 화면에 추가하세요.",
+        feature1Title: "빠른 접근",
+        feature1Description: "시작 메뉴, Dock 또는 데스크톱에서 WorkAdventure를 실행하세요.",
+        feature2Title: "전용 앱 창",
+        feature2Description: "WorkAdventure를 브라우저 탭과 분리해 두고 작업 표시줄에서 한눈에 찾으세요.",
+        feature3Title: "컴퓨터와 함께 시작",
+        feature3Description: "기기가 시작될 때 WorkAdventure를 실행하세요.",
         iosStepsTitle: "설치 방법",
         iosStep1: "Safari 하단의 공유 버튼(화살표가 있는 사각형)을 탭하세요.",
         iosStep2: '아래로 스크롤하여 "홈 화면에 추가"를 탭하세요.',
         iosStep3: '"추가"를 탭하여 확인하세요.',
-        install: "WorkAdventure 웹 앱 설치",
+        install: "WorkAdventure 앱 설치",
         installing: "설치 중…",
         skip: "브라우저에서 계속",
         continue: "브라우저에서 계속",
-        neverShowPage: "이 페이지를 다시 표시하지 않기",
+        neverShowPage: "다시 묻지 않기",
     },
 };
 

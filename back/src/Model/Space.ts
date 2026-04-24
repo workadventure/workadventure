@@ -25,6 +25,7 @@ import type { EventProcessor } from "./EventProcessor";
 import { CommunicationManager } from "./CommunicationManager";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
+import type { ManagedRecordingState } from "./RecordingManager";
 import { metadataProcessor } from "./MetadataProcessorInit";
 
 const debug = Debug("space");
@@ -157,7 +158,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                     `${this.name} : user updated => removed ${user.spaceUserId} updateMask : ${updateMask.join(", ")}`
                 );
 
-                this.communicationManager.handleUserDeleted(user, false).catch((error) => {
+                this.communicationManager.handleUserDeleted(user).catch((error) => {
                     console.error("Error while deleting user", error);
                     Sentry.captureException(error);
                 });
@@ -236,7 +237,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             debug("Error while removing user", e);
         } finally {
             if (user && this.filterOneUser(user)) {
-                this.communicationManager.handleUserDeleted(user, false).catch((error) => {
+                this.communicationManager.handleUserDeleted(user).catch((error) => {
                     console.error("Error while deleting user", error);
                     Sentry.captureException(error);
                 });
@@ -249,6 +250,13 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                             spaceUserId: spaceUserId,
                         }),
                     },
+                });
+            }
+
+            if (user) {
+                this.stopRecordingIfUserCompletelyLeftSpace(user.spaceUserId).catch((error) => {
+                    console.error("Error while stopping recording after user removal", error);
+                    Sentry.captureException(error);
                 });
             }
         }
@@ -270,25 +278,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
         await Promise.allSettled(promises);
 
-        if (Object.keys(processedMetadata).length === 0) {
-            return;
-        }
-
-        for (const [key, value] of Object.entries(processedMetadata)) {
-            this.metadata.set(key, value);
-        }
-
-        this.notifyWatchers({
-            message: {
-                $case: "updateSpaceMetadataMessage",
-                updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
-                    spaceName: this.name,
-                    metadata: JSON.stringify(processedMetadata),
-                }),
-            },
-        });
-
-        debug(`${this.name} : metadata => updated`);
+        this.publishMetadata(processedMetadata);
     }
 
     private filterOneUser(user: SpaceUser): boolean {
@@ -340,17 +330,25 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
     public removeWatcher(watcher: SpacesWatcher) {
         const spaceUsers = this.users.get(watcher);
+        const spaceUsersToNotify = this.usersToNotify.get(watcher);
+
+        this.users.delete(watcher);
+        this.usersToNotify.delete(watcher);
+
+        const impactedUserIds = new Set<string>([
+            ...(spaceUsers ? Array.from(spaceUsers.keys()) : []),
+            ...(spaceUsersToNotify ? Array.from(spaceUsersToNotify.keys()) : []),
+        ]);
+
         if (spaceUsers) {
             for (const spaceUser of spaceUsers.values()) {
-                this.communicationManager.handleUserDeleted(spaceUser, true).catch((e) => {
+                this.communicationManager.handleUserDeleted(spaceUser).catch((e) => {
                     Sentry.captureException(e);
                     console.error(e);
                 });
             }
         }
-        this.users.delete(watcher);
 
-        const spaceUsersToNotify = this.usersToNotify.get(watcher);
         if (spaceUsersToNotify) {
             for (const spaceUser of spaceUsersToNotify.values()) {
                 this.communicationManager.handleUserToNotifyDeleted(spaceUser).catch((e) => {
@@ -359,7 +357,14 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 });
             }
         }
-        this.usersToNotify.delete(watcher);
+
+        for (const spaceUserId of impactedUserIds) {
+            this.stopRecordingIfUserCompletelyLeftSpace(spaceUserId).catch((error) => {
+                console.error("Error while stopping recording after watcher removal", error);
+                Sentry.captureException(error);
+            });
+        }
+
         // In case was not empty when it was removed, we need to notify the other watchers
         for (const spaceUser of spaceUsers?.values() || []) {
             if (this.filterOneUser(spaceUser)) {
@@ -398,6 +403,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         this.communicationManager.handleUserToNotifyDeleted(spaceUser).catch((e) => {
             Sentry.captureException(e);
             console.error(e);
+        });
+        this.stopRecordingIfUserCompletelyLeftSpace(spaceUser.spaceUserId).catch((error) => {
+            console.error("Error while stopping recording after userToNotify removal", error);
+            Sentry.captureException(error);
         });
         debug(`${this.name} : user to notify => deleted ${spaceUser.spaceUserId}`);
     }
@@ -566,10 +575,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         this.users.set(watcher, new Map<string, SpaceUser>(users.map((user) => [user.spaceUserId, user])));
     }
 
-    public handleQuery(
+    public async handleQuery(
         watcher: SpacesWatcher,
         spaceQueryMessage: SpaceQueryMessage
-    ): Pick<SpaceAnswerMessage, "answer"> {
+    ): Promise<Pick<SpaceAnswerMessage, "answer">> {
         try {
             if (!spaceQueryMessage.query) {
                 throw new Error("SpaceQueryMessage has no query");
@@ -608,6 +617,38 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                                 spaceName: this.name,
                                 spaceUserId: spaceQueryMessage.query.removeSpaceUserQuery.spaceUserId,
                             },
+                        },
+                    };
+                }
+                case "startSpaceRecordingQuery": {
+                    const { spaceUserId } = spaceQueryMessage.query.startSpaceRecordingQuery;
+                    const user = this.getUser(spaceUserId);
+
+                    if (!user) {
+                        throw new Error(`Could not find user ${spaceUserId} in space ${this.name}`);
+                    }
+
+                    await this.startRecording(user);
+                    return {
+                        answer: {
+                            $case: "startSpaceRecordingAnswer",
+                            startSpaceRecordingAnswer: {},
+                        },
+                    };
+                }
+                case "stopSpaceRecordingQuery": {
+                    const { spaceUserId } = spaceQueryMessage.query.stopSpaceRecordingQuery;
+                    const user = this.getUser(spaceUserId);
+
+                    if (!user) {
+                        throw new Error(`Could not find user ${spaceUserId} in space ${this.name}`);
+                    }
+
+                    await this.stopRecording(user);
+                    return {
+                        answer: {
+                            $case: "stopSpaceRecordingAnswer",
+                            stopSpaceRecordingAnswer: {},
                         },
                     };
                 }
@@ -708,8 +749,63 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     public async stopRecording(user: SpaceUser) {
         await this.communicationManager.handleStopRecording(user);
     }
+    public async stopRecordingByServer(): Promise<void> {
+        await this.communicationManager.handleServerStopRecording();
+    }
+    public getRecordingState(): ManagedRecordingState {
+        return this.communicationManager.getRecordingState();
+    }
     public destroy() {
         this.communicationManager.destroy();
         debug(`${this.name} => destroyed`);
+    }
+
+    public publishMetadata(metadata: { [key: string]: unknown }): void {
+        if (Object.keys(metadata).length === 0) {
+            return;
+        }
+
+        for (const [key, value] of Object.entries(metadata)) {
+            this.metadata.set(key, value);
+        }
+
+        this.notifyWatchers({
+            message: {
+                $case: "updateSpaceMetadataMessage",
+                updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
+                    spaceName: this.name,
+                    metadata: JSON.stringify(metadata),
+                }),
+            },
+        });
+
+        debug(`${this.name} : metadata => updated`);
+    }
+
+    private async stopRecordingIfUserCompletelyLeftSpace(spaceUserId: string): Promise<void> {
+        if (this.isUserStillPresentInSpace(spaceUserId)) {
+            return;
+        }
+
+        const didStop = await this.communicationManager.handleRecorderLeftSpace(spaceUserId);
+        if (!didStop) {
+            return;
+        }
+    }
+
+    private isUserStillPresentInSpace(spaceUserId: string): boolean {
+        for (const usersList of this.users.values()) {
+            if (usersList.has(spaceUserId)) {
+                return true;
+            }
+        }
+
+        for (const usersToNotifyList of this.usersToNotify.values()) {
+            if (usersToNotifyList.has(spaceUserId)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -16,7 +16,7 @@
     import { onDestroy, onMount } from "svelte";
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
-    import { defautlNativeIntegrationAppName } from "@workadventure/shared-utils";
+    import { defaultNativeIntegrationAppName } from "@workadventure/shared-utils";
     import type { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { chatInputFocusStore, shouldDisableChatInProximityRoomStore } from "../../../Stores/ChatStore";
@@ -24,7 +24,6 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { connectionManager } from "../../../Connection/ConnectionManager";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { MatrixChatRoom } from "../../Connection/Matrix/MatrixChatRoom";
     import { draftMessageService } from "../../Services/DraftMessageService";
@@ -63,6 +62,8 @@
     const isProximityChatRoom = room instanceof ProximityChatRoom;
     let replyMessageId: string | null = null;
     const draftId = `${room.id}-${localUserStore.getChatId() ?? "0"}`;
+
+    const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
     const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
         if (chatMessage !== null) {
@@ -149,7 +150,9 @@
     }
 
     function onInputHandler() {
-        if (message == "" || message == undefined) {
+        // We remove the <br> tags and the whitespace to check if the message is empty
+        const messageToSend = message.replace(/<br>/g, "").trim();
+        if (messageToSend == "" || messageToSend == undefined) {
             if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
             room.stopTyping().catch((error) => console.error(error));
         }
@@ -301,7 +304,7 @@
         let targetEmbedableUrl: string | undefined;
         switch (subtype) {
             case "youtube": {
-                name = defautlNativeIntegrationAppName.YOUTUBE;
+                name = defaultNativeIntegrationAppName.YOUTUBE;
                 placeholder = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
                 title = $LL.chat.form.application.youtube.title();
                 description = $LL.chat.form.application.youtube.description();
@@ -309,7 +312,7 @@
                 break;
             }
             case "klaxoon": {
-                name = defautlNativeIntegrationAppName.KLAXOON;
+                name = defaultNativeIntegrationAppName.KLAXOON;
                 placeholder = "https://app.klaxoon.com/";
                 title = $LL.chat.form.application.klaxoon.title();
                 description = $LL.chat.form.application.klaxoon.description();
@@ -317,7 +320,7 @@
                 break;
             }
             case "googleDrive": {
-                name = defautlNativeIntegrationAppName.GOOGLE_DRIVE;
+                name = defaultNativeIntegrationAppName.GOOGLE_DRIVE;
                 placeholder = "https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview";
                 title = $LL.chat.form.application.googleDrive.title();
                 description = $LL.chat.form.application.googleDrive.description();
@@ -325,7 +328,7 @@
                 break;
             }
             case "googleDocs": {
-                name = defautlNativeIntegrationAppName.GOOGLE_DOCS;
+                name = defaultNativeIntegrationAppName.GOOGLE_DOCS;
                 placeholder = "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
                 title = $LL.chat.form.application.googleDocs.title();
                 description = $LL.chat.form.application.googleDocs.description();
@@ -333,7 +336,7 @@
                 break;
             }
             case "googleSheets": {
-                name = defautlNativeIntegrationAppName.GOOGLE_SHEETS;
+                name = defaultNativeIntegrationAppName.GOOGLE_SHEETS;
                 placeholder =
                     "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit";
                 title = $LL.chat.form.application.googleSheets.title();
@@ -342,7 +345,7 @@
                 break;
             }
             case "googleSlides": {
-                name = defautlNativeIntegrationAppName.GOOGLE_SLIDES;
+                name = defaultNativeIntegrationAppName.GOOGLE_SLIDES;
                 placeholder =
                     "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit";
                 title = $LL.chat.form.application.googleSlides.title();
@@ -351,7 +354,7 @@
                 break;
             }
             case "eraser": {
-                name = defautlNativeIntegrationAppName.ERASER;
+                name = defaultNativeIntegrationAppName.ERASER;
                 placeholder = "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU";
                 title = $LL.chat.form.application.eraser.title();
                 description = $LL.chat.form.application.eraser.description();
@@ -359,7 +362,7 @@
                 break;
             }
             case "excalidraw": {
-                name = defautlNativeIntegrationAppName.EXCALIDRAW;
+                name = defaultNativeIntegrationAppName.EXCALIDRAW;
                 placeholder = "https://excalidraw.workadventu.re/";
                 title = $LL.chat.form.application.excalidraw.title();
                 description = $LL.chat.form.application.excalidraw.description();
@@ -367,7 +370,7 @@
                 break;
             }
             case "cards": {
-                name = defautlNativeIntegrationAppName.CARDS;
+                name = defaultNativeIntegrationAppName.CARDS;
                 placeholder = "https://member.workadventu.re?tenant=<your cards tenant>&learning=<Your cards learning>";
                 title = $LL.chat.form.application.cards.title();
                 description = $LL.chat.form.application.cards.description();
@@ -375,7 +378,7 @@
                 break;
             }
             case "tldraw": {
-                name = defautlNativeIntegrationAppName.TLDRAW;
+                name = defaultNativeIntegrationAppName.TLDRAW;
                 placeholder = "https://tldraw.com/";
                 title = $LL.chat.form.application.tldraw.title();
                 description = $LL.chat.form.application.tldraw.description();
@@ -383,7 +386,7 @@
                 break;
             }
             default: {
-                const app = connectionManager.applications.find((app) => app.name === subtype);
+                const app = applicationManager.applications.find((app) => app.name === subtype);
                 if (app == undefined) throw new Error(`Application ${subtype} not found`);
 
                 name = app.name;
@@ -492,12 +495,12 @@
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("youtube")}
                 class:bg-secondary-800={applicationProperty?.name === "youtube"}
-                disabled={!connectionManager.youtubeToolActivated}
+                disabled={!applicationManager.youtubeToolActivated}
             >
                 <img draggable="false" class="w-8" src={youtubeSvg} alt="info icon" />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.youtube.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                    {connectionManager.youtubeToolActivated
+                    {applicationManager.youtubeToolActivated
                         ? $LL.chat.form.application.youtube.description()
                         : $LL.mapEditor.properties.youtube.disabled()}
                 </p>
@@ -508,12 +511,12 @@
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("klaxoon")}
                 class:bg-secondary-800={applicationProperty?.name === "klaxoon"}
-                disabled={!connectionManager.klaxoonToolActivated}
+                disabled={!applicationManager.klaxoonToolActivated}
             >
                 <img draggable="false" class="w-8" src={klaxoonSvg} alt="info icon" />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.klaxoon.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                    {connectionManager.klaxoonToolActivated
+                    {applicationManager.klaxoonToolActivated
                         ? $LL.chat.form.application.klaxoon.description()
                         : $LL.mapEditor.properties.klaxoon.disabled()}
                 </p>
@@ -524,12 +527,12 @@
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("googleSheets")}
                 class:bg-secondary-800={applicationProperty?.name === "googleSheets"}
-                disabled={!connectionManager.googleSheetsToolActivated}
+                disabled={!applicationManager.googleSheetsToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleSheetsSvg} alt="info icon" />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleSheets.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                    {connectionManager.googleSheetsToolActivated
+                    {applicationManager.googleSheetsToolActivated
                         ? $LL.chat.form.application.googleSheets.description()
                         : $LL.mapEditor.properties.googleSheets.disabled()}
                 </p>
@@ -540,12 +543,12 @@
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("googleDocs")}
                 class:bg-secondary-800={applicationProperty?.name === "googleDocs"}
-                disabled={!connectionManager.googleDocsToolActivated}
+                disabled={!applicationManager.googleDocsToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleDocsSvg} alt="info icon" />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleDocs.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                    {connectionManager.googleDocsToolActivated
+                    {applicationManager.googleDocsToolActivated
                         ? $LL.chat.form.application.googleDocs.description()
                         : $LL.mapEditor.properties.googleDocs.disabled()}
                 </p>
@@ -556,12 +559,12 @@
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("googleSlides")}
                 class:bg-secondary-800={applicationProperty?.name === "googleSlides"}
-                disabled={!connectionManager.googleSlidesToolActivated}
+                disabled={!applicationManager.googleSlidesToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleSlidesSvg} alt="info icon" />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleSlides.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                    {connectionManager.googleSheetsToolActivated
+                    {applicationManager.googleSlidesToolActivated
                         ? $LL.chat.form.application.googleSlides.description()
                         : $LL.mapEditor.properties.googleSlides.disabled()}
                 </p>
@@ -572,12 +575,12 @@
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("googleDrive")}
                 class:bg-secondary-800={applicationProperty?.name === "googleDrive"}
-                disabled={!connectionManager.googleSheetsToolActivated}
+                disabled={!applicationManager.googleDriveToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleDriveSvg} alt="info icon" />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleDrive.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                    {connectionManager.googleDriveToolActivated
+                    {applicationManager.googleDriveToolActivated
                         ? $LL.chat.form.application.googleDrive.description()
                         : $LL.mapEditor.properties.googleDrive.disabled()}
                 </p>
@@ -588,12 +591,12 @@
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("eraser")}
                 class:bg-secondary-800={applicationProperty?.name === "eraser"}
-                disabled={!connectionManager.eraserToolActivated}
+                disabled={!applicationManager.eraserToolActivated}
             >
                 <img draggable="false" class="w-8" src={eraserSvg} alt="info icon" />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.eraser.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                    {connectionManager.eraserToolActivated
+                    {applicationManager.eraserToolActivated
                         ? $LL.chat.form.application.eraser.description()
                         : $LL.mapEditor.properties.eraser.disabled()}
                 </p>
@@ -604,12 +607,12 @@
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("excalidraw")}
                 class:bg-secondary-800={applicationProperty?.name === "excalidraw"}
-                disabled={!connectionManager.excalidrawToolActivated}
+                disabled={!applicationManager.excalidrawToolActivated}
             >
                 <img draggable="false" class="w-8" src={excalidrawSvg} alt="info icon" />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.excalidraw.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                    {connectionManager.excalidrawToolActivated
+                    {applicationManager.excalidrawToolActivated
                         ? $LL.chat.form.application.excalidraw.description()
                         : $LL.mapEditor.properties.excalidraw.disabled()}
                 </p>
@@ -620,12 +623,12 @@
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("cards")}
                 class:bg-secondary-800={applicationProperty?.name === "cards"}
-                disabled={!connectionManager.cardsToolActivated}
+                disabled={!applicationManager.cardsToolActivated}
             >
                 <img draggable="false" class="w-8" src={cardsPng} alt="info icon" />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.cards.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                    {connectionManager.cardsToolActivated
+                    {applicationManager.cardsToolActivated
                         ? $LL.chat.form.application.cards.description()
                         : $LL.mapEditor.properties.cards.disabled()}
                 </p>
@@ -636,12 +639,12 @@
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("tldraw")}
                 class:bg-secondary-800={applicationProperty?.name === "tldraw"}
-                disabled={!connectionManager.tldrawToolActivated}
+                disabled={!applicationManager.tldrawToolActivated}
             >
                 <img draggable="false" class="w-8" src={tldrawJpeg} alt="info icon" />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.tldraw.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                    {connectionManager.tldrawToolActivated
+                    {applicationManager.tldrawToolActivated
                         ? $LL.chat.form.application.tldraw.description()
                         : $LL.mapEditor.properties.tldraw.disabled()}
                 </p>
@@ -649,7 +652,7 @@
         </div>
 
         <div class="flex flex-wrap w-full justify-between items-center p-2 gap-2">
-            {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
+            {#each applicationManager.applications as app, index (`my-own-app-${index}`)}
                 <button
                     data-testid="{app.name}ApplicationButton"
                     class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
@@ -695,8 +698,8 @@
 >
     {#if $selectedChatMessageToReply !== null}
         <div class="flex p-2 items-start absolute top-0 -translate-y-full w-full">
-            <div class="flex flex-row gap-2 items-center justify-between bg-contrast rounded w-full backdrop-blur">
-                <div class="flex flex-col p-2 rounded w-full">
+            <div class="flex flex-row gap-2 items-center justify-between bg-contrast rounded-lg w-full backdrop-blur">
+                <div class="flex flex-col p-2 rounded-lg w-full">
                     <span class="flex flex-row justify-between">
                         <span class="text-sm text-gray-400">
                             {$LL.chat.replyTo()}
@@ -727,13 +730,13 @@
         bind:message
         bind:messageInput
         disabled={(disabled && !isProximityChatRoom) || ($shouldDisableChatInProximityRoomStore && isProximityChatRoom)}
-        inputClass="message-input flex-grow !m-0 px-5 py-2.5 max-h-36 overflow-auto  h-full rounded-xl wa-searchbar block text-white placeholder:text-base border-light-purple border !bg-transparent resize-none border-none outline-none shadow-none focus:ring-0"
+        inputClass="message-input flex-grow !m-0 px-4 py-2.5 max-h-36 overflow-auto h-full rounded-lg wa-searchbar block text-sm text-white placeholder:text-white/50 placeholder:text-sm border border-white/10 !bg-white/5 resize-none outline-none shadow-none focus:ring-0 focus:border-white/20"
         dataText={$LL.chat.enter()}
         dataTestid="messageInput"
     />
     <button
         data-testid="addApplicationButton"
-        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-none"
+        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0"
         class:bg-secondary-800={applicationComponentOpened}
         on:click={toggleApplicationComponent}
     >
@@ -744,7 +747,7 @@
         />
     </button>
     <button
-        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-none"
+        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0"
         on:click={openCloseEmojiPicker}
     >
         <IconMoodSmile font-size={18} />
@@ -752,7 +755,7 @@
     {#if message.trim().length !== 0 || files.length !== 0 || (applicationProperty && applicationProperty.link.length !== 0)}
         <button
             data-testid="sendMessageButton"
-            class="disabled:opacity-30 disabled:!cursor-none disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-none"
+            class="disabled:opacity-30 disabled:!cursor-none disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-md"
             disabled={applicationPropertyInProcessing}
             on:click={() => sendMessage(message).catch((error) => console.error(error))}
         >

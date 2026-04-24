@@ -389,6 +389,10 @@ const mapEditor: BaseTranslation = {
         },
         images: "Image{{s}}",
         noImage: "No image",
+        specialTags: {
+            customLabel: "Custom",
+            mostUsedLabel: "Most used",
+        },
         customEntityEditorForm: {
             imageName: "Image name",
             tags: "Tags",
@@ -438,6 +442,15 @@ const mapEditor: BaseTranslation = {
                 rights: "Rights",
                 rightsHelper:
                     "The rights define who can use the megaphone. If you leave it empty, anyone can use it. If you set it, only users that have one of those 'tag' can use it.",
+                recording: {
+                    title: "Recording",
+                    enable: "Enable megaphone recording",
+                    enableHelper:
+                        "When disabled, users cannot start a recording in the megaphone. Existing recordings can still be stopped.",
+                    rights: "Recording rights",
+                    rightsHelper:
+                        "Anyone with at least one of these tags can record the megaphone, if they can already record and use the megaphone. Leave it empty to add no extra restriction.",
+                },
                 audienceVideoFeedbackActivated: "Auditorium mode",
                 audienceVideoFeedbackActivatedDisabled: "Auditorium mode",
                 audienceVideoFeedbackActivatedHelper:

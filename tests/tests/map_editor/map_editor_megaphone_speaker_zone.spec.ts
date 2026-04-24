@@ -171,6 +171,119 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
+    /**
+     * E2E 4 users: megaphone with see attendees (auditorium), screen share visibility.
+     * - 2 users "in meeting", 2 "outside" (no proximity bubble).
+     * - One outside starts megaphone; one meeting user starts megaphone + screen share → both outside see.
+     * - Meeting user stops megaphone → outside no longer see screen share.
+     * - Meeting user starts megaphone again → outside see screen share again.
+     * This test is skipped in Firefox because of screen share visibility issues.
+     */
+    test("Megaphone see attendees: outside users see screen share only when sharer is speaker @nofirefox", async ({
+        browser,
+        request,
+    }) => {
+        await resetWamMaps(request);
+        await using pageMeetingA = await getPage(browser, "Admin1", Map.url("empty"));
+        await Map.teleportToPosition(pageMeetingA, 5 * 32, 5 * 32);
+
+        await Menu.openMapEditor(pageMeetingA);
+        await MapEditor.openConfigureMyRoom(pageMeetingA);
+        await ConfigureMyRoom.selectMegaphoneItemInCMR(pageMeetingA);
+
+        await Megaphone.toggleMegaphone(pageMeetingA);
+        await Megaphone.megaphoneInputNameSpace(pageMeetingA, `${browser.browserType().name()}ScreenShareVisibility`);
+        await Megaphone.megaphoneSelectScope(pageMeetingA);
+        await Megaphone.enableAuditoriumMode(pageMeetingA);
+        await Megaphone.megaphoneSave(pageMeetingA);
+        await Megaphone.isCorrectlySaved(pageMeetingA);
+        await Menu.closeMapEditorConfigureMyRoomPopUp(pageMeetingA);
+        await Menu.closeMapEditor(pageMeetingA);
+
+        await using pageMeetingB = await getPage(browser, "Admin2", Map.url("empty"));
+        await using pageOutsideC = await getPage(browser, "Alice", Map.url("empty"));
+        await using pageOutsideD = await getPage(browser, "Bob", Map.url("empty"));
+
+        await Map.teleportToPosition(pageMeetingB, 5 * 32, 6 * 32);
+        await Map.teleportToPosition(pageOutsideC, 13 * 32, 13 * 32);
+        await Map.teleportToPosition(pageOutsideD, 14 * 32, 13 * 32);
+
+        await Menu.isThereMegaphoneButton(pageMeetingA);
+        await Menu.isThereMegaphoneButton(pageOutsideC);
+
+        // Outside user C starts megaphone (becomes speaker)
+        await Menu.clickSendGlobalMessage(pageOutsideC);
+        await expect(pageOutsideC.getByRole("button", { name: "Start live message" })).toBeVisible();
+        await pageOutsideC.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
+        await expect(pageOutsideC.getByRole("button", { name: "Start megaphone" })).toBeVisible();
+        await pageOutsideC.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await pageOutsideC.locator(".close-btn").first().click();
+
+        await expect(pageMeetingA.locator("#cameras-container").getByText("Alice", { exact: true })).toBeVisible({
+            timeout: 20_000,
+        });
+
+        // Meeting user A starts megaphone then screen share
+        await Menu.clickSendGlobalMessage(pageMeetingA);
+        await expect(pageMeetingA.getByRole("button", { name: "Start live message" })).toBeVisible();
+        await pageMeetingA.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
+        await expect(pageMeetingA.getByRole("button", { name: "Start megaphone" })).toBeVisible();
+        await pageMeetingA.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await pageMeetingA.locator(".close-btn").first().click();
+
+        await pageMeetingA.getByTestId("screenShareButton").click();
+        await Menu.expectButtonState(pageMeetingA, "screenShareButton", "active");
+
+        // Both outside users (C and D) must see Admin1's screen share in highlighted media
+        await expect(pageOutsideC.locator("#highlighted-media").getByText("Admin1", { exact: true })).toBeVisible({
+            timeout: 20_000,
+        });
+        await expect(pageOutsideD.locator("#highlighted-media").getByText("Admin1", { exact: true })).toBeVisible({
+            timeout: 20_000,
+        });
+
+        // A stops megaphone → becomes listener, screen share no longer published → outside must not see it
+        await Menu.clickSendGlobalMessage(pageMeetingA);
+        await expect(pageMeetingA.getByRole("button", { name: "Start live message" })).toBeVisible();
+        await pageMeetingA.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
+        await expect(pageMeetingA.getByRole("button", { name: "Stop megaphone" })).toBeVisible();
+        await pageMeetingA.getByRole("button", { name: "Stop megaphone" }).click();
+        await expect(pageMeetingA.getByRole("heading", { name: "Global communication" })).toBeHidden();
+
+        await expect(pageOutsideC.locator("#highlighted-media").getByText("Admin1", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+        await expect(pageOutsideD.locator("#highlighted-media").getByText("Admin1", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+
+        // A starts megaphone again (and screen share if still needed)
+        await Menu.clickSendGlobalMessage(pageMeetingA);
+        await expect(pageMeetingA.getByRole("button", { name: "Start live message" })).toBeVisible();
+        await pageMeetingA.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
+        await expect(pageMeetingA.getByRole("button", { name: "Start megaphone" })).toBeVisible();
+        await pageMeetingA.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await pageMeetingA.locator(".close-btn").first().click();
+
+        await pageMeetingA.getByTestId("screenShareButton").click();
+        await Menu.expectButtonState(pageMeetingA, "screenShareButton", "active");
+
+        await expect(pageOutsideC.locator("#highlighted-media").getByText("Admin1", { exact: true })).toBeVisible({
+            timeout: 20_000,
+        });
+        await expect(pageOutsideD.locator("#highlighted-media").getByText("Admin1", { exact: true })).toBeVisible({
+            timeout: 20_000,
+        });
+
+        await pageMeetingA.getByTestId("screenShareButton").click();
+        await Menu.expectButtonState(pageMeetingA, "screenShareButton", "normal");
+
+        await pageMeetingA.context().close();
+        await pageMeetingB.context().close();
+        await pageOutsideC.context().close();
+        await pageOutsideD.context().close();
+    });
+
     test('Successfully set "SpeakerZone" in the map editor', async ({ browser, request }) => {
         // skip the test, speaker zone with Jitsi is deprecated
         await resetWamMaps(request);
@@ -181,10 +294,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         // await expect(page.locator('canvas')).toBeVisible();
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "speakerMegaphone");
         await AreaEditor.setPodiumNameProperty(page, `${browser.browserType().name()}SpeakerZone`);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 6 * 32 }, { x: 9 * 32, y: 9 * 32 });
         await AreaEditor.addProperty(page, "listenerMegaphone");
         await AreaEditor.setMatchingPodiumZoneProperty(
             page,
@@ -236,7 +349,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "speakerMegaphone");
         await AreaEditor.setPodiumNameProperty(
             page,
@@ -244,7 +357,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
             false,
             false,
         );
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 6 * 32 }, { x: 9 * 32, y: 9 * 32 });
         await AreaEditor.addProperty(page, "listenerMegaphone");
         await AreaEditor.setMatchingPodiumZoneProperty(
             page,
@@ -267,10 +380,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         // await expect(page.locator('canvas')).toBeVisible();
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "speakerMegaphone");
         await AreaEditor.setPodiumNameProperty(page, `${browser.browserType().name()}SpeakerZone`, true);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 6 * 32 }, { x: 9 * 32, y: 9 * 32 });
         await AreaEditor.addProperty(page, "listenerMegaphone");
         await AreaEditor.setMatchingPodiumZoneProperty(
             page,
@@ -337,10 +450,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         // await expect(page.locator('canvas')).toBeVisible();
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(page, "speakerMegaphone");
         await AreaEditor.setPodiumNameProperty(page, `${browser.browserType().name()}SpeakerZone`, true, true);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 6 * 32 }, { x: 9 * 32, y: 9 * 32 });
         await AreaEditor.addProperty(page, "listenerMegaphone");
         await AreaEditor.setMatchingPodiumZoneProperty(
             page,
@@ -653,13 +766,13 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Draw a smaller speaker zone (podium) INSIDE the listener zone
         // Zone covers from (3,6) to (7,8) in tile coordinates - completely inside the listener zone
-        await AreaEditor.drawArea(page, { x: 3 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 7 * 32 * 1.5, y: 8 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 3 * 32, y: 6 * 32 }, { x: 7 * 32, y: 8 * 32 });
         await AreaEditor.addProperty(page, "speakerMegaphone");
         await AreaEditor.setPodiumNameProperty(page, `${browser.browserType().name()}NestedPodium`);
 
         // Draw a large listener zone (attendees) - this will contain the speaker zone
         // Zone covers from (1,5) to (9,9) in tile coordinates
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 5 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 5 * 32 }, { x: 9 * 32, y: 9 * 32 });
         await AreaEditor.addProperty(page, "listenerMegaphone");
         await AreaEditor.setMatchingPodiumZoneProperty(
             page,

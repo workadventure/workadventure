@@ -32,6 +32,8 @@
         (joinable) => !$suggestedRooms.some((suggested) => suggested.id === joinable.id)
     );
 
+    $: hasSuggestedRooms = $suggestedRooms.length > 0;
+
     function toggleFolder() {
         isOpen = !isOpen;
         if (isOpen) {
@@ -55,14 +57,17 @@
     >
         <div class="flex items-center space-x-2 grow m-0 p-0">
             <button class="flex items-center space-x-2 grow m-0 p-0" on:click={toggleFolder}>
-                <div
-                    class={`${
-                        rootFolder
-                            ? "text-white/75 group-hover:text-white text-sm font-bold tracking-widest uppercase grow text-start"
-                            : "text-sm font-bold tracking-widest uppercase grow text-start"
-                    }`}
-                >
-                    {$name}
+                <div class="text-white text-sm font-bold tracking-widest uppercase grow text-start">
+                    <span class="truncate">{$name}</span>
+                    {#if hasSuggestedRooms}
+                        <span
+                            class="shrink-0 inline-flex items-center rounded-full bg-secondary/50 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white/95 border border-secondary/60"
+                            title={$LL.chat.suggestedRooms()}
+                            aria-label={$LL.chat.suggestedRooms()}
+                        >
+                            {$suggestedRooms.length}
+                        </span>
+                    {/if}
                 </div>
             </button>
             <CreateRoomOrFolderOption {folder} parentID={id} parentName={$name} />
@@ -91,7 +96,7 @@
                                     data-testid="openJoinableRooms"
                                     on:click={toggleJoinableRooms}
                                 >
-                                    <div class="text-sm font-bold tracking-widest uppercase grow text-start">
+                                    <div class="text-white text-sm font-bold tracking-widest uppercase grow text-start">
                                         {$LL.chat.joinableRooms()}
                                     </div>
                                 </button>

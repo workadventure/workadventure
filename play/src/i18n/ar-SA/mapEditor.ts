@@ -388,6 +388,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         images: "صورة{{s}}", // Image{{s}}
         noImage: "لا توجد صورة", // No image
+        specialTags: {
+            customLabel: "مخصص",
+            mostUsedLabel: "الأكثر استخدامًا",
+        },
         customEntityEditorForm: {
             imageName: "اسم الصورة", // Image name
             tags: "وسوم", // Tags
@@ -435,6 +439,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "الحقوق",
                 rightsHelper:
                     "الحقوق تُحدد من يمكنه استخدام الميغافون. إن تركته فارغًا فالجميع يمكنه استخدامه. وإن وضعته فلا يمكن استخدامه إلا لمن لديه أحد هذه الوسوم.",
+                recording: {
+                    title: "التسجيل",
+                    enable: "تمكين تسجيل الميغافون",
+                    enableHelper:
+                        "عند التعطيل، لا يمكن للمستخدمين بدء تسجيل في الميغافون. يمكن دائمًا إيقاف التسجيلات الجارية.",
+                    rights: "صلاحيات التسجيل",
+                    rightsHelper:
+                        "يمكن لأي شخص لديه أحد هذه الوسوم على الأقل تسجيل الميغافون، إذا كان يستطيع التسجيل واستخدام الميغافون بالفعل. اتركه فارغًا حتى لا تضيف أي قيد إضافي.",
+                },
                 audienceVideoFeedbackActivated: "وضع القاعة مفعّل",
                 audienceVideoFeedbackActivatedDisabled: "وضع القاعة معطّل",
                 audienceVideoFeedbackActivatedHelper:

@@ -1,6 +1,8 @@
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
+import { Deferred } from "@workadventure/shared-utils";
+import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Room } from "../../Connection/Room";
@@ -22,7 +24,7 @@ import { gameSceneIsLoadedStore, waitForGameSceneStore } from "../../Stores/Game
 import { myCameraStore } from "../../Stores/MyMediaStore";
 import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
-import { pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallStore";
+import { pwaInstallProfileMenuEligibleStore, pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallStore";
 import { hasCapability } from "../../Connection/Capabilities";
 import type { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
@@ -35,6 +37,7 @@ import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
 import type { WokaData } from "../../Components/Woka/WokaTypes";
 import { generateRandomName } from "../../Utils/RandomNameGenerator";
 import { shouldShowPwaInstallSceneAsync } from "../../Utils/PwaInstallEligibility";
+import { raceTimeout } from "../../Utils/PromiseUtils";
 import { GameScene } from "./GameScene";
 /**
  * This class should be responsible for any scene starting/stopping
@@ -43,7 +46,8 @@ export class GameManager {
     private playerName: string | null;
     private characterTextureIds: string[] | null;
     private companionTextureId: string | null;
-    private startRoom!: Room;
+    private startRoom: Room | undefined;
+    private _startRoomPromise: Deferred<Room> = new Deferred();
     private currentGameSceneName: string | null = null;
     // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
     private scenePlugin!: Phaser.Scenes.ScenePlugin;
@@ -80,6 +84,7 @@ export class GameManager {
         }
         let nextScene = result.nextScene;
         this.startRoom = result.room;
+        this._startRoomPromise.resolve(result.room);
         this.loadMap(this.startRoom);
 
         const preferredAudioInputDeviceId = localUserStore.getPreferredAudioInputDevice();
@@ -149,11 +154,32 @@ export class GameManager {
 
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
-        if (
-            this.playerName &&
-            localUserStore.getAuthToken() &&
-            (await shouldShowPwaInstallSceneAsync({ bypassPwa: this.startRoom.bypassPwa }))
-        ) {
+        let shouldShowPwaInstall = false;
+        pwaInstallProfileMenuEligibleStore.set(shouldShowPwaInstall);
+
+        const pwaInstallEligibilityPromise = shouldShowPwaInstallSceneAsync({
+            bypassPwa: this.startRoom.bypassPwa,
+        })
+            .then((isEligible) => {
+                pwaInstallProfileMenuEligibleStore.set(isEligible);
+                return isEligible;
+            })
+            .catch((error) => {
+                console.error("Error while checking if PWA install should be shown", error);
+                Sentry.captureException(error);
+                return false;
+            });
+
+        try {
+            shouldShowPwaInstall = await raceTimeout(pwaInstallEligibilityPromise, 1500);
+        } catch (error) {
+            if (!(error instanceof TimeoutError)) {
+                console.error("Error while checking if PWA install should be shown", error);
+                Sentry.captureException(error);
+            }
+        }
+
+        if (this.playerName && localUserStore.getAuthToken() && shouldShowPwaInstall) {
             return PwaInstallSceneName;
         } else if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
             return LoginSceneName;
@@ -193,6 +219,7 @@ export class GameManager {
 
     public setPlayerName(name: string): void {
         this.playerName = name;
+        localUserStore.notifyPlayerDisplayNameChanged(name);
         Sentry.setUser({
             id: localUserStore.getLocalUser()?.uuid ?? undefined,
             email: localUserStore.getLocalUser()?.email ?? undefined,
@@ -244,8 +271,8 @@ export class GameManager {
     }
 
     public goToStartingMap(): void {
-        console.info("starting " + (this.currentGameSceneName || this.startRoom.key));
-        this.scenePlugin.start(this.currentGameSceneName || this.startRoom.key);
+        console.info("starting " + (this.currentGameSceneName || this.currentStartedRoom.key));
+        this.scenePlugin.start(this.currentGameSceneName || this.currentStartedRoom.key);
         this.activeMenuSceneAndHelpCameraSettings();
     }
 
@@ -318,12 +345,12 @@ export class GameManager {
                 (currentSceneName === SelectCompanionSceneName ||
                     currentSceneName === LoginSceneName ||
                     currentSceneName === SelectCharacterSceneName) &&
-                !this.startRoom.skipCameraPage
+                !this.currentStartedRoom.skipCameraPage
             ) {
                 this.scenePlugin.run(EnableCameraSceneName);
                 return;
             }
-            this.scenePlugin.run(this.startRoom.key);
+            this.scenePlugin.run(this.currentStartedRoom.key);
         }
     }
 
@@ -345,8 +372,15 @@ export class GameManager {
         return gameScene;
     }
 
-    public get currentStartedRoom() {
+    public get currentStartedRoom(): Room {
+        if (this.startRoom === undefined) {
+            throw new Error("startRoom not yet initialized");
+        }
         return this.startRoom;
+    }
+
+    public get currentStartedRoomPromise(): Promise<Room> {
+        return this._startRoomPromise.promise;
     }
 
     public setMatrixServerUrl(matrixServerUrl: string | undefined) {

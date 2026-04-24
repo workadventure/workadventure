@@ -21,8 +21,38 @@ const camera: DeepPartial<Translation["camera"]> = {
         allow: "Autoriser la webcam",
         continue: "Continuer sans webcam",
         screen: {
-            firefox: "/resources/help-setting-camera-permission/fr-FR-chrome.png",
+            firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/fr-FR-chrome.png",
+        },
+        tooltip: {
+            permissionDeniedTitle: "Accès caméra refusé",
+            permissionDeniedDesc:
+                "Le navigateur a refusé la caméra pour ce site. Autorisez-la via la barre d’adresse (cadenas ou icône caméra) ou les paramètres du site. L’illustration correspond à votre navigateur.",
+            noDeviceTitle: "Aucune caméra utilisable",
+            noDeviceDesc:
+                "Le navigateur ne détecte aucune caméra utilisable. Essayez un autre navigateur, vérifiez qu’une caméra est branchée, vérifiez les configurations de l’ordinateur (confidentialité, périphériques), ou redémarrez l’ordinateur si le matériel devrait fonctionner.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/fr-FR-chrome.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/fr-FR-chrome.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
+        microphoneTooltip: {
+            permissionDeniedTitle: "Accès microphone refusé",
+            permissionDeniedDesc:
+                "Le navigateur a refusé le microphone pour ce site. Autorisez-le via la barre d’adresse (cadenas ou icône micro) ou les paramètres du site. L’illustration correspond à votre navigateur.",
+            noDeviceTitle: "Aucun microphone utilisable",
+            noDeviceDesc:
+                "Le navigateur ne détecte aucun microphone utilisable. Essayez un autre navigateur, vérifiez qu’un micro est branché, vérifiez les configurations de l’ordinateur (confidentialité, périphériques), ou redémarrez l’ordinateur si le matériel devrait fonctionner.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/fr-FR-chrome.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/fr-FR-chrome.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
         },
     },
     webrtc: {
@@ -45,7 +75,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     my: {
         silentZone: "Zone silencieuse",
         silentZoneDesc:
-            "Vous êtes dans une zone silencieuse, les autres utilisateurs ne peuvent pas vous parler, votre micro et caméra est désactivé. Bonne pause !",
+            "Vous êtes dans une zone silencieuse, les autres utilisateurs ne peuvent pas vous parler, votre micro et caméra sont désactivés. Bonne pause !",
         nameTag: "Vous",
         loading: "Chargement de votre webcam...",
     },

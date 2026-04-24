@@ -6,6 +6,7 @@ import {
     AccessToken,
     TrackSource,
     EgressClient,
+    EgressStatus,
     EncodedFileOutput,
     S3Upload,
     EncodedFileType,
@@ -28,6 +29,21 @@ const defaultRoomServiceClient = (livekitHost: string, livekitApiKey: string, li
 
 const defaultEgressClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
     new EgressClient(livekitHost, livekitApiKey, livekitApiSecret);
+
+const TERMINAL_EGRESS_STATUSES = new Set<EgressStatus>([
+    EgressStatus.EGRESS_COMPLETE,
+    EgressStatus.EGRESS_FAILED,
+    EgressStatus.EGRESS_ABORTED,
+    EgressStatus.EGRESS_LIMIT_REACHED,
+]);
+
+const TERMINAL_EGRESS_STATUS_NAMES = ["EGRESS_COMPLETE", "EGRESS_FAILED", "EGRESS_ABORTED", "EGRESS_LIMIT_REACHED"];
+
+type LivekitErrorLike = Error & {
+    code?: string;
+    status?: number;
+    metadata?: Record<string, string>;
+};
 
 export class LiveKitService {
     private roomServiceClient: RoomServiceClient;
@@ -197,7 +213,37 @@ export class LiveKitService {
             console.warn("No recording to stop");
             return;
         }
-        await this.egressClient.stopEgress(this.currentRecordingInformation.egressId);
-        this.currentRecordingInformation = null;
+
+        if (this.isTerminalEgressStatus(this.currentRecordingInformation.status)) {
+            debug(`Egress ${this.currentRecordingInformation.egressId} is already in a terminal state`);
+            this.currentRecordingInformation = null;
+            return;
+        }
+
+        try {
+            await this.egressClient.stopEgress(this.currentRecordingInformation.egressId);
+            this.currentRecordingInformation = null;
+        } catch (error) {
+            if (this.isAlreadyStoppedEgressError(error)) {
+                debug(`Egress ${this.currentRecordingInformation?.egressId} is already stopped`);
+                this.currentRecordingInformation = null;
+                return;
+            }
+
+            throw error;
+        }
+    }
+
+    private isTerminalEgressStatus(status: EgressStatus | undefined): boolean {
+        return status !== undefined && TERMINAL_EGRESS_STATUSES.has(status);
+    }
+
+    private isAlreadyStoppedEgressError(error: unknown): error is LivekitErrorLike {
+        if (!(error instanceof Error)) {
+            return false;
+        }
+
+        const message = error.message.toUpperCase();
+        return TERMINAL_EGRESS_STATUS_NAMES.some((status) => message.includes(status));
     }
 }

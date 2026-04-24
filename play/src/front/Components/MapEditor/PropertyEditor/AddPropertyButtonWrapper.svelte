@@ -13,10 +13,10 @@
     import tldrawsJpeg from "../../images/applications/icon_tldraw.jpeg";
     import jitsiPng from "../../images/jitsi.png";
     import LL from "../../../../i18n/i18n-svelte";
-    import { connectionManager } from "../../../Connection/ConnectionManager";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
     import type { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import { mapEditorRestrictedPropertiesStore } from "../../../Stores/MapEditorStore";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import AddPropertyButton from "./AddPropertyButton.svelte";
     import {
         IconDesk,
@@ -48,6 +48,8 @@
         close: undefined;
         click: CustomEvent;
     }>();
+
+    const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
     let modulesExtensionMapEditor = $extensionModuleStore.reduce(
         (acc: { [key: string]: ExtensionModuleAreaProperty }[], module: ExtensionModule) => {
@@ -262,12 +264,12 @@
 {#if property === "openWebsite" && subProperty === "klaxoon"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.klaxoon.label()}
-        descriptionText={connectionManager.klaxoonToolActivated
+        descriptionText={applicationManager.klaxoonToolActivated
             ? $LL.mapEditor.properties.klaxoon.description()
             : $LL.mapEditor.properties.klaxoon.disabled()}
         img={klaxoonSvg}
         style={`z-index: 170;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.klaxoonToolActivated || disabled}
+        disabled={!applicationManager.klaxoonToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -277,12 +279,12 @@
 {#if property === "openWebsite" && subProperty === "youtube"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.youtube.label()}
-        descriptionText={connectionManager.youtubeToolActivated
+        descriptionText={applicationManager.youtubeToolActivated
             ? $LL.mapEditor.properties.youtube.description()
             : $LL.mapEditor.properties.youtube.disabled()}
         img={youtubeSvg}
         style={`z-index: 160;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.youtubeToolActivated || disabled}
+        disabled={!applicationManager.youtubeToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -292,12 +294,12 @@
 {#if property === "openWebsite" && subProperty === "googleDrive"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.googleDrive.label()}
-        descriptionText={connectionManager.googleDriveToolActivated
+        descriptionText={applicationManager.googleDriveToolActivated
             ? $LL.mapEditor.properties.googleDrive.description()
             : $LL.mapEditor.properties.googleDrive.disabled()}
         img={googleDriveSvg}
         style={`z-index: 150;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.googleDriveToolActivated || disabled}
+        disabled={!applicationManager.googleDriveToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -307,12 +309,12 @@
 {#if property === "openWebsite" && subProperty === "googleDocs"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.googleDocs.label()}
-        descriptionText={connectionManager.googleDocsToolActivated
+        descriptionText={applicationManager.googleDocsToolActivated
             ? $LL.mapEditor.properties.googleDocs.description()
             : $LL.mapEditor.properties.googleDocs.disabled()}
         img={googleDocsSvg}
         style={`z-index: 140;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.googleDocsToolActivated || disabled}
+        disabled={!applicationManager.googleDocsToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -322,12 +324,12 @@
 {#if property === "openWebsite" && subProperty === "googleSheets"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.googleSheets.label()}
-        descriptionText={connectionManager.googleSheetsToolActivated
+        descriptionText={applicationManager.googleSheetsToolActivated
             ? $LL.mapEditor.properties.googleSheets.description()
             : $LL.mapEditor.properties.googleSheets.disabled()}
         img={googleSheetsSvg}
         style={`z-index: 130;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.googleSheetsToolActivated || disabled}
+        disabled={!applicationManager.googleSheetsToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -337,12 +339,12 @@
 {#if property === "openWebsite" && subProperty === "googleSlides"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.googleSlides.label()}
-        descriptionText={connectionManager.googleSlidesToolActivated
+        descriptionText={applicationManager.googleSlidesToolActivated
             ? $LL.mapEditor.properties.googleSlides.description()
             : $LL.mapEditor.properties.googleSlides.disabled()}
         img={googleSlidesSvg}
         style={`z-index: 120;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.googleSlidesToolActivated || disabled}
+        disabled={!applicationManager.googleSlidesToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -352,12 +354,12 @@
 {#if property === "openWebsite" && subProperty === "eraser"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.eraser.label()}
-        descriptionText={connectionManager.eraserToolActivated
+        descriptionText={applicationManager.eraserToolActivated
             ? $LL.mapEditor.properties.eraser.description()
             : $LL.mapEditor.properties.eraser.disabled()}
         img={eraserSvg}
         style={`z-index: 110;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.eraserToolActivated || disabled}
+        disabled={!applicationManager.eraserToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -368,12 +370,12 @@
 {#if property === "openWebsite" && subProperty === "excalidraw"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.excalidraw.label()}
-        descriptionText={connectionManager.excalidrawToolActivated
+        descriptionText={applicationManager.excalidrawToolActivated
             ? $LL.mapEditor.properties.excalidraw.description()
             : $LL.mapEditor.properties.excalidraw.disabled()}
         img={excalidrawSvg}
         style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.excalidrawToolActivated || disabled}
+        disabled={!applicationManager.excalidrawToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -384,12 +386,12 @@
 {#if property === "openWebsite" && subProperty === "cards"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.cards.label()}
-        descriptionText={connectionManager.cardsToolActivated
+        descriptionText={applicationManager.cardsToolActivated
             ? $LL.mapEditor.properties.cards.description()
             : $LL.mapEditor.properties.cards.disabled()}
         img={cardsPng}
         style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.cardsToolActivated || disabled}
+        disabled={!applicationManager.cardsToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -400,12 +402,12 @@
 {#if property === "openWebsite" && subProperty === "tldraw"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.tldraw.label()}
-        descriptionText={connectionManager.tldrawToolActivated
+        descriptionText={applicationManager.tldrawToolActivated
             ? $LL.mapEditor.properties.tldraw.description()
             : $LL.mapEditor.properties.tldraw.disabled()}
         img={tldrawsJpeg}
         style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.tldrawToolActivated || disabled}
+        disabled={!applicationManager.tldrawToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -507,7 +509,7 @@
         img={IconLock}
     />
 {/if}
-{#each connectionManager.applications as app, index (`my-own-app-${index}`)}
+{#each applicationManager.applications as app, index (`my-own-app-${index}`)}
     {#if property === "openWebsite" && subProperty === app.name}
         <AddPropertyButton
             headerText={app.name}

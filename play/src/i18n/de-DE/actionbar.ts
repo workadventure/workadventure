@@ -11,6 +11,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantListPlaceholder: "Teilnehmerliste",
     participantSendMessage: "Nachricht senden",
     participantInviteUser: "Benutzer einladen",
+    participantExitFullscreen: "Vollbild beenden",
     profil: "Ihren Namen bearbeiten",
     startScreenSharing: "Bildschirmfreigabe starten",
     stopScreenSharing: "Bildschirmfreigabe beenden",
@@ -52,6 +53,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Ihr Lautsprecher ist deaktiviert",
         activate: "Lautsprecher aktivieren",
         noDevices: "Kein Lautsprecher gefunden",
+        noDevicesDesc:
+            "Ihr Browser listet keine auswählbare Audioausgabe auf. Einige Browser schränken das ein (z. B. Safari). Versuchen Sie einen anderen Browser, schließen Sie Kopfhörer oder Lautsprecher erneut an, prüfen Sie die Systemtöne und die Konfiguration des Computers (Datenschutz, Geräte).",
     },
     status: {
         ONLINE: "Online",

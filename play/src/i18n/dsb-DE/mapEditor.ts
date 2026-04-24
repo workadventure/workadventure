@@ -393,6 +393,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         images: "Wobraz{{s}}",
         noImage: "Žedny wobraz",
+        specialTags: {
+            customLabel: "Swójski",
+            mostUsedLabel: "Nejcesćej wužywane",
+        },
         customEntityEditorForm: {
             imageName: "Mě wobrazka",
             tags: "Toflicki",
@@ -441,6 +445,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Pšawa",
                 rightsHelper:
                     "Pšawa definěruju, chto móžo megafon wužywaś. Jolic wóstajijośo to prozne, móžo kuždy wón wužywaś. Jolic nastajijośo to, mógu jano wužywarje, kótarež maju jadnu z toś tych 'toflickow', wón wužywaś.",
+                recording: {
+                    title: "Nagraśe",
+                    enable: "Nagraśe megafona zmóžniś",
+                    enableHelper:
+                        "Gaž jo znjemóžnjone, wužywarje njemógu nagraśe w megafonje zachopiś. Běžace nagraśa daju se hyšći zastajiś.",
+                    rights: "Pšawa za nagraśe",
+                    rightsHelper:
+                        "Kuždy z nanejmjenjej jadnym z toś tych toflickow móžo megafon nagraś, jolic južo móžo nagraś a megafon wužywaś. Wóstajśo prozne, aby njepśidał dalšne wobgranicowanje.",
+                },
                 audienceVideoFeedbackActivated: "Auditoriumowy modus zmóžnjony",
                 audienceVideoFeedbackActivatedDisabled: "Auditoriumowy modus znjemóžnjony",
                 audienceVideoFeedbackActivatedHelper:

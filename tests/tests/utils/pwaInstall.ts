@@ -11,15 +11,11 @@ export async function ensureWebAppInstallMenuEligibility(page: Page): Promise<vo
         } catch {
             // ignore
         }
-        const mockPrompt = {
+        const mockPromptEvent = Object.assign(new Event("beforeinstallprompt"), {
             prompt: async (): Promise<void> => undefined,
             userChoice: Promise.resolve({ outcome: "dismissed" as const }),
-        };
-        (
-            window as unknown as {
-                __workadventureDeferredPwaPrompt: typeof mockPrompt;
-            }
-        ).__workadventureDeferredPwaPrompt = mockPrompt;
+        });
+        window.dispatchEvent(mockPromptEvent);
     });
 }
 
@@ -42,7 +38,7 @@ export async function dismissPwaInstallScreenIfShown(page: Page, dontShowAgain: 
 
     if (await skip.isVisible()) {
         if (dontShowAgain) {
-            await neverShowAgain.check();
+            await neverShowAgain.click();
         }
         await skip.click();
     }

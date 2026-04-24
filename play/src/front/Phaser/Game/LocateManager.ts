@@ -40,12 +40,19 @@ export class LocateManager {
     }
 
     private subscribeToWokaMenuStore(): void {
+        let previouslyFollowedRemotePlayer: number | undefined = undefined;
         // Subscribe to woka menu store to stop following the remote player when the woka menu is closed.
         this.wokaMenuStoreUnsubscriber = wokaMenuStore.subscribe((value) => {
-            if (value === undefined) {
+            if (value === undefined && previouslyFollowedRemotePlayer !== undefined) {
                 this.cameraManager.stopFollowRemotePlayer();
-            } else if (value.userUuid !== undefined && value.userUuid !== "") {
-                this.cameraManager.followRemotePlayer(value.userUuid);
+                previouslyFollowedRemotePlayer = undefined;
+            } else if (
+                value !== undefined &&
+                value.userId !== undefined &&
+                value.userId !== previouslyFollowedRemotePlayer
+            ) {
+                this.cameraManager.followRemotePlayer(value.userId);
+                previouslyFollowedRemotePlayer = value.userId;
             }
         });
     }
@@ -78,7 +85,7 @@ export class LocateManager {
         const visitCardUrl = userData?.visitCardUrl ?? undefined;
 
         // Initialize woka menu with progress
-        wokaMenuStore.initialize(userName, -1, userUuid, visitCardUrl || undefined);
+        wokaMenuStore.initialize(userName, userData?.userId ?? -1, userUuid, visitCardUrl || undefined);
 
         // Set up progress messages with fun explanations
         const progressMessages = [

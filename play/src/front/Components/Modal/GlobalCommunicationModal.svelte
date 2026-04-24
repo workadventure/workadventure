@@ -1,5 +1,4 @@
 <script lang="ts">
-    //import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { showModalGlobalComminucationVisibilityStore } from "../../Stores/ModalStore";
@@ -28,13 +27,9 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import {
-        currentLiveStreamingSpaceStore,
-        megaphoneCanBeUsedStore,
-        megaphoneSpaceStore,
-        requestedMegaphoneStore,
-    } from "../../Stores/MegaphoneStore";
+    import { megaphoneCanBeUsedStore, requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
+    import { startMegaphoneLive, stopMegaphoneLive } from "../ActionBar/MenuIcons/megaphoneActions";
     import Tooltip from "../Util/Tooltip.svelte";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import Select from "../Input/Select.svelte";
@@ -182,18 +177,12 @@
     }
 
     function startLive() {
-        analyticsClient.startMegaphone();
-        currentLiveStreamingSpaceStore.set($megaphoneSpaceStore);
-        requestedMegaphoneStore.set(true);
-        $megaphoneSpaceStore?.startStreaming();
+        startMegaphoneLive();
         //close();
     }
 
     function stopLive() {
-        analyticsClient.stopMegaphone();
-        $megaphoneSpaceStore?.stopStreaming();
-        currentLiveStreamingSpaceStore.set(undefined);
-        requestedMegaphoneStore.set(false);
+        stopMegaphoneLive();
         close();
     }
 </script>

@@ -395,6 +395,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         images: "Afbeelding{{s}}",
         noImage: "Geen afbeelding",
+        specialTags: {
+            customLabel: "Aangepast",
+            mostUsedLabel: "Meest gebruikt",
+        },
         customEntityEditorForm: {
             imageName: "Afbeeldingsnaam",
             tags: "Tags",
@@ -445,6 +449,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Rechten",
                 rightsHelper:
                     "De rechten bepalen wie de megaphone kan gebruiken. Als je het leeg laat, kan iedereen het gebruiken. Als je het instelt, kunnen alleen gebruikers met een van die 'tags' het gebruiken.",
+                recording: {
+                    title: "Opname",
+                    enable: "Megaphone-opname inschakelen",
+                    enableHelper:
+                        "Wanneer uitgeschakeld, kunnen gebruikers geen opname starten in de megaphone. Bestaande opnames kunnen nog steeds worden gestopt.",
+                    rights: "Opnamerechten",
+                    rightsHelper:
+                        "Iedereen met ten minste een van deze tags kan de megaphone opnemen, als die persoon al mag opnemen en de megaphone mag gebruiken. Laat leeg om geen extra beperking toe te voegen.",
+                },
                 audienceVideoFeedbackActivated: "Auditoriummodus geactiveerd",
                 audienceVideoFeedbackActivatedDisabled: "Auditoriummodus gedeactiveerd",
                 audienceVideoFeedbackActivatedHelper:

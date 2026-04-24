@@ -8,18 +8,31 @@ import type { IUserRegistry } from "./Interfaces/IUserRegistry";
 import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager";
 import type { IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
 
+export type RecordingStatus = "idle" | "starting" | "recording" | "stopping";
+
+export interface ManagedRecordingState {
+    isRecording: boolean;
+    recorder: string | null;
+    status: RecordingStatus;
+}
+
 export interface IRecordingManager {
+    getRecordingState(): ManagedRecordingState;
     startRecording(user: SpaceUser): Promise<void>;
-    stopRecording(user: SpaceUser): Promise<void>;
+    stopRecording(user: SpaceUser): Promise<SpaceUser | null>;
+    stopRecordingByServer(): Promise<SpaceUser | null>;
+    stopRecordingIfRecorderMatches(spaceUserId: string): Promise<SpaceUser | null>;
     handleAddUser(user: SpaceUser): void;
-    handleRemoveUser(user: SpaceUser): Promise<void>;
     isRecording: boolean;
     destroy(): void;
 }
 
 export class RecordingManager implements IRecordingManager {
-    private _isRecording: boolean = false;
+    private _status: RecordingStatus = "idle";
     private _user: SpaceUser | undefined;
+    private _startPromise: Promise<void> | null = null;
+    private _stopPromise: Promise<SpaceUser | null> | null = null;
+    private _stopAfterStartRequested = false;
 
     constructor(
         private readonly _space: ICommunicationSpace,
@@ -29,30 +42,221 @@ export class RecordingManager implements IRecordingManager {
     ) {}
 
     public async startRecording(user: SpaceUser): Promise<void> {
-        if (this._isRecording) {
-            throw new Error("Recording already started");
-        }
-        this._isRecording = true;
-        const currentState = this._lifecycleManager.getCurrentState();
-        this._user = user;
-
-        if (this.isRecordableState(currentState)) {
-            await this.executeRecording(currentState, user);
-        } else {
-            await this.switchToLivekitAndRecord(user);
+        switch (this._status) {
+            case "idle": {
+                return this.runStart(user);
+            }
+            case "starting": {
+                if (this._user?.spaceUserId === user.spaceUserId && this._startPromise) {
+                    return this._startPromise;
+                }
+                throw new Error("Recording is already starting");
+            }
+            case "recording": {
+                if (this._user?.spaceUserId === user.spaceUserId) {
+                    return;
+                }
+                throw new Error("Recording already started");
+            }
+            case "stopping": {
+                if (this._user?.spaceUserId === user.spaceUserId && this._stopPromise) {
+                    await this._stopPromise;
+                    return;
+                }
+                throw new Error("Recording is already stopping");
+            }
         }
     }
 
-    private async executeRecording(
-        recordableState: IRecordableState<IRecordableStrategy>,
-        user: SpaceUser
-    ): Promise<void> {
+    public async stopRecording(user: SpaceUser): Promise<SpaceUser | null> {
+        if (!this._user) {
+            console.warn("No recording is currently active.");
+            return null;
+        }
+
+        if (this._user.spaceUserId !== user.spaceUserId) {
+            throw new Error("User is not the one recording");
+        }
+
+        switch (this._status) {
+            case "idle": {
+                console.warn("No recording is currently active.");
+                return null;
+            }
+            case "starting": {
+                return this.requestStopAfterStart();
+            }
+            case "recording": {
+                return this.runStop();
+            }
+            case "stopping": {
+                if (this._stopPromise) {
+                    await this._stopPromise;
+                }
+                return null;
+            }
+        }
+    }
+
+    public async stopRecordingByServer(): Promise<SpaceUser | null> {
+        switch (this._status) {
+            case "idle": {
+                return null;
+            }
+            case "starting": {
+                return await this.requestStopAfterStart();
+            }
+            case "recording": {
+                return await this.runStop();
+            }
+            case "stopping": {
+                return this._stopPromise ? await this._stopPromise : this._user ?? null;
+            }
+        }
+    }
+
+    public async stopRecordingIfRecorderMatches(spaceUserId: string): Promise<SpaceUser | null> {
+        if (this._user?.spaceUserId !== spaceUserId) {
+            return null;
+        }
+
+        return this.stopRecordingByServer();
+    }
+
+    public handleAddUser(_user: SpaceUser): void {
+        // Intentionally empty. Kept for symmetry with deletion hooks.
+    }
+
+    public getRecordingState(): ManagedRecordingState {
+        return this.buildStateSnapshot();
+    }
+
+    public get isRecording(): boolean {
+        return this._status !== "idle";
+    }
+
+    public destroy(): void {
+        if (this._status === "idle") {
+            return;
+        }
+
+        this.stopRecordingByServer().catch((error) => {
+            console.error(error);
+            Sentry.captureException(error);
+        });
+    }
+
+    private async runStart(user: SpaceUser): Promise<void> {
+        const promise = this.performStart(user);
+        this._startPromise = promise;
+
         try {
-            this._isRecording = true;
-            await recordableState.handleStartRecording(user);
+            await promise;
+        } finally {
+            if (this._startPromise === promise) {
+                this._startPromise = null;
+            }
+        }
+    }
+
+    private async performStart(user: SpaceUser): Promise<void> {
+        this._user = user;
+        this._status = "starting";
+        this._stopAfterStartRequested = false;
+        this.publishState();
+
+        try {
+            const currentState = this._lifecycleManager.getCurrentState();
+
+            if (this.isRecordableState(currentState)) {
+                await currentState.handleStartRecording(user);
+            } else {
+                await this.switchToLivekitAndRecord(user);
+            }
+
+            this._status = "recording";
+            this.publishState();
+
+            if (this._stopAfterStartRequested) {
+                await this.runStop();
+            }
         } catch (error) {
-            this._isRecording = false;
+            this._status = "idle";
             this._user = undefined;
+            this._stopAfterStartRequested = false;
+            this.publishState();
+            throw error;
+        }
+    }
+
+    private async requestStopAfterStart(): Promise<SpaceUser | null> {
+        const recorder = this._user;
+        if (!recorder) {
+            return null;
+        }
+
+        this._stopAfterStartRequested = true;
+
+        if (this._startPromise) {
+            await this._startPromise;
+            return recorder;
+        }
+
+        if (this._status === "recording") {
+            return await this.runStop();
+        }
+
+        return null;
+    }
+
+    private async runStop(): Promise<SpaceUser | null> {
+        if (!this._user) {
+            return null;
+        }
+
+        if (this._stopPromise) {
+            return this._stopPromise;
+        }
+
+        const promise = this.performStop();
+        this._stopPromise = promise;
+
+        try {
+            return await promise;
+        } finally {
+            if (this._stopPromise === promise) {
+                this._stopPromise = null;
+            }
+        }
+    }
+
+    private async performStop(): Promise<SpaceUser | null> {
+        const recorder = this._user;
+        if (!recorder) {
+            return null;
+        }
+
+        this._status = "stopping";
+        this.publishState();
+
+        try {
+            const currentState = this._lifecycleManager.getCurrentState();
+
+            if (!this.isRecordableState(currentState)) {
+                throw new Error("Current state is not recordable");
+            }
+
+            await currentState.handleStopRecording();
+
+            this._status = "idle";
+            this._user = undefined;
+            this._stopAfterStartRequested = false;
+            this.publishState();
+
+            return recorder;
+        } catch (error) {
+            this._status = "recording";
+            this.publishState();
             throw error;
         }
     }
@@ -73,63 +277,25 @@ export class RecordingManager implements IRecordingManager {
         }
 
         await this._lifecycleManager.transitionTo(recordableState);
-        await this.executeRecording(recordableState, user);
+        await recordableState.handleStartRecording(user);
     }
 
-    public async stopRecording(user: SpaceUser): Promise<void> {
-        if (!this._isRecording) {
-            console.warn("No recording is currently active.");
-            return;
-        }
-
-        if (this._user?.spaceUserId !== user.spaceUserId) {
-            throw new Error("User is not the one recording");
-        }
-
-        const currentState = this._lifecycleManager.getCurrentState();
-
-        if (this.isRecordableState(currentState)) {
-            await currentState.handleStopRecording();
-        }
-
-        this._isRecording = false;
-        this._user = undefined;
+    private publishState(): void {
+        this._space.publishMetadata({
+            recording: {
+                recorder: this._user?.spaceUserId ?? null,
+                recording: this._status === "recording" || this._status === "stopping",
+                status: this._status,
+            },
+        });
     }
 
-    public handleAddUser(user: SpaceUser): void {
-        // Does nothing. Here for symmetry with handleRemoveUser.
-    }
-
-    public async handleRemoveUser(user: SpaceUser): Promise<void> {
-        if (!this._isRecording) {
-            return;
-        }
-
-        if (this._user === user) {
-            await this.stopRecording(user);
-            await this._space.updateMetadata(
-                {
-                    recording: {
-                        recorder: user.spaceUserId,
-                        recording: false,
-                    },
-                },
-                user.spaceUserId
-            );
-        }
-    }
-
-    public get isRecording(): boolean {
-        return this._isRecording;
-    }
-
-    public destroy(): void {
-        if (this._isRecording && this._user) {
-            this.stopRecording(this._user).catch((error) => {
-                console.error(error);
-                Sentry.captureException(error);
-            });
-        }
+    private buildStateSnapshot(): ManagedRecordingState {
+        return {
+            isRecording: this._status !== "idle",
+            recorder: this._user?.spaceUserId ?? null,
+            status: this._status,
+        };
     }
 
     private isRecordableState(

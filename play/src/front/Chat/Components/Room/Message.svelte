@@ -2,9 +2,13 @@
     import type { ComponentType } from "svelte";
     import { createEventDispatcher } from "svelte";
     import { derived } from "svelte/store";
-    import type { ChatMessage, ChatMessageType } from "../../Connection/ChatConnection";
+    import type { Readable } from "svelte/store";
+    import type { ChatMessage, ChatMessageType, ChatRoomMember } from "../../Connection/ChatConnection";
     import LL, { locale } from "../../../../i18n/i18n-svelte";
     import Avatar from "../Avatar.svelte";
+
+    import { resolveChatUserColor } from "../../Connection/Matrix/services/WaMatrixProfileService";
+    import { getMatrixClientForChatTint } from "../../Utils";
     import { selectedChatMessageToEdit } from "../../Stores/ChatStore";
     import MessageOptions from "./MessageOptions.svelte";
     import MessageImage from "./Message/MessageImage.svelte";
@@ -21,6 +25,8 @@
     export let message: ChatMessage;
     export let replyDepth = 0;
     export let showHeader = true;
+    /** Matrix rooms: member avatars follow Matrix profile (same pipeline as DM row / room list). */
+    export let membersForMessageAvatars: Readable<readonly ChatRoomMember[]> | undefined = undefined;
 
     let messageRef: HTMLDivElement | undefined;
 
@@ -67,6 +73,21 @@
             return Array.from($reactions.values()).filter((reaction) => reaction.users.size > 0);
         }
     );
+
+    $: messageSenderAvatarColor = resolveChatUserColor(
+        message.sender?.chatId ?? "",
+        message.sender?.color,
+        getMatrixClientForChatTint()
+    );
+
+    $: roomMembersList = membersForMessageAvatars ? $membersForMessageAvatars : undefined;
+    $: memberForSender =
+        roomMembersList && message.sender?.chatId
+            ? roomMembersList.find((m) => m.id === message.sender!.chatId)
+            : undefined;
+    $: messageAvatarPictureStore = memberForSender?.pictureStore ?? message.sender?.pictureStore;
+    $: waParensStore = memberForSender?.waDisplayNameIfDifferent;
+    $: waDisplayNameParens = waParensStore ? $waParensStore : undefined;
 </script>
 
 <div
@@ -86,24 +107,31 @@
             : 'justify-start pl-3'}"
     >
         {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0 && showHeader}
-            <div class="avatar overflow-hidden mt-5 shrink-0">
-                <Avatar pictureStore={sender?.pictureStore} fallbackName={sender?.username} />
+            <div class="avatar overflow-hidden mt-4 shrink-0">
+                <Avatar
+                    compact
+                    pictureStore={messageAvatarPictureStore}
+                    fallbackName={sender?.username}
+                    color={messageSenderAvatarColor}
+                />
             </div>
         {/if}
 
-        <div class="flex flex-col justify-end {replyDepth === 0 && !showHeader ? 'ml-12' : ''}">
+        <div class="flex flex-col justify-end max-w-full {replyDepth === 0 && !showHeader ? 'ml-12' : ''}">
             {#if replyDepth <= 0 && showHeader}
                 <div
-                    class="w-full h-fit text-white/50 text-xs px-2 flex justify-between items-end gap-2 overflow-x-hidden"
+                    class="w-full h-fit text-xs px-2 flex justify-between items-end gap-2 overflow-x-hidden"
                     class:flex-row-reverse={isMyMessage}
                     hidden={isQuotedMessage || messageFromSystem}
                 >
                     <span
                         hidden={messageFromSystem}
-                        class="text-white text-nowrap {!isMyMessage ? 'text-white font-bold' : ''}"
-                        >{isMyMessage ? "You" : sender?.username}</span
+                        class="text-nowrap text-sm font-bold {!isMyMessage ? 'text-white' : 'text-white/75'}"
+                        >{isMyMessage ? $LL.chat.you() : sender?.username}{#if waDisplayNameParens}<span
+                                class="text-xs font-normal opacity-75 ml-0.5">({waDisplayNameParens})</span
+                            >{/if}</span
                     >
-                    <span class={`text-xxs text-nowrap ${isMyMessage ? "mr-1" : "ml-1"}`}
+                    <span class={`text-xs font-condensed text-nowrap opacity-75 ${isMyMessage ? "mr-1" : "ml-1"}`}
                         >{date?.toLocaleTimeString($locale, {
                             hour: "2-digit",
                             minute: "2-digit",
@@ -133,7 +161,11 @@
                     <MessageEdition message={$selectedChatMessageToEdit} />
                 {:else}
                     {#if replyDepth > 0}
-                        <div class="px-2 pt-1 text-xxs font-bold">{isMyMessage ? "You" : sender?.username}</div>
+                        <div class="px-2 pt-1 text-xxs font-bold">
+                            {isMyMessage ? $LL.chat.you() : sender?.username}{#if waDisplayNameParens}<span
+                                    class="text-xxs font-normal opacity-75 ml-0.5">({waDisplayNameParens})</span
+                                >{/if}
+                        </div>
                     {/if}
 
                     <svelte:component this={messageType[type]} on:updateMessageBody={updateMessageBody} {content} />
@@ -154,7 +186,11 @@
                 {#if quotedMessage && replyDepth < 1 && !$isDeleted}
                     <div class="p-1 opacity-80">
                         <div class="response bg-white/10 rounded">
-                            <svelte:self replyDepth={replyDepth + 1} message={quotedMessage} />
+                            <svelte:self
+                                replyDepth={replyDepth + 1}
+                                message={quotedMessage}
+                                {membersForMessageAvatars}
+                            />
                         </div>
                     </div>
                 {/if}

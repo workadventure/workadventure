@@ -1,5 +1,5 @@
 import type { Readable, Unsubscriber, Writable } from "svelte/store";
-import { derived, get, writable } from "svelte/store";
+import { derived, get, readable, writable } from "svelte/store";
 import type {
     EmittedEvents,
     ICreateRoomOpts,
@@ -29,11 +29,14 @@ import {
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
+import { defaultWoka } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { canAcceptVerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { asError } from "catch-unknown";
+
+import Debug from "debug";
 import type {
     ChatConnectionInterface,
     ChatRoom,
@@ -41,25 +44,34 @@ import type {
     ChatUser,
     ConnectionStatus,
     CreateRoomOptions,
+    MatrixChatCapabilities,
+    MatrixPeerProfileDiagnostics,
+    MatrixUserSettingsDiagnostics,
 } from "../ChatConnection";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
+import { currentPlayerWokaStore } from "../../../Stores/CurrentPlayerWokaStore";
 import LL from "../../../../i18n/i18n-svelte";
 import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
-import { MatrixRateLimiter } from "../../Services/MatrixRateLimiter";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import type { MatrixSecurity } from "./MatrixSecurity";
 import { matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
 import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
+import {
+    pushLocalWokaAndNameToMatrixProfile,
+    syncWokaAvatarToMatrixProfileOnWokaChange,
+} from "./services/WaMatrixProfileService";
+
+const debug = Debug("MatrixChatConnection");
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
-export const defaultWoka =
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
-export const defaultColor = "#626262";
 
-export class MatrixChatConnection implements ChatConnectionInterface {
+export type { MatrixPeerProfileDiagnostics, MatrixUserSettingsDiagnostics } from "../ChatConnection";
+
+export class MatrixChatConnection implements ChatConnectionInterface, MatrixChatCapabilities {
     private readonly roomList: MapStore<string, MatrixChatRoom>;
     private client: MatrixClient | undefined;
     private handleRoom: (room: Room) => void;
@@ -71,10 +83,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private handleUserPresence: (event: MatrixEvent | undefined, user: User) => void;
     private handleVerificationRequestReceived: (request: VerificationRequest) => void;
     private statusUnsubscriber: Unsubscriber | undefined;
+    private wokaAvatarMatrixSyncUnsubscriber: Unsubscriber | undefined;
+    private displayNameMatrixSyncUnsubscriber: (() => void) | undefined;
+    private displayNameMatrixSyncDebounceTimer: ReturnType<typeof setTimeout> | undefined;
     private isClientReady = false;
     private usersStatus: MapStore<string, AvailabilityStatus>;
     private userIdsNeedingPresenceUpdate = new Set();
-    private matrixRateLimiter: MatrixRateLimiter;
     nbUnreadInvitationsMessages: Readable<number>;
     nbUnreadDirectRoomsMessages: Readable<number>;
     nbUnreadRoomsMessages: Readable<number>;
@@ -113,13 +127,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     ) {
         this.connectionStatus = writable("CONNECTING");
         this.roomList = new AutoDestroyingMapStore<string, MatrixChatRoom>();
-        this.matrixRateLimiter = MatrixRateLimiter.getInstance();
         this.clientPromise = clientPromise;
-        this.directRooms = derived(this.roomList, (roomList) => {
-            return Array.from(roomList.values()).filter(
-                (room) => get(room.myMembership) === KnownMembership.Join && room.type === "direct"
-            );
-        });
+        this.directRooms = this.createJoinedRoomsReadable(
+            (room) => get(room.myMembership) === KnownMembership.Join && get(room.type) === "direct"
+        );
 
         this.directRoomsUsers = derived(
             [this.directRooms, this.statusStore],
@@ -166,11 +177,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             }
         );
 
-        this.rooms = derived(this.roomList, (roomList) => {
-            return Array.from(roomList.values()).filter(
-                (room) => get(room.myMembership) === KnownMembership.Join && room.type === "multiple"
-            );
-        });
+        this.rooms = this.createJoinedRoomsReadable(
+            (room) => get(room.myMembership) === KnownMembership.Join && get(room.type) === "multiple"
+        );
 
         this.hasUnreadMessages = derived(
             this.roomList,
@@ -190,7 +199,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         this.folders = derived(
             [this.roomFolders, ...Array.from(this.roomFolders.values()).map((folder) => folder.myMembership)],
-            (folderList) => {
+            () => {
                 return Array.from(this.roomFolders.values()).filter(
                     (folder) => get(folder.myMembership) === KnownMembership.Join
                 );
@@ -286,6 +295,38 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         });
     }
 
+    /**
+     * Recomputes when the room list changes or when any room's membership / DM-vs-group {@link MatrixChatRoom.type}
+     * changes (so UI lists move rooms between Direct messages and Group conversations).
+     */
+    private createJoinedRoomsReadable(predicate: (room: MatrixChatRoom) => boolean): Readable<MatrixChatRoom[]> {
+        return readable<MatrixChatRoom[]>([], (set) => {
+            let childUnsubs: Unsubscriber[] = [];
+            const clearChildSubs = () => {
+                childUnsubs.forEach((u) => u());
+                childUnsubs = [];
+            };
+            const listRooms = () => Array.from(get(this.roomList).values());
+            const bump = () => {
+                set(listRooms().filter(predicate));
+            };
+            const rewireRoomSignals = () => {
+                clearChildSubs();
+                for (const room of listRooms()) {
+                    childUnsubs.push(room.myMembership.subscribe(bump));
+                    childUnsubs.push(room.type.subscribe(bump));
+                }
+                bump();
+            };
+            const unsubList = this.roomList.subscribe(rewireRoomSignals);
+            rewireRoomSignals();
+            return () => {
+                unsubList();
+                clearChildSubs();
+            };
+        });
+    }
+
     async init(): Promise<void> {
         try {
             this.client = await this.clientPromise;
@@ -293,11 +334,154 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             await this.startMatrixClient();
             this.isGuest.set(this.client.isGuest());
             this.rebuildSpaceHierarchy();
+            await this.syncMatrixGlobalProfileFromLocalWokaAndName(false);
+            this.attachWokaAvatarMatrixSync();
+            this.attachDisplayNameMatrixSync();
+
+            // Refresh all joined folders children to ensure the UI is up to date
+            this.refreshAllJoinedFoldersChildren();
         } catch (error) {
             this.connectionStatus.set("OFFLINE");
             console.error(error);
             Sentry.captureException(error);
         }
+    }
+
+    /**
+     * When the in-game WOKA changes, upload it to the Matrix content repo and set the Matrix profile avatar.
+     */
+    private attachWokaAvatarMatrixSync(): void {
+        if (!this.client || this.wokaAvatarMatrixSyncUnsubscriber) {
+            return;
+        }
+
+        const trySync = async (wokaSrc: string | undefined) => {
+            if (!this.client) {
+                return;
+            }
+            await syncWokaAvatarToMatrixProfileOnWokaChange(this.client, wokaSrc);
+        };
+
+        this.wokaAvatarMatrixSyncUnsubscriber = currentPlayerWokaStore.subscribe((src) => {
+            trySync(src).catch(() => undefined);
+        });
+    }
+
+    /**
+     * When the in-game display name changes, push it to the Matrix profile (debounced; coalesces with
+     * {@link #attachWokaAvatarMatrixSync} flows).
+     */
+    private attachDisplayNameMatrixSync(): void {
+        if (this.displayNameMatrixSyncUnsubscriber) {
+            return;
+        }
+        const schedule = () => {
+            if (this.displayNameMatrixSyncDebounceTimer !== undefined) {
+                clearTimeout(this.displayNameMatrixSyncDebounceTimer);
+            }
+            this.displayNameMatrixSyncDebounceTimer = setTimeout(() => {
+                this.displayNameMatrixSyncDebounceTimer = undefined;
+                this.syncMatrixGlobalProfileFromLocalWokaAndName(false).catch(() => undefined);
+            }, 400);
+        };
+        this.displayNameMatrixSyncUnsubscriber = localUserStore.subscribeDisplayNameChange(() => {
+            schedule();
+        });
+    }
+
+    /** Exposes the synced Matrix client (e.g. chat tint resolution via {@link getMatrixClientForChatTint}). */
+    getMatrixClient(): MatrixClient | undefined {
+        return this.client;
+    }
+
+    /**
+     * Loads Matrix profile and local game state for the settings UI.
+     */
+    async getMatrixUserSettingsDiagnostics(): Promise<MatrixUserSettingsDiagnostics | undefined> {
+        if (!this.client || this.client.isGuest()) {
+            return undefined;
+        }
+        const userId = this.client.getSafeUserId();
+        if (!userId) {
+            return undefined;
+        }
+        const homeserverUrl = this.client.getHomeserverUrl();
+        let profileDisplayName: string | undefined;
+        let profileAvatarMxc: string | undefined;
+        try {
+            const profile = await this.client.getProfileInfo(userId);
+            profileDisplayName = profile.displayname?.trim();
+            profileAvatarMxc = profile.avatar_url;
+        } catch {
+            /* profile fetch can fail on restricted networks */
+        }
+        const profileAvatarPreviewUrl = profileAvatarMxc
+            ? this.client.mxcUrlToHttp(profileAvatarMxc, 96, 96) ?? undefined
+            : undefined;
+        const localDisplayName = localUserStore.getDisplayNameForMatrixProfile();
+        const localWoka = get(currentPlayerWokaStore);
+        const hasCustomWoka = Boolean(localWoka && localWoka !== defaultWoka);
+        const profileNameNorm = profileDisplayName?.trim();
+        const nameMismatch = Boolean(
+            localDisplayName &&
+                (profileNameNorm === undefined || profileNameNorm === "" || localDisplayName !== profileNameNorm)
+        );
+        const avatarMissingOnProfile = Boolean(hasCustomWoka && !profileAvatarMxc);
+        const profileNeedsSync = nameMismatch || avatarMissingOnProfile;
+
+        return {
+            matrixUserId: userId,
+            homeserverUrl,
+            profileDisplayName,
+            profileAvatarMxc,
+            profileAvatarPreviewUrl,
+            localDisplayName,
+            profileNeedsSync,
+        };
+    }
+
+    /**
+     * Loads Matrix profile for another user (debug UI only).
+     */
+    async getMatrixPeerProfileDiagnostics(matrixUserId: string): Promise<MatrixPeerProfileDiagnostics | undefined> {
+        if (!this.client || this.client.isGuest()) {
+            return undefined;
+        }
+        const homeserverUrl = this.client.getHomeserverUrl();
+        let profileDisplayName: string | undefined;
+        let profileAvatarMxc: string | undefined;
+        try {
+            const profile = await this.client.getProfileInfo(matrixUserId);
+            profileDisplayName = profile.displayname;
+            profileAvatarMxc = profile.avatar_url;
+        } catch {
+            /* profile fetch can fail */
+        }
+        const profileAvatarPreviewUrl = profileAvatarMxc
+            ? this.client.mxcUrlToHttp(profileAvatarMxc, 96, 96) ?? undefined
+            : undefined;
+
+        return {
+            matrixUserId,
+            homeserverUrl,
+            profileDisplayName,
+            profileAvatarMxc,
+            profileAvatarPreviewUrl,
+        };
+    }
+
+    /**
+     * Pushes the in-game display name and WOKA image to the Matrix global profile (`/profile`).
+     */
+    async syncMatrixGlobalProfileFromLocalWokaAndName(forceSync: boolean): Promise<void> {
+        if (!this.client || this.client.isGuest()) {
+            return;
+        }
+        await pushLocalWokaAndNameToMatrixProfile(this.client, {
+            localDisplayName: localUserStore.getDisplayNameForMatrixProfile(),
+            wokaImageSrc: get(currentPlayerWokaStore),
+            forceSync,
+        });
     }
 
     private setPresence(status: AvailabilityStatus): void {
@@ -451,9 +635,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     private getParentRoomID(room: Room): string[] {
-        return (
-            room.getLiveTimeline().getState(EventTimeline.FORWARDS)?.getStateEvents(EventType.SpaceParent) || []
-        ).reduce((acc, currentMatrixEvent) => {
+        const parentIDs =
+            room.getLiveTimeline().getState(EventTimeline.FORWARDS)?.getStateEvents(EventType.SpaceParent) || [];
+        return parentIDs.reduce((acc, currentMatrixEvent) => {
             const parentID = currentMatrixEvent.getStateKey();
             if (parentID) acc.push(parentID);
             return acc;
@@ -578,7 +762,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private async tryAddRoomToParentFolder(room: Room, parentRoomID: string): Promise<boolean> {
         try {
             const parentFolder = await this.findParentFolder(parentRoomID);
-
             if (!parentFolder) {
                 const parentRoom = this.client?.getRoom(parentRoomID);
                 if (parentRoom) {
@@ -639,9 +822,73 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         rootList.set(roomId, new RoomClass(room));
     }
 
+    /**
+     * Re-syncs each joined space folder from local `m.space.child` state so invited/joined
+     * children appear under the right folder before {@link #manageRoomOrFolder} runs.
+     */
+    /**
+     * Re-reads `m.space.child` for a joined folder and recurses into child folders.
+     * @param targetRoomId When set, stops recursing once this room id appears under `folder` (including nested folders).
+     * @returns true if `targetRoomId` was found under this subtree (only meaningful when `targetRoomId` is set).
+     */
+    private refreshJoinedFolderSubtree(folder: MatrixRoomFolder, targetRoomId?: string): boolean {
+        if (get(folder.myMembership) !== KnownMembership.Join) {
+            return false;
+        }
+        folder.getChildren();
+        if (targetRoomId && this.isRoomUnderFolder(targetRoomId, folder)) {
+            return true;
+        }
+        for (const childFolder of folder.folderList.values()) {
+            if (this.refreshJoinedFolderSubtree(childFolder, targetRoomId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Refreshes space-folder children from Matrix state for every root folder.
+     * @param targetRoomId Optional: when the goal is to place one room after join/invite, pass its id to stop
+     * after that room is found under a folder tree (avoids walking unrelated roots when found early).
+     */
+    private refreshAllJoinedFoldersChildren(targetRoomId?: string): void {
+        for (const rootFolder of this.roomFolders.values()) {
+            if (this.refreshJoinedFolderSubtree(rootFolder, targetRoomId)) {
+                return;
+            }
+        }
+    }
+
+    private isRoomUnderFolder(roomId: string, folder: MatrixRoomFolder): boolean {
+        if (folder.roomList.has(roomId)) {
+            return true;
+        }
+        for (const subFolder of folder.folderList.values()) {
+            if (this.isRoomUnderFolder(roomId, subFolder)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** True if this chat room id is already attached under any root space folder tree. */
+    private isRoomUnderAnyFolder(roomId: string): boolean {
+        for (const rootFolder of this.roomFolders.values()) {
+            if (this.isRoomUnderFolder(roomId, rootFolder)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private handleOrphanRoom(room: Room): void {
         if (room.isSpaceRoom()) {
             this.createAndAddNewRootFolder(room);
+            return;
+        }
+
+        if (this.isRoomUnderAnyFolder(room.roomId)) {
             return;
         }
 
@@ -725,12 +972,21 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined): void {
+        debug(
+            "Receive an event to update the membership of the room or folder :",
+            room.name,
+            room.roomId,
+            membership,
+            prevMembership
+        );
         const { roomId } = room;
-
         if (membership !== prevMembership && membership === KnownMembership.Join) {
             this.roomList.delete(roomId);
             this.roomFolders.delete(roomId);
 
+            if (this.client?.isInitialSyncComplete()) {
+                this.refreshAllJoinedFoldersChildren(roomId);
+            }
             this.manageRoomOrFolder(room).catch((e) => {
                 console.error("Failed to manageRoomOrFolder :", e);
             });
@@ -760,6 +1016,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
                     this.roomList.delete(room.roomId);
                     this.roomFolders.delete(room.roomId);
+                    if (this.client?.isInitialSyncComplete()) {
+                        this.refreshAllJoinedFoldersChildren(room.roomId);
+                    }
                     this.manageRoomOrFolder(room).catch((e) => {
                         console.error("Failed to manageRoomOrFolder : ", e);
                     });
@@ -1026,7 +1285,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     .filter((member) => member.id && ["join", "invite"].includes(get(member.membership)))
                     .map((member) => member.id);
                 return (
-                    room.type === "direct" &&
+                    get(room.type) === "direct" &&
                     memberIDs.some((memberId) => memberId === userID && memberIDs.length === 2)
                 );
             })
@@ -1250,6 +1509,18 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client?.off(UserEvent.Presence, this.handleUserPresence);
         this.client?.off(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
         if (this.statusUnsubscriber) this.statusUnsubscriber();
+        if (this.wokaAvatarMatrixSyncUnsubscriber) {
+            this.wokaAvatarMatrixSyncUnsubscriber();
+            this.wokaAvatarMatrixSyncUnsubscriber = undefined;
+        }
+        if (this.displayNameMatrixSyncDebounceTimer !== undefined) {
+            clearTimeout(this.displayNameMatrixSyncDebounceTimer);
+            this.displayNameMatrixSyncDebounceTimer = undefined;
+        }
+        if (this.displayNameMatrixSyncUnsubscriber) {
+            this.displayNameMatrixSyncUnsubscriber();
+            this.displayNameMatrixSyncUnsubscriber = undefined;
+        }
     }
     async destroy(): Promise<void> {
         await this.client?.logout(true);

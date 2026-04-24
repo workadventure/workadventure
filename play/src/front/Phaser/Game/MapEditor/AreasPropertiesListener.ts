@@ -58,6 +58,7 @@ import {
 import { currentLiveStreamingSpaceStore } from "../../../Stores/MegaphoneStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
+import { getImageCoWebsiteTitle, ImageCoWebsite, isImageCoWebsiteUrl } from "../../../WebRtc/CoWebsite/ImageCoWebsite";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsites } from "../../../Stores/CoWebsiteStore";
@@ -1082,7 +1083,7 @@ export class AreasPropertiesListener {
         proximityRoom.setDisplayName(get(LL).mapEditor.properties.livekitRoomProperty.label());
         await proximityRoom.joinSpace(
             roomName,
-            ["cameraState", "microphoneState", "screenShareState"],
+            ["cameraState", "microphoneState", "screenSharingState"],
             true,
             FilterType.ALL_USERS,
             property.livekitRoomConfig?.disableChat ?? false,
@@ -1426,14 +1427,23 @@ export class AreasPropertiesListener {
 
         // Create the co-website to be opened
         const url = new URL(urlStr, this.scene.mapUrlFile);
-        const coWebsite = new SimpleCoWebsite(
-            url,
-            allowAPI ?? false,
-            property.policy,
-            property.width,
-            property.closable,
-            property.hideUrl
-        );
+        const coWebsite =
+            property.type === "openFile" && isImageCoWebsiteUrl(url)
+                ? new ImageCoWebsite(
+                      url,
+                      property.name ?? getImageCoWebsiteTitle(url),
+                      property.width,
+                      property.closable,
+                      property.hideUrl
+                  )
+                : new SimpleCoWebsite(
+                      url,
+                      allowAPI ?? false,
+                      property.policy,
+                      property.width,
+                      property.closable,
+                      property.hideUrl
+                  );
 
         coWebsiteOpen.coWebsite = coWebsite;
 
@@ -1515,7 +1525,7 @@ export class AreasPropertiesListener {
                 proximityRoom.setDisplayName(property.name);
                 const space = await proximityRoom.joinSpace(
                     uniqRoomName,
-                    ["cameraState", "microphoneState", "screenShareState"],
+                    ["cameraState", "microphoneState", "screenSharingState"],
                     true,
                     property.seeAttendees
                         ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK
@@ -1561,7 +1571,12 @@ export class AreasPropertiesListener {
                 // Switch back to listener role instead of leaving
                 const space = this.scene.proximityChatRoom.getCurrentSpace();
                 if (space) {
-                    space.stopStreaming();
+                    try {
+                        space.stopStreaming();
+                    } catch (error) {
+                        console.error("An error occurred while stopping streaming", error);
+                        Sentry.captureException(error);
+                    }
                     isSpeakerStore.set(false);
                     isListenerStore.set(true);
                     listenerWaitingMediaStore.set(remainingListenerZone.waitingLink);
@@ -1642,7 +1657,7 @@ export class AreasPropertiesListener {
                 proximityRoom.setDisplayName(speakerZoneName);
                 const space = await proximityRoom.joinSpace(
                     uniqRoomName,
-                    ["cameraState", "microphoneState", "screenShareState"],
+                    ["cameraState", "microphoneState", "screenSharingState"],
                     true,
                     seeAttendees ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK : FilterType.LIVE_STREAMING_USERS,
                     !property.chatEnabled
@@ -1849,14 +1864,23 @@ export class AreasPropertiesListener {
             } catch (e) {
                 console.error("Error on getWebsiteUrl: ", e);
             }
-            const coWebsite = new SimpleCoWebsite(
-                new URL(cowebsiteUrl, this.scene.mapUrlFile),
-                false,
-                property.policy,
-                property.width,
-                property.closable,
-                property.hideUrl
-            );
+            const imageUrl = new URL(cowebsiteUrl, this.scene.mapUrlFile);
+            const coWebsite = isImageCoWebsiteUrl(imageUrl)
+                ? new ImageCoWebsite(
+                      imageUrl,
+                      property.name ?? getImageCoWebsiteTitle(imageUrl),
+                      property.width,
+                      property.closable,
+                      property.hideUrl
+                  )
+                : new SimpleCoWebsite(
+                      imageUrl,
+                      false,
+                      property.policy,
+                      property.width,
+                      property.closable,
+                      property.hideUrl
+                  );
 
             coWebsiteOpen.coWebsite = coWebsite;
 

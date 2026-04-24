@@ -1,5 +1,6 @@
 import type { SignalData } from "@workadventure/simple-peer";
 import type {
+    RoomConnectedMessage,
     ApplicationDefinitionInterface,
     AvailabilityStatus,
     EditMapCommandMessage,
@@ -87,7 +88,7 @@ export interface RoomJoinedMessageInterface {
     characterTextures: WokaTextureDescriptionInterface[];
     companionTexture?: CompanionTextureDescriptionInterface;
     commandsToApply?: EditMapCommandMessage[];
-    applications?: Array<ApplicationDefinitionInterface> | undefined;
+    applications: ApplicationDefinitionInterface[];
 }
 
 export interface PlayGlobalMessageInterface {
@@ -98,5 +99,5 @@ export interface PlayGlobalMessageInterface {
 
 export interface OnConnectInterface {
     connection: RoomConnection;
-    room: RoomJoinedMessageInterface;
+    roomConnectedMessage: RoomConnectedMessage;
 }

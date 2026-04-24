@@ -395,6 +395,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         images: "Imagem{{s}}",
         noImage: "Nenhuma imagem",
+        specialTags: {
+            customLabel: "Personalizado",
+            mostUsedLabel: "Mais usados",
+        },
         customEntityEditorForm: {
             imageName: "Nome da imagem",
             tags: "Tags",
@@ -445,6 +449,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Direitos",
                 rightsHelper:
                     "Os direitos definem quem pode usar o megafone. Se você deixar vazio, qualquer um pode usar. Se você definir, apenas usuários que tenham uma dessas 'tag' podem usar.",
+                recording: {
+                    title: "Gravação",
+                    enable: "Ativar gravação do megafone",
+                    enableHelper:
+                        "Quando desativado, os usuários não podem iniciar uma gravação no megafone. Gravações existentes ainda podem ser interrompidas.",
+                    rights: "Direitos de gravação",
+                    rightsHelper:
+                        "Qualquer pessoa com pelo menos uma dessas tags pode gravar o megafone, se já puder gravar e usar o megafone. Deixe vazio para não adicionar restrição extra.",
+                },
                 audienceVideoFeedbackActivated: "Modo auditório ativado",
                 audienceVideoFeedbackActivatedDisabled: "Modo auditório desativado",
                 audienceVideoFeedbackActivatedHelper:

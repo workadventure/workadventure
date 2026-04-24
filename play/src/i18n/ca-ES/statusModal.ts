@@ -8,6 +8,9 @@ const statusModal: DeepPartial<Translation["statusModal"]> = {
     goBackToOnlineStatusLabel: "Vols tornar a estar en línia?",
     allowNotification: "Permetre notificacions?",
     allowNotificationExplanation: "Rep una notificació d'escriptori quan algú vulgui parlar amb tu.",
+    soundBlockedBackInAMoment:
+        "El teu navegador està bloquejant el so ara mateix, per això ets en mode Torna en un moment.",
+    turnSoundOn: "Activar el so",
 };
 
 export default statusModal;

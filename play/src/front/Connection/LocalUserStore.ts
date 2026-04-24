@@ -49,6 +49,7 @@ const matrixGuest = "matrixGuest";
 const pwaInstallPromptShownKey = "workadventure_pwa_install_prompt_shown";
 const volumeProximityDiscussion = "volumeProximityDiscussion";
 const foldersOpened = "foldersOpened";
+const ignoredSuggestedRoomIdsKey = "ignoredSuggestedRoomIds";
 const cameraContainerHeightKey = "cameraContainerHeight";
 const chatSideBarWidthKey = "chatSideBarWidth";
 const mapEditorSideBarWidthKey = "mapEditorSideBarWidthKey";
@@ -85,6 +86,49 @@ interface PlayerVariable {
 class LocalUserStore {
     private jwt: JwtAuthToken | undefined;
     private name: string | undefined;
+    /** Last in-session display name (from {@link #setName} or {@link #notifyPlayerDisplayNameChanged}). */
+    private latestSessionDisplayName: string | undefined;
+    private displayNameListeners = new Set<(name: string) => void>();
+
+    private emitDisplayNameListeners(name: string): void {
+        for (const listener of this.displayNameListeners) {
+            try {
+                listener(name);
+            } catch (e) {
+                console.error("LocalUserStore displayName listener", e);
+            }
+        }
+    }
+
+    /**
+     * Subscribe to display name changes (persisted name via {@link #setName} or session updates via
+     * {@link #notifyPlayerDisplayNameChanged}).
+     */
+    subscribeDisplayNameChange(listener: (name: string) => void): () => void {
+        this.displayNameListeners.add(listener);
+        return () => {
+            this.displayNameListeners.delete(listener);
+        };
+    }
+
+    /**
+     * Notifies display name listeners without persisting to localStorage (e.g. when the name is set
+     * on the game manager only after a successful server-side save).
+     */
+    notifyPlayerDisplayNameChanged(name: string): void {
+        const trimmed = name.trim();
+        this.latestSessionDisplayName = trimmed;
+        this.emitDisplayNameListeners(trimmed);
+    }
+
+    /**
+     * Effective display name for Matrix profile sync: in-session name (including OpenID / API flows
+     * that only update the game manager) or persisted {@link #getName}.
+     */
+    getDisplayNameForMatrixProfile(): string | undefined {
+        const s = this.latestSessionDisplayName?.trim() || this.getName()?.trim();
+        return s || undefined;
+    }
 
     saveUser(localUser: LocalUser) {
         localStorage.setItem("localUser", JSON.stringify(localUser));
@@ -97,7 +141,9 @@ class LocalUserStore {
 
     setName(name: string): void {
         this.name = name;
+        this.latestSessionDisplayName = name.trim();
         localStorage.setItem(playerNameKey, name);
+        this.emitDisplayNameListeners(name);
     }
 
     getName(): string | null {
@@ -407,6 +453,35 @@ class LocalUserStore {
         const folders = this.getFoldersOpened();
         folders.delete(folderId);
         this.setFoldersOpened(folders);
+    }
+
+    getIgnoredSuggestedRoomIds(): Set<string> {
+        try {
+            const raw = localStorage.getItem(ignoredSuggestedRoomIdsKey);
+            if (!raw) {
+                return new Set();
+            }
+            const parsed = JSON.parse(raw) as unknown;
+            if (!Array.isArray(parsed)) {
+                return new Set();
+            }
+            return new Set(parsed.filter((id): id is string => typeof id === "string" && id.length > 0));
+        } catch {
+            return new Set();
+        }
+    }
+
+    addIgnoredSuggestedRoom(roomId: string): void {
+        if (!roomId) {
+            return;
+        }
+        const set = this.getIgnoredSuggestedRoomIds();
+        set.add(roomId);
+        localStorage.setItem(ignoredSuggestedRoomIdsKey, JSON.stringify([...set]));
+    }
+
+    clearIgnoredSuggestedRoomIds(): void {
+        localStorage.removeItem(ignoredSuggestedRoomIdsKey);
     }
 
     setPreferredVideoInputDevice(deviceId?: string) {

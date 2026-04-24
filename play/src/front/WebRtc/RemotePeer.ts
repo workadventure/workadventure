@@ -238,7 +238,7 @@ export class RemotePeer extends Peer implements Streamable {
         private iceServers: IceServer[],
         //private spaceUser: SpaceUserExtended,
         isLocalPeer: boolean,
-        private localStreamStore: Readable<LocalStreamStoreValue>,
+        private localStreamStore: Readable<LocalStreamStoreValue | undefined>,
         private type: "video" | "screenSharing",
         private _spaceUserId: string,
         private _blockedUsersStore: Readable<Set<string>>,

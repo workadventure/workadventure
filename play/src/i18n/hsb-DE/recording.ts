@@ -22,6 +22,8 @@ const recording: DeepPartial<Translation["recording"]> = {
     notification: {
         deleteNotification: "Nagraće wuspěšnje zhašene",
         deleteFailedNotification: "Zhašowanje nagraća njeje so poradźiło",
+        startFailedNotification: "Startowanje nagraća njeje so poradźiło",
+        stopFailedNotification: "Zastajenje nagraća njeje so poradźiło",
         recordingStarted: "{name} je nagraće započał.",
         downloadFailedNotification: "Sćehnjenje nagraća njeje so poradźiło",
         recordingComplete: "Nagraće dokónčene",

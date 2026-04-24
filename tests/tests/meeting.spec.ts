@@ -191,6 +191,64 @@ test.describe("Meeting actions test @nomobile @nowebkit", () => {
         await userAlice.context().close();
     });
 
+    test("Highlight fullscreen: participant cameras, auto-hide list, toggle, chat, exit @nofirefox", async ({
+        browser,
+    }) => {
+        test.skip(
+            browser.browserType().name() === "firefox",
+            "Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.",
+        );
+
+        await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await Map.teleportToPosition(page, 160, 160);
+        await using userBob = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await Map.teleportToPosition(userBob, 160, 160);
+
+        await expect(page.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 30_000 });
+        await expect(page.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 30_000 });
+
+        const bobCameraBox = page.locator("#cameras-container .camera-box").filter({ hasText: "Bob" });
+        await bobCameraBox.hover();
+        await bobCameraBox.locator(".full-screen-button").click();
+
+        await page.getByTestId("highlight-enter-fullscreen-button").click({ timeout: 15_000 });
+
+        await expect(page.locator("#highlightFullScreenParticipantCamerasList")).toHaveClass(/visible/);
+        await expect
+            .poll(async () => page.locator("#highlightFullScreenParticipantCamerasList video").count(), {
+                timeout: 20_000,
+            })
+            .toBeGreaterThan(0);
+
+        // Check that participant is close automatically
+        await expect(page.locator("#highlightFullScreenParticipantCamerasList")).toHaveClass(/invisible/, {
+            timeout: 10_000,
+        });
+
+        // Open participant list
+        await page.getByTestId("toggle-highlight-participant-cameras-list").click();
+        await expect(page.locator("#highlightFullScreenParticipantCamerasList")).toBeVisible();
+
+        // Open chat
+        await page.getByTestId("highlight-fullscreen-send-message").click();
+        await expect(page.getByTestId("roomName")).toBeVisible();
+        await page.getByTestId("highlight-fullscreen-send-message").click();
+        await expect(page.getByTestId("roomName")).toBeHidden();
+
+        // Open invite user
+        await page.getByTestId("highlight-fullscreen-invite-user").click();
+        await expect(page.getByTestId("user-list-room-here")).toBeVisible();
+        await page.getByTestId("highlight-fullscreen-invite-user").click();
+        await expect(page.getByTestId("user-list-room-here")).toBeHidden();
+
+        // Exit fullscreen
+        await page.getByTestId("highlight-fullscreen-exit").click();
+        await expect(page.locator("#highlightFullScreenParticipantCamerasList")).toBeHidden({ timeout: 10_000 });
+
+        await userBob.context().close();
+        await page.context().close();
+    });
+
     // FIXME jitsi bug
     /*test('Jitsi meeting action to mute microphone & video', async ({ browser, request }, { project }) => {
     // Skip test for mobile device
@@ -209,7 +267,7 @@ test.describe("Meeting actions test @nomobile @nowebkit", () => {
     // Create a new area
     await Mapeditor.openAreaEditor(page);
     // Draw the area
-    await AreaEditor.drawArea(page, {x: 0*32*1.5, y: 5}, {x: 9*32*1.5, y: 4*32*1.5});
+    await AreaEditor.drawArea(page, {x: 0*32, y: 5}, {x: 9*32, y: 4*32});
     // Add a property Speaker zone to create new Jitsi meeting zone
     await AreaEditor.addProperty(page, 'Speaker zone');
     // Set the speaker zone property
