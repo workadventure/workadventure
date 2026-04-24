@@ -1,11 +1,6 @@
 import { z } from "zod";
 import type { AnswerMessage, CompanionDetail, ErrorApiData, SubMessage, WokaDetail } from "@workadventure/messages";
-import {
-    apiVersionHash,
-    noUndefined,
-    ServerToClientMessage as ServerToClientMessageTsProto,
-    ServerToClientMessage,
-} from "@workadventure/messages";
+import { apiVersionHash, noUndefined } from "@workadventure/messages";
 import { errors } from "jose";
 import * as Sentry from "@sentry/node";
 import type { TemplatedApp } from "uWebSockets.js";
@@ -584,17 +579,16 @@ export class IoSocketController {
                     if (socketData.messages && Array.isArray(socketData.messages)) {
                         socketData.messages.forEach((c: unknown) => {
                             const messageToSend = z.object({ type: z.string(), message: z.string() }).parse(c);
-                            const bytes = ServerToClientMessageTsProto.encode({
-                                message: {
-                                    $case: "sendUserMessage",
-                                    sendUserMessage: {
-                                        type: messageToSend.type,
-                                        message: messageToSend.message,
-                                    },
-                                },
-                            }).finish();
                             if (!socketData.disconnecting) {
-                                socket.send(bytes, true);
+                                socket.send({
+                                    message: {
+                                        $case: "sendUserMessage",
+                                        sendUserMessage: {
+                                            type: messageToSend.type,
+                                            message: messageToSend.message,
+                                        },
+                                    },
+                                });
                             }
                         });
                     }
@@ -1194,17 +1188,14 @@ export class IoSocketController {
 
                         try {
                             if (!userData.disconnecting) {
-                                socket.send(
-                                    ServerToClientMessage.encode({
-                                        message: {
-                                            $case: "errorMessage",
-                                            errorMessage: {
-                                                message: "An error occurred in pusher: " + asError(e).message,
-                                            },
+                                socket.send({
+                                    message: {
+                                        $case: "errorMessage",
+                                        errorMessage: {
+                                            message: "An error occurred in pusher: " + asError(e).message,
                                         },
-                                    }).finish(),
-                                    true
-                                );
+                                    },
+                                });
                             }
                         } catch (error) {
                             Sentry.captureException(error);
@@ -1234,14 +1225,11 @@ export class IoSocketController {
         setTimeout(() => {
             socket.getUserData().queryAbortControllers.delete(answerMessage.id);
         }, 5000);
-        socket.send(
-            ServerToClientMessage.encode({
-                message: {
-                    $case: "answerMessage",
-                    answerMessage,
-                },
-            }).finish(),
-            true
-        );
+        socket.send({
+            message: {
+                $case: "answerMessage",
+                answerMessage,
+            },
+        });
     }
 }

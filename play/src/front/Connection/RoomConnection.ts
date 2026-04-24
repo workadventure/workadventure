@@ -78,13 +78,13 @@ import type {
     MeetingInvitationResponseReceivedMessage,
     MeetingInvitationRequestClosedMessage,
     MeetingInvitationRequestTooHighMessage,
+    ClientToServerMessage as ClientToServerMessageTsProto,
     ServerToClientMessage as ServerToClientMessageTsProto,
 } from "@workadventure/messages";
 import {
     noUndefined,
     AskPositionMessage_AskType as AskPositionMessageAskType,
     apiVersionHash,
-    ClientToServerMessage as ClientToServerMessageTsProto,
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     SetPlayerVariableMessage_Scope,
     UpdateSpaceMetadataMessage,
@@ -2147,14 +2147,12 @@ export class RoomConnection implements RoomConnection {
     }
 
     private send(message: ClientToServerMessageTsProto): void {
-        const bytes = ClientToServerMessageTsProto.encode(message).finish();
-
         if (!this.socket.isOpen()) {
             console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
             return;
         }
 
-        this.socket.send(bytes);
+        this.socket.send(message);
     }
 
     private query<T extends Required<QueryMessage>["query"]>(

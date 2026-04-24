@@ -1,4 +1,9 @@
-import { ServerToClientMessage as ServerToClientMessageTsProto } from "@workadventure/messages";
+import {
+    FrontToPusherWebSocketMessage,
+    PusherToFrontWebSocketMessage,
+    type ClientToServerMessage,
+    type ServerToClientMessage,
+} from "@workadventure/messages";
 
 type WebSocketFactory = (url: string, protocols?: string[]) => WebSocket;
 
@@ -12,13 +17,14 @@ export class WorkAdventureWebSocket {
     public onopen: ((this: WorkAdventureWebSocket, ev: Event) => void) | null = null;
     public onclose: ((this: WorkAdventureWebSocket, ev: CloseEvent) => void) | null = null;
     public onerror: ((this: WorkAdventureWebSocket, ev: Event) => void) | null = null;
-    public onmessage: ((this: WorkAdventureWebSocket, ev: MessageEvent<ServerToClientMessageTsProto>) => void) | null =
-        null;
+    public onmessage: ((this: WorkAdventureWebSocket, ev: MessageEvent<ServerToClientMessage>) => void) | null = null;
 
     private readonly url: string;
     private readonly protocols: string[] | undefined;
     private manuallyClosed = false;
     private reconnectAttempted = false;
+    private nextOutgoingNonce = 1;
+    private lastReceivedNonce = 0;
 
     private socket: WebSocket;
 
@@ -33,8 +39,18 @@ export class WorkAdventureWebSocket {
         return this.socket.readyState === WebSocket.OPEN;
     }
 
-    public send(data: string | Blob | BufferSource): void {
-        this.socket.send(data);
+    public send(message: ClientToServerMessage): void {
+        const payloadWithNonce = FrontToPusherWebSocketMessage.encode({
+            nonce: this.nextOutgoingNonce,
+            message,
+        }).finish();
+        this.nextOutgoingNonce += 1;
+
+        this.socket.send(payloadWithNonce);
+    }
+
+    public getLastReceivedNonce(): number {
+        return this.lastReceivedNonce;
     }
 
     public close(code?: number, reason?: string): void {
@@ -72,13 +88,23 @@ export class WorkAdventureWebSocket {
     };
 
     private handleMessageEvent = (event: MessageEvent): void => {
-        const data: ServerToClientMessageTsProto =
+        const bytes =
             event.data instanceof ArrayBuffer
-                ? ServerToClientMessageTsProto.decode(new Uint8Array(event.data))
-                : event.data;
+                ? new Uint8Array(event.data)
+                : new Uint8Array(event.data.buffer, event.data.byteOffset, event.data.byteLength);
 
-        const messageEvent = new MessageEvent<ServerToClientMessageTsProto>("message", {
-            data,
+        let frame;
+        try {
+            frame = PusherToFrontWebSocketMessage.decode(bytes);
+        } catch (e) {
+            console.error(e);
+            this.close(1003, "Invalid message format");
+            return;
+        }
+
+        this.lastReceivedNonce = frame.nonce;
+        const messageEvent = new MessageEvent<ServerToClientMessage>("message", {
+            data: frame.message,
             origin: event.origin,
             lastEventId: event.lastEventId,
             ports: [...event.ports],

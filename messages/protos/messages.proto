@@ -339,6 +339,18 @@ message ModifyEntityMessage {
   uint32 height = 8;
 }
 
+// Transport envelope for websocket frames sent from front to pusher.
+message FrontToPusherWebSocketMessage {
+  uint32 nonce = 1;
+  ClientToServerMessage message = 2;
+}
+
+// Transport envelope for websocket frames sent from pusher to front.
+message PusherToFrontWebSocketMessage {
+  uint32 nonce = 1;
+  ServerToClientMessage message = 2;
+}
+
 message ClientToServerMessage {
   oneof message {
     JoinRoomFrontMessage joinRoomFrontMessage = 1;

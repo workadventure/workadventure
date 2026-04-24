@@ -1,5 +1,5 @@
 import type { TemplatedApp, HttpResponse, HttpRequest, us_socket_context_t } from "uWebSockets.js";
-import { ClientToServerMessage } from "@workadventure/messages";
+import type { ClientToServerMessage } from "@workadventure/messages";
 import type { ConnectingSocketData } from "../models/Websocket/SocketData";
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
 import type { Socket } from "./SocketManager";
@@ -65,7 +65,7 @@ export class PusherRoomSocketController {
 
                 let message;
                 try {
-                    message = ClientToServerMessage.decode(new Uint8Array(arrayBuffer));
+                    message = socket.decodeIncomingMessage(arrayBuffer);
                 } catch (e) {
                     console.error(e);
                     ws.end(1003, "Invalid message format");

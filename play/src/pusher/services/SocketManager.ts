@@ -269,7 +269,7 @@ export class SocketManager implements ZoneEventListener {
 
                     // Let's pass data over from the back to the client.
                     if (!socketData.disconnecting) {
-                        client.send(ServerToClientMessage.encode(message).finish(), true);
+                        client.send(message);
                     }
                 })
                 .on("end", () => {
@@ -927,15 +927,12 @@ export class SocketManager implements ZoneEventListener {
     public emitWorldFullMessage(client: Socket): void {
         const socketData = client.getUserData();
         if (!socketData.disconnecting) {
-            client.send(
-                ServerToClientMessage.encode({
-                    message: {
-                        $case: "worldFullMessage",
-                        worldFullMessage: {},
-                    },
-                }).finish(),
-                true
-            );
+            client.send({
+                message: {
+                    $case: "worldFullMessage",
+                    worldFullMessage: {},
+                },
+            });
         }
     }
 
@@ -1201,23 +1198,20 @@ export class SocketManager implements ZoneEventListener {
             // Nothing to do with the error
             tags = [];
         }
-        client.send(
-            ServerToClientMessage.encode({
-                message: {
-                    $case: "answerMessage",
-                    answerMessage: {
-                        id: queryMessage.id,
-                        answer: {
-                            $case: "roomTagsAnswer",
-                            roomTagsAnswer: {
-                                tags,
-                            },
+        client.send({
+            message: {
+                $case: "answerMessage",
+                answerMessage: {
+                    id: queryMessage.id,
+                    answer: {
+                        $case: "roomTagsAnswer",
+                        roomTagsAnswer: {
+                            tags,
                         },
                     },
                 },
-            }).finish(),
-            true
-        );
+            },
+        });
     }
 
     async handleRoomsFromSameWorldQuery(client: Socket, queryMessage: QueryMessage) {
@@ -1228,53 +1222,47 @@ export class SocketManager implements ZoneEventListener {
                 undefined,
                 client.getUserData().tags
             );
-            client.send(
-                ServerToClientMessage.encode({
+            client.send({
+                message: {
+                    $case: "answerMessage",
+                    answerMessage: {
+                        id: queryMessage.id,
+                        answer: {
+                            $case: "roomsFromSameWorldAnswer",
+                            roomsFromSameWorldAnswer: {
+                                roomDescriptions: roomDescriptions.map((room) => ({
+                                    ...room,
+                                    name: room.name ?? "",
+                                    roomUrl: room.roomUrl ?? "",
+                                    description: room.description ?? undefined, // Add this line to ensure description is not null
+                                    wamUrl: room.wamUrl ?? undefined, // Add this line to ensure wamUrl is not null
+                                    copyright: room.copyright ?? undefined, // Add this line to ensure copyright is not null
+                                    thumbnail: room.thumbnail ?? undefined, // Add this line to ensure thumbnail is not null
+                                    areasSearchable: room.areasSearchable ?? undefined, // Add this line to ensure areasSearchable is not null
+                                    entitiesSearchable: room.entitiesSearchable ?? undefined, // Add this line to ensure entitiesSearchable is not null
+                                })),
+                            },
+                        },
+                    },
+                },
+            });
+        } catch (e) {
+            console.warn("SocketManager => handleRoomsFromSameWorldQuery => error while getting other rooms list", e);
+            try {
+                client.send({
                     message: {
                         $case: "answerMessage",
                         answerMessage: {
                             id: queryMessage.id,
                             answer: {
-                                $case: "roomsFromSameWorldAnswer",
-                                roomsFromSameWorldAnswer: {
-                                    roomDescriptions: roomDescriptions.map((room) => ({
-                                        ...room,
-                                        name: room.name ?? "",
-                                        roomUrl: room.roomUrl ?? "",
-                                        description: room.description ?? undefined, // Add this line to ensure description is not null
-                                        wamUrl: room.wamUrl ?? undefined, // Add this line to ensure wamUrl is not null
-                                        copyright: room.copyright ?? undefined, // Add this line to ensure copyright is not null
-                                        thumbnail: room.thumbnail ?? undefined, // Add this line to ensure thumbnail is not null
-                                        areasSearchable: room.areasSearchable ?? undefined, // Add this line to ensure areasSearchable is not null
-                                        entitiesSearchable: room.entitiesSearchable ?? undefined, // Add this line to ensure entitiesSearchable is not null
-                                    })),
+                                $case: "error",
+                                error: {
+                                    message: e instanceof Error ? e.message + e.stack : "Unknown error",
                                 },
                             },
                         },
                     },
-                }).finish(),
-                true
-            );
-        } catch (e) {
-            console.warn("SocketManager => handleRoomsFromSameWorldQuery => error while getting other rooms list", e);
-            try {
-                client.send(
-                    ServerToClientMessage.encode({
-                        message: {
-                            $case: "answerMessage",
-                            answerMessage: {
-                                id: queryMessage.id,
-                                answer: {
-                                    $case: "error",
-                                    error: {
-                                        message: e instanceof Error ? e.message + e.stack : "Unknown error",
-                                    },
-                                },
-                            },
-                        },
-                    }).finish(),
-                    true
-                );
+                });
                 // Nothing to do with the error
                 Sentry.captureException(e);
                 return;
@@ -1308,26 +1296,23 @@ export class SocketManager implements ZoneEventListener {
         const url = queryMessage.query.embeddableWebsiteQuery.url;
 
         const emitAnswerMessage = (state: boolean, embeddable: boolean, message: string | undefined = undefined) => {
-            client.send(
-                ServerToClientMessage.encode({
-                    message: {
-                        $case: "answerMessage",
-                        answerMessage: {
-                            id: queryMessage.id,
-                            answer: {
-                                $case: "embeddableWebsiteAnswer",
-                                embeddableWebsiteAnswer: {
-                                    url,
-                                    state,
-                                    embeddable,
-                                    message,
-                                },
+            client.send({
+                message: {
+                    $case: "answerMessage",
+                    answerMessage: {
+                        id: queryMessage.id,
+                        answer: {
+                            $case: "embeddableWebsiteAnswer",
+                            embeddableWebsiteAnswer: {
+                                url,
+                                state,
+                                embeddable,
+                                message,
                             },
                         },
                     },
-                }).finish(),
-                true
-            );
+                },
+            });
         };
 
         // If the URL is in the white list, we send a message to the client

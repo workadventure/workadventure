@@ -1,5 +1,4 @@
-import type { SubMessage } from "@workadventure/messages";
-import { ServerToClientMessage } from "@workadventure/messages";
+import type { SubMessage, ServerToClientMessage } from "@workadventure/messages";
 import type { Socket } from "./SocketManager";
 
 export function emitInBatch(socket: Socket, payload: SubMessage): void {
@@ -19,7 +18,7 @@ export function emitInBatch(socket: Socket, payload: SubMessage): void {
                 },
             };
 
-            socket.send(ServerToClientMessage.encode(serverToClientMessage).finish(), true);
+            socket.send(serverToClientMessage);
             socketData.batchedMessages = {
                 event: "",
                 payload: [],
