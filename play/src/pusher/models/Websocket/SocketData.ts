@@ -66,6 +66,9 @@ export type ConnectingSocketData = {
     queryAbortControllers: Map<number, AbortController>;
     canRecord: boolean;
     keepAliveInterval: NodeJS.Timeout | undefined;
+    // Nonce values reported by the front when reconnecting unexpectedly.
+    reconnectLastReceivedNonce?: number;
+    reconnectLastSentNonce?: number;
 };
 
 export type SocketData = ConnectingSocketData & {

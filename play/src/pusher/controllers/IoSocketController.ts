@@ -18,7 +18,6 @@ import type { AdminSocketData } from "../models/Websocket/AdminSocketData";
 import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
-import { validateWebsocketQuery } from "../services/QueryValidator";
 import type { ConnectingSocketData, SpaceName } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
 import { ClientAbortError } from "../models/ClientAbortError";
@@ -226,342 +225,251 @@ export class IoSocketController {
             idleTimeout: SOCKET_IDLE_TIMER,
             maxPayloadLength: 16 * 1024 * 1024,
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
-            upgrade: (res, req, context) => {
-                (async () => {
-                    /* Keep track of abortions */
-                    const upgradeAborted = { aborted: false };
+            queryValidator: z.object({
+                roomId: z.string(),
+                characterTextureIds: z.union([z.string(), z.string().array()]).optional(),
+                companionTextureId: z.string().optional(),
+                lastCommandId: z.string().optional(),
+                version: z.string(),
+                chatID: z.string(),
+                roomName: z.string(),
+                cameraState: z.string().transform((val) => val === "true"),
+                microphoneState: z.string().transform((val) => val === "true"),
+            }),
+            upgrade: async ({ query, request, isAborted, upgrade, failUpgrade }) => {
+                debug(
+                    `FrontController => [${request.method}] ${request.url} — IP: ${
+                        request.ipAddress
+                    } — Time: ${Date.now()}`
+                );
 
-                    res.onAborted(() => {
-                        /* We can simply signal that we were aborted */
-                        upgradeAborted.aborted = true;
-                    });
+                // We abuse the protocol header to pass the JWT token (to avoid sending it in the query string)
+                const token = request.token;
+                const ipAddress = request.ipAddress;
+                const locale = request.locale;
 
-                    const query = validateWebsocketQuery(
-                        req,
-                        res,
-                        context,
-                        z.object({
-                            roomId: z.string(),
-                            characterTextureIds: z.union([z.string(), z.string().array()]).optional(),
-                            companionTextureId: z.string().optional(),
-                            lastCommandId: z.string().optional(),
-                            version: z.string(),
-                            chatID: z.string(),
-                            roomName: z.string(),
-                            cameraState: z.string().transform((val) => val === "true"),
-                            microphoneState: z.string().transform((val) => val === "true"),
-                        })
-                    );
+                const { roomId, lastCommandId, version, companionTextureId, roomName, cameraState, microphoneState } =
+                    query;
 
-                    if (query === undefined) {
+                const chatID = query.chatID ? query.chatID : undefined;
+
+                try {
+                    if (version !== apiVersionHash) {
+                        if (isAborted()) {
+                            // If the response points to nowhere, don't attempt an upgrade
+                            return;
+                        }
+                        failUpgrade({
+                            rejected: true,
+                            reason: "error",
+                            error: {
+                                status: "error",
+                                type: "retry",
+                                title: "Please refresh",
+                                subtitle: "New version available",
+                                image: "/resources/icons/new_version.png",
+                                imageLogo: "/static/images/logo.png",
+                                code: "NEW_VERSION",
+                                details: "A new version of WorkAdventure is available. Please refresh your window",
+                                canRetryManual: true,
+                                buttonTitle: "Refresh",
+                                timeToRetry: 999999,
+                            },
+                        } satisfies UpgradeFailedData);
                         return;
                     }
 
-                    debug(
-                        `FrontController => [${req.getMethod()}] ${req.getUrl()} — IP: ${req.getHeader(
-                            "x-forwarded-for"
-                        )} — Time: ${Date.now()}`
-                    );
+                    const characterTextureIds: string[] =
+                        query.characterTextureIds === undefined
+                            ? []
+                            : typeof query.characterTextureIds === "string"
+                            ? [query.characterTextureIds]
+                            : query.characterTextureIds;
 
-                    const websocketKey = req.getHeader("sec-websocket-key");
-                    const websocketProtocol = req.getHeader("sec-websocket-protocol");
-                    // We abuse the protocol header to pass the JWT token (to avoid sending it in the query string)
-                    const token = websocketProtocol;
-                    const websocketExtensions = req.getHeader("sec-websocket-extensions");
-                    const ipAddress = req.getHeader("x-forwarded-for");
-                    const locale = req.getHeader("accept-language");
+                    const tokenData = token ? await jwtTokenManager.verifyJWTToken(token) : null;
 
-                    const {
-                        roomId,
-                        lastCommandId,
-                        version,
-                        companionTextureId,
-                        roomName,
-                        cameraState,
-                        microphoneState,
-                    } = query;
+                    if (DISABLE_ANONYMOUS && !tokenData) {
+                        throw new Error("Expecting token");
+                    }
 
-                    const chatID = query.chatID ? query.chatID : undefined;
+                    const userIdentifier = tokenData ? tokenData.identifier : "";
+                    const isLogged = !!tokenData?.accessToken;
+
+                    let memberTags: string[] = [];
+                    let memberVisitCardUrl: string | null = null;
+                    let memberUserRoomToken: string | undefined;
+                    let userData: FetchMemberDataByUuidResponse = {
+                        status: "ok",
+                        email: userIdentifier,
+                        userUuid: userIdentifier,
+                        tags: tokenData?.tags ?? [],
+                        visitCardUrl: null,
+                        isCharacterTexturesValid: true,
+                        characterTextures: [],
+                        isCompanionTextureValid: true,
+                        companionTexture: undefined,
+                        messages: [],
+                        userRoomToken: undefined,
+                        activatedInviteUser: true,
+                        canEdit: false,
+                        world: "",
+                        chatID,
+                        canRecord: false,
+                    };
+
+                    let characterTextures: WokaDetail[];
+                    let companionTexture: CompanionDetail | undefined;
 
                     try {
-                        if (version !== apiVersionHash) {
-                            if (upgradeAborted.aborted) {
-                                // If the response points to nowhere, don't attempt an upgrade
+                        try {
+                            const memberTagsFromToken = userData.tags;
+                            userData = await adminService.fetchMemberDataByUuid(
+                                userIdentifier,
+                                tokenData?.accessToken,
+                                roomId,
+                                ipAddress,
+                                characterTextureIds,
+                                companionTextureId,
+                                locale,
+                                memberTagsFromToken,
+                                chatID
+                            );
+
+                            if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
+                                failUpgrade({
+                                    rejected: true,
+                                    reason: "invalidTexture",
+                                    entityType: "character",
+                                } satisfies UpgradeFailedInvalidTexture);
                                 return;
                             }
-                            res.cork(() => {
-                                res.upgrade(
-                                    {
-                                        rejected: true,
-                                        reason: "error",
-                                        error: {
-                                            status: "error",
-                                            type: "retry",
-                                            title: "Please refresh",
-                                            subtitle: "New version available",
-                                            image: "/resources/icons/new_version.png",
-                                            imageLogo: "/static/images/logo.png",
-                                            code: "NEW_VERSION",
-                                            details:
-                                                "A new version of WorkAdventure is available. Please refresh your window",
-                                            canRetryManual: true,
-                                            buttonTitle: "Refresh",
-                                            timeToRetry: 999999,
-                                        },
-                                    } satisfies UpgradeFailedData,
-                                    websocketKey,
-                                    websocketProtocol,
-                                    websocketExtensions,
-                                    context
-                                );
-                            });
-                            return;
-                        }
+                            if (userData.status === "ok" && !userData.isCompanionTextureValid) {
+                                failUpgrade({
+                                    rejected: true,
+                                    reason: "invalidTexture",
+                                    entityType: "companion",
+                                } satisfies UpgradeFailedInvalidTexture);
+                                return;
+                            }
 
-                        const characterTextureIds: string[] =
-                            query.characterTextureIds === undefined
-                                ? []
-                                : typeof query.characterTextureIds === "string"
-                                ? [query.characterTextureIds]
-                                : query.characterTextureIds;
-
-                        const tokenData = token ? await jwtTokenManager.verifyJWTToken(token) : null;
-
-                        if (DISABLE_ANONYMOUS && !tokenData) {
-                            throw new Error("Expecting token");
-                        }
-
-                        const userIdentifier = tokenData ? tokenData.identifier : "";
-                        const isLogged = !!tokenData?.accessToken;
-
-                        let memberTags: string[] = [];
-                        let memberVisitCardUrl: string | null = null;
-                        let memberUserRoomToken: string | undefined;
-                        let userData: FetchMemberDataByUuidResponse = {
-                            status: "ok",
-                            email: userIdentifier,
-                            userUuid: userIdentifier,
-                            tags: tokenData?.tags ?? [],
-                            visitCardUrl: null,
-                            isCharacterTexturesValid: true,
-                            characterTextures: [],
-                            isCompanionTextureValid: true,
-                            companionTexture: undefined,
-                            messages: [],
-                            userRoomToken: undefined,
-                            activatedInviteUser: true,
-                            canEdit: false,
-                            world: "",
-                            chatID,
-                            canRecord: false,
-                        };
-
-                        let characterTextures: WokaDetail[];
-                        let companionTexture: CompanionDetail | undefined;
-
-                        try {
-                            try {
-                                const memberTagsFromToken = userData.tags;
-                                userData = await adminService.fetchMemberDataByUuid(
-                                    userIdentifier,
-                                    tokenData?.accessToken,
-                                    roomId,
-                                    ipAddress,
-                                    characterTextureIds,
-                                    companionTextureId,
-                                    locale,
-                                    memberTagsFromToken,
-                                    chatID
-                                );
-
-                                if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
-                                    res.cork(() => {
-                                        res.upgrade(
-                                            {
-                                                rejected: true,
-                                                reason: "invalidTexture",
-                                                entityType: "character",
-                                            } satisfies UpgradeFailedInvalidTexture,
-                                            websocketKey,
-                                            websocketProtocol,
-                                            websocketExtensions,
-                                            context
-                                        );
-                                    });
-                                    return;
-                                }
-                                if (userData.status === "ok" && !userData.isCompanionTextureValid) {
-                                    res.cork(() => {
-                                        res.upgrade(
-                                            {
-                                                rejected: true,
-                                                reason: "invalidTexture",
-                                                entityType: "companion",
-                                            } satisfies UpgradeFailedInvalidTexture,
-                                            websocketKey,
-                                            websocketProtocol,
-                                            websocketExtensions,
-                                            context
-                                        );
-                                    });
-                                    return;
-                                }
-
-                                if (userData.status !== "ok") {
-                                    if (upgradeAborted.aborted) {
-                                        // If the response points to nowhere, don't attempt an upgrade
-                                        return;
-                                    }
-
-                                    const errorData = userData;
-                                    res.cork(() => {
-                                        res.upgrade(
-                                            {
-                                                rejected: true,
-                                                reason: "error",
-                                                error: errorData,
-                                            } satisfies UpgradeFailedData,
-                                            websocketKey,
-                                            websocketProtocol,
-                                            websocketExtensions,
-                                            context
-                                        );
-                                    });
-                                    return;
-                                }
-                            } catch (err) {
-                                if (upgradeAborted.aborted) {
+                            if (userData.status !== "ok") {
+                                if (isAborted()) {
                                     // If the response points to nowhere, don't attempt an upgrade
                                     return;
                                 }
-                                throw err;
+
+                                const errorData = userData;
+                                failUpgrade({
+                                    rejected: true,
+                                    reason: "error",
+                                    error: errorData,
+                                } satisfies UpgradeFailedData);
+                                return;
                             }
-                            memberTags = userData.tags;
-                            memberVisitCardUrl = userData.visitCardUrl;
-                            characterTextures = userData.characterTextures;
-                            companionTexture = userData.companionTexture ?? undefined;
-                            memberUserRoomToken = userData.userRoomToken;
-                        } catch (e) {
-                            console.info(
-                                "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
-                            );
+                        } catch (err) {
+                            if (isAborted()) {
+                                // If the response points to nowhere, don't attempt an upgrade
+                                return;
+                            }
+                            throw err;
+                        }
+                        memberTags = userData.tags;
+                        memberVisitCardUrl = userData.visitCardUrl;
+                        characterTextures = userData.characterTextures;
+                        companionTexture = userData.companionTexture ?? undefined;
+                        memberUserRoomToken = userData.userRoomToken;
+                    } catch (e) {
+                        console.info(
+                            "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
+                        );
+                        Sentry.captureException(e);
+                        console.error(e);
+                        throw new Error("User cannot access this world", { cause: e });
+                    }
+
+                    if (isAborted()) {
+                        console.info("Ouch! Client disconnected before we could upgrade it!");
+                        /* You must not upgrade now */
+                        return;
+                    }
+
+                    const socketData: ConnectingSocketData = {
+                        rejected: false,
+                        disconnecting: false,
+                        token: token && typeof token === "string" ? token : "",
+                        roomId,
+                        userId: undefined,
+                        userUuid: userData.userUuid,
+                        isLogged,
+                        ipAddress,
+                        characterTextures,
+                        companionTexture,
+                        lastCommandId,
+                        messages: [],
+                        tags: memberTags,
+                        visitCardUrl: memberVisitCardUrl,
+                        userRoomToken: memberUserRoomToken,
+                        activatedInviteUser: userData.activatedInviteUser ?? undefined,
+                        applications: userData.applications,
+                        canEdit: userData.canEdit ?? false,
+                        spaceUserId: "",
+                        emitInBatch: (payload: SubMessage): void => {},
+                        batchedMessages: {
+                            event: "",
+                            payload: [],
+                        },
+                        batchTimeout: null,
+                        backConnection: undefined,
+                        listenedZones: new Set<string>(),
+                        pusherRoom: undefined,
+                        spaces: new Set<SpaceName>(),
+                        joinSpacesPromise: new Map<SpaceName, Promise<void>>(),
+                        chatID,
+                        world: userData.world,
+                        currentChatRoomArea: [],
+                        roomName,
+                        microphoneState,
+                        cameraState,
+                        attendeesState: false,
+                        queryAbortControllers: new Map<number, AbortController>(),
+                        canRecord: userData.canRecord ?? false,
+                        keepAliveInterval: undefined,
+                    };
+
+                    /* This immediately calls open handler, you must not use res after this call */
+                    upgrade(socketData);
+                } catch (e) {
+                    if (e instanceof Error) {
+                        if (!(e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired)) {
                             Sentry.captureException(e);
                             console.error(e);
-                            throw new Error("User cannot access this world", { cause: e });
                         }
-
-                        if (upgradeAborted.aborted) {
-                            console.info("Ouch! Client disconnected before we could upgrade it!");
-                            /* You must not upgrade now */
+                        if (isAborted()) {
+                            // If the response points to nowhere, don't attempt an upgrade
                             return;
                         }
-
-                        const socketData: ConnectingSocketData = {
-                            rejected: false,
-                            disconnecting: false,
-                            token: token && typeof token === "string" ? token : "",
+                        failUpgrade({
+                            rejected: true,
+                            reason:
+                                e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired
+                                    ? tokenInvalidException
+                                    : null,
+                            message: e.message,
                             roomId,
-                            userId: undefined,
-                            userUuid: userData.userUuid,
-                            isLogged,
-                            ipAddress,
-                            characterTextures,
-                            companionTexture,
-                            lastCommandId,
-                            messages: [],
-                            tags: memberTags,
-                            visitCardUrl: memberVisitCardUrl,
-                            userRoomToken: memberUserRoomToken,
-                            activatedInviteUser: userData.activatedInviteUser ?? undefined,
-                            applications: userData.applications,
-                            canEdit: userData.canEdit ?? false,
-                            spaceUserId: "",
-                            emitInBatch: (payload: SubMessage): void => {},
-                            batchedMessages: {
-                                event: "",
-                                payload: [],
-                            },
-                            batchTimeout: null,
-                            backConnection: undefined,
-                            listenedZones: new Set<string>(),
-                            pusherRoom: undefined,
-                            spaces: new Set<SpaceName>(),
-                            joinSpacesPromise: new Map<SpaceName, Promise<void>>(),
-                            chatID,
-                            world: userData.world,
-                            currentChatRoomArea: [],
-                            roomName,
-                            microphoneState,
-                            cameraState,
-                            attendeesState: false,
-                            queryAbortControllers: new Map<number, AbortController>(),
-                            canRecord: userData.canRecord ?? false,
-                            keepAliveInterval: undefined,
-                        };
-
-                        /* This immediately calls open handler, you must not use res after this call */
-                        res.cork(() => {
-                            res.upgrade<ConnectingSocketData>(
-                                socketData,
-                                /* Spell these correctly */
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
-                        });
-                    } catch (e) {
-                        if (e instanceof Error) {
-                            if (!(e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired)) {
-                                Sentry.captureException(e);
-                                console.error(e);
-                            }
-                            if (upgradeAborted.aborted) {
-                                // If the response points to nowhere, don't attempt an upgrade
-                                return;
-                            }
-                            res.cork(() => {
-                                res.upgrade(
-                                    {
-                                        rejected: true,
-                                        reason:
-                                            e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired
-                                                ? tokenInvalidException
-                                                : null,
-                                        message: e.message,
-                                        roomId,
-                                    } satisfies UpgradeFailedData,
-                                    websocketKey,
-                                    websocketProtocol,
-                                    websocketExtensions,
-                                    context
-                                );
-                            });
-                        } else {
-                            if (upgradeAborted.aborted) {
-                                // If the response points to nowhere, don't attempt an upgrade
-                                return;
-                            }
-                            res.cork(() => {
-                                res.upgrade(
-                                    {
-                                        rejected: true,
-                                        reason: null,
-                                        message: "500 Internal Server Error",
-                                        roomId,
-                                    } satisfies UpgradeFailedData,
-                                    websocketKey,
-                                    websocketProtocol,
-                                    websocketExtensions,
-                                    context
-                                );
-                            });
+                        } satisfies UpgradeFailedData);
+                    } else {
+                        if (isAborted()) {
+                            // If the response points to nowhere, don't attempt an upgrade
+                            return;
                         }
+                        failUpgrade({
+                            rejected: true,
+                            reason: null,
+                            message: "500 Internal Server Error",
+                            roomId,
+                        } satisfies UpgradeFailedData);
                     }
-                })().catch((e) => {
-                    Sentry.captureException(e);
-                    console.error(e);
-                });
+                }
             },
             /* Handlers */
             open: (socket) => {

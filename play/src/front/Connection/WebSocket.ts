@@ -19,7 +19,7 @@ export class WorkAdventureWebSocket {
     public onerror: ((this: WorkAdventureWebSocket, ev: Event) => void) | null = null;
     public onmessage: ((this: WorkAdventureWebSocket, ev: MessageEvent<ServerToClientMessage>) => void) | null = null;
 
-    private readonly url: string;
+    private readonly url: URL;
     private readonly protocols: string[] | undefined;
     private manuallyClosed = false;
     private reconnectAttempted = false;
@@ -29,7 +29,7 @@ export class WorkAdventureWebSocket {
     private socket: WebSocket;
 
     public constructor(url: string | URL, protocols?: string[]) {
-        this.url = url.toString();
+        this.url = new URL(url);
         this.protocols = protocols;
         this.socket = this.createSocket();
         this.bindSocketListeners(this.socket);
@@ -115,9 +115,15 @@ export class WorkAdventureWebSocket {
     };
 
     private createSocket(): WebSocket {
+        const socketUrl = this.url;
+        if (this.reconnectAttempted) {
+            socketUrl.searchParams.set("lastReceivedNonce", this.lastReceivedNonce.toString());
+            socketUrl.searchParams.set("lastSentNonce", Math.max(this.nextOutgoingNonce - 1, 0).toString());
+        }
+
         const socket = WorkAdventureWebSocket.websocketFactory
-            ? WorkAdventureWebSocket.websocketFactory(this.url, this.protocols)
-            : new WebSocket(this.url, this.protocols);
+            ? WorkAdventureWebSocket.websocketFactory(socketUrl.toString(), this.protocols)
+            : new WebSocket(socketUrl, this.protocols);
         socket.binaryType = "arraybuffer";
         return socket;
     }
