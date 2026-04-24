@@ -1,6 +1,6 @@
 <script lang="ts">
     import LL, { locale } from "../../../../i18n/i18n-svelte";
-    import type { ChatPollAnswer, ChatPollItem } from "../../Connection/ChatConnection";
+    import type { ChatPollItem } from "../../Connection/ChatConnection";
     import { IconCheck, IconList, IconLoader, IconTrash } from "@wa-icons";
 
     export let poll: ChatPollItem;
@@ -92,10 +92,6 @@
         }
     }
 
-    function answerBarStyle(answer: ChatPollAnswer) {
-        return `width: ${Math.max(answer.percentage, answer.votes > 0 ? 8 : 0)}%`;
-    }
-
     function haveSameSelection(left: string[], right: string[]) {
         if (left.length !== right.length) {
             return false;
@@ -154,7 +150,7 @@
                             class={`absolute inset-y-0 left-0 bg-white/10 pointer-events-none ${
                                 answer.isWinning ? "bg-emerald-400/20" : ""
                             }`}
-                            style={answerBarStyle(answer)}
+                            style:width={answer.votes > 0 ? `${Math.max(answer.percentage, 8)}%` : "0%"}
                         />
                     {/if}
                     <div class="relative z-10 flex items-center justify-between gap-4">
