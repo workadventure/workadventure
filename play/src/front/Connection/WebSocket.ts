@@ -4,11 +4,13 @@ import {
     type ClientToServerMessage,
     type ServerToClientMessage,
 } from "@workadventure/messages";
+import { NoncedMessageStore } from "../../common/NoncedMessageStore";
 
 type WebSocketFactory = (url: string, protocols?: string[]) => WebSocket;
 
 export class WorkAdventureWebSocket {
     private static websocketFactory: WebSocketFactory | null = null;
+    private static readonly DISCONNECTION_RETENTION_MS = 30_000;
 
     public static setWebsocketFactory(websocketFactory: WebSocketFactory | null): void {
         WorkAdventureWebSocket.websocketFactory = websocketFactory;
@@ -25,6 +27,9 @@ export class WorkAdventureWebSocket {
     private reconnectAttempted = false;
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
+    private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array>(
+        WorkAdventureWebSocket.DISCONNECTION_RETENTION_MS
+    );
 
     private socket: WebSocket;
 
@@ -40,11 +45,13 @@ export class WorkAdventureWebSocket {
     }
 
     public send(message: ClientToServerMessage): void {
+        const nonce = this.nextOutgoingNonce;
         const payloadWithNonce = FrontToPusherWebSocketMessage.encode({
-            nonce: this.nextOutgoingNonce,
+            nonce,
             message,
         }).finish();
         this.nextOutgoingNonce += 1;
+        this.outgoingMessagesStore.add(nonce, payloadWithNonce);
 
         this.socket.send(payloadWithNonce);
     }
@@ -61,12 +68,14 @@ export class WorkAdventureWebSocket {
 
     private handleOpenEvent = (): void => {
         this.reconnectAttempted = false;
+        this.outgoingMessagesStore.endDisconnectionRetention();
         const event = new Event("open");
         this.onopen?.call(this, event);
     };
 
     private handleCloseEvent = (event: CloseEvent): void => {
         this.detachSocketListeners(this.socket);
+        this.outgoingMessagesStore.beginDisconnectionRetention();
 
         if (!this.manuallyClosed && this.shouldReconnect(event)) {
             this.reconnectAttempted = true;

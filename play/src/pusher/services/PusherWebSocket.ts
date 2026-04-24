@@ -5,18 +5,25 @@ import {
     type ServerToClientMessage,
     type ClientToServerMessage,
 } from "@workadventure/messages";
+import { NoncedMessageStore } from "../../common/NoncedMessageStore";
 
 import type { SocketData } from "../models/Websocket/SocketData";
 
 export type RawSocket = WebSocket<SocketData>;
 
 export class PusherWebSocket {
+    private static readonly DISCONNECTION_RETENTION_MS = 30_000;
+
     private socket: RawSocket;
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
+    private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array>(
+        PusherWebSocket.DISCONNECTION_RETENTION_MS
+    );
 
     public constructor(socket: RawSocket) {
         this.socket = socket;
+        this.outgoingMessagesStore.beginDisconnectionRetention();
     }
 
     public getUserData(): SocketData {
@@ -24,11 +31,13 @@ export class PusherWebSocket {
     }
 
     public send(message: ServerToClientMessage): ReturnType<RawSocket["send"]> {
+        const nonce = this.nextOutgoingNonce;
         const payloadWithNonce = PusherToFrontWebSocketMessage.encode({
-            nonce: this.nextOutgoingNonce,
+            nonce,
             message,
         }).finish();
         this.nextOutgoingNonce += 1;
+        this.outgoingMessagesStore.add(nonce, payloadWithNonce);
 
         return this.socket.send(payloadWithNonce, true);
     }
