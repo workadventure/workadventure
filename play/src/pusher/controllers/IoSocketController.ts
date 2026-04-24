@@ -1276,6 +1276,13 @@ export class IoSocketController {
                                 await socketManager.handleBackEvent(socket, message.message.backEvent);
                                 break;
                             }
+                            case "videoQualityReportMessage": {
+                                debug(
+                                    "Received video quality report with %d samples",
+                                    message.message.videoQualityReportMessage.samples.length
+                                );
+                                break;
+                            }
                             default: {
                                 const _exhaustiveCheck: never = message.message;
                             }
