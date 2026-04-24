@@ -130,7 +130,7 @@ export class VideoBox {
             return;
         }
 
-        this.promotePendingStreamable(false);
+        this.promotePendingStreamable();
     }
 
     private handleStatusChange(status: PeerStatus): void {
@@ -165,10 +165,13 @@ export class VideoBox {
         }
 
         if (this.pendingStreamableEntry && (status === "closed" || status === "error")) {
+            console.warn(
+                `Active streamable ${streamableEntry.streamable.uniqueId} ended before pending streamable became ready`
+            );
             Sentry.captureMessage(
                 `Active streamable ${streamableEntry.streamable.uniqueId} ended before pending streamable became ready`
             );
-            this.promotePendingStreamable(true);
+            this.promotePendingStreamable();
             return;
         }
 
@@ -183,8 +186,11 @@ export class VideoBox {
             return;
         }
 
+        // In case an error happens with the new stream, let's display the error immediately
+        // It doesn't make sense to keep the old stream running if the new stream is in error, as the old streamable
+        // will be garbage collected anyway.
         if (status === "closed" || status === "error") {
-            this.promotePendingStreamable(true);
+            this.promotePendingStreamable();
         }
     }
 
@@ -248,16 +254,9 @@ export class VideoBox {
         this.refreshStreamables();
     }
 
-    private promotePendingStreamable(force: boolean): void {
+    private promotePendingStreamable(): void {
         if (!this.pendingStreamableEntry) {
             return;
-        }
-
-        if (!force && this.pendingStreamableEntry.waitForFirstFrame) {
-            const currentStatus = get(this.pendingStreamableEntry.streamable.statusStore);
-            if (currentStatus !== "connected") {
-                return;
-            }
         }
 
         this.promoteNewStreamable(this.pendingStreamableEntry);
