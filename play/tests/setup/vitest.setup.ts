@@ -47,6 +47,7 @@ if (typeof window !== "undefined" && window.env === undefined) {
         ENABLE_OPENID: false,
         OPID_PROFILE_SCREEN_PROVIDER: undefined,
         ENABLE_CHAT_UPLOAD: false,
+        ENABLE_MATRIX_GUEST: false,
         FALLBACK_LOCALE: "en",
         OPID_WOKA_NAME_POLICY: undefined,
         ENABLE_REPORT_ISSUES_MENU: undefined,

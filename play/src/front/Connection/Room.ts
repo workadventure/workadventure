@@ -9,6 +9,7 @@ import {
     ENABLE_CHAT_ONLINE_LIST,
     ENABLE_CHAT_UPLOAD,
     ENABLE_ISSUE_REPORT,
+    ENABLE_MATRIX_GUEST,
     ENABLE_OPENID,
     ENABLE_SAY,
     MATRIX_PUBLIC_URI,
@@ -49,6 +50,7 @@ export class Room {
     private _enableChat: boolean | undefined;
     private _isMatrixChatEnabled: boolean | undefined;
     private _enableChatUpload: boolean | undefined;
+    private _enableMatrixGuest: boolean | undefined;
     private _enableChatOnlineList: boolean | undefined;
     private _enableChatDisconnectedList: boolean | undefined;
     private _defaultWokaName: string | undefined;
@@ -197,6 +199,7 @@ export class Room {
                 this._isMatrixChatEnabled =
                     (data.enableMatrixChat ?? true) && (ENABLE_OPENID || MATRIX_PUBLIC_URI !== undefined);
                 this._enableChatUpload = (data.enableChatUpload ?? true) && ENABLE_CHAT_UPLOAD;
+                this._enableMatrixGuest = (data.enableMatrixGuest ?? true) && ENABLE_MATRIX_GUEST;
                 this._enableChatOnlineList = (data.enableChatOnlineList ?? true) && ENABLE_CHAT_ONLINE_LIST;
                 this._enableChatDisconnectedList =
                     (data.enableChatDisconnectedList ?? true) && ENABLE_CHAT_DISCONNECTED_LIST;
@@ -381,6 +384,13 @@ export class Room {
             return true;
         }
         return this._enableChatUpload;
+    }
+
+    get isMatrixGuestEnabled(): boolean {
+        if (this._enableMatrixGuest === undefined) {
+            return true;
+        }
+        return this._enableMatrixGuest;
     }
 
     get isChatOnlineListEnabled(): boolean {

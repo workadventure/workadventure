@@ -653,7 +653,6 @@ class ConnectionManager {
             }
         }
 
-        console.log("isMatrixGuestChatSession", localUserStore.isMatrixGuestChatSession());
         //user connected, set connected store for menu at true
         if (localUserStore.isLogged()) {
             userIsConnected.set(true);

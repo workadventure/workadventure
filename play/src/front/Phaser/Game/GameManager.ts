@@ -397,8 +397,14 @@ export class GameManager {
         }
 
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
+        const guestMatrixSession = localUserStore.isMatrixGuestChatSession();
 
-        if (matrixServerUrl && (get(userIsConnected) || localUserStore.isMatrixGuestChatSession())) {
+        const gameScene = await waitForGameSceneStore();
+        console.log("gameScene.room.isMatrixGuestEnabled", gameScene.room.isMatrixGuestEnabled);
+        console.log("matrixServerUrl", matrixServerUrl);
+        console.log("get(userIsConnected)", get(userIsConnected));
+        console.log("guestMatrixSession", guestMatrixSession);
+        if (gameScene.room.isMatrixGuestEnabled && matrixServerUrl && (get(userIsConnected) || guestMatrixSession)) {
             this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
 
             const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
@@ -416,8 +422,6 @@ export class GameManager {
             isMatrixChatEnabledStore.set(true);
 
             try {
-                const gameScene = await waitForGameSceneStore();
-
                 if (gameScene.room.isChatEnabled) {
                     return this.chatConnectionPromise;
                 }

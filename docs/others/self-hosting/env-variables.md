@@ -49,6 +49,7 @@ Environment variables for the Play service (frontend and pusher).
 | `PROMETHEUS_PORT` | No | The port to access the Prometheus metrics. If not set, the default port is used AND an authorization token is required. |
 | `ENABLE_CHAT` | No | Enable/disable the chat feature. Defaults to true |
 | `ENABLE_CHAT_UPLOAD` | No | Enable/disable file upload in chat. Defaults to true |
+| `ENABLE_MATRIX_GUEST` | No | Enable/disable matrix guest for chat. Defaults to true |
 | `ENABLE_CHAT_ONLINE_LIST` | No | Enable/disable online users list in chat. Defaults to true |
 | `ENABLE_CHAT_DISCONNECTED_LIST` | No | Enable/disable offline users list in chat. Defaults to true |
 | `DEFAULT_WOKA_NAME` | No | Default name to use for users when they join the room. |

@@ -229,6 +229,9 @@ export const EnvironmentVariables = z.object({
     ENABLE_CHAT_UPLOAD: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe("Enable/disable file upload in chat. Defaults to true"),
+    ENABLE_MATRIX_GUEST: BoolAsString.optional()
+        .transform((val) => toBool(val, true))
+        .describe("Enable/disable matrix guest for chat. Defaults to true"),
     ENABLE_CHAT_ONLINE_LIST: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe("Enable/disable online users list in chat. Defaults to true"),
