@@ -163,6 +163,7 @@
 
     let showAfterDelay = true;
     let connectingTimer: ReturnType<typeof setTimeout> | null = null;
+    let markStreamableReadyTimer: ReturnType<typeof setTimeout> | undefined;
 
     // When the status is "connecting", do not show the loader for 500ms to avoid visual glitches during fast connections.
     // EXCEPT when reconnecting: in that case, show the loader immediately to avoid black screen.
@@ -212,6 +213,7 @@
         unBlackListSubject?.unsubscribe();
         closeFloatingUi?.();
         if (connectingTimer) clearTimeout(connectingTimer);
+        if (markStreamableReadyTimer) clearTimeout(markStreamableReadyTimer);
     });
 </script>
 
@@ -294,10 +296,11 @@
                             ? false
                             : (isMegaphoneSpace && $megaphoneState) || isLocalUserStreamingMegaphone}
                         on:video={() => {
-                            setTimeout(() => {
+                            markStreamableReadyTimer = setTimeout(() => {
                                 if (streamableEntry.isPending) {
                                     videoBox.markPendingStreamableReady(streamableEntry.id);
                                 }
+                                markStreamableReadyTimer = undefined;
                                 // Even by waiting the first frame, we see a first glitch.
                                 // Maybe the first LiveKit frame is not correctly rendered?
                                 // We noticed waiting a bit makes the glitch disappear.

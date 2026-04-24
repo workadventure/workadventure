@@ -254,7 +254,7 @@ export class VideoBox {
         this.refreshStreamables();
     }
 
-    private promotePendingStreamable(): void {
+    public promotePendingStreamable(): void {
         if (!this.pendingStreamableEntry) {
             return;
         }

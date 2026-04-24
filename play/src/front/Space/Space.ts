@@ -92,7 +92,9 @@ export class Space implements SpaceInterface {
     private readonly observeSyncUserUpdated: Subscription;
     private readonly observeSyncUserRemoved: Subscription;
     private observeVideoPeerAdded: Subscription | undefined;
+    private observeVideoPeerRemoved: Subscription | undefined;
     private observeScreenSharingPeerAdded: Subscription | undefined;
+    private observeScreenSharingPeerRemoved: Subscription | undefined;
 
     // Stores to track streaming state for speaker (megaphoneState) and listener (attendeesState)
     private readonly _isSpeakerStreamingStore: Writable<boolean>;
@@ -569,7 +571,9 @@ export class Space implements SpaceInterface {
         this.observeSyncUserUpdated.unsubscribe();
         this.observeSyncUserRemoved.unsubscribe();
         this.observeVideoPeerAdded?.unsubscribe();
+        this.observeVideoPeerRemoved?.unsubscribe();
         this.observeScreenSharingPeerAdded?.unsubscribe();
+        this.observeScreenSharingPeerRemoved?.unsubscribe();
         this.onBlockSubscribe.unsubscribe();
         this.onUnBlockSubscribe.unsubscribe();
         this.observeSyncBlockUser.unsubscribe();
@@ -1261,6 +1265,7 @@ export class Space implements SpaceInterface {
 
     private registerPeerManagerEventHandlers() {
         this.observeVideoPeerAdded?.unsubscribe();
+        this.observeVideoPeerRemoved?.unsubscribe();
         this.observeVideoPeerAdded = this._peerManager.videoPeerAdded.subscribe((peer) => {
             const spaceUserId = peer.spaceUserId;
 
@@ -1286,8 +1291,27 @@ export class Space implements SpaceInterface {
                 waitForFirstFrame: this.shouldWaitForFirstFrameDuringTransition(user, false),
             });
         });
+        this.observeVideoPeerRemoved = this._peerManager.videoPeerRemoved.subscribe((peer) => {
+            const spaceUserId = peer.spaceUserId;
+
+            if (!spaceUserId) {
+                console.error("observeVideoPeerRemoved : peer has no spaceUserId");
+                return;
+            }
+
+            const videoBox = this.getVideoPeerVideoBox(spaceUserId);
+
+            if (!videoBox) {
+                return;
+            }
+
+            if (peer === get(videoBox.streamable)) {
+                videoBox.promotePendingStreamable();
+            }
+        });
 
         this.observeScreenSharingPeerAdded?.unsubscribe();
+        this.observeScreenSharingPeerRemoved?.unsubscribe();
         this.observeScreenSharingPeerAdded = this._peerManager.screenSharingPeerAdded.subscribe((peer) => {
             const spaceUserId = peer.spaceUserId;
 
@@ -1318,6 +1342,28 @@ export class Space implements SpaceInterface {
             });
 
             this._highlightedEmbedScreenStore.highlight(videoBox);
+        });
+        this.observeScreenSharingPeerRemoved = this._peerManager.screenSharingPeerRemoved.subscribe((peer) => {
+            const spaceUserId = peer.spaceUserId;
+
+            if (spaceUserId === this._mySpaceUserId) {
+                return;
+            }
+
+            if (!spaceUserId) {
+                console.error("observeScreenSharingPeerRemoved : peer has no spaceUserId");
+                return;
+            }
+
+            const videoBox = this.getScreenSharingPeerVideoBox(spaceUserId);
+
+            if (!videoBox) {
+                return;
+            }
+
+            if (peer === get(videoBox.streamable)) {
+                videoBox.promotePendingStreamable();
+            }
         });
     }
 
