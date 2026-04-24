@@ -26,16 +26,10 @@
     "@smarttools/eslint-plugin-rxjs": {
       "typescript": "5.8.3"
     },
-    "ts-jest": {
-      "typescript": "5.8.3"
-    },
     "ts-node": {
       "typescript": "5.8.3"
     },
     "ts-loader": {
-      "typescript": "5.8.3"
-    },
-    "svelte-preprocess": {
       "typescript": "5.8.3"
     },
     "svelte-check": {

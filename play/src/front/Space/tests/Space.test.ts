@@ -1,4 +1,4 @@
-import * as Phaser from "phaser";
+import Phaser from "phaser";
 globalThis.Phaser = Phaser;
 
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";

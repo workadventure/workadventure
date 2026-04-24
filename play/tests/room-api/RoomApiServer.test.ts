@@ -1,6 +1,6 @@
 /*eslint-disable @typescript-eslint/no-explicit-any*/
 
-import { PassThrough } from "node:stream";
+import { PassThrough } from "stream";
 import { Metadata } from "@grpc/grpc-js";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { describe, test, expect, vi, beforeAll, it, beforeEach } from "vitest";

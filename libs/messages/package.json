@@ -2,6 +2,7 @@
   "name": "@workadventure/messages",
   "version": "1.0.0",
   "description": "Google Protobuf generated messages",
+  "type": "module",
   "main": "./src/index.ts",
   "scripts": {
     "build": "tsc",
@@ -21,7 +22,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.7.17",
-    "typescript": "^5.7.2"
+    "typescript": "^5.8.3"
   },
   "files": [
     "src"

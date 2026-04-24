@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import * as path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 import { expect, test } from "@playwright/test";
 import Map from "../utils/map";
 import EntityEditor from "../utils/map-editor/entityEditor";
@@ -242,7 +242,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
 
         // Prepare file
-        const filePath = path.join(__dirname, "../assets/lorem-ipsum.pdf");
+        const filePath = fileURLToPath(new URL("../assets/lorem-ipsum.pdf", import.meta.url));
         const buffer = fs.readFileSync(filePath);
         const base64 = buffer.toString("base64");
 
