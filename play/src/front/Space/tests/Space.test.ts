@@ -12,6 +12,7 @@ import { recordingStore } from "../../Stores/RecordingStore";
 import type { StreamCategory, Streamable } from "../Streamable";
 import type { StreamableSubjects } from "../SpacePeerManager/SpacePeerManager";
 import type { PeerStatus } from "../../WebRtc/RemotePeer";
+import { notificationPlayingStore } from "../../Stores/NotificationStore";
 
 // Mock the entire GameManager module
 vi.mock("../../Phaser/Game/GameManager", () => ({
@@ -596,6 +597,37 @@ describe("Space test", () => {
 
         expect(showInfoPopupSpy).not.toHaveBeenCalled();
         expect(showGenericInfoPopupSpy).not.toHaveBeenCalled();
+    });
+
+    it("should show a private notification when recording stops unexpectedly", async () => {
+        const space = await Space.create(
+            "space-name",
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            signal,
+            {
+                metadata: new Map<string, unknown>(),
+            }
+        );
+        const playNotificationSpy = vi.spyOn(notificationPlayingStore, "playNotification");
+
+        space.dispatchPrivateMessage({
+            spaceName: "space-name",
+            receiverUserId: "current-user-id",
+            sender: createSpaceUser({
+                spaceUserId: "alice-id",
+                name: "Alice",
+            }),
+            spaceEvent: {
+                event: {
+                    $case: "recordingUnexpectedlyStoppedMessage",
+                    recordingUnexpectedlyStoppedMessage: {},
+                },
+            },
+        });
+
+        expect(playNotificationSpy).toHaveBeenCalledTimes(1);
     });
 
     it("should forward startRecording and stopRecording to the room connection", async () => {

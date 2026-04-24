@@ -249,3 +249,5 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     ENABLE_TUTORIAL,
 };
 export const GRPC_MAX_MESSAGE_SIZE = env.GRPC_MAX_MESSAGE_SIZE;
+export const LIVEKIT_API_KEY = env.LIVEKIT_API_KEY;
+export const LIVEKIT_API_SECRET = env.LIVEKIT_API_SECRET;

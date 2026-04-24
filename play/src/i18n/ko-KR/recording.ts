@@ -28,6 +28,7 @@ const recording: DeepPartial<Translation["recording"]> = {
         downloadFailedNotification: "녹화 다운로드에 실패했습니다",
         recordingComplete: "녹화가 완료되었습니다",
         recordingIsInProgress: "녹화가 진행 중입니다",
+        unexpectedlyStoppedNotification: "녹화가 예기치 않게 중지되었습니다",
         recordingSaved: "녹화가 성공적으로 저장되었습니다.",
         howToAccess: "녹화에 액세스하려면:",
         viewRecordings: "녹화 보기",

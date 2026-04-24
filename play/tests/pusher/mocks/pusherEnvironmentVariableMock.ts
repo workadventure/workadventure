@@ -104,6 +104,8 @@ export const LIVEKIT_PIXEL_DENSITY = 2 / 3;
 export const ENABLE_ISSUE_REPORT = true;
 export const ENABLE_TUTORIAL = true;
 export const GRPC_MAX_MESSAGE_SIZE = 20 * 1024 * 1024;
+export const LIVEKIT_API_KEY: string | undefined = undefined;
+export const LIVEKIT_API_SECRET: string | undefined = undefined;
 
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: false,
