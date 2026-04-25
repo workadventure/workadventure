@@ -187,7 +187,7 @@ export class SocketManager {
     public async handleJoinRoom(socket: UserSocket, room: GameRoom, joinRoomMessage: JoinRoomMessage): Promise<User> {
         const user = await room.join(socket, joinRoomMessage);
 
-        clientEventsEmitter.clientJoinSubject.next({ clientUUid: user.uuid, roomId: room.id });
+        clientEventsEmitter.clientJoinSubject.next({ clientUUid: user.uuid, roomId: room.roomUrl });
 
         if (!socket.writable) {
             console.warn("Socket was aborted");
