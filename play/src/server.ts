@@ -1,7 +1,7 @@
 import fs from "fs";
 import process from "process";
 import * as Sentry from "@sentry/node";
-import * as grpc from "@grpc/grpc-js";
+import { Server, ServerCredentials } from "@grpc/grpc-js";
 import { RoomApiService } from "@workadventure/messages/src/ts-proto-generated/room-api";
 import { setErrorHandler } from "@workadventure/shared-utils";
 import app from "./pusher/app";
@@ -68,11 +68,11 @@ if (SENTRY_DSN != undefined) {
 if (!ADMIN_API_URL && !ROOM_API_SECRET_KEY) {
     console.info("RoomAPI is disabled! ROOM_API_SECRET_KEY is not defined on environment variables.");
 } else {
-    const RoomAPI = new grpc.Server();
+    const RoomAPI = new Server();
 
     RoomAPI.addService(RoomApiService, RoomApiServer);
 
-    RoomAPI.bindAsync(`0.0.0.0:${ROOM_API_PORT}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
+    RoomAPI.bindAsync(`0.0.0.0:${ROOM_API_PORT}`, ServerCredentials.createInsecure(), (err, port) => {
         if (err) {
             throw err;
         }

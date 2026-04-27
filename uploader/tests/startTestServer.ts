@@ -1,3 +1,4 @@
+import { fileURLToPath } from "url";
 import {spawn} from "child_process";
 
 export default function(env: {}) {
@@ -6,7 +7,7 @@ export default function(env: {}) {
             ...process.env,
             ...env
         },
-        cwd: __dirname + "/..",
+        cwd: fileURLToPath(new URL("../", import.meta.url)),
     });
     let stderr = "";
 

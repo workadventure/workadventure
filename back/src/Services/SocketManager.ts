@@ -49,6 +49,7 @@ import type {
     SetAreaPropertyVariableMessage,
     BackEventMessage,
     ConnectToRoomMessage,
+    HandleRecordingWebhookRequest,
 } from "@workadventure/messages";
 import {
     AnswerMessage,
@@ -186,7 +187,7 @@ export class SocketManager {
     public async handleJoinRoom(socket: UserSocket, room: GameRoom, joinRoomMessage: JoinRoomMessage): Promise<User> {
         const user = await room.join(socket, joinRoomMessage);
 
-        clientEventsEmitter.clientJoinSubject.next({ clientUUid: user.uuid, roomId: room.id });
+        clientEventsEmitter.clientJoinSubject.next({ clientUUid: user.uuid, roomId: room.roomUrl });
 
         if (!socket.writable) {
             console.warn("Socket was aborted");
@@ -1725,6 +1726,18 @@ export class SocketManager {
             Sentry.captureException("Error while handling space query");
             return;
         }
+    }
+
+    handleRecordingWebhook(request: HandleRecordingWebhookRequest): void {
+        const space = this.spaces.get(request.spaceName);
+        if (!space) {
+            console.warn(
+                `Received recording webhook for missing space ${request.spaceName} (${request.egressId}). Ignoring.`
+            );
+            return;
+        }
+
+        space.handleRecordingWebhook(request);
     }
 
     handleAddSpaceUserToNotifyMessage(pusher: SpacesWatcher, addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage) {

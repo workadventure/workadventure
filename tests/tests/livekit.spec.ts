@@ -64,6 +64,11 @@ test.describe("Meeting actions test", () => {
         await expect(page.locator("#cameras-container").getByText("Eve")).toBeVisible({ timeout: 30_000 });
         await expect(page.locator("#cameras-container").getByText("Mallory")).toBeVisible({ timeout: 30_000 });
 
+        // Required because the "No sound" popup can clutter the view and prevent us clicking the "All settings" close button.
+        await page.addLocatorHandler(page.getByTestId("no-microphone-sound-ignore"), async () => {
+            await page.getByTestId("no-microphone-sound-ignore").click();
+        });
+
         // Let's enable the video quality display and test it works
         await Menu.openMenu(page);
         await page.getByRole("button", { name: "All settings" }).click();

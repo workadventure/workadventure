@@ -1,4 +1,8 @@
-import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
+import type {
+    HandleRecordingWebhookRequest,
+    MeetingConnectionRestartMessage,
+    SpaceUser,
+} from "@workadventure/messages";
 import type { ManagedRecordingState } from "../RecordingManager";
 
 export interface ICommunicationManager {
@@ -10,6 +14,7 @@ export interface ICommunicationManager {
     handleStopRecording(user: SpaceUser): Promise<void>;
     handleRecorderLeftSpace(spaceUserId: string): Promise<boolean>;
     handleServerStopRecording(): Promise<boolean>;
+    handleRecordingWebhook(request: HandleRecordingWebhookRequest): void;
     handleUserToNotifyAdded(user: SpaceUser): Promise<void>;
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void>;
     handleMeetingConnectionRestartMessage(

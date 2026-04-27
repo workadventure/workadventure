@@ -1,3 +1,4 @@
+import { fileURLToPath } from "url";
 import { execSync } from "child_process";
 import type { APIRequestContext, APIResponse } from "@playwright/test";
 import Dockerode from "dockerode";
@@ -15,7 +16,7 @@ export function dockerCompose(command: string) {
     }
 
     return execSync("docker compose -f docker-compose.yaml " + param + " " + command, {
-        cwd: __dirname + "/../../../",
+        cwd: fileURLToPath(new URL("../../../", import.meta.url)),
     });
 }
 

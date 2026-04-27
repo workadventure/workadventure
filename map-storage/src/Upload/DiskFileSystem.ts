@@ -1,7 +1,7 @@
 import path from "path";
+import fs from "fs-extra";
 import type { Archiver } from "archiver";
 import type { NextFunction, Response } from "express";
-import * as fs from "fs-extra";
 import type * as unzipper from "unzipper";
 import { MapListService } from "../Services/MapListService";
 import { FileNotFoundError } from "./FileNotFoundError";

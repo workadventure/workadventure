@@ -1,6 +1,6 @@
 // Disabled because test mocks use vi.fn() which are passed as object properties
 import { describe, expect, it, vi } from "vitest";
-import { SpaceUser } from "@workadventure/messages";
+import { HandleRecordingWebhookRequest, RecordingWebhookPhase, SpaceUser } from "@workadventure/messages";
 import type { InitialStateFactory } from "../src/Model/CommunicationManager";
 import { CommunicationManager } from "../src/Model/CommunicationManager";
 import { CommunicationType } from "../src/Model/Types/CommunicationTypes";
@@ -79,6 +79,10 @@ describe("CommunicationManager", () => {
             stopRecording: vi.fn().mockResolvedValue(undefined),
             stopRecordingByServer: vi.fn().mockResolvedValue(null),
             stopRecordingIfRecorderMatches: vi.fn().mockResolvedValue(null),
+            confirmRecordingStartedByWebhook: vi.fn().mockReturnValue(false),
+            finishRecordingByWebhook: vi
+                .fn()
+                .mockReturnValue({ processed: false, recorder: null, unexpected: false, hasActiveSessions: false }),
             handleAddUser: vi.fn(),
             destroy: vi.fn(),
         };
@@ -89,6 +93,8 @@ describe("CommunicationManager", () => {
             stopRecording: mocks.stopRecording,
             stopRecordingByServer: mocks.stopRecordingByServer,
             stopRecordingIfRecorderMatches: mocks.stopRecordingIfRecorderMatches,
+            confirmRecordingStartedByWebhook: mocks.confirmRecordingStartedByWebhook,
+            finishRecordingByWebhook: mocks.finishRecordingByWebhook,
             handleAddUser: mocks.handleAddUser,
             isRecording: false,
             destroy: mocks.destroy,
@@ -671,7 +677,7 @@ describe("CommunicationManager", () => {
     });
 
     describe("delayed transition callback", () => {
-        it("should schedule a delayed WebRTC transition when the recorder leaves the space", async () => {
+        it("should wait for the terminal webhook when the recorder leaves the space", async () => {
             const space = createSpace();
             const orchestrator = createOrchestrator();
             const state = createState(CommunicationType.LIVEKIT);
@@ -693,22 +699,7 @@ describe("CommunicationManager", () => {
 
             expect(didStop).toBe(true);
             expect(recordingManager.mocks.stopRecordingIfRecorderMatches).toHaveBeenCalledWith(recorder.spaceUserId);
-            expect(orchestrator.mocks.scheduleDelayedTransition).toHaveBeenCalled();
-
-            const transitionContext = orchestrator.mocks.scheduleDelayedTransition.mock.calls[0]?.[1] as
-                | {
-                      playUri: string;
-                      space: ICommunicationSpace;
-                      users: Map<string, SpaceUser>;
-                      usersToNotify: Map<string, SpaceUser>;
-                  }
-                | undefined;
-
-            expect(transitionContext).toBeDefined();
-            expect(transitionContext?.playUri).toBe(recorder.playUri);
-            expect(transitionContext?.space).toBe(space);
-            expect(transitionContext?.users).toBeInstanceOf(Map);
-            expect(transitionContext?.usersToNotify).toBeInstanceOf(Map);
+            expect(orchestrator.mocks.scheduleDelayedTransition).not.toHaveBeenCalled();
         });
 
         it("should no-op when a server stop is requested and no recording is active", async () => {
@@ -731,6 +722,134 @@ describe("CommunicationManager", () => {
             const didStop = await manager.handleServerStopRecording();
 
             expect(didStop).toBe(false);
+            expect(orchestrator.mocks.scheduleDelayedTransition).not.toHaveBeenCalled();
+        });
+
+        it("should schedule a delayed WebRTC transition when an ended webhook is received", () => {
+            const space = createSpace();
+            const orchestrator = createOrchestrator();
+            const state = createState(CommunicationType.LIVEKIT);
+            const lifecycleManager = createLifecycleManager(state);
+            const recordingManager = createRecordingManager();
+            const policy = createPolicy(false);
+            const recorder = createSpaceUser("recorder_1");
+
+            recordingManager.mocks.finishRecordingByWebhook.mockReturnValue({
+                processed: true,
+                recorder,
+                unexpected: false,
+                hasActiveSessions: false,
+            });
+
+            const manager = new CommunicationManager(space, {
+                orchestrator,
+                lifecycleManager,
+                recordingManager,
+                policy,
+            });
+
+            manager.handleRecordingWebhook(
+                HandleRecordingWebhookRequest.fromPartial({
+                    recordingSessionId: "session-1",
+                    egressId: "egress-1",
+                    roomName: "test-space",
+                    phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
+                })
+            );
+
+            expect(recordingManager.mocks.finishRecordingByWebhook).toHaveBeenCalledWith(
+                "session-1",
+                "egress-1",
+                "test-space"
+            );
+            expect(orchestrator.mocks.scheduleDelayedTransition).toHaveBeenCalledWith(
+                CommunicationType.WEBRTC,
+                expect.objectContaining({
+                    playUri: recorder.playUri,
+                    space,
+                }),
+                expect.any(Function),
+                expect.any(Function)
+            );
+        });
+
+        it("should notify only the recorder on unexpected end webhooks", () => {
+            const space = createSpace();
+            const orchestrator = createOrchestrator();
+            const state = createState(CommunicationType.LIVEKIT);
+            const lifecycleManager = createLifecycleManager(state);
+            const recordingManager = createRecordingManager();
+            const policy = createPolicy(false);
+            const recorder = createSpaceUser("recorder_1");
+
+            recordingManager.mocks.finishRecordingByWebhook.mockReturnValue({
+                processed: true,
+                recorder,
+                unexpected: true,
+                hasActiveSessions: false,
+            });
+
+            const manager = new CommunicationManager(space, {
+                orchestrator,
+                lifecycleManager,
+                recordingManager,
+                policy,
+            });
+
+            manager.handleRecordingWebhook(
+                HandleRecordingWebhookRequest.fromPartial({
+                    recordingSessionId: "session-1",
+                    egressId: "egress-1",
+                    roomName: "test-space",
+                    phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
+                })
+            );
+
+            expect(space.dispatchPrivateEvent).toHaveBeenCalledWith({
+                spaceName: "test-space",
+                receiverUserId: recorder.spaceUserId,
+                senderUserId: recorder.spaceUserId,
+                spaceEvent: {
+                    event: {
+                        $case: "recordingUnexpectedlyStoppedMessage",
+                        recordingUnexpectedlyStoppedMessage: {},
+                    },
+                },
+            });
+        });
+
+        it("should not schedule a delayed WebRTC transition while another recording session remains", () => {
+            const space = createSpace();
+            const orchestrator = createOrchestrator();
+            const state = createState(CommunicationType.LIVEKIT);
+            const lifecycleManager = createLifecycleManager(state);
+            const recordingManager = createRecordingManager();
+            const policy = createPolicy(false);
+            const recorder = createSpaceUser("recorder_1");
+
+            recordingManager.mocks.finishRecordingByWebhook.mockReturnValue({
+                processed: true,
+                recorder,
+                unexpected: false,
+                hasActiveSessions: true,
+            });
+
+            const manager = new CommunicationManager(space, {
+                orchestrator,
+                lifecycleManager,
+                recordingManager,
+                policy,
+            });
+
+            manager.handleRecordingWebhook(
+                HandleRecordingWebhookRequest.fromPartial({
+                    recordingSessionId: "session-1",
+                    egressId: "egress-1",
+                    roomName: "test-space",
+                    phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
+                })
+            );
+
             expect(orchestrator.mocks.scheduleDelayedTransition).not.toHaveBeenCalled();
         });
 

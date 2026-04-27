@@ -28,6 +28,7 @@ const recording: DeepPartial<Translation["recording"]> = {
         downloadFailedNotification: "Error en descarregar l'enregistrament",
         recordingComplete: "Enregistrament completat",
         recordingIsInProgress: "Enregistrament en curs",
+        unexpectedlyStoppedNotification: "La gravació s'ha aturat de manera inesperada",
         recordingSaved: "El vostre enregistrament s'ha desat correctament.",
         howToAccess: "Per accedir als vostres enregistraments:",
         viewRecordings: "Veure enregistraments",

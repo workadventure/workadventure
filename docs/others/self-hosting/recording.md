@@ -54,6 +54,30 @@ Configure the following environment variables to enable recording:
 | `LIVEKIT_RECORDING_S3_BUCKET` | Yes | The S3 bucket name |
 | `LIVEKIT_RECORDING_S3_REGION` | Yes | The S3 region (e.g., `us-east-1`, `eu-west-1`) |
 
+### LiveKit egress webhooks (back and pusher)
+
+The back service registers an egress webhook URL with LiveKit so the pusher can forward recording lifecycle events to the space manager. Configure:
+
+| Variable | Service | Required | Description |
+|----------|-----------|----------|-------------|
+| `PLAY_URL` | Back | Yes | Public URL of the play stack (same host as the pusher HTTP API in typical deployments). Used as the base URL for LiveKit egress webhooks. |
+| `LIVEKIT_API_KEY` | Back + Pusher | Yes | LiveKit API key. Used by the back to sign egress webhooks and by the pusher to validate them. |
+| `LIVEKIT_API_SECRET` | Back + Pusher | Yes | LiveKit API secret. Used by the pusher to verify webhook JWTs. |
+
+To troubleshoot webhook delivery from the back service, set `DEBUG=*` on the back service. There is currently no dedicated LiveKit debug namespace.
+
+**Connectivity check:** from the same network as LiveKit egress (e.g. inside the egress container), run:
+
+The webhook endpoint currently expects a raw body with `Content-Type: application/webhook+json`. Requests sent as `application/json` will not be parsed as a signed LiveKit webhook.
+
+```bash
+curl -v -X POST "${PLAY_URL}/livekit/egress/webhook?space=test&recordingSessionId=test-session" \
+  -H "Content-Type: application/webhook+json" \
+  -d '{}'
+```
+
+You should see an HTTP response from the pusher. Without a valid LiveKit-signed `Authorization` header, expect `401 Unauthorized`. If the request does not reach the pusher, fix DNS or firewall rules so LiveKit egress can reach `PLAY_URL`.
+
 ## Configuration Examples
 
 ### Docker Compose
