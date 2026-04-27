@@ -8,6 +8,12 @@ import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
 import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
 import { dismissDoNotDisturbInfoToast } from "./doNotDisturbInfoToast";
 
+type GetPageOptions = {
+    pageCreatedHook?: (page: Page) => void;
+    permissions?: string[];
+    clearPermissions?: boolean;
+};
+
 function selectWoka(name: string): number {
     let res = 0;
     for (let i = 0; i < name.length; i++) {
@@ -44,11 +50,18 @@ async function createUser(
         | "User1",
     browser: Browser,
     url: string,
+    options: Pick<GetPageOptions, "permissions" | "clearPermissions"> = {},
 ): Promise<void> {
     if (isJsonCreate(name)) {
         return;
     }
     const context: BrowserContext = await browser.newContext();
+    if (options.clearPermissions || options.permissions !== undefined) {
+        await context.clearPermissions();
+        if (options.permissions && options.permissions.length > 0 && browser.browserType().name() !== "firefox") {
+            await context.grantPermissions(options.permissions, { origin: play_url });
+        }
+    }
     const page: Page = await context.newPage();
     const targetUrl = new URL(url, play_url).toString();
 
@@ -77,10 +90,10 @@ async function createUser(
     await dismissDoNotDisturbInfoToast(page);
     await skipOnboardingWhenShown(page);
 
-    if (browser.browserType().name() !== "webkit") {
+    if (options.permissions === undefined && !options.clearPermissions && browser.browserType().name() !== "webkit") {
         await Menu.expectButtonState(page, "microphone-button", "normal");
         await Menu.expectButtonState(page, "camera-button", "normal");
-    } else {
+    } else if (options.permissions === undefined && !options.clearPermissions) {
         await Menu.expectButtonState(page, "microphone-button", "forbidden");
         await Menu.expectButtonState(page, "camera-button", "forbidden");
     }
@@ -125,12 +138,16 @@ export async function getPage(
         | "UserMatrix2"
         | "User1",
     url: string,
-    options: {
-        pageCreatedHook?: (page: Page) => void;
-    } = {},
+    options: GetPageOptions = {},
 ): Promise<Page> {
-    await createUser(name, browser, url);
+    await createUser(name, browser, url, options);
     const newBrowser: BrowserContext = await browser.newContext({ storageState: "./.auth/" + name + ".json" });
+    if (options.clearPermissions || options.permissions !== undefined) {
+        await newBrowser.clearPermissions();
+        if (options.permissions && options.permissions.length > 0 && browser.browserType().name() !== "firefox") {
+            await newBrowser.grantPermissions(options.permissions, { origin: play_url });
+        }
+    }
     const page: Page = await newBrowser.newPage();
     if (options.pageCreatedHook) {
         options.pageCreatedHook(page);

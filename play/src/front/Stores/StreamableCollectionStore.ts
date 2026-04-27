@@ -21,10 +21,10 @@ import {
     localStreamStore,
     localVoiceIndicatorStore,
     localVolumeStore,
-    mediaStreamConstraintsStore,
     requestedCameraState,
     requestedMicrophoneState,
     silentStore,
+    synchronizedCameraStateStore,
 } from "./MediaStore";
 import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
 import { windowSize } from "./CoWebsiteStore";
@@ -68,10 +68,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) 
             },
         },
         volumeStore: localVolumeStore,
-        hasVideo: derived(
-            mediaStreamConstraintsStore,
-            ($mediaStreamConstraintsStore) => $mediaStreamConstraintsStore.video !== false
-        ),
+        hasVideo: synchronizedCameraStateStore,
         // hasAudio = true because the webcam has a microphone attached and could potentially play sound
         hasAudio: writable(true),
         isMuted: derived(requestedMicrophoneState, (micState) => !micState),

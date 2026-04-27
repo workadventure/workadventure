@@ -27,7 +27,10 @@
 
 <!-- Bug with transition : transition:fly={{ y: 50, duration: 150 }} -->
 
-<div class="video-media-box pointer-events-auto media-container justify-center relative h-full w-full">
+<div
+    class="video-media-box pointer-events-auto media-container justify-center relative h-full w-full"
+    data-testid={`camera-box-${videoBox.spaceUser.name}`}
+>
     <!-- in:fly={{ y: 50, duration: 150 }} -->
     <VideoMediaBox {videoBox} {fullScreen} />
 </div>
