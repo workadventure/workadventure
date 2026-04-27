@@ -42,6 +42,7 @@ export interface IRecordingManager {
         egressId: string,
         roomName: string
     ): { processed: boolean; recorder: SpaceUser | null; unexpected: boolean; hasActiveSessions: boolean };
+    hasRecordingSession(recordingSessionId: string): boolean;
     handleAddUser(user: SpaceUser): void;
     isRecording: boolean;
     destroy(): void;
@@ -129,6 +130,10 @@ export class RecordingManager implements IRecordingManager {
 
     public handleAddUser(_user: SpaceUser): void {
         // Intentionally empty. Kept for symmetry with deletion hooks.
+    }
+
+    public hasRecordingSession(recordingSessionId: string): boolean {
+        return this.sessions.has(recordingSessionId);
     }
 
     public getRecordingState(): ManagedRecordingState {

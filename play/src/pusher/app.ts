@@ -42,7 +42,7 @@ class App {
         this.websocketApp = uWebsockets.App();
         this.app = express();
 
-        // LiveKit webhooks must receive the raw body for signature verification; register before express.json().
+        // LiveKit webhooks must keep the raw body for signature verification in the back; register before express.json().
         new LivekitWebhookController(this.app);
 
         this.app.use(express.json());

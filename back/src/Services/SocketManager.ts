@@ -49,7 +49,7 @@ import type {
     SetAreaPropertyVariableMessage,
     BackEventMessage,
     ConnectToRoomMessage,
-    HandleRecordingWebhookRequest,
+    HandleLivekitWebhookRequest,
 } from "@workadventure/messages";
 import {
     AnswerMessage,
@@ -1728,16 +1728,15 @@ export class SocketManager {
         }
     }
 
-    handleRecordingWebhook(request: HandleRecordingWebhookRequest): void {
+    async handleLivekitWebhook(request: HandleLivekitWebhookRequest): Promise<void> {
         const space = this.spaces.get(request.spaceName);
         if (!space) {
-            console.warn(
-                `Received recording webhook for missing space ${request.spaceName} (${request.egressId}). Ignoring.`
-            );
+            // Retrying cannot recreate a space that is already gone, so the pusher should acknowledge this as ignored.
+            console.warn(`Received LiveKit webhook for missing space ${request.spaceName}. Ignoring.`);
             return;
         }
 
-        space.handleRecordingWebhook(request);
+        await space.handleLivekitWebhook(request);
     }
 
     handleAddSpaceUserToNotifyMessage(pusher: SpacesWatcher, addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage) {
