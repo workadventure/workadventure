@@ -46,6 +46,7 @@ import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MessageNotification } from "../../../Notification/MessageNotification";
 import { notificationManager } from "../../../Notification/NotificationManager";
 import type { PictureStore } from "../../../Stores/PictureStore";
+import { isLazyPictureStore } from "../../../Stores/PictureStore";
 import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
@@ -159,21 +160,49 @@ export class MatrixChatRoom
         ]);
         this.membersForMessageAvatars = this.members;
 
-        /** Channel: room avatar. DM: room avatar or peer Matrix avatar (peer read via `get`; list row refreshes on `members` / type changes). */
-        this.pictureStore = derived(
+        /** Channel: room avatar. DM: room avatar or peer Matrix avatar, with load delegated to the peer lazy store. */
+        const roomPictureStore = derived(
             [this.roomTypeStore, roomAvatarStore, this.members],
-            ([roomType, roomAvatar, members]) => {
+            ([roomType, roomAvatar, members], set: (value: string | undefined) => void) => {
                 if (roomType !== "direct") {
-                    return roomAvatar;
+                    set(roomAvatar);
+                    return;
                 }
                 const myUserId = this.matrixRoom.client.getUserId();
                 const other = members.find((m) => m.id !== myUserId);
                 if (!other) {
-                    return roomAvatar;
+                    set(roomAvatar);
+                    return;
                 }
-                return roomAvatar ?? get(other.pictureStore);
-            }
+                if (roomAvatar) {
+                    set(roomAvatar);
+                    return;
+                }
+                return other.pictureStore.subscribe(set);
+            },
+            undefined
         );
+        this.pictureStore = {
+            subscribe: roomPictureStore.subscribe,
+            load: async () => {
+                const other = this.getDirectRoomPeerMember();
+                if (!get(roomAvatarStore) && isLazyPictureStore(other?.pictureStore)) {
+                    await other.pictureStore.load();
+                }
+            },
+            refresh: async () => {
+                const other = this.getDirectRoomPeerMember();
+                if (!get(roomAvatarStore) && isLazyPictureStore(other?.pictureStore)) {
+                    await other.pictureStore.refresh();
+                }
+            },
+            invalidate: () => {
+                const other = this.getDirectRoomPeerMember();
+                if (!get(roomAvatarStore) && isLazyPictureStore(other?.pictureStore)) {
+                    other.pictureStore.invalidate();
+                }
+            },
+        };
 
         this.avatarFallbackColor = derived(
             [this.roomTypeStore, this.members, this.userProviderMergerStore],
@@ -338,6 +367,14 @@ export class MatrixChatRoom
         const messages = result.filter((message): message is MatrixChatMessage => message !== undefined);
         this.messages.push(...messages);
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
+    }
+
+    private getDirectRoomPeerMember(): MatrixChatRoomMember | undefined {
+        if (get(this.roomTypeStore) !== "direct") {
+            return undefined;
+        }
+        const myUserId = this.matrixRoom.client.getUserId();
+        return get(this.members).find((member) => member.id !== myUserId);
     }
 
     private async readEventsToAddMessagesAndReactions(

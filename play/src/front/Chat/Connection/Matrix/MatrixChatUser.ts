@@ -1,8 +1,9 @@
 import type { MatrixClient, User } from "matrix-js-sdk";
 import { SetPresence } from "matrix-js-sdk";
-import { readable, writable } from "svelte/store";
+import { writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { ChatUser } from "../ChatConnection";
+import { matrixAvatarProfile } from "./services/MatrixAvatarProfile";
 
 export const chatUserFactory: (matrixChatUser: User, matrixClient: MatrixClient) => ChatUser = (
     matrixChatUser,
@@ -13,7 +14,9 @@ export const chatUserFactory: (matrixChatUser: User, matrixClient: MatrixClient)
         username: matrixChatUser.rawDisplayName,
         roomName: undefined,
         playUri: undefined,
-        pictureStore: readable(matrixClient.mxcUrlToHttp(matrixChatUser.avatarUrl ?? "", 48, 48) ?? undefined),
+        pictureStore: matrixAvatarProfile.createLazyAvatarStore(matrixChatUser.userId, () =>
+            matrixAvatarProfile.resolveUserAvatarUrl(matrixChatUser.userId, matrixClient)
+        ),
         color: undefined,
         spaceUserId: undefined,
         availabilityStatus: writable(mapMatrixPresenceToAvailabilityStatus(matrixChatUser.presence)),
