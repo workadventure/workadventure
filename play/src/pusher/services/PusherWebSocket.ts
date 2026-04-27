@@ -82,6 +82,10 @@ export class PusherWebSocket {
         this.socket.end(code, reason);
     }
 
+    public isCurrentTransport(rawSocket: RawSocket): boolean {
+        return this.socket === rawSocket;
+    }
+
     public replaceSocket(newSocket: RawSocket, clientLastReceivedNonce: number, clientLastSentNonce: number): boolean {
         const socketData = this.socket.getUserData();
         console.info(

@@ -189,16 +189,13 @@ export class PusherRoomSocketController {
 
                         if (replaced) {
                             this.wrappersBySocket.set(rawSocket, context.socket);
-                            Promise.resolve(config.open(context.socket)).catch((e) => {
-                                console.error(e);
-                            });
                             return;
                         }
                     }
 
                     const socket = this.getOrCreateWrapper(rawSocket);
                     this.contextByTabKey.set(tabId, {
-                        socket: this.getOrCreateWrapper(rawSocket),
+                        socket,
                     });
                     await config.open(socket);
                 })().catch((e) => {
@@ -244,6 +241,10 @@ export class PusherRoomSocketController {
                     return;
                 }
                 this.wrappersBySocket.delete(rawSocket);
+
+                if (!socket.isCurrentTransport(rawSocket)) {
+                    return;
+                }
 
                 Promise.resolve(config.close(socket))
                     .catch((e) => {
