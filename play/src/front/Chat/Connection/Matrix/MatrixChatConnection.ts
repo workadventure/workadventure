@@ -31,6 +31,8 @@ import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { defaultWoka } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import { shortHash } from "@workadventure/shared-utils/src/String/shortHash";
+
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { canAcceptVerificationRequest } from "matrix-js-sdk/lib/crypto-api";
@@ -482,6 +484,16 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             wokaImageSrc: get(currentPlayerWokaStore),
             forceSync,
         });
+    }
+
+    /**
+     * Returns a unique room alias local part (no domain) for public rooms/folders.
+     * Ensures multiple rooms with the same name get distinct aliases.
+     */
+    private uniqueRoomAliasName(baseName: string): string {
+        const slug = slugify(baseName) || "room";
+        const hash = shortHash(crypto.randomUUID());
+        return `${slug}-${hash}`;
     }
 
     private setPresence(status: AvailabilityStatus): void {
@@ -1151,10 +1163,13 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             throw new Error("Room name is undefined");
         }
 
+        // When MSC4362 (encrypted state events) is supported: for rooms created with state encryption
+        // enabled, omit `name` here and call client.setRoomName(room_id, name) after creation so the
+        // client can send the name as an encrypted state event. Currently we send the name in createRoom.
         return {
             name: roomName.trim(),
             visibility: roomOptions.visibility as Visibility | undefined,
-            room_alias_name: slugify(roomName),
+            ...(roomOptions.visibility === "public" && { room_alias_name: this.uniqueRoomAliasName(roomName) }),
             invite:
                 roomOptions.invite
                     ?.map((invitation) => invitation.value)
@@ -1178,7 +1193,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         return {
             name: roomName.trim(),
             visibility: (roomOptions.visibility === "public" ? "public" : "private") as Visibility | undefined,
-            room_alias_name: slugify(roomName),
+            ...(roomOptions.visibility === "public" && { room_alias_name: this.uniqueRoomAliasName(roomName) }),
             invite:
                 roomOptions.invite
                     ?.map((invitation) => invitation.value)
