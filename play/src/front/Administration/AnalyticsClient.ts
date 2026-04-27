@@ -5,31 +5,31 @@ import type { Emoji } from "../Stores/Utils/emojiSchema";
 declare let window: any;
 
 interface PostHogExt {
-    capture: (event: string, properties?: Record<string, any>) => void;
-    identify: (uuid: string, properties: Record<string, any>) => void;
+    capture: (event: string, properties?: Record<string, unknown>) => void;
+    identify: (uuid: string, properties: Record<string, unknown>) => void;
 }
 
 class AnalyticsClient {
-    private posthogPromise: Promise<PostHog|PostHogExt> = new Promise((resolve) => {
+    private posthogPromise: Promise<PostHog | PostHogExt> = new Promise((resolve) => {
         resolve({
-            capture: (event: string, properties?: Record<string, any>) => {
+            capture: (event: string, properties?: Record<string, unknown>) => {
                 console.info(`[Analytics] ${event}`, properties);
             },
-            identify: (uuid: string, properties: Record<string, any>) => {
+            identify: (uuid: string, properties: Record<string, unknown>) => {
                 console.info(`[Analytics] identify ${uuid}`, properties);
-            }
+            },
         });
-    }) as Promise<PostHogExt>;
+    });
     private isPostHogEnabled = false;
 
     constructor() {
         const postHogApiKey = POSTHOG_API_KEY;
         if (postHogApiKey && POSTHOG_URL) {
-            try{
+            try {
                 this.posthogPromise = import("posthog-js").then(({ default: posthog }) => {
                     const posthogInstance = posthog.init(postHogApiKey, { api_host: POSTHOG_URL });
                     //the posthog toolbar need a reference in window to be able to work
-                    window.posthog = posthog;
+                    window.posthog = posthogInstance;
                     this.isPostHogEnabled = true;
                     return posthog;
                 });
