@@ -1,18 +1,19 @@
 import crypto from "crypto";
-import type { SpaceUser } from "@workadventure/messages";
-import type { CreateOptions, EgressInfo, EncodedOutputs } from "livekit-server-sdk";
+import { HandleRecordingWebhookRequest, RecordingWebhookPhase, type SpaceUser } from "@workadventure/messages";
 import {
     RoomServiceClient,
     AccessToken,
     TrackSource,
     EgressClient,
     EgressStatus,
+    WebhookReceiver,
     EncodedFileOutput,
     S3Upload,
     EncodedFileType,
     ImageOutput,
     WebhookConfig,
 } from "livekit-server-sdk";
+import type { CreateOptions, EgressInfo, EncodedOutputs, WebhookEvent } from "livekit-server-sdk";
 import * as Sentry from "@sentry/node";
 import {
     LIVEKIT_RECORDING_S3_ENDPOINT,
@@ -48,9 +49,21 @@ type EgressToStop = {
     status?: EgressStatus;
 };
 
+type ForwardedWebhookEvent = Extract<WebhookEvent["event"], "egress_started" | "egress_ended">;
+
+type WebhookReceiverLike = Pick<WebhookReceiver, "receive">;
+
+type CreateWebhookReceiver = (apiKey: string, apiSecret: string) => WebhookReceiverLike;
+
 export interface RecordingStartInfo {
     egressId: string;
     roomName: string;
+}
+
+export class LivekitWebhookError extends Error {
+    constructor(message: string, public readonly kind: "bad-request" | "unauthorized") {
+        super(message);
+    }
 }
 
 export function getLivekitRoomName(roomName: string): string {
@@ -62,6 +75,7 @@ export function getLivekitRoomName(roomName: string): string {
 export class LiveKitService {
     private roomServiceClient: RoomServiceClient;
     private egressClient: EgressClient;
+    private readonly webhookReceiver: WebhookReceiverLike;
     private readonly activeRecordings = new Map<string, EgressInfo>();
 
     constructor(
@@ -70,7 +84,6 @@ export class LiveKitService {
         private livekitApiSecret: string,
         private livekitFrontendUrl: string,
         private recordingWebhookBaseUrl: string,
-        private recordingWebhookApiKey: string,
         createRoomServiceClient: (
             livekitHost: string,
             livekitApiKey: string,
@@ -80,13 +93,15 @@ export class LiveKitService {
             livekitHost: string,
             livekitApiKey: string,
             livekitApiSecret: string
-        ) => EgressClient = defaultEgressClient
+        ) => EgressClient = defaultEgressClient,
+        createWebhookReceiver: CreateWebhookReceiver = (apiKey, apiSecret) => new WebhookReceiver(apiKey, apiSecret)
     ) {
         if (!this.livekitHost || !this.livekitApiKey || !this.livekitApiSecret) {
             throw new Error("Livekit host, api key or secret is not set");
         }
         this.roomServiceClient = createRoomServiceClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
         this.egressClient = createEgressClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
+        this.webhookReceiver = createWebhookReceiver(this.livekitApiKey, this.livekitApiSecret);
     }
 
     async createRoom(roomName: string): Promise<void> {
@@ -169,10 +184,6 @@ export class LiveKitService {
                 throw new Error("Livekit recording webhook base URL is not set");
             }
 
-            if (!this.recordingWebhookApiKey) {
-                throw new Error("Livekit recording webhook API key is not set");
-            }
-
             const endpoint = LIVEKIT_RECORDING_S3_ENDPOINT;
             const accessKey = LIVEKIT_RECORDING_S3_ACCESS_KEY;
             const secret = LIVEKIT_RECORDING_S3_SECRET_KEY;
@@ -224,9 +235,7 @@ export class LiveKitService {
 
             const result = await this.egressClient.startRoomCompositeEgress(livekitRoomName, outputs, {
                 layout,
-                // Reusing the main LiveKit API key here keeps the first iteration simple.
-                // A dedicated webhook signing key should replace this once deployed.
-                webhooks: [new WebhookConfig({ url: webhookUrl.toString(), signingKey: this.recordingWebhookApiKey })],
+                webhooks: [new WebhookConfig({ url: webhookUrl.toString(), signingKey: this.livekitApiKey })],
             });
 
             this.activeRecordings.set(result.egressId, result);
@@ -264,6 +273,74 @@ export class LiveKitService {
             }
             throw error;
         }
+    }
+
+    async handleLivekitWebhook(
+        rawBody: Buffer | Uint8Array,
+        authHeader: string | undefined,
+        spaceName: string,
+        recordingSessionId: string
+    ): Promise<HandleRecordingWebhookRequest | "ignored"> {
+        if (rawBody.length === 0) {
+            throw new LivekitWebhookError("Missing webhook body", "bad-request");
+        }
+
+        const event = await this.receiveWebhook(rawBody, authHeader);
+        if (!this.isForwardedEvent(event.event)) {
+            return "ignored";
+        }
+
+        const egressInfo = event.egressInfo;
+        if (!egressInfo?.egressId || !egressInfo.roomName) {
+            throw new LivekitWebhookError("Missing egress information in webhook payload", "bad-request");
+        }
+
+        return HandleRecordingWebhookRequest.fromPartial({
+            spaceName,
+            eventId: event.id,
+            recordingSessionId,
+            egressId: egressInfo.egressId,
+            roomName: egressInfo.roomName,
+            phase: this.toWebhookPhase(event.event),
+            status: this.toStatusName(egressInfo.status),
+            error: egressInfo.error,
+            createdAt: Number(event.createdAt),
+        });
+    }
+
+    private async receiveWebhook(rawBody: Buffer | Uint8Array, authHeader: string | undefined): Promise<WebhookEvent> {
+        try {
+            return await this.webhookReceiver.receive(Buffer.from(rawBody).toString("utf-8"), authHeader);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Invalid LiveKit webhook";
+            if (
+                message.includes("authorization header") ||
+                message.includes("sha256 checksum") ||
+                message.includes("invalid JWT") ||
+                message.includes("could not verify")
+            ) {
+                throw new LivekitWebhookError(message, "unauthorized");
+            }
+            throw new LivekitWebhookError(message, "bad-request");
+        }
+    }
+
+    private isForwardedEvent(eventName: WebhookEvent["event"]): eventName is ForwardedWebhookEvent {
+        return eventName === "egress_started" || eventName === "egress_ended";
+    }
+
+    private toWebhookPhase(eventName: ForwardedWebhookEvent): RecordingWebhookPhase {
+        return eventName === "egress_started"
+            ? RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_STARTED
+            : RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED;
+    }
+
+    private toStatusName(status: EgressStatus | undefined): string {
+        if (status === undefined) {
+            return "";
+        }
+
+        return EgressStatus[status] ?? "";
     }
 
     private resolveRecordingToStop(egressId?: string): EgressToStop | undefined {

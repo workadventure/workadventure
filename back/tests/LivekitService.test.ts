@@ -1,16 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
+import { RecordingWebhookPhase } from "@workadventure/messages";
 import type { EgressInfo } from "livekit-server-sdk";
 import { EgressStatus } from "livekit-server-sdk";
+import type { LivekitWebhookError } from "../src/Model/Services/LivekitService";
 import { LiveKitService } from "../src/Model/Services/LivekitService";
 
-function createService(stopEgress = vi.fn(), startRoomCompositeEgress = vi.fn()) {
+function createService(stopEgress = vi.fn(), startRoomCompositeEgress = vi.fn(), receive = vi.fn()) {
     return new LiveKitService(
         "http://livekit.local",
         "api-key",
         "api-secret",
         "ws://livekit.local",
         "https://play.local",
-        "webhook-key",
         () =>
             ({
                 listRooms: vi.fn(),
@@ -21,6 +22,10 @@ function createService(stopEgress = vi.fn(), startRoomCompositeEgress = vi.fn())
             ({
                 stopEgress,
                 startRoomCompositeEgress,
+            } as never),
+        () =>
+            ({
+                receive,
             } as never)
     );
 }
@@ -130,11 +135,65 @@ describe("LiveKitService", () => {
                 webhooks: [
                     expect.objectContaining({
                         url: "https://play.local/livekit/egress/webhook?space=test-space&recordingSessionId=session-1",
-                        signingKey: "webhook-key",
+                        signingKey: "api-key",
                     }),
                 ],
             })
         );
         expect(getTrackedRecordings(service).has("egress-1")).toBe(true);
+    });
+
+    it("normalizes signed LiveKit egress webhooks into recording webhook requests", async () => {
+        const receive = vi.fn().mockResolvedValue({
+            event: "egress_ended",
+            id: "event-1",
+            createdAt: 1234n,
+            egressInfo: {
+                egressId: "egress-1",
+                roomName: "test-space",
+                status: EgressStatus.EGRESS_ABORTED,
+                error: "egress stopped remotely",
+            },
+        });
+        const service = createService(vi.fn(), vi.fn(), receive);
+
+        const result = await service.handleLivekitWebhook(Buffer.from("{}"), "jwt-token", "space-name", "session-1");
+
+        expect(receive).toHaveBeenCalledWith("{}", "jwt-token");
+        expect(result).toMatchObject({
+            spaceName: "space-name",
+            eventId: "event-1",
+            recordingSessionId: "session-1",
+            egressId: "egress-1",
+            roomName: "test-space",
+            phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
+            status: "EGRESS_ABORTED",
+            error: "egress stopped remotely",
+            createdAt: 1234,
+        });
+    });
+
+    it("ignores signed LiveKit events that do not describe egress lifecycle", async () => {
+        const receive = vi.fn().mockResolvedValue({
+            event: "participant_joined",
+            id: "event-1",
+            createdAt: 1234n,
+        });
+        const service = createService(vi.fn(), vi.fn(), receive);
+
+        await expect(
+            service.handleLivekitWebhook(Buffer.from("{}"), "jwt-token", "space-name", "session-1")
+        ).resolves.toBe("ignored");
+    });
+
+    it("classifies LiveKit signature errors as unauthorized webhook errors", async () => {
+        const receive = vi.fn().mockRejectedValue(new Error("sha256 checksum of body does not match"));
+        const service = createService(vi.fn(), vi.fn(), receive);
+
+        await expect(
+            service.handleLivekitWebhook(Buffer.from("{}"), "jwt-token", "space-name", "session-1")
+        ).rejects.toMatchObject({
+            kind: "unauthorized",
+        } satisfies Partial<LivekitWebhookError>);
     });
 });

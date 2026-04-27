@@ -2,15 +2,22 @@ import type { SpaceManagerServer } from "@workadventure/messages/src/ts-proto-ge
 import { v4 as uuid } from "uuid";
 import type {
     BackToPusherSpaceMessage,
-    HandleRecordingWebhookRequest,
+    HandleLivekitWebhookRequest,
     PusherToBackSpaceMessage,
 } from "@workadventure/messages";
 import Debug from "debug";
-import type { sendUnaryData, ServerDuplexStream, ServerUnaryCall } from "@grpc/grpc-js";
+import {
+    status,
+    type sendUnaryData,
+    type ServerDuplexStream,
+    type ServerUnaryCall,
+    type ServiceError,
+} from "@grpc/grpc-js";
 import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import * as Sentry from "@sentry/node";
 import { socketManager } from "./Services/SocketManager";
 import { SpacesWatcher } from "./Model/SpacesWatcher";
+import { LivekitWebhookError } from "./Model/Services/LivekitService";
 
 export type SpaceSocket = ServerDuplexStream<PusherToBackSpaceMessage, BackToPusherSpaceMessage>;
 
@@ -131,14 +138,29 @@ const spaceManager = {
                 call.end();
             });
     },
-    handleRecordingWebhook: (
-        call: ServerUnaryCall<HandleRecordingWebhookRequest, Empty>,
+    handleLivekitWebhook: (
+        call: ServerUnaryCall<HandleLivekitWebhookRequest, Empty>,
         callback: sendUnaryData<Empty>
     ): void => {
-        const request = call.request;
-        socketManager.handleRecordingWebhook(request);
-        callback(null, {});
+        socketManager
+            .handleLivekitWebhook(call.request)
+            .then(() => callback(null, {}))
+            .catch((error) => callback(toGrpcLivekitWebhookError(error), null));
     },
 } satisfies SpaceManagerServer;
+
+function toGrpcLivekitWebhookError(error: unknown): ServiceError {
+    const message = error instanceof Error ? error.message : "Unexpected LiveKit webhook error";
+
+    if (error instanceof LivekitWebhookError) {
+        // Invalid payloads/signatures are permanent failures; pusher maps these to non-retryable HTTP statuses.
+        return Object.assign(new Error(message), {
+            code: error.kind === "unauthorized" ? status.UNAUTHENTICATED : status.INVALID_ARGUMENT,
+        }) as ServiceError;
+    }
+
+    // Unknown back errors stay retryable; pusher maps this to HTTP 500 so LiveKit can retry.
+    return Object.assign(new Error(message), { code: status.UNKNOWN }) as ServiceError;
+}
 
 export { spaceManager };

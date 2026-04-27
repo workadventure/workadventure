@@ -1,21 +1,14 @@
-import { Metadata } from "@grpc/grpc-js";
-import { HandleRecordingWebhookRequest, RecordingWebhookPhase } from "@workadventure/messages";
+import { Metadata, status, type ServiceError } from "@grpc/grpc-js";
+import { HandleLivekitWebhookRequest } from "@workadventure/messages";
 import type { SpaceManagerClient } from "@workadventure/messages/src/ts-proto-generated/services";
-import { EgressStatus, WebhookReceiver, type WebhookEvent } from "livekit-server-sdk";
-import { GRPC_MAX_MESSAGE_SIZE, LIVEKIT_API_KEY, LIVEKIT_API_SECRET } from "../enums/EnvironmentVariable";
+import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { apiClientRepository } from "./ApiClientRepository";
 
-type ForwardedWebhookEvent = Extract<WebhookEvent["event"], "egress_started" | "egress_ended">;
-
-type SpaceManagerClientLike = Pick<SpaceManagerClient, "handleRecordingWebhook">;
+type SpaceManagerClientLike = Pick<SpaceManagerClient, "handleLivekitWebhook">;
 
 type ApiClientRepositoryLike = {
     getSpaceClient(spaceName: string, grpcMaxMessageSize: number): Promise<SpaceManagerClientLike>;
 };
-
-type WebhookReceiverLike = Pick<WebhookReceiver, "receive">;
-
-type CreateWebhookReceiver = (apiKey: string, apiSecret: string) => WebhookReceiverLike;
 
 export class LivekitWebhookHttpError extends Error {
     constructor(message: string, public readonly statusCode: number) {
@@ -24,63 +17,33 @@ export class LivekitWebhookHttpError extends Error {
 }
 
 export class LivekitWebhookService {
-    private readonly webhookReceiver?: WebhookReceiverLike;
-
     constructor(
         private readonly _apiClientRepository: ApiClientRepositoryLike = apiClientRepository,
-        private readonly _grpcMaxMessageSize = GRPC_MAX_MESSAGE_SIZE,
-        livekitWebhookApiKey = LIVEKIT_API_KEY,
-        livekitWebhookApiSecret = LIVEKIT_API_SECRET,
-        createWebhookReceiver: CreateWebhookReceiver = (apiKey, apiSecret) => new WebhookReceiver(apiKey, apiSecret)
-    ) {
-        if (livekitWebhookApiKey && livekitWebhookApiSecret) {
-            this.webhookReceiver = createWebhookReceiver(livekitWebhookApiKey, livekitWebhookApiSecret);
-        }
-    }
+        private readonly _grpcMaxMessageSize = GRPC_MAX_MESSAGE_SIZE
+    ) {}
 
     async handleWebhook(
         rawBody: Buffer,
         authHeader: string | undefined,
         spaceName: string,
         recordingSessionId: string
-    ): Promise<"forwarded" | "ignored"> {
-        const webhookReceiver = this.webhookReceiver;
-        if (!webhookReceiver) {
-            throw new LivekitWebhookHttpError("LiveKit webhook receiver is not configured", 500);
-        }
-
+    ): Promise<"forwarded"> {
         if (!Buffer.isBuffer(rawBody) || rawBody.length === 0) {
             throw new LivekitWebhookHttpError("Missing webhook body", 400);
         }
 
-        const event = await this.receiveWebhook(webhookReceiver, rawBody, authHeader);
-
-        if (!this.isForwardedEvent(event.event)) {
-            return "ignored";
-        }
-
-        const egressInfo = event.egressInfo;
-        if (!egressInfo?.egressId || !egressInfo.roomName) {
-            throw new LivekitWebhookHttpError("Missing egress information in webhook payload", 400);
-        }
-
-        const request = HandleRecordingWebhookRequest.fromPartial({
+        const request = HandleLivekitWebhookRequest.fromPartial({
             spaceName,
-            eventId: event.id,
             recordingSessionId,
-            egressId: egressInfo.egressId,
-            roomName: egressInfo.roomName,
-            phase: this.toPhase(event.event),
-            status: this.toStatusName(egressInfo.status),
-            error: egressInfo.error,
-            createdAt: Number(event.createdAt),
+            rawBody,
+            authorizationHeader: authHeader ?? "",
         });
 
         const client = await this._apiClientRepository.getSpaceClient(spaceName, this._grpcMaxMessageSize);
         await new Promise<void>((resolve, reject) => {
-            client.handleRecordingWebhook(request, new Metadata(), (error) => {
+            client.handleLivekitWebhook(request, new Metadata(), (error) => {
                 if (error) {
-                    reject(error);
+                    reject(this.toHttpError(error));
                     return;
                 }
                 resolve();
@@ -90,42 +53,16 @@ export class LivekitWebhookService {
         return "forwarded";
     }
 
-    private async receiveWebhook(
-        webhookReceiver: WebhookReceiverLike,
-        rawBody: Buffer,
-        authHeader: string | undefined
-    ): Promise<WebhookEvent> {
-        try {
-            return await webhookReceiver.receive(rawBody.toString("utf-8"), authHeader);
-        } catch (error) {
-            const message = error instanceof Error ? error.message : "Invalid LiveKit webhook";
-            if (
-                message.includes("authorization header") ||
-                message.includes("sha256 checksum") ||
-                message.includes("invalid JWT") ||
-                message.includes("could not verify")
-            ) {
-                throw new LivekitWebhookHttpError(message, 401);
-            }
-            throw new LivekitWebhookHttpError(message, 400);
+    private toHttpError(error: ServiceError): LivekitWebhookHttpError {
+        // Invalid payloads/signatures are permanent failures, so LiveKit should not retry them.
+        if (error.code === status.INVALID_ARGUMENT) {
+            return new LivekitWebhookHttpError(error.message, 400);
         }
-    }
-
-    private isForwardedEvent(eventName: WebhookEvent["event"]): eventName is ForwardedWebhookEvent {
-        return eventName === "egress_started" || eventName === "egress_ended";
-    }
-
-    private toPhase(eventName: ForwardedWebhookEvent): RecordingWebhookPhase {
-        return eventName === "egress_started"
-            ? RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_STARTED
-            : RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED;
-    }
-
-    private toStatusName(status: EgressStatus | undefined): string {
-        if (status === undefined) {
-            return "";
+        if (error.code === status.UNAUTHENTICATED) {
+            return new LivekitWebhookHttpError(error.message, 401);
         }
 
-        return EgressStatus[status] ?? "";
+        // Back transport or unexpected processing failures stay retryable for LiveKit.
+        return new LivekitWebhookHttpError(error.message, 500);
     }
 }
