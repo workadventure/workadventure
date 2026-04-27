@@ -34,6 +34,12 @@ if (SENTRY_DSN != undefined) {
             environment: SENTRY_ENVIRONMENT,
             tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE,
             attachStacktrace: true,
+            enableLogs: true,
+            integrations: [
+                Sentry.consoleLoggingIntegration({
+                    levels: ["log", "warn", "error"],
+                }),
+            ],
         };
 
         Sentry.init(sentryOptions);
