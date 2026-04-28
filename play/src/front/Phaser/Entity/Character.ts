@@ -30,6 +30,7 @@ import RenderTexture = Phaser.GameObjects.RenderTexture;
 
 const playerNameY = -16;
 const interactiveRadius = 25;
+const meetingSpeakingIconY = -49;
 
 export const CHARACTER_BODY_WIDTH = 16;
 export const CHARACTER_BODY_HEIGHT = 16;
@@ -185,8 +186,8 @@ export abstract class Character extends Container implements OutlineableInterfac
             this.scene.markDirty();
         }, 0);
 
-        this.talkIcon = new TalkIcon(scene, 0, -45);
-        this.speakerIcon = new SpeakerIcon(scene, 0, -45);
+        this.talkIcon = new TalkIcon(scene, 0, meetingSpeakingIconY);
+        this.speakerIcon = new SpeakerIcon(scene, 0, meetingSpeakingIconY);
         this.add([this.talkIcon, this.speakerIcon]);
 
         if (isClickable) {
