@@ -57,6 +57,11 @@ export function applyThreadRelationToContent(
 
 export function getThreadSummary(thread: Thread | null, room: Room, rootEventId: string): ChatThreadSummary | null {
     const rootEvent = thread?.rootEvent ?? room.findEventById(rootEventId) ?? undefined;
+    const unreadNotificationCount = room.getThreadUnreadNotificationCount(rootEventId);
+    const unreadFields = {
+        hasUnreadMessages: unreadNotificationCount > 0,
+        unreadNotificationCount,
+    };
 
     if (thread) {
         if (thread.length <= 0) {
@@ -73,6 +78,7 @@ export function getThreadSummary(thread: Thread | null, room: Room, rootEventId:
             lastReplySenderName: getEventSenderName(replyEvent, room),
             currentUserParticipated: thread.hasCurrentUserParticipated,
             lastActivityTimestamp: replyEvent?.getDate()?.getTime() ?? rootEvent?.getDate()?.getTime() ?? 0,
+            ...unreadFields,
         };
     }
 
@@ -93,6 +99,7 @@ export function getThreadSummary(thread: Thread | null, room: Room, rootEventId:
         lastReplySenderName: getRawEventSenderName(bundledThread.latest_event, room),
         currentUserParticipated: !!bundledThread.current_user_participated,
         lastActivityTimestamp: getRawEventTimestamp(bundledThread.latest_event) ?? rootEvent?.getDate()?.getTime() ?? 0,
+        ...unreadFields,
     };
 }
 

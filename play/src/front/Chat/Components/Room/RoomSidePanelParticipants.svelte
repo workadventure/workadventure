@@ -8,8 +8,8 @@
 
     export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration;
 
-    const members = room.members;
-    const canInvite = room.hasPermissionTo("invite");
+    $: members = room.members;
+    $: canInvite = room.hasPermissionTo("invite");
 
     function openManageParticipantsModal() {
         openModal(ManageParticipantsModal, { room });

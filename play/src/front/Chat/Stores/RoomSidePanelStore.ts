@@ -2,7 +2,7 @@ import { get, writable } from "svelte/store";
 import type { ChatConversation } from "../Connection/ChatConnection";
 import { selectedThreadStore } from "./SelectedThreadStore";
 
-export type RoomSidePanelSection = "threads" | "polls" | "participants";
+export type RoomSidePanelSection = "home" | "threads" | "polls" | "participants" | "settings";
 export type RoomTimelineFocusRequest = {
     roomId: string;
     eventId: string;
@@ -16,7 +16,7 @@ type RoomSidePanelState = {
 
 const DEFAULT_STATE: RoomSidePanelState = {
     isOpen: false,
-    activeSection: "threads",
+    activeSection: "home",
 };
 
 export const roomTimelineFocusStore = writable<RoomTimelineFocusRequest | undefined>(undefined);

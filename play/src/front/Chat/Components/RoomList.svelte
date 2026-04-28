@@ -11,6 +11,7 @@
     import {
         hasChatRoomMembershipManagement,
         hasChatRoomModeration,
+        hasChatRoomNotificationControl,
         type ChatConversation,
         type ChatRoom,
         type ChatThread,
@@ -173,7 +174,9 @@
     $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
     $: displayThreeColumnLayout = sideBarWidth >= THREAD_PANEL_LAYOUT_LIMIT;
     $: selectedRoomWithSidePanel =
-        hasChatRoomMembershipManagement($selectedRoomStore) && hasChatRoomModeration($selectedRoomStore)
+        hasChatRoomMembershipManagement($selectedRoomStore) &&
+        hasChatRoomModeration($selectedRoomStore) &&
+        hasChatRoomNotificationControl($selectedRoomStore)
             ? $selectedRoomStore
             : undefined;
     $: hasSelectedRoomWithSidePanel = selectedRoomWithSidePanel !== undefined;

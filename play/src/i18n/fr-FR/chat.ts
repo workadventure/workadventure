@@ -392,10 +392,33 @@ const chat: DeepPartial<Translation["chat"]> = {
     roomPanel: {
         toggleOpen: "Ouvrir le panneau de room",
         toggleClose: "Fermer le panneau de room",
+        back: "Back to room overview",
         sections: {
             threads: "Fils",
             polls: "Sondages",
             participants: "Participants",
+            settings: "Settings",
+        },
+        home: {
+            directRoom: "Direct room",
+            groupRoom: "Group room",
+            encrypted: "Encrypted",
+            notEncrypted: "Not encrypted",
+            readOnly: "Read-only",
+        },
+        settings: {
+            roomType: "Room type",
+            encryption: "Encryption",
+            joinRule: "Access",
+            restrictedTo: "Restricted to",
+            readOnly: "These settings are read-only here.",
+            unknown: "Unknown",
+            joinRules: {
+                public: "Public",
+                invite: "Invite only",
+                restricted: "Restricted",
+                knock: "Request access",
+            },
         },
         pollsEmpty: "Aucun sondage pour l'instant",
         participantsEmpty: "Aucun participant pour l'instant",

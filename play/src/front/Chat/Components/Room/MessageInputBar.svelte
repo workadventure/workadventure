@@ -19,7 +19,7 @@
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { defaultNativeIntegrationAppName } from "@workadventure/shared-utils";
-    import { hasChatRoomPollCreation, type ChatConversation, type ChatRoom } from "../../Connection/ChatConnection";
+    import { hasChatRoomPollCreation, type ChatConversation } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { chatInputFocusStore, shouldDisableChatInProximityRoomStore } from "../../../Stores/ChatStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
@@ -65,13 +65,7 @@
     const cannotCreatePoll = readable(false);
 
     function getPollCreationCapability(currentRoom: ChatConversation) {
-        if (currentRoom.conversationKind !== "room") {
-            return undefined;
-        }
-
-        const roomConversation = currentRoom as ChatRoom;
-
-        return hasChatRoomPollCreation(roomConversation) ? roomConversation.pollCreation : undefined;
+        return hasChatRoomPollCreation(currentRoom) ? currentRoom.pollCreation : undefined;
     }
 
     let pollCreation = getPollCreationCapability(room);

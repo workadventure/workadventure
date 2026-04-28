@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { MatrixEvent } from "matrix-js-sdk";
 import {
     buildThreadRelationContent,
+    getThreadSummary,
     isThreadReplyEvent,
     shouldDisplayEventInRoomTimeline,
     shouldRenderQuotedReply,
@@ -53,6 +54,29 @@ describe("MatrixThreadUtils", () => {
         });
 
         expect(shouldRenderQuotedReply(event)).toBe(true);
+    });
+
+    it("includes unread metadata in thread summaries", () => {
+        const rootEvent = createThreadReplyEvent();
+        vi.spyOn(rootEvent, "getId").mockReturnValue("$root");
+        const room = {
+            findEventById: vi.fn(() => rootEvent),
+            getThreadUnreadNotificationCount: vi.fn(() => 4),
+            getMember: vi.fn(() => undefined),
+        };
+        const thread = {
+            rootEvent,
+            length: 1,
+            replyToEvent: rootEvent,
+            hasCurrentUserParticipated: true,
+        };
+
+        const summary = getThreadSummary(thread as never, room as never, "$root");
+
+        expect(summary).toMatchObject({
+            hasUnreadMessages: true,
+            unreadNotificationCount: 4,
+        });
     });
 });
 

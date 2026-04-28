@@ -1,17 +1,34 @@
 <script lang="ts">
     import { tick } from "svelte";
+    import { readable, type Readable } from "svelte/store";
     import { get } from "svelte/store";
     import LL from "../../../../i18n/i18n-svelte";
     import type { ChatPollItem, ChatRoom } from "../../Connection/ChatConnection";
+    import { selectedThreadStore } from "../../Stores/SelectedThreadStore";
     import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
     import RoomSidePanelPollItem from "./RoomSidePanelPollItem.svelte";
 
     export let room: ChatRoom;
     export let closeOnTimelineFocus = false;
 
-    const timelineItems = room.timelineItems;
+    const emptyPollItems = readable<readonly ChatPollItem[]>([]);
+
+    $: timelineItems = room.timelineItems;
 
     async function focusPoll(poll: ChatPollItem) {
+        if (poll.context.kind === "thread") {
+            const thread = await room.openThread?.(poll.context.threadRootMessageId);
+            if (!thread) {
+                return;
+            }
+
+            selectedThreadStore.set(thread);
+            roomSidePanelStore.setActiveSection("threads");
+            await tick();
+            roomSidePanelStore.focusTimelineEvent(thread.id, poll.id);
+            return;
+        }
+
         if (closeOnTimelineFocus) {
             roomSidePanelStore.close();
             await tick();
@@ -20,21 +37,27 @@
         roomSidePanelStore.focusTimelineEvent(room.id, poll.id);
     }
 
-    $: polls = $timelineItems
-        .filter((item): item is { kind: "poll"; id: string; date: Date | null; poll: ChatPollItem } => {
-            return item.kind === "poll";
-        })
-        .map((item) => item.poll)
-        .sort((left, right) => {
-            const leftState = get(left.state);
-            const rightState = get(right.state);
+    function getPollItemsStore(currentRoom: ChatRoom): Readable<readonly ChatPollItem[]> {
+        return currentRoom.pollItems ?? emptyPollItems;
+    }
 
-            if (leftState.isEnded !== rightState.isEnded) {
-                return leftState.isEnded ? 1 : -1;
-            }
+    $: pollItems = getPollItemsStore(room);
+    $: timelinePolls = $timelineItems
+        .filter(
+            (item): item is { kind: "poll"; id: string; date: Date | null; poll: ChatPollItem } => item.kind === "poll"
+        )
+        .map((item) => item.poll);
+    $: pollSource = $pollItems.length > 0 ? $pollItems : timelinePolls;
+    $: polls = [...pollSource].sort((left, right) => {
+        const leftState = get(left.state);
+        const rightState = get(right.state);
 
-            return (right.date?.getTime() ?? 0) - (left.date?.getTime() ?? 0);
-        });
+        if (leftState.isEnded !== rightState.isEnded) {
+            return leftState.isEnded ? 1 : -1;
+        }
+
+        return (right.date?.getTime() ?? 0) - (left.date?.getTime() ?? 0);
+    });
 </script>
 
 <div class="flex h-full min-h-0 flex-col bg-white/[0.02]" data-testid="roomSidePanelPolls">
@@ -55,14 +78,12 @@
         {:else}
             <div class="flex flex-col gap-2">
                 {#each polls as poll (poll.id)}
-                    <button
-                        type="button"
-                        class="m-0 rounded-lg border border-solid border-white/10 bg-white/[0.03] px-3 py-3 text-left transition-colors hover:bg-white/[0.08]"
+                    <div
+                        class="rounded-lg border border-solid border-white/10 bg-white/[0.03] px-3 py-3 text-left"
                         data-testid="roomSidePanelPollItem"
-                        on:click={() => focusPoll(poll).catch((error) => console.error(error))}
                     >
-                        <RoomSidePanelPollItem {poll} />
-                    </button>
+                        <RoomSidePanelPollItem {poll} onFocusPoll={() => focusPoll(poll)} />
+                    </div>
                 {/each}
             </div>
         {/if}

@@ -2,7 +2,13 @@
     import { afterUpdate, beforeUpdate, onMount, tick } from "svelte";
     import { get, readable, type Readable } from "svelte/store";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import type { ChatConversation, ChatMessage, ChatTimelineItem } from "../../Connection/ChatConnection";
+    import type {
+        ChatConversation,
+        ChatMessage,
+        ChatRoom,
+        ChatThreadSummary,
+        ChatTimelineItem,
+    } from "../../Connection/ChatConnection";
     import type { PictureStore } from "../../../Stores/PictureStore";
     import getCloseImg from "../../images/get-close.png";
     import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
@@ -55,11 +61,13 @@
     const emptyTimelineItems = readable<readonly ChatTimelineItem[]>([]);
     const emptyRoomName = readable("");
     const emptyTypingMembers = readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>>([]);
+    const emptyThreads = readable<readonly ChatThreadSummary[]>([]);
 
     let timelineItems: Readable<readonly ChatTimelineItem[]> = emptyTimelineItems;
     let roomName: Readable<string> = emptyRoomName;
     let typingMembers: Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>> =
         emptyTypingMembers;
+    let threads: Readable<readonly ChatThreadSummary[]> = emptyThreads;
 
     function getTimelineItemsStore(currentRoom: ChatConversation | undefined): Readable<readonly ChatTimelineItem[]> {
         return currentRoom?.timelineItems ?? emptyTimelineItems;
@@ -75,9 +83,18 @@
         return currentRoom?.typingMembers ?? emptyTypingMembers;
     }
 
+    function getThreadsStore(currentRoom: ChatConversation | undefined): Readable<readonly ChatThreadSummary[]> {
+        if (currentRoom?.conversationKind !== "room") {
+            return emptyThreads;
+        }
+        return (currentRoom as ChatRoom).threads ?? emptyThreads;
+    }
+
     $: timelineItems = getTimelineItemsStore(room);
     $: roomName = getRoomNameStore(room);
     $: typingMembers = getTypingMembersStore(room);
+    $: threads = getThreadsStore(room);
+    $: unreadThreadCount = $threads.filter((thread) => thread.hasUnreadMessages).length;
     $: shouldReserveHeaderEndSpace = shouldReserveFloatingCloseButtonSpace(
         $hideActionBarStoreBecauseOfChatBar,
         showRoomSidePanelToggle
@@ -424,7 +441,7 @@
                 {#if showRoomSidePanelToggle}
                     <button
                         type="button"
-                        class="p-3 rounded aspect-square w-12 h-12 shrink-0 !text-white hover:bg-white/10 {$roomSidePanelStore.isOpen
+                        class="relative p-3 rounded aspect-square w-12 h-12 shrink-0 !text-white hover:bg-white/10 {$roomSidePanelStore.isOpen
                             ? 'bg-white/10'
                             : ''}"
                         data-testid="toggleRoomSidePanelButton"
@@ -435,6 +452,12 @@
                         on:click={() => roomSidePanelStore.toggle()}
                     >
                         <IconTableOptions font-size="20" />
+                        {#if unreadThreadCount > 0}
+                            <span
+                                class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border border-solid border-contrast bg-success"
+                                data-testid="toggleRoomSidePanelUnreadBadge"
+                            />
+                        {/if}
                     </button>
                 {:else}
                     <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" aria-hidden="true" />

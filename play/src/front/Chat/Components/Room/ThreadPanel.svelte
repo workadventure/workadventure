@@ -61,13 +61,26 @@
                     {#each $threadSummaries as summary (summary.rootMessageId)}
                         <button
                             type="button"
-                            class="m-0 rounded-lg border border-solid border-white/10 bg-white/5 px-3 py-3 text-left transition-colors hover:bg-white/10"
+                            class="m-0 rounded-lg border border-solid border-white/10 bg-white/5 px-3 py-3 text-left transition-colors hover:bg-white/10 {summary.hasUnreadMessages
+                                ? 'font-bold ring-1 ring-success/40'
+                                : ''}"
                             data-testid={`threadPanelItem-${summary.rootMessageId}`}
                             on:click={() => openThread(summary.rootMessageId)}
                         >
-                            <div class="truncate text-sm font-semibold text-white">
-                                {#if summary.rootMessageSenderName}{summary.rootMessageSenderName}:
-                                {/if}{summary.rootMessagePreview ?? $LL.chat.thread.defaultPreview()}
+                            <div class="flex min-w-0 items-center gap-2">
+                                <div class="truncate text-sm font-semibold text-white">
+                                    {#if summary.rootMessageSenderName}{summary.rootMessageSenderName}:
+                                    {/if}{summary.rootMessagePreview ?? $LL.chat.thread.defaultPreview()}
+                                </div>
+                                {#if summary.hasUnreadMessages}
+                                    <span
+                                        class="ml-auto flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-success px-1.5 text-xs font-bold text-contrast"
+                                        data-testid={`threadPanelItemUnread-${summary.rootMessageId}`}
+                                        aria-label={`${summary.unreadNotificationCount} unread`}
+                                    >
+                                        {summary.unreadNotificationCount > 9 ? "9+" : summary.unreadNotificationCount}
+                                    </span>
+                                {/if}
                             </div>
                             <div
                                 class="mt-2 flex items-center gap-2 text-xs font-semibold opacity-75"

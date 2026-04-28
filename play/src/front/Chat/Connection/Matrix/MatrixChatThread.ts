@@ -72,15 +72,31 @@ export class MatrixChatThread implements ChatThread {
         this.messages = derived([this.rootMessage, this.replyMessages], ([$rootMessage, $replyMessages]) => {
             return $rootMessage ? [$rootMessage, ...$replyMessages] : [...$replyMessages];
         });
-        this.timelineItems = derived(this.messages, ($messages) =>
-            $messages.map(
-                (message): ChatTimelineItem => ({
-                    kind: "message",
-                    id: message.id,
-                    date: message.date,
-                    message,
-                })
-            )
+        this.timelineItems = derived([this.messages, parentRoom.pollItems], ([$messages, $polls]) =>
+            [
+                ...$messages.map(
+                    (message): ChatTimelineItem => ({
+                        kind: "message",
+                        id: message.id,
+                        date: message.date,
+                        message,
+                    })
+                ),
+                ...$polls
+                    .filter((poll) => poll.context.kind === "thread" && poll.context.threadRootMessageId === this.id)
+                    .map(
+                        (poll): ChatTimelineItem => ({
+                            kind: "poll",
+                            id: poll.id,
+                            date: poll.date,
+                            poll,
+                        })
+                    ),
+            ].sort((left, right) => {
+                const leftTs = left.date?.getTime() ?? 0;
+                const rightTs = right.date?.getTime() ?? 0;
+                return leftTs - rightTs;
+            })
         );
         this.timelineWindow = new TimelineWindow(parentRoom.getMatrixRoom().client, thread.getUnfilteredTimelineSet());
 
@@ -116,6 +132,7 @@ export class MatrixChatThread implements ChatThread {
         const events = this.timelineWindow.getEvents();
         const messages = await Promise.all(events.map((event) => this.readEventsToAddMessagesAndReactions(event)));
         this.replyMessages.push(...messages.filter((message): message is MatrixChatMessage => message !== undefined));
+        await this.parentRoom.processPollEvents(events);
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
     }
 

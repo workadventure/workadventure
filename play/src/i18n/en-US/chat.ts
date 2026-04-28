@@ -391,10 +391,33 @@ const chat: BaseTranslation = {
     roomPanel: {
         toggleOpen: "Open room panel",
         toggleClose: "Close room panel",
+        back: "Back to room overview",
         sections: {
             threads: "Threads",
             polls: "Polls",
             participants: "Participants",
+            settings: "Settings",
+        },
+        home: {
+            directRoom: "Direct room",
+            groupRoom: "Group room",
+            encrypted: "Encrypted",
+            notEncrypted: "Not encrypted",
+            readOnly: "Read-only",
+        },
+        settings: {
+            roomType: "Room type",
+            encryption: "Encryption",
+            joinRule: "Access",
+            restrictedTo: "Restricted to",
+            readOnly: "These settings are read-only here.",
+            unknown: "Unknown",
+            joinRules: {
+                public: "Public",
+                invite: "Invite only",
+                restricted: "Restricted",
+                knock: "Request access",
+            },
         },
         pollsEmpty: "No polls yet",
         participantsEmpty: "No participants yet",

@@ -53,6 +53,8 @@ import type {
     ChatRoomPollCreation,
     ChatPollCreationCapability,
     ChatPollKind,
+    ChatPollContext,
+    ChatRoomPrivacyState,
     ChatTimelineItem,
     ChatThreadSummary,
     memberTypingInformation,
@@ -102,6 +104,7 @@ export class MatrixChatRoom
     readonly avatarFallbackColor: Readable<string | undefined>;
     messages: SearchableArrayStore<string, MatrixChatMessage>;
     polls: SearchableArrayStore<string, MatrixChatPoll>;
+    readonly pollItems: Readable<readonly MatrixChatPoll[]>;
     readonly threads: Readable<readonly ChatThreadSummary[]>;
     timelineItems: Readable<readonly ChatTimelineItem[]>;
     readonly pollCreation: ChatPollCreationCapability;
@@ -114,6 +117,7 @@ export class MatrixChatRoom
     timelineWindow: TimelineWindow;
     inMemoryEventsContent: Map<EventId, IContent>;
     isEncrypted!: Writable<boolean>;
+    readonly privacyState: Writable<ChatRoomPrivacyState>;
     typingMembers: Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>>;
     isRoomFolder = false;
     areNotificationsMuted = writable(false);
@@ -186,6 +190,8 @@ export class MatrixChatRoom
         );
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.polls = new SearchableArrayStore((item: MatrixChatPoll) => item.id);
+        this.pollItems = this.polls;
+        this.privacyState = writable(this.getMatrixRoomPrivacyState());
         this.pollCreation = {
             canCreate: readable(true),
             supportedKinds: ["open", "closed"],
@@ -209,7 +215,7 @@ export class MatrixChatRoom
                     })
                 ),
                 ...Array.from(
-                    $polls,
+                    $polls.filter((poll) => poll.context.kind === "room"),
                     (poll): ChatTimelineItem => ({
                         kind: "poll",
                         id: poll.id,
@@ -472,7 +478,7 @@ export class MatrixChatRoom
         }
 
         if (!this.polls.has(poll.pollId)) {
-            this.polls.push(new MatrixChatPoll(poll, this.matrixRoom));
+            this.polls.push(new MatrixChatPoll(poll, this.matrixRoom, this.getPollContext(poll)));
             return;
         }
 
@@ -487,7 +493,7 @@ export class MatrixChatRoom
         this.refreshRoomType();
     }
 
-    private async processPollEvents(events: MatrixEvent[]): Promise<void> {
+    public async processPollEvents(events: MatrixEvent[]): Promise<void> {
         await this.matrixRoom.processPollEvents(events);
         await this.syncPollItemsFromRoom();
     }
@@ -508,7 +514,7 @@ export class MatrixChatRoom
                 continue;
             }
 
-            this.polls.push(new MatrixChatPoll(poll, this.matrixRoom));
+            this.polls.push(new MatrixChatPoll(poll, this.matrixRoom, this.getPollContext(poll)));
         }
 
         await Promise.all(pollRefreshes);
@@ -532,7 +538,30 @@ export class MatrixChatRoom
             return false;
         }
 
-        return !(rootEvent.threadRootId && rootEvent.threadRootId !== rootEvent.getId());
+        return true;
+    }
+
+    private getPollContext(poll: Poll): ChatPollContext {
+        const rootEvent = poll.rootEvent;
+        const pollEventId = rootEvent.getId();
+        const threadRootMessageId = rootEvent.threadRootId;
+
+        if (!threadRootMessageId || threadRootMessageId === pollEventId) {
+            return { kind: "room" };
+        }
+
+        const threadSummary = getThreadSummary(
+            this.matrixRoom.getThread(threadRootMessageId),
+            this.matrixRoom,
+            threadRootMessageId
+        );
+
+        return {
+            kind: "thread",
+            threadRootMessageId,
+            threadPreview: threadSummary?.rootMessagePreview,
+            threadSenderName: threadSummary?.rootMessageSenderName,
+        };
     }
 
     private isPollRelatedEvent(event: MatrixEvent): boolean {
@@ -572,9 +601,19 @@ export class MatrixChatRoom
         if (event.getType() === EventType.SpaceParent) {
             this.refreshRoomType();
         }
+        if (
+            event.getType() === EventType.SpaceParent ||
+            event.getType() === EventType.RoomJoinRules ||
+            event.getType() === EventType.RoomHistoryVisibility
+        ) {
+            this.privacyState.set(this.getMatrixRoomPrivacyState());
+        }
         if (get(this.isEncrypted)) return;
         const isEncrypted = !!state.getStateEvents(EventType.RoomEncryption)[0];
-        if (isEncrypted) this.isEncrypted.set(isEncrypted);
+        if (isEncrypted) {
+            this.isEncrypted.set(isEncrypted);
+            this.privacyState.set(this.getMatrixRoomPrivacyState());
+        }
     }
     /**
      * Strict "newly arrived" rule (see Element Web / matrix-js-sdk): only treat as live when
@@ -656,6 +695,9 @@ export class MatrixChatRoom
     ) {
         this.hasUnreadMessages.set(this.matrixRoom.getUnreadNotificationCount() > 0);
         this.unreadNotificationCount.set(this.matrixRoom.getUnreadNotificationCount());
+        if (threadId) {
+            this.refreshThreadSummary(threadId);
+        }
     }
 
     public async retrySendingEvents(): Promise<void> {
@@ -1054,6 +1096,34 @@ export class MatrixChatRoom
             [];
         const ev = events.find((e) => e.getStateKey() === "") ?? events[0];
         return ev?.getContent()?.is_direct === true;
+    }
+
+    private getMatrixRoomPrivacyState(): ChatRoomPrivacyState {
+        const roomState = this.matrixRoom.getLiveTimeline()?.getState(EventTimeline.FORWARDS);
+        const joinRulesEvent = roomState?.getStateEvents(EventType.RoomJoinRules, "");
+        const historyVisibilityEvent = roomState?.getStateEvents(EventType.RoomHistoryVisibility, "");
+        const spaceParentEvent = roomState
+            ?.getStateEvents(EventType.SpaceParent)
+            ?.find((event) => Boolean(event.getStateKey()));
+        const joinRuleContent = joinRulesEvent?.getContent();
+        const historyVisibilityContent = historyVisibilityEvent?.getContent();
+        const restrictedRoomId = Array.isArray(joinRuleContent?.allow)
+            ? joinRuleContent.allow.find((rule: { room_id?: unknown }) => typeof rule.room_id === "string")?.room_id
+            : undefined;
+
+        return {
+            joinRule: typeof joinRuleContent?.join_rule === "string" ? joinRuleContent.join_rule : undefined,
+            historyVisibility:
+                typeof historyVisibilityContent?.history_visibility === "string"
+                    ? historyVisibilityContent.history_visibility
+                    : undefined,
+            restrictedRoomId:
+                typeof restrictedRoomId === "string"
+                    ? restrictedRoomId
+                    : typeof spaceParentEvent?.getStateKey() === "string"
+                    ? spaceParentEvent.getStateKey()
+                    : undefined,
+        };
     }
 
     /**

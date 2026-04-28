@@ -17,7 +17,9 @@
 
 <button
     type="button"
-    class="mt-1.5 text-left rounded-md border border-solid border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition-colors"
+    class="mt-1.5 text-left rounded-md border border-solid border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition-colors {summary.hasUnreadMessages
+        ? 'font-bold ring-1 ring-success/40'
+        : ''}"
     data-testid="threadSummary"
     on:click={openThread}
 >
@@ -28,6 +30,15 @@
                 ? $LL.chat.thread.replySingular()
                 : $LL.chat.thread.replyPlural({ count: summary.replyCount })}</span
         >
+        {#if summary.hasUnreadMessages}
+            <span
+                class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-success px-1.5 text-xs font-bold text-contrast"
+                data-testid="threadSummaryUnread"
+                aria-label={`${summary.unreadNotificationCount} unread`}
+            >
+                {summary.unreadNotificationCount > 9 ? "9+" : summary.unreadNotificationCount}
+            </span>
+        {/if}
     </div>
 
     {#if summary.lastReplyPreview}
