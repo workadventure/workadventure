@@ -96,6 +96,8 @@ export interface ChatRoom {
     readonly stopTyping: () => Promise<object>;
     readonly isRoomFolder: boolean;
     readonly lastMessageTimestamp: number;
+    /** Mute state for notifications; implementations default to false. */
+    readonly areNotificationsMuted: Readable<boolean>;
 }
 
 export interface ChatRoomMembershipManagement {
