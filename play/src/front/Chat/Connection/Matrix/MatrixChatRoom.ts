@@ -52,6 +52,7 @@ import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMe
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
+import { hasValidViaEntries } from "./MatrixSpaceRelations";
 import { resolveChatUserColor } from "./services/WaMatrixProfileService";
 import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
 
@@ -749,7 +750,7 @@ export class MatrixChatRoom
                 .getLiveTimeline()
                 ?.getState(EventTimeline.FORWARDS)
                 ?.getStateEvents(EventType.SpaceParent) ?? [];
-        return events.some((ev) => Boolean(ev.getStateKey()));
+        return events.some((ev) => Boolean(ev.getStateKey()) && hasValidViaEntries(ev.getContent()));
     }
 
     /** `m.room.create` content `is_direct` (Matrix-native DM flag). */

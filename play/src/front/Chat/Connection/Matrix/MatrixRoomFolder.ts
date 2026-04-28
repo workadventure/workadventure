@@ -11,6 +11,7 @@ import { matrixRateLimiter } from "../../Services/MatrixRateLimiter";
 import { ignoredSuggestedRoomIdsStore } from "../../Stores/ChatStore";
 import type { RoomFolder } from "../ChatConnection";
 import { MatrixChatRoom } from "./MatrixChatRoom";
+import { hasValidViaEntries } from "./MatrixSpaceRelations";
 
 export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     roomList: MapStore<MatrixChatRoom["id"], MatrixChatRoom> = new MapStore<MatrixChatRoom["id"], MatrixChatRoom>();
@@ -138,7 +139,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             }
 
             const getNodePromise = Array.from(this.folderList.values()).map((folder) => {
-                return folder.getParentOfNode(id);
+                return folder.getNode(id);
             });
 
             const nodes = await Promise.all(getNodePromise);
@@ -245,24 +246,26 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             ?.getState(EventTimeline.FORWARDS)
             ?.getStateEvents(EventType.SpaceChild);
 
-        childEvents?.forEach((childEvent) => {
-            const roomId = childEvent.event.state_key;
-            const childRoom = this.room.client.getRoom(roomId);
+        childEvents
+            ?.filter((childEvent) => hasValidViaEntries(childEvent.getContent()))
+            .forEach((childEvent) => {
+                const roomId = childEvent.event.state_key;
+                const childRoom = this.room.client.getRoom(roomId);
 
-            if (!childRoom || roomId === this.id) return;
+                if (!childRoom || roomId === this.id) return;
 
-            if (childRoom.isSpaceRoom()) {
-                this.folderList.set(childRoom.roomId, new MatrixRoomFolder(childRoom));
-            } else {
-                const matrixChatRoom = new MatrixChatRoom(childRoom);
-                if (
-                    get(matrixChatRoom.myMembership) === KnownMembership.Join ||
-                    get(matrixChatRoom.myMembership) === KnownMembership.Invite
-                ) {
-                    this.roomList.set(childRoom.roomId, matrixChatRoom);
+                if (childRoom.isSpaceRoom()) {
+                    this.folderList.set(childRoom.roomId, new MatrixRoomFolder(childRoom));
+                } else {
+                    const matrixChatRoom = new MatrixChatRoom(childRoom);
+                    if (
+                        get(matrixChatRoom.myMembership) === KnownMembership.Join ||
+                        get(matrixChatRoom.myMembership) === KnownMembership.Invite
+                    ) {
+                        this.roomList.set(childRoom.roomId, matrixChatRoom);
+                    }
                 }
-            }
-        });
+            });
     }
 
     async refreshRooms() {
@@ -361,6 +364,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         if (!childEvents) return;
 
         const children = childEvents
+            .filter((ev) => hasValidViaEntries(ev.getContent()))
             .map((ev) => {
                 const stateKey = ev.getStateKey();
                 if (!stateKey) return null;
