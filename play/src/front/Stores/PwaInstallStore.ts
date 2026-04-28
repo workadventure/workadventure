@@ -38,8 +38,17 @@ export function initPwaInstallUiListeners(): () => void {
         window.__workadventureDeferredPwaPrompt = e as BeforeInstallPromptEvent;
         syncFromWindow();
     };
+    const onAppInstalled = () => {
+        window.__workadventureDeferredPwaPrompt = null;
+        pwaInstallProfileMenuEligibleStore.set(false);
+        syncFromWindow();
+    };
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
-    return () => window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+    window.addEventListener("appinstalled", onAppInstalled);
+    return () => {
+        window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+        window.removeEventListener("appinstalled", onAppInstalled);
+    };
 }
 
 export async function installPwaFromStore(): Promise<void> {
@@ -51,9 +60,11 @@ export async function installPwaFromStore(): Promise<void> {
     try {
         await state.deferredPrompt.prompt();
         const { outcome } = await state.deferredPrompt.userChoice;
+        console.log("outcome", outcome);
         analyticsClient.pwaInstallOutcome(outcome);
         if (outcome === "accepted") {
             window.__workadventureDeferredPwaPrompt = null;
+            pwaInstallProfileMenuEligibleStore.set(false);
             store.update((s) => ({ ...s, deferredPrompt: null }));
         }
     } finally {
@@ -63,7 +74,6 @@ export async function installPwaFromStore(): Promise<void> {
 }
 
 export function continuePwaInBrowser(): void {
-    analyticsClient.pwaContinueInBrowserClick();
     gameManager.completePwaInstall();
 }
 
