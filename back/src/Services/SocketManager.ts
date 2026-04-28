@@ -779,11 +779,18 @@ export class SocketManager {
             }
         }
 
+        // Jitsi has two prosody plugins that can grant moderator rights from a JWT:
+        //   - token_moderation reads `moderator` at the top level of the token,
+        //   - token_affiliation reads `context.user.moderator`.
+        // Emit both so deployments using either plugin (#5135) work unchanged.
+        // Dropping the top-level field would break installs still on
+        // token_moderation; adding the context-level field is a no-op for them.
         const jwt = new SignJWT({
             context: {
                 user: {
                     id: user.id,
                     name: user.name,
+                    moderator: isAdmin,
                 },
                 features: {
                     livestreaming: isAdmin,
