@@ -339,7 +339,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             this.attachDisplayNameMatrixSync();
 
             // Refresh all joined folders children to ensure the UI is up to date
-            this.refreshAllJoinedFoldersChildren();
+            //this.refreshAllJoinedFoldersChildren();
         } catch (error) {
             this.connectionStatus.set("OFFLINE");
             console.error(error);
