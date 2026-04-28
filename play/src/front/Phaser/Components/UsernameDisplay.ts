@@ -110,6 +110,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         if ("roundRect" in context) {
             context.roundRect(0, 0, textureWidth, textureHeight, PLAYER_NAME_BACKGROUND_RADIUS);
         } else {
+            // @ts-expect-error - rect is not a method of type never
             context.rect(0, 0, textureWidth, textureHeight);
         }
         context.fill();
