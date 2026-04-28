@@ -5,8 +5,10 @@ import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager"
 import { MegaphoneIcon } from "./MegaphoneIcon";
 import { PlayerStatusDot } from "./PlayerStatusDot";
 
-const DEFAULT_PLAYER_NAME_OUTLINE_COLOR = "#14304C";
+const DEFAULT_PLAYER_NAME_OUTLINE_COLOR = "#000000";
 const CORRECTION_RATE = 0.75;
+const PLAYER_NAME_BACKGROUND_COLOR = "rgba(20, 48, 76, 0.7)"; // Design system: brand-blue + opacity
+const PLAYER_NAME_BACKGROUND_RADIUS = 4;
 
 export class UsernameDisplay extends Phaser.GameObjects.Container {
     private static nextPlayerNameTextureId = 0;
@@ -88,6 +90,14 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         context.textAlign = "center";
         context.textBaseline = "middle";
         context.lineJoin = "round";
+        context.fillStyle = PLAYER_NAME_BACKGROUND_COLOR;
+        context.beginPath();
+        if ("roundRect" in context) {
+            context.roundRect(0, 0, textureWidth, textureHeight, PLAYER_NAME_BACKGROUND_RADIUS);
+        } else {
+            context.rect(0, 0, textureWidth, textureHeight);
+        }
+        context.fill();
 
         if (dynamicOutlineColor) {
             context.lineWidth = fullOutlineThickness;
