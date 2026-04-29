@@ -51,6 +51,7 @@
   "devDependencies": {
     "@fontsource/roboto": "^4.5.8",
     "@iconify-json/tabler": "^1.1.113",
+    "@posthog/types": "^1.372.5",
     "@rollup/plugin-inject": "^5.0.5",
     "@sentry/vite-plugin": "^4.6.1",
     "@sveltejs/vite-plugin-svelte": "^3.1.2",
@@ -164,7 +165,6 @@
     "phaser": "3.86.0",
     "phaser-animated-tiles": "workadventure/phaser-animated-tiles#7e02ce91a100338a27f75f7b443bacd12459fd0f",
     "phaser3-rex-plugins": "1.60.10",
-    "posthog-js": "^1.372.3",
     "prom-client": "^14.1.0",
     "protobuf-fieldmask": "^2.0.0",
     "qs": "^6.11.0",
