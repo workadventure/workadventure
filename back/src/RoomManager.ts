@@ -57,6 +57,179 @@ const roomManager = {
         let room: GameRoom | null = null;
         let user: User | null = null;
         let pongTimeoutId: NodeJS.Timeout | undefined;
+        let messageProcessingPromise = Promise.resolve();
+        const setRoom = (gameRoom: GameRoom | null) => {
+            room = gameRoom;
+        };
+        const setUser = (myUser: User | null) => {
+            user = myUser;
+        };
+
+        const handleMessage = async (message: PusherToBackMessage) => {
+            if (!message.message) {
+                console.error("Empty message received");
+                Sentry.captureException(`Empty message received ${JSON.stringify(room)}`);
+                return;
+            }
+
+            try {
+                if (room === null || user === null) {
+                    if (message.message.$case === "connectToRoomMessage") {
+                        const gameRoom = await socketManager.handleConnectToRoom(
+                            call,
+                            message.message.connectToRoomMessage
+                        );
+                        if (call.writable) {
+                            setRoom(gameRoom);
+                        } else {
+                            // Connection may have been closed before the init was finished, so we have to manually disconnect the user.
+                            socketManager.cleanupRoomIfEmpty(gameRoom);
+                        }
+                    } else if (message.message.$case === "joinRoomMessage") {
+                        if (room === null) {
+                            console.error("joinRoomMessage received before connectToRoomMessage");
+                            Sentry.captureMessage("joinRoomMessage received before connectToRoomMessage");
+                            emitError(call, new Error("joinRoomMessage received before connectToRoomMessage"));
+                            call.end();
+                            return;
+                        }
+                        const myUser = await socketManager.handleJoinRoom(call, room, message.message.joinRoomMessage);
+                        if (call.writable) {
+                            setUser(myUser);
+                        } else {
+                            // Connection may have been closed before the init was finished, so we have to manually disconnect the user.
+                            if (room) {
+                                socketManager.leaveRoom(room, myUser);
+                            }
+                        }
+                    } else if (message.message.$case !== "pingMessage") {
+                        throw new Error(
+                            `The first message sent MUST be of type ConnectToRoomMessage and the second message joinRoomMessage. Got ${message.message.$case}`
+                        );
+                    }
+                } else {
+                    switch (message.message.$case) {
+                        case "connectToRoomMessage": {
+                            throw new Error("Cannot call ConnectToRoomMessage twice!");
+                        }
+                        case "joinRoomMessage": {
+                            throw new Error("Cannot call JoinRoomMessage twice!");
+                        }
+                        case "userMovesMessage": {
+                            socketManager.handleUserMovesMessage(room, user, message.message.userMovesMessage);
+                            break;
+                        }
+                        case "itemEventMessage": {
+                            socketManager.handleItemEvent(room, user, message.message.itemEventMessage);
+                            break;
+                        }
+                        case "variableMessage": {
+                            await socketManager.handleVariableEvent(room, user, message.message.variableMessage);
+                            break;
+                        }
+                        case "queryMessage": {
+                            await socketManager.handleQueryMessage(room, user, message.message.queryMessage);
+                            break;
+                        }
+                        case "abortQueryMessage": {
+                            socketManager.handleAbortQueryMessage(room, user, message.message.abortQueryMessage);
+                            break;
+                        }
+                        case "emotePromptMessage": {
+                            socketManager.handleEmoteEventMessage(room, user, message.message.emotePromptMessage);
+                            break;
+                        }
+                        case "followRequestMessage": {
+                            socketManager.handleFollowRequestMessage(room, user, message.message.followRequestMessage);
+                            break;
+                        }
+                        case "followConfirmationMessage": {
+                            socketManager.handleFollowConfirmationMessage(
+                                room,
+                                user,
+                                message.message.followConfirmationMessage
+                            );
+                            break;
+                        }
+                        case "followAbortMessage": {
+                            socketManager.handleFollowAbortMessage(room, user, message.message.followAbortMessage);
+                            break;
+                        }
+                        case "lockGroupPromptMessage": {
+                            socketManager.handleLockGroupPromptMessage(
+                                room,
+                                user,
+                                message.message.lockGroupPromptMessage
+                            );
+                            break;
+                        }
+                        case "editMapCommandMessage": {
+                            room.forwardEditMapCommandMessage(user, message.message.editMapCommandMessage);
+                            break;
+                        }
+                        case "sendUserMessage": {
+                            socketManager.handleSendUserMessage(user, message.message.sendUserMessage);
+                            break;
+                        }
+                        case "banUserMessage": {
+                            socketManager.handleBanUserMessage(room, user, message.message.banUserMessage);
+                            break;
+                        }
+                        case "setPlayerDetailsMessage": {
+                            socketManager.handleSetPlayerDetails(room, user, message.message.setPlayerDetailsMessage);
+                            break;
+                        }
+                        case "pingMessage": {
+                            // Do nothing
+                            break;
+                        }
+                        case "askPositionMessage": {
+                            socketManager.handleAskPositionMessage(room, user, message.message.askPositionMessage);
+                            break;
+                        }
+                        case "meetingInvitationRequestMessage": {
+                            socketManager.handleMeetingInvitationRequestMessage(
+                                room,
+                                user,
+                                message.message.meetingInvitationRequestMessage
+                            );
+                            break;
+                        }
+                        case "meetingInvitationResponseMessage": {
+                            socketManager.handleMeetingInvitationResponseMessage(
+                                room,
+                                user,
+                                message.message.meetingInvitationResponseMessage
+                            );
+                            break;
+                        }
+                        case "publicEvent":
+                        case "privateEvent": {
+                            throw new Error("Cannot reach here, this is handled by the space manager");
+                        }
+                        case "setAreaPropertyVariableMessage": {
+                            await socketManager.handleSetAreaPropertyVariableEvent(
+                                room,
+                                user,
+                                message.message.setAreaPropertyVariableMessage
+                            );
+                            break;
+                        }
+                        default: {
+                            const _exhaustiveCheck: never = message.message;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error(
+                    "An error occurred while managing a message of type PusherToBackMessage:" + message.message.$case,
+                    e
+                );
+                Sentry.captureException(e);
+                emitError(call, e);
+                closeConnection(`Error while handling joinRoom message: ${asError(e).message}`);
+            }
+        };
 
         call.on("data", (message: PusherToBackMessage) => {
             // On each message, let's reset the pong timeout
@@ -65,197 +238,12 @@ const roomManager = {
                 pongTimeoutId = undefined;
             }
 
-            (async () => {
-                if (!message.message) {
-                    console.error("Empty message received");
-                    Sentry.captureException(`Empty message received ${JSON.stringify(room)}`);
-                    return;
-                }
-
-                try {
-                    if (room === null || user === null) {
-                        if (message.message.$case === "connectToRoomMessage") {
-                            socketManager
-                                .handleConnectToRoom(call, message.message.connectToRoomMessage)
-                                .then((gameRoom) => {
-                                    if (call.writable) {
-                                        room = gameRoom;
-                                    } else {
-                                        // Connection may have been closed before the init was finished, so we have to manually disconnect the user.
-                                        socketManager.cleanupRoomIfEmpty(gameRoom);
-                                    }
-                                })
-                                .catch((e) => {
-                                    console.error("message handleConnectToRoom error: ", e);
-                                    Sentry.captureException(e);
-                                    emitError(call, e);
-                                    call.end();
-                                });
-                        } else if (message.message.$case === "joinRoomMessage") {
-                            if (room === null) {
-                                console.error("joinRoomMessage received before connectToRoomMessage");
-                                Sentry.captureMessage("joinRoomMessage received before connectToRoomMessage");
-                                emitError(call, new Error("joinRoomMessage received before connectToRoomMessage"));
-                                call.end();
-                                return;
-                            }
-                            socketManager
-                                .handleJoinRoom(call, room, message.message.joinRoomMessage)
-                                .then((myUser) => {
-                                    if (call.writable) {
-                                        user = myUser;
-                                    } else {
-                                        // Connection may have been closed before the init was finished, so we have to manually disconnect the user.
-                                        if (room) {
-                                            socketManager.leaveRoom(room, myUser);
-                                        }
-                                    }
-                                })
-                                .catch((e) => {
-                                    console.error("message handleJoinRoom error: ", e);
-                                    Sentry.captureException(e);
-                                    emitError(call, e);
-                                });
-                        } else if (message.message.$case !== "pingMessage") {
-                            throw new Error(
-                                `The first message sent MUST be of type ConnectToRoomMessage and the second message joinRoomMessage. Got ${message.message.$case}`
-                            );
-                        }
-                    } else {
-                        switch (message.message.$case) {
-                            case "connectToRoomMessage": {
-                                throw new Error("Cannot call ConnectToRoomMessage twice!");
-                            }
-                            case "joinRoomMessage": {
-                                throw new Error("Cannot call JoinRoomMessage twice!");
-                            }
-                            case "userMovesMessage": {
-                                socketManager.handleUserMovesMessage(room, user, message.message.userMovesMessage);
-                                break;
-                            }
-                            case "itemEventMessage": {
-                                socketManager.handleItemEvent(room, user, message.message.itemEventMessage);
-                                break;
-                            }
-                            case "variableMessage": {
-                                await socketManager.handleVariableEvent(room, user, message.message.variableMessage);
-                                break;
-                            }
-                            case "queryMessage": {
-                                await socketManager.handleQueryMessage(room, user, message.message.queryMessage);
-                                break;
-                            }
-                            case "abortQueryMessage": {
-                                socketManager.handleAbortQueryMessage(room, user, message.message.abortQueryMessage);
-                                break;
-                            }
-                            case "emotePromptMessage": {
-                                socketManager.handleEmoteEventMessage(room, user, message.message.emotePromptMessage);
-                                break;
-                            }
-                            case "followRequestMessage": {
-                                socketManager.handleFollowRequestMessage(
-                                    room,
-                                    user,
-                                    message.message.followRequestMessage
-                                );
-                                break;
-                            }
-                            case "followConfirmationMessage": {
-                                socketManager.handleFollowConfirmationMessage(
-                                    room,
-                                    user,
-                                    message.message.followConfirmationMessage
-                                );
-                                break;
-                            }
-                            case "followAbortMessage": {
-                                socketManager.handleFollowAbortMessage(room, user, message.message.followAbortMessage);
-                                break;
-                            }
-                            case "lockGroupPromptMessage": {
-                                socketManager.handleLockGroupPromptMessage(
-                                    room,
-                                    user,
-                                    message.message.lockGroupPromptMessage
-                                );
-                                break;
-                            }
-                            case "editMapCommandMessage": {
-                                room.forwardEditMapCommandMessage(user, message.message.editMapCommandMessage);
-                                break;
-                            }
-                            case "sendUserMessage": {
-                                socketManager.handleSendUserMessage(user, message.message.sendUserMessage);
-                                break;
-                            }
-                            case "banUserMessage": {
-                                socketManager.handleBanUserMessage(room, user, message.message.banUserMessage);
-                                break;
-                            }
-                            case "setPlayerDetailsMessage": {
-                                socketManager.handleSetPlayerDetails(
-                                    room,
-                                    user,
-                                    message.message.setPlayerDetailsMessage
-                                );
-                                break;
-                            }
-                            case "pingMessage": {
-                                // Do nothing
-                                break;
-                            }
-                            case "askPositionMessage": {
-                                socketManager.handleAskPositionMessage(room, user, message.message.askPositionMessage);
-                                break;
-                            }
-                            case "meetingInvitationRequestMessage": {
-                                socketManager.handleMeetingInvitationRequestMessage(
-                                    room,
-                                    user,
-                                    message.message.meetingInvitationRequestMessage
-                                );
-                                break;
-                            }
-                            case "meetingInvitationResponseMessage": {
-                                socketManager.handleMeetingInvitationResponseMessage(
-                                    room,
-                                    user,
-                                    message.message.meetingInvitationResponseMessage
-                                );
-                                break;
-                            }
-                            case "publicEvent":
-                            case "privateEvent": {
-                                throw new Error("Cannot reach here, this is handled by the space manager");
-                            }
-                            case "setAreaPropertyVariableMessage": {
-                                await socketManager.handleSetAreaPropertyVariableEvent(
-                                    room,
-                                    user,
-                                    message.message.setAreaPropertyVariableMessage
-                                );
-                                break;
-                            }
-                            default: {
-                                const _exhaustiveCheck: never = message.message;
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.error(
-                        "An error occurred while managing a message of type PusherToBackMessage:" +
-                            message.message.$case,
-                        e
-                    );
+            messageProcessingPromise = messageProcessingPromise
+                .then(() => handleMessage(message))
+                .catch((e) => {
+                    console.error(e);
                     Sentry.captureException(e);
-                    emitError(call, e);
-                    closeConnection(`Error while handling joinRoom message: ${asError(e).message}`);
-                }
-            })().catch((e) => {
-                console.error(e);
-                Sentry.captureException(e);
-            });
+                });
         });
 
         const closeConnection = (reason?: string) => {
@@ -274,8 +262,8 @@ const roomManager = {
             } else {
                 call.end();
             }
-            room = null;
-            user = null;
+            setRoom(null);
+            setUser(null);
         };
 
         call.on("end", () => {

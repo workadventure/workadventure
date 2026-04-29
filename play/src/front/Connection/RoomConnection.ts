@@ -876,36 +876,21 @@ export class RoomConnection implements RoomConnection {
         const message = SetPlayerDetailsMessageTsProto.fromPartial({
             showVoiceIndicator: show,
         });
-        this.send({
-            message: {
-                $case: "setPlayerDetailsMessage",
-                setPlayerDetailsMessage: message,
-            },
-        });
+        this.sendPlayerDetailsMessage(message);
     }
 
     public emitPlayerStatusChange(availabilityStatus: AvailabilityStatus): void {
         const message = SetPlayerDetailsMessageTsProto.fromPartial({
             availabilityStatus,
         });
-        this.send({
-            message: {
-                $case: "setPlayerDetailsMessage",
-                setPlayerDetailsMessage: message,
-            },
-        });
+        this.sendPlayerDetailsMessage(message);
     }
 
     public emitPlayerChatID(chatID: string): void {
         const message = SetPlayerDetailsMessageTsProto.fromPartial({
             chatID,
         });
-        this.send({
-            message: {
-                $case: "setPlayerDetailsMessage",
-                setPlayerDetailsMessage: message,
-            },
-        });
+        this.sendPlayerDetailsMessage(message);
     }
 
     public emitPlayerOutlineColor(color: number | null) {
@@ -919,23 +904,40 @@ export class RoomConnection implements RoomConnection {
                 outlineColor: color,
             });
         }
-        this.send({
-            message: {
-                $case: "setPlayerDetailsMessage",
-                setPlayerDetailsMessage: message,
-            },
-        });
+        this.sendPlayerDetailsMessage(message);
     }
 
     public emitPlayerSayMessage(sayMessage: SayMessage | undefined) {
-        this.send({
+        this.sendPlayerDetailsMessage(
+            SetPlayerDetailsMessageTsProto.fromPartial({
+                sayMessage,
+            })
+        );
+    }
+
+    private sendPlayerDetailsMessage(setPlayerDetailsMessage: SetPlayerDetailsMessageTsProto): void {
+        const message: ClientToServerMessageTsProto = {
             message: {
                 $case: "setPlayerDetailsMessage",
-                setPlayerDetailsMessage: SetPlayerDetailsMessageTsProto.fromPartial({
-                    sayMessage,
-                }),
+                setPlayerDetailsMessage,
             },
-        });
+        };
+
+        if (this.userId !== null) {
+            this.send(message);
+            return;
+        }
+
+        this.roomJoinedPromise
+            .then(() => {
+                this.send(message);
+            })
+            .catch((error) => {
+                if (!this._closed) {
+                    console.error("Unable to send player details message before joining room", error);
+                    Sentry.captureException(error);
+                }
+            });
     }
 
     public closeConnection(): void {
