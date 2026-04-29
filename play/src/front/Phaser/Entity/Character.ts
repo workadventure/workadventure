@@ -175,7 +175,8 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.x,
                 this.y + playerNameY,
                 this.playerName,
-                playerNameOutlineColor
+                playerNameOutlineColor,
+                userId === "me"
             );
             this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true, true);
 
