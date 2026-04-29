@@ -19,7 +19,7 @@
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { defaultNativeIntegrationAppName } from "@workadventure/shared-utils";
-    import { hasChatRoomPollCreation, type ChatRoom } from "../../Connection/ChatConnection";
+    import { hasChatRoomPollCreation, type ChatConversation } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { chatInputFocusStore, shouldDisableChatInProximityRoomStore } from "../../../Stores/ChatStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
@@ -27,7 +27,6 @@
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { localUserStore } from "../../../Connection/LocalUserStore";
-    import { MatrixChatRoom } from "../../Connection/Matrix/MatrixChatRoom";
     import { draftMessageService } from "../../Services/DraftMessageService";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import PollCreateDialog from "../PollCreateDialog.svelte";
@@ -47,7 +46,7 @@
     import MessageInput from "./MessageInput.svelte";
     import { IconList, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
 
-    export let room: ChatRoom;
+    export let room: ChatConversation;
     export let disabled = false;
 
     let message = "";
@@ -64,9 +63,14 @@
     let applicationProperty: ApplicationProperty | undefined = undefined;
     const isProximityChatRoom = room instanceof ProximityChatRoom;
     const cannotCreatePoll = readable(false);
-    let pollCreation = hasChatRoomPollCreation(room) ? room.pollCreation : undefined;
+
+    function getPollCreationCapability(currentRoom: ChatConversation) {
+        return hasChatRoomPollCreation(currentRoom) ? currentRoom.pollCreation : undefined;
+    }
+
+    let pollCreation = getPollCreationCapability(room);
     let canCreatePoll = cannotCreatePoll;
-    $: pollCreation = hasChatRoomPollCreation(room) ? room.pollCreation : undefined;
+    $: pollCreation = getPollCreationCapability(room);
     $: canCreatePoll = pollCreation?.canCreate ?? cannotCreatePoll;
     let replyMessageId: string | null = null;
     const draftId = `${room.id}-${localUserStore.getChatId() ?? "0"}`;
@@ -172,10 +176,8 @@
         if (draft) {
             message = draft.message ?? "";
             if (draft.replyingToMessageId) {
-                if (room instanceof MatrixChatRoom) {
-                    let loadReplyMessage = await room.getMessageById(draft.replyingToMessageId);
-                    selectedChatMessageToReply.set(loadReplyMessage ?? null);
-                }
+                const loadReplyMessage = await room.getMessageById?.(draft.replyingToMessageId);
+                selectedChatMessageToReply.set(loadReplyMessage ?? null);
             }
         }
     });

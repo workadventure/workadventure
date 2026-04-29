@@ -1,7 +1,7 @@
 <script lang="ts">
     import { get } from "svelte/store";
     import { createEventDispatcher, onMount } from "svelte";
-    import type { ChatRoom } from "../../../Connection/ChatConnection";
+    import type { ChatConversation } from "../../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../../Stores/ChatStore";
     import { ProximityChatRoom } from "../../../Connection/Proximity/ProximityChatRoom";
     import { chatInputFocusStore } from "../../../../Stores/ChatStore";
@@ -14,7 +14,7 @@
 
     let files: FileList | undefined = undefined;
     let fileInputElement: HTMLInputElement;
-    export let room: ChatRoom;
+    export let room: ChatConversation;
     const isProximityChatRoom = room instanceof ProximityChatRoom;
 
     $: {

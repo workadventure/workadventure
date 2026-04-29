@@ -676,7 +676,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         }
 
         await this.client.startClient({
-            threadSupport: false,
+            threadSupport: true,
             //Detached to prevent using listener on localIdReplaced for each event
             pendingEventOrdering: PendingEventOrdering.Detached,
         });

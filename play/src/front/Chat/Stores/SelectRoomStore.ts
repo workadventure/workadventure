@@ -1,13 +1,15 @@
 import { get, writable } from "svelte/store";
-import type { ChatRoom } from "../Connection/ChatConnection";
+import type { ChatConversation } from "../Connection/ChatConnection";
 import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
+import { selectedThreadStore } from "./SelectedThreadStore";
+import { roomSidePanelStore } from "./RoomSidePanelStore";
 
 const createSelectedRoomStore = () => {
-    const { subscribe, update } = writable<ChatRoom | undefined>(undefined);
+    const { subscribe, update } = writable<ChatConversation | undefined>(undefined);
     let isOpen = false;
 
-    const customSet = (value: ChatRoom | undefined) => {
+    const customSet = (value: ChatConversation | undefined) => {
         update((currentValue) => {
             value?.ensureTimelineInitialized?.().catch((error) => {
                 console.error("Failed to initialize selected room", error);
@@ -24,6 +26,8 @@ const createSelectedRoomStore = () => {
                     });
             }
 
+            roomSidePanelStore.syncWithRoom(value);
+            selectedThreadStore.syncWithRoom(value);
             return value;
         });
     };
