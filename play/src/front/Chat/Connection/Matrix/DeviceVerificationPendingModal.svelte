@@ -1,5 +1,6 @@
 <script lang="ts">
     import { closeModal } from "svelte-modals";
+    import { onDestroy } from "svelte";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import ChatLoader from "../../Components/ChatLoader.svelte";
@@ -9,15 +10,27 @@
     export let isOpen: boolean;
     export let startVerificationPromise: Promise<VerificationEmojiDialogProps>;
     export let isInitiatedByMe = false;
+    let isActive = true;
 
     startVerificationPromise
         .then((verificationEmojiProps) => {
+            if (!isActive) {
+                return;
+            }
             closeModal();
             matrixSecurity.openVerificationEmojiDialog(verificationEmojiProps);
         })
         .catch((error) => {
+            if (!isActive) {
+                return;
+            }
             console.error(error);
+            closeModal();
         });
+
+    onDestroy(() => {
+        isActive = false;
+    });
 </script>
 
 <Popup {isOpen} withAction={false}>
