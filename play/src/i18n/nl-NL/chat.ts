@@ -230,6 +230,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         removeVote: "Stem verwijderen",
         submitError: "Kan uw stem niet verzenden. Probeer het opnieuw.",
         endError: "Kan de peiling niet sluiten. Probeer het opnieuw.",
+        deleteError: "Kan de peiling niet verwijderen. Probeer het opnieuw.",
         participants: "{count} stem(men)",
         multiSelect: "Tot {count} keuzes",
         spoiledVotes: "{count} ongeldige stem(men)",

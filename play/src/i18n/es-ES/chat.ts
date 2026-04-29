@@ -229,6 +229,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         removeVote: "Quitar voto",
         submitError: "No se pudo enviar su voto. Inténtelo de nuevo.",
         endError: "No se pudo cerrar la encuesta. Inténtelo de nuevo.",
+        deleteError: "No se pudo eliminar la encuesta. Inténtelo de nuevo.",
         participants: "{count} voto(s)",
         multiSelect: "Hasta {count} opciones",
         spoiledVotes: "{count} voto(s) anulado(s)",

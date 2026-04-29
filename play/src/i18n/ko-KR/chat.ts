@@ -231,6 +231,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         removeVote: "투표 취소",
         submitError: "투표를 제출할 수 없습니다. 다시 시도하세요.",
         endError: "투표를 종료할 수 없습니다. 다시 시도하세요.",
+        deleteError: "투표를 삭제할 수 없습니다. 다시 시도하세요.",
         participants: "{count}표",
         multiSelect: "최대 {count}개 선택",
         spoiledVotes: "무효표 {count}개",
