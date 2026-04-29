@@ -7,7 +7,7 @@ import { PollEvent } from "matrix-js-sdk/lib/models/poll";
 import { PollEndEvent } from "matrix-js-sdk/lib/extensible_events_v1/PollEndEvent";
 import { PollResponseEvent } from "matrix-js-sdk/lib/extensible_events_v1/PollResponseEvent";
 import type { TimelineEvents } from "matrix-js-sdk/lib/@types/event";
-import type { ChatPollItem, ChatPollState, ChatUser } from "../ChatConnection";
+import type { ChatPollContext, ChatPollItem, ChatPollState, ChatUser } from "../ChatConnection";
 import LL from "../../../../i18n/i18n-svelte";
 import { computePollState, type ComputedPollState } from "./MatrixPollUtils";
 import { chatUserFactoryFromRoom } from "./MatrixChatUser";
@@ -16,6 +16,7 @@ export class MatrixChatPoll implements ChatPollItem {
     id: string;
     sender: ChatUser | undefined;
     date: Date | null;
+    context: ChatPollContext;
     state: Readable<ChatPollState>;
     canVote: Readable<boolean>;
     canEnd: Readable<boolean>;
@@ -31,10 +32,11 @@ export class MatrixChatPoll implements ChatPollItem {
         this.refresh().catch((error) => console.error("Failed to refresh undecryptable poll relations", error));
     };
 
-    constructor(private readonly poll: Poll, private readonly room: Room) {
+    constructor(private readonly poll: Poll, private readonly room: Room, context?: ChatPollContext) {
         this.id = poll.pollId;
         this.sender = this.getSender();
         this.date = poll.rootEvent.getDate();
+        this.context = context ?? { kind: "room" };
         this.internalState = writable(
             computePollState(this.poll.pollEvent, [], {
                 currentUserId: this.room.client.getSafeUserId(),
@@ -68,6 +70,7 @@ export class MatrixChatPoll implements ChatPollItem {
         const event = PollResponseEvent.from(answerIds, this.id).serialize();
         await this.room.client.sendEvent(
             this.room.roomId,
+            this.context.kind === "thread" ? this.context.threadRootMessageId : null,
             event.type as keyof TimelineEvents,
             event.content as TimelineEvents[keyof TimelineEvents]
         );
@@ -85,6 +88,7 @@ export class MatrixChatPoll implements ChatPollItem {
         const event = PollEndEvent.from(this.id, endMessage).serialize();
         await this.room.client.sendEvent(
             this.room.roomId,
+            this.context.kind === "thread" ? this.context.threadRootMessageId : null,
             event.type as keyof TimelineEvents,
             event.content as TimelineEvents[keyof TimelineEvents]
         );

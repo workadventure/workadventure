@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/svelte";
 import Debug from "debug";
 import { ForwardableStore, MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import type { Readable, Writable, Unsubscriber } from "svelte/store";
-import { get, readable, writable } from "svelte/store";
+import { derived, get, readable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import type { Subscription } from "rxjs";
 import type { CharacterTextureMessage } from "@workadventure/messages";
@@ -15,10 +15,12 @@ import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
 import type {
     AnyKindOfUser,
+    ChatConversation,
     ChatMessage,
     ChatMessageContent,
     ChatMessageReaction,
     ChatMessageType,
+    ChatTimelineItem,
     ChatRoom,
 } from "../ChatConnection";
 import LL, { locale } from "../../../../i18n/i18n-svelte";
@@ -96,6 +98,7 @@ const MAX_PARTICIPANTS_FOR_SOUND_NOTIFICATIONS = 5;
 
 export class ProximityChatRoom implements ChatRoom {
     id = "proximity";
+    conversationKind = "room" as const;
     name = writable("Proximity Chat");
     type = readable<"direct" | "multiple">("multiple");
     hasUnreadMessages = writable(false);
@@ -143,7 +146,7 @@ export class ProximityChatRoom implements ChatRoom {
     ensureMembersInitialized(): Promise<void> {
         return Promise.resolve();
     }
-    currentMatrixRoom: ChatRoom | undefined;
+    currentMatrixRoom: ChatConversation | undefined;
     currentChatVisibility = false;
 
     private unknownUser = {

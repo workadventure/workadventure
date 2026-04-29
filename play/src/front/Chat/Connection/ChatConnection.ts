@@ -67,11 +67,13 @@ export interface ChatRoomMember {
      */
     readonly waDisplayNameIfDifferent?: Readable<string | undefined>;
 }
-export interface ChatRoom {
+export interface ChatConversation {
     readonly id: string;
     readonly name: Readable<string>;
     /** Reactive: DM vs group can change (e.g. after ban/leave changes active member count). */
     readonly type: Readable<"direct" | "multiple">;
+    readonly conversationKind: "room" | "thread";
+    readonly parentRoom?: ChatRoom;
     readonly hasUnreadMessages: Readable<boolean>;
     readonly unreadNotificationCount: Readable<number>;
     readonly initializationState: Readable<ChatRoomInitializationState>;
@@ -103,6 +105,21 @@ export interface ChatRoom {
     readonly stopTyping: () => Promise<object>;
     readonly isRoomFolder: boolean;
     readonly lastMessageTimestamp: number;
+    readonly getMessageById?: (messageId: string) => Promise<ChatMessage | undefined>;
+}
+
+export interface ChatRoom extends ChatConversation {
+    readonly conversationKind: "room";
+    readonly openThread?: (rootMessageId: string) => Promise<ChatThread | undefined>;
+    readonly threads?: Readable<readonly ChatThreadSummary[]>;
+    readonly pollItems?: Readable<readonly ChatPollItem[]>;
+    readonly privacyState?: Readable<ChatRoomPrivacyState>;
+}
+
+export interface ChatThread extends ChatConversation {
+    readonly conversationKind: "thread";
+    readonly parentRoom: ChatRoom;
+    readonly rootMessage: Readable<ChatMessage | undefined>;
 }
 
 export interface ChatRoomMembershipManagement {
@@ -152,6 +169,8 @@ export interface ChatMessage {
     isModified: Readable<boolean>;
     addReaction: (reaction: string) => Promise<void>;
     canDelete: Readable<boolean>;
+    threadSummary?: Readable<ChatThreadSummary | null>;
+    openThread?: () => Promise<ChatThread | undefined>;
 }
 
 export interface ChatMessageReaction {
@@ -163,6 +182,19 @@ export interface ChatMessageReaction {
 }
 
 export type ChatPollKind = "open" | "closed";
+
+export type ChatThreadSummary = {
+    rootMessageId: string;
+    rootMessagePreview?: string;
+    rootMessageSenderName?: string;
+    replyCount: number;
+    lastReplyPreview?: string;
+    lastReplySenderName?: string;
+    currentUserParticipated: boolean;
+    lastActivityTimestamp: number;
+    hasUnreadMessages: boolean;
+    unreadNotificationCount: number;
+};
 
 export type ChatPollCreateOptions = {
     question: string;
@@ -216,6 +248,7 @@ export interface ChatPollItem {
     id: string;
     sender: AnyKindOfUser | undefined;
     date: Date | null;
+    context: ChatPollContext;
     state: Readable<ChatPollState>;
     canVote: Readable<boolean>;
     canEnd: Readable<boolean>;
@@ -224,6 +257,15 @@ export interface ChatPollItem {
     end: () => Promise<void>;
     remove: () => Promise<void>;
 }
+
+export type ChatPollContext =
+    | { kind: "room" }
+    | {
+          kind: "thread";
+          threadRootMessageId: string;
+          threadPreview?: string;
+          threadSenderName?: string;
+      };
 
 export type ChatTimelineItem =
     | {
@@ -258,6 +300,12 @@ export type ChatMessageContent = {
 };
 export const historyVisibilityOptions = ["joined", "invited", "world_readable"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];
+export type ChatRoomJoinRule = "public" | "invite" | "knock" | "restricted" | "private" | string;
+export type ChatRoomPrivacyState = {
+    joinRule?: ChatRoomJoinRule;
+    historyVisibility?: historyVisibility | string;
+    restrictedRoomId?: string;
+};
 
 export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration {
     id: string;
@@ -377,13 +425,48 @@ export function hasMatrixChatCapabilities(connection: ChatConnectionInterface): 
     return typeof connection.getMatrixClient === "function";
 }
 
-export function hasChatRoomPollCreation(room: ChatRoom): room is ChatRoom & ChatRoomPollCreation {
-    const candidate = room as ChatRoom & Partial<ChatRoomPollCreation>;
+export function hasChatRoomPollCreation(room: ChatConversation): room is ChatConversation & ChatRoomPollCreation {
+    const candidate = room as ChatConversation & Partial<ChatRoomPollCreation>;
     return (
         candidate.pollCreation !== undefined &&
         typeof candidate.pollCreation.create === "function" &&
         typeof candidate.pollCreation.canCreate?.subscribe === "function" &&
         Array.isArray(candidate.pollCreation.supportedKinds)
+    );
+}
+
+export function hasChatRoomMembershipManagement(
+    conversation: ChatConversation | undefined
+): conversation is ChatRoom & ChatRoomMembershipManagement {
+    const candidate = conversation as (ChatRoom & Partial<ChatRoomMembershipManagement>) | undefined;
+    return (
+        candidate?.conversationKind === "room" &&
+        typeof candidate.members?.subscribe === "function" &&
+        typeof candidate.joinRoom === "function" &&
+        typeof candidate.leaveRoom === "function"
+    );
+}
+
+export function hasChatRoomModeration(
+    conversation: ChatConversation | undefined
+): conversation is ChatRoom & ChatRoomModeration {
+    const candidate = conversation as (ChatRoom & Partial<ChatRoomModeration>) | undefined;
+    return (
+        candidate?.conversationKind === "room" &&
+        typeof candidate.isCurrentUserRoomAdmin?.subscribe === "function" &&
+        typeof candidate.hasPermissionTo === "function"
+    );
+}
+
+export function hasChatRoomNotificationControl(
+    conversation: ChatConversation | undefined
+): conversation is ChatRoom & ChatRoomNotificationControl {
+    const candidate = conversation as (ChatRoom & Partial<ChatRoomNotificationControl>) | undefined;
+    return (
+        candidate?.conversationKind === "room" &&
+        typeof candidate.areNotificationsMuted?.subscribe === "function" &&
+        typeof candidate.muteNotification === "function" &&
+        typeof candidate.unmuteNotification === "function"
     );
 }
 

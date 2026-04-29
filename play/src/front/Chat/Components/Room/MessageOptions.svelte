@@ -1,14 +1,20 @@
 <script lang="ts">
     import type { ChatMessage } from "../../Connection/ChatConnection";
+    import LL from "../../../../i18n/i18n-svelte";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
     import EmojiButton from "./EmojiButton.svelte";
-    import { IconArrowBackUp, IconArrowDown, IconPencil, IconTrash } from "@wa-icons";
+    import { IconArrowBackUp, IconArrowDown, IconMessageCircle2, IconPencil, IconTrash } from "@wa-icons";
 
     export let message: ChatMessage;
     export let messageRef: HTMLDivElement | undefined;
+    export let onOpenThread: (() => Promise<void>) | undefined = undefined;
 
     function replyToMessage() {
         selectedChatMessageToReply.set(message);
+    }
+
+    async function openThread() {
+        await onOpenThread?.();
     }
 
     function removeMessage() {
@@ -44,6 +50,16 @@
     >
         <IconArrowBackUp font-size={16} />
     </button>
+    {#if message.openThread}
+        <button
+            class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
+            data-testid="openThreadButton"
+            title={$LL.chat.thread.openThreadButtonTitle()}
+            on:click={openThread}
+        >
+            <IconMessageCircle2 font-size={16} />
+        </button>
+    {/if}
     <EmojiButton on:change={addReaction} {messageRef} />
     {#if isMyMessage && type === "text"}
         <button
