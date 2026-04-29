@@ -264,6 +264,15 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             [keyId, keyInfo] = keyInfoEntries[0];
         }
 
+        customMatrixLogger.debug("Secret storage key info", {
+            keyId,
+            availableKeyIds: Object.keys(keys),
+            algorithm: keyInfo.algorithm,
+            hasPassphrase: Boolean(keyInfo.passphrase?.salt && keyInfo.passphrase.iterations),
+            hasPassphraseSalt: Boolean(keyInfo.passphrase?.salt),
+            hasPassphraseIterations: Boolean(keyInfo.passphrase?.iterations),
+        });
+
         if (this.secretStorageKeys[keyId]) {
             console.debug("getCryptoCallbacks from cache");
             return [keyId, this.secretStorageKeys[keyId]];

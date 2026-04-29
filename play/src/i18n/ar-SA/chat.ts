@@ -416,7 +416,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "التحقق من الجهاز",
         description: "اختر طريقة التحقق",
         withOtherDevice: "التحقق باستخدام جهاز آخر",
-        withPassphrase: "التحقق باستخدام عبارة المرور الأمنية",
+        withPassphrase: "التحقق باستخدام مفتاح الاسترداد أو عبارة المرور الأمنية",
     },
     askStartVerificationModal: {
         title: "التحقق مطلوب",

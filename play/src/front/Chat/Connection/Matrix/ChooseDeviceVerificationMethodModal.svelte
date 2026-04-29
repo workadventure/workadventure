@@ -6,9 +6,9 @@
 
     export let isOpen: boolean;
 
-    function startVerificationWithPassphrase() {
+    function startVerificationWithRecoveryOrPassphrase() {
         matrixSecurity.initClientCryptoConfiguration().catch((error) => {
-            console.error("Failed to startVerificationWithPassphrase : ", error);
+            console.error("Failed to startVerificationWithRecoveryOrPassphrase : ", error);
         });
         closeModal();
     }
@@ -36,7 +36,7 @@
         <button
             data-testid="VerifyWithPassphraseButton"
             class="btn btn-secondary bg-secondary flex-1 justify-center"
-            on:click={startVerificationWithPassphrase}
+            on:click={startVerificationWithRecoveryOrPassphrase}
             >{$LL.chat.chooseDeviceVerificationMethodModal.withPassphrase()}
         </button>
     </svelte:fragment>

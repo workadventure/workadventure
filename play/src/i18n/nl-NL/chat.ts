@@ -419,7 +419,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Verifieer je apparaat",
         description: "Kies de verificatiemethode",
         withOtherDevice: "Verifieer met een ander apparaat",
-        withPassphrase: "Verifieer met de wachtwoordzin",
+        withPassphrase: "Verifieer met herstelsleutel of wachtwoordzin",
     },
     askStartVerificationModal: {
         title: "Verificatie vereist",
