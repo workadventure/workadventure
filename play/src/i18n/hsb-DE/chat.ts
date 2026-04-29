@@ -230,6 +230,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         removeVote: "Hłós wotstronić",
         submitError: "Waš hłós njeda so wotesłać. Prošu spytajće hišće raz.",
         endError: "Wothłosowanje njeda so skónčić. Prošu spytajće hišće raz.",
+        deleteError: "Wothłosowanje njeda so zhašeć. Prošu spytajće hišće raz.",
         participants: "{count} hłós(y)",
         multiSelect: "Hač k {count} wuběram",
         spoiledVotes: "{count} njepłaćiwe hłosy",

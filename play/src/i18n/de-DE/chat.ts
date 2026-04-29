@@ -231,6 +231,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         removeVote: "Stimme entfernen",
         submitError: "Ihre Stimme konnte nicht übermittelt werden. Bitte versuchen Sie es erneut.",
         endError: "Die Umfrage konnte nicht beendet werden. Bitte versuchen Sie es erneut.",
+        deleteError: "Die Umfrage konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
         participants: "{count} Stimme(n)",
         multiSelect: "Bis zu {count} Auswahlen",
         spoiledVotes: "{count} ungültige Stimme(n)",

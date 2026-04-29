@@ -228,6 +228,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         removeVote: "إزالة التصويت",
         submitError: "تعذر إرسال صوتك. حاول مرة أخرى.",
         endError: "تعذر إغلاق الاستطلاع. حاول مرة أخرى.",
+        deleteError: "تعذر حذف الاستطلاع. حاول مرة أخرى.",
         participants: "{count} صوت/أصوات",
         multiSelect: "حتى {count} خيارات",
         spoiledVotes: "{count} صوت/أصوات باطلة",

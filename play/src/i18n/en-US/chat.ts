@@ -229,6 +229,7 @@ const chat: BaseTranslation = {
         removeVote: "Remove vote",
         submitError: "Unable to submit your vote. Try again.",
         endError: "Unable to close the poll. Try again.",
+        deleteError: "Unable to delete the poll. Try again.",
         participants: "{count} vote(s)",
         multiSelect: "Up to {count} choices",
         spoiledVotes: "{count} spoiled vote(s)",

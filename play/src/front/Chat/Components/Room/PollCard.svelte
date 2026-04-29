@@ -86,7 +86,7 @@
             await poll.remove();
         } catch (error) {
             console.error("Failed to delete poll", error);
-            errorMessage = $LL.chat.poll.endError();
+            errorMessage = $LL.chat.poll.deleteError();
         } finally {
             isDeletingPoll = false;
         }

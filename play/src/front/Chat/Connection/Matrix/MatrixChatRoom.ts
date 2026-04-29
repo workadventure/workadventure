@@ -703,7 +703,6 @@ export class MatrixChatRoom
     }
 
     private async refreshAllPolls(): Promise<void> {
-        await Promise.all([...this.polls].map((poll) => poll.refresh()));
         await this.syncPollItemsFromRoom();
     }
 

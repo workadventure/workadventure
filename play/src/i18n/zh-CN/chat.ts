@@ -227,6 +227,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         removeVote: "撤销投票",
         submitError: "无法提交您的投票，请重试。",
         endError: "无法结束投票，请重试。",
+        deleteError: "无法删除投票，请重试。",
         participants: "{count} 票",
         multiSelect: "最多可选 {count} 项",
         spoiledVotes: "{count} 张无效票",
