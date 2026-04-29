@@ -1,24 +1,43 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import { openModal } from "svelte-modals";
     import type { Readable } from "svelte/store";
     import { AskPositionMessage_AskType } from "@workadventure/messages";
-    import {
-        type ChatRoom,
-        type ChatRoomMembershipManagement,
-        type ChatUser,
+    import { hasMatrixChatCapabilities } from "../../../Connection/ChatConnection";
+    import type {
+        ChatRoom,
+        ChatRoomMembershipManagement,
+        ChatRoomModeration,
+        ChatRoomNotificationControl,
+        ChatUser,
+        MatrixChatConnectionLike,
     } from "../../../Connection/ChatConnection";
-    import { localUserStore } from "../../../../Connection/LocalUserStore";
+    import { isMatrixChatEnabledStore } from "../../../../Stores/ChatStore";
     import { notificationPlayingStore } from "../../../../Stores/NotificationStore";
+    import { localUserStore } from "../../../../Connection/LocalUserStore";
     import { draftMessageService } from "../../../Services/DraftMessageService";
     import LL from "../../../../../i18n/i18n-svelte";
+    import ManageParticipantsModal from "../ManageParticipantsModal.svelte";
     import { gameManager } from "../../../../Phaser/Game/GameManager";
     import { analyticsClient } from "../../../../Administration/AnalyticsClient";
     import { scriptUtils } from "../../../../Api/ScriptUtils";
     import type { UserProviderMerger } from "../../../UserProviderMerger/UserProviderMerger";
+    import { DEBUG_MODE } from "../../../../Enum/EnvironmentVariable";
+    import MatrixPeerProfileDebugModal from "../../MatrixPeerProfileDebugModal.svelte";
     import RoomOption from "./RoomOption.svelte";
-    import { IconDots, IconMapPin, IconCamera, IconUserPlus, IconLogout } from "@wa-icons";
+    import {
+        IconDots,
+        IconLogout,
+        IconUserEdit,
+        IconMute,
+        IconUnMute,
+        IconMapPin,
+        IconCamera,
+        IconUserPlus,
+        IconSettings,
+    } from "@wa-icons";
 
-    export let room: ChatRoom & ChatRoomMembershipManagement;
+    export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomNotificationControl & ChatRoomModeration;
     const roomType = room.type;
     const areNotificationsMuted = room.areNotificationsMuted;
     const roomMembers = room.members;
@@ -29,6 +48,18 @@
         | undefined = undefined;
 
     const { connection } = gameManager.getCurrentGameScene();
+
+    function matrixConnectionFromGameManager(): MatrixChatConnectionLike | undefined {
+        try {
+            const c = gameManager.chatConnection;
+            return hasMatrixChatCapabilities(c) ? c : undefined;
+        } catch {
+            return undefined;
+        }
+    }
+
+    /** Everyone can open the participant list; only admins can invite / change roles / kick / ban (enforced in the modal). */
+    const shouldDisplayManageParticipantButton = true;
 
     onMount(() => {
         document.addEventListener("click", closeRoomOptionsOnClickOutside);
@@ -66,6 +97,34 @@
         }
     }
 
+    function closeMenuAndLeaveRoom() {
+        toggleRoomOptions();
+        const roomId = room.id;
+        room.leaveRoom()
+            .then(() => {
+                draftMessageService.deleteDraft(`${roomId}-${localUserStore.getChatId() ?? "0"}`);
+                notificationPlayingStore.playNotification($LL.chat.roomMenu.leaveRoom.notification());
+            })
+            .catch(() => console.error("Failed to leave room"));
+    }
+
+    function openManageParticipantsModal() {
+        openModal(ManageParticipantsModal, { room });
+    }
+
+    function closeMenuAndSetMuteStatus() {
+        toggleRoomOptions();
+        if ($areNotificationsMuted) {
+            room.unmuteNotification().catch(() => {
+                console.error("Failed to unmute room");
+            });
+            return;
+        }
+        room.muteNotification().catch(() => {
+            console.error("Failed to mute room");
+        });
+    }
+
     $: usersByRoomMap = usersByRoomStore && $usersByRoomStore ? $usersByRoomStore : new Map();
 
     // Flatten usersByRoomMap into a list of users with playUri from their room
@@ -87,7 +146,6 @@
 
     $: chatUser = usersWithRoomPlayUri.find((u) => u.chatId === matrixChatUser?.id);
     $: isInTheSameMap = chatUser?.playUri === gameManager.getCurrentGameScene().roomUrl;
-    $: leaveRoomNotification = $LL.chat.roomMenu.leaveRoom.notification();
 
     function locateUser() {
         if (chatUser == undefined || chatUser.uuid == undefined) return;
@@ -131,15 +189,22 @@
         connection?.emitMeetingInvitationRequest(chatUser.uuid);
     }
 
-    function closeMenuAndLeaveRoom() {
+    /** Reactive on `$isMatrixChatEnabledStore` so the connection appears when Matrix chat connects. */
+    $: matrixChatConnection = $isMatrixChatEnabledStore ? matrixConnectionFromGameManager() : undefined;
+
+    $: showMatrixPeerProfileDebug =
+        DEBUG_MODE && matrixChatConnection !== undefined && $roomType === "direct" && Boolean(matrixChatUser?.id);
+
+    function openMatrixPeerProfileDebug() {
+        if (!matrixChatConnection || matrixChatUser?.id === undefined) {
+            return;
+        }
+        openModal(MatrixPeerProfileDebugModal, {
+            connection: matrixChatConnection,
+            matrixUserId: matrixChatUser.id,
+            label: chatUser?.username,
+        });
         toggleRoomOptions();
-        const roomId = room.id;
-        room.leaveRoom()
-            .then(() => {
-                draftMessageService.deleteDraft(`${roomId}-${localUserStore.getChatId() ?? "0"}`);
-                notificationPlayingStore.playNotification(leaveRoomNotification);
-            })
-            .catch(() => console.error("Failed to leave room"));
     }
 </script>
 
@@ -180,11 +245,35 @@
             on:click={inviteUserToMeeting}
             disabled={chatUser == undefined || chatUser.uuid == undefined}
         />
+        {#if showMatrixPeerProfileDebug}
+            <RoomOption
+                dataTestId="dm-matrix-peer-profile-debug"
+                IconComponent={IconSettings}
+                title={$LL.chat.matrixPeerProfileDebug.menuItemTitle()}
+                tagText={$LL.chat.matrixPeerProfileDebug.menuItemDebugTag()}
+                on:click={openMatrixPeerProfileDebug}
+            />
+        {/if}
+    {/if}
+    {#if shouldDisplayManageParticipantButton}
         <RoomOption
-            IconComponent={IconLogout}
-            title={$LL.chat.roomMenu.leaveRoom.label()}
-            bg="bg-danger-900 hover:bg-danger"
-            on:click={closeMenuAndLeaveRoom}
+            dataTestId="manageParticipantOption"
+            IconComponent={IconUserEdit}
+            title={$LL.chat.manageRoomUsers.roomOption()}
+            on:click={openManageParticipantsModal}
         />
     {/if}
+
+    <RoomOption
+        IconComponent={$areNotificationsMuted ? IconUnMute : IconMute}
+        title={$areNotificationsMuted ? $LL.chat.roomMenu.unmuteRoom() : $LL.chat.roomMenu.muteRoom()}
+        on:click={closeMenuAndSetMuteStatus}
+    />
+
+    <RoomOption
+        IconComponent={IconLogout}
+        title={$LL.chat.roomMenu.leaveRoom.label()}
+        bg="bg-danger-900 hover:bg-danger"
+        on:click={closeMenuAndLeaveRoom}
+    />
 </div>

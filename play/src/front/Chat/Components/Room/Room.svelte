@@ -82,9 +82,7 @@
     {#if $areNotificationsMuted}
         <IconBellOff font-size="12" class="opacity-50" />
     {/if}
-    {#if $roomType === "direct"}
-        <RoomMenu {room} />
-    {/if}
+    <RoomMenu {room} />
     {#if $hasUnreadMessage}
         <div class="relative flex h-7 w-7 items-center justify-center">
             <span class="absolute top-2 start-2 block h-4 w-4 rounded-full bg-white animate-ping" />

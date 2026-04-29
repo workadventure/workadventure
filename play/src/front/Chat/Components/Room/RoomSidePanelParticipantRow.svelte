@@ -1,7 +1,6 @@
 <script lang="ts">
     import { defaultColor } from "@workadventure/shared-utils";
     import { openModal } from "svelte-modals";
-    import { IconSettings } from "@wa-icons";
     import LL from "../../../../i18n/i18n-svelte";
     import { DEBUG_MODE } from "../../../Enum/EnvironmentVariable";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -14,6 +13,7 @@
     } from "../../Connection/ChatConnection";
     import MatrixPeerProfileDebugModal from "../MatrixPeerProfileDebugModal.svelte";
     import Avatar from "../Avatar.svelte";
+    import { IconSettings } from "@wa-icons";
 
     export let member: ChatRoomMember;
 
