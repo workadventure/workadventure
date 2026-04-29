@@ -1,6 +1,11 @@
 // Disabled because test mocks use vi.fn() which are passed as object properties
 import { describe, expect, it, vi } from "vitest";
-import { HandleRecordingWebhookRequest, RecordingWebhookPhase, SpaceUser } from "@workadventure/messages";
+import {
+    HandleLivekitWebhookRequest,
+    HandleRecordingWebhookRequest,
+    RecordingWebhookPhase,
+    SpaceUser,
+} from "@workadventure/messages";
 import type { InitialStateFactory } from "../src/Model/CommunicationManager";
 import { CommunicationManager } from "../src/Model/CommunicationManager";
 import { CommunicationType } from "../src/Model/Types/CommunicationTypes";
@@ -79,6 +84,7 @@ describe("CommunicationManager", () => {
             stopRecording: vi.fn().mockResolvedValue(undefined),
             stopRecordingByServer: vi.fn().mockResolvedValue(null),
             stopRecordingIfRecorderMatches: vi.fn().mockResolvedValue(null),
+            hasRecordingSession: vi.fn().mockReturnValue(false),
             confirmRecordingStartedByWebhook: vi.fn().mockReturnValue(false),
             finishRecordingByWebhook: vi
                 .fn()
@@ -93,6 +99,7 @@ describe("CommunicationManager", () => {
             stopRecording: mocks.stopRecording,
             stopRecordingByServer: mocks.stopRecordingByServer,
             stopRecordingIfRecorderMatches: mocks.stopRecordingIfRecorderMatches,
+            hasRecordingSession: mocks.hasRecordingSession,
             confirmRecordingStartedByWebhook: mocks.confirmRecordingStartedByWebhook,
             finishRecordingByWebhook: mocks.finishRecordingByWebhook,
             handleAddUser: mocks.handleAddUser,
@@ -748,7 +755,7 @@ describe("CommunicationManager", () => {
                 policy,
             });
 
-            manager.handleRecordingWebhook(
+            manager.handleNormalizedRecordingWebhook(
                 HandleRecordingWebhookRequest.fromPartial({
                     recordingSessionId: "session-1",
                     egressId: "egress-1",
@@ -770,6 +777,57 @@ describe("CommunicationManager", () => {
                 }),
                 expect.any(Function),
                 expect.any(Function)
+            );
+        });
+
+        it("should verify raw LiveKit webhooks in the active recordable state before handling the normalized event", async () => {
+            const space = createSpace();
+            const orchestrator = createOrchestrator();
+            const normalizedRequest = HandleRecordingWebhookRequest.fromPartial({
+                spaceName: "test-space",
+                recordingSessionId: "session-1",
+                egressId: "egress-1",
+                roomName: "test-space",
+                phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
+            });
+            const state = {
+                ...createState(CommunicationType.LIVEKIT),
+                handleStartRecording: vi.fn(),
+                handleStopRecording: vi.fn(),
+                handleLivekitWebhook: vi.fn().mockResolvedValue(normalizedRequest),
+            };
+            const lifecycleManager = createLifecycleManager(state);
+            const recordingManager = createRecordingManager();
+            const policy = createPolicy(false);
+
+            recordingManager.mocks.hasRecordingSession.mockReturnValue(true);
+
+            const manager = new CommunicationManager(space, {
+                orchestrator,
+                lifecycleManager,
+                recordingManager,
+                policy,
+            });
+
+            await manager.handleLivekitWebhook(
+                HandleLivekitWebhookRequest.fromPartial({
+                    spaceName: "test-space",
+                    recordingSessionId: "session-1",
+                    rawBody: Buffer.from("{}"),
+                    authorizationHeader: "jwt-token",
+                })
+            );
+
+            expect(state.handleLivekitWebhook).toHaveBeenCalledWith(
+                expect.any(Uint8Array),
+                "jwt-token",
+                "test-space",
+                "session-1"
+            );
+            expect(recordingManager.mocks.finishRecordingByWebhook).toHaveBeenCalledWith(
+                "session-1",
+                "egress-1",
+                "test-space"
             );
         });
 
@@ -796,7 +854,7 @@ describe("CommunicationManager", () => {
                 policy,
             });
 
-            manager.handleRecordingWebhook(
+            manager.handleNormalizedRecordingWebhook(
                 HandleRecordingWebhookRequest.fromPartial({
                     recordingSessionId: "session-1",
                     egressId: "egress-1",
@@ -841,7 +899,7 @@ describe("CommunicationManager", () => {
                 policy,
             });
 
-            manager.handleRecordingWebhook(
+            manager.handleNormalizedRecordingWebhook(
                 HandleRecordingWebhookRequest.fromPartial({
                     recordingSessionId: "session-1",
                     egressId: "egress-1",

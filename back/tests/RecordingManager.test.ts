@@ -25,6 +25,7 @@ function createRecordableState() {
             .fn<(user: SpaceUser, recordingSessionId: string) => Promise<StartRecordingResult>>()
             .mockResolvedValue({ egressId: "egress-1", roomName: "test-space" }),
         handleStopRecording: vi.fn().mockResolvedValue(undefined),
+        handleLivekitWebhook: vi.fn().mockResolvedValue("ignored"),
     };
 
     const state: IRecordableState<IRecordableStrategy> = {
@@ -40,6 +41,7 @@ function createRecordableState() {
         handleMeetingConnectionRestartMessage: vi.fn(),
         handleStartRecording: mocks.handleStartRecording,
         handleStopRecording: mocks.handleStopRecording,
+        handleLivekitWebhook: mocks.handleLivekitWebhook,
     };
 
     return { state, mocks };

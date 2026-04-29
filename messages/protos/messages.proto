@@ -844,6 +844,13 @@ message HandleRecordingWebhookRequest {
   int64 createdAt = 9;
 }
 
+message HandleLivekitWebhookRequest {
+  string spaceName = 1;
+  string recordingSessionId = 2;
+  bytes rawBody = 3;
+  string authorizationHeader = 4;
+}
+
 /*********** SERVER TO CLIENT MESSAGES *************/
 
 message UserMovedMessage {

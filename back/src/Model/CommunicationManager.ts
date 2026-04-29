@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/node";
 import {
+    type HandleLivekitWebhookRequest,
     RecordingWebhookPhase,
     type HandleRecordingWebhookRequest,
     type MeetingConnectionRestartMessage,
@@ -8,7 +9,7 @@ import {
 import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
-import type { ICommunicationState } from "./Interfaces/ICommunicationState";
+import type { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
 import { CommunicationType } from "./Types/CommunicationTypes";
 import { WebRTCState } from "./States/WebRTCState";
 import { VoidState } from "./States/VoidState";
@@ -23,7 +24,7 @@ import type { IUserRegistry } from "./Interfaces/IUserRegistry";
 import type { ITransitionPolicy } from "./Interfaces/ITransitionPolicy";
 import type { ITransitionOrchestrator, TransitionContext } from "./Interfaces/ITransitionOrchestrator";
 import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager";
-import type { ICommunicationStrategy } from "./Interfaces/ICommunicationStrategy";
+import type { ICommunicationStrategy, IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
 
 /**
  * Factory interface for creating the initial communication state.
@@ -325,7 +326,34 @@ export class CommunicationManager implements ICommunicationManager {
         return stoppedRecorder !== null;
     }
 
-    public handleRecordingWebhook(request: HandleRecordingWebhookRequest): void {
+    public async handleLivekitWebhook(request: HandleLivekitWebhookRequest): Promise<void> {
+        if (!this._recordingManager.hasRecordingSession(request.recordingSessionId)) {
+            // Retrying cannot recreate a local recording session that is already gone, so acknowledge as ignored.
+            console.warn(
+                `Received LiveKit webhook for missing recording session ${request.recordingSessionId}. Ignoring.`
+            );
+            return;
+        }
+
+        const currentState = this.lifecycleManager.getCurrentState();
+        if (!this.isRecordableState(currentState)) {
+            throw new Error("Current state is not recordable");
+        }
+
+        const normalizedRequest = await currentState.handleLivekitWebhook(
+            request.rawBody,
+            request.authorizationHeader || undefined,
+            request.spaceName,
+            request.recordingSessionId
+        );
+        if (normalizedRequest === "ignored") {
+            return;
+        }
+
+        this.handleNormalizedRecordingWebhook(normalizedRequest);
+    }
+
+    public handleNormalizedRecordingWebhook(request: HandleRecordingWebhookRequest): void {
         switch (request.phase) {
             case RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_STARTED: {
                 this._recordingManager.confirmRecordingStartedByWebhook(
@@ -378,6 +406,12 @@ export class CommunicationManager implements ICommunicationManager {
             playUri: user.playUri,
         };
         this.scheduleDelayedTransitionWithValidation(CommunicationType.WEBRTC, context);
+    }
+
+    private isRecordableState(
+        state: ICommunicationState<ICommunicationStrategy>
+    ): state is IRecordableState<IRecordableStrategy> {
+        return "handleStartRecording" in state && "handleStopRecording" in state && "handleLivekitWebhook" in state;
     }
 
     public destroy(): void {

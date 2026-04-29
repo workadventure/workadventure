@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/node";
-import type { SpaceUser } from "@workadventure/messages";
+import type { HandleRecordingWebhookRequest, SpaceUser } from "@workadventure/messages";
 import { CommunicationType } from "../Types/CommunicationTypes";
 import { LivekitCommunicationStrategy } from "../Strategies/LivekitCommunicationStrategy";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
@@ -35,8 +35,7 @@ export class LivekitState
                     _livekitServerCredentials.livekitApiKey,
                     _livekitServerCredentials.livekitApiSecret,
                     _livekitServerCredentials.livekitHost.replace("http", "ws"),
-                    PLAY_URL,
-                    _livekitServerCredentials.livekitApiKey
+                    PLAY_URL
                 )
             ),
             users,
@@ -70,5 +69,14 @@ export class LivekitState
 
     async handleStopRecording(egressId?: string): Promise<void> {
         await this._currentStrategy.stopRecording(egressId);
+    }
+
+    async handleLivekitWebhook(
+        rawBody: Buffer | Uint8Array,
+        authorizationHeader: string | undefined,
+        spaceName: string,
+        recordingSessionId: string
+    ): Promise<HandleRecordingWebhookRequest | "ignored"> {
+        return this._currentStrategy.handleLivekitWebhook(rawBody, authorizationHeader, spaceName, recordingSessionId);
     }
 }

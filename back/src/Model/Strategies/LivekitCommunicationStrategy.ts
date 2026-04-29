@@ -1,4 +1,8 @@
-import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
+import type {
+    HandleRecordingWebhookRequest,
+    MeetingConnectionRestartMessage,
+    SpaceUser,
+} from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
@@ -279,5 +283,14 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
     }
     async stopRecording(egressId?: string): Promise<void> {
         await this.livekitService.stopRecording(egressId);
+    }
+
+    async handleLivekitWebhook(
+        rawBody: Buffer | Uint8Array,
+        authorizationHeader: string | undefined,
+        spaceName: string,
+        recordingSessionId: string
+    ): Promise<HandleRecordingWebhookRequest | "ignored"> {
+        return this.livekitService.handleLivekitWebhook(rawBody, authorizationHeader, spaceName, recordingSessionId);
     }
 }
