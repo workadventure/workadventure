@@ -417,7 +417,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Verificar dispositiu",
         description: "Trieu el mètode de verificació",
         withOtherDevice: "Verificar amb un altre dispositiu",
-        withPassphrase: "Verificar amb la frase de contrasenya de seguretat",
+        withPassphrase: "Verificar amb clau de recuperació o frase de seguretat",
     },
     askStartVerificationModal: {
         title: "Verificació necessària",

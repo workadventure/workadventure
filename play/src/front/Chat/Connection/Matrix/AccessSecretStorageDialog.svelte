@@ -12,7 +12,13 @@
     export let keyInfo: SecretStorage.SecretStorageKeyDescription;
     export let matrixClient: MatrixClient;
     export let onClose: (key: Uint8Array | null) => void;
-    let accessSecretStorageMethod: "passphrase" | "recoveryKey" = "passphrase";
+
+    function hasConfiguredPassphrase(keyInfo: SecretStorage.SecretStorageKeyDescription): boolean {
+        return Boolean(keyInfo.passphrase?.salt && keyInfo.passphrase.iterations);
+    }
+
+    let hasPassphrase = hasConfiguredPassphrase(keyInfo);
+    let accessSecretStorageMethod: "passphrase" | "recoveryKey" = hasPassphrase ? "passphrase" : "recoveryKey";
     let recoveryKeyInput = "";
     let passphraseInput = "";
     let error = false;
@@ -24,20 +30,33 @@
             accessSecretStorageMethod = "recoveryKey";
             return;
         }
-        accessSecretStorageMethod = "passphrase";
+        if (hasPassphrase) {
+            accessSecretStorageMethod = "passphrase";
+        }
     }
 
     async function checkAndSubmitRecoveryOrPassphraseIfValid() {
         isCheckingPassphrase = true;
-        if (recoveryKeyInput.trim().length === 0 && passphraseInput.trim().length === 0) {
+        const activeInputIsEmpty =
+            accessSecretStorageMethod === "passphrase"
+                ? passphraseInput.trim().length === 0
+                : recoveryKeyInput.trim().length === 0;
+        if (activeInputIsEmpty) {
             error = true;
+            isCheckingPassphrase = false;
             return;
         }
 
         try {
             const inputToKey = MatrixSecurity.makeInputToKey(keyInfo);
-            const passphrase = passphraseInput.trim().length === 0 ? undefined : passphraseInput;
-            const recoveryKey = recoveryKeyInput.trim().length === 0 ? undefined : recoveryKeyInput;
+            const passphrase =
+                accessSecretStorageMethod === "passphrase" && passphraseInput.trim().length > 0
+                    ? passphraseInput
+                    : undefined;
+            const recoveryKey =
+                accessSecretStorageMethod === "recoveryKey" && recoveryKeyInput.trim().length > 0
+                    ? recoveryKeyInput
+                    : undefined;
             const key = await inputToKey({ recoveryKey, passphrase });
             const keyVerified = await matrixClient.secretStorage.checkKey(key, keyInfo);
 
@@ -86,6 +105,10 @@
         accessSecretStorageMethod === "passphrase"
             ? passphraseInput.trim().length === 0
             : recoveryKeyInput.trim().length === 0;
+    $: hasPassphrase = hasConfiguredPassphrase(keyInfo);
+    $: if (!hasPassphrase && accessSecretStorageMethod === "passphrase") {
+        accessSecretStorageMethod = "recoveryKey";
+    }
 
     const changeAccessSecretStorageMethodButtonClass = "self-end text-blue-500";
 </script>
@@ -139,9 +162,14 @@
                     <IconRestore />
                     {$LL.menu.chat.resetKeyStorageUpButtonLabel()}
                 </button>
-                <button on:click={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}>
-                    <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.buttons.usePassphrase()}</button
-                >
+                {#if hasPassphrase}
+                    <button
+                        on:click={changeAccessSecretStorageMethod}
+                        class={changeAccessSecretStorageMethodButtonClass}
+                    >
+                        <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.buttons.usePassphrase()}</button
+                    >
+                {/if}
             </div>
         {/if}
 

@@ -419,7 +419,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Twój rěd pśeglědaś",
         description: "Wubjeŕ pśeglědańsku metodu",
         withOtherDevice: "Z drugim rědom pśeglědaś",
-        withPassphrase: "Z wěstotneju frazu pśeglědaś",
+        withPassphrase: "Z wobnowjeńskim klucom abo wěstotneju frazu pśeglědaś",
     },
     askStartVerificationModal: {
         title: "Pśeglědanje trjebne",

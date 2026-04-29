@@ -173,7 +173,11 @@ export class MatrixSecurity {
     ): (keyParams: KeyParams) => Promise<Uint8Array> {
         return ({ passphrase, recoveryKey }): Promise<Uint8Array> => {
             if (passphrase) {
-                return deriveKey(passphrase, keyInfo.passphrase.salt, keyInfo.passphrase.iterations);
+                const passphraseInfo = keyInfo.passphrase;
+                if (!passphraseInfo?.salt || !passphraseInfo.iterations) {
+                    return Promise.reject(new Error("This secret storage key cannot be unlocked with a passphrase"));
+                }
+                return deriveKey(passphrase, passphraseInfo.salt, passphraseInfo.iterations);
             } else if (recoveryKey) {
                 return Promise.resolve(decodeRecoveryKey(recoveryKey));
             }
@@ -287,45 +291,48 @@ export class MatrixSecurity {
 
             const doneVerificationDeferred = new Deferred<void>();
 
+            let verificationStarted = false;
+
+            const startSasVerification = async () => {
+                if (verificationStarted || verificationRequest.phase !== Phase.Ready) {
+                    return;
+                }
+
+                verificationStarted = true;
+                const verifier = await verificationRequest.startVerification(VerificationMethod.Sas);
+
+                verifier.on(VerifierEvent.ShowSas, (showSasCallbacks) => {
+                    const emojis = showSasCallbacks.sas.emoji;
+                    const confirmationCallback = async () => {
+                        await showSasCallbacks.confirm();
+                    };
+                    const mismatchCallback = () => {
+                        showSasCallbacks.mismatch();
+                    };
+
+                    if (!emojis || this.isVerifyingDevice) return;
+
+                    this.isVerifyingDevice = true;
+
+                    startVerificationDeferred.resolve({
+                        emojis,
+                        confirmationCallback,
+                        mismatchCallback,
+                        donePromise: doneVerificationDeferred.promise,
+                        isThisDeviceVerification: verificationRequest.initiatedByMe,
+                    });
+                });
+
+                verifier.verify().catch((error) => {
+                    doneVerificationDeferred.reject(error);
+                });
+            };
+
             verificationRequest.on(VerificationRequestEvent.Change, () => {
-                if (verificationRequest.phase === Phase.Started) {
-                    const verifier = verificationRequest.verifier;
-
-                    if (!verifier) throw new Error("Verifier is undefined");
-
-                    switch (verificationRequest.chosenMethod) {
-                        case VerificationMethod.Sas:
-                            verifier.on(VerifierEvent.ShowSas, (showSasCallbacks) => {
-                                const emojis = showSasCallbacks.sas.emoji;
-                                const confirmationCallback = async () => {
-                                    await showSasCallbacks.confirm();
-                                };
-                                const mismatchCallback = () => {
-                                    //TODO : use showSasCallbacks.mismatch(); after matris-js-sdk update
-                                    //showSasCallbacks.mismatch();
-                                    return verificationRequest.cancel({ reason: "m.mismatched_sas" });
-                                };
-
-                                if (!emojis || this.isVerifyingDevice) return;
-
-                                this.isVerifyingDevice = true;
-
-                                startVerificationDeferred.resolve({
-                                    emojis,
-                                    confirmationCallback,
-                                    mismatchCallback,
-                                    donePromise: doneVerificationDeferred.promise,
-                                    isThisDeviceVerification: verificationRequest.initiatedByMe,
-                                });
-                            });
-
-                            verifier.verify().catch((error) => {
-                                doneVerificationDeferred.reject(error);
-                            });
-                            break;
-                        default:
-                            throw new Error("The chosen verification method is not implemented");
-                    }
+                if (verificationRequest.phase === Phase.Ready) {
+                    startSasVerification().catch((error) => {
+                        doneVerificationDeferred.reject(error);
+                    });
                 }
 
                 if (verificationRequest.phase === Phase.Done) {
@@ -338,6 +345,9 @@ export class MatrixSecurity {
                     doneVerificationDeferred.reject(new Error("verification request cancelled"));
                     this.isVerifyingDevice = false;
                 }
+            });
+            startSasVerification().catch((error) => {
+                doneVerificationDeferred.reject(error);
             });
         } catch (error) {
             console.error("Failed to verify this device", error);
@@ -413,7 +423,7 @@ export const matrixSecurity = new MatrixSecurity();
 
 export type VerificationEmojiDialogProps = {
     confirmationCallback: () => Promise<void>;
-    mismatchCallback: () => Promise<void>;
+    mismatchCallback: () => void | Promise<void>;
     emojis: EmojiMapping[];
     donePromise: Promise<void>;
     isThisDeviceVerification: boolean;
