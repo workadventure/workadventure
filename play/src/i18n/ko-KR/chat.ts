@@ -418,7 +418,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "기기 확인",
         description: "검증 방법을 선택하세요",
         withOtherDevice: "다른 기기로 확인",
-        withPassphrase: "보안 암호로 확인",
+        withPassphrase: "복구 키 또는 보안 암호로 확인",
     },
     askStartVerificationModal: {
         title: "검증 필요",

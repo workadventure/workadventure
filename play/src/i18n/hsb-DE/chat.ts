@@ -418,7 +418,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Twoj rjad přeglědać",
         description: "Wubjer přeglědowansku metodu",
         withOtherDevice: "Z druhym rjadom přeglědać",
-        withPassphrase: "Z wěstotneju frazu přeglědać",
+        withPassphrase: "Z wobnowjenskim klučom abo wěstotneju frazu přeglědać",
     },
     askStartVerificationModal: {
         title: "Přeglědowanje trěbne",

@@ -417,7 +417,7 @@ const chat: BaseTranslation = {
         title: "Verify device",
         description: "Choose the verification method",
         withOtherDevice: "Verify with another device",
-        withPassphrase: "Verify with security passphrase",
+        withPassphrase: "Use recovery key or passphrase",
     },
     askStartVerificationModal: {
         title: "Verification required",

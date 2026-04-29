@@ -413,7 +413,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "验证设备",
         description: "选择验证方法",
         withOtherDevice: "使用其他设备验证",
-        withPassphrase: "使用安全密码短语验证",
+        withPassphrase: "使用恢复密钥或安全密码短语验证",
     },
     askStartVerificationModal: {
         title: "需要验证",
