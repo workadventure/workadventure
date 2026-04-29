@@ -455,8 +455,6 @@ export const EnvironmentVariables = z.object({
         .or(z.string().max(0))
         .transform((val) => toNumber(val, 20 * 1024 * 1024)) // Default to 20 MB
         .describe("The maximum size of a gRPC message. Defaults to 20 MB."),
-    LIVEKIT_API_KEY: z.string().optional().transform(emptyStringToUndefined).describe("The LiveKit API key."),
-    LIVEKIT_API_SECRET: z.string().optional().transform(emptyStringToUndefined).describe("The LiveKit API secret."),
     LIVEKIT_RECORDING_S3_ENDPOINT: z
         .string()
         .url()
