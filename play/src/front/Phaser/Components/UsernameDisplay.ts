@@ -5,8 +5,14 @@ import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager"
 import { MegaphoneIcon } from "./MegaphoneIcon";
 import { PlayerStatusDot } from "./PlayerStatusDot";
 
-const DEFAULT_PLAYER_NAME_OUTLINE_COLOR = "#14304C";
+const DEFAULT_PLAYER_NAME_OUTLINE_COLOR = "#000000";
 const CORRECTION_RATE = 0.75;
+const PLAYER_NAME_BACKGROUND_COLOR = "rgba(20, 48, 76, 0.6)"; // Design system: brand-blue + opacity
+const PLAYER_NAME_BACKGROUND_RADIUS = 8;
+const PLAYER_NAME_HORIZONTAL_PADDING = 4;
+const PLAYER_NAME_VERTICAL_PADDING = 2;
+const PLAYER_NAME_EXTRA_LEFT_PADDING = 10;
+const PLAYER_NAME_STATUS_DOT_INSET = 12;
 
 export class UsernameDisplay extends Phaser.GameObjects.Container {
     private static nextPlayerNameTextureId = 0;
@@ -55,8 +61,8 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     private reflow(): void {
         const halfPlayerNameHeight = -this.playerNameSprite.displayHeight / 2;
         const halfPlayerNameWidth = this.playerNameSprite.displayWidth / 2;
-        this.statusDot.setPosition(-halfPlayerNameWidth - 2, halfPlayerNameHeight);
-        this.megaphoneIcon.setPosition(halfPlayerNameWidth + 2, halfPlayerNameHeight);
+        this.statusDot.setPosition(-halfPlayerNameWidth + PLAYER_NAME_STATUS_DOT_INSET, halfPlayerNameHeight);
+        this.megaphoneIcon.setPosition(halfPlayerNameWidth + 10, halfPlayerNameHeight);
     }
 
     private createPlayerNameTexture(outlineColor: number | undefined): string {
@@ -74,8 +80,19 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         measurementContext.font = `${this.playerNameFontSize}px "Press Start 2P"`;
         const measuredWidth = measurementContext.measureText(this.playerName).width;
         const fullOutlineThickness = strokeThickness + outlineThickness * 2;
-        const textureWidth = Math.max(1, Math.ceil(measuredWidth + fullOutlineThickness * 2));
-        const textureHeight = Math.max(1, Math.ceil(this.playerNameFontSize + fullOutlineThickness * 2));
+        const textureWidth = Math.max(
+            1,
+            Math.ceil(
+                measuredWidth +
+                    fullOutlineThickness * 2 +
+                    PLAYER_NAME_HORIZONTAL_PADDING * 2 +
+                    PLAYER_NAME_EXTRA_LEFT_PADDING
+            )
+        );
+        const textureHeight = Math.max(
+            1,
+            Math.ceil(this.playerNameFontSize + fullOutlineThickness * 2 + PLAYER_NAME_VERTICAL_PADDING * 2)
+        );
 
         const texture = this.scene.textures.createCanvas(textureKey, textureWidth, textureHeight);
         if (!texture) {
@@ -88,18 +105,29 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         context.textAlign = "center";
         context.textBaseline = "middle";
         context.lineJoin = "round";
+        context.fillStyle = PLAYER_NAME_BACKGROUND_COLOR;
+        context.beginPath();
+        if ("roundRect" in context) {
+            context.roundRect(0, 0, textureWidth, textureHeight, PLAYER_NAME_BACKGROUND_RADIUS);
+        } else {
+            // @ts-expect-error - rect is not a method of type never
+            context.rect(0, 0, textureWidth, textureHeight);
+        }
+        context.fill();
+        const textCenterX = textureWidth / 2 + PLAYER_NAME_EXTRA_LEFT_PADDING / 2;
+        const textCenterY = textureHeight / 2;
 
         if (dynamicOutlineColor) {
             context.lineWidth = fullOutlineThickness;
             context.strokeStyle = dynamicOutlineColor;
-            context.strokeText(this.playerName, textureWidth / 2, textureHeight / 2);
+            context.strokeText(this.playerName, textCenterX, textCenterY);
         }
 
         context.lineWidth = strokeThickness;
         context.strokeStyle = DEFAULT_PLAYER_NAME_OUTLINE_COLOR;
         context.fillStyle = "#ffffff";
-        context.strokeText(this.playerName, textureWidth / 2, textureHeight / 2);
-        context.fillText(this.playerName, textureWidth / 2, textureHeight / 2);
+        context.strokeText(this.playerName, textCenterX, textCenterY);
+        context.fillText(this.playerName, textCenterX, textCenterY);
         texture.refresh();
 
         return textureKey;
