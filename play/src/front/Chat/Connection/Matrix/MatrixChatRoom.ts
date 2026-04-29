@@ -72,7 +72,6 @@ import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatPoll } from "./MatrixChatPoll";
-import { MatrixChatPoll } from "./MatrixChatPoll";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatThread } from "./MatrixChatThread";
 import { matrixSecurity } from "./MatrixSecurity";
