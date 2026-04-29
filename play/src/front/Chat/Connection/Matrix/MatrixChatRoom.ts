@@ -18,6 +18,7 @@ import {
     PushRuleActionName,
     PushRuleKind,
     ReceiptType,
+    RoomMemberEvent,
     RoomEvent,
     RoomStateEvent,
     TimelineWindow,
@@ -29,8 +30,10 @@ import { derived, get, readable, readonly, writable } from "svelte/store";
 import type { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/media";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import type { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
+import Debug from "debug";
 import type {
     ChatRoom,
+    ChatRoomInitializationState,
     ChatRoomMember,
     ChatRoomMembership,
     ChatRoomMembershipManagement,
@@ -46,7 +49,6 @@ import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MessageNotification } from "../../../Notification/MessageNotification";
 import { notificationManager } from "../../../Notification/NotificationManager";
 import type { LazyPictureStore, PictureStore } from "../../../Stores/PictureStore";
-import { isLazyPictureStore } from "../../../Stores/PictureStore";
 import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
@@ -56,10 +58,13 @@ import { matrixSecurity } from "./MatrixSecurity";
 import { hasValidViaEntries } from "./MatrixSpaceRelations";
 import { resolveChatUserColor } from "./services/WaMatrixProfileService";
 import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
+import { matrixAvatarProfile } from "./services/MatrixAvatarProfile";
 
 type EventId = string;
 
 type ModerationAction = "ban" | "kick" | "invite" | "redact";
+
+const debug = Debug("MatrixChatRoom");
 
 export class MatrixChatRoom
     implements ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration, ChatRoomNotificationControl
@@ -70,6 +75,8 @@ export class MatrixChatRoom
     readonly type: Readable<"multiple" | "direct">;
     readonly hasUnreadMessages: Writable<boolean>;
     readonly unreadNotificationCount: Writable<number>;
+    readonly initializationState: Writable<ChatRoomInitializationState> = writable("idle");
+    readonly initializationError: Writable<Error | undefined> = writable(undefined);
     pictureStore: LazyPictureStore;
     readonly avatarFallbackColor: Readable<string | undefined>;
     messages: SearchableArrayStore<string, MatrixChatMessage>;
@@ -85,7 +92,7 @@ export class MatrixChatRoom
     typingMembers: Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>>;
     isRoomFolder = false;
     areNotificationsMuted = writable(false);
-    currentRoomMember: Readable<MatrixChatRoomMember>;
+    currentRoomMember: Readable<MatrixChatRoomMember | undefined>;
     readonly isCurrentUserRoomAdmin: Readable<boolean>;
     private notSentEvents: MapStore<string, MatrixEvent> = new MapStore<string, MatrixEvent>();
     shouldRetrySendingEvents = derived(this.notSentEvents, (notSentEvents) => notSentEvents.size > 0);
@@ -105,6 +112,17 @@ export class MatrixChatRoom
     private readonly userProviderMergerStore = writable<UserProviderMerger | undefined>(undefined);
     private dmMergerUsersByRoomUnsub: (() => void) | undefined;
     private dmMergerRoomTypeUnsub: (() => void) | undefined;
+    private initializationPromise: Promise<void> | undefined;
+    private membersInitializationPromise: Promise<void> | undefined;
+    private membersInitialized = false;
+    private initializedEventHandlersStarted = false;
+    private directRoomPeerAvatarStore: LazyPictureStore | undefined;
+    private directRoomPeerAvatarMember: RoomMember | undefined;
+    // Keep full MatrixChatRoomMember objects lazy. Space-level UI permissions still need the current user's
+    // power level before a room is opened, so we only observe the Matrix SDK RoomMember without avatar/profile work.
+    private currentUserRoomMember: RoomMember | undefined;
+    private currentUserPermissionLevel: Writable<ChatPermissionLevel | undefined> = writable(undefined);
+    private handleCurrentUserRoomMemberPowerLevel = this.onCurrentUserRoomMemberPowerLevel.bind(this);
 
     constructor(
         private matrixRoom: Room,
@@ -150,27 +168,34 @@ export class MatrixChatRoom
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.sendMessage = this.sendMessage.bind(this);
         this.myMembership = writable(matrixRoom.getMyMembership());
+        this.setCurrentUserRoomMember(matrixRoom.getMember(matrixRoom.client.getSafeUserId()) ?? undefined);
 
-        this.members = writable([
-            ...matrixRoom
-                .getMembers()
-                .map(
-                    (member) => new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl, this.matrixRoom.client)
-                ),
-        ]);
+        this.members = writable([]);
         this.membersForMessageAvatars = this.members;
+        this.directRoomPeerAvatarMember = this.getDirectRoomPeerRoomMember();
+        if (this.directRoomPeerAvatarMember) {
+            this.directRoomPeerAvatarStore = matrixAvatarProfile.createLazyAvatarStore(
+                this.directRoomPeerAvatarMember.userId,
+                () =>
+                    matrixAvatarProfile.resolveAvatarUrl(
+                        this.directRoomPeerAvatarMember!.userId,
+                        this.directRoomPeerAvatarMember!,
+                        this.matrixRoom.client.baseUrl,
+                        this.matrixRoom.client,
+                        get(this.userProviderMergerStore)
+                    )
+            );
+        }
 
         /** Channel: room avatar. DM: room avatar or peer Matrix avatar, with load delegated to the peer lazy store. */
         const roomPictureStore = derived(
-            [this.roomTypeStore, roomAvatarStore, this.members],
-            ([roomType, roomAvatar, members], set: (value: string | undefined) => void) => {
+            [this.roomTypeStore, roomAvatarStore],
+            ([roomType, roomAvatar], set: (value: string | undefined) => void) => {
                 if (roomType !== "direct") {
                     set(roomAvatar);
                     return;
                 }
-                const myUserId = this.matrixRoom.client.getUserId();
-                const other = members.find((m) => m.id !== myUserId);
-                if (!other) {
+                if (!this.directRoomPeerAvatarStore) {
                     set(roomAvatar);
                     return;
                 }
@@ -178,57 +203,50 @@ export class MatrixChatRoom
                     set(roomAvatar);
                     return;
                 }
-                return other.pictureStore.subscribe(set);
+                return this.directRoomPeerAvatarStore.subscribe(set);
             },
             undefined
         );
         this.pictureStore = {
             subscribe: roomPictureStore.subscribe,
             load: async () => {
-                const other = this.getDirectRoomPeerMember();
-                if (!get(roomAvatarStore) && isLazyPictureStore(other?.pictureStore)) {
-                    await other.pictureStore.load();
+                if (!get(roomAvatarStore) && this.directRoomPeerAvatarStore) {
+                    await this.directRoomPeerAvatarStore.load();
                 }
             },
             refresh: async () => {
-                const other = this.getDirectRoomPeerMember();
-                if (!get(roomAvatarStore) && isLazyPictureStore(other?.pictureStore)) {
-                    await other.pictureStore.refresh();
+                if (!get(roomAvatarStore) && this.directRoomPeerAvatarStore) {
+                    await this.directRoomPeerAvatarStore.refresh();
                 }
             },
             invalidate: () => {
-                const other = this.getDirectRoomPeerMember();
-                if (!get(roomAvatarStore) && isLazyPictureStore(other?.pictureStore)) {
-                    other.pictureStore.invalidate();
+                if (!get(roomAvatarStore) && this.directRoomPeerAvatarStore) {
+                    this.directRoomPeerAvatarStore.invalidate();
                 }
             },
         };
 
-        this.avatarFallbackColor = derived(
-            [this.roomTypeStore, this.members, this.userProviderMergerStore],
-            ([roomType, members, merger]) => {
-                if (roomType !== "direct") {
-                    return undefined;
-                }
-                const myUserId = this.matrixRoom.client.getUserId();
-                const other = members.find((m) => m.id !== myUserId);
-                if (!other) {
-                    return undefined;
-                }
-                let mergerColor: string | undefined;
-                if (merger) {
-                    const byRoom = get(merger.usersByRoomStore);
-                    for (const [, { users }] of byRoom) {
-                        const u = users.find((user) => user.chatId === other.id);
-                        if (u?.color) {
-                            mergerColor = u.color;
-                            break;
-                        }
+        this.avatarFallbackColor = derived([this.roomTypeStore, this.userProviderMergerStore], ([roomType, merger]) => {
+            if (roomType !== "direct") {
+                return undefined;
+            }
+            const other = this.directRoomPeerAvatarMember;
+            if (!other) {
+                return undefined;
+            }
+            let mergerColor: string | undefined;
+            if (merger) {
+                const byRoom = get(merger.usersByRoomStore);
+                for (const [, { users }] of byRoom) {
+                    const u = users.find((user) => user.chatId === other.userId);
+                    if (u?.color) {
+                        mergerColor = u.color;
+                        break;
                     }
                 }
-                return resolveChatUserColor(other.id, mergerColor, this.matrixRoom.client);
             }
-        );
+            return resolveChatUserColor(other.userId, mergerColor, this.matrixRoom.client);
+        });
 
         this.peerWaDisplayNameIfDifferent = derived(
             [this.roomTypeStore, this.members],
@@ -274,12 +292,24 @@ export class MatrixChatRoom
         this.isEncrypted = writable(matrixRoom.hasEncryptionStateEvent());
 
         this.typingMembers = derived(
-            get(this.members).map((member) => member.isTypingInformation),
-            (membersInformation) => {
-                return membersInformation.filter(
-                    (member) => member !== null && member.id !== this.matrixRoom.client.getUserId()
-                ) as memberTypingInformation[];
-            }
+            this.members,
+            (members, set: (value: memberTypingInformation[]) => void) => {
+                const typingByUser = new Map<string, memberTypingInformation>();
+                const sync = () => set(Array.from(typingByUser.values()));
+                const unsubscribers = members.map((member) =>
+                    member.isTypingInformation.subscribe((memberInformation) => {
+                        if (memberInformation && memberInformation.id !== this.matrixRoom.client.getUserId()) {
+                            typingByUser.set(memberInformation.id, memberInformation);
+                        } else {
+                            typingByUser.delete(member.id);
+                        }
+                        sync();
+                    })
+                );
+                sync();
+                return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
+            },
+            []
         );
         this.isRoomFolder = matrixRoom.isSpaceRoom();
         this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
@@ -296,21 +326,7 @@ export class MatrixChatRoom
                 })
         );
 
-        (async () => {
-            await matrixSecurity.restoreRoomsMessages();
-        })()
-            .catch((error) => {
-                console.error("Failed to init client crypto configuration", error);
-            })
-            .then(async () => {
-                await this.initMatrixRoomMessagesAndReactions();
-            })
-            .catch((error) => {
-                console.error("Failed to init Matrix room messages:", error);
-            });
-
-        //Necessary to keep matrix event content for local event deletions after initialization
-        this.startHandlingChatRoomEvents();
+        this.startHandlingChatRoomShellEvents();
 
         gameManager
             .getCurrentGameScene()
@@ -325,6 +341,9 @@ export class MatrixChatRoom
                         return;
                     }
                     this.dmMergerUsersByRoomUnsub = merger.usersByRoomStore.subscribe(() => {
+                        this.directRoomPeerAvatarStore?.refresh().catch((error) => {
+                            console.warn("Failed to refresh Matrix direct room avatar", error);
+                        });
                         const myUserId = this.matrixRoom.client.getUserId();
                         get(this.members)
                             .filter((mem) => mem.id !== myUserId)
@@ -350,6 +369,83 @@ export class MatrixChatRoom
             });
     }
 
+    async ensureInitialized(): Promise<void> {
+        return this.ensureTimelineInitialized();
+    }
+
+    async ensureMembersInitialized(): Promise<void> {
+        if (this.membersInitialized) {
+            return;
+        }
+        if (this.membersInitializationPromise) {
+            return this.membersInitializationPromise;
+        }
+
+        this.debugInitialization("members");
+        this.membersInitializationPromise = Promise.resolve()
+            .then(() => {
+                this.initializeMembers();
+                this.startHandlingChatRoomInitializedEvents();
+                this.membersInitialized = true;
+            })
+            .catch((error: unknown) => {
+                this.membersInitializationPromise = undefined;
+                throw error;
+            });
+
+        return this.membersInitializationPromise;
+    }
+
+    async ensureTimelineInitialized(): Promise<void> {
+        if (get(this.initializationState) === "ready") {
+            return;
+        }
+        if (this.initializationPromise) {
+            return this.initializationPromise;
+        }
+
+        this.initializationState.set("loading");
+        this.initializationError.set(undefined);
+        this.debugInitialization("timeline");
+        this.initializationPromise = (async () => {
+            await this.ensureMembersInitialized();
+            await matrixSecurity.restoreRoomsMessages();
+            await this.initMatrixRoomMessagesAndReactions();
+            this.initializationState.set("ready");
+        })().catch((error: unknown) => {
+            const initializationError = error instanceof Error ? error : new Error(String(error));
+            this.initializationError.set(initializationError);
+            this.initializationState.set("error");
+            this.initializationPromise = undefined;
+            throw initializationError;
+        });
+
+        return this.initializationPromise;
+    }
+
+    private debugInitialization(type: "members" | "timeline"): void {
+        debug("init %s room=%s roomId=%s", type, get(this.name), this.id);
+    }
+
+    private initializeMembers(): void {
+        if (get(this.members).length > 0) {
+            return;
+        }
+        const merger = get(this.userProviderMergerStore);
+        const members = this.matrixRoom.getMembers().map((member) => {
+            const wrappedMember = new MatrixChatRoomMember(
+                member,
+                this.matrixRoom.client.baseUrl,
+                this.matrixRoom.client
+            );
+            if (merger) {
+                wrappedMember.setUserProviderMergerContext(merger);
+            }
+            return wrappedMember;
+        });
+        this.members.set(members);
+    }
+
     private async initMatrixRoomMessagesAndReactions() {
         if (this.matrixRoom.hasEncryptionStateEvent()) {
             await this.matrixRoom.decryptAllEvents();
@@ -369,12 +465,12 @@ export class MatrixChatRoom
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
     }
 
-    private getDirectRoomPeerMember(): MatrixChatRoomMember | undefined {
+    private getDirectRoomPeerRoomMember(): RoomMember | undefined {
         if (get(this.roomTypeStore) !== "direct") {
             return undefined;
         }
         const myUserId = this.matrixRoom.client.getUserId();
-        return get(this.members).find((member) => member.id !== myUserId);
+        return this.getMembersForRoomTypeHeuristics().find((member) => member.userId !== myUserId);
     }
 
     private async readEventsToAddMessagesAndReactions(
@@ -397,15 +493,22 @@ export class MatrixChatRoom
         return undefined;
     }
 
-    private startHandlingChatRoomEvents() {
+    private startHandlingChatRoomShellEvents() {
         this.matrixRoom.on(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
-        this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
         this.matrixRoom.on(RoomStateEvent.Events, this.handleStateEvent);
         this.matrixRoom.on(RoomEvent.MyMembership, this.handleMyMembership);
-        this.matrixRoom.on(RoomStateEvent.NewMember, this.handleNewMember);
         this.matrixRoom.on(RoomEvent.UnreadNotifications, this.updateUnreadNotificationCount);
         this.matrixRoom.currentState.on(RoomStateEvent.Members, this.handleRoomStateMembers);
+    }
+
+    private startHandlingChatRoomInitializedEvents() {
+        if (this.initializedEventHandlersStarted) {
+            return;
+        }
+        this.initializedEventHandlersStarted = true;
+        this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
+        this.matrixRoom.on(RoomStateEvent.NewMember, this.handleNewMember);
     }
 
     protected onRoomMyMembership(room: Room) {
@@ -431,7 +534,12 @@ export class MatrixChatRoom
         this.refreshRoomType();
         const myUserId = this.matrixRoom.client.getUserId();
         if (member.userId === myUserId) {
+            this.setCurrentUserRoomMember(member);
             return;
+        }
+        if (member.userId === this.directRoomPeerAvatarMember?.userId) {
+            this.directRoomPeerAvatarMember = member;
+            this.directRoomPeerAvatarStore?.invalidate();
         }
         get(this.members)
             .filter((m) => m.id === member.userId)
@@ -677,6 +785,7 @@ export class MatrixChatRoom
     }
 
     async loadMorePreviousMessages() {
+        await this.ensureTimelineInitialized();
         if (get(this.hasPreviousMessage)) {
             const existingEventsBeforePagination = this.timelineWindow.getEvents();
             await this.timelineWindow.paginate(Direction.Backward, 8);
@@ -951,6 +1060,8 @@ export class MatrixChatRoom
     destroy() {
         this.dmMergerUsersByRoomUnsub?.();
         this.dmMergerUsersByRoomUnsub = undefined;
+        this.currentUserRoomMember?.off(RoomMemberEvent.PowerLevel, this.handleCurrentUserRoomMemberPowerLevel);
+        this.currentUserRoomMember = undefined;
         this.matrixRoom.currentState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
         this.matrixRoom.off(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);
@@ -984,9 +1095,28 @@ export class MatrixChatRoom
 
     public hasPermissionTo(action: ModerationAction, member?: ChatRoomMember): Readable<boolean> {
         const otherUserPermissionLevel = member ? member.permissionLevel : readable(ChatPermissionLevel.USER);
+        const currentRoomMember = get(this.currentRoomMember);
+        if (!currentRoomMember) {
+            return derived(
+                [this.currentUserPermissionLevel, otherUserPermissionLevel],
+                ([$currentUserPermission, $otherUserPermission]) => {
+                    if (!$currentUserPermission) return false;
+
+                    const currentUserPowerLevel = MatrixChatRoomMember.getPowerLevel($currentUserPermission);
+                    const otherUserPowerLevel = MatrixChatRoomMember.getPowerLevel($otherUserPermission);
+                    const hasSufficientPowerLevel =
+                        this.matrixRoom
+                            .getLiveTimeline()
+                            .getState(Direction.Backward)
+                            ?.hasSufficientPowerLevelFor(action, currentUserPowerLevel) ?? false;
+
+                    return hasSufficientPowerLevel && currentUserPowerLevel > otherUserPowerLevel;
+                }
+            );
+        }
 
         return derived(
-            [get(this.currentRoomMember).permissionLevel, otherUserPermissionLevel],
+            [currentRoomMember.permissionLevel, otherUserPermissionLevel],
             ([$currentRoomPermission, $otherUserPermission]) => {
                 if (!$currentRoomPermission) return false;
 
@@ -1005,7 +1135,7 @@ export class MatrixChatRoom
     }
 
     public hasPermissionForRoomStateEvent(eventType: keyof StateEvents): Readable<boolean> {
-        return derived([get(this.currentRoomMember).permissionLevel], () => {
+        return derived([this.currentUserPermissionLevel, this.myMembership], () => {
             return (
                 this.matrixRoom
                     .getLiveTimeline()
@@ -1013,6 +1143,30 @@ export class MatrixChatRoom
                     ?.maySendStateEvent(eventType, this.matrixRoom.client.getSafeUserId()) ?? false
             );
         });
+    }
+
+    private setCurrentUserRoomMember(member: RoomMember | undefined): void {
+        if (this.currentUserRoomMember === member) {
+            if (member) {
+                this.currentUserPermissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevelNorm));
+            }
+            return;
+        }
+
+        this.currentUserRoomMember?.off(RoomMemberEvent.PowerLevel, this.handleCurrentUserRoomMemberPowerLevel);
+        this.currentUserRoomMember = member;
+
+        if (!member) {
+            this.currentUserPermissionLevel.set(undefined);
+            return;
+        }
+
+        this.currentUserPermissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevelNorm));
+        member.on(RoomMemberEvent.PowerLevel, this.handleCurrentUserRoomMemberPowerLevel);
+    }
+
+    private onCurrentUserRoomMemberPowerLevel(_event: MatrixEvent, member: RoomMember): void {
+        this.currentUserPermissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevelNorm));
     }
 
     public async changePermissionLevelFor(member: ChatRoomMember, permissionLevel: ChatPermissionLevel): Promise<void> {
@@ -1047,7 +1201,11 @@ export class MatrixChatRoom
     public getAllowedRolesToAssign(): ChatPermissionLevel[] {
         const allowedRolesToAssign: ChatPermissionLevel[] = [];
 
-        const currentRoomMemberPermissionLevel = get(get(this.currentRoomMember).permissionLevel);
+        const currentRoomMember = get(this.currentRoomMember);
+        if (!currentRoomMember) {
+            return allowedRolesToAssign;
+        }
+        const currentRoomMemberPermissionLevel = get(currentRoomMember.permissionLevel);
 
         const currentRoomMemberPowerLevel = MatrixChatRoomMember.getPowerLevel(currentRoomMemberPermissionLevel);
 
@@ -1063,7 +1221,11 @@ export class MatrixChatRoom
     }
 
     public canModifyRoleOf(permissionLevel?: ChatPermissionLevel): boolean {
-        const currentRoomMemberPermissionLevel = get(get(this.currentRoomMember).permissionLevel);
+        const currentRoomMember = get(this.currentRoomMember);
+        if (!currentRoomMember) {
+            return false;
+        }
+        const currentRoomMemberPermissionLevel = get(currentRoomMember.permissionLevel);
         const currentRoomMemberPowerLevel = MatrixChatRoomMember.getPowerLevel(currentRoomMemberPermissionLevel);
         const memberPowerLevel = permissionLevel ? MatrixChatRoomMember.getPowerLevel(permissionLevel) : 0;
 

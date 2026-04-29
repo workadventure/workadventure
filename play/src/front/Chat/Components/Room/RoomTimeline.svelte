@@ -42,6 +42,8 @@
     $: messages = room?.messages;
     $: roomName = room?.name;
     $: typingMembers = room.typingMembers;
+    $: initializationState = room.initializationState;
+    $: initializationError = room.initializationError;
 
     type RenderItem =
         | { kind: "separator"; key: string; label: string }
@@ -145,6 +147,7 @@
 
         const loadMessages = async () => {
             try {
+                await room.ensureTimelineInitialized();
                 if (get(room.isEncrypted) && get(matrixSecurity.isEncryptionRequiredAndNotSet)) {
                     return;
                 }
@@ -168,6 +171,10 @@
         }
     }
 
+    function retryInitialization() {
+        room.ensureTimelineInitialized().catch((error) => console.error(error));
+    }
+
     beforeUpdate(() => {
         if (messageListRef) {
             oldScrollHeight = messageListRef.scrollHeight;
@@ -178,7 +185,9 @@
     });
 
     afterUpdate(() => {
-        room.setTimelineAsRead();
+        if ($initializationState === "ready") {
+            room.setTimelineAsRead();
+        }
         if (autoScroll) {
             scrollToMessageListBottom();
         } else if (onScrollTop) {
@@ -340,7 +349,24 @@
                     ? 'items-center justify-center pb-4'
                     : 'max-w-6xl'}"
             >
-                {#if $messages.length === 0}
+                {#if $initializationState === "loading" || $initializationState === "idle"}
+                    <li class="flex flex-col items-center justify-center gap-3 text-center px-3 max-w-md">
+                        <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={32} />
+                    </li>
+                {:else if $initializationState === "error"}
+                    <li class="flex flex-col items-center justify-center gap-3 text-center px-3 max-w-md">
+                        <div class="text-lg font-bold text-center">{$LL.chat.connectionError()}</div>
+                        <div class="text-sm opacity-50 text-center">
+                            {$initializationError?.message ?? ""}
+                        </div>
+                        <button
+                            class="px-3 py-2 rounded bg-white/10 hover:bg-white/20 text-sm"
+                            on:click={retryInitialization}
+                        >
+                            Retry
+                        </button>
+                    </li>
+                {:else if $messages.length === 0}
                     {#if room instanceof ProximityChatRoom}
                         <li class="text-center px-3 max-w-md">
                             <img draggable="false" src={getCloseImg} alt="Discussion bubble" />
@@ -394,11 +420,15 @@
             </ul>
         </div>
 
-        {#if $typingMembers.length > 0}
+        {#if $initializationState === "ready" && $typingMembers.length > 0}
             <TypingUsers typingMembers={$typingMembers} />
         {/if}
         {#key room}
-            <MessageInputBar disabled={$shouldRetrySendingEvents} {room} bind:this={messageInputBarRef} />
+            <MessageInputBar
+                disabled={$shouldRetrySendingEvents || $initializationState !== "ready"}
+                {room}
+                bind:this={messageInputBarRef}
+            />
         {/key}
     {/if}
 </div>

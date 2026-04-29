@@ -9,6 +9,9 @@ const createSelectedRoomStore = () => {
 
     const customSet = (value: ChatRoom | undefined) => {
         update((currentValue) => {
+            value?.ensureTimelineInitialized?.().catch((error) => {
+                console.error("Failed to initialize selected room", error);
+            });
             if (currentValue !== value && value && get(value.isEncrypted) && !isOpen && get(chatVisibilityStore)) {
                 isOpen = true;
                 matrixSecurity

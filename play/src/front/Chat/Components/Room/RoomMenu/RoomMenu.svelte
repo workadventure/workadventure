@@ -1,7 +1,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { openModal } from "svelte-modals";
-    import { get } from "svelte/store";
     import type { Readable } from "svelte/store";
     import { AskPositionMessage_AskType } from "@workadventure/messages";
     import {
@@ -41,6 +40,7 @@
     export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomNotificationControl & ChatRoomModeration;
     const roomType = room.type;
     const areNotificationsMuted = room.areNotificationsMuted;
+    const roomMembers = room.members;
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
     let hideOptions = true;
     let usersByRoomStore:
@@ -82,6 +82,9 @@
         if (optionButtonRef === undefined) {
             return;
         }
+        if (hideOptions) {
+            room.ensureMembersInitialized().catch((error) => console.error(error));
+        }
         hideOptions = !hideOptions;
     }
 
@@ -122,7 +125,7 @@
         });
     }
 
-    $: members = get(room.members);
+    $: members = $roomMembers;
     $: usersByRoomMap = usersByRoomStore && $usersByRoomStore ? $usersByRoomStore : new Map();
 
     // Flatten usersByRoomMap into a list of users with playUri from their room
