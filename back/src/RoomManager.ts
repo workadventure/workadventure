@@ -762,18 +762,15 @@ const roomManager = {
                 callback(asError(e));
             });
     },
-    
+
     getLivekitCredentials(
         call: ServerUnaryCall<GetLivekitCredentialVariableRequestMessage, GetLivekitCredentialResponseMessage>,
         callback: sendUnaryData<GetLivekitCredentialResponseMessage>
     ): void {
         socketManager
             .handleGetLivekitCredentialVariableRequestMessage(call.request)
-            .then(() => {
-                callback(null, {
-                    url: "https://livekit.com",
-                    jwtToken: "1234567890",
-                });
+            .then((credentials: GetLivekitCredentialResponseMessage) => {
+                callback(null, credentials);
             })
             .catch((e: unknown) => {
                 console.error(e);

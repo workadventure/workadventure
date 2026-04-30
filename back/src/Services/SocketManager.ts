@@ -1768,37 +1768,24 @@ export class SocketManager {
         space.deleteUserToNotify(pusher, deleteSpaceUserToNotifyMessage.user);
     }
 
-    async handleGetLivekitCredentialVariableRequestMessage(getLivekitCredentialVariableMessage: GetLivekitCredentialVariableRequestMessage): Promise<GetLivekitCredentialResponseMessage> {
+    async handleGetLivekitCredentialVariableRequestMessage(
+        getLivekitCredentialVariableMessage: GetLivekitCredentialVariableRequestMessage
+    ): Promise<GetLivekitCredentialResponseMessage> {
         const space = this.spaces.get(getLivekitCredentialVariableMessage.spaceName);
-        console.log(space);
         if (!space) {
-            throw new Error(`Could not find space ${getLivekitCredentialVariableMessage.spaceName} to get livekit credential variable`);
+            throw new Error(
+                `Could not find space ${getLivekitCredentialVariableMessage.spaceName} to get livekit credential variable`
+            );
         }
 
         const user = space.getUser(getLivekitCredentialVariableMessage.spaceUserId);
-        console.log(user);
         if (!user) {
-            throw new Error(`Could not find user ${getLivekitCredentialVariableMessage.spaceUserId} to get livekit credential variable`);
+            throw new Error(
+                `Could not find user ${getLivekitCredentialVariableMessage.spaceUserId} to get livekit credential variable`
+            );
         }
 
-        const credentials = await space.getLivekitCredentials(user);
-        console.log(credentials);
-
-        return {
-            url: "https://livekit.com",
-            jwtToken: "1234567890",
-        };
-
-        /*const credentials = await space.getLivekitCredentialVariable(getLivekitCredentialVariableMessage);
-        pusher.write({
-            message: {
-                $case: "getLivekitCredentialVariableResponse",
-                getLivekitCredentialVariableResponse: {
-                    url: credentials.url,
-                    jwtToken: credentials.jwtToken,
-                },
-            },
-        });*/
+        return await space.getLivekitCredentials(user);
     }
 }
 

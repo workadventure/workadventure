@@ -1,5 +1,9 @@
 import * as Sentry from "@sentry/node";
-import type { HandleRecordingWebhookRequest, SpaceUser } from "@workadventure/messages";
+import type {
+    GetLivekitCredentialResponseMessage,
+    HandleRecordingWebhookRequest,
+    SpaceUser,
+} from "@workadventure/messages";
 import { CommunicationType } from "../Types/CommunicationTypes";
 import { LivekitCommunicationStrategy } from "../Strategies/LivekitCommunicationStrategy";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
@@ -78,5 +82,13 @@ export class LivekitState
         recordingSessionId: string
     ): Promise<HandleRecordingWebhookRequest | "ignored"> {
         return this._currentStrategy.handleLivekitWebhook(rawBody, authorizationHeader, spaceName, recordingSessionId);
+    }
+
+    async handleGenerateLivekitCredentials(user: SpaceUser): Promise<GetLivekitCredentialResponseMessage> {
+        const token = await this._currentStrategy.generateToken(user);
+        return {
+            url: this._livekitServerCredentials.livekitHost,
+            jwtToken: token,
+        };
     }
 }
