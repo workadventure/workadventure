@@ -52,6 +52,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         loading: "Bild wird geladen...",
         loadError: "Diese Bildvorschau konnte nicht geladen werden.",
         openInNewTab: "In neuem Tab öffnen",
+        notAvailable: "Bild nicht verfügbar.",
+        imageActions: "Bildaktionen",
     },
     join: "Beitreten",
     search: "Suchen",
@@ -127,6 +129,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         youJoinedMeetingRoom: "Du bist der Besprechung beigetreten",
         today: "Heute",
         yesterday: "Gestern",
+        retry: "Erneut versuchen",
     },
     form: {
         placeholder: "Gib deine Nachricht ein...",
@@ -219,6 +222,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         replySingular: "1 Antwort",
         replyPlural: "{count} Antworten",
         openThreadButtonTitle: "Thread öffnen",
+        unreadAriaLabel: "{count} ungelesen",
     },
     react: "Reagieren",
     copy: "Kopieren",
@@ -485,6 +489,17 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "Chat nicht verfügbar",
+    unknownError: "Unbekannter Fehler",
+    matrixUserSelect: {
+        userNotFound: "Benutzer nicht gefunden",
+        failedToLoadUsers: "Benutzer konnten nicht geladen werden",
+    },
+    a11y: {
+        menuActions: "Aktionsmenü",
+        unreadCount: "{count} ungelesen",
+        userAvatar: "Benutzeravatar",
+        applicationIcon: "Anwendung",
+    },
     requiresLoginForChatModal: {
         title: "Melden Sie sich an, um den Chat zu nutzen!",
         content_1: "Um diese Chat-Funktion vollständig nutzen zu können, müssen Sie angemeldet sein.",

@@ -52,6 +52,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         loading: "Afbeelding laden...",
         loadError: "Kan dit afbeeldingsvoorbeeld niet laden.",
         openInNewTab: "Openen in nieuw tabblad",
+        notAvailable: "Afbeelding is niet beschikbaar.",
+        imageActions: "Afbeeldingsacties",
     },
     join: "Lid worden",
     search: "Zoeken",
@@ -126,6 +128,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         youJoinedMeetingRoom: "Je hebt deelgenomen aan de vergadering",
         today: "Vandaag",
         yesterday: "Gisteren",
+        retry: "Opnieuw proberen",
     },
     form: {
         placeholder: "Voer je bericht in...",
@@ -218,6 +221,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         replySingular: "1 antwoord",
         replyPlural: "{count} antwoorden",
         openThreadButtonTitle: "Thread openen",
+        unreadAriaLabel: "{count} ongelezen",
     },
     react: "Reageren",
     copy: "Kopiëren",
@@ -482,6 +486,17 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "Chat niet beschikbaar",
+    unknownError: "Onbekende fout",
+    matrixUserSelect: {
+        userNotFound: "Gebruiker niet gevonden",
+        failedToLoadUsers: "Gebruikers laden mislukt",
+    },
+    a11y: {
+        menuActions: "Actiemenu",
+        unreadCount: "{count} ongelezen",
+        userAvatar: "Gebruikersavatar",
+        applicationIcon: "Toepassing",
+    },
     requiresLoginForChatModal: {
         title: "Log in om de chat te ontgrendelen!",
         content_1: "Om volledig van deze chatfunctie te genieten, moet je ingelogd zijn.",

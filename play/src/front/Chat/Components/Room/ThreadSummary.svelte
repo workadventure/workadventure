@@ -34,7 +34,7 @@
             <span
                 class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-success px-1.5 text-xs font-bold text-contrast"
                 data-testid="threadSummaryUnread"
-                aria-label={`${summary.unreadNotificationCount} unread`}
+                aria-label={$LL.chat.thread.unreadAriaLabel({ count: summary.unreadNotificationCount })}
             >
                 {summary.unreadNotificationCount > 9 ? "9+" : summary.unreadNotificationCount}
             </span>

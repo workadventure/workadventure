@@ -66,7 +66,7 @@
             <button
                 class="p-2 mt-2 rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center text-white"
                 on:click={toggleMenu}
-                aria-label="Menu actions"
+                aria-label={$LL.chat.a11y.menuActions()}
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"

@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
     import { openModal } from "svelte-modals";
+    import LL from "../../../../../i18n/i18n-svelte";
     import type { ChatMessageContent } from "../../../Connection/ChatConnection";
     import ChatImagePreviewModal from "../../ChatImagePreviewModal.svelte";
 
@@ -19,7 +20,7 @@
     <div
         class="bg-contrast/50 p-1 rounded absolute top-2 right-2 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all h-fit w-fit z-10"
         role="group"
-        aria-label="Image actions"
+        aria-label={$LL.chat.imagePreview.imageActions()}
     >
         {#if previewUrl}
             <a
@@ -28,7 +29,7 @@
                 rel="noopener noreferrer"
                 class="hover:bg-white/10 rounded-sm p-1"
                 on:click|stopPropagation
-                title="Open in new tab"
+                title={$LL.chat.imagePreview.openInNewTab()}
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -68,10 +69,12 @@
             <img class="w-full object-cover max-h-52 rounded" src={displayUrl} alt={$content.body} draggable="false" />
         </div>
     {:else if $content.mediaState === "loading"}
-        <div class="text-xs text-white/80 px-2 py-1">Loading image...</div>
+        <div class="text-xs text-white/80 px-2 py-1">{$LL.chat.imagePreview.loading()}</div>
     {:else}
         <div class="text-xs text-white/80 px-2 py-1">
-            {$content.mediaErrorKind === "decrypt" ? "Unable to decrypt image." : "Unable to load image."}
+            {$content.mediaErrorKind === "decrypt"
+                ? $LL.chat.file.attachmentDecryptError()
+                : $LL.chat.imagePreview.loadError()}
         </div>
     {/if}
 </div>

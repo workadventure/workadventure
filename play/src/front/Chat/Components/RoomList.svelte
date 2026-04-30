@@ -284,7 +284,7 @@
                                     <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white" />
                                     <div
                                         class="flex aspect-square h-5 w-5 items-center justify-center rounded-full bg-success text-sm font-bold leading-none text-contrast z-10"
-                                        aria-label="{$proximityUnreadCount} unread"
+                                        aria-label={$LL.chat.a11y.unreadCount({ count: $proximityUnreadCount })}
                                     >
                                         <span>{$proximityUnreadCount > 9 ? "9" : $proximityUnreadCount}</span>
                                         {#if $proximityUnreadCount > 9}
@@ -420,7 +420,7 @@
     {:else if $selectedRoomStore === undefined && sideBarWidth >= CHAT_LAYOUT_LIMIT}
         <div class="flex flex-col flex-1 ps-4 items-center pt-8">
             <div class="text-center px-3 max-w-md">
-                <img src={getCloseImg} alt="Discussion bubble" draggable="false" />
+                <img src={getCloseImg} alt={$LL.chat.getCloserTitle()} draggable="false" />
                 <div class="text-lg font-bold text-center">{$LL.chat.noRoomOpen()}</div>
                 <div class="text-sm opacity-50 text-center">
                     {$LL.chat.noRoomOpenDescription()}

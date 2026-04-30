@@ -114,6 +114,7 @@ export class MatrixChatRoom
     readonly threads: Readable<readonly ChatThreadSummary[]>;
     timelineItems: Readable<readonly ChatTimelineItem[]>;
     readonly pollCreation: ChatPollCreationCapability;
+    readonly joinedMemberCount: Readable<number>;
     members: Writable<MatrixChatRoomMember[]>;
     /** Same stores as {@link members}, for {@link ChatRoom.membersForMessageAvatars} (timeline avatars). */
     readonly membersForMessageAvatars: Readable<readonly ChatRoomMember[]>;
@@ -145,6 +146,7 @@ export class MatrixChatRoom
     private readonly threadSummaryStores = new Map<string, Writable<ChatThreadSummary | null>>();
     private readonly threadSubscriptions = new Map<string, () => void>();
     private readonly threadList = writable<ChatThreadSummary[]>([]);
+    private readonly joinedMemberCountStore = writable(0);
     /**
      * Filled when {@link gameManager.getCurrentGameScene().userProviderMerger} resolves.
      * Reactive so DM {@link avatarFallbackColor} recomputes when the merger was not ready at construction time.
@@ -256,6 +258,7 @@ export class MatrixChatRoom
         this.setCurrentUserRoomMember(matrixRoom.getMember(matrixRoom.client.getSafeUserId()) ?? undefined);
 
         this.members = writable([]);
+        this.joinedMemberCount = readonly(this.joinedMemberCountStore);
         this.membersForMessageAvatars = this.members;
         this.directRoomPeerAvatarMember = this.getDirectRoomPeerRoomMember();
         if (this.directRoomPeerAvatarMember) {
@@ -412,6 +415,7 @@ export class MatrixChatRoom
         );
 
         this.startHandlingChatRoomShellEvents();
+        this.refreshJoinedMemberCount();
 
         this.userProviderMergerPromise = gameManager
             .getCurrentGameScene()
@@ -510,6 +514,11 @@ export class MatrixChatRoom
             return wrappedMember;
         });
         this.members.set(members);
+        this.refreshJoinedMemberCount();
+    }
+
+    private refreshJoinedMemberCount(): void {
+        this.joinedMemberCountStore.set(this.matrixRoom.getJoinedMemberCount());
     }
 
     activateVisibleProfileSync(): () => void {
@@ -666,6 +675,7 @@ export class MatrixChatRoom
     protected onRoomMyMembership(room: Room) {
         this.myMembership.set(room.getMyMembership());
         this.refreshRoomType();
+        this.refreshJoinedMemberCount();
     }
 
     public async processPollEvents(events: MatrixEvent[]): Promise<void> {
@@ -755,10 +765,12 @@ export class MatrixChatRoom
         }
         this.members.update((members) => [...members, newWrapper]);
         this.refreshRoomType();
+        this.refreshJoinedMemberCount();
     }
 
     /** Room member state updates (e.g. avatar_url) without a separate RoomMember "name" event. */
     private onRoomStateMembers(event: MatrixEvent, _state: RoomState, member: RoomMember) {
+        this.refreshJoinedMemberCount();
         if (event.getType() !== EventType.RoomMember) {
             return;
         }

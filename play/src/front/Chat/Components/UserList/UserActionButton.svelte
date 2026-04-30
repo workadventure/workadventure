@@ -240,7 +240,7 @@
                     ><img
                         class="noselect"
                         src={teleport}
-                        alt="Teleport to logo"
+                        alt={$LL.chat.userList.teleport()}
                         height="13"
                         width="13"
                         draggable="false"
@@ -281,7 +281,7 @@
                     ><img
                         class="noselect"
                         src={businessCard}
-                        alt="Business card"
+                        alt={$LL.chat.userList.businessCard()}
                         height="13"
                         width="13"
                         draggable="false"

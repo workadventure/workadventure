@@ -16,6 +16,7 @@ import type { Thread } from "matrix-js-sdk/lib/models/thread";
 import { SearchableArrayStore } from "@workadventure/store-utils";
 import type {
     ChatMessage,
+    ChatRoomInitializationState,
     ChatRoomMember,
     ChatThread,
     ChatTimelineItem,
@@ -48,6 +49,10 @@ export class MatrixChatThread implements ChatThread {
     readonly timelineItems: Readable<readonly ChatTimelineItem[]>;
     readonly hasPreviousMessage = writable(false);
     readonly timelineWindow: TimelineWindow;
+    readonly initializationState = writable<ChatRoomInitializationState>("idle");
+    readonly initializationError = writable<Error | undefined>(undefined);
+
+    private initializationPromise: Promise<void> | undefined;
 
     private readonly replyMessages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
     private readonly inMemoryEventsContent = new Map<string, IContent>();
@@ -102,12 +107,39 @@ export class MatrixChatThread implements ChatThread {
 
         this.initializeRootMessage();
         this.startHandlingThreadEvents();
+    }
 
-        this.initMatrixThreadMessages()
-            .catch((error) => console.error("Failed to init Matrix thread messages:", error))
-            .finally(() => {
+    async ensureInitialized(): Promise<void> {
+        return this.ensureTimelineInitialized();
+    }
+
+    async ensureTimelineInitialized(): Promise<void> {
+        if (get(this.initializationState) === "ready") {
+            return;
+        }
+        if (this.initializationPromise) {
+            return this.initializationPromise;
+        }
+
+        this.initializationState.set("loading");
+        this.initializationError.set(undefined);
+        this.initializationPromise = (async () => {
+            await this.parentRoom.ensureTimelineInitialized();
+            try {
+                await this.initMatrixThreadMessages();
+            } finally {
                 this.parentRoom.refreshThreadSummary(this.id);
-            });
+            }
+            this.initializationState.set("ready");
+        })().catch((error: unknown) => {
+            const initializationError = error instanceof Error ? error : new Error(String(error));
+            this.initializationError.set(initializationError);
+            this.initializationState.set("error");
+            this.initializationPromise = undefined;
+            throw initializationError;
+        });
+
+        return this.initializationPromise;
     }
 
     private initializeRootMessage(): void {

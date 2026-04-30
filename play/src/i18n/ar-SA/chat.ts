@@ -50,6 +50,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         loading: "جارٍ تحميل الصورة...",
         loadError: "تعذر تحميل معاينة هذه الصورة.",
         openInNewTab: "فتح في علامة تبويب جديدة",
+        notAvailable: "الصورة غير متوفرة.",
+        imageActions: "إجراءات الصورة",
     },
     join: "انضمام",
     search: "بحث",
@@ -124,6 +126,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         youJoinedMeetingRoom: "لقد انضممت إلى غرفة الاجتماع",
         today: "اليوم",
         yesterday: "أمس",
+        retry: "إعادة المحاولة",
     },
     form: {
         placeholder: "أدخل رسالتك...",
@@ -216,6 +219,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         replySingular: "رد واحد",
         replyPlural: "{count} ردود",
         openThreadButtonTitle: "فتح الموضوع",
+        unreadAriaLabel: "{count} غير مقروء",
     },
     react: "تفاعل",
     copy: "نسخ",
@@ -480,6 +484,17 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "الدردشة غير متاحة",
+    unknownError: "خطأ غير معروف",
+    matrixUserSelect: {
+        userNotFound: "المستخدم غير موجود",
+        failedToLoadUsers: "تعذّر تحميل المستخدمين",
+    },
+    a11y: {
+        menuActions: "قائمة الإجراءات",
+        unreadCount: "{count} غير مقروء",
+        userAvatar: "صورة المستخدم",
+        applicationIcon: "تطبيق",
+    },
     requiresLoginForChatModal: {
         title: "قم بتسجيل الدخول لفتح الدردشة!",
         content_1: "للاستمتاع الكامل بميزة الدردشة هذه، تحتاج إلى تسجيل الدخول إلى حسابك.",
