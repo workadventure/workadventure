@@ -276,6 +276,26 @@ export const EnvironmentVariables = z.object({
     VIDEO_ANALYTICS_ENABLED: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe("Enable/disable video quality analytics telemetry. Defaults to false"),
+    VIDEO_ANALYTICS_ADMIN_URL: AbsoluteOrRelativeUrl.optional()
+        .transform(emptyStringToUndefined)
+        .describe("Internal admin base URL used by pusher to send video quality analytics batches"),
+    VIDEO_ANALYTICS_API_KEY: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("Bearer API key used by pusher to authenticate video quality analytics batches"),
+    VIDEO_ANALYTICS_FLUSH_INTERVAL_MS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 10_000))
+        .describe("Interval in milliseconds between video quality analytics batch flushes. Defaults to 10000"),
+    VIDEO_ANALYTICS_TIMEOUT_MS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 2_000))
+        .describe("HTTP timeout in milliseconds for video quality analytics ingestion calls. Defaults to 2000"),
+    VIDEO_ANALYTICS_MAX_QUEUE_SIZE: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 10_000))
+        .describe("Maximum number of video quality samples queued in pusher memory. Defaults to 10000"),
+    VIDEO_ANALYTICS_MAX_BATCH_SIZE: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 1_000))
+        .describe("Maximum number of video quality samples sent in one admin batch. Defaults to 1000"),
     START_ROOM_URL: z.string().optional().describe("Default room URL where users start when accessing the platform"),
 
     // Front related environment variables

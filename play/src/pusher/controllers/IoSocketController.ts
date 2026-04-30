@@ -29,6 +29,8 @@ import type { ConnectingSocketData, SocketData, SpaceName } from "../models/Webs
 import { emitInBatch } from "../services/IoSocketHelpers";
 import { ClientAbortError } from "../models/ClientAbortError";
 import { ClientNotPartOfSpaceError, UserAlreadyAddedInSpaceError } from "../models/SpaceValidationErrors";
+import { videoQualityAnalyticsQueue } from "../services/VideoQualityAnalyticsQueue";
+import { getClientIpFromXForwardedFor } from "../services/ClientIp";
 
 const debug = Debug("pusher:requests");
 
@@ -269,7 +271,7 @@ export class IoSocketController {
                     // We abuse the protocol header to pass the JWT token (to avoid sending it in the query string)
                     const token = websocketProtocol;
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
-                    const ipAddress = req.getHeader("x-forwarded-for");
+                    const ipAddress = getClientIpFromXForwardedFor(req.getHeader("x-forwarded-for"));
                     const locale = req.getHeader("accept-language");
 
                     const {
@@ -1280,6 +1282,10 @@ export class IoSocketController {
                                 debug(
                                     "Received video quality report with %d samples",
                                     message.message.videoQualityReportMessage.samples.length
+                                );
+                                videoQualityAnalyticsQueue.enqueueReport(
+                                    message.message.videoQualityReportMessage,
+                                    socket.getUserData()
                                 );
                                 break;
                             }
