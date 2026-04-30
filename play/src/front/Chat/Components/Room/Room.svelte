@@ -1,6 +1,7 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
     import { defaultColor } from "@workadventure/shared-utils";
+    import { onDestroy, onMount } from "svelte";
     import type {
         ChatRoom,
         ChatRoomMembershipManagement,
@@ -32,6 +33,16 @@
     $: peerAvatarColorStore = room.avatarFallbackColor;
     $: peerWaParensStore = room.peerWaDisplayNameIfDifferent;
     $: peerWaDisplayNameParens = peerWaParensStore ? $peerWaParensStore : undefined;
+
+    let deactivateVisibleProfileSync: (() => void) | undefined;
+
+    onMount(() => {
+        deactivateVisibleProfileSync = room.activateVisibleProfileSync?.();
+    });
+
+    onDestroy(() => {
+        deactivateVisibleProfileSync?.();
+    });
 </script>
 
 <div

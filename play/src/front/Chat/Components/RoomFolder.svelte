@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { get } from "svelte/store";
     import type { RoomFolder, ChatRoom, ChatRoomModeration } from "../Connection/ChatConnection";
     import LL from "../../../i18n/i18n-svelte";
@@ -9,11 +10,11 @@
     import ShowMore from "./ShowMore.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
     import RoomSuggested from "./Room/RoomSuggested.svelte";
-    import { IconChevronUp } from "@wa-icons";
+    import { IconChevronUp, IconLoader } from "@wa-icons";
 
     export let rootFolder: boolean;
     export let folder: RoomFolder & ChatRoomModeration;
-    $: ({ name, folders, invitations, rooms, id, suggestedRooms, joinableRooms } = folder);
+    $: ({ name, folders, invitations, rooms, id, suggestedRooms, joinableRooms, joinableRoomsLoading } = folder);
     let isOpen: boolean = localUserStore.hasFolderOpened(folder.id) ?? false;
     let joinableRoomsOpen = false;
     const isFoldersOpen: { [key: string]: boolean } = {};
@@ -38,6 +39,7 @@
         isOpen = !isOpen;
         if (isOpen) {
             localUserStore.addFolderOpened(id);
+            loadOpenedFolderContent();
         } else {
             localUserStore.removeFolderOpened(id);
         }
@@ -46,6 +48,19 @@
     function toggleJoinableRooms() {
         joinableRoomsOpen = !joinableRoomsOpen;
     }
+
+    function loadOpenedFolderContent() {
+        folder.ensureChildrenLoaded();
+        folder.ensureJoinableRoomsLoaded().catch((error) => {
+            console.error("Failed to load joinable rooms", error);
+        });
+    }
+
+    onMount(() => {
+        if (isOpen) {
+            loadOpenedFolderContent();
+        }
+    });
 </script>
 
 <div class={`${!rootFolder ? "mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4" : ""}`}>
@@ -84,7 +99,7 @@
     <div class="flex flex-col">
         {#if isOpen}
             <div class="flex flex-col">
-                {#if $suggestedRooms.length > 0 || filteredJoinableRooms.length > 0}
+                {#if $joinableRoomsLoading || $suggestedRooms.length > 0 || filteredJoinableRooms.length > 0}
                     <div class="mx-2 p-1 bg-secondary/30 rounded-lg mb-4 border border-solid border-secondary/80">
                         <div
                             class="group relative px-3 m-0 rounded-md text-white/75 hover:text-white h-8 hover:bg-contrast-200/10 w-full flex space-x-2 items-center"
@@ -112,7 +127,11 @@
                         </div>
                         {#if joinableRoomsOpen}
                             <div class="flex flex-col overflow-auto ps-3 pe-4 pb-3">
-                                {#if $suggestedRooms.length > 0}
+                                {#if $joinableRoomsLoading}
+                                    <div class="flex items-center justify-center p-2 text-white/70">
+                                        <IconLoader class="animate-spin" />
+                                    </div>
+                                {:else if $suggestedRooms.length > 0}
                                     <div class="bg-white/10 rounded-md">
                                         <span class="text-sm opacity-80 p-2">
                                             {$LL.chat.suggestedRooms()} :

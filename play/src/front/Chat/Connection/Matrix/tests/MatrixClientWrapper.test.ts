@@ -1,26 +1,37 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ICreateClientOpts } from "matrix-js-sdk";
+import type { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
+import { openModal } from "svelte-modals";
 import type { MatrixClientWrapperInterface, MatrixLocalUserStore } from "../MatrixClientWrapper";
 import { MatrixClientWrapper } from "../MatrixClientWrapper";
+import { matrixSecurity } from "../MatrixSecurity";
 
 // @vitest-environment jsdom
 vi.mock("../AccessSecretStorageDialog.svelte", () => {
-    return {};
+    return { default: {} };
 });
 
 vi.mock("../CreateRecoveryKeyDialog.svelte", () => {
-    return {};
+    return { default: {} };
 });
 vi.mock("../InteractiveAuthDialog.svelte", () => {
-    return {};
+    return { default: {} };
 });
 
 vi.mock("../../../Stores/ChatStore.ts", () => {
     return {};
 });
+
+vi.mock("svelte-modals", () => {
+    return {
+        openModal: vi.fn(),
+    };
+});
+
 describe("MatrixClientWrapper", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        matrixSecurity.shouldDisplayModal = false;
     });
     describe("initMatrixClient", () => {
         const basicMockClient = {
@@ -304,6 +315,88 @@ describe("MatrixClientWrapper", () => {
 
             expect(lastCreateClientArg.cryptoCallbacks?.getSecretStorageKey).toBeDefined();
             expect(lastCreateClientArg.cryptoCallbacks?.cacheSecretStorageKey).toBeDefined();
+        });
+
+        it("should deduplicate concurrent secret storage key requests", async () => {
+            matrixSecurity.shouldDisplayModal = true;
+
+            const userId = "Alice";
+            const accessToken = "accessToken";
+            const refreshToken = "refreshToken";
+            const deviceId = "deviceId";
+            const matrixBaseURL = "testUrl";
+            const secretStorageKeyId = "secretStorageKeyId";
+            const secretStorageKey = new Uint8Array([1, 2, 3]);
+
+            const mockClient = {
+                ...basicMockClient,
+                clearStores: vi.fn(),
+                secretStorage: {
+                    getDefaultKeyId: vi.fn().mockResolvedValue(secretStorageKeyId),
+                },
+            };
+
+            const createClient = vi.fn().mockReturnValue(mockClient);
+            const localUserStoreMock: MatrixLocalUserStore = {
+                ...basicLocalUserStoreMock,
+                getLocalUser: vi.fn().mockReturnValue({
+                    uuid: "myUuid",
+                    email: "",
+                    isMatrixRegistered: true,
+                    matrixUserId: userId,
+                }),
+                getMatrixAccessToken: vi.fn().mockReturnValue(accessToken),
+                getMatrixRefreshToken: vi.fn().mockReturnValue(refreshToken),
+                getMatrixUserId: vi.fn().mockReturnValue(userId),
+                getMatrixDeviceId: vi.fn().mockReturnValue(deviceId),
+                getMatrixLoginToken: vi.fn().mockReturnValue(null),
+            } as unknown as MatrixLocalUserStore;
+
+            // eslint-disable-next-line
+            vi.spyOn(MatrixClientWrapper.prototype as any, "matrixWebClientStore").mockReturnValue({});
+
+            const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
+                matrixBaseURL,
+                localUserStoreMock,
+                createClient
+            );
+
+            await matrixClientWrapperInstance.initMatrixClient();
+
+            const lastCreateClientArg: ICreateClientOpts = createClient.mock.calls[0][0] as ICreateClientOpts;
+            const getSecretStorageKey = lastCreateClientArg.cryptoCallbacks?.getSecretStorageKey;
+            if (!getSecretStorageKey) {
+                throw new Error("getSecretStorageKey callback is missing");
+            }
+
+            const keyRequest: { keys: Record<string, SecretStorageKeyDescriptionAesV1> } = {
+                keys: {
+                    [secretStorageKeyId]: {
+                        algorithm: "m.secret_storage.v1.aes-hmac-sha2",
+                        iv: "",
+                        mac: "",
+                        name: "",
+                        passphrase: {
+                            algorithm: "m.pbkdf2",
+                            iterations: 1,
+                            salt: "",
+                        },
+                    },
+                },
+            };
+
+            const firstRequest = getSecretStorageKey(keyRequest, "m.cross_signing.master");
+            const secondRequest = getSecretStorageKey(keyRequest, "m.cross_signing.master");
+
+            await vi.waitFor(() => expect(openModal).toHaveBeenCalledOnce());
+
+            const openModalProps = vi.mocked(openModal).mock.calls[0][1] as {
+                onClose: (key: Uint8Array | null) => void;
+            };
+            openModalProps.onClose(secretStorageKey);
+
+            await expect(firstRequest).resolves.toEqual([secretStorageKeyId, secretStorageKey]);
+            await expect(secondRequest).resolves.toEqual([secretStorageKeyId, secretStorageKey]);
         });
     });
 });
