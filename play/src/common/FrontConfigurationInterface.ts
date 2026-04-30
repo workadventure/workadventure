@@ -63,7 +63,6 @@ export interface FrontConfigurationInterface {
     GRPC_MAX_MESSAGE_SIZE: number;
     TURN_CREDENTIALS_RENEWAL_TIME: number;
     BACKGROUND_TRANSFORMER_ENGINE: "tasks-vision" | "selfie-segmentation" | undefined;
-    VIDEO_ANALYTICS_ENABLED: boolean;
     // Woka settings
     DEFAULT_WOKA_NAME: string | undefined;
     DEFAULT_WOKA_TEXTURE: string | undefined;

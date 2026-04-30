@@ -8,9 +8,8 @@ import {
 } from "@workadventure/messages";
 import type { SocketData } from "../models/Websocket/SocketData";
 import {
-    VIDEO_ANALYTICS_ADMIN_URL,
-    VIDEO_ANALYTICS_API_KEY,
-    VIDEO_ANALYTICS_ENABLED,
+    ADMIN_API_TOKEN,
+    ADMIN_API_URL,
     VIDEO_ANALYTICS_FLUSH_INTERVAL_MS,
     VIDEO_ANALYTICS_MAX_BATCH_SIZE,
     VIDEO_ANALYTICS_MAX_QUEUE_SIZE,
@@ -64,9 +63,8 @@ export type VideoQualityAnalyticsBatch = {
 };
 
 export type VideoQualityAnalyticsQueueConfig = {
-    enabled: boolean;
-    adminUrl: string | undefined;
-    apiKey: string | undefined;
+    adminApiUrl: string | undefined;
+    adminApiToken: string | undefined;
     flushIntervalMs: number;
     timeoutMs: number;
     maxQueueSize: number;
@@ -101,6 +99,7 @@ export class VideoQualityAnalyticsQueue {
     private batchesSent = 0;
     private samplesSent = 0;
     private flushErrors = 0;
+    private enabled = false;
 
     public constructor(
         private readonly config: VideoQualityAnalyticsQueueConfig,
@@ -108,11 +107,11 @@ export class VideoQualityAnalyticsQueue {
         private readonly now: () => Date = () => new Date(),
         private readonly random: () => number = Math.random
     ) {
-        this.endpointUrl = config.adminUrl
-            ? `${config.adminUrl.replace(/\/+$/, "")}/api/analytics/video-quality-batch`
+        this.endpointUrl = config.adminApiUrl
+            ? `${config.adminApiUrl.replace(/\/+$/, "")}/api/analytics/video-quality-batch`
             : undefined;
 
-        if (this.canSend() && config.flushIntervalMs > 0) {
+        if (this.hasAdminApiConfig() && config.flushIntervalMs > 0) {
             this.timer = setInterval(() => {
                 this.flush().catch((error) => {
                     this.logFlushError(error);
@@ -120,6 +119,13 @@ export class VideoQualityAnalyticsQueue {
             }, config.flushIntervalMs);
             // Analytics flushing must not keep the Node.js process alive during shutdown or tests.
             this.timer.unref();
+        }
+    }
+
+    public setEnabled(enabled: boolean): void {
+        this.enabled = enabled;
+        if (!enabled) {
+            this.queue.length = 0;
         }
     }
 
@@ -192,14 +198,12 @@ export class VideoQualityAnalyticsQueue {
         };
     }
 
+    private hasAdminApiConfig(): boolean {
+        return this.endpointUrl !== undefined && this.config.adminApiToken !== undefined;
+    }
+
     private canSend(): boolean {
-        return (
-            this.config.enabled &&
-            this.config.adminUrl !== undefined &&
-            this.config.apiKey !== undefined &&
-            this.config.maxQueueSize > 0 &&
-            this.config.maxBatchSize > 0
-        );
+        return this.enabled && this.hasAdminApiConfig() && this.config.maxQueueSize > 0 && this.config.maxBatchSize > 0;
     }
 
     private normalizeSample(
@@ -326,13 +330,13 @@ export class VideoQualityAnalyticsQueue {
     }
 
     private async postBatch(batch: VideoQualityAnalyticsBatch): Promise<void> {
-        if (!this.endpointUrl) {
+        if (!this.endpointUrl || this.config.adminApiToken === undefined) {
             return;
         }
 
         await this.post(this.endpointUrl, batch, {
             headers: {
-                Authorization: `Bearer ${this.config.apiKey}`,
+                Authorization: `Bearer ${this.config.adminApiToken}`,
                 "Content-Type": "application/json",
             },
             timeout: this.config.timeoutMs,
@@ -404,9 +408,8 @@ async function sleep(ms: number): Promise<void> {
 
 function buildDefaultConfig(): VideoQualityAnalyticsQueueConfig {
     return {
-        enabled: VIDEO_ANALYTICS_ENABLED,
-        adminUrl: VIDEO_ANALYTICS_ADMIN_URL,
-        apiKey: VIDEO_ANALYTICS_API_KEY,
+        adminApiUrl: ADMIN_API_URL,
+        adminApiToken: ADMIN_API_TOKEN,
         flushIntervalMs: VIDEO_ANALYTICS_FLUSH_INTERVAL_MS,
         timeoutMs: VIDEO_ANALYTICS_TIMEOUT_MS,
         maxQueueSize: VIDEO_ANALYTICS_MAX_QUEUE_SIZE,

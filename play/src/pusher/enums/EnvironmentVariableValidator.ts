@@ -273,17 +273,6 @@ export const EnvironmentVariables = z.object({
     ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe("Enable/disable the OpenAPI documentation endpoint. Defaults to false"),
-    VIDEO_ANALYTICS_ENABLED: BoolAsString.optional()
-        .transform((val) => toBool(val, false))
-        .describe("Enable/disable video quality analytics telemetry. Defaults to false"),
-    VIDEO_ANALYTICS_ADMIN_URL: AbsoluteOrRelativeUrl.optional()
-        .transform(emptyStringToUndefined)
-        .describe("Internal admin base URL used by pusher to send video quality analytics batches"),
-    VIDEO_ANALYTICS_API_KEY: z
-        .string()
-        .optional()
-        .transform(emptyStringToUndefined)
-        .describe("Bearer API key used by pusher to authenticate video quality analytics batches"),
     VIDEO_ANALYTICS_FLUSH_INTERVAL_MS: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 10_000))
         .describe("Interval in milliseconds between video quality analytics batch flushes. Defaults to 10000"),

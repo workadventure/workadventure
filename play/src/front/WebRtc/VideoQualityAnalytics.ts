@@ -6,9 +6,10 @@ import {
     VideoQualityTransportType,
 } from "@workadventure/messages";
 import type { WebRtcStats } from "../Components/Video/WebRtcStats";
-import { VIDEO_ANALYTICS_ENABLED } from "../Enum/EnvironmentVariable";
+import { hasCapability } from "../Connection/Capabilities";
 
 const VIDEO_ANALYTICS_SEND_INTERVAL_MS = 5_000;
+const VIDEO_QUALITY_ANALYTICS_CAPABILITY = "api/analytics/video-quality-batch";
 
 export type VideoQualityAnalyticsContext = {
     streamId: string;
@@ -28,7 +29,7 @@ export function subscribeToVideoQualityAnalytics(
     context: VideoQualityAnalyticsContext,
     sendReport: (message: VideoQualityReportMessage) => void
 ): Unsubscriber {
-    if (!VIDEO_ANALYTICS_ENABLED) {
+    if (hasCapability(VIDEO_QUALITY_ANALYTICS_CAPABILITY) !== "v1") {
         return () => {};
     }
 

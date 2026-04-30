@@ -104,9 +104,6 @@ export const LIVEKIT_PIXEL_DENSITY = 2 / 3;
 export const ENABLE_ISSUE_REPORT = true;
 export const ENABLE_TUTORIAL = true;
 export const GRPC_MAX_MESSAGE_SIZE = 20 * 1024 * 1024;
-export const VIDEO_ANALYTICS_ENABLED = false;
-export const VIDEO_ANALYTICS_ADMIN_URL: string | undefined = undefined;
-export const VIDEO_ANALYTICS_API_KEY: string | undefined = undefined;
 export const VIDEO_ANALYTICS_FLUSH_INTERVAL_MS = 10_000;
 export const VIDEO_ANALYTICS_TIMEOUT_MS = 2_000;
 export const VIDEO_ANALYTICS_MAX_QUEUE_SIZE = 10_000;
@@ -175,7 +172,6 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     GRPC_MAX_MESSAGE_SIZE,
     TURN_CREDENTIALS_RENEWAL_TIME,
     BACKGROUND_TRANSFORMER_ENGINE: "selfie-segmentation",
-    VIDEO_ANALYTICS_ENABLED,
     DEFAULT_WOKA_NAME,
     DEFAULT_WOKA_TEXTURE,
     SKIP_CAMERA_PAGE,

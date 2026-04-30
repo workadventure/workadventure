@@ -61,9 +61,6 @@ Environment variables for the Play service (frontend and pusher).
 | `ENABLE_ISSUE_REPORT` | No | Whether the feature 'issue report' is enabled or not on this room. Defaults to true. |
 | `ENABLE_TUTORIAL` | No | Whether the onboarding tutorial is enabled or not on this room. Defaults to true. |
 | `ENABLE_OPENAPI_ENDPOINT` | No | Enable/disable the OpenAPI documentation endpoint. Defaults to false |
-| `VIDEO_ANALYTICS_ENABLED` | No | Enable/disable video quality analytics telemetry. Defaults to false |
-| `VIDEO_ANALYTICS_ADMIN_URL` | No | Internal admin base URL used by pusher to send video quality analytics batches |
-| `VIDEO_ANALYTICS_API_KEY` | No | Bearer API key used by pusher to authenticate video quality analytics batches |
 | `VIDEO_ANALYTICS_FLUSH_INTERVAL_MS` | No | Interval in milliseconds between video quality analytics batch flushes. Defaults to 10000 |
 | `VIDEO_ANALYTICS_TIMEOUT_MS` | No | HTTP timeout in milliseconds for video quality analytics ingestion calls. Defaults to 2000 |
 | `VIDEO_ANALYTICS_MAX_QUEUE_SIZE` | No | Maximum number of video quality samples queued in pusher memory. Defaults to 10000 |

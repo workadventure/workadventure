@@ -85,7 +85,6 @@ if (typeof window !== "undefined" && window.env === undefined) {
         GRPC_MAX_MESSAGE_SIZE: 4194304,
         TURN_CREDENTIALS_RENEWAL_TIME: 0,
         BACKGROUND_TRANSFORMER_ENGINE: undefined,
-        VIDEO_ANALYTICS_ENABLED: false,
         DEFAULT_WOKA_NAME: undefined,
         DEFAULT_WOKA_TEXTURE: undefined,
         SKIP_CAMERA_PAGE: undefined,

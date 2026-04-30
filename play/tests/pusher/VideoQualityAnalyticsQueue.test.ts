@@ -16,9 +16,8 @@ import {
 } from "../../src/pusher/services/VideoQualityAnalyticsQueue";
 
 const baseConfig: VideoQualityAnalyticsQueueConfig = {
-    enabled: true,
-    adminUrl: "http://admin.test",
-    apiKey: "analytics-key",
+    adminApiUrl: "http://admin.test",
+    adminApiToken: "analytics-key",
     flushIntervalMs: 0,
     timeoutMs: 500,
     maxQueueSize: 10,
@@ -31,9 +30,24 @@ describe("VideoQualityAnalyticsQueue", () => {
         vi.useRealTimers();
     });
 
+    it("does not queue samples until analytics is enabled from admin capabilities", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new VideoQualityAnalyticsQueue(baseConfig, post);
+
+        queue.enqueueReport({ samples: [sample()] }, socketData());
+        await queue.flush();
+
+        expect(post).not.toHaveBeenCalled();
+        expect(queue.getStats()).toMatchObject({
+            queueSize: 0,
+            samplesSent: 0,
+        });
+    });
+
     it("enriches and sends protobuf samples as admin batches", async () => {
         const post = vi.fn().mockResolvedValue(undefined);
         const queue = new VideoQualityAnalyticsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));
+        queue.setEnabled(true);
 
         queue.enqueueReport({ samples: [sample()] }, socketData());
         await queue.flush();
@@ -95,6 +109,7 @@ describe("VideoQualityAnalyticsQueue", () => {
     it("drops the oldest samples when the queue is full", async () => {
         const post = vi.fn().mockResolvedValue(undefined);
         const queue = new VideoQualityAnalyticsQueue({ ...baseConfig, maxQueueSize: 2 }, post);
+        queue.setEnabled(true);
 
         queue.enqueueReport({ samples: [sample({ sampleSeq: 1 })] }, socketData());
         queue.enqueueReport({ samples: [sample({ sampleSeq: 2 })] }, socketData());
@@ -113,6 +128,7 @@ describe("VideoQualityAnalyticsQueue", () => {
         const post = vi.fn().mockResolvedValue(undefined);
         const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
         const queue = new VideoQualityAnalyticsQueue(baseConfig, post);
+        queue.setEnabled(true);
 
         queue.enqueueReport(
             {
@@ -144,6 +160,7 @@ describe("VideoQualityAnalyticsQueue", () => {
         const post = vi.fn().mockRejectedValue(new Error("admin unavailable"));
         const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
         const queue = new VideoQualityAnalyticsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));
+        queue.setEnabled(true);
 
         queue.enqueueReport({ samples: [sample()] }, socketData());
         const flushPromise = queue.flush();
