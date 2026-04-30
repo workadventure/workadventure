@@ -7,6 +7,7 @@ import LL from "../../../i18n/i18n-svelte";
 import { RemotePlayer } from "../Entity/RemotePlayer";
 import { Entity } from "../ECS/Entity";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
+import { PHASER_COLOR_DESIGN_SYSTEM_SECONDARY } from "../../Utils/DesignSystemPhaserColors";
 import type { ActivatableInterface } from "./ActivatableInterface";
 
 export class ActivatablesManager {
@@ -19,7 +20,7 @@ export class ActivatablesManager {
 
     private canSelectByDistance = true;
 
-    private readonly outlineColor = 0xf9e81e;
+    private readonly outlineColor = PHASER_COLOR_DESIGN_SYSTEM_SECONDARY;
     private readonly directionalActivationPositionShift = 24;
 
     constructor(currentPlayer: Player) {
