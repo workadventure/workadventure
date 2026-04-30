@@ -49,6 +49,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         loading: "正在加载图片...",
         loadError: "无法加载此图片预览。",
         openInNewTab: "在新标签页中打开",
+        notAvailable: "图片不可用。",
+        imageActions: "图片操作",
     },
     join: "加入",
     search: "搜索",
@@ -123,6 +125,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         youJoinedMeetingRoom: "您已加入会议室",
         today: "今天",
         yesterday: "昨天",
+        retry: "重试",
     },
     form: {
         placeholder: "输入您的消息...",
@@ -215,6 +218,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         replySingular: "1 条回复",
         replyPlural: "{count} 条回复",
         openThreadButtonTitle: "打开话题串",
+        unreadAriaLabel: "{count} 条未读",
     },
     react: "反应",
     copy: "复制",
@@ -477,6 +481,17 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "聊天不可用",
+    unknownError: "未知错误",
+    matrixUserSelect: {
+        userNotFound: "未找到用户",
+        failedToLoadUsers: "加载用户失败",
+    },
+    a11y: {
+        menuActions: "操作菜单",
+        unreadCount: "{count} 条未读",
+        userAvatar: "用户头像",
+        applicationIcon: "应用",
+    },
     requiresLoginForChatModal: {
         title: "登录以解锁聊天！",
         content_1: "要完全享受此聊天功能，您需要登录到您的账户。",

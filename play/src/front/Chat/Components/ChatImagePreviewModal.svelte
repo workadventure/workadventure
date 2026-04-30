@@ -53,11 +53,11 @@
                     draggable="false"
                 />
             {:else}
-                <div class="text-white/90 text-sm p-4">Image is not available.</div>
+                <div class="text-white/90 text-sm p-4">{$LL.chat.imagePreview.notAvailable()}</div>
             {/if}
             <div
                 class="absolute top-2 right-2 flex items-center justify-end gap-2 rounded-lg bg-black/40 p-1.5"
-                aria-label="Image actions"
+                aria-label={$LL.chat.imagePreview.imageActions()}
             >
                 {#if url}
                     <a

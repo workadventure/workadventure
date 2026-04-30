@@ -43,7 +43,7 @@
             if (error instanceof Error) {
                 createRoomError = error.message;
             } else {
-                createRoomError = "Unknown error";
+                createRoomError = get(LL).chat.unknownError();
             }
         } finally {
             loadingRoomCreation = false;

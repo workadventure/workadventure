@@ -1,6 +1,6 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
-    import { readable } from "svelte/store";
+    import { get, readable } from "svelte/store";
     import { fade } from "svelte/transition";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -26,7 +26,7 @@
             if (error instanceof Error) {
                 joinRoomError = error.message;
             } else {
-                joinRoomError = "Unknown error";
+                joinRoomError = get(LL).chat.unknownError();
             }
             setTimeout(() => {
                 joinRoomError = undefined;

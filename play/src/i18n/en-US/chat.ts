@@ -50,6 +50,8 @@ const chat: BaseTranslation = {
         loading: "Loading image...",
         loadError: "Unable to load this image preview.",
         openInNewTab: "Open in new tab",
+        notAvailable: "Image is not available.",
+        imageActions: "Image actions",
     },
     join: "Join",
     search: "Search",
@@ -124,6 +126,7 @@ const chat: BaseTranslation = {
         youJoinedMeetingRoom: "You have joined the meeting room",
         today: "Today",
         yesterday: "Yesterday",
+        retry: "Retry",
     },
     form: {
         placeholder: "Enter your message...",
@@ -217,6 +220,7 @@ const chat: BaseTranslation = {
         replySingular: "1 reply",
         replyPlural: "{count} replies",
         openThreadButtonTitle: "Open thread",
+        unreadAriaLabel: "{count} unread",
     },
     react: "React",
     copy: "Copy",
@@ -481,6 +485,17 @@ const chat: BaseTranslation = {
         },
     },
     connectionError: "Chat not available",
+    unknownError: "Unknown error",
+    matrixUserSelect: {
+        userNotFound: "User not found",
+        failedToLoadUsers: "Failed to load users",
+    },
+    a11y: {
+        menuActions: "Menu actions",
+        unreadCount: "{count} unread",
+        userAvatar: "User avatar",
+        applicationIcon: "Application",
+    },
     requiresLoginForChatModal: {
         title: "Log in to unlock the chat!",
         content_1: "To fully enjoy this chat feature, you need to be logged into your account.",

@@ -1,15 +1,37 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { get } from "svelte/store";
     import { openModal } from "svelte-modals";
     import LL from "../../../../i18n/i18n-svelte";
     import type { ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration } from "../../Connection/ChatConnection";
     import ManageParticipantsModal from "./ManageParticipantsModal.svelte";
     import RoomSidePanelParticipantRow from "./RoomSidePanelParticipantRow.svelte";
+    import { IconLoader } from "@wa-icons";
 
     export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration;
 
     $: members = room.members;
     $: canInvite = room.hasPermissionTo("invite");
+
+    let loadingMembers = true;
+    let membersLoadingError: string | undefined = undefined;
+
+    onMount(() => {
+        loadMembers().catch((error) => console.error(error));
+    });
+
+    async function loadMembers() {
+        try {
+            loadingMembers = true;
+            membersLoadingError = undefined;
+            await room.ensureMembersInitialized();
+        } catch (error) {
+            console.error(error);
+            membersLoadingError = error instanceof Error ? error.message : String(error);
+        } finally {
+            loadingMembers = false;
+        }
+    }
 
     function openManageParticipantsModal() {
         openModal(ManageParticipantsModal, { room });
@@ -41,7 +63,28 @@
     </div>
 
     <div class="flex-1 overflow-y-auto px-3 py-3">
-        {#if joinedMembers.length === 0}
+        {#if loadingMembers}
+            <div
+                class="flex flex-col items-center justify-center gap-3 py-10"
+                data-testid="roomSidePanelParticipantsLoading"
+            >
+                <div class="animate-[spin_2s_linear_infinite] text-white/80">
+                    <IconLoader font-size="2em" />
+                </div>
+                <p class="text-sm text-white/60">{$LL.chat.createRoom.loadingCreation()}</p>
+            </div>
+        {:else if membersLoadingError}
+            <div class="flex flex-col items-center justify-center gap-3 py-8 px-2 text-center">
+                <p class="text-sm text-red-100">{$LL.chat.manageRoomUsers.error()} : {membersLoadingError}</p>
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    on:click={() => loadMembers().catch((e) => console.error(e))}
+                >
+                    {$LL.chat.load()}
+                </button>
+            </div>
+        {:else if joinedMembers.length === 0}
             <div
                 class="rounded-lg border border-dashed border-white/10 px-4 py-6 text-center text-sm opacity-60"
                 data-testid="roomSidePanelParticipantsEmpty"

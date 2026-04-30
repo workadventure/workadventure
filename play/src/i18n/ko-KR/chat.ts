@@ -51,6 +51,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         loading: "이미지 불러오는 중...",
         loadError: "이 이미지 미리보기를 불러올 수 없습니다.",
         openInNewTab: "새 탭에서 열기",
+        notAvailable: "이미지를 사용할 수 없습니다.",
+        imageActions: "이미지 작업",
     },
     join: "참가",
     search: "검색",
@@ -126,6 +128,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         youJoinedMeetingRoom: "회의실에 참가했습니다",
         today: "오늘",
         yesterday: "어제",
+        retry: "다시 시도",
     },
     form: {
         placeholder: "메시지를 입력하세요...",
@@ -219,6 +222,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         replySingular: "답글 1개",
         replyPlural: "답글 {count}개",
         openThreadButtonTitle: "스레드 열기",
+        unreadAriaLabel: "읽지 않음 {count}개",
     },
     react: "반응",
     copy: "복사",
@@ -482,6 +486,17 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "채팅을 사용할 수 없습니다",
+    unknownError: "알 수 없는 오류",
+    matrixUserSelect: {
+        userNotFound: "사용자를 찾을 수 없습니다",
+        failedToLoadUsers: "사용자를 불러오지 못했습니다",
+    },
+    a11y: {
+        menuActions: "작업 메뉴",
+        unreadCount: "읽지 않음 {count}개",
+        userAvatar: "사용자 아바타",
+        applicationIcon: "애플리케이션",
+    },
     requiresLoginForChatModal: {
         title: "채팅을 사용하려면 로그인하세요!",
         content_1: "이 채팅 기능을 온전히 즐기려면 계정에 로그인해야 합니다.",

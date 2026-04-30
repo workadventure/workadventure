@@ -52,6 +52,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         loading: "Wobraz se zacytujo...",
         loadError: "Toś ten wobrazowy pśeglěd njedajo se zacytaś.",
         openInNewTab: "W nowem rejtarku wócyniś",
+        notAvailable: "Wobraz njedajo se pokazaś.",
+        imageActions: "Akcije wobraza",
     },
     join: "Pśizamknuś",
     search: "Pytaś",
@@ -126,6 +128,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         youJoinedMeetingRoom: "Sy pśistupił k zasedanju",
         today: "Źinsa",
         yesterday: "Wčera",
+        retry: "Hyšći wopytaś",
     },
     form: {
         placeholder: "Napiš powěsć...",
@@ -218,6 +221,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         replySingular: "1 wótegron",
         replyPlural: "{count} wótegronow",
         openThreadButtonTitle: "Nitku wócyniś",
+        unreadAriaLabel: "{count} njecytane",
     },
     react: "Reagěrowaś",
     copy: "Kopěrowaś",
@@ -482,6 +486,17 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "Chat njestej k dipoziciji",
+    unknownError: "Njeznaty zmylk",
+    matrixUserSelect: {
+        userNotFound: "Wužywaŕ njenamakany",
+        failedToLoadUsers: "Wužywarjow njedajo se zacytaś",
+    },
+    a11y: {
+        menuActions: "Menij akcijow",
+        unreadCount: "{count} njecytane",
+        userAvatar: "Awatar wužywarja",
+        applicationIcon: "Nałoženje",
+    },
     requiresLoginForChatModal: {
         title: "Zaloguj se, aby chat wužywał!",
         content_1: "Aby dostał pólny pśistup k toś tej chatowej funkciji, musyš zalogowany byś.",

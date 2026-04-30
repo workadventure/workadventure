@@ -52,6 +52,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         loading: "Wobraz so začituje...",
         loadError: "Tutón wobrazowy přehlad njeda so začitać.",
         openInNewTab: "W nowym rajtarku woteworić",
+        notAvailable: "Wobraz njeda so pokazać.",
+        imageActions: "Akcije wobraza",
     },
     join: "Přizamknyć",
     search: "Pytać",
@@ -126,6 +128,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         youJoinedMeetingRoom: "Sy přistupił k zasedanju",
         today: "Dźensa",
         yesterday: "Wčera",
+        retry: "Hišće raz spytać",
     },
     form: {
         placeholder: "Zapodaj swoju powěsć...",
@@ -218,6 +221,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         replySingular: "1 wotmołwa",
         replyPlural: "{count} wotmołwow",
         openThreadButtonTitle: "Nitku wočinić",
+        unreadAriaLabel: "{count} njepřečitane",
     },
     react: "reagować",
     copy: "kopěrować",
@@ -482,6 +486,17 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "Chat njestej k dispoziciji",
+    unknownError: "Njeznaty zmylk",
+    matrixUserSelect: {
+        userNotFound: "Wužiwar namakany njeje",
+        failedToLoadUsers: "Wužiwarjow njeda so čitać",
+    },
+    a11y: {
+        menuActions: "Menij akcijow",
+        unreadCount: "{count} njepřečitane",
+        userAvatar: "Awatar wužiwarja",
+        applicationIcon: "Nałoženje",
+    },
     requiresLoginForChatModal: {
         title: "Přizjew so, zo by chat wužiwał!",
         content_1: "Zo by dostał połny přistup k tutej chatowej funkciji, dyrbiš přizjewjeny być.",

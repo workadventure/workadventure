@@ -531,7 +531,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "youtube"}
                 disabled={!applicationManager.youtubeToolActivated}
             >
-                <img draggable="false" class="w-8" src={youtubeSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={youtubeSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.youtube.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.youtubeToolActivated
@@ -547,7 +547,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "klaxoon"}
                 disabled={!applicationManager.klaxoonToolActivated}
             >
-                <img draggable="false" class="w-8" src={klaxoonSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={klaxoonSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.klaxoon.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.klaxoonToolActivated
@@ -563,7 +563,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "googleSheets"}
                 disabled={!applicationManager.googleSheetsToolActivated}
             >
-                <img draggable="false" class="w-8" src={googleSheetsSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={googleSheetsSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleSheets.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.googleSheetsToolActivated
@@ -579,7 +579,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "googleDocs"}
                 disabled={!applicationManager.googleDocsToolActivated}
             >
-                <img draggable="false" class="w-8" src={googleDocsSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={googleDocsSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleDocs.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.googleDocsToolActivated
@@ -595,7 +595,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "googleSlides"}
                 disabled={!applicationManager.googleSlidesToolActivated}
             >
-                <img draggable="false" class="w-8" src={googleSlidesSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={googleSlidesSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleSlides.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.googleSlidesToolActivated
@@ -611,7 +611,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "googleDrive"}
                 disabled={!applicationManager.googleDriveToolActivated}
             >
-                <img draggable="false" class="w-8" src={googleDriveSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={googleDriveSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleDrive.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.googleDriveToolActivated
@@ -627,7 +627,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "eraser"}
                 disabled={!applicationManager.eraserToolActivated}
             >
-                <img draggable="false" class="w-8" src={eraserSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={eraserSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.eraser.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.eraserToolActivated
@@ -643,7 +643,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "excalidraw"}
                 disabled={!applicationManager.excalidrawToolActivated}
             >
-                <img draggable="false" class="w-8" src={excalidrawSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={excalidrawSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.excalidraw.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.excalidrawToolActivated
@@ -659,7 +659,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "cards"}
                 disabled={!applicationManager.cardsToolActivated}
             >
-                <img draggable="false" class="w-8" src={cardsPng} alt="info icon" />
+                <img draggable="false" class="w-8" src={cardsPng} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.cards.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.cardsToolActivated
@@ -675,7 +675,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "tldraw"}
                 disabled={!applicationManager.tldrawToolActivated}
             >
-                <img draggable="false" class="w-8" src={tldrawJpeg} alt="info icon" />
+                <img draggable="false" class="w-8" src={tldrawJpeg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.tldraw.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.tldrawToolActivated
@@ -693,7 +693,7 @@
                     class:bg-secondary-800={applicationProperty?.name === app.name}
                     on:click={() => openLinkForm(app.name)}
                 >
-                    <img draggable="false" class="w-8" src={app.image} alt="info icon" />
+                    <img draggable="false" class="w-8" src={app.image} alt={$LL.chat.a11y.applicationIcon()} />
                     <h2 class="text-sm p-0 m-0">{app.name}</h2>
                     <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                         {app.description}

@@ -52,6 +52,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         loading: "画像を読み込み中...",
         loadError: "この画像プレビューを読み込めません。",
         openInNewTab: "新しいタブで開く",
+        notAvailable: "画像を利用できません。",
+        imageActions: "画像の操作",
     },
     join: "参加",
     search: "検索",
@@ -126,6 +128,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         youJoinedMeetingRoom: "ミーティングに参加しました",
         today: "今日",
         yesterday: "昨日",
+        retry: "再試行",
     },
     form: {
         placeholder: "メッセージを入力...",
@@ -218,6 +221,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         replySingular: "返信 1 件",
         replyPlural: "返信 {count} 件",
         openThreadButtonTitle: "スレッドを開く",
+        unreadAriaLabel: "未読 {count} 件",
     },
     react: "反応する",
     copy: "コピーする",
@@ -482,6 +486,17 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "チャットは利用できません",
+    unknownError: "不明なエラー",
+    matrixUserSelect: {
+        userNotFound: "ユーザーが見つかりません",
+        failedToLoadUsers: "ユーザーの読み込みに失敗しました",
+    },
+    a11y: {
+        menuActions: "操作メニュー",
+        unreadCount: "未読 {count} 件",
+        userAvatar: "ユーザーアバター",
+        applicationIcon: "アプリ",
+    },
     requiresLoginForChatModal: {
         title: "チャットのロックを解除するにはログインしてください",
         content_1: "チャットを十分に楽しむには、ログインする必要があります。",

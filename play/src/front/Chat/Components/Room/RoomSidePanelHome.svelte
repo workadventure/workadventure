@@ -43,6 +43,8 @@
     $: threads = room.threads ?? emptyThreads;
     $: pollItems = room.pollItems ?? emptyPolls;
     $: joinedMembers = $members.filter((member) => get(member.membership) === "join");
+    $: joinedMemberCountStore = room.joinedMemberCount;
+    $: participantBadgeCount = joinedMemberCountStore != null ? $joinedMemberCountStore : joinedMembers.length;
     $: unreadThreadCount = $threads.filter((thread) => thread.hasUnreadMessages).length;
     $: openPollCount = $pollItems.filter((poll) => !get(poll.state).isEnded).length;
     $: avatarColorStore = room.avatarFallbackColor;
@@ -116,7 +118,7 @@
             >
                 <IconUsersGroup font-size={18} />
                 <div class="mt-2 text-sm font-semibold">{$LL.chat.roomPanel.sections.participants()}</div>
-                <div class="mt-1 text-xs text-white/55">{joinedMembers.length}</div>
+                <div class="mt-1 text-xs text-white/55">{participantBadgeCount}</div>
             </button>
 
             <button

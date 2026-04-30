@@ -114,6 +114,10 @@ export interface ChatRoom extends ChatConversation {
     readonly threads?: Readable<readonly ChatThreadSummary[]>;
     readonly pollItems?: Readable<readonly ChatPollItem[]>;
     readonly privacyState?: Readable<ChatRoomPrivacyState>;
+    /**
+     * Joined participant count without hydrating full {@link ChatRoomMembershipManagement.members}.
+     */
+    readonly joinedMemberCount?: Readable<number>;
 }
 
 export interface ChatThread extends ChatConversation {

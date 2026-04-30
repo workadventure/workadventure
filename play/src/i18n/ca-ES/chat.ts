@@ -51,6 +51,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         loading: "Carregant la imatge...",
         loadError: "No es pot carregar aquesta vista prèvia de la imatge.",
         openInNewTab: "Obrir en una nova pestanya",
+        notAvailable: "La imatge no està disponible.",
+        imageActions: "Accions de la imatge",
     },
     join: "Unir-se",
     search: "Cercar",
@@ -125,6 +127,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         youJoinedMeetingRoom: "Us heu unit a la reunió",
         today: "Avui",
         yesterday: "Ahir",
+        retry: "Tornar a intentar",
     },
     form: {
         placeholder: "Escriu el teu missatge...",
@@ -217,6 +220,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         replySingular: "1 resposta",
         replyPlural: "{count} respostes",
         openThreadButtonTitle: "Obrir el fil",
+        unreadAriaLabel: "{count} sense llegir",
     },
     react: "Reaccionar",
     copy: "Copiar",
@@ -481,6 +485,17 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "Xat no disponible",
+    unknownError: "Error desconegut",
+    matrixUserSelect: {
+        userNotFound: "Usuari no trobat",
+        failedToLoadUsers: "No s’han pogut carregar els usuaris",
+    },
+    a11y: {
+        menuActions: "Menú d’accions",
+        unreadCount: "{count} sense llegir",
+        userAvatar: "Avatar d’usuari",
+        applicationIcon: "Aplicació",
+    },
     requiresLoginForChatModal: {
         title: "Inicieu sessió per desbloquejar el xat!",
         content_1: "Per gaudir plenament d'aquesta funcionalitat del xat, necessiteu iniciar sessió al vostre compte.",

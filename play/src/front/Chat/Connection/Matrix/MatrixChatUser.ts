@@ -1,6 +1,6 @@
 import type { MatrixClient, Room, User } from "matrix-js-sdk";
 import { SetPresence } from "matrix-js-sdk";
-import { writable } from "svelte/store";
+import { readable, writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { ChatUser } from "../ChatConnection";
 import { matrixAvatarProfile } from "./services/MatrixAvatarProfile";
