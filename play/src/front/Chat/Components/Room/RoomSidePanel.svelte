@@ -23,7 +23,6 @@
     }
 
     $: shouldShowCloseButton = showCloseButton || $roomSidePanelStore.activeSection === "settings";
-
 </script>
 
 <div class="flex h-full min-h-0 flex-col bg-white/[0.02]" data-testid="roomSidePanel">
