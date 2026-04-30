@@ -89,6 +89,7 @@ export interface ChatRoom {
     readonly membersForMessageAvatars?: Readable<readonly ChatRoomMember[]>;
     /** Direct Matrix rooms: peer WA display name when it differs from Matrix name (for DM row subtitle). */
     readonly peerWaDisplayNameIfDifferent?: Readable<string | undefined>;
+    readonly activateVisibleProfileSync?: () => () => void;
     readonly messages: Readable<readonly ChatMessage[]>;
     readonly sendMessage: (message: string) => void;
     readonly sendFiles: (files: FileList) => Promise<void>;
@@ -182,7 +183,10 @@ export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, Chat
     invitations: Readable<ChatRoom[]>;
     suggestedRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
     joinableRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
+    joinableRoomsLoading: Readable<boolean>;
     hasChildRoomsError: Writable<boolean>;
+    ensureChildrenLoaded: () => void;
+    ensureJoinableRoomsLoaded: () => Promise<void>;
 }
 
 export interface CreateRoomOptions {

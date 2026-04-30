@@ -1218,11 +1218,11 @@ describe("MatrixChatConnection", () => {
             const addRoomToParentFolder = vi
                 .spyOn(
                     matrixChatConnection as unknown as {
-                        addRoomToParentFolder: (room: unknown, folder: MatrixRoomFolder) => Promise<void>;
+                        addRoomToParentFolder: (room: unknown, folder: MatrixRoomFolder) => void;
                     },
                     "addRoomToParentFolder"
                 )
-                .mockResolvedValue(undefined);
+                .mockImplementation(() => undefined);
 
             matrixChatConnection["onRoomEventMembership"](
                 { roomId: leftFolderId, name: "Left nested space" } as never,
@@ -1521,9 +1521,9 @@ describe("MatrixChatConnection", () => {
             );
             matrixChatConnection["roomFolders"].set(roomId, { id: roomId, destroy: vi.fn() } as never);
 
-            await matrixChatConnection["addRoomToParentFolder"](spaceRoom as never, parentFolder as never);
+            matrixChatConnection["addRoomToParentFolder"](spaceRoom as never, parentFolder as never);
 
-            expect(existingChildFolder.refreshRooms).toHaveBeenCalledOnce();
+            expect(existingChildFolder.refreshRooms).not.toHaveBeenCalled();
             expect(existingChildFolder.init).toHaveBeenCalledOnce();
         });
     });

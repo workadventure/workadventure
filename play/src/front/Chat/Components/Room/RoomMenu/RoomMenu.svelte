@@ -125,7 +125,6 @@
         });
     }
 
-    $: members = $roomMembers;
     $: usersByRoomMap = usersByRoomStore && $usersByRoomStore ? $usersByRoomStore : new Map();
 
     // Flatten usersByRoomMap into a list of users with playUri from their room
@@ -142,7 +141,8 @@
         return usersList;
     })();
 
-    $: matrixChatUser = $roomType === "direct" ? members.find((u) => u.id !== localUserStore.getChatId()) : undefined;
+    $: matrixChatUser =
+        $roomType === "direct" ? $roomMembers.find((u) => u.id !== localUserStore.getChatId()) : undefined;
 
     $: chatUser = usersWithRoomPlayUri.find((u) => u.chatId === matrixChatUser?.id);
     $: isInTheSameMap = chatUser?.playUri === gameManager.getCurrentGameScene().roomUrl;

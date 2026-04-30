@@ -1,5 +1,4 @@
 <script lang="ts">
-    import Debug from "debug";
     import { get } from "svelte/store";
     import { getColorByString } from "../../Utils/ColorGenerator";
     import type { PictureStore } from "../../Stores/PictureStore";
@@ -15,10 +14,6 @@
      */
     export let compact = false;
 
-    const debug = Debug("MatrixChatConnection:Avatar");
-    const debugThrottleByKey = new Map<string, number>();
-    const DEBUG_THROTTLE_MS = 1_000;
-
     let forceFallback = false;
     let previousPictureUrl: string | undefined;
 
@@ -29,20 +24,6 @@
     $: if ($pictureStore !== previousPictureUrl) {
         previousPictureUrl = $pictureStore;
         forceFallback = false;
-    }
-
-    function logAvatarDebug(event: "load-request" | "loaded" | "error") {
-        if (!debug.enabled) {
-            return;
-        }
-        const key = `${event}:${fallbackName}`;
-        const now = Date.now();
-        const previous = debugThrottleByKey.get(key) ?? 0;
-        if (now - previous < DEBUG_THROTTLE_MS) {
-            return;
-        }
-        debugThrottleByKey.set(key, now);
-        debug("%s avatar %s", event, fallbackName);
     }
 
     function loadLazyPictureStore(node: HTMLElement, store: PictureStore | undefined) {
@@ -62,7 +43,6 @@
                 return;
             }
             if (typeof IntersectionObserver === "undefined") {
-                logAvatarDebug("load-request");
                 nextStore.load().catch((error) => console.warn("Failed to load avatar", error));
                 return;
             }
@@ -71,7 +51,6 @@
                     if (!entries.some((entry) => entry.isIntersecting)) {
                         return;
                     }
-                    logAvatarDebug("load-request");
                     nextStore.load().catch((error) => console.warn("Failed to load avatar", error));
                     cleanup();
                 },
@@ -99,9 +78,7 @@
         loading="lazy"
         decoding="async"
         style:background-color={`${color ? color : `${getColorByString(fallbackName)}`}`}
-        on:load={() => logAvatarDebug("loaded")}
         on:error={(event) => {
-            logAvatarDebug("error");
             console.warn(`Failed to load avatar image for ${fallbackName}`, event);
             forceFallback = true;
         }}

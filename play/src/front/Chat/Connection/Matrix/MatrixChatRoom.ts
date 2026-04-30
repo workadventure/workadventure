@@ -112,6 +112,8 @@ export class MatrixChatRoom
     private readonly userProviderMergerStore = writable<UserProviderMerger | undefined>(undefined);
     private dmMergerUsersByRoomUnsub: (() => void) | undefined;
     private dmMergerRoomTypeUnsub: (() => void) | undefined;
+    private userProviderMergerPromise: Promise<UserProviderMerger | undefined>;
+    private visibleProfileSyncUsers = 0;
     private initializationPromise: Promise<void> | undefined;
     private membersInitializationPromise: Promise<void> | undefined;
     private membersInitialized = false;
@@ -328,34 +330,16 @@ export class MatrixChatRoom
 
         this.startHandlingChatRoomShellEvents();
 
-        gameManager
+        this.userProviderMergerPromise = gameManager
             .getCurrentGameScene()
             .userProviderMerger.then((merger) => {
                 this.userProviderMergerStore.set(merger);
                 get(this.members).forEach((m) => m.setUserProviderMergerContext(merger));
-
-                const syncDmMergerAvatarSub = () => {
-                    this.dmMergerUsersByRoomUnsub?.();
-                    this.dmMergerUsersByRoomUnsub = undefined;
-                    if (get(this.roomTypeStore) !== "direct") {
-                        return;
-                    }
-                    this.dmMergerUsersByRoomUnsub = merger.usersByRoomStore.subscribe(() => {
-                        this.directRoomPeerAvatarStore?.refresh().catch((error) => {
-                            console.warn("Failed to refresh Matrix direct room avatar", error);
-                        });
-                        const myUserId = this.matrixRoom.client.getUserId();
-                        get(this.members)
-                            .filter((mem) => mem.id !== myUserId)
-                            .forEach((mem) => mem.refreshAvatarFromRoomMember());
-                    });
-                };
-                syncDmMergerAvatarSub();
-                this.dmMergerRoomTypeUnsub?.();
-                this.dmMergerRoomTypeUnsub = this.roomTypeStore.subscribe(syncDmMergerAvatarSub);
+                return merger;
             })
             .catch(() => {
                 /* chat list can work without merger */
+                return undefined;
             });
 
         this.matrixRoom
@@ -408,7 +392,6 @@ export class MatrixChatRoom
         this.initializationError.set(undefined);
         this.debugInitialization("timeline");
         this.initializationPromise = (async () => {
-            await this.ensureMembersInitialized();
             await matrixSecurity.restoreRoomsMessages();
             await this.initMatrixRoomMessagesAndReactions();
             this.initializationState.set("ready");
@@ -444,6 +427,60 @@ export class MatrixChatRoom
             return wrappedMember;
         });
         this.members.set(members);
+    }
+
+    activateVisibleProfileSync(): () => void {
+        let cleaned = false;
+        this.visibleProfileSyncUsers += 1;
+        this.startVisibleProfileSync().catch(() => {
+            /* chat list can work without merger */
+        });
+
+        return () => {
+            if (cleaned) {
+                return;
+            }
+            cleaned = true;
+            this.visibleProfileSyncUsers = Math.max(0, this.visibleProfileSyncUsers - 1);
+            if (this.visibleProfileSyncUsers === 0) {
+                this.stopVisibleProfileSync();
+            }
+        };
+    }
+
+    private async startVisibleProfileSync(): Promise<void> {
+        if (this.dmMergerRoomTypeUnsub) {
+            return;
+        }
+
+        const merger = get(this.userProviderMergerStore) ?? (await this.userProviderMergerPromise);
+        if (!merger || this.visibleProfileSyncUsers === 0 || this.dmMergerRoomTypeUnsub) {
+            return;
+        }
+
+        const syncDmMergerAvatarSub = () => {
+            this.dmMergerUsersByRoomUnsub?.();
+            this.dmMergerUsersByRoomUnsub = undefined;
+            if (get(this.roomTypeStore) !== "direct" || this.visibleProfileSyncUsers === 0) {
+                return;
+            }
+            this.dmMergerUsersByRoomUnsub = merger.usersByRoomStore.subscribe(() => {
+                this.directRoomPeerAvatarStore?.refresh().catch(() => undefined);
+                const myUserId = this.matrixRoom.client.getUserId();
+                get(this.members)
+                    .filter((mem) => mem.id !== myUserId)
+                    .forEach((mem) => mem.refreshAvatarFromRoomMember());
+            });
+        };
+
+        this.dmMergerRoomTypeUnsub = this.roomTypeStore.subscribe(syncDmMergerAvatarSub);
+    }
+
+    private stopVisibleProfileSync(): void {
+        this.dmMergerUsersByRoomUnsub?.();
+        this.dmMergerUsersByRoomUnsub = undefined;
+        this.dmMergerRoomTypeUnsub?.();
+        this.dmMergerRoomTypeUnsub = undefined;
     }
 
     private async initMatrixRoomMessagesAndReactions() {
@@ -496,6 +533,7 @@ export class MatrixChatRoom
     private startHandlingChatRoomShellEvents() {
         this.matrixRoom.on(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
+        this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
         this.matrixRoom.on(RoomStateEvent.Events, this.handleStateEvent);
         this.matrixRoom.on(RoomEvent.MyMembership, this.handleMyMembership);
         this.matrixRoom.on(RoomEvent.UnreadNotifications, this.updateUnreadNotificationCount);
@@ -507,7 +545,6 @@ export class MatrixChatRoom
             return;
         }
         this.initializedEventHandlersStarted = true;
-        this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
         this.matrixRoom.on(RoomStateEvent.NewMember, this.handleNewMember);
     }
 
@@ -726,7 +763,7 @@ export class MatrixChatRoom
                         this.handleMessageDeletion(sourceEventId);
                         break;
                     case "m.reaction":
-                        this.handleReactionDeletion(redactionEvent, sourceEventId);
+                        this.handleReactionDeletion(redactionEvent, sourceEvent);
                         break;
                 }
             }
@@ -741,20 +778,21 @@ export class MatrixChatRoom
         }
     }
 
-    private handleReactionDeletion(redactionEvent: MatrixEvent, reactionEventId: string) {
+    private handleReactionDeletion(redactionEvent: MatrixEvent, reactionEvent: MatrixEvent) {
+        const reactionEventId = reactionEvent.getId();
+        if (reactionEventId === undefined) {
+            console.error("Reaction event id is undefined");
+            return;
+        }
         const reactionEventContent = this.inMemoryEventsContent.get(reactionEventId);
-        const sender = redactionEvent.getSender();
+        const sender = reactionEvent.getSender() ?? redactionEvent.getSender();
         if (sender === undefined) {
-            console.error("Redaction sender is undefined");
+            console.error("Reaction sender is undefined");
             return;
         }
 
-        if (reactionEventContent === undefined) {
-            console.error("No reaction event in memory to proceed deletion");
-            return;
-        }
-        const relation = reactionEventContent["m.relates_to"];
-        if (relation === undefined) {
+        const relation = reactionEventContent?.["m.relates_to"] ?? reactionEvent.getRelation();
+        if (relation === undefined || relation === null) {
             console.error("The event has no relation content,");
             return;
         }
@@ -1058,8 +1096,7 @@ export class MatrixChatRoom
     }
 
     destroy() {
-        this.dmMergerUsersByRoomUnsub?.();
-        this.dmMergerUsersByRoomUnsub = undefined;
+        this.stopVisibleProfileSync();
         this.currentUserRoomMember?.off(RoomMemberEvent.PowerLevel, this.handleCurrentUserRoomMemberPowerLevel);
         this.currentUserRoomMember = undefined;
         this.matrixRoom.currentState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
