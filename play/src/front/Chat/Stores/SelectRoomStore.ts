@@ -15,7 +15,7 @@ const createSelectedRoomStore = () => {
             if (currentValue !== value && value && get(value.isEncrypted) && !isOpen && get(chatVisibilityStore)) {
                 isOpen = true;
                 matrixSecurity
-                    .openChooseDeviceVerificationMethodModal()
+                    .openAutomaticChooseDeviceVerificationMethodModal()
                     .catch((error) => {
                         console.error(error);
                     })
