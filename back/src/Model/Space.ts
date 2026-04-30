@@ -28,6 +28,7 @@ import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ManagedRecordingState } from "./RecordingManager";
 import { metadataProcessor } from "./MetadataProcessorInit";
+import { LivekitCredentialsResponse } from "../Services/Repository/LivekitCredentialsResponse";
 
 const debug = Debug("space");
 
@@ -811,5 +812,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         }
 
         return false;
+    }
+
+    public getLivekitCredentials(user: SpaceUser): Promise<{ url: string, jwtToken: string }> {
+        return this.communicationManager.getLivekitCredentials(user);
     }
 }

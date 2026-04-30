@@ -9,6 +9,8 @@ import type {
     EventRequest,
     EventResponse,
     ExternalModuleMessage,
+    GetLivekitCredentialResponseMessage,
+    GetLivekitCredentialVariableRequestMessage,
     MapStorageClearAfterUploadMessage,
     MapStorageDeleteMessage,
     PingMessage,
@@ -753,6 +755,25 @@ const roomManager = {
             .handleExternalModuleMessage(call.request)
             .then(() => {
                 callback(null, {});
+            })
+            .catch((e: unknown) => {
+                console.error(e);
+                Sentry.captureException(e);
+                callback(asError(e));
+            });
+    },
+    
+    getLivekitCredentials(
+        call: ServerUnaryCall<GetLivekitCredentialVariableRequestMessage, GetLivekitCredentialResponseMessage>,
+        callback: sendUnaryData<GetLivekitCredentialResponseMessage>
+    ): void {
+        socketManager
+            .handleGetLivekitCredentialVariableRequestMessage(call.request)
+            .then(() => {
+                callback(null, {
+                    url: "https://livekit.com",
+                    jwtToken: "1234567890",
+                });
             })
             .catch((e: unknown) => {
                 console.error(e);

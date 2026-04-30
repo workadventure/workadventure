@@ -293,4 +293,8 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
     ): Promise<HandleRecordingWebhookRequest | "ignored"> {
         return this.livekitService.handleLivekitWebhook(rawBody, authorizationHeader, spaceName, recordingSessionId);
     }
+
+    async generateToken(user: SpaceUser): Promise<string> {
+        return await this.livekitService.generateToken(this.space.getSpaceName(), user);
+    }
 }

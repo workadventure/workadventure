@@ -32,6 +32,7 @@ import { UserController } from "./controllers/UserController";
 import { MatrixRoomAreaController } from "./controllers/MatrixRoomAreaController";
 import { LocalScriptController } from "./controllers/LocalScriptController";
 import { LivekitWebhookController } from "./controllers/LivekitWebhookController";
+import { MobileController } from "./controllers/MobileController";
 
 class App {
     private readonly app: Application;
@@ -109,6 +110,7 @@ class App {
         new FrontController(this.app);
         new UserController(this.app);
         new MatrixRoomAreaController(this.app);
+        new MobileController(this.app, GRPC_MAX_MESSAGE_SIZE);
 
         const staticOptions = {
             extensions: [

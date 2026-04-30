@@ -1,8 +1,10 @@
 import type { HandleLivekitWebhookRequest, MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 import type { ManagedRecordingState } from "../RecordingManager";
+import { LivekitCredentialsResponse } from "../../Services/Repository/LivekitCredentialsResponse";
 
 export interface ICommunicationManager {
     getRecordingState(): ManagedRecordingState;
+    getLivekitCredentials(user: SpaceUser): Promise<{ url: string, jwtToken: string }>;
     handleUserAdded(user: SpaceUser): Promise<void>;
     handleUserDeleted(user: SpaceUser): Promise<void>;
     handleUserUpdated(user: SpaceUser): Promise<void>;

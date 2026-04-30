@@ -1592,6 +1592,17 @@ message ExternalModuleMessage {
   google.protobuf.Value message = 4;
 }
 
+message GetLivekitCredentialResponseMessage {
+  string url = 1;
+  string jwtToken = 2;
+}
+
+message GetLivekitCredentialVariableRequestMessage {
+  string spaceName = 1;
+  string spaceUserId = 2;
+  string userUuid = 3;
+}
+
 /********************************************************************************
  * Start Spaces messages
  ********************************************************************************/

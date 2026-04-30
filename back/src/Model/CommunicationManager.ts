@@ -25,6 +25,9 @@ import type { ITransitionPolicy } from "./Interfaces/ITransitionPolicy";
 import type { ITransitionOrchestrator, TransitionContext } from "./Interfaces/ITransitionOrchestrator";
 import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager";
 import type { ICommunicationStrategy, IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
+import { LivekitCredentialsResponse } from "../Services/Repository/LivekitCredentialsResponse";
+import { LivekitCommunicationStrategy } from "./Strategies/LivekitCommunicationStrategy";
+import { LivekitState } from "./States/LivekitState";
 
 /**
  * Factory interface for creating the initial communication state.
@@ -412,6 +415,19 @@ export class CommunicationManager implements ICommunicationManager {
         state: ICommunicationState<ICommunicationStrategy>
     ): state is IRecordableState<IRecordableStrategy> {
         return "handleStartRecording" in state && "handleStopRecording" in state && "handleLivekitWebhook" in state;
+    }
+
+    public async getLivekitCredentials(user: SpaceUser): Promise<{ url: string, jwtToken: string }> {
+        const currentState = this.lifecycleManager.getCurrentState();
+        console.log(currentState, currentState.communicationType);
+        if (currentState.communicationType !== CommunicationType.LIVEKIT) {
+            throw new Error("Current state is not LiveKit");
+        }
+        const token = await (currentState as unknown as LivekitCommunicationStrategy).generateToken(user);
+        return {
+            url: "https://livekit.com",
+            jwtToken: token,
+        }
     }
 
     public destroy(): void {
