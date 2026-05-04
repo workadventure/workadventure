@@ -11,6 +11,7 @@ import type {
     BatchMessage,
     SubMessage,
 } from "@workadventure/messages";
+import type { AdminLoginMessage } from "../../services/AdminApi";
 import type { PusherRoom } from "../PusherRoom";
 import type { ViewportInterface } from "./ViewportMessage";
 
@@ -42,6 +43,7 @@ export type ConnectingSocketData = {
     tags: string[];
     visitCardUrl: string | null;
     userRoomToken: string | undefined;
+    loginMessages: AdminLoginMessage[];
     activatedInviteUser: boolean | undefined;
     applications?: Array<ApplicationDefinitionInterface> | null;
     canEdit: boolean;

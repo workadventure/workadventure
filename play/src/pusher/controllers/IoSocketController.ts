@@ -411,6 +411,7 @@ export class IoSocketController {
                         tags: memberTags,
                         visitCardUrl: memberVisitCardUrl,
                         userRoomToken: memberUserRoomToken,
+                        loginMessages: userData.messages,
                         activatedInviteUser: userData.activatedInviteUser ?? undefined,
                         applications: userData.applications,
                         canEdit: userData.canEdit ?? false,
@@ -465,6 +466,15 @@ export class IoSocketController {
                 };
 
                 await socketManager.handleConnectToRoom(socket);
+
+                for (const loginMessage of socketData.loginMessages) {
+                    socket.send({
+                        message: {
+                            $case: "sendUserMessage",
+                            sendUserMessage: loginMessage,
+                        },
+                    });
+                }
 
                 // Let's send a ping to keep the connection alive. Note: there is ANOTHER ping/pong mechanism
                 // at the application level, between the front and the back. This other mechanism is in charge
