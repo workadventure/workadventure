@@ -832,7 +832,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
 
     private scheduleRoomPlacementReconciliation(roomId: string): void {
-        console.trace("scheduleRoomPlacementReconciliation", roomId);
         this.clearRoomPlacementRetry(roomId);
         const generation = this.roomPlacementRetryGenerations.get(roomId) ?? 0;
         const runAttempt = (attemptIndex: number): void => {

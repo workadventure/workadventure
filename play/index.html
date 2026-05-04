@@ -148,7 +148,15 @@
                  * Callback after api.js is loaded.
                  */
                 function gapiLoaded() {
-                    gapi.load('client:picker', initializePicker);
+                    try {
+                        if (typeof gapi === "undefined") {
+                            console.error("[Google Drive] gapi is undefined after api.js onload (blocked network or script error).");
+                            return;
+                        }
+                        gapi.load("client:picker", initializePicker);
+                    } catch (e) {
+                        console.error("[Google Drive] gapiLoaded failed:", e);
+                    }
                 }
 
                 /**
@@ -156,19 +164,47 @@
                  * discovery doc to initialize the API.
                  */
                 async function initializePicker() {
-                    await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
-                    pickerInited = true;
+                    try {
+                        if (typeof gapi === "undefined" || !gapi.client) {
+                            console.error("[Google Drive] gapi.client unavailable in initializePicker.");
+                            return;
+                        }
+                        await gapi.client.load("https://www.googleapis.com/discovery/v1/apis/drive/v3/rest");
+                        window.pickerInited = true;
+                    } catch (e) {
+                        console.error("[Google Drive] initializePicker failed:", e);
+                    }
                 }
 
                 /**
                  * Callback after Google Identity Services are loaded.
                  */
                 function gisLoaded() {
-                    window.gisInited = true;
+                    try {
+                        window.gisInited = true;
+                    } catch (e) {
+                        console.error("[Google Drive] gisLoaded failed:", e);
+                    }
+                }
+
+                function waGoogleDriveScriptError(which) {
+                    console.error("[Google Drive] Failed to load script:", which);
                 }
             </script>
-            <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-            <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+            <script
+                async
+                defer
+                src="https://apis.google.com/js/api.js"
+                onload="gapiLoaded()"
+                onerror="waGoogleDriveScriptError('apis.google.com/js/api.js')"
+            ></script>
+            <script
+                async
+                defer
+                src="https://accounts.google.com/gsi/client"
+                onload="gisLoaded()"
+                onerror="waGoogleDriveScriptError('accounts.google.com/gsi/client')"
+            ></script>
         {{/googleDrivePickerClientId}}
 
     </head>

@@ -23,6 +23,10 @@ class AnalyticsClient {
         return window.posthog;
     }
 
+    public get posthogInstance(): PostHog | undefined {
+        return window.posthog;
+    }
+
     identifyUser(uuid: string, email: string | null, roomId: string | null): void {
         this.posthog?.identify(uuid, { uuid, email, wa: true, roomId });
     }
