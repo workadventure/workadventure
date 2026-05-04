@@ -294,6 +294,8 @@ export class FrontController extends BaseHttpController {
                 msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,
                 url,
                 script: await this.getScript(),
+                posthogApiKey: FRONT_ENVIRONMENT_VARIABLES.POSTHOG_API_KEY,
+                posthogUrl: FRONT_ENVIRONMENT_VARIABLES.POSTHOG_URL,
                 authToken: authToken,
                 googleDrivePickerClientId: GOOGLE_DRIVE_PICKER_CLIENT_ID,
                 cssVariablesOverride,
