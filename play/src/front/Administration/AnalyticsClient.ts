@@ -9,6 +9,8 @@ declare global {
 }
 
 class AnalyticsClient {
+    private isEnabled_ = false;
+
     constructor() {
         if ((POSTHOG_API_KEY || POSTHOG_URL) && (!POSTHOG_API_KEY || !POSTHOG_URL)) {
             console.warn("PostHog is partially configured. Analytics will not be sent.");
@@ -17,6 +19,8 @@ class AnalyticsClient {
         if (POSTHOG_API_KEY && POSTHOG_URL && !this.posthog) {
             console.warn("PostHog is configured but not initialized. Analytics will not be sent.");
         }
+
+        this.isEnabled_ = POSTHOG_API_KEY != undefined && POSTHOG_URL != undefined;
     }
 
     private get posthog(): PostHog | undefined {
@@ -25,6 +29,10 @@ class AnalyticsClient {
 
     public get posthogInstance(): PostHog | undefined {
         return window.posthog;
+    }
+
+    public get isEnabled(): boolean {
+        return this.isEnabled_;
     }
 
     identifyUser(uuid: string, email: string | null, roomId: string | null): void {
