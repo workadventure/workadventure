@@ -23,8 +23,8 @@ The name of the layers of this map are :
 ### Detecting when the user enters/leaves a layer
 
 ```ts
-WA.room.onEnterLayer(name: string): Subscription
-WA.room.onLeaveLayer(name: string): Subscription
+WA.room.onEnterLayer(name: string): Subscription<{ reason: "initial" | "move" }>
+WA.room.onLeaveLayer(name: string): Subscription<{ reason: "initial" | "move" }>
 ```
 
 Listens to the position of the current user. The event is triggered when the user enters or leaves a given layer.
@@ -43,6 +43,22 @@ WA.room.onLeaveLayer("myLayer").subscribe(() => {
   myLayerSubscriber.unsubscribe();
 });
 ```
+
+**Note:** If the user is already inside the layer when the `onEnterLayer` is subscribed to, the callback will fire immediately
+upon subscription. Similarly, if the user is already outside the layer when an `onLeaveLayer` is subscribed to, that callback
+will also fire immediately. If you want to avoid this behavior, you can check the "reason" parameter in the callback, which will
+be "initial" in this case. If the user enters or leaves the layer after the subscription, the "reason" parameter will be "move".
+
+```ts
+WA.room.onEnterLayer("myLayer").subscribe(({ reason }) => {
+    if (reason === "initial") {
+        // The user was already on the layer when the subscription was made.
+        return;
+    }
+    // ...
+});
+```
+
 
 ### Show / Hide a layer
 
@@ -142,8 +158,8 @@ WA.room.area.delete('MyNewArea');
 ### Detecting when the user enters/leaves an area
 
 ```ts
-WA.room.area.onEnter(name: string): Subscription
-WA.room.area.onLeave(name: string): Subscription
+WA.room.area.onEnter(name: string): Subscription<{ reason: "initial" | "move" }>
+WA.room.area.onLeave(name: string): Subscription<{ reason: "initial" | "move" }>
 ```
 
 Listens to the position of the current user. The event is triggered when the user enters or leaves a given area.
@@ -160,6 +176,22 @@ const myAreaSubscriber = WA.room.area.onEnter("myArea").subscribe(() => {
 WA.room.area.onLeave("myArea").subscribe(() => {
   WA.chat.sendChatMessage("Goodbye!", "Mr Robot");
   myAreaSubscriber.unsubscribe();
+});
+```
+
+**Note:** If the user is already inside the area when the `onEnter` callback is registered, the callback will fire immediately 
+upon subscription. Similarly, if the user is already outside the area when an `onLeave` callback is registered, that 
+callback will also fire immediately. If you want to avoid this behavior, you can check the "reason" parameter in the 
+callback, which will be "initial" in this case. If the user enters or leaves the area after the subscription, the "reason" 
+parameter will be "move".
+
+```ts
+WA.room.area.onEnter("myArea").subscribe(({ reason }) => {
+    if (reason === "initial") {
+        // The user was already inside the area when the subscription was made.
+        return;
+    }
+    // ...
 });
 ```
 

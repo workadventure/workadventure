@@ -201,6 +201,7 @@ import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVari
 import { ApplicationManager } from "../../Chat/Applications/ApplicationManager";
 import { isNotSuspendedAudioContextStore } from "../../Stores/AudioContextStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingService";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -404,6 +405,8 @@ export class GameScene extends DirtyScene {
     public landingAreas: AreaData[] = [];
     // Listeners for when the player finishes moving
     private onPlayerMovementEndedCallbacks: Array<(event: HasPlayerMovedInterface) => void> = [];
+
+    private enterLeaveScriptingService: EnterLeaveScriptingService | undefined;
 
     public _chatConnection: ChatConnectionInterface | undefined;
     private _proximityChatRoomDeferred: Deferred<ProximityChatRoom> = new Deferred();
@@ -1238,6 +1241,7 @@ export class GameScene extends DirtyScene {
         this.followManager?.close();
         this.inviteManager?.close();
         this.spaceScriptingBridgeService?.destroy();
+        this.enterLeaveScriptingService?.destroy();
         iceServersManager.finalize();
         if (this.localVolumeStoreUnsubscriber) {
             this.localVolumeStoreUnsubscriber();
@@ -1870,6 +1874,8 @@ export class GameScene extends DirtyScene {
 
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
 
+                this.enterLeaveScriptingService = new EnterLeaveScriptingService(this.gameMapFrontWrapper, this);
+
                 this._spaceRegistry = new SpaceRegistry(this.connection);
                 this.spaceScriptingBridgeService = new SpaceScriptingBridgeService(this._spaceRegistry);
 
@@ -2095,44 +2101,6 @@ export class GameScene extends DirtyScene {
                     }) || [];
 
                 this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
-                // Init layer change listener
-                this.gameMapFrontWrapper.onEnterLayer((layers) => {
-                    layers.forEach((layer) => {
-                        iframeListener.sendEnterLayerEvent(layer.name);
-                    });
-                });
-
-                this.gameMapFrontWrapper.onLeaveLayer((layers) => {
-                    layers.forEach((layer) => {
-                        iframeListener.sendLeaveLayerEvent(layer.name);
-                    });
-                });
-
-                // NOTE: Leaving events names as "enterArea" and "leaveArea" to not introduce any breaking changes.
-                //       We are only looking through dynamic areas when handling those events.
-                this.gameMapFrontWrapper.onEnterDynamicArea((areas) => {
-                    areas.forEach((area) => {
-                        iframeListener.sendEnterAreaEvent(area.name);
-                    });
-                });
-
-                this.gameMapFrontWrapper.onLeaveDynamicArea((areas) => {
-                    areas.forEach((area) => {
-                        iframeListener.sendLeaveAreaEvent(area.name);
-                    });
-                });
-
-                this.gameMapFrontWrapper.onEnterDynamicArea((areas) => {
-                    areas.forEach((area) => {
-                        iframeListener.sendEnterMapEditorAreaEvent(area.name);
-                    });
-                });
-
-                this.gameMapFrontWrapper.onLeaveDynamicArea((areas) => {
-                    areas.forEach((area) => {
-                        iframeListener.sendLeaveMapEditorAreaEvent(area.name);
-                    });
-                });
 
                 this.emoteManager = new EmoteManager(this, this.connection);
 

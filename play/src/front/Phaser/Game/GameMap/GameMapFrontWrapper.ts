@@ -1505,8 +1505,8 @@ export class GameMapFrontWrapper {
     }
 
     private triggerLayersChange(): void {
-        const layersByOldKey = this.oldKey ? this.gameMap.getLayersByKey(this.oldKey) : [];
-        const layersByNewKey = this.key ? this.gameMap.getLayersByKey(this.key) : [];
+        const layersByOldKey = this.oldKey === undefined ? [] : this.gameMap.getLayersByKey(this.oldKey);
+        const layersByNewKey = this.key === undefined ? [] : this.gameMap.getLayersByKey(this.key);
 
         const enterLayers = new Set(layersByNewKey);
         const leaveLayers = new Set(layersByOldKey);
@@ -1609,6 +1609,13 @@ export class GameMapFrontWrapper {
         objectCoordinates: { x: number; y: number }
     ) {
         return MathUtils.isOverlappingWithRectangle(objectCoordinates, areaCoordinates);
+    }
+
+    public getCurrentLayers(): Array<ITiledMapLayer> {
+        if (this.key === undefined) {
+            return [];
+        }
+        return this.gameMap.getLayersByKey(this.key);
     }
 
     public close() {

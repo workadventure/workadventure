@@ -1,30 +1,12 @@
 import type { Observable } from "rxjs";
-import { Subject } from "rxjs";
 import type { WAMFileFormat } from "@workadventure/map-editor";
-import type { ChangeAreaEvent } from "../Events/ChangeAreaEvent";
 import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
-import { apiCallback } from "./registeredCallbacks";
 import type { MapEditorArea } from "./MapEditor/MapEditorArea";
 import { toMapEditorArea } from "./MapEditor/MapEditorArea";
-
-const enterAreaStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
-const leaveAreaStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
+import { getEnterLeaveObservable } from "./enterLeaveUtils";
 
 class WorkadventureMapEditorAreaCommands extends IframeApiContribution<WorkadventureMapEditorAreaCommands> {
-    callbacks = [
-        apiCallback({
-            type: "enterMapEditorAreaEvent",
-            callback: (payloadData: ChangeAreaEvent) => {
-                enterAreaStreams.get(payloadData.name)?.next();
-            },
-        }),
-        apiCallback({
-            type: "leaveMapEditorAreaEvent",
-            callback: (payloadData) => {
-                leaveAreaStreams.get(payloadData.name)?.next();
-            },
-        }),
-    ];
+    callbacks = [];
 
     /**
      * Listens to the position of the current user. The event is triggered when the user enters a given area.
@@ -33,14 +15,8 @@ class WorkadventureMapEditorAreaCommands extends IframeApiContribution<Workadven
      * @param {string} areaName Area name
      * @returns {Subject<void>} An observable fired when someone enters the area
      */
-    onEnter(areaName: string): Observable<void> {
-        let subject = enterAreaStreams.get(areaName);
-        if (subject === undefined) {
-            subject = new Subject<void>();
-            enterAreaStreams.set(areaName, subject);
-        }
-
-        return subject.asObservable();
+    onEnter(areaName: string): Observable<{ reason: "initial" | "move" }> {
+        return getEnterLeaveObservable("mapEditorArea", "enter", areaName);
     }
 
     /**
@@ -50,14 +26,8 @@ class WorkadventureMapEditorAreaCommands extends IframeApiContribution<Workadven
      * @param {string} areaName Area name
      * @returns {Subject<void>} An observable fired when someone leaves the area
      */
-    onLeave(areaName: string): Observable<void> {
-        let subject = leaveAreaStreams.get(areaName);
-        if (subject === undefined) {
-            subject = new Subject<void>();
-            leaveAreaStreams.set(areaName, subject);
-        }
-
-        return subject.asObservable();
+    onLeave(areaName: string): Observable<{ reason: "initial" | "move" }> {
+        return getEnterLeaveObservable("mapEditorArea", "leave", areaName);
     }
 
     private wamMapCache: Promise<WAMFileFormat | undefined> | undefined;

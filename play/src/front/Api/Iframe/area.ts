@@ -1,29 +1,11 @@
 import type { Observable } from "rxjs";
-import { Subject } from "rxjs";
-import type { ChangeAreaEvent } from "../Events/ChangeAreaEvent";
 import type { CreateDynamicAreaEvent } from "../Events/CreateDynamicAreaEvent";
 import { Area } from "./Area/Area";
 import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
-import { apiCallback } from "./registeredCallbacks";
-
-const enterAreaStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
-const leaveAreaStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
+import { getEnterLeaveObservable } from "./enterLeaveUtils";
 
 export class WorkadventureAreaCommands extends IframeApiContribution<WorkadventureAreaCommands> {
-    callbacks = [
-        apiCallback({
-            type: "enterAreaEvent",
-            callback: (payloadData: ChangeAreaEvent) => {
-                enterAreaStreams.get(payloadData.name)?.next();
-            },
-        }),
-        apiCallback({
-            type: "leaveAreaEvent",
-            callback: (payloadData) => {
-                leaveAreaStreams.get(payloadData.name)?.next();
-            },
-        }),
-    ];
+    callbacks = [];
 
     /**
      * Create a new Area object (currently limited to rectangular shapes).
@@ -68,8 +50,6 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
             type: "deleteArea",
             data: name,
         });
-        enterAreaStreams.delete(name);
-        leaveAreaStreams.delete(name);
     }
 
     /**
@@ -79,14 +59,8 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
      * @param {string} areaName Area name
      * @returns {Subject<void>} An observable fired when someone enters the area
      */
-    onEnter(areaName: string): Observable<void> {
-        let subject = enterAreaStreams.get(areaName);
-        if (subject === undefined) {
-            subject = new Subject<void>();
-            enterAreaStreams.set(areaName, subject);
-        }
-
-        return subject.asObservable();
+    onEnter(areaName: string): Observable<{ reason: "initial" | "move" }> {
+        return getEnterLeaveObservable("tiledArea", "enter", areaName);
     }
 
     /**
@@ -96,14 +70,8 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
      * @param {string} areaName Area name
      * @returns {Subject<void>} An observable fired when someone leaves the area
      */
-    onLeave(areaName: string): Observable<void> {
-        let subject = leaveAreaStreams.get(areaName);
-        if (subject === undefined) {
-            subject = new Subject<void>();
-            leaveAreaStreams.set(areaName, subject);
-        }
-
-        return subject.asObservable();
+    onLeave(areaName: string): Observable<{ reason: "initial" | "move" }> {
+        return getEnterLeaveObservable("tiledArea", "leave", areaName);
     }
 }
 
