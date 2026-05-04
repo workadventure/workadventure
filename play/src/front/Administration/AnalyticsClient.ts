@@ -20,7 +20,6 @@ class AnalyticsClient {
                 console.info(`[Analytics] identify ${uuid}`, properties);
             },
             getSurveys: (callback: (surveys: unknown[]) => void) => {
-                console.info(`[Analytics] getSurveys`);
                 callback([]);
             },
         });
