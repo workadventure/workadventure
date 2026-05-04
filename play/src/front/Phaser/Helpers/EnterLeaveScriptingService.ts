@@ -1,5 +1,4 @@
 import { Subject } from "rxjs";
-import { MathUtils } from "@workadventure/math-utils";
 import { iframeListener } from "../../Api/IframeListener";
 import type { GameMapFrontWrapper } from "../Game/GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../Game/GameScene";
@@ -70,101 +69,38 @@ export class EnterLeaveScriptingService {
 
         iframeListener.registerOpenMessagePortAnswerer("enterLeave", (data, port) => {
             const { type, action, zoneName } = data;
+            const postAction = (action: "enter" | "leave", reason: "initial" | "move") => {
+                port.postMessage({
+                    type: "onAction",
+                    action,
+                    data: {
+                        reason,
+                    },
+                });
+            };
 
+            let isInside = false;
             switch (type) {
                 case "layer": {
-                    const layer = gameMapFrontWrapper.getCurrentLayers().find((layer) => layer.name === zoneName);
-                    switch (action) {
-                        case "enter": {
-                            if (layer) {
-                                port.postMessage({
-                                    type: "onAction",
-                                    data: {
-                                        reason: "initial",
-                                    },
-                                });
-                            }
-                            break;
-                        }
-                        case "leave": {
-                            if (!layer) {
-                                port.postMessage({
-                                    type: "onAction",
-                                    data: {
-                                        reason: "initial",
-                                    },
-                                });
-                            }
-                            break;
-                        }
-                    }
+                    isInside = gameMapFrontWrapper.getCurrentLayers().some((layer) => layer.name === zoneName);
                     break;
                 }
                 case "tiledArea": {
-                    const area = gameMapFrontWrapper
+                    isInside = gameMapFrontWrapper
                         .getDynamicAreasOnPosition({ x: gameScene.CurrentPlayer.x, y: gameScene.CurrentPlayer.y })
-                        .find((area) => area.name === zoneName);
-                    switch (action) {
-                        case "enter": {
-                            if (area) {
-                                port.postMessage({
-                                    type: "onAction",
-                                    data: {
-                                        reason: "initial",
-                                    },
-                                });
-                            }
-                            break;
-                        }
-                        case "leave": {
-                            if (!area) {
-                                port.postMessage({
-                                    type: "onAction",
-                                    data: {
-                                        reason: "initial",
-                                    },
-                                });
-                            }
-                            break;
-                        }
-                    }
+                        .some((area) => area.name === zoneName);
                     break;
                 }
                 case "mapEditorArea": {
-                    if (gameMapFrontWrapper.areasManager) {
-                        const areas = gameMapFrontWrapper.areasManager
-                            .getAreasByName(zoneName)
-                            .filter((area) =>
-                                MathUtils.isOverlappingWithRectangle(
-                                    { x: gameScene.CurrentPlayer.x, y: gameScene.CurrentPlayer.y },
-                                    area.getBounds()
-                                )
-                            );
-                        switch (action) {
-                            case "enter": {
-                                if (areas.length !== 0) {
-                                    port.postMessage({
-                                        type: "onAction",
-                                        data: {
-                                            reason: "initial",
-                                        },
-                                    });
-                                }
-                                break;
-                            }
-                            case "leave": {
-                                if (areas.length === 0) {
-                                    port.postMessage({
-                                        type: "onAction",
-                                        data: {
-                                            reason: "initial",
-                                        },
-                                    });
-                                }
-                                break;
-                            }
-                        }
-                    }
+                    isInside =
+                        gameMapFrontWrapper
+                            .getGameMap()
+                            .getWamFile()
+                            ?.getGameMapAreas()
+                            .isPlayerInsideAreaByName(zoneName, {
+                                x: gameScene.CurrentPlayer.x,
+                                y: gameScene.CurrentPlayer.y,
+                            }) ?? false;
                     break;
                 }
                 default: {
@@ -172,19 +108,36 @@ export class EnterLeaveScriptingService {
                 }
             }
 
-            const subscription = this.subjects[type][action].subscribe((name) => {
-                if (name === zoneName) {
-                    port.postMessage({
-                        type: "onAction",
-                        data: {
-                            reason: "move",
-                        },
-                    });
-                }
-            });
+            if (action === "watch" || (action === "enter" && isInside) || (action === "leave" && !isInside)) {
+                postAction(isInside ? "enter" : "leave", "initial");
+            }
+
+            const subscriptions =
+                action === "watch"
+                    ? [
+                          this.subjects[type].enter.subscribe((name) => {
+                              if (name === zoneName) {
+                                  postAction("enter", "move");
+                              }
+                          }),
+                          this.subjects[type].leave.subscribe((name) => {
+                              if (name === zoneName) {
+                                  postAction("leave", "move");
+                              }
+                          }),
+                      ]
+                    : [
+                          this.subjects[type][action].subscribe((name) => {
+                              if (name === zoneName) {
+                                  postAction(action, "move");
+                              }
+                          }),
+                      ];
 
             const closeSubscription = port.closeEvent.subscribe(() => {
-                subscription.unsubscribe();
+                for (const subscription of subscriptions) {
+                    subscription.unsubscribe();
+                }
                 closeSubscription.unsubscribe();
             });
         });

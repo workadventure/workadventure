@@ -1,23 +1,27 @@
 // Utility function to add enter / leave listeners on layers / tiled areas / map editor areas
 
 import { Observable, concat, defer, of } from "rxjs";
-import { share } from "rxjs/operators";
+import { filter, map, share } from "rxjs/operators";
 import { openMessagePort } from "./IframeApiContribution";
+
+type EnterLeaveAction = "enter" | "leave";
+type EnterLeaveEvent = { reason: "initial" | "move" };
+type EnterLeavePortEvent = {
+    action: EnterLeaveAction;
+    data: EnterLeaveEvent;
+};
 
 const observables = {
     layer: {
-        enter: new Map<string, Observable<{ reason: "initial" | "move" }>>(),
-        leave: new Map<string, Observable<{ reason: "initial" | "move" }>>(),
+        stream: new Map<string, Observable<EnterLeavePortEvent>>(),
         status: new Map<string, "in" | "out">(),
     },
     tiledArea: {
-        enter: new Map<string, Observable<{ reason: "initial" | "move" }>>(),
-        leave: new Map<string, Observable<{ reason: "initial" | "move" }>>(),
+        stream: new Map<string, Observable<EnterLeavePortEvent>>(),
         status: new Map<string, "in" | "out">(),
     },
     mapEditorArea: {
-        enter: new Map<string, Observable<{ reason: "initial" | "move" }>>(),
-        leave: new Map<string, Observable<{ reason: "initial" | "move" }>>(),
+        stream: new Map<string, Observable<EnterLeavePortEvent>>(),
         status: new Map<string, "in" | "out">(),
     },
 };
@@ -31,21 +35,21 @@ const observables = {
  */
 export function getEnterLeaveObservable(
     type: "layer" | "tiledArea" | "mapEditorArea",
-    action: "enter" | "leave",
+    action: EnterLeaveAction,
     name: string
-): Observable<{ reason: "initial" | "move" }> {
-    const observablesMap = observables[type][action];
+): Observable<EnterLeaveEvent> {
+    const streamsMap = observables[type].stream;
 
-    // Retrieve or create the shared (hot) observable backed by a single port.
-    let sharedPort = observablesMap.get(name);
+    // Retrieve or create the shared (hot) observable backed by a single port per zone.
+    let sharedPort = streamsMap.get(name);
     if (sharedPort === undefined) {
-        sharedPort = new Observable<{ reason: "initial" | "move" }>((subscriber) => {
+        sharedPort = new Observable<EnterLeavePortEvent>((subscriber) => {
             const abortController = new AbortController();
 
             (async () => {
                 const port = await openMessagePort("enterLeave", {
                     type,
-                    action,
+                    action: "watch",
                     zoneName: name,
                 });
 
@@ -57,8 +61,11 @@ export function getEnterLeaveObservable(
                 const subscription = port.messages.subscribe((event) => {
                     switch (event.data.type) {
                         case "onAction": {
-                            observables[type].status.set(name, action === "enter" ? "in" : "out");
-                            subscriber.next(event.data.data);
+                            observables[type].status.set(name, event.data.action === "enter" ? "in" : "out");
+                            subscriber.next({
+                                action: event.data.action,
+                                data: event.data.data,
+                            });
                             break;
                         }
                         default: {
@@ -79,13 +86,8 @@ export function getEnterLeaveObservable(
 
             return () => {
                 abortController.abort();
-                observablesMap.delete(name);
-                if (
-                    observables[type]["enter"].get(name) === undefined &&
-                    observables[type]["leave"].get(name) === undefined
-                ) {
-                    observables[type].status.delete(name);
-                }
+                streamsMap.delete(name);
+                observables[type].status.delete(name);
             };
         }).pipe(
             // share() makes this observable hot: the port is opened on the first subscribe
@@ -93,13 +95,17 @@ export function getEnterLeaveObservable(
             share()
         );
 
-        observablesMap.set(name, sharedPort);
+        streamsMap.set(name, sharedPort);
     }
 
     // defer() re-evaluates on every subscribe call, so the status check reflects the state
     // at subscription time. If the user is already in the correct state (and this is not the
     // first subscriber — the server handles the initial state for the first one), emit immediately.
     const capturedSharedPort = sharedPort;
+    const actionStream = capturedSharedPort.pipe(
+        filter((event) => event.action === action),
+        map((event) => event.data)
+    );
     return defer(() => {
         const status = observables[type].status.get(name);
         const shouldEmitNow = (status === "in" && action === "enter") || (status === "out" && action === "leave");
@@ -109,8 +115,8 @@ export function getEnterLeaveObservable(
                   of({
                       reason: "initial" as const,
                   }),
-                  capturedSharedPort
+                  actionStream
               )
-            : capturedSharedPort;
+            : actionStream;
     });
 }

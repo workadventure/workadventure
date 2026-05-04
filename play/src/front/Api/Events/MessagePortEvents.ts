@@ -72,12 +72,13 @@ export const iframeMessagePortTypeGuards = {
     enterLeave: {
         data: z.object({
             zoneName: z.string(),
-            action: z.union([z.literal("enter"), z.literal("leave")]),
+            action: z.union([z.literal("enter"), z.literal("leave"), z.literal("watch")]),
             type: z.union([z.literal("layer"), z.literal("tiledArea"), z.literal("mapEditorArea")]),
         }),
         iframeEvents: z.void(),
         workAdventureEvents: z.object({
             type: z.literal("onAction"),
+            action: z.union([z.literal("enter"), z.literal("leave")]),
             data: z.object({
                 reason: z.union([z.literal("initial"), z.literal("move")]),
             }),
