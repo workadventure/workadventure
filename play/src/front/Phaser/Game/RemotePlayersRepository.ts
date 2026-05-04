@@ -1,6 +1,8 @@
 import type { PlayerDetailsUpdatedMessage, UserMovedMessage } from "@workadventure/messages";
 import { AvailabilityStatus, availabilityStatusToJSON } from "@workadventure/messages";
 import { Deferred } from "@workadventure/shared-utils";
+import type { Observable } from "rxjs";
+import { BehaviorSubject } from "rxjs";
 import type { MessageUserJoined } from "../../Connection/ConnexionModels";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { iframeListener } from "../../Api/IframeListener";
@@ -37,6 +39,8 @@ export class RemotePlayersRepository {
 
     private remotePlayersData = new Map<number, RemotePlayerData>();
     private getPlayerDeferred = new Map<number, Deferred<RemotePlayerData>>();
+    private readonly playersCountSubject = new BehaviorSubject<number>(0);
+    public readonly playersCount$: Observable<number> = this.playersCountSubject.asObservable();
 
     public addPlayer(userJoinedMessage: MessageUserJoined): void {
         debugAddPlayer("Player will be added to repo", userJoinedMessage.userId);
@@ -46,6 +50,7 @@ export class RemotePlayersRepository {
             showVoiceIndicator: false,
         };
         this.remotePlayersData.set(userJoinedMessage.userId, player);
+        this.updatePlayersCount();
 
         if (this.removedPlayers.has(userJoinedMessage.userId)) {
             // Special case: we add a user that was just removed before. Instead, let's update the user
@@ -81,6 +86,7 @@ export class RemotePlayersRepository {
         debugRemovePlayer("Player will be removed from repo", userId);
 
         this.remotePlayersData.delete(userId);
+        this.updatePlayersCount();
         if (this.addedPlayers.has(userId)) {
             this.addedPlayers.delete(userId);
         } else {
@@ -195,6 +201,17 @@ export class RemotePlayersRepository {
 
     public getPlayers(): ReadonlyMap<number, MessageUserJoined> {
         return this.remotePlayersData;
+    }
+
+    public getPlayersCountObservable(): Observable<number> {
+        return this.playersCount$;
+    }
+
+    private updatePlayersCount(): void {
+        const playersCount = this.remotePlayersData.size;
+        if (this.playersCountSubject.value !== playersCount) {
+            this.playersCountSubject.next(playersCount);
+        }
     }
 
     /**
