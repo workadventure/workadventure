@@ -7,6 +7,7 @@ declare let window: any;
 interface PostHogExt {
     capture: (event: string, properties?: Record<string, unknown>) => void;
     identify: (uuid: string, properties: Record<string, unknown>) => void;
+    getSurveys: (callback: (surveys: unknown[]) => void) => void;
 }
 
 class AnalyticsClient {
@@ -18,18 +19,22 @@ class AnalyticsClient {
             identify: (uuid: string, properties: Record<string, unknown>) => {
                 console.info(`[Analytics] identify ${uuid}`, properties);
             },
+            getSurveys: (callback: (surveys: unknown[]) => void) => {
+                callback([]);
+            },
         });
     });
     private isPostHogEnabled = false;
+    private posthogInstance_: PostHog | PostHogExt | null = null;
 
     constructor() {
         const postHogApiKey = POSTHOG_API_KEY;
         if (postHogApiKey && POSTHOG_URL) {
             try {
                 this.posthogPromise = import("posthog-js").then(({ default: posthog }) => {
-                    const posthogInstance = posthog.init(postHogApiKey, { api_host: POSTHOG_URL });
+                    this.posthogInstance_ = posthog.init(postHogApiKey, { api_host: POSTHOG_URL });
                     //the posthog toolbar need a reference in window to be able to work
-                    window.posthog = posthogInstance;
+                    window.posthog = this.posthogInstance_;
                     this.isPostHogEnabled = true;
                     return posthog;
                 });
@@ -41,6 +46,10 @@ class AnalyticsClient {
 
     get isEnabled(): boolean {
         return this.isPostHogEnabled;
+    }
+
+    get posthogInstance(): PostHog | PostHogExt | null {
+        return this.posthogInstance_;
     }
 
     identifyUser(uuid: string, email: string | null, roomId: string | null): void {
