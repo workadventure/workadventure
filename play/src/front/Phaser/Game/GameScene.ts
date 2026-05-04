@@ -234,6 +234,8 @@ import { InviteManager } from "./InviteManager";
 import { LocateManager } from "./LocateManager";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { ScriptingVideoManager } from "./ScriptingVideoManager";
+import { UsernameDomLayer } from "./UsernameDomLayer";
+import { UsernameRenderingModeStream } from "./UsernameRenderingModeStream";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
@@ -374,6 +376,9 @@ export class GameScene extends DirtyScene {
     private playersEventDispatcher = new IframeEventDispatcher();
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
+    private usernameRenderingModeStream = new UsernameRenderingModeStream(this.remotePlayersRepository);
+    public readonly usernameRenderingAsDOM$ = this.usernameRenderingModeStream.renderingAsDOM$;
+    public usernameDomLayer!: UsernameDomLayer;
     private throttledSendViewportToServer_!: throttle<() => void>;
     private lastSentViewport: ViewportInterface | undefined;
     private serverViewportDebugGraphics: Phaser.GameObjects.Graphics | undefined;
@@ -712,6 +717,13 @@ export class GameScene extends DirtyScene {
 
         //permit to set bound collision
         this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
+
+        this.usernameDomLayer = new UsernameDomLayer(this, this.Map.widthInPixels, this.Map.heightInPixels);
+        this.rxJsSubscriptions.push(
+            this.usernameRenderingAsDOM$.subscribe((renderingAsDOM) => {
+                this.usernameDomLayer.setVisible(renderingAsDOM);
+            })
+        );
 
         this.embeddedWebsiteManager = new EmbeddedWebsiteManager(this);
 
@@ -1237,6 +1249,7 @@ export class GameScene extends DirtyScene {
         this._sayManager?.close();
         this.playersEventDispatcher.cleanup();
         this.playersMovementEventDispatcher.cleanup();
+        this.usernameDomLayer?.destroy();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
         this.inviteManager?.close();
