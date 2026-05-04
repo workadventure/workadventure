@@ -2,8 +2,7 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import { Easing } from "../../types";
 import { getColorOfStatus } from "../../Utils/AvailabilityStatus";
 
-/** Display scale vs atlas art (smaller = more compact next to the name). */
-const STATUS_DOT_DISPLAY_SCALE = 0.7;
+const STATUS_DOT_DISPLAY_SCALE = 1;
 
 export class PlayerStatusDot extends Phaser.GameObjects.Container {
     private statusImage: Phaser.GameObjects.Image;
