@@ -2,7 +2,7 @@ import { DEPTH_INGAME_TEXT_INDEX } from "./DepthIndexes";
 import type { GameScene } from "./GameScene";
 
 type UsernameElement = {
-    element: HTMLDivElement;
+    element: HTMLParagraphElement;
 };
 
 export class UsernameDomLayer {
@@ -41,6 +41,7 @@ export class UsernameDomLayer {
             element.style.textAlign = "center";
             element.style.transformOrigin = "50% 50%";
             element.style.pointerEvents = "none";
+            element.style.setProperty("translate", "-50% -50%");
             this.container.appendChild(element);
             username = { element };
             this.usernames.set(id, username);
@@ -68,7 +69,7 @@ export class UsernameDomLayer {
             return;
         }
 
-        username.element.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        username.element.style.setProperty("scale", `${scale}`);
     }
 
     public removeUsername(id: number): void {

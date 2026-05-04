@@ -12,6 +12,7 @@ const CORRECTION_RATE = 0.75;
 const PLAYER_NAME_BACKGROUND_COLOR = "rgba(27, 42, 65, 0.5)";
 const PLAYER_NAME_BACKGROUND_RADIUS = 8;
 const PLAYER_NAME_TEXT_OFFSET_X = 6;
+type Position = { x: number; y: number };
 
 export class UsernameDisplay extends Phaser.GameObjects.Container {
     private static nextPlayerNameTextureId = 0;
@@ -31,7 +32,9 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         this.displayScale = this.getDisplayScale(zoomModifier);
         this.setScale(this.displayScale);
         if (this.renderingAsDOM) {
+            const textPosition = this.getDomTextPosition();
             this.gameScene.usernameDomLayer.updateUsernameScale(this.domUsernameId, this.displayScale);
+            this.gameScene.usernameDomLayer.updateUsernamePosition(this.domUsernameId, textPosition.x, textPosition.y);
         }
     };
 
@@ -146,11 +149,12 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         }
 
         if (renderingAsDOM) {
+            const textPosition = this.getDomTextPosition();
             this.gameScene.usernameDomLayer.addUsername(
                 this.domUsernameId,
                 this.playerName,
-                this.x + PLAYER_NAME_TEXT_OFFSET_X,
-                this.y - this.playerNameSprite.displayHeight / 2,
+                textPosition.x,
+                textPosition.y,
                 this.playerNameFontSize,
                 this.displayScale
             );
@@ -195,11 +199,8 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     public override setPosition(x?: number, y?: number, z?: number, w?: number): this {
         super.setPosition(x, y, z, w);
         if (this.renderingAsDOM) {
-            this.gameScene.usernameDomLayer.updateUsernamePosition(
-                this.domUsernameId,
-                this.x + PLAYER_NAME_TEXT_OFFSET_X,
-                this.y - this.playerNameSprite.displayHeight / 2
-            );
+            const textPosition = this.getDomTextPosition();
+            this.gameScene.usernameDomLayer.updateUsernamePosition(this.domUsernameId, textPosition.x, textPosition.y);
         }
         return this;
     }
@@ -216,5 +217,12 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
 
     private get gameScene(): GameScene {
         return this.scene as GameScene;
+    }
+
+    private getDomTextPosition(): Position {
+        return {
+            x: this.x + PLAYER_NAME_TEXT_OFFSET_X * this.displayScale,
+            y: this.y - (this.playerNameSprite.height / 2) * this.displayScale,
+        };
     }
 }
