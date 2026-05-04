@@ -2,6 +2,7 @@
   "name": "@workadventure/generate-env-docs",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Generate environment variables documentation from Zod schemas",
   "scripts": {
     "generate": "tsx src/generate.ts",
@@ -12,7 +13,7 @@
     "@workadventure/messages": "1.0.0",
     "@workadventure/shared-utils": "1.0.0",
     "tsx": "^4.7.1",
-    "typescript": "^5.7.2",
+    "typescript": "^5.8.3",
     "zod": "^3.23.8"
   }
 }

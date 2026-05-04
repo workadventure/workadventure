@@ -54,7 +54,7 @@
         }
 
         // At the end, open the categorie of image uploaded
-        selectCategoryStore.set(tagUploadInProcess);
+        selectCategoryStore.set(tagUploadInProcess ? { kind: "tag", tag: tagUploadInProcess } : undefined);
     }
 
     async function processFileToUpload(customEditedEntity: EntityPrefab) {

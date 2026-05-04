@@ -127,6 +127,7 @@ import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandle
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
+import { PHASER_COLOR_DESIGN_SYSTEM_SECONDARY } from "../../Utils/DesignSystemPhaserColors";
 
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { embedScreenLayoutStore } from "../../Stores/EmbedScreenLayoutStore";
@@ -806,10 +807,6 @@ export class GameScene extends DirtyScene {
         this.subscribeToGameMapChanged();
         this.subscribeToEntitiesManagerObservables();
 
-        // We create the player and position it on the map before connecting to the room to avoid any delay in the player
-        // display when the connection is established. The player will be moved to the correct position when we
-        // now the exact start position (after receiving the map updates)
-        this.createCurrentPlayer();
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
 
         this.tryMovePlayerWithMoveToParameter();
@@ -819,8 +816,6 @@ export class GameScene extends DirtyScene {
             { width: this.Map.widthInPixels, height: this.Map.heightInPixels },
             waScaleManager
         );
-
-        this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
 
         biggestAvailableAreaStore.recompute();
         if (ENABLE_MAP_EDITOR) {
@@ -1112,8 +1107,7 @@ export class GameScene extends DirtyScene {
             const startPosition = this.startPositionCalculator.computeStartPosition(
                 urlManager.getStartPositionNameFromUrl()
             );
-            this.CurrentPlayer.x = startPosition.x;
-            this.CurrentPlayer.y = startPosition.y;
+            this.CurrentPlayer.setPosition(startPosition.x, startPosition.y);
             this.CurrentPlayer.finishFollowingPath(true);
             // clear properties in case we are moved on the same layer / area in order to trigger them
             this.gameMapFrontWrapper.clearCurrentProperties();
@@ -1871,8 +1865,10 @@ export class GameScene extends DirtyScene {
                     urlManager.getStartPositionNameFromUrl()
                 );
 
-                this.CurrentPlayer.teleportTo(startPosition.x, startPosition.y);
-                this.cameraManager.startFollowPlayer(this.CurrentPlayer);
+                this.createCurrentPlayer(startPosition);
+
+                this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
+                this.cameraManager.startFollowPlayer(this.CurrentPlayer, 0);
 
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
 
@@ -3814,14 +3810,14 @@ ${escapedMessage}
         }
     }
 
-    private createCurrentPlayer() {
+    private createCurrentPlayer(startPosition: PositionInterface) {
         //TODO create animation moving between exit and start
         try {
             this.CurrentPlayer = new Player(
                 this,
                 // We start creating the player before we know its exact position in order to start lazy loading the texture.
-                0,
-                0,
+                startPosition.x,
+                startPosition.y,
                 this.playerName,
                 this.currentPlayerTexturesPromise,
                 PositionMessage_Direction.DOWN,
@@ -3829,7 +3825,7 @@ ${escapedMessage}
                 gameManager.getCompanionTextureId() != undefined ? this.currentCompanionTexturePromise : undefined
             );
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
-                this.CurrentPlayer.pointerOverOutline(0x365dff);
+                this.CurrentPlayer.pointerOverOutline(PHASER_COLOR_DESIGN_SYSTEM_SECONDARY);
             });
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OUT, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOutOutline();

@@ -44,6 +44,7 @@ export type PartialAdminUser = Partial<AdminUser> & { uuid: string };
 export type PartialAnyKindOfUser = PartialChatUser | PartialAdminUser;
 
 export type ChatRoomMembership = "ban" | "leave" | "knock" | "join" | "invite" | string;
+export type ChatRoomInitializationState = "idle" | "loading" | "ready" | "error";
 
 export enum ChatPermissionLevel {
     USER = "USER",
@@ -69,9 +70,14 @@ export interface ChatRoomMember {
 export interface ChatRoom {
     readonly id: string;
     readonly name: Readable<string>;
-    readonly type: "direct" | "multiple";
+    /** Reactive: DM vs group can change (e.g. after ban/leave changes active member count). */
+    readonly type: Readable<"direct" | "multiple">;
     readonly hasUnreadMessages: Readable<boolean>;
     readonly unreadNotificationCount: Readable<number>;
+    readonly initializationState: Readable<ChatRoomInitializationState>;
+    readonly initializationError?: Readable<Error | undefined>;
+    readonly ensureInitialized: () => Promise<void>;
+    readonly ensureTimelineInitialized: () => Promise<void>;
     readonly pictureStore: PictureStore;
     /** Direct rooms: peer user color from the same source as the user list (UserProviderMerger), for Avatar background. */
     readonly avatarFallbackColor: Readable<string | undefined>;
@@ -83,6 +89,7 @@ export interface ChatRoom {
     readonly membersForMessageAvatars?: Readable<readonly ChatRoomMember[]>;
     /** Direct Matrix rooms: peer WA display name when it differs from Matrix name (for DM row subtitle). */
     readonly peerWaDisplayNameIfDifferent?: Readable<string | undefined>;
+    readonly activateVisibleProfileSync?: () => () => void;
     readonly messages: Readable<readonly ChatMessage[]>;
     readonly sendMessage: (message: string) => void;
     readonly sendFiles: (files: FileList) => Promise<void>;
@@ -101,6 +108,7 @@ export interface ChatRoomMembershipManagement {
     readonly name: Readable<string>;
     readonly myMembership: Readable<ChatRoomMembership>;
     readonly members: Readable<ChatRoomMember[]>;
+    readonly ensureMembersInitialized: () => Promise<void>;
     readonly joinRoom: () => Promise<void>;
     readonly leaveRoom: () => Promise<void>;
 }
@@ -175,7 +183,10 @@ export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, Chat
     invitations: Readable<ChatRoom[]>;
     suggestedRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
     joinableRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
+    joinableRoomsLoading: Readable<boolean>;
     hasChildRoomsError: Writable<boolean>;
+    ensureChildrenLoaded: () => void;
+    ensureJoinableRoomsLoaded: () => Promise<void>;
 }
 
 export interface CreateRoomOptions {

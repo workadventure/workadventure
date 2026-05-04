@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import type { SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
@@ -7,8 +8,21 @@ import { CommunicationType } from "./Types/CommunicationTypes";
 import type { IUserRegistry } from "./Interfaces/IUserRegistry";
 import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager";
 import type { IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
+import { getLivekitRoomName } from "./Services/LivekitService";
 
 export type RecordingStatus = "idle" | "starting" | "recording" | "stopping";
+
+interface RecordingSession {
+    createdAt: number;
+    egressId?: string;
+    expectedRoomName: string;
+    recorder: SpaceUser;
+    recordingSessionId: string;
+    startPromise: Promise<void> | null;
+    status: Exclude<RecordingStatus, "idle">;
+    stopAfterStartRequested: boolean;
+    stopPromise: Promise<SpaceUser | null> | null;
+}
 
 export interface ManagedRecordingState {
     isRecording: boolean;
@@ -22,17 +36,22 @@ export interface IRecordingManager {
     stopRecording(user: SpaceUser): Promise<SpaceUser | null>;
     stopRecordingByServer(): Promise<SpaceUser | null>;
     stopRecordingIfRecorderMatches(spaceUserId: string): Promise<SpaceUser | null>;
+    confirmRecordingStartedByWebhook(recordingSessionId: string, egressId: string, roomName: string): boolean;
+    finishRecordingByWebhook(
+        recordingSessionId: string,
+        egressId: string,
+        roomName: string
+    ): { processed: boolean; recorder: SpaceUser | null; unexpected: boolean; hasActiveSessions: boolean };
+    hasRecordingSession(recordingSessionId: string): boolean;
     handleAddUser(user: SpaceUser): void;
     isRecording: boolean;
     destroy(): void;
 }
 
 export class RecordingManager implements IRecordingManager {
-    private _status: RecordingStatus = "idle";
-    private _user: SpaceUser | undefined;
-    private _startPromise: Promise<void> | null = null;
-    private _stopPromise: Promise<SpaceUser | null> | null = null;
-    private _stopAfterStartRequested = false;
+    private readonly sessions = new Map<string, RecordingSession>();
+    private readonly sessionIdsByEgressId = new Map<string, string>();
+    private primarySessionId: string | undefined;
 
     constructor(
         private readonly _space: ICommunicationSpace,
@@ -42,89 +61,79 @@ export class RecordingManager implements IRecordingManager {
     ) {}
 
     public async startRecording(user: SpaceUser): Promise<void> {
-        switch (this._status) {
-            case "idle": {
-                return this.runStart(user);
+        const primarySession = this.getPrimarySession();
+
+        if (!primarySession) {
+            const session = this.createSession(user);
+            return this.runStart(session);
+        }
+
+        if (primarySession.recorder.spaceUserId !== user.spaceUserId) {
+            switch (primarySession.status) {
+                case "starting":
+                    throw new Error("Recording is already starting");
+                case "recording":
+                    throw new Error("Recording already started");
+                case "stopping":
+                    throw new Error("Recording is already stopping");
             }
-            case "starting": {
-                if (this._user?.spaceUserId === user.spaceUserId && this._startPromise) {
-                    return this._startPromise;
+        }
+
+        switch (primarySession.status) {
+            case "starting":
+                if (primarySession.startPromise) {
+                    return primarySession.startPromise;
                 }
                 throw new Error("Recording is already starting");
-            }
-            case "recording": {
-                if (this._user?.spaceUserId === user.spaceUserId) {
-                    return;
-                }
-                throw new Error("Recording already started");
-            }
-            case "stopping": {
-                if (this._user?.spaceUserId === user.spaceUserId && this._stopPromise) {
-                    await this._stopPromise;
+            case "recording":
+                return;
+            case "stopping":
+                if (primarySession.stopPromise) {
+                    await primarySession.stopPromise;
                     return;
                 }
                 throw new Error("Recording is already stopping");
-            }
         }
     }
 
     public async stopRecording(user: SpaceUser): Promise<SpaceUser | null> {
-        if (!this._user) {
+        const primarySession = this.getPrimarySession();
+        if (!primarySession) {
             console.warn("No recording is currently active.");
             return null;
         }
 
-        if (this._user.spaceUserId !== user.spaceUserId) {
+        if (primarySession.recorder.spaceUserId !== user.spaceUserId) {
             throw new Error("User is not the one recording");
         }
 
-        switch (this._status) {
-            case "idle": {
-                console.warn("No recording is currently active.");
-                return null;
-            }
-            case "starting": {
-                return this.requestStopAfterStart();
-            }
-            case "recording": {
-                return this.runStop();
-            }
-            case "stopping": {
-                if (this._stopPromise) {
-                    await this._stopPromise;
-                }
-                return null;
-            }
-        }
+        return this.stopSession(primarySession);
     }
 
     public async stopRecordingByServer(): Promise<SpaceUser | null> {
-        switch (this._status) {
-            case "idle": {
-                return null;
-            }
-            case "starting": {
-                return await this.requestStopAfterStart();
-            }
-            case "recording": {
-                return await this.runStop();
-            }
-            case "stopping": {
-                return this._stopPromise ? await this._stopPromise : this._user ?? null;
-            }
-        }
-    }
-
-    public async stopRecordingIfRecorderMatches(spaceUserId: string): Promise<SpaceUser | null> {
-        if (this._user?.spaceUserId !== spaceUserId) {
+        const primarySession = this.getPrimarySession();
+        if (!primarySession) {
             return null;
         }
 
-        return this.stopRecordingByServer();
+        return this.stopSession(primarySession);
+    }
+
+    public async stopRecordingIfRecorderMatches(spaceUserId: string): Promise<SpaceUser | null> {
+        const primarySession = this.getPrimarySession();
+        if (!primarySession || primarySession.recorder.spaceUserId !== spaceUserId) {
+            return null;
+        }
+
+        return this.stopSession(primarySession);
     }
 
     public handleAddUser(_user: SpaceUser): void {
         // Intentionally empty. Kept for symmetry with deletion hooks.
+    }
+
+    public hasRecordingSession(recordingSessionId: string): boolean {
+        return this.sessions.has(recordingSessionId);
     }
 
     public getRecordingState(): ManagedRecordingState {
@@ -132,111 +141,223 @@ export class RecordingManager implements IRecordingManager {
     }
 
     public get isRecording(): boolean {
-        return this._status !== "idle";
+        return this.sessions.size > 0;
     }
 
     public destroy(): void {
-        if (this._status === "idle") {
-            return;
+        const sessions = Array.from(this.sessions.values());
+        for (const session of sessions) {
+            this.stopSession(session).catch((error) => {
+                console.error(error);
+                Sentry.captureException(error);
+            });
         }
-
-        this.stopRecordingByServer().catch((error) => {
-            console.error(error);
-            Sentry.captureException(error);
-        });
     }
 
-    private async runStart(user: SpaceUser): Promise<void> {
-        const promise = this.performStart(user);
-        this._startPromise = promise;
+    public confirmRecordingStartedByWebhook(recordingSessionId: string, egressId: string, roomName: string): boolean {
+        const session = this.sessions.get(recordingSessionId);
+        if (!session) {
+            return false;
+        }
+
+        if (!this.matchesSessionWebhook(session, egressId, roomName)) {
+            return false;
+        }
+
+        if (session.status === "recording") {
+            return true;
+        }
+
+        if (session.status === "stopping") {
+            return true;
+        }
+
+        session.status = "recording";
+        this.publishState();
+
+        if (session.stopAfterStartRequested) {
+            this.runStop(session).catch((error) => {
+                console.error("Error stopping recording after LiveKit start confirmation:", error);
+                Sentry.captureException(error);
+            });
+        }
+
+        return true;
+    }
+
+    public finishRecordingByWebhook(
+        recordingSessionId: string,
+        egressId: string,
+        roomName: string
+    ): { processed: boolean; recorder: SpaceUser | null; unexpected: boolean; hasActiveSessions: boolean } {
+        const session = this.sessions.get(recordingSessionId);
+        if (!session) {
+            return { processed: false, recorder: null, unexpected: false, hasActiveSessions: this.sessions.size > 0 };
+        }
+
+        if (!this.matchesSessionWebhook(session, egressId, roomName)) {
+            return {
+                processed: false,
+                recorder: session.recorder,
+                unexpected: false,
+                hasActiveSessions: this.sessions.size > 0,
+            };
+        }
+
+        const unexpected = session.status !== "stopping";
+        const recorder = session.recorder;
+        this.deleteSession(recordingSessionId);
+        this.publishState();
+
+        return {
+            processed: true,
+            recorder,
+            unexpected,
+            hasActiveSessions: this.sessions.size > 0,
+        };
+    }
+
+    private createSession(recorder: SpaceUser): RecordingSession {
+        const session: RecordingSession = {
+            createdAt: Date.now(),
+            expectedRoomName: getLivekitRoomName(this._space.getSpaceName()),
+            recorder,
+            recordingSessionId: randomUUID(),
+            startPromise: null,
+            status: "starting",
+            stopAfterStartRequested: false,
+            stopPromise: null,
+        };
+
+        this.sessions.set(session.recordingSessionId, session);
+        this.primarySessionId = session.recordingSessionId;
+        return session;
+    }
+
+    private getPrimarySession(): RecordingSession | undefined {
+        if (this.primarySessionId) {
+            const primarySession = this.sessions.get(this.primarySessionId);
+            if (primarySession) {
+                return primarySession;
+            }
+        }
+
+        const fallbackSession = Array.from(this.sessions.values()).sort(
+            (left, right) => right.createdAt - left.createdAt
+        )[0];
+        this.primarySessionId = fallbackSession?.recordingSessionId;
+        return fallbackSession;
+    }
+
+    private deleteSession(recordingSessionId: string): void {
+        const session = this.sessions.get(recordingSessionId);
+        if (session?.egressId) {
+            this.sessionIdsByEgressId.delete(session.egressId);
+        }
+
+        this.sessions.delete(recordingSessionId);
+        if (this.primarySessionId === recordingSessionId) {
+            this.primarySessionId = undefined;
+        }
+        this.getPrimarySession();
+    }
+
+    private async runStart(session: RecordingSession): Promise<void> {
+        const promise = this.performStart(session);
+        session.startPromise = promise;
 
         try {
             await promise;
         } finally {
-            if (this._startPromise === promise) {
-                this._startPromise = null;
+            if (session.startPromise === promise) {
+                session.startPromise = null;
             }
         }
     }
 
-    private async performStart(user: SpaceUser): Promise<void> {
-        this._user = user;
-        this._status = "starting";
-        this._stopAfterStartRequested = false;
+    private async performStart(session: RecordingSession): Promise<void> {
+        session.status = "starting";
+        session.stopAfterStartRequested = false;
+        session.egressId = undefined;
+        session.expectedRoomName = getLivekitRoomName(this._space.getSpaceName());
         this.publishState();
 
         try {
             const currentState = this._lifecycleManager.getCurrentState();
 
             if (this.isRecordableState(currentState)) {
-                await currentState.handleStartRecording(user);
+                const recordingStartInfo = await currentState.handleStartRecording(
+                    session.recorder,
+                    session.recordingSessionId
+                );
+                this.reconcileStartResult(
+                    session.recordingSessionId,
+                    recordingStartInfo.egressId,
+                    recordingStartInfo.roomName
+                );
             } else {
-                await this.switchToLivekitAndRecord(user);
-            }
-
-            this._status = "recording";
-            this.publishState();
-
-            if (this._stopAfterStartRequested) {
-                await this.runStop();
+                await this.switchToLivekitAndRecord(session);
             }
         } catch (error) {
-            this._status = "idle";
-            this._user = undefined;
-            this._stopAfterStartRequested = false;
+            this.deleteSession(session.recordingSessionId);
             this.publishState();
             throw error;
         }
     }
 
-    private async requestStopAfterStart(): Promise<SpaceUser | null> {
-        const recorder = this._user;
-        if (!recorder) {
-            return null;
+    private async stopSession(session: RecordingSession): Promise<SpaceUser | null> {
+        switch (session.status) {
+            case "starting":
+                return this.requestStopAfterStart(session);
+            case "recording":
+                return this.runStop(session);
+            case "stopping":
+                return session.stopPromise ? await session.stopPromise : null;
         }
-
-        this._stopAfterStartRequested = true;
-
-        if (this._startPromise) {
-            await this._startPromise;
-            return recorder;
-        }
-
-        if (this._status === "recording") {
-            return await this.runStop();
-        }
-
-        return null;
     }
 
-    private async runStop(): Promise<SpaceUser | null> {
-        if (!this._user) {
-            return null;
+    private async requestStopAfterStart(session: RecordingSession): Promise<SpaceUser | null> {
+        session.stopAfterStartRequested = true;
+
+        if (session.startPromise) {
+            await session.startPromise;
         }
 
-        if (this._stopPromise) {
-            return this._stopPromise;
+        const refreshedSession = this.sessions.get(session.recordingSessionId);
+        if (!refreshedSession) {
+            return session.recorder;
         }
 
-        const promise = this.performStop();
-        this._stopPromise = promise;
+        if (refreshedSession.status === "recording") {
+            return this.runStop(refreshedSession);
+        }
+
+        if (refreshedSession.status === "stopping" && refreshedSession.stopPromise) {
+            return refreshedSession.stopPromise;
+        }
+
+        return session.recorder;
+    }
+
+    private async runStop(session: RecordingSession): Promise<SpaceUser | null> {
+        if (session.stopPromise) {
+            return session.stopPromise;
+        }
+
+        const promise = this.performStop(session);
+        session.stopPromise = promise;
 
         try {
             return await promise;
         } finally {
-            if (this._stopPromise === promise) {
-                this._stopPromise = null;
+            if (session.stopPromise === promise) {
+                session.stopPromise = null;
             }
         }
     }
 
-    private async performStop(): Promise<SpaceUser | null> {
-        const recorder = this._user;
-        if (!recorder) {
-            return null;
-        }
-
-        this._status = "stopping";
+    private async performStop(session: RecordingSession): Promise<SpaceUser | null> {
+        session.status = "stopping";
         this.publishState();
 
         try {
@@ -246,29 +367,23 @@ export class RecordingManager implements IRecordingManager {
                 throw new Error("Current state is not recordable");
             }
 
-            await currentState.handleStopRecording();
-
-            this._status = "idle";
-            this._user = undefined;
-            this._stopAfterStartRequested = false;
-            this.publishState();
-
-            return recorder;
+            await currentState.handleStopRecording(session.egressId);
+            return session.recorder;
         } catch (error) {
-            this._status = "recording";
+            session.status = session.egressId ? "recording" : "starting";
             this.publishState();
             throw error;
         }
     }
 
-    private async switchToLivekitAndRecord(user: SpaceUser): Promise<void> {
+    private async switchToLivekitAndRecord(session: RecordingSession): Promise<void> {
         const recordableState = await this._transitionOrchestrator.executeImmediateTransition(
             CommunicationType.LIVEKIT,
             {
                 space: this._space,
                 users: this._userRegistry.getUsers(),
                 usersToNotify: this._userRegistry.getUsersToNotify(),
-                playUri: user.playUri,
+                playUri: session.recorder.playUri,
             }
         );
 
@@ -277,25 +392,90 @@ export class RecordingManager implements IRecordingManager {
         }
 
         await this._lifecycleManager.transitionTo(recordableState);
-        await recordableState.handleStartRecording(user);
+        const recordingStartInfo = await recordableState.handleStartRecording(
+            session.recorder,
+            session.recordingSessionId
+        );
+        this.reconcileStartResult(session.recordingSessionId, recordingStartInfo.egressId, recordingStartInfo.roomName);
+    }
+
+    private reconcileStartResult(recordingSessionId: string, egressId: string, roomName: string): void {
+        const session = this.sessions.get(recordingSessionId);
+        if (!session) {
+            return;
+        }
+
+        if (roomName !== session.expectedRoomName) {
+            return;
+        }
+
+        if (!session.egressId) {
+            this.assignEgressId(session, egressId);
+            return;
+        }
     }
 
     private publishState(): void {
+        const snapshot = this.buildStateSnapshot();
         this._space.publishMetadata({
             recording: {
-                recorder: this._user?.spaceUserId ?? null,
-                recording: this._status === "recording" || this._status === "stopping",
-                status: this._status,
+                recorder: snapshot.recorder,
+                recording: snapshot.status === "recording" || snapshot.status === "stopping",
+                status: snapshot.status,
             },
         });
     }
 
     private buildStateSnapshot(): ManagedRecordingState {
+        const primarySession = this.getPrimarySession();
+        if (!primarySession) {
+            return {
+                isRecording: false,
+                recorder: null,
+                status: "idle",
+            };
+        }
+
         return {
-            isRecording: this._status !== "idle",
-            recorder: this._user?.spaceUserId ?? null,
-            status: this._status,
+            isRecording: true,
+            recorder: primarySession.recorder.spaceUserId,
+            status: primarySession.status,
         };
+    }
+
+    private matchesSessionWebhook(session: RecordingSession, egressId: string, roomName: string): boolean {
+        if (roomName !== session.expectedRoomName) {
+            return false;
+        }
+
+        if (getLivekitRoomName(this._space.getSpaceName()) !== roomName) {
+            return false;
+        }
+
+        if (!session.egressId) {
+            return this.assignEgressId(session, egressId);
+        }
+
+        if (session.egressId !== egressId) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private assignEgressId(session: RecordingSession, egressId: string): boolean {
+        const existingSessionId = this.sessionIdsByEgressId.get(egressId);
+        if (existingSessionId && existingSessionId !== session.recordingSessionId) {
+            return false;
+        }
+
+        if (session.egressId && session.egressId !== egressId) {
+            this.sessionIdsByEgressId.delete(session.egressId);
+        }
+
+        session.egressId = egressId;
+        this.sessionIdsByEgressId.set(egressId, session.recordingSessionId);
+        return true;
     }
 
     private isRecordableState(

@@ -534,13 +534,6 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
             publicTestMapUrl(`tests/RemotePlayers/remote_players_cowebsite.json`, "api_players"),
         );
 
-        // Ouvrir le Site A dans le premier onglet
-        page.locator(".siteA-page1");
-
-        // Ouvrir le Site B dans le deuxième onglet
-        page.locator(".siteB-page1");
-        // await page.frameLocator('iframe[name="cowebsite-frame"]').locator('text=Site B Page 1').waitFor();
-
         //Switching tabs and pages
         await page.getByTestId("tab1").click();
         const event = getCoWebsiteIframe(page).locator(".siteA-page1");

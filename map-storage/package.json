@@ -2,6 +2,7 @@
   "private": true,
   "name": "map-storage",
   "version": "1.0.0",
+  "type": "module",
   "description": "",
   "main": "index.js",
   "contributors": [
@@ -26,8 +27,8 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "typecheck": "tsc --project tsconfig-node.json --noEmit",
-    "pretty": "prettier --write \"{src,src-ui}/**/*.{ts,svelte}\" vite.config.mts",
-    "pretty-check": "prettier --check '{src,src-ui}/**/*.{ts,svelte}' vite.config.mts",
+    "pretty": "prettier --write \"{src,src-ui}/**/*.{ts,svelte}\" vite.config.ts",
+    "pretty-check": "prettier --check '{src,src-ui}/**/*.{ts,svelte}' vite.config.ts",
     "start": "if [ $PATH_PREFIX ]; then npm run front:build; fi && ESBK_TSCONFIG_PATH=tsconfig-node.json tsx ./src/index.ts",
     "back:start:dev": "ESBK_TSCONFIG_PATH=tsconfig-node.json tsx watch --clear-screen=false --inspect=0.0.0.0:9229 ./src/index.ts",
     "lint": "eslint \"{src,src-ui}/**/*.ts\"",
@@ -110,10 +111,9 @@
     "source-map-support": "^0.5.20",
     "svelte": "^4.2.20",
     "svelte-check": "^3.8.6",
-    "svelte-preprocess": "^6.0.3",
     "ts-loader": "^9.2.3",
     "tsconfig-paths": "4.0.0",
-    "typescript": "^5.7.2",
+    "typescript": "^5.8.3",
     "vite": "^5.4.21",
     "vitest": "^2.1.2"
   },

@@ -19,9 +19,13 @@ function createUser(spaceUserId: string): SpaceUser {
 }
 
 function createRecordableState() {
+    type StartRecordingResult = { egressId: string; roomName: string };
     const mocks = {
-        handleStartRecording: vi.fn().mockResolvedValue(undefined),
+        handleStartRecording: vi
+            .fn<(user: SpaceUser, recordingSessionId: string) => Promise<StartRecordingResult>>()
+            .mockResolvedValue({ egressId: "egress-1", roomName: "test-space" }),
         handleStopRecording: vi.fn().mockResolvedValue(undefined),
+        handleLivekitWebhook: vi.fn().mockResolvedValue("ignored"),
     };
 
     const state: IRecordableState<IRecordableStrategy> = {
@@ -37,6 +41,7 @@ function createRecordableState() {
         handleMeetingConnectionRestartMessage: vi.fn(),
         handleStartRecording: mocks.handleStartRecording,
         handleStopRecording: mocks.handleStopRecording,
+        handleLivekitWebhook: mocks.handleLivekitWebhook,
     };
 
     return { state, mocks };
@@ -88,16 +93,30 @@ function createDependencies(state: IRecordableState<IRecordableStrategy>) {
     return { space, publishMetadata, orchestrator, userRegistry, lifecycleManager };
 }
 
+function getRecordingSessionId(
+    handleStartRecording: ReturnType<typeof vi.fn<(user: SpaceUser, recordingSessionId: string) => Promise<unknown>>>
+): string {
+    const lastCall = handleStartRecording.mock.calls.at(-1);
+    expect(lastCall).toBeDefined();
+
+    const recordingSessionId = lastCall?.[1];
+    expect(recordingSessionId).toEqual(expect.any(String));
+    return recordingSessionId as string;
+}
+
 describe("RecordingManager", () => {
-    it("publishes starting then recording on successful start", async () => {
+    it("stays in starting until the start webhook confirms the egress", async () => {
         const { state, mocks } = createRecordableState();
         const { space, publishMetadata, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
         const manager = new RecordingManager(space, orchestrator, userRegistry, lifecycleManager);
         const user = createUser("user-1");
 
         await manager.startRecording(user);
+        const recordingSessionId = getRecordingSessionId(mocks.handleStartRecording);
 
-        expect(mocks.handleStartRecording).toHaveBeenCalledWith(user);
+        expect(manager.getRecordingState().status).toBe("starting");
+        expect(mocks.handleStartRecording).toHaveBeenCalledWith(user, recordingSessionId);
+        expect(publishMetadata).toHaveBeenCalledTimes(1);
         expect(publishMetadata).toHaveBeenNthCalledWith(1, {
             recording: {
                 recorder: "user-1",
@@ -105,11 +124,79 @@ describe("RecordingManager", () => {
                 status: "starting",
             },
         });
+
+        expect(manager.confirmRecordingStartedByWebhook(recordingSessionId, "egress-1", "test-space")).toBe(true);
         expect(publishMetadata).toHaveBeenNthCalledWith(2, {
             recording: {
                 recorder: "user-1",
                 recording: true,
                 status: "recording",
+            },
+        });
+    });
+
+    it("accepts a started webhook before the LiveKit start call resolves", async () => {
+        const { state, mocks } = createRecordableState();
+        let resolveStart: ((startInfo: { egressId: string; roomName: string }) => void) | undefined;
+        mocks.handleStartRecording.mockImplementation(
+            () =>
+                new Promise<{ egressId: string; roomName: string }>((resolve) => {
+                    resolveStart = resolve;
+                })
+        );
+        const { space, publishMetadata, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
+        const manager = new RecordingManager(space, orchestrator, userRegistry, lifecycleManager);
+        const user = createUser("user-1");
+
+        const startPromise = manager.startRecording(user);
+        expect(mocks.handleStartRecording).toHaveBeenCalledTimes(1);
+
+        const recordingSessionId = getRecordingSessionId(mocks.handleStartRecording);
+        expect(manager.confirmRecordingStartedByWebhook(recordingSessionId, "egress-1", "test-space")).toBe(true);
+
+        resolveStart?.({ egressId: "egress-1", roomName: "test-space" });
+        await startPromise;
+
+        expect(manager.getRecordingState().status).toBe("recording");
+        expect(publishMetadata).toHaveBeenCalledTimes(2);
+    });
+
+    it("ignores mismatched webhook events", async () => {
+        const { state, mocks } = createRecordableState();
+        const { space, publishMetadata, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
+        const manager = new RecordingManager(space, orchestrator, userRegistry, lifecycleManager);
+
+        await manager.startRecording(createUser("user-1"));
+        const recordingSessionId = getRecordingSessionId(mocks.handleStartRecording);
+
+        expect(manager.confirmRecordingStartedByWebhook(recordingSessionId, "egress-2", "test-space")).toBe(false);
+        expect(manager.confirmRecordingStartedByWebhook(recordingSessionId, "egress-1", "wrong-room")).toBe(false);
+        expect(publishMetadata).toHaveBeenCalledTimes(1);
+    });
+
+    it("returns recorder information when an unexpected end webhook is processed", async () => {
+        const { state, mocks } = createRecordableState();
+        const { space, publishMetadata, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
+        const manager = new RecordingManager(space, orchestrator, userRegistry, lifecycleManager);
+        const user = createUser("user-1");
+
+        await manager.startRecording(user);
+        const recordingSessionId = getRecordingSessionId(mocks.handleStartRecording);
+        manager.confirmRecordingStartedByWebhook(recordingSessionId, "egress-1", "test-space");
+
+        const result = manager.finishRecordingByWebhook(recordingSessionId, "egress-1", "test-space");
+
+        expect(result).toEqual({
+            processed: true,
+            recorder: user,
+            unexpected: true,
+            hasActiveSessions: false,
+        });
+        expect(publishMetadata).toHaveBeenNthCalledWith(3, {
+            recording: {
+                recorder: null,
+                recording: false,
+                status: "idle",
             },
         });
     });
@@ -140,10 +227,10 @@ describe("RecordingManager", () => {
 
     it("deduplicates duplicate start requests from the same owner", async () => {
         const { state, mocks } = createRecordableState();
-        let resolveStart: (() => void) | undefined;
+        let resolveStart: ((startInfo: { egressId: string; roomName: string }) => void) | undefined;
         mocks.handleStartRecording.mockImplementation(
             () =>
-                new Promise<void>((resolve) => {
+                new Promise<{ egressId: string; roomName: string }>((resolve) => {
                     resolveStart = resolve;
                 })
         );
@@ -155,20 +242,22 @@ describe("RecordingManager", () => {
         const secondStart = manager.startRecording(user);
 
         expect(mocks.handleStartRecording).toHaveBeenCalledTimes(1);
-        resolveStart?.();
+        resolveStart?.({ egressId: "egress-1", roomName: "test-space" });
         await Promise.all([firstStart, secondStart]);
 
-        expect(publishMetadata).toHaveBeenCalledTimes(2);
+        expect(publishMetadata).toHaveBeenCalledTimes(1);
     });
 
     it("rejects start and stop requests from another user while a recording is owned", async () => {
-        const { state } = createRecordableState();
+        const { state, mocks } = createRecordableState();
         const { space, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
         const manager = new RecordingManager(space, orchestrator, userRegistry, lifecycleManager);
         const owner = createUser("user-1");
         const otherUser = createUser("user-2");
 
         await manager.startRecording(owner);
+        const recordingSessionId = getRecordingSessionId(mocks.handleStartRecording);
+        manager.confirmRecordingStartedByWebhook(recordingSessionId, "egress-1", "test-space");
 
         await expect(manager.startRecording(otherUser)).rejects.toThrow("Recording already started");
         await expect(manager.stopRecording(otherUser)).rejects.toThrow("User is not the one recording");
@@ -176,10 +265,10 @@ describe("RecordingManager", () => {
 
     it("stops automatically after start completes when the owner leaves during starting", async () => {
         const { state, mocks } = createRecordableState();
-        let resolveStart: (() => void) | undefined;
+        let resolveStart: ((startInfo: { egressId: string; roomName: string }) => void) | undefined;
         mocks.handleStartRecording.mockImplementation(
             () =>
-                new Promise<void>((resolve) => {
+                new Promise<{ egressId: string; roomName: string }>((resolve) => {
                     resolveStart = resolve;
                 })
         );
@@ -188,13 +277,18 @@ describe("RecordingManager", () => {
         const user = createUser("user-1");
 
         const startPromise = manager.startRecording(user);
+        const recordingSessionId = getRecordingSessionId(mocks.handleStartRecording);
         const leavePromise = manager.stopRecordingIfRecorderMatches("user-1");
 
-        resolveStart?.();
+        resolveStart?.({ egressId: "egress-1", roomName: "test-space" });
 
         await startPromise;
         await expect(leavePromise).resolves.toEqual(user);
+        expect(mocks.handleStopRecording).not.toHaveBeenCalled();
+
+        manager.confirmRecordingStartedByWebhook(recordingSessionId, "egress-1", "test-space");
         expect(mocks.handleStopRecording).toHaveBeenCalledTimes(1);
+        expect(mocks.handleStopRecording).toHaveBeenCalledWith("egress-1");
         expect(publishMetadata).toHaveBeenNthCalledWith(1, {
             recording: {
                 recorder: "user-1",
@@ -216,6 +310,13 @@ describe("RecordingManager", () => {
                 status: "stopping",
             },
         });
+
+        expect(manager.finishRecordingByWebhook(recordingSessionId, "egress-1", "test-space")).toEqual({
+            processed: true,
+            recorder: user,
+            unexpected: false,
+            hasActiveSessions: false,
+        });
         expect(publishMetadata).toHaveBeenNthCalledWith(4, {
             recording: {
                 recorder: null,
@@ -233,6 +334,8 @@ describe("RecordingManager", () => {
         const user = createUser("user-1");
 
         await manager.startRecording(user);
+        const recordingSessionId = getRecordingSessionId(mocks.handleStartRecording);
+        manager.confirmRecordingStartedByWebhook(recordingSessionId, "egress-1", "test-space");
         await expect(manager.stopRecording(user)).rejects.toThrow("stop-failed");
 
         expect(publishMetadata).toHaveBeenNthCalledWith(3, {

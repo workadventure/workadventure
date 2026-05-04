@@ -16,6 +16,8 @@ import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
+import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
+import { DEPTH_INGAME_TEXT_INDEX, DEPTH_OVERLAY_INDEX } from "../Game/DepthIndexes";
 
 import { UsernameDisplay } from "../Components/UsernameDisplay";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
@@ -29,6 +31,11 @@ import RenderTexture = Phaser.GameObjects.RenderTexture;
 
 const playerNameY = -16;
 const interactiveRadius = 25;
+const meetingSpeakingIconY = -49;
+/** Slightly below overlay layer so the hovered Woka draws above other characters (y-based depth). */
+const CHARACTER_DEPTH_WHEN_POINTER_OVER = DEPTH_OVERLAY_INDEX - 1;
+/** Above other name tags when the character is hovered. */
+const USERNAME_DEPTH_WHEN_POINTER_OVER = DEPTH_INGAME_TEXT_INDEX + 1;
 
 export const CHARACTER_BODY_WIDTH = 16;
 export const CHARACTER_BODY_HEIGHT = 16;
@@ -36,6 +43,8 @@ export const CHARACTER_BODY_OFFSET_X = 0;
 export const CHARACTER_BODY_OFFSET_Y = 8;
 
 export const PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX = "playtext-mediadevice-";
+
+export type PathFollowResult = { x: number; y: number; cancelled: boolean };
 
 export abstract class Character extends Container implements OutlineableInterface {
     private bubble: RenderTexture | null | DOMElement = null;
@@ -49,6 +58,8 @@ export abstract class Character extends Container implements OutlineableInterfac
     //private teleportation: Sprite;
     private invisible: boolean;
     private clickable: boolean;
+    /** True while the pointer is over this clickable character — depth is raised so the Woka and name read clearly. */
+    private pointerOverForDepth = false;
     public companion?: Companion;
     private emote: Phaser.GameObjects.DOMElement | null = null;
     private emoteTween: Phaser.Tweens.Tween | null = null;
@@ -61,6 +72,10 @@ export abstract class Character extends Container implements OutlineableInterfac
     private outlineColorStoreUnsubscribe: Unsubscriber | undefined;
     private texturePromise: CancelablePromise<string[] | void> | undefined;
     private destroyed = false;
+    protected pathToFollow?: { x: number; y: number }[];
+    protected pathWalkingSpeed?: number;
+    private currentPathSegmentDistanceFromStart = 0;
+    private pathFollowingResolve?: (result: PathFollowResult) => void;
 
     /**
      * A deferred promise that resolves when the texture of the character is actually displayed.
@@ -162,32 +177,30 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
 
             const playerNameOutlineColor = get(this.outlineColorStore);
-            this.usernameDisplay = new UsernameDisplay(scene, 0, playerNameY, this.playerName, playerNameOutlineColor);
+            this.usernameDisplay = new UsernameDisplay(
+                scene,
+                this.x,
+                this.y + playerNameY,
+                this.playerName,
+                playerNameOutlineColor
+            );
             this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true, true);
-            this.add(this.usernameDisplay);
 
             this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
                 this.usernameDisplay?.setPlayerNameOutlineColor(color);
                 this.scene.markDirty();
             });
             this.scene.markDirty();
+            this.updateCharacterDisplayDepth();
         }, 0);
 
-        this.talkIcon = new TalkIcon(scene, 0, -45);
-        this.speakerIcon = new SpeakerIcon(scene, 0, -45);
+        this.talkIcon = new TalkIcon(scene, 0, meetingSpeakingIconY);
+        this.speakerIcon = new SpeakerIcon(scene, 0, meetingSpeakingIconY);
         this.add([this.talkIcon, this.speakerIcon]);
 
-        if (isClickable) {
-            this.setInteractive({
-                hitArea: new Phaser.Geom.Circle(8, 8, interactiveRadius),
-                hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
-                useHandCursor: true,
-            });
-        }
+        scene.add.existing(this);
 
         this.setClickable(isClickable);
-
-        scene.add.existing(this);
 
         this.scene.physics.world.enableBody(this);
         this.getBody().setImmovable(true);
@@ -195,7 +208,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT);
         this.getBody().setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT); //edit the hitbox to better match the character model
         this.getBody().setOffset(CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y);
-        this.setDepth(this.y + 16);
+        this.updateCharacterDisplayDepth();
     }
 
     private waitAndGetSnapshot(): Promise<string> {
@@ -228,6 +241,51 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
+    private updateCharacterDisplayDepth(): void {
+        if (this.pointerOverForDepth) {
+            this.setDepth(CHARACTER_DEPTH_WHEN_POINTER_OVER);
+            this.usernameDisplay?.setDepth(USERNAME_DEPTH_WHEN_POINTER_OVER);
+        } else {
+            this.setDepth(this.y + 16);
+            this.usernameDisplay?.setDepth(DEPTH_INGAME_TEXT_INDEX);
+        }
+    }
+
+    private readonly onPointerOverRaiseDepth = (): void => {
+        if (this.pointerOverForDepth) {
+            return;
+        }
+        this.pointerOverForDepth = true;
+        this.updateCharacterDisplayDepth();
+    };
+
+    private readonly onPointerOutRestoreDepth = (): void => {
+        if (!this.pointerOverForDepth) {
+            return;
+        }
+        this.pointerOverForDepth = false;
+        this.updateCharacterDisplayDepth();
+    };
+
+    private bindCharacterPointerHoverDepth(): void {
+        if (!this.clickable || this.destroyed) {
+            return;
+        }
+        this.off(Phaser.Input.Events.POINTER_OVER, this.onPointerOverRaiseDepth, this);
+        this.off(Phaser.Input.Events.POINTER_OUT, this.onPointerOutRestoreDepth, this);
+        this.on(Phaser.Input.Events.POINTER_OVER, this.onPointerOverRaiseDepth, this);
+        this.on(Phaser.Input.Events.POINTER_OUT, this.onPointerOutRestoreDepth, this);
+    }
+
+    private unbindCharacterPointerHoverDepth(): void {
+        this.off(Phaser.Input.Events.POINTER_OVER, this.onPointerOverRaiseDepth, this);
+        this.off(Phaser.Input.Events.POINTER_OUT, this.onPointerOutRestoreDepth, this);
+        if (this.pointerOverForDepth) {
+            this.pointerOverForDepth = false;
+            this.updateCharacterDisplayDepth();
+        }
+    }
+
     public setClickable(clickable = true): void {
         if (this.clickable === clickable) {
             return;
@@ -239,8 +297,10 @@ export abstract class Character extends Container implements OutlineableInterfac
                 hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
                 useHandCursor: true,
             });
+            this.bindCharacterPointerHoverDepth();
             return;
         }
+        this.unbindCharacterPointerHoverDepth();
         this.disableInteractive();
     }
 
@@ -370,9 +430,130 @@ export abstract class Character extends Container implements OutlineableInterfac
         return body;
     }
 
+    protected updateUsernameDisplayPosition(x = this.x, y = this.y): void {
+        this.usernameDisplay?.setPosition(x, y + playerNameY);
+    }
+
+    setPosition(x: number, y: number): this {
+        super.setPosition(x, y);
+        this.updateCharacterDisplayDepth();
+        this.updateUsernameDisplayPosition();
+        return this;
+    }
+
     stop() {
         this.getBody().setVelocity(0, 0);
         this.playAnimation(this._lastDirection, false);
+    }
+
+    protected setPathToFollow(path: { x: number; y: number }[], speed?: number): Promise<PathFollowResult> {
+        const isPreviousPathInProgress = this.isFollowingPath();
+        this.pathToFollow = this.adjustPathToColliderBounds(path);
+        this.pathToFollow.unshift({ x: this.x, y: this.y });
+        this.pathWalkingSpeed = speed;
+        this.currentPathSegmentDistanceFromStart = 0;
+
+        return new Promise((resolve) => {
+            this.pathFollowingResolve?.call(this, { x: this.x, y: this.y, cancelled: isPreviousPathInProgress });
+            this.pathFollowingResolve = resolve;
+        });
+    }
+
+    public finishFollowingPath(cancelled = false): void {
+        this.pathToFollow = undefined;
+        this.pathWalkingSpeed = undefined;
+        this.currentPathSegmentDistanceFromStart = 0;
+        this.stop();
+
+        const resolve = this.pathFollowingResolve;
+        this.pathFollowingResolve = undefined;
+        resolve?.({ x: this.x, y: this.y, cancelled });
+    }
+
+    protected isFollowingPath(): boolean {
+        return this.pathToFollow !== undefined || this.pathFollowingResolve !== undefined;
+    }
+
+    protected getPathWalkingSpeed(): number {
+        return this.pathWalkingSpeed ?? WOKA_SPEED;
+    }
+
+    protected adjustPathToColliderBounds(path: { x: number; y: number }[]): { x: number; y: number }[] {
+        const body = this.getBody();
+        return path.map((step) => ({
+            x: step.x,
+            y: step.y - body.height / 2 - body.offset.y,
+        }));
+    }
+
+    protected followPath(delta: number): void {
+        if (this.pathToFollow !== undefined && this.pathToFollow.length === 1) {
+            this.finishFollowingPath();
+            return;
+        }
+        if (!this.pathToFollow) {
+            return;
+        }
+
+        let segmentStartPos = this.pathToFollow[0];
+        let segmentEndPos = this.pathToFollow[1];
+        let xDistance = segmentEndPos.x - segmentStartPos.x;
+        let yDistance = segmentEndPos.y - segmentStartPos.y;
+        let pathSegmentLength = Math.sqrt(xDistance * xDistance + yDistance * yDistance);
+
+        this.currentPathSegmentDistanceFromStart += (this.getPathWalkingSpeed() * delta * 20) / 1000;
+
+        while (this.currentPathSegmentDistanceFromStart >= pathSegmentLength) {
+            this.currentPathSegmentDistanceFromStart -= pathSegmentLength;
+            this.pathToFollow.shift();
+
+            if (this.pathToFollow.length === 1) {
+                this.setPosition(this.pathToFollow[0].x, this.pathToFollow[0].y);
+                this.finishFollowingPath();
+                return;
+            }
+
+            segmentStartPos = this.pathToFollow[0];
+            segmentEndPos = this.pathToFollow[1];
+            xDistance = segmentEndPos.x - segmentStartPos.x;
+            yDistance = segmentEndPos.y - segmentStartPos.y;
+            pathSegmentLength = Math.sqrt(xDistance * xDistance + yDistance * yDistance);
+        }
+
+        const newX =
+            segmentStartPos.x +
+            (this.currentPathSegmentDistanceFromStart / pathSegmentLength) * (segmentEndPos.x - segmentStartPos.x);
+        const newY =
+            segmentStartPos.y +
+            (this.currentPathSegmentDistanceFromStart / pathSegmentLength) * (segmentEndPos.y - segmentStartPos.y);
+
+        this.moveToPathPosition(newX, newY);
+        this.scene.markDirty();
+    }
+
+    protected moveToPathPosition(x: number, y: number): void {
+        const oldX = this.x;
+        const oldY = this.y;
+        this.setPosition(x, y);
+
+        // In path finding mode, diagonal movement can make x and y deltas almost equal.
+        // Biasing y prevents the animation from flickering between horizontal and vertical directions.
+        if (Math.abs(x - oldX) > Math.abs((y - oldY) * 1.1)) {
+            if (x < oldX) {
+                this._lastDirection = PositionMessage_Direction.LEFT;
+            } else if (x > oldX) {
+                this._lastDirection = PositionMessage_Direction.RIGHT;
+            }
+        } else {
+            if (y < oldY) {
+                this._lastDirection = PositionMessage_Direction.UP;
+            } else if (y > oldY) {
+                this._lastDirection = PositionMessage_Direction.DOWN;
+            }
+        }
+
+        this.playAnimation(this._lastDirection, true);
+        this.companion?.setTarget(this.x, this.y, this._lastDirection);
     }
 
     say(text: string, type: SayMessageType) {
@@ -420,6 +601,8 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     destroy(): void {
+        this.unbindCharacterPointerHoverDepth();
+        this.usernameDisplay?.destroy();
         for (const sprite of this.sprites.values()) {
             if (this.scene) {
                 this.scene.sys.updateList.remove(sprite);

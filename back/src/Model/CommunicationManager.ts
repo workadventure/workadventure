@@ -1,9 +1,15 @@
 import * as Sentry from "@sentry/node";
-import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
+import {
+    type HandleLivekitWebhookRequest,
+    RecordingWebhookPhase,
+    type HandleRecordingWebhookRequest,
+    type MeetingConnectionRestartMessage,
+    type SpaceUser,
+} from "@workadventure/messages";
 import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
-import type { ICommunicationState } from "./Interfaces/ICommunicationState";
+import type { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
 import { CommunicationType } from "./Types/CommunicationTypes";
 import { WebRTCState } from "./States/WebRTCState";
 import { VoidState } from "./States/VoidState";
@@ -18,7 +24,7 @@ import type { IUserRegistry } from "./Interfaces/IUserRegistry";
 import type { ITransitionPolicy } from "./Interfaces/ITransitionPolicy";
 import type { ITransitionOrchestrator, TransitionContext } from "./Interfaces/ITransitionOrchestrator";
 import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager";
-import type { ICommunicationStrategy } from "./Interfaces/ICommunicationStrategy";
+import type { ICommunicationStrategy, IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
 
 /**
  * Factory interface for creating the initial communication state.
@@ -307,31 +313,89 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public async handleStopRecording(user: SpaceUser): Promise<void> {
-        const stoppedRecorder = await this._recordingManager.stopRecording(user);
-        if (!stoppedRecorder) {
-            return;
-        }
-        this.scheduleTransitionAfterRecordingStops(stoppedRecorder);
+        await this._recordingManager.stopRecording(user);
     }
 
     public async handleRecorderLeftSpace(spaceUserId: string): Promise<boolean> {
         const stoppedRecorder = await this._recordingManager.stopRecordingIfRecorderMatches(spaceUserId);
-        if (!stoppedRecorder) {
-            return false;
-        }
-
-        this.scheduleTransitionAfterRecordingStops(stoppedRecorder);
-        return true;
+        return stoppedRecorder !== null;
     }
 
     public async handleServerStopRecording(): Promise<boolean> {
         const stoppedRecorder = await this._recordingManager.stopRecordingByServer();
-        if (!stoppedRecorder) {
-            return false;
+        return stoppedRecorder !== null;
+    }
+
+    public async handleLivekitWebhook(request: HandleLivekitWebhookRequest): Promise<void> {
+        if (!this._recordingManager.hasRecordingSession(request.recordingSessionId)) {
+            // Retrying cannot recreate a local recording session that is already gone, so acknowledge as ignored.
+            console.warn(
+                `Received LiveKit webhook for missing recording session ${request.recordingSessionId}. Ignoring.`
+            );
+            return;
         }
 
-        this.scheduleTransitionAfterRecordingStops(stoppedRecorder);
-        return true;
+        const currentState = this.lifecycleManager.getCurrentState();
+        if (!this.isRecordableState(currentState)) {
+            throw new Error("Current state is not recordable");
+        }
+
+        const normalizedRequest = await currentState.handleLivekitWebhook(
+            request.rawBody,
+            request.authorizationHeader || undefined,
+            request.spaceName,
+            request.recordingSessionId
+        );
+        if (normalizedRequest === "ignored") {
+            return;
+        }
+
+        this.handleNormalizedRecordingWebhook(normalizedRequest);
+    }
+
+    public handleNormalizedRecordingWebhook(request: HandleRecordingWebhookRequest): void {
+        switch (request.phase) {
+            case RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_STARTED: {
+                this._recordingManager.confirmRecordingStartedByWebhook(
+                    request.recordingSessionId,
+                    request.egressId,
+                    request.roomName
+                );
+                return;
+            }
+            case RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED: {
+                const result = this._recordingManager.finishRecordingByWebhook(
+                    request.recordingSessionId,
+                    request.egressId,
+                    request.roomName
+                );
+                if (!result.processed || !result.recorder) {
+                    return;
+                }
+
+                if (result.unexpected) {
+                    this.space.dispatchPrivateEvent({
+                        spaceName: this.space.getSpaceName(),
+                        receiverUserId: result.recorder.spaceUserId,
+                        senderUserId: result.recorder.spaceUserId,
+                        spaceEvent: {
+                            event: {
+                                $case: "recordingUnexpectedlyStoppedMessage",
+                                recordingUnexpectedlyStoppedMessage: {},
+                            },
+                        },
+                    });
+                }
+
+                if (!result.hasActiveSessions) {
+                    this.scheduleTransitionAfterRecordingStops(result.recorder);
+                }
+                return;
+            }
+            case RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_UNSPECIFIED:
+            case RecordingWebhookPhase.UNRECOGNIZED:
+                return;
+        }
     }
 
     private scheduleTransitionAfterRecordingStops(user: SpaceUser): void {
@@ -342,6 +406,12 @@ export class CommunicationManager implements ICommunicationManager {
             playUri: user.playUri,
         };
         this.scheduleDelayedTransitionWithValidation(CommunicationType.WEBRTC, context);
+    }
+
+    private isRecordableState(
+        state: ICommunicationState<ICommunicationStrategy>
+    ): state is IRecordableState<IRecordableStrategy> {
+        return "handleStartRecording" in state && "handleStopRecording" in state && "handleLivekitWebhook" in state;
     }
 
     public destroy(): void {

@@ -1,14 +1,18 @@
-import * as Phaser from "phaser";
+import Phaser from "phaser";
 globalThis.Phaser = Phaser;
 
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { FilterType, type SpaceUser } from "@workadventure/messages";
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { Space } from "../Space";
 import { SpaceNameIsEmptyError } from "../Errors/SpaceError";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { recordingStore } from "../../Stores/RecordingStore";
+import type { StreamCategory, Streamable } from "../Streamable";
+import type { StreamableSubjects } from "../SpacePeerManager/SpacePeerManager";
+import type { PeerStatus } from "../../WebRtc/RemotePeer";
+import { notificationPlayingStore } from "../../Stores/NotificationStore";
 
 // Mock the entire GameManager module
 vi.mock("../../Phaser/Game/GameManager", () => ({
@@ -126,6 +130,7 @@ const defaultRoomConnectionMock = {
 } as unknown as RoomConnection;
 
 const defaultPropertiesToSync = ["x", "y", "z"];
+const videoPropertiesToSync = ["cameraState", "microphoneState", "screenSharingState"];
 const signal = new AbortController().signal;
 
 function createSpaceUser(overrides: Partial<SpaceUser> & Pick<SpaceUser, "spaceUserId">): SpaceUser {
@@ -150,6 +155,40 @@ function createSpaceUser(overrides: Partial<SpaceUser> & Pick<SpaceUser, "spaceU
         showVoiceIndicator: overrides.showVoiceIndicator ?? false,
         attendeesState: overrides.attendeesState ?? false,
     };
+}
+
+function createStreamable(uniqueId: string, spaceUserId: string, videoType: StreamCategory = "video"): Streamable {
+    return {
+        uniqueId,
+        media: {
+            type: "webrtc",
+            streamStore: writable(undefined),
+            isBlocked: writable(false),
+            setDimensions: vi.fn(),
+        },
+        volumeStore: undefined,
+        hasVideo: writable(true),
+        hasAudio: writable(true),
+        isMuted: writable(false),
+        statusStore: writable<PeerStatus>("connected"),
+        name: writable(uniqueId),
+        showVoiceIndicator: writable(false),
+        flipX: false,
+        muteAudio: writable(false),
+        displayMode: "cover",
+        displayInPictureInPictureMode: false,
+        usePresentationMode: false,
+        spaceUserId,
+        closeStreamable: vi.fn(),
+        canCloseStreamable: () => false,
+        volume: writable(1),
+        videoType,
+        webrtcStats: undefined,
+    };
+}
+
+function getStreamableSubjects(space: Space): StreamableSubjects {
+    return (space.spacePeerManager as unknown as { _streamableSubjects: StreamableSubjects })._streamableSubjects;
 }
 
 describe("Space test", () => {
@@ -323,6 +362,131 @@ describe("Space test", () => {
 
         await userPromise;
     });
+    it("should promote a pending video streamable when the active video peer is removed", async () => {
+        const space = await Space.create(
+            "space-name",
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            videoPropertiesToSync,
+            signal,
+            {
+                metadata: new Map<string, unknown>(),
+            }
+        );
+        const subjects = getStreamableSubjects(space);
+        const activeStreamable = createStreamable("active-video", "alice-id");
+        const pendingStreamable = createStreamable("pending-video", "alice-id");
+
+        space.addUser(
+            createSpaceUser({
+                spaceUserId: "alice-id",
+                name: "Alice",
+                cameraState: true,
+            })
+        );
+
+        subjects.videoPeerAdded.next(activeStreamable);
+        subjects.videoPeerAdded.next(pendingStreamable);
+        subjects.videoPeerRemoved.next(activeStreamable);
+
+        const videoBox = space.getVideoPeerVideoBox("alice-id");
+        expect(videoBox).toBeDefined();
+        expect(get(videoBox?.streamables ?? writable([]))).toStrictEqual([
+            {
+                id: 1,
+                streamable: pendingStreamable,
+                isPending: false,
+            },
+        ]);
+        expect(activeStreamable.closeStreamable).toHaveBeenCalledOnce();
+        expect(pendingStreamable.closeStreamable).not.toHaveBeenCalled();
+    });
+
+    it("should keep the active video streamable when the pending video peer is removed", async () => {
+        const space = await Space.create(
+            "space-name",
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            videoPropertiesToSync,
+            signal,
+            {
+                metadata: new Map<string, unknown>(),
+            }
+        );
+        const subjects = getStreamableSubjects(space);
+        const activeStreamable = createStreamable("active-video", "alice-id");
+        const pendingStreamable = createStreamable("pending-video", "alice-id");
+
+        space.addUser(
+            createSpaceUser({
+                spaceUserId: "alice-id",
+                name: "Alice",
+                cameraState: true,
+            })
+        );
+
+        subjects.videoPeerAdded.next(activeStreamable);
+        subjects.videoPeerAdded.next(pendingStreamable);
+        subjects.videoPeerRemoved.next(pendingStreamable);
+
+        const videoBox = space.getVideoPeerVideoBox("alice-id");
+        expect(videoBox).toBeDefined();
+        expect(get(videoBox?.streamables ?? writable([]))).toStrictEqual([
+            {
+                id: 0,
+                streamable: activeStreamable,
+                isPending: false,
+            },
+            {
+                id: 1,
+                streamable: pendingStreamable,
+                isPending: true,
+            },
+        ]);
+        expect(activeStreamable.closeStreamable).not.toHaveBeenCalled();
+        expect(pendingStreamable.closeStreamable).not.toHaveBeenCalled();
+    });
+
+    it("should promote a pending screen-sharing streamable when the active screen-sharing peer is removed", async () => {
+        const space = await Space.create(
+            "space-name",
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            videoPropertiesToSync,
+            signal,
+            {
+                metadata: new Map<string, unknown>(),
+            }
+        );
+        const subjects = getStreamableSubjects(space);
+        const activeStreamable = createStreamable("active-screen-share", "alice-id", "screenSharing");
+        const pendingStreamable = createStreamable("pending-screen-share", "alice-id", "screenSharing");
+
+        space.initUsers([
+            createSpaceUser({
+                spaceUserId: "alice-id",
+                name: "Alice",
+                screenSharingState: true,
+            }),
+        ]);
+
+        subjects.screenSharingPeerAdded.next(activeStreamable);
+        subjects.screenSharingPeerAdded.next(pendingStreamable);
+        subjects.screenSharingPeerRemoved.next(activeStreamable);
+
+        const videoBox = space.getScreenSharingPeerVideoBox("alice-id");
+        expect(videoBox).toBeDefined();
+        expect(get(videoBox?.streamables ?? writable([]))).toStrictEqual([
+            {
+                id: 1,
+                streamable: pendingStreamable,
+                isPending: false,
+            },
+        ]);
+        expect(activeStreamable.closeStreamable).toHaveBeenCalledOnce();
+        expect(pendingStreamable.closeStreamable).not.toHaveBeenCalled();
+    });
+
     it("should show a named recording toast immediately when the recorder is already known", async () => {
         const space = await Space.create(
             "space-name",
@@ -433,6 +597,37 @@ describe("Space test", () => {
 
         expect(showInfoPopupSpy).not.toHaveBeenCalled();
         expect(showGenericInfoPopupSpy).not.toHaveBeenCalled();
+    });
+
+    it("should show a private notification when recording stops unexpectedly", async () => {
+        const space = await Space.create(
+            "space-name",
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            signal,
+            {
+                metadata: new Map<string, unknown>(),
+            }
+        );
+        const playNotificationSpy = vi.spyOn(notificationPlayingStore, "playNotification");
+
+        space.dispatchPrivateMessage({
+            spaceName: "space-name",
+            receiverUserId: "current-user-id",
+            sender: createSpaceUser({
+                spaceUserId: "alice-id",
+                name: "Alice",
+            }),
+            spaceEvent: {
+                event: {
+                    $case: "recordingUnexpectedlyStoppedMessage",
+                    recordingUnexpectedlyStoppedMessage: {},
+                },
+            },
+        });
+
+        expect(playNotificationSpy).toHaveBeenCalledTimes(1);
     });
 
     it("should forward startRecording and stopRecording to the room connection", async () => {

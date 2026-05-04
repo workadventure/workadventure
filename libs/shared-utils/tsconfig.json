@@ -1,18 +1,16 @@
 {
-    "compilerOptions": {
-      "rootDir": ".",
-      "outDir": "dist",
-      "target": "ES2022",
-      "lib": [
-        "es2022",
-        "dom"
-      ],
-      "module": "CommonJS",
-      "esModuleInterop": true,
-      "strict": true,
-      "declaration": true,
-      "sourceMap": true,
-      "importsNotUsedAsValues": "remove",
-      "skipLibCheck": true
-    }
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [ "ES2022", "DOM" ],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+
+    "sourceMap": true,
+    "declaration": true,
+    "outDir": "dist",
+
+    "strict": true,
+
+    "skipLibCheck": true
+  }
 }

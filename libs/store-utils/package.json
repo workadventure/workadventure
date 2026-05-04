@@ -2,6 +2,7 @@
   "name": "@workadventure/store-utils",
   "version": "1.0.0",
   "description": "Useful Svelte store-related utility Class",
+  "type": "module",
   "main": "./src/index.ts",
   "scripts": {
     "build": "tsc",
@@ -20,15 +21,15 @@
   "license": "ISC",
   "devDependencies": {
     "@tsconfig/svelte": "^1.0.10",
-    "@types/node": "^18.11.18",
     "@types/debug": "^4.1.5",
+    "@types/node": "^18.11.18",
     "@workadventure/eslint-config": "1.0.0",
     "eslint": "^9.35.0",
     "lint-staged": "^13.1.0",
     "svelte": "^4.2.20",
-    "svelte-check": "^2.9.2",
+    "svelte-check": "^3.8.6",
     "prettier": "^2.8.2",
-    "typescript": "^5.7.2",
+    "typescript": "^5.8.3",
     "rxjs": "^6.6.3",
     "vitest": "^2.1.4"
   },

@@ -4,19 +4,52 @@ import type { Emoji } from "../Stores/Utils/emojiSchema";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let window: any;
 
+interface PostHogExt {
+    capture: (event: string, properties?: Record<string, unknown>) => void;
+    identify: (uuid: string, properties: Record<string, unknown>) => void;
+    getSurveys: (callback: (surveys: unknown[]) => void) => void;
+}
+
 class AnalyticsClient {
-    private posthogPromise: Promise<PostHog> | undefined;
+    private posthogPromise: Promise<PostHog | PostHogExt> = new Promise((resolve) => {
+        resolve({
+            capture: (event: string, properties?: Record<string, unknown>) => {
+                console.info(`[Analytics] ${event}`, properties);
+            },
+            identify: (uuid: string, properties: Record<string, unknown>) => {
+                console.info(`[Analytics] identify ${uuid}`, properties);
+            },
+            getSurveys: (callback: (surveys: unknown[]) => void) => {
+                callback([]);
+            },
+        });
+    });
+    private isPostHogEnabled = false;
+    private posthogInstance_: PostHog | PostHogExt | null = null;
 
     constructor() {
         const postHogApiKey = POSTHOG_API_KEY;
         if (postHogApiKey && POSTHOG_URL) {
-            this.posthogPromise = import("posthog-js").then(({ default: posthog }) => {
-                posthog.init(postHogApiKey, { api_host: POSTHOG_URL });
-                //the posthog toolbar need a reference in window to be able to work
-                window.posthog = posthog;
-                return posthog;
-            });
+            try {
+                this.posthogPromise = import("posthog-js").then(({ default: posthog }) => {
+                    this.posthogInstance_ = posthog.init(postHogApiKey, { api_host: POSTHOG_URL });
+                    //the posthog toolbar need a reference in window to be able to work
+                    window.posthog = this.posthogInstance_;
+                    this.isPostHogEnabled = true;
+                    return posthog;
+                });
+            } catch (e) {
+                console.warn("Error initializing posthog", e);
+            }
         }
+    }
+
+    get isEnabled(): boolean {
+        return this.isPostHogEnabled;
+    }
+
+    get posthogInstance(): PostHog | PostHogExt | null {
+        return this.posthogInstance_;
     }
 
     identifyUser(uuid: string, email: string | null, roomId: string | null): void {

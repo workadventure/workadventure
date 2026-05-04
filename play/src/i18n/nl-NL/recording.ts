@@ -28,6 +28,7 @@ const recording: DeepPartial<Translation["recording"]> = {
         downloadFailedNotification: "Downloaden van opname mislukt",
         recordingComplete: "Opname voltooid",
         recordingIsInProgress: "Opname is bezig",
+        unexpectedlyStoppedNotification: "De opname is onverwacht gestopt",
         recordingSaved: "Uw opname is succesvol opgeslagen.",
         howToAccess: "Om toegang te krijgen tot uw opnames:",
         viewRecordings: "Opnames bekijken",

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { closeModal } from "svelte-modals";
     import { fade } from "svelte/transition";
+    import { onMount } from "svelte";
     import { get } from "svelte/store";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import type { ChatRoomMembershipManagement, ChatRoomModeration } from "../../Connection/ChatConnection";
@@ -16,9 +17,28 @@
 
     let invitations: { value: string; label: string }[] = [];
     let sendingInvitationsToRoom = false;
+    let loadingMembers = true;
     let invitationToRoomError: string | undefined = undefined;
+    let membersLoadingError: string | undefined = undefined;
 
     const hasPermissionToInvite = room.hasPermissionTo("invite");
+    onMount(() => {
+        loadMembers().catch((error) => console.error(error));
+    });
+
+    async function loadMembers() {
+        try {
+            loadingMembers = true;
+            membersLoadingError = undefined;
+            await room.ensureMembersInitialized();
+        } catch (error) {
+            console.error(error);
+            membersLoadingError = error instanceof Error ? error.message : String(error);
+        } finally {
+            loadingMembers = false;
+        }
+    }
+
     async function inviteUsersAndCloseModalOnSuccess() {
         try {
             sendingInvitationsToRoom = true;
@@ -59,7 +79,21 @@
             <IconLink class="h-4 w-4 shrink-0 opacity-50 transition group-hover:opacity-90" aria-hidden="true" />
         </button>
 
-        {#if sendingInvitationsToRoom}
+        {#if loadingMembers}
+            <div class="flex flex-col items-center justify-center gap-3 py-10">
+                <div class="animate-[spin_2s_linear_infinite] text-white/80">
+                    <IconLoader font-size="2em" />
+                </div>
+                <p class="text-sm text-white/60">{$LL.chat.createRoom.loadingCreation()}</p>
+            </div>
+        {:else if membersLoadingError}
+            <div class="flex flex-col items-center justify-center gap-3 py-8">
+                <p class="text-sm text-red-100">{$LL.chat.manageRoomUsers.error()} : {membersLoadingError}</p>
+                <button type="button" class="btn btn-secondary" on:click={loadMembers}>
+                    {$LL.chat.load()}
+                </button>
+            </div>
+        {:else if sendingInvitationsToRoom}
             <div class="flex flex-col items-center justify-center gap-3 py-10">
                 <div class="animate-[spin_2s_linear_infinite] text-white/80">
                     <IconLoader font-size="2em" />

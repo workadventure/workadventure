@@ -14,7 +14,7 @@
         continuePwaInBrowser,
         neverShowPwaPage,
     } from "../../Stores/PwaInstallStore";
-    import { detectIos } from "../../Utils/PwaInstallEligibility";
+    import { detectIos, markPwaPromptNeverShow } from "../../Utils/PwaInstallEligibility";
     import { IconApps, IconAppWindow, IconHistory } from "@wa-icons";
 
     let logo = logoImg;
@@ -58,6 +58,9 @@
     }
 
     async function handleInstall(): Promise<void> {
+        if (neverShowAgain) {
+            markPwaPromptNeverShow();
+        }
         await installPwaFromStore();
     }
 
@@ -199,7 +202,10 @@
                     <button
                         type="button"
                         class="btn btn-light !bg-white/10 !text-lg !text-white hover:!bg-white/20"
-                        on:click={handleContinue}
+                        on:click={() => {
+                            analyticsClient.pwaContinueInBrowserClick();
+                            handleContinue();
+                        }}
                         data-testid="pwa-install-skip"
                     >
                         {$LL.warning.pwaInstall.continue()}

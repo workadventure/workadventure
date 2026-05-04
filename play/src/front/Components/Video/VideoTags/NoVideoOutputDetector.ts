@@ -22,9 +22,11 @@ export class NoVideoOutputDetector {
         // Not sure why, probably a bug due to the fact the video element is moved in the DOM.
         // We reset the displayNoVideoWarning flag when the PictureInPicture mode is changed.
         this.activePictureInPictureStoreUnsubscriber = activePiPStore.subscribe(() => {
-            clearTimeout(this.noVideoTimeout);
-            this.noVideoTimeout = undefined;
-            onVideo();
+            if (this.noVideoTimeout) {
+                clearTimeout(this.noVideoTimeout);
+                this.noVideoTimeout = undefined;
+                onVideo();
+            }
         });
     }
 

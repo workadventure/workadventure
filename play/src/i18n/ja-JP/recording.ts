@@ -28,6 +28,7 @@ const recording: DeepPartial<Translation["recording"]> = {
         downloadFailedNotification: "録画のダウンロードに失敗しました",
         recordingComplete: "録画が完了しました",
         recordingIsInProgress: "録画が進行中です",
+        unexpectedlyStoppedNotification: "録画が予期せず停止しました",
         recordingSaved: "録画が正常に保存されました。",
         howToAccess: "録画にアクセスするには:",
         viewRecordings: "録画を表示",

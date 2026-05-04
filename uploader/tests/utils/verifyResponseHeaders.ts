@@ -1,5 +1,5 @@
 import {AxiosResponse} from "axios";
-import {expect} from '@jest/globals';
+import {expect} from 'vitest';
 import {PLAY_URL} from "../../src/Enum/EnvironmentVariable";
 export function verifyResponseHeaders(response: AxiosResponse) {
     //expect(response.headers['access-control-allow-headers']).toEqual("Origin, X-Requested-With, Content-Type, Accept, Authorization, Pragma, Cache-Control")

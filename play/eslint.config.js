@@ -16,6 +16,8 @@ export default [
             "listeners/matching-remove-event-listener": "error",
             "listeners/no-inline-function-event-listener": "error",
 
+            // https://github.com/un-ts/eslint-plugin-import-x/issues/308
+            "import/no-duplicates": "off",
 
 
             // Uncomment this to detect circular dependencies in imports

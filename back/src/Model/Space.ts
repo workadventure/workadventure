@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/node";
 import type {
     BackEventMessage,
     BackToPusherSpaceMessage,
+    HandleLivekitWebhookRequest,
     PrivateEvent,
     PublicEvent,
     SpaceAnswerMessage,
@@ -751,6 +752,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
     public async stopRecordingByServer(): Promise<void> {
         await this.communicationManager.handleServerStopRecording();
+    }
+    public async handleLivekitWebhook(request: HandleLivekitWebhookRequest): Promise<void> {
+        await this.communicationManager.handleLivekitWebhook(request);
     }
     public getRecordingState(): ManagedRecordingState {
         return this.communicationManager.getRecordingState();

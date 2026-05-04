@@ -1,4 +1,4 @@
-import * as path from "path";
+import { fileURLToPath } from "url";
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { gameToBrowserCanvasCoordinates } from "../gameCoordinates";
@@ -106,7 +106,7 @@ class EntityEditor {
     async uploadTestAsset(page: Page) {
         await page
             .getByTestId("uploadCustomAsset")
-            .setInputFiles(path.join(__dirname, `../../assets/${this.getTestAssetFile()}`));
+            .setInputFiles(fileURLToPath(new URL(`../../assets/${this.getTestAssetFile()}`, import.meta.url)));
         await page.getByTestId("floatingObject").click();
         await this.applyEntityModifications(page);
     }
@@ -114,7 +114,9 @@ class EntityEditor {
     async uploadTestAssetWithOddSize(page: Page) {
         await page
             .getByTestId("uploadCustomAsset")
-            .setInputFiles(path.join(__dirname, `../../assets/${this.getTestAssetFileWithOddSize()}`));
+            .setInputFiles(
+                fileURLToPath(new URL(`../../assets/${this.getTestAssetFileWithOddSize()}`, import.meta.url)),
+            );
         await page.getByTestId("floatingObject").click();
         await this.applyEntityModifications(page);
     }
@@ -154,7 +156,7 @@ class EntityEditor {
         const fileChooserPromise = page.waitForEvent("filechooser");
         await page.locator(".map-editor .sidebar .properties-container span#chooseUpload").click();
         const fileChooser = await fileChooserPromise;
-        await fileChooser.setFiles(path.join(__dirname, `../../assets/ipsum-lorem.pdf`));
+        await fileChooser.setFiles(fileURLToPath(new URL(`../../assets/ipsum-lorem.pdf`, import.meta.url)));
     }
 
     getTestAssetFile() {

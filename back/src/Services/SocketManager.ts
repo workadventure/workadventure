@@ -49,6 +49,7 @@ import type {
     SetAreaPropertyVariableMessage,
     BackEventMessage,
     ConnectToRoomMessage,
+    HandleLivekitWebhookRequest,
 } from "@workadventure/messages";
 import {
     AnswerMessage,
@@ -81,7 +82,7 @@ import { eventProcessor } from "../Model/EventProcessorInit";
 import { gaugeManager } from "./GaugeManager";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { getMapStorageClient } from "./MapStorageClient";
-import { emitError } from "./MessageHelpers";
+import { emitError, endUserConnectionWithReason } from "./MessageHelpers";
 import { cpuTracker } from "./CpuTracker";
 
 const debug = Debug("socketmanager");
@@ -186,7 +187,7 @@ export class SocketManager {
     public async handleJoinRoom(socket: UserSocket, room: GameRoom, joinRoomMessage: JoinRoomMessage): Promise<User> {
         const user = await room.join(socket, joinRoomMessage);
 
-        clientEventsEmitter.clientJoinSubject.next({ clientUUid: user.uuid, roomId: room.id });
+        clientEventsEmitter.clientJoinSubject.next({ clientUUid: user.uuid, roomId: room.roomUrl });
 
         if (!socket.writable) {
             console.warn("Socket was aborted");
@@ -901,8 +902,7 @@ export class SocketManager {
         setTimeout(() => {
             // Let's leave the room now.
             room.leave(user);
-            // Let's close the connection when the user is banned.
-            user.socket.end();
+            endUserConnectionWithReason(user.socket, `User was banned: ${banUserMessageToSend.message}`);
         }, 10000);
     }
 
@@ -1128,7 +1128,7 @@ export class SocketManager {
                     type: "banned",
                 },
             });
-            recipient.socket.end();
+            endUserConnectionWithReason(recipient.socket, `User was banned: ${message}`);
         }
     }
 
@@ -1726,6 +1726,17 @@ export class SocketManager {
             Sentry.captureException("Error while handling space query");
             return;
         }
+    }
+
+    async handleLivekitWebhook(request: HandleLivekitWebhookRequest): Promise<void> {
+        const space = this.spaces.get(request.spaceName);
+        if (!space) {
+            // Retrying cannot recreate a space that is already gone, so the pusher should acknowledge this as ignored.
+            console.warn(`Received LiveKit webhook for missing space ${request.spaceName}. Ignoring.`);
+            return;
+        }
+
+        await space.handleLivekitWebhook(request);
     }
 
     handleAddSpaceUserToNotifyMessage(pusher: SpacesWatcher, addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage) {

@@ -5,7 +5,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import type { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
-    import type { SelectableTag } from "../../../Stores/MapEditorStore";
+    import type { CategoryTag, SelectableTag } from "../../../Stores/MapEditorStore";
     import {
         mapEditorDeleteCustomEntityEventStore,
         mapEditorEntityModeStore,
@@ -27,6 +27,7 @@
 
     const entitiesCollectionsManager = gameManager.getCurrentGameScene().getEntitiesCollectionsManager();
     const entitiesPrefabsVariants = entitiesCollectionsManager.getEntitiesPrefabsVariantStore();
+    const MOST_USED_CATEGORY_LIMIT = 12;
 
     let pickedEntity: EntityPrefab | undefined = undefined;
     let pickedEntityVariant: EntityVariant | undefined = undefined;
@@ -80,7 +81,7 @@
         mapEditorSelectedEntityPrefabStore.set(pickedEntity);
     }
 
-    function onSelectedTag(tag: string) {
+    function onSelectedTag(tag: CategoryTag) {
         selectCategoryStore.set(tag);
     }
 
@@ -105,9 +106,9 @@
         isEditingCustomEntity = isEditing;
     }
 
-    function getEntitiesPrefabsVariantsGroupedByTagWithCustomFirst(entitiesPrefabsVariants: EntityVariant[]): {
-        [tag: string]: EntityVariant[];
-    } {
+    function getForEntitiesPrefabsVariantsWithCategories(
+        entitiesPrefabsVariants: EntityVariant[]
+    ): { category: CategoryTag; entitiesPrefabsVariants: EntityVariant[] }[] {
         const entitiesPrefabsVariantsGroupedByTag = entitiesPrefabsVariants.reduce(
             (groupByTag: { [tag: string]: EntityVariant[] }, entityPrefabVariant) => {
                 const { tags } = entityPrefabVariant.defaultPrefab;
@@ -124,10 +125,80 @@
                 (entityPrefabVariant) => entityPrefabVariant.defaultPrefab.type === "Custom"
             ),
         };
-        return {
-            ...customEntitiesPrefabsVariants,
-            ...Object.fromEntries(Object.entries(entitiesPrefabsVariantsGroupedByTag).sort()),
-        };
+        const mostUsedEntitiesPrefabsVariants = getMostUsedEntitiesPrefabsVariants(entitiesPrefabsVariants);
+
+        const groupedCategories: { category: CategoryTag; entitiesPrefabsVariants: EntityVariant[] }[] = [];
+
+        if (mostUsedEntitiesPrefabsVariants.length > 0) {
+            groupedCategories.push({
+                category: { kind: "special", tag: "most_used" },
+                entitiesPrefabsVariants: mostUsedEntitiesPrefabsVariants,
+            });
+        }
+
+        groupedCategories.push({
+            category: { kind: "special", tag: "custom" },
+            entitiesPrefabsVariants: customEntitiesPrefabsVariants.Custom,
+        });
+
+        groupedCategories.push(
+            ...Object.entries(entitiesPrefabsVariantsGroupedByTag)
+                .sort()
+                .map(([tag, groupedPrefabsVariants]) => ({
+                    category: { kind: "tag", tag } as const,
+                    entitiesPrefabsVariants: groupedPrefabsVariants,
+                }))
+        );
+
+        return groupedCategories;
+    }
+
+    function getMostUsedEntitiesPrefabsVariants(entitiesPrefabsVariants: EntityVariant[]): EntityVariant[] {
+        const entities = gameManager
+            .getCurrentGameScene()
+            .getGameMap()
+            .getWamFile()
+            ?.getGameMapEntities()
+            .getEntities();
+
+        if (!entities) {
+            return [];
+        }
+
+        const usageCountByPrefabId = Object.values(entities).reduce((usageCount, entity) => {
+            usageCount.set(entity.prefabRef.id, (usageCount.get(entity.prefabRef.id) ?? 0) + 1);
+            return usageCount;
+        }, new Map<string, number>());
+
+        return entitiesPrefabsVariants
+            .map((entityPrefabVariant) => ({
+                entityPrefabVariant,
+                count: entityPrefabVariant.prefabIds.reduce(
+                    (count, prefabId) => count + (usageCountByPrefabId.get(prefabId) ?? 0),
+                    0
+                ),
+            }))
+            .filter(({ count }) => count > 0)
+            .sort((a, b) => {
+                if (a.count !== b.count) {
+                    return b.count - a.count;
+                }
+                return a.entityPrefabVariant.defaultPrefab.name.localeCompare(b.entityPrefabVariant.defaultPrefab.name);
+            })
+            .slice(0, MOST_USED_CATEGORY_LIMIT)
+            .map(({ entityPrefabVariant }) => entityPrefabVariant);
+    }
+
+    function getCategoryLabel(category: CategoryTag): string {
+        if (category.kind === "special") {
+            switch (category.tag) {
+                case "custom":
+                    return $LL.mapEditor.entityEditor.specialTags.customLabel();
+                case "most_used":
+                    return $LL.mapEditor.entityEditor.specialTags.mostUsedLabel();
+            }
+        }
+        return category.tag;
     }
 
     function getEntitiesPrefabsVariantsFilteredByTag(
@@ -145,17 +216,22 @@
                     entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
-        if ($selectCategoryStore === "Custom") {
+        if (tag.kind === "special" && tag.tag === "custom") {
             return entitiesPrefabsVariants.filter(
                 (entityPrefabVariant) =>
                     entityPrefabVariant.defaultPrefab.type === "Custom" &&
-                    entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm)
+                    entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+        if (tag.kind === "special" && tag.tag === "most_used") {
+            return getMostUsedEntitiesPrefabsVariants(entitiesPrefabsVariants).filter((entityPrefabVariant) =>
+                entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
         return entitiesPrefabsVariants.filter(
             (entityPrefabVariant) =>
-                entityPrefabVariant.defaultPrefab.tags.includes(tag) &&
-                entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm)
+                entityPrefabVariant.defaultPrefab.tags.includes(tag.tag) &&
+                entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }
 
@@ -200,12 +276,13 @@
     <div class="flex-1 overflow-auto">
         {#if $selectCategoryStore === undefined && searchTerm === ""}
             <ul class="list-none !p-0 min-w-full">
-                {#each Object.entries(getEntitiesPrefabsVariantsGroupedByTagWithCustomFirst($entitiesPrefabsVariants)) as [tag, entitiesPrefabsVariants] (tag)}
+                {#each getForEntitiesPrefabsVariantsWithCategories($entitiesPrefabsVariants) as { category, entitiesPrefabsVariants } (`${category.kind}-${category.tag}`)}
                     <TagListItem
                         on:onSelectedTag={(event) => {
                             onSelectedTag(event.detail);
                         }}
-                        {tag}
+                        tag={category}
+                        label={getCategoryLabel(category)}
                         {entitiesPrefabsVariants}
                     />
                 {/each}
@@ -275,7 +352,7 @@
                 <div class="flex flex-col gap-2" class:mt-52={pickedEntityVariant && pickedEntity}>
                     {#if $selectCategoryStore}
                         <span class="font-bold text-lg">
-                            {$selectCategoryStore}
+                            {getCategoryLabel($selectCategoryStore)}
                         </span>
                     {/if}
                     <EntitiesGrid

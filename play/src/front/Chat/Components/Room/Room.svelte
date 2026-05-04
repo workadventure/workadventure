@@ -1,6 +1,7 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
     import { defaultColor } from "@workadventure/shared-utils";
+    import { onDestroy, onMount } from "svelte";
     import type {
         ChatRoom,
         ChatRoomMembershipManagement,
@@ -16,6 +17,7 @@
 
     export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
 
+    const roomType = room.type;
     let hasUnreadMessage = room.hasUnreadMessages;
     const roomUnreadCount = room.unreadNotificationCount;
     let roomName = room.name;
@@ -31,6 +33,16 @@
     $: peerAvatarColorStore = room.avatarFallbackColor;
     $: peerWaParensStore = room.peerWaDisplayNameIfDifferent;
     $: peerWaDisplayNameParens = peerWaParensStore ? $peerWaParensStore : undefined;
+
+    let deactivateVisibleProfileSync: (() => void) | undefined;
+
+    onMount(() => {
+        deactivateVisibleProfileSync = room.activateVisibleProfileSync?.();
+    });
+
+    onDestroy(() => {
+        deactivateVisibleProfileSync?.();
+    });
 </script>
 
 <div
@@ -49,7 +61,7 @@
             compact
             pictureStore={room.pictureStore}
             fallbackName={$roomName}
-            color={room.type === "direct" ? $peerAvatarColorStore ?? defaultColor : null}
+            color={$roomType === "direct" ? $peerAvatarColorStore ?? defaultColor : null}
         />
 
         {#if $isEncrypted}

@@ -1,3 +1,4 @@
+import fs from "fs/promises";
 import type { CompanionTextureCollection, CompanionDetail } from "@workadventure/messages";
 import type { CompanionServiceInterface } from "./CompanionServiceInterface";
 
@@ -5,10 +6,18 @@ import type { CompanionServiceInterface } from "./CompanionServiceInterface";
  * Companion Service list that the default list of companions
  */
 class LocalCompanionService implements CompanionServiceInterface {
+    private async loadCompanionData(): Promise<CompanionTextureCollection[]> {
+        try {
+            const file = new URL("../data/companions.json", import.meta.url);
+            const content = await fs.readFile(file, "utf8");
+            return JSON.parse(content) as CompanionTextureCollection[];
+        } catch {
+            throw new Error("Failed to load Companion data");
+        }
+    }
+
     async getCompanionList(roomUrl: string, token: string): Promise<CompanionTextureCollection[] | undefined> {
-        // "import" does not support loading JSON files
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const companionList: CompanionTextureCollection[] = await require("../data/companions.json");
+        const companionList: CompanionTextureCollection[] = await this.loadCompanionData();
         if (!companionList) {
             return undefined;
         }
@@ -16,9 +25,7 @@ class LocalCompanionService implements CompanionServiceInterface {
     }
 
     async fetchCompanionDetails(textureId: string): Promise<CompanionDetail | undefined> {
-        // "import" does not support loading JSON files
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const companionList: CompanionTextureCollection[] = await require("../data/companions.json");
+        const companionList: CompanionTextureCollection[] = await this.loadCompanionData();
 
         for (const collection of companionList) {
             const texture = collection.textures.find((texture) => texture.id === textureId);

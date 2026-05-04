@@ -1,4 +1,4 @@
-import {expect} from '@jest/globals';
+import {expect} from 'vitest';
 import {uploadFile} from "./utils/uploadFile";
 import {verifyResponseHeaders} from "./utils/verifyResponseHeaders";
 import {download} from "./utils/download";

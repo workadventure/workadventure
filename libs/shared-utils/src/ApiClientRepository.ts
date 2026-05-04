@@ -2,7 +2,7 @@
  * A class to get connections to the correct "api" server given a room name.
  */
 import crypto from "crypto";
-import * as grpc from "@grpc/grpc-js";
+import { credentials as grpcCredentials } from "@grpc/grpc-js";
 
 import Debug from "debug";
 import { RoomManagerClient, SpaceManagerClient } from "@workadventure/messages/src/ts-proto-generated/services";
@@ -22,7 +22,7 @@ export class ApiClientRepository {
         if (client === undefined) {
             this.roomManagerClients[index] = client = new RoomManagerClient(
                 this.apiUrls[index],
-                grpc.credentials.createInsecure(),
+                grpcCredentials.createInsecure(),
                 {
                     "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE,
                     "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE,
@@ -37,7 +37,7 @@ export class ApiClientRepository {
     public getAllClients(GRPC_MAX_MESSAGE_SIZE: number): Promise<RoomManagerClient[]> {
         for (let i = 0; i < this.apiUrls.length; i++) {
             if (this.roomManagerClients[i] === undefined) {
-                this.roomManagerClients[i] = new RoomManagerClient(this.apiUrls[i], grpc.credentials.createInsecure(), {
+                this.roomManagerClients[i] = new RoomManagerClient(this.apiUrls[i], grpcCredentials.createInsecure(), {
                     "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE,
                     "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE,
                 });
@@ -53,7 +53,7 @@ export class ApiClientRepository {
         if (client === undefined) {
             this.spaceManagerClients[index] = client = new SpaceManagerClient(
                 this.apiUrls[index],
-                grpc.credentials.createInsecure(),
+                grpcCredentials.createInsecure(),
                 {
                     "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE,
                     "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE,

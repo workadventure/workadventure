@@ -35,17 +35,12 @@ test.describe("Scripting follow functions", () => {
 
         await waitForFollowPromise;
 
-        let position = await Map.getPosition(page2);
-
-        //eslint-disable-next-line playwright/no-conditional-in-test
-        if (position.x < 100) {
-            // Wait a bit, maybe Bob was slow to start
-            //eslint-disable-next-line playwright/no-wait-for-timeout
-            await page2.waitForTimeout(2000);
-            position = await Map.getPosition(page2);
-        }
-
-        expect(position.x).toBeGreaterThan(100);
+        await expect
+            .poll(async () => {
+                const position = await Map.getPosition(page2);
+                return position.x;
+            })
+            .toBeGreaterThan(100);
 
         // Now, let's stop loading the users and move to the top right of the map
         await evaluateScript(page, async () => {
@@ -54,9 +49,12 @@ test.describe("Scripting follow functions", () => {
         });
 
         // Let's check that Bob is not following us anymore
-        position = await Map.getPosition(page2);
-
-        expect(position.y).toBeGreaterThan(100);
+        await expect
+            .poll(async () => {
+                const position = await Map.getPosition(page2);
+                return position.y;
+            })
+            .toBeGreaterThan(100);
 
         // Let's move back Bob in the same position as Alice
         await Map.teleportToPosition(page2, 300, 32);

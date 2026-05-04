@@ -1,5 +1,5 @@
 import { MathUtils } from "@workadventure/math-utils";
-import * as EasyStar from "easystarjs";
+import { js as EasyStar } from "easystarjs";
 import { CHARACTER_BODY_HEIGHT, CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y } from "../Phaser/Entity/Character";
 
 export enum PathTileType {
@@ -12,14 +12,14 @@ export enum PathTileType {
 }
 
 export class PathfindingManager {
-    private easyStar: EasyStar.js;
+    private easyStar: EasyStar;
     private grid: number[][];
     private tileDimensions: { width: number; height: number };
     private currentPathfindingInstanceId: number | null = null;
     private pathfindingTimeout: number | null = null;
 
     constructor(collisionsGrid: number[][], tileDimensions: { width: number; height: number }) {
-        this.easyStar = new EasyStar.js();
+        this.easyStar = new EasyStar();
         this.easyStar.enableDiagonals();
         this.easyStar.disableCornerCutting();
         this.easyStar.setTileCost(PathTileType.Exit, 100);

@@ -1,7 +1,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { openModal } from "svelte-modals";
-    import { get } from "svelte/store";
     import type { Readable } from "svelte/store";
     import { AskPositionMessage_AskType } from "@workadventure/messages";
     import {
@@ -39,7 +38,9 @@
     } from "@wa-icons";
 
     export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomNotificationControl & ChatRoomModeration;
+    const roomType = room.type;
     const areNotificationsMuted = room.areNotificationsMuted;
+    const roomMembers = room.members;
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
     let hideOptions = true;
     let usersByRoomStore:
@@ -81,6 +82,9 @@
         if (optionButtonRef === undefined) {
             return;
         }
+        if (hideOptions) {
+            room.ensureMembersInitialized().catch((error) => console.error(error));
+        }
         hideOptions = !hideOptions;
     }
 
@@ -121,7 +125,6 @@
         });
     }
 
-    $: members = get(room.members);
     $: usersByRoomMap = usersByRoomStore && $usersByRoomStore ? $usersByRoomStore : new Map();
 
     // Flatten usersByRoomMap into a list of users with playUri from their room
@@ -138,7 +141,8 @@
         return usersList;
     })();
 
-    $: matrixChatUser = room.type === "direct" ? members.find((u) => u.id !== localUserStore.getChatId()) : undefined;
+    $: matrixChatUser =
+        $roomType === "direct" ? $roomMembers.find((u) => u.id !== localUserStore.getChatId()) : undefined;
 
     $: chatUser = usersWithRoomPlayUri.find((u) => u.chatId === matrixChatUser?.id);
     $: isInTheSameMap = chatUser?.playUri === gameManager.getCurrentGameScene().roomUrl;
@@ -189,7 +193,7 @@
     $: matrixChatConnection = $isMatrixChatEnabledStore ? matrixConnectionFromGameManager() : undefined;
 
     $: showMatrixPeerProfileDebug =
-        DEBUG_MODE && matrixChatConnection !== undefined && room.type === "direct" && Boolean(matrixChatUser?.id);
+        DEBUG_MODE && matrixChatConnection !== undefined && $roomType === "direct" && Boolean(matrixChatUser?.id);
 
     function openMatrixPeerProfileDebug() {
         if (!matrixChatConnection || matrixChatUser?.id === undefined) {
@@ -219,7 +223,7 @@
     class:absolute={optionButtonRef !== undefined}
     class:hidden={hideOptions}
 >
-    {#if room.type === "direct"}
+    {#if $roomType === "direct"}
         <!-- Create Room Option to talk to the user -->
         <RoomOption
             IconComponent={IconCamera}

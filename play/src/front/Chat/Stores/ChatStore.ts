@@ -81,7 +81,7 @@ export function initializeChatVisibilitySubscription() {
         const isEncrypted = get(selectedRoom.isEncrypted);
 
         if (visible && isEncrypted) {
-            matrixSecurity.openChooseDeviceVerificationMethodModal().catch((error) => {
+            matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal().catch((error) => {
                 console.error(error);
             });
         }
