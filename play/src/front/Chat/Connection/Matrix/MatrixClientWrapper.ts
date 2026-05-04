@@ -58,6 +58,7 @@ export class InvalidLoginTokenError extends Error {
 export class MatrixClientWrapper implements MatrixClientWrapperInterface {
     private client!: MatrixClient;
     private secretStorageKeys: Record<string, Uint8Array> = {};
+    private secretStorageKeyRequestPromise: Promise<[string, Uint8Array] | null> | undefined;
     private clientClosed = false;
 
     constructor(
@@ -269,7 +270,22 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             return [keyId, this.secretStorageKeys[keyId]];
         }
 
-        const key = await new Promise<Uint8Array | null>((resolve, reject) => {
+        if (this.secretStorageKeyRequestPromise) {
+            return this.secretStorageKeyRequestPromise;
+        }
+
+        this.secretStorageKeyRequestPromise = this.openSecretStorageKeyDialog(keyId, keyInfo).finally(() => {
+            this.secretStorageKeyRequestPromise = undefined;
+        });
+
+        return this.secretStorageKeyRequestPromise;
+    }
+
+    private async openSecretStorageKeyDialog(
+        keyId: string,
+        keyInfo: SecretStorage.SecretStorageKeyDescription
+    ): Promise<[string, Uint8Array] | null> {
+        const key = await new Promise<Uint8Array | null>((resolve) => {
             if (!matrixSecurity.shouldDisplayModal) {
                 resolve(null);
                 return;

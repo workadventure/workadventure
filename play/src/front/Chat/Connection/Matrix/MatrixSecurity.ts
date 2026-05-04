@@ -28,6 +28,7 @@ export class MatrixSecurity {
     isEncryptionRequiredAndNotSet = writable(false);
     private matrixClientStore: MatrixClient | null = null;
     private isVerifyingDevice = false;
+    private automaticDeviceVerificationPromptRequested = false;
     public shouldDisplayModal = false;
     constructor(
         private initializingEncryptionPromise: Promise<void> | undefined = undefined,
@@ -356,7 +357,20 @@ export class MatrixSecurity {
         });
     }
 
+    public openAutomaticChooseDeviceVerificationMethodModal(): Promise<void> {
+        if (this.automaticDeviceVerificationPromptRequested || this.isVerifyingDevice) {
+            return Promise.resolve();
+        }
+
+        this.automaticDeviceVerificationPromptRequested = true;
+        return this.openChooseDeviceVerificationMethodModal();
+    }
+
     public async openChooseDeviceVerificationMethodModal() {
+        if (this.isVerifyingDevice) {
+            return;
+        }
+
         try {
             this.isVerifyingDevice = true;
 

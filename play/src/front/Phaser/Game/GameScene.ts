@@ -127,6 +127,7 @@ import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandle
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
+import { PHASER_COLOR_DESIGN_SYSTEM_SECONDARY } from "../../Utils/DesignSystemPhaserColors";
 
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { embedScreenLayoutStore } from "../../Stores/EmbedScreenLayoutStore";
@@ -3822,7 +3823,7 @@ ${escapedMessage}
                 gameManager.getCompanionTextureId() != undefined ? this.currentCompanionTexturePromise : undefined
             );
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
-                this.CurrentPlayer.pointerOverOutline(0x365dff);
+                this.CurrentPlayer.pointerOverOutline(PHASER_COLOR_DESIGN_SYSTEM_SECONDARY);
             });
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OUT, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOutOutline();

@@ -13,6 +13,11 @@ const livekitWebhookQuerySchema = z.object({
     recordingSessionId: z.string().min(1),
 });
 
+function getRawWebhookBody(req: Request): Buffer | undefined {
+    const body: unknown = req.body;
+    return Buffer.isBuffer(body) ? body : undefined;
+}
+
 function debugWebhookResponse(
     req: Request,
     statusCode: number,
@@ -40,9 +45,10 @@ export class LivekitWebhookController extends BaseHttpController {
             // Keep the original bytes intact; the back verifies the LiveKit signature against this exact payload.
             express.raw({ type: "application/webhook+json" }),
             async (req: Request, res: Response) => {
+                const body = getRawWebhookBody(req);
                 debug(
                     `LivekitWebhookController => [${req.method}] ${req.originalUrl} - IP: ${req.ip} - Body bytes: ${
-                        Buffer.isBuffer(req.body) ? req.body.length : 0
+                        body?.length ?? 0
                     } - Time: ${Date.now()}`
                 );
 
@@ -53,7 +59,11 @@ export class LivekitWebhookController extends BaseHttpController {
                 }
 
                 const authHeader = req.header("authorization") ?? req.header("Authorize") ?? undefined;
-                const body = req.body as Buffer;
+                if (body === undefined) {
+                    debugWebhookResponse(req, 400, "invalid-body");
+                    res.status(400).send("Invalid request body");
+                    return;
+                }
 
                 try {
                     await this.livekitWebhookService.handleWebhook(
