@@ -140,7 +140,7 @@ test.describe("Areas @nomobile", () => {
             });
         });
 
-        // Let's first check the onEnter is triggered when if we are already in the area when we subscribe.
+        // Let's first check the onEnter is triggered when we are already in the area when we subscribe.
         await expect(page.getByText("Welcome to MyNewArea")).toBeVisible();
         await page.getByRole("button", { name: "Close" }).first().click();
         // Let's move out

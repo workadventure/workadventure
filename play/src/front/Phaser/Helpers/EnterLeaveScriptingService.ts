@@ -79,7 +79,9 @@ export class EnterLeaveScriptingService {
                             if (layer) {
                                 port.postMessage({
                                     type: "onAction",
-                                    data: undefined,
+                                    data: {
+                                        reason: "initial",
+                                    },
                                 });
                             }
                             break;
@@ -88,7 +90,9 @@ export class EnterLeaveScriptingService {
                             if (!layer) {
                                 port.postMessage({
                                     type: "onAction",
-                                    data: undefined,
+                                    data: {
+                                        reason: "initial",
+                                    },
                                 });
                             }
                             break;
@@ -105,7 +109,9 @@ export class EnterLeaveScriptingService {
                             if (area) {
                                 port.postMessage({
                                     type: "onAction",
-                                    data: undefined,
+                                    data: {
+                                        reason: "initial",
+                                    },
                                 });
                             }
                             break;
@@ -114,7 +120,9 @@ export class EnterLeaveScriptingService {
                             if (!area) {
                                 port.postMessage({
                                     type: "onAction",
-                                    data: undefined,
+                                    data: {
+                                        reason: "initial",
+                                    },
                                 });
                             }
                             break;
@@ -123,32 +131,38 @@ export class EnterLeaveScriptingService {
                     break;
                 }
                 case "mapEditorArea": {
-                    const areas = gameMapFrontWrapper.areasManager
-                        ?.getAreasByName(zoneName)
-                        .filter((area) =>
-                            MathUtils.isOverlappingWithRectangle(
-                                { x: gameScene.CurrentPlayer.x, y: gameScene.CurrentPlayer.y },
-                                area.getBounds()
-                            )
-                        );
-                    switch (action) {
-                        case "enter": {
-                            if (areas?.length !== 0) {
-                                port.postMessage({
-                                    type: "onAction",
-                                    data: undefined,
-                                });
+                    if (gameMapFrontWrapper.areasManager) {
+                        const areas = gameMapFrontWrapper.areasManager
+                            .getAreasByName(zoneName)
+                            .filter((area) =>
+                                MathUtils.isOverlappingWithRectangle(
+                                    { x: gameScene.CurrentPlayer.x, y: gameScene.CurrentPlayer.y },
+                                    area.getBounds()
+                                )
+                            );
+                        switch (action) {
+                            case "enter": {
+                                if (areas.length !== 0) {
+                                    port.postMessage({
+                                        type: "onAction",
+                                        data: {
+                                            reason: "initial",
+                                        },
+                                    });
+                                }
+                                break;
                             }
-                            break;
-                        }
-                        case "leave": {
-                            if (areas?.length === 0) {
-                                port.postMessage({
-                                    type: "onAction",
-                                    data: undefined,
-                                });
+                            case "leave": {
+                                if (areas.length === 0) {
+                                    port.postMessage({
+                                        type: "onAction",
+                                        data: {
+                                            reason: "initial",
+                                        },
+                                    });
+                                }
+                                break;
                             }
-                            break;
                         }
                     }
                     break;
@@ -162,7 +176,9 @@ export class EnterLeaveScriptingService {
                 if (name === zoneName) {
                     port.postMessage({
                         type: "onAction",
-                        data: undefined,
+                        data: {
+                            reason: "move",
+                        },
                     });
                 }
             });

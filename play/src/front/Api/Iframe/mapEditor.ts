@@ -15,7 +15,7 @@ class WorkadventureMapEditorAreaCommands extends IframeApiContribution<Workadven
      * @param {string} areaName Area name
      * @returns {Subject<void>} An observable fired when someone enters the area
      */
-    onEnter(areaName: string): Observable<void> {
+    onEnter(areaName: string): Observable<{ reason: "initial" | "move" }> {
         return getEnterLeaveObservable("mapEditorArea", "enter", areaName);
     }
 
@@ -26,7 +26,7 @@ class WorkadventureMapEditorAreaCommands extends IframeApiContribution<Workadven
      * @param {string} areaName Area name
      * @returns {Subject<void>} An observable fired when someone leaves the area
      */
-    onLeave(areaName: string): Observable<void> {
+    onLeave(areaName: string): Observable<{ reason: "initial" | "move" }> {
         return getEnterLeaveObservable("mapEditorArea", "leave", areaName);
     }
 

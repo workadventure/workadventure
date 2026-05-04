@@ -1613,7 +1613,7 @@ export class GameMapFrontWrapper {
 
     public getCurrentLayers(): Array<ITiledMapLayer> {
         if (!this.key) {
-            throw new Error("Trying to get layers at the player position but the user has no position");
+            return [];
         }
         return this.gameMap.getLayersByKey(this.key);
     }

@@ -86,9 +86,9 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
      * {@link https://docs.workadventu.re/map-building/api-room.md#detecting-when-the-user-entersleaves-a-layer | Website documentation}
      *
      * @param {string} layerName Name of the layer who as defined in Tiled
-     * @returns {Subject<void>} Event subject can be listened to by a subscription
+     * @returns {Observable<{ reason: "initial" | "move" }>} RxJS observable triggered when someone enters the layer
      */
-    onEnterLayer(layerName: string): Observable<void> {
+    onEnterLayer(layerName: string): Observable<{ reason: "initial" | "move" }> {
         return getEnterLeaveObservable("layer", "enter", layerName);
     }
 
@@ -97,9 +97,9 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
      * {@link https://docs.workadventu.re/map-building/api-room.md#detecting-when-the-user-entersleaves-a-layer | Website documentation}
      *
      * @param {string} layerName Name of the layer who as defined in Tiled
-     * @returns {Subject<void>} Event subject can be listened to by a subscription
+     * @returns {Observable<{ reason: "initial" | "move" }>} RxJS observable triggered when someone leaves the layer
      */
-    onLeaveLayer(layerName: string): Observable<void> {
+    onLeaveLayer(layerName: string): Observable<{ reason: "initial" | "move" }> {
         return getEnterLeaveObservable("layer", "leave", layerName);
     }
 

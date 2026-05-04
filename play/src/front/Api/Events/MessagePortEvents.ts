@@ -78,7 +78,9 @@ export const iframeMessagePortTypeGuards = {
         iframeEvents: z.void(),
         workAdventureEvents: z.object({
             type: z.literal("onAction"),
-            data: z.undefined(),
+            data: z.object({
+                reason: z.union([z.literal("initial"), z.literal("move")]),
+            }),
         }),
     },
 };

@@ -6,24 +6,24 @@ import { openMessagePort } from "./IframeApiContribution";
 
 const observables = {
     layer: {
-        enter: new Map<string, Observable<void>>(),
-        leave: new Map<string, Observable<void>>(),
+        enter: new Map<string, Observable<{ reason: "initial" | "move" }>>(),
+        leave: new Map<string, Observable<{ reason: "initial" | "move" }>>(),
         status: new Map<string, "in" | "out">(),
     },
     tiledArea: {
-        enter: new Map<string, Observable<void>>(),
-        leave: new Map<string, Observable<void>>(),
+        enter: new Map<string, Observable<{ reason: "initial" | "move" }>>(),
+        leave: new Map<string, Observable<{ reason: "initial" | "move" }>>(),
         status: new Map<string, "in" | "out">(),
     },
     mapEditorArea: {
-        enter: new Map<string, Observable<void>>(),
-        leave: new Map<string, Observable<void>>(),
+        enter: new Map<string, Observable<{ reason: "initial" | "move" }>>(),
+        leave: new Map<string, Observable<{ reason: "initial" | "move" }>>(),
         status: new Map<string, "in" | "out">(),
     },
 };
 
 /**
- * Register an observer that will trigger when a layer / Tiled area / Map Editor area is entered or leaved.
+ * Register an observer that will trigger when a layer / Tiled area / Map Editor area is entered or left.
  * The actual registration happens on first subscribe and is stopped on last subscribe.
  * The port is shared among all subscribers (opened once, closed when the last subscriber unsubscribes).
  * If the user is already in the correct state when subscribing, the observable triggers immediately
@@ -33,13 +33,13 @@ export function getEnterLeaveObservable(
     type: "layer" | "tiledArea" | "mapEditorArea",
     action: "enter" | "leave",
     name: string
-): Observable<void> {
+): Observable<{ reason: "initial" | "move" }> {
     const observablesMap = observables[type][action];
 
     // Retrieve or create the shared (hot) observable backed by a single port.
     let sharedPort = observablesMap.get(name);
     if (sharedPort === undefined) {
-        sharedPort = new Observable<void>((subscriber) => {
+        sharedPort = new Observable<{ reason: "initial" | "move" }>((subscriber) => {
             const abortController = new AbortController();
 
             (async () => {
@@ -58,7 +58,7 @@ export function getEnterLeaveObservable(
                     switch (event.data.type) {
                         case "onAction": {
                             observables[type].status.set(name, action === "enter" ? "in" : "out");
-                            subscriber.next();
+                            subscriber.next(event.data.data);
                             break;
                         }
                         default: {
@@ -104,6 +104,13 @@ export function getEnterLeaveObservable(
         const status = observables[type].status.get(name);
         const shouldEmitNow = (status === "in" && action === "enter") || (status === "out" && action === "leave");
 
-        return shouldEmitNow ? concat(of(undefined as void), capturedSharedPort) : capturedSharedPort;
+        return shouldEmitNow
+            ? concat(
+                  of({
+                      reason: "initial" as const,
+                  }),
+                  capturedSharedPort
+              )
+            : capturedSharedPort;
     });
 }
