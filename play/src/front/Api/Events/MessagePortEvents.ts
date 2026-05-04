@@ -72,7 +72,6 @@ export const iframeMessagePortTypeGuards = {
     enterLeave: {
         data: z.object({
             zoneName: z.string(),
-            action: z.union([z.literal("enter"), z.literal("leave"), z.literal("watch")]),
             type: z.union([z.literal("layer"), z.literal("tiledArea"), z.literal("mapEditorArea")]),
         }),
         iframeEvents: z.void(),

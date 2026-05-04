@@ -68,7 +68,7 @@ export class EnterLeaveScriptingService {
             });
 
         iframeListener.registerOpenMessagePortAnswerer("enterLeave", (data, port) => {
-            const { type, action, zoneName } = data;
+            const { type, zoneName } = data;
             const postAction = (action: "enter" | "leave", reason: "initial" | "move") => {
                 port.postMessage({
                     type: "onAction",
@@ -108,31 +108,20 @@ export class EnterLeaveScriptingService {
                 }
             }
 
-            if (action === "watch" || (action === "enter" && isInside) || (action === "leave" && !isInside)) {
-                postAction(isInside ? "enter" : "leave", "initial");
-            }
+            postAction(isInside ? "enter" : "leave", "initial");
 
-            const subscriptions =
-                action === "watch"
-                    ? [
-                          this.subjects[type].enter.subscribe((name) => {
-                              if (name === zoneName) {
-                                  postAction("enter", "move");
-                              }
-                          }),
-                          this.subjects[type].leave.subscribe((name) => {
-                              if (name === zoneName) {
-                                  postAction("leave", "move");
-                              }
-                          }),
-                      ]
-                    : [
-                          this.subjects[type][action].subscribe((name) => {
-                              if (name === zoneName) {
-                                  postAction(action, "move");
-                              }
-                          }),
-                      ];
+            const subscriptions = [
+                this.subjects[type].enter.subscribe((name) => {
+                    if (name === zoneName) {
+                        postAction("enter", "move");
+                    }
+                }),
+                this.subjects[type].leave.subscribe((name) => {
+                    if (name === zoneName) {
+                        postAction("leave", "move");
+                    }
+                }),
+            ];
 
             const closeSubscription = port.closeEvent.subscribe(() => {
                 for (const subscription of subscriptions) {

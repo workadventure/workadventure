@@ -49,7 +49,6 @@ export function getEnterLeaveObservable(
             (async () => {
                 const port = await openMessagePort("enterLeave", {
                     type,
-                    action: "watch",
                     zoneName: name,
                 });
 
