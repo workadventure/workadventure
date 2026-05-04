@@ -832,6 +832,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
 
     private scheduleRoomPlacementReconciliation(roomId: string): void {
+        console.trace("scheduleRoomPlacementReconciliation", roomId);
         this.clearRoomPlacementRetry(roomId);
         const generation = this.roomPlacementRetryGenerations.get(roomId) ?? 0;
         const runAttempt = (attemptIndex: number): void => {
@@ -1386,9 +1387,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         if (membership !== prevMembership && membership === KnownMembership.Join) {
             this.detachRoomFromRootLists(roomId);
 
-            // if (this.client?.isInitialSyncComplete()) {
-            // this.refreshAllJoinedFoldersChildren(roomId);
-            // }
+            if (!this.client?.isInitialSyncComplete()) return;
+            debug("Refresh all joined folders children", roomId);
+            this.refreshAllJoinedFoldersChildren(roomId);
             this.scheduleRoomPlacementReconciliation(roomId);
             return;
         }
