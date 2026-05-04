@@ -37,9 +37,7 @@ import type { LayerEvent } from "./Events/LayerEvent";
 import type { SetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import type { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
-import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
 import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
-import type { ChangeAreaEvent } from "./Events/ChangeAreaEvent";
 import type { CameraSetEvent } from "./Events/CameraSetEvent";
 import type { CameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
 import type { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
@@ -944,59 +942,6 @@ class IframeListener {
             data: {
                 name: name,
             } as EnterLeaveEvent,
-        });
-    }
-
-    sendEnterLayerEvent(layerName: string) {
-        this.postMessage({
-            type: "enterLayerEvent",
-            data: {
-                name: layerName,
-            } as ChangeLayerEvent,
-        });
-    }
-
-    sendLeaveLayerEvent(layerName: string) {
-        this.postMessage({
-            type: "leaveLayerEvent",
-            data: {
-                name: layerName,
-            } as ChangeLayerEvent,
-        });
-    }
-
-    sendEnterAreaEvent(areaName: string) {
-        this.postMessage({
-            type: "enterAreaEvent",
-            data: {
-                name: areaName,
-            } as ChangeAreaEvent,
-        });
-    }
-
-    sendLeaveAreaEvent(areaName: string) {
-        this.postMessage({
-            type: "leaveAreaEvent",
-            data: {
-                name: areaName,
-            } as ChangeAreaEvent,
-        });
-    }
-
-    sendEnterMapEditorAreaEvent(areaName: string) {
-        this.postMessage({
-            type: "enterMapEditorAreaEvent",
-            data: {
-                name: areaName,
-            } as ChangeAreaEvent,
-        });
-    }
-    sendLeaveMapEditorAreaEvent(areaName: string) {
-        this.postMessage({
-            type: "leaveMapEditorAreaEvent",
-            data: {
-                name: areaName,
-            } as ChangeAreaEvent,
         });
     }
 

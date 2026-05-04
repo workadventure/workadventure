@@ -40,8 +40,6 @@ import { isCreateUIWebsiteEvent, isModifyUIWebsiteEvent, isUIWebsiteEvent } from
 import { isCreateDynamicAreaEvent, isDynamicAreaEvent } from "./CreateDynamicAreaEvent";
 import { isUserInputChatEvent } from "./UserInputChatEvent";
 import { isEnterLeaveEvent } from "./EnterLeaveEvent";
-import { isChangeLayerEvent } from "./ChangeLayerEvent";
-import { isChangeAreaEvent } from "./ChangeAreaEvent";
 import { isButtonClickedEvent } from "./ButtonClickedEvent";
 import { isActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent";
 import { isHasPlayerMovedEvent } from "./HasPlayerMovedEvent";
@@ -405,30 +403,6 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("leaveEvent"),
         data: isEnterLeaveEvent,
-    }),
-    z.object({
-        type: z.literal("enterMapEditorAreaEvent"),
-        data: isChangeAreaEvent,
-    }),
-    z.object({
-        type: z.literal("leaveMapEditorAreaEvent"),
-        data: isChangeAreaEvent,
-    }),
-    z.object({
-        type: z.literal("enterLayerEvent"),
-        data: isChangeLayerEvent,
-    }),
-    z.object({
-        type: z.literal("leaveLayerEvent"),
-        data: isChangeLayerEvent,
-    }),
-    z.object({
-        type: z.literal("enterAreaEvent"),
-        data: isChangeAreaEvent,
-    }),
-    z.object({
-        type: z.literal("leaveAreaEvent"),
-        data: isChangeAreaEvent,
     }),
     z.object({
         type: z.literal("buttonClickedEvent"),

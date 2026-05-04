@@ -138,6 +138,10 @@ export class AreasManager {
         return this.areas.get(areaId);
     }
 
+    public getAreasByName(name: string): Area[] {
+        return Array.from(this.areas.values()).filter((area) => area.areaData.name === name);
+    }
+
     public getAreasByPropertyType(propertyType: string): Area[] {
         return Array.from(this.areas.values()).reduce((areas, area) => {
             const areaFound = area.areaData.properties.find((property) => property.type === propertyType);

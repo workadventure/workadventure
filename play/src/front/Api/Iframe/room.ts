@@ -3,7 +3,6 @@ import { Subject } from "rxjs";
 
 import type { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import type { EnterLeaveEvent } from "../Events/EnterLeaveEvent";
-import type { ChangeLayerEvent } from "../Events/ChangeLayerEvent";
 
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
@@ -12,12 +11,10 @@ import type { WorkadventureRoomWebsiteCommands } from "./website";
 import website from "./website";
 import area from "./area";
 import type { WorkadventureAreaCommands } from "./area";
+import { getEnterLeaveObservable } from "./enterLeaveUtils";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
-
-const enterLayerStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
-const leaveLayerStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
 
 export interface TileDescriptor {
     x: number;
@@ -58,18 +55,6 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
                 leaveStreams.get(payloadData.name)?.next();
             },
         }),
-        apiCallback({
-            type: "enterLayerEvent",
-            callback: (payloadData: ChangeLayerEvent) => {
-                enterLayerStreams.get(payloadData.name)?.next();
-            },
-        }),
-        apiCallback({
-            type: "leaveLayerEvent",
-            callback: (payloadData) => {
-                leaveLayerStreams.get(payloadData.name)?.next();
-            },
-        }),
     ];
 
     /**
@@ -101,16 +86,10 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
      * {@link https://docs.workadventu.re/map-building/api-room.md#detecting-when-the-user-entersleaves-a-layer | Website documentation}
      *
      * @param {string} layerName Name of the layer who as defined in Tiled
-     * @returns {Subject<void>} Event subject can be listen by a subscribtion
+     * @returns {Subject<void>} Event subject can be listened to by a subscription
      */
     onEnterLayer(layerName: string): Observable<void> {
-        let subject = enterLayerStreams.get(layerName);
-        if (subject === undefined) {
-            subject = new Subject<void>();
-            enterLayerStreams.set(layerName, subject);
-        }
-
-        return subject.asObservable();
+        return getEnterLeaveObservable("layer", "enter", layerName);
     }
 
     /**
@@ -118,16 +97,10 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
      * {@link https://docs.workadventu.re/map-building/api-room.md#detecting-when-the-user-entersleaves-a-layer | Website documentation}
      *
      * @param {string} layerName Name of the layer who as defined in Tiled
-     * @returns {Subject<void>} Event subject can be listen by a subscribtion
+     * @returns {Subject<void>} Event subject can be listened to by a subscription
      */
     onLeaveLayer(layerName: string): Observable<void> {
-        let subject = leaveLayerStreams.get(layerName);
-        if (subject === undefined) {
-            subject = new Subject<void>();
-            leaveLayerStreams.set(layerName, subject);
-        }
-
-        return subject.asObservable();
+        return getEnterLeaveObservable("layer", "leave", layerName);
     }
 
     /**
@@ -240,7 +213,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
     }
 
     /**
-     * Load a tileset in JSON format from an url and return the id of the first tile of the loaded tileset.
+     * Load a tileset in JSON format from a url and return the id of the first tile of the loaded tileset.
      * {@link https://docs.workadventu.re/map-building/api-room.md#loading-a-tileset | Website documentation}
      *
      * @param {string} url Url of the tileset

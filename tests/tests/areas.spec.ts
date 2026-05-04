@@ -4,11 +4,13 @@ import { publicTestMapUrl } from "./utils/urls";
 import Menu from "./utils/menu";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
+import Map from "./utils/map";
 
 test.describe("Areas @nomobile", () => {
     test.beforeEach(async ({ page }) => {
         test.skip(isMobile(page), "Skip on mobile devices");
     });
+
     test("can edit Tiled area from scripting API", async ({ browser }) => {
         // This tests connects on a map with an area named "silent".
         // The Woka is out of the zone, but we move the zone to cover the Woka.
@@ -96,6 +98,60 @@ test.describe("Areas @nomobile", () => {
         });
         await Menu.expectButtonState(page, "music-button", "forbidden");
         await expect(page.getByText("Could not load sound")).toBeVisible();
+
+        await page.context().close();
+    });
+
+    test("can create an area dynamically and detect when we enter and leave", async ({ browser }) => {
+        await using page = await getPage(
+            browser,
+            "Alice",
+            publicTestMapUrl("tests/E2E/empty.json", "availability-status"),
+        );
+
+        await evaluateScript(page, async () => {
+            await WA.onInit();
+            WA.room.area.create({
+                name: "MyNewArea",
+                x: 0,
+                y: 4 * 32,
+                width: 64,
+                height: 6 * 32,
+            });
+
+            WA.room.area.onEnter("MyNewArea").subscribe(() => {
+                WA.ui.displayActionMessage({
+                    message: "Welcome to MyNewArea",
+                    type: "message",
+                    callback: () => {
+                        console.info("Welcome to MyNewArea");
+                    },
+                });
+            });
+
+            WA.room.area.onLeave("MyNewArea").subscribe(() => {
+                WA.ui.displayActionMessage({
+                    message: "Goodbye MyNewArea",
+                    type: "message",
+                    callback: () => {
+                        console.info("Goodbye MyNewArea");
+                    },
+                });
+            });
+        });
+
+        // Let's first check the onEnter is triggered when if we are already in the area when we subscribe.
+        await expect(page.getByText("Welcome to MyNewArea")).toBeVisible();
+        await page.getByRole("button", { name: "Close" }).first().click();
+        // Let's move out
+        await Map.teleportToPosition(page, 9 * 32, 9 * 32);
+        await expect(page.getByText("Goodbye MyNewArea")).toBeVisible();
+        await page.getByRole("button", { name: "Close" }).click();
+        await expect(page.locator("span.characterTriggerAction")).toBeHidden();
+
+        // Let's move back in
+        await Map.teleportToPosition(page, 0.5 * 32, 5 * 32);
+        await expect(page.getByText("Welcome to MyNewArea")).toBeVisible();
 
         await page.context().close();
     });

@@ -1611,6 +1611,13 @@ export class GameMapFrontWrapper {
         return MathUtils.isOverlappingWithRectangle(objectCoordinates, areaCoordinates);
     }
 
+    public getCurrentLayers(): Array<ITiledMapLayer> {
+        if (!this.key) {
+            throw new Error("Trying to get layers at the player position but the user has no position");
+        }
+        return this.gameMap.getLayersByKey(this.key);
+    }
+
     public close() {
         this.entitiesManager.close();
         this.areasManager?.destroy();

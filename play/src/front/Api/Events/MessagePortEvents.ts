@@ -69,6 +69,18 @@ export const iframeMessagePortTypeGuards = {
             }),
         ]),
     },
+    enterLeave: {
+        data: z.object({
+            zoneName: z.string(),
+            action: z.union([z.literal("enter"), z.literal("leave")]),
+            type: z.union([z.literal("layer"), z.literal("tiledArea"), z.literal("mapEditorArea")]),
+        }),
+        iframeEvents: z.void(),
+        workAdventureEvents: z.object({
+            type: z.literal("onAction"),
+            data: z.undefined(),
+        }),
+    },
 };
 
 type IframeMessagePortTypeGuards = typeof iframeMessagePortTypeGuards;
