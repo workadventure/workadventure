@@ -94,8 +94,10 @@ async function createUser(
             await oidcMemberTagLogin(page);
             break;
         case "UserMatrix":
-        case "UserMatrix2":
             await oidcMatrixUserLogin(page);
+            break;
+        case "UserMatrix2":
+            await oidcMatrixUserLogin(page, "UserMatrix2");
             break;
         case "UserLogin1":
             await oidcLogin(page);

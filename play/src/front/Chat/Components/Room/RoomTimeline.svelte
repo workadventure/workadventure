@@ -1,12 +1,24 @@
 <script lang="ts">
-    import { afterUpdate, beforeUpdate, onMount } from "svelte";
-    import { get } from "svelte/store";
+    import { afterUpdate, beforeUpdate, onMount, tick } from "svelte";
+    import { get, readable } from "svelte/store";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import type { ChatMessage, ChatRoom } from "../../Connection/ChatConnection";
+    import type {
+        ChatConversation,
+        ChatMessage,
+        ChatRoom,
+        ChatThreadSummary,
+        ChatTimelineItem,
+    } from "../../Connection/ChatConnection";
     import getCloseImg from "../../images/get-close.png";
     import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
     import { intentionallyClosedChatDuringMeetingStore } from "../../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+    import { hideActionBarStoreBecauseOfChatBar } from "../../ChatSidebarWidthStore";
+    import {
+        roomSidePanelStore,
+        roomTimelineFocusStore,
+        type RoomTimelineFocusRequest,
+    } from "../../Stores/RoomSidePanelStore";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
@@ -14,10 +26,16 @@
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
+    import PollCard from "./PollCard.svelte";
     import TypingUsers from "./TypingUsers.svelte";
-    import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox } from "@wa-icons";
+    import { shouldReserveFloatingCloseButtonSpace } from "./RoomTimelineHeaderLayout";
+    import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox, IconTableOptions } from "@wa-icons";
 
-    export let room: ChatRoom;
+    export let room: ChatConversation;
+    export let backAction: (() => void) | undefined = undefined;
+    export let backButtonTestId = "chatBackward";
+    export let timelineTestId = "roomTimeline";
+    export let showRoomSidePanelToggle = false;
 
     const chatConnection = gameManager.chatConnection;
     const shouldRetrySendingEvents = chatConnection.shouldRetrySendingEvents;
@@ -34,28 +52,47 @@
     let scrollTimer: ReturnType<typeof setTimeout>;
     let shouldDisplayLoader = false;
     let messageInputBarRef: MessageInputBar;
+    let lastTimelineFocusSequence = 0;
 
     const gameScene = gameManager.getCurrentGameScene();
     const chatRoomsEnableInAdmin = gameScene.room.isChatEnabled;
     const direction = document.documentElement.getAttribute("dir") || "ltr";
 
+    function isChatRoom(conversation: ChatConversation): conversation is ChatRoom {
+        return conversation.conversationKind === "room";
+    }
+
+    const emptyThreadSummaries = readable<readonly ChatThreadSummary[]>([]);
+
     $: messages = room?.messages;
     $: roomName = room?.name;
     $: typingMembers = room.typingMembers;
+    $: timelineItems = room.timelineItems;
     $: initializationState = room.initializationState;
     $: initializationError = room.initializationError;
+    // threads exist only on ChatRoom, not when this timeline shows a thread (ThreadPanel).
+    $: threadsStore = isChatRoom(room) ? room.threads : undefined;
+    $: threadSummariesStore = threadsStore ?? emptyThreadSummaries;
+    $: unreadThreadCount = $threadSummariesStore.filter((thread) => thread.hasUnreadMessages).length;
+    $: shouldReserveHeaderEndSpace = shouldReserveFloatingCloseButtonSpace(
+        $hideActionBarStoreBecauseOfChatBar,
+        showRoomSidePanelToggle
+    );
+    $: if ($roomTimelineFocusStore) {
+        focusTimelineEvent($roomTimelineFocusStore).catch((error) => console.error(error));
+    }
 
     type RenderItem =
         | { kind: "separator"; key: string; label: string }
-        | { kind: "message"; key: string; message: ChatMessage; showHeader: boolean };
+        | { kind: "item"; key: string; timelineItem: ChatTimelineItem; showHeader: boolean };
 
     function isValidDate(d: Date) {
         return d instanceof Date && !Number.isNaN(d.getTime());
     }
 
-    function getMessageDate(message: ChatMessage): Date | undefined {
-        if (message?.date && isValidDate(message.date)) {
-            return message.date;
+    function getTimelineItemDate(timelineItem: ChatTimelineItem): Date | undefined {
+        if (timelineItem?.date && isValidDate(timelineItem.date)) {
+            return timelineItem.date;
         }
         return undefined;
     }
@@ -90,10 +127,10 @@
         const out: RenderItem[] = [];
         let lastDayKey: string | null = null;
         let previousMessage: ChatMessage | undefined = undefined;
-        const messageList = $messages ?? [];
+        const currentTimelineItems = $timelineItems ?? [];
 
-        for (const msg of messageList) {
-            const d = getMessageDate(msg);
+        for (const timelineItem of currentTimelineItems) {
+            const d = getTimelineItemDate(timelineItem);
             let insertedSeparator = false;
 
             if (d && isValidDate(d)) {
@@ -113,22 +150,26 @@
                 previousMessage = undefined;
             }
 
+            const currentMessage = timelineItem.kind === "message" ? timelineItem.message : undefined;
             const previousMessageUserId = previousMessage?.sender?.spaceUserId ?? previousMessage?.sender?.chatId;
-            const currentMessageUserId = msg.sender?.spaceUserId ?? msg.sender?.chatId;
+            const currentMessageUserId = currentMessage?.sender?.spaceUserId ?? currentMessage?.sender?.chatId;
             const timeDiff =
-                msg.date && previousMessage?.date ? msg.date.getTime() - previousMessage.date.getTime() : Infinity;
+                currentMessage?.date && previousMessage?.date
+                    ? currentMessage.date.getTime() - previousMessage.date.getTime()
+                    : Infinity;
             const isRepeatedSender =
+                !!currentMessage &&
                 !!previousMessageUserId &&
                 previousMessageUserId === currentMessageUserId &&
                 timeDiff < TIME_GAP_THRESHOLD;
 
             out.push({
-                kind: "message",
-                key: `msg-${msg.id}`,
-                message: msg,
+                kind: "item",
+                key: `${timelineItem.kind}-${timelineItem.id}`,
+                timelineItem,
                 showHeader: !isRepeatedSender,
             });
-            previousMessage = msg;
+            previousMessage = currentMessage;
         }
 
         return out;
@@ -137,9 +178,7 @@
     onMount(() => {
         initMessages()
             .catch((error) => console.error(error))
-            .finally(() => {
-                scrollToMessageListBottom();
-            });
+            .finally(() => focusPendingTimelineRequestOrScrollToBottom().catch((error) => console.error(error)));
     });
 
     async function initMessages() {
@@ -164,7 +203,6 @@
 
         try {
             await loadMessages();
-            scrollToMessageListBottom();
             setFirstListItem();
         } catch (error) {
             console.error(`Failed to load messages: ${error}`);
@@ -173,6 +211,23 @@
 
     function retryInitialization() {
         room.ensureTimelineInitialized().catch((error) => console.error(error));
+    }
+
+    function hasPendingTimelineFocusRequest(
+        request: RoomTimelineFocusRequest | undefined
+    ): request is RoomTimelineFocusRequest {
+        return request !== undefined && request.roomId === room.id && request.sequence > lastTimelineFocusSequence;
+    }
+
+    async function focusPendingTimelineRequestOrScrollToBottom() {
+        const pendingFocusRequest = get(roomTimelineFocusStore);
+
+        if (hasPendingTimelineFocusRequest(pendingFocusRequest)) {
+            await focusTimelineEvent(pendingFocusRequest);
+            return;
+        }
+
+        scrollToMessageListBottom();
     }
 
     beforeUpdate(() => {
@@ -208,7 +263,16 @@
 
     function goBackAndClearSelectedChatMessage() {
         selectedChatMessageToReply.set(null);
-        selectedRoomStore.set(undefined);
+        if (backAction) {
+            backAction();
+            shouldRestoreChatStateStore.set(false);
+            return;
+        }
+        if (room.conversationKind === "thread" && room.parentRoom) {
+            selectedRoomStore.set(room.parentRoom);
+        } else {
+            selectedRoomStore.set(undefined);
+        }
         shouldRestoreChatStateStore.set(false);
 
         if (room instanceof ProximityChatRoom) {
@@ -281,13 +345,15 @@
     }
 
     function onUpdateMessageBody(event: CustomEvent) {
-        const messageList = get(messages);
+        const currentTimelineItems = get(timelineItems);
+        const lastTimelineItem = currentTimelineItems[currentTimelineItems.length - 1];
+        const lastMessage = lastTimelineItem?.kind === "message" ? lastTimelineItem.message : undefined;
         if (
             autoScroll ||
             (event.detail != undefined &&
-                messageList.length > 0 &&
-                event.detail.id === messageList[messageList.length - 1].id &&
-                messageList[messageList.length - 1].sender?.chatId === myChatID)
+                lastMessage &&
+                event.detail.id === lastMessage.id &&
+                lastMessage.sender?.chatId === myChatID)
         ) {
             scrollToMessageListBottom();
         }
@@ -300,22 +366,49 @@
             } as CustomEvent<FileList>);
         }
     }
+
+    async function focusTimelineEvent(request: RoomTimelineFocusRequest) {
+        if (!hasPendingTimelineFocusRequest(request)) {
+            return;
+        }
+
+        await tick();
+
+        const target = Array.from(messageListRef?.querySelectorAll<HTMLLIElement>("li[data-event-id]") ?? []).find(
+            (element) => element.dataset.eventId === request.eventId
+        );
+
+        if (!target) {
+            return;
+        }
+
+        lastTimelineFocusSequence = request.sequence;
+        target.scrollIntoView({ block: "center", behavior: "smooth" });
+        target.classList.remove("highlight-message");
+        // // Force the highlight animation to restart when the same poll is clicked again.
+        // target.offsetWidth;
+        target.classList.add("highlight-message");
+    }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="flex flex-col flex-auto h-full w-full max-w-full"
-    data-testid="roomTimeline"
+    data-testid={timelineTestId}
     on:dragover|preventDefault
     on:drop|preventDefault|stopPropagation={onDropFiles}
 >
     {#if room !== undefined}
         <div class="flex flex-col gap-2">
-            <div class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10">
+            <div
+                class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10 {shouldReserveHeaderEndSpace
+                    ? 'pe-14'
+                    : ''}"
+            >
                 {#if chatRoomsEnableInAdmin}
                     <button
                         class="back-roomlist p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white shrink-0"
-                        data-testid="chatBackward"
+                        data-testid={backButtonTestId}
                         on:click={goBackAndClearSelectedChatMessage}
                     >
                         {#if direction === "rtl"}
@@ -331,7 +424,30 @@
                     {$roomName}
                 </div>
 
-                <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" aria-hidden="true" />
+                {#if showRoomSidePanelToggle}
+                    <button
+                        type="button"
+                        class="relative p-3 rounded aspect-square w-12 h-12 shrink-0 !text-white hover:bg-white/10 {$roomSidePanelStore.isOpen
+                            ? 'bg-white/10'
+                            : ''}"
+                        data-testid="toggleRoomSidePanelButton"
+                        title={$roomSidePanelStore.isOpen
+                            ? $LL.chat.roomPanel.toggleClose()
+                            : $LL.chat.roomPanel.toggleOpen()}
+                        aria-pressed={$roomSidePanelStore.isOpen}
+                        on:click={() => roomSidePanelStore.toggle()}
+                    >
+                        <IconTableOptions font-size="20" />
+                        {#if unreadThreadCount > 0}
+                            <span
+                                class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border border-solid border-contrast bg-success"
+                                data-testid="toggleRoomSidePanelUnreadBadge"
+                            />
+                        {/if}
+                    </button>
+                {:else}
+                    <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" aria-hidden="true" />
+                {/if}
             </div>
             {#if shouldDisplayLoader}
                 <div class="flex justify-center items-center w-full pb-1 bg-transparent">
@@ -345,7 +461,7 @@
             on:scroll={handleScroll}
         >
             <ul
-                class="list-none p-0 flex-1 flex flex-col max-w-full max-h-full pt-10 gap-1 {$messages.length === 0
+                class="list-none p-0 flex-1 flex flex-col max-w-full max-h-full pt-10 gap-1 {$timelineItems.length === 0
                     ? 'items-center justify-center pb-4'
                     : 'max-w-6xl'}"
             >
@@ -363,13 +479,13 @@
                             class="px-3 py-2 rounded bg-white/10 hover:bg-white/20 text-sm"
                             on:click={retryInitialization}
                         >
-                            Retry
+                            {$LL.chat.timeLine.retry()}
                         </button>
                     </li>
                 {:else if $messages.length === 0}
                     {#if room instanceof ProximityChatRoom}
                         <li class="text-center px-3 max-w-md">
-                            <img draggable="false" src={getCloseImg} alt="Discussion bubble" />
+                            <img draggable="false" src={getCloseImg} alt={$LL.chat.getCloserTitle()} />
                             <div class="text-lg font-bold text-center">{$LL.chat.getCloserTitle()}</div>
                             <div class="text-sm opacity-50 text-center">
                                 {$LL.chat.getCloserDesc()}
@@ -398,21 +514,24 @@
                     {/if}
                 {/if}
                 {#each renderItems as item (item.key)}
-                    <li class="last:pb-3" data-event-id={item.kind === "message" ? item.message.id : undefined}>
+                    <li class="last:pb-3" data-event-id={item.kind === "item" ? item.timelineItem.id : undefined}>
                         {#if item.kind === "separator"}
                             <div class="flex justify-center items-center pt-3 pb-1 px-6">
                                 <span class="text-xs font-condensed min-w-32 text-center block opacity-75 py-1.5 px-3"
                                     >{item.label}</span
                                 >
                             </div>
-                        {:else if item.message.type === "outcoming" || item.message.type === "incoming"}
-                            <MessageSystem message={item.message} />
+                        {:else if item.timelineItem.kind === "system"}
+                            <MessageSystem message={item.timelineItem.message} />
+                        {:else if item.timelineItem.kind === "poll"}
+                            <PollCard poll={item.timelineItem.poll} />
                         {:else}
                             <Message
                                 on:updateMessageBody={onUpdateMessageBody}
-                                message={item.message}
+                                message={item.timelineItem.message}
                                 showHeader={item.showHeader}
                                 membersForMessageAvatars={room.membersForMessageAvatars}
+                                showThreadSummary={room.conversationKind === "room"}
                             />
                         {/if}
                     </li>

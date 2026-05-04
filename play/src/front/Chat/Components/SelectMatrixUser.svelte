@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount, createEventDispatcher } from "svelte";
+    import { get } from "svelte/store";
     import * as Sentry from "@sentry/svelte";
     import Select from "svelte-select";
     import LL from "../../../i18n/i18n-svelte";
@@ -49,7 +50,7 @@
 
         const hasInvalidItems = verificationResults.some(({ isValid }) => !isValid);
         if (hasInvalidItems) {
-            dispatch("error", { error: "User not found" });
+            dispatch("error", { error: get(LL).chat.matrixUserSelect.userNotFound() });
         }
 
         return validItems;
@@ -61,7 +62,7 @@
                 items = newItems;
             })
             .catch((error) => {
-                dispatch("error", { error: "Failed to load users" });
+                dispatch("error", { error: get(LL).chat.matrixUserSelect.failedToLoadUsers() });
                 console.error(error);
                 Sentry.captureException(error);
             });
