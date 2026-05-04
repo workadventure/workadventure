@@ -18,9 +18,9 @@ export class UsernameRenderingModeStream {
     }
 
     private isRenderingAsDOM(playersCount: number): boolean | undefined {
-        if (playersCount >= CANVAS_TO_DOM_THRESHOLD) {
+        if (playersCount <= CANVAS_TO_DOM_THRESHOLD) {
             return true;
-        } else if (playersCount <= DOM_TO_CANVAS_THRESHOLD) {
+        } else if (playersCount >= DOM_TO_CANVAS_THRESHOLD) {
             return false;
         }
         return undefined;
