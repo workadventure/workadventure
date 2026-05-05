@@ -115,9 +115,14 @@ describe("MatrixChatConnection", () => {
             matrixChatConnection["roomList"].set(multipleChatRoom.id, multipleChatRoom);
             matrixChatConnection["roomList"].set(InviteMultipleChatRoom.id, InviteMultipleChatRoom);
 
+            // createJoinedRoomsReadable defers updates with queueMicrotask; flush after roomList changes.
+            await Promise.resolve();
+
             expect(get(matrixChatConnection["directRooms"])).toHaveLength(1);
 
             matrixChatConnection["roomList"].set(directChatRoom.id + "2", directChatRoom);
+
+            await Promise.resolve();
 
             expect(get(matrixChatConnection["directRooms"])).toHaveLength(2);
             expect(get(matrixChatConnection["directRooms"]).includes(directChatRoom)).toBeTruthy();
@@ -138,9 +143,16 @@ describe("MatrixChatConnection", () => {
             matrixChatConnection["roomList"].set(multipleChatRoom.id, multipleChatRoom);
             matrixChatConnection["roomList"].set(InviteMultipleChatRoom.id, InviteMultipleChatRoom);
 
+            // Unlike directRooms (constructor subscribes for unread sync), `rooms` has no subscriber until first read.
+            // Prime so roomList updates schedule the join-list microtask before we flush.
+            get(matrixChatConnection["rooms"]);
+            await Promise.resolve();
+
             expect(get(matrixChatConnection["rooms"])).toHaveLength(1);
 
             matrixChatConnection["roomList"].set(multipleChatRoom.id + "2", multipleChatRoom);
+
+            await Promise.resolve();
 
             expect(get(matrixChatConnection["rooms"])).toHaveLength(2);
             expect(get(matrixChatConnection["rooms"]).includes(multipleChatRoom)).toBeTruthy();

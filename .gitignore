@@ -26,3 +26,6 @@ synapse/media_store/*
 
 .vscode/settings.json
 play/src/i18n/ko-KR/*.backup
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
