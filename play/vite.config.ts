@@ -29,6 +29,10 @@ export default defineConfig(({ mode }) => {
             sourcemap: env.GENERATE_SOURCEMAP !== "false",
             outDir: "./dist/public",
             rollupOptions: {
+                input: {
+                    main: path.resolve(process.cwd(), "index.html"),
+                    pipLayoutTest: path.resolve(process.cwd(), "pip-layout-test.html"),
+                },
                 plugins: [mediapipe_workaround()],
                 // external: ["@mediapipe/tasks-vision"],
                 //plugins: [inject({ Buffer: ["buffer/", "Buffer"] })],

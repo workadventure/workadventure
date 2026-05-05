@@ -24,6 +24,7 @@ import {
 import { PingController } from "./controllers/PingController";
 import { CompanionListController } from "./controllers/CompanionListController";
 import { FrontController } from "./controllers/FrontController";
+import { PipLayoutTestDevController } from "./controllers/PipLayoutTestDevController";
 import { globalErrorHandler } from "./services/GlobalErrorHandler";
 import { jwtTokenManager } from "./services/JWTTokenManager";
 import { CompanionService } from "./services/CompanionService";
@@ -107,6 +108,7 @@ class App {
             new SwaggerController(this.app);
         }
         new FrontController(this.app);
+        new PipLayoutTestDevController(this.app);
         new UserController(this.app);
         new MatrixRoomAreaController(this.app);
 

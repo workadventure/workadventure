@@ -14,8 +14,10 @@
     export let videoWidth: number;
     export let videoHeight: number | undefined;
     export let intersectionObserver: IntersectionObserver | undefined;
+    export let forceVisible = false;
+    export let fitContainer = false;
 
-    let isVisible = !intersectionObserver;
+    let isVisible = forceVisible || !intersectionObserver;
     let videoBoxElement: HTMLDivElement | undefined;
 
     const orderStore = videoBox.displayOrder;
@@ -119,7 +121,9 @@
     let oldIntersectionObserver: IntersectionObserver | undefined = undefined;
 
     $: {
-        if (videoBoxElement && oldIntersectionObserver !== intersectionObserver) {
+        if (forceVisible) {
+            isVisible = true;
+        } else if (videoBoxElement && oldIntersectionObserver !== intersectionObserver) {
             oldIntersectionObserver?.unobserve(videoBoxElement);
             oldIntersectionObserver = intersectionObserver;
             intersectionObserver?.observe(videoBoxElement);
@@ -132,12 +136,16 @@
 
 <div
     bind:this={videoBoxElement}
-    style={`order: ${$orderStore}; width: ${videoWidth}px; max-width: ${videoWidth}px;${
-        videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""
-    }`}
+    style={fitContainer
+        ? `order: ${$orderStore}; width: 100%; max-width: 100%; height: 100%; max-height: 100%;`
+        : `order: ${$orderStore}; width: ${videoWidth}px; max-width: ${videoWidth}px;${
+              videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""
+          }`}
     class={` overflow-hidden
     ${
-        isOnOneLine
+        fitContainer
+            ? "pointer-events-auto h-full w-full min-h-0 min-w-0 camera-box"
+            : isOnOneLine
             ? oneLineMode === "horizontal"
                 ? `pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box ${isFirst ? "ml-auto" : ""} ${
                       isLast ? "mr-auto" : ""
@@ -145,7 +153,7 @@
                 : "pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
             : "pointer-events-auto shrink-0 camera-box"
     }`}
-    class:aspect-video={videoHeight === undefined}
+    class:aspect-video={!fitContainer && videoHeight === undefined}
 >
     {#if isVisible}
         <MediaBox {videoBox} />

@@ -10,10 +10,21 @@
     export let videoWidth: number;
     export let videoHeight: number | undefined;
     export let intersectionObserver: IntersectionObserver | undefined;
+    export let forceDisplay = false;
+    export let fitContainer = false;
 
     const streamable = videoBox.streamable;
 </script>
 
-{#if (($highlightedEmbedScreen !== videoBox || $playerMovedInTheLast10Seconds) && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && ($streamable?.displayInPictureInPictureMode ?? false))}
-    <VideoBoxOptimizer {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} {intersectionObserver} />
+{#if forceDisplay || (($highlightedEmbedScreen !== videoBox || $playerMovedInTheLast10Seconds) && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && ($streamable?.displayInPictureInPictureMode ?? false))}
+    <VideoBoxOptimizer
+        {videoBox}
+        {isOnOneLine}
+        {oneLineMode}
+        {videoWidth}
+        {videoHeight}
+        {intersectionObserver}
+        forceVisible={forceDisplay}
+        {fitContainer}
+    />
 {/if}
