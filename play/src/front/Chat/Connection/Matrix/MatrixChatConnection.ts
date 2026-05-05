@@ -118,7 +118,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private readonly unreadDirectRoomLastCount = new Map<string, number>();
     /**
      * FIFO for heavy {@link manageRoomOrFolder} work from Matrix {@link ClientEvent.Room}.
-     * Yields with {@link queueMicrotask} between rooms so other work can run on the JS event loop.
+     * Yields {@link requestAnimationFrame} between rooms so the browser/game can paint between bursts.
      */
     private readonly matrixClientRoomManageQueue: Room[] = [];
     private matrixClientRoomManageQueuePumpBusy = false;
@@ -198,7 +198,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 ...Array.from(this.roomList.values()).map((room) => room.myMembership),
                 ...Array.from(this.roomFolders.values()).map((folder) => folder.myMembership),
             ],
-            (memberships) => {
+            (_memberships) => {
                 return [
                     ...Array.from(this.roomList.values()).filter(
                         (room) => get(room.myMembership) === KnownMembership.Invite
@@ -1138,7 +1138,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.startMatrixClientRoomManageQueueDrainIfNeeded();
     }
 
-    /** Starts a drained run; chained promises satisfy `no-await-in-loop`, `no-void`, and `no-floating-promises`. */
+    // Used to start a drained run of the matrix client room manage queue.
     private startMatrixClientRoomManageQueueDrainIfNeeded(): void {
         if (this.matrixClientRoomManageQueuePumpBusy) {
             return;
@@ -1156,6 +1156,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             });
     }
 
+    // Used to drain the matrix client room manage queue.
     private drainMatrixClientRoomManageQueueChain(): Promise<void> {
         const nextRoom = this.matrixClientRoomManageQueue.shift();
         if (!nextRoom) {
@@ -1169,6 +1170,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             .then(() => this.yieldMicrotaskThenContinueMatrixClientRoomManageChain());
     }
 
+    /** Yields one animation frame ({@link requestAnimationFrame}) before processing the next queued room. */
     private yieldMicrotaskThenContinueMatrixClientRoomManageChain(): Promise<void> {
         if (this.matrixClientRoomManageQueue.length === 0) {
             return Promise.resolve();
@@ -1187,37 +1189,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.enqueueMatrixClientRoomManage(room);
     }
 
-    private async moveRoomToParentFolder(room: Room, parentID: string): Promise<boolean> {
-        const isSpaceRoom = room.isSpaceRoom();
-        const parentFolder = await this.findParentFolder(parentID);
-
-        if (!parentFolder) {
-            return false;
-        }
-
-        this.addRoomToFolder(room, parentFolder, isSpaceRoom);
-        return true;
-    }
-    private addRoomToFolder(room: Room, targetFolder: MatrixRoomFolder, isSpaceRoom: boolean): void {
-        if (targetFolder.hasLoadedChildren?.() === false) {
-            return;
-        }
-        if (isSpaceRoom) {
-            if (targetFolder.folderList.has(room.roomId)) {
-                return;
-            }
-            const newFolder = new MatrixRoomFolder(room);
-            targetFolder.folderList.set(room.roomId, newFolder);
-            this.registerFolderShell(newFolder);
-
-            newFolder.init();
-        } else {
-            if (targetFolder.roomList.has(room.roomId)) {
-                return;
-            }
-            targetFolder.roomList.set(room.roomId, new MatrixChatRoom(room));
-        }
-    }
     private async manageRoomOrFolder(room: Room): Promise<void> {
         const parentsIds = this.getParentRoomID(room);
 
