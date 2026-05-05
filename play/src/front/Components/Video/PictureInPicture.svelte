@@ -61,6 +61,15 @@
     }
 
     function destroyPictureInPictureComponent() {
+        if (!$askPictureInPictureActivatingStore) {
+            return;
+        }
+        if (!parentDivElement) {
+            return;
+        }
+        // eslint-disable-next-line svelte/no-dom-manipulating
+        parentDivElement.append(divElement);
+
         if (pipWindow) pipWindow.removeEventListener("pagehide", destroyPictureInPictureComponent);
         if (pipWindow) pipWindow.close();
         pipWindow = undefined;
