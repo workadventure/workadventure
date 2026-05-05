@@ -315,7 +315,7 @@ export class VideoQualityAnalyticsQueue {
             return undefined;
         }
 
-        const fpsStdDev = sample.fpsStdDev !== undefined && Number.isFinite(sample.fpsStdDev) ? sample.fpsStdDev : null;
+        const fpsStdDev = Number.isFinite(sample.fpsStdDev) ? sample.fpsStdDev ?? null : null;
 
         return {
             clientEventTime: clientEventDate.toISOString(),
