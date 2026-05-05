@@ -106,13 +106,22 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private readonly folderShellsByRoomId = new Map<string, MatrixRoomFolder>();
     private readonly rawUnreadRooms = writable<Map<string, RawUnreadRoom>>(new Map());
     private readonly rawUnreadRoomUnsubscribers = new Map<string, () => void>();
-    /** Aggregates DM unread totals in O(1) per notification instead of scanning all direct rooms. */
+    /** Aggregates DM unread totals incrementally instead of scanning all DMs on every update. */
     private readonly nbUnreadDirectRoomsMessagesStore = writable(0);
-    private aggregatedDirectUnreadTotal = 0;
-    /** null = none; -1 = queueMicrotask fallback scheduled (cannot cancel). */
-    private directUnreadStoreFlushRafId: number | null = null;
+    /** Sum of unread counts across direct rooms (store is updated once per animation frame). */
+    private dmUnreadAgg = 0;
+    // RAF id for the flush of the unread count
+    private dmUnreadFlushRaf: number | undefined;
+    // Map of direct room id to unsubscriber for their unreadNotificationCount
     private readonly unreadDirectRoomUnsubs = new Map<string, Unsubscriber>();
+    // Map of direct room id to last unread count
     private readonly unreadDirectRoomLastCount = new Map<string, number>();
+    /**
+     * FIFO for heavy {@link manageRoomOrFolder} work from Matrix {@link ClientEvent.Room}.
+     * Yields {@link requestAnimationFrame} between rooms so Phaser/game can render during sync bursts.
+     */
+    private readonly matrixClientRoomManageQueue: Room[] = [];
+    private matrixClientRoomManageQueuePumpBusy = false;
     nbUnreadInvitationsMessages: Readable<number>;
     nbUnreadDirectRoomsMessages: Readable<number>;
     nbUnreadRoomsMessages: Readable<number>;
@@ -265,25 +274,48 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     /**
      * Recomputes when the room list changes or when any room's membership / DM-vs-group {@link MatrixChatRoom.type}
      * changes (so UI lists move rooms between Direct messages and Group conversations).
+     *
+     * Child subscriptions invoke their callback synchronously on subscribe — without coalescing, rewiring N rooms
+     * runs ~2N full scans of the Matrix room list (~O(N²) work and huge main-thread stalls).
      */
     private createJoinedRoomsReadable(predicate: (room: MatrixChatRoom) => boolean): Readable<MatrixChatRoom[]> {
         return readable<MatrixChatRoom[]>([], (set) => {
             let childUnsubs: Unsubscriber[] = [];
+            let recomputationQueued = false;
+
             const clearChildSubs = () => {
                 childUnsubs.forEach((u) => u());
                 childUnsubs = [];
             };
-            const listRooms = () => Array.from(get(this.roomList).values());
-            const bump = () => {
-                set(listRooms().filter(predicate));
+
+            const applyPredicateToRoomMap = (): MatrixChatRoom[] => {
+                const next: MatrixChatRoom[] = [];
+                for (const room of get(this.roomList).values()) {
+                    if (predicate(room)) {
+                        next.push(room);
+                    }
+                }
+                return next;
             };
+
+            const scheduleRecomputeJoinedRooms = (): void => {
+                if (recomputationQueued) {
+                    return;
+                }
+                recomputationQueued = true;
+                queueMicrotask(() => {
+                    recomputationQueued = false;
+                    set(applyPredicateToRoomMap());
+                });
+            };
+
             const rewireRoomSignals = () => {
                 clearChildSubs();
-                for (const room of listRooms()) {
-                    childUnsubs.push(room.myMembership.subscribe(bump));
-                    childUnsubs.push(room.type.subscribe(bump));
+                for (const room of get(this.roomList).values()) {
+                    childUnsubs.push(room.myMembership.subscribe(scheduleRecomputeJoinedRooms));
+                    childUnsubs.push(room.type.subscribe(scheduleRecomputeJoinedRooms));
                 }
-                bump();
+                scheduleRecomputeJoinedRooms();
             };
             const unsubList = this.roomList.subscribe(rewireRoomSignals);
             rewireRoomSignals();
@@ -295,8 +327,11 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
 
     private resetNbUnreadDirectRoomsMessagesAggregate(): void {
-        this.cancelNbUnreadDirectRoomsMessagesFlush();
-        this.aggregatedDirectUnreadTotal = 0;
+        if (this.dmUnreadFlushRaf !== undefined) {
+            cancelAnimationFrame(this.dmUnreadFlushRaf);
+            this.dmUnreadFlushRaf = undefined;
+        }
+        this.dmUnreadAgg = 0;
         for (const unsub of this.unreadDirectRoomUnsubs.values()) {
             unsub();
         }
@@ -305,34 +340,15 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.nbUnreadDirectRoomsMessagesStore.set(0);
     }
 
-    private cancelNbUnreadDirectRoomsMessagesFlush(): void {
-        if (this.directUnreadStoreFlushRafId === null) {
+    /** One store write per frame so Matrix bursts don’t chain many synchronous Svelte runs. */
+    private queueDmUnreadStoreFlush(): void {
+        if (this.dmUnreadFlushRaf !== undefined) {
             return;
         }
-        if (this.directUnreadStoreFlushRafId !== -1 && typeof globalThis.cancelAnimationFrame === "function") {
-            globalThis.cancelAnimationFrame(this.directUnreadStoreFlushRafId);
-        }
-        this.directUnreadStoreFlushRafId = null;
-    }
-
-    /**
-     * Pushes unread total changes to subscribers at most once per animation frame when available,
-     * so Matrix notification bursts don't synchronously cascade Svelte updates.
-     */
-    private scheduleNbUnreadDirectRoomsMessagesFlush(): void {
-        if (this.directUnreadStoreFlushRafId !== null) {
-            return;
-        }
-        const flush = (): void => {
-            this.directUnreadStoreFlushRafId = null;
-            this.nbUnreadDirectRoomsMessagesStore.set(this.aggregatedDirectUnreadTotal);
-        };
-        if (typeof globalThis.requestAnimationFrame === "function") {
-            this.directUnreadStoreFlushRafId = globalThis.requestAnimationFrame(flush);
-        } else {
-            this.directUnreadStoreFlushRafId = -1;
-            queueMicrotask(flush);
-        }
+        this.dmUnreadFlushRaf = requestAnimationFrame(() => {
+            this.dmUnreadFlushRaf = undefined;
+            this.nbUnreadDirectRoomsMessagesStore.set(this.dmUnreadAgg);
+        });
     }
 
     /**
@@ -347,18 +363,20 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
         const nextIds = new Set(directRooms.map((room) => room.id));
 
+        // To all unread direct rooms, unsubscribe from their unreadNotificationCount
         for (const [roomId, unsub] of [...this.unreadDirectRoomUnsubs.entries()]) {
             if (nextIds.has(roomId)) {
                 continue;
             }
             const last = this.unreadDirectRoomLastCount.get(roomId) ?? 0;
-            this.aggregatedDirectUnreadTotal -= last;
-            this.scheduleNbUnreadDirectRoomsMessagesFlush();
+            this.dmUnreadAgg -= last;
+            this.queueDmUnreadStoreFlush();
             this.unreadDirectRoomLastCount.delete(roomId);
             unsub();
             this.unreadDirectRoomUnsubs.delete(roomId);
         }
 
+        // To all direct rooms, subscribe to their unreadNotificationCount
         for (const room of directRooms) {
             const roomId = room.id;
             if (this.unreadDirectRoomUnsubs.has(roomId)) {
@@ -366,9 +384,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             }
             const unsub = room.unreadNotificationCount.subscribe((count) => {
                 const previous = this.unreadDirectRoomLastCount.get(roomId) ?? 0;
-                this.aggregatedDirectUnreadTotal += count - previous;
+                this.dmUnreadAgg += count - previous;
                 this.unreadDirectRoomLastCount.set(roomId, count);
-                this.scheduleNbUnreadDirectRoomsMessagesFlush();
+                this.queueDmUnreadStoreFlush();
             });
             this.unreadDirectRoomUnsubs.set(roomId, unsub);
         }
@@ -1115,12 +1133,48 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 this.scheduleRoomPlacementReconciliation(roomID);
             });
     }
+    private enqueueMatrixClientRoomManage(room: Room): void {
+        this.matrixClientRoomManageQueue.push(room);
+        this.pumpMatrixClientRoomManageQueue().catch((e) => {
+            console.error("Failed to pump matrix client room manage queue : ", e);
+        });
+    }
+
+    private async pumpMatrixClientRoomManageQueue(): Promise<void> {
+        if (this.matrixClientRoomManageQueuePumpBusy) {
+            return;
+        }
+        this.matrixClientRoomManageQueuePumpBusy = true;
+        try {
+            const promises: Promise<void>[] = [];
+            while (this.matrixClientRoomManageQueue.length > 0) {
+                const nextRoom = this.matrixClientRoomManageQueue.shift();
+                if (!nextRoom) {
+                    break;
+                }
+                try {
+                    requestAnimationFrame(() => {
+                        promises.push(this.manageRoomOrFolder(nextRoom));
+                    });
+                } catch (e) {
+                    console.error("Failed to manage : ", e);
+                }
+            }
+            await Promise.all(promises);
+        } finally {
+            this.matrixClientRoomManageQueuePumpBusy = false;
+            if (this.matrixClientRoomManageQueue.length > 0) {
+                this.pumpMatrixClientRoomManageQueue().catch((e) => {
+                    console.error("Failed to pump matrix client room manage queue : ", e);
+                });
+            }
+        }
+    }
+
     private onClientEventRoom(room: Room) {
         this.trackRawUnreadRoom(room);
         this.indexRoomPlacement(room);
-        this.manageRoomOrFolder(room).catch((e) => {
-            console.error("Failed to manage : ", e);
-        });
+        this.enqueueMatrixClientRoomManage(room);
     }
 
     private async moveRoomToParentFolder(room: Room, parentID: string): Promise<boolean> {
@@ -1957,6 +2011,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     };
 
     clearListener() {
+        this.matrixClientRoomManageQueue.length = 0;
         this.clearRoomPlacementRetries();
         this.rawUnreadRoomUnsubscribers.forEach((unsubscribe) => unsubscribe());
         this.rawUnreadRoomUnsubscribers.clear();
