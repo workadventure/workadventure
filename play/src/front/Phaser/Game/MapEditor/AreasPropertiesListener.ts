@@ -103,6 +103,7 @@ interface MegaphoneZoneState {
     propertyId: string;
     seeAttendees: boolean;
     chatEnabled: boolean;
+    allowTalking: boolean;
     waitingLink: string | undefined;
 }
 
@@ -1506,6 +1507,7 @@ export class AreasPropertiesListener {
                             propertyId: property.id,
                             seeAttendees: property.seeAttendees,
                             chatEnabled: property.chatEnabled,
+                            allowTalking: false,
                             waitingLink: undefined,
                         });
                         return;
@@ -1535,6 +1537,7 @@ export class AreasPropertiesListener {
                     propertyId: property.id,
                     seeAttendees: property.seeAttendees,
                     chatEnabled: property.chatEnabled,
+                    allowTalking: false,
                     waitingLink: undefined,
                 });
             } catch (e) {
@@ -1569,7 +1572,9 @@ export class AreasPropertiesListener {
                         Sentry.captureException(error);
                     }
                     isSpeakerStore.set(false);
-                    isListenerStore.set(true);
+                    if (!remainingListenerZone.allowTalking) {
+                        isListenerStore.set(true);
+                    }
                     listenerWaitingMediaStore.set(remainingListenerZone.waitingLink);
 
                     // Restore listener-specific state
@@ -1614,7 +1619,9 @@ export class AreasPropertiesListener {
                 const proximityRoom = this.scene.proximityChatRoom;
                 const currentSpaceName = proximityRoom.getCurrentSpaceName();
 
-                isListenerStore.set(true);
+                if (!property.allowTalking) {
+                    isListenerStore.set(true);
+                }
                 // If already in this space (as speaker or listener), just update tracking
                 if (currentSpaceName === uniqRoomName) {
                     // Check if we're already as speaker - speaker has priority, don't change role
@@ -1627,6 +1634,7 @@ export class AreasPropertiesListener {
                             propertyId: property.id,
                             seeAttendees,
                             chatEnabled: property.chatEnabled,
+                            allowTalking: property.allowTalking,
                             waitingLink: property.waitingLink,
                         });
                         return;
@@ -1639,6 +1647,7 @@ export class AreasPropertiesListener {
                         propertyId: property.id,
                         seeAttendees,
                         chatEnabled: property.chatEnabled,
+                        allowTalking: property.allowTalking,
                         waitingLink: property.waitingLink,
                     });
                     return;
@@ -1671,6 +1680,7 @@ export class AreasPropertiesListener {
                     propertyId: property.id,
                     seeAttendees,
                     chatEnabled: property.chatEnabled,
+                    allowTalking: property.allowTalking,
                     waitingLink: property.waitingLink,
                 });
             }
