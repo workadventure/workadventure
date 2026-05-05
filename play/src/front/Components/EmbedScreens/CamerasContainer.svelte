@@ -417,6 +417,8 @@
         ];
         setTimeout(updateScrollIndicators, 100);
     }
+
+    $: isActiveLocalUserName = $activePictureInPictureStore && containerWidth > 500 ? true : false;
 </script>
 
 <div
@@ -467,13 +469,11 @@
                     data-unique-id="my-camera"
                     style={`top: -50px; width: ${videoWidth / 3}px; max-width: ${videoWidth / 3}px;${
                         videoHeight ? `height: ${videoHeight / 3}px; max-height: ${videoHeight / 3}px;` : ""
-                    } ${
-                        $activePictureInPictureStore ? "min-width: 224px; min-height: 130px; margin-right: 0.5rem;" : ""
-                    }`}
+                    } ${$activePictureInPictureStore ? "min-width: 10%; min-height: 10%; margin-right: 0.5rem;" : ""}`}
                     class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
                     class:aspect-video={videoHeight === undefined}
                 >
-                    <MediaBox videoBox={$myCameraPeerStore} />
+                    <MediaBox videoBox={$myCameraPeerStore} activeUserName={isActiveLocalUserName} />
                 </div>
             </div>
         {/if}
