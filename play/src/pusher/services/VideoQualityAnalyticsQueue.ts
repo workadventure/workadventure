@@ -282,8 +282,43 @@ export class VideoQualityAnalyticsQueue {
             return undefined;
         }
 
+        const clientEventDate = new Date(sample.clientEventTimeMs);
+        if (isNaN(clientEventDate.getTime())) {
+            console.warn("Video quality analytics sample dropped", {
+                reason: "invalid clientEventTimeMs",
+                streamId: sample.streamId,
+                spaceName: sample.spaceName,
+                reporterUserUuid: socketData.userUuid,
+                clientEventTimeMs: sample.clientEventTimeMs,
+            });
+            return undefined;
+        }
+
+        if (
+            !Number.isFinite(sample.fps) ||
+            !Number.isFinite(sample.jitter) ||
+            !Number.isFinite(sample.bandwidthBytesPerSecond) ||
+            !Number.isFinite(sample.frameWidth) ||
+            !Number.isFinite(sample.frameHeight)
+        ) {
+            console.warn("Video quality analytics sample dropped", {
+                reason: "non-finite numeric field",
+                streamId: sample.streamId,
+                spaceName: sample.spaceName,
+                reporterUserUuid: socketData.userUuid,
+                fps: sample.fps,
+                jitter: sample.jitter,
+                bandwidthBytesPerSecond: sample.bandwidthBytesPerSecond,
+                frameWidth: sample.frameWidth,
+                frameHeight: sample.frameHeight,
+            });
+            return undefined;
+        }
+
+        const fpsStdDev = sample.fpsStdDev !== undefined && Number.isFinite(sample.fpsStdDev) ? sample.fpsStdDev : null;
+
         return {
-            clientEventTime: new Date(sample.clientEventTimeMs).toISOString(),
+            clientEventTime: clientEventDate.toISOString(),
             pusherReceivedAt,
             reporterUserUuid: socketData.userUuid,
             remoteUserUuid: sample.remoteUserUuid ?? null,
@@ -302,7 +337,7 @@ export class VideoQualityAnalyticsQueue {
             relayProtocol,
             livekitServerUrl: sample.livekitServerUrl ?? null,
             fps: sample.fps,
-            fpsStdDev: sample.fpsStdDev ?? null,
+            fpsStdDev,
             jitter: sample.jitter,
             bandwidthBytesPerSecond: sample.bandwidthBytesPerSecond,
             frameWidth: Math.round(sample.frameWidth),

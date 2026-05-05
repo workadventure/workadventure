@@ -155,6 +155,56 @@ describe("VideoQualityAnalyticsQueue", () => {
         consoleWarn.mockRestore();
     });
 
+    it("drops samples with invalid (NaN) clientEventTimeMs", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const queue = new VideoQualityAnalyticsQueue(baseConfig, post);
+        queue.setEnabled(true);
+
+        queue.enqueueReport({ samples: [sample({ clientEventTimeMs: NaN })] }, socketData());
+        await queue.flush();
+
+        expect(post).not.toHaveBeenCalled();
+        expect(queue.getStats()).toMatchObject({ droppedInvalid: 1, queueSize: 0 });
+
+        consoleWarn.mockRestore();
+    });
+
+    it.each([
+        ["fps", { fps: NaN }],
+        ["fps=Infinity", { fps: Infinity }],
+        ["jitter", { jitter: NaN }],
+        ["bandwidthBytesPerSecond", { bandwidthBytesPerSecond: Infinity }],
+        ["frameWidth", { frameWidth: NaN }],
+        ["frameHeight", { frameHeight: Infinity }],
+    ] as const)("drops samples with non-finite %s", async (_label, overrides) => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const queue = new VideoQualityAnalyticsQueue(baseConfig, post);
+        queue.setEnabled(true);
+
+        queue.enqueueReport({ samples: [sample(overrides as Partial<VideoQualitySampleMessage>)] }, socketData());
+        await queue.flush();
+
+        expect(post).not.toHaveBeenCalled();
+        expect(queue.getStats()).toMatchObject({ droppedInvalid: 1, queueSize: 0 });
+
+        consoleWarn.mockRestore();
+    });
+
+    it("silently nullifies a non-finite optional fpsStdDev", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new VideoQualityAnalyticsQueue(baseConfig, post);
+        queue.setEnabled(true);
+
+        queue.enqueueReport({ samples: [sample({ fpsStdDev: NaN })] }, socketData());
+        await queue.flush();
+
+        expect(queue.getStats()).toMatchObject({ droppedInvalid: 0, samplesSent: 1 });
+        const batch = post.mock.calls[0][1] as VideoQualityAnalyticsBatch;
+        expect(batch.samples[0].fpsStdDev).toBeNull();
+    });
+
     it("drops a failed batch after retry exhaustion", async () => {
         vi.useFakeTimers();
         const post = vi.fn().mockRejectedValue(new Error("admin unavailable"));
