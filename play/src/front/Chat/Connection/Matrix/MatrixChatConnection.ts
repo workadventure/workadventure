@@ -118,7 +118,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private readonly unreadDirectRoomLastCount = new Map<string, number>();
     /**
      * FIFO for heavy {@link manageRoomOrFolder} work from Matrix {@link ClientEvent.Room}.
-     * Yields {@link requestAnimationFrame} between rooms so Phaser/game can render during sync bursts.
+     * Yields with {@link queueMicrotask} between rooms so other work can run on the JS event loop.
      */
     private readonly matrixClientRoomManageQueue: Room[] = [];
     private matrixClientRoomManageQueuePumpBusy = false;
@@ -1135,40 +1135,50 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
     private enqueueMatrixClientRoomManage(room: Room): void {
         this.matrixClientRoomManageQueue.push(room);
-        this.pumpMatrixClientRoomManageQueue().catch((e) => {
-            console.error("Failed to pump matrix client room manage queue : ", e);
-        });
+        this.startMatrixClientRoomManageQueueDrainIfNeeded();
     }
 
-    private async pumpMatrixClientRoomManageQueue(): Promise<void> {
+    /** Starts a drained run; chained promises satisfy `no-await-in-loop`, `no-void`, and `no-floating-promises`. */
+    private startMatrixClientRoomManageQueueDrainIfNeeded(): void {
         if (this.matrixClientRoomManageQueuePumpBusy) {
             return;
         }
         this.matrixClientRoomManageQueuePumpBusy = true;
-        try {
-            const promises: Promise<void>[] = [];
-            while (this.matrixClientRoomManageQueue.length > 0) {
-                const nextRoom = this.matrixClientRoomManageQueue.shift();
-                if (!nextRoom) {
-                    break;
+        Promise.resolve(this.drainMatrixClientRoomManageQueueChain())
+            .catch((err: unknown) => {
+                console.error("Matrix room manage queue failed", err);
+            })
+            .finally(() => {
+                this.matrixClientRoomManageQueuePumpBusy = false;
+                if (this.matrixClientRoomManageQueue.length > 0) {
+                    this.startMatrixClientRoomManageQueueDrainIfNeeded();
                 }
-                try {
-                    requestAnimationFrame(() => {
-                        promises.push(this.manageRoomOrFolder(nextRoom));
-                    });
-                } catch (e) {
-                    console.error("Failed to manage : ", e);
-                }
-            }
-            await Promise.all(promises);
-        } finally {
-            this.matrixClientRoomManageQueuePumpBusy = false;
-            if (this.matrixClientRoomManageQueue.length > 0) {
-                this.pumpMatrixClientRoomManageQueue().catch((e) => {
-                    console.error("Failed to pump matrix client room manage queue : ", e);
-                });
-            }
+            });
+    }
+
+    private drainMatrixClientRoomManageQueueChain(): Promise<void> {
+        const nextRoom = this.matrixClientRoomManageQueue.shift();
+        if (!nextRoom) {
+            return Promise.resolve();
         }
+
+        return this.manageRoomOrFolder(nextRoom)
+            .catch((e: unknown) => {
+                console.error("Failed to manage : ", e);
+            })
+            .then(() => this.yieldMicrotaskThenContinueMatrixClientRoomManageChain());
+    }
+
+    private yieldMicrotaskThenContinueMatrixClientRoomManageChain(): Promise<void> {
+        if (this.matrixClientRoomManageQueue.length === 0) {
+            return Promise.resolve();
+        }
+
+        return new Promise<void>((resolve) => {
+            requestAnimationFrame(() => {
+                resolve();
+            });
+        }).then(() => this.drainMatrixClientRoomManageQueueChain());
     }
 
     private onClientEventRoom(room: Room) {
