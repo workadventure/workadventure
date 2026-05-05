@@ -270,7 +270,9 @@ export class VideoQualityAnalyticsQueue {
             return undefined;
         }
 
-        if (socketData.spaces.size > 0 && !socketData.spaces.has(sample.spaceName)) {
+        const fullSpaceName = `${socketData.world}.${sample.spaceName}`;
+
+        if (socketData.spaces.size > 0 && !socketData.spaces.has(fullSpaceName)) {
             console.warn("Video quality analytics sample dropped", {
                 reason: "socket is not joined to reported space",
                 streamId: sample.streamId,
@@ -287,7 +289,7 @@ export class VideoQualityAnalyticsQueue {
             console.warn("Video quality analytics sample dropped", {
                 reason: "invalid clientEventTimeMs",
                 streamId: sample.streamId,
-                spaceName: sample.spaceName,
+                spaceName: fullSpaceName,
                 reporterUserUuid: socketData.userUuid,
                 clientEventTimeMs: sample.clientEventTimeMs,
             });
@@ -304,7 +306,7 @@ export class VideoQualityAnalyticsQueue {
             console.warn("Video quality analytics sample dropped", {
                 reason: "non-finite numeric field",
                 streamId: sample.streamId,
-                spaceName: sample.spaceName,
+                spaceName: fullSpaceName,
                 reporterUserUuid: socketData.userUuid,
                 fps: sample.fps,
                 jitter: sample.jitter,
@@ -325,7 +327,7 @@ export class VideoQualityAnalyticsQueue {
             reporterUserId: socketData.userId ?? null,
             reporterSpaceUserId: socketData.spaceUserId,
             remoteSpaceUserId: sample.remoteSpaceUserId,
-            spaceName: sample.spaceName,
+            spaceName: fullSpaceName,
             world: socketData.world,
             roomId: socketData.roomId,
             tabId: socketData.tabId ?? null,
