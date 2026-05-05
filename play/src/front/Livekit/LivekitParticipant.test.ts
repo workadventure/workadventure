@@ -15,6 +15,8 @@ type MockRemoteTrackPublication = RemoteTrackPublication & {
 describe("LiveKitParticipant", () => {
     beforeEach(() => {
         vi.spyOn(console, "warn").mockImplementation(() => {});
+        // Provide an empty capabilities object so hasCapability() does not crash
+        window.capabilities = {} as typeof window.capabilities;
     });
 
     afterEach(() => {
