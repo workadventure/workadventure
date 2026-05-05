@@ -1,5 +1,5 @@
 import type { Readable, Unsubscriber, Writable } from "svelte/store";
-import { derived, get, readable, writable } from "svelte/store";
+import { derived, get, readable, readonly, writable } from "svelte/store";
 import type {
     EmittedEvents,
     ICreateRoomOpts,
@@ -91,6 +91,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private handleAccountDataEvent: (event: MatrixEvent) => void;
     private handleUserPresence: (event: MatrixEvent | undefined, user: User) => void;
     private handleVerificationRequestReceived: (request: VerificationRequest) => void;
+    private directRoomsUnreadAggregateUnsubscriber: Unsubscriber | undefined;
     private statusUnsubscriber: Unsubscriber | undefined;
     private wokaAvatarMatrixSyncUnsubscriber: Unsubscriber | undefined;
     private displayNameMatrixSyncUnsubscriber: (() => void) | undefined;
@@ -105,6 +106,13 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private readonly folderShellsByRoomId = new Map<string, MatrixRoomFolder>();
     private readonly rawUnreadRooms = writable<Map<string, RawUnreadRoom>>(new Map());
     private readonly rawUnreadRoomUnsubscribers = new Map<string, () => void>();
+    /** Aggregates DM unread totals in O(1) per notification instead of scanning all direct rooms. */
+    private readonly nbUnreadDirectRoomsMessagesStore = writable(0);
+    private aggregatedDirectUnreadTotal = 0;
+    /** null = none; -1 = queueMicrotask fallback scheduled (cannot cancel). */
+    private directUnreadStoreFlushRafId: number | null = null;
+    private readonly unreadDirectRoomUnsubs = new Map<string, Unsubscriber>();
+    private readonly unreadDirectRoomLastCount = new Map<string, number>();
     nbUnreadInvitationsMessages: Readable<number>;
     nbUnreadDirectRoomsMessages: Readable<number>;
     nbUnreadRoomsMessages: Readable<number>;
@@ -226,30 +234,10 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             )
         );
 
-        this.nbUnreadDirectRoomsMessages = derived(
-            this.directRooms,
-            (directRooms, set) => {
-                if (!this.client?.isInitialSyncComplete()) {
-                    return;
-                }
-                // Subscribe to all direct room unreadNotificationCount stores
-                const unsubscribes = directRooms.map((room) =>
-                    room.unreadNotificationCount.subscribe(() => {
-                        const total = directRooms.reduce(
-                            (acc: number, r: ChatRoom) => acc + get(r.unreadNotificationCount),
-                            0
-                        );
-                        set(total);
-                    })
-                );
-                // Initial calculation
-                const total = directRooms.reduce((acc: number, r: ChatRoom) => acc + get(r.unreadNotificationCount), 0);
-                set(total);
-                // Cleanup function
-                return () => unsubscribes.forEach((unsub) => unsub());
-            },
-            0
-        );
+        this.nbUnreadDirectRoomsMessages = readonly(this.nbUnreadDirectRoomsMessagesStore);
+        this.directRoomsUnreadAggregateUnsubscriber = this.directRooms.subscribe((directRoomsList) => {
+            this.syncNbUnreadDirectRoomsMessagesAggregate(directRoomsList);
+        });
 
         this.nbUnreadRoomsMessages = derived(this.rawUnreadRooms, (rawUnreadRooms) =>
             Array.from(rawUnreadRooms.values()).reduce((total, room) => {
@@ -304,6 +292,86 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 clearChildSubs();
             };
         });
+    }
+
+    private resetNbUnreadDirectRoomsMessagesAggregate(): void {
+        this.cancelNbUnreadDirectRoomsMessagesFlush();
+        this.aggregatedDirectUnreadTotal = 0;
+        for (const unsub of this.unreadDirectRoomUnsubs.values()) {
+            unsub();
+        }
+        this.unreadDirectRoomUnsubs.clear();
+        this.unreadDirectRoomLastCount.clear();
+        this.nbUnreadDirectRoomsMessagesStore.set(0);
+    }
+
+    private cancelNbUnreadDirectRoomsMessagesFlush(): void {
+        if (this.directUnreadStoreFlushRafId === null) {
+            return;
+        }
+        if (this.directUnreadStoreFlushRafId !== -1 && typeof globalThis.cancelAnimationFrame === "function") {
+            globalThis.cancelAnimationFrame(this.directUnreadStoreFlushRafId);
+        }
+        this.directUnreadStoreFlushRafId = null;
+    }
+
+    /**
+     * Pushes unread total changes to subscribers at most once per animation frame when available,
+     * so Matrix notification bursts don't synchronously cascade Svelte updates.
+     */
+    private scheduleNbUnreadDirectRoomsMessagesFlush(): void {
+        if (this.directUnreadStoreFlushRafId !== null) {
+            return;
+        }
+        const flush = (): void => {
+            this.directUnreadStoreFlushRafId = null;
+            this.nbUnreadDirectRoomsMessagesStore.set(this.aggregatedDirectUnreadTotal);
+        };
+        if (typeof globalThis.requestAnimationFrame === "function") {
+            this.directUnreadStoreFlushRafId = globalThis.requestAnimationFrame(flush);
+        } else {
+            this.directUnreadStoreFlushRafId = -1;
+            queueMicrotask(flush);
+        }
+    }
+
+    /**
+     * Maintains {@link nbUnreadDirectRoomsMessages} by applying deltas when a single room's count changes,
+     * instead of re-summing every direct room on every update (quadratic with many DMs).
+     */
+    private syncNbUnreadDirectRoomsMessagesAggregate(directRooms: MatrixChatRoom[]): void {
+        if (!this.client?.isInitialSyncComplete()) {
+            this.resetNbUnreadDirectRoomsMessagesAggregate();
+            return;
+        }
+
+        const nextIds = new Set(directRooms.map((room) => room.id));
+
+        for (const [roomId, unsub] of [...this.unreadDirectRoomUnsubs.entries()]) {
+            if (nextIds.has(roomId)) {
+                continue;
+            }
+            const last = this.unreadDirectRoomLastCount.get(roomId) ?? 0;
+            this.aggregatedDirectUnreadTotal -= last;
+            this.scheduleNbUnreadDirectRoomsMessagesFlush();
+            this.unreadDirectRoomLastCount.delete(roomId);
+            unsub();
+            this.unreadDirectRoomUnsubs.delete(roomId);
+        }
+
+        for (const room of directRooms) {
+            const roomId = room.id;
+            if (this.unreadDirectRoomUnsubs.has(roomId)) {
+                continue;
+            }
+            const unsub = room.unreadNotificationCount.subscribe((count) => {
+                const previous = this.unreadDirectRoomLastCount.get(roomId) ?? 0;
+                this.aggregatedDirectUnreadTotal += count - previous;
+                this.unreadDirectRoomLastCount.set(roomId, count);
+                this.scheduleNbUnreadDirectRoomsMessagesFlush();
+            });
+            this.unreadDirectRoomUnsubs.set(roomId, unsub);
+        }
     }
 
     private trackRawUnreadRoom(room: Room): void {
@@ -1906,6 +1974,11 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.client?.off(RoomEvent.Name, this.handleName);
         this.client?.off(UserEvent.Presence, this.handleUserPresence);
         this.client?.off(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
+        if (this.directRoomsUnreadAggregateUnsubscriber) {
+            this.directRoomsUnreadAggregateUnsubscriber();
+            this.directRoomsUnreadAggregateUnsubscriber = undefined;
+        }
+        this.resetNbUnreadDirectRoomsMessagesAggregate();
         if (this.statusUnsubscriber) this.statusUnsubscriber();
         if (this.wokaAvatarMatrixSyncUnsubscriber) {
             this.wokaAvatarMatrixSyncUnsubscriber();
