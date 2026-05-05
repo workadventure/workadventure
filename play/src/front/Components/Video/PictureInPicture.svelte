@@ -19,8 +19,7 @@
     let parentDivElement: HTMLDivElement;
     let pipWindow: Window | undefined;
     let mapImage: string | undefined = undefined;
-
-    /* eslint-disable svelte/no-dom-manipulating */
+    let pipRequested = false;
 
     const DocumentPictureInPictureSchema = z.object({
         requestWindow: z
@@ -62,11 +61,6 @@
     }
 
     function destroyPictureInPictureComponent() {
-        if (!parentDivElement) {
-            return;
-        }
-        parentDivElement.append(divElement);
-
         if (pipWindow) pipWindow.removeEventListener("pagehide", destroyPictureInPictureComponent);
         if (pipWindow) pipWindow.close();
         pipWindow = undefined;
@@ -80,8 +74,6 @@
             destroyPictureInPictureComponent();
         }
     });
-
-    let pipRequested = false;
 
     function requestPictureInPicture() {
         debug("Request Picture in Picture mode");
