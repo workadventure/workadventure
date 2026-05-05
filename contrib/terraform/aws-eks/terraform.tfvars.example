@@ -1,0 +1,24 @@
+# Copie ce fichier en terraform.tfvars (non versionné) et adapte les valeurs.
+
+aws_region  = "eu-west-3"
+project_name = "workadventure"
+
+# cluster_name = "mon-cluster-eks"
+# cluster_version = "1.31"
+
+# vpc_cidr = "10.0.0.0/16"
+# single_nat_gateway = false
+
+# Restreindre l'accès API public au lieu de 0.0.0.0/0
+# eks_public_access_cidrs = ["203.0.113.10/32"]
+
+# node_instance_types = ["m6i.xlarge"]
+# node_desired_size   = 3
+# node_min_size       = 2
+# node_max_size       = 10
+
+# enable_ingress_nginx = true
+# enable_cert_manager  = true
+# enable_metrics_server = true
+
+# tags = { Owner = "equipe-platform" }
