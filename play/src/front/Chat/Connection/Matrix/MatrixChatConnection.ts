@@ -229,6 +229,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.nbUnreadDirectRoomsMessages = derived(
             this.directRooms,
             (directRooms, set) => {
+                if (!this.client?.isInitialSyncComplete()) {
+                    return;
+                }
                 // Subscribe to all direct room unreadNotificationCount stores
                 const unsubscribes = directRooms.map((room) =>
                     room.unreadNotificationCount.subscribe(() => {
