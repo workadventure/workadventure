@@ -291,7 +291,13 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             const applyPredicateToRoomMap = (): MatrixChatRoom[] => {
                 const next: MatrixChatRoom[] = [];
                 for (const room of get(this.roomList).values()) {
-                    if (predicate(room)) {
+                    let matches = false;
+                    try {
+                        matches = predicate(room);
+                    } catch {
+                        matches = false;
+                    }
+                    if (matches) {
                         next.push(room);
                     }
                 }
@@ -312,6 +318,12 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             const rewireRoomSignals = () => {
                 clearChildSubs();
                 for (const room of get(this.roomList).values()) {
+                    if (
+                        typeof room.myMembership?.subscribe !== "function" ||
+                        typeof room.type?.subscribe !== "function"
+                    ) {
+                        continue;
+                    }
                     childUnsubs.push(room.myMembership.subscribe(scheduleRecomputeJoinedRooms));
                     childUnsubs.push(room.type.subscribe(scheduleRecomputeJoinedRooms));
                 }
@@ -356,7 +368,8 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
      * instead of re-summing every direct room on every update (quadratic with many DMs).
      */
     private syncNbUnreadDirectRoomsMessagesAggregate(directRooms: MatrixChatRoom[]): void {
-        if (!this.client?.isInitialSyncComplete()) {
+        const client = this.client;
+        if (!client || typeof client.isInitialSyncComplete !== "function" || !client.isInitialSyncComplete()) {
             this.resetNbUnreadDirectRoomsMessagesAggregate();
             return;
         }
