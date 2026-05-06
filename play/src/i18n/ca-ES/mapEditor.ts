@@ -329,6 +329,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Opcions avançades",
         chatEnabled: "Associar un canal de xat dedicat",
+        allowTalking: "Permetre parlar i formar bombolles",
         noProperties: "No s'han definit propietats",
     },
     areaEditor: {

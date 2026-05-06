@@ -139,6 +139,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             actionButtonLabel: "الانضمام إلى الجمهور",
         },
         chatEnabled: "ربط قناة دردشة مخصصة",
+        allowTalking: "السماح بالتحدث وتشكيل الفقاعات",
         seeAttendees: "عرض الحضور",
         start: {
             label: "منطقة البداية",

@@ -322,6 +322,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "高级选项",
         chatEnabled: "关联专用聊天频道",
+        allowTalking: "允许交谈和形成气泡",
         noProperties: "未定义属性",
     },
     areaEditor: {
