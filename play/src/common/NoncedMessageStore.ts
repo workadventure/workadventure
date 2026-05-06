@@ -43,7 +43,11 @@ export class NoncedMessageStore<TPayload> {
 
     public hasEveryNonceAfter(lastReceivedNonce: number): boolean {
         this.pruneExpired();
-        return this.has(lastReceivedNonce + 1);
+        const firstMessage = this.messages[0];
+        if (!firstMessage) {
+            return true;
+        }
+        return firstMessage.nonce <= lastReceivedNonce + 1;
     }
 
     public clear(): void {

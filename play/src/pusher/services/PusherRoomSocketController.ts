@@ -187,8 +187,9 @@ export class PusherRoomSocketController {
 
                         if (replaced) {
                             this.wrappersBySocket.set(rawSocket, context.socket);
-                            return;
                         }
+
+                        return;
                     }
 
                     const socket = this.getOrCreateWrapper(rawSocket);

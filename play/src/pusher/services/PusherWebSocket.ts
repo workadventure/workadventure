@@ -121,6 +121,23 @@ export class PusherWebSocket {
         const previousSocketData = previousSocket.getUserData();
         const newSocketData = newSocket.getUserData();
 
+        if (previousSocketData.userUuid !== newSocketData.userUuid) {
+            console.warn(
+                `Cannot replace WebSocket transport: user UUID mismatch (previous=${previousSocketData.userUuid}, new=${newSocketData.userUuid})`
+            );
+            Sentry.captureMessage(
+                `Cannot replace WebSocket transport: user UUID mismatch (previous=${previousSocketData.userUuid}, new=${newSocketData.userUuid})`,
+                {
+                    tags: {
+                        previousUserUuid: previousSocketData.userUuid,
+                        newUserUuid: newSocketData.userUuid,
+                    },
+                }
+            );
+            newSocket.end(1008, "Cannot replace socket: user UUID mismatch");
+            return false;
+        }
+
         // Keep logical connection state (room/back stream/subscriptions) while swapping only the transport.
         Object.assign(newSocketData, previousSocketData, {
             disconnecting: false,
