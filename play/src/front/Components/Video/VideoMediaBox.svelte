@@ -30,6 +30,8 @@
     export let fullScreen = false;
     export let videoBox: VideoBox; // If true, and if there is no video, the height of the video box will be 11rem
     export let miniMode = false;
+    export let activeUserName = true;
+
     $: streamableStore = videoBox.streamable;
     $: streamablesStore = videoBox.streamables;
     $: effectiveStatusStore = videoBox.statusStore;
@@ -307,7 +309,7 @@
                             }, 200);
                         }}
                     >
-                        {#if !streamableEntry.isPending}
+                        {#if !streamableEntry.isPending && activeUserName}
                             <UserName
                                 name={name ?? "unknown"}
                                 picture={pictureStore}

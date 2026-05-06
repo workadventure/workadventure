@@ -25,6 +25,7 @@ import type { StreamStoppedMessage } from "./P2PMessages/P2PMessage";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
 import type { BlockMessage } from "./P2PMessages/BlockMessage";
 import type { UnblockMessage } from "./P2PMessages/UnblockMessage";
+import { subscribeToVideoQualityAnalytics } from "./VideoQualityAnalytics";
 import { createWebRtcStats } from "./WebRtcStatsFactory";
 import { selectVideoPreset, type VideoQualitySetting } from "./VideoPresets";
 
@@ -69,6 +70,8 @@ export class RemotePeer extends Peer implements Streamable {
     public readonly volume: Writable<number>;
     public readonly videoType: StreamCategory;
     public readonly webrtcStats: Readable<WebRtcStats | undefined>;
+    private analyticsStatsUnsubscribe: Unsubscriber | undefined;
+    private analyticsRemoteStreamUnsubscribe: (() => void) | undefined;
     private receiverMaxBitrateBps: number | undefined;
     /**
      * Set to true when closeStreamable() is called.
@@ -555,15 +558,76 @@ export class RemotePeer extends Peer implements Streamable {
             if (this.blocked) {
                 this.toggleRemoteStream(false);
             }
+            if (stream) {
+                this.bindAnalyticsToRemoteStream(stream);
+            }
         } catch (err) {
             console.error(err);
         }
 
         if (!stream) {
             this.isReceivingStream = false;
+            this.unbindAnalyticsFromRemoteStream();
         } else {
             this.isReceivingStream = true;
         }
+    }
+
+    private bindAnalyticsToRemoteStream(stream: MediaStream): void {
+        this.unbindAnalyticsFromRemoteStream();
+
+        const updateAnalyticsStatsSubscription = () => {
+            const hasVideoTrack = stream.getVideoTracks().length > 0;
+
+            if (hasVideoTrack && !this.analyticsStatsUnsubscribe) {
+                this.analyticsStatsUnsubscribe = subscribeToVideoQualityAnalytics(
+                    this.webrtcStats,
+                    {
+                        streamId: `${this._connectionId}:${this._spaceUserId}:${this.type}`,
+                        streamCategory: this.type,
+                        transportType: "P2P",
+                        remoteSpaceUserId: this._spaceUserId,
+                        remoteUserUuid: this.space.getSpaceUserBySpaceUserId(this._spaceUserId)?.uuid,
+                        spaceName: this.space.getName(),
+                        connectionId: this._connectionId,
+                    },
+                    (message) => this.space.emitVideoQualityReport(message)
+                );
+            } else if (!hasVideoTrack && this.analyticsStatsUnsubscribe) {
+                this.analyticsStatsUnsubscribe();
+                this.analyticsStatsUnsubscribe = undefined;
+            }
+        };
+
+        const handleTrackAdded = (event: MediaStreamTrackEvent) => {
+            if (event.track.kind === "video") {
+                updateAnalyticsStatsSubscription();
+            }
+        };
+
+        const handleTrackRemoved = (event: MediaStreamTrackEvent) => {
+            if (event.track.kind === "video") {
+                updateAnalyticsStatsSubscription();
+            }
+        };
+
+        stream.addEventListener("addtrack", handleTrackAdded);
+        stream.addEventListener("removetrack", handleTrackRemoved);
+        updateAnalyticsStatsSubscription();
+
+        this.analyticsRemoteStreamUnsubscribe = () => {
+            stream.removeEventListener("addtrack", handleTrackAdded);
+            stream.removeEventListener("removetrack", handleTrackRemoved);
+            if (this.analyticsStatsUnsubscribe) {
+                this.analyticsStatsUnsubscribe();
+                this.analyticsStatsUnsubscribe = undefined;
+            }
+        };
+    }
+
+    private unbindAnalyticsFromRemoteStream(): void {
+        this.analyticsRemoteStreamUnsubscribe?.();
+        this.analyticsRemoteStreamUnsubscribe = undefined;
     }
 
     /**
@@ -603,6 +667,7 @@ export class RemotePeer extends Peer implements Streamable {
             decrementWebRtcConnectionsCount();
 
             this.localStreamStoreSubscribe();
+            this.unbindAnalyticsFromRemoteStream();
 
             super.destroy(error);
 

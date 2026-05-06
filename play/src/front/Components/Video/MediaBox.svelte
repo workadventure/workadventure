@@ -9,6 +9,7 @@
 
     export let videoBox: VideoBox;
     export let fullScreen: boolean = false;
+    export let activeUserName: boolean = true;
 
     // This context is used to know if the VideoMediaBox is part of the highlight fullscreen participant list.
     export let inHighlightFullscreenParticipantList: boolean = false;
@@ -29,5 +30,5 @@
 
 <div class="video-media-box pointer-events-auto media-container justify-center relative h-full w-full">
     <!-- in:fly={{ y: 50, duration: 150 }} -->
-    <VideoMediaBox {videoBox} {fullScreen} />
+    <VideoMediaBox {videoBox} {fullScreen} {activeUserName} />
 </div>

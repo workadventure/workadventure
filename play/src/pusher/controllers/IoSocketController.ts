@@ -21,6 +21,7 @@ import { adminService } from "../services/AdminService";
 import type { ConnectingSocketData, SpaceName } from "../models/Websocket/SocketData";
 import { ClientAbortError } from "../models/ClientAbortError";
 import { ClientNotPartOfSpaceError, UserAlreadyAddedInSpaceError } from "../models/SpaceValidationErrors";
+import { videoQualityAnalyticsQueue } from "../services/VideoQualityAnalyticsQueue";
 import { PusherRoomSocketController } from "../services/PusherRoomSocketController";
 
 const debug = Debug("pusher:requests");
@@ -1040,6 +1041,17 @@ export class IoSocketController {
                                 }`;
 
                                 await socketManager.handleBackEvent(socket, message.message.backEvent);
+                                break;
+                            }
+                            case "videoQualityReportMessage": {
+                                debug(
+                                    "Received video quality report with %d samples",
+                                    message.message.videoQualityReportMessage.samples.length
+                                );
+                                videoQualityAnalyticsQueue.enqueueReport(
+                                    message.message.videoQualityReportMessage,
+                                    socket.getUserData()
+                                );
                                 break;
                             }
                             default: {

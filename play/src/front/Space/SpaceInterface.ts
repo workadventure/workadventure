@@ -7,6 +7,7 @@ import type {
     SpaceEvent,
     SpaceUser,
     UpdateSpaceMetadataMessage,
+    VideoQualityReportMessage,
 } from "@workadventure/messages";
 import type { MapStore } from "@workadventure/store-utils";
 import type { Readable } from "svelte/store";
@@ -59,6 +60,7 @@ export interface SpaceInterface {
         receiverUserId: SpaceUser["spaceUserId"]
     ): void;
     emitBackEvent(message: NonNullable<BackEventMessage["backEvent"]>): void;
+    emitVideoQualityReport(message: VideoQualityReportMessage): void;
     emitUpdateUser(spaceUser: SpaceUserUpdate): void;
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     startRecording(): Promise<void>;

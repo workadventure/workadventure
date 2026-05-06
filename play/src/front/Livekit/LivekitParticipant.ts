@@ -8,9 +8,9 @@ import type {
 } from "livekit-client";
 import * as Sentry from "@sentry/svelte";
 import { Track, ParticipantEvent, VideoQuality } from "livekit-client";
-import type { Readable, Writable } from "svelte/store";
+import type { Readable, Unsubscriber, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
-import type { SpaceUserExtended } from "../Space/SpaceInterface";
+import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
 import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
@@ -18,6 +18,7 @@ import type { WebRtcStats } from "../Components/Video/WebRtcStats";
 import { videoQualityStore } from "../Stores/MediaStore";
 import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 
+import { subscribeToVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
 import type { LivekitStreamable, Streamable } from "../Space/Streamable";
 
@@ -58,6 +59,9 @@ export class LiveKitParticipant {
     private _screenShareVideoSubscribed = false;
     private _cameraUnsubscribeTimeout: ReturnType<typeof setTimeout> | undefined;
     private _screenShareUnsubscribeTimeout: ReturnType<typeof setTimeout> | undefined;
+    private readonly videoWebrtcStats: Readable<WebRtcStats | undefined>;
+    private readonly screenShareWebrtcStats: Readable<WebRtcStats | undefined>;
+    private readonly analyticsStatsUnsubscribers: Unsubscriber[] = [];
 
     private _cameraPublication: RemoteTrackPublication | undefined;
     private _microphonePublication: RemoteTrackPublication | undefined;
@@ -76,6 +80,8 @@ export class LiveKitParticipant {
     constructor(
         public participant: RemoteParticipant,
         private spaceUser: SpaceUserExtended,
+        private space: SpaceInterface,
+        private livekitServerUrl: string,
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
         private abortSignal: AbortSignal,
@@ -104,6 +110,8 @@ export class LiveKitParticipant {
         this._isSpeakingStore = writable(this.participant.isSpeaking);
         this._connectionQualityStore = writable(this.participant.connectionQuality);
         this._nameStore = writable(this.participant.name);
+        this.videoWebrtcStats = this.getWebrtcStats("video");
+        this.screenShareWebrtcStats = this.getWebrtcStats("screenShare");
 
         for (const publication of this.participant.getTrackPublications()) {
             if (publication.isLocal) {
@@ -120,6 +128,10 @@ export class LiveKitParticipant {
         }
 
         this.updateLivekitVideoStreamStore();
+        this.analyticsStatsUnsubscribers.push(this.subscribeToAnalyticsStats("video", this.videoWebrtcStats));
+        this.analyticsStatsUnsubscribers.push(
+            this.subscribeToAnalyticsStats("screenShare", this.screenShareWebrtcStats)
+        );
     }
 
     private acquireVideoSubscription(type: "camera" | "screenShare"): () => void {
@@ -467,7 +479,7 @@ export class LiveKitParticipant {
             closeStreamable: () => {},
             canCloseStreamable: () => false,
             videoType: "video",
-            webrtcStats: this.getWebrtcStats("video"),
+            webrtcStats: this.videoWebrtcStats,
         };
     }
 
@@ -501,7 +513,7 @@ export class LiveKitParticipant {
             closeStreamable: () => {},
             canCloseStreamable: () => false,
             videoType: "screenSharing",
-            webrtcStats: this.getWebrtcStats("screenShare"),
+            webrtcStats: this.screenShareWebrtcStats,
         };
     }
 
@@ -521,6 +533,25 @@ export class LiveKitParticipant {
         });
     }
 
+    private subscribeToAnalyticsStats(
+        type: "video" | "screenShare",
+        statsStore: Readable<WebRtcStats | undefined>
+    ): Unsubscriber {
+        return subscribeToVideoQualityAnalytics(
+            statsStore,
+            {
+                streamId: `${this.participant.sid}:${type}`,
+                streamCategory: type === "video" ? "video" : "screenSharing",
+                transportType: "Livekit",
+                remoteSpaceUserId: this._spaceUser.spaceUserId,
+                remoteUserUuid: this._spaceUser.uuid,
+                spaceName: this.space.getName(),
+                livekitServerUrl: this.livekitServerUrl,
+            },
+            (message) => this.space.emitVideoQualityReport(message)
+        );
+    }
+
     public setActiveSpeaker(isActiveSpeaker: boolean) {
         this._isActiveSpeaker.set(isActiveSpeaker);
     }
@@ -535,6 +566,8 @@ export class LiveKitParticipant {
 
     public destroy() {
         decrementLivekitConnectionsCount();
+        this.analyticsStatsUnsubscribers.forEach((unsubscribe) => unsubscribe());
+        this.analyticsStatsUnsubscribers.length = 0;
 
         if (this._actualVideo) {
             this._streamableSubjects.videoPeerRemoved.next(this._actualVideo);

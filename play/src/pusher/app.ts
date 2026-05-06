@@ -20,10 +20,12 @@ import {
     ENABLE_OPENAPI_ENDPOINT,
     PROMETHEUS_PORT,
     GRPC_MAX_MESSAGE_SIZE,
+    FRONT_ENVIRONMENT_VARIABLES,
 } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
 import { CompanionListController } from "./controllers/CompanionListController";
 import { FrontController } from "./controllers/FrontController";
+import { PipLayoutTestDevController } from "./controllers/PipLayoutTestDevController";
 import { globalErrorHandler } from "./services/GlobalErrorHandler";
 import { jwtTokenManager } from "./services/JWTTokenManager";
 import { CompanionService } from "./services/CompanionService";
@@ -32,6 +34,9 @@ import { UserController } from "./controllers/UserController";
 import { MatrixRoomAreaController } from "./controllers/MatrixRoomAreaController";
 import { LocalScriptController } from "./controllers/LocalScriptController";
 import { LivekitWebhookController } from "./controllers/LivekitWebhookController";
+import { videoQualityAnalyticsQueue } from "./services/VideoQualityAnalyticsQueue";
+
+const VIDEO_QUALITY_ANALYTICS_CAPABILITY = "api/analytics/video-quality-batch";
 
 class App {
     private readonly app: Application;
@@ -107,6 +112,9 @@ class App {
             new SwaggerController(this.app);
         }
         new FrontController(this.app);
+        if (FRONT_ENVIRONMENT_VARIABLES.DEBUG_MODE === true) {
+            new PipLayoutTestDevController(this.app);
+        }
         new UserController(this.app);
         new MatrixRoomAreaController(this.app);
 
@@ -190,6 +198,7 @@ class App {
             const capabilities = await adminApi.initialise();
             companionListController.setCompanionService(CompanionService.get(capabilities));
             wokaListController.setWokaService(WokaService.get(capabilities));
+            videoQualityAnalyticsQueue.setEnabled(capabilities[VIDEO_QUALITY_ANALYTICS_CAPABILITY] === "v1");
         } catch (error) {
             console.error("Failed to initialize: problem getting AdminAPI capabilities", error);
             Sentry.captureException(`Failed to initialized companion and woka services : ${error}`);
