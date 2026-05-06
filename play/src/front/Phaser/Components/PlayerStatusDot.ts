@@ -71,4 +71,8 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
     get availabilityStatus(): AvailabilityStatus {
         return this._availabilityStatus;
     }
+
+    public getDefaultDisplayWidth(): number {
+        return this.statusImageOutline.displayWidth * STATUS_DOT_DISPLAY_SCALE;
+    }
 }

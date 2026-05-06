@@ -11,8 +11,20 @@ const CORRECTION_RATE = 0.75;
 /** Design system `brand-blue` — fond du pseudo (tous les joueurs), léger alpha pour laisser voir le décor. */
 const PLAYER_NAME_BACKGROUND_COLOR = "rgba(27, 42, 65, 0.5)";
 const PLAYER_NAME_BACKGROUND_RADIUS = 8;
-const PLAYER_NAME_TEXT_OFFSET_X = 6;
+const PLAYER_NAME_HEIGHT = 16;
+const PLAYER_NAME_PADDING = 6;
+const PLAYER_NAME_GAP = 4;
 type Position = { x: number; y: number };
+type PlayerNameLayout = {
+    textureWidth: number;
+    textureHeight: number;
+    textureLeft: number;
+    spriteX: number;
+    textTextureX: number;
+    textLocalX: number;
+    statusDotX: number;
+    megaphoneX: number;
+};
 
 export class UsernameDisplay extends Phaser.GameObjects.Container {
     private static nextPlayerNameTextureId = 0;
@@ -23,6 +35,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     private readonly playerNameFontSize: number;
     private playerNameTextureKey: string;
     private playerNameOutlineColor: number | undefined;
+    private megaphoneShown = false;
     private renderingAsDOM = false;
     private readonly renderingModeSubscription: Subscription;
     private displayScale: number;
@@ -48,13 +61,13 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         // Use larger font size for non-Latin characters (Arabic, CJK, etc.) for better readability
         this.playerNameFontSize = StringUtils.containsNonLatinCharacters(playerName) ? 11 : 8;
         this.playerNameOutlineColor = outlineColor;
+        this.statusDot = new PlayerStatusDot(scene, 0, -1);
+        this.megaphoneIcon = new MegaphoneIcon(scene, 0, -1);
         this.playerNameTextureKey = this.createPlayerNameTexture(outlineColor, this.renderingAsDOM);
 
         this.playerNameSprite = new Phaser.GameObjects.Sprite(scene, 0, 0, this.playerNameTextureKey)
             .setOrigin(0.5, 1)
             .setDepth(DEPTH_INGAME_TEXT_INDEX);
-        this.statusDot = new PlayerStatusDot(scene, 0, -1);
-        this.megaphoneIcon = new MegaphoneIcon(scene, 0, -1);
 
         this.megaphoneIcon.visible = false;
 
@@ -74,37 +87,71 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     }
 
     private reflow(): void {
-        const halfPlayerNameHeight = -this.playerNameSprite.displayHeight / 2;
-        const halfPlayerNameWidth = this.playerNameSprite.displayWidth / 2;
-        this.statusDot.setPosition(-halfPlayerNameWidth + 10, halfPlayerNameHeight);
-        this.megaphoneIcon.setPosition(halfPlayerNameWidth + 2, halfPlayerNameHeight);
+        const layout = this.getPlayerNameLayout();
+        const halfPlayerNameHeight = -layout.textureHeight / 2;
+        this.playerNameSprite.setX(layout.spriteX);
+        this.statusDot.setPosition(layout.statusDotX, halfPlayerNameHeight);
+        this.megaphoneIcon.setPosition(layout.megaphoneX, halfPlayerNameHeight);
     }
 
-    private createPlayerNameTexture(outlineColor: number | undefined, renderingAsDOM: boolean): string {
-        const textureKey = `player-name-${UsernameDisplay.nextPlayerNameTextureId++}`;
-        const dynamicOutlineColor =
-            outlineColor === undefined ? undefined : `#${outlineColor.toString(16).padStart(6, "0")}`;
-        const strokeThickness = 1;
-        const outlineThickness = 1;
+    private getPlayerNameLayout(): PlayerNameLayout {
+        const textWidth = this.measurePlayerNameWidth();
+        const statusWidth = this.statusDot.getDefaultDisplayWidth();
+        const megaphoneWidth = this.megaphoneIcon.getDefaultDisplayWidth();
 
+        const baseContentWidth = statusWidth + PLAYER_NAME_GAP + textWidth;
+        const baseWidth = PLAYER_NAME_PADDING * 2 + baseContentWidth;
+        const textureLeft = -baseWidth / 2;
+        let cursor = textureLeft + PLAYER_NAME_PADDING;
+        const statusDotX = cursor + statusWidth / 2;
+
+        cursor += statusWidth + PLAYER_NAME_GAP;
+        const textLocalX = cursor + textWidth / 2;
+
+        cursor += textWidth;
+        const megaphoneX = cursor + PLAYER_NAME_GAP + megaphoneWidth / 2;
+        if (this.megaphoneShown) {
+            cursor += PLAYER_NAME_GAP + megaphoneWidth;
+        }
+
+        const textureRight = cursor + PLAYER_NAME_PADDING;
+        const textureWidth = Math.max(1, Math.ceil(textureRight - textureLeft));
+
+        return {
+            textureWidth,
+            textureHeight: PLAYER_NAME_HEIGHT,
+            textureLeft,
+            spriteX: textureLeft + textureWidth / 2,
+            textTextureX: textLocalX - textureLeft,
+            textLocalX,
+            statusDotX,
+            megaphoneX,
+        };
+    }
+
+    private measurePlayerNameWidth(): number {
         const measurementCanvas = document.createElement("canvas");
         const measurementContext = measurementCanvas.getContext("2d");
         if (!measurementContext) {
             throw new Error("Could not create canvas context for player name texture");
         }
         measurementContext.font = `${this.playerNameFontSize}px "Press Start 2P"`;
-        const measuredWidth = measurementContext.measureText(this.playerName).width;
-        const fullOutlineThickness = strokeThickness + outlineThickness * 2;
-        const textureWidth = Math.max(1, Math.ceil(measuredWidth + fullOutlineThickness * 8));
-        const textureHeight = Math.max(1, Math.ceil(this.playerNameFontSize + fullOutlineThickness * 2));
+        return measurementContext.measureText(this.playerName).width;
+    }
 
-        const texture = this.scene.textures.createCanvas(textureKey, textureWidth, textureHeight);
+    private createPlayerNameTexture(outlineColor: number | undefined, renderingAsDOM: boolean): string {
+        const textureKey = `player-name-${UsernameDisplay.nextPlayerNameTextureId++}`;
+        const dynamicOutlineColor =
+            outlineColor === undefined ? undefined : `#${outlineColor.toString(16).padStart(6, "0")}`;
+        const layout = this.getPlayerNameLayout();
+
+        const texture = this.scene.textures.createCanvas(textureKey, layout.textureWidth, layout.textureHeight);
         if (!texture) {
             throw new Error("Could not create texture for player name");
         }
 
         const context = texture.getContext();
-        context.clearRect(0, 0, textureWidth, textureHeight);
+        context.clearRect(0, 0, layout.textureWidth, layout.textureHeight);
         context.font = `${this.playerNameFontSize}px "Press Start 2P"`;
         context.textAlign = "center";
         context.textBaseline = "middle";
@@ -117,15 +164,15 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
             }
         ).roundRect;
         if (roundRect) {
-            roundRect.call(context, 0, 0, textureWidth, textureHeight, PLAYER_NAME_BACKGROUND_RADIUS);
+            roundRect.call(context, 0, 0, layout.textureWidth, layout.textureHeight, PLAYER_NAME_BACKGROUND_RADIUS);
         } else {
-            context.rect(0, 0, textureWidth, textureHeight);
+            context.rect(0, 0, layout.textureWidth, layout.textureHeight);
         }
         context.fill();
 
         if (!renderingAsDOM) {
             context.fillStyle = "#ffffff";
-            context.fillText(this.playerName, textureWidth / 2 + 6, textureHeight / 2);
+            context.fillText(this.playerName, layout.textTextureX, layout.textureHeight / 2);
         }
         texture.refresh();
 
@@ -139,14 +186,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
 
         this.renderingAsDOM = renderingAsDOM;
 
-        const nextTextureKey = this.createPlayerNameTexture(this.playerNameOutlineColor, renderingAsDOM);
-        const previousTextureKey = this.playerNameTextureKey;
-        this.playerNameTextureKey = nextTextureKey;
-        this.playerNameSprite.setTexture(nextTextureKey);
-
-        if (previousTextureKey && this.scene.textures.exists(previousTextureKey)) {
-            this.scene.textures.remove(previousTextureKey);
-        }
+        this.refreshPlayerNameTexture();
 
         if (renderingAsDOM) {
             const textPosition = this.getDomTextPosition();
@@ -161,11 +201,13 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         } else {
             this.gameScene.usernameDomLayer.removeUsername(this.domUsernameId);
         }
-
-        this.reflow();
     }
 
     private showMegaphone(show = true, forceClose = false): void {
+        if (this.megaphoneShown !== show) {
+            this.megaphoneShown = show;
+            this.refreshPlayerNameTexture();
+        }
         this.megaphoneIcon.visible = show;
         this.megaphoneIcon.show(show, forceClose);
         this.reflow();
@@ -177,7 +219,11 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         }
         this.playerNameOutlineColor = outlineColor;
 
-        const nextTextureKey = this.createPlayerNameTexture(outlineColor, this.renderingAsDOM);
+        this.refreshPlayerNameTexture();
+    }
+
+    private refreshPlayerNameTexture(): void {
+        const nextTextureKey = this.createPlayerNameTexture(this.playerNameOutlineColor, this.renderingAsDOM);
         const previousTextureKey = this.playerNameTextureKey;
         this.playerNameTextureKey = nextTextureKey;
         this.playerNameSprite.setTexture(nextTextureKey);
@@ -185,6 +231,8 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         if (previousTextureKey && this.scene.textures.exists(previousTextureKey)) {
             this.scene.textures.remove(previousTextureKey);
         }
+        this.reflow();
+        this.updateDomTextPosition();
     }
 
     public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant = false, forceClose = false): void {
@@ -219,9 +267,18 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         return this.scene as GameScene;
     }
 
+    private updateDomTextPosition(): void {
+        if (!this.renderingAsDOM) {
+            return;
+        }
+        const textPosition = this.getDomTextPosition();
+        this.gameScene.usernameDomLayer.updateUsernamePosition(this.domUsernameId, textPosition.x, textPosition.y);
+    }
+
     private getDomTextPosition(): Position {
+        const layout = this.getPlayerNameLayout();
         return {
-            x: this.x + PLAYER_NAME_TEXT_OFFSET_X * this.displayScale,
+            x: this.x + layout.textLocalX * this.displayScale,
             y: this.y - (this.playerNameSprite.height / 2) * this.displayScale,
         };
     }
