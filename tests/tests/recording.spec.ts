@@ -291,10 +291,10 @@ test.describe("Recording test", () => {
         await using discussionPeer = await getPage(browser, "Bob", Map.url("empty"));
         await Map.teleportToPosition(discussionPeer, 0, 0);
 
-        await expect(recorder.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
+        await expect(recorder.locator("#cameras-container").getByText("Admin1", { exact: true }).first()).toBeVisible({
             timeout: 30_000,
         });
-        await expect(recorder.locator("#cameras-container").getByText("Bob", { exact: true })).toBeVisible({
+        await expect(recorder.locator("#cameras-container").getByText("Bob", { exact: true }).first()).toBeVisible({
             timeout: 30_000,
         });
         await expect(recorder.getByTestId("recordingButton-start")).toBeEnabled();
@@ -314,10 +314,12 @@ test.describe("Recording test", () => {
         await expect(discussionPeer.getByTestId("recordingButton-stop")).toBeHidden({ timeout: 30_000 });
         await expect(discussionPeer.getByTestId("recordingButton-start")).toBeHidden();
 
-        await expect(broadcaster.locator("#cameras-container").getByText("Bob", { exact: true })).toBeVisible({
+        await expect(broadcaster.locator("#cameras-container").getByText("Bob", { exact: true }).first()).toBeVisible({
             timeout: 30_000,
         });
-        await expect(discussionPeer.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
+        await expect(
+            discussionPeer.locator("#cameras-container").getByText("Admin1", { exact: true }).first(),
+        ).toBeVisible({
             timeout: 30_000,
         });
 
@@ -345,7 +347,7 @@ test.describe("Recording test", () => {
         await Menu.clickStartMegaphone(broadcaster);
         await waitForMegaphoneToBeStreaming(broadcaster);
 
-        await expect(recorder.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
+        await expect(recorder.locator("#cameras-container").getByText("Admin1", { exact: true }).first()).toBeVisible({
             timeout: 30_000,
         });
         await expect(recorder.getByTestId("recordingButton-start")).toBeEnabled();

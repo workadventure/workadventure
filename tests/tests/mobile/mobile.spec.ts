@@ -14,6 +14,7 @@ test.describe("Mobile @nowebkit @nodesktop", () => {
     test.beforeEach(async ({ page, browserName }) => {
         test.skip(!isMobile(page) || browserName === "webkit", "Run only on mobile Chromium");
     });
+
     test("Successfully bubble discussion with mobile device", async ({ browser }) => {
         await using page = await getPage(browser, "Bob", Map.url("empty"));
 
@@ -38,7 +39,7 @@ test.describe("Mobile @nowebkit @nodesktop", () => {
         // TODO: find a solution to test Joystick
         await Map.walkToPosition(pageAlice, positionToDiscuss.x, positionToDiscuss.y);
 
-        await expect(pageAlice.getByText("Bob")).toBeVisible();
+        await expect(pageAlice.getByText("Bob").first()).toBeVisible();
         // check if we can still open and close burgerMenu when 2 in proximity chat with cam on
         await Menu.openMenu(pageAlice);
         await Menu.closeMenu(pageAlice);
@@ -73,8 +74,8 @@ test.describe("Mobile @nowebkit @nodesktop", () => {
         await pageJohn.mouse.up();
 
         // Expect to see camera of users
-        await expect(pageJohn.getByText("Bob")).toBeVisible();
-        await expect(pageJohn.getByText("Alice")).toBeVisible();
+        await expect(pageJohn.getByText("Bob").first()).toBeVisible();
+        await expect(pageJohn.getByText("Alice").first()).toBeVisible();
 
         // check if we can still open and close burgerMenu when 2 in proximity chat with cam on
         await Menu.openMenu(pageJohn);
