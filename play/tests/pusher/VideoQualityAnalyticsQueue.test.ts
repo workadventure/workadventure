@@ -134,7 +134,7 @@ describe("VideoQualityAnalyticsQueue", () => {
             {
                 samples: [
                     sample({
-                        spaceName: "other.space",
+                        spaceName: "other",
                     }),
                     sample({
                         streamCategory: VideoQualityStreamCategory.VIDEO_QUALITY_STREAM_CATEGORY_UNSPECIFIED,
@@ -237,7 +237,7 @@ function sample(overrides: Partial<VideoQualitySampleMessage> = {}): VideoQualit
         sessionId: "session-id",
         remoteUserUuid: "remote-uuid",
         remoteSpaceUserId: "remote-space-user",
-        spaceName: "world.space",
+        spaceName: "space",
         streamCategory: VideoQualityStreamCategory.VIDEO_QUALITY_STREAM_CATEGORY_VIDEO,
         transportType: VideoQualityTransportType.VIDEO_QUALITY_TRANSPORT_TYPE_P2P,
         relay: true,
