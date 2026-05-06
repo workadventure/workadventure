@@ -5,12 +5,12 @@ import {
     type ServerToClientMessage,
 } from "@workadventure/messages";
 import { NoncedMessageStore } from "../../common/NoncedMessageStore";
+import { CLIENT_DISCONNECTION_RETENTION_MS } from "../Enum/EnvironmentVariable";
 
 type WebSocketFactory = (url: string, protocols?: string[]) => WebSocket;
 
 export class WorkAdventureWebSocket {
     private static websocketFactory: WebSocketFactory | null = null;
-    private static readonly DISCONNECTION_RETENTION_MS = 30_000;
 
     public static setWebsocketFactory(websocketFactory: WebSocketFactory | null): void {
         WorkAdventureWebSocket.websocketFactory = websocketFactory;
@@ -28,7 +28,7 @@ export class WorkAdventureWebSocket {
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
-        WorkAdventureWebSocket.DISCONNECTION_RETENTION_MS
+        CLIENT_DISCONNECTION_RETENTION_MS
     );
 
     private socket: WebSocket;

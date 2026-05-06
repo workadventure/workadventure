@@ -29,6 +29,8 @@ export interface FrontConfigurationInterface {
     OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy | undefined;
     ENABLE_REPORT_ISSUES_MENU: boolean | undefined;
     REPORT_ISSUES_URL: string | undefined;
+    CLIENT_CONNECTION_RETRY_MAX_DURATION_MS: number;
+    CLIENT_DISCONNECTION_RETENTION_MS: number;
     SENTRY_DSN_FRONT: string | undefined;
     SENTRY_DSN_PUSHER: string | undefined;
     SENTRY_ENVIRONMENT: string | undefined;

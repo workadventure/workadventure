@@ -12,7 +12,7 @@ import { userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
-import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
+import { CLIENT_CONNECTION_RETRY_MAX_DURATION_MS, ENABLE_OPENID } from "../Enum/EnvironmentVariable";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
@@ -32,6 +32,10 @@ import type { OnConnectInterface } from "./ConnexionModels";
 import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
+
+const connectionRetryBaseDelayMs = 1_000;
+const connectionRetryMaxDelayMs = 10_000;
+const connectionRetryJitterMs = 500;
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -409,7 +413,9 @@ class ConnectionManager {
         name: string,
         characterTextureIds: string[],
         companionTextureId: string | null,
-        lastCommandId?: string
+        lastCommandId?: string,
+        retryStartedAt = Date.now(),
+        retryAttempt = 0
     ): Promise<OnConnectInterface> {
         return new Promise<OnConnectInterface>((resolve, reject) => {
             const connection = new RoomConnection(
@@ -488,6 +494,20 @@ class ConnectionManager {
                 });
         }).catch((err) => {
             console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => err", err);
+            const elapsedTime = Date.now() - retryStartedAt;
+            if (elapsedTime >= CLIENT_CONNECTION_RETRY_MAX_DURATION_MS) {
+                errorScreenStore.setError(
+                    ErrorScreenMessage.fromPartial({
+                        type: "error",
+                        code: "CONNECTION_FAILED",
+                        title: get(LL).warning.connectionLostTitle(),
+                        subtitle: get(LL).error.connectionRetry.unableConnect(),
+                        image: gameManager?.currentStartedRoom?.loadingLogo ?? waLogo,
+                    })
+                );
+                throw err;
+            }
+
             errorScreenStore.setError(
                 ErrorScreenMessage.fromPartial({
                     type: "reconnecting",
@@ -497,13 +517,11 @@ class ConnectionManager {
                     image: gameManager?.currentStartedRoom?.loadingLogo ?? waLogo,
                 })
             );
-            // Let's retry in 4-6 seconds
-            return new Promise<OnConnectInterface>((resolve) => {
+            const retryDelay = this.getConnectionRetryDelay(retryAttempt, elapsedTime);
+            return new Promise<OnConnectInterface>((resolve, reject) => {
                 console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => reconnectingTimeout");
 
                 this.reconnectingTimeout = setTimeout(() => {
-                    //todo: allow a way to break recursion?
-                    //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
                     console.info(
                         "[ConnectionManager] connectToRoomSocket => catch => ew Promise[OnConnectInterface] reconnectingTimeout => setTimeout",
                         roomUrl,
@@ -513,17 +531,31 @@ class ConnectionManager {
                         lastCommandId
                     );
 
-                    this.connectToRoomSocket(roomUrl, name, characterTextureIds, companionTextureId, lastCommandId)
+                    this.connectToRoomSocket(
+                        roomUrl,
+                        name,
+                        characterTextureIds,
+                        companionTextureId,
+                        lastCommandId,
+                        retryStartedAt,
+                        retryAttempt + 1
+                    )
                         .then((connection) => {
                             this._roomConnectionStream.next(connection.connection);
                             resolve(connection);
                         })
-                        .catch(() => {
-                            /* Do nothing, the error is already handled in the connectToRoomSocket call */
-                        });
-                }, 4000 + Math.floor(Math.random() * 2000));
+                        .catch(reject);
+                }, retryDelay);
             });
         });
+    }
+
+    private getConnectionRetryDelay(retryAttempt: number, elapsedTime: number): number {
+        const exponentialDelay = connectionRetryBaseDelayMs * 2 ** retryAttempt;
+        const jitter = Math.floor(Math.random() * connectionRetryJitterMs);
+        const remainingRetryTime = CLIENT_CONNECTION_RETRY_MAX_DURATION_MS - elapsedTime;
+
+        return Math.max(0, Math.min(connectionRetryMaxDelayMs, exponentialDelay + jitter, remainingRetryTime));
     }
 
     get getConnexionType() {
