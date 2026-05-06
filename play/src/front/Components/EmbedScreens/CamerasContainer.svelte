@@ -37,7 +37,6 @@
     import type { Writable } from "svelte/store";
     import { myCameraPeerStore, type MyLocalStreamable } from "../../Stores/StreamableCollectionStore";
     import VideoBox from "../Video/VideoBox.svelte";
-    import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -441,8 +440,6 @@
         ];
         setTimeout(updateScrollIndicators, 100);
     }
-
-    $: isActiveLocalUserName = $activePictureInPictureStore && containerWidth > 500 ? true : false;
 </script>
 
 <div
@@ -512,7 +509,6 @@
                 />
             </div>
         {/each}
-
     </div>
     {#if !isOnOneLine}
         <ResizeHandle
