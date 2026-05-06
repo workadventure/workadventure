@@ -18,7 +18,8 @@ describe("pictureInPictureGridLayout", () => {
         });
 
         it("uses landscape mode when width >= height", () => {
-            const layout = computePictureInPictureGridLayout(2, 800, 100);
+            // Below isFullWidth (width > height × 3) so we exercise the ratio-based 2‑video row, not « plein cadre » strip.
+            const layout = computePictureInPictureGridLayout(2, 300, 100);
 
             expect(layout.portrait).toBe(false);
             expect(layout.columnTracks).toBe(2);
@@ -32,6 +33,16 @@ describe("pictureInPictureGridLayout", () => {
             expect(layout.portrait).toBe(false);
             expect(layout.columnTracks).toBe(2);
             expect(layout.rowTracks).toBe(1);
+        });
+
+        it("uses full-width horizontal strip when width > height × 3", () => {
+            const layout = computePictureInPictureGridLayout(5, 800, 100);
+
+            expect(layout.portrait).toBe(false);
+            expect(layout.columnTracks).toBe(5);
+            expect(layout.rowTracks).toBe(1);
+            expect(layout.tiles).toHaveLength(5);
+            expect(layout.description).toContain("plein cadre");
         });
     });
 
@@ -72,7 +83,8 @@ describe("pictureInPictureGridLayout", () => {
         });
 
         it("keeps 5-video landscape mode as 2 left + 3 right", () => {
-            const layout = computePictureInPictureGridLayout(5, 900, 100);
+            // Same: avoid isFullWidth so the 5-tile asymmetric grid is used instead of one horizontal row.
+            const layout = computePictureInPictureGridLayout(5, 300, 100);
 
             expect(layout.portrait).toBe(false);
             expect(layout.columnTracks).toBe(2);
