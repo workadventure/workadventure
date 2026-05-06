@@ -55,8 +55,8 @@ export function computePictureInPictureGridLayout(
     const n = clampCount(videoCount);
     const portrait = containerHeight > containerWidth;
 
-    const isFullWidth = containerWidth > (containerHeight * 3);
-    if(isFullWidth) {
+    const isFullWidth = containerWidth > containerHeight * 3;
+    if (isFullWidth) {
         return {
             portrait: false,
             videoCount: n,
@@ -73,8 +73,8 @@ export function computePictureInPictureGridLayout(
         };
     }
 
-    const isFullHeight = containerHeight > (containerWidth * 2);
-    if(isFullHeight) {
+    const isFullHeight = containerHeight > containerWidth * 2;
+    if (isFullHeight) {
         return {
             portrait: true,
             videoCount: n,
@@ -89,7 +89,6 @@ export function computePictureInPictureGridLayout(
             description: `${n} vidéos : plein hauteur (h×4 > w)`,
         };
     }
-
 
     if (n === 0) {
         return {

@@ -93,8 +93,8 @@
                 ? "vertical"
                 : "horizontal"
             : inPictureInPicture
-              ? "vertical"
-              : "horizontal";
+            ? "vertical"
+            : "horizontal";
     }
 </script>
 
@@ -117,11 +117,7 @@
                 style={pipCameraContainerStyle}
                 bind:this={camContainer}
             >
-                <CamerasContainer
-                    {oneLineMaxHeight}
-                    isOnOneLine={$isOnOneLine}
-                    oneLineMode={pipOneLineMode}
-                />
+                <CamerasContainer {oneLineMaxHeight} isOnOneLine={$isOnOneLine} oneLineMode={pipOneLineMode} />
             </div>
         {/if}
 
@@ -130,7 +126,9 @@
                 id="highlighted-media"
                 class="md:mb-0"
                 class:flex-1={!inPictureInPicture || $highlightedEmbedScreen == undefined}
-                class:flex-[4]={inPictureInPicture && $highlightedEmbedScreen != undefined && !pipHighlightLayoutEnabled}
+                class:flex-[4]={inPictureInPicture &&
+                    $highlightedEmbedScreen != undefined &&
+                    !pipHighlightLayoutEnabled}
                 class:mb-8={!inPictureInPicture || $highlightedEmbedScreen == undefined}
                 class:mb-0={inPictureInPicture && $highlightedEmbedScreen != undefined}
                 style={pipHighlightContainerStyle}
