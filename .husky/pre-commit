@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 . "$(dirname "$0")/_/husky.sh"
 
 # Check if all strings are translated in all languages

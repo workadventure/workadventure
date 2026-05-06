@@ -1,14 +1,20 @@
 @charset "UTF-8";
-@import "highlight.js/scss/dark";
-@import "breakpoints";
-@import "cowebsite.scss";
-@import "style";
-@import "chat.scss";
+
+// Style baseline
 @import "@workadventure/tailwind/style/index.scss";
+
+// Style from external libs
+@import "highlight.js/scss/dark";
+
+// Internal styles
+@import "breakpoints.scss";
+@import "cowebsite.scss";
+@import "style.scss";
+@import "chat.scss";
+@import "font.scss";
+@import "audio-range.scss";
+@import "map-editor.scss";
+@import "loader.scss";
+@import "input.scss";
+@import "warning-toast.scss";
 @import "wa-theme/action-menu-bar.scss";
-@import "audio-range";
-@import "map-editor";
-@import "loader";
-@import "input";
-@import "warning-toast";
-@import "chat";
