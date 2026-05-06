@@ -1,22 +1,3 @@
-// Custom font Comic Jens for Speech / Think bubbles
-@font-face {
-    font-family: "Comic Jens";
-    src: url("./fonts/comic-jens/ComicJensFreePro-Regular.ttf") format("truetype");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-
-// Special fallback font for Korean characters (see https://github.com/workadventure/workadventure/issues/5626)
-@font-face {
-    font-family: "Pretendard Korean";
-    src: url("./fonts/pretendard/Pretendard-Regular.otf") format("opentype");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-    unicode-range: U+1100-11FF, U+3130-318F, U+AC00-D7AF, U+A960-A97F, U+D7B0-D7FF;
-}
-
 * a,
 button,
 select {
