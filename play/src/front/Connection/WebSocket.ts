@@ -142,7 +142,6 @@ export class WorkAdventureWebSocket {
         const socketUrl = this.url;
         if (this.reconnectAttempted) {
             socketUrl.searchParams.set("lastReceivedNonce", this.lastReceivedNonce.toString());
-            socketUrl.searchParams.set("lastSentNonce", Math.max(this.nextOutgoingNonce - 1, 0).toString());
         }
 
         const socket = WorkAdventureWebSocket.websocketFactory

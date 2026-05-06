@@ -86,24 +86,24 @@ export class PusherWebSocket {
         return this.socket === rawSocket;
     }
 
-    public replaceSocket(newSocket: RawSocket, clientLastReceivedNonce: number, clientLastSentNonce: number): boolean {
+    public replaceSocket(newSocket: RawSocket, clientLastReceivedNonce: number): boolean {
         const socketData = this.socket.getUserData();
         console.info(
-            `Replacing WebSocket transport for user ${socketData.userUuid} on tab ${socketData.tabId} (lastReceivedNonce=${clientLastReceivedNonce}, lastSentNonce=${clientLastSentNonce})`
+            `Replacing WebSocket transport for user ${socketData.userUuid} on tab ${socketData.tabId} (lastReceivedNonce=${clientLastReceivedNonce})`
         );
 
-        if (!this.outgoingMessagesStore.hasEveryNonceAfter(clientLastReceivedNonce, clientLastSentNonce)) {
+        if (!this.outgoingMessagesStore.hasEveryNonceAfter(clientLastReceivedNonce)) {
             console.warn(
                 `Cannot replace WebSocket transport for user ${socketData.userUuid} on tab ${
                     socketData.tabId
-                }: server is missing messages to replay (lastReceivedNonce=${clientLastReceivedNonce}, lastSentNonce=${clientLastSentNonce}, oldestStoredNonce=${
+                }: server is missing messages to replay (lastReceivedNonce=${clientLastReceivedNonce}, oldestStoredNonce=${
                     this.outgoingMessagesStore.getAll()[0]?.nonce
                 })`
             );
             Sentry.captureMessage(
                 `Cannot replace WebSocket transport for user ${socketData.userUuid} on tab ${
                     socketData.tabId
-                }: server is missing messages to replay (lastReceivedNonce=${clientLastReceivedNonce}, lastSentNonce=${clientLastSentNonce}, oldestStoredNonce=${
+                }: server is missing messages to replay (lastReceivedNonce=${clientLastReceivedNonce}, oldestStoredNonce=${
                     this.outgoingMessagesStore.getAll()[0]?.nonce
                 })`,
                 {

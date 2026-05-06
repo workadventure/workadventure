@@ -46,7 +46,6 @@ type RoomWsConfig<TQueryValidator extends ZodObject<ZodRawShape>> = {
 type WebSocketContext = {
     socket: PusherWebSocket;
     clientLastReceivedNonce?: number;
-    clientLastSentNonce?: number;
 };
 
 export class PusherRoomSocketController {
@@ -142,10 +141,6 @@ export class PusherRoomSocketController {
                             urlSearchParams.get("lastReceivedNonce") ?? undefined,
                             "lastReceivedNonce"
                         );
-                        tabContext.clientLastSentNonce = this.parseReconnectNonce(
-                            urlSearchParams.get("lastSentNonce") ?? undefined,
-                            "lastSentNonce"
-                        );
                     }
 
                     await config.upgrade({
@@ -188,11 +183,7 @@ export class PusherRoomSocketController {
                     const tabId = socketData.tabId;
                     const context = this.contextByTabKey.get(tabId);
                     if (context) {
-                        const replaced = context.socket.replaceSocket(
-                            rawSocket,
-                            context.clientLastReceivedNonce!,
-                            context.clientLastSentNonce!
-                        );
+                        const replaced = context.socket.replaceSocket(rawSocket, context.clientLastReceivedNonce!);
 
                         if (replaced) {
                             this.wrappersBySocket.set(rawSocket, context.socket);

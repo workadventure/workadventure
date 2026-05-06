@@ -41,9 +41,8 @@ export class NoncedMessageStore<TPayload> {
         return this.messages.some((message) => message.nonce === nonce);
     }
 
-    public hasEveryNonceAfter(lastReceivedNonce: number, latestSentNonce: number): boolean {
+    public hasEveryNonceAfter(lastReceivedNonce: number): boolean {
         this.pruneExpired();
-        if (latestSentNonce <= lastReceivedNonce) return true;
         return this.has(lastReceivedNonce + 1);
     }
 
