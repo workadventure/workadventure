@@ -137,7 +137,7 @@ import type {
 } from "./ConnexionModels";
 import { localUserStore } from "./LocalUserStore";
 import { ConnectionClosedError } from "./ConnectionClosedError";
-import { WorkAdventureWebSocket } from "./WebSocket";
+import { WorkAdventureWebSocket } from "./WorkAdventureWebSocket";
 
 // This must be greater than RoomManager's PING_INTERVAL
 const manualPingDelay = 100_000;

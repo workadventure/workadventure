@@ -1,6 +1,6 @@
 import type { TemplatedApp, HttpResponse, HttpRequest, us_socket_context_t } from "uWebSockets.js";
 import type { ClientToServerMessage } from "@workadventure/messages";
-import type { ZodObject, ZodRawShape, infer as ZodInfer } from "zod";
+import type { ZodObject, ZodRawShape, ZodTypeAny } from "zod";
 import * as Sentry from "@sentry/node";
 import { asError } from "catch-unknown";
 import type { ConnectingSocketData } from "../models/Websocket/SocketData";
@@ -20,7 +20,8 @@ type UpgradeContext<TQuery> = {
         token: string;
     };
     isAborted: () => boolean;
-    upgrade: (data: ConnectingSocketData | UpgradeFailedData) => void;
+    upgrade: (data: ConnectingSocketData) => void;
+    reject: (data: UpgradeFailedData) => void;
 };
 
 type UpgradeHandler<TQuery> = (context: UpgradeContext<TQuery>) => void | Promise<void>;
@@ -30,12 +31,18 @@ type MessageHandler = (socket: Socket, message: ClientToServerMessage) => void |
 type CloseHandler = (socket: Socket) => void | Promise<void>;
 type DrainHandler = (socket: Socket) => void | Promise<void>;
 
-type RoomWsConfig<TQueryValidator extends ZodObject<ZodRawShape>> = {
+type RoomWsQuery = {
+    tabId: string;
+};
+
+type RoomWsQueryValidator<TQuery extends RoomWsQuery> = ZodObject<ZodRawShape, "strip", ZodTypeAny, TQuery>;
+
+type RoomWsConfig<TQuery extends RoomWsQuery> = {
     idleTimeout?: number;
     maxPayloadLength?: number;
     maxBackpressure?: number;
-    queryValidator: TQueryValidator;
-    upgrade: UpgradeHandler<ZodInfer<TQueryValidator>>;
+    queryValidator: RoomWsQueryValidator<TQuery>;
+    upgrade: UpgradeHandler<TQuery>;
     open: OpenHandler;
     rejectedOpen: RejectedOpenHandler;
     message: MessageHandler;
@@ -109,10 +116,26 @@ export class PusherRoomSocketController {
         return parsed;
     }
 
-    public ws<TQueryValidator extends ZodObject<ZodRawShape>>(
-        path: string,
-        config: RoomWsConfig<TQueryValidator>
-    ): void {
+    private upgradeSocket(
+        aborted: boolean,
+        res: HttpResponse,
+        data: ConnectingSocketData | UpgradeFailedData,
+        websocketKey: string,
+        websocketProtocol: string,
+        websocketExtensions: string,
+        context: us_socket_context_t
+    ) {
+        if (aborted) {
+            // If the response points to nowhere, don't attempt an upgrade
+            return;
+        }
+
+        res.cork(() => {
+            res.upgrade(data, websocketKey, websocketProtocol, websocketExtensions, context);
+        });
+    }
+
+    public ws<TQuery extends RoomWsQuery>(path: string, config: RoomWsConfig<TQuery>): void {
         this.app.ws<ConnectingSocketData | UpgradeFailedData>(path, {
             idleTimeout: config.idleTimeout,
             maxPayloadLength: config.maxPayloadLength,
@@ -154,14 +177,26 @@ export class PusherRoomSocketController {
                         },
                         isAborted: () => upgradeAborted.aborted,
                         upgrade: (data) => {
-                            if (upgradeAborted.aborted) {
-                                // If the response points to nowhere, don't attempt an upgrade
-                                return;
-                            }
-
-                            res.cork(() => {
-                                res.upgrade(data, websocketKey, websocketProtocol, websocketExtensions, context);
-                            });
+                            this.upgradeSocket(
+                                upgradeAborted.aborted,
+                                res,
+                                data,
+                                websocketKey,
+                                websocketProtocol,
+                                websocketExtensions,
+                                context
+                            );
+                        },
+                        reject: (data) => {
+                            this.upgradeSocket(
+                                upgradeAborted.aborted,
+                                res,
+                                data,
+                                websocketKey,
+                                websocketProtocol,
+                                websocketExtensions,
+                                context
+                            );
                         },
                     });
                 })().catch((e) => {

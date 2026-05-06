@@ -237,7 +237,7 @@ export class IoSocketController {
                 microphoneState: z.string().transform((val) => val === "true"),
                 tabId: z.string(),
             }),
-            upgrade: async ({ query, request, isAborted, upgrade }) => {
+            upgrade: async ({ query, request, isAborted, upgrade, reject }) => {
                 debug(
                     `FrontController => [${request.method}] ${request.url} — IP: ${
                         request.ipAddress
@@ -260,7 +260,7 @@ export class IoSocketController {
                             // If the response points to nowhere, don't attempt an upgrade
                             return;
                         }
-                        upgrade({
+                        reject({
                             rejected: true,
                             reason: "error",
                             error: {
@@ -337,7 +337,7 @@ export class IoSocketController {
                             );
 
                             if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
-                                upgrade({
+                                reject({
                                     rejected: true,
                                     reason: "invalidTexture",
                                     entityType: "character",
@@ -345,7 +345,7 @@ export class IoSocketController {
                                 return;
                             }
                             if (userData.status === "ok" && !userData.isCompanionTextureValid) {
-                                upgrade({
+                                reject({
                                     rejected: true,
                                     reason: "invalidTexture",
                                     entityType: "companion",
@@ -360,7 +360,7 @@ export class IoSocketController {
                                 }
 
                                 const errorData = userData;
-                                upgrade({
+                                reject({
                                     rejected: true,
                                     reason: "error",
                                     error: errorData,
@@ -444,7 +444,7 @@ export class IoSocketController {
                     upgrade(socketData);
                 } catch (e) {
                     if (e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired) {
-                        upgrade({
+                        reject({
                             rejected: true,
                             reason: tokenInvalidException,
                             message: e.message,

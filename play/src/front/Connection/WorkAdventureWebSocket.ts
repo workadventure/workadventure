@@ -25,7 +25,6 @@ export class WorkAdventureWebSocket {
     private readonly protocols: string[] | undefined;
     private manuallyClosed = false;
     private reconnectAttempted = false;
-    private pendingErrorEvent: Event | undefined;
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
@@ -38,7 +37,6 @@ export class WorkAdventureWebSocket {
         this.url = new URL(url);
         this.protocols = protocols;
         this.socket = this.createSocket();
-        this.bindSocketListeners(this.socket);
     }
 
     public isOpen(): boolean {
@@ -70,9 +68,10 @@ export class WorkAdventureWebSocket {
     private handleOpenEvent = (): void => {
         const isReconnection = this.reconnectAttempted;
         this.reconnectAttempted = false;
-        this.pendingErrorEvent = undefined;
         if (isReconnection) {
-            this.replayStoredOutgoingMessages();
+            for (const { payload } of this.outgoingMessagesStore.getAll()) {
+                this.socket.send(payload);
+            }
         }
         const event = new Event("open");
         this.onopen?.call(this, event);
@@ -83,12 +82,10 @@ export class WorkAdventureWebSocket {
 
         if (!this.manuallyClosed && this.shouldReconnect(event)) {
             this.reconnectAttempted = true;
-            this.pendingErrorEvent = undefined;
-            this.reconnect();
+            this.socket = this.createSocket();
             return;
         }
 
-        this.flushPendingErrorEvent();
         const closeEvent = new CloseEvent("close", {
             code: event.code,
             reason: event.reason,
@@ -97,19 +94,9 @@ export class WorkAdventureWebSocket {
         this.onclose?.call(this, closeEvent);
     };
 
-    private handleErrorEvent = (): void => {
-        this.pendingErrorEvent = new Event("error");
-    };
-
-    private flushPendingErrorEvent(): void {
-        if (!this.pendingErrorEvent) {
-            return;
-        }
-
-        const event = this.pendingErrorEvent;
-        this.pendingErrorEvent = undefined;
+    private handleErrorEvent = (event: Event): void => {
         this.onerror?.call(this, event);
-    }
+    };
 
     private handleMessageEvent = (event: MessageEvent): void => {
         const bytes =
@@ -148,26 +135,15 @@ export class WorkAdventureWebSocket {
             ? WorkAdventureWebSocket.websocketFactory(socketUrl.toString(), this.protocols)
             : new WebSocket(socketUrl, this.protocols);
         socket.binaryType = "arraybuffer";
+
+        this.bindSocketListeners(socket);
         return socket;
-    }
-
-    private reconnect(): void {
-        this.socket = this.createSocket();
-        this.bindSocketListeners(this.socket);
-    }
-
-    private replayStoredOutgoingMessages(): void {
-        const storedMessages = this.outgoingMessagesStore.getAll();
-
-        for (const { payload } of storedMessages) {
-            this.socket.send(payload);
-        }
     }
 
     private shouldReconnect(event: CloseEvent): boolean {
         if (this.reconnectAttempted) return false;
         // Do not reconnect if handshake/auth was refused.
-        if (event.code === 1008 || event.code === 4001 || event.code === 4003) return false;
+        if (event.code === 1000 || event.code === 1008) return false;
         return true;
     }
 

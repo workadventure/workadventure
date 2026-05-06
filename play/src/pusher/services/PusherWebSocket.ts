@@ -58,10 +58,6 @@ export class PusherWebSocket {
         return frame.message;
     }
 
-    public getLastReceivedNonce(): number {
-        return this.lastReceivedNonce;
-    }
-
     public ping(...args: Parameters<RawSocket["ping"]>): ReturnType<RawSocket["ping"]> {
         return this.socket.ping(...args);
     }
@@ -72,14 +68,6 @@ export class PusherWebSocket {
 
     public getBufferedAmount(): number {
         return this.socket.getBufferedAmount();
-    }
-
-    public getRemoteAddressAsText(): ArrayBuffer {
-        return this.socket.getRemoteAddressAsText();
-    }
-
-    public closeTransport(code: number, reason: string): void {
-        this.socket.end(code, reason);
     }
 
     public isCurrentTransport(rawSocket: RawSocket): boolean {
