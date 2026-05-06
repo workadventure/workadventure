@@ -473,7 +473,7 @@
         class:flex-col={isOnOneLine && oneLineMode === "vertical" && !isPictureInPictureGridMode}
         class:flex-wrap={!isOnOneLine}
         class:content-start={!isOnOneLine}
-        class:justify-start={isOnOneLine}
+        class:!justify-start={canScrollLeft || canScrollRight}
         class:whitespace-nowrap={isOnOneLine}
         class:relative={true}
         class:overflow-x-auto={isOnOneLine && oneLineMode === "horizontal" && !isPictureInPictureGridMode}
@@ -512,21 +512,7 @@
                 />
             </div>
         {/each}
-        <!-- in PictureInPicture, let's finish with our video feedback in small -->
-        {#if isOnOneLine && oneLineMode === "vertical" && !($myCameraStreamable?.displayInPictureInPictureMode ?? false) && !$activePictureInPictureStore}
-            <div class="fixed bottom-20 right-0 z-50">
-                <div
-                    data-unique-id="my-camera"
-                    style={`top: -50px; width: ${videoWidth / 3}px; max-width: ${videoWidth / 3}px;${
-                        videoHeight ? `height: ${videoHeight / 3}px; max-height: ${videoHeight / 3}px;` : ""
-                    } ${$activePictureInPictureStore ? "min-width: 10%; min-height: 10%; margin-right: 0.5rem;" : ""}`}
-                    class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
-                    class:aspect-video={videoHeight === undefined}
-                >
-                    <MediaBox videoBox={$myCameraPeerStore} activeUserName={isActiveLocalUserName} />
-                </div>
-            </div>
-        {/if}
+
     </div>
     {#if !isOnOneLine}
         <ResizeHandle

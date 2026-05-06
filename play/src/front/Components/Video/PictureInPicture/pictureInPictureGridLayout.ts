@@ -55,6 +55,42 @@ export function computePictureInPictureGridLayout(
     const n = clampCount(videoCount);
     const portrait = containerHeight > containerWidth;
 
+    const isFullWidth = containerWidth > (containerHeight * 3);
+    if(isFullWidth) {
+        return {
+            portrait: false,
+            videoCount: n,
+            columnTracks: n,
+            rowTracks: 1,
+            // Create a grid with all videos in one row
+            tiles: Array.from({ length: n }, (_, i) => ({
+                columnStart: i + 1,
+                columnEnd: i + 2,
+                rowStart: 1,
+                rowEnd: 2,
+            })),
+            description: `${n} vidéos : plein cadre (w×4 > h)`,
+        };
+    }
+
+    const isFullHeight = containerHeight > (containerWidth * 2);
+    if(isFullHeight) {
+        return {
+            portrait: true,
+            videoCount: n,
+            columnTracks: 1,
+            rowTracks: n,
+            tiles: Array.from({ length: n }, (_, i) => ({
+                columnStart: 1,
+                columnEnd: 2,
+                rowStart: i + 1,
+                rowEnd: i + 2,
+            })),
+            description: `${n} vidéos : plein hauteur (h×4 > w)`,
+        };
+    }
+
+
     if (n === 0) {
         return {
             portrait,
@@ -177,12 +213,12 @@ export function computePictureInPictureGridLayout(
             rowTracks: 3,
             tiles: [
                 { columnStart: 1, columnEnd: 2, rowStart: 1, rowEnd: 2 },
-                { columnStart: 1, columnEnd: 2, rowStart: 2, rowEnd: 3 },
                 { columnStart: 2, columnEnd: 3, rowStart: 1, rowEnd: 2 },
-                { columnStart: 2, columnEnd: 3, rowStart: 2, rowEnd: 3 },
+                { columnStart: 1, columnEnd: 3, rowStart: 2, rowEnd: 3 },
+                { columnStart: 1, columnEnd: 2, rowStart: 3, rowEnd: 4 },
                 { columnStart: 2, columnEnd: 3, rowStart: 3, rowEnd: 4 },
             ],
-            description: "5 paysage : 2 colonne gauche + 3 colonne droite",
+            description: "5 paysage : 2 colonne gauche + 2 colonne droite + 1 ligne en bas",
         };
     }
 
@@ -249,10 +285,10 @@ export function computePictureInPictureGridLayout(
             rowTracks: 4,
             tiles: [
                 { columnStart: 1, columnEnd: 2, rowStart: 1, rowEnd: 2 },
-                { columnStart: 1, columnEnd: 2, rowStart: 2, rowEnd: 3 },
                 { columnStart: 1, columnEnd: 2, rowStart: 3, rowEnd: 4 },
+                { columnStart: 1, columnEnd: 2, rowStart: 4, rowEnd: 5 },
+                { columnStart: 1, columnEnd: 3, rowStart: 2, rowEnd: 3 },
                 { columnStart: 2, columnEnd: 3, rowStart: 1, rowEnd: 2 },
-                { columnStart: 2, columnEnd: 3, rowStart: 2, rowEnd: 3 },
                 { columnStart: 2, columnEnd: 3, rowStart: 3, rowEnd: 4 },
                 { columnStart: 2, columnEnd: 3, rowStart: 4, rowEnd: 5 },
             ],
