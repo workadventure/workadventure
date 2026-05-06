@@ -13,7 +13,7 @@ class BBBFactory {
         const coWebsite = new BBBCoWebsite(
             new URL(clientURL),
             false,
-            "microphone *; camera *; display-capture *; clipboard-read *; clipboard-write *; screen-wake-lock *;"
+            "microphone *; camera *; display-capture *; clipboard-read *; clipboard-write *; screen-wake-lock *;  fullscreen *; geolocation *;"
         );
         coWebsites.add(coWebsite);
     }
