@@ -37,7 +37,6 @@
     import type { Writable } from "svelte/store";
     import { myCameraPeerStore, type MyLocalStreamable } from "../../Stores/StreamableCollectionStore";
     import VideoBox from "../Video/VideoBox.svelte";
-    import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -55,6 +54,13 @@
     import ChevronRightIcon from "../Icons/ChevronRightIcon.svelte";
     import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
+    import {
+        computePictureInPictureGridLayout,
+        pipGridTemplateColumns,
+        pipGridTemplateRows,
+        pipTileStyle,
+        PIP_GRID_MAX_VIDEOS,
+    } from "../Video/PictureInPicture/pictureInPictureGridLayout";
     import ResizeHandle from "./ResizeHandle.svelte";
 
     setContext("inCameraContainer", true);
@@ -72,6 +78,7 @@
     let containerWidth: number;
     let maxContainerHeight: number;
     let containerHeight: number;
+    let camerasContainerHeight: number;
     let videoWidth: number;
     let videoHeight: number | undefined;
     let camerasContainer: HTMLDivElement | undefined;
@@ -357,9 +364,25 @@
     let canScrollRight = false;
     let canScrollTop = false;
     let canScrollBottom = false;
+    $: isPictureInPictureGridMode = $activePictureInPictureStore && oneLineMode === "vertical";
+    $: pipVideoBoxes = isPictureInPictureGridMode
+        ? $oneLineStreamableCollectionStore.slice(0, PIP_GRID_MAX_VIDEOS)
+        : $oneLineStreamableCollectionStore;
+    $: pipLayout = computePictureInPictureGridLayout(
+        pipVideoBoxes.length,
+        Math.max(1, containerWidth || 0),
+        Math.max(1, camerasContainerHeight || 0)
+    );
 
     function updateScrollIndicators() {
         if (!camerasContainer) return;
+        if (isPictureInPictureGridMode) {
+            canScrollLeft = false;
+            canScrollRight = false;
+            canScrollTop = false;
+            canScrollBottom = false;
+            return;
+        }
         const { scrollLeft, scrollTop, scrollWidth, scrollHeight, clientWidth, clientHeight } = camerasContainer;
         const threshold = 4; // pixels tolerance
 
@@ -417,8 +440,6 @@
         ];
         setTimeout(updateScrollIndicators, 100);
     }
-
-    $: isActiveLocalUserName = $activePictureInPictureStore && containerWidth > 500 ? true : false;
 </script>
 
 <div
@@ -428,24 +449,35 @@
 >
     <div
         bind:clientWidth={containerWidth}
+        bind:clientHeight={camerasContainerHeight}
         bind:this={camerasContainer}
-        class="no-scroll-bar gap-4 mx-1"
+        class="no-scroll-bar mx-1 justify-center"
         class:pointer-events-none={!grabPointerEvents}
         class:pointer-events-auto={grabPointerEvents}
         class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
-        class:flex={true}
+        class:flex={!isPictureInPictureGridMode}
+        class:grid={isPictureInPictureGridMode}
+        style={isPictureInPictureGridMode
+            ? `grid-template-columns: ${pipGridTemplateColumns(
+                  pipLayout.columnTracks
+              )}; grid-template-rows: ${pipGridTemplateRows(pipLayout.rowTracks)};`
+            : ""}
+        class:gap-2={isPictureInPictureGridMode}
+        class:p-2={isPictureInPictureGridMode}
+        class:gap-4={!isPictureInPictureGridMode}
         class:max-h-full={isOnOneLine && oneLineMode === "horizontal"}
         class:max-w-full={!isOnOneLine || (isOnOneLine && oneLineMode === "horizontal")}
-        class:flex-col={isOnOneLine && oneLineMode === "vertical"}
+        class:flex-col={isOnOneLine && oneLineMode === "vertical" && !isPictureInPictureGridMode}
         class:flex-wrap={!isOnOneLine}
         class:content-start={!isOnOneLine}
-        class:justify-start={isOnOneLine}
-        class:justify-center={!isOnOneLine || $activePictureInPictureStore}
+        class:!justify-start={canScrollLeft || canScrollRight}
         class:whitespace-nowrap={isOnOneLine}
         class:relative={true}
-        class:overflow-x-auto={isOnOneLine && oneLineMode === "horizontal"}
+        class:overflow-x-auto={isOnOneLine && oneLineMode === "horizontal" && !isPictureInPictureGridMode}
         class:overflow-x-hidden={!isOnOneLine}
-        class:overflow-y-auto={!isOnOneLine || (isOnOneLine && oneLineMode === "vertical")}
+        class:overflow-y-auto={!isOnOneLine ||
+            (isOnOneLine && oneLineMode === "vertical" && !isPictureInPictureGridMode)}
+        class:overflow-hidden={isPictureInPictureGridMode}
         class:overflow-y-hidden={isOnOneLine && oneLineMode === "horizontal"}
         class:pb-3={isOnOneLine && !$highlightedEmbedScreen}
         class:m-0={isOnOneLine}
@@ -459,24 +491,24 @@
         id="cameras-container"
         data-testid="cameras-container"
     >
-        {#each $oneLineStreamableCollectionStore as videoBox (videoBox.uniqueId)}
-            <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} {intersectionObserver} />
-        {/each}
-        <!-- in PictureInPicture, let's finish with our video feedback in small -->
-        {#if isOnOneLine && oneLineMode === "vertical" && !($myCameraStreamable?.displayInPictureInPictureMode ?? false)}
-            <div class="fixed bottom-20 right-0 z-50">
-                <div
-                    data-unique-id="my-camera"
-                    style={`top: -50px; width: ${videoWidth / 3}px; max-width: ${videoWidth / 3}px;${
-                        videoHeight ? `height: ${videoHeight / 3}px; max-height: ${videoHeight / 3}px;` : ""
-                    } ${$activePictureInPictureStore ? "min-width: 10%; min-height: 10%; margin-right: 0.5rem;" : ""}`}
-                    class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
-                    class:aspect-video={videoHeight === undefined}
-                >
-                    <MediaBox videoBox={$myCameraPeerStore} activeUserName={isActiveLocalUserName} />
-                </div>
+        {#each pipVideoBoxes as videoBox, i (videoBox.uniqueId)}
+            <div
+                style={isPictureInPictureGridMode ? pipTileStyle(pipLayout.tiles[i]) : ""}
+                class:min-h-0={isPictureInPictureGridMode}
+                class:min-w-0={isPictureInPictureGridMode}
+            >
+                <VideoBox
+                    {videoBox}
+                    {isOnOneLine}
+                    {oneLineMode}
+                    {videoWidth}
+                    {videoHeight}
+                    intersectionObserver={isPictureInPictureGridMode ? undefined : intersectionObserver}
+                    forceDisplay={isPictureInPictureGridMode}
+                    fitContainer={isPictureInPictureGridMode}
+                />
             </div>
-        {/if}
+        {/each}
     </div>
     {#if !isOnOneLine}
         <ResizeHandle

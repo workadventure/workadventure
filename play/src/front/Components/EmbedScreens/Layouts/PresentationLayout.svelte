@@ -15,7 +15,9 @@
 
     let camContainer: HTMLDivElement;
     let highlightScreen: HTMLDivElement;
+    let containerWidth = 0;
     let containerHeight = 0;
+    let pipOneLineMode: "vertical" | "horizontal" = "horizontal";
 
     const windowSize = writable({
         height: window.innerHeight,
@@ -72,30 +74,50 @@
     }
 
     $: oneLineMaxHeight = containerHeight * 0.2;
+    $: pipHighlightLayoutEnabled =
+        inPictureInPicture && $activePictureInPictureStore && $highlightedEmbedScreen != undefined;
+    $: pipHighlightLandscape = pipHighlightLayoutEnabled && containerWidth > containerHeight;
+    $: pipCameraContainerStyle = pipHighlightLayoutEnabled
+        ? pipHighlightLandscape
+            ? "flex: 0 0 20%; max-width: 20%; min-width: 20%;"
+            : "flex: 0 0 20%; max-height: 20%; min-height: 20%;"
+        : "";
+    $: pipHighlightContainerStyle = pipHighlightLayoutEnabled
+        ? pipHighlightLandscape
+            ? "flex: 0 0 80%; max-width: 80%; min-width: 80%;"
+            : "flex: 0 0 80%; max-height: 80%; min-height: 80%;"
+        : "";
+    $: {
+        pipOneLineMode = pipHighlightLayoutEnabled
+            ? pipHighlightLandscape
+                ? "vertical"
+                : "horizontal"
+            : inPictureInPicture
+            ? "vertical"
+            : "horizontal";
+    }
 </script>
 
 {#if $proximityMeetingStore === true && !$inExternalServiceStore}
     <div
         class="presentation-layout flex pointer-events-none h-full w-full absolute mobile:mt-3"
-        class:flex-col={!inPictureInPicture || $highlightedEmbedScreen == undefined}
-        class:flex-row-reverse={inPictureInPicture && $highlightedEmbedScreen != undefined}
+        class:flex-col={!pipHighlightLayoutEnabled || !pipHighlightLandscape}
+        class:flex-row-reverse={pipHighlightLayoutEnabled && pipHighlightLandscape}
         style={inPictureInPicture && $highlightedEmbedScreen != undefined ? "height: calc(100vh - 80px);" : ""}
+        bind:clientWidth={containerWidth}
         bind:clientHeight={containerHeight}
     >
         {#if $streamableCollectionStore.size > 0}
             <div
                 class="justify-end md:justify-center w-full relative"
                 class:max-height-quarter={$isOnOneLine && !inPictureInPicture}
-                class:h-full={!$isOnOneLine || inPictureInPicture}
+                class:h-full={!$isOnOneLine || (inPictureInPicture && !pipHighlightLayoutEnabled)}
                 class:overflow-y-auto={inPictureInPicture}
-                class:flex-1={inPictureInPicture && $highlightedEmbedScreen != undefined}
+                class:flex-1={inPictureInPicture && $highlightedEmbedScreen != undefined && !pipHighlightLayoutEnabled}
+                style={pipCameraContainerStyle}
                 bind:this={camContainer}
             >
-                <CamerasContainer
-                    {oneLineMaxHeight}
-                    isOnOneLine={$isOnOneLine}
-                    oneLineMode={inPictureInPicture ? "vertical" : "horizontal"}
-                />
+                <CamerasContainer {oneLineMaxHeight} isOnOneLine={$isOnOneLine} oneLineMode={pipOneLineMode} />
             </div>
         {/if}
 
@@ -104,9 +126,12 @@
                 id="highlighted-media"
                 class="md:mb-0"
                 class:flex-1={!inPictureInPicture || $highlightedEmbedScreen == undefined}
-                class:flex-[4]={inPictureInPicture && $highlightedEmbedScreen != undefined}
+                class:flex-[4]={inPictureInPicture &&
+                    $highlightedEmbedScreen != undefined &&
+                    !pipHighlightLayoutEnabled}
                 class:mb-8={!inPictureInPicture || $highlightedEmbedScreen == undefined}
                 class:mb-0={inPictureInPicture && $highlightedEmbedScreen != undefined}
+                style={pipHighlightContainerStyle}
                 bind:this={highlightScreen}
             >
                 {#key $highlightedEmbedScreen.uniqueId}

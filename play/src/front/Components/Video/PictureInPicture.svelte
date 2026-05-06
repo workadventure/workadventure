@@ -61,9 +61,6 @@
     }
 
     function destroyPictureInPictureComponent() {
-        if (!$askPictureInPictureActivatingStore) {
-            return;
-        }
         if (!parentDivElement) {
             return;
         }

@@ -20,10 +20,12 @@ import {
     ENABLE_OPENAPI_ENDPOINT,
     PROMETHEUS_PORT,
     GRPC_MAX_MESSAGE_SIZE,
+    FRONT_ENVIRONMENT_VARIABLES,
 } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
 import { CompanionListController } from "./controllers/CompanionListController";
 import { FrontController } from "./controllers/FrontController";
+import { PipLayoutTestDevController } from "./controllers/PipLayoutTestDevController";
 import { globalErrorHandler } from "./services/GlobalErrorHandler";
 import { jwtTokenManager } from "./services/JWTTokenManager";
 import { CompanionService } from "./services/CompanionService";
@@ -107,6 +109,9 @@ class App {
             new SwaggerController(this.app);
         }
         new FrontController(this.app);
+        if (FRONT_ENVIRONMENT_VARIABLES.DEBUG_MODE === true) {
+            new PipLayoutTestDevController(this.app);
+        }
         new UserController(this.app);
         new MatrixRoomAreaController(this.app);
 
