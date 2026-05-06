@@ -29,7 +29,77 @@ vi.mock("../../../Stores/ChatStore.ts", () => {
         alreadyAskForInitCryptoConfiguration: writable(false),
     };
 });
+
+const createClientWithVerifiedOtherDevice = () => {
+    const otherDevice = {
+        deviceId: "OTHER",
+        getIdentityKey: vi.fn(() => "identity-key"),
+    };
+    const crypto = {
+        getUserDeviceInfo: vi
+            .fn()
+            .mockResolvedValue(new Map([["@me:example.test", new Map([["OTHER", otherDevice]])]])),
+        getDeviceVerificationStatus: vi.fn((_userId: string, deviceId: string) => {
+            return Promise.resolve({ signedByOwner: deviceId === "OTHER" });
+        }),
+    };
+    const mockMatrixClient = {
+        getCrypto: vi.fn(() => crypto),
+        getUserId: vi.fn(() => "@me:example.test"),
+        getDeviceId: vi.fn(() => "CURRENT"),
+        getKeyBackupVersion: vi.fn().mockResolvedValue(null),
+        isGuest: vi.fn(() => false),
+    } as unknown as MatrixClient;
+
+    return { mockMatrixClient, crypto };
+};
+
 describe("MatrixSecurity", () => {
+    describe("openAutomaticChooseDeviceVerificationMethodModal", () => {
+        it("opens the device verification chooser once for concurrent automatic requests", async () => {
+            const openModal = vi.fn();
+            const { mockMatrixClient } = createClientWithVerifiedOtherDevice();
+
+            const matrixSecurity = new MatrixSecurity(undefined, undefined, openModal);
+            matrixSecurity.updateMatrixClientStore(mockMatrixClient);
+
+            await Promise.all([
+                matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal(),
+                matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal(),
+            ]);
+
+            expect(openModal).toHaveBeenCalledOnce();
+        });
+
+        it("does not reopen the device verification chooser automatically after the first attempt", async () => {
+            const openModal = vi.fn();
+            const { mockMatrixClient } = createClientWithVerifiedOtherDevice();
+
+            const matrixSecurity = new MatrixSecurity(undefined, undefined, openModal);
+            matrixSecurity.updateMatrixClientStore(mockMatrixClient);
+
+            await matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal();
+            await matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal();
+
+            expect(openModal).toHaveBeenCalledOnce();
+        });
+    });
+
+    describe("openChooseDeviceVerificationMethodModal", () => {
+        it("can reopen the device verification chooser explicitly after an automatic attempt", async () => {
+            const openModal = vi.fn();
+            const { mockMatrixClient } = createClientWithVerifiedOtherDevice();
+
+            const matrixSecurity = new MatrixSecurity(undefined, undefined, openModal);
+            matrixSecurity.updateMatrixClientStore(mockMatrixClient);
+
+            await matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal();
+            await matrixSecurity.openChooseDeviceVerificationMethodModal();
+
+            expect(openModal).toHaveBeenCalledTimes(2);
+        });
+    });
+
     describe("initClientCryptoConfiguration", () => {
         const basicMockClient = {
             isGuest: vi.fn().mockReturnValue(null),

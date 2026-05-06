@@ -6,9 +6,8 @@ import { MegaphoneIcon } from "./MegaphoneIcon";
 import { PlayerStatusDot } from "./PlayerStatusDot";
 
 const CORRECTION_RATE = 0.75;
-/** Design system `brand-blue` — autres joueurs. */
-const PLAYER_NAME_BACKGROUND_COLOR_REMOTE = "rgba(20, 48, 76, 1)";
-const PLAYER_NAME_BACKGROUND_COLOR_LOCAL = "rgba(65, 86, 246, 1)";
+/** Design system `brand-blue` — fond du pseudo (tous les joueurs), léger alpha pour laisser voir le décor. */
+const PLAYER_NAME_BACKGROUND_COLOR = "rgba(27, 42, 65, 0.5)";
 const PLAYER_NAME_BACKGROUND_RADIUS = 8;
 
 export class UsernameDisplay extends Phaser.GameObjects.Container {
@@ -20,22 +19,13 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     private playerNameOutlineColor: number | undefined;
     private readonly statusDot: PlayerStatusDot;
     private readonly megaphoneIcon: MegaphoneIcon;
-    private readonly useSecondaryBackground: boolean;
     private readonly onZoomChanged = (zoomModifier: number): void => {
         this.setScale(this.getDisplayScale(zoomModifier));
     };
 
-    constructor(
-        scene: Phaser.Scene,
-        x: number,
-        y: number,
-        playerName: string,
-        outlineColor: number | undefined,
-        useSecondaryBackground = false
-    ) {
+    constructor(scene: Phaser.Scene, x: number, y: number, playerName: string, outlineColor: number | undefined) {
         super(scene, x, y);
         this.playerName = playerName;
-        this.useSecondaryBackground = useSecondaryBackground;
         this.setDepth(DEPTH_INGAME_TEXT_INDEX);
 
         // Todo: Replace the font family with a better one
@@ -100,9 +90,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         context.textAlign = "center";
         context.textBaseline = "middle";
         context.lineJoin = "round";
-        context.fillStyle = this.useSecondaryBackground
-            ? PLAYER_NAME_BACKGROUND_COLOR_LOCAL
-            : PLAYER_NAME_BACKGROUND_COLOR_REMOTE;
+        context.fillStyle = dynamicOutlineColor ?? PLAYER_NAME_BACKGROUND_COLOR;
         context.beginPath();
         const roundRect = (
             context as CanvasRenderingContext2D & {
@@ -115,12 +103,6 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
             context.rect(0, 0, textureWidth, textureHeight);
         }
         context.fill();
-
-        if (dynamicOutlineColor !== undefined) {
-            context.lineWidth = strokeThickness;
-            context.strokeStyle = dynamicOutlineColor;
-            context.stroke();
-        }
 
         context.fillStyle = "#ffffff";
         context.fillText(this.playerName, textureWidth / 2 + 6, textureHeight / 2);

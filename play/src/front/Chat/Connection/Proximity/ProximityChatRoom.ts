@@ -100,6 +100,8 @@ export class ProximityChatRoom implements ChatRoom {
     hasUnreadMessages = writable(false);
     unreadMessagesCount = writable(0);
     unreadNotificationCount = writable(0);
+    initializationState = readable<"ready">("ready");
+    initializationError = readable<Error | undefined>(undefined);
     pictureStore = readable(undefined);
     avatarFallbackColor = readable(undefined);
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
@@ -129,6 +131,16 @@ export class ProximityChatRoom implements ChatRoom {
     private _currentMeetingParticipantsStore = writable<MeetingParticipant[]>([]);
     public readonly currentMeetingParticipantsStore: Readable<MeetingParticipant[]> =
         this._currentMeetingParticipantsStore;
+
+    ensureInitialized(): Promise<void> {
+        return Promise.resolve();
+    }
+    ensureTimelineInitialized(): Promise<void> {
+        return Promise.resolve();
+    }
+    ensureMembersInitialized(): Promise<void> {
+        return Promise.resolve();
+    }
     currentMatrixRoom: ChatRoom | undefined;
     currentChatVisibility = false;
 

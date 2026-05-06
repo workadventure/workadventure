@@ -6,6 +6,7 @@ import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipel
 import type { GameScene } from "../Game/GameScene";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import { gameManager } from "../Game/GameManager";
+import { PHASER_COLOR_DESIGN_SYSTEM_SECONDARY } from "../../Utils/DesignSystemPhaserColors";
 import Sprite = Phaser.GameObjects.Sprite;
 
 type EventCallback = (state: unknown, parameters: unknown) => void;
@@ -28,7 +29,7 @@ export class ActionableItem implements ActivatableInterface {
             .getCurrentGameScene()
             .getOutlineManager()
             .add(this.sprite, () => {
-                return { thickness: 2, outlineColor: 0xf9e81e };
+                return { thickness: 2, outlineColor: PHASER_COLOR_DESIGN_SYSTEM_SECONDARY };
             });
     }
 
@@ -64,7 +65,7 @@ export class ActionableItem implements ActivatableInterface {
 
         this.getOutlinePlugin()?.add(this.sprite, {
             thickness: 2,
-            outlineColor: 0xf9e81e,
+            outlineColor: PHASER_COLOR_DESIGN_SYSTEM_SECONDARY,
         });
     }
 

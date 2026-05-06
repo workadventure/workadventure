@@ -84,6 +84,7 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
             await this.matrixRoom.client
                 .redactEvent(this.matrixRoom.roomId, myReactionEventId)
                 .catch((error) => console.error(error));
+            this.removeUser(this.matrixRoom.myUserId);
         } catch (error) {
             console.error(error);
         }
