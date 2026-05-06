@@ -23,7 +23,9 @@ import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { openChatRoom } from "../Chat/Utils";
 import LL from "../../i18n/i18n-svelte";
 import waLogo from "../Components/images/logo.svg";
+import WebsocketReconnectingToast from "../Components/Toasts/WebsocketReconnectingToast.svelte";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
+import { toastStore } from "../Stores/ToastStore";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -36,6 +38,7 @@ import { hasCapability } from "./Capabilities";
 const connectionRetryBaseDelayMs = 1_000;
 const connectionRetryMaxDelayMs = 10_000;
 const connectionRetryJitterMs = 500;
+const websocketReconnectingToastId = "websocket-reconnecting-toast";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -437,6 +440,7 @@ class ConnectionManager {
                 .then((connect) => {
                     // Set the default application integration for the room
 
+                    this.bindWebsocketReconnectingToast(connection);
                     this._roomConnectionStream.next(connection);
                     errorScreenStore.delete();
                     resolve(connect);
@@ -547,6 +551,19 @@ class ConnectionManager {
                         .catch(reject);
                 }, retryDelay);
             });
+        });
+    }
+
+    private bindWebsocketReconnectingToast(connection: RoomConnection): void {
+        // The websocketReconnectingStream stream is completed with the RoomConnection lifecycle.
+        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+        connection.websocketReconnectingStream.subscribe((reconnecting) => {
+            if (reconnecting) {
+                toastStore.addToast(WebsocketReconnectingToast, {}, websocketReconnectingToastId);
+                return;
+            }
+
+            toastStore.removeToast(websocketReconnectingToastId);
         });
     }
 

@@ -91,7 +91,7 @@ import {
     SpaceUser,
     LeaveChatRoomAreaMessage,
 } from "@workadventure/messages";
-import { Subject } from "rxjs";
+import { Subject, type Observable } from "rxjs";
 import { get } from "svelte/store";
 import { generateFieldMask } from "protobuf-fieldmask";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
@@ -145,6 +145,7 @@ const recordingQueryTimeoutMs = 60_000;
 
 export class RoomConnection implements RoomConnection {
     public readonly socket: WorkAdventureWebSocket;
+    public readonly websocketReconnectingStream: Observable<boolean>;
     private userId: number | null = null;
     private _closed = false;
     private tags: string[] = [];
@@ -319,6 +320,7 @@ export class RoomConnection implements RoomConnection {
         }
 
         this.socket = new WorkAdventureWebSocket(url, subProtocols);
+        this.websocketReconnectingStream = this.socket.reconnectingStream;
 
         this.socket.onopen = () => {
             console.info("Socket has been opened");

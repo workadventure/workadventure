@@ -4,6 +4,7 @@ import {
     type ClientToServerMessage,
     type ServerToClientMessage,
 } from "@workadventure/messages";
+import { BehaviorSubject } from "rxjs";
 import { NoncedMessageStore } from "../../common/NoncedMessageStore";
 import { CLIENT_DISCONNECTION_RETENTION_MS } from "../Enum/EnvironmentVariable";
 
@@ -20,6 +21,9 @@ export class WorkAdventureWebSocket {
     public onclose: ((this: WorkAdventureWebSocket, ev: CloseEvent) => void) | null = null;
     public onerror: ((this: WorkAdventureWebSocket, ev: Event) => void) | null = null;
     public onmessage: ((this: WorkAdventureWebSocket, ev: MessageEvent<ServerToClientMessage>) => void) | null = null;
+
+    private readonly _reconnectingStream = new BehaviorSubject<boolean>(false);
+    public readonly reconnectingStream = this._reconnectingStream.asObservable();
 
     private readonly url: URL;
     private readonly protocols: string[] | undefined;
@@ -62,6 +66,8 @@ export class WorkAdventureWebSocket {
     public close(code?: number, reason?: string): void {
         this.manuallyClosed = true;
         this.detachSocketListeners(this.socket);
+        this._reconnectingStream.next(false);
+        this._reconnectingStream.complete();
         this.socket.close(code, reason);
     }
 
@@ -72,6 +78,7 @@ export class WorkAdventureWebSocket {
             for (const { payload } of this.outgoingMessagesStore.getAll()) {
                 this.socket.send(payload);
             }
+            this._reconnectingStream.next(false);
         }
         const event = new Event("open");
         this.onopen?.call(this, event);
@@ -82,16 +89,19 @@ export class WorkAdventureWebSocket {
 
         if (!this.manuallyClosed && this.shouldReconnect(event)) {
             this.reconnectAttempted = true;
+            this._reconnectingStream.next(true);
             this.socket = this.createSocket();
             return;
         }
 
+        this._reconnectingStream.next(false);
         const closeEvent = new CloseEvent("close", {
             code: event.code,
             reason: event.reason,
             wasClean: event.wasClean,
         });
         this.onclose?.call(this, closeEvent);
+        this._reconnectingStream.complete();
     };
 
     private handleErrorEvent = (event: Event): void => {
