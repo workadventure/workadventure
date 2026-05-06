@@ -1,7 +1,7 @@
 import fs from "fs";
 import { v4 } from "uuid";
 import type { MeResponse, RegisterData } from "@workadventure/messages";
-import { MeRequest } from "@workadventure/messages";
+import { MatrixGuestLoginRequest, MeRequest } from "@workadventure/messages";
 import { z } from "zod";
 import { errors } from "jose";
 import Mustache from "mustache";
@@ -10,7 +10,13 @@ import Debug from "debug";
 import type { AuthTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
-import { DISABLE_ANONYMOUS, FRONT_URL, MATRIX_PUBLIC_URI, PUSHER_URL } from "../enums/EnvironmentVariable";
+import {
+    DISABLE_ANONYMOUS,
+    FRONT_URL,
+    MATRIX_API_URI,
+    MATRIX_PUBLIC_URI,
+    PUSHER_URL,
+} from "../enums/EnvironmentVariable";
 import { adminService } from "../services/AdminService";
 import { validateQuery } from "../services/QueryValidator";
 import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
@@ -66,6 +72,7 @@ export class AuthenticateController extends BaseHttpController {
         this.logoutCallback();
         this.register();
         this.anonymLogin();
+        this.matrixGuestLogin();
         this.profileCallback();
         this.logoutUser();
     }
@@ -531,6 +538,59 @@ export class AuthenticateController extends BaseHttpController {
                     userUuid,
                 });
                 return;
+            }
+        });
+    }
+
+    /**
+     * Anonymous session with a Synapse guest Matrix account (for chat without OpenID SSO).
+     * Requires MATRIX_API_URI, MATRIX_PUBLIC_URI, MATRIX_DOMAIN and guest registration enabled on the homeserver.
+     */
+    private matrixGuestLogin(): void {
+        this.app.post("/matrixGuestLogin", async (req, res) => {
+            debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
+            if (DISABLE_ANONYMOUS) {
+                res.status(403).send("");
+                return;
+            }
+            if (!MATRIX_API_URI || !MATRIX_PUBLIC_URI) {
+                res.status(503).send("Matrix guest login is not configured");
+                return;
+            }
+
+            try {
+                const parsedBody = MatrixGuestLoginRequest.safeParse(
+                    req.body && typeof req.body === "object" ? req.body : {}
+                );
+                const playerName = parsedBody.success ? parsedBody.data.playerName?.trim() : undefined;
+
+                const guest = await matrixProvider.registerGuestUser();
+                if (playerName && playerName.length > 0) {
+                    await matrixProvider.setGuestProfileDisplayName(guest.userId, guest.accessToken, playerName);
+                }
+
+                const userUuid = v4();
+                const bareMatrixId = matrixProvider.getBareMatrixIdFromUserId(guest.userId);
+                const authToken = await jwtTokenManager.createAuthToken(
+                    userUuid,
+                    undefined,
+                    playerName,
+                    undefined,
+                    [],
+                    bareMatrixId
+                );
+
+                res.json({
+                    authToken,
+                    userUuid,
+                    matrixUserId: guest.userId,
+                    matrixAccessToken: guest.accessToken,
+                    matrixDeviceId: guest.deviceId,
+                    matrixServerUrl: MATRIX_PUBLIC_URI,
+                });
+            } catch (error) {
+                console.error("matrixGuestLogin:", error);
+                res.status(500).send("Matrix guest registration failed");
             }
         });
     }

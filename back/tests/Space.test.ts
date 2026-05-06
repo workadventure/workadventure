@@ -708,8 +708,7 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>()
             );
 
-            space.publishMetadata(
-                {
+            space.publishMetadata({
                 foo: "bar",
             });
 
@@ -767,9 +766,8 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>()
             );
 
-            space.publishMetadata(
-                {
-                    "metadata-1": "value-1",
+            space.publishMetadata({
+                "metadata-1": "value-1",
             });
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
@@ -803,7 +801,6 @@ describe("Space with filter", () => {
                 })
             );
         });
-
     });
 
     describe("dispatchPublicEvent", () => {

@@ -239,6 +239,10 @@ export const isMapDetailsData = z.object({
       "Whether the feature 'upload' in the chat is enabled or not on this room",
     example: true,
   }),
+  enableMatrixGuest: extendApi(z.boolean().optional(), {
+    description: "Whether the matrix guest is enabled or not on this room",
+    example: true,
+  }),
   enableChatOnlineList: extendApi(z.boolean().optional(), {
     description:
       "Whether the feature 'Users list' in the chat is enabled or not on this room",

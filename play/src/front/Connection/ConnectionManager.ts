@@ -1,7 +1,12 @@
 import * as Sentry from "@sentry/svelte";
 import { get } from "svelte/store";
-import type { ErrorApiErrorData, ErrorApiRetryData, ErrorApiUnauthorizedData } from "@workadventure/messages";
-import { isRegisterData, MeResponse, ErrorScreenMessage } from "@workadventure/messages";
+import type {
+    ErrorApiErrorData,
+    ErrorApiRetryData,
+    ErrorApiUnauthorizedData,
+    MatrixGuestLoginData,
+} from "@workadventure/messages";
+import { isRegisterData, MatrixGuestLoginResponse, MeResponse, ErrorScreenMessage } from "@workadventure/messages";
 import axios, { AxiosError, isAxiosError } from "axios";
 import { Subject } from "rxjs";
 import { asError } from "catch-unknown";
@@ -12,7 +17,7 @@ import { userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
-import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
+import { ENABLE_OPENID, MATRIX_PUBLIC_URI } from "../Enum/EnvironmentVariable";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
@@ -24,6 +29,7 @@ import { openChatRoom } from "../Chat/Utils";
 import LL from "../../i18n/i18n-svelte";
 import waLogo from "../Components/images/logo.svg";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
+import { generateRandomName } from "../Utils/RandomNameGenerator";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -393,7 +399,45 @@ class ConnectionManager {
         this.anonymousMatrixLogin();
     }
 
+    private async initGuestConnectionToMatrix(isBenchmark: boolean = false): Promise<void> {
+        if (!isBenchmark && !MATRIX_PUBLIC_URI) return;
+        try {
+            // Use the player name from the local user store or the game manager, or generate a random name if neither is available
+            const playerName = localUserStore.getName() ?? gameManager.getPlayerName() ?? generateRandomName();
+            // Create a matrix guest session
+            const raw = await axiosWithRetry
+                .post("matrixGuestLogin", playerName.trim() !== "" ? { playerName: playerName.trim() } : {})
+                .then((res) => res.data);
+            const parsed = MatrixGuestLoginResponse.safeParse(raw);
+            if (parsed.success) {
+                this.applyAnonymousMatrixGuestLogin(parsed.data, isBenchmark);
+                return;
+            }
+            console.warn("matrixGuestLogin: invalid response", parsed.error);
+        } catch (error) {
+            console.warn("matrixGuestLogin failed, falling back to anonymLogin", error);
+        }
+    }
+
+    private applyAnonymousMatrixGuestLogin(data: MatrixGuestLoginData, isBenchmark: boolean): void {
+        this.localUser = new LocalUser(data.userUuid, null, data.matrixUserId);
+        this.authToken = data.authToken;
+        if (!isBenchmark) {
+            localUserStore.saveUser(this.localUser);
+            localUserStore.setAuthToken(this.authToken);
+            localUserStore.setMatrixUserId(data.matrixUserId);
+            localUserStore.setMatrixAccessToken(data.matrixAccessToken);
+            localUserStore.setMatrixRefreshToken(null);
+            localUserStore.setMatrixDeviceId(data.matrixDeviceId, data.matrixUserId);
+            localUserStore.setMatrixLoginToken(null);
+            localUserStore.setGuest(true);
+            gameManager.setMatrixServerUrl(data.matrixServerUrl);
+            userIsConnected.set(true);
+        }
+    }
+
     private anonymousMatrixLogin() {
+        localUserStore.setGuest(false);
         localUserStore.setMatrixLoginToken(null);
         localUserStore.setMatrixUserId(null);
         localUserStore.setMatrixAccessToken(null);
@@ -612,6 +656,10 @@ class ConnectionManager {
         //user connected, set connected store for menu at true
         if (localUserStore.isLogged()) {
             userIsConnected.set(true);
+        } else if (!localUserStore.isMatrixGuestChatSession()) {
+            await this.initGuestConnectionToMatrix().catch((error) => {
+                console.warn("initGuestConnectionToMatrix failed, falling back to anonymLogin", error);
+            });
         }
 
         return response;

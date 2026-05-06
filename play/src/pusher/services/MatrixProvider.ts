@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import axios from "axios";
 import pLimit from "p-limit";
@@ -84,6 +85,129 @@ class MatrixProvider {
 
     getBareMatrixIdFromEmail(email: string): string {
         return email.replace("@", "_");
+    }
+
+    /** Localpart of a Matrix user id (e.g. `@name:domain` → `name`). */
+    getBareMatrixIdFromUserId(matrixUserId: string): string {
+        const localpart = matrixUserId.split(":")[0];
+        if (!localpart.startsWith("@")) {
+            throw new Error(`Invalid Matrix user id: ${matrixUserId}`);
+        }
+        return localpart.slice(1);
+    }
+
+    /**
+     * Registers a guest account on the homeserver (requires `allow_guest_access` on Synapse).
+     * Uses the public registration API without admin credentials.
+     *
+     * Synapse often responds with HTTP 401 and User-Interactive Authentication (session + flows).
+     * Guest registration then requires completing the `m.login.dummy` stage (see Matrix CS API).
+     *
+     * Some Synapse configs require a `password` field for registration (including guest); we send a random
+     * password on each request — the client only uses the returned access_token.
+     */
+    async registerGuestUser(): Promise<{ userId: string; accessToken: string; deviceId: string }> {
+        if (!MATRIX_API_URI) {
+            throw new Error("MATRIX_API_URI is not configured");
+        }
+
+        const registerUrl = `${MATRIX_API_URI}_matrix/client/v3/register`;
+        const password = randomBytes(32).toString("base64url");
+
+        const guestBody = (extra: Record<string, unknown>) => ({
+            kind: "guest" as const,
+            password,
+            ...extra,
+        });
+
+        let response = await axios.post(registerUrl, guestBody({}), { validateStatus: () => true });
+
+        if (response.status === 401 && this.registrationRequiresDummyAuth(response.data)) {
+            const session = (response.data as { session: string }).session;
+            response = await axios.post(
+                registerUrl,
+                guestBody({
+                    auth: {
+                        type: "m.login.dummy",
+                        session,
+                    },
+                }),
+                { validateStatus: () => true }
+            );
+        }
+
+        if (response.status !== 200) {
+            throw new Error(
+                `Matrix guest registration failed (HTTP ${response.status}): ${JSON.stringify(response.data)}`
+            );
+        }
+
+        const data = response.data as {
+            user_id?: string;
+            access_token?: string;
+            device_id?: string;
+            errcode?: string;
+        };
+
+        if (data.errcode) {
+            throw new Error(`Matrix guest registration failed: ${data.errcode}`);
+        }
+        if (!data.user_id || !data.access_token || !data.device_id) {
+            throw new Error("Matrix guest registration response is missing user_id, access_token, or device_id");
+        }
+
+        return {
+            userId: data.user_id,
+            accessToken: data.access_token,
+            deviceId: data.device_id,
+        };
+    }
+
+    /**
+     * Sets the Matrix profile display name (visible in chat) for a guest session.
+     * Uses the authenticated user's access token from registration.
+     */
+    async setGuestProfileDisplayName(userId: string, accessToken: string, displayName: string): Promise<void> {
+        const trimmed = displayName.trim();
+        if (!MATRIX_API_URI || trimmed.length === 0) {
+            return;
+        }
+
+        const url = `${MATRIX_API_URI}_matrix/client/v3/profile/${encodeURIComponent(userId)}/displayname`;
+        const response = await axios.put(
+            url,
+            { displayname: trimmed },
+            {
+                headers: { Authorization: `Bearer ${accessToken}` },
+                validateStatus: () => true,
+            }
+        );
+
+        if (response.status !== 200) {
+            console.warn(
+                `Matrix set displayname failed (HTTP ${response.status}) for ${userId}: ${JSON.stringify(
+                    response.data
+                )}`
+            );
+        }
+    }
+
+    /** True when Synapse returned UIA with an m.login.dummy stage (registration not finished). */
+    private registrationRequiresDummyAuth(data: unknown): boolean {
+        if (data === null || typeof data !== "object") {
+            return false;
+        }
+        const d = data as { session?: unknown; flows?: unknown };
+        if (typeof d.session !== "string" || !Array.isArray(d.flows)) {
+            return false;
+        }
+        return d.flows.some(
+            (flow: unknown) =>
+                flow !== null &&
+                typeof flow === "object" &&
+                Array.isArray((flow as { stages?: unknown }).stages) &&
+                (flow as { stages: string[] }).stages.includes("m.login.dummy")
+        );
     }
 
     private async getAccessToken(): Promise<string> {

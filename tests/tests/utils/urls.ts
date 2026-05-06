@@ -2,6 +2,9 @@ import { RENDERER_MODE } from "./environment";
 
 export const play_url =
     process.env.PLAY_URL ?? (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://play.workadventure.localhost";
+
+/** Base URL for the Pusher HTTP API (AuthenticateController, etc.). */
+export const pusher_url = process.env.PUSHER_URL ?? "http://pusher.workadventure.localhost";
 export const map_storage_url =
     (process.env.MAP_STORAGE_PROTOCOL ?? "http") +
     "://john.doe:password@" +

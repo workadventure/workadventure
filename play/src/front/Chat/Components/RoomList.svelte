@@ -14,6 +14,7 @@
     import ExternalComponents from "../../Components/ExternalModules/ExternalComponents.svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatNotificationStore } from "../../Stores/ProximityNotificationStore";
+    import { localUserStore } from "../../Connection/LocalUserStore";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -184,7 +185,7 @@
                     <ChatError />
                 {/if}
 
-                {#if !$userIsConnected && gameManager.getCurrentGameScene().room.isMatrixChatEnabled}
+                {#if !$userIsConnected && !localUserStore.isMatrixGuestChatSession() && gameManager.getCurrentGameScene().room.isMatrixChatEnabled}
                     <RequireConnection />
                 {:else if $loginTokenErrorStore}
                     <RequireConnection>

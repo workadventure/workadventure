@@ -45,6 +45,7 @@ export const PROMETHEUS_AUTHORIZATION_TOKEN: string | undefined = undefined;
 export const PROMETHEUS_PORT = 0;
 export const ENABLE_CHAT = true;
 export const ENABLE_CHAT_UPLOAD = true;
+export const ENABLE_MATRIX_GUEST = true;
 export const ENABLE_CHAT_ONLINE_LIST = true;
 export const ENABLE_CHAT_DISCONNECTED_LIST = true;
 export const DEFAULT_WOKA_NAME = "";
@@ -131,6 +132,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     OPID_PROFILE_SCREEN_PROVIDER: undefined,
     OPID_WOKA_NAME_POLICY,
     ENABLE_CHAT_UPLOAD,
+    ENABLE_MATRIX_GUEST,
     FALLBACK_LOCALE,
     ENABLE_REPORT_ISSUES_MENU: false,
     REPORT_ISSUES_URL: undefined,

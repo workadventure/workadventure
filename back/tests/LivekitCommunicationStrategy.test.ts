@@ -12,7 +12,7 @@ function createUser(spaceUserId: string): SpaceUser {
 }
 
 describe("LivekitCommunicationStrategy", () => {
-    it("stops recording through the server path when the last streaming user leaves",async () => {
+    it("stops recording through the server path when the last streaming user leaves", async () => {
         const dispatchPrivateEvent = vi.fn();
         const stopRecordingByServer = vi.fn().mockResolvedValue(undefined);
 
