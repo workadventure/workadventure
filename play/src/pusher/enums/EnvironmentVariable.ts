@@ -174,6 +174,10 @@ export const LIVEKIT_PIXEL_DENSITY: number = env.LIVEKIT_PIXEL_DENSITY;
 export const ENABLE_ISSUE_REPORT: boolean = env.ENABLE_ISSUE_REPORT || true;
 // Tutorial settings
 export const ENABLE_TUTORIAL: boolean = env.ENABLE_TUTORIAL ?? true;
+export const VIDEO_ANALYTICS_FLUSH_INTERVAL_MS: number = env.VIDEO_ANALYTICS_FLUSH_INTERVAL_MS;
+export const VIDEO_ANALYTICS_TIMEOUT_MS: number = env.VIDEO_ANALYTICS_TIMEOUT_MS;
+export const VIDEO_ANALYTICS_MAX_QUEUE_SIZE: number = env.VIDEO_ANALYTICS_MAX_QUEUE_SIZE;
+export const VIDEO_ANALYTICS_MAX_BATCH_SIZE: number = env.VIDEO_ANALYTICS_MAX_BATCH_SIZE;
 
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {

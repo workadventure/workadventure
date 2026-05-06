@@ -30,6 +30,10 @@ export const isCapabilities = z.object({
         description: "The API can provide ICE server configurations (including TURN servers and credentials) for WebRTC connections.",
         example:"v1"
     }),
+    "api/analytics/video-quality-batch": extendApi(z.optional(z.string()), {
+        description: "Means the api accepts video quality analytics batches.",
+        example: "v1",
+    }),
 });
 
 export type Capabilities = z.infer<typeof isCapabilities>;

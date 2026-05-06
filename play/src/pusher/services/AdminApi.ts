@@ -775,6 +775,158 @@ class AdminApi implements AdminInterface {
         return this.capabilitiesDeferred.promise;
     }
 
+    /**
+     * @openapi
+     * /api/analytics/video-quality-batch:
+     *   post:
+     *     tags: ["AdminAPI"]
+     *     description: Accepts best-effort WebRTC video quality samples sent by pusher.
+     *     security:
+     *      - Bearer: []
+     *     consumes:
+     *      - "application/json"
+     *     produces:
+     *      - "application/json"
+     *     parameters:
+     *      - name: "payload"
+     *        in: "body"
+     *        required: true
+     *        schema:
+     *          type: object
+     *          required:
+     *            - schemaVersion
+     *            - sentAt
+     *            - pusherInstanceId
+     *            - samples
+     *          properties:
+     *            schemaVersion:
+     *              type: integer
+     *              example: 1
+     *            sentAt:
+     *              type: string
+     *              format: date-time
+     *            pusherInstanceId:
+     *              type: string
+     *              example: "pusher-0"
+     *            samples:
+     *              type: array
+     *              items:
+     *                type: object
+     *                required:
+     *                  - clientEventTime
+     *                  - pusherReceivedAt
+     *                  - reporterUserUuid
+     *                  - reporterSpaceUserId
+     *                  - remoteSpaceUserId
+     *                  - spaceName
+     *                  - world
+     *                  - roomId
+     *                  - streamId
+     *                  - streamCategory
+     *                  - transportType
+     *                  - fps
+     *                  - jitter
+     *                  - bandwidthBytesPerSecond
+     *                  - frameWidth
+     *                  - frameHeight
+     *                properties:
+     *                  clientEventTime:
+     *                    type: string
+     *                    format: date-time
+     *                  pusherReceivedAt:
+     *                    type: string
+     *                    format: date-time
+     *                  reporterUserUuid:
+     *                    type: string
+     *                    example: "reporter-uuid"
+     *                  remoteUserUuid:
+     *                    type: string
+     *                  reporterUserId:
+     *                    type: integer
+     *                  reporterSpaceUserId:
+     *                    type: string
+     *                    example: "reporter-space-user"
+     *                  remoteSpaceUserId:
+     *                    type: string
+     *                    example: "remote-space-user"
+     *                  spaceName:
+     *                    type: string
+     *                    example: "world.space"
+     *                  world:
+     *                    type: string
+     *                    example: "world"
+     *                  roomId:
+     *                    type: string
+     *                    example: "https://play.example/@/team/world/room"
+     *                  tabId:
+     *                    type: string
+     *                  reporterClientIp:
+     *                    type: string
+     *                    example: "203.0.113.10"
+     *                  streamId:
+     *                    type: string
+     *                    example: "stream-id"
+     *                  streamCategory:
+     *                    type: string
+     *                    enum: ["video", "screenSharing"]
+     *                  transportType:
+     *                    type: string
+     *                    enum: ["P2P", "Livekit"]
+     *                  relay:
+     *                    type: boolean
+     *                  relayProtocol:
+     *                    type: string
+     *                    enum: ["udp", "tcp", "tls"]
+     *                  livekitServerUrl:
+     *                    type: string
+     *                  fps:
+     *                    type: number
+     *                    format: float
+     *                    example: 24.5
+     *                  fpsStdDev:
+     *                    type: number
+     *                    format: float
+     *                  jitter:
+     *                    type: number
+     *                    format: float
+     *                    example: 0.07
+     *                  bandwidthBytesPerSecond:
+     *                    type: number
+     *                    format: float
+     *                  frameWidth:
+     *                    type: integer
+     *                    example: 1280
+     *                  frameHeight:
+     *                    type: integer
+     *                    example: 720
+     *                  mimeType:
+     *                    type: string
+     *                    example: "video/VP8"
+     *                  sampleSeq:
+     *                    type: integer
+     *                  connectionId:
+     *                    type: string
+     *                  sessionId:
+     *                    type: string
+     *     responses:
+     *       202:
+     *         description: Batch accepted
+     *         schema:
+     *           type: object
+     *           properties:
+     *             status:
+     *               type: string
+     *               example: "accepted"
+     *             acceptedSamples:
+     *               type: integer
+     *               example: 1
+     *       401:
+     *         description: Unauthorized
+     *       413:
+     *         description: Batch too large
+     *       422:
+     *         description: Invalid payload
+     */
     async getTagsList(roomUrl: string): Promise<string[]> {
         /**
          * @openapi

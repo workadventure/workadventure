@@ -136,6 +136,52 @@ message WebRtcSignal {
   string connectionId = 3;
 }
 
+enum VideoQualityStreamCategory {
+  VIDEO_QUALITY_STREAM_CATEGORY_UNSPECIFIED = 0;
+  VIDEO_QUALITY_STREAM_CATEGORY_VIDEO = 1;
+  VIDEO_QUALITY_STREAM_CATEGORY_SCREEN_SHARING = 2;
+}
+
+enum VideoQualityTransportType {
+  VIDEO_QUALITY_TRANSPORT_TYPE_UNSPECIFIED = 0;
+  VIDEO_QUALITY_TRANSPORT_TYPE_P2P = 1;
+  VIDEO_QUALITY_TRANSPORT_TYPE_LIVEKIT = 2;
+}
+
+enum VideoQualityRelayProtocol {
+  VIDEO_QUALITY_RELAY_PROTOCOL_UNSPECIFIED = 0;
+  VIDEO_QUALITY_RELAY_PROTOCOL_UDP = 1;
+  VIDEO_QUALITY_RELAY_PROTOCOL_TCP = 2;
+  VIDEO_QUALITY_RELAY_PROTOCOL_TLS = 3;
+}
+
+message VideoQualitySampleMessage {
+  uint64 clientEventTimeMs = 1;
+  optional uint64 sampleSeq = 2;
+  string streamId = 3;
+  optional string connectionId = 4;
+  optional string sessionId = 5;
+  optional string remoteUserUuid = 6;
+  string remoteSpaceUserId = 7;
+  string spaceName = 8;
+  VideoQualityStreamCategory streamCategory = 9;
+  VideoQualityTransportType transportType = 10;
+  optional bool relay = 11;
+  optional VideoQualityRelayProtocol relayProtocol = 12;
+  optional string livekitServerUrl = 13;
+  double fps = 14;
+  optional double fpsStdDev = 15;
+  double jitter = 16;
+  double bandwidthBytesPerSecond = 17;
+  uint32 frameWidth = 18;
+  uint32 frameHeight = 19;
+  optional string mimeType = 20;
+}
+
+message VideoQualityReportMessage {
+  repeated VideoQualitySampleMessage samples = 1;
+}
+
 message ReportPlayerMessage {
   string reportedUserUuid = 1;
   string reportComment = 2;
@@ -373,6 +419,7 @@ message ClientToServerMessage {
     MeetingInvitationRequestMessage meetingInvitationRequestMessage = 48;
     MeetingInvitationResponseMessage meetingInvitationResponseMessage = 49;
     SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 46;
+    VideoQualityReportMessage videoQualityReportMessage = 50;
   }
 }
 

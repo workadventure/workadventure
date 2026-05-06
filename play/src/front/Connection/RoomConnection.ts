@@ -78,6 +78,7 @@ import type {
     MeetingInvitationResponseReceivedMessage,
     MeetingInvitationRequestClosedMessage,
     MeetingInvitationRequestTooHighMessage,
+    VideoQualityReportMessage,
 } from "@workadventure/messages";
 import {
     noUndefined,
@@ -2177,6 +2178,15 @@ export class RoomConnection implements RoomConnection {
         menuIconVisiblilityStore.set(false);
         selectCompanionSceneVisibleStore.set(true);
         gameManager.leaveGame(SelectCompanionSceneName, new SelectCompanionScene());
+    }
+
+    public emitVideoQualityReport(message: VideoQualityReportMessage): void {
+        this.send({
+            message: {
+                $case: "videoQualityReportMessage",
+                videoQualityReportMessage: message,
+            },
+        });
     }
 
     private send(message: ClientToServerMessageTsProto): void {

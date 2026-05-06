@@ -1607,10 +1607,12 @@ export class GameScene extends DirtyScene {
         const gameSceneKey = "somekey" + Math.round(Math.random() * 10000);
         const game = new GameScene(this._room, gameSceneKey);
         this.scene.add(gameSceneKey, game, autostart, {
-            initPosition: {
-                x: this.CurrentPlayer.x,
-                y: this.CurrentPlayer.y,
-            },
+            initPosition: this.CurrentPlayer
+                ? {
+                      x: this.CurrentPlayer.x,
+                      y: this.CurrentPlayer.y,
+                  }
+                : undefined,
             reconnecting: reconnecting,
         });
 

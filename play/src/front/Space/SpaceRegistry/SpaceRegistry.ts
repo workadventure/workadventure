@@ -38,6 +38,7 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitUpdateSpaceUserMessage"
     | "spaceDestroyedMessage"
     | "emitBackEvent"
+    | "emitVideoQualityReport"
 >;
 
 /**

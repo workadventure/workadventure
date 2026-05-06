@@ -77,6 +77,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
         throw new Error("Method not implemented.");
     }
     public emitBackEvent = vi.fn();
+    public emitVideoQualityReport = vi.fn();
 
     // Add any other methods or properties that need to be mocked
 }
