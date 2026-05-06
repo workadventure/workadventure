@@ -134,7 +134,7 @@ export class PusherRoom {
                             for (const listener of this.listeners) {
                                 const userData = listener.getUserData();
                                 if (!readableBy || userData.tags.includes(readableBy)) {
-                                    userData.emitInBatch({
+                                    listener.emitInBatch({
                                         message: {
                                             $case: "variableMessage",
                                             variableMessage: variableMessage,
@@ -146,8 +146,7 @@ export class PusherRoom {
                         }
                         case "editMapCommandMessage": {
                             for (const listener of this.listeners) {
-                                const userData = listener.getUserData();
-                                userData.emitInBatch({
+                                listener.emitInBatch({
                                     message: {
                                         $case: "editMapCommandMessage",
                                         editMapCommandMessage: message.message.editMapCommandMessage,
@@ -160,7 +159,7 @@ export class PusherRoom {
                             const errorMessage = message.message.errorMessage;
                             // Let's dispatch this error to all the listeners
                             for (const listener of this.listeners) {
-                                listener.getUserData().emitInBatch({
+                                listener.emitInBatch({
                                     message: {
                                         $case: "errorMessage",
                                         errorMessage: errorMessage,
@@ -172,7 +171,7 @@ export class PusherRoom {
                         case "receivedEventMessage": {
                             // Let's dispatch this receivedEventMessage to all the listeners
                             for (const listener of this.listeners) {
-                                listener.getUserData().emitInBatch({
+                                listener.emitInBatch({
                                     message: {
                                         $case: "receivedEventMessage",
                                         receivedEventMessage: message.message.receivedEventMessage,
@@ -190,7 +189,7 @@ export class PusherRoom {
                             // Broadcast area property variable changes to all listeners
                             const areaPropertyVariableMessage = message.message.areaPropertyVariableMessage;
                             for (const listener of this.listeners) {
-                                listener.getUserData().emitInBatch({
+                                listener.emitInBatch({
                                     message: {
                                         $case: "areaPropertyVariableMessage",
                                         areaPropertyVariableMessage: areaPropertyVariableMessage,

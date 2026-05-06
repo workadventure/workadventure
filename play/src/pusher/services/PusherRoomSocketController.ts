@@ -58,6 +58,7 @@ type WebSocketContext = {
 export class PusherRoomSocketController {
     private readonly wrappersBySocket = new WeakMap<RawSocket, PusherWebSocket>();
     private readonly contextByTabKey = new Map<string, WebSocketContext>();
+    private readonly disconnectingSockets = new WeakSet<PusherWebSocket>();
 
     public constructor(private readonly app: TemplatedApp) {}
 
@@ -66,7 +67,17 @@ export class PusherRoomSocketController {
         if (existingWrapper) {
             return existingWrapper;
         }
-        const wrapper = new PusherWebSocket(rawSocket);
+        const wrapper = new PusherWebSocket(rawSocket, {
+            isDisconnecting: (socket) => this.disconnectingSockets.has(socket),
+            startDisconnecting: (socket) => {
+                if (this.disconnectingSockets.has(socket)) {
+                    return false;
+                }
+
+                this.disconnectingSockets.add(socket);
+                return true;
+            },
+        });
         this.wrappersBySocket.set(rawSocket, wrapper);
         return wrapper;
     }

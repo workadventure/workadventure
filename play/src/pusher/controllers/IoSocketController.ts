@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { AnswerMessage, CompanionDetail, ErrorApiData, SubMessage, WokaDetail } from "@workadventure/messages";
+import type { AnswerMessage, CompanionDetail, ErrorApiData, WokaDetail } from "@workadventure/messages";
 import { apiVersionHash, noUndefined } from "@workadventure/messages";
 import { errors } from "jose";
 import * as Sentry from "@sentry/node";
@@ -19,7 +19,6 @@ import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessa
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
 import type { ConnectingSocketData, SpaceName } from "../models/Websocket/SocketData";
-import { emitInBatch } from "../services/IoSocketHelpers";
 import { ClientAbortError } from "../models/ClientAbortError";
 import { ClientNotPartOfSpaceError, UserAlreadyAddedInSpaceError } from "../models/SpaceValidationErrors";
 import { PusherRoomSocketController } from "../services/PusherRoomSocketController";
@@ -398,7 +397,6 @@ export class IoSocketController {
 
                     const socketData: ConnectingSocketData = {
                         rejected: false,
-                        disconnecting: false,
                         token: token && typeof token === "string" ? token : "",
                         roomId,
                         userId: undefined,
@@ -416,12 +414,6 @@ export class IoSocketController {
                         applications: userData.applications,
                         canEdit: userData.canEdit ?? false,
                         spaceUserId: "",
-                        emitInBatch: (payload: SubMessage): void => {},
-                        batchedMessages: {
-                            event: "",
-                            payload: [],
-                        },
-                        batchTimeout: null,
                         backConnection: undefined,
                         listenedZones: new Set<string>(),
                         pusherRoom: undefined,
@@ -437,7 +429,6 @@ export class IoSocketController {
                         attendeesState: false,
                         queryAbortControllers: new Map<number, AbortController>(),
                         canRecord: userData.canRecord ?? false,
-                        keepAliveInterval: undefined,
                     };
 
                     /* This immediately calls open handler, you must not use res after this call */
@@ -484,11 +475,6 @@ export class IoSocketController {
                 const socketData = socket.getUserData();
                 debug("WebSocket connection established");
 
-                // TODO: move the batching mechanism inside the PusherWebSocket
-                socketData.emitInBatch = (payload: SubMessage): void => {
-                    emitInBatch(socket, payload);
-                };
-
                 await socketManager.handleConnectToRoom(socket);
 
                 for (const loginMessage of socketData.loginMessages) {
@@ -499,22 +485,6 @@ export class IoSocketController {
                         },
                     });
                 }
-
-                // Let's send a ping to keep the connection alive. Note: there is ANOTHER ping/pong mechanism
-                // at the application level, between the front and the back. This other mechanism is in charge
-                // of shutting down the connection when idle. However, because of limitations in the browser
-                // (heavy throttling of setTimeout when tab is in background), that mechanism cannot manage
-                // ping delays lower than 1 minute.
-                // Because there are proxies and load balancers on the path that might cut the connection if
-                // idle for more than ~30 seconds, we need this additional ping/pong mechanism here at the
-                // pusher WebSocket level.
-
-                // TODO: move the keep-alive mechanism inside the PusherWebSocket
-                socketData.keepAliveInterval = setInterval(() => {
-                    if (!socketData.disconnecting) {
-                        socket.ping();
-                    }
-                }, 25000); // Every 25 seconds
 
                 // Performance test
                 /*
@@ -1091,7 +1061,7 @@ export class IoSocketController {
                         console.error("An error occurred while processing a message: ", e);
 
                         try {
-                            if (!userData.disconnecting) {
+                            if (!socket.isDisconnecting()) {
                                 socket.send({
                                     message: {
                                         $case: "errorMessage",
@@ -1118,7 +1088,7 @@ export class IoSocketController {
     }
 
     private sendAnswerMessage(socket: Socket, answerMessage: AnswerMessage) {
-        if (socket.getUserData().disconnecting) {
+        if (socket.isDisconnecting()) {
             // Avoid leaking Map entries when we bail out before scheduling the delayed delete below.
             socket.getUserData().queryAbortControllers.delete(answerMessage.id);
             return;

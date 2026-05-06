@@ -4,6 +4,8 @@ import {
     PusherToFrontWebSocketMessage,
     type ServerToClientMessage,
     type ClientToServerMessage,
+    type BatchMessage,
+    type SubMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import { NoncedMessageStore } from "../../common/NoncedMessageStore";
@@ -12,18 +14,31 @@ import type { SocketData } from "../models/Websocket/SocketData";
 
 export type RawSocket = WebSocket<SocketData>;
 
+export type ConnectionStatusManager = {
+    isDisconnecting: (socket: PusherWebSocket) => boolean;
+    startDisconnecting: (socket: PusherWebSocket) => boolean;
+};
+
 export class PusherWebSocket {
     private static readonly DISCONNECTION_RETENTION_MS = 30_000;
+    private static readonly KEEP_ALIVE_INTERVAL_MS = 25_000;
 
     private socket: RawSocket;
+    private keepAliveInterval: NodeJS.Timeout | undefined;
+    private batchTimeout: NodeJS.Timeout | undefined;
+    private batchedMessages: BatchMessage = {
+        event: "",
+        payload: [],
+    };
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
         PusherWebSocket.DISCONNECTION_RETENTION_MS
     );
 
-    public constructor(socket: RawSocket) {
+    public constructor(socket: RawSocket, private readonly connectionStatusManager: ConnectionStatusManager) {
         this.socket = socket;
+        this.startKeepAlive();
     }
 
     public getUserData(): SocketData {
@@ -40,6 +55,30 @@ export class PusherWebSocket {
         this.outgoingMessagesStore.add(nonce, payloadWithNonce);
 
         return this.socket.send(payloadWithNonce, true);
+    }
+
+    public emitInBatch(payload: SubMessage): void {
+        this.batchedMessages.payload.push(payload);
+
+        if (this.batchTimeout) {
+            return;
+        }
+
+        this.batchTimeout = setTimeout(() => {
+            this.batchTimeout = undefined;
+            if (this.isDisconnecting()) {
+                this.resetBatch();
+                return;
+            }
+
+            this.send({
+                message: {
+                    $case: "batchMessage",
+                    batchMessage: this.batchedMessages,
+                },
+            });
+            this.resetBatch();
+        }, 100);
     }
 
     public decodeIncomingMessage(payload: ArrayBuffer | ArrayBufferView): ClientToServerMessage | undefined {
@@ -68,6 +107,19 @@ export class PusherWebSocket {
 
     public getBufferedAmount(): number {
         return this.socket.getBufferedAmount();
+    }
+
+    public isDisconnecting(): boolean {
+        return this.connectionStatusManager.isDisconnecting(this);
+    }
+
+    public startDisconnecting(): boolean {
+        const started = this.connectionStatusManager.startDisconnecting(this);
+        if (started) {
+            this.stopKeepAlive();
+            this.stopBatching();
+        }
+        return started;
     }
 
     public isCurrentTransport(rawSocket: RawSocket): boolean {
@@ -127,9 +179,7 @@ export class PusherWebSocket {
         }
 
         // Keep logical connection state (room/back stream/subscriptions) while swapping only the transport.
-        Object.assign(newSocketData, previousSocketData, {
-            disconnecting: false,
-        });
+        Object.assign(newSocketData, previousSocketData);
 
         this.socket = newSocket;
 
@@ -144,5 +194,45 @@ export class PusherWebSocket {
         previousSocket.end(1008, "Replaced by a reconnected socket");
 
         return true;
+    }
+
+    private startKeepAlive(): void {
+        if (this.keepAliveInterval) {
+            return;
+        }
+
+        // Keep the pusher WebSocket active across proxies/load balancers; app-level ping can be delayed by browsers.
+        this.keepAliveInterval = setInterval(() => {
+            if (!this.isDisconnecting()) {
+                this.socket.ping();
+            }
+        }, PusherWebSocket.KEEP_ALIVE_INTERVAL_MS);
+    }
+
+    private stopKeepAlive(): void {
+        if (!this.keepAliveInterval) {
+            return;
+        }
+
+        clearInterval(this.keepAliveInterval);
+        this.keepAliveInterval = undefined;
+    }
+
+    private stopBatching(): void {
+        if (!this.batchTimeout) {
+            this.resetBatch();
+            return;
+        }
+
+        clearTimeout(this.batchTimeout);
+        this.batchTimeout = undefined;
+        this.resetBatch();
+    }
+
+    private resetBatch(): void {
+        this.batchedMessages = {
+            event: "",
+            payload: [],
+        };
     }
 }

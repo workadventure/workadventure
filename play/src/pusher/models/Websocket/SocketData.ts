@@ -8,8 +8,6 @@ import type {
     AvailabilityStatus,
     CharacterTextureMessage,
     CompanionTextureMessage,
-    BatchMessage,
-    SubMessage,
 } from "@workadventure/messages";
 import type { AdminLoginMessage } from "../../services/AdminApi";
 import type { PusherRoom } from "../PusherRoom";
@@ -30,7 +28,6 @@ export type SpaceName = string;
  */
 export type ConnectingSocketData = {
     rejected: false;
-    disconnecting: boolean; // TODO: move the connection status management inside the PusherRoomSocketController
     token: string;
     roomId: string;
     userId?: number; // User Id served by the back
@@ -48,9 +45,6 @@ export type ConnectingSocketData = {
     applications?: Array<ApplicationDefinitionInterface> | null;
     canEdit: boolean;
     spaceUserId: string;
-    emitInBatch: (payload: SubMessage) => void;
-    batchedMessages: BatchMessage;
-    batchTimeout: NodeJS.Timeout | null;
     backConnection?: BackConnection;
     listenedZones: Set<string>;
     pusherRoom: PusherRoom | undefined;
@@ -68,7 +62,6 @@ export type ConnectingSocketData = {
     // The abort controllers for each queries received
     queryAbortControllers: Map<number, AbortController>;
     canRecord: boolean;
-    keepAliveInterval: NodeJS.Timeout | undefined;
 };
 
 export type SocketData = ConnectingSocketData & {
