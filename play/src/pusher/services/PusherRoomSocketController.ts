@@ -5,7 +5,7 @@ import * as Sentry from "@sentry/node";
 import { asError } from "catch-unknown";
 import type { ConnectingSocketData } from "../models/Websocket/SocketData";
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
-import type { Socket } from "./SocketManager";
+import type { Socket, SocketUpgradeFailed } from "./SocketManager";
 import { PusherWebSocket } from "./PusherWebSocket";
 import type { RawSocket } from "./PusherWebSocket";
 import { validateWebsocketQuery } from "./QueryValidator";
@@ -25,6 +25,7 @@ type UpgradeContext<TQuery> = {
 
 type UpgradeHandler<TQuery> = (context: UpgradeContext<TQuery>) => void | Promise<void>;
 type OpenHandler = (socket: Socket) => void | Promise<void>;
+type RejectedOpenHandler = (socket: SocketUpgradeFailed) => void | Promise<void>;
 type MessageHandler = (socket: Socket, message: ClientToServerMessage) => void | Promise<void>;
 type CloseHandler = (socket: Socket) => void | Promise<void>;
 type DrainHandler = (socket: Socket) => void | Promise<void>;
@@ -36,6 +37,7 @@ type RoomWsConfig<TQueryValidator extends ZodObject<ZodRawShape>> = {
     queryValidator: TQueryValidator;
     upgrade: UpgradeHandler<ZodInfer<TQueryValidator>>;
     open: OpenHandler;
+    rejectedOpen: RejectedOpenHandler;
     message: MessageHandler;
     close: CloseHandler;
     drain?: DrainHandler;
@@ -112,7 +114,7 @@ export class PusherRoomSocketController {
         path: string,
         config: RoomWsConfig<TQueryValidator>
     ): void {
-        this.app.ws<ConnectingSocketData>(path, {
+        this.app.ws<ConnectingSocketData | UpgradeFailedData>(path, {
             idleTimeout: config.idleTimeout,
             maxPayloadLength: config.maxPayloadLength,
             maxBackpressure: config.maxBackpressure,
@@ -176,6 +178,11 @@ export class PusherRoomSocketController {
             open: (ws) => {
                 (async () => {
                     const socketData = ws.getUserData();
+                    if (socketData.rejected === true) {
+                        await config.rejectedOpen(ws as SocketUpgradeFailed);
+                        return;
+                    }
+
                     const rawSocket = ws as unknown as RawSocket;
 
                     const tabId = socketData.tabId;
@@ -204,6 +211,11 @@ export class PusherRoomSocketController {
                 });
             },
             message: (ws, arrayBuffer) => {
+                if (ws.getUserData().rejected === true) {
+                    ws.end(1008, "Connection rejected");
+                    return;
+                }
+
                 const rawSocket = ws as unknown as RawSocket;
                 const socket = this.getOrCreateWrapper(rawSocket);
 
@@ -227,6 +239,10 @@ export class PusherRoomSocketController {
                 if (!config.drain) {
                     return;
                 }
+                if (ws.getUserData().rejected === true) {
+                    return;
+                }
+
                 const rawSocket = ws as unknown as RawSocket;
                 const socket = this.getOrCreateWrapper(rawSocket);
                 Promise.resolve(config.drain(socket)).catch((e) => {
@@ -235,6 +251,10 @@ export class PusherRoomSocketController {
             },
             close: (ws) => {
                 const socketData = ws.getUserData();
+                if (socketData.rejected === true) {
+                    return;
+                }
+
                 const rawSocket = ws as unknown as RawSocket;
                 const socket = this.wrappersBySocket.get(rawSocket);
                 if (!socket) {

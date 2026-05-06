@@ -25,6 +25,7 @@ export class WorkAdventureWebSocket {
     private readonly protocols: string[] | undefined;
     private manuallyClosed = false;
     private reconnectAttempted = false;
+    private pendingErrorEvent: Event | undefined;
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
@@ -69,6 +70,7 @@ export class WorkAdventureWebSocket {
     private handleOpenEvent = (): void => {
         const isReconnection = this.reconnectAttempted;
         this.reconnectAttempted = false;
+        this.pendingErrorEvent = undefined;
         if (isReconnection) {
             this.replayStoredOutgoingMessages();
         }
@@ -81,10 +83,12 @@ export class WorkAdventureWebSocket {
 
         if (!this.manuallyClosed && this.shouldReconnect(event)) {
             this.reconnectAttempted = true;
+            this.pendingErrorEvent = undefined;
             this.reconnect();
             return;
         }
 
+        this.flushPendingErrorEvent();
         const closeEvent = new CloseEvent("close", {
             code: event.code,
             reason: event.reason,
@@ -94,9 +98,18 @@ export class WorkAdventureWebSocket {
     };
 
     private handleErrorEvent = (): void => {
-        const event = new Event("error");
-        this.onerror?.call(this, event);
+        this.pendingErrorEvent = new Event("error");
     };
+
+    private flushPendingErrorEvent(): void {
+        if (!this.pendingErrorEvent) {
+            return;
+        }
+
+        const event = this.pendingErrorEvent;
+        this.pendingErrorEvent = undefined;
+        this.onerror?.call(this, event);
+    }
 
     private handleMessageEvent = (event: MessageEvent): void => {
         const bytes =
