@@ -69,7 +69,7 @@ export class UsernameDomLayer {
             return;
         }
 
-        username.element.style.setProperty("scale", `${scale}`);
+        username.element.style.transform = `translate(-50%, -50%) scale(${scale})`;
     }
 
     public removeUsername(id: number): void {
