@@ -268,6 +268,10 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     }
 
     public override setPosition(x?: number, y?: number, z?: number, w?: number): this {
+        if (x === this.x && y === this.y) {
+            return this;
+        }
+
         super.setPosition(x, y, z, w);
         this.updateDomTextPosition();
         return this;

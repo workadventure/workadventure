@@ -76,6 +76,10 @@ export abstract class Character extends Container implements OutlineableInterfac
     protected pathWalkingSpeed?: number;
     private currentPathSegmentDistanceFromStart = 0;
     private pathFollowingResolve?: (result: PathFollowResult) => void;
+    private readonly syncDisplayPositionWithPhysics = (): void => {
+        this.updateCharacterDisplayDepth();
+        this.updateUsernameDisplayPosition();
+    };
 
     /**
      * A deferred promise that resolves when the texture of the character is actually displayed.
@@ -203,11 +207,13 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.setClickable(isClickable);
 
         this.scene.physics.world.enableBody(this);
-        this.getBody().setImmovable(true);
-        this.getBody().setCollideWorldBounds(true);
+        const body = this.getBody();
+        body.setImmovable(true);
+        body.setCollideWorldBounds(true);
         this.setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT);
-        this.getBody().setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT); //edit the hitbox to better match the character model
-        this.getBody().setOffset(CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y);
+        body.setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT); //edit the hitbox to better match the character model
+        body.setOffset(CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y);
+        this.scene.events.on(Phaser.Scenes.Events.POST_UPDATE, this.syncDisplayPositionWithPhysics);
         this.updateCharacterDisplayDepth();
     }
 
@@ -243,11 +249,23 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     private updateCharacterDisplayDepth(): void {
         if (this.pointerOverForDepth) {
-            this.setDepth(CHARACTER_DEPTH_WHEN_POINTER_OVER);
-            this.usernameDisplay?.setDepth(USERNAME_DEPTH_WHEN_POINTER_OVER);
+            this.setDepthIfNeeded(CHARACTER_DEPTH_WHEN_POINTER_OVER);
+            this.setUsernameDepthIfNeeded(USERNAME_DEPTH_WHEN_POINTER_OVER);
         } else {
-            this.setDepth(this.y + 16);
-            this.usernameDisplay?.setDepth(DEPTH_INGAME_TEXT_INDEX);
+            this.setDepthIfNeeded(this.y + 16);
+            this.setUsernameDepthIfNeeded(DEPTH_INGAME_TEXT_INDEX);
+        }
+    }
+
+    private setDepthIfNeeded(depth: number): void {
+        if (this.depth !== depth) {
+            this.setDepth(depth);
+        }
+    }
+
+    private setUsernameDepthIfNeeded(depth: number): void {
+        if (this.usernameDisplay && this.usernameDisplay.depth !== depth) {
+            this.usernameDisplay.setDepth(depth);
         }
     }
 
@@ -602,6 +620,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     destroy(): void {
         this.unbindCharacterPointerHoverDepth();
+        this.scene.events.off(Phaser.Scenes.Events.POST_UPDATE, this.syncDisplayPositionWithPhysics);
         this.usernameDisplay?.destroy();
         for (const sprite of this.sprites.values()) {
             if (this.scene) {
