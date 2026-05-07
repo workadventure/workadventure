@@ -49,7 +49,6 @@
     ]
   },
   "devDependencies": {
-    "@fontsource/roboto": "^4.5.8",
     "@iconify-json/tabler": "^1.1.113",
     "@posthog/types": "^1.372.5",
     "@rollup/plugin-inject": "^5.0.5",
