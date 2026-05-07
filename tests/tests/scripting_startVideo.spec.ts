@@ -17,12 +17,12 @@ test.describe("Scripting WA.ui.playVideo functions", () => {
             });
         });
 
-        await expect(page.getByText("Bob")).toBeVisible();
+        await expect(page.getByText("Bob").first()).toBeVisible();
 
         await evaluateScript(page, async () => {
             window.myVideo.stop();
         });
 
-        await expect(page.getByText("Bob")).toBeHidden();
+        await expect(page.getByText("Bob").first()).toBeHidden();
     });
 });

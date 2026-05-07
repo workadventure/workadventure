@@ -69,6 +69,10 @@ export abstract class Character extends Container implements OutlineableInterfac
     protected pathWalkingSpeed?: number;
     private currentPathSegmentDistanceFromStart = 0;
     private pathFollowingResolve?: (result: PathFollowResult) => void;
+    private readonly syncDisplayPositionWithPhysics = (): void => {
+        this.setDepthIfNeeded(this.y + 16);
+        this.updateUsernameDisplayPosition();
+    };
 
     /**
      * A deferred promise that resolves when the texture of the character is actually displayed.
@@ -203,12 +207,14 @@ export abstract class Character extends Container implements OutlineableInterfac
         scene.add.existing(this);
 
         this.scene.physics.world.enableBody(this);
-        this.getBody().setImmovable(true);
-        this.getBody().setCollideWorldBounds(true);
+        const body = this.getBody();
+        body.setImmovable(true);
+        body.setCollideWorldBounds(true);
         this.setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT);
-        this.getBody().setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT); //edit the hitbox to better match the character model
-        this.getBody().setOffset(CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y);
-        this.setDepth(this.y + 16);
+        body.setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT); //edit the hitbox to better match the character model
+        body.setOffset(CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y);
+        this.scene.events.on(Phaser.Scenes.Events.POST_UPDATE, this.syncDisplayPositionWithPhysics);
+        this.setDepthIfNeeded(this.y + 16);
     }
 
     private waitAndGetSnapshot(): Promise<string> {
@@ -239,6 +245,12 @@ export abstract class Character extends Container implements OutlineableInterfac
                     resolve(defaultWoka);
                 });
         });
+    }
+
+    private setDepthIfNeeded(depth: number): void {
+        if (this.depth !== depth) {
+            this.setDepth(depth);
+        }
     }
 
     public setClickable(clickable = true): void {
@@ -554,6 +566,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     destroy(): void {
+        this.scene.events.off(Phaser.Scenes.Events.POST_UPDATE, this.syncDisplayPositionWithPhysics);
         this.usernameDisplay?.destroy();
         for (const sprite of this.sprites.values()) {
             if (this.scene) {
