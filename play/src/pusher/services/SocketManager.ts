@@ -64,7 +64,6 @@ import { SpaceConnection } from "../models/SpaceConnection";
 import { ClientNotPartOfSpaceError } from "../models/SpaceValidationErrors";
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
 import { eventProcessor } from "../models/eventProcessorInit";
-import { emitInBatch } from "./IoSocketHelpers";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
@@ -72,11 +71,12 @@ import { adminService } from "./AdminService";
 import type { ShortMapDescription } from "./ShortMapDescription";
 import { matrixProvider } from "./MatrixProvider";
 import RecordingService from "./RecordingService";
+import type { PusherWebSocket } from "./PusherWebSocket";
 
 const debug = Debug("socket");
 
 export type AdminSocket = WebSocket<AdminSocketData>;
-export type Socket = WebSocket<SocketData>;
+export type Socket = PusherWebSocket;
 export type SocketUpgradeFailed = WebSocket<UpgradeFailedData>;
 
 export class SocketManager implements ZoneEventListener {
@@ -267,13 +267,13 @@ export class SocketManager implements ZoneEventListener {
                     }
 
                     // Let's pass data over from the back to the client.
-                    if (!socketData.disconnecting) {
-                        client.send(ServerToClientMessage.encode(message).finish(), true);
+                    if (!client.isDisconnecting()) {
+                        client.send(message);
                     }
                 })
                 .on("end", () => {
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
-                    if (!socketData.disconnecting) {
+                    if (!client.isDisconnecting()) {
                         const connectionCloseReason =
                             backConnectionCloseReason ?? "No close reason received from back server.";
                         console.warn(
@@ -295,7 +295,7 @@ export class SocketManager implements ZoneEventListener {
                             date.toLocaleString("en-GB"),
                         err
                     );
-                    if (!socketData.disconnecting) {
+                    if (!client.isDisconnecting()) {
                         this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                     }
                 });
@@ -337,7 +337,6 @@ export class SocketManager implements ZoneEventListener {
         socketData.viewport = message.viewportMessage;
         socketData.name = message.name;
         socketData.availabilityStatus = message.availabilityStatus;
-        socketData.tabId = message.tabId;
 
         const streamToBack = socketData.backConnection;
         if (!streamToBack) {
@@ -524,19 +523,12 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public cleanupSocket(client: Socket): void {
-        const socketData = client.getUserData();
-
-        if (socketData.disconnecting) {
+        if (!client.startDisconnecting()) {
             // Cleanup already called
             return;
         }
 
-        socketData.disconnecting = true;
-
-        if (socketData.keepAliveInterval) {
-            clearInterval(socketData.keepAliveInterval);
-            socketData.keepAliveInterval = undefined;
-        }
+        const socketData = client.getUserData();
 
         try {
             this.leaveRoom(client);
@@ -607,7 +599,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     onGroupUsersUpdated(group: GroupDescriptor, listener: Socket): void {
-        emitInBatch(listener, {
+        listener.emitInBatch({
             message: {
                 $case: "groupUsersUpdateMessage",
                 groupUsersUpdateMessage: {
@@ -619,7 +611,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     onEmote(emoteMessage: EmoteEventMessage, listener: Socket): void {
-        emitInBatch(listener, {
+        listener.emitInBatch({
             message: {
                 $case: "emoteEventMessage",
                 emoteEventMessage: emoteMessage,
@@ -628,7 +620,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: Socket): void {
-        emitInBatch(listener, {
+        listener.emitInBatch({
             message: {
                 $case: "playerDetailsUpdatedMessage",
                 playerDetailsUpdatedMessage,
@@ -637,7 +629,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     onError(errorMessage: ErrorMessage, listener: Socket): void {
-        emitInBatch(listener, {
+        listener.emitInBatch({
             message: {
                 $case: "errorMessage",
                 errorMessage,
@@ -871,7 +863,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public onUserEnters(user: UserDescriptor, listener: Socket): void {
-        emitInBatch(listener, {
+        listener.emitInBatch({
             message: {
                 $case: "userJoinedMessage",
                 userJoinedMessage: user.toUserJoinedMessage(),
@@ -880,7 +872,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public onUserMoves(user: UserDescriptor, listener: Socket): void {
-        emitInBatch(listener, {
+        listener.emitInBatch({
             message: {
                 $case: "userMovedMessage",
                 userMovedMessage: user.toUserMovedMessage(),
@@ -889,7 +881,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public onUserLeaves(userId: number, listener: Socket): void {
-        emitInBatch(listener, {
+        listener.emitInBatch({
             message: {
                 $case: "userLeftMessage",
                 userLeftMessage: {
@@ -900,7 +892,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public onGroupEnters(group: GroupDescriptor, listener: Socket): void {
-        emitInBatch(listener, {
+        listener.emitInBatch({
             message: {
                 $case: "groupUpdateMessage",
                 groupUpdateMessage: group.toGroupUpdateMessage(),
@@ -913,7 +905,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public onGroupLeaves(groupId: number, listener: Socket): void {
-        emitInBatch(listener, {
+        listener.emitInBatch({
             message: {
                 $case: "groupDeleteMessage",
                 groupDeleteMessage: {
@@ -924,17 +916,13 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public emitWorldFullMessage(client: Socket): void {
-        const socketData = client.getUserData();
-        if (!socketData.disconnecting) {
-            client.send(
-                ServerToClientMessage.encode({
-                    message: {
-                        $case: "worldFullMessage",
-                        worldFullMessage: {},
-                    },
-                }).finish(),
-                true
-            );
+        if (!client.isDisconnecting()) {
+            client.send({
+                message: {
+                    $case: "worldFullMessage",
+                    worldFullMessage: {},
+                },
+            });
         }
     }
 
@@ -1101,7 +1089,7 @@ export class SocketManager implements ZoneEventListener {
                 new Error(`Security exception, the client tried to update the map: ${JSON.stringify(socketData)}`)
             );
             // Emit error message
-            socketData.emitInBatch({
+            client.emitInBatch({
                 message: {
                     $case: "errorMessage",
                     errorMessage: {
@@ -1200,23 +1188,20 @@ export class SocketManager implements ZoneEventListener {
             // Nothing to do with the error
             tags = [];
         }
-        client.send(
-            ServerToClientMessage.encode({
-                message: {
-                    $case: "answerMessage",
-                    answerMessage: {
-                        id: queryMessage.id,
-                        answer: {
-                            $case: "roomTagsAnswer",
-                            roomTagsAnswer: {
-                                tags,
-                            },
+        client.send({
+            message: {
+                $case: "answerMessage",
+                answerMessage: {
+                    id: queryMessage.id,
+                    answer: {
+                        $case: "roomTagsAnswer",
+                        roomTagsAnswer: {
+                            tags,
                         },
                     },
                 },
-            }).finish(),
-            true
-        );
+            },
+        });
     }
 
     async handleRoomsFromSameWorldQuery(client: Socket, queryMessage: QueryMessage) {
@@ -1227,53 +1212,47 @@ export class SocketManager implements ZoneEventListener {
                 undefined,
                 client.getUserData().tags
             );
-            client.send(
-                ServerToClientMessage.encode({
+            client.send({
+                message: {
+                    $case: "answerMessage",
+                    answerMessage: {
+                        id: queryMessage.id,
+                        answer: {
+                            $case: "roomsFromSameWorldAnswer",
+                            roomsFromSameWorldAnswer: {
+                                roomDescriptions: roomDescriptions.map((room) => ({
+                                    ...room,
+                                    name: room.name ?? "",
+                                    roomUrl: room.roomUrl ?? "",
+                                    description: room.description ?? undefined, // Add this line to ensure description is not null
+                                    wamUrl: room.wamUrl ?? undefined, // Add this line to ensure wamUrl is not null
+                                    copyright: room.copyright ?? undefined, // Add this line to ensure copyright is not null
+                                    thumbnail: room.thumbnail ?? undefined, // Add this line to ensure thumbnail is not null
+                                    areasSearchable: room.areasSearchable ?? undefined, // Add this line to ensure areasSearchable is not null
+                                    entitiesSearchable: room.entitiesSearchable ?? undefined, // Add this line to ensure entitiesSearchable is not null
+                                })),
+                            },
+                        },
+                    },
+                },
+            });
+        } catch (e) {
+            console.warn("SocketManager => handleRoomsFromSameWorldQuery => error while getting other rooms list", e);
+            try {
+                client.send({
                     message: {
                         $case: "answerMessage",
                         answerMessage: {
                             id: queryMessage.id,
                             answer: {
-                                $case: "roomsFromSameWorldAnswer",
-                                roomsFromSameWorldAnswer: {
-                                    roomDescriptions: roomDescriptions.map((room) => ({
-                                        ...room,
-                                        name: room.name ?? "",
-                                        roomUrl: room.roomUrl ?? "",
-                                        description: room.description ?? undefined, // Add this line to ensure description is not null
-                                        wamUrl: room.wamUrl ?? undefined, // Add this line to ensure wamUrl is not null
-                                        copyright: room.copyright ?? undefined, // Add this line to ensure copyright is not null
-                                        thumbnail: room.thumbnail ?? undefined, // Add this line to ensure thumbnail is not null
-                                        areasSearchable: room.areasSearchable ?? undefined, // Add this line to ensure areasSearchable is not null
-                                        entitiesSearchable: room.entitiesSearchable ?? undefined, // Add this line to ensure entitiesSearchable is not null
-                                    })),
+                                $case: "error",
+                                error: {
+                                    message: e instanceof Error ? e.message + e.stack : "Unknown error",
                                 },
                             },
                         },
                     },
-                }).finish(),
-                true
-            );
-        } catch (e) {
-            console.warn("SocketManager => handleRoomsFromSameWorldQuery => error while getting other rooms list", e);
-            try {
-                client.send(
-                    ServerToClientMessage.encode({
-                        message: {
-                            $case: "answerMessage",
-                            answerMessage: {
-                                id: queryMessage.id,
-                                answer: {
-                                    $case: "error",
-                                    error: {
-                                        message: e instanceof Error ? e.message + e.stack : "Unknown error",
-                                    },
-                                },
-                            },
-                        },
-                    }).finish(),
-                    true
-                );
+                });
                 // Nothing to do with the error
                 Sentry.captureException(e);
                 return;
@@ -1307,26 +1286,23 @@ export class SocketManager implements ZoneEventListener {
         const url = queryMessage.query.embeddableWebsiteQuery.url;
 
         const emitAnswerMessage = (state: boolean, embeddable: boolean, message: string | undefined = undefined) => {
-            client.send(
-                ServerToClientMessage.encode({
-                    message: {
-                        $case: "answerMessage",
-                        answerMessage: {
-                            id: queryMessage.id,
-                            answer: {
-                                $case: "embeddableWebsiteAnswer",
-                                embeddableWebsiteAnswer: {
-                                    url,
-                                    state,
-                                    embeddable,
-                                    message,
-                                },
+            client.send({
+                message: {
+                    $case: "answerMessage",
+                    answerMessage: {
+                        id: queryMessage.id,
+                        answer: {
+                            $case: "embeddableWebsiteAnswer",
+                            embeddableWebsiteAnswer: {
+                                url,
+                                state,
+                                embeddable,
+                                message,
                             },
                         },
                     },
-                }).finish(),
-                true
-            );
+                },
+            });
         };
 
         // If the URL is in the white list, we send a message to the client

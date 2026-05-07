@@ -373,7 +373,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                 debug(`${this._space.name} : metadata update sent to ${socketData.name}`);
                 subMessage.message.updateSpaceMetadataMessage.spaceName = this._space.localName;
 
-                socketData.emitInBatch(subMessage);
+                watcher.emitInBatch(subMessage);
             }
         });
     }
@@ -407,7 +407,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
     }
 
     public notifyMe(watcher: Socket, subMessage: SubMessage) {
-        watcher.getUserData().emitInBatch(subMessage);
+        watcher.emitInBatch(subMessage);
     }
 
     public notifyMeAddUser(watcher: Socket, user: SpaceUserExtended) {
@@ -513,7 +513,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
             lowercaseName: message.sender.name.toLowerCase(),
         };
 
-        receiverSocket.getUserData().emitInBatch({
+        receiverSocket.emitInBatch({
             message: {
                 $case: "privateEvent",
                 privateEvent: {
@@ -535,7 +535,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
     private notifyAllUsers(subMessage: SubMessage, senderId: string) {
         for (const [socket, spaceUser] of this._space._localConnectedUserWithSpaceUser.entries()) {
             if (spaceUser.spaceUserId !== senderId) {
-                socket.getUserData().emitInBatch(subMessage);
+                socket.emitInBatch(subMessage);
             }
         }
     }

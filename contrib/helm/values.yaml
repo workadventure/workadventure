@@ -271,6 +271,8 @@ play:
     START_ROOM_URL: /_/global/raw.githubusercontent.com/workadventure/map-starter-kit/master/office.tmj
     ENABLE_CHAT_ONLINE_LIST: "true"
     ENABLE_CHAT_DISCONNECTED_LIST: "true"
+    CLIENT_CONNECTION_RETRY_MAX_DURATION_MS: "30000"
+    CLIENT_DISCONNECTION_RETENTION_MS: "30000"
     MAX_HISTORY_CHAT: 0
     ENABLE_REPORT_ISSUES_MENU: "false"
     #GRPC_VERBOSITY: DEBUG

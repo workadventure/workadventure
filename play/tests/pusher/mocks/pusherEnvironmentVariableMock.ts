@@ -19,6 +19,8 @@ export const CPU_OVERHEAT_THRESHOLD = 80;
 export const PUSHER_HTTP_PORT = 3000;
 export const PUSHER_WS_PORT = 3001;
 export const SOCKET_IDLE_TIMER = 120;
+export const CLIENT_CONNECTION_RETRY_MAX_DURATION_MS = 30_000;
+export const CLIENT_DISCONNECTION_RETENTION_MS = 30_000;
 export const ALLOWED_CORS_ORIGIN: string | undefined = undefined;
 export const PUSHER_URL = "http://pusher.test";
 export const FRONT_URL = "http://front.test";
@@ -138,6 +140,8 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     FALLBACK_LOCALE,
     ENABLE_REPORT_ISSUES_MENU: false,
     REPORT_ISSUES_URL: undefined,
+    CLIENT_CONNECTION_RETRY_MAX_DURATION_MS,
+    CLIENT_DISCONNECTION_RETENTION_MS,
     SENTRY_DSN_FRONT: undefined,
     SENTRY_DSN_PUSHER: undefined,
     SENTRY_ENVIRONMENT: undefined,

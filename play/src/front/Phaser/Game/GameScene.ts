@@ -2171,8 +2171,7 @@ export class GameScene extends DirtyScene {
                 moving: false,
             },
             this.getViewport(true),
-            get(availabilityStatusStore),
-            connectionManager.tabId
+            get(availabilityStatusStore)
         );
 
         // TODO: what happens if we never receive the room joined message?

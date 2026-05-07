@@ -51,6 +51,8 @@ if (typeof window !== "undefined" && window.env === undefined) {
         OPID_WOKA_NAME_POLICY: undefined,
         ENABLE_REPORT_ISSUES_MENU: undefined,
         REPORT_ISSUES_URL: undefined,
+        CLIENT_CONNECTION_RETRY_MAX_DURATION_MS: 30_000,
+        CLIENT_DISCONNECTION_RETENTION_MS: 30_000,
         SENTRY_DSN_FRONT: undefined,
         SENTRY_DSN_PUSHER: undefined,
         SENTRY_ENVIRONMENT: undefined,
