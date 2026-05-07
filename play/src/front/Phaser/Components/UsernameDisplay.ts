@@ -1,6 +1,5 @@
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { Subscription } from "rxjs";
-import { StringUtils } from "../../Utils/StringUtils";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import type { GameScene } from "../Game/GameScene";
 import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
@@ -14,7 +13,11 @@ const PLAYER_NAME_BACKGROUND_RADIUS = 8;
 const PLAYER_NAME_HEIGHT = 16;
 const PLAYER_NAME_PADDING = 6;
 const PLAYER_NAME_GAP = 4;
+const USERNAME_FONT_SIZE = 8;
+const USERNAME_FONT = `${USERNAME_FONT_SIZE}px "Press Start 2P"`; // Todo: Replace the font family with a better one
+
 type Position = { x: number; y: number };
+
 type PlayerNameLayout = {
     textureWidth: number;
     textureHeight: number;
@@ -32,7 +35,6 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     private readonly domUsernameId = UsernameDisplay.nextDomUsernameId++;
     private readonly playerNameSprite: Phaser.GameObjects.Sprite;
     private readonly playerName: string;
-    private readonly playerNameFontSize: number;
     private playerNameTextureKey: string;
     private playerNameOutlineColor: number | undefined;
     private megaphoneShown = false;
@@ -57,9 +59,6 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         this.setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.displayScale = this.getDisplayScale(waScaleManager.zoomModifier);
 
-        // Todo: Replace the font family with a better one
-        // Use larger font size for non-Latin characters (Arabic, CJK, etc.) for better readability
-        this.playerNameFontSize = StringUtils.containsNonLatinCharacters(playerName) ? 11 : 8;
         this.playerNameOutlineColor = outlineColor;
         this.statusDot = new PlayerStatusDot(scene, 0, -1);
         this.megaphoneIcon = new MegaphoneIcon(scene, 0, -1);
@@ -135,7 +134,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         if (!measurementContext) {
             throw new Error("Could not create canvas context for player name texture");
         }
-        measurementContext.font = `${this.playerNameFontSize}px "Press Start 2P"`;
+        measurementContext.font = USERNAME_FONT;
         return measurementContext.measureText(this.playerName).width;
     }
 
@@ -152,7 +151,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
 
         const context = texture.getContext();
         context.clearRect(0, 0, layout.textureWidth, layout.textureHeight);
-        context.font = `${this.playerNameFontSize}px "Press Start 2P"`;
+        context.font = USERNAME_FONT;
         context.textAlign = "center";
         context.textBaseline = "middle";
         context.lineJoin = "round";
@@ -195,7 +194,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
                 this.playerName,
                 textPosition.x,
                 textPosition.y,
-                this.playerNameFontSize,
+                USERNAME_FONT_SIZE,
                 this.displayScale
             );
         } else {
