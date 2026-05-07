@@ -1249,6 +1249,10 @@ export class GameScene extends DirtyScene {
         this._sayManager?.close();
         this.playersEventDispatcher.cleanup();
         this.playersMovementEventDispatcher.cleanup();
+        for (const subscription of this.rxJsSubscriptions) {
+            subscription.unsubscribe();
+        }
+        this.rxJsSubscriptions = [];
         this.usernameDomLayer?.destroy();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
