@@ -110,5 +110,13 @@
                 onChange={onValueChange}
             />
         </div>
+        <div class="value-switch">
+            <InputSwitch
+                id="allowTalking"
+                label={$LL.mapEditor.properties.allowTalking()}
+                bind:value={property.allowTalking}
+                onChange={onValueChange}
+            />
+        </div>
     </span>
 </PropertyEditorBase>

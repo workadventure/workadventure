@@ -139,6 +139,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             actionButtonLabel: "청중 참가",
         },
         chatEnabled: "전용 채팅 채널 연결",
+        allowTalking: "대화 및 버블 형성 허용",
         seeAttendees: "참석자 보기",
         start: {
             label: "시작 영역",

@@ -142,6 +142,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             actionButtonLabel: "Rejoindre l'audience",
         },
         chatEnabled: "Chat activé",
+        allowTalking: "Autoriser la parole et la formation de bulles",
         seeAttendees: "Voir les participants",
         start: {
             label: "Zone de départ",

@@ -318,6 +318,7 @@
                     type,
                     speakerZoneName: areasName.size == 1 ? [...areasName.keys()][0] : "",
                     chatEnabled: false,
+                    allowTalking: false,
                 };
             }
             case "exit":
