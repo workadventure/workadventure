@@ -269,10 +269,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
 
     public override setPosition(x?: number, y?: number, z?: number, w?: number): this {
         super.setPosition(x, y, z, w);
-        if (this.renderingAsDOM) {
-            const textPosition = this.getDomTextPosition();
-            this.gameScene.usernameDomLayer.updateUsernamePosition(this.domUsernameId, textPosition.x, textPosition.y);
-        }
+        this.updateDomTextPosition();
         return this;
     }
 
@@ -295,7 +292,11 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
             return;
         }
         const textPosition = this.getDomTextPosition();
-        this.gameScene.usernameDomLayer.updateUsernamePosition(this.domUsernameId, textPosition.x, textPosition.y);
+        this.gameScene.usernameDomLayer.updateUsernamePosition(
+            this.domUsernameId,
+            Math.floor(textPosition.x),
+            Math.floor(textPosition.y)
+        );
     }
 
     private getDomTextPosition(): Position {
