@@ -15,6 +15,7 @@ import { adminService } from "../services/AdminService";
 import { validateQuery } from "../services/QueryValidator";
 import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
 import { matrixProvider } from "../services/MatrixProvider";
+import { getClientIpFromXForwardedFor } from "../services/ClientIp";
 import { BaseHttpController } from "./BaseHttpController";
 
 const debug = Debug("pusher:requests");
@@ -181,7 +182,7 @@ export class AuthenticateController extends BaseHttpController {
 
         this.app.get("/me", async (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
-            const IPAddress = req.header("x-forwarded-for") ?? "";
+            const IPAddress = getClientIpFromXForwardedFor(req.header("x-forwarded-for"));
             const query = validateQuery(req, res, MeRequest);
             if (query === undefined) {
                 return;

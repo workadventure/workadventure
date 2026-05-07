@@ -273,6 +273,18 @@ export const EnvironmentVariables = z.object({
     ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe("Enable/disable the OpenAPI documentation endpoint. Defaults to false"),
+    VIDEO_ANALYTICS_FLUSH_INTERVAL_MS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 10_000))
+        .describe("Interval in milliseconds between video quality analytics batch flushes. Defaults to 10000"),
+    VIDEO_ANALYTICS_TIMEOUT_MS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 2_000))
+        .describe("HTTP timeout in milliseconds for video quality analytics ingestion calls. Defaults to 2000"),
+    VIDEO_ANALYTICS_MAX_QUEUE_SIZE: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 10_000))
+        .describe("Maximum number of video quality samples queued in pusher memory. Defaults to 10000"),
+    VIDEO_ANALYTICS_MAX_BATCH_SIZE: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 1_000))
+        .describe("Maximum number of video quality samples sent in one admin batch. Defaults to 1000"),
     START_ROOM_URL: z.string().optional().describe("Default room URL where users start when accessing the platform"),
 
     // Front related environment variables

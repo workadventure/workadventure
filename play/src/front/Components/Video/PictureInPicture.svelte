@@ -19,8 +19,7 @@
     let parentDivElement: HTMLDivElement;
     let pipWindow: Window | undefined;
     let mapImage: string | undefined = undefined;
-
-    /* eslint-disable svelte/no-dom-manipulating */
+    let pipRequested = false;
 
     const DocumentPictureInPictureSchema = z.object({
         requestWindow: z
@@ -65,6 +64,7 @@
         if (!parentDivElement) {
             return;
         }
+        // eslint-disable-next-line svelte/no-dom-manipulating
         parentDivElement.append(divElement);
 
         if (pipWindow) pipWindow.removeEventListener("pagehide", destroyPictureInPictureComponent);
@@ -80,8 +80,6 @@
             destroyPictureInPictureComponent();
         }
     });
-
-    let pipRequested = false;
 
     function requestPictureInPicture() {
         debug("Request Picture in Picture mode");

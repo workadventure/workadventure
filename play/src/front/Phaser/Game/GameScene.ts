@@ -245,6 +245,8 @@ import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
 
+const MOUSE_WHEEL_ZOOM_RATE = 0.25;
+
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -1618,10 +1620,12 @@ export class GameScene extends DirtyScene {
         const gameSceneKey = "somekey" + Math.round(Math.random() * 10000);
         const game = new GameScene(this._room, gameSceneKey);
         this.scene.add(gameSceneKey, game, autostart, {
-            initPosition: {
-                x: this.CurrentPlayer.x,
-                y: this.CurrentPlayer.y,
-            },
+            initPosition: this.CurrentPlayer
+                ? {
+                      x: this.CurrentPlayer.x,
+                      y: this.CurrentPlayer.y,
+                  }
+                : undefined,
             reconnecting: reconnecting,
         });
 
@@ -4166,7 +4170,7 @@ ${escapedMessage}
 
         // Explanation of the formula: to Zoom x 2, we need a delta of 200
         // Question: Why 200 ? For mac usage, it's too slow
-        let zoomFactor = Math.exp((-deltaY * Math.log(2)) /* / 200 */ / 100);
+        let zoomFactor = Math.exp(((-deltaY * Math.log(2)) / 100) * MOUSE_WHEEL_ZOOM_RATE);
 
         // Sometimes, deltaY can be really high (this happens when the browser is lagging for 1 second or so)
         // Let's clamp the value to avoid zooming too much

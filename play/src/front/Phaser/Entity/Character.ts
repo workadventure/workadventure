@@ -17,7 +17,6 @@ import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
-import { DEPTH_INGAME_TEXT_INDEX, DEPTH_OVERLAY_INDEX } from "../Game/DepthIndexes";
 
 import { UsernameDisplay } from "../Components/UsernameDisplay";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
@@ -32,10 +31,6 @@ import RenderTexture = Phaser.GameObjects.RenderTexture;
 const playerNameY = -16;
 const interactiveRadius = 25;
 const meetingSpeakingIconY = -49;
-/** Slightly below overlay layer so the hovered Woka draws above other characters (y-based depth). */
-const CHARACTER_DEPTH_WHEN_POINTER_OVER = DEPTH_OVERLAY_INDEX - 1;
-/** Above other name tags when the character is hovered. */
-const USERNAME_DEPTH_WHEN_POINTER_OVER = DEPTH_INGAME_TEXT_INDEX + 1;
 
 export const CHARACTER_BODY_WIDTH = 16;
 export const CHARACTER_BODY_HEIGHT = 16;
@@ -58,8 +53,6 @@ export abstract class Character extends Container implements OutlineableInterfac
     //private teleportation: Sprite;
     private invisible: boolean;
     private clickable: boolean;
-    /** True while the pointer is over this clickable character — depth is raised so the Woka and name read clearly. */
-    private pointerOverForDepth = false;
     public companion?: Companion;
     private emote: Phaser.GameObjects.DOMElement | null = null;
     private emoteTween: Phaser.Tweens.Tween | null = null;
@@ -77,7 +70,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     private currentPathSegmentDistanceFromStart = 0;
     private pathFollowingResolve?: (result: PathFollowResult) => void;
     private readonly syncDisplayPositionWithPhysics = (): void => {
-        this.updateCharacterDisplayDepth();
+        this.setDepthIfNeeded(this.y + 16);
         this.updateUsernameDisplayPosition();
     };
 
@@ -195,16 +188,23 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.scene.markDirty();
             });
             this.scene.markDirty();
-            this.updateCharacterDisplayDepth();
         }, 0);
 
         this.talkIcon = new TalkIcon(scene, 0, meetingSpeakingIconY);
         this.speakerIcon = new SpeakerIcon(scene, 0, meetingSpeakingIconY);
         this.add([this.talkIcon, this.speakerIcon]);
 
-        scene.add.existing(this);
+        if (isClickable) {
+            this.setInteractive({
+                hitArea: new Phaser.Geom.Circle(8, 8, interactiveRadius),
+                hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
+                useHandCursor: true,
+            });
+        }
 
         this.setClickable(isClickable);
+
+        scene.add.existing(this);
 
         this.scene.physics.world.enableBody(this);
         const body = this.getBody();
@@ -214,7 +214,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         body.setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT); //edit the hitbox to better match the character model
         body.setOffset(CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y);
         this.scene.events.on(Phaser.Scenes.Events.POST_UPDATE, this.syncDisplayPositionWithPhysics);
-        this.updateCharacterDisplayDepth();
+        this.setDepthIfNeeded(this.y + 16);
     }
 
     private waitAndGetSnapshot(): Promise<string> {
@@ -247,60 +247,9 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    private updateCharacterDisplayDepth(): void {
-        if (this.pointerOverForDepth) {
-            this.setDepthIfNeeded(CHARACTER_DEPTH_WHEN_POINTER_OVER);
-            this.setUsernameDepthIfNeeded(USERNAME_DEPTH_WHEN_POINTER_OVER);
-        } else {
-            this.setDepthIfNeeded(this.y + 16);
-            this.setUsernameDepthIfNeeded(DEPTH_INGAME_TEXT_INDEX);
-        }
-    }
-
     private setDepthIfNeeded(depth: number): void {
         if (this.depth !== depth) {
             this.setDepth(depth);
-        }
-    }
-
-    private setUsernameDepthIfNeeded(depth: number): void {
-        if (this.usernameDisplay && this.usernameDisplay.depth !== depth) {
-            this.usernameDisplay.setDepth(depth);
-        }
-    }
-
-    private readonly onPointerOverRaiseDepth = (): void => {
-        if (this.pointerOverForDepth) {
-            return;
-        }
-        this.pointerOverForDepth = true;
-        this.updateCharacterDisplayDepth();
-    };
-
-    private readonly onPointerOutRestoreDepth = (): void => {
-        if (!this.pointerOverForDepth) {
-            return;
-        }
-        this.pointerOverForDepth = false;
-        this.updateCharacterDisplayDepth();
-    };
-
-    private bindCharacterPointerHoverDepth(): void {
-        if (!this.clickable || this.destroyed) {
-            return;
-        }
-        this.off(Phaser.Input.Events.POINTER_OVER, this.onPointerOverRaiseDepth, this);
-        this.off(Phaser.Input.Events.POINTER_OUT, this.onPointerOutRestoreDepth, this);
-        this.on(Phaser.Input.Events.POINTER_OVER, this.onPointerOverRaiseDepth, this);
-        this.on(Phaser.Input.Events.POINTER_OUT, this.onPointerOutRestoreDepth, this);
-    }
-
-    private unbindCharacterPointerHoverDepth(): void {
-        this.off(Phaser.Input.Events.POINTER_OVER, this.onPointerOverRaiseDepth, this);
-        this.off(Phaser.Input.Events.POINTER_OUT, this.onPointerOutRestoreDepth, this);
-        if (this.pointerOverForDepth) {
-            this.pointerOverForDepth = false;
-            this.updateCharacterDisplayDepth();
         }
     }
 
@@ -315,10 +264,8 @@ export abstract class Character extends Container implements OutlineableInterfac
                 hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
                 useHandCursor: true,
             });
-            this.bindCharacterPointerHoverDepth();
             return;
         }
-        this.unbindCharacterPointerHoverDepth();
         this.disableInteractive();
     }
 
@@ -454,7 +401,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     setPosition(x: number, y: number): this {
         super.setPosition(x, y);
-        this.updateCharacterDisplayDepth();
+        this.setDepth(this.y + 16);
         this.updateUsernameDisplayPosition();
         return this;
     }
@@ -619,7 +566,6 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     destroy(): void {
-        this.unbindCharacterPointerHoverDepth();
         this.scene.events.off(Phaser.Scenes.Events.POST_UPDATE, this.syncDisplayPositionWithPhysics);
         this.usernameDisplay?.destroy();
         for (const sprite of this.sprites.values()) {

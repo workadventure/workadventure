@@ -35,4 +35,5 @@ export class MockRoomConnectionForSpaces implements RoomConnectionForSpacesInter
     public emitUpdateSpaceMetadata = vi.fn();
     public emitUpdateSpaceUserMessage = vi.fn();
     public emitBackEvent = vi.fn();
+    public emitVideoQualityReport = vi.fn();
 }

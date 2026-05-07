@@ -61,6 +61,10 @@ Environment variables for the Play service (frontend and pusher).
 | `ENABLE_ISSUE_REPORT` | No | Whether the feature 'issue report' is enabled or not on this room. Defaults to true. |
 | `ENABLE_TUTORIAL` | No | Whether the onboarding tutorial is enabled or not on this room. Defaults to true. |
 | `ENABLE_OPENAPI_ENDPOINT` | No | Enable/disable the OpenAPI documentation endpoint. Defaults to false |
+| `VIDEO_ANALYTICS_FLUSH_INTERVAL_MS` | No | Interval in milliseconds between video quality analytics batch flushes. Defaults to 10000 |
+| `VIDEO_ANALYTICS_TIMEOUT_MS` | No | HTTP timeout in milliseconds for video quality analytics ingestion calls. Defaults to 2000 |
+| `VIDEO_ANALYTICS_MAX_QUEUE_SIZE` | No | Maximum number of video quality samples queued in pusher memory. Defaults to 10000 |
+| `VIDEO_ANALYTICS_MAX_BATCH_SIZE` | No | Maximum number of video quality samples sent in one admin batch. Defaults to 1000 |
 | `START_ROOM_URL` | No | Default room URL where users start when accessing the platform |
 | `DEBUG_MODE` | No | Enable debug mode with additional console logging. Defaults to false |
 | `UPLOADER_URL` | Yes | URL of the file uploader service |

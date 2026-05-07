@@ -20,6 +20,7 @@ import type {
     PrivateEventPusherToFront,
     BackEventFrontToPusherMessage,
     InitSpaceUsersMessage,
+    VideoQualityReportMessage,
 } from "@workadventure/messages";
 import { FilterType } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
@@ -524,6 +525,14 @@ export class Space implements SpaceInterface {
     public emitBackEvent(message: NonNullable<BackEventFrontToPusherMessage["backEvent"]>): void {
         this._connection.emitBackEvent(this.name, message);
     }
+
+    public emitVideoQualityReport(message: VideoQualityReportMessage): void {
+        if (this._isDestroyed) {
+            return;
+        }
+        this._connection.emitVideoQualityReport(message);
+    }
+
     /**
      * Sends a message to the server to update our user in the space.
      */
