@@ -91,7 +91,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     private reflow(): void {
         const layout = this.getPlayerNameLayout();
         const halfPlayerNameHeight = -layout.textureHeight / 2;
-        this.playerNameSprite.setX(layout.spriteX);
+        this.playerNameSprite.setX(Math.round(layout.spriteX));
         this.statusDot.setPosition(layout.statusDotX, halfPlayerNameHeight);
         this.megaphoneIcon.setPosition(layout.megaphoneX, halfPlayerNameHeight);
     }
@@ -291,12 +291,15 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         if (!this.renderingAsDOM) {
             return;
         }
-        const textPosition = this.getDomTextPosition();
-        this.gameScene.usernameDomLayer.updateUsernamePosition(
-            this.domUsernameId,
-            Math.floor(textPosition.x),
-            Math.floor(textPosition.y)
-        );
+
+        this.scene.events.once(Phaser.Scenes.Events.RENDER, () => {
+            const textPosition = this.getDomTextPosition();
+            this.gameScene.usernameDomLayer.updateUsernamePosition(
+                this.domUsernameId,
+                Math.round(textPosition.x),
+                Math.round(textPosition.y)
+            );
+        });
     }
 
     private getDomTextPosition(): Position {
