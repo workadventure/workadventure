@@ -32,9 +32,12 @@ type PlayerNameLayout = {
 export class UsernameDisplay extends Phaser.GameObjects.Container {
     private static nextPlayerNameTextureId = 0;
     private static nextDomUsernameId = 0;
+    private static measurementContext: CanvasRenderingContext2D | undefined;
     private readonly domUsernameId = UsernameDisplay.nextDomUsernameId++;
     private readonly playerNameSprite: Phaser.GameObjects.Sprite;
     private readonly playerName: string;
+    private readonly playerNameWidth: number;
+    private playerNameLayout: PlayerNameLayout | undefined;
     private playerNameTextureKey: string;
     private playerNameOutlineColor: number | undefined;
     private megaphoneShown = false;
@@ -56,6 +59,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     constructor(scene: GameScene, x: number, y: number, playerName: string, outlineColor: number | undefined) {
         super(scene, x, y);
         this.playerName = playerName;
+        this.playerNameWidth = UsernameDisplay.measurePlayerNameWidth(playerName);
         this.setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.displayScale = this.getDisplayScale(waScaleManager.zoomModifier);
 
@@ -94,7 +98,11 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     }
 
     private getPlayerNameLayout(): PlayerNameLayout {
-        const textWidth = this.measurePlayerNameWidth();
+        if (this.playerNameLayout) {
+            return this.playerNameLayout;
+        }
+
+        const textWidth = this.playerNameWidth;
         const statusWidth = this.statusDot.getDefaultDisplayWidth();
         const megaphoneWidth = this.megaphoneIcon.getDefaultDisplayWidth();
 
@@ -116,7 +124,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         const textureRight = cursor + PLAYER_NAME_PADDING;
         const textureWidth = Math.max(1, Math.ceil(textureRight - textureLeft));
 
-        return {
+        this.playerNameLayout = {
             textureWidth,
             textureHeight: PLAYER_NAME_HEIGHT,
             textureLeft,
@@ -126,16 +134,32 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
             statusDotX,
             megaphoneX,
         };
+
+        return this.playerNameLayout;
     }
 
-    private measurePlayerNameWidth(): number {
-        const measurementCanvas = document.createElement("canvas");
-        const measurementContext = measurementCanvas.getContext("2d");
+    private invalidatePlayerNameLayout(): void {
+        this.playerNameLayout = undefined;
+    }
+
+    private static measurePlayerNameWidth(playerName: string): number {
+        const measurementContext = UsernameDisplay.getMeasurementContext();
+        measurementContext.font = USERNAME_FONT;
+        return measurementContext.measureText(playerName).width;
+    }
+
+    private static getMeasurementContext(): CanvasRenderingContext2D {
+        if (UsernameDisplay.measurementContext) {
+            return UsernameDisplay.measurementContext;
+        }
+
+        const measurementContext = document.createElement("canvas").getContext("2d");
         if (!measurementContext) {
             throw new Error("Could not create canvas context for player name texture");
         }
-        measurementContext.font = USERNAME_FONT;
-        return measurementContext.measureText(this.playerName).width;
+
+        UsernameDisplay.measurementContext = measurementContext;
+        return measurementContext;
     }
 
     private createPlayerNameTexture(outlineColor: number | undefined, renderingAsDOM: boolean): string {
@@ -205,6 +229,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     private showMegaphone(show = true, forceClose = false): void {
         if (this.megaphoneShown !== show) {
             this.megaphoneShown = show;
+            this.invalidatePlayerNameLayout();
             this.refreshPlayerNameTexture();
         }
         this.megaphoneIcon.visible = show;
