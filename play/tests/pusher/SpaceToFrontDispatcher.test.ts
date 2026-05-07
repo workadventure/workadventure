@@ -20,9 +20,9 @@ describe("SpaceToFrontDispatcher", () => {
                 const mockEmitInBatch = vi.fn();
 
                 const mockSocket = mock<Socket>({
+                    emitInBatch: mockEmitInBatch,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
-                        emitInBatch: mockEmitInBatch,
                     }),
                 });
 
@@ -77,9 +77,9 @@ describe("SpaceToFrontDispatcher", () => {
                 });
 
                 const mockSocket = mock<Socket>({
+                    emitInBatch: mockEmitInBatch,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
-                        emitInBatch: mockEmitInBatch,
                     }),
                 });
                 const mockSpace = {
@@ -121,9 +121,9 @@ describe("SpaceToFrontDispatcher", () => {
                 const mockEmitInBatch = vi.fn();
 
                 const mockSocket = mock<Socket>({
+                    emitInBatch: mockEmitInBatch,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
-                        emitInBatch: mockEmitInBatch,
                     }),
                 });
 
@@ -185,9 +185,9 @@ describe("SpaceToFrontDispatcher", () => {
                 });
 
                 const mockSocket = mock<Socket>({
+                    emitInBatch: mockEmitInBatch,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
-                        emitInBatch: mockEmitInBatch,
                     }),
                 });
 
@@ -235,9 +235,9 @@ describe("SpaceToFrontDispatcher", () => {
                 const mockEmitInBatch = vi.fn();
 
                 const mockSocket = mock<Socket>({
+                    emitInBatch: mockEmitInBatch,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
-                        emitInBatch: mockEmitInBatch,
                     }),
                 });
 
@@ -293,9 +293,9 @@ describe("SpaceToFrontDispatcher", () => {
                 });
 
                 const mockSocket = mock<Socket>({
+                    emitInBatch: mockEmitInBatch,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
-                        emitInBatch: mockEmitInBatch,
                     }),
                 });
 
@@ -351,9 +351,9 @@ describe("SpaceToFrontDispatcher", () => {
                 });
 
                 const mockSocket = mock<Socket>({
+                    emitInBatch: mockEmitInBatch,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
-                        emitInBatch: mockEmitInBatch,
                     }),
                 });
 
@@ -614,9 +614,9 @@ describe("SpaceToFrontDispatcher", () => {
                 });
 
                 const mockSocket2 = mock<Socket>({
+                    emitInBatch: mockEmitInBatch2,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser2,
-                        emitInBatch: mockEmitInBatch2,
                     }),
                 });
 
@@ -895,9 +895,9 @@ describe("SpaceToFrontDispatcher", () => {
                 });
 
                 const mockSocket2 = mock<Socket>({
+                    emitInBatch: mockEmitInBatch2,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser2,
-                        emitInBatch: mockEmitInBatch2,
                     }),
                 });
 
@@ -1003,16 +1003,16 @@ describe("SpaceToFrontDispatcher", () => {
             const mockEmitInBatch2 = vi.fn();
 
             const mockSocket = mock<Socket>({
+                emitInBatch: mockEmitInBatch,
                 getUserData: vi.fn().mockReturnValue({
                     spaceUser: spaceUser,
-                    emitInBatch: mockEmitInBatch,
                 }),
             });
 
             const mockSocket2 = mock<Socket>({
+                emitInBatch: mockEmitInBatch2,
                 getUserData: vi.fn().mockReturnValue({
                     spaceUser: spaceUser2,
-                    emitInBatch: mockEmitInBatch2,
                 }),
             });
 
@@ -1092,16 +1092,16 @@ describe("SpaceToFrontDispatcher", () => {
             const mockEmitInBatch2 = vi.fn();
 
             const mockSocket = mock<Socket>({
+                emitInBatch: mockEmitInBatch,
                 getUserData: vi.fn().mockReturnValue({
                     spaceUser: spaceUser,
-                    emitInBatch: mockEmitInBatch,
                 }),
             });
 
             const mockSocket2 = mock<Socket>({
+                emitInBatch: mockEmitInBatch2,
                 getUserData: vi.fn().mockReturnValue({
                     spaceUser: spaceUser2,
-                    emitInBatch: mockEmitInBatch2,
                 }),
             });
 
@@ -1161,16 +1161,16 @@ describe("SpaceToFrontDispatcher", () => {
             const mockEmitInBatch2 = vi.fn();
 
             const mockSocket = mock<Socket>({
+                emitInBatch: mockEmitInBatch,
                 getUserData: vi.fn().mockReturnValue({
                     spaceUser: spaceUser,
-                    emitInBatch: mockEmitInBatch,
                 }),
             });
 
             const mockSocket2 = mock<Socket>({
+                emitInBatch: mockEmitInBatch2,
                 getUserData: vi.fn().mockReturnValue({
                     spaceUser: spaceUser2,
-                    emitInBatch: mockEmitInBatch2,
                 }),
             });
 
