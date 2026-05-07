@@ -2,8 +2,8 @@ import type { Observable } from "rxjs";
 import { distinctUntilChanged, map, scan, shareReplay } from "rxjs/operators";
 import type { RemotePlayersRepository } from "./RemotePlayersRepository";
 
-const CANVAS_TO_DOM_THRESHOLD = 110;
-const DOM_TO_CANVAS_THRESHOLD = 90;
+const CANVAS_TO_DOM_THRESHOLD = 90;
+const DOM_TO_CANVAS_THRESHOLD = 110;
 
 export class UsernameRenderingModeStream {
     public readonly renderingAsDOM$: Observable<boolean>;

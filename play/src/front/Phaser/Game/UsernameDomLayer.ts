@@ -26,29 +26,29 @@ export class UsernameDomLayer {
         this.domElement.setVisible(visible);
     }
 
-    public addUsername(id: number, playerName: string, x: number, y: number, fontSize: number, scale: number): void {
+    public addUsername(id: number, playerName: string, x: number, y: number, font: string, scale: number): void {
         let username = this.usernames.get(id);
         if (!username) {
             const element = document.createElement("p");
+            element.ariaHidden = "true";
             element.style.position = "absolute";
             element.style.left = "0";
             element.style.top = "0";
             element.style.margin = "0";
             element.style.color = "#ffffff";
-            element.style.fontFamily = '"Press Start 2P", monospace';
+            element.style.font = font;
             element.style.lineHeight = "1";
             element.style.whiteSpace = "nowrap";
             element.style.textAlign = "center";
             element.style.transformOrigin = "50% 50%";
             element.style.pointerEvents = "none";
-            element.style.setProperty("translate", "-50% -50%");
+            element.style.transform = "translate(-50%, -50%)";
             this.container.appendChild(element);
             username = { element };
             this.usernames.set(id, username);
         }
 
         username.element.textContent = playerName;
-        username.element.style.fontSize = `${fontSize}px`;
         this.updateUsernamePosition(id, x, y);
         this.updateUsernameScale(id, scale);
     }

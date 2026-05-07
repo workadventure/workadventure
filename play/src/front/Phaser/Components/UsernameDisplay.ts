@@ -13,8 +13,7 @@ const PLAYER_NAME_BACKGROUND_RADIUS = 8;
 const PLAYER_NAME_HEIGHT = 16;
 const PLAYER_NAME_PADDING = 6;
 const PLAYER_NAME_GAP = 4;
-const USERNAME_FONT_SIZE = 8;
-const USERNAME_FONT = `${USERNAME_FONT_SIZE}px "Press Start 2P"`; // Todo: Replace the font family with a better one
+const USERNAME_FONT = '8px "Press Start 2P"'; // Todo: Replace the font family with a better one
 
 type Position = { x: number; y: number };
 
@@ -218,7 +217,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
                 this.playerName,
                 textPosition.x,
                 textPosition.y,
-                USERNAME_FONT_SIZE,
+                USERNAME_FONT,
                 this.displayScale
             );
         } else {
