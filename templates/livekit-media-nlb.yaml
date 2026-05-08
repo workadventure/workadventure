@@ -1,0 +1,36 @@
+{{- if and .Values.nlb.enabled (index .Values.workadventure "livekit" "enabled") -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-livekit-media
+  labels:
+    app.kubernetes.io/name: livekit-media
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "external"
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-attributes: "load_balancing.cross_zone.enabled=true"
+    service.beta.kubernetes.io/aws-load-balancer-target-group-attributes: "preserve_client_ip.enabled=true"
+    service.beta.kubernetes.io/aws-load-balancer-name: {{ .Values.nlb.name | default (printf "%s-livekit" .Release.Name) | quote }}
+    {{- with .Values.nlb.eipAllocations }}
+    service.beta.kubernetes.io/aws-load-balancer-eip-allocations: {{ join "," . | quote }}
+    {{- end }}
+spec:
+  type: LoadBalancer
+  loadBalancerClass: eks.amazonaws.com/nlb
+  externalTrafficPolicy: Local
+  selector:
+    app.kubernetes.io/name: livekit-server
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: rtc-udp
+      port: {{ .Values.nlb.udpPort }}
+      protocol: UDP
+      targetPort: {{ .Values.nlb.udpPort }}
+    - name: rtc-tcp
+      port: {{ .Values.nlb.tcpPort }}
+      protocol: TCP
+      targetPort: {{ .Values.nlb.tcpPort }}
+{{- end }}

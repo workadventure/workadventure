@@ -1,0 +1,30 @@
+nlb:
+  # Until an EIP is provisioned in compute-infra, leave this empty and fall back
+  # to an AWS-managed dynamic NLB IP. Update node_ip below after first provision.
+  eipAllocations: []
+
+livekitExternalSecret:
+  secretsManagerKey: workadventure/dev/livekit
+
+workadventure:
+  domainName: workadventure.internal.dev.celebrate.company
+
+  commonEnv:
+    # Force every conversation through the LiveKit SFU instead of the
+    # simple-peer P2P mesh (which ships with no STUN/TURN configured).
+    MAX_USERS_FOR_WEBRTC: "1"
+
+  commonSecretEnv:
+    MAP_STORAGE_API_TOKEN: "123"
+
+  mapstorage:
+    env:
+      ENABLE_BEARER_AUTHENTICATION: "true"
+    secretEnv:
+      AUTHENTICATION_PASSWORD: "my-password"
+
+  livekit-server:
+    livekit:
+      rtc:
+        # Set after NLB provisions; must be one of the NLB's public IPs.
+        node_ip: "18.153.181.37"

@@ -1,0 +1,63 @@
+# Defaults shared across all environments.
+# Override per-env in values.<env>.yaml.
+
+# LiveKit media NLB — passthrough UDP+TCP for WebRTC media.
+nlb:
+  enabled: true
+  # Stable Elastic IP allocations for the NLB (required for GitOps — the
+  # upstream chart's rtc.node_ip must match one of these IPs).
+  # Populate in per-env values. Allocations are provisioned in compute-infra.
+  eipAllocations: []
+  udpPort: 3478
+  tcpPort: 7881
+
+# LiveKit API credentials pulled from AWS Secrets Manager via ESO.
+# Disables the upstream chart's built-in secret management (manageSecret: false
+# under workadventure.livekit.credentials).
+livekitExternalSecret:
+  enabled: true
+  secretStoreRef:
+    name: aws-secrets
+    kind: ClusterSecretStore
+  # The Secrets Manager entry must be a JSON object with apiKey and apiSecret.
+  # Set the path per-env.
+  secretsManagerKey: ""
+
+# Upstream workadventure chart values.
+# See: https://github.com/thecodingmachine/workadventure-charts/blob/main/charts/workadventure/values.yaml
+workadventure:
+  singleDomain: false
+
+  ingress:
+    enabled: true
+    className: public-alb
+    tls: true
+    # AWS ALB treats pathType=ImplementationSpecific with literal "/" as an
+    # exact match, so only GET / works and everything else (e.g. /upload on
+    # map-storage) returns awselb 404. Prefix + "/" compiles to "/*".
+    pathType: Prefix
+    annotationsRoot:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+
+  livekit:
+    enabled: true
+    ingress:
+      enabled: true
+      className: public-alb
+    credentials:
+      # Credentials come from our ExternalSecret; upstream must not manage them.
+      manageSecret: false
+
+  livekit-server:
+    podHostNetwork: false
+    loadBalancer:
+      type: disable
+    livekit:
+      rtc:
+        udp_port: 3478
+        tcp_port: 7881
+        use_external_ip: false
+        # node_ip is env-specific — set in values.<env>.yaml to match the NLB's EIP.

@@ -1,0 +1,6 @@
+dependencies:
+- name: workadventure
+  repository: https://charts.workadventu.re/
+  version: v1.30.5
+digest: sha256:a3594967b9ccefe6246551a2db7dea0950775308dc1475af97c0ea560fbbed66
+generated: "2026-04-24T15:29:33.477375+02:00"

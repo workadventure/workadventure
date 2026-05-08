@@ -1,0 +1,18 @@
+nlb:
+  eipAllocations: []  # populate with prod EIP allocation id(s)
+
+livekitExternalSecret:
+  secretsManagerKey: workadventure/production/livekit
+
+workadventure:
+  domainName: workadventure.celebrate.company
+
+  commonEnv:
+    # Force every conversation through the LiveKit SFU instead of the
+    # simple-peer P2P mesh (which ships with no STUN/TURN configured).
+    MAX_USERS_FOR_WEBRTC: "1"
+
+  livekit-server:
+    livekit:
+      rtc:
+        node_ip: ""  # set to prod EIP public IP

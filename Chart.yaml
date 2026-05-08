@@ -1,0 +1,11 @@
+apiVersion: v2
+name: workadventure
+description: Celebrate WorkAdventure wrapper — upstream chart + LiveKit media NLB + ExternalSecret wiring
+type: application
+version: 0.1.0
+appVersion: v1.30.5
+
+dependencies:
+  - name: workadventure
+    version: v1.30.5
+    repository: https://charts.workadventu.re/
