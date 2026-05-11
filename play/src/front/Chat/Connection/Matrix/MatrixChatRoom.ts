@@ -466,9 +466,9 @@ export class MatrixChatRoom
                 return;
             }
             this.dmMergerUsersByRoomUnsub = merger.usersByRoomStore.subscribe(() => {
-                                   if (this.destroyed) {
-                        return;
-                    }
+                if (this.destroyed) {
+                    return;
+                }
                 this.directRoomPeerAvatarStore?.refresh().catch(() => undefined);
                 const myUserId = this.matrixRoom.client.getUserId();
                 get(this.members)

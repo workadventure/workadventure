@@ -1209,7 +1209,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.enqueueMatrixClientRoomManage(room);
     }
 
-    
     private setRootRoom(room: MatrixChatRoom): void {
         const roomId = room.id;
         const existingRoom = this.roomList.get(roomId);
@@ -1368,12 +1367,12 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 const rootFolder = new MatrixRoomFolder(room);
                 rootFolder.init();
                 this.registerFolderShell(rootFolder);
-                this.roomFolders.set(roomId, rootFolder);
+                this.setRootFolder(rootFolder);
             }
             return;
         }
         if (!this.roomList.has(roomId)) {
-            this.roomList.set(roomId, new MatrixChatRoom(room));
+            this.setRootRoom(new MatrixChatRoom(room));
         }
     }
 
