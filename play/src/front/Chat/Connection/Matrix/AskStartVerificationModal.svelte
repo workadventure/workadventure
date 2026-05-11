@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import type { ShowSasCallbacks, Verifier } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationRequestEvent, VerifierEvent, VerificationPhase } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationMethod } from "matrix-js-sdk/lib/types";
@@ -7,7 +8,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import type { AskStartVerificationModalProps } from "./MatrixSecurity";
     import { matrixSecurity } from "./MatrixSecurity";
-    import { modals, onBeforeClose } from "@wa-modals";
+    import { modals } from "@wa-modals";
 
     interface Props {
         isOpen: boolean;
@@ -21,6 +22,7 @@
     let verifier: Verifier | undefined = $state();
     let listenersAttached = false;
     let verificationHandedOffToEmojiDialog = false;
+    let isDestroyed = false;
 
     const cleanupVerificationListeners = () => {
         if (!listenersAttached) {
@@ -43,8 +45,12 @@
         }
 
         try {
-            verifier = await request.startVerification(VerificationMethod.Sas);
+            const startedVerifier = await request.startVerification(VerificationMethod.Sas);
+            if (isDestroyed) {
+                return;
+            }
             cleanupVerificationListeners();
+            verifier = startedVerifier;
             request.on(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
             verifier.on(VerifierEvent.ShowSas, handleVerifierEventShowSas);
             listenersAttached = true;
@@ -110,13 +116,8 @@
         }
     }
 
-    onBeforeClose(() => {
-        if (!verificationHandedOffToEmojiDialog) {
-            cleanupVerificationListeners();
-        }
-    });
-
     onDestroy(() => {
+        isDestroyed = true;
         if (!verificationHandedOffToEmojiDialog) {
             cleanupVerificationListeners();
         }
