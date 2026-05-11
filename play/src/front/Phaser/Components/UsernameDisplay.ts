@@ -298,11 +298,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
 
         this.scene.events.once(Phaser.Scenes.Events.RENDER, () => {
             const textPosition = this.getDomTextPosition();
-            this.gameScene.usernameDomLayer.updateUsernamePosition(
-                this.domUsernameId,
-                Math.round(textPosition.x),
-                Math.round(textPosition.y)
-            );
+            this.gameScene.usernameDomLayer.updateUsernamePosition(this.domUsernameId, textPosition.x, textPosition.y);
         });
     }
 

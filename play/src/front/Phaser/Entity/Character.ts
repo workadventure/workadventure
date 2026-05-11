@@ -400,7 +400,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     setPosition(x: number, y: number): this {
-        super.setPosition(x, y);
+        super.setPosition(Math.round(x), Math.round(y));
         this.setDepth(this.y + 16);
         this.updateUsernameDisplayPosition();
         return this;
@@ -503,7 +503,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
         // In path finding mode, diagonal movement can make x and y deltas almost equal.
         // Biasing y prevents the animation from flickering between horizontal and vertical directions.
-        if (Math.abs(x - oldX) > Math.abs((y - oldY) * 1.1)) {
+        if (Math.abs(x - oldX) > Math.abs((y - oldY) * 1.5)) {
             if (x < oldX) {
                 this._lastDirection = PositionMessage_Direction.LEFT;
             } else if (x > oldX) {
