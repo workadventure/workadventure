@@ -10,6 +10,7 @@
     } from "../../Connection/ChatConnection";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+    import LL from "../../../../i18n/i18n-svelte";
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
     import RoomMenu from "./RoomMenu/RoomMenu.svelte";
@@ -89,7 +90,7 @@
             <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white" />
             <div
                 class="flex aspect-square h-5 w-5 items-center justify-center rounded-full bg-success text-sm font-bold leading-none text-contrast z-10"
-                aria-label="{$roomUnreadCount} unread"
+                aria-label={$LL.chat.a11y.unreadCount({ count: $roomUnreadCount })}
             >
                 <span>{$roomUnreadCount > 9 ? "9" : $roomUnreadCount}</span>
                 {#if $roomUnreadCount > 9}

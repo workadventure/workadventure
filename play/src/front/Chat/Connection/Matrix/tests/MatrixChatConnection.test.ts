@@ -353,7 +353,7 @@ describe("MatrixChatConnection", () => {
             expect(mockStartClient).toHaveBeenCalledOnce();
 
             expect(mockStartClient).toHaveBeenCalledWith({
-                threadSupport: false,
+                threadSupport: true,
                 pendingEventOrdering: PendingEventOrdering.Detached,
             });
         });

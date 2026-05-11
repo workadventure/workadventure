@@ -6,7 +6,16 @@
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
-    import type { ChatRoom } from "../Connection/ChatConnection";
+    import { isThreadPanelEnabledStore, selectedThreadStore } from "../Stores/SelectedThreadStore";
+    import { roomSidePanelStore } from "../Stores/RoomSidePanelStore";
+    import {
+        hasChatRoomMembershipManagement,
+        hasChatRoomModeration,
+        hasChatRoomNotificationControl,
+        type ChatConversation,
+        type ChatRoom,
+        type ChatThread,
+    } from "../Connection/ChatConnection";
     import { INITIAL_SIDEBAR_WIDTH, loginTokenErrorStore } from "../../Stores/ChatStore";
     import { userIsConnected } from "../../Stores/MenuStore";
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
@@ -26,6 +35,8 @@
     import ChatHeader from "./ChatHeader.svelte";
     import RequireConnection from "./requireConnection.svelte";
     import RefreshChat from "./RefreshChat.svelte";
+    import RoomSidePanel from "./Room/RoomSidePanel.svelte";
+    import { getRoomSidePanelPlacement, shouldShowRoomSidePanelToggle, shouldShowRoomTimeline } from "./RoomListLayout";
     import { IconChevronUp, IconCloudLock, IconPlus, IconRefresh } from "@wa-icons";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
@@ -41,6 +52,7 @@
 
     const chatConnectionStatus = chat.connectionStatus;
     const CHAT_LAYOUT_LIMIT = INITIAL_SIDEBAR_WIDTH * 2;
+    const THREAD_PANEL_LAYOUT_LIMIT = INITIAL_SIDEBAR_WIDTH * 3;
 
     let directRooms = chat.directRooms;
     let rooms = chat.rooms;
@@ -84,6 +96,7 @@
         directRoomsUnsubscriber();
         roomsUnsubscriber();
         roomInvitationsUnsubscriber();
+        isThreadPanelEnabledStore.set(false);
         //if (proximityChatRoomHasUserInProximityChatSubscribtion) proximityChatRoomHasUserInProximityChatSubscribtion();
         //if (proximityChatRoomHasUnreadMessagesSubscribtion) proximityChatRoomHasUnreadMessagesSubscribtion();
     });
@@ -144,6 +157,10 @@
         proximityChatRoom.unreadNotificationCount.set(0);
     }
 
+    function isThreadConversation(conversation: ChatConversation | undefined): conversation is ChatThread {
+        return conversation?.conversationKind === "thread";
+    }
+
     $: filteredDirectRoom = $directRooms
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
@@ -155,14 +172,40 @@
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
 
     $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
+    $: displayThreeColumnLayout = sideBarWidth >= THREAD_PANEL_LAYOUT_LIMIT;
+    $: selectedRoomWithSidePanel =
+        hasChatRoomMembershipManagement($selectedRoomStore) &&
+        hasChatRoomModeration($selectedRoomStore) &&
+        hasChatRoomNotificationControl($selectedRoomStore)
+            ? $selectedRoomStore
+            : undefined;
+    $: hasSelectedRoomWithSidePanel = selectedRoomWithSidePanel !== undefined;
+    $: showRoomSidePanelToggle = shouldShowRoomSidePanelToggle(hasSelectedRoomWithSidePanel);
+    $: roomSidePanelPlacement = getRoomSidePanelPlacement({
+        canDisplayThirdColumn: displayThreeColumnLayout,
+        hasCompatibleRoom: hasSelectedRoomWithSidePanel,
+        isOpen: $roomSidePanelStore.isOpen,
+    });
+    $: showRoomSidePanelInThirdColumn = roomSidePanelPlacement === "third-column";
+    $: showRoomSidePanelInTimelineColumn = roomSidePanelPlacement === "timeline-column";
+    $: isThreadPanelEnabledStore.set(hasSelectedRoomWithSidePanel);
+    $: if (displayThreeColumnLayout && isThreadConversation($selectedRoomStore)) {
+        const selectedThread = $selectedRoomStore;
+        selectedRoomStore.set(selectedThread.parentRoom);
+        selectedThreadStore.set(selectedThread);
+    }
+    $: if (!hasSelectedRoomWithSidePanel && $selectedThreadStore) {
+        selectedRoomStore.set($selectedThreadStore);
+        selectedThreadStore.clear();
+    }
+    $: roomListGridClass = showRoomSidePanelInThirdColumn
+        ? "grid-cols-[335px_minmax(0,1fr)_360px]"
+        : sideBarWidth > INITIAL_SIDEBAR_WIDTH * 2 && $navChat.key === "chat"
+        ? "grid-cols-[auto_minmax(0,1fr)]"
+        : "grid-cols-[1fr]";
 </script>
 
-<div
-    class="overflow-auto h-full grid grid-rows-[1fr_auto] {sideBarWidth > INITIAL_SIDEBAR_WIDTH * 2 &&
-    $navChat.key === 'chat'
-        ? 'grid-cols-[auto_1fr]'
-        : 'grid-cols-[1fr]'}"
->
+<div class="overflow-auto h-full grid grid-rows-[1fr_auto] {roomListGridClass}">
     {#if $selectedRoomStore === undefined || displayTwoColumnLayout}
         <div
             class="w-full flex flex-col border border-solid border-y-0 border-l-0 border-white/10 relative overflow-y-auto overflow-x-none"
@@ -241,7 +284,7 @@
                                     <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white" />
                                     <div
                                         class="flex aspect-square h-5 w-5 items-center justify-center rounded-full bg-success text-sm font-bold leading-none text-contrast z-10"
-                                        aria-label="{$proximityUnreadCount} unread"
+                                        aria-label={$LL.chat.a11y.unreadCount({ count: $proximityUnreadCount })}
                                     >
                                         <span>{$proximityUnreadCount > 9 ? "9" : $proximityUnreadCount}</span>
                                         {#if $proximityUnreadCount > 9}
@@ -367,13 +410,17 @@
         </div>
     {/if}
     {#if $selectedRoomStore !== undefined}
-        <div class="overflow-y-auto">
-            <RoomTimeline room={$selectedRoomStore} />
+        <div class="overflow-y-auto min-w-0">
+            {#if showRoomSidePanelInTimelineColumn && selectedRoomWithSidePanel}
+                <RoomSidePanel room={selectedRoomWithSidePanel} showCloseButton closeOnTimelineFocus />
+            {:else if shouldShowRoomTimeline(roomSidePanelPlacement)}
+                <RoomTimeline room={$selectedRoomStore} {showRoomSidePanelToggle} />
+            {/if}
         </div>
     {:else if $selectedRoomStore === undefined && sideBarWidth >= CHAT_LAYOUT_LIMIT}
         <div class="flex flex-col flex-1 ps-4 items-center pt-8">
             <div class="text-center px-3 max-w-md">
-                <img src={getCloseImg} alt="Discussion bubble" draggable="false" />
+                <img src={getCloseImg} alt={$LL.chat.getCloserTitle()} draggable="false" />
                 <div class="text-lg font-bold text-center">{$LL.chat.noRoomOpen()}</div>
                 <div class="text-sm opacity-50 text-center">
                     {$LL.chat.noRoomOpenDescription()}
@@ -382,7 +429,13 @@
         </div>
     {/if}
 
-    <div class="w-full flex flex-col col-span-2 h-fit">
+    {#if showRoomSidePanelInThirdColumn && selectedRoomWithSidePanel}
+        <div class="overflow-y-auto min-w-0 border border-solid border-y-0 border-r-0 border-white/10">
+            <RoomSidePanel room={selectedRoomWithSidePanel} />
+        </div>
+    {/if}
+
+    <div class="w-full flex flex-col col-span-full h-fit">
         <ExternalComponents zone="chatBand" />
         {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
             <div class="w-full">
