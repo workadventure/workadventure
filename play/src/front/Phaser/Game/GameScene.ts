@@ -720,7 +720,7 @@ export class GameScene extends DirtyScene {
         //permit to set bound collision
         this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
-        this.usernameDomLayer = new UsernameDomLayer(this, this.Map.widthInPixels, this.Map.heightInPixels);
+        this.usernameDomLayer = new UsernameDomLayer(this);
         this.rxJsSubscriptions.push(
             this.usernameRenderingAsDOM$.subscribe((renderingAsDOM) => {
                 this.usernameDomLayer.setVisible(renderingAsDOM);

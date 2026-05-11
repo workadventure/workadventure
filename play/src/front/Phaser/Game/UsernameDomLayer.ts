@@ -10,11 +10,9 @@ export class UsernameDomLayer {
     private readonly domElement: Phaser.GameObjects.DOMElement;
     private readonly usernames = new Map<number, UsernameElement>();
 
-    constructor(scene: GameScene, width: number, height: number) {
+    constructor(scene: GameScene) {
         this.container = document.createElement("div");
         this.container.style.position = "relative";
-        this.container.style.width = `${width}px`;
-        this.container.style.height = `${height}px`;
         this.container.style.pointerEvents = "none";
         this.container.style.overflow = "visible";
 
