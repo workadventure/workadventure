@@ -123,6 +123,7 @@ class OpenIDClient {
         email: string;
         sub: string;
         access_token: string;
+        refresh_token: string | undefined;
         username: string;
         locale: string;
         matrix_url: string | undefined;
@@ -165,6 +166,7 @@ class OpenIDClient {
                             email: res.email ?? "",
                             sub: res.sub,
                             access_token: tokenSet.access_token ?? "",
+                            refresh_token: tokenSet.refresh_token,
                             username: res[OPID_USERNAME_CLAIM] as string,
                             locale: res[OPID_LOCALE_CLAIM] as string,
                             tags: res[OPID_TAGS_CLAIM] as string[],
@@ -189,6 +191,29 @@ class OpenIDClient {
         return this.initClient().then((client) => {
             return client.userinfo(token);
         });
+    }
+
+    /**
+     * Exchange a refresh token for a new access token (and optionally a new refresh token).
+     * Uses the openid-client `refresh()` method which calls the provider's token endpoint
+     * with grant_type=refresh_token.
+     *
+     * Most providers issue a refresh token by default with authorization_code flow.
+     * If your provider requires it explicitly, add `offline_access` to OPID_SCOPE.
+     */
+    public async refreshAccessToken(refreshToken: string): Promise<{
+        access_token: string;
+        refresh_token: string | undefined;
+    }> {
+        const client = await this.initClient();
+        const tokenSet = await client.refresh(refreshToken);
+        if (!tokenSet.access_token) {
+            throw new Error("No access_token returned from token refresh endpoint");
+        }
+        return {
+            access_token: tokenSet.access_token,
+            refresh_token: tokenSet.refresh_token,
+        };
     }
 
     private encrypt(text: string): string {
