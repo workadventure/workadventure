@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { closeModal, onBeforeClose } from "svelte-modals";
+    import { closeModal } from "svelte-modals";
     import { onDestroy } from "svelte";
     import type { ShowSasCallbacks, Verifier } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationRequestEvent, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
@@ -19,6 +19,7 @@
     let verifier: Verifier | undefined;
     let listenersAttached = false;
     let verificationHandedOffToEmojiDialog = false;
+    let isDestroyed = false;
 
     const cleanupVerificationListeners = () => {
         if (!listenersAttached) {
@@ -41,8 +42,12 @@
         }
 
         try {
-            verifier = await request.startVerification(VerificationMethod.Sas);
+            const startedVerifier = await request.startVerification(VerificationMethod.Sas);
+            if (isDestroyed) {
+                return;
+            }
             cleanupVerificationListeners();
+            verifier = startedVerifier;
             request.on(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
             verifier.on(VerifierEvent.ShowSas, handleVerifierEventShowSas);
             listenersAttached = true;
@@ -108,13 +113,8 @@
         }
     }
 
-    onBeforeClose(() => {
-        if (!verificationHandedOffToEmojiDialog) {
-            cleanupVerificationListeners();
-        }
-    });
-
     onDestroy(() => {
+        isDestroyed = true;
         if (!verificationHandedOffToEmojiDialog) {
             cleanupVerificationListeners();
         }

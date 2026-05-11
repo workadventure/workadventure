@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fade } from "svelte/transition";
     import { onMount } from "svelte";
-    import { get } from "svelte/store";
+    import type { Readable } from "svelte/store";
     import type { ProximityNotification } from "../../Stores/ProximityNotificationStore";
     import { chatNotificationStore } from "../../Stores/ProximityNotificationStore";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
@@ -12,8 +12,13 @@
 
     export let notification: ProximityNotification;
 
-    $: roomType = notification.room ? get(notification.room.type) : notification.roomType ?? "multiple";
-    $: roomName = notification.room ? get(notification.room.name) : notification.roomName;
+    let roomTypeStore: Readable<"direct" | "multiple"> | undefined;
+    let roomNameStore: Readable<string> | undefined;
+
+    $: roomTypeStore = notification.room?.type;
+    $: roomNameStore = notification.room?.name;
+    $: roomType = roomTypeStore ? $roomTypeStore : notification.roomType ?? "multiple";
+    $: roomName = roomNameStore ? $roomNameStore : notification.roomName;
 
     const NOTIFICATION_DURATION = 10000; // 10 seconds
 
@@ -91,7 +96,7 @@
 
 <div
     class="proximity-notification bg-contrast/50 rounded backdrop-blur-md flex gap-3 py-3 pl-5 pr-2 shadow-xl pointer-events-auto z-[900] cursor-pointer hover:bg-contrast/90 transition-colors text-white w-[60%] min-w-[300px] max-w-[600px]"
-    on:click={handleClick}
+    on:click={() => handleClick().catch((error) => console.error("Failed to handle chat notification click", error))}
     role="button"
     tabindex="0"
     on:keydown={handleKeyboardClick}
