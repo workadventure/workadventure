@@ -1,6 +1,7 @@
 export function shouldReserveFloatingCloseButtonSpace(
     isFloatingCloseButtonVisible: boolean,
-    hasRoomSidePanelToggle: boolean
+    hasRoomSidePanelToggle: boolean,
+    roomSidePanelToggleIsOpen: boolean
 ) {
-    return isFloatingCloseButtonVisible && hasRoomSidePanelToggle;
+    return isFloatingCloseButtonVisible && hasRoomSidePanelToggle && !roomSidePanelToggleIsOpen;
 }

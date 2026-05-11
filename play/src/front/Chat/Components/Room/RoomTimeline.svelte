@@ -37,6 +37,8 @@
     export let timelineTestId = "roomTimeline";
     export let showRoomSidePanelToggle = false;
 
+
+
     const chatConnection = gameManager.chatConnection;
     const shouldRetrySendingEvents = chatConnection.shouldRetrySendingEvents;
     let myChatID = localUserStore.getChatId();
@@ -54,29 +56,32 @@
     let messageInputBarRef: MessageInputBar;
     let lastTimelineFocusSequence = 0;
 
+ 
     const gameScene = gameManager.getCurrentGameScene();
     const chatRoomsEnableInAdmin = gameScene.room.isChatEnabled;
     const direction = document.documentElement.getAttribute("dir") || "ltr";
 
+    
     function isChatRoom(conversation: ChatConversation): conversation is ChatRoom {
         return conversation.conversationKind === "room";
     }
-
+    
     const emptyThreadSummaries = readable<readonly ChatThreadSummary[]>([]);
-
-    $: messages = room?.messages;
-    $: roomName = room?.name;
-    $: typingMembers = room.typingMembers;
-    $: timelineItems = room.timelineItems;
-    $: initializationState = room.initializationState;
-    $: initializationError = room.initializationError;
-    // threads exist only on ChatRoom, not when this timeline shows a thread (ThreadPanel).
+        
+        $: roomSidePanelToggleIsOpen = $roomSidePanelStore.isOpen ?? false;
+        $: roomName = room?.name;
+        $: typingMembers = room.typingMembers;
+        $: timelineItems = room.timelineItems;
+        $: initializationState = room.initializationState;
+        $: initializationError = room.initializationError;
+        // threads exist only on ChatRoom, not when this timeline shows a thread (ThreadPanel).
     $: threadsStore = isChatRoom(room) ? room.threads : undefined;
     $: threadSummariesStore = threadsStore ?? emptyThreadSummaries;
     $: unreadThreadCount = $threadSummariesStore.filter((thread) => thread.hasUnreadMessages).length;
     $: shouldReserveHeaderEndSpace = shouldReserveFloatingCloseButtonSpace(
         $hideActionBarStoreBecauseOfChatBar,
-        showRoomSidePanelToggle
+        showRoomSidePanelToggle,
+        roomSidePanelToggleIsOpen
     );
     $: if ($roomTimelineFocusStore) {
         focusTimelineEvent($roomTimelineFocusStore).catch((error) => console.error(error));
@@ -427,14 +432,14 @@
                 {#if showRoomSidePanelToggle}
                     <button
                         type="button"
-                        class="relative p-3 rounded aspect-square w-12 h-12 shrink-0 !text-white hover:bg-white/10 {$roomSidePanelStore.isOpen
+                        class="relative p-3 rounded aspect-square w-12 h-12 shrink-0 !text-white hover:bg-white/10 {roomSidePanelToggleIsOpen
                             ? 'bg-white/10'
                             : ''}"
                         data-testid="toggleRoomSidePanelButton"
-                        title={$roomSidePanelStore.isOpen
+                        title={roomSidePanelToggleIsOpen
                             ? $LL.chat.roomPanel.toggleClose()
                             : $LL.chat.roomPanel.toggleOpen()}
-                        aria-pressed={$roomSidePanelStore.isOpen}
+                        aria-pressed={roomSidePanelToggleIsOpen}
                         on:click={() => roomSidePanelStore.toggle()}
                     >
                         <IconTableOptions font-size="20" />
@@ -482,7 +487,7 @@
                             {$LL.chat.timeLine.retry()}
                         </button>
                     </li>
-                {:else if $messages.length === 0}
+                {:else if $timelineItems.length === 0}
                     {#if room instanceof ProximityChatRoom}
                         <li class="text-center px-3 max-w-md">
                             <img draggable="false" src={getCloseImg} alt={$LL.chat.getCloserTitle()} />

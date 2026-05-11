@@ -7,7 +7,7 @@
 
     export let content: Readable<ChatMessageContent>;
 
-    $: previewUrl = $content.url;
+    $: previewUrl = $content.url ?? $content.thumbnailUrl;
     $: displayUrl = $content.thumbnailUrl ?? $content.url;
     $: canDisplayImage = displayUrl !== undefined;
 

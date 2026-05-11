@@ -7,7 +7,6 @@ import { matrixAvatarProfile } from "./services/MatrixAvatarProfile";
 
 type ChatUserFactoryOptions = {
     username?: string;
-    pictureUrl?: string;
 };
 
 export const chatUserFactory: (
@@ -45,7 +44,6 @@ export function chatUserFactoryFromRoom(room: Room, userId: string): ChatUser | 
     if (matrixUser) {
         return chatUserFactory(matrixUser, room.client, {
             username: displayName,
-            pictureUrl,
         });
     }
 
