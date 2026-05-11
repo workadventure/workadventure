@@ -1165,6 +1165,10 @@ export class Space implements SpaceInterface {
         return this._isStreamingAudioStore;
     }
 
+    get canAskToMuteAudioOrTurnOffVideo(): Readable<boolean> {
+        return this._isStreamingAudioStore;
+    }
+
     private blockUser(spaceUserId: string): void {
         this._blockedUsersStore.update((blockedUsers) => {
             blockedUsers.add(spaceUserId);

@@ -44,6 +44,7 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
             emitPublicMessage: (message: NonNullable<SpaceEvent["event"]>) => {
                 throw new Error("should not be called");
             },
+            canAskToMuteAudioOrTurnOffVideo: writable(false),
         },
         reactiveUser: {
             spaceUserId: "",
