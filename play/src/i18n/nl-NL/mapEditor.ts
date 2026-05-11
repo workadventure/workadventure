@@ -143,6 +143,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
 
         chatEnabled: "Koppel een speciale chatkanaal",
+        allowTalking: "Praten en bubbels vormen toestaan",
         seeAttendees: "Deelnemers zien",
         start: {
             label: "Startgebied",

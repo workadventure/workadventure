@@ -317,6 +317,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Opciones avanzadas",
         chatEnabled: "Asociar un canal de chat dedicado",
+        allowTalking: "Permitir hablar y formar burbujas",
         maxUsersInAreaPropertyData: {
             label: "Número máximo de usuarios",
             description: "Establecer el número máximo de usuarios en la zona.",

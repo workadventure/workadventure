@@ -141,6 +141,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             actionButtonLabel: "K publikumoju pśipowjazaś",
         },
         chatEnabled: "Chat jo aktiwěrowany",
+        allowTalking: "Powědanje a twórjenje pucherow dowóliś",
         seeAttendees: "Wobźělnikow pokazaś",
         start: {
             label: "Startowy wobceŕk",
