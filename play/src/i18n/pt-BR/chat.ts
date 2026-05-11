@@ -634,7 +634,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         localName: "Nome local no jogo",
         waDisplayName: "Nome WA (fr.workadventure.wa_display_name)",
         waAvatar: "WA avatar (fr.workadventure.wa_avatar)",
-        needsSyncHint: "Seu nome local ou WOKA pode ser diferente do seu perfil Matrix. Use Sincronizar para atualizar.",
+        needsSyncHint:
+            "Seu nome local ou WOKA pode ser diferente do seu perfil Matrix. Use Sincronizar para atualizar.",
         upToDateHint:
             "Seu perfil Matrix corresponde ao nome local no jogo e ao WOKA (ou não há nada para sincronizar).",
         syncButton: "Sincronizar perfil Matrix (nome + imagem WOKA)",
@@ -662,7 +663,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuItemTitle: "Perfil Matrix",
         menuItemDebugTag: "debug",
         title: "Perfil Matrix",
-        subtitle: "Visualização somente leitura do perfil Matrix deste usuário. Exibida apenas quando DEBUG_MODE está ativo.",
+        subtitle:
+            "Visualização somente leitura do perfil Matrix deste usuário. Exibida apenas quando DEBUG_MODE está ativo.",
         loadError: "Não foi possível carregar o perfil Matrix deste usuário.",
     },
 };

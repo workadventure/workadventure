@@ -29,15 +29,13 @@
     import PollCard from "./PollCard.svelte";
     import TypingUsers from "./TypingUsers.svelte";
     import { shouldReserveFloatingCloseButtonSpace } from "./RoomTimelineHeaderLayout";
-    import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox, IconTableOptions } from "@wa-icons";
+    import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox, IconInfoCircle } from "@wa-icons";
 
     export let room: ChatConversation;
     export let backAction: (() => void) | undefined = undefined;
     export let backButtonTestId = "chatBackward";
     export let timelineTestId = "roomTimeline";
     export let showRoomSidePanelToggle = false;
-
-
 
     const chatConnection = gameManager.chatConnection;
     const shouldRetrySendingEvents = chatConnection.shouldRetrySendingEvents;
@@ -56,25 +54,23 @@
     let messageInputBarRef: MessageInputBar;
     let lastTimelineFocusSequence = 0;
 
- 
     const gameScene = gameManager.getCurrentGameScene();
     const chatRoomsEnableInAdmin = gameScene.room.isChatEnabled;
     const direction = document.documentElement.getAttribute("dir") || "ltr";
 
-    
     function isChatRoom(conversation: ChatConversation): conversation is ChatRoom {
         return conversation.conversationKind === "room";
     }
-    
+
     const emptyThreadSummaries = readable<readonly ChatThreadSummary[]>([]);
-        
-        $: roomSidePanelToggleIsOpen = $roomSidePanelStore.isOpen ?? false;
-        $: roomName = room?.name;
-        $: typingMembers = room.typingMembers;
-        $: timelineItems = room.timelineItems;
-        $: initializationState = room.initializationState;
-        $: initializationError = room.initializationError;
-        // threads exist only on ChatRoom, not when this timeline shows a thread (ThreadPanel).
+
+    $: roomSidePanelToggleIsOpen = $roomSidePanelStore.isOpen ?? false;
+    $: roomName = room?.name;
+    $: typingMembers = room.typingMembers;
+    $: timelineItems = room.timelineItems;
+    $: initializationState = room.initializationState;
+    $: initializationError = room.initializationError;
+    // threads exist only on ChatRoom, not when this timeline shows a thread (ThreadPanel).
     $: threadsStore = isChatRoom(room) ? room.threads : undefined;
     $: threadSummariesStore = threadsStore ?? emptyThreadSummaries;
     $: unreadThreadCount = $threadSummariesStore.filter((thread) => thread.hasUnreadMessages).length;
@@ -442,7 +438,7 @@
                         aria-pressed={roomSidePanelToggleIsOpen}
                         on:click={() => roomSidePanelStore.toggle()}
                     >
-                        <IconTableOptions font-size="20" />
+                        <IconInfoCircle font-size="20" />
                         {#if unreadThreadCount > 0}
                             <span
                                 class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border border-solid border-contrast bg-success"
