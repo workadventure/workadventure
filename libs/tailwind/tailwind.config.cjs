@@ -83,8 +83,4 @@ module.exports = {
       addVariant('picture-in-picture', '@media (display-mode: picture-in-picture)');
     })
   ],
-  workadventureUi: {
-    oswaldFontUrl: './fonts/Oswald.ttf',
-  },
-
 };
