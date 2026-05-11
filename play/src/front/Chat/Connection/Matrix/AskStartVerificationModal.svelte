@@ -1,5 +1,6 @@
 <script lang="ts">
     import { closeModal } from "svelte-modals";
+    import { onDestroy } from "svelte";
     import type { ShowSasCallbacks, Verifier } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationRequestEvent, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationMethod } from "matrix-js-sdk/lib/types";
@@ -16,6 +17,20 @@
     let errorLabel: string | undefined = "";
     const doneDeferred = new Deferred<void>();
     let verifier: Verifier | undefined;
+    let listenersAttached = false;
+    let verificationHandedOffToEmojiDialog = false;
+    let isDestroyed = false;
+
+    const cleanupVerificationListeners = () => {
+        if (!listenersAttached) {
+            return;
+        }
+
+        listenersAttached = false;
+        verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
+        request.off(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
+        verifier = undefined;
+    };
 
     async function acceptToStartVerification() {
         try {
@@ -26,11 +41,20 @@
             return;
         }
 
-        verifier = await request.startVerification(VerificationMethod.Sas);
-
-        request.on(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
-
-        verifier.on(VerifierEvent.ShowSas, handleVerifierEventShowSas);
+        try {
+            const startedVerifier = await request.startVerification(VerificationMethod.Sas);
+            if (isDestroyed) {
+                return;
+            }
+            cleanupVerificationListeners();
+            verifier = startedVerifier;
+            request.on(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
+            verifier.on(VerifierEvent.ShowSas, handleVerifierEventShowSas);
+            listenersAttached = true;
+        } catch (error) {
+            console.error("Failed to start verification request:", error);
+            errorLabel = "Failed to start verification request ...";
+        }
     }
 
     const handleVerifierEventShowSas = (showSasCallbacks: ShowSasCallbacks) => {
@@ -49,6 +73,7 @@
 
         if (!emojis) return;
 
+        verificationHandedOffToEmojiDialog = true;
         closeModal();
 
         matrixSecurity.openVerificationEmojiDialog({
@@ -63,21 +88,18 @@
             console.error("error with verify ...", error);
             errorLabel = "Failed to start verification ...";
             doneDeferred.reject();
-            verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
-            request.off(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
+            cleanupVerificationListeners();
         });
     };
     const handleChangeVerificationRequestEvent = () => {
         if (request.phase === Phase.Done) {
             doneDeferred.resolve();
-            verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
-            request.off(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
+            cleanupVerificationListeners();
         }
         if (request.phase === Phase.Cancelled) {
             errorLabel = "request was cancelled ...";
             doneDeferred.reject();
-            verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
-            request.off(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
+            cleanupVerificationListeners();
         }
     };
 
@@ -90,6 +112,13 @@
             closeModal();
         }
     }
+
+    onDestroy(() => {
+        isDestroyed = true;
+        if (!verificationHandedOffToEmojiDialog) {
+            cleanupVerificationListeners();
+        }
+    });
 </script>
 
 <Popup {isOpen}>
