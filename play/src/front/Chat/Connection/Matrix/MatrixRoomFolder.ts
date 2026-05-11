@@ -100,14 +100,9 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     }
 
     override destroy(): void {
-        for (const id of Array.from(this.folderList.keys())) {
-            this.folderList.get(id)?.destroy();
-            this.folderList.delete(id);
-        }
-        for (const id of Array.from(this.roomList.keys())) {
-            this.roomList.get(id)?.destroy();
-            this.roomList.delete(id);
-        }
+        this.clearNodes();
+        this.availableRooms.set([]);
+        this.allSuggestedRooms.set([]);
         super.destroy();
     }
 
@@ -153,19 +148,72 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         }
     }
 
+    setRoomNode(room: MatrixChatRoom): void {
+        const existingRoom = this.roomList.get(room.id);
+        if (existingRoom && existingRoom !== room) {
+            existingRoom.destroy();
+        }
+        this.roomList.delete(room.id);
+
+        const existingFolder = this.folderList.get(room.id);
+        if (existingFolder) {
+            existingFolder.destroy();
+        }
+        this.folderList.delete(room.id);
+
+        this.roomList.set(room.id, room);
+    }
+
+    setFolderNode(folder: MatrixRoomFolder): void {
+        const existingFolder = this.folderList.get(folder.id);
+        if (existingFolder && existingFolder !== folder) {
+            existingFolder.destroy();
+        }
+        this.folderList.delete(folder.id);
+
+        const existingRoom = this.roomList.get(folder.id);
+        if (existingRoom) {
+            existingRoom.destroy();
+        }
+        this.roomList.delete(folder.id);
+
+        this.folderList.set(folder.id, folder);
+    }
+
+    findLoadedNode(id: string): MatrixRoomFolder | MatrixChatRoom | undefined {
+        if (this.id === id) {
+            return this;
+        }
+
+        const roomNode = this.roomList.get(id);
+        if (roomNode) {
+            return roomNode;
+        }
+
+        const folderNode = this.folderList.get(id);
+        if (folderNode) {
+            return folderNode;
+        }
+
+        for (const folder of this.folderList.values()) {
+            const node = folder.findLoadedNode(id);
+            if (node) {
+                return node;
+            }
+        }
+
+        return undefined;
+    }
+
     async deleteNode(id: string): Promise<boolean> {
         try {
             await this.loadRoomsAndFolderPromise.promise;
-            const roomNode = this.roomList.get(id);
-            if (roomNode) {
-                roomNode.destroy();
-                return this.roomList.delete(id);
+            if (this.deleteRoomNode(id)) {
+                return true;
             }
 
-            const folderNode = this.folderList.get(id);
-            if (folderNode) {
-                folderNode.destroy();
-                return this.folderList.delete(id);
+            if (this.deleteFolderNode(id)) {
+                return true;
             }
 
             const deleteNodePromise = Array.from(this.folderList.values()).map((folder) => {
@@ -181,6 +229,33 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         }
 
         return false;
+    }
+
+    private deleteRoomNode(id: string): boolean {
+        const existingRoom = this.roomList.get(id);
+        if (!existingRoom) {
+            return false;
+        }
+        existingRoom.destroy();
+        this.roomList.delete(id);
+        return true;
+    }
+
+    private deleteFolderNode(id: string): boolean {
+        const existingFolder = this.folderList.get(id);
+        if (!existingFolder) {
+            return false;
+        }
+        existingFolder.destroy();
+        this.folderList.delete(id);
+        return true;
+    }
+
+    private clearNodes(): void {
+        Array.from(this.roomList.values()).forEach((room) => room.destroy());
+        this.roomList.clear();
+        Array.from(this.folderList.values()).forEach((folder) => folder.destroy());
+        this.folderList.clear();
     }
 
     async getParentOfNode(id: string): Promise<MatrixRoomFolder | undefined> {
@@ -250,14 +325,14 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                 if (!childRoom || roomId === this.id) return;
 
                 if (childRoom.isSpaceRoom()) {
-                    this.folderList.set(childRoom.roomId, new MatrixRoomFolder(childRoom));
+                    this.setFolderNode(new MatrixRoomFolder(childRoom));
                 } else {
                     const matrixChatRoom = new MatrixChatRoom(childRoom);
                     if (
                         get(matrixChatRoom.myMembership) === KnownMembership.Join ||
                         get(matrixChatRoom.myMembership) === KnownMembership.Invite
                     ) {
-                        this.roomList.set(childRoom.roomId, matrixChatRoom);
+                        this.setRoomNode(matrixChatRoom);
                     }
                 }
             });
@@ -411,14 +486,12 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
 
         for (const id of Array.from(this.roomList.keys())) {
             if (!childIds.has(id)) {
-                this.roomList.get(id)?.destroy();
-                this.roomList.delete(id);
+                this.deleteRoomNode(id);
             }
         }
         for (const id of Array.from(this.folderList.keys())) {
             if (!childIds.has(id)) {
-                this.folderList.get(id)?.destroy();
-                this.folderList.delete(id);
+                this.deleteFolderNode(id);
             }
         }
 
@@ -427,11 +500,11 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                 let spaceFolder = this.folderList.get(child.roomId);
                 if (!spaceFolder) {
                     spaceFolder = new MatrixRoomFolder(child);
-                    this.folderList.set(child.roomId, spaceFolder);
+                    this.setFolderNode(spaceFolder);
                 }
                 spaceFolder.init();
             } else if (!this.roomList.has(child.roomId)) {
-                this.roomList.set(child.roomId, new MatrixChatRoom(child));
+                this.setRoomNode(new MatrixChatRoom(child));
             }
         });
     }

@@ -9,7 +9,6 @@ import { MatrixChatConnection } from "../MatrixChatConnection";
 import { MatrixRoomFolder } from "../MatrixRoomFolder";
 import type { CreateRoomOptions } from "../../ChatConnection";
 import type { MatrixChatRoom } from "../MatrixChatRoom";
-import type { MatrixRoomFolder } from "../MatrixRoomFolder";
 import type { MatrixSecurity } from "../MatrixSecurity";
 import type { RequestedStatus } from "../../../../Rules/StatusRules/statusRules";
 
@@ -70,10 +69,10 @@ describe("MatrixChatConnection", () => {
         subscribe: vi.fn(),
     };
 
-    const basicMockMatrixSecurity: Partial<MatrixSecurity> = {
+    const basicMockMatrixSecurity = {
         isEncryptionRequiredAndNotSet: writable(false),
         updateMatrixClientStore: vi.fn(),
-    };
+    } as unknown as MatrixSecurity;
 
     const getMatrixConnection = async (
         clientPromise: Promise<MatrixClient>,
@@ -485,7 +484,7 @@ describe("MatrixChatConnection", () => {
             expect(offMock).toHaveBeenCalledWith(ClientEvent.Sync, matrixChatConnection["handleSync"]);
             expect(offMock).toHaveBeenCalledWith(
                 ClientEvent.AccountData,
-                matrixChatConnection["handleAccountDataEvent"]
+                matrixChatConnection["handleAccountDataEvent"],
             );
         });
 
@@ -1273,8 +1272,8 @@ describe("MatrixChatConnection", () => {
                 folderList: new Map(),
                 loadRoomsAndFolderPromise: { promise: Promise.resolve() },
             }) as MatrixRoomFolder;
-            rootFolder.folderList.set(intermediateFolder.id, intermediateFolder);
-            intermediateFolder.folderList.set(nestedFolder.id, nestedFolder);
+            rootFolder.setFolderNode(intermediateFolder);
+            intermediateFolder.setFolderNode(nestedFolder);
 
             await expect(rootFolder.getNode(nestedFolder.id)).resolves.toBe(nestedFolder);
         });
@@ -1285,11 +1284,13 @@ describe("MatrixChatConnection", () => {
             const childNode = {
                 id: childRoomId,
                 myMembership: readable(KnownMembership.Join),
+                destroy: vi.fn(),
             };
             const folder = Object.assign(Object.create(MatrixRoomFolder.prototype), {
                 id: folderId,
                 roomList: new Map([[childRoomId, childNode]]),
                 folderList: new Map(),
+                destroy: vi.fn(),
                 loadRoomsAndFolderPromise: { promise: Promise.resolve() },
             }) as MatrixRoomFolder;
             const matrixChatConnection = new MatrixChatConnection(
@@ -1325,6 +1326,7 @@ describe("MatrixChatConnection", () => {
             const childNode = {
                 id: childRoomId,
                 myMembership: readable(KnownMembership.Join),
+                destroy: vi.fn(),
             };
             const leftFolder = Object.assign(Object.create(MatrixRoomFolder.prototype), {
                 id: leftFolderId,

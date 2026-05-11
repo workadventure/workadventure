@@ -6,7 +6,7 @@ function createTextEvent(
     overrides: Partial<MatrixEvent> & {
         replyEventId?: string;
         formattedBody?: string;
-    } = {}
+    } = {},
 ): MatrixEvent {
     const originalContent = {
         body: "hello",

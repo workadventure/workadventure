@@ -17,7 +17,7 @@
 
     let { notification }: Props = $props();
 
-    let roomType = $derived(notification.room ? get(notification.room.type) : notification.roomType ?? "multiple");
+    let roomType = $derived(notification.room ? get(notification.room.type) : (notification.roomType ?? "multiple"));
     let roomName = $derived(notification.room ? get(notification.room.name) : notification.roomName);
 
     const NOTIFICATION_DURATION = 10000; // 10 seconds

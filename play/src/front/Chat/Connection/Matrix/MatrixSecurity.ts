@@ -408,7 +408,7 @@ export class MatrixSecurity {
                             return;
                         default: {
                             const unsupportedMethodError = new Error(
-                                "The chosen verification method is not implemented"
+                                "The chosen verification method is not implemented",
                             );
                             rejectStartVerification(unsupportedMethodError);
                             rejectDoneVerification(unsupportedMethodError);

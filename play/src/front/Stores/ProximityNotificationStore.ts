@@ -70,7 +70,10 @@ function createChatNotificationStore() {
         },
         clearRoom: (roomId: string): void => {
             update((notifications: ProximityNotification[]) => {
-                return notifications.filter((notification) => notification.room.id !== roomId);
+                return notifications.filter((notification) => {
+                    const notificationRoomId = notification.room?.id ?? notification.roomId;
+                    return notificationRoomId !== roomId;
+                });
             });
         },
     };
