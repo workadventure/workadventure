@@ -116,6 +116,7 @@ export interface SpaceInterface {
     readonly isStreamingStore: Readable<boolean>;
 
     readonly isStreamingAudioStore: Readable<boolean>;
+    readonly canAskToMuteAudioOrTurnOffVideo: Readable<boolean>;
     readonly shouldPublishScreenShareStore: Readable<boolean>;
 
     /**
@@ -159,6 +160,6 @@ export type ReactiveSpaceUser = {
 export type SpaceUserExtended = SpaceUser & {
     pictureStore: Readable<string | undefined>;
     emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => void;
-    space: Pick<SpaceInterface, "emitPublicMessage">;
+    space: Pick<SpaceInterface, "emitPublicMessage" | "canAskToMuteAudioOrTurnOffVideo">;
     reactiveUser: ReactiveSpaceUser;
 };
