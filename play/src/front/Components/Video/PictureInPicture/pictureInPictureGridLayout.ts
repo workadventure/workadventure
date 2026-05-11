@@ -188,36 +188,36 @@ export function computePictureInPictureGridLayout(
 
     if (n === 5) {
         if (portrait) {
-            // 3 en haut, 2 en bas — 6 colonnes virtuelles : haut 2+2+2, bas 3+3
+            // 2 gauche empilées, 3 droite empilées (grille 2 col × 3 lignes)
             return {
                 portrait,
                 videoCount: n,
-                columnTracks: 6,
-                rowTracks: 2,
+                columnTracks: 2,
+                rowTracks: 3,
                 tiles: [
-                    { columnStart: 1, columnEnd: 3, rowStart: 1, rowEnd: 2 },
-                    { columnStart: 3, columnEnd: 5, rowStart: 1, rowEnd: 2 },
-                    { columnStart: 5, columnEnd: 7, rowStart: 1, rowEnd: 2 },
-                    { columnStart: 1, columnEnd: 4, rowStart: 2, rowEnd: 3 },
-                    { columnStart: 4, columnEnd: 7, rowStart: 2, rowEnd: 3 },
+                    { columnStart: 1, columnEnd: 2, rowStart: 1, rowEnd: 2 },
+                    { columnStart: 2, columnEnd: 3, rowStart: 1, rowEnd: 2 },
+                    { columnStart: 1, columnEnd: 3, rowStart: 2, rowEnd: 3 },
+                    { columnStart: 1, columnEnd: 2, rowStart: 3, rowEnd: 4 },
+                    { columnStart: 2, columnEnd: 3, rowStart: 3, rowEnd: 4 },
                 ],
-                description: "5 portrait : 3 haut + 2 bas",
+                description: "5 paysage : 2 colonne gauche + 2 colonne droite + 1 ligne en bas",
             };
         }
-        // 2 gauche empilées, 3 droite empilées (grille 2 col × 3 lignes)
+        // 3 en haut, 2 en bas — 6 colonnes virtuelles : haut 2+2+2, bas 3+3
         return {
             portrait,
             videoCount: n,
-            columnTracks: 2,
-            rowTracks: 3,
+            columnTracks: 6,
+            rowTracks: 2,
             tiles: [
-                { columnStart: 1, columnEnd: 2, rowStart: 1, rowEnd: 2 },
-                { columnStart: 2, columnEnd: 3, rowStart: 1, rowEnd: 2 },
-                { columnStart: 1, columnEnd: 3, rowStart: 2, rowEnd: 3 },
-                { columnStart: 1, columnEnd: 2, rowStart: 3, rowEnd: 4 },
-                { columnStart: 2, columnEnd: 3, rowStart: 3, rowEnd: 4 },
+                { columnStart: 1, columnEnd: 3, rowStart: 1, rowEnd: 2 },
+                { columnStart: 3, columnEnd: 5, rowStart: 1, rowEnd: 2 },
+                { columnStart: 5, columnEnd: 7, rowStart: 1, rowEnd: 2 },
+                { columnStart: 1, columnEnd: 4, rowStart: 2, rowEnd: 3 },
+                { columnStart: 4, columnEnd: 7, rowStart: 2, rowEnd: 3 },
             ],
-            description: "5 paysage : 2 colonne gauche + 2 colonne droite + 1 ligne en bas",
+            description: "5 portrait : 3 haut + 2 bas",
         };
     }
 
@@ -226,72 +226,72 @@ export function computePictureInPictureGridLayout(
             return {
                 portrait,
                 videoCount: n,
-                columnTracks: 3,
-                rowTracks: 2,
+                columnTracks: 2,
+                rowTracks: 3,
                 tiles: [
                     { columnStart: 1, columnEnd: 2, rowStart: 1, rowEnd: 2 },
                     { columnStart: 2, columnEnd: 3, rowStart: 1, rowEnd: 2 },
-                    { columnStart: 3, columnEnd: 4, rowStart: 1, rowEnd: 2 },
                     { columnStart: 1, columnEnd: 2, rowStart: 2, rowEnd: 3 },
                     { columnStart: 2, columnEnd: 3, rowStart: 2, rowEnd: 3 },
-                    { columnStart: 3, columnEnd: 4, rowStart: 2, rowEnd: 3 },
+                    { columnStart: 1, columnEnd: 2, rowStart: 3, rowEnd: 4 },
+                    { columnStart: 2, columnEnd: 3, rowStart: 3, rowEnd: 4 },
                 ],
-                description: "6 portrait : 3×2",
+                description: "6 paysage : 2×3",
             };
         }
         return {
             portrait,
             videoCount: n,
-            columnTracks: 2,
-            rowTracks: 3,
+            columnTracks: 3,
+            rowTracks: 2,
             tiles: [
                 { columnStart: 1, columnEnd: 2, rowStart: 1, rowEnd: 2 },
                 { columnStart: 2, columnEnd: 3, rowStart: 1, rowEnd: 2 },
+                { columnStart: 3, columnEnd: 4, rowStart: 1, rowEnd: 2 },
                 { columnStart: 1, columnEnd: 2, rowStart: 2, rowEnd: 3 },
                 { columnStart: 2, columnEnd: 3, rowStart: 2, rowEnd: 3 },
-                { columnStart: 1, columnEnd: 2, rowStart: 3, rowEnd: 4 },
-                { columnStart: 2, columnEnd: 3, rowStart: 3, rowEnd: 4 },
+                { columnStart: 3, columnEnd: 4, rowStart: 2, rowEnd: 3 },
             ],
-            description: "6 paysage : 2×3",
+            description: "6 portrait : 3×2",
         };
     }
 
     if (n === 7) {
         if (portrait) {
-            // 4 haut + 3 bas (12 colonnes : haut 3 chacune, bas 4 chacune)
+            // 3 gauche + 4 droite (4 lignes)
             return {
                 portrait,
                 videoCount: n,
-                columnTracks: 12,
-                rowTracks: 2,
+                columnTracks: 2,
+                rowTracks: 4,
                 tiles: [
-                    { columnStart: 1, columnEnd: 4, rowStart: 1, rowEnd: 2 },
-                    { columnStart: 4, columnEnd: 7, rowStart: 1, rowEnd: 2 },
-                    { columnStart: 7, columnEnd: 10, rowStart: 1, rowEnd: 2 },
-                    { columnStart: 10, columnEnd: 13, rowStart: 1, rowEnd: 2 },
-                    { columnStart: 1, columnEnd: 5, rowStart: 2, rowEnd: 3 },
-                    { columnStart: 5, columnEnd: 9, rowStart: 2, rowEnd: 3 },
-                    { columnStart: 9, columnEnd: 13, rowStart: 2, rowEnd: 3 },
+                    { columnStart: 1, columnEnd: 2, rowStart: 1, rowEnd: 2 },
+                    { columnStart: 1, columnEnd: 2, rowStart: 3, rowEnd: 4 },
+                    { columnStart: 1, columnEnd: 2, rowStart: 4, rowEnd: 5 },
+                    { columnStart: 1, columnEnd: 3, rowStart: 2, rowEnd: 3 },
+                    { columnStart: 2, columnEnd: 3, rowStart: 1, rowEnd: 2 },
+                    { columnStart: 2, columnEnd: 3, rowStart: 3, rowEnd: 4 },
+                    { columnStart: 2, columnEnd: 3, rowStart: 4, rowEnd: 5 },
                 ],
-                description: "7 portrait : 4 haut + 3 bas",
+                description: "7 paysage : 3 gauche + 4 droite",
             };
         }
-        // 3 gauche + 4 droite (4 lignes)
+        // 4 haut + 3 bas (12 colonnes : haut 3 chacune, bas 4 chacune)
         return {
             portrait,
             videoCount: n,
-            columnTracks: 2,
-            rowTracks: 4,
+            columnTracks: 12,
+            rowTracks: 2,
             tiles: [
-                { columnStart: 1, columnEnd: 2, rowStart: 1, rowEnd: 2 },
-                { columnStart: 1, columnEnd: 2, rowStart: 3, rowEnd: 4 },
-                { columnStart: 1, columnEnd: 2, rowStart: 4, rowEnd: 5 },
-                { columnStart: 1, columnEnd: 3, rowStart: 2, rowEnd: 3 },
-                { columnStart: 2, columnEnd: 3, rowStart: 1, rowEnd: 2 },
-                { columnStart: 2, columnEnd: 3, rowStart: 3, rowEnd: 4 },
-                { columnStart: 2, columnEnd: 3, rowStart: 4, rowEnd: 5 },
+                { columnStart: 1, columnEnd: 4, rowStart: 1, rowEnd: 2 },
+                { columnStart: 4, columnEnd: 7, rowStart: 1, rowEnd: 2 },
+                { columnStart: 7, columnEnd: 10, rowStart: 1, rowEnd: 2 },
+                { columnStart: 10, columnEnd: 13, rowStart: 1, rowEnd: 2 },
+                { columnStart: 1, columnEnd: 5, rowStart: 2, rowEnd: 3 },
+                { columnStart: 5, columnEnd: 9, rowStart: 2, rowEnd: 3 },
+                { columnStart: 9, columnEnd: 13, rowStart: 2, rowEnd: 3 },
             ],
-            description: "7 paysage : 3 gauche + 4 droite",
+            description: "7 portrait : 4 haut + 3 bas",
         };
     }
 
@@ -300,37 +300,37 @@ export function computePictureInPictureGridLayout(
         return {
             portrait,
             videoCount: n,
-            columnTracks: 4,
-            rowTracks: 2,
+            columnTracks: 2,
+            rowTracks: 4,
             tiles: [
                 { columnStart: 1, columnEnd: 2, rowStart: 1, rowEnd: 2 },
                 { columnStart: 2, columnEnd: 3, rowStart: 1, rowEnd: 2 },
-                { columnStart: 3, columnEnd: 4, rowStart: 1, rowEnd: 2 },
-                { columnStart: 4, columnEnd: 5, rowStart: 1, rowEnd: 2 },
                 { columnStart: 1, columnEnd: 2, rowStart: 2, rowEnd: 3 },
                 { columnStart: 2, columnEnd: 3, rowStart: 2, rowEnd: 3 },
-                { columnStart: 3, columnEnd: 4, rowStart: 2, rowEnd: 3 },
-                { columnStart: 4, columnEnd: 5, rowStart: 2, rowEnd: 3 },
+                { columnStart: 1, columnEnd: 2, rowStart: 3, rowEnd: 4 },
+                { columnStart: 2, columnEnd: 3, rowStart: 3, rowEnd: 4 },
+                { columnStart: 1, columnEnd: 2, rowStart: 4, rowEnd: 5 },
+                { columnStart: 2, columnEnd: 3, rowStart: 4, rowEnd: 5 },
             ],
-            description: "8 portrait : 4×2",
+            description: "8 paysage : 2×4",
         };
     }
     return {
         portrait,
         videoCount: n,
-        columnTracks: 2,
-        rowTracks: 4,
+        columnTracks: 4,
+        rowTracks: 2,
         tiles: [
             { columnStart: 1, columnEnd: 2, rowStart: 1, rowEnd: 2 },
             { columnStart: 2, columnEnd: 3, rowStart: 1, rowEnd: 2 },
+            { columnStart: 3, columnEnd: 4, rowStart: 1, rowEnd: 2 },
+            { columnStart: 4, columnEnd: 5, rowStart: 1, rowEnd: 2 },
             { columnStart: 1, columnEnd: 2, rowStart: 2, rowEnd: 3 },
             { columnStart: 2, columnEnd: 3, rowStart: 2, rowEnd: 3 },
-            { columnStart: 1, columnEnd: 2, rowStart: 3, rowEnd: 4 },
-            { columnStart: 2, columnEnd: 3, rowStart: 3, rowEnd: 4 },
-            { columnStart: 1, columnEnd: 2, rowStart: 4, rowEnd: 5 },
-            { columnStart: 2, columnEnd: 3, rowStart: 4, rowEnd: 5 },
+            { columnStart: 3, columnEnd: 4, rowStart: 2, rowEnd: 3 },
+            { columnStart: 4, columnEnd: 5, rowStart: 2, rowEnd: 3 },
         ],
-        description: "8 paysage : 2×4",
+        description: "8 portrait : 4×2",
     };
 }
 
