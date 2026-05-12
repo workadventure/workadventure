@@ -1,18 +1,21 @@
 import fs from "fs";
 import { v4 } from "uuid";
-import { MeRequest, MeResponse, RegisterData } from "@workadventure/messages";
+import type { MeResponse, RegisterData } from "@workadventure/messages";
+import { MeRequest } from "@workadventure/messages";
 import { z } from "zod";
-import { JsonWebTokenError } from "jsonwebtoken";
+import { errors } from "jose";
 import Mustache from "mustache";
-import { Application } from "express";
+import type { Application } from "express";
 import Debug from "debug";
-import { AuthTokenData, jwtTokenManager } from "../services/JWTTokenManager";
+import type { AuthTokenData } from "../services/JWTTokenManager";
+import { jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
 import { DISABLE_ANONYMOUS, FRONT_URL, MATRIX_PUBLIC_URI, PUSHER_URL } from "../enums/EnvironmentVariable";
 import { adminService } from "../services/AdminService";
 import { validateQuery } from "../services/QueryValidator";
 import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
 import { matrixProvider } from "../services/MatrixProvider";
+import { getClientIpFromXForwardedFor } from "../services/ClientIp";
 import { BaseHttpController } from "./BaseHttpController";
 
 const debug = Debug("pusher:requests");
@@ -179,7 +182,7 @@ export class AuthenticateController extends BaseHttpController {
 
         this.app.get("/me", async (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
-            const IPAddress = req.header("x-forwarded-for") ?? "";
+            const IPAddress = getClientIpFromXForwardedFor(req.header("x-forwarded-for"));
             const query = validateQuery(req, res, MeRequest);
             if (query === undefined) {
                 return;
@@ -190,7 +193,7 @@ export class AuthenticateController extends BaseHttpController {
                 localStorageCharacterTextureIds = [localStorageCharacterTextureIds];
             }
             try {
-                const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token, false);
+                const authTokenData: AuthTokenData = await jwtTokenManager.verifyJWTToken(token, false);
 
                 //Get user data from Admin Back Office
                 //This is very important to create User Local in LocalStorage in WorkAdventure
@@ -239,12 +242,42 @@ export class AuthenticateController extends BaseHttpController {
                         ...resCheckTokenAuth,
                     } satisfies MeResponse);
                 } catch (err) {
+                    // OIDC access token expired — attempt silent refresh before forcing re-login
+                    if (authTokenData.refreshToken) {
+                        try {
+                            const refreshed = await openIDClient.refreshAccessToken(authTokenData.refreshToken);
+                            const resCheckTokenAuth = await openIDClient.checkTokenAuth(refreshed.access_token);
+                            const newAuthToken = await jwtTokenManager.createAuthToken(
+                                authTokenData.identifier,
+                                refreshed.access_token,
+                                refreshed.refresh_token ?? authTokenData.refreshToken,
+                                authTokenData.username,
+                                authTokenData.locale,
+                                authTokenData.tags,
+                                authTokenData.matrixUserId
+                            );
+                            res.json({
+                                username: authTokenData?.username,
+                                authToken: newAuthToken,
+                                locale: authTokenData?.locale,
+                                matrixUserId: authTokenData?.matrixUserId,
+                                matrixServerUrl:
+                                    (resCheckTokenAuth.matrix_url as string | undefined) ?? MATRIX_PUBLIC_URI,
+                                // TODO: replace ... with each property
+                                ...resUserData,
+                                ...resCheckTokenAuth,
+                            } satisfies MeResponse);
+                            return;
+                        } catch (refreshErr) {
+                            console.warn("OIDC silent refresh failed, forcing re-login", refreshErr);
+                        }
+                    }
                     console.warn("Error while checking token auth", err);
-                    throw new JsonWebTokenError("Invalid token");
+                    throw new errors.JWTInvalid("Invalid token");
                 }
                 return;
             } catch (err) {
-                if (err instanceof JsonWebTokenError) {
+                if (err instanceof errors.JWTInvalid || err instanceof errors.JWTExpired) {
                     res.status(401);
                     res.send("Invalid token");
                     return;
@@ -309,9 +342,10 @@ export class AuthenticateController extends BaseHttpController {
             if (!email) {
                 throw new Error("No email in the response");
             }
-            const authToken = jwtTokenManager.createAuthToken(
+            const authToken = await jwtTokenManager.createAuthToken(
                 email,
                 userInfo?.access_token,
+                userInfo?.refresh_token,
                 userInfo?.username,
                 userInfo?.locale,
                 userInfo?.tags,
@@ -472,8 +506,9 @@ export class AuthenticateController extends BaseHttpController {
             const mapUrlStart = data.mapUrlStart;
             const matrixUserId = email ? matrixProvider.getBareMatrixIdFromEmail(email) : undefined;
 
-            const authToken = jwtTokenManager.createAuthToken(
+            const authToken = await jwtTokenManager.createAuthToken(
                 email || userUuid,
+                undefined,
                 undefined,
                 undefined,
                 undefined,
@@ -515,14 +550,15 @@ export class AuthenticateController extends BaseHttpController {
      *         description: Anonymous login is disabled at the configuration level (environment variable DISABLE_ANONYMOUS = true)
      */
     private anonymLogin(): void {
-        this.app.post("/anonymLogin", (req, res) => {
+        this.app.post("/anonymLogin", async (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
+            // We refuse the anonymous login if the anonymous mode is disabled AND that the default woka name is not set
             if (DISABLE_ANONYMOUS) {
                 res.status(403).send("");
                 return;
             } else {
                 const userUuid = v4();
-                const authToken = jwtTokenManager.createAuthToken(userUuid);
+                const authToken = await jwtTokenManager.createAuthToken(userUuid);
                 res.json({
                     authToken,
                     userUuid,
@@ -567,7 +603,7 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             }
             const { token, playUri } = query;
-            const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token, false);
+            const authTokenData: AuthTokenData = await jwtTokenManager.verifyJWTToken(token, false);
             if (authTokenData.accessToken == undefined) {
                 throw Error("Token cannot be checked on OpenID connect provider");
             }
@@ -648,7 +684,7 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             }
 
-            const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(query.token, false);
+            const authTokenData: AuthTokenData = await jwtTokenManager.verifyJWTToken(query.token, false);
             if (authTokenData.accessToken == undefined) {
                 throw Error("Cannot log out, no access token found.");
             }
