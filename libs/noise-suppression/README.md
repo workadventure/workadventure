@@ -95,9 +95,9 @@ realtime target remains the standard 512-sample frame.
 
 ## AudioWorklet
 
-The package also ships a dedicated AudioWorklet entrypoint that resolves and
-fetches the Wasm/model assets on the main thread, then sends the bytes into the
-processor.
+The package also ships a dedicated AudioWorklet entrypoint. The worklet
+processor bundle contains the LiteRT Wasm bytes and the two DTLN model files, so
+the default worklet path does not fetch those assets from the main thread.
 
 ```ts
 import {
@@ -117,8 +117,8 @@ Notes:
 - audio passes through until the denoiser is ready by default
 - once ready, the processor buffers four 128-sample render quanta into one
   512-sample DTLN frame and drains a matching output ring buffer
-- the worklet path uses a repository-local LiteRT fork because stock LiteRT.js
-  expects `document` or `importScripts` during Wasm bootstrap
+- the worklet path uses the repository-local LiteRT ESM fork and passes bundled
+  Wasm bytes to the Emscripten module factory
 
 ## Vite development
 
@@ -148,6 +148,8 @@ The Vite library build writes:
 
 - `dist/index.js`
 - `dist/index.d.ts`
+- `dist/audio-worklet.js`
+- `dist/assets/audio-worklet-processor.js`
 - `dist/assets/*.tflite`
 - `dist/vendor/litert/*`
 
@@ -166,6 +168,7 @@ Then open one of:
 - `/browser-benchmark-litert-manual.html`
 - `/audio-worklet-validation.html`
 - `/audio-worklet.html`
+- `/listen-test.html`
 
 The compare page now benchmarks forced single-threaded LiteRT against threaded
 LiteRT under cross-origin isolation.

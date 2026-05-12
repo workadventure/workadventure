@@ -17,11 +17,6 @@
       "import": "./dist/audio-worklet.js",
       "default": "./dist/audio-worklet.js"
     },
-    "./dist/audio-worklet.js": {
-      "types": "./dist/audio-worklet.d.ts",
-      "import": "./dist/audio-worklet.js",
-      "default": "./dist/audio-worklet.js"
-    },
     "./package.json": "./package.json"
   },
   "files": [

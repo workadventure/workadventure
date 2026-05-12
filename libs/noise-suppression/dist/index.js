@@ -1,6 +1,6 @@
-import le from "fft.js";
-import { r as ue, a as fe, b as ce, c as de, d as pe } from "./browser-runtime-options-szKHyy8v.js";
-async function he(e) {
+import ce from "fft.js";
+import { r as pe, a as he, b as me, c as ye, d as Te } from "./browser-runtime-options-szKHyy8v.js";
+async function $(e) {
   if (typeof importScripts == "function")
     importScripts(e.toString());
   else {
@@ -14,12 +14,23 @@ async function he(e) {
     });
   }
 }
-var me = async (e, t, r, n, o) => {
-  if (t && await he(t), !self.ModuleFactory)
+var L = async (e, t, r, n, o) => {
+  let s = t, a;
+  if (typeof t == "object" && t !== null && (s = t.wasmLoaderScript, r = t.assetLoaderScript, n = t.glCanvas, o = t.fileLocator, a = t.moduleFactory), a) {
+    const l = await a(o);
+    return new e(l, n);
+  }
+  if (s && await $(s), !self.ModuleFactory)
     throw new Error("ModuleFactory not set.");
-  const s = await self.ModuleFactory(self.Module || o);
-  return self.ModuleFactory = self.Module = void 0, new e(s, n);
-}, d = {
+  if (r && (await $(r), !self.ModuleFactory))
+    throw new Error("ModuleFactory not set.");
+  if (self.Module && o) {
+    const l = self.Module;
+    l.locateFile = o.locateFile, o.mainScriptUrlOrBlob && (l.mainScriptUrlOrBlob = o.mainScriptUrlOrBlob);
+  }
+  const i = await self.ModuleFactory(self.Module || o);
+  return self.ModuleFactory = self.Module = void 0, new e(i, n);
+}, p = {
   NONE: 0,
   FLOAT32: 1,
   INT32: 2,
@@ -40,101 +51,98 @@ var me = async (e, t, r, n, o) => {
   UINT16: 17,
   INT4: 18,
   BFLOAT16: 19
-}, te = {
-  [d.NONE]: "NONE",
-  [d.FLOAT32]: "FLOAT32",
-  [d.INT32]: "INT32",
-  [d.UINT8]: "UINT8",
-  [d.INT64]: "INT64",
-  [d.STRING]: "STRING",
-  [d.BOOL]: "BOOL",
-  [d.INT16]: "INT16",
-  [d.COMPLEX64]: "COMPLEX64",
-  [d.INT8]: "INT8",
-  [d.FLOAT16]: "FLOAT16",
-  [d.FLOAT64]: "FLOAT64",
-  [d.COMPLEX128]: "COMPLEX128",
-  [d.UINT64]: "UINT64",
-  [d.RESOURCE]: "RESOURCE",
-  [d.VARIANT]: "VARIANT",
-  [d.UINT32]: "UINT32",
-  [d.UINT16]: "UINT16",
-  [d.INT4]: "INT4",
-  [d.BFLOAT16]: "BFLOAT16"
+}, ae = {
+  [p.NONE]: "NONE",
+  [p.FLOAT32]: "FLOAT32",
+  [p.INT32]: "INT32",
+  [p.UINT8]: "UINT8",
+  [p.INT64]: "INT64",
+  [p.STRING]: "STRING",
+  [p.BOOL]: "BOOL",
+  [p.INT16]: "INT16",
+  [p.COMPLEX64]: "COMPLEX64",
+  [p.INT8]: "INT8",
+  [p.FLOAT16]: "FLOAT16",
+  [p.FLOAT64]: "FLOAT64",
+  [p.COMPLEX128]: "COMPLEX128",
+  [p.UINT64]: "UINT64",
+  [p.RESOURCE]: "RESOURCE",
+  [p.VARIANT]: "VARIANT",
+  [p.UINT32]: "UINT32",
+  [p.UINT16]: "UINT16",
+  [p.INT4]: "INT4",
+  [p.BFLOAT16]: "BFLOAT16"
 }, T = {
   HOST_MEMORY: 1,
   WEB_GPU_BUFFER: 20,
   WEB_GPU_BUFFER_FP16: 21,
   WEB_GPU_BUFFER_PACKED: 26
-}, v = {
+}, _ = {
   [T.HOST_MEMORY]: "HOST_MEMORY",
   [T.WEB_GPU_BUFFER]: "WEB_GPU_BUFFER",
   [T.WEB_GPU_BUFFER_FP16]: "WEB_GPU_BUFFER_FP16",
   [T.WEB_GPU_BUFFER_PACKED]: "WEB_GPU_BUFFER_PACKED"
-}, ye = Object.freeze([
+}, we = Object.freeze([
   {
     dtype: "float32",
     typedArrayConstructor: Float32Array,
-    elementType: d.FLOAT32
+    elementType: p.FLOAT32
   },
   {
     dtype: "int32",
     typedArrayConstructor: Int32Array,
-    elementType: d.INT32
+    elementType: p.INT32
   },
   {
     dtype: "uint8",
     typedArrayConstructor: Uint8Array,
-    elementType: d.UINT8
+    elementType: p.UINT8
   }
 ]);
-function D(e) {
-  for (const t of ye)
+function M(e) {
+  for (const t of we)
     if (t.dtype === e || t.typedArrayConstructor === e || e instanceof t.typedArrayConstructor || t.elementType === e)
       return t;
   throw typeof e == "string" ? new Error(`DType ${e} is not supported.`) : e instanceof Object ? new Error(`Typed array ${"name" in e ? e.name : e.constructor.name} is not supported.`) : new Error(
-    `Element type ${te[e] ?? e} is not supported.`
+    `Element type ${ae[e] ?? e} is not supported.`
   );
 }
-var Te = class extends Error {
+var Re = class extends Error {
   constructor() {
     super(
       "LiteRT is not initialized yet. Please call loadLiteRt() and wait for its promise to resolve to load the LiteRT WASM module."
     );
   }
-}, C = void 0, k = void 0;
+}, N = void 0, k = void 0;
 function w() {
-  if (!C)
-    throw new Te();
-  return C;
+  if (!N)
+    throw new Re();
+  return N;
 }
-function re(e) {
-  C = e;
+function Ee(e) {
+  N = e;
 }
-function x() {
+function le() {
   return k;
 }
-function ne() {
+function ge() {
   return !!k;
 }
-function W(e) {
+function z(e) {
   k = e;
 }
-var we = {
+var Be = {
   webgpu: T.WEB_GPU_BUFFER_PACKED,
   wasm: T.HOST_MEMORY
-}, Re = {
+}, be = {
   [T.HOST_MEMORY]: "wasm",
   [T.WEB_GPU_BUFFER]: "webgpu",
   [T.WEB_GPU_BUFFER_FP16]: "webgpu",
   [T.WEB_GPU_BUFFER_PACKED]: "webgpu"
-}, Ee = [
+}, ve = [
   "shader-f16",
-  "subgroups",
-  // In origin trial
-  "subgroups-f16"
-  // In origin trial
-], I = class oe {
+  "subgroups"
+], x = class ue {
   constructor(t) {
     this.options = t, this.liteRtEnvironment = w().liteRtWasm.LiteRtEnvironment.create(
       t.webGpuDevice
@@ -147,11 +155,11 @@ var we = {
       t.webGpuDevice && (r = t.webGpuDevice);
     else
       try {
-        r = await ge();
+        r = await Se();
       } catch (n) {
         console.warn("Failed to create default WebGPU device:", n);
       }
-    return new oe({
+    return new ue({
       ...t,
       webGpuDevice: r
     });
@@ -163,7 +171,7 @@ var we = {
     this.liteRtEnvironment.delete();
   }
 };
-async function ge() {
+async function Se() {
   const e = {
     powerPreference: "high-performance"
   }, t = await navigator.gpu.requestAdapter(e);
@@ -175,63 +183,65 @@ async function ge() {
     maxStorageBuffersPerShaderStage: t.limits.maxStorageBuffersPerShaderStage,
     maxTextureDimension2D: t.limits.maxTextureDimension2D
   }, n = [];
-  for (const o of Ee)
+  for (const o of ve)
     t.features.has(o) && n.push(o);
   return await t.requestDevice({
     requiredFeatures: n,
     requiredLimits: r
   });
 }
-function M(e) {
+function D(e) {
   const t = new Array(e.size());
   for (let r = 0; r < e.size(); ++r)
     t[r] = e.get(r);
   return e.delete(), t;
 }
-function se(e, t) {
+function fe(e, t) {
   for (const r of e)
     t.push_back(r);
 }
-function Be(e) {
+function _e(e) {
   const t = e.shift(), r = w().liteRtWasm;
   if (t instanceof r.LiteRtTensorBuffer)
     return { liteRtTensorBuffer: t };
-  if (typeof GPUBuffer < "u" && t instanceof GPUBuffer)
-    return { gpuBuffer: t };
   if (ArrayBuffer.isView(t))
     return { typedArray: t };
-  throw new Error(`Unknown type (${t?.constructor.name ?? t}) provided to create a Tensor`);
+  if (t instanceof GPUBuffer)
+    return { gpuBuffer: t };
+  throw new Error(
+    `Unknown type (${t?.constructor.name ?? t}) provided to create a Tensor`
+  );
 }
-function be(e) {
+function Me(e) {
   return Array.isArray(e[0]) || e[0] instanceof Int32Array ? { shape: e.shift() } : {};
 }
-function $(e) {
+function j(e) {
   for (; e.length > 0 && e[0] === void 0; )
     e.shift();
 }
-function Se(e) {
-  if ($(e), typeof e[0] == "string") {
+function Ae(e) {
+  if (j(e), typeof e[0] == "string") {
     const t = e.shift();
-    return { dataType: D(t).dtype };
+    return { dataType: M(t).dtype };
   } else
     return {};
 }
-function ve(e) {
-  return $(e), e[0] instanceof I ? { environment: e.shift() } : {};
-}
-function Ae(e) {
-  return $(e), e[0] instanceof Function ? { onDelete: e.shift() } : {};
-}
 function De(e) {
+  return j(e), e[0] instanceof x ? { environment: e.shift() } : {};
+}
+function Ue(e) {
+  return j(e), e[0] instanceof Function ? { onDelete: e.shift() } : {};
+}
+function Pe(e) {
   return {
-    ...Be(e),
-    ...be(e),
-    ...Se(e),
-    ...ve(e),
-    ...Ae(e)
+    ..._e(e),
+    ...Me(e),
+    ...Ae(e),
+    ...De(e),
+    ...Ue(e)
   };
 }
-var B = class G {
+var g = class O {
   liteRtTensorBuffer;
   type;
   environment;
@@ -240,48 +250,52 @@ var B = class G {
   static copyFunctions = /* @__PURE__ */ new Map();
   constructor(t, r, n, o, s) {
     const {
-      typedArray: i,
-      gpuBuffer: a,
+      typedArray: a,
+      gpuBuffer: i,
       liteRtTensorBuffer: l,
       shape: f,
-      dataType: p,
+      dataType: h,
       environment: u,
-      onDelete: h
-    } = De([t, r, n, o, s]);
-    if (this.onDelete = h, this.environment = u ?? w().getDefaultEnvironment(), l) {
+      onDelete: d
+    } = Pe([t, r, n, o, s]);
+    if (this.onDelete = d, this.environment = u ?? w().getDefaultEnvironment(), l) {
       if (f)
         throw new Error(
           "A LiteRtTensorBuffer cannot be provided with a shape."
         );
-      if (p)
+      if (h)
         throw new Error(
           "A LiteRtTensorBuffer cannot be provided with a data type."
         );
       this.liteRtTensorBuffer = l;
-    } else if (a) {
+    } else if (i) {
       if (!f)
         throw new Error("A GPUBuffer must be provided with a shape.");
-      if (!p)
+      if (!h)
         throw new Error("A GPUBuffer must be provided with a data type.");
-      const [y, E] = Me(
-        a,
+      const [y, B] = We(
+        i,
         f,
-        p,
+        h,
         this.environment
       );
       this.liteRtTensorBuffer = y;
       const S = this.onDelete;
       this.onDelete = () => {
-        w().liteRtWasm.wgpuBufferRelease(E), S?.();
+        w().liteRtWasm.wgpuBufferRelease(B), S?.();
       };
-    } else if (i)
-      this.liteRtTensorBuffer = Ue(i, f, u);
+    } else if (a)
+      this.liteRtTensorBuffer = Le(
+        a,
+        f,
+        u
+      );
     else
       throw new Error("No data provided to create a Tensor.");
-    this.type = _e(this.liteRtTensorBuffer);
+    this.type = Fe(this.liteRtTensorBuffer);
   }
   static fromTypedArray(t, r, n) {
-    return new G(t, r, n);
+    return new O(t, r, n);
   }
   ensureNotDeleted() {
     if (this.deleted)
@@ -308,23 +322,25 @@ var B = class G {
       throw new Error("Tensors with strides or padding are not yet supported.");
     const r = this.liteRtTensorBuffer.tensorType(), n = r.elementType(), o = t.liteRtGetByteWidth(n);
     r.delete();
-    const s = D(n.value).typedArrayConstructor;
+    const s = M(
+      n.value
+    ).typedArrayConstructor;
     if (s.BYTES_PER_ELEMENT !== o)
       throw new Error(
-        `Byte width ${o} of the tensor's element type ${te[n.value]} does not match the expected byte width ${s.BYTES_PER_ELEMENT} of the ${s.name}.`
+        `Byte width ${o} of the tensor's element type ${ae[n.value]} does not match the expected byte width ${s.BYTES_PER_ELEMENT} of the ${s.name}.`
       );
-    const i = this.liteRtTensorBuffer.lock(
+    const a = this.liteRtTensorBuffer.lock(
       w().liteRtWasm.LiteRtTensorBufferLockMode.READ
     );
     try {
-      const a = t.HEAPU8.slice(
-        i,
-        i + this.liteRtTensorBuffer.packedSize()
+      const i = t.HEAPU8.slice(
+        a,
+        a + this.liteRtTensorBuffer.packedSize()
       );
       return new s(
-        a.buffer,
-        a.byteOffset,
-        a.byteLength / o
+        i.buffer,
+        i.byteOffset,
+        i.byteLength / o
       );
     } finally {
       this.liteRtTensorBuffer.unlock();
@@ -365,18 +381,26 @@ var B = class G {
   }
   getCopyFunctionSet(t) {
     this.ensureNotDeleted();
-    const r = this.getBufferType(), n = G.copyFunctions.get(r);
+    const r = this.getBufferType(), n = O.copyFunctions.get(r);
     if (!n)
-      throw new Error(`TensorBufferType ${v[r] ?? r} does not support copying or moving`);
-    const o = typeof t == "string" ? we[t] : t;
+      throw new Error(
+        `TensorBufferType ${_[r] ?? r} does not support copying or moving`
+      );
+    const o = typeof t == "string" ? Be[t] : t;
     if (o == null)
       throw new Error(
         `Unknown destination '${t}' for copying or moving.`
       );
     const s = n.get(o);
     if (!s) {
-      const i = [...n].map(([a]) => v[a] ?? a);
-      throw new Error(`TensorBufferType ${v[r]} does not support copying or moving to ${v[o]}. It supports the following TensorBufferTypes: [${i.join(", ")}].`);
+      const a = [...n].map(
+        ([i]) => _[i] ?? i
+      );
+      throw new Error(
+        `TensorBufferType ${_[r]} does not support copying or moving to ${_[o]}. It supports the following TensorBufferTypes: [${a.join(
+          ", "
+        )}].`
+      );
     }
     return [s, o];
   }
@@ -389,7 +413,9 @@ var B = class G {
   async copyTo(t, r) {
     const [n, o] = this.getCopyFunctionSet(t);
     if (!n.copyTo)
-      throw new Error(`Copying to ${v[o]} is not supported by this tensor.`);
+      throw new Error(
+        `Copying to ${_[o]} is not supported by this tensor.`
+      );
     return n.copyTo(this, r);
   }
   /**
@@ -401,16 +427,20 @@ var B = class G {
   async moveTo(t, r) {
     const [n, o] = this.getCopyFunctionSet(t);
     if (!n.moveTo)
-      throw new Error(`Moving to ${v[o]} is not supported by this tensor.`);
+      throw new Error(
+        `Moving to ${_[o]} is not supported by this tensor.`
+      );
     return n.moveTo(this, r);
   }
   get bufferType() {
     return this.liteRtTensorBuffer.bufferType().value;
   }
   get accelerator() {
-    const t = Re[this.bufferType];
+    const t = be[this.bufferType];
     if (t === void 0)
-      throw new Error(`TensorBufferType ${v[this.bufferType]} has an unknown accelerator type.`);
+      throw new Error(
+        `TensorBufferType ${_[this.bufferType]} has an unknown accelerator type.`
+      );
     return t;
   }
   get deleted() {
@@ -420,50 +450,53 @@ var B = class G {
     this.deletedInternal || (this.deletedInternal = !0, this.liteRtTensorBuffer.delete(), this.onDelete?.());
   }
 };
-function _e(e) {
+function Fe(e) {
   const t = e.tensorType(), r = t.elementType(), n = t.layout(), o = n.dimensions();
   return n.delete(), t.delete(), {
-    dtype: D(r.value).dtype,
-    layout: { dimensions: M(o) }
+    dtype: M(r.value).dtype,
+    layout: { dimensions: D(o) }
   };
 }
-function Me(e, t, r, n) {
-  const s = w().liteRtWasm, i = new s.VectorInt32();
-  se(t, i);
-  const a = s.LiteRtLayout.create(i);
-  i.delete();
-  const l = s.LiteRtRankedTensorType.create(
-    { value: D(r).elementType },
-    a
-  );
+function We(e, t, r, n) {
+  const s = w().liteRtWasm, a = new s.VectorInt32();
+  fe(t, a);
+  const i = s.LiteRtLayout.create(a);
   a.delete();
-  const f = s.WebGPU.importJsBuffer(e), p = s.LiteRtTensorBuffer.createFromWebGpuBuffer(
+  const l = s.LiteRtRankedTensorType.create(
+    { value: M(r).elementType },
+    i
+  );
+  i.delete();
+  const f = s.WebGPU.importJsBuffer(e), h = s.LiteRtTensorBuffer.createFromWebGpuBuffer(
     n.liteRtEnvironment,
     l,
     s.LiteRtTensorBufferType.WEB_GPU_BUFFER_PACKED,
     f,
     e.size
   );
-  return l.delete(), [p, f];
+  return l.delete(), [h, f];
 }
-function Ue(e, t, r) {
+function Le(e, t, r) {
   const n = w(), o = n.liteRtWasm;
   r = r ?? n.getDefaultEnvironment();
-  const s = D(e).elementType, i = new o.VectorInt32();
-  se(t ?? [e.length], i);
-  const a = o.LiteRtLayout.create(i);
-  i.delete();
-  const l = a.numElements();
+  const s = M(e).elementType, a = new o.VectorInt32();
+  fe(t ?? [e.length], a);
+  const i = o.LiteRtLayout.create(a);
+  a.delete();
+  const l = i.numElements();
   if (e.length !== l)
-    throw a.delete(), new Error(
+    throw i.delete(), new Error(
       `Number of elements ${e.length} of the provided TypedArray does not match the expected number of elements ${l}.`
     );
-  const f = o.LiteRtRankedTensorType.create({ value: s }, a);
-  a.delete();
-  const u = e.constructor.BYTES_PER_ELEMENT * e.length, h = f.bytes();
-  if (u !== h)
+  const f = o.LiteRtRankedTensorType.create(
+    { value: s },
+    i
+  );
+  i.delete();
+  const u = e.constructor.BYTES_PER_ELEMENT * e.length, d = f.bytes();
+  if (u !== d)
     throw f.delete(), new Error(
-      `Byte length ${u} of the provided TypedArray does not match the expected buffer size ${h}.`
+      `Byte length ${u} of the provided TypedArray does not match the expected buffer size ${d}.`
     );
   const y = o.LiteRtTensorBuffer.createManaged(
     r.liteRtEnvironment,
@@ -472,30 +505,36 @@ function Ue(e, t, r) {
     u
   );
   f.delete();
-  const E = y.lock(o.LiteRtTensorBufferLockMode.WRITE);
+  const B = y.lock(
+    o.LiteRtTensorBufferLockMode.WRITE
+  );
   try {
-    const S = new Uint8Array(e.buffer, e.byteOffset, e.byteLength);
-    o.HEAPU8.set(S, E);
+    const S = new Uint8Array(
+      e.buffer,
+      e.byteOffset,
+      e.byteLength
+    );
+    o.HEAPU8.set(S, B);
   } finally {
     y.unlock();
   }
   return y;
 }
-var Pe = class {
+var Ie = class {
   constructor(e, t, r, n) {
     this.signatureIndex = e, this.liteRtModel = t, this.liteRtCompiledModel = r, this.options = n, this.liteRtSimpleSignature = t.getSignature(e);
-    const o = M(this.liteRtSimpleSignature.inputNames()), s = [];
+    const o = D(this.liteRtSimpleSignature.inputNames()), s = [];
     for (let l = 0; l < o.length; l++) {
-      const f = o[l], p = t.getInputTensorType(e, l), u = r.getInputBufferRequirements(e, l);
-      s.push(z(f, l, p, u));
+      const f = o[l], h = t.getInputTensorType(e, l), u = r.getInputBufferRequirements(e, l);
+      s.push(H(f, l, h, u));
     }
     this.inputDetails = Object.freeze(s);
-    const i = M(this.liteRtSimpleSignature.outputNames()), a = [];
-    for (let l = 0; l < i.length; l++) {
-      const f = i[l], p = t.getOutputTensorType(e, l), u = r.getOutputBufferRequirements(e, l);
-      a.push(z(f, l, p, u));
+    const a = D(this.liteRtSimpleSignature.outputNames()), i = [];
+    for (let l = 0; l < a.length; l++) {
+      const f = a[l], h = t.getOutputTensorType(e, l), u = r.getOutputBufferRequirements(e, l);
+      i.push(H(f, l, h, u));
     }
-    this.outputDetails = Object.freeze(a);
+    this.outputDetails = Object.freeze(i);
   }
   inputDetails;
   outputDetails;
@@ -524,11 +563,11 @@ var Pe = class {
     const t = this.inputsToArray(e), { inputsOnAccelerator: r, cleanup: n } = await this.ensureInputsOnAccelerator(t);
     let o;
     try {
-      o = this.runWithArray(r);
+      o = await this.runWithArray(r);
     } finally {
       n();
     }
-    return Array.isArray(e) || e instanceof B ? o : this.outputsToRecord(o);
+    return Array.isArray(e) || e instanceof g ? o : this.outputsToRecord(o);
   }
   inputsToArray(e) {
     if (Array.isArray(e)) {
@@ -538,7 +577,7 @@ var Pe = class {
         );
       return e;
     }
-    if (e instanceof B) {
+    if (e instanceof g) {
       if (this.inputDetails.length !== 1)
         throw new Error(
           `run() called with a single tensor, but signature expects ${this.inputDetails.length} inputs`
@@ -576,13 +615,13 @@ var Pe = class {
     if (e.length !== n.length)
       throw new Error(`ensureInputsOnAccelerator() called with ${e.length} inputs, but signature expects ${n.length} inputs`);
     for (let o = 0; o < e.length; o++) {
-      const s = e[o], i = s.getBufferType(), a = n[o].supportedBufferTypes;
-      if (a.size === 0)
+      const s = e[o], a = s.getBufferType(), i = n[o].supportedBufferTypes;
+      if (i.size === 0)
         throw new Error(`Tensor ${n[o].name} with index ${n[o].index} has no supported buffer types.`);
-      if (a.has(i))
+      if (i.has(a))
         r.push(s);
       else {
-        const l = a.values().next().value, f = await s.copyTo(l);
+        const l = i.values().next().value, f = await s.copyTo(l);
         t.push(f), r.push(f);
       }
     }
@@ -594,7 +633,7 @@ var Pe = class {
       }
     };
   }
-  runWithArray(e) {
+  async runWithArray(e) {
     for (let r = 0; r < e.length; r++) {
       const n = e[r], o = this.liteRtModel.getInputTensorType(this.signatureIndex, r), s = this.liteRtCompiledModel.getInputBufferRequirements(
         this.signatureIndex,
@@ -606,11 +645,11 @@ var Pe = class {
         s
       ), o.delete(), s.delete();
     }
-    return this.liteRtCompiledModel.run(
+    return (await this.liteRtCompiledModel.run(
       this.signatureIndex,
       e.map((r) => r.liteRtTensorBuffer)
-    ).map(
-      (r) => new B(r, this.options.environment)
+    )).map(
+      (r) => new g(r, this.options.environment)
     );
   }
   get deleted() {
@@ -626,30 +665,30 @@ var Pe = class {
     this.deletedInternal || (this.deletedInternal = !0, this.liteRtSimpleSignature.delete());
   }
 };
-function z(e, t, r, n) {
-  const o = r.layout(), s = M(o.dimensions());
+function H(e, t, r, n) {
+  const o = r.layout(), s = D(o.dimensions());
   o.delete();
-  const i = new Set(M(n.supportedTypes()).map(({ value: l }) => l)), a = {
+  const a = new Set(D(n.supportedTypes()).map(({ value: l }) => l)), i = {
     name: e,
     index: t,
-    dtype: D(r.elementType().value).dtype,
+    dtype: M(r.elementType().value).dtype,
     shape: new Int32Array(s),
-    supportedBufferTypes: i
+    supportedBufferTypes: a
   };
-  return r.delete(), n.delete(), a;
+  return r.delete(), n.delete(), i;
 }
-var Le = class {
+var Ce = class {
   constructor(e, t, r, n) {
     this.model = e, this.liteRtCompiledModel = t, this.options = r, this.onDelete = n;
     const o = e.liteRtModel.getNumSignatures(), s = {};
-    for (let i = 0; i < o; i++) {
-      const a = new Pe(
-        i,
+    for (let a = 0; a < o; a++) {
+      const i = new Ie(
+        a,
         e.liteRtModel,
         t,
         r
       );
-      s[a.key] = a;
+      s[i.key] = i;
     }
     this.compiledModelSignatureRunners = Object.freeze(s), this.defaultSignature = Object.values(this.signatures)[0], this.key = this.defaultSignature.key;
   }
@@ -694,6 +733,9 @@ var Le = class {
     if (this.deleted)
       throw new Error("CompiledModel is deleted and cannot be used.");
   }
+  get isFullyAccelerated() {
+    return this.ensureNotDeleted(), this.liteRtCompiledModel.isFullyAccelerated();
+  }
   delete() {
     if (!this.deletedInternal) {
       this.deletedInternal = !0, this.liteRtCompiledModel.delete(), this.model.delete();
@@ -705,11 +747,11 @@ var Le = class {
     }
   }
 };
-async function Fe(e) {
+async function Ne(e) {
   const t = await fetch(e);
   return new Uint8Array(await t.arrayBuffer());
 }
-async function We(e) {
+async function Oe(e) {
   let t = 0, r = new Uint8Array(
     1024
     /* arbitrary starting size */
@@ -721,11 +763,11 @@ async function We(e) {
       if (r.byteLength < t + s.byteLength) {
         if (t + s.byteLength > n)
           throw new Error(`Model is too large (> ${n} bytes).`);
-        const i = new Uint8Array(Math.min(
+        const a = new Uint8Array(Math.min(
           n,
           Math.max(r.byteLength, s.byteLength) * 2
         ));
-        i.set(r), r = i;
+        a.set(r), r = a;
       }
       r.set(s, t), t += s.byteLength;
     }
@@ -734,7 +776,7 @@ async function We(e) {
   }
   return r.slice(0, t);
 }
-var Ie = class {
+var Ge = class {
   constructor(e, t) {
     this.liteRtModel = e, this.onDelete = t;
   }
@@ -742,10 +784,10 @@ var Ie = class {
     this.liteRtModel.delete(), this.onDelete();
   }
 };
-function H(e, t) {
+function Y(e, t) {
   return w().loadAndCompile(e, t);
 }
-var ie = class {
+var I = class {
   liteRtWasm;
   defaultEnvironment;
   objectsToDelete = /* @__PURE__ */ new Set();
@@ -762,7 +804,7 @@ var ie = class {
   }
   setWebGpuDevice(e) {
     const t = this.getDefaultEnvironment();
-    this.setDefaultEnvironment(new I({
+    this.setDefaultEnvironment(new x({
       ...t.options,
       webGpuDevice: e
     }));
@@ -783,57 +825,59 @@ var ie = class {
    */
   async loadAndCompile(e, t = {}) {
     let r;
-    if (typeof e == "string" || typeof URL < "u" && e instanceof URL)
-      r = await Fe(e);
+    if (typeof e == "string" || e instanceof URL)
+      r = await Ne(e);
     else if (e instanceof Uint8Array)
       r = e;
     else if (e instanceof ReadableStreamDefaultReader)
-      r = await We(e);
+      r = await Oe(e);
     else
       throw new Error("Unsupported model type.");
     const n = t.environment ?? this.getDefaultEnvironment(), o = t.accelerator ?? (n.webGpuDevice ? "webgpu" : "wasm");
-    if (o === "webgpu" && !n.webGpuDevice)
+    if ((Array.isArray(o) ? o.includes("webgpu") : o === "webgpu") && !n.webGpuDevice)
       throw new Error(
         "WebGPU was requested but no WebGPU device is set in the environment."
       );
-    const s = t.cpuOptions ?? { numThreads: this.liteRtWasm.getThreadCount() }, i = {
+    const a = t.cpuOptions ?? { numThreads: this.liteRtWasm.getThreadCount() }, i = {
       environment: n,
       accelerator: o,
-      cpuOptions: s
-    }, a = this.liteRtWasm._malloc(r.byteLength);
-    this.liteRtWasm.HEAPU8.set(r, a);
-    const l = this.liteRtWasm.loadModel(
-      i.environment.liteRtEnvironment,
-      a,
-      r.byteLength
-    ), f = this.liteRtWasm.compileModel(
+      cpuOptions: a,
+      gpuOptions: t.gpuOptions ?? {},
+      webNNOptions: t.webNNOptions ?? {}
+    }, l = this.liteRtWasm._malloc(r.byteLength);
+    this.liteRtWasm.HEAPU8.set(r, l);
+    const f = this.liteRtWasm.loadModel(
       i.environment.liteRtEnvironment,
       l,
-      i
-    ), p = new Ie(l, () => {
-      this.liteRtWasm._free(a);
-    }), u = new Le(
-      p,
+      r.byteLength
+    ), h = await this.liteRtWasm.compileModel(
+      i.environment.liteRtEnvironment,
       f,
+      i
+    ), u = new Ge(f, () => {
+      this.liteRtWasm._free(l);
+    }), d = new Ce(
+      u,
+      h,
       i,
       () => {
-        this.objectsToDelete.delete(u);
+        this.objectsToDelete.delete(d);
       }
     );
-    return this.objectsToDelete.add(u), u;
+    return this.objectsToDelete.add(d), d;
   }
   delete() {
     for (const e of this.objectsToDelete)
       e.delete();
   }
 };
-function Oe(e, t) {
+function ke(e, t) {
   if (!e) return t;
   if (!t) return e;
   const r = e.endsWith("/") ? e : e + "/", n = t.startsWith("/") ? t.substring(1) : t;
   return r + n;
 }
-var Ce = new Uint8Array([
+var xe = new Uint8Array([
   0,
   97,
   115,
@@ -870,7 +914,7 @@ var Ce = new Uint8Array([
   128,
   2,
   11
-]), Ge = new Uint8Array([
+]), je = new Uint8Array([
   0,
   97,
   115,
@@ -908,184 +952,211 @@ var Ce = new Uint8Array([
   0,
   26,
   11
-]), A = {
+]), R = {
   relaxedSimd: void 0,
-  threads: void 0
+  threads: void 0,
+  jspi: void 0,
+  webnn: void 0
 };
-async function j(e) {
+function $e() {
+  return "Suspending" in WebAssembly;
+}
+function ze() {
+  return typeof navigator < "u" && !!navigator.ml;
+}
+async function J(e) {
   try {
     return await WebAssembly.instantiate(e), { supported: !0 };
   } catch (t) {
     return { supported: !1, error: t };
   }
 }
-var ae = {
-  relaxedSimd: () => (A.relaxedSimd === void 0 && (A.relaxedSimd = j(Ce)), A.relaxedSimd),
+var de = {
+  relaxedSimd: () => (R.relaxedSimd === void 0 && (R.relaxedSimd = J(xe)), R.relaxedSimd),
   threads: () => {
-    if (A.threads === void 0)
+    if (R.threads === void 0)
       try {
-        typeof MessageChannel < "u" && new MessageChannel().port1.postMessage(new SharedArrayBuffer(1)), A.threads = j(Ge);
+        typeof MessageChannel < "u" && new MessageChannel().port1.postMessage(new SharedArrayBuffer(1)), R.threads = J(je);
       } catch (e) {
-        A.threads = Promise.resolve({ supported: !1, error: e });
+        R.threads = Promise.resolve({ supported: !1, error: e });
       }
-    return A.threads;
+    return R.threads;
+  },
+  jspi: () => {
+    if (R.jspi === void 0) {
+      const e = $e();
+      R.jspi = Promise.resolve({
+        supported: e,
+        error: e ? void 0 : new Error("JSPI is not supported")
+      });
+    }
+    return R.jspi;
+  },
+  webnn: () => {
+    if (R.webnn === void 0) {
+      const e = ze();
+      R.webnn = Promise.resolve({
+        supported: e,
+        error: e ? void 0 : new Error("WebNN is not supported")
+      });
+    }
+    return R.webnn;
   }
 };
-async function Ne(e) {
-  const t = ae[e]?.();
+async function He(e) {
+  const t = de[e]?.();
   if (!t)
     throw new Error(`Unknown feature: ${e}`);
   return (await t).supported;
 }
-async function ke(e) {
-  const t = ae[e]?.();
+async function K(e) {
+  const t = de[e]?.();
   if (!t)
     throw new Error(`Unknown feature: ${e}`);
   const r = await t;
   if (!r.supported)
     throw r.error;
 }
-var xe = "litert_wasm_internal.js", $e = "litert_wasm_compat_internal.js", ze = "litert_wasm_threaded_internal.js";
-async function He(e, t) {
-  const r = e, n = r.endsWith(".wasm") || r.endsWith(".js"), o = await Ne("relaxedSimd");
-  if (t?.threads) {
-    if (n && console.warn(
-      `The \`threads\` option was specified, but the wasm path ${r} is a full file path. Whether threads are available or not will depend on the loaded file. To allow LiteRT.js to load the threaded wasm file, use a directory path instead of a full file path.`
-    ), !o)
-      throw new Error(
-        "Threads are only supported with relaxed SIMD, and the current browser does not support relaxed SIMD."
-      );
-    await ke("threads");
-  }
-  let s = $e;
-  o && (t?.threads ? s = ze : s = xe);
+var Ye = "litert_wasm_internal.js", Je = "litert_wasm_compat_internal.js", Ke = "litert_wasm_threaded_internal.js", Ve = "litert_wasm_jspi_internal.js", qe = "litert_wasm_internal.mjs", Xe = "litert_wasm_compat_internal.mjs", Ze = "litert_wasm_threaded_internal.mjs", Qe = "litert_wasm_jspi_internal.mjs";
+async function et(e, t) {
+  if (typeof e == "function")
+    return await V(
+      t,
+      /* isFullFilePath= */
+      !0,
+      "the provided Wasm module factory"
+    ), L(I, {
+      fileLocator: t?.fileLocator,
+      moduleFactory: e
+    });
+  const r = e, n = t?.wasmLoaderType === "module" || r.endsWith(".mjs"), o = r.endsWith(".wasm") || r.endsWith(".js") || r.endsWith(".mjs"), s = await V(t, o, r);
+  let a = n ? Xe : Je;
+  s && (t?.threads ? a = n ? Ze : Ke : t?.jspi ? a = n ? Qe : Ve : a = n ? qe : Ye);
   let i = e;
   if (r.endsWith(".wasm"))
     throw new Error(
       "Please load the `.js` file corresponding to the `.wasm` file, or load the directory containing it."
     );
-  return r.endsWith(".js") || (i = Oe(e, s)), me(ie, i);
+  if (!r.endsWith(".js") && !r.endsWith(".mjs") && (i = ke(e, a)), n) {
+    const l = await tt(i);
+    return L(I, {
+      fileLocator: t?.fileLocator,
+      moduleFactory: l
+    });
+  }
+  return L(I, i, null, null, t?.fileLocator);
 }
-function je(e, t) {
-  if (ne())
-    throw new Error("LiteRT is already loading / loaded.");
-  return W(He(e, t).then(async (r) => (re(r), r.setDefaultEnvironment(
-    await I.create()
-  ), r)).catch((r) => {
-    throw W(void 0), r;
-  })), x();
+async function V(e, t, r) {
+  const n = await He("relaxedSimd");
+  if (e?.threads) {
+    if (e?.jspi)
+      throw new Error(
+        "The `threads` and `jspi` options are mutually exclusive."
+      );
+    if (t && console.warn(
+      `The \`threads\` option was specified, but the wasm path ${r} is a full file path. Whether threads are available or not will depend on the loaded file. To allow LiteRT.js to load the threaded wasm file, use a directory path instead of a full file path.`
+    ), !n)
+      throw new Error(
+        "Threads are only supported with relaxed SIMD, and the current browser does not support relaxed SIMD."
+      );
+    await K("threads");
+  }
+  return e?.jspi && (t && console.warn(
+    `The \`jspi\` option was specified, but the wasm path ${r} is a full file path. Whether JSPI is available or not will depend on the loaded file. To allow LiteRT.js to load the JSPI wasm file, use a directory path instead of a full file path.`
+  ), await K("jspi")), n;
 }
-function Ye(e) {
-  const t = globalThis.TextDecoder ?? class {
-    decode(o) {
-      const s = o instanceof Uint8Array ? o : new Uint8Array(o);
-      let i = "";
-      for (const a of s)
-        i += `%${a.toString(16).padStart(2, "0")}`;
-      return decodeURIComponent(i);
-    }
-  }, r = new Function(
-    "TextDecoder",
-    `${e}
-return typeof ModuleFactory === "function" ? ModuleFactory : undefined;`
-  )(t);
-  if (typeof r != "function")
-    throw new Error("Failed to evaluate bundled LiteRT loader source.");
-  return r;
-}
-function Ke(e, t, r) {
-  if (ne())
-    throw new Error("LiteRT is already loading / loaded.");
-  if (r?.threads)
+async function tt(e) {
+  const t = await import(
+    /* @vite-ignore */
+    e
+  );
+  if (typeof t.default != "function")
     throw new Error(
-      "Threaded bundled LiteRT loading is not supported yet in the worklet fork."
+      `LiteRT Wasm ES module ${e} must have a default export module factory.`
     );
-  return W((async () => {
-    const o = await Ye(e)({
-      wasmBinary: t,
-      locateFile(i) {
-        return i;
-      }
-    }), s = new ie(o);
-    return re(s), s.setDefaultEnvironment(
-      await I.create()
-    ), s;
-  })().catch((n) => {
-    throw W(void 0), n;
-  })), x();
+  return t.default;
 }
-async function Y(e, t = {}) {
+function q(e, t) {
+  if (ge())
+    throw new Error("LiteRT is already loading / loaded.");
+  return z(et(e, t).then(async (r) => (Ee(r), r.setDefaultEnvironment(
+    await x.create()
+  ), r)).catch((r) => {
+    throw z(void 0), r;
+  })), le();
+}
+async function X(e, t = {}) {
   const r = t.environment ?? e.environment, n = w().liteRtWasm, o = e.liteRtTensorBuffer;
   if (o.bufferType().value !== T.HOST_MEMORY)
     throw new Error(
       "Source tensor is not in host memory. Cannot copy to host memory."
     );
-  const i = o.lock(
+  const a = o.lock(
     n.LiteRtTensorBufferLockMode.READ
   );
-  let a;
+  let i;
   try {
-    a = n.LiteRtTensorBuffer.createManaged(
+    i = n.LiteRtTensorBuffer.createManaged(
       r.liteRtEnvironment,
       n.LiteRtTensorBufferType.HOST_MEMORY,
       o.tensorType(),
       o.size()
     );
-    const l = a.lock(
+    const l = i.lock(
       n.LiteRtTensorBufferLockMode.WRITE
     );
     try {
       const f = new Uint8Array(
         n.HEAPU8.buffer,
-        i,
+        a,
         o.size()
       );
       n.HEAPU8.set(f, l);
     } finally {
-      a.unlock();
+      i.unlock();
     }
   } finally {
     o.unlock();
   }
-  if (!a)
+  if (!i)
     throw new Error("Failed to create destination tensor buffer.");
-  return new B(a, r);
+  return new g(i, r);
 }
-async function K(e, t = {}) {
+async function Z(e, t = {}) {
   const r = t.environment ?? e.environment, n = r.webGpuDevice;
   if (!n)
     throw new Error(
       "No WebGPU device is available. Did you forget to pass a destination environment that has a WebGPU device?"
     );
-  const o = w().liteRtWasm, i = e.liteRtTensorBuffer.size() + 3 & -4, a = n.createBuffer({
-    size: i,
+  const o = w().liteRtWasm, a = e.liteRtTensorBuffer.size() + 3 & -4, i = n.createBuffer({
+    size: a,
     usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
     mappedAtCreation: !0
-  }), l = await a.getMappedRange(), f = new Uint8Array(l), p = e.liteRtTensorBuffer.lock(
+  }), l = await i.getMappedRange(), f = new Uint8Array(l), h = e.liteRtTensorBuffer.lock(
     o.LiteRtTensorBufferLockMode.READ
   );
   try {
     const y = new Uint8Array(
       o.HEAPU8.buffer,
-      p,
+      h,
       e.liteRtTensorBuffer.size()
     );
     f.set(y);
   } finally {
     e.liteRtTensorBuffer.unlock();
   }
-  a.unmap();
+  i.unmap();
   const u = n.createBuffer({
-    size: i,
+    size: a,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
-  }), h = n.createCommandEncoder();
-  return h.copyBufferToBuffer(
-    a,
+  }), d = n.createCommandEncoder();
+  return d.copyBufferToBuffer(
+    i,
     0,
     u,
     0,
-    i
-  ), n.queue.submit([h.finish()]), a.destroy(), new B(
+    a
+  ), n.queue.submit([d.finish()]), i.destroy(), new g(
     u,
     e.type.layout.dimensions,
     e.type.dtype,
@@ -1095,77 +1166,77 @@ async function K(e, t = {}) {
     }
   );
 }
-async function V(e, t = {}) {
+async function Q(e, t = {}) {
   const r = t.environment ?? e.environment, n = e.environment.webGpuDevice;
   if (!n)
     throw new Error(
       "No WebGPU device is available. Does the source tensor have a WebGPU device?"
     );
-  const o = w().liteRtWasm, s = e.liteRtTensorBuffer, i = s.bufferType();
-  if (i !== o.LiteRtTensorBufferType.WEB_GPU_BUFFER_PACKED)
-    throw new Error(`Cannot convert a tensor with a non-WebGPU buffer type ${i} to a CPU tensor.`);
-  const a = o.WebGPU.getJsObject(
+  const o = w().liteRtWasm, s = e.liteRtTensorBuffer, a = s.bufferType();
+  if (a !== o.LiteRtTensorBufferType.WEB_GPU_BUFFER_PACKED)
+    throw new Error(`Cannot convert a tensor with a non-WebGPU buffer type ${a} to a CPU tensor.`);
+  const i = o.WebGPU.getJsObject(
     s.getWebGpuBuffer()
-  ), l = s.offset(), f = s.tensorType(), p = f.layout(), u = p.numElements(), h = D(f.elementType().value).typedArrayConstructor;
-  p.delete(), f.delete();
-  let y = a, E = () => {
+  ), l = s.offset(), f = s.tensorType(), h = f.layout(), u = h.numElements(), d = M(f.elementType().value).typedArrayConstructor;
+  h.delete(), f.delete();
+  let y = i, B = () => {
   };
-  if (!(a.usage & GPUBufferUsage.MAP_READ)) {
+  if (!(i.usage & GPUBufferUsage.MAP_READ)) {
     y = n.createBuffer({
-      size: a.size,
+      size: i.size,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
-    }), E = () => {
+    }), B = () => {
       y.destroy();
     };
     const U = n.createCommandEncoder();
     U.copyBufferToBuffer(
-      a,
+      i,
       0,
       y,
       0,
-      a.size
+      i.size
     ), n.queue.submit([U.finish()]);
   }
   await y.mapAsync(GPUMapMode.READ);
-  const S = y.getMappedRange(), m = new h(S, l, u), _ = new B(m, e.type.layout.dimensions, r);
-  return y.unmap(), E(), _;
+  const S = y.getMappedRange(), m = new d(S, l, u), A = new g(m, e.type.layout.dimensions, r);
+  return y.unmap(), B(), A;
 }
-function O(e) {
+function C(e) {
   return async (t, r) => {
     const n = await e(t, r);
     return t.delete(), n;
   };
 }
-function Ve() {
-  B.copyFunctions.set(T.HOST_MEMORY, /* @__PURE__ */ new Map([
+function rt() {
+  g.copyFunctions.set(T.HOST_MEMORY, /* @__PURE__ */ new Map([
     [
       T.HOST_MEMORY,
       {
-        copyTo: Y,
+        copyTo: X,
         // There might be a more efficient way to move
         // from CPU to CPU.
-        moveTo: O(Y)
+        moveTo: C(X)
       }
     ],
     [
       T.WEB_GPU_BUFFER_PACKED,
       {
-        copyTo: K,
-        moveTo: O(K)
+        copyTo: Z,
+        moveTo: C(Z)
       }
     ]
-  ])), B.copyFunctions.set(T.WEB_GPU_BUFFER_PACKED, /* @__PURE__ */ new Map([
+  ])), g.copyFunctions.set(T.WEB_GPU_BUFFER_PACKED, /* @__PURE__ */ new Map([
     [
       T.HOST_MEMORY,
       {
-        copyTo: V,
-        moveTo: O(V)
+        copyTo: Q,
+        moveTo: C(Q)
       }
     ]
   ]));
 }
-Ve();
-const g = 512, b = 128, P = g / 2 + 1, N = [
+rt();
+const b = 512, v = 128, P = b / 2 + 1, G = [
   "fft",
   "magnitude",
   "model1_tensor",
@@ -1179,70 +1250,119 @@ const g = 512, b = 128, P = g / 2 + 1, N = [
   "overlap_add",
   "infer_total",
   "denoise_total"
-], qe = {
+], nt = {
   sampleRate: 16e3,
   channels: 1,
-  frameSize: g,
+  frameSize: b,
   frameDuration: 32
 };
-function Xe(e) {
+function ot(e) {
   return Number.isFinite(e) && e !== void 0 && e > 0 ? Math.floor(e) : 1;
 }
-async function Je(e) {
-  const t = x();
-  return t || (e.loaderSource && e.wasmBinary ? Ke(e.loaderSource, e.wasmBinary, {
-    threads: e.threads
-  }) : je(e.wasmRoot, { threads: e.threads }));
+async function st(e) {
+  const t = le();
+  if (t)
+    return t;
+  if (e.wasmModuleFactory) {
+    if (e.threads)
+      throw new Error(
+        "Threaded bundled LiteRT loading is not supported yet in the worklet path."
+      );
+    const r = e.wasmBinary ? (n) => e.wasmModuleFactory({
+      ...typeof n == "object" && n !== null ? n : {},
+      wasmBinary: e.wasmBinary
+    }) : e.wasmModuleFactory;
+    return q(r, {
+      threads: e.threads
+    });
+  }
+  return q(e.wasmRoot, { threads: e.threads });
 }
-function Ze(e) {
+function it(e) {
   return Array.from(e, (t) => Number(t));
 }
-function q(e) {
+function ee(e) {
   return e.map((t) => ({
     name: t.name,
     index: t.index,
     dtype: t.dtype,
-    shape: Ze(t.shape)
+    shape: it(t.shape)
   }));
 }
-function X(e) {
+function te(e) {
   return {
-    inputs: q(e.getInputDetails()),
-    outputs: q(e.getOutputDetails())
+    inputs: ee(e.getInputDetails()),
+    outputs: ee(e.getOutputDetails())
   };
 }
-function J(e, t) {
+function re(e, t) {
   const r = e.defaultSignature;
-  if (!r || typeof r.runWithArray != "function")
+  if (!r || typeof r.signatureIndex != "number" || !r.liteRtModel || !r.liteRtCompiledModel || typeof r.liteRtCompiledModel.run != "function")
     throw new Error(
       `LiteRT.js internal sync runner is unavailable for ${t}. This package currently depends on that API to keep dtln_denoise synchronous.`
     );
   return r;
 }
-function Z(e, t) {
+function at(e) {
+  return typeof e == "object" && e !== null && "then" in e && typeof e.then == "function";
+}
+function ne(e, t) {
+  const r = w().liteRtWasm;
+  for (let s = 0; s < t.length; s++) {
+    const a = t[s], i = e.liteRtModel.getInputTensorType(
+      e.signatureIndex,
+      s
+    ), l = e.liteRtCompiledModel.getInputBufferRequirements(
+      e.signatureIndex,
+      s
+    );
+    try {
+      r.checkTensorBufferCompatible(
+        a.liteRtTensorBuffer,
+        i,
+        l
+      );
+    } finally {
+      i.delete(), l.delete();
+    }
+  }
+  const n = e.liteRtCompiledModel.run(
+    e.signatureIndex,
+    t.map((s) => s.liteRtTensorBuffer)
+  );
+  if (at(n))
+    throw new Error(
+      "LiteRT.js returned an async model invocation. AudioWorklet inference requires a synchronous wasm run path."
+    );
+  const o = g;
+  return n.map(
+    (s) => new o(s, e.options.environment)
+  );
+}
+function oe(e, t) {
   if (!(t instanceof Float32Array))
     throw new TypeError(`${e} must be a Float32Array`);
 }
-function L(e) {
+function F(e) {
   for (const t of e)
     t.delete();
 }
 function c() {
   return performance.now();
 }
-function Q() {
+function se() {
   return {
     inferCalls: 0,
     denoiseCalls: 0,
     timings: Object.fromEntries(
-      N.map((t) => [t, []])
+      G.map((t) => [t, []])
     )
   };
 }
-function R(e, t, r) {
+function E(e, t, r) {
   e.timings[t].push(r);
 }
-function Qe(e) {
+function lt(e) {
   if (e.length === 0)
     return {
       count: 0,
@@ -1261,16 +1381,16 @@ function Qe(e) {
     p95Ms: t[n] ?? 0
   };
 }
-function et(e) {
+function ut(e) {
   const t = /* @__PURE__ */ Object.create(null);
-  for (const o of N)
+  for (const o of G)
     t[o] = {
-      ...Qe(e.timings[o]),
+      ...lt(e.timings[o]),
       inferShare: 0,
       denoiseShare: 0
     };
   const r = t.infer_total.totalMs, n = t.denoise_total.totalMs;
-  for (const o of N) {
+  for (const o of G) {
     const s = t[o].totalMs;
     t[o].inferShare = r > 0 ? s / r : 0, t[o].denoiseShare = n > 0 ? s / n : 0;
   }
@@ -1280,15 +1400,15 @@ function et(e) {
     stages: t
   };
 }
-function F(e, t) {
+function W(e, t) {
   if (!(t instanceof Float32Array))
     throw new TypeError(`${e} must resolve to Float32Array`);
   return t;
 }
-function ee(e) {
+function ie(e) {
   return e.createComplexArray();
 }
-class tt {
+class ft {
   model1Runner;
   model2Runner;
   profilingEnabled;
@@ -1305,175 +1425,175 @@ class tt {
   inMag;
   estimatedBlock;
   constructor(t, r, n = {}) {
-    if (this.model1Runner = J(t, "model1"), this.model2Runner = J(r, "model2"), this.profilingEnabled = n.profilingEnabled === !0, this.profile = Q(), this.model1InputShapes = t.getInputDetails().map((o) => o.shape), this.model2InputShapes = r.getInputDetails().map((o) => o.shape), this.model1InputShapes.length !== 2 || this.model2InputShapes.length !== 2)
+    if (this.model1Runner = re(t, "model1"), this.model2Runner = re(r, "model2"), this.profilingEnabled = n.profilingEnabled === !0, this.profile = se(), this.model1InputShapes = t.getInputDetails().map((o) => o.shape), this.model2InputShapes = r.getInputDetails().map((o) => o.shape), this.model1InputShapes.length !== 2 || this.model2InputShapes.length !== 2)
       throw new Error("Expected exactly two inputs for each DTLN model");
-    this.fft = new le(g), this.fftSpectrum = ee(this.fft), this.ifftComplex = ee(this.fft), this.inBuffer = new Float32Array(g), this.outBuffer = new Float32Array(g), this.states1 = new Float32Array(g), this.states2 = new Float32Array(g), this.inMag = new Float32Array(P), this.estimatedBlock = new Float32Array(g);
+    this.fft = new ce(b), this.fftSpectrum = ie(this.fft), this.ifftComplex = ie(this.fft), this.inBuffer = new Float32Array(b), this.outBuffer = new Float32Array(b), this.states1 = new Float32Array(b), this.states2 = new Float32Array(b), this.inMag = new Float32Array(P), this.estimatedBlock = new Float32Array(b);
   }
   denoise(t, r) {
-    if (Z("inputSamples", t), Z("outputSamples", r), t.length % b !== 0)
+    if (oe("inputSamples", t), oe("outputSamples", r), t.length % v !== 0)
       throw new RangeError(
-        `inputSamples length must be a multiple of ${b}`
+        `inputSamples length must be a multiple of ${v}`
       );
     if (r.length < t.length)
       throw new RangeError("outputSamples must be at least as large as inputSamples");
-    const n = this.profilingEnabled ? c() : 0, o = t.length / b;
+    const n = this.profilingEnabled ? c() : 0, o = t.length / v;
     for (let s = 0; s < o; s++) {
-      const i = s * b;
-      this.inBuffer.copyWithin(0, b), this.inBuffer.set(
-        t.subarray(i, i + b),
-        g - b
-      ), this.infer(), r.set(this.outBuffer.subarray(0, b), i);
+      const a = s * v;
+      this.inBuffer.copyWithin(0, v), this.inBuffer.set(
+        t.subarray(a, a + v),
+        b - v
+      ), this.infer(), r.set(this.outBuffer.subarray(0, v), a);
     }
-    return this.profilingEnabled && (this.profile.denoiseCalls++, R(this.profile, "denoise_total", c() - n)), !1;
+    return this.profilingEnabled && (this.profile.denoiseCalls++, E(this.profile, "denoise_total", c() - n)), !1;
   }
   getProfile() {
-    return et(this.profile);
+    return ut(this.profile);
   }
   resetProfile() {
-    this.profile = Q();
+    this.profile = se();
   }
   infer() {
     const t = this.profilingEnabled ? c() : 0;
     let r = this.profilingEnabled ? t : 0;
-    this.fft.realTransform(this.fftSpectrum, this.inBuffer), this.profilingEnabled && (R(this.profile, "fft", c() - r), r = c());
+    this.fft.realTransform(this.fftSpectrum, this.inBuffer), this.profilingEnabled && (E(this.profile, "fft", c() - r), r = c());
     for (let u = 0; u < P; u++) {
-      const h = u * 2;
-      this.inMag[u] = Math.hypot(this.fftSpectrum[h], this.fftSpectrum[h + 1]);
+      const d = u * 2;
+      this.inMag[u] = Math.hypot(this.fftSpectrum[d], this.fftSpectrum[d + 1]);
     }
-    this.profilingEnabled && (R(this.profile, "magnitude", c() - r), r = c());
+    this.profilingEnabled && (E(this.profile, "magnitude", c() - r), r = c());
     const n = [
-      B.fromTypedArray(this.inMag, this.model1InputShapes[0]),
-      B.fromTypedArray(this.states1, this.model1InputShapes[1])
+      g.fromTypedArray(this.inMag, this.model1InputShapes[0]),
+      g.fromTypedArray(this.states1, this.model1InputShapes[1])
     ];
-    this.profilingEnabled && (R(this.profile, "model1_tensor", c() - r), r = c());
+    this.profilingEnabled && (E(this.profile, "model1_tensor", c() - r), r = c());
     let o;
     try {
-      o = this.model1Runner.runWithArray(n);
+      o = ne(this.model1Runner, n);
     } finally {
-      L(n);
+      F(n);
     }
-    this.profilingEnabled && (R(this.profile, "model1_invoke", c() - r), r = c());
-    const s = F("model1 mask output", o[0].toTypedArray()), i = F(
+    this.profilingEnabled && (E(this.profile, "model1_invoke", c() - r), r = c());
+    const s = W("model1 mask output", o[0].toTypedArray()), a = W(
       "model1 state output",
       o[1].toTypedArray()
     );
-    this.states1.set(i), this.profilingEnabled && (R(this.profile, "model1_read", c() - r), r = c());
+    this.states1.set(a), this.profilingEnabled && (E(this.profile, "model1_read", c() - r), r = c());
     for (let u = 0; u < P; u++) {
-      const h = u * 2, y = s[u];
-      this.fftSpectrum[h] *= y, this.fftSpectrum[h + 1] *= y;
+      const d = u * 2, y = s[u];
+      this.fftSpectrum[d] *= y, this.fftSpectrum[d + 1] *= y;
     }
-    this.profilingEnabled && (R(this.profile, "mask", c() - r), r = c()), L(o), this.fftSpectrum[1] = 0, this.fftSpectrum[(P - 1) * 2 + 1] = 0, this.fft.completeSpectrum(this.fftSpectrum), this.fft.inverseTransform(this.ifftComplex, this.fftSpectrum);
-    for (let u = 0; u < g; u++)
+    this.profilingEnabled && (E(this.profile, "mask", c() - r), r = c()), F(o), this.fftSpectrum[1] = 0, this.fftSpectrum[(P - 1) * 2 + 1] = 0, this.fft.completeSpectrum(this.fftSpectrum), this.fft.inverseTransform(this.ifftComplex, this.fftSpectrum);
+    for (let u = 0; u < b; u++)
       this.estimatedBlock[u] = this.ifftComplex[u * 2];
-    this.profilingEnabled && (R(this.profile, "ifft", c() - r), r = c());
-    const a = [
-      B.fromTypedArray(this.estimatedBlock, this.model2InputShapes[0]),
-      B.fromTypedArray(this.states2, this.model2InputShapes[1])
+    this.profilingEnabled && (E(this.profile, "ifft", c() - r), r = c());
+    const i = [
+      g.fromTypedArray(this.estimatedBlock, this.model2InputShapes[0]),
+      g.fromTypedArray(this.states2, this.model2InputShapes[1])
     ];
-    this.profilingEnabled && (R(this.profile, "model2_tensor", c() - r), r = c());
+    this.profilingEnabled && (E(this.profile, "model2_tensor", c() - r), r = c());
     let l;
     try {
-      l = this.model2Runner.runWithArray(a);
+      l = ne(this.model2Runner, i);
     } finally {
-      L(a);
+      F(i);
     }
-    this.profilingEnabled && (R(this.profile, "model2_invoke", c() - r), r = c());
-    const f = F("model2 output", l[0].toTypedArray()), p = F(
+    this.profilingEnabled && (E(this.profile, "model2_invoke", c() - r), r = c());
+    const f = W("model2 output", l[0].toTypedArray()), h = W(
       "model2 state output",
       l[1].toTypedArray()
     );
-    this.states2.set(p), L(l), this.profilingEnabled && (R(this.profile, "model2_read", c() - r), r = c()), this.outBuffer.copyWithin(0, b), this.outBuffer.fill(0, g - b);
-    for (let u = 0; u < g; u++) {
-      const h = this.outBuffer[u] ?? 0;
-      this.outBuffer[u] = h + f[u];
+    this.states2.set(h), F(l), this.profilingEnabled && (E(this.profile, "model2_read", c() - r), r = c()), this.outBuffer.copyWithin(0, v), this.outBuffer.fill(0, b - v);
+    for (let u = 0; u < b; u++) {
+      const d = this.outBuffer[u] ?? 0;
+      this.outBuffer[u] = d + f[u];
     }
-    this.profilingEnabled && (R(this.profile, "overlap_add", c() - r), this.profile.inferCalls++, R(this.profile, "infer_total", c() - t));
+    this.profilingEnabled && (E(this.profile, "overlap_add", c() - r), this.profile.inferCalls++, E(this.profile, "infer_total", c() - t));
   }
 }
-async function rt(e) {
-  const t = e.liteRtWasmRoot, r = e.model1Data ?? e.model1Url, n = e.model2Data ?? e.model2Url, o = e.threads === !0, s = Xe(e.numThreads), i = e.enableProfiling === !0;
+async function dt(e) {
+  const t = e.liteRtWasmRoot, r = e.model1Data ?? e.model1Url, n = e.model2Data ?? e.model2Url, o = e.threads === !0, s = ot(e.numThreads), a = e.enableProfiling === !0;
   if (!r)
     throw new Error("Missing model1 source. Provide model1Url or model1Data.");
   if (!n)
     throw new Error("Missing model2 source. Provide model2Url or model2Data.");
-  if (!e.liteRtLoaderSource && !t)
+  if (!e.liteRtWasmModuleFactory && !t)
     throw new Error(
-      "Missing LiteRT runtime source. Provide liteRtWasmRoot or bundled loader assets."
+      "Missing LiteRT runtime source. Provide liteRtWasmRoot or liteRtWasmModuleFactory."
     );
-  const a = {
+  const i = {
     wasmRoot: t,
     threads: o
   };
-  e.liteRtLoaderSource !== void 0 && (a.loaderSource = e.liteRtLoaderSource), e.liteRtWasmBinary !== void 0 && (a.wasmBinary = e.liteRtWasmBinary), await Je(a);
+  e.liteRtWasmModuleFactory !== void 0 && (i.wasmModuleFactory = e.liteRtWasmModuleFactory), e.liteRtWasmBinary !== void 0 && (i.wasmBinary = e.liteRtWasmBinary), await st(i);
   const l = {
     accelerator: "wasm",
     cpuOptions: {
       numThreads: s
     }
-  }, [f, p] = await Promise.all([
-    H(r, l),
-    H(n, l)
+  }, [f, h] = await Promise.all([
+    Y(r, l),
+    Y(n, l)
   ]), u = {
-    model1: X(f),
-    model2: X(p),
+    model1: te(f),
+    model2: te(h),
     threads: o,
     numThreads: s,
     liteRtWasmRoot: t
   };
   e.logModelDetails && console.info("[noise-suppression] model details", u);
-  const h = /* @__PURE__ */ new Map();
+  const d = /* @__PURE__ */ new Map();
   let y = 1;
-  const E = (m) => {
-    const _ = h.get(m);
-    if (!_)
+  const B = (m) => {
+    const A = d.get(m);
+    if (!A)
       throw new Error(`Unknown noise suppression handle: ${m}`);
-    return _;
+    return A;
   }, S = {
     ready: Promise.resolve(void 0),
     modelDetails: u,
-    audioConfig: qe,
+    audioConfig: nt,
     dtln_create() {
       const m = y++;
-      return h.set(m, new tt(f, p, { profilingEnabled: i })), m;
+      return d.set(m, new ft(f, h, { profilingEnabled: a })), m;
     },
-    dtln_denoise(m, _, U) {
-      return E(m).denoise(_, U);
+    dtln_denoise(m, A, U) {
+      return B(m).denoise(A, U);
     },
     dtln_stop(m) {
-      h.delete(m);
+      d.delete(m);
     },
     dtln_destroy(m) {
-      h.delete(m);
+      d.delete(m);
     },
     get_profile(m) {
-      return E(m).getProfile();
+      return B(m).getProfile();
     },
     reset_profile(m) {
-      E(m).resetProfile();
+      B(m).resetProfile();
     },
     dtln_profile_get(m) {
-      return E(m).getProfile();
+      return B(m).getProfile();
     },
     dtln_profile_reset(m) {
-      E(m).resetProfile();
+      B(m).resetProfile();
     }
   };
   return S.ready = Promise.resolve(S), S;
 }
-async function it(e = {}) {
+async function ht(e = {}) {
   const t = {
-    liteRtWasmRoot: e.liteRtWasmRoot ?? pe(),
-    model1Url: e.model1Url ?? de(),
-    model2Url: e.model2Url ?? ce(),
-    threads: fe(e.threads),
-    numThreads: ue(e.numThreads)
+    liteRtWasmRoot: e.liteRtWasmRoot ?? Te(),
+    model1Url: e.model1Url ?? ye(),
+    model2Url: e.model2Url ?? me(),
+    threads: he(e.threads),
+    numThreads: pe(e.numThreads)
   };
-  return e.logModelDetails !== void 0 && (t.logModelDetails = e.logModelDetails), e.enableProfiling !== void 0 && (t.enableProfiling = e.enableProfiling), rt(t);
+  return e.logModelDetails !== void 0 && (t.logModelDetails = e.logModelDetails), e.enableProfiling !== void 0 && (t.enableProfiling = e.enableProfiling), dt(t);
 }
 export {
-  qe as AUDIO_CONFIG,
-  it as createNoiseSuppressionModule,
-  rt as createNoiseSuppressionRuntime,
-  it as default
+  nt as AUDIO_CONFIG,
+  ht as createNoiseSuppressionModule,
+  dt as createNoiseSuppressionRuntime,
+  ht as default
 };
 //# sourceMappingURL=index.js.map

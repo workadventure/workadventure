@@ -7,11 +7,12 @@ interface ModelTensorDetails {
     dtype: DType;
     shape: number[];
 }
+type LiteRtWasmModuleFactory = (moduleArg?: unknown) => Promise<unknown>;
 export interface NoiseSuppressionRuntimeOptions {
     liteRtWasmRoot: string;
     model1Url?: string;
     model2Url?: string;
-    liteRtLoaderSource?: string;
+    liteRtWasmModuleFactory?: LiteRtWasmModuleFactory;
     liteRtWasmBinary?: Uint8Array;
     model1Data?: Uint8Array;
     model2Data?: Uint8Array;

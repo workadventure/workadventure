@@ -4,9 +4,6 @@ interface AudioWorkletCapableContext extends BaseAudioContext {
 }
 export interface NoiseSuppressionAudioWorkletOptions {
     moduleUrl?: string;
-    liteRtWasmUrl?: string;
-    model1Url?: string;
-    model2Url?: string;
     threads?: boolean;
     numThreads?: number;
     bypassUntilReady?: boolean;
