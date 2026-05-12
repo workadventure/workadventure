@@ -3,14 +3,14 @@
     import { openModal } from "svelte-modals";
     import type { Readable } from "svelte/store";
     import { AskPositionMessage_AskType } from "@workadventure/messages";
-    import {
-        hasMatrixChatCapabilities,
-        type ChatRoom,
-        type ChatRoomMembershipManagement,
-        type ChatRoomModeration,
-        type ChatRoomNotificationControl,
-        type ChatUser,
-        type MatrixChatConnectionLike,
+    import { hasMatrixChatCapabilities } from "../../../Connection/ChatConnection";
+    import type {
+        ChatRoom,
+        ChatRoomMembershipManagement,
+        ChatRoomModeration,
+        ChatRoomNotificationControl,
+        ChatUser,
+        MatrixChatConnectionLike,
     } from "../../../Connection/ChatConnection";
     import { isMatrixChatEnabledStore } from "../../../../Stores/ChatStore";
     import { notificationPlayingStore } from "../../../../Stores/NotificationStore";

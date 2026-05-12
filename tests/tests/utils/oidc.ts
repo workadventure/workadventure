@@ -36,8 +36,8 @@ export async function oidcAdminTagLogin(page: Page) {
     await oidcLogin(page, "User1", "pwd");
 }
 
-export async function oidcMatrixUserLogin(page: Page) {
-    await oidcLogin(page, "UserMatrix", "pwd");
+export async function oidcMatrixUserLogin(page: Page, userName = "UserMatrix") {
+    await oidcLogin(page, userName, "pwd");
 }
 
 export async function oidcMemberTagLogin(page: Page) {

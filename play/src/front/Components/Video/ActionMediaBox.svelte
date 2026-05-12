@@ -8,7 +8,6 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import type { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
-    import { isListenerStore } from "../../Stores/MediaStore";
     import RangeSlider from "../Input/RangeSlider.svelte";
     import type { StreamCategory } from "../../Space/Streamable";
     import { IconAlertTriangle, IconUser, IconMute, IconUnMute } from "@wa-icons";
@@ -23,6 +22,7 @@
 
     const isMicrophoneEnabled = spaceUser.reactiveUser.microphoneState;
     const isVideoEnabled = spaceUser.reactiveUser.cameraState;
+    const canAskToMuteAudioOrTurnOffVideo = spaceUser.space.canAskToMuteAudioOrTurnOffVideo;
 
     let moreActionOpened = false;
 
@@ -144,7 +144,7 @@
     </div>
 
     <!-- Mute audio user -->
-    {#if ($userIsAdminStore || !$isListenerStore) && !isScreenSharing}
+    {#if ($userIsAdminStore || $canAskToMuteAudioOrTurnOffVideo) && !isScreenSharing}
         <button
             class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
             on:click|preventDefault|stopPropagation={() => muteAudio(spaceUser)}
@@ -171,7 +171,7 @@
     {/if}
 
     <!-- Mute video -->
-    {#if ($userIsAdminStore || !$isListenerStore) && !isScreenSharing}
+    {#if ($userIsAdminStore || $canAskToMuteAudioOrTurnOffVideo) && !isScreenSharing}
         <button
             id="mute-video-user"
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"

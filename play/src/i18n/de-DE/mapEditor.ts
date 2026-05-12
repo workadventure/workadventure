@@ -142,6 +142,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
 
         chatEnabled: "Chat aktiviert",
+        allowTalking: "Sprechen und Blasenbildung erlauben",
         seeAttendees: "Teilnehmer anzeigen",
         start: {
             label: "Startbereich",

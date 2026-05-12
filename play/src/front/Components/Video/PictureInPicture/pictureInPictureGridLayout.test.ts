@@ -67,32 +67,32 @@ describe("pictureInPictureGridLayout", () => {
     });
 
     describe("layout snapshots by count", () => {
-        it("keeps 5-video portrait mode as 3 top + 2 bottom", () => {
+        it("uses 5-video portrait branch (h > w) as 2×3 grid with merged middle row", () => {
             const layout = computePictureInPictureGridLayout(5, 200, 300);
 
             expect(layout.portrait).toBe(true);
-            expect(layout.columnTracks).toBe(6);
-            expect(layout.rowTracks).toBe(2);
+            expect(layout.columnTracks).toBe(2);
+            expect(layout.rowTracks).toBe(3);
             expect(layout.tiles).toHaveLength(5);
             expect(layout.tiles[4]).toEqual({
-                columnStart: 4,
-                columnEnd: 7,
-                rowStart: 2,
-                rowEnd: 3,
+                columnStart: 2,
+                columnEnd: 3,
+                rowStart: 3,
+                rowEnd: 4,
             });
         });
 
-        it("keeps 5-video landscape mode as 2 left + 3 right", () => {
+        it("uses 5-video landscape branch (w ≥ h) as 3 top + 2 bottom on 6 virtual columns", () => {
             // Same: avoid isFullWidth so the 5-tile asymmetric grid is used instead of one horizontal row.
             const layout = computePictureInPictureGridLayout(5, 300, 100);
 
             expect(layout.portrait).toBe(false);
-            expect(layout.columnTracks).toBe(2);
-            expect(layout.rowTracks).toBe(3);
+            expect(layout.columnTracks).toBe(6);
+            expect(layout.rowTracks).toBe(2);
             expect(layout.tiles).toHaveLength(5);
             expect(layout.tiles[0]).toEqual({
                 columnStart: 1,
-                columnEnd: 2,
+                columnEnd: 3,
                 rowStart: 1,
                 rowEnd: 2,
             });

@@ -325,6 +325,7 @@ const mapEditor: BaseTranslation = {
         },
         advancedOptions: "Advanced Options",
         chatEnabled: "Associate a dedicated chat channel",
+        allowTalking: "Allow talking and forming bubbles",
         noProperties: "No properties defined",
     },
     areaEditor: {

@@ -103,6 +103,7 @@ interface MegaphoneZoneState {
     propertyId: string;
     seeAttendees: boolean;
     chatEnabled: boolean;
+    allowTalking: boolean;
     waitingLink: string | undefined;
 }
 
@@ -1506,6 +1507,7 @@ export class AreasPropertiesListener {
                             propertyId: property.id,
                             seeAttendees: property.seeAttendees,
                             chatEnabled: property.chatEnabled,
+                            allowTalking: false,
                             waitingLink: undefined,
                         });
                         return;
@@ -1535,6 +1537,7 @@ export class AreasPropertiesListener {
                     propertyId: property.id,
                     seeAttendees: property.seeAttendees,
                     chatEnabled: property.chatEnabled,
+                    allowTalking: false,
                     waitingLink: undefined,
                 });
             } catch (e) {
@@ -1569,7 +1572,7 @@ export class AreasPropertiesListener {
                         Sentry.captureException(error);
                     }
                     isSpeakerStore.set(false);
-                    isListenerStore.set(true);
+                    isListenerStore.set(!this.shouldAllowTalkingInSpace(uniqRoomName));
                     listenerWaitingMediaStore.set(remainingListenerZone.waitingLink);
 
                     // Restore listener-specific state
@@ -1614,7 +1617,6 @@ export class AreasPropertiesListener {
                 const proximityRoom = this.scene.proximityChatRoom;
                 const currentSpaceName = proximityRoom.getCurrentSpaceName();
 
-                isListenerStore.set(true);
                 // If already in this space (as speaker or listener), just update tracking
                 if (currentSpaceName === uniqRoomName) {
                     // Check if we're already as speaker - speaker has priority, don't change role
@@ -1627,6 +1629,7 @@ export class AreasPropertiesListener {
                             propertyId: property.id,
                             seeAttendees,
                             chatEnabled: property.chatEnabled,
+                            allowTalking: property.allowTalking,
                             waitingLink: property.waitingLink,
                         });
                         return;
@@ -1639,8 +1642,11 @@ export class AreasPropertiesListener {
                         propertyId: property.id,
                         seeAttendees,
                         chatEnabled: property.chatEnabled,
+                        allowTalking: property.allowTalking,
                         waitingLink: property.waitingLink,
                     });
+                    // Update mute state based on all active listener zones
+                    isListenerStore.set(!this.shouldAllowTalkingInSpace(uniqRoomName));
                     return;
                 }
 
@@ -1671,8 +1677,10 @@ export class AreasPropertiesListener {
                     propertyId: property.id,
                     seeAttendees,
                     chatEnabled: property.chatEnabled,
+                    allowTalking: property.allowTalking,
                     waitingLink: property.waitingLink,
                 });
+                isListenerStore.set(!property.allowTalking);
             }
         }
     }
@@ -1699,7 +1707,8 @@ export class AreasPropertiesListener {
                 // Check if still in another listener zone for the same space
                 const remainingListenerZone = this.findActiveListenerZoneForSpace(uniqRoomName);
                 if (remainingListenerZone) {
-                    // Still in another listener zone, don't leave the space
+                    // Still in another listener zone, update mute state based on remaining zones
+                    isListenerStore.set(!this.shouldAllowTalkingInSpace(uniqRoomName));
                     return;
                 }
 
@@ -1727,6 +1736,20 @@ export class AreasPropertiesListener {
             }
         }
         return undefined;
+    }
+
+    /**
+     * Checks if talking should be allowed in a space by examining all active listener zones.
+     * Returns true only if all active listener zones for the space have allowTalking=true.
+     * If any zone has allowTalking=false, the user should be muted.
+     */
+    private shouldAllowTalkingInSpace(spaceName: string): boolean {
+        for (const zone of this.activeMegaphoneZones.values()) {
+            if (zone.spaceName === spaceName && zone.role === "listener" && !zone.allowTalking) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

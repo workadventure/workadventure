@@ -1,5 +1,6 @@
 <script lang="ts">
     import { closeModal } from "svelte-modals";
+    import { get } from "svelte/store";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import type { CreateRoomOptions } from "../../Connection/ChatConnection";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -35,7 +36,7 @@
             if (error instanceof Error) {
                 createFolderError = error.message;
             } else {
-                createFolderError = "Unknown error";
+                createFolderError = get(LL).chat.unknownError();
             }
         } finally {
             loadingFolderCreation = false;

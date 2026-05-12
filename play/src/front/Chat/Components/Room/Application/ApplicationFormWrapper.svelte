@@ -177,7 +177,7 @@
 
 <div class="flex flex-col w-full justify-center items-center py-4 px-6 gap-2">
     <div class="flex flex-row w-full justify-between items-center gap-2">
-        <img draggable="false" class="w-8" src={property.img} alt="info icon" />
+        <img draggable="false" class="w-8" src={property.img} alt={$LL.chat.a11y.applicationIcon()} />
         <h2 class="text-sm p-0 m-0">{property.title}</h2>
         <CloseButton
             on:click={() => {

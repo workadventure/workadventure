@@ -14,10 +14,12 @@
 
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import { readable } from "svelte/store";
+    import { openModal } from "svelte-modals";
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { defaultNativeIntegrationAppName } from "@workadventure/shared-utils";
-    import type { ChatRoom } from "../../Connection/ChatConnection";
+    import { hasChatRoomPollCreation, type ChatConversation } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { chatInputFocusStore, shouldDisableChatInProximityRoomStore } from "../../../Stores/ChatStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
@@ -25,9 +27,9 @@
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { localUserStore } from "../../../Connection/LocalUserStore";
-    import { MatrixChatRoom } from "../../Connection/Matrix/MatrixChatRoom";
     import { draftMessageService } from "../../Services/DraftMessageService";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import PollCreateDialog from "../PollCreateDialog.svelte";
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
     import youtubeSvg from "../../../Components/images/applications/icon_youtube.svg";
     import klaxoonSvg from "../../../Components/images/applications/icon_klaxoon.svg";
@@ -42,9 +44,9 @@
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
-    import { IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
+    import { IconList, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
 
-    export let room: ChatRoom;
+    export let room: ChatConversation;
     export let disabled = false;
 
     let message = "";
@@ -60,6 +62,16 @@
     let fileAttachementEnabled = false;
     let applicationProperty: ApplicationProperty | undefined = undefined;
     const isProximityChatRoom = room instanceof ProximityChatRoom;
+    const cannotCreatePoll = readable(false);
+
+    function getPollCreationCapability(currentRoom: ChatConversation) {
+        return hasChatRoomPollCreation(currentRoom) ? currentRoom.pollCreation : undefined;
+    }
+
+    let pollCreation = getPollCreationCapability(room);
+    let canCreatePoll = cannotCreatePoll;
+    $: pollCreation = getPollCreationCapability(room);
+    $: canCreatePoll = pollCreation?.canCreate ?? cannotCreatePoll;
     let replyMessageId: string | null = null;
     const draftId = `${room.id}-${localUserStore.getChatId() ?? "0"}`;
 
@@ -164,10 +176,8 @@
         if (draft) {
             message = draft.message ?? "";
             if (draft.replyingToMessageId) {
-                if (room instanceof MatrixChatRoom) {
-                    let loadReplyMessage = await room.getMessageById(draft.replyingToMessageId);
-                    selectedChatMessageToReply.set(loadReplyMessage ?? null);
-                }
+                const loadReplyMessage = await room.getMessageById?.(draft.replyingToMessageId);
+                selectedChatMessageToReply.set(loadReplyMessage ?? null);
             }
         }
     });
@@ -277,6 +287,17 @@
         fileAttachmentComponentOpened = false;
         applicationComponentOpened = false;
         applicationProperty = undefined;
+    }
+
+    function openPollCreationModal() {
+        if (!pollCreation || !$canCreatePoll) {
+            return;
+        }
+
+        applicationComponentOpened = false;
+        applicationProperty = undefined;
+        fileAttachmentComponentOpened = false;
+        openModal(PollCreateDialog, { pollCreation });
     }
     // This function open the application part to propose to the user to add a new application or close application part
     function toggleApplicationComponent() {
@@ -487,6 +508,19 @@
                         : $LL.chat.fileAttachment.featureComingSoon()}
                 </p>
             </button>
+
+            <button
+                data-testid="createPollButton"
+                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                on:click={openPollCreationModal}
+                disabled={!pollCreation || !$canCreatePoll}
+            >
+                <IconList font-size={32} />
+                <h2 class="text-sm p-0 m-0">{$LL.chat.poll.title()}</h2>
+                <p class="text-xs p-0 m-0 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                    {pollCreation && $canCreatePoll ? $LL.chat.poll.create.description() : $LL.chat.disabled()}
+                </p>
+            </button>
         </div>
 
         <div class="flex flex-wrap w-full justify-between items-center p-2 gap-2">
@@ -497,7 +531,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "youtube"}
                 disabled={!applicationManager.youtubeToolActivated}
             >
-                <img draggable="false" class="w-8" src={youtubeSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={youtubeSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.youtube.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.youtubeToolActivated
@@ -513,7 +547,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "klaxoon"}
                 disabled={!applicationManager.klaxoonToolActivated}
             >
-                <img draggable="false" class="w-8" src={klaxoonSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={klaxoonSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.klaxoon.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.klaxoonToolActivated
@@ -529,7 +563,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "googleSheets"}
                 disabled={!applicationManager.googleSheetsToolActivated}
             >
-                <img draggable="false" class="w-8" src={googleSheetsSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={googleSheetsSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleSheets.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.googleSheetsToolActivated
@@ -545,7 +579,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "googleDocs"}
                 disabled={!applicationManager.googleDocsToolActivated}
             >
-                <img draggable="false" class="w-8" src={googleDocsSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={googleDocsSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleDocs.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.googleDocsToolActivated
@@ -561,7 +595,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "googleSlides"}
                 disabled={!applicationManager.googleSlidesToolActivated}
             >
-                <img draggable="false" class="w-8" src={googleSlidesSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={googleSlidesSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleSlides.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.googleSlidesToolActivated
@@ -577,7 +611,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "googleDrive"}
                 disabled={!applicationManager.googleDriveToolActivated}
             >
-                <img draggable="false" class="w-8" src={googleDriveSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={googleDriveSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleDrive.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.googleDriveToolActivated
@@ -593,7 +627,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "eraser"}
                 disabled={!applicationManager.eraserToolActivated}
             >
-                <img draggable="false" class="w-8" src={eraserSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={eraserSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.eraser.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.eraserToolActivated
@@ -609,7 +643,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "excalidraw"}
                 disabled={!applicationManager.excalidrawToolActivated}
             >
-                <img draggable="false" class="w-8" src={excalidrawSvg} alt="info icon" />
+                <img draggable="false" class="w-8" src={excalidrawSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.excalidraw.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.excalidrawToolActivated
@@ -625,7 +659,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "cards"}
                 disabled={!applicationManager.cardsToolActivated}
             >
-                <img draggable="false" class="w-8" src={cardsPng} alt="info icon" />
+                <img draggable="false" class="w-8" src={cardsPng} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.cards.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.cardsToolActivated
@@ -641,7 +675,7 @@
                 class:bg-secondary-800={applicationProperty?.name === "tldraw"}
                 disabled={!applicationManager.tldrawToolActivated}
             >
-                <img draggable="false" class="w-8" src={tldrawJpeg} alt="info icon" />
+                <img draggable="false" class="w-8" src={tldrawJpeg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.tldraw.title()}</h2>
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {applicationManager.tldrawToolActivated
@@ -659,7 +693,7 @@
                     class:bg-secondary-800={applicationProperty?.name === app.name}
                     on:click={() => openLinkForm(app.name)}
                 >
-                    <img draggable="false" class="w-8" src={app.image} alt="info icon" />
+                    <img draggable="false" class="w-8" src={app.image} alt={$LL.chat.a11y.applicationIcon()} />
                     <h2 class="text-sm p-0 m-0">{app.name}</h2>
                     <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                         {app.description}

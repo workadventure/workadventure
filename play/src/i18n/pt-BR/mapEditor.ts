@@ -142,6 +142,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
 
         chatEnabled: "Associar um canal de chat dedicado",
+        allowTalking: "Permitir falar e formar bolhas",
         seeAttendees: "Ver participantes",
         start: {
             label: "Área inicial",
