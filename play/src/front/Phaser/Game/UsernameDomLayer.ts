@@ -37,9 +37,11 @@ export class UsernameDomLayer {
             element.ariaHidden = "true";
             element.textContent = playerName;
 
+            element.style.position = "absolute";
             element.style.margin = "0";
             element.style.color = "#ffffff";
             element.style.font = font;
+            element.style.whiteSpace = "nowrap";
             element.style.pointerEvents = "none";
 
             element.style.willChange = "transform";
