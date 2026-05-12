@@ -3,6 +3,7 @@ import type { ClientToServerMessage } from "@workadventure/messages";
 import type { ZodObject, ZodRawShape, ZodTypeAny } from "zod";
 import * as Sentry from "@sentry/node";
 import { asError } from "catch-unknown";
+import { CLIENT_DISCONNECTION_RETENTION_MS } from "../enums/EnvironmentVariable";
 import type { ConnectingSocketData } from "../models/Websocket/SocketData";
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
 import type { Socket, SocketUpgradeFailed } from "./SocketManager";
@@ -58,6 +59,7 @@ type WebSocketContext = {
 export class PusherRoomSocketController {
     private readonly wrappersBySocket = new WeakMap<RawSocket, PusherWebSocket>();
     private readonly contextByTabKey = new Map<string, WebSocketContext>();
+    private readonly contextCleanupTimeoutsByTabKey = new Map<string, ReturnType<typeof setTimeout>>();
     private readonly disconnectingSockets = new WeakSet<PusherWebSocket>();
 
     public constructor(private readonly app: TemplatedApp) {}
@@ -146,6 +148,30 @@ export class PusherRoomSocketController {
         });
     }
 
+    private clearContextCleanup(tabId: string): void {
+        const timeout = this.contextCleanupTimeoutsByTabKey.get(tabId);
+        if (!timeout) {
+            return;
+        }
+
+        clearTimeout(timeout);
+        this.contextCleanupTimeoutsByTabKey.delete(tabId);
+    }
+
+    private scheduleContextCleanup(tabId: string, socket: PusherWebSocket): void {
+        this.clearContextCleanup(tabId);
+
+        const timeout = setTimeout(() => {
+            this.contextCleanupTimeoutsByTabKey.delete(tabId);
+
+            if (this.contextByTabKey.get(tabId)?.socket === socket) {
+                this.contextByTabKey.delete(tabId);
+            }
+        }, CLIENT_DISCONNECTION_RETENTION_MS);
+
+        this.contextCleanupTimeoutsByTabKey.set(tabId, timeout);
+    }
+
     public ws<TQuery extends RoomWsQuery>(path: string, config: RoomWsConfig<TQuery>): void {
         this.app.ws<ConnectingSocketData | UpgradeFailedData>(path, {
             idleTimeout: config.idleTimeout,
@@ -232,12 +258,14 @@ export class PusherRoomSocketController {
                         const replaced = context.socket.replaceSocket(rawSocket, context.clientLastReceivedNonce!);
 
                         if (replaced) {
+                            this.clearContextCleanup(tabId);
                             this.wrappersBySocket.set(rawSocket, context.socket);
                         }
 
                         return;
                     }
 
+                    this.clearContextCleanup(tabId);
                     const socket = this.getOrCreateWrapper(rawSocket);
                     this.contextByTabKey.set(tabId, {
                         socket,
@@ -311,7 +339,7 @@ export class PusherRoomSocketController {
                     .finally(() => {
                         const tabId = socketData.tabId;
                         if (this.contextByTabKey.get(tabId)?.socket === socket) {
-                            this.contextByTabKey.delete(tabId);
+                            this.scheduleContextCleanup(tabId, socket);
                         }
                     });
             },

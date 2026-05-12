@@ -8,6 +8,7 @@ import {
     type SubMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
+import { CLIENT_DISCONNECTION_RETENTION_MS } from "../enums/EnvironmentVariable";
 import { NoncedMessageStore } from "../../common/NoncedMessageStore";
 
 import type { SocketData } from "../models/Websocket/SocketData";
@@ -20,7 +21,6 @@ export type ConnectionStatusManager = {
 };
 
 export class PusherWebSocket {
-    private static readonly DISCONNECTION_RETENTION_MS = 30_000;
     private static readonly KEEP_ALIVE_INTERVAL_MS = 25_000;
 
     private socket: RawSocket;
@@ -33,7 +33,7 @@ export class PusherWebSocket {
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
-        PusherWebSocket.DISCONNECTION_RETENTION_MS
+        CLIENT_DISCONNECTION_RETENTION_MS
     );
 
     public constructor(socket: RawSocket, private readonly connectionStatusManager: ConnectionStatusManager) {
