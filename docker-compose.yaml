@@ -193,6 +193,10 @@ services:
       - "traefik.http.routers.play-ws.priority=2"
       - "traefik.http.routers.play-ws.service=play-ws"
       - "traefik.http.services.play-ws.loadbalancer.server.port=3001"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie=true"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie.name=wa_ws_affinity"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie.httpOnly=true"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie.sameSite=lax"
 
   maps:
     image: thecodingmachine/php:8.1-v4-apache-node12

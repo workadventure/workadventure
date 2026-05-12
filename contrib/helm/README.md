@@ -49,6 +49,26 @@ If you don't provide a `secretKey` (used to encode JWT tokens), the image will g
 
 For a complete reference of all available environment variables, see the [Environment Variables documentation](../../docs/others/self-hosting/env-variables.md) or use the original [docker-compose file](../docker/docker-compose.prod.yaml) for reference. Look at the [original configuration template](../docker/.env.prod.template) for more information about the available variables.
 
+### WebSocket sticky session for reconnection
+
+When running multiple replicas of the `play` service, the reconnect mechanism requires websocket affinity so reconnections from a browser tab return to the same pusher instance.
+
+Enable cookie-based affinity on websocket routes with:
+
+```yaml
+play:
+  ingress:
+    sticky:
+      enabled: true
+      cookie:
+        name: "wa_ws_affinity"
+        httpOnly: true
+        secure: true
+        sameSite: "lax"
+```
+
+For local HTTP-only setups, set `play.ingress.sticky.cookie.secure: false`.
+
 ### Minimal sample configuration file
 
 Assuming you are using the nginx ingress controller, and CertManager for the SSL certificates (with a cluster issuer named `letsencrypt-prod`), here is a minimal configuration file:

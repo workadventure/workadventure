@@ -1,0 +1,43 @@
+{{- if and .Values.ingress.enabled .Values.singleDomain -}}
+{{- $fullName := include "workadventure.fullname" . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}-ws
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+  {{- if or .Values.play.ingress.sticky.enabled .Values.ingress.annotationsRoot }}
+  annotations:
+    {{- with .Values.ingress.annotationsRoot }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- if .Values.play.ingress.sticky.enabled }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
+    traefik.ingress.kubernetes.io/service.sticky.cookie.name: {{ .Values.play.ingress.sticky.cookie.name | quote }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie.httpOnly: {{ .Values.play.ingress.sticky.cookie.httpOnly | quote }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie.secure: {{ .Values.play.ingress.sticky.cookie.secure | quote }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie.sameSite: {{ .Values.play.ingress.sticky.cookie.sameSite | quote }}
+    {{- end }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.domainName }}
+      secretName: {{ .Values.ingress.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.domainName }}
+      http:
+        paths:
+          - path: /ws/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-play
+                port:
+                  number: {{ .Values.play.service.wsPort }}
+{{- end }}

@@ -3,12 +3,21 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ $fullName }}-play
+  name: {{ $fullName }}-play-pusher-ws
   labels:
     {{- include "workadventure.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotationsRoot }}
+  {{- if or .Values.play.ingress.sticky.enabled .Values.ingress.annotationsRoot }}
   annotations:
+    {{- with .Values.ingress.annotationsRoot }}
     {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- if .Values.play.ingress.sticky.enabled }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
+    traefik.ingress.kubernetes.io/service.sticky.cookie.name: {{ .Values.play.ingress.sticky.cookie.name | quote }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie.httpOnly: {{ .Values.play.ingress.sticky.cookie.httpOnly | quote }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie.secure: {{ .Values.play.ingress.sticky.cookie.secure | quote }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie.sameSite: {{ .Values.play.ingress.sticky.cookie.sameSite | quote }}
+    {{- end }}
   {{- end }}
 spec:
   {{- $ingressClassName := coalesce .Values.play.ingress.className .Values.ingress.className -}}
@@ -19,39 +28,18 @@ spec:
   {{- if $tls }}
   tls:
     - hosts:
-        - {{ (include "workadventure.playDomainName" .) | quote }}
         - {{ (include "workadventure.pusherDomainName" .) | quote }}
       secretName: {{ .Values.play.ingress.secretName | default .Values.ingress.secretName | default (printf "%s-play-cert" (include "workadventure.fullname" .)) }}
   {{- end }}
   rules:
-    - host: {{ (include "workadventure.playDomainName" .) | quote }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ include "workadventure.fullname" . }}-play
-                port:
-                  number: {{ .Values.play.service.port }}
     - host: {{ (include "workadventure.pusherDomainName" .) | quote }}
       http:
         paths:
-          - path: /
+          - path: /ws/
             pathType: Prefix
             backend:
               service:
                 name: {{ include "workadventure.fullname" . }}-play
                 port:
-                  number: {{ .Values.play.service.port }}
-    - host: {{ (include "workadventure.roomApiDomainName" .) | quote }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ include "workadventure.fullname" . }}-room-api
-                port:
-                  number: {{ .Values.play.roomApiService.port }}
+                  number: {{ .Values.play.service.wsPort }}
 {{- end }}
