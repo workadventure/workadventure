@@ -10,7 +10,7 @@ const CORRECTION_RATE = 0.75;
 /** Design system `brand-blue` — fond du pseudo (tous les joueurs), léger alpha pour laisser voir le décor. */
 const PLAYER_NAME_BACKGROUND_COLOR = "rgba(27, 42, 65, 0.5)";
 const PLAYER_NAME_BACKGROUND_RADIUS = 8;
-const PLAYER_NAME_HEIGHT = 16;
+const PLAYER_NAME_HEIGHT = 14;
 const PLAYER_NAME_PADDING = 6;
 const PLAYER_NAME_GAP = 4;
 const USERNAME_FONT = '8px "Press Start 2P"'; // Todo: Replace the font family with a better one
