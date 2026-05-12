@@ -1066,15 +1066,30 @@ async function V(e, t, r) {
   ), await K("jspi")), n;
 }
 async function tt(e) {
-  const t = await import(
+  const t = rt(e), r = await import(
     /* @vite-ignore */
-    e
+    t
   );
-  if (typeof t.default != "function")
+  if (typeof r.default != "function")
     throw new Error(
-      `LiteRT Wasm ES module ${e} must have a default export module factory.`
+      `LiteRT Wasm ES module ${t} must have a default export module factory.`
     );
-  return t.default;
+  return r.default;
+}
+function rt(e) {
+  const t = e, r = nt();
+  if (!r) return t;
+  try {
+    return new URL(t, r).href;
+  } catch {
+    return t;
+  }
+}
+function nt() {
+  if (typeof document < "u")
+    return document.baseURI;
+  if (typeof location < "u")
+    return location.href;
 }
 function q(e, t) {
   if (ge())
@@ -1207,7 +1222,7 @@ function C(e) {
     return t.delete(), n;
   };
 }
-function rt() {
+function ot() {
   g.copyFunctions.set(T.HOST_MEMORY, /* @__PURE__ */ new Map([
     [
       T.HOST_MEMORY,
@@ -1235,7 +1250,7 @@ function rt() {
     ]
   ]));
 }
-rt();
+ot();
 const b = 512, v = 128, P = b / 2 + 1, G = [
   "fft",
   "magnitude",
@@ -1250,16 +1265,16 @@ const b = 512, v = 128, P = b / 2 + 1, G = [
   "overlap_add",
   "infer_total",
   "denoise_total"
-], nt = {
+], st = {
   sampleRate: 16e3,
   channels: 1,
   frameSize: b,
   frameDuration: 32
 };
-function ot(e) {
+function it(e) {
   return Number.isFinite(e) && e !== void 0 && e > 0 ? Math.floor(e) : 1;
 }
-async function st(e) {
+async function at(e) {
   const t = le();
   if (t)
     return t;
@@ -1278,7 +1293,7 @@ async function st(e) {
   }
   return q(e.wasmRoot, { threads: e.threads });
 }
-function it(e) {
+function lt(e) {
   return Array.from(e, (t) => Number(t));
 }
 function ee(e) {
@@ -1286,7 +1301,7 @@ function ee(e) {
     name: t.name,
     index: t.index,
     dtype: t.dtype,
-    shape: it(t.shape)
+    shape: lt(t.shape)
   }));
 }
 function te(e) {
@@ -1303,7 +1318,7 @@ function re(e, t) {
     );
   return r;
 }
-function at(e) {
+function ut(e) {
   return typeof e == "object" && e !== null && "then" in e && typeof e.then == "function";
 }
 function ne(e, t) {
@@ -1330,7 +1345,7 @@ function ne(e, t) {
     e.signatureIndex,
     t.map((s) => s.liteRtTensorBuffer)
   );
-  if (at(n))
+  if (ut(n))
     throw new Error(
       "LiteRT.js returned an async model invocation. AudioWorklet inference requires a synchronous wasm run path."
     );
@@ -1362,7 +1377,7 @@ function se() {
 function E(e, t, r) {
   e.timings[t].push(r);
 }
-function lt(e) {
+function ft(e) {
   if (e.length === 0)
     return {
       count: 0,
@@ -1381,11 +1396,11 @@ function lt(e) {
     p95Ms: t[n] ?? 0
   };
 }
-function ut(e) {
+function dt(e) {
   const t = /* @__PURE__ */ Object.create(null);
   for (const o of G)
     t[o] = {
-      ...lt(e.timings[o]),
+      ...ft(e.timings[o]),
       inferShare: 0,
       denoiseShare: 0
     };
@@ -1408,7 +1423,7 @@ function W(e, t) {
 function ie(e) {
   return e.createComplexArray();
 }
-class ft {
+class ct {
   model1Runner;
   model2Runner;
   profilingEnabled;
@@ -1447,7 +1462,7 @@ class ft {
     return this.profilingEnabled && (this.profile.denoiseCalls++, E(this.profile, "denoise_total", c() - n)), !1;
   }
   getProfile() {
-    return ut(this.profile);
+    return dt(this.profile);
   }
   resetProfile() {
     this.profile = se();
@@ -1510,8 +1525,8 @@ class ft {
     this.profilingEnabled && (E(this.profile, "overlap_add", c() - r), this.profile.inferCalls++, E(this.profile, "infer_total", c() - t));
   }
 }
-async function dt(e) {
-  const t = e.liteRtWasmRoot, r = e.model1Data ?? e.model1Url, n = e.model2Data ?? e.model2Url, o = e.threads === !0, s = ot(e.numThreads), a = e.enableProfiling === !0;
+async function pt(e) {
+  const t = e.liteRtWasmRoot, r = e.model1Data ?? e.model1Url, n = e.model2Data ?? e.model2Url, o = e.threads === !0, s = it(e.numThreads), a = e.enableProfiling === !0;
   if (!r)
     throw new Error("Missing model1 source. Provide model1Url or model1Data.");
   if (!n)
@@ -1524,7 +1539,7 @@ async function dt(e) {
     wasmRoot: t,
     threads: o
   };
-  e.liteRtWasmModuleFactory !== void 0 && (i.wasmModuleFactory = e.liteRtWasmModuleFactory), e.liteRtWasmBinary !== void 0 && (i.wasmBinary = e.liteRtWasmBinary), await st(i);
+  e.liteRtWasmModuleFactory !== void 0 && (i.wasmModuleFactory = e.liteRtWasmModuleFactory), e.liteRtWasmBinary !== void 0 && (i.wasmBinary = e.liteRtWasmBinary), await at(i);
   const l = {
     accelerator: "wasm",
     cpuOptions: {
@@ -1551,10 +1566,10 @@ async function dt(e) {
   }, S = {
     ready: Promise.resolve(void 0),
     modelDetails: u,
-    audioConfig: nt,
+    audioConfig: st,
     dtln_create() {
       const m = y++;
-      return d.set(m, new ft(f, h, { profilingEnabled: a })), m;
+      return d.set(m, new ct(f, h, { profilingEnabled: a })), m;
     },
     dtln_denoise(m, A, U) {
       return B(m).denoise(A, U);
@@ -1580,7 +1595,7 @@ async function dt(e) {
   };
   return S.ready = Promise.resolve(S), S;
 }
-async function ht(e = {}) {
+async function yt(e = {}) {
   const t = {
     liteRtWasmRoot: e.liteRtWasmRoot ?? Te(),
     model1Url: e.model1Url ?? ye(),
@@ -1588,12 +1603,12 @@ async function ht(e = {}) {
     threads: he(e.threads),
     numThreads: pe(e.numThreads)
   };
-  return e.logModelDetails !== void 0 && (t.logModelDetails = e.logModelDetails), e.enableProfiling !== void 0 && (t.enableProfiling = e.enableProfiling), dt(t);
+  return e.logModelDetails !== void 0 && (t.logModelDetails = e.logModelDetails), e.enableProfiling !== void 0 && (t.enableProfiling = e.enableProfiling), pt(t);
 }
 export {
-  nt as AUDIO_CONFIG,
-  ht as createNoiseSuppressionModule,
-  dt as createNoiseSuppressionRuntime,
-  ht as default
+  st as AUDIO_CONFIG,
+  yt as createNoiseSuppressionModule,
+  pt as createNoiseSuppressionRuntime,
+  yt as default
 };
 //# sourceMappingURL=index.js.map

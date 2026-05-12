@@ -5,7 +5,6 @@ import {
     type NoiseSuppressionAudioWorkletHandle,
     type NoiseSuppressionAudioWorkletOutboundMessage,
 } from "@workadventure/noise-suppression/audio-worklet";
-import noiseSuppressionWorkletModuleUrl from "../../../../../libs/noise-suppression/dist/assets/audio-worklet-processor.js?url";
 
 export interface NoiseSuppressionStatusMessage {
     status: "initializing" | "ready" | "error" | "starved";
@@ -138,7 +137,6 @@ export class NoiseSuppressionTransformer {
 
         const workletHandle = await createNoiseSuppressionAudioWorklet(this.audioContext, {
             bypassUntilReady: true,
-            moduleUrl: noiseSuppressionWorkletModuleUrl,
         });
 
         this.stopObservingWorkletMessages = observeNoiseSuppressionAudioWorkletMessages(

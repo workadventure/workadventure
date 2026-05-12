@@ -1,12 +1,8 @@
 import { a as E, r as f } from "./browser-runtime-options-szKHyy8v.js";
-const m = "workadventure-noise-suppression", M = 3e4, h = new URL(
-  /* @vite-ignore */
-  "./assets/audio-worklet-processor.js",
-  import.meta.url
-).href, g = /* @__PURE__ */ new WeakMap();
+const M = new URL("assets/audio-worklet-processor.js", import.meta.url).href, m = "workadventure-noise-suppression", h = 3e4, l = /* @__PURE__ */ new WeakMap();
 function w(e, s) {
-  let r = g.get(e);
-  r || (r = /* @__PURE__ */ new Map(), g.set(e, r));
+  let r = l.get(e);
+  r || (r = /* @__PURE__ */ new Map(), l.set(e, r));
   const o = r.get(s);
   if (o)
     return o;
@@ -16,13 +12,13 @@ function w(e, s) {
 function v(e) {
   return e.type === "ready";
 }
-function l(e) {
+function g(e) {
   return e.type === "error";
 }
 function y(e) {
   return e.type === "benchmark-complete";
 }
-function T(e, s) {
+function k(e, s) {
   return new Promise((r, o) => {
     const a = globalThis.setTimeout(() => {
       n(), o(new Error("Timed out waiting for the noise suppression worklet to initialize."));
@@ -32,7 +28,7 @@ function T(e, s) {
         n(), r(i);
         return;
       }
-      l(i) && (n(), o(new Error(i.message)));
+      g(i) && (n(), o(new Error(i.message)));
     }, c = () => {
       n(), o(new Error("The noise suppression AudioWorklet processor failed."));
     }, n = () => {
@@ -41,8 +37,8 @@ function T(e, s) {
     e.port.addEventListener("message", u), e.port.start(), e.addEventListener("processorerror", c);
   });
 }
-async function k(e, s = {}) {
-  const r = s.moduleUrl ?? h, o = s.readyTimeoutMs ?? M, a = E(s.threads), u = f(s.numThreads), c = s.bypassUntilReady ?? !0;
+async function L(e, s = {}) {
+  const r = s.moduleUrl ?? M, o = s.readyTimeoutMs ?? h, a = E(s.threads), u = f(s.numThreads), c = s.bypassUntilReady ?? !0;
   await w(e, r);
   const n = {
     threads: a,
@@ -59,21 +55,21 @@ async function k(e, s = {}) {
       outputChannelCount: [1],
       processorOptions: n
     }
-  ), i = T(t, o);
+  ), i = k(t, o);
   return {
     node: t,
     ready: i,
     moduleUrl: r,
     processorName: m,
     dispose() {
-      const d = {
+      const p = {
         type: "dispose"
       };
-      t.port.postMessage(d), t.disconnect();
+      t.port.postMessage(p), t.disconnect();
     }
   };
 }
-function O(e, s) {
+function S(e, s) {
   const r = (o) => {
     s(o.data);
   };
@@ -81,20 +77,20 @@ function O(e, s) {
     e.node.port.removeEventListener("message", r);
   };
 }
-function R(e) {
+function b(e) {
   return e.type === "processing-started";
 }
-async function S(e, s = {}) {
+async function O(e, s = {}) {
   const r = s.warmupIterations ?? 40, o = s.benchmarkIterations ?? 300;
   return await e.ready, new Promise(
     (a, u) => {
-      const c = (d) => {
-        const p = d.data;
-        if (y(p)) {
-          t(), a(p);
+      const c = (p) => {
+        const d = p.data;
+        if (y(d)) {
+          t(), a(d);
           return;
         }
-        l(p) && (t(), u(new Error(p.message)));
+        g(d) && (t(), u(new Error(d.message)));
       }, n = () => {
         t(), u(new Error("The noise suppression AudioWorklet processor failed."));
       }, t = () => {
@@ -112,9 +108,9 @@ async function S(e, s = {}) {
 }
 export {
   m as NOISE_SUPPRESSION_AUDIO_WORKLET_PROCESSOR_NAME,
-  k as createNoiseSuppressionAudioWorklet,
-  R as isNoiseSuppressionProcessingStartedMessage,
-  O as observeNoiseSuppressionAudioWorkletMessages,
-  S as runNoiseSuppressionAudioWorkletBenchmark
+  L as createNoiseSuppressionAudioWorklet,
+  b as isNoiseSuppressionProcessingStartedMessage,
+  S as observeNoiseSuppressionAudioWorkletMessages,
+  O as runNoiseSuppressionAudioWorkletBenchmark
 };
 //# sourceMappingURL=audio-worklet.js.map
