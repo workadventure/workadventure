@@ -13,7 +13,8 @@ const PLAYER_NAME_BACKGROUND_RADIUS = 8;
 const PLAYER_NAME_HEIGHT = 14;
 const PLAYER_NAME_PADDING = 6;
 const PLAYER_NAME_GAP = 4;
-const USERNAME_FONT = '8px "Press Start 2P"'; // Todo: Replace the font family with a better one
+const USERNAME_FONT_FAMILY = '"Press Start 2P"'; // Todo: Replace the font family with a better one
+const USERNAME_FONT_SIZE = 8;
 
 type Position = { x: number; y: number };
 
@@ -50,7 +51,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         this.setScale(this.displayScale);
         if (this.renderingAsDOM) {
             const textPosition = this.getDomTextPosition();
-            this.gameScene.usernameDomLayer.updateUsernameScale(this.domUsernameId, this.displayScale);
+            this.gameScene.usernameDomLayer.updateUsernameScale(this.domUsernameId, this.displayScale, zoomModifier);
             this.gameScene.usernameDomLayer.updateUsernamePosition(this.domUsernameId, textPosition.x, textPosition.y);
         }
     };
@@ -143,7 +144,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
 
     private static measurePlayerNameWidth(playerName: string): number {
         const measurementContext = UsernameDisplay.getMeasurementContext();
-        measurementContext.font = USERNAME_FONT;
+        measurementContext.font = `${USERNAME_FONT_SIZE}px ${USERNAME_FONT_FAMILY}`;
         return measurementContext.measureText(playerName).width;
     }
 
@@ -174,7 +175,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
 
         const context = texture.getContext();
         context.clearRect(0, 0, layout.textureWidth, layout.textureHeight);
-        context.font = USERNAME_FONT;
+        context.font = `${USERNAME_FONT_SIZE}px ${USERNAME_FONT_FAMILY}`;
         context.textAlign = "center";
         context.textBaseline = "middle";
         context.lineJoin = "round";
@@ -217,8 +218,10 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
                 this.playerName,
                 textPosition.x,
                 textPosition.y,
-                USERNAME_FONT,
-                this.displayScale
+                USERNAME_FONT_FAMILY,
+                USERNAME_FONT_SIZE,
+                this.displayScale,
+                waScaleManager.zoomModifier
             );
         } else {
             this.gameScene.usernameDomLayer.removeUsername(this.domUsernameId);

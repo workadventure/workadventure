@@ -6,6 +6,8 @@ type UsernameElement = {
     x: number;
     y: number;
     scale: number;
+    baseFontPx: number;
+    zoomScale: number;
 };
 
 export class UsernameDomLayer {
@@ -28,7 +30,16 @@ export class UsernameDomLayer {
         this.domElement.setVisible(visible);
     }
 
-    public addUsername(id: number, playerName: string, x: number, y: number, font: string, scale: number): void {
+    public addUsername(
+        id: number,
+        playerName: string,
+        x: number,
+        y: number,
+        font: string,
+        fontSize: number,
+        displayScale: number,
+        zoomScale: number
+    ): void {
         let username = this.usernames.get(id);
 
         if (!username) {
@@ -40,7 +51,8 @@ export class UsernameDomLayer {
             element.style.position = "absolute";
             element.style.margin = "0";
             element.style.color = "#ffffff";
-            element.style.font = font;
+            element.style.fontFamily = font;
+            element.style.fontSize = `${fontSize}px`;
             element.style.whiteSpace = "nowrap";
             element.style.pointerEvents = "none";
 
@@ -50,7 +62,9 @@ export class UsernameDomLayer {
                 element,
                 x,
                 y,
-                scale,
+                scale: displayScale,
+                baseFontPx: fontSize,
+                zoomScale,
             };
 
             this.container.appendChild(element);
@@ -66,7 +80,8 @@ export class UsernameDomLayer {
 
         username.x = x;
         username.y = y;
-        username.scale = scale;
+        username.scale = displayScale;
+        username.zoomScale = zoomScale;
         this.applyTransform(username);
     }
 
@@ -85,17 +100,17 @@ export class UsernameDomLayer {
         this.applyTransform(username);
     }
 
-    public updateUsernameScale(id: number, scale: number): void {
+    public updateUsernameScale(id: number, displayScale: number, zoomScale: number): void {
         const username = this.usernames.get(id);
         if (!username) {
             return;
         }
-
-        if (username.scale === scale) {
+        if (username.scale === displayScale && username.zoomScale === zoomScale) {
             return;
         }
 
-        username.scale = scale;
+        username.scale = displayScale;
+        username.zoomScale = zoomScale;
         this.applyTransform(username);
     }
 
@@ -119,6 +134,10 @@ export class UsernameDomLayer {
     }
 
     private applyTransform(username: UsernameElement): void {
-        username.element.style.transform = `translate3d(${username.x}px, ${username.y}px, 0) translate(-50%, -50%) scale(${username.scale})`;
+        const fontPx = Math.max(0.5, username.baseFontPx * username.zoomScale);
+        username.element.style.fontSize = `${fontPx}px`;
+        username.element.style.transform = `translate3d(${username.x}px, ${
+            username.y
+        }px, 0) translate(-50%, -50%) scale(${1 / username.zoomScale})`;
     }
 }
