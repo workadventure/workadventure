@@ -134,10 +134,9 @@ export class UsernameDomLayer {
     }
 
     private applyTransform(username: UsernameElement): void {
-        const fontPx = Math.max(0.5, username.baseFontPx * username.zoomScale);
+        const fontPx = username.baseFontPx * username.zoomScale * username.scale;
+        const scale = 1 / username.zoomScale;
         username.element.style.fontSize = `${fontPx}px`;
-        username.element.style.transform = `translate3d(${username.x}px, ${
-            username.y
-        }px, 0) translate(-50%, -50%) scale(${1 / username.zoomScale})`;
+        username.element.style.transform = `translate3d(${username.x}px, ${username.y}px, 0) translate(-50%, -50%) scale(${scale})`;
     }
 }
