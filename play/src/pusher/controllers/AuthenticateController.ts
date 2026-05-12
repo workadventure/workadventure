@@ -243,16 +243,12 @@ export class AuthenticateController extends BaseHttpController {
                     } satisfies MeResponse);
                 } catch (err) {
                     // The OIDC access token has likely expired. If we have a refresh token stored
-                    // in the WA auth JWT, attempt a silent exchange before giving up and forcing
-                    // the user through the full login flow.
+                    // in the WA auth JWT, attempt a silent exchange before giving up.
                     if (authTokenData.refreshToken) {
                         try {
                             const refreshed = await openIDClient.refreshAccessToken(authTokenData.refreshToken);
-                            // Re-verify with the fresh access token to get up-to-date user claims.
                             const resCheckTokenAuth = await openIDClient.checkTokenAuth(refreshed.access_token);
-                            // Issue a new WA JWT containing the rotated tokens.
-                            // If the provider returned a new refresh_token we store it;
-                            // otherwise carry the existing one forward.
+                            // Issue a new WA JWT with rotated tokens so the client continues seamlessly.
                             const newAuthToken = await jwtTokenManager.createAuthToken(
                                 authTokenData.identifier,
                                 refreshed.access_token,

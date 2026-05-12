@@ -196,9 +196,6 @@ class OpenIDClient {
     /**
      * Exchange a refresh token for a new access token (and optionally a rotated refresh token).
      * Uses openid-client's built-in client.refresh() — no new dependencies required.
-     *
-     * Most OIDC providers issue a refresh_token by default with the authorization_code flow.
-     * Providers that require it explicitly should add `offline_access` to OPID_SCOPE.
      */
     public async refreshAccessToken(refreshToken: string): Promise<{
         access_token: string;
