@@ -1,7 +1,7 @@
 <script lang="ts">
     import LL, { locale } from "../../../../i18n/i18n-svelte";
-    import type { ChatPollItem } from "../../Connection/ChatConnection";
-    import { IconCheck, IconList, IconLoader, IconTrash } from "@wa-icons";
+    import type { ChatPollAnswer, ChatPollItem } from "../../Connection/ChatConnection";
+    import { IconCheck, IconLoader, IconTrash } from "@wa-icons";
 
     export let poll: ChatPollItem;
 
@@ -20,6 +20,18 @@
 
     $: senderDisplayName =
         poll.sender?.username && poll.sender.username !== poll.sender.chatId ? poll.sender.username : undefined;
+    $: winningAnswers = $state.answers.filter((answer) => answer.isWinning);
+    $: sortedAnswers = [...$state.answers].sort((left, right) => {
+        if (left.isWinning !== right.isWinning) {
+            return left.isWinning ? -1 : 1;
+        }
+
+        return right.votes - left.votes;
+    });
+
+    function getAnswerResult(answer: ChatPollAnswer) {
+        return `${answer.votes} (${answer.percentage}%)`;
+    }
 
     function computeNextSelection(answerId: string): string[] {
         if ($state.maxSelections === 1) {
@@ -105,110 +117,135 @@
 
 <div class="px-3">
     <div data-testid="pollCard" class="poll-card rounded-2xl bg-contrast/90 border border-white/10 p-4 max-w-2xl">
-        <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-                <div class="text-xs uppercase tracking-[0.2em] text-white/40 flex items-center gap-2">
-                    <IconList font-size={14} />
-                    <span>{$LL.chat.poll.title()}</span>
-                </div>
-                <div data-testid="pollQuestion" class="text-lg font-bold text-white mt-2 overflow-wrap-anywhere">
-                    {$state.question}
-                </div>
-                <div class="text-xs text-white/50 mt-1 flex flex-wrap gap-2">
+        <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+                <span
+                    class="rounded-full border border-solid px-2 py-0.5 text-xxs font-bold uppercase {$state.isEnded
+                        ? 'border-white/10 bg-white/5 text-white/60'
+                        : 'border-success-900/30 bg-success-900/20 text-white'}"
+                >
+                    {$state.isEnded ? $LL.chat.poll.kind.closed() : $LL.chat.poll.kind.open()}
+                </span>
+                <span class="text-xs text-white/50" data-testid="pollParticipantsCount">
+                    {$LL.chat.poll.participants({ count: $state.totalVotes })}
+                </span>
+                {#if $state.maxSelections > 1}
+                    <span class="text-xs text-white/50"
+                        >{$LL.chat.poll.multiSelect({ count: $state.maxSelections })}</span
+                    >
+                {/if}
+                {#if $state.spoiledVotes > 0}
+                    <span class="text-xs text-white/50"
+                        >{$LL.chat.poll.spoiledVotes({ count: $state.spoiledVotes })}</span
+                    >
+                {/if}
+            </div>
+
+            <div data-testid="pollQuestion" class="mt-2 text-sm font-semibold text-white overflow-wrap-anywhere">
+                {$state.question}
+            </div>
+
+            {#if senderDisplayName || date}
+                <div class="mt-2 flex flex-wrap gap-2 text-xs text-white/55">
                     {#if senderDisplayName}
                         <span data-testid="pollCreatorName">{senderDisplayName}</span>
                     {/if}
                     {#if date}
-                        <span
-                            >{date.toLocaleTimeString($locale, {
+                        <span>
+                            {date.toLocaleTimeString($locale, {
                                 hour: "2-digit",
                                 minute: "2-digit",
-                            })}</span
-                        >
+                            })}
+                        </span>
                     {/if}
                 </div>
-            </div>
+            {/if}
         </div>
 
-        <div class="mt-4 flex flex-col gap-2">
-            {#each $state.answers as answer (answer.id)}
-                {@const selected = localSelection.includes(answer.id)}
-                <button
-                    type="button"
-                    data-testid={`pollAnswer-${answer.id}`}
-                    aria-pressed={selected}
-                    class={`poll-answer text-left rounded-xl border px-3 py-3 relative overflow-hidden ${
-                        !selected
-                            ? "border-white/10 hover:border-white/30 hover:bg-white/[0.06] active:border-light-blue/60 active:bg-light-blue/10 active:scale-[0.985]"
-                            : "border-white/30 bg-white/10"
-                    } ${$state.isEnded || !$canVote ? "cursor-default" : "hover:-translate-y-[1px]"}`}
-                    disabled={$state.isEnded || !$canVote || isSubmittingVote}
-                    on:click={() => voteFromAnswerClick(answer.id)}
-                >
-                    {#if $state.resultsVisible}
-                        <div
-                            class={`absolute inset-y-0 left-0 bg-white/10 pointer-events-none ${
-                                answer.isWinning ? "bg-emerald-400/20" : ""
-                            }`}
-                            style:width={answer.votes > 0 ? `${Math.max(answer.percentage, 8)}%` : "0%"}
-                        />
-                    {/if}
-                    <div class="relative z-10 flex items-center justify-between gap-4">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <div
-                                class={`h-5 w-5 shrink-0 rounded-full border flex items-center justify-center transition-all duration-150 ${
-                                    selected ? "border-white/30 bg-white/20" : "border-white/20"
-                                }`}
+        {#if !$state.isEnded && $canVote}
+            <div class="mt-3 flex flex-col gap-1.5">
+                {#each $state.answers as answer (answer.id)}
+                    {@const selected = localSelection.includes(answer.id)}
+                    <button
+                        type="button"
+                        data-testid={`pollAnswer-${answer.id}`}
+                        aria-pressed={selected}
+                        class="m-0 flex min-w-0 items-center justify-between gap-2 rounded-lg border border-solid px-2.5 py-2 text-left text-xs transition-colors {selected
+                            ? 'border-white/30 bg-white/10 text-white'
+                            : 'border-white/10 bg-white/[0.03] text-white/80 hover:bg-white/[0.08]'}"
+                        disabled={isSubmittingVote}
+                        on:click={() => voteFromAnswerClick(answer.id)}
+                    >
+                        <span class="flex min-w-0 items-center gap-2">
+                            <span
+                                class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-solid {selected
+                                    ? 'border-white/30 bg-white/20'
+                                    : 'border-white/20'}"
                             >
                                 {#if selected}
-                                    <IconCheck font-size={14} />
+                                    <IconCheck font-size={12} />
                                 {/if}
-                            </div>
+                            </span>
                             <span class="truncate">{answer.text}</span>
-                        </div>
-                        {#if $state.resultsVisible}
-                            <div class="text-xs text-white/70 shrink-0">{answer.votes} ({answer.percentage}%)</div>
+                        </span>
+                        {#if isSubmittingVote && selected}
+                            <IconLoader class="shrink-0 animate-[spin_2s_linear_infinite]" font-size={13} />
+                        {:else if $state.resultsVisible}
+                            <span class="shrink-0 text-white/60">{getAnswerResult(answer)}</span>
                         {/if}
+                    </button>
+                {/each}
+            </div>
+        {:else if $state.resultsVisible}
+            <div class="mt-3 flex flex-col gap-1.5">
+                {#each sortedAnswers as answer (answer.id)}
+                    <div class="text-xs text-white/70">
+                        <div class="mb-1 flex items-center justify-between gap-2">
+                            <span class="truncate {answer.isWinning ? 'font-semibold text-white' : ''}">
+                                {answer.text}
+                            </span>
+                            <span class="shrink-0">{getAnswerResult(answer)}</span>
+                        </div>
+                        <div class="h-1.5 overflow-hidden rounded-full bg-white/10">
+                            <div
+                                class="h-full rounded-full {answer.isWinning ? 'bg-emerald-400/70' : 'bg-white/25'}"
+                                style:width={`${answer.percentage}%`}
+                            />
+                        </div>
                     </div>
-                </button>
-            {/each}
-        </div>
-
-        <div class="mt-4 text-xs text-white/60 flex flex-wrap gap-3">
-            <span data-testid="pollParticipantsCount">{$LL.chat.poll.participants({ count: $state.totalVotes })}</span>
-            {#if $state.maxSelections > 1}
-                <span>{$LL.chat.poll.multiSelect({ count: $state.maxSelections })}</span>
-            {/if}
-            {#if $state.spoiledVotes > 0}
-                <span>{$LL.chat.poll.spoiledVotes({ count: $state.spoiledVotes })}</span>
-            {/if}
-        </div>
+                {/each}
+            </div>
+        {/if}
 
         {#if !$state.resultsVisible && !$state.isEnded}
-            <div class="mt-3 rounded-xl bg-white/5 px-3 py-2 text-sm text-white/70">
+            <div class="mt-3 text-xs text-white/50">
                 {$state.kind === "open" ? $LL.chat.poll.resultsAfterVote() : $LL.chat.poll.resultsWhenClosed()}
             </div>
         {/if}
 
-        {#if $state.isEnded}
-            <div data-testid="pollClosedNotice" class="mt-3 rounded-xl bg-white/5 px-3 py-2 text-sm text-white/80">
-                {$LL.chat.poll.closed()}
-                {#if $state.closingMessage}
-                    <div class="mt-1 text-white/60">{$state.closingMessage}</div>
-                {/if}
+        {#if $state.isEnded && winningAnswers.length > 0}
+            <div class="mt-3 text-xs font-semibold text-white/80" data-testid="pollClosedNotice">
+                {$LL.chat.roomPanel.pollWinner({ answer: winningAnswers.map((answer) => answer.text).join(", ") })}
+            </div>
+        {/if}
+
+        {#if $state.isEnded && $state.closingMessage}
+            <div class="mt-2 rounded-lg bg-white/5 px-2.5 py-2 text-xs text-white/65">
+                {$state.closingMessage}
             </div>
         {/if}
 
         {#if errorMessage}
-            <div class="mt-3 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-200">{errorMessage}</div>
+            <div class="mt-3 rounded-lg bg-red-500/10 px-2.5 py-2 text-xs text-red-200">{errorMessage}</div>
         {/if}
 
         {#if !$state.isEnded || $canDelete}
             <div class="mt-4 flex flex-wrap gap-2">
                 {#if !$state.isEnded && $canEnd}
                     <button
+                        type="button"
                         data-testid="endPollButton"
-                        class="btn btn-danger"
+                        class="m-0 rounded-lg border border-solid border-danger-900/40 bg-danger-900/20 px-3 py-2 text-xs font-semibold text-white/85 transition-colors hover:bg-danger-900/30"
                         disabled={isEndingPoll}
                         on:click={endPoll}
                     >
@@ -220,8 +257,9 @@
                 {/if}
                 {#if $canDelete}
                     <button
+                        type="button"
                         data-testid="deletePollButton"
-                        class="btn btn-light btn-border"
+                        class="m-0 rounded-lg border border-solid border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white"
                         disabled={isDeletingPoll}
                         on:click={deletePoll}
                     >
@@ -241,17 +279,5 @@
 <style>
     .overflow-wrap-anywhere {
         overflow-wrap: anywhere;
-    }
-
-    .poll-answer {
-        touch-action: manipulation;
-        user-select: none;
-        -webkit-tap-highlight-color: transparent;
-        will-change: transform, border-color, background-color, box-shadow;
-        transition: transform 0.08s ease, border-color 0.08s ease, background-color 0.08s ease, box-shadow 0.08s ease;
-    }
-
-    .poll-answer:not(:disabled):active {
-        transform: scale(0.985);
     }
 </style>

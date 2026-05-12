@@ -219,6 +219,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         replyPlural: "{count} 条回复",
         openThreadButtonTitle: "打开话题串",
         unreadAriaLabel: "{count} 条未读",
+        partialHistory: "此房间中话题串的历史记录仅部分可用。",
+        degradedListWarning: "有 {count} 个话题串缺少开头部分。",
+        degradedBadge: "开头不可用",
+        rootUnavailable: "此对话的开头不可用。您仍可阅读和回复。",
+        openError: "无法打开此话题串。",
     },
     react: "反应",
     copy: "复制",
@@ -395,6 +400,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         toggleOpen: "打开房间面板",
         toggleClose: "关闭房间面板",
         back: "Back to room overview",
+        status: {
+            partialHistory: "部分历史",
+            pollDetailsUnavailable: "此投票的详细结果目前不可用。",
+            retry: "重试",
+        },
         sections: {
             threads: "话题串",
             polls: "投票",
@@ -425,6 +435,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsEmpty: "暂无投票",
         participantsEmpty: "暂无参与者",
         pollWinner: "当前领先答案：{answer}",
+        threadsLoadError: "无法加载话题串。请重试。",
+        pollsLoadError: "无法加载投票。请重试。",
+        pollsPartial: "部分投票无法加载其详细结果。",
+        pollFocusError: "无法在时间线中打开此投票。",
     },
     roomMenu: {
         leaveRoom: {

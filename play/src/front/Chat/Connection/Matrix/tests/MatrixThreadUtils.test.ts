@@ -78,6 +78,34 @@ describe("MatrixThreadUtils", () => {
             unreadNotificationCount: 4,
         });
     });
+
+    it("keeps server-discovered threads visible even when the root event is missing", () => {
+        const replyEvent = createThreadReplyEvent();
+        vi.spyOn(replyEvent, "getId").mockReturnValue("$reply");
+
+        const room = {
+            findEventById: vi.fn(() => undefined),
+            getThreadUnreadNotificationCount: vi.fn(() => 0),
+            getMember: vi.fn(() => undefined),
+        };
+        const thread = {
+            rootEvent: undefined,
+            length: 2,
+            replyToEvent: replyEvent,
+            hasCurrentUserParticipated: false,
+            id: "$root",
+        };
+
+        const summary = getThreadSummary(thread as never, room as never, "$root");
+
+        expect(summary).toMatchObject({
+            rootMessageId: "$root",
+            isDegraded: true,
+            degradedReason: "root_missing",
+            replyCount: 2,
+            lastReplyPreview: "Hello from a thread",
+        });
+    });
 });
 
 function createThreadReplyEvent(options?: { isFallback?: boolean; replyTargetId?: string }) {

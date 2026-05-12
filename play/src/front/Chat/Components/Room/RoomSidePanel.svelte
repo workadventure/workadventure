@@ -71,16 +71,18 @@
     {/if}
 
     <div class="min-h-0 flex-1 overflow-hidden">
-        {#if $roomSidePanelStore.activeSection === "home"}
-            <RoomSidePanelHome {room} />
-        {:else if $roomSidePanelStore.activeSection === "threads"}
-            <ThreadPanel {room} />
-        {:else if $roomSidePanelStore.activeSection === "participants"}
-            <RoomSidePanelParticipants {room} />
-        {:else if $roomSidePanelStore.activeSection === "polls"}
-            <RoomSidePanelPolls {room} {closeOnTimelineFocus} />
-        {:else}
-            <RoomSidePanelSettings {room} />
-        {/if}
+        {#key `${room.id}-${$roomSidePanelStore.activeSection}`}
+            {#if $roomSidePanelStore.activeSection === "home"}
+                <RoomSidePanelHome {room} />
+            {:else if $roomSidePanelStore.activeSection === "threads"}
+                <ThreadPanel {room} />
+            {:else if $roomSidePanelStore.activeSection === "participants"}
+                <RoomSidePanelParticipants {room} />
+            {:else if $roomSidePanelStore.activeSection === "polls"}
+                <RoomSidePanelPolls {room} {closeOnTimelineFocus} />
+            {:else}
+                <RoomSidePanelSettings {room} />
+            {/if}
+        {/key}
     </div>
 </div>

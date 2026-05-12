@@ -222,6 +222,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         replyPlural: "返信 {count} 件",
         openThreadButtonTitle: "スレッドを開く",
         unreadAriaLabel: "未読 {count} 件",
+        partialHistory: "このルームではスレッドの履歴の一部のみが利用できます。",
+        degradedListWarning: "{count} 件のスレッドで冒頭がありません。",
+        degradedBadge: "冒頭は利用不可",
+        rootUnavailable: "この会話の冒頭は利用できません。読み取りと返信は引き続き可能です。",
+        openError: "このスレッドを開けませんでした。",
     },
     react: "反応する",
     copy: "コピーする",
@@ -398,6 +403,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         toggleOpen: "ルームパネルを開く",
         toggleClose: "ルームパネルを閉じる",
         back: "Back to room overview",
+        status: {
+            partialHistory: "履歴の一部のみ",
+            pollDetailsUnavailable: "この投票の詳細な結果は現在利用できません。",
+            retry: "再試行",
+        },
         sections: {
             threads: "スレッド",
             polls: "投票",
@@ -428,6 +438,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsEmpty: "投票はまだありません",
         participantsEmpty: "参加者はまだいません",
         pollWinner: "現在のトップ回答: {answer}",
+        threadsLoadError: "スレッドを読み込めませんでした。もう一度お試しください。",
+        pollsLoadError: "投票を読み込めませんでした。もう一度お試しください。",
+        pollsPartial: "一部の投票で詳細な結果を読み込めませんでした。",
+        pollFocusError: "タイムラインでこの投票を開けませんでした。",
     },
     roomMenu: {
         leaveRoom: {

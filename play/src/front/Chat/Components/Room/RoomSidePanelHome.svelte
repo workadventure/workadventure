@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { openModal } from "svelte-modals";
     import { get, readable } from "svelte/store";
     import { defaultColor } from "@workadventure/shared-utils";
@@ -13,6 +14,7 @@
         ChatRoomMembershipManagement,
         ChatRoomModeration,
         ChatRoomNotificationControl,
+        ChatRoomSidePanelHydrationState,
         ChatThreadSummary,
     } from "../../Connection/ChatConnection";
     import { draftMessageService } from "../../Services/DraftMessageService";
@@ -21,6 +23,7 @@
     import {
         IconBellOff,
         IconCheckList,
+        IconLoader,
         IconLogout,
         IconMessageCircle2,
         IconSettings,
@@ -33,6 +36,14 @@
 
     const emptyThreads = readable<readonly ChatThreadSummary[]>([]);
     const emptyPolls = readable<readonly ChatPollItem[]>([]);
+    const idleHydrationState = readable<ChatRoomSidePanelHydrationState>({ status: "idle" });
+
+    onMount(() => {
+        room.ensureThreadsHydrated?.().catch((error) => console.error("Failed to hydrate room threads", error));
+        room.ensurePollCatalogueHydrated?.().catch((error) =>
+            console.error("Failed to hydrate room polls catalogue", error)
+        );
+    });
 
     $: members = room.members;
     $: roomName = room.name;
@@ -42,6 +53,8 @@
     $: areNotificationsMuted = room.areNotificationsMuted;
     $: threads = room.threads ?? emptyThreads;
     $: pollItems = room.pollItems ?? emptyPolls;
+    $: threadsHydrationState = room.threadsHydrationState ?? idleHydrationState;
+    $: pollCatalogueHydrationState = room.pollCatalogueHydrationState ?? idleHydrationState;
     $: joinedMembers = $members.filter((member) => get(member.membership) === "join");
     $: joinedMemberCountStore = room.joinedMemberCount;
     $: participantBadgeCount = joinedMemberCountStore != null ? $joinedMemberCountStore : joinedMembers.length;
@@ -49,6 +62,38 @@
     $: openPollCount = $pollItems.filter((poll) => !get(poll.state).isEnded).length;
     $: avatarColorStore = room.avatarFallbackColor;
     $: leaveRoomNotification = $LL.chat.roomMenu.leaveRoom.notification();
+    $: threadWarnings = $threadsHydrationState.warnings ?? [];
+    $: hasUnsupportedThreadHistory = threadWarnings.some((warning) => warning.reason === "server_unsupported");
+    $: threadCardValue =
+        room.threadsHydrationState == null
+            ? `${$threads.length}`
+            : $threadsHydrationState.status === "loading" || $threadsHydrationState.status === "idle"
+            ? $LL.chat.loading()
+            : $threadsHydrationState.status === "error"
+            ? $LL.chat.roomPanel.status.retry()
+            : hasUnsupportedThreadHistory
+            ? "?"
+            : `${$threads.length}`;
+    $: threadCardHint =
+        room.threadsHydrationState == null
+            ? undefined
+            : $threadsHydrationState.status === "error"
+            ? $LL.chat.roomPanel.threadsLoadError()
+            : hasUnsupportedThreadHistory
+            ? $LL.chat.roomPanel.status.partialHistory()
+            : undefined;
+    $: pollCardValue =
+        room.pollCatalogueHydrationState == null
+            ? `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`
+            : $pollCatalogueHydrationState.status === "loading" || $pollCatalogueHydrationState.status === "idle"
+            ? $LL.chat.loading()
+            : $pollCatalogueHydrationState.status === "error"
+            ? $LL.chat.roomPanel.status.retry()
+            : `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`;
+    $: pollCardHint =
+        room.pollCatalogueHydrationState != null && $pollCatalogueHydrationState.status === "error"
+            ? $LL.chat.roomPanel.pollsLoadError()
+            : undefined;
 
     function openSection(section: RoomSidePanelSection) {
         roomSidePanelStore.setActiveSection(section);
@@ -136,7 +181,16 @@
                     {/if}
                 </div>
                 <div class="mt-2 text-sm font-semibold">{$LL.chat.roomPanel.sections.threads()}</div>
-                <div class="mt-1 text-xs text-white/55">{$threads.length}</div>
+                <div class="mt-1 flex min-h-4 items-center text-xs text-white/55">
+                    {#if room.threadsHydrationState != null && ($threadsHydrationState.status === "loading" || $threadsHydrationState.status === "idle")}
+                        <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={14} />
+                    {:else}
+                        {threadCardValue}
+                    {/if}
+                </div>
+                {#if threadCardHint}
+                    <div class="mt-1 text-xs text-white/45">{threadCardHint}</div>
+                {/if}
             </button>
 
             <button
@@ -147,10 +201,16 @@
             >
                 <IconCheckList font-size={18} />
                 <div class="mt-2 text-sm font-semibold">{$LL.chat.roomPanel.sections.polls()}</div>
-                <div class="mt-1 text-xs text-white/55">
-                    {$pollItems.length} · {openPollCount}
-                    {$LL.chat.poll.kind.open()}
+                <div class="mt-1 flex min-h-4 items-center text-xs text-white/55">
+                    {#if room.pollCatalogueHydrationState != null && ($pollCatalogueHydrationState.status === "loading" || $pollCatalogueHydrationState.status === "idle")}
+                        <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={14} />
+                    {:else}
+                        {pollCardValue}
+                    {/if}
                 </div>
+                {#if pollCardHint}
+                    <div class="mt-1 text-xs text-white/45">{pollCardHint}</div>
+                {/if}
             </button>
 
             <button

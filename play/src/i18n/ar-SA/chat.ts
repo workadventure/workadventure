@@ -220,6 +220,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         replyPlural: "{count} ردود",
         openThreadButtonTitle: "فتح الموضوع",
         unreadAriaLabel: "{count} غير مقروء",
+        partialHistory: "سجل الموضوع متاح جزئيًا فقط في هذه الغرفة.",
+        degradedListWarning: "{count} موضوعًا لا يتضمن بدايته.",
+        degradedBadge: "البداية غير متاحة",
+        rootUnavailable: "بداية هذه المحادثة غير متاحة. لا يزال بإمكانك القراءة والرد.",
+        openError: "تعذر فتح هذا الموضوع.",
     },
     react: "تفاعل",
     copy: "نسخ",
@@ -396,6 +401,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         toggleOpen: "فتح لوحة الغرفة",
         toggleClose: "إغلاق لوحة الغرفة",
         back: "Back to room overview",
+        status: {
+            partialHistory: "سجل جزئي",
+            pollDetailsUnavailable: "النتائج التفصيلية لهذا الاستطلاع غير متاحة حاليًا.",
+            retry: "إعادة المحاولة",
+        },
         sections: {
             threads: "المواضيع",
             polls: "الاستطلاعات",
@@ -426,6 +436,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsEmpty: "لا توجد استطلاعات بعد",
         participantsEmpty: "لا يوجد مشاركون بعد",
         pollWinner: "الإجابة المتصدرة: {answer}",
+        threadsLoadError: "تعذر تحميل المواضيع. حاول مرة أخرى.",
+        pollsLoadError: "تعذر تحميل الاستطلاعات. حاول مرة أخرى.",
+        pollsPartial: "تعذر على بعض الاستطلاعات تحميل نتائجها التفصيلية.",
+        pollFocusError: "تعذر فتح هذا الاستطلاع في الخط الزمني.",
     },
     roomMenu: {
         leaveRoom: {

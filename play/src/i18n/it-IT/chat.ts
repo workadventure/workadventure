@@ -222,6 +222,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         replyPlural: "{count} risposte",
         openThreadButtonTitle: "Apri thread",
         unreadAriaLabel: "{count} non letti",
+        partialHistory: "La cronologia del thread è disponibile solo in parte in questa stanza.",
+        degradedListWarning: "A {count} thread manca l'inizio.",
+        degradedBadge: "Inizio non disponibile",
+        rootUnavailable: "L'inizio di questa conversazione non è disponibile. Puoi comunque leggere e rispondere.",
+        openError: "Impossibile aprire questo thread.",
     },
     react: "Reagisci",
     copy: "Copia",
@@ -398,6 +403,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         toggleOpen: "Apri pannello della stanza",
         toggleClose: "Chiudi pannello della stanza",
         back: "Back to room overview",
+        status: {
+            partialHistory: "Cronologia parziale",
+            pollDetailsUnavailable: "I risultati dettagliati di questo sondaggio non sono disponibili al momento.",
+            retry: "Riprova",
+        },
         sections: {
             threads: "Thread",
             polls: "Sondaggi",
@@ -428,6 +438,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsEmpty: "Nessun sondaggio per ora",
         participantsEmpty: "Nessun partecipante per ora",
         pollWinner: "Risposta in testa: {answer}",
+        threadsLoadError: "Impossibile caricare i thread. Riprova.",
+        pollsLoadError: "Impossibile caricare i sondaggi. Riprova.",
+        pollsPartial: "Per alcuni sondaggi non è stato possibile caricare i risultati dettagliati.",
+        pollFocusError: "Impossibile aprire questo sondaggio nella timeline.",
     },
     roomMenu: {
         leaveRoom: {

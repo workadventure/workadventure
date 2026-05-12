@@ -223,6 +223,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         replyPlural: "{count} Antworten",
         openThreadButtonTitle: "Thread öffnen",
         unreadAriaLabel: "{count} ungelesen",
+        partialHistory: "Der Thread-Verlauf ist in diesem Raum nur teilweise verfügbar.",
+        degradedListWarning: "Bei {count} Thread(s) fehlt der Anfang.",
+        degradedBadge: "Anfang nicht verfügbar",
+        rootUnavailable: "Der Anfang dieser Unterhaltung ist nicht verfügbar. Sie können dennoch lesen und antworten.",
+        openError: "Dieser Thread konnte nicht geöffnet werden.",
     },
     react: "Reagieren",
     copy: "Kopieren",
@@ -400,6 +405,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         toggleOpen: "Raumpanel öffnen",
         toggleClose: "Raumpanel schließen",
         back: "Back to room overview",
+        status: {
+            partialHistory: "Unvollständiger Verlauf",
+            pollDetailsUnavailable: "Detaillierte Ergebnisse für diese Umfrage sind derzeit nicht verfügbar.",
+            retry: "Erneut versuchen",
+        },
         sections: {
             threads: "Threads",
             polls: "Umfragen",
@@ -430,6 +440,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsEmpty: "Noch keine Umfragen",
         participantsEmpty: "Noch keine Teilnehmenden",
         pollWinner: "Führende Antwort: {answer}",
+        threadsLoadError: "Threads konnten nicht geladen werden. Bitte erneut versuchen.",
+        pollsLoadError: "Umfragen konnten nicht geladen werden. Bitte erneut versuchen.",
+        pollsPartial: "Für einige Umfragen konnten die detaillierten Ergebnisse nicht geladen werden.",
+        pollFocusError: "Diese Umfrage konnte in der Zeitleiste nicht geöffnet werden.",
     },
     roomMenu: {
         leaveRoom: {
