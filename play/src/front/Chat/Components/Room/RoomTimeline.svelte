@@ -53,6 +53,7 @@
     let shouldDisplayLoader = false;
     let messageInputBarRef: MessageInputBar;
     let lastTimelineFocusSequence = 0;
+    let initialMessagesLoaded = false;
 
     const gameScene = gameManager.getCurrentGameScene();
     const chatRoomsEnableInAdmin = gameScene.room.isChatEnabled;
@@ -79,7 +80,7 @@
         showRoomSidePanelToggle,
         roomSidePanelToggleIsOpen
     );
-    $: if ($roomTimelineFocusStore) {
+    $: if (initialMessagesLoaded && $roomTimelineFocusStore) {
         focusTimelineEvent($roomTimelineFocusStore).catch((error) => console.error(error));
     }
 
@@ -184,6 +185,7 @@
 
     async function initMessages() {
         if (!messageListRef) return;
+        initialMessagesLoaded = false;
 
         const loadMessages = async () => {
             try {
@@ -205,6 +207,7 @@
         try {
             await loadMessages();
             setFirstListItem();
+            initialMessagesLoaded = true;
         } catch (error) {
             console.error(`Failed to load messages: ${error}`);
         }
