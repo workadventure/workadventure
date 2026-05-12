@@ -235,7 +235,6 @@ import { LocateManager } from "./LocateManager";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { ScriptingVideoManager } from "./ScriptingVideoManager";
 import { UsernameDomLayer } from "./UsernameDomLayer";
-import { UsernameRenderingModeStream } from "./UsernameRenderingModeStream";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
@@ -378,8 +377,6 @@ export class GameScene extends DirtyScene {
     private playersEventDispatcher = new IframeEventDispatcher();
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
-    private usernameRenderingModeStream = new UsernameRenderingModeStream(this.remotePlayersRepository);
-    public readonly usernameRenderingAsDOM$ = this.usernameRenderingModeStream.renderingAsDOM$;
     public usernameDomLayer!: UsernameDomLayer;
     private throttledSendViewportToServer_!: throttle<() => void>;
     private lastSentViewport: ViewportInterface | undefined;
@@ -721,11 +718,6 @@ export class GameScene extends DirtyScene {
         this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
         this.usernameDomLayer = new UsernameDomLayer(this);
-        this.rxJsSubscriptions.push(
-            this.usernameRenderingAsDOM$.subscribe((renderingAsDOM) => {
-                this.usernameDomLayer.setVisible(renderingAsDOM);
-            })
-        );
 
         this.embeddedWebsiteManager = new EmbeddedWebsiteManager(this);
 

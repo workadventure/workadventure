@@ -1,5 +1,4 @@
 import { AvailabilityStatus } from "@workadventure/messages";
-import type { Subscription } from "rxjs";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import type { GameScene } from "../Game/GameScene";
 import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
@@ -38,22 +37,18 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     private readonly playerName: string;
     private readonly playerNameWidth: number;
     private playerNameLayout: PlayerNameLayout | undefined;
-    private playerNameTextureKey: string;
+    private playerNameOutlineTextureKey: string;
     private playerNameOutlineColor: number | undefined;
     private megaphoneShown = false;
-    private renderingAsDOM = false;
-    private readonly renderingModeSubscription: Subscription;
     private displayScale: number;
     private readonly statusDot: PlayerStatusDot;
     private readonly megaphoneIcon: MegaphoneIcon;
     private readonly onZoomChanged = (zoomModifier: number): void => {
         this.displayScale = this.getDisplayScale(zoomModifier);
         this.setScale(this.displayScale);
-        if (this.renderingAsDOM) {
-            const textPosition = this.getDomTextPosition();
-            this.gameScene.usernameDomLayer.updateUsernameScale(this.domUsernameId, this.displayScale, zoomModifier);
-            this.gameScene.usernameDomLayer.updateUsernamePosition(this.domUsernameId, textPosition.x, textPosition.y);
-        }
+        const textPosition = this.getDomTextPosition();
+        this.gameScene.usernameDomLayer.updateUsernameScale(this.domUsernameId, this.displayScale, zoomModifier);
+        this.gameScene.usernameDomLayer.updateUsernamePosition(this.domUsernameId, textPosition.x, textPosition.y);
     };
 
     constructor(scene: GameScene, x: number, y: number, playerName: string, outlineColor: number | undefined) {
@@ -66,13 +61,25 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         this.playerNameOutlineColor = outlineColor;
         this.statusDot = new PlayerStatusDot(scene, 0, -1);
         this.megaphoneIcon = new MegaphoneIcon(scene, 0, -1);
-        this.playerNameTextureKey = this.createPlayerNameTexture(outlineColor, this.renderingAsDOM);
+        this.playerNameOutlineTextureKey = this.createPlayerNameOutlineTexture(outlineColor);
 
-        this.playerNameSprite = new Phaser.GameObjects.Sprite(scene, 0, 0, this.playerNameTextureKey)
+        this.playerNameSprite = new Phaser.GameObjects.Sprite(scene, 0, 0, this.playerNameOutlineTextureKey)
             .setOrigin(0.5, 1)
             .setDepth(DEPTH_INGAME_TEXT_INDEX);
 
         this.megaphoneIcon.visible = false;
+
+        const textPosition = this.getDomTextPosition();
+        this.gameScene.usernameDomLayer.addUsername(
+            this.domUsernameId,
+            this.playerName,
+            textPosition.x,
+            textPosition.y,
+            USERNAME_FONT_FAMILY,
+            USERNAME_FONT_SIZE,
+            this.displayScale,
+            waScaleManager.zoomModifier
+        );
 
         this.add([this.playerNameSprite, this.statusDot, this.megaphoneIcon]);
         this.reflow();
@@ -80,9 +87,6 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         this.scene.add.existing(this);
         this.setScale(this.displayScale);
         this.scene.game.events.on(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
-        this.renderingModeSubscription = scene.usernameRenderingAsDOM$.subscribe((renderingAsDOM) => {
-            this.setRenderingAsDOM(renderingAsDOM);
-        });
     }
 
     private getDisplayScale(zoomModifier: number): number {
@@ -162,7 +166,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         return measurementContext;
     }
 
-    private createPlayerNameTexture(outlineColor: number | undefined, renderingAsDOM: boolean): string {
+    private createPlayerNameOutlineTexture(outlineColor: number | undefined): string {
         const textureKey = `player-name-${UsernameDisplay.nextPlayerNameTextureId++}`;
         const dynamicOutlineColor =
             outlineColor === undefined ? undefined : `#${outlineColor.toString(16).padStart(6, "0")}`;
@@ -193,39 +197,9 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         }
         context.fill();
 
-        if (!renderingAsDOM) {
-            context.fillStyle = "#ffffff";
-            context.fillText(this.playerName, layout.textTextureX, layout.textureHeight / 2);
-        }
         texture.refresh();
 
         return textureKey;
-    }
-
-    private setRenderingAsDOM(renderingAsDOM: boolean): void {
-        if (this.renderingAsDOM === renderingAsDOM) {
-            return;
-        }
-
-        this.renderingAsDOM = renderingAsDOM;
-
-        this.refreshPlayerNameTexture();
-
-        if (renderingAsDOM) {
-            const textPosition = this.getDomTextPosition();
-            this.gameScene.usernameDomLayer.addUsername(
-                this.domUsernameId,
-                this.playerName,
-                textPosition.x,
-                textPosition.y,
-                USERNAME_FONT_FAMILY,
-                USERNAME_FONT_SIZE,
-                this.displayScale,
-                waScaleManager.zoomModifier
-            );
-        } else {
-            this.gameScene.usernameDomLayer.removeUsername(this.domUsernameId);
-        }
     }
 
     private showMegaphone(show = true, forceClose = false): void {
@@ -249,9 +223,9 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     }
 
     private refreshPlayerNameTexture(): void {
-        const nextTextureKey = this.createPlayerNameTexture(this.playerNameOutlineColor, this.renderingAsDOM);
-        const previousTextureKey = this.playerNameTextureKey;
-        this.playerNameTextureKey = nextTextureKey;
+        const nextTextureKey = this.createPlayerNameOutlineTexture(this.playerNameOutlineColor);
+        const previousTextureKey = this.playerNameOutlineTextureKey;
+        this.playerNameOutlineTextureKey = nextTextureKey;
         this.playerNameSprite.setTexture(nextTextureKey);
 
         if (previousTextureKey && this.scene.textures.exists(previousTextureKey)) {
@@ -281,11 +255,10 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     }
 
     public override destroy(fromScene?: boolean): void {
-        this.renderingModeSubscription.unsubscribe();
         this.gameScene.usernameDomLayer.removeUsername(this.domUsernameId);
         this.scene.game.events.off(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
-        if (this.playerNameTextureKey && this.scene.textures.exists(this.playerNameTextureKey)) {
-            this.scene.textures.remove(this.playerNameTextureKey);
+        if (this.playerNameOutlineTextureKey && this.scene.textures.exists(this.playerNameOutlineTextureKey)) {
+            this.scene.textures.remove(this.playerNameOutlineTextureKey);
         }
         super.destroy(fromScene);
     }
@@ -295,10 +268,6 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     }
 
     private updateDomTextPosition(): void {
-        if (!this.renderingAsDOM) {
-            return;
-        }
-
         this.scene.events.once(Phaser.Scenes.Events.RENDER, () => {
             const textPosition = this.getDomTextPosition();
             this.gameScene?.usernameDomLayer.updateUsernamePosition(this.domUsernameId, textPosition.x, textPosition.y);
