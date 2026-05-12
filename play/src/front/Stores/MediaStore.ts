@@ -923,7 +923,7 @@ async function runLocalStreamUpdate(
     signal: AbortSignal
 ): Promise<void> {
     // This can happen when the user navigates away from the page while the stream is being updated
-    if (rawValue == undefined) return;
+    //if (rawValue == undefined) return;
     if (
         streamValue.type === "error" ||
         streamValue.stream === undefined ||
