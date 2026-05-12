@@ -28,7 +28,7 @@ import Sprite = Phaser.GameObjects.Sprite;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import RenderTexture = Phaser.GameObjects.RenderTexture;
 
-const playerNameY = -16;
+const playerNameY = -18;
 const interactiveRadius = 25;
 const meetingSpeakingIconY = -49;
 
