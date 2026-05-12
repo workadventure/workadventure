@@ -49,6 +49,8 @@ export class UsernameDomLayer {
             element.textContent = playerName;
 
             element.style.position = "absolute";
+            element.style.top = "0";
+            element.style.left = "0";
             element.style.margin = "0";
             element.style.color = "#ffffff";
             element.style.fontFamily = font;
