@@ -40,7 +40,6 @@ export class UsernameDomLayer {
             element.style.margin = "0";
             element.style.color = "#ffffff";
             element.style.font = font;
-            element.style.transformOrigin = "50% 50%";
             element.style.pointerEvents = "none";
 
             element.style.willChange = "transform";
@@ -118,7 +117,6 @@ export class UsernameDomLayer {
     }
 
     private applyTransform(username: UsernameElement): void {
-        username.element.style.transform =
-            `translate3d(${username.x}px, ${username.y}px, 0) ` + `translate(-50%, -50%) ` + `scale(${username.scale})`;
+        username.element.style.transform = `translate3d(${username.x}px, ${username.y}px, 0) translate(-50%, -50%) scale(${username.scale})`;
     }
 }
