@@ -78,19 +78,15 @@ class OpenIDClient {
             }
 
             const code_verifier = generators.codeVerifier();
-            // store the code_verifier in your framework's session mechanism, if it is a cookie based solution
-            // it should be httpOnly (not readable by javascript) and encrypted.
             res.cookie("code_verifier", this.encrypt(code_verifier), {
-                httpOnly: true, // dont let browser javascript access cookie ever
-                secure: req.secure, // only use cookie over https
+                httpOnly: true,
+                secure: req.secure,
             });
 
-            // We also store the state in cookies. The state should not be needed, except for older OpenID client servers that
-            // don't understand PKCE
             const state = v4();
             res.cookie("oidc_state", state, {
-                httpOnly: true, // dont let browser javascript access cookie ever
-                secure: req.secure, // only use cookie over https
+                httpOnly: true,
+                secure: req.secure,
             });
 
             const code_challenge = generators.codeChallenge(code_verifier);
@@ -99,11 +95,7 @@ class OpenIDClient {
                 scope: OPID_SCOPE,
                 prompt: OPID_PROMPT,
                 state: state,
-                //nonce: nonce,
                 playUri,
-                // Whether the login was triggered by clicking on the "sign in" button (in which case the user was
-                // anonymous) or whether the login was triggered because user was not authenticated and authentication
-                // is mandatory.
                 manuallyTriggered,
                 chatRoomId,
                 providerId,
@@ -123,6 +115,7 @@ class OpenIDClient {
         email: string;
         sub: string;
         access_token: string;
+        refresh_token: string | undefined;
         username: string;
         locale: string;
         matrix_url: string | undefined;
@@ -154,17 +147,14 @@ class OpenIDClient {
                 res.clearCookie("oidc_state");
 
                 return client
-                    .userinfo(tokenSet, {
-                        params: {
-                            playUri,
-                        },
-                    })
+                    .userinfo(tokenSet, { params: { playUri } })
                     .then((res) => {
                         return {
                             ...res,
                             email: res.email ?? "",
                             sub: res.sub,
                             access_token: tokenSet.access_token ?? "",
+                            refresh_token: tokenSet.refresh_token,
                             username: res[OPID_USERNAME_CLAIM] as string,
                             locale: res[OPID_LOCALE_CLAIM] as string,
                             tags: res[OPID_TAGS_CLAIM] as string[],
@@ -189,6 +179,25 @@ class OpenIDClient {
         return this.initClient().then((client) => {
             return client.userinfo(token);
         });
+    }
+
+    /**
+     * Exchange a refresh token for a new access token.
+     * Uses openid-client's built-in client.refresh() — no new dependencies required.
+     */
+    public async refreshAccessToken(refreshToken: string): Promise<{
+        access_token: string;
+        refresh_token: string | undefined;
+    }> {
+        const client = await this.initClient();
+        const tokenSet = await client.refresh(refreshToken);
+        if (!tokenSet.access_token) {
+            throw new Error("No access_token returned from token refresh endpoint");
+        }
+        return {
+            access_token: tokenSet.access_token,
+            refresh_token: tokenSet.refresh_token,
+        };
     }
 
     private encrypt(text: string): string {
