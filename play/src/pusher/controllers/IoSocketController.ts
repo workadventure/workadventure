@@ -1090,9 +1090,6 @@ export class IoSocketController {
                     });
                 });
             },
-            drain: (socket) => {
-                console.info("WebSocket backpressure: " + socket.getBufferedAmount());
-            },
             close: (socket) => {
                 socketManager.cleanupSocket(socket);
             },

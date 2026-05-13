@@ -30,7 +30,6 @@ type OpenHandler = (socket: Socket) => void | Promise<void>;
 type RejectedOpenHandler = (socket: SocketUpgradeFailed) => void | Promise<void>;
 type MessageHandler = (socket: Socket, message: ClientToServerMessage) => void | Promise<void>;
 type CloseHandler = (socket: Socket) => void | Promise<void>;
-type DrainHandler = (socket: Socket) => void | Promise<void>;
 
 type RoomWsQuery = {
     tabId: string;
@@ -48,7 +47,6 @@ type RoomWsConfig<TQuery extends RoomWsQuery> = {
     rejectedOpen: RejectedOpenHandler;
     message: MessageHandler;
     close: CloseHandler;
-    drain?: DrainHandler;
 };
 
 type WebSocketContext = {
@@ -302,18 +300,16 @@ export class PusherRoomSocketController {
                 });
             },
             drain: (ws) => {
-                if (!config.drain) {
-                    return;
-                }
                 if (ws.getUserData().rejected === true) {
                     return;
                 }
 
                 const rawSocket = ws as unknown as RawSocket;
                 const socket = this.getOrCreateWrapper(rawSocket);
-                Promise.resolve(config.drain(socket)).catch((e) => {
-                    console.error(e);
-                });
+                if (!socket.isCurrentTransport(rawSocket)) {
+                    return;
+                }
+                socket.handleDrain();
             },
             close: (ws) => {
                 const socketData = ws.getUserData();

@@ -2,15 +2,26 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 vi.mock("../../src/pusher/enums/EnvironmentVariable", () => import("./mocks/pusherEnvironmentVariableMock"));
+vi.mock("@workadventure/messages", () => ({
+    FrontToPusherWebSocketMessage: {
+        decode: vi.fn(),
+    },
+    PusherToFrontWebSocketMessage: {
+        encode: vi.fn(() => ({
+            finish: () => new Uint8Array([1]),
+        })),
+    },
+}));
 
 import { CLIENT_DISCONNECTION_RETENTION_MS } from "../../src/pusher/enums/EnvironmentVariable";
 import type { SocketData } from "../../src/pusher/models/Websocket/SocketData";
 import { PusherRoomSocketController } from "../../src/pusher/services/PusherRoomSocketController";
-import type { RawSocket } from "../../src/pusher/services/PusherWebSocket";
+import { PusherWebSocket, type RawSocket } from "../../src/pusher/services/PusherWebSocket";
 
 type RegisteredHandlers = {
     open: (socket: unknown) => void | Promise<void>;
     close: (socket: unknown) => void | Promise<void>;
+    drain: (socket: unknown) => void | Promise<void>;
 };
 
 describe("PusherRoomSocketController reconnect retention", () => {
@@ -93,6 +104,65 @@ describe("PusherRoomSocketController reconnect retention", () => {
         expect(open).toHaveBeenCalledTimes(2);
         expect(getContextMap(controller).get("tab-1")?.socket).toBeDefined();
     });
+
+    it("lets the wrapper flush queued messages on drain even without an application drain handler", async () => {
+        const controller = createController((handlers) => {
+            registeredHandlers = handlers;
+        });
+
+        const socket = createSocket({ tabId: "tab-1" });
+        getSendMock(socket).mockReturnValueOnce(0).mockReturnValue(1);
+
+        await registeredHandlers?.open(socket as never);
+
+        const wrapper = getContextMap(controller).get("tab-1")?.socket as PusherWebSocket;
+        wrapper.send({ message: undefined } as never);
+        wrapper.send({ message: undefined } as never);
+
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(1);
+
+        await registeredHandlers?.drain(socket as never);
+
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(3);
+    });
+});
+
+describe("PusherWebSocket backpressure", () => {
+    afterEach(() => {
+        vi.useRealTimers();
+        vi.restoreAllMocks();
+    });
+
+    it("records messages without attempting new sends while waiting for drain", () => {
+        const socket = createSocket();
+        getSendMock(socket).mockReturnValueOnce(0).mockReturnValue(1);
+        const wrapper = createPusherWebSocket(socket);
+
+        expect(wrapper.send({ message: undefined } as never)).toBe(0);
+        expect(wrapper.send({ message: undefined } as never)).toBe(0);
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(1);
+
+        wrapper.handleDrain();
+
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(3);
+    });
+
+    it("keeps the drain tracker at the last accepted nonce when drain hits backpressure again", () => {
+        const socket = createSocket();
+        getSendMock(socket).mockReturnValueOnce(0).mockReturnValueOnce(1).mockReturnValueOnce(0).mockReturnValue(1);
+        const wrapper = createPusherWebSocket(socket);
+
+        wrapper.send({ message: undefined } as never);
+        wrapper.send({ message: undefined } as never);
+        wrapper.handleDrain();
+        wrapper.send({ message: undefined } as never);
+
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(3);
+
+        wrapper.handleDrain();
+
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(5);
+    });
 });
 
 function createController(
@@ -168,13 +238,27 @@ function createSocket(overrides: Partial<SocketData> = {}): RawSocket {
         ...overrides,
     };
 
+    const sendMock = vi.fn().mockReturnValue(1);
+
     return {
         getUserData: vi.fn(() => socketData),
-        send: vi.fn().mockReturnValue(1),
+        send: sendMock,
+        sendMock,
         ping: vi.fn(),
         end: vi.fn(),
         getBufferedAmount: vi.fn().mockReturnValue(0),
     } as unknown as RawSocket;
+}
+
+function createPusherWebSocket(socket: RawSocket): PusherWebSocket {
+    return new PusherWebSocket(socket, {
+        isDisconnecting: () => false,
+        startDisconnecting: () => true,
+    });
+}
+
+function getSendMock(socket: RawSocket): ReturnType<typeof vi.fn> {
+    return (socket as unknown as { sendMock: ReturnType<typeof vi.fn> }).sendMock;
 }
 
 async function flushMicrotasks(): Promise<void> {

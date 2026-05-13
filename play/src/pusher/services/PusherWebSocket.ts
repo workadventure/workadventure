@@ -31,6 +31,7 @@ export class PusherWebSocket {
         payload: [],
     };
     private nextOutgoingNonce = 1;
+    private lastSentNonce = 0;
     private lastReceivedNonce = 0;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
         CLIENT_DISCONNECTION_RETENTION_MS
@@ -54,7 +55,19 @@ export class PusherWebSocket {
         this.nextOutgoingNonce += 1;
         this.outgoingMessagesStore.add(nonce, payloadWithNonce);
 
-        return this.socket.send(payloadWithNonce, true);
+        if (nonce > this.lastSentNonce + 1) {
+            return 0;
+        }
+
+        return this.sendStoredPayload(nonce, payloadWithNonce);
+    }
+
+    public handleDrain(): void {
+        for (const { nonce, payload } of this.outgoingMessagesStore.getAfter(this.lastSentNonce)) {
+            if (this.sendStoredPayload(nonce, payload) !== 1) {
+                return;
+            }
+        }
     }
 
     public emitInBatch(payload: SubMessage): void {
@@ -182,13 +195,9 @@ export class PusherWebSocket {
         Object.assign(newSocketData, previousSocketData);
 
         this.socket = newSocket;
+        this.lastSentNonce = clientLastReceivedNonce;
 
-        const messagesToReplay = this.outgoingMessagesStore.getAfter(clientLastReceivedNonce);
-        for (const { payload } of messagesToReplay) {
-            this.socket.send(payload, true);
-        }
-
-        this.outgoingMessagesStore.clear();
+        this.handleDrain();
 
         // Close the old transport only after rebinding so the logical connection keeps running.
         previousSocket.end(1008, "Replaced by a reconnected socket");
@@ -234,5 +243,13 @@ export class PusherWebSocket {
             event: "",
             payload: [],
         };
+    }
+
+    private sendStoredPayload(nonce: number, payload: Uint8Array<ArrayBuffer>): ReturnType<RawSocket["send"]> {
+        const sendStatus = this.socket.send(payload, true);
+        if (sendStatus === 1) {
+            this.lastSentNonce = nonce;
+        }
+        return sendStatus;
     }
 }
