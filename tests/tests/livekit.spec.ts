@@ -265,10 +265,10 @@ test.describe("Meeting actions test", () => {
         await Menu.clickStartMegaphone(page);
 
         // click on the megaphone button to start the streaming session
-        await expect(page2.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
-        await expect(userAlice.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
-        await expect(userBob.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
-        await expect(userEve.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
+        await expect(page2.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+        await expect(userAlice.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+        await expect(userBob.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+        await expect(userEve.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
 
         await expectLivekitRoomsCountToBe(userAlice, 1);
         await expectLivekitRoomsCountToBe(userBob, 1);
@@ -293,10 +293,10 @@ test.describe("Meeting actions test", () => {
         await expect(page.getByRole("button", { name: "Start megaphone" })).toBeVisible();
         await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
 
-        await expect(page2.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
-        await expect(userAlice.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
-        await expect(userBob.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
-        await expect(userEve.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
+        await expect(page2.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+        await expect(userAlice.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+        await expect(userBob.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+        await expect(userEve.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
 
         await expectLivekitRoomsCountToBe(userAlice, 1);
         await expectLivekitRoomsCountToBe(userBob, 1);

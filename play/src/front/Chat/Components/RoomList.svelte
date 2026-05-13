@@ -414,7 +414,9 @@
             {#if showRoomSidePanelInTimelineColumn && selectedRoomWithSidePanel}
                 <RoomSidePanel room={selectedRoomWithSidePanel} showCloseButton closeOnTimelineFocus />
             {:else if shouldShowRoomTimeline(roomSidePanelPlacement)}
-                <RoomTimeline room={$selectedRoomStore} {showRoomSidePanelToggle} />
+                {#key $selectedRoomStore.id}
+                    <RoomTimeline room={$selectedRoomStore} {showRoomSidePanelToggle} />
+                {/key}
             {/if}
         </div>
     {:else if $selectedRoomStore === undefined && sideBarWidth >= CHAT_LAYOUT_LIMIT}

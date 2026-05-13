@@ -86,7 +86,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
 
         // click on the megaphone button to start the streaming session
-        await expect(page2.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
+        await expect(page2.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
 
         await page.getByRole("button", { name: "Stop megaphone" }).click();
         await expect(page.getByRole("heading", { name: "Global communication" })).toBeHidden();
@@ -158,9 +158,9 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
 
         // click on the megaphone button to start the streaming session
-        await expect(page2.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
+        await expect(page2.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
 
-        await expect(page.getByText("Admin2", { exact: true })).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("Admin2", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
 
         await page.getByRole("button", { name: "Stop megaphone" }).click();
         await expect(page.getByRole("heading", { name: "Global communication" })).toBeHidden();
@@ -602,26 +602,34 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Verify listeners cannot see each other (only the speaker)
         // Admin2 (listener1) should NOT see Alice, Bob, and John
-        await expect(pageListener1.locator("#cameras-container").getByText("Alice", { exact: true })).toBeHidden({
+        await expect(
+            pageListener1.locator("#cameras-container").getByText("Alice", { exact: true }).first(),
+        ).toBeHidden({
             timeout: 20_000,
         });
-        await expect(pageListener1.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
+        await expect(pageListener1.locator("#cameras-container").getByText("Bob", { exact: true }).first()).toBeHidden({
             timeout: 20_000,
         });
-        await expect(pageListener1.locator("#cameras-container").getByText("John", { exact: true })).toBeHidden({
-            timeout: 20_000,
-        });
+        await expect(pageListener1.locator("#cameras-container").getByText("John", { exact: true }).first()).toBeHidden(
+            {
+                timeout: 20_000,
+            },
+        );
 
         // Alice (listener2) should NOT see Admin2, Bob, and John
-        await expect(pageListener2.locator("#cameras-container").getByText("Admin2", { exact: true })).toBeHidden({
+        await expect(
+            pageListener2.locator("#cameras-container").getByText("Admin2", { exact: true }).first(),
+        ).toBeHidden({
             timeout: 20_000,
         });
-        await expect(pageListener2.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
+        await expect(pageListener2.locator("#cameras-container").getByText("Bob", { exact: true }).first()).toBeHidden({
             timeout: 20_000,
         });
-        await expect(pageListener2.locator("#cameras-container").getByText("John", { exact: true })).toBeHidden({
-            timeout: 20_000,
-        });
+        await expect(pageListener2.locator("#cameras-container").getByText("John", { exact: true }).first()).toBeHidden(
+            {
+                timeout: 20_000,
+            },
+        );
 
         // ============================================================
         // SCENARIO: Late listener (Eve) joins while speaker is broadcasting
@@ -644,16 +652,24 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         });
 
         // The late listener should NOT see other listeners (only the speaker)
-        await expect(pageLateListener.locator("#cameras-container").getByText("Admin2", { exact: true })).toBeHidden({
+        await expect(
+            pageLateListener.locator("#cameras-container").getByText("Admin2", { exact: true }).first(),
+        ).toBeHidden({
             timeout: 20_000,
         });
-        await expect(pageLateListener.locator("#cameras-container").getByText("Alice", { exact: true })).toBeHidden({
+        await expect(
+            pageLateListener.locator("#cameras-container").getByText("Alice", { exact: true }).first(),
+        ).toBeHidden({
             timeout: 20_000,
         });
-        await expect(pageLateListener.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
+        await expect(
+            pageLateListener.locator("#cameras-container").getByText("Bob", { exact: true }).first(),
+        ).toBeHidden({
             timeout: 20_000,
         });
-        await expect(pageLateListener.locator("#cameras-container").getByText("John", { exact: true })).toBeHidden({
+        await expect(
+            pageLateListener.locator("#cameras-container").getByText("John", { exact: true }).first(),
+        ).toBeHidden({
             timeout: 20_000,
         });
 

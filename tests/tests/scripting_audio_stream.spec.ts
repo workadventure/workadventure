@@ -180,7 +180,7 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
         await eve.context().close();
 
         // Let's wait for eve to be disconnected
-        await expect(alice2.getByText("Eve", { exact: true })).toBeHidden();
+        await expect(alice2.getByText("Eve", { exact: true }).first()).toBeHidden();
 
         // Wait for the delayed LiveKit -> WebRTC fallback before asserting audio again.
         await expectLivekitConnectionsCountToBe(alice2, 0, 35_000);

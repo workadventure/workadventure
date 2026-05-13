@@ -7,6 +7,7 @@
     import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
     import { navChat } from "../../Chat/Stores/ChatStore";
     import LL from "../../../i18n/i18n-svelte";
+    import { focusNotificationMessage } from "./NotificationRoomFocus";
 
     export let notification: ProximityNotification;
 
@@ -35,38 +36,11 @@
             const room = notification.room;
             room.setTimelineAsRead();
             selectedRoomStore.set(room);
-
-            const messageId = notification.messageId;
-            if (messageId) {
-                setTimeout(() => {
-                    scrollToMessage(messageId);
-                }, 300);
-            }
+            focusNotificationMessage(room, notification.messageId);
         } else {
             // Open the chat on the main chat panel
             selectedRoomStore.set(undefined);
         }
-    }
-
-    function scrollToMessage(messageId: string) {
-        let attempts = 0;
-        const maxAttempts = 10;
-
-        const tryScroll = () => {
-            const messageElement = document.querySelector(`li[data-event-id="${messageId}"]`);
-            if (messageElement) {
-                messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
-                messageElement.classList.add("highlight-message");
-                setTimeout(() => {
-                    messageElement.classList.remove("highlight-message");
-                }, 2000);
-            } else if (attempts < maxAttempts) {
-                attempts++;
-                setTimeout(tryScroll, 200);
-            }
-        };
-
-        tryScroll();
     }
 </script>
 
