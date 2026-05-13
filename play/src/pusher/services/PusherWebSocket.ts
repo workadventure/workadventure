@@ -35,13 +35,10 @@ export class PusherWebSocket {
     private lastSentNonce = 0;
     private lastReceivedNonce = 0;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
-        CLIENT_DISCONNECTION_RETENTION_MS,
+        CLIENT_DISCONNECTION_RETENTION_MS
     );
 
-    public constructor(
-        socket: RawSocket,
-        private readonly connectionStatusManager: ConnectionStatusManager,
-    ) {
+    public constructor(socket: RawSocket, private readonly connectionStatusManager: ConnectionStatusManager) {
         this.socket = socket;
         this.startKeepAlive();
     }
@@ -154,7 +151,7 @@ export class PusherWebSocket {
     public replaceSocket(newSocket: RawSocket, clientLastReceivedNonce: number): boolean {
         const socketData = this.socket.getUserData();
         console.info(
-            `Replacing WebSocket transport for user ${socketData.userUuid} on tab ${socketData.tabId} (lastReceivedNonce=${clientLastReceivedNonce})`,
+            `Replacing WebSocket transport for user ${socketData.userUuid} on tab ${socketData.tabId} (lastReceivedNonce=${clientLastReceivedNonce})`
         );
 
         if (!this.outgoingMessagesStore.hasEveryNonceAfter(clientLastReceivedNonce)) {
@@ -163,7 +160,7 @@ export class PusherWebSocket {
                     socketData.tabId
                 }: server is missing messages to replay (lastReceivedNonce=${clientLastReceivedNonce}, oldestStoredNonce=${
                     this.outgoingMessagesStore.getAll()[0]?.nonce
-                })`,
+                })`
             );
             Sentry.captureMessage(
                 `Cannot replace WebSocket transport for user ${socketData.userUuid} on tab ${
@@ -176,7 +173,7 @@ export class PusherWebSocket {
                         userUuid: socketData.userUuid,
                         tabId: socketData.tabId,
                     },
-                },
+                }
             );
             newSocket.end(1008, "Cannot replace socket: server is missing messages to replay");
             return false;
@@ -188,7 +185,7 @@ export class PusherWebSocket {
 
         if (previousSocketData.userUuid !== newSocketData.userUuid) {
             console.warn(
-                `Cannot replace WebSocket transport: user UUID mismatch (previous=${previousSocketData.userUuid}, new=${newSocketData.userUuid})`,
+                `Cannot replace WebSocket transport: user UUID mismatch (previous=${previousSocketData.userUuid}, new=${newSocketData.userUuid})`
             );
             Sentry.captureMessage(
                 `Cannot replace WebSocket transport: user UUID mismatch (previous=${previousSocketData.userUuid}, new=${newSocketData.userUuid})`,
@@ -197,7 +194,7 @@ export class PusherWebSocket {
                         previousUserUuid: previousSocketData.userUuid,
                         newUserUuid: newSocketData.userUuid,
                     },
-                },
+                }
             );
             newSocket.end(1008, "Cannot replace socket: user UUID mismatch");
             return false;
