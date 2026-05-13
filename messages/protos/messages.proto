@@ -385,6 +385,18 @@ message ModifyEntityMessage {
   uint32 height = 8;
 }
 
+// Transport envelope for websocket frames sent from front to pusher.
+message FrontToPusherWebSocketMessage {
+  uint32 nonce = 1;
+  ClientToServerMessage message = 2;
+}
+
+// Transport envelope for websocket frames sent from pusher to front.
+message PusherToFrontWebSocketMessage {
+  uint32 nonce = 1;
+  ServerToClientMessage message = 2;
+}
+
 message ClientToServerMessage {
   oneof message {
     JoinRoomFrontMessage joinRoomFrontMessage = 1;
@@ -1380,9 +1392,6 @@ message JoinRoomFrontMessage {
   ViewportMessage viewportMessage = 2;
   string name = 3;
   AvailabilityStatus availabilityStatus = 6;
-  // Unique identifier for the browser tab, used to detect reconnections from the same tab
-  // and kill stale connections immediately instead of waiting for ping timeout
-  string tabId = 8;
 }
 
 /**

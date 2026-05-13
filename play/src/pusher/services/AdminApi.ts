@@ -48,6 +48,13 @@ export const AdminBannedData = z.object({
 
 export type AdminBannedData = z.infer<typeof AdminBannedData>;
 
+export const AdminLoginMessage = z.object({
+    type: z.string(),
+    message: z.string(),
+});
+
+export type AdminLoginMessage = z.infer<typeof AdminLoginMessage>;
+
 export const isFetchMemberDataByUuidSuccessResponse = z.object({
     status: extendApi(z.literal("ok"), {
         description: "MUST be 'ok' if the system successfully authenticated the user.",
@@ -90,7 +97,7 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
     companionTexture: extendApi(CompanionDetail.nullable().optional(), {
         description: "This data represents the companion texture that will be use.",
     }),
-    messages: extendApi(z.array(z.unknown()), {
+    messages: extendApi(z.array(AdminLoginMessage), {
         description:
             "Sets messages that will be displayed when the user logs in to the WA room. These messages are used for ban or ban warning.",
     }),

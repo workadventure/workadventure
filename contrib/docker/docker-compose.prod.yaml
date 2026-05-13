@@ -70,6 +70,8 @@ services:
       - ENABLE_CHAT_UPLOAD
       - ENABLE_CHAT_ONLINE_LIST
       - ENABLE_CHAT_DISCONNECTED_LIST
+      - CLIENT_CONNECTION_RETRY_MAX_DURATION_MS
+      - CLIENT_DISCONNECTION_RETENTION_MS
       - REDIS_HOST=redis
       - ENABLE_TUTORIAL=${ENABLE_TUTORIAL:-true}
       - UPLOADER_URL=/uploader
@@ -145,6 +147,10 @@ services:
       traefik.http.routers.play-ws.entryPoints: "web"
       traefik.http.routers.play-ws.service: play-ws
       traefik.http.services.play-ws.loadbalancer.server.port: "3001"
+      traefik.http.services.play-ws.loadbalancer.sticky.cookie: "true"
+      traefik.http.services.play-ws.loadbalancer.sticky.cookie.name: "wa_ws_affinity"
+      traefik.http.services.play-ws.loadbalancer.sticky.cookie.httpOnly: "true"
+      traefik.http.services.play-ws.loadbalancer.sticky.cookie.sameSite: "lax"
 
       traefik.http.routers.play-ws-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/ws/`)"
       traefik.http.routers.play-ws-ssl.entryPoints: "websecure"

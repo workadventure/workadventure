@@ -50,6 +50,16 @@ export const EnvironmentVariables = z.object({
         .describe(
             "maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling)"
         ),
+    CLIENT_CONNECTION_RETRY_MAX_DURATION_MS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 30_000))
+        .describe(
+            "Maximum time, in milliseconds, the client keeps retrying the room connection before giving up. Defaults to 30000."
+        ),
+    CLIENT_DISCONNECTION_RETENTION_MS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 30_000))
+        .describe(
+            "Maximum time, in milliseconds, the client keeps sent websocket messages for replay after a short disconnection. Defaults to 30000."
+        ),
     // Used only in development
     VITE_URL: z.string().url().optional().describe("URL of the Vite development server (development only)"),
     // Use "*" to allow any domain

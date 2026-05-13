@@ -41,7 +41,18 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.play.rule=Host(`play.workadventure.localhost`)"
       - "traefik.http.routers.play.entryPoints=web"
+      - "traefik.http.routers.play.priority=1"
+      - "traefik.http.routers.play.service=play"
       - "traefik.http.services.play.loadbalancer.server.port=3000"
+      - "traefik.http.routers.play-ws.rule=Host(`play.workadventure.localhost`) && PathPrefix(`/ws/`)"
+      - "traefik.http.routers.play-ws.entryPoints=web"
+      - "traefik.http.routers.play-ws.priority=2"
+      - "traefik.http.routers.play-ws.service=play-ws"
+      - "traefik.http.services.play-ws.loadbalancer.server.port=3001"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie=true"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie.name=wa_ws_affinity"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie.httpOnly=true"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie.sameSite=lax"
   back:
     image: ghcr.io/workadventure/back-dev-build:amd64-${GITHUB_SHA}
     build:

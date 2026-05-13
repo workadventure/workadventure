@@ -104,6 +104,8 @@ services:
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
       ENABLE_CHAT_ONLINE_LIST: "$ENABLE_CHAT_ONLINE_LIST"
       ENABLE_CHAT_DISCONNECTED_LIST: "$ENABLE_CHAT_DISCONNECTED_LIST"
+      CLIENT_CONNECTION_RETRY_MAX_DURATION_MS: "$CLIENT_CONNECTION_RETRY_MAX_DURATION_MS"
+      CLIENT_DISCONNECTION_RETENTION_MS: "$CLIENT_DISCONNECTION_RETENTION_MS"
       ENABLE_TUTORIAL: "$ENABLE_TUTORIAL"
       # Woka settings
       DEFAULT_WOKA_NAME: ${DEFAULT_WOKA_NAME:-}
@@ -191,6 +193,10 @@ services:
       - "traefik.http.routers.play-ws.priority=2"
       - "traefik.http.routers.play-ws.service=play-ws"
       - "traefik.http.services.play-ws.loadbalancer.server.port=3001"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie=true"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie.name=wa_ws_affinity"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie.httpOnly=true"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie.sameSite=lax"
 
   maps:
     image: thecodingmachine/php:8.1-v4-apache-node12

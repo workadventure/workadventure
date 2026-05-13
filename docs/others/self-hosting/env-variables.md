@@ -22,6 +22,8 @@ Environment variables for the Play service (frontend and pusher).
 | `PUSHER_HTTP_PORT` | No | HTTP port for the pusher service. Defaults to 3000 |
 | `PUSHER_WS_PORT` | No | WebSocket port for the pusher service. Defaults to 3001 |
 | `SOCKET_IDLE_TIMER` | No | maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling) |
+| `CLIENT_CONNECTION_RETRY_MAX_DURATION_MS` | No | Maximum time, in milliseconds, the client keeps retrying the room connection before giving up. Defaults to 30000. |
+| `CLIENT_DISCONNECTION_RETENTION_MS` | No | Maximum time, in milliseconds, the client keeps sent websocket messages for replay after a short disconnection. Defaults to 30000. |
 | `VITE_URL` | No | URL of the Vite development server (development only) |
 | `ALLOWED_CORS_ORIGIN` | No | Allowed CORS origin for API requests. Use '*' to allow any domain |
 | `PUSHER_URL` | No | Public URL of the pusher service |

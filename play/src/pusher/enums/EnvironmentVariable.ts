@@ -43,6 +43,8 @@ export const PUSHER_HTTP_PORT = env.PUSHER_HTTP_PORT;
 
 export const PUSHER_WS_PORT = env.PUSHER_WS_PORT;
 export const SOCKET_IDLE_TIMER = env.SOCKET_IDLE_TIMER; // maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling)
+export const CLIENT_CONNECTION_RETRY_MAX_DURATION_MS = env.CLIENT_CONNECTION_RETRY_MAX_DURATION_MS;
+export const CLIENT_DISCONNECTION_RETENTION_MS = env.CLIENT_DISCONNECTION_RETENTION_MS;
 export const ALLOWED_CORS_ORIGIN = env.ALLOWED_CORS_ORIGIN; // Use "*" to allow any domain
 export const PUSHER_URL = env.PUSHER_URL || "";
 export const FRONT_URL = env.FRONT_URL || "";
@@ -209,6 +211,8 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     FALLBACK_LOCALE,
     ENABLE_REPORT_ISSUES_MENU: env.ENABLE_REPORT_ISSUES_MENU,
     REPORT_ISSUES_URL: env.REPORT_ISSUES_URL,
+    CLIENT_CONNECTION_RETRY_MAX_DURATION_MS,
+    CLIENT_DISCONNECTION_RETENTION_MS,
     SENTRY_DSN_FRONT: env.SENTRY_DSN_FRONT,
     SENTRY_DSN_PUSHER: env.SENTRY_DSN_PUSHER,
     SENTRY_ENVIRONMENT: env.SENTRY_ENVIRONMENT,

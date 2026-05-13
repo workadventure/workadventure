@@ -1,15 +1,15 @@
-import {RoomConnection} from "../play/src/front/Connexion/RoomConnection";
-import {connectionManager} from "../play/src/front/Connexion/ConnectionManager";
+import {connectionManager} from "../play/src/front/Connection/ConnectionManager";
+import { WorkAdventureWebSocket } from "../play/src/front/Connection/WebSocket";
 import * as WebSocket from "ws"
-import { AvailabilityStatus } from '../play/src/messages/ts-proto-generated/protos/messages';
+import { AvailabilityStatus, PositionMessage_Direction } from '../libs/messages/src/ts-proto-generated/messages';
 
 let userMovedCount = 0;
 
-function sleep(ms) {
+function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-RoomConnection.setWebsocketFactory((url: string) => {
+WorkAdventureWebSocket.setWebsocketFactory((url: string) => {
     return new WebSocket(url);
 });
 
@@ -41,7 +41,7 @@ async function startOneUser(): Promise<void> {
         const x = Math.floor(320 + 1472/2 * (1 + Math.sin(angle)));
         const y = Math.floor(200 + 1090/2 * (1 + Math.cos(angle)));
 
-        connection.sharePosition(x, y, 'down', true, {
+        connection.sharePosition(x, y, PositionMessage_Direction.DOWN, true, {
             top: y - 200,
             bottom: y + 200,
             left: x - 320,
