@@ -200,7 +200,11 @@ export class PusherWebSocket {
         this.handleDrain();
 
         // Close the old transport only after rebinding so the logical connection keeps running.
-        previousSocket.end(1008, "Replaced by a reconnected socket");
+        try {
+            previousSocket.end(1008, "Replaced by a reconnected socket");
+        } catch {
+            // Ignore errors when closing the previous socket, as it might have already been closed by the client.
+        }
 
         return true;
     }

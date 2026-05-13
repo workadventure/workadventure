@@ -252,8 +252,8 @@ export class PusherRoomSocketController {
 
                     const tabId = socketData.tabId;
                     const context = this.contextByTabKey.get(tabId);
-                    if (context) {
-                        const replaced = context.socket.replaceSocket(rawSocket, context.clientLastReceivedNonce!);
+                    if (context && context.clientLastReceivedNonce !== undefined) {
+                        const replaced = context.socket.replaceSocket(rawSocket, context.clientLastReceivedNonce);
 
                         if (replaced) {
                             this.clearContextCleanup(tabId);
