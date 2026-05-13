@@ -2,6 +2,7 @@ import type { RoomApiServer as RoomApiServerInterface } from "@workadventure/mes
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import * as Sentry from "@sentry/node";
 import { apiClientRepository } from "../pusher/services/ApiClientRepository";
+import { writeWithBackpressure } from "../pusher/services/StreamBackpressure";
 import { GRPC_MAX_MESSAGE_SIZE } from "./../pusher/enums/EnvironmentVariable";
 import AuthenticationGuard from "./guards/AuthenticationGuard";
 import { GuardError } from "./types/GuardError";
@@ -61,7 +62,7 @@ export default {
                         // Event listeners are valid for the lifetime of the listener
                         /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
                         variableListener.on("data", (response) => {
-                            call.write(response);
+                            writeWithBackpressure(call, response, {}, "room_api_variable_listener");
                         });
 
                         variableListener.on("cancelled", () => {
@@ -191,7 +192,7 @@ export default {
                         const eventListener = apiClient.listenEvent(call.request);
 
                         eventListener.on("data", (response) => {
-                            call.write(response);
+                            writeWithBackpressure(call, response, {}, "room_api_event_listener");
                         });
 
                         eventListener.on("cancelled", () => {

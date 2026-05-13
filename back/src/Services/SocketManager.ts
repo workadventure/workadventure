@@ -84,6 +84,7 @@ import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { getMapStorageClient } from "./MapStorageClient";
 import { emitError, endUserConnectionWithReason } from "./MessageHelpers";
 import { cpuTracker } from "./CpuTracker";
+import { writeWithBackpressure } from "./StreamBackpressure";
 
 const debug = Debug("socketmanager");
 
@@ -92,7 +93,7 @@ function emitZoneMessage(subMessage: SubToPusherRoomMessage, socket: RoomSocket)
     const batchMessage: BatchToPusherRoomMessage = {
         payload: [subMessage],
     };
-    socket.write(batchMessage);
+    writeWithBackpressure(socket, batchMessage, {}, "back_room_socket");
 }
 
 export class SocketManager {
@@ -159,7 +160,8 @@ export class SocketManager {
         }
 
         await new Promise<void>((resolve, reject) => {
-            socket.write(
+            writeWithBackpressure(
+                socket,
                 {
                     message: {
                         $case: "roomConnectedMessage",
@@ -171,12 +173,14 @@ export class SocketManager {
                         },
                     },
                 },
-                (error: Error | null | undefined) => {
-                    if (error) {
-                        reject(error);
-                        return;
-                    }
-                    resolve();
+                {
+                    callback: (error: unknown) => {
+                        if (error) {
+                            reject(asError(error));
+                            return;
+                        }
+                        resolve();
+                    },
                 }
             );
         });
@@ -953,7 +957,7 @@ export class SocketManager {
             }
         }
 
-        call.write(batchMessage);
+        writeWithBackpressure(call, batchMessage, {}, "back_room_socket");
     }
 
     async removeZoneListener(call: RoomSocket, roomId: string, x: number, y: number): Promise<void> {
@@ -1681,11 +1685,9 @@ export class SocketManager {
         }
 
         for (const recipient of recipients) {
-            recipient.socket.write({
-                message: {
-                    $case: "externalModuleMessage",
-                    externalModuleMessage: externalModuleMessage,
-                },
+            recipient.write({
+                $case: "externalModuleMessage",
+                externalModuleMessage: externalModuleMessage,
             });
         }
     }

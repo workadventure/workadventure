@@ -4,6 +4,7 @@ import type { BackToPusherSpaceMessage } from "@workadventure/messages";
 import type { SpaceManagerClient } from "@workadventure/messages/src/ts-proto-generated/services";
 import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { apiClientRepository } from "../services/ApiClientRepository";
+import { writeWithBackpressure } from "../services/StreamBackpressure";
 import type { SpaceForSpaceConnectionInterface, SpaceInterface } from "./Space";
 import type { BackSpaceConnection } from "./Websocket/SocketData";
 const debug = Debug("spaceConnection");
@@ -124,23 +125,32 @@ export class SpaceConnection implements SpaceConnectionInterface {
                                 spaceStreamToBack.pingTimeout = undefined;
                             }
 
-                            spaceStreamToBack.write({
-                                message: {
-                                    $case: "pongMessage",
-                                    pongMessage: {},
+                            writeWithBackpressure(
+                                spaceStreamToBack,
+                                {
+                                    message: {
+                                        $case: "pongMessage",
+                                        pongMessage: {},
+                                    },
                                 },
-                            });
-
-                            spaceStreamToBack.pingTimeout = setTimeout(() => {
-                                console.error("Error spaceStreamToBack timed out for back:", backId);
-                                Sentry.captureException("Error spaceStreamToBack timed out for back: " + backId);
-                                spaceStreamToBack.end();
-                                this.removeListeners(spaceStreamToBack, backId);
-                                this.cleanUpSpacePerBackId(backId).catch((e) => {
-                                    console.error("Error while cleaning up space per back id", e);
-                                    Sentry.captureException(e);
-                                });
-                            }, 1000 * 60);
+                                {
+                                    callback: () => {
+                                        spaceStreamToBack.pingTimeout = setTimeout(() => {
+                                            console.error("Error spaceStreamToBack timed out for back:", backId);
+                                            Sentry.captureException(
+                                                "Error spaceStreamToBack timed out for back: " + backId
+                                            );
+                                            spaceStreamToBack.end();
+                                            this.removeListeners(spaceStreamToBack, backId);
+                                            this.cleanUpSpacePerBackId(backId).catch((e) => {
+                                                console.error("Error while cleaning up space per back id", e);
+                                                Sentry.captureException(e);
+                                            });
+                                        }, 1000 * 60);
+                                    },
+                                },
+                                "pusher_space_pong"
+                            );
                             break;
                         }
                         default: {
@@ -228,17 +238,22 @@ export class SpaceConnection implements SpaceConnectionInterface {
     private joinSpace(spaceStreamToBackPromise: Promise<BackSpaceConnection>, space: SpaceForSpaceConnectionInterface) {
         spaceStreamToBackPromise
             .then((spaceStreamToBack) => {
-                spaceStreamToBack.write({
-                    message: {
-                        $case: "joinSpaceMessage",
-                        joinSpaceMessage: {
-                            spaceName: space.name,
-                            filterType: space.filterType,
-                            propertiesToSync: space.getPropertiesToSync(),
-                            world: space.world,
+                writeWithBackpressure(
+                    spaceStreamToBack,
+                    {
+                        message: {
+                            $case: "joinSpaceMessage",
+                            joinSpaceMessage: {
+                                spaceName: space.name,
+                                filterType: space.filterType,
+                                propertiesToSync: space.getPropertiesToSync(),
+                                world: space.world,
+                            },
                         },
                     },
-                });
+                    {},
+                    "pusher_space_join"
+                );
             })
             .catch((e) => {
                 // FIXME: if joinspace fails, we have big problems.

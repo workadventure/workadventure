@@ -6,6 +6,7 @@ import type { WAMFileFormat } from "@workadventure/map-editor";
 
 import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { apiClientRepository } from "../services/ApiClientRepository";
+import { writeWithBackpressure } from "../services/StreamBackpressure";
 import type { Socket } from "../services/SocketManager";
 import { socketManager } from "../services/SocketManager";
 import { PositionDispatcher } from "./PositionDispatcher";
@@ -70,30 +71,40 @@ export class PusherRoom {
             console.warn(`Cannot subscribe to zone (${x},${y}) in room ${this.roomUrl}, connection is closing`);
             return;
         }
-        this.backConnection.write({
-            message: {
-                $case: "subscribeZoneMessage",
-                subscribeZoneMessage: {
-                    x,
-                    y,
+        writeWithBackpressure(
+            this.backConnection,
+            {
+                message: {
+                    $case: "subscribeZoneMessage",
+                    subscribeZoneMessage: {
+                        x,
+                        y,
+                    },
                 },
             },
-        });
+            {},
+            "pusher_room_zone"
+        );
     }
 
     public unsubscribeFromZone(x: number, y: number): void {
         if (this.isClosing) {
             return;
         }
-        this.backConnection.write({
-            message: {
-                $case: "unsubscribeZoneMessage",
-                unsubscribeZoneMessage: {
-                    x,
-                    y,
+        writeWithBackpressure(
+            this.backConnection,
+            {
+                message: {
+                    $case: "unsubscribeZoneMessage",
+                    unsubscribeZoneMessage: {
+                        x,
+                        y,
+                    },
                 },
             },
-        });
+            {},
+            "pusher_room_zone"
+        );
     }
 
     /**
@@ -104,14 +115,19 @@ export class PusherRoom {
         const apiClient = await apiClientRepository.getClient(this.roomUrl, GRPC_MAX_MESSAGE_SIZE);
         this.backConnection = apiClient.listenRoom();
         // Send init message to transmit the roomId
-        this.backConnection.write({
-            message: {
-                $case: "initRoomMessage",
-                initRoomMessage: {
-                    roomId: this.roomUrl,
+        writeWithBackpressure(
+            this.backConnection,
+            {
+                message: {
+                    $case: "initRoomMessage",
+                    initRoomMessage: {
+                        roomId: this.roomUrl,
+                    },
                 },
             },
-        });
+            {},
+            "pusher_room_listener"
+        );
         // Event listeners are valid for the lifetime of the connection
         /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
         this.backConnection.on("data", (batch: BatchToPusherRoomMessage) => {

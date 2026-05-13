@@ -3,7 +3,7 @@ import type { AnswerMessage, CompanionDetail, ErrorApiData, WokaDetail } from "@
 import { apiVersionHash, noUndefined } from "@workadventure/messages";
 import { errors } from "jose";
 import * as Sentry from "@sentry/node";
-import type { TemplatedApp } from "uWebSockets.js";
+import type { TemplatedApp, WebSocket } from "uWebSockets.js";
 import { asError } from "catch-unknown";
 import Debug from "debug";
 import { AxiosError } from "axios";
@@ -13,7 +13,13 @@ import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
 import type { Socket, SocketUpgradeFailed } from "../services/SocketManager";
 import { socketManager } from "../services/SocketManager";
-import { ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../enums/EnvironmentVariable";
+import {
+    ADMIN_SOCKETS_TOKEN,
+    DISABLE_ANONYMOUS,
+    PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES,
+    PUSHER_STREAM_BACKPRESSURE_DRAIN_TIMEOUT_MS,
+    SOCKET_IDLE_TIMER,
+} from "../enums/EnvironmentVariable";
 import type { AdminSocketData } from "../models/Websocket/AdminSocketData";
 import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
@@ -23,6 +29,7 @@ import { ClientAbortError } from "../models/ClientAbortError";
 import { ClientNotPartOfSpaceError, UserAlreadyAddedInSpaceError } from "../models/SpaceValidationErrors";
 import { videoQualityAnalyticsQueue } from "../services/VideoQualityAnalyticsQueue";
 import { PusherRoomSocketController } from "../services/PusherRoomSocketController";
+import { AdminWebSocketBackpressureWriter } from "../services/AdminWebSocketBackpressureWriter";
 
 const debug = Debug("pusher:requests");
 
@@ -49,6 +56,7 @@ export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidDat
 
 export class IoSocketController {
     private readonly roomSocketController: PusherRoomSocketController;
+    private readonly adminSocketWriters = new WeakMap<WebSocket<AdminSocketData>, AdminWebSocketBackpressureWriter>();
 
     constructor(private readonly app: TemplatedApp) {
         // Global handler for unhandled Promises
@@ -69,6 +77,7 @@ export class IoSocketController {
 
     adminRoomSocket(): void {
         this.app.ws<AdminSocketData>("/ws/admin/rooms", {
+            maxBackpressure: PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES,
             upgrade: (res, req, context) => {
                 const websocketKey = req.getHeader("sec-websocket-key");
                 const websocketProtocol = req.getHeader("sec-websocket-protocol");
@@ -79,6 +88,9 @@ export class IoSocketController {
                         {
                             adminConnections: new Map(),
                             disconnecting: false,
+                            sendMessage: () => {
+                                return;
+                            },
                         },
                         websocketKey,
                         websocketProtocol,
@@ -92,6 +104,21 @@ export class IoSocketController {
                     "Admin socket connect to client on " + Buffer.from(ws.getRemoteAddressAsText()).toString()
                 );
                 ws.getUserData().disconnecting = false;
+                const writer = new AdminWebSocketBackpressureWriter(ws, {
+                    maxQueuedMessages: 1_000,
+                    maxQueuedBytes: PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES,
+                    drainTimeoutMs: PUSHER_STREAM_BACKPRESSURE_DRAIN_TIMEOUT_MS,
+                    onDropped: (reason, priority) => {
+                        console.warn(`Admin websocket dropped ${priority} message: ${reason}`);
+                    },
+                    onClosed: (reason) => {
+                        console.warn(`Admin websocket closed by backpressure: ${reason}`);
+                    },
+                });
+                this.adminSocketWriters.set(ws, writer);
+                ws.getUserData().sendMessage = (message) => {
+                    writer.send(message);
+                };
             },
             message: async (ws, arrayBuffer): Promise<void> => {
                 try {
@@ -108,7 +135,7 @@ export class IoSocketController {
                         }
                         Sentry.captureException(`Invalid message received. ${JSON.stringify(message)}`);
                         console.error("Invalid message received.", message);
-                        ws.send(
+                        ws.getUserData().sendMessage(
                             JSON.stringify({
                                 type: "Error",
                                 data: {
@@ -128,7 +155,7 @@ export class IoSocketController {
                         data = await jwtTokenManager.verifyAdminSocketToken(token);
                     } catch (e) {
                         console.error("Admin socket access refused for token: " + token, e);
-                        ws.send(
+                        ws.getUserData().sendMessage(
                             JSON.stringify({
                                 type: "Error",
                                 data: {
@@ -153,7 +180,7 @@ export class IoSocketController {
                             ).toString()} listening of : \n${JSON.stringify(notAuthorizedRoom)}`;
                             Sentry.captureException(errorMessage);
                             console.error(errorMessage);
-                            ws.send(
+                            ws.getUserData().sendMessage(
                                 JSON.stringify({
                                     type: "Error",
                                     data: {
@@ -209,11 +236,15 @@ export class IoSocketController {
             close: (ws) => {
                 try {
                     ws.getUserData().disconnecting = true;
+                    this.adminSocketWriters.delete(ws);
                     socketManager.leaveAdminRoom(ws);
                 } catch (e) {
                     Sentry.captureException(`An error occurred on admin "disconnect" ${e}`);
                     console.error(`An error occurred on admin "disconnect" ${e}`);
                 }
+            },
+            drain: (ws) => {
+                this.adminSocketWriters.get(ws)?.handleDrain();
             },
         });
     }

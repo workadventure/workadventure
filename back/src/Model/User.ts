@@ -17,6 +17,7 @@ import type { PositionNotifier } from "../Model/PositionNotifier";
 import type { Zone } from "../Model/Zone";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
 import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
+import { writeWithBackpressure } from "../Services/StreamBackpressure";
 import type { BrothersFinder } from "./BrothersFinder";
 import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import type { Group } from "./Group";
@@ -140,13 +141,11 @@ export class User implements Movable, CustomJsonReplacerInterface {
         this.followedBy.add(follower);
         follower._following = this;
 
-        this.socket.write({
-            message: {
-                $case: "followConfirmationMessage",
-                followConfirmationMessage: {
-                    follower: follower.id,
-                    leader: this.id,
-                },
+        this.write({
+            $case: "followConfirmationMessage",
+            followConfirmationMessage: {
+                follower: follower.id,
+                leader: this.id,
             },
         });
     }
@@ -156,16 +155,14 @@ export class User implements Movable, CustomJsonReplacerInterface {
         follower._following = undefined;
 
         const clientMessage = {
-            message: {
-                $case: "followAbortMessage",
-                followAbortMessage: {
-                    follower: follower.id,
-                    leader: this.id,
-                },
+            $case: "followAbortMessage",
+            followAbortMessage: {
+                follower: follower.id,
+                leader: this.id,
             },
         } as const;
-        this.socket.write(clientMessage);
-        follower.socket.write(clientMessage);
+        this.write(clientMessage);
+        follower.write(clientMessage);
     }
 
     public hasFollowers(): boolean {
@@ -220,13 +217,11 @@ export class User implements Movable, CustomJsonReplacerInterface {
                     return;
                 }*/
 
-                this.socket.write({
-                    message: {
-                        $case: "batchMessage",
-                        batchMessage: {
-                            event: "", // FIXME: remove event
-                            payload: this.batchedMessages,
-                        },
+                this.write({
+                    $case: "batchMessage",
+                    batchMessage: {
+                        event: "", // FIXME: remove event
+                        payload: this.batchedMessages,
                     },
                 });
                 this.batchedMessages = [];
@@ -364,33 +359,38 @@ export class User implements Movable, CustomJsonReplacerInterface {
      * in the correct order. If the first message is not a "roomJoinedMessage", it is buffered until the
      * "roomJoinedMessage" message is received.
      */
-    public write(chunk: NonNullable<ServerToClientMessage["message"]>, cb?: (...args: unknown[]) => unknown): boolean {
-        //TODO : handle socket.write return false
+    public write(chunk: NonNullable<ServerToClientMessage["message"]>, cb?: (...args: unknown[]) => void): boolean {
         if (this.isRoomJoinedMessage) {
-            return this.socket.write(
+            return writeWithBackpressure(
+                this.socket,
                 {
                     message: chunk,
                 },
-                cb
+                { callback: cb },
+                "back_user_socket"
             );
         }
 
         if (chunk.$case === "roomJoinedMessage") {
             this.isRoomJoinedMessage = true;
 
-            this.socket.write(
+            writeWithBackpressure(
+                this.socket,
                 {
                     message: chunk,
                 },
-                cb
+                { callback: cb },
+                "back_user_socket"
             );
 
             this.pendingMessages.forEach((message) => {
-                this.socket.write(
+                writeWithBackpressure(
+                    this.socket,
                     {
                         message,
                     },
-                    cb
+                    { callback: cb },
+                    "back_user_socket"
                 );
             });
 

@@ -39,6 +39,7 @@ import type { User, UserSocket } from "./Model/User";
 import type { GameRoom } from "./Model/GameRoom";
 import { Admin } from "./Model/Admin";
 import { getMapStorageClient } from "./Services/MapStorageClient";
+import { writeWithBackpressure } from "./Services/StreamBackpressure";
 
 const debug = Debug("roommanager");
 
@@ -300,35 +301,48 @@ const roomManager = {
 
         // Ping requests are sent from the server because the setTimeout on the browser is unreliable when the tab is hidden.
         const pingIntervalId = setInterval(() => {
-            call.write(serverToClientMessage);
-
             if (pongTimeoutId) {
                 console.warn("Warning, emitting a new ping message before previous pong message was received.");
                 clearTimeout(pongTimeoutId);
             }
-            const today = new Date();
-            pongTimeoutId = setTimeout(() => {
-                console.info(
-                    "Connection lost with user ",
-                    user?.uuid,
-                    user?.name,
-                    "in room",
-                    room?.roomUrl,
-                    "at : ",
-                    today.toLocaleString("en-GB")
-                );
-                const reason =
-                    "Connection lost with user. The user did not send a pong message in time. You should never see this message in the browser.";
-                call.write({
-                    message: {
-                        $case: "errorMessage",
-                        errorMessage: {
-                            message: reason,
-                        },
+
+            writeWithBackpressure(
+                call,
+                serverToClientMessage,
+                {
+                    callback: () => {
+                        const today = new Date();
+                        pongTimeoutId = setTimeout(() => {
+                            console.info(
+                                "Connection lost with user ",
+                                user?.uuid,
+                                user?.name,
+                                "in room",
+                                room?.roomUrl,
+                                "at : ",
+                                today.toLocaleString("en-GB")
+                            );
+                            const reason =
+                                "Connection lost with user. The user did not send a pong message in time. You should never see this message in the browser.";
+                            writeWithBackpressure(
+                                call,
+                                {
+                                    message: {
+                                        $case: "errorMessage",
+                                        errorMessage: {
+                                            message: reason,
+                                        },
+                                    },
+                                },
+                                {},
+                                "back_user_ping"
+                            );
+                            closeConnection(reason);
+                        }, PONG_TIMEOUT);
                     },
-                });
-                closeConnection(reason);
-            }, PONG_TIMEOUT);
+                },
+                "back_user_ping"
+            );
         }, PING_INTERVAL);
     },
 
