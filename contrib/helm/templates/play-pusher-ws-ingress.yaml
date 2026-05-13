@@ -1,5 +1,6 @@
 {{- if and (or .Values.ingress.enabled .Values.play.ingress.enabled) (not .Values.singleDomain) -}}
 {{- $fullName := include "workadventure.fullname" . -}}
+{{- $ingressClassName := default "" (coalesce .Values.play.ingress.className .Values.ingress.className) -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -12,15 +13,21 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
     {{- if .Values.play.ingress.sticky.enabled }}
+    {{- if contains "nginx" (lower $ingressClassName) }}
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: {{ .Values.play.ingress.sticky.cookie.name | quote }}
+    nginx.ingress.kubernetes.io/session-cookie-secure: {{ .Values.play.ingress.sticky.cookie.secure | quote }}
+    nginx.ingress.kubernetes.io/session-cookie-samesite: {{ .Values.play.ingress.sticky.cookie.sameSite | title | quote }}
+    {{- else }}
     traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
     traefik.ingress.kubernetes.io/service.sticky.cookie.name: {{ .Values.play.ingress.sticky.cookie.name | quote }}
     traefik.ingress.kubernetes.io/service.sticky.cookie.httpOnly: {{ .Values.play.ingress.sticky.cookie.httpOnly | quote }}
     traefik.ingress.kubernetes.io/service.sticky.cookie.secure: {{ .Values.play.ingress.sticky.cookie.secure | quote }}
     traefik.ingress.kubernetes.io/service.sticky.cookie.sameSite: {{ .Values.play.ingress.sticky.cookie.sameSite | quote }}
     {{- end }}
+    {{- end }}
   {{- end }}
 spec:
-  {{- $ingressClassName := coalesce .Values.play.ingress.className .Values.ingress.className -}}
   {{- if $ingressClassName }}
   ingressClassName: {{ $ingressClassName }}
   {{- end }}

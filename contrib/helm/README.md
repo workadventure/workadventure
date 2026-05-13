@@ -89,6 +89,11 @@ ingress:
   annotationsPath:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
 
+play:
+  ingress:
+    sticky:
+      enabled: true
+
 commonSecretEnv:
   # Secret token to connect to the map storage API.
   MAP_STORAGE_API_TOKEN: "123"
