@@ -7,7 +7,13 @@ import { PollEvent } from "matrix-js-sdk/lib/models/poll";
 import { PollEndEvent } from "matrix-js-sdk/lib/extensible_events_v1/PollEndEvent";
 import { PollResponseEvent } from "matrix-js-sdk/lib/extensible_events_v1/PollResponseEvent";
 import type { TimelineEvents } from "matrix-js-sdk/lib/@types/event";
-import type { ChatPollContext, ChatPollItem, ChatPollState, ChatUser } from "../ChatConnection";
+import type {
+    ChatPollContext,
+    ChatPollItem,
+    ChatPollState,
+    ChatRoomSidePanelHydrationState,
+    ChatUser,
+} from "../ChatConnection";
 import LL from "../../../../i18n/i18n-svelte";
 import { computePollState, type ComputedPollState } from "./MatrixPollUtils";
 import { chatUserFactoryFromRoom } from "./MatrixChatUser";
@@ -21,7 +27,10 @@ export class MatrixChatPoll implements ChatPollItem {
     canVote: Readable<boolean>;
     canEnd: Readable<boolean>;
     canDelete: Readable<boolean>;
+    hydrationState?: Readable<ChatRoomSidePanelHydrationState>;
+    retryHydration?: () => Promise<void>;
     private readonly internalState: Writable<ComputedPollState>;
+    private readonly internalHydrationState?: Writable<ChatRoomSidePanelHydrationState>;
     private readonly handlePollResponses = () => {
         this.refresh().catch((error) => console.error("Failed to refresh poll responses", error));
     };
@@ -32,7 +41,16 @@ export class MatrixChatPoll implements ChatPollItem {
         this.refresh().catch((error) => console.error("Failed to refresh undecryptable poll relations", error));
     };
 
-    constructor(private readonly poll: Poll, private readonly room: Room, context?: ChatPollContext) {
+    constructor(
+        private readonly poll: Poll,
+        private readonly room: Room,
+        context?: ChatPollContext,
+        options?: {
+            hydrateOnInit?: boolean;
+            hydrationState?: ChatRoomSidePanelHydrationState;
+            retryHydration?: () => Promise<void>;
+        }
+    ) {
         this.id = poll.pollId;
         this.sender = this.getSender();
         this.date = poll.rootEvent.getDate();
@@ -58,12 +76,19 @@ export class MatrixChatPoll implements ChatPollItem {
             return currentUserId === this.poll.rootEvent.getSender();
         });
         this.canDelete = writable(this.computeCanDelete());
+        if (options?.hydrationState) {
+            this.internalHydrationState = writable(options.hydrationState);
+            this.hydrationState = this.internalHydrationState;
+        }
+        this.retryHydration = options?.retryHydration;
 
         this.poll.on(PollEvent.Responses, this.handlePollResponses);
         this.poll.on(PollEvent.End, this.handlePollEnd);
         this.poll.on(PollEvent.UndecryptableRelations, this.handlePollUndecryptableRelations);
 
-        this.refresh().catch((error) => console.error("Failed to initialize poll", error));
+        if (options?.hydrateOnInit ?? true) {
+            this.refresh().catch((error) => console.error("Failed to initialize poll", error));
+        }
     }
 
     async vote(answerIds: string[]): Promise<void> {
@@ -117,6 +142,7 @@ export class MatrixChatPoll implements ChatPollItem {
             undecryptableRelationsCount: this.poll.undecryptableRelationsCount,
         });
         this.internalState.set(nextState);
+        this.internalHydrationState?.set({ status: "ready" });
     }
 
     destroy(): void {

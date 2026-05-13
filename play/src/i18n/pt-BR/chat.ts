@@ -222,6 +222,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         replyPlural: "{count} respostas",
         openThreadButtonTitle: "Abrir thread",
         unreadAriaLabel: "{count} não lidas",
+        partialHistory: "O histórico do tópico está disponível apenas parcialmente nesta sala.",
+        degradedListWarning: "{count} tópico(s) estão sem o início.",
+        degradedBadge: "Início indisponível",
+        rootUnavailable: "O início desta conversa não está disponível. Você ainda pode ler e responder.",
+        openError: "Não foi possível abrir este tópico.",
     },
     react: "Reagir",
     copy: "Copiar",
@@ -398,6 +403,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         toggleOpen: "Abrir painel da sala",
         toggleClose: "Fechar painel da sala",
         back: "Voltar para a visão geral da sala",
+        status: {
+            partialHistory: "Histórico parcial",
+            pollDetailsUnavailable: "Os resultados detalhados desta enquete não estão disponíveis no momento.",
+            retry: "Tentar novamente",
+        },
         sections: {
             threads: "Tópicos",
             polls: "Enquetes",
@@ -428,6 +438,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsEmpty: "Ainda não há enquetes",
         participantsEmpty: "Ainda não há participantes",
         pollWinner: "Resposta na liderança: {answer}",
+        threadsLoadError: "Não foi possível carregar os tópicos. Tente novamente.",
+        pollsLoadError: "Não foi possível carregar as enquetes. Tente novamente.",
+        pollsPartial: "Algumas enquetes não puderam carregar seus resultados detalhados.",
+        pollFocusError: "Não foi possível abrir esta enquete na linha do tempo.",
     },
     roomMenu: {
         leaveRoom: {

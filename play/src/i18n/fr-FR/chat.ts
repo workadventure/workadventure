@@ -222,6 +222,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         replyPlural: "{count} réponses",
         openThreadButtonTitle: "Ouvrir le fil",
         unreadAriaLabel: "{count} non lu(s)",
+        partialHistory: "L'historique des fils n'est disponible qu'en partie dans ce salon.",
+        degradedListWarning: "{count} fil(s) n'ont pas leur début.",
+        degradedBadge: "Début indisponible",
+        rootUnavailable:
+            "Le début de cette conversation n'est pas disponible. Vous pouvez quand même lire et répondre.",
+        openError: "Impossible d'ouvrir ce fil.",
     },
     react: "Réagir",
     copy: "Copier",
@@ -398,6 +404,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         toggleOpen: "Ouvrir le panneau de room",
         toggleClose: "Fermer le panneau de room",
         back: "Back to room overview",
+        status: {
+            partialHistory: "Historique partiel",
+            pollDetailsUnavailable: "Les résultats détaillés de ce sondage sont indisponibles pour le moment.",
+            retry: "Réessayer",
+        },
         sections: {
             threads: "Fils",
             polls: "Sondages",
@@ -428,6 +439,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsEmpty: "Aucun sondage pour l'instant",
         participantsEmpty: "Aucun participant pour l'instant",
         pollWinner: "Réponse en tête : {answer}",
+        threadsLoadError: "Impossible de charger les fils. Veuillez réessayer.",
+        pollsLoadError: "Impossible de charger les sondages. Veuillez réessayer.",
+        pollsPartial: "Certains sondages n'ont pas pu charger leurs résultats détaillés.",
+        pollFocusError: "Impossible d'ouvrir ce sondage dans la timeline.",
     },
     roomMenu: {
         leaveRoom: {

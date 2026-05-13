@@ -221,6 +221,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         replyPlural: "{count} respostes",
         openThreadButtonTitle: "Obrir el fil",
         unreadAriaLabel: "{count} sense llegir",
+        partialHistory: "L'historial dels fils només està disponible parcialment en aquesta sala.",
+        degradedListWarning: "A {count} fil(s) els manca l'inici.",
+        degradedBadge: "Inici no disponible",
+        rootUnavailable: "L'inici d'aquesta conversa no està disponible. Encara podeu llegir i respondre.",
+        openError: "No s'ha pogut obrir aquest fil.",
     },
     react: "Reaccionar",
     copy: "Copiar",
@@ -397,6 +402,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         toggleOpen: "Obre el tauler de la sala",
         toggleClose: "Tanca el tauler de la sala",
         back: "Back to room overview",
+        status: {
+            partialHistory: "Historial parcial",
+            pollDetailsUnavailable: "Els resultats detallats d'aquesta enquesta no estan disponibles ara mateix.",
+            retry: "Tornar-ho a provar",
+        },
         sections: {
             threads: "Fils",
             polls: "Enquestes",
@@ -427,6 +437,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsEmpty: "Encara no hi ha enquestes",
         participantsEmpty: "Encara no hi ha participants",
         pollWinner: "Resposta capdavantera: {answer}",
+        threadsLoadError: "No s'han pogut carregar els fils. Torneu-ho a provar.",
+        pollsLoadError: "No s'han pogut carregar les enquestes. Torneu-ho a provar.",
+        pollsPartial: "Algunes enquestes no han pogut carregar els seus resultats detallats.",
+        pollFocusError: "No s'ha pogut obrir aquesta enquesta a la línia de temps.",
     },
     roomMenu: {
         leaveRoom: {

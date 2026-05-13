@@ -45,6 +45,18 @@ export type PartialAnyKindOfUser = PartialChatUser | PartialAdminUser;
 
 export type ChatRoomMembership = "ban" | "leave" | "knock" | "join" | "invite" | string;
 export type ChatRoomInitializationState = "idle" | "loading" | "ready" | "error";
+export type ChatRoomSidePanelHydrationStatus = "idle" | "loading" | "ready" | "error" | "partial";
+export type ChatRoomSidePanelHydrationReason = "server_unsupported" | "thread_root_missing" | "poll_item_error";
+export type ChatRoomSidePanelHydrationWarning = {
+    reason: ChatRoomSidePanelHydrationReason;
+    count?: number;
+};
+export type ChatRoomSidePanelHydrationState = {
+    status: ChatRoomSidePanelHydrationStatus;
+    reason?: ChatRoomSidePanelHydrationReason;
+    errorMessage?: string;
+    warnings?: ChatRoomSidePanelHydrationWarning[];
+};
 
 export enum ChatPermissionLevel {
     USER = "USER",
@@ -106,6 +118,7 @@ export interface ChatConversation {
     readonly isRoomFolder: boolean;
     readonly lastMessageTimestamp: number;
     readonly getMessageById?: (messageId: string) => Promise<ChatMessage | undefined>;
+    readonly ensureTimelineEventVisible?: (eventId: string) => Promise<boolean>;
 }
 
 export interface ChatRoom extends ChatConversation {
@@ -113,6 +126,12 @@ export interface ChatRoom extends ChatConversation {
     readonly openThread?: (rootMessageId: string) => Promise<ChatThread | undefined>;
     readonly threads?: Readable<readonly ChatThreadSummary[]>;
     readonly pollItems?: Readable<readonly ChatPollItem[]>;
+    readonly threadsHydrationState?: Readable<ChatRoomSidePanelHydrationState>;
+    readonly pollCatalogueHydrationState?: Readable<ChatRoomSidePanelHydrationState>;
+    readonly pollRichHydrationState?: Readable<ChatRoomSidePanelHydrationState>;
+    readonly ensureThreadsHydrated?: () => Promise<void>;
+    readonly ensurePollCatalogueHydrated?: () => Promise<void>;
+    readonly ensurePollRichHydrated?: () => Promise<void>;
     readonly privacyState?: Readable<ChatRoomPrivacyState>;
     /**
      * Joined participant count without hydrating full {@link ChatRoomMembershipManagement.members}.
@@ -198,6 +217,8 @@ export type ChatThreadSummary = {
     lastActivityTimestamp: number;
     hasUnreadMessages: boolean;
     unreadNotificationCount: number;
+    isDegraded?: boolean;
+    degradedReason?: "root_missing";
 };
 
 export type ChatPollCreateOptions = {
@@ -257,6 +278,8 @@ export interface ChatPollItem {
     canVote: Readable<boolean>;
     canEnd: Readable<boolean>;
     canDelete: Readable<boolean>;
+    hydrationState?: Readable<ChatRoomSidePanelHydrationState>;
+    retryHydration?: () => Promise<void>;
     vote: (answerIds: string[]) => Promise<void>;
     end: () => Promise<void>;
     remove: () => Promise<void>;

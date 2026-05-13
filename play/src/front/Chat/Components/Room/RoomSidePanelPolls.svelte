@@ -1,31 +1,50 @@
 <script lang="ts">
-    import { tick } from "svelte";
-    import { readable, type Readable } from "svelte/store";
-    import { get } from "svelte/store";
+    import { onMount, tick } from "svelte";
+    import { get, readable, type Readable } from "svelte/store";
     import LL from "../../../../i18n/i18n-svelte";
-    import type { ChatPollItem, ChatRoom } from "../../Connection/ChatConnection";
+    import type { ChatPollItem, ChatRoom, ChatRoomSidePanelHydrationState } from "../../Connection/ChatConnection";
     import { selectedThreadStore } from "../../Stores/SelectedThreadStore";
     import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
+    import { toastStore } from "../../../Stores/ToastStore";
+    import TextToast from "../../../Components/Toasts/TextToast.svelte";
     import RoomSidePanelPollItem from "./RoomSidePanelPollItem.svelte";
+    import { IconLoader } from "@wa-icons";
 
     export let room: ChatRoom;
     export let closeOnTimelineFocus = false;
 
     const emptyPollItems = readable<readonly ChatPollItem[]>([]);
+    const idleHydrationState = readable<ChatRoomSidePanelHydrationState>({ status: "idle" });
 
-    $: timelineItems = room.timelineItems;
+    onMount(() => {
+        room.ensurePollRichHydrated?.().catch((error) => console.error("Failed to hydrate polls side panel", error));
+    });
 
     async function focusPoll(poll: ChatPollItem) {
         if (poll.context.kind === "thread") {
             const thread = await room.openThread?.(poll.context.threadRootMessageId);
             if (!thread) {
+                toastStore.addToast(TextToast, { message: $LL.chat.thread.openError() }, undefined);
                 return;
             }
 
             selectedThreadStore.set(thread);
             roomSidePanelStore.setActiveSection("threads");
+
+            const canFocusThreadPoll = (await thread.ensureTimelineEventVisible?.(poll.id)) ?? true;
+            if (!canFocusThreadPoll) {
+                toastStore.addToast(TextToast, { message: $LL.chat.roomPanel.pollFocusError() }, undefined);
+                return;
+            }
+
             await tick();
             roomSidePanelStore.focusTimelineEvent(thread.id, poll.id);
+            return;
+        }
+
+        const canFocusRoomPoll = (await room.ensureTimelineEventVisible?.(poll.id)) ?? true;
+        if (!canFocusRoomPoll) {
+            toastStore.addToast(TextToast, { message: $LL.chat.roomPanel.pollFocusError() }, undefined);
             return;
         }
 
@@ -37,18 +56,19 @@
         roomSidePanelStore.focusTimelineEvent(room.id, poll.id);
     }
 
+    function retryPollRichHydration() {
+        room.ensurePollRichHydrated?.().catch((error) => console.error("Failed to retry poll rich hydration", error));
+    }
+
     function getPollItemsStore(currentRoom: ChatRoom): Readable<readonly ChatPollItem[]> {
         return currentRoom.pollItems ?? emptyPollItems;
     }
 
     $: pollItems = getPollItemsStore(room);
-    $: timelinePolls = $timelineItems
-        .filter(
-            (item): item is { kind: "poll"; id: string; date: Date | null; poll: ChatPollItem } => item.kind === "poll"
-        )
-        .map((item) => item.poll);
-    $: pollSource = $pollItems.length > 0 ? $pollItems : timelinePolls;
-    $: polls = [...pollSource].sort((left, right) => {
+    $: pollRichHydrationState = room.pollRichHydrationState ?? idleHydrationState;
+    $: richWarnings = $pollRichHydrationState.warnings ?? [];
+    $: pollItemErrorWarning = richWarnings.find((warning) => warning.reason === "poll_item_error");
+    $: polls = [...$pollItems].sort((left, right) => {
         const leftState = get(left.state);
         const rightState = get(right.state);
 
@@ -68,24 +88,58 @@
     </div>
 
     <div class="flex-1 overflow-y-auto px-3 py-3">
-        {#if polls.length === 0}
+        {#if $pollRichHydrationState.status === "loading" || $pollRichHydrationState.status === "idle"}
             <div
                 class="rounded-lg border border-dashed border-white/10 px-4 py-6 text-center text-sm opacity-60"
-                data-testid="roomSidePanelPollsEmpty"
+                data-testid="roomSidePanelPollsLoading"
             >
-                {$LL.chat.roomPanel.pollsEmpty()}
+                <div class="flex items-center justify-center text-white/80">
+                    <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={24} />
+                </div>
+            </div>
+        {:else if $pollRichHydrationState.status === "error"}
+            <div
+                class="rounded-lg border border-solid border-danger-900/50 bg-danger-900/20 px-4 py-4 text-sm text-white/85"
+            >
+                <div data-testid="roomSidePanelPollsError">{$LL.chat.roomPanel.pollsLoadError()}</div>
+                <button
+                    type="button"
+                    class="m-0 mt-3 rounded-lg border border-solid border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                    data-testid="roomSidePanelPollsRetry"
+                    on:click={retryPollRichHydration}
+                >
+                    {$LL.chat.roomPanel.status.retry()}
+                </button>
             </div>
         {:else}
-            <div class="flex flex-col gap-2">
-                {#each polls as poll (poll.id)}
-                    <div
-                        class="rounded-lg border border-solid border-white/10 bg-white/[0.03] px-3 py-3 text-left"
-                        data-testid="roomSidePanelPollItem"
-                    >
-                        <RoomSidePanelPollItem {poll} onFocusPoll={() => focusPoll(poll)} />
-                    </div>
-                {/each}
-            </div>
+            {#if pollItemErrorWarning?.count}
+                <div
+                    class="mb-3 rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3 text-xs text-white/70"
+                    data-testid="roomSidePanelPollsPartial"
+                >
+                    {$LL.chat.roomPanel.pollsPartial()}
+                </div>
+            {/if}
+
+            {#if polls.length === 0}
+                <div
+                    class="rounded-lg border border-dashed border-white/10 px-4 py-6 text-center text-sm opacity-60"
+                    data-testid="roomSidePanelPollsEmpty"
+                >
+                    {$LL.chat.roomPanel.pollsEmpty()}
+                </div>
+            {:else}
+                <div class="flex flex-col gap-2">
+                    {#each polls as poll (poll.id)}
+                        <div
+                            class="rounded-lg border border-solid border-white/10 bg-white/[0.03] px-3 py-3 text-left"
+                            data-testid="roomSidePanelPollItem"
+                        >
+                            <RoomSidePanelPollItem {poll} onFocusPoll={() => focusPoll(poll)} />
+                        </div>
+                    {/each}
+                </div>
+            {/if}
         {/if}
     </div>
 </div>

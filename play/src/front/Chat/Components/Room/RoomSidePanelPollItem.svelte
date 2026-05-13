@@ -1,16 +1,26 @@
 <script lang="ts">
+    import { readable } from "svelte/store";
     import LL from "../../../../i18n/i18n-svelte";
-    import type { ChatPollAnswer, ChatPollItem } from "../../Connection/ChatConnection";
+    import type {
+        ChatPollAnswer,
+        ChatPollItem,
+        ChatRoomSidePanelHydrationState,
+    } from "../../Connection/ChatConnection";
     import { IconCheck, IconLoader, IconMessageCircle2 } from "@wa-icons";
 
     export let poll: ChatPollItem;
     export let onFocusPoll: (() => Promise<void>) | (() => void);
 
+    const readyHydrationState = readable<ChatRoomSidePanelHydrationState>({ status: "ready" });
     const { state, canVote } = poll;
     let localSelection: string[] = [];
     let isDirty = false;
     let isSubmittingVote = false;
     let hasVoteError = false;
+    let isRetryingHydration = false;
+
+    $: pollHydrationState = poll.hydrationState ?? readyHydrationState;
+    $: isFallbackPoll = $pollHydrationState.status === "error" || $pollHydrationState.status === "loading";
 
     $: if (!isDirty) {
         localSelection = [...$state.myAnswerIds];
@@ -46,7 +56,7 @@
     }
 
     function voteFromAnswerClick(answerId: string) {
-        if ($state.isEnded || !$canVote || isSubmittingVote) {
+        if (isFallbackPoll || $state.isEnded || !$canVote || isSubmittingVote) {
             return;
         }
 
@@ -81,6 +91,21 @@
         const rightSorted = [...right].sort();
         return leftSorted.every((answerId, index) => answerId === rightSorted[index]);
     }
+
+    function retryPollHydration() {
+        if (!poll.retryHydration || isRetryingHydration) {
+            return;
+        }
+
+        isRetryingHydration = true;
+        poll.retryHydration()
+            .catch((error) => {
+                console.error("Failed to retry poll hydration", error);
+            })
+            .finally(() => {
+                isRetryingHydration = false;
+            });
+    }
 </script>
 
 <div class="min-w-0">
@@ -93,7 +118,13 @@
         >
             {$state.isEnded ? $LL.chat.poll.kind.closed() : $LL.chat.poll.kind.open()}
         </span>
-        <span class="text-xs text-white/50">{$LL.chat.poll.participants({ count: $state.totalVotes })}</span>
+        {#if isFallbackPoll}
+            <span class="text-xs text-white/50">
+                {$pollHydrationState.status === "loading" ? "" : $LL.chat.roomPanel.status.pollDetailsUnavailable()}
+            </span>
+        {:else}
+            <span class="text-xs text-white/50">{$LL.chat.poll.participants({ count: $state.totalVotes })}</span>
+        {/if}
     </div>
 
     <div class="mt-2 line-clamp-2 text-sm font-semibold text-white" data-testid="roomSidePanelPollQuestion">
@@ -110,7 +141,19 @@
         </div>
     {/if}
 
-    {#if !$state.isEnded && $canVote}
+    {#if isFallbackPoll}
+        <div
+            class="mt-3 rounded-lg border border-solid border-white/10 bg-white/[0.03] px-2.5 py-2 text-xs text-white/60"
+        >
+            {#if $pollHydrationState.status === "loading"}
+                <div class="flex items-center gap-2">
+                    <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={14} />
+                </div>
+            {:else}
+                {$LL.chat.roomPanel.status.pollDetailsUnavailable()}
+            {/if}
+        </div>
+    {:else if !$state.isEnded && $canVote}
         <div class="mt-3 flex flex-col gap-1.5">
             {#each $state.answers as answer (answer.id)}
                 {@const selected = localSelection.includes(answer.id)}
@@ -161,13 +204,15 @@
                 </div>
             {/each}
         </div>
-    {:else if !$state.isEnded}
+    {/if}
+
+    {#if !isFallbackPoll && !$state.resultsVisible && !$state.isEnded}
         <div class="mt-3 text-xs text-white/50">
             {$state.kind === "open" ? $LL.chat.poll.resultsAfterVote() : $LL.chat.poll.resultsWhenClosed()}
         </div>
     {/if}
 
-    {#if $state.isEnded && winningAnswers.length > 0}
+    {#if $state.isEnded && !isFallbackPoll && winningAnswers.length > 0}
         <div class="mt-3 text-xs font-semibold text-white/80">
             {$LL.chat.roomPanel.pollWinner({ answer: winningAnswers.map((answer) => answer.text).join(", ") })}
         </div>
@@ -179,12 +224,30 @@
         </div>
     {/if}
 
-    <button
-        type="button"
-        class="m-0 mt-3 rounded-lg border border-solid border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white"
-        data-testid="roomSidePanelPollFocusButton"
-        on:click={() => onFocusPoll()}
-    >
-        {$LL.chat.show()}
-    </button>
+    <div class="mt-3 flex flex-wrap gap-2">
+        {#if $pollHydrationState.status === "error" && poll.retryHydration}
+            <button
+                type="button"
+                class="m-0 rounded-lg border border-solid border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white"
+                data-testid="roomSidePanelPollRetryButton"
+                disabled={isRetryingHydration}
+                on:click={retryPollHydration}
+            >
+                {#if isRetryingHydration}
+                    <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={14} />
+                {:else}
+                    {$LL.chat.roomPanel.status.retry()}
+                {/if}
+            </button>
+        {/if}
+
+        <button
+            type="button"
+            class="m-0 rounded-lg border border-solid border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white"
+            data-testid="roomSidePanelPollFocusButton"
+            on:click={() => onFocusPoll()}
+        >
+            {$LL.chat.show()}
+        </button>
+    </div>
 </div>

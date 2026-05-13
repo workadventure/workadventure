@@ -223,6 +223,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         replyPlural: "답글 {count}개",
         openThreadButtonTitle: "스레드 열기",
         unreadAriaLabel: "읽지 않음 {count}개",
+        partialHistory: "이 방에서는 스레드 기록의 일부만 사용할 수 있습니다.",
+        degradedListWarning: "{count}개의 스레드에 시작 부분이 없습니다.",
+        degradedBadge: "시작 부분을 사용할 수 없음",
+        rootUnavailable: "이 대화의 시작 부분을 사용할 수 없습니다. 읽기와 답장은 계속할 수 있습니다.",
+        openError: "이 스레드를 열 수 없습니다.",
     },
     react: "반응",
     copy: "복사",
@@ -399,6 +404,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         toggleOpen: "방 패널 열기",
         toggleClose: "방 패널 닫기",
         back: "Back to room overview",
+        status: {
+            partialHistory: "부분 기록",
+            pollDetailsUnavailable: "이 투표의 상세 결과를 지금은 사용할 수 없습니다.",
+            retry: "다시 시도",
+        },
         sections: {
             threads: "스레드",
             polls: "투표",
@@ -429,6 +439,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsEmpty: "아직 투표가 없습니다",
         participantsEmpty: "아직 참가자가 없습니다",
         pollWinner: "현재 선두 응답: {answer}",
+        threadsLoadError: "스레드를 불러올 수 없습니다. 다시 시도하세요.",
+        pollsLoadError: "투표를 불러올 수 없습니다. 다시 시도하세요.",
+        pollsPartial: "일부 투표에서 상세 결과를 불러오지 못했습니다.",
+        pollFocusError: "타임라인에서 이 투표를 열 수 없습니다.",
     },
     roomMenu: {
         leaveRoom: {

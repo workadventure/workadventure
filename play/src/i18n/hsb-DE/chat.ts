@@ -222,6 +222,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         replyPlural: "{count} wotmołwow",
         openThreadButtonTitle: "Nitku wočinić",
         unreadAriaLabel: "{count} njepřečitane",
+        partialHistory: "Nitkinowa historija je jenož čěšćownje k dispoziciji w tutej rumnosći.",
+        degradedListWarning: "{count} nitkomaj brakuje započatk.",
+        degradedBadge: "Započatk k dispoziciji njeje",
+        rootUnavailable: "Započatk tuteje konwersacije njeje k dispoziciji. Móžeš hišće čitać a wotmołwić.",
+        openError: "Tutu nitku njeda so wočinić.",
     },
     react: "reagować",
     copy: "kopěrować",
@@ -398,6 +403,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         toggleOpen: "Panel ruma wočinić",
         toggleClose: "Panel ruma začinić",
         back: "Back to room overview",
+        status: {
+            partialHistory: "Dźěłkowa historija",
+            pollDetailsUnavailable: "Detelnje wuslědki za tute wothłosowanje w tutej chwili k dispoziciji njejsu.",
+            retry: "Hišće raz spytać",
+        },
         sections: {
             threads: "Nitki",
             polls: "Wothłosowanja",
@@ -428,6 +438,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsEmpty: "Hišće žane wothłosowanja",
         participantsEmpty: "Hišće žani wobdźělnicy",
         pollWinner: "Naječbnješa wotmołwa: {answer}",
+        threadsLoadError: "Nitki njeda so čitać. Prošu spytajće hišće raz.",
+        pollsLoadError: "Wothłosowanja njeda so čitać. Prošu spytajće hišće raz.",
+        pollsPartial: "Za někotre wothłosowanja njebuchu so jich detelnje wuslědki čitać.",
+        pollFocusError: "Tute wothłosowanje njeda so w časowej lince wočinić.",
     },
     roomMenu: {
         leaveRoom: {

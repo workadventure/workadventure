@@ -221,6 +221,11 @@ const chat: BaseTranslation = {
         replyPlural: "{count} replies",
         openThreadButtonTitle: "Open thread",
         unreadAriaLabel: "{count} unread",
+        partialHistory: "Thread history is only partially available in this room.",
+        degradedListWarning: "{count} thread(s) are missing their beginning.",
+        degradedBadge: "Beginning unavailable",
+        rootUnavailable: "The beginning of this conversation isn't available. You can still read and reply.",
+        openError: "Unable to open this thread.",
     },
     react: "React",
     copy: "Copy",
@@ -397,6 +402,11 @@ const chat: BaseTranslation = {
         toggleOpen: "Open room panel",
         toggleClose: "Close room panel",
         back: "Back to room overview",
+        status: {
+            partialHistory: "Partial history",
+            pollDetailsUnavailable: "Detailed results are unavailable for this poll right now.",
+            retry: "Retry",
+        },
         sections: {
             threads: "Threads",
             polls: "Polls",
@@ -427,6 +437,10 @@ const chat: BaseTranslation = {
         pollsEmpty: "No polls yet",
         participantsEmpty: "No participants yet",
         pollWinner: "Leading answer: {answer}",
+        threadsLoadError: "Unable to load threads. Try again.",
+        pollsLoadError: "Unable to load polls. Try again.",
+        pollsPartial: "Some polls couldn't load their detailed results.",
+        pollFocusError: "Unable to open this poll in the timeline.",
     },
     roomMenu: {
         leaveRoom: {

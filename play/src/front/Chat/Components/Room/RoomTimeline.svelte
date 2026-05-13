@@ -378,9 +378,19 @@
 
         await tick();
 
-        const target = Array.from(messageListRef?.querySelectorAll<HTMLLIElement>("li[data-event-id]") ?? []).find(
+        let target = Array.from(messageListRef?.querySelectorAll<HTMLLIElement>("li[data-event-id]") ?? []).find(
             (element) => element.dataset.eventId === request.eventId
         );
+
+        if (!target) {
+            const wasMadeVisible = (await room.ensureTimelineEventVisible?.(request.eventId)) ?? false;
+            if (wasMadeVisible) {
+                await tick();
+                target = Array.from(messageListRef?.querySelectorAll<HTMLLIElement>("li[data-event-id]") ?? []).find(
+                    (element) => element.dataset.eventId === request.eventId
+                );
+            }
+        }
 
         if (!target) {
             return;

@@ -13,6 +13,7 @@ import {
     Direction,
     EventStatus,
     EventType,
+    Filter,
     MsgType,
     NotificationCountType,
     PushRuleActionName,
@@ -39,13 +40,15 @@ import {
 } from "matrix-js-sdk/lib/@types/polls";
 import { PollStartEvent } from "matrix-js-sdk/lib/extensible_events_v1/PollStartEvent";
 import type { Poll } from "matrix-js-sdk/lib/models/poll";
-import { PollEvent } from "matrix-js-sdk/lib/models/poll";
-import { ThreadEvent } from "matrix-js-sdk/lib/models/thread";
+import { Thread, ThreadEvent } from "matrix-js-sdk/lib/models/thread";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import Debug from "debug";
+import pLimit from "p-limit";
 import type {
+    ChatPollItem,
     ChatRoom,
     ChatRoomInitializationState,
+    ChatRoomSidePanelHydrationState,
     ChatThread,
     ChatRoomMember,
     ChatRoomMembership,
@@ -73,6 +76,7 @@ import { chatNotificationStore } from "../../../Stores/ProximityNotificationStor
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { MatrixChatMessage } from "./MatrixChatMessage";
+import { MatrixChatLightPoll } from "./MatrixChatLightPoll";
 import { MatrixChatPoll } from "./MatrixChatPoll";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatThread } from "./MatrixChatThread";
@@ -109,9 +113,13 @@ export class MatrixChatRoom
     pictureStore: LazyPictureStore;
     readonly avatarFallbackColor: Readable<string | undefined>;
     messages: SearchableArrayStore<string, MatrixChatMessage>;
-    polls: SearchableArrayStore<string, MatrixChatPoll>;
-    readonly pollItems: Readable<readonly MatrixChatPoll[]>;
+    private readonly timelinePolls: SearchableArrayStore<string, MatrixChatPoll>;
+    private readonly sidePanelPolls: SearchableArrayStore<string, ChatPollItem>;
+    readonly pollItems: Readable<readonly ChatPollItem[]>;
     readonly threads: Readable<readonly ChatThreadSummary[]>;
+    readonly threadsHydrationState: Writable<ChatRoomSidePanelHydrationState> = writable({ status: "idle" });
+    readonly pollCatalogueHydrationState: Writable<ChatRoomSidePanelHydrationState> = writable({ status: "idle" });
+    readonly pollRichHydrationState: Writable<ChatRoomSidePanelHydrationState> = writable({ status: "idle" });
     timelineItems: Readable<readonly ChatTimelineItem[]>;
     readonly pollCreation: ChatPollCreationCapability;
     readonly joinedMemberCount: Readable<number>;
@@ -141,7 +149,6 @@ export class MatrixChatRoom
     private handleRoomStateMembers = this.onRoomStateMembers.bind(this);
     private handleMyMembership = this.onRoomMyMembership.bind(this);
     private updateUnreadNotificationCount = this.onRoomUpdateUnreadNotificationCount.bind(this);
-    private handleNewPoll = this.onRoomNewPoll.bind(this);
     private readonly openThreadConversations = new Map<string, MatrixChatThread>();
     private readonly threadSummaryStores = new Map<string, Writable<ChatThreadSummary | null>>();
     private readonly threadSubscriptions = new Map<string, () => void>();
@@ -157,6 +164,9 @@ export class MatrixChatRoom
     private userProviderMergerPromise: Promise<UserProviderMerger | undefined>;
     private visibleProfileSyncUsers = 0;
     private initializationPromise: Promise<void> | undefined;
+    private threadsHydrationPromise: Promise<void> | undefined;
+    private pollCatalogueHydrationPromise: Promise<void> | undefined;
+    private pollRichHydrationPromise: Promise<void> | undefined;
     private membersInitializationPromise: Promise<void> | undefined;
     private membersInitialized = false;
     private initializedEventHandlersStarted = false;
@@ -210,8 +220,9 @@ export class MatrixChatRoom
             matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined
         );
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
-        this.polls = new SearchableArrayStore((item: MatrixChatPoll) => item.id);
-        this.pollItems = this.polls;
+        this.timelinePolls = new SearchableArrayStore((item: MatrixChatPoll) => item.id);
+        this.sidePanelPolls = new SearchableArrayStore((item: ChatPollItem) => item.id);
+        this.pollItems = this.sidePanelPolls;
         this.privacyState = writable(this.getMatrixRoomPrivacyState());
         this.pollCreation = {
             canCreate: readable(true),
@@ -224,7 +235,7 @@ export class MatrixChatRoom
             },
             create: ({ question, answers, kind, threadId }) => this.createPoll(question, answers, kind, threadId),
         };
-        this.timelineItems = derived([this.messages, this.polls], ([$messages, $polls]) => {
+        this.timelineItems = derived([this.messages, this.timelinePolls], ([$messages, $polls]) => {
             const timelineItems: ChatTimelineItem[] = [
                 ...Array.from(
                     $messages,
@@ -493,6 +504,363 @@ export class MatrixChatRoom
         return this.initializationPromise;
     }
 
+    async ensureThreadsHydrated(): Promise<void> {
+        const currentState = get(this.threadsHydrationState);
+        const shouldRetryDegradedThreads =
+            currentState.status === "partial" &&
+            (currentState.warnings ?? []).some((warning) => warning.reason === "thread_root_missing");
+
+        if (currentState.status === "ready" || (currentState.status === "partial" && !shouldRetryDegradedThreads)) {
+            return;
+        }
+
+        if (this.threadsHydrationPromise) {
+            return this.threadsHydrationPromise;
+        }
+
+        this.threadsHydrationState.set({ status: "loading" });
+        this.threadsHydrationPromise = (async () => {
+            if (Thread.hasServerSideSupport) {
+                await this.matrixRoom.createThreadsTimelineSets();
+                await this.matrixRoom.fetchRoomThreads();
+            }
+
+            const threadIds = this.matrixRoom.getThreads().map((thread) => thread.id);
+            await Promise.allSettled(threadIds.map((threadId) => this.resolveThreadRoot(threadId)));
+            this.refreshThreadListFromRoom();
+        })()
+            .catch((error: unknown) => {
+                const hydrationError = error instanceof Error ? error : new Error(String(error));
+                this.threadsHydrationState.set({
+                    status: "error",
+                    errorMessage: hydrationError.message,
+                });
+                throw hydrationError;
+            })
+            .finally(() => {
+                this.threadsHydrationPromise = undefined;
+            });
+
+        return this.threadsHydrationPromise;
+    }
+
+    async ensurePollCatalogueHydrated(): Promise<void> {
+        const currentState = get(this.pollCatalogueHydrationState);
+        if (currentState.status === "ready") {
+            return;
+        }
+
+        if (this.pollCatalogueHydrationPromise) {
+            return this.pollCatalogueHydrationPromise;
+        }
+
+        this.pollCatalogueHydrationState.set({ status: "loading" });
+        this.pollCatalogueHydrationPromise = (async () => {
+            const pollStartEvents = await this.fetchAllPollStartEvents();
+            await this.processPollEvents(pollStartEvents);
+
+            await Promise.all(
+                pollStartEvents
+                    .map((event) => event.getId())
+                    .filter((eventId): eventId is string => !!eventId)
+                    .map((pollId) => this.resolveHistoricalPollEndEvent(pollId))
+            );
+
+            this.rebuildSidePanelPollCatalogue();
+            this.pollCatalogueHydrationState.set({ status: "ready" });
+        })()
+            .catch((error: unknown) => {
+                const hydrationError = error instanceof Error ? error : new Error(String(error));
+                this.pollCatalogueHydrationState.set({
+                    status: "error",
+                    errorMessage: hydrationError.message,
+                });
+                throw hydrationError;
+            })
+            .finally(() => {
+                this.pollCatalogueHydrationPromise = undefined;
+            });
+
+        return this.pollCatalogueHydrationPromise;
+    }
+
+    async ensurePollRichHydrated(): Promise<void> {
+        const currentState = get(this.pollRichHydrationState);
+        if (currentState.status === "ready" || currentState.status === "partial") {
+            return;
+        }
+
+        if (this.pollRichHydrationPromise) {
+            return this.pollRichHydrationPromise;
+        }
+
+        this.pollRichHydrationState.set({ status: "loading" });
+        this.pollRichHydrationPromise = (async () => {
+            await this.ensurePollCatalogueHydrated();
+
+            const limit = pLimit(5);
+            await Promise.all(
+                [...this.sidePanelPolls].map((pollItem) =>
+                    limit(() => {
+                        return this.retryPollRichHydration(pollItem.id, { updateGlobalState: false });
+                    })
+                )
+            );
+
+            this.refreshPollRichHydrationState();
+        })()
+            .catch((error: unknown) => {
+                const hydrationError = error instanceof Error ? error : new Error(String(error));
+                this.pollRichHydrationState.set({
+                    status: "error",
+                    errorMessage: hydrationError.message,
+                });
+                throw hydrationError;
+            })
+            .finally(() => {
+                this.pollRichHydrationPromise = undefined;
+            });
+
+        return this.pollRichHydrationPromise;
+    }
+
+    private async resolveThreadRoot(rootEventId: string): Promise<boolean> {
+        const thread = this.matrixRoom.getThread(rootEventId);
+        if (!thread) {
+            return false;
+        }
+
+        if (thread.rootEvent || this.matrixRoom.findEventById(rootEventId)) {
+            return true;
+        }
+
+        const rootEvent = await this.getMatrixEventById(rootEventId);
+        if (!rootEvent) {
+            return false;
+        }
+
+        thread.rootEvent = rootEvent;
+        return true;
+    }
+
+    private refreshThreadListFromRoom(): void {
+        const threadSummaries = this.matrixRoom
+            .getThreads()
+            .map((thread) => getThreadSummary(thread, this.matrixRoom, thread.id))
+            .filter((summary): summary is ChatThreadSummary => summary !== null)
+            .sort((left, right) => right.lastActivityTimestamp - left.lastActivityTimestamp);
+
+        this.threadList.set(threadSummaries);
+        this.refreshThreadsHydrationState();
+    }
+
+    private refreshThreadsHydrationState(): void {
+        const warnings: NonNullable<ChatRoomSidePanelHydrationState["warnings"]> = [];
+        if (!Thread.hasServerSideSupport) {
+            warnings.push({ reason: "server_unsupported" });
+        }
+
+        const degradedThreadsCount = get(this.threadList).filter((thread) => thread.isDegraded).length;
+        if (degradedThreadsCount > 0) {
+            warnings.push({
+                reason: "thread_root_missing",
+                count: degradedThreadsCount,
+            });
+        }
+
+        this.threadsHydrationState.set(
+            warnings.length > 0
+                ? {
+                      status: "partial",
+                      warnings,
+                  }
+                : {
+                      status: "ready",
+                  }
+        );
+    }
+
+    private async fetchAllPollStartEvents(): Promise<MatrixEvent[]> {
+        const client = this.matrixRoom.client;
+        const filter = new Filter(client.getSafeUserId() ?? "");
+        filter.setDefinition({
+            room: {
+                timeline: {
+                    types: [M_POLL_START.name, M_POLL_START.altName],
+                },
+            },
+        });
+
+        const filterId = await client.getOrCreateFilter(`POLL_HISTORY_FILTER_${this.matrixRoom.roomId}`, filter);
+        filter.filterId = filterId;
+
+        const timelineSet = this.matrixRoom.getOrCreateFilteredTimelineSet(filter);
+        const liveTimeline = timelineSet.getLiveTimeline();
+        const eventsById = new Map<string, MatrixEvent>();
+
+        const collectEvents = () => {
+            liveTimeline.getEvents().forEach((event) => {
+                const eventId = event.getId();
+                if (eventId && M_POLL_START.matches(event.getType())) {
+                    eventsById.set(eventId, event);
+                }
+            });
+        };
+
+        collectEvents();
+        while (liveTimeline.getPaginationToken(EventTimeline.BACKWARDS)) {
+            // Pagination is token-driven, so each request depends on the previous page.
+            // eslint-disable-next-line no-await-in-loop
+            await client.paginateEventTimeline(liveTimeline, { backwards: true });
+            collectEvents();
+        }
+
+        return [...eventsById.values()].sort((left, right) => left.getTs() - right.getTs());
+    }
+
+    private async resolveHistoricalPollEndEvent(pollId: string): Promise<void> {
+        const poll = this.matrixRoom.polls.get(pollId);
+        if (!poll || poll.isEnded) {
+            return;
+        }
+
+        const stableEndEvent = await this.fetchHistoricalPollEndEvent(pollId, M_POLL_END.name);
+        if (stableEndEvent) {
+            await this.processPollEvents([stableEndEvent]);
+            return;
+        }
+
+        if (!M_POLL_END.altName) {
+            return;
+        }
+
+        const unstableEndEvent = await this.fetchHistoricalPollEndEvent(pollId, M_POLL_END.altName);
+        if (unstableEndEvent) {
+            await this.processPollEvents([unstableEndEvent]);
+        }
+    }
+
+    private async fetchHistoricalPollEndEvent(pollId: string, eventType: string): Promise<MatrixEvent | undefined> {
+        let nextBatch: string | undefined;
+
+        do {
+            // Relations pagination is token-driven, so requests must remain sequential.
+            // eslint-disable-next-line no-await-in-loop
+            const relations = await this.matrixRoom.client.relations(this.id, pollId, "m.reference", eventType, {
+                from: nextBatch,
+            });
+            // Decryption must finish before we inspect the page for end events.
+            // eslint-disable-next-line no-await-in-loop
+            await Promise.all(
+                relations.events.map((event) =>
+                    this.matrixRoom.client.decryptEventIfNeeded(event).catch(() => undefined)
+                )
+            );
+
+            const endEvent = relations.events.find((event) => M_POLL_END.matches(event.getType()));
+            if (endEvent) {
+                return endEvent;
+            }
+
+            nextBatch = relations.nextBatch ?? undefined;
+        } while (nextBatch);
+
+        return undefined;
+    }
+
+    private rebuildSidePanelPollCatalogue(): void {
+        const nextPollItems: ChatPollItem[] = [];
+        const reusedPollIds = new Set<string>();
+
+        for (const poll of this.matrixRoom.polls.values()) {
+            if (!this.shouldTrackPoll(poll)) {
+                continue;
+            }
+
+            const existingPoll = this.sidePanelPolls.get(poll.pollId);
+            if (existingPoll instanceof MatrixChatPoll || existingPoll instanceof MatrixChatLightPoll) {
+                nextPollItems.push(existingPoll);
+                reusedPollIds.add(existingPoll.id);
+                continue;
+            }
+
+            const lightPoll = new MatrixChatLightPoll(poll, this.matrixRoom, this.getPollContext(poll));
+            nextPollItems.push(lightPoll);
+            reusedPollIds.add(lightPoll.id);
+        }
+
+        for (const existingPoll of [...this.sidePanelPolls]) {
+            if (
+                !reusedPollIds.has(existingPoll.id) &&
+                (existingPoll instanceof MatrixChatPoll || existingPoll instanceof MatrixChatLightPoll)
+            ) {
+                existingPoll.destroy();
+            }
+        }
+
+        this.sidePanelPolls.clear();
+        this.sidePanelPolls.push(...nextPollItems);
+    }
+
+    private async retryPollRichHydration(
+        pollId: string,
+        options?: {
+            updateGlobalState?: boolean;
+        }
+    ): Promise<void> {
+        const poll = this.matrixRoom.polls.get(pollId);
+        if (!poll || !this.shouldTrackPoll(poll)) {
+            return;
+        }
+
+        const existingPoll = this.sidePanelPolls.get(pollId);
+        if (existingPoll instanceof MatrixChatLightPoll) {
+            existingPoll.setHydrationState({ status: "loading" });
+        }
+
+        try {
+            await this.upsertSidePanelRichPoll(poll, {
+                retryHydration: () => this.retryPollRichHydration(pollId),
+            });
+        } catch (error: unknown) {
+            const hydrationError = error instanceof Error ? error : new Error(String(error));
+            this.upsertSidePanelLightPoll(poll, {
+                hydrationState: {
+                    status: "error",
+                    reason: "poll_item_error",
+                    errorMessage: hydrationError.message,
+                },
+                retryHydration: () => this.retryPollRichHydration(pollId),
+            });
+        } finally {
+            if (options?.updateGlobalState ?? true) {
+                this.refreshPollRichHydrationState();
+            }
+        }
+    }
+
+    private refreshPollRichHydrationState(): void {
+        const erroredPollItems = [...this.sidePanelPolls].filter(
+            (poll) => get(poll.hydrationState ?? readable({ status: "ready" })).status === "error"
+        );
+
+        this.pollRichHydrationState.set(
+            erroredPollItems.length > 0
+                ? {
+                      status: "partial",
+                      warnings: [
+                          {
+                              reason: "poll_item_error",
+                              count: erroredPollItems.length,
+                          },
+                      ],
+                  }
+                : {
+                      status: "ready",
+                  }
+        );
+    }
+
     private debugInitialization(type: "members" | "timeline"): void {
         debug("init %s room=%s roomId=%s", type, get(this.name), this.id);
     }
@@ -602,6 +970,7 @@ export class MatrixChatRoom
         const messages = result.filter((message): message is MatrixChatMessage => message !== undefined);
         this.messages.push(...messages);
         await this.processPollEvents(events);
+        await this.syncTimelinePollItemsFromEvents(events);
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
     }
 
@@ -644,24 +1013,7 @@ export class MatrixChatRoom
         this.matrixRoom.on(RoomStateEvent.Events, this.handleStateEvent);
         this.matrixRoom.on(RoomEvent.MyMembership, this.handleMyMembership);
         this.matrixRoom.on(RoomEvent.UnreadNotifications, this.updateUnreadNotificationCount);
-        this.matrixRoom.on(PollEvent.New, this.handleNewPoll);
         this.matrixRoom.currentState.on(RoomStateEvent.Members, this.handleRoomStateMembers);
-    }
-
-    private onRoomNewPoll(poll: Poll) {
-        if (!this.shouldTrackPoll(poll)) {
-            return;
-        }
-
-        if (!this.polls.has(poll.pollId)) {
-            this.polls.push(new MatrixChatPoll(poll, this.matrixRoom, this.getPollContext(poll)));
-            return;
-        }
-
-        this.polls
-            .get(poll.pollId)
-            ?.refresh()
-            .catch((error) => console.error("Failed to refresh poll", error));
     }
 
     private startHandlingChatRoomInitializedEvents() {
@@ -680,40 +1032,189 @@ export class MatrixChatRoom
 
     public async processPollEvents(events: MatrixEvent[]): Promise<void> {
         await this.matrixRoom.processPollEvents(events);
-        await this.syncPollItemsFromRoom();
     }
 
-    private async syncPollItemsFromRoom(): Promise<void> {
-        const visiblePollIds = new Set<string>();
-        const pollRefreshes: Promise<void>[] = [];
+    private async syncTimelinePollItemsFromEvents(events: MatrixEvent[]): Promise<void> {
+        const touchedPollIds = new Set<string>();
 
-        for (const [pollId, poll] of this.matrixRoom.polls.entries()) {
-            if (!this.shouldTrackPoll(poll)) {
+        for (const event of events) {
+            const eventId = event.getId();
+            if (eventId && M_POLL_START.matches(event.getType())) {
+                touchedPollIds.add(eventId);
+            }
+
+            const relationEventId = event.relationEventId ?? event.getRelation()?.event_id;
+            if (relationEventId && this.timelinePolls.has(relationEventId)) {
+                touchedPollIds.add(relationEventId);
+            }
+        }
+
+        const refreshes: Promise<void>[] = [];
+
+        for (const pollId of touchedPollIds) {
+            const poll = this.matrixRoom.polls.get(pollId);
+            if (!poll || !this.shouldTrackPoll(poll) || this.getPollContext(poll).kind !== "room") {
+                const existingPoll = this.timelinePolls.get(pollId);
+                if (existingPoll) {
+                    existingPoll.destroy();
+                    this.timelinePolls.delete(pollId);
+                }
                 continue;
             }
 
-            visiblePollIds.add(pollId);
-            const existingPoll = this.polls.get(pollId);
+            const existingPoll = this.timelinePolls.get(pollId);
             if (existingPoll) {
-                pollRefreshes.push(existingPoll.refresh());
+                refreshes.push(existingPoll.refresh());
                 continue;
             }
 
-            this.polls.push(new MatrixChatPoll(poll, this.matrixRoom, this.getPollContext(poll)));
+            this.timelinePolls.push(new MatrixChatPoll(poll, this.matrixRoom, this.getPollContext(poll)));
         }
 
-        await Promise.all(pollRefreshes);
+        await Promise.all(refreshes);
+    }
 
-        for (const existingPoll of [...this.polls]) {
-            if (!visiblePollIds.has(existingPoll.id)) {
-                existingPoll.destroy();
-                this.polls.delete(existingPoll.id);
+    private upsertSidePanelLightPoll(
+        poll: Poll,
+        options?: {
+            hydrationState?: ChatRoomSidePanelHydrationState;
+            retryHydration?: () => Promise<void>;
+        }
+    ): ChatPollItem {
+        const existingPoll = this.sidePanelPolls.get(poll.pollId);
+        if (existingPoll instanceof MatrixChatPoll) {
+            if (options?.hydrationState?.status !== "error") {
+                return existingPoll;
+            }
+
+            existingPoll.destroy();
+            this.sidePanelPolls.delete(existingPoll.id);
+        }
+
+        if (existingPoll instanceof MatrixChatLightPoll) {
+            if (options?.hydrationState) {
+                existingPoll.setHydrationState(options.hydrationState);
+            }
+            existingPoll.refresh();
+            this.sidePanelPolls.update(existingPoll);
+            return existingPoll;
+        }
+
+        const lightPoll = new MatrixChatLightPoll(poll, this.matrixRoom, this.getPollContext(poll), options);
+        this.sidePanelPolls.push(lightPoll);
+        return lightPoll;
+    }
+
+    private async upsertSidePanelRichPoll(
+        poll: Poll,
+        options?: {
+            retryHydration?: () => Promise<void>;
+        }
+    ): Promise<ChatPollItem> {
+        const existingPoll = this.sidePanelPolls.get(poll.pollId);
+        if (existingPoll instanceof MatrixChatPoll) {
+            await existingPoll.refresh();
+            this.sidePanelPolls.update(existingPoll);
+            return existingPoll;
+        }
+
+        const richPoll = new MatrixChatPoll(poll, this.matrixRoom, this.getPollContext(poll), {
+            hydrateOnInit: false,
+            hydrationState: { status: "ready" },
+            retryHydration: options?.retryHydration,
+        });
+        await richPoll.refresh();
+
+        if (existingPoll instanceof MatrixChatLightPoll) {
+            existingPoll.destroy();
+        }
+
+        this.sidePanelPolls.push(richPoll);
+        return richPoll;
+    }
+
+    private prunePollStores(): void {
+        const visiblePollIds = new Set(
+            Array.from(this.matrixRoom.polls.entries())
+                .filter(([, poll]) => this.shouldTrackPoll(poll))
+                .map(([pollId]) => pollId)
+        );
+
+        for (const timelinePoll of [...this.timelinePolls]) {
+            if (!visiblePollIds.has(timelinePoll.id)) {
+                timelinePoll.destroy();
+                this.timelinePolls.delete(timelinePoll.id);
+            }
+        }
+
+        for (const sidePanelPoll of [...this.sidePanelPolls]) {
+            if (!visiblePollIds.has(sidePanelPoll.id)) {
+                if (sidePanelPoll instanceof MatrixChatPoll || sidePanelPoll instanceof MatrixChatLightPoll) {
+                    sidePanelPoll.destroy();
+                }
+                this.sidePanelPolls.delete(sidePanelPoll.id);
             }
         }
     }
 
-    private async refreshAllPolls(): Promise<void> {
-        await this.syncPollItemsFromRoom();
+    private async syncSidePanelPollItemsFromEvents(events: MatrixEvent[]): Promise<void> {
+        const startedCatalogueHydration = this.pollCatalogueHydrationStarted();
+        const startedRichHydration = this.pollRichHydrationEnabled();
+        const touchedPollIds = new Set<string>();
+
+        for (const event of events) {
+            const eventId = event.getId();
+            if (eventId && M_POLL_START.matches(event.getType())) {
+                touchedPollIds.add(eventId);
+            }
+
+            const relationEventId = event.relationEventId ?? event.getRelation()?.event_id;
+            if (relationEventId) {
+                touchedPollIds.add(relationEventId);
+            }
+        }
+
+        if (startedRichHydration) {
+            const retries: Promise<void>[] = [];
+
+            for (const pollId of touchedPollIds) {
+                const poll = this.matrixRoom.polls.get(pollId);
+                if (!poll || !this.shouldTrackPoll(poll)) {
+                    continue;
+                }
+
+                retries.push(this.retryPollRichHydration(pollId, { updateGlobalState: false }));
+            }
+
+            await Promise.all(retries);
+        } else if (startedCatalogueHydration) {
+            for (const pollId of touchedPollIds) {
+                const poll = this.matrixRoom.polls.get(pollId);
+                if (!poll || !this.shouldTrackPoll(poll)) {
+                    continue;
+                }
+
+                this.upsertSidePanelLightPoll(poll);
+            }
+        }
+
+        this.prunePollStores();
+        if (startedRichHydration) {
+            this.refreshPollRichHydrationState();
+        }
+    }
+
+    private pollCatalogueHydrationStarted(): boolean {
+        return get(this.pollCatalogueHydrationState).status !== "idle";
+    }
+
+    private pollRichHydrationStarted(): boolean {
+        return get(this.pollRichHydrationState).status !== "idle";
+    }
+
+    private pollRichHydrationEnabled(): boolean {
+        const status = get(this.pollRichHydrationState).status;
+        return status === "loading" || status === "ready" || status === "partial";
     }
 
     private shouldTrackPoll(poll: Poll): boolean {
@@ -875,6 +1376,8 @@ export class MatrixChatRoom
                 }
                 if (this.isPollRelatedEvent(event)) {
                     await this.processPollEvents([event]);
+                    await this.syncTimelinePollItemsFromEvents([event]);
+                    await this.syncSidePanelPollItemsFromEvents([event]);
                 }
             })().catch((error) => console.error(error));
         }
@@ -925,7 +1428,7 @@ export class MatrixChatRoom
         } else if (sourceEventId) {
             this.refreshThreadSummary(sourceEventId);
         }
-        this.refreshAllPolls().catch((error) => console.error("Failed to refresh polls after redaction", error));
+        this.prunePollStores();
     }
 
     private handleNewMessage(event: MatrixEvent) {
@@ -1077,6 +1580,7 @@ export class MatrixChatRoom
             const messages = result.filter((message): message is MatrixChatMessage => message !== undefined);
             this.messages.unshift(...messages);
             await this.processPollEvents(paginatedEvents);
+            await this.syncTimelinePollItemsFromEvents(paginatedEvents);
             this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
             if (messages.length === 0) {
                 await this.loadMorePreviousMessages();
@@ -1134,21 +1638,32 @@ export class MatrixChatRoom
     public async openThread(rootMessageId: string): Promise<ChatThread | undefined> {
         const existingThreadConversation = this.openThreadConversations.get(rootMessageId);
         if (existingThreadConversation) {
+            await existingThreadConversation.refreshRootMessage();
             return existingThreadConversation;
         }
 
+        let thread = this.matrixRoom.getThread(rootMessageId);
         const rootEvent = await this.getMatrixEventById(rootMessageId);
-        if (!rootEvent || rootEvent.getType() !== EventType.RoomMessage) {
+
+        if (!thread && (!rootEvent || rootEvent.getType() !== EventType.RoomMessage)) {
             return undefined;
         }
 
-        let thread = this.matrixRoom.getThread(rootMessageId);
-        if (!thread) {
+        if (!thread && rootEvent) {
             thread = this.matrixRoom.createThread(rootMessageId, rootEvent, [], false);
+        }
+
+        if (!thread) {
+            return undefined;
+        }
+
+        if (rootEvent && !thread.rootEvent) {
+            thread.rootEvent = rootEvent;
         }
 
         const threadConversation = new MatrixChatThread(thread, this);
         this.openThreadConversations.set(rootMessageId, threadConversation);
+        await threadConversation.refreshRootMessage();
         this.refreshThreadSummary(rootMessageId);
 
         return threadConversation;
@@ -1236,6 +1751,10 @@ export class MatrixChatRoom
             nextThreadList.sort((left, right) => right.lastActivityTimestamp - left.lastActivityTimestamp);
             return nextThreadList;
         });
+
+        if (get(this.threadsHydrationState).status !== "idle") {
+            this.refreshThreadsHydrationState();
+        }
     }
 
     async joinRoom(): Promise<void> {
@@ -1480,7 +1999,6 @@ export class MatrixChatRoom
         this.matrixRoom.off(RoomEvent.MyMembership, this.handleMyMembership);
         this.matrixRoom.off(RoomStateEvent.NewMember, this.handleNewMember);
         this.matrixRoom.off(RoomEvent.UnreadNotifications, this.updateUnreadNotificationCount);
-        this.matrixRoom.off(PollEvent.New, this.handleNewPoll);
         this.threadSubscriptions.forEach((unsubscribe) => unsubscribe());
         this.threadSubscriptions.clear();
         this.threadSummaryStores.clear();
@@ -1494,8 +2012,13 @@ export class MatrixChatRoom
             message.relations?.destroy();
             message.destroy();
         });
-        this.polls.forEach((poll) => {
+        this.timelinePolls.forEach((poll) => {
             poll.destroy();
+        });
+        this.sidePanelPolls.forEach((poll) => {
+            if (poll instanceof MatrixChatPoll || poll instanceof MatrixChatLightPoll) {
+                poll.destroy();
+            }
         });
     }
 
@@ -1674,6 +2197,32 @@ export class MatrixChatRoom
             return this.createChatMessageFromEvent(event);
         }
         return;
+    }
+
+    public async ensureTimelineEventVisible(eventId: string): Promise<boolean> {
+        if (this.messages.has(eventId) || this.timelinePolls.has(eventId)) {
+            return true;
+        }
+
+        const event = await this.getMatrixEventById(eventId);
+        if (!event) {
+            return false;
+        }
+
+        if (M_POLL_START.matches(event.getType()) || this.isPollRelatedEvent(event)) {
+            await this.processPollEvents([event]);
+            await this.syncTimelinePollItemsFromEvents([event]);
+            return this.timelinePolls.has(eventId);
+        }
+
+        if (event.getType() === EventType.RoomMessage && shouldDisplayEventInRoomTimeline(event)) {
+            if (!this.messages.has(eventId)) {
+                this.messages.push(this.createChatMessageFromEvent(event));
+            }
+            return true;
+        }
+
+        return false;
     }
 
     public async getMatrixEventById(messageId: string): Promise<MatrixEvent | undefined> {

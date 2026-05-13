@@ -222,6 +222,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         replyPlural: "{count} antwoorden",
         openThreadButtonTitle: "Thread openen",
         unreadAriaLabel: "{count} ongelezen",
+        partialHistory: "De threadgeschiedenis is in deze ruimte slechts gedeeltelijk beschikbaar.",
+        degradedListWarning: "{count} thread(s) mist het begin.",
+        degradedBadge: "Begin niet beschikbaar",
+        rootUnavailable: "Het begin van dit gesprek is niet beschikbaar. Je kunt nog steeds lezen en antwoorden.",
+        openError: "Kan deze thread niet openen.",
     },
     react: "Reageren",
     copy: "Kopiëren",
@@ -398,6 +403,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         toggleOpen: "Kamerpaneel openen",
         toggleClose: "Kamerpaneel sluiten",
         back: "Back to room overview",
+        status: {
+            partialHistory: "Gedeeltelijke geschiedenis",
+            pollDetailsUnavailable: "Gedetailleerde resultaten voor deze peiling zijn momenteel niet beschikbaar.",
+            retry: "Opnieuw proberen",
+        },
         sections: {
             threads: "Threads",
             polls: "Peilingen",
@@ -428,6 +438,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsEmpty: "Nog geen peilingen",
         participantsEmpty: "Nog geen deelnemers",
         pollWinner: "Leidend antwoord: {answer}",
+        threadsLoadError: "Kan threads niet laden. Probeer het opnieuw.",
+        pollsLoadError: "Kan peilingen niet laden. Probeer het opnieuw.",
+        pollsPartial: "Voor sommige peilingen konden de gedetailleerde resultaten niet worden geladen.",
+        pollFocusError: "Kan deze peiling niet openen in de tijdlijn.",
     },
     roomMenu: {
         leaveRoom: {

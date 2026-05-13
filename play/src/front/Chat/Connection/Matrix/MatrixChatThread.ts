@@ -9,19 +9,21 @@ import {
     TimelineWindow,
 } from "matrix-js-sdk";
 import type { Readable, Writable } from "svelte/store";
-import { derived, get, writable } from "svelte/store";
+import { derived, get, readable, writable } from "svelte/store";
 import type { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/media";
 import type { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
 import type { Thread } from "matrix-js-sdk/lib/models/thread";
-import { SearchableArrayStore } from "@workadventure/store-utils";
+import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import type {
     ChatMessage,
+    ChatMessageContent,
     ChatRoomInitializationState,
     ChatRoomMember,
     ChatThread,
     ChatTimelineItem,
     memberTypingInformation,
 } from "../ChatConnection";
+import LL from "../../../../i18n/i18n-svelte";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
 import type { PictureStore } from "../../../Stores/PictureStore";
 import type { MatrixChatMessage } from "./MatrixChatMessage";
@@ -47,6 +49,23 @@ export class MatrixChatThread implements ChatThread {
     readonly rootMessage: Writable<MatrixChatMessage | undefined>;
     readonly messages: Readable<readonly ChatMessage[]>;
     readonly timelineItems: Readable<readonly ChatTimelineItem[]>;
+    readonly ensureTimelineEventVisible = async (eventId: string) => {
+        if (get(this.rootMessage)?.id === eventId || this.replyMessages.has(eventId)) {
+            return true;
+        }
+
+        const event = await this.parentRoom.getMatrixEventById(eventId);
+        if (!event || !this.shouldTrackThreadMessage(event)) {
+            return false;
+        }
+
+        const message = await this.readEventsToAddMessagesAndReactions(event);
+        if (message) {
+            this.replyMessages.push(message);
+        }
+
+        return this.replyMessages.has(eventId);
+    };
     readonly hasPreviousMessage = writable(false);
     readonly timelineWindow: TimelineWindow;
     readonly initializationState = writable<ChatRoomInitializationState>("idle");
@@ -55,6 +74,7 @@ export class MatrixChatThread implements ChatThread {
     private initializationPromise: Promise<void> | undefined;
 
     private readonly replyMessages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
+    private readonly missingRootMessage = writable<ChatMessage | undefined>(undefined);
     private readonly inMemoryEventsContent = new Map<string, IContent>();
     private readonly handleRoomTimeline = this.onRoomTimeline.bind(this);
     private readonly handleRoomRedaction = this.onRoomRedaction.bind(this);
@@ -77,8 +97,18 @@ export class MatrixChatThread implements ChatThread {
         this.messages = derived([this.rootMessage, this.replyMessages], ([$rootMessage, $replyMessages]) => {
             return $rootMessage ? [$rootMessage, ...$replyMessages] : [...$replyMessages];
         });
-        this.timelineItems = derived([this.messages, parentRoom.pollItems], ([$messages, $polls]) =>
+        this.timelineItems = derived([this.messages, this.missingRootMessage], ([$messages, $missingRootMessage]) =>
             [
+                ...($missingRootMessage
+                    ? [
+                          {
+                              kind: "system" as const,
+                              id: $missingRootMessage.id,
+                              date: $missingRootMessage.date,
+                              message: $missingRootMessage,
+                          },
+                      ]
+                    : []),
                 ...$messages.map(
                     (message): ChatTimelineItem => ({
                         kind: "message",
@@ -87,16 +117,6 @@ export class MatrixChatThread implements ChatThread {
                         message,
                     })
                 ),
-                ...$polls
-                    .filter((poll) => poll.context.kind === "thread" && poll.context.threadRootMessageId === this.id)
-                    .map(
-                        (poll): ChatTimelineItem => ({
-                            kind: "poll",
-                            id: poll.id,
-                            date: poll.date,
-                            poll,
-                        })
-                    ),
             ].sort((left, right) => {
                 const leftTs = left.date?.getTime() ?? 0;
                 const rightTs = right.date?.getTime() ?? 0;
@@ -105,7 +125,7 @@ export class MatrixChatThread implements ChatThread {
         );
         this.timelineWindow = new TimelineWindow(parentRoom.getMatrixRoom().client, thread.getUnfilteredTimelineSet());
 
-        this.initializeRootMessage();
+        this.refreshRootMessage().catch((error) => console.error("Failed to initialize thread root message", error));
         this.startHandlingThreadEvents();
     }
 
@@ -126,6 +146,7 @@ export class MatrixChatThread implements ChatThread {
         this.initializationPromise = (async () => {
             await this.parentRoom.ensureTimelineInitialized();
             try {
+                await this.refreshRootMessage();
                 await this.initMatrixThreadMessages();
             } finally {
                 this.parentRoom.refreshThreadSummary(this.id);
@@ -142,16 +163,33 @@ export class MatrixChatThread implements ChatThread {
         return this.initializationPromise;
     }
 
-    private initializeRootMessage(): void {
-        const rootEvent = this.thread.rootEvent ?? this.parentRoom.getMatrixRoom().findEventById(this.id);
-        if (!rootEvent) {
-            return;
+    async refreshRootMessage(): Promise<boolean> {
+        const rootEvent =
+            this.thread.rootEvent ??
+            this.parentRoom.getMatrixRoom().findEventById(this.id) ??
+            (await this.parentRoom.getMatrixEventById(this.id));
+
+        if (!rootEvent || rootEvent.getType() !== EventType.RoomMessage) {
+            get(this.rootMessage)?.destroy?.();
+            this.rootMessage.set(undefined);
+            this.missingRootMessage.set(this.buildMissingRootMessage());
+            return false;
         }
 
+        this.thread.rootEvent = rootEvent;
+        const currentRootMessage = get(this.rootMessage);
+        if (currentRootMessage?.id === rootEvent.getId()) {
+            this.missingRootMessage.set(undefined);
+            return true;
+        }
+
+        currentRootMessage?.destroy?.();
         const message = this.parentRoom.createChatMessageFromEvent(rootEvent);
         message.openThread = undefined;
         message.threadSummary.set(null);
         this.rootMessage.set(message);
+        this.missingRootMessage.set(undefined);
+        return true;
     }
 
     private async initMatrixThreadMessages(): Promise<void> {
@@ -552,6 +590,31 @@ export class MatrixChatThread implements ChatThread {
         const matrixMessage = this.parentRoom.createChatMessageFromEvent(event);
         matrixMessage.openThread = undefined;
         return matrixMessage;
+    }
+
+    private buildMissingRootMessage(): ChatMessage {
+        return {
+            id: `${this.id}-missing-root`,
+            sender: undefined,
+            content: readable<ChatMessageContent>({
+                body: get(LL).chat.thread.rootUnavailable(),
+                url: undefined,
+            }),
+            isMyMessage: false,
+            isQuotedMessage: undefined,
+            date: null,
+            quotedMessage: undefined,
+            type: "text",
+            reactions: new MapStore(),
+            remove: () => undefined,
+            edit: () => Promise.resolve(),
+            isDeleted: readable(false),
+            isModified: readable(false),
+            addReaction: () => Promise.resolve(),
+            canDelete: readable(false),
+            threadSummary: readable(null),
+            openThread: undefined,
+        };
     }
 
     destroy() {

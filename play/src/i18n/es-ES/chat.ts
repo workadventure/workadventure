@@ -221,6 +221,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         replyPlural: "{count} respuestas",
         openThreadButtonTitle: "Abrir hilo",
         unreadAriaLabel: "{count} sin leer",
+        partialHistory: "El historial del hilo solo está parcialmente disponible en esta sala.",
+        degradedListWarning: "A {count} hilo(s) les falta el principio.",
+        degradedBadge: "Inicio no disponible",
+        rootUnavailable: "El inicio de esta conversación no está disponible. Aún puede leer y responder.",
+        openError: "No se pudo abrir este hilo.",
     },
     react: "Reaccionar",
     copy: "Copiar",
@@ -397,6 +402,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         toggleOpen: "Abrir panel de la sala",
         toggleClose: "Cerrar panel de la sala",
         back: "Back to room overview",
+        status: {
+            partialHistory: "Historial parcial",
+            pollDetailsUnavailable: "Los resultados detallados de esta encuesta no están disponibles en este momento.",
+            retry: "Reintentar",
+        },
         sections: {
             threads: "Hilos",
             polls: "Encuestas",
@@ -427,6 +437,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsEmpty: "Todavía no hay encuestas",
         participantsEmpty: "Todavía no hay participantes",
         pollWinner: "Respuesta más votada: {answer}",
+        threadsLoadError: "No se pudieron cargar los hilos. Inténtelo de nuevo.",
+        pollsLoadError: "No se pudieron cargar las encuestas. Inténtelo de nuevo.",
+        pollsPartial: "Algunas encuestas no pudieron cargar sus resultados detallados.",
+        pollFocusError: "No se pudo abrir esta encuesta en la línea de tiempo.",
     },
     roomMenu: {
         leaveRoom: {

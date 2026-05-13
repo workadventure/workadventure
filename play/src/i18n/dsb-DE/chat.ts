@@ -222,6 +222,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         replyPlural: "{count} wótegronow",
         openThreadButtonTitle: "Nitku wócyniś",
         unreadAriaLabel: "{count} njecytane",
+        partialHistory: "Nitkinowa historija jo jano źěłkownje k dispoziciji w toś tej konferencyjni komórce.",
+        degradedListWarning: "{count} nitce maju swój zachopk wutbyty.",
+        degradedBadge: "Zachopk njek dispoziciji",
+        rootUnavailable: "Zachopk toś teje konwersacije njejo k dispoziciji. Móžoš hyšći cytaś a wótegroniś.",
+        openError: "Toś tu nitku njedajo se wócyniś.",
     },
     react: "Reagěrowaś",
     copy: "Kopěrowaś",
@@ -398,6 +403,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         toggleOpen: "Panel śpy wócyniś",
         toggleClose: "Panel śpy zacyniś",
         back: "Back to room overview",
+        status: {
+            partialHistory: "Źěłkowa historija",
+            pollDetailsUnavailable: "Detalěrowane wuslědki za toś ten wótběg njejsu tuchylu k dispoziciji.",
+            retry: "Hyšći raz wopytaś",
+        },
         sections: {
             threads: "Nitki",
             polls: "Wótběgi",
@@ -428,6 +438,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsEmpty: "Hyšći žeden wótběg",
         participantsEmpty: "Hyšći žedne wobźělniki",
         pollWinner: "Wjeduce wótegrono: {answer}",
+        threadsLoadError: "Nitki njedaju se zacytaś. Prošu wopytajśo hyšći raz.",
+        pollsLoadError: "Wótběgi njedaju se zacytaś. Prošu wopytajśo hyšći raz.",
+        pollsPartial: "Za někotare wótběgi njedachu se jich detalěrowane wuslědki zacytaś.",
+        pollFocusError: "Toś ten wótběg njedajo se w casowej smužce wócyniś.",
     },
     roomMenu: {
         leaveRoom: {
