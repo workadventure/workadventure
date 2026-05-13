@@ -77,4 +77,8 @@ export class MegaphoneIcon extends Phaser.GameObjects.Image {
     public isShown(): boolean {
         return this.shown;
     }
+
+    public getDefaultDisplayWidth(): number {
+        return (this.width - 6) * this.defaultScale;
+    }
 }

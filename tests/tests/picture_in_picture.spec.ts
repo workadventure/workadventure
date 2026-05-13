@@ -20,8 +20,8 @@ test.describe("Picture In Picture", () => {
         );
 
         // Wait for both users to be connected
-        await expect(alicePage.getByText("Bob", { exact: true })).toBeVisible({ timeout: 20_000 });
-        await expect(bobPage.getByText("Alice", { exact: true })).toBeVisible({ timeout: 20_000 });
+        await expect(alicePage.getByText("Bob", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
+        await expect(bobPage.getByText("Alice", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
 
         // Move to a position where the video call button is visible
         await alicePage.mouse.move(300, 300);
@@ -58,8 +58,8 @@ test.describe("Picture In Picture", () => {
         );
 
         // Wait for both users to be connected
-        await expect(alicePage.getByText("Bob", { exact: true })).toBeVisible({ timeout: 20_000 });
-        await expect(bobPage.getByText("Alice", { exact: true })).toBeVisible({ timeout: 20_000 });
+        await expect(alicePage.getByText("Bob", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
+        await expect(bobPage.getByText("Alice", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
 
         // Move to a position where the video call button is visible
         await alicePage.mouse.move(300, 300);
