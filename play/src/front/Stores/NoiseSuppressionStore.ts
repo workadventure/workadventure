@@ -2,13 +2,7 @@ import { derived, writable } from "svelte/store";
 
 import { localUserStore } from "../Connection/LocalUserStore";
 
-export type NoiseSuppressionStatus =
-    | "disabled"
-    | "initializing"
-    | "ready"
-    | "error"
-    | "unsupported"
-    | "auto-disabled-starved";
+export type NoiseSuppressionStatus = "disabled" | "initializing" | "ready" | "error" | "unsupported";
 
 export interface NoiseSuppressionState {
     status: NoiseSuppressionStatus;
@@ -30,16 +24,6 @@ function createNoiseSuppressionEnabledStore() {
                 noiseSuppressionStateStore.set({ status: "initializing" });
             }
         },
-        autoDisableDueToStarvation(message?: string) {
-            localUserStore.setNoiseSuppressionEnabled(false);
-            set(false);
-            noiseSuppressionStateStore.set({
-                status: "auto-disabled-starved",
-                message:
-                    message ??
-                    "Custom noise suppression was disabled automatically because it could not keep up in real time.",
-            });
-        },
     };
 }
 
@@ -55,8 +39,7 @@ export const customNoiseSuppressionActiveStore = derived(
         return (
             $noiseSuppressionEnabledStore &&
             $noiseSuppressionStateStore.status !== "error" &&
-            $noiseSuppressionStateStore.status !== "unsupported" &&
-            $noiseSuppressionStateStore.status !== "auto-disabled-starved"
+            $noiseSuppressionStateStore.status !== "unsupported"
         );
     }
 );
