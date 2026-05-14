@@ -72,6 +72,7 @@ import type { ShortMapDescription } from "./ShortMapDescription";
 import { matrixProvider } from "./MatrixProvider";
 import RecordingService from "./RecordingService";
 import type { PusherWebSocket } from "./PusherWebSocket";
+import { writeWithBackpressure } from "./StreamBackpressure";
 
 const debug = Debug("socket");
 
@@ -123,7 +124,7 @@ export class SocketManager implements ZoneEventListener {
                     case "userJoinedRoom": {
                         const userJoinedRoomMessage = message.message.userJoinedRoom;
                         if (!socketData.disconnecting) {
-                            client.send(
+                            socketData.sendMessage(
                                 JSON.stringify({
                                     type: "MemberJoin",
                                     data: {
@@ -140,7 +141,7 @@ export class SocketManager implements ZoneEventListener {
                     case "userLeftRoom": {
                         const userLeftRoomMessage = message.message.userLeftRoom;
                         if (!socketData.disconnecting) {
-                            client.send(
+                            socketData.sendMessage(
                                 JSON.stringify({
                                     type: "MemberLeave",
                                     data: {
@@ -156,7 +157,7 @@ export class SocketManager implements ZoneEventListener {
                         console.error("Error message received from adminRoomStream: " + errorMessage.message);
                         Sentry.captureException("Error message received from adminRoomStream: " + errorMessage.message);
                         if (!socketData.disconnecting) {
-                            client.send(
+                            socketData.sendMessage(
                                 JSON.stringify({
                                     type: "Error",
                                     data: {
@@ -212,7 +213,7 @@ export class SocketManager implements ZoneEventListener {
             ).toString()}`
         );
 
-        adminRoomStream.write(message);
+        writeWithBackpressure(adminRoomStream, message, {}, "pusher_admin_room");
     }
 
     leaveAdminRoom(socket: AdminSocket): void {
@@ -306,7 +307,7 @@ export class SocketManager implements ZoneEventListener {
                     connectToRoomMessage,
                 },
             };
-            streamToBack.write(pusherToBackMessage);
+            writeWithBackpressure(streamToBack, pusherToBackMessage, {}, "pusher_connect_to_room");
 
             const pusherRoom = await this.getOrCreateRoom(socketData.roomId);
             pusherRoom.join(client);
@@ -376,7 +377,7 @@ export class SocketManager implements ZoneEventListener {
                     joinRoomMessage,
                 },
             };
-            streamToBack.write(pusherToBackMessage);
+            writeWithBackpressure(streamToBack, pusherToBackMessage, {}, "pusher_join_room");
 
             const pusherRoom = await this.getOrCreateRoom(socketData.roomId);
             pusherRoom.join(client);
@@ -582,12 +583,20 @@ export class SocketManager implements ZoneEventListener {
             throw new Error("Client has no back connection");
         }
 
-        socketData.backConnection.write({
-            message: {
-                $case: "userMovesMessage",
-                userMovesMessage,
+        writeWithBackpressure(
+            socketData.backConnection,
+            {
+                message: {
+                    $case: "userMovesMessage",
+                    userMovesMessage,
+                },
             },
-        });
+            {
+                priority: "volatile",
+                coalesceKey: "userMovesMessage",
+            },
+            "pusher_user_moves"
+        );
 
         const viewport = userMovesMessage.viewport;
         if (viewport === undefined) {
@@ -1079,7 +1088,7 @@ export class SocketManager implements ZoneEventListener {
             throw new Error("forwardMessageToBack => client.backConnection is undefined");
         }
 
-        socketData.backConnection.write(pusherToBackMessage);
+        writeWithBackpressure(socketData.backConnection, pusherToBackMessage, {}, "pusher_to_back");
     }
 
     forwardAdminMessageToBack(client: Socket, message: PusherToBackMessage["message"]): void {

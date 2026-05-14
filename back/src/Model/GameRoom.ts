@@ -60,6 +60,7 @@ import { VariableError } from "../Services/VariableError";
 import { VariablesManager } from "../Services/VariablesManager";
 import type { AreaPropertyVariable } from "../Services/AreaPropertyVariablesManager";
 import { AreaPropertyVariablesManager } from "../Services/AreaPropertyVariablesManager";
+import { writeWithBackpressure } from "../Services/StreamBackpressure";
 import { AreaZoneTracker } from "./AreaZoneTracker";
 import type { BrothersFinder } from "./BrothersFinder";
 import { Group } from "./Group";
@@ -223,22 +224,25 @@ export class GameRoom implements BrothersFinder {
     public dispatchRoomMessage(message: SubToPusherRoomMessage): void {
         // Dispatch the message on the room listeners
         for (const socket of this.roomListeners) {
-            socket.write({
-                payload: [message],
-            });
+            writeWithBackpressure(
+                socket,
+                {
+                    payload: [message],
+                },
+                {},
+                "back_room_socket"
+            );
         }
     }
 
     public sendRefreshRoomMessageToUsers(): void {
         this.users.forEach((user) =>
-            user.socket.write({
-                message: {
-                    $case: "refreshRoomMessage",
-                    refreshRoomMessage: RefreshRoomMessage.fromPartial({
-                        roomId: this._roomUrl,
-                        timeToRefresh: 30,
-                    }),
-                },
+            user.write({
+                $case: "refreshRoomMessage",
+                refreshRoomMessage: RefreshRoomMessage.fromPartial({
+                    roomId: this._roomUrl,
+                    timeToRefresh: 30,
+                }),
             })
         );
     }
@@ -246,11 +250,9 @@ export class GameRoom implements BrothersFinder {
     public sendMapDeletedMessageToUsers(): void {
         this.users.forEach((user) => {
             this.leave(user);
-            user.socket.write({
-                message: {
-                    $case: "deleteMapMessage",
-                    deleteMapMessage: {},
-                },
+            user.write({
+                $case: "deleteMapMessage",
+                deleteMapMessage: {},
             });
             endUserConnectionWithReason(user.socket, "Map was deleted.");
         });
@@ -567,7 +569,7 @@ export class GameRoom implements BrothersFinder {
     public sendToOthersInGroupIncludingUser(user: User, message: ServerToClientMessage): void {
         user.group?.getUsers().forEach((currentUser: User) => {
             if (currentUser.id !== user.id) {
-                currentUser.socket.write(message);
+                writeWithBackpressure(currentUser.socket, message, {}, "back_user_socket");
             }
         });
     }
@@ -694,7 +696,7 @@ export class GameRoom implements BrothersFinder {
             // Dispatch the variable update to variable listeners
             const listeners = this.variableListeners.get(name);
             for (const listener of listeners ?? []) {
-                listener.write(JSON.parse(value));
+                writeWithBackpressure(listener, JSON.parse(value), {}, "back_variable_listener");
             }
         } catch (e) {
             if (e instanceof VariableError) {
@@ -1388,9 +1390,14 @@ export class GameRoom implements BrothersFinder {
     public sendSubMessageToRoom(subMessage: SubToPusherRoomMessage) {
         // Dispatch the message on the room listeners
         for (const socket of this.roomListeners) {
-            socket.write({
-                payload: [subMessage],
-            });
+            writeWithBackpressure(
+                socket,
+                {
+                    payload: [subMessage],
+                },
+                {},
+                "back_room_socket"
+            );
         }
     }
 
@@ -1463,20 +1470,18 @@ export class GameRoom implements BrothersFinder {
                             }
                             if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
                                 // Return the error message to the sender and don't dispatch it to the room
-                                user.socket.write({
-                                    message: {
-                                        $case: "batchMessage",
-                                        batchMessage: {
-                                            event: "",
-                                            payload: [
-                                                {
-                                                    message: {
-                                                        $case: "editMapCommandMessage",
-                                                        editMapCommandMessage,
-                                                    },
+                                user.write({
+                                    $case: "batchMessage",
+                                    batchMessage: {
+                                        event: "",
+                                        payload: [
+                                            {
+                                                message: {
+                                                    $case: "editMapCommandMessage",
+                                                    editMapCommandMessage,
                                                 },
-                                            ],
-                                        },
+                                            },
+                                        ],
                                     },
                                 });
                                 resolve();
@@ -1535,10 +1540,15 @@ export class GameRoom implements BrothersFinder {
             // Dispatch to RoomApi listeners
             const listeners = this.eventListeners.get(name);
             for (const eventListener of listeners ?? []) {
-                eventListener.write({
-                    senderId: senderId === "RoomApi" ? undefined : senderId,
-                    data,
-                });
+                writeWithBackpressure(
+                    eventListener,
+                    {
+                        senderId: senderId === "RoomApi" ? undefined : senderId,
+                        data,
+                    },
+                    {},
+                    "back_event_listener"
+                );
             }
         } else {
             for (const targetUserId of targetUserIds) {

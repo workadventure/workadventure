@@ -10,6 +10,8 @@ import type { BackSpaceConnection } from "../../src/pusher/models/Websocket/Sock
 import type { Socket } from "../../src/pusher/services/SocketManager";
 import { eventProcessor } from "../../src/pusher/models/eventProcessorInit";
 
+vi.mock("../../src/pusher/enums/EnvironmentVariable", () => import("./mocks/pusherEnvironmentVariableMock"));
+
 //TODO : see if there are not too many repetitions in the tests
 const flushPromises = () => new Promise(setImmediate);
 describe("SpaceToBackForwarder", () => {

@@ -60,6 +60,24 @@ export const EnvironmentVariables = z.object({
         .describe(
             "Maximum time, in milliseconds, the client keeps sent websocket messages for replay after a short disconnection. Defaults to 30000."
         ),
+    PUSHER_STREAM_BACKPRESSURE_MAX_QUEUED_MESSAGES: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 1_000))
+        .describe(
+            "Maximum number of gRPC messages queued per pusher stream while waiting for drain. Defaults to 1000."
+        ),
+    PUSHER_STREAM_BACKPRESSURE_MAX_QUEUED_BYTES: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 8 * 1024 * 1024))
+        .describe("Maximum estimated bytes queued per pusher stream while waiting for drain. Defaults to 8388608."),
+    PUSHER_STREAM_BACKPRESSURE_DRAIN_TIMEOUT_MS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 10_000))
+        .describe(
+            "Maximum time, in milliseconds, to wait for a pusher stream drain before closing it. Defaults to 10000."
+        ),
+    PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 1024 * 1024))
+        .describe(
+            "Maximum uWebSockets backpressure bytes accepted on admin websocket connections. Defaults to 1048576."
+        ),
     // Used only in development
     VITE_URL: z.string().url().optional().describe("URL of the Vite development server (development only)"),
     // Use "*" to allow any domain

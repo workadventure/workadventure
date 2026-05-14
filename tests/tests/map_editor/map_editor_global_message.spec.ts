@@ -34,6 +34,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Second browser
         await using page2 = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(page2, 0, 0);
 
         // Open the map editor and configure the megaphone to have access to the global message
         await Menu.openMapEditor(page);
@@ -81,6 +82,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // TODO : change to use the global message feature for user through megaphon settings rights
 
         await page2.context().close();
+        await page2.close();
         await page.close();
         await page.context().close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played

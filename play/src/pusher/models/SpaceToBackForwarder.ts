@@ -11,6 +11,7 @@ import { Color } from "@workadventure/shared-utils";
 
 import type { Socket } from "../services/SocketManager";
 import { clientEventsEmitter } from "../services/ClientEventsEmitter";
+import { writeWithBackpressure } from "../services/StreamBackpressure";
 import type { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
 import type { EventProcessor } from "./EventProcessor";
 import type { SocketData } from "./Websocket/SocketData";
@@ -232,16 +233,20 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                     });
                     return;
                 }
-                spaceStreamToBack.write(
+                writeWithBackpressure(
+                    spaceStreamToBack,
                     {
                         message: pusherToBackSpaceMessage,
                     },
-                    (error: unknown) => {
-                        if (error) {
-                            console.error("Error while forwarding message to space back", error);
-                            Sentry.captureException(error);
-                        }
-                    }
+                    {
+                        callback: (error: unknown) => {
+                            if (error) {
+                                console.error("Error while forwarding message to space back", error);
+                                Sentry.captureException(error);
+                            }
+                        },
+                    },
+                    "pusher_space_forwarder"
                 );
 
                 if (pusherToBackSpaceMessage && pusherToBackSpaceMessage.$case) {
