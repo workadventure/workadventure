@@ -36,3 +36,7 @@ declare module "*.webp" {
     const value: string;
     export = value;
 }
+
+declare module "@workadventure/noise-suppression/audio-worklet" {
+    export * from "@workadventure/noise-suppression/dist/audio-worklet.js";
+}
