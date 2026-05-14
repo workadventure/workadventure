@@ -5,7 +5,7 @@ import type {
 } from "@workadventure/messages";
 import type { UserSocket } from "../Model/User";
 import type { AdminSocket, RoomSocket } from "../RoomManager";
-import { writeWithBackpressure } from "./StreamBackpressure";
+import { closeBackpressureWriter, writeWithBackpressure } from "./StreamBackpressure";
 
 function getMessageFromError(error: unknown): string {
     if (error instanceof Error) {
@@ -53,6 +53,7 @@ export function endUserConnectionWithReason(Client: UserSocket, reason: string):
     }
 
     Client.end();
+    closeBackpressureWriter(Client, "target_closed");
 }
 
 export function emitErrorOnAdminSocket(Client: AdminSocket, error: unknown): void {
