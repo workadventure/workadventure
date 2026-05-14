@@ -6,7 +6,7 @@ import type { WAMFileFormat } from "@workadventure/map-editor";
 
 import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { apiClientRepository } from "../services/ApiClientRepository";
-import { writeWithBackpressure } from "../services/StreamBackpressure";
+import { closeBackpressureWriter, writeWithBackpressure } from "../services/StreamBackpressure";
 import type { Socket } from "../services/SocketManager";
 import { socketManager } from "../services/SocketManager";
 import { PositionDispatcher } from "./PositionDispatcher";
@@ -226,6 +226,7 @@ export class PusherRoom {
         });
 
         this.backConnection.on("error", (err) => {
+            closeBackpressureWriter(this.backConnection, "target_error");
             if (!this.isClosing) {
                 debug("Error on back connection");
                 this.close();
@@ -240,6 +241,7 @@ export class PusherRoom {
         });
 
         this.backConnection.on("close", () => {
+            closeBackpressureWriter(this.backConnection, "target_closed");
             if (!this.isClosing) {
                 debug("Close on back connection", this.roomUrl);
                 this.close();
@@ -262,6 +264,7 @@ export class PusherRoom {
     public close(): void {
         debug("Closing connection to room %s on back server", this.roomUrl);
         this.isClosing = true;
+        closeBackpressureWriter(this.backConnection, "target_closed");
         this.backConnection.cancel();
     }
 

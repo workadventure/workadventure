@@ -4,7 +4,7 @@ import type { BackToPusherSpaceMessage } from "@workadventure/messages";
 import type { SpaceManagerClient } from "@workadventure/messages/src/ts-proto-generated/services";
 import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { apiClientRepository } from "../services/ApiClientRepository";
-import { writeWithBackpressure } from "../services/StreamBackpressure";
+import { closeBackpressureWriter, writeWithBackpressure } from "../services/StreamBackpressure";
 import type { SpaceForSpaceConnectionInterface, SpaceInterface } from "./Space";
 import type { BackSpaceConnection } from "./Websocket/SocketData";
 const debug = Debug("spaceConnection");
@@ -140,6 +140,7 @@ export class SpaceConnection implements SpaceConnectionInterface {
                                             Sentry.captureException(
                                                 "Error spaceStreamToBack timed out for back: " + backId
                                             );
+                                            closeBackpressureWriter(spaceStreamToBack, "target_closed");
                                             spaceStreamToBack.end();
                                             this.removeListeners(spaceStreamToBack, backId);
                                             this.cleanUpSpacePerBackId(backId).catch((e) => {
@@ -170,6 +171,7 @@ export class SpaceConnection implements SpaceConnectionInterface {
     private onEndListener(spaceStreamToBack: BackSpaceConnection, backId: number) {
         return () => {
             debug("[space] spaceStreamsToBack ended");
+            closeBackpressureWriter(spaceStreamToBack, "target_closed");
             if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
             this.removeListeners(spaceStreamToBack, backId);
             this.spaceStreamToBackPromises.delete(backId);
@@ -184,6 +186,7 @@ export class SpaceConnection implements SpaceConnectionInterface {
     ) {
         return (err: Error) => {
             if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
+            closeBackpressureWriter(spaceStreamToBack, "target_error");
             console.error(
                 "Error in connection to back server for watchSpace '" + apiSpaceClient.getChannel().getTarget(),
                 err
@@ -293,6 +296,7 @@ export class SpaceConnection implements SpaceConnectionInterface {
                 .then((connection) => {
                     if (connection.pingTimeout) clearTimeout(connection.pingTimeout);
                     this.removeListeners(connection, backId);
+                    closeBackpressureWriter(connection, "target_closed");
                     connection.end();
                 })
                 .catch((e) => {

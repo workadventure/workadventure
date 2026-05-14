@@ -1,3 +1,5 @@
+import { asError } from "catch-unknown";
+
 export type BackpressureWriteCallback = (...args: unknown[]) => void;
 
 export type WritableTarget<T> = {
@@ -8,8 +10,20 @@ export type WritableTarget<T> = {
 };
 
 export type BackpressurePriority = "critical" | "volatile";
-export type BackpressureCloseReason = "queue_limit_exceeded" | "drain_timeout";
+export type BackpressureCloseReason =
+    | "queue_limit_exceeded"
+    | "drain_timeout"
+    | "target_closed"
+    | "target_error"
+    | "write_after_close";
 export type BackpressureDropReason = "volatile_coalesced" | "volatile_queue_limit";
+
+export class BackpressureWriterClosedError extends Error {
+    public constructor(public readonly reason: BackpressureCloseReason) {
+        super(`Backpressure writer closed: ${reason}`);
+        this.name = "BackpressureWriterClosedError";
+    }
+}
 
 export type BackpressureWriterOptions<T> = {
     maxQueuedMessages: number;
@@ -39,6 +53,7 @@ export class BackpressureWriter<T> {
     private queuedBytes = 0;
     private waitingForDrain = false;
     private closed = false;
+    private closeError: Error | undefined;
     private drainTimeout: NodeJS.Timeout | undefined;
 
     public constructor(
@@ -48,6 +63,7 @@ export class BackpressureWriter<T> {
 
     public write(chunk: T, writeOptions: BackpressureWriteOptions = {}): boolean {
         if (this.closed) {
+            writeOptions.callback?.(this.closeError ?? createCloseError("target_closed"));
             return false;
         }
 
@@ -58,6 +74,10 @@ export class BackpressureWriter<T> {
         }
 
         return this.writeNow(message);
+    }
+
+    public close(reason: BackpressureCloseReason): void {
+        this.closeWithReason(reason, false);
     }
 
     private toQueuedMessage(chunk: T, writeOptions: BackpressureWriteOptions): QueuedMessage<T> {
@@ -93,7 +113,9 @@ export class BackpressureWriter<T> {
                 return false;
             }
 
-            this.close("queue_limit_exceeded");
+            const error = createCloseError("queue_limit_exceeded");
+            message.callback?.(error);
+            this.closeTarget("queue_limit_exceeded", error);
             return false;
         }
 
@@ -103,10 +125,19 @@ export class BackpressureWriter<T> {
     }
 
     private writeNow(message: QueuedMessage<T>): boolean {
-        const acceptedWithoutBackpressure =
-            message.callback === undefined
-                ? this.target.write(message.chunk)
-                : this.target.write(message.chunk, message.callback);
+        let acceptedWithoutBackpressure: boolean;
+        try {
+            acceptedWithoutBackpressure =
+                message.callback === undefined
+                    ? this.target.write(message.chunk)
+                    : this.target.write(message.chunk, message.callback);
+        } catch (error) {
+            const writeError = asError(error);
+            const reason = isWriteAfterCloseError(writeError) ? "write_after_close" : "target_error";
+            message.callback?.(writeError);
+            this.closeWithReason(reason, false, writeError);
+            return false;
+        }
         if (acceptedWithoutBackpressure === false) {
             this.waitForDrain();
         }
@@ -121,7 +152,7 @@ export class BackpressureWriter<T> {
         this.waitingForDrain = true;
         this.target.once("drain", () => this.handleDrain());
         this.drainTimeout = setTimeout(() => {
-            this.close("drain_timeout");
+            this.closeTarget("drain_timeout");
         }, this.options.drainTimeoutMs);
     }
 
@@ -149,12 +180,22 @@ export class BackpressureWriter<T> {
         }
     }
 
-    private close(reason: BackpressureCloseReason): void {
+    private closeTarget(reason: BackpressureCloseReason, error = createCloseError(reason)): void {
+        this.closeWithReason(reason, true, error);
+    }
+
+    private closeWithReason(
+        reason: BackpressureCloseReason,
+        closeTarget: boolean,
+        error = createCloseError(reason)
+    ): void {
         if (this.closed) {
             return;
         }
 
         this.closed = true;
+        this.closeError = error;
+        this.flushQueuedCallbacks(error);
         this.queue = [];
         this.queuedBytes = 0;
         if (this.drainTimeout) {
@@ -162,10 +203,42 @@ export class BackpressureWriter<T> {
             this.drainTimeout = undefined;
         }
         this.options.onClosed?.(reason);
-        if (this.target.end) {
-            this.target.end();
-        } else {
-            this.target.destroy?.(new Error(reason));
+        if (closeTarget) {
+            this.closeWritableTarget(error);
         }
     }
+
+    private flushQueuedCallbacks(error: Error): void {
+        for (const message of this.queue) {
+            message.callback?.(error);
+        }
+    }
+
+    private closeWritableTarget(error: Error): void {
+        try {
+            if (this.target.end) {
+                this.target.end();
+            } else {
+                this.target.destroy?.(error);
+            }
+        } catch {
+            // The target may already be closed when backpressure decides to close it.
+        }
+    }
+}
+
+function createCloseError(reason: BackpressureCloseReason): Error {
+    return new BackpressureWriterClosedError(reason);
+}
+
+function isWriteAfterCloseError(error: Error): boolean {
+    const message = error.message.toLowerCase();
+    return (
+        message.includes("write after end") ||
+        message.includes("write after close") ||
+        message.includes("stream has been ended") ||
+        message.includes("call already closed") ||
+        message.includes("destroyed") ||
+        message.includes("cancelled")
+    );
 }
