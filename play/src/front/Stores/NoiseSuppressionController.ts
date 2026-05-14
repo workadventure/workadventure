@@ -1,15 +1,11 @@
 import { get } from "svelte/store";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
-import NoiseSuppressionDisabledToast from "../Components/Toasts/NoiseSuppressionDisabledToast.svelte";
 import {
     type NoiseSuppressionStatusMessage,
     NoiseSuppressionTransformer,
 } from "../WebRtc/NoiseSuppression/NoiseSuppressionTransformer";
 import type { LocalStreamStoreValue } from "./LocalStreamTypes";
-import { noiseSuppressionEnabledStore, noiseSuppressionStateStore } from "./NoiseSuppressionStore";
-import { toastStore } from "./ToastStore";
-
-const NOISE_SUPPRESSION_DISABLED_TOAST_ID = "noise-suppression-disabled-toast";
+import { noiseSuppressionStateStore } from "./NoiseSuppressionStore";
 
 export class NoiseSuppressionController {
     private transformer: NoiseSuppressionTransformer | undefined;
@@ -101,11 +97,6 @@ export class NoiseSuppressionController {
     private updateState(message: NoiseSuppressionStatusMessage): void {
         const currentState = get(noiseSuppressionStateStore);
 
-        if (message.status === "starved") {
-            this.autoDisableDueToStarvation(message.message);
-            return;
-        }
-
         if (message.status === "ready") {
             if (currentState.status !== "ready") {
                 noiseSuppressionStateStore.set({ status: "ready" });
@@ -126,19 +117,6 @@ export class NoiseSuppressionController {
                 message: message.message ?? "Custom noise suppression failed. Browser microphone processing is active.",
             });
         }
-    }
-
-    private autoDisableDueToStarvation(message?: string): void {
-        const currentState = get(noiseSuppressionStateStore);
-        if (currentState.status === "auto-disabled-starved" && currentState.message === message) {
-            return;
-        }
-
-        this.destroy().catch((error) => {
-            console.warn("[MediaStore] Failed to destroy the noise suppression transformer after starvation", error);
-        });
-        noiseSuppressionEnabledStore.autoDisableDueToStarvation(message);
-        toastStore.addToast(NoiseSuppressionDisabledToast, {}, NOISE_SUPPRESSION_DISABLED_TOAST_ID);
     }
 
     private throwIfAborted(signal?: AbortSignal): void {

@@ -7,7 +7,7 @@ import {
 } from "@workadventure/noise-suppression/audio-worklet";
 
 export interface NoiseSuppressionStatusMessage {
-    status: "initializing" | "ready" | "error" | "starved";
+    status: "initializing" | "ready" | "error";
     message?: string;
 }
 
@@ -207,8 +207,5 @@ export class NoiseSuppressionTransformer {
         if (message.type === "benchmark-complete") {
             return;
         }
-
-        // TODO: When the library exposes overrun/underrun notifications, map them to
-        // WorkAdventure's existing "starved" status instead of dropping the path.
     }
 }

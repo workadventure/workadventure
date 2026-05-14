@@ -73,9 +73,7 @@
     }
 
     $: isNoiseSuppressionErrorState =
-        $noiseSuppressionStateStore.status === "error" ||
-        $noiseSuppressionStateStore.status === "unsupported" ||
-        $noiseSuppressionStateStore.status === "auto-disabled-starved";
+        $noiseSuppressionStateStore.status === "error" || $noiseSuppressionStateStore.status === "unsupported";
 
     $: cameraDenied =
         $cameraPermissionStateStore === "denied" ||
@@ -197,11 +195,6 @@
                         {#if $noiseSuppressionStateStore.status === "initializing"}
                             <div class="text-xs text-white/50">
                                 {$LL.actionbar.microphone.noiseSuppressionInitializing()}
-                            </div>
-                        {:else if $noiseSuppressionStateStore.status === "auto-disabled-starved"}
-                            <div data-testid="noise-suppression-error" class="text-xs text-pop-red">
-                                {$noiseSuppressionStateStore.message ??
-                                    $LL.actionbar.microphone.noiseSuppressionAutoDisabled()}
                             </div>
                         {:else if $noiseSuppressionStateStore.status === "unsupported"}
                             <div data-testid="noise-suppression-error" class="text-xs text-pop-red">
