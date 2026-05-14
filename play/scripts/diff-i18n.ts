@@ -6,9 +6,12 @@ import { fileURLToPath } from "url";
 //  - Single comparison: tsx scripts/diff-i18n.ts <target-locale> [source-locale]
 //  - Summary mode (no args): tsx scripts/diff-i18n.ts
 //  - Detailed check mode (CI/CD): tsx scripts/diff-i18n.ts --check
+//  - Verbose output: add --verbose
 // Defaults: source = en-US
 const args = process.argv.slice(2);
 const isCheckMode = args.includes("--check");
+const isVerboseMode = args.includes("--verbose");
+const isQuietMode = !isVerboseMode;
 // Filter out flags to get locale arguments
 const localeArgs = args.filter((arg) => !arg.startsWith("--"));
 const targetLocale = localeArgs[0];
@@ -16,6 +19,7 @@ const sourceLocale = localeArgs[1] || "en-US";
 
 const srcDir = fileURLToPath(new URL(`../src/i18n/${sourceLocale}`, import.meta.url));
 const tgtDir = fileURLToPath(new URL(`../src/i18n/${targetLocale}`, import.meta.url));
+const baseI18nDir = fileURLToPath(new URL("../src/i18n", import.meta.url));
 
 async function loadModule(file: string): Promise<unknown> {
     const mod = await import(file);
@@ -104,20 +108,33 @@ async function computeMissingCountsForLocale(
 }
 
 async function runDetailedCheck() {
-    const baseDir = path.resolve(import.meta.url, "../src/i18n");
+    const baseDir = baseI18nDir;
     let hasErrors = 0;
 
-    console.log("=== RECENSEMENT COMPLET DES FICHIERS INCOMPLETS ===");
-    console.log("");
-    console.log("📁 Détection automatique des langues dans src/i18n/...");
+    if (!isQuietMode) {
+        console.log("=== Complete inventory of incomplete translation files ===");
+        console.log("");
+        console.log("📁 Detecting locales in src/i18n/...");
+    }
 
     const languages = listLocaleDirs(baseDir, sourceLocale);
     const langCount = languages.length;
-    console.log(`✅ Langues détectées: ${langCount}`);
-    console.log(`   ${languages.join(" ")}`);
-    console.log("");
-    console.log("📄 Fichier de référence: en-US");
-    console.log("");
+    if (!isQuietMode) {
+        console.log(`✅ Locales detected: ${langCount}`);
+        console.log(`   ${languages.join(" ")}`);
+        console.log("");
+    }
+
+    if (langCount === 0) {
+        console.error(`❌ ERROR: No target locales detected in ${baseDir}`);
+        process.exitCode = 1;
+        return;
+    }
+
+    if (!isQuietMode) {
+        console.log(`📄 Reference locale: ${sourceLocale}`);
+        console.log("");
+    }
 
     // Get all reference files
     const referenceFiles = listFiles(srcDir).filter((f) => f !== "index.ts");
@@ -133,7 +150,9 @@ async function runDetailedCheck() {
             continue;
         }
 
-        console.log(`📄 ${file} (en-US: ${refKeyCount} clés):`);
+        if (!isQuietMode) {
+            console.log(`📄 ${file} (${sourceLocale}: ${refKeyCount} keys):`);
+        }
         let incompleteFound = false;
 
         // Check each language
@@ -141,7 +160,10 @@ async function runDetailedCheck() {
             const langFile = path.join(baseDir, lang, file);
 
             if (!fs.existsSync(langFile)) {
-                console.log(`  ❌ ${lang}: FICHIER MANQUANT`);
+                if (isQuietMode && !incompleteFound) {
+                    console.log(`${file}:`);
+                }
+                console.log(`  ❌ ${lang}: MISSING FILE`);
                 incompleteFound = true;
                 hasErrors = 1;
             } else {
@@ -158,8 +180,11 @@ async function runDetailedCheck() {
 
                 if (missingCount > 0 && refKeyCount > 0) {
                     const percentage = Math.floor((langKeyCount * 100) / refKeyCount);
+                    if (isQuietMode && !incompleteFound) {
+                        console.log(`${file}:`);
+                    }
                     console.log(
-                        `  ⚠️  ${lang}: ${langKeyCount}/${refKeyCount} clés (${percentage}% complet, ${missingCount} clé(s) manquante(s))`
+                        `  ⚠️  ${lang}: ${langKeyCount}/${refKeyCount} keys (${percentage}% complete, ${missingCount} missing key(s))`
                     );
                     // Show first 15 missing keys
                     const keysToShow = missingKeys.slice(0, 15);
@@ -168,25 +193,29 @@ async function runDetailedCheck() {
                     }
                     if (missingCount > 15) {
                         const remaining = missingCount - 15;
-                        console.log(`     ... et ${remaining} autre(s) clé(s)`);
+                        console.log(`     ... and ${remaining} more key(s)`);
                     }
                     incompleteFound = true;
                     hasErrors = 1;
-                } else {
-                    console.log(`  ✅ ${lang}: Toutes les clés présentes`);
+                } else if (!isQuietMode) {
+                    console.log(`  ✅ ${lang}: All keys are present`);
                 }
             }
         }
 
-        if (!incompleteFound) {
-            console.log("  ✅ Toutes les langues complètes");
+        if (!incompleteFound && !isQuietMode) {
+            console.log("  ✅ All locales complete");
         }
-        console.log("");
+        if (!isQuietMode || incompleteFound) {
+            console.log("");
+        }
     }
 
     // Summary by language
-    console.log("=== RÉSUMÉ PAR LANGUE ===");
-    console.log("");
+    if (!isQuietMode) {
+        console.log("=== Summary by locale ===");
+        console.log("");
+    }
 
     for (const lang of languages) {
         let totalFiles = 0;
@@ -231,25 +260,31 @@ async function runDetailedCheck() {
 
         if (totalFiles > 0) {
             const completionRate = Math.floor((completeFiles * 100) / totalFiles);
-            console.log(`🌍 ${lang}: ${completeFiles}/${totalFiles} fichiers complets (${completionRate}%)`);
-            if (missingFiles > 0) {
-                console.log(`   ❌ ${missingFiles} fichier(s) manquant(s)`);
+            if (!isQuietMode) {
+                console.log(`🌍 ${lang}: ${completeFiles}/${totalFiles} complete files (${completionRate}%)`);
+            }
+            if (missingFiles > 0 && !isQuietMode) {
+                console.log(`   ❌ ${missingFiles} missing file(s)`);
                 hasErrors = 1;
             }
-            if (incompleteFiles > 0) {
-                console.log(`   ⚠️  ${incompleteFiles} fichier(s) incomplet(s): ${incompleteFileNames.join(", ")}`);
+            if (incompleteFiles > 0 && !isQuietMode) {
+                console.log(`   ⚠️  ${incompleteFiles} incomplete file(s): ${incompleteFileNames.join(", ")}`);
                 hasErrors = 1;
             }
         }
     }
 
-    console.log("");
+    if (!isQuietMode) {
+        console.log("");
+    }
     if (hasErrors === 1) {
-        console.log("❌ ERREUR: Des traductions sont incomplètes ou manquantes !");
-        console.log("   Veuillez compléter les fichiers de traduction avant de continuer.");
+        console.log("❌ ERROR: Some translations are incomplete or missing.");
+        if (!isQuietMode) {
+            console.log("   Please complete the translation files before continuing.");
+        }
         process.exitCode = 1;
     } else {
-        console.log("✅ Toutes les traductions sont complètes !");
+        console.log("✅ All translations are complete.");
     }
 }
 
@@ -268,7 +303,7 @@ async function run() {
 
     // Summary mode when no target locale is provided
     if (!targetLocale) {
-        const baseDir = path.resolve(import.meta.url, "../src/i18n");
+        const baseDir = baseI18nDir;
         const locales = listLocaleDirs(baseDir, sourceLocale);
 
         if (locales.length === 0) {
@@ -289,15 +324,24 @@ async function run() {
         // Sort by missing keys desc
         results.sort((a, b) => b.missingKeys - a.missingKeys);
 
-        console.log(`i18n diff summary (source: ${sourceLocale})`);
+        if (!isQuietMode) {
+            console.log(`i18n diff summary (source: ${sourceLocale})`);
+        }
         for (const r of results) {
+            if (isQuietMode && r.missingKeys === 0 && r.missingFiles === 0) {
+                continue;
+            }
             console.log(
                 `${r.locale}: ${r.missingKeys} missing keys${r.missingFiles ? `, ${r.missingFiles} missing files` : ""}`
             );
         }
         const totalMissing = results.reduce((acc, r) => acc + r.missingKeys, 0);
         if (totalMissing === 0) console.log("All locales are fully translated. ✅");
-        console.log("\nTip: to view detailed missing keys for one locale, run: npm run i18n:diff -- <language-code>");
+        if (!isQuietMode) {
+            console.log(
+                "\nTip: to view detailed missing keys for one locale, run: npm run i18n:diff -- <language-code>"
+            );
+        }
         return;
     }
 
