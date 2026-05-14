@@ -72,7 +72,7 @@ import type { ShortMapDescription } from "./ShortMapDescription";
 import { matrixProvider } from "./MatrixProvider";
 import RecordingService from "./RecordingService";
 import type { PusherWebSocket } from "./PusherWebSocket";
-import { writeWithBackpressure } from "./StreamBackpressure";
+import { closeBackpressureWriter, writeWithBackpressure } from "./StreamBackpressure";
 
 const debug = Debug("socket");
 
@@ -174,6 +174,7 @@ export class SocketManager implements ZoneEventListener {
                 }
             })
             .on("end", () => {
+                closeBackpressureWriter(adminRoomStream, "target_closed");
                 // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                 if (!socketData.disconnecting) {
                     console.warn(
@@ -187,6 +188,7 @@ export class SocketManager implements ZoneEventListener {
                 }
             })
             .on("error", (err: Error) => {
+                closeBackpressureWriter(adminRoomStream, "target_error");
                 console.error(
                     "Error in connection to back server '" +
                         apiClient.getChannel().getTarget() +
@@ -218,6 +220,7 @@ export class SocketManager implements ZoneEventListener {
 
     leaveAdminRoom(socket: AdminSocket): void {
         for (const adminConnection of socket.getUserData().adminConnections?.values() ?? []) {
+            closeBackpressureWriter(adminConnection, "target_closed");
             adminConnection.end();
         }
     }
@@ -273,6 +276,9 @@ export class SocketManager implements ZoneEventListener {
                     }
                 })
                 .on("end", () => {
+                    if (streamToBack) {
+                        closeBackpressureWriter(streamToBack, "target_closed");
+                    }
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                     if (!client.isDisconnecting()) {
                         const connectionCloseReason =
@@ -286,6 +292,9 @@ export class SocketManager implements ZoneEventListener {
                     }
                 })
                 .on("error", (err: Error) => {
+                    if (streamToBack) {
+                        closeBackpressureWriter(streamToBack, "target_error");
+                    }
                     const date = new Date();
                     console.error(
                         "Error in connection to back server '" +
@@ -319,6 +328,7 @@ export class SocketManager implements ZoneEventListener {
             // The websocket connection will then be closed below to complete the cleanup.
             if (streamToBack) {
                 try {
+                    closeBackpressureWriter(streamToBack, "target_closed");
                     streamToBack.end();
                 } catch (err) {
                     console.warn("Error while closing streamToBack after failed join:", err);
@@ -389,6 +399,7 @@ export class SocketManager implements ZoneEventListener {
             // undo the earlier emitted client join to keep metrics consistent.
             if (streamToBack) {
                 try {
+                    closeBackpressureWriter(streamToBack, "target_closed");
                     streamToBack.end();
                 } catch (err) {
                     console.warn("Error while closing streamToBack after failed join:", err);
@@ -749,6 +760,7 @@ export class SocketManager implements ZoneEventListener {
             }
         } finally {
             if (socketData.backConnection) {
+                closeBackpressureWriter(socketData.backConnection, "target_closed");
                 socketData.backConnection.end();
             }
         }

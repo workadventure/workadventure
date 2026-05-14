@@ -39,7 +39,7 @@ import type { User, UserSocket } from "./Model/User";
 import type { GameRoom } from "./Model/GameRoom";
 import { Admin } from "./Model/Admin";
 import { getMapStorageClient } from "./Services/MapStorageClient";
-import { writeWithBackpressure } from "./Services/StreamBackpressure";
+import { closeBackpressureWriter, writeWithBackpressure } from "./Services/StreamBackpressure";
 
 const debug = Debug("roommanager");
 
@@ -263,16 +263,19 @@ const roomManager = {
             } else {
                 call.end();
             }
+            closeBackpressureWriter(call, "target_closed");
             setRoom(null);
             setUser(null);
         };
 
         call.on("end", () => {
+            closeBackpressureWriter(call, "target_closed");
             debug("joinRoom ended for user %s", user?.name);
             closeConnection();
         });
 
         call.on("error", (err: unknown) => {
+            closeBackpressureWriter(call, "target_error");
             // Note: it seems "end" is called before "error" and therefore, user is null
             console.error("An error occurred in joinRoom stream for user", user?.name, ":", err);
             Sentry.captureException(err, {
@@ -448,6 +451,7 @@ const roomManager = {
         };
 
         call.on("cancelled", () => {
+            closeBackpressureWriter(call, "target_closed");
             debug("listenRoom cancelled");
             cleanupAllZones()
                 .catch((e) => {
@@ -460,12 +464,14 @@ const roomManager = {
         });
 
         call.on("close", () => {
+            closeBackpressureWriter(call, "target_closed");
             debug("listenRoom connection closed");
             cleanupAllZones().catch((e) => {
                 console.error(e);
                 Sentry.captureException(e);
             });
         }).on("error", (e) => {
+            closeBackpressureWriter(call, "target_error");
             console.error("An error occurred in listenRoom stream:", e);
             Sentry.captureException(`An error occurred in listenRoom stream: ${JSON.stringify(e)}`);
             cleanupAllZones()
@@ -513,6 +519,7 @@ const roomManager = {
         });
 
         call.on("end", () => {
+            closeBackpressureWriter(call, "target_closed");
             debug("joinRoom ended");
             if (room !== null) {
                 socketManager.leaveAdminRoom(room, admin);
@@ -522,6 +529,7 @@ const roomManager = {
         });
 
         call.on("error", (err: Error) => {
+            closeBackpressureWriter(call, "target_error");
             console.error("An error occurred in joinAdminRoom stream:", err);
             Sentry.captureException(err);
         });
@@ -605,6 +613,7 @@ const roomManager = {
         });
 
         call.on("cancelled", () => {
+            closeBackpressureWriter(call, "target_closed");
             socketManager.removeVariableListener(call).catch((e) => {
                 console.error(e);
                 Sentry.captureException(e);
@@ -613,11 +622,13 @@ const roomManager = {
         });
 
         call.on("close", () => {
+            closeBackpressureWriter(call, "target_closed");
             socketManager.removeVariableListener(call).catch((e) => {
                 console.error(e);
                 Sentry.captureException(e);
             });
         }).on("error", (e) => {
+            closeBackpressureWriter(call, "target_error");
             socketManager.removeVariableListener(call).catch((e) => {
                 console.error(e);
                 Sentry.captureException(e);
@@ -714,6 +725,7 @@ const roomManager = {
         });
 
         call.on("cancelled", () => {
+            closeBackpressureWriter(call, "target_closed");
             socketManager.removeEventListener(call).catch((e) => {
                 console.error(e);
                 Sentry.captureException(e);
@@ -722,11 +734,13 @@ const roomManager = {
         });
 
         call.on("close", () => {
+            closeBackpressureWriter(call, "target_closed");
             socketManager.removeEventListener(call).catch((e) => {
                 console.error(e);
                 Sentry.captureException(e);
             });
         }).on("error", (e) => {
+            closeBackpressureWriter(call, "target_error");
             socketManager.removeEventListener(call).catch((e) => {
                 console.error(e);
                 Sentry.captureException(e);

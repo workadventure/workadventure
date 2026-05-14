@@ -66,4 +66,41 @@ describe("AdminWebSocketBackpressureWriter", () => {
         expect(socket.end).toHaveBeenCalledWith(1013, "Backpressure limit exceeded");
         expect(onClosed).toHaveBeenCalledWith("send_dropped");
     });
+
+    it("does not send after the writer is closed externally", () => {
+        const socket = new FakeAdminSocket();
+        const writer = new AdminWebSocketBackpressureWriter(socket, {
+            maxQueuedMessages: 10,
+            maxQueuedBytes: 1024,
+            drainTimeoutMs: 1000,
+            estimateSize: (message) => message.length,
+        });
+
+        writer.close("target_closed");
+
+        expect(writer.send("late")).toBe(2);
+        expect(socket.sent).toEqual([]);
+        expect(socket.end).not.toHaveBeenCalled();
+    });
+
+    it("clears queued messages and ignores late drain after external close", () => {
+        const socket = new FakeAdminSocket();
+        const writer = new AdminWebSocketBackpressureWriter(socket, {
+            maxQueuedMessages: 10,
+            maxQueuedBytes: 1024,
+            drainTimeoutMs: 1000,
+            estimateSize: (message) => message.length,
+        });
+        socket.onDrain(() => writer.handleDrain());
+        socket.pushStatus(0);
+
+        expect(writer.send("first")).toBe(0);
+        expect(writer.send("second")).toBe(0);
+
+        writer.close("target_closed");
+        socket.drain();
+
+        expect(socket.sent).toEqual(["first"]);
+        expect(socket.end).not.toHaveBeenCalled();
+    });
 });

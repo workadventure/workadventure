@@ -3,7 +3,12 @@ import {
     BACK_STREAM_BACKPRESSURE_MAX_QUEUED_BYTES,
     BACK_STREAM_BACKPRESSURE_MAX_QUEUED_MESSAGES,
 } from "../Enum/EnvironmentVariable";
-import { BackpressureWriter, type BackpressureWriteOptions, type WritableTarget } from "./BackpressureWriter";
+import {
+    BackpressureWriter,
+    type BackpressureCloseReason,
+    type BackpressureWriteOptions,
+    type WritableTarget,
+} from "./BackpressureWriter";
 
 const writers = new WeakMap<object, BackpressureWriter<unknown>>();
 
@@ -14,6 +19,14 @@ export function writeWithBackpressure<T>(
     streamName = "back_stream"
 ): boolean {
     return getBackpressureWriter(stream, streamName).write(message, options);
+}
+
+export function closeBackpressureWriter<T>(
+    stream: WritableTarget<T>,
+    reason: BackpressureCloseReason = "target_closed"
+): void {
+    const existingWriter = writers.get(stream);
+    existingWriter?.close(reason);
 }
 
 function getBackpressureWriter<T>(stream: WritableTarget<T>, streamName: string): BackpressureWriter<T> {

@@ -54,6 +54,10 @@ export class AdminWebSocketBackpressureWriter {
         return this.sendNow(message);
     }
 
+    public close(reason: BackpressureCloseReason | "send_dropped" = "target_closed"): void {
+        this.closeWithReason(reason, false);
+    }
+
     public handleDrain(): void {
         if (this.closed) {
             return;
@@ -110,7 +114,7 @@ export class AdminWebSocketBackpressureWriter {
                 return;
             }
 
-            this.close("queue_limit_exceeded");
+            this.closeTarget("queue_limit_exceeded");
             return;
         }
 
@@ -119,11 +123,17 @@ export class AdminWebSocketBackpressureWriter {
     }
 
     private sendNow(message: QueuedPayload): SendStatus {
-        const status = this.socket.send(message.payload);
+        let status: SendStatus;
+        try {
+            status = this.socket.send(message.payload);
+        } catch {
+            this.closeWithReason("write_after_close", false);
+            return 2;
+        }
         if (status === 0) {
             this.waitForDrain();
         } else if (status === 2) {
-            this.close("send_dropped");
+            this.closeTarget("send_dropped");
         }
         return status;
     }
@@ -135,11 +145,15 @@ export class AdminWebSocketBackpressureWriter {
 
         this.waitingForDrain = true;
         this.drainTimeout = setTimeout(() => {
-            this.close("drain_timeout");
+            this.closeTarget("drain_timeout");
         }, this.options.drainTimeoutMs);
     }
 
-    private close(reason: BackpressureCloseReason | "send_dropped"): void {
+    private closeTarget(reason: BackpressureCloseReason | "send_dropped"): void {
+        this.closeWithReason(reason, true);
+    }
+
+    private closeWithReason(reason: BackpressureCloseReason | "send_dropped", closeTarget: boolean): void {
         if (this.closed) {
             return;
         }
@@ -152,6 +166,12 @@ export class AdminWebSocketBackpressureWriter {
             this.drainTimeout = undefined;
         }
         this.options.onClosed?.(reason);
-        this.socket.end(1013, "Backpressure limit exceeded");
+        if (closeTarget) {
+            try {
+                this.socket.end(1013, "Backpressure limit exceeded");
+            } catch {
+                // The socket may already be closed by the time the writer reacts.
+            }
+        }
     }
 }

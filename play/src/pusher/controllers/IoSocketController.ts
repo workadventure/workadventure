@@ -236,6 +236,7 @@ export class IoSocketController {
             close: (ws) => {
                 try {
                     ws.getUserData().disconnecting = true;
+                    this.adminSocketWriters.get(ws)?.close("target_closed");
                     this.adminSocketWriters.delete(ws);
                     socketManager.leaveAdminRoom(ws);
                 } catch (e) {
