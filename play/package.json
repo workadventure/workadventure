@@ -37,7 +37,8 @@
     "typesafe-i18n": "typesafe-i18n --no-watch",
     "typesafe-i18n-watch": "typesafe-i18n",
     "i18n:diff": "TSX_TSCONFIG_PATH=tsconfig.json tsx ./scripts/diff-i18n.ts",
-    "i18n:check": "TSX_TSCONFIG_PATH=tsconfig.json tsx ./scripts/diff-i18n.ts --check"
+    "i18n:check": "TSX_TSCONFIG_PATH=tsconfig.json tsx ./scripts/diff-i18n.ts --check",
+    "update-dtln-rs": "bash ./scripts/update-dtln-rs.sh"
   },
   "lint-staged": {
     "*.svelte": [
@@ -119,6 +120,7 @@
     "@workadventure/map-editor": "1.0.0",
     "@workadventure/math-utils": "1.0.0",
     "@workadventure/messages": "1.0.0",
+    "@workadventure/noise-suppression": "^0.0.1",
     "@workadventure/shared-utils": "1.0.0",
     "@workadventure/simple-peer": "^12.0.1",
     "@workadventure/store-utils": "1.0.0",
