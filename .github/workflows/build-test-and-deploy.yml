@@ -538,6 +538,7 @@ jobs:
             ${{ steps.poll-pipeline.outputs.failed == 'true' && '❌ GitLab SaaS pipeline failed. ' || '✅ GitLab SaaS pipeline succeeded. ' }}[Check Pipeline](${{ env.PIPELINE_URL }})
           fail: ${{ steps.poll-pipeline.outputs.failed == 'true' }}
           recreate: true
+
   prod-single-domain-deploy-tests:
     name: "Test production docker compose (${{ matrix.shard }}/${{ matrix.nbShards }})"
     strategy:
