@@ -28,26 +28,34 @@ export class AuthenticateController extends BaseHttpController {
 
         let redirectToMatrixPath: string;
         if (fs.existsSync("dist/public/redirectToMatrix.html")) {
+            // In prod mode
             redirectToMatrixPath = "dist/public/redirectToMatrix.html";
         } else if (fs.existsSync("redirectToMatrix.html")) {
+            // In dev mode
             redirectToMatrixPath = "redirectToMatrix.html";
         } else {
             throw new Error("Could not find redirectToMatrix.html file");
         }
 
         this.redirectToMatrixFile = fs.readFileSync(redirectToMatrixPath, "utf8");
+
+        // Pre-parse the file for speed (and validation)
         Mustache.parse(this.redirectToMatrixFile);
 
         let redirectToPlayPath: string;
         if (fs.existsSync("dist/public/redirectToPlay.html")) {
+            // In prod mode
             redirectToPlayPath = "dist/public/redirectToPlay.html";
         } else if (fs.existsSync("redirectToPlay.html")) {
+            // In dev mode
             redirectToPlayPath = "redirectToPlay.html";
         } else {
             throw new Error("Could not find redirectToPlay.html file");
         }
 
         this.redirectToPlayFile = fs.readFileSync(redirectToPlayPath, "utf8");
+
+        // Pre-parse the file for speed (and validation)
         Mustache.parse(this.redirectToPlayFile);
     }
 
@@ -90,6 +98,7 @@ export class AuthenticateController extends BaseHttpController {
          *         description: Redirects the user to the OpenID login screen
          *
          */
+
         this.app.get("/login-screen", async (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const query = validateQuery(
@@ -100,13 +109,14 @@ export class AuthenticateController extends BaseHttpController {
                     manuallyTriggered: z.literal("true").optional(),
                     chatRoomId: z.string().optional(),
                     providerId: z.string().optional(),
-                    providerScopes: z.string().array().optional(),
+                    providerScopes: z.string().array().optional(), // Optional scopes to request
                 })
             );
             if (query === undefined) {
                 return;
             }
 
+            // Let's validate the playUri (we don't want a hacker to forge a URL that will redirect to a malicious URL)
             const verifyDomainService_ = VerifyDomainService.get(await adminService.getCapabilities());
             const verifyDomainResult = await verifyDomainService_.verifyDomain(query.playUri);
             if (!verifyDomainResult) {
@@ -125,8 +135,8 @@ export class AuthenticateController extends BaseHttpController {
                 query.providerScopes
             );
             res.cookie("playUri", query.playUri, {
-                httpOnly: true,
-                secure: req.secure,
+                httpOnly: true, // dont let browser javascript access cookie ever
+                secure: req.secure, // only use cookie over https
             });
 
             res.redirect(loginUri);
@@ -169,6 +179,7 @@ export class AuthenticateController extends BaseHttpController {
          *       401:
          *         description: Thrown when the token is invalid
          */
+
         this.app.get("/me", async (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const IPAddress = getClientIpFromXForwardedFor(req.header("x-forwarded-for"));
@@ -184,6 +195,8 @@ export class AuthenticateController extends BaseHttpController {
             try {
                 const authTokenData: AuthTokenData = await jwtTokenManager.verifyJWTToken(token, false);
 
+                //Get user data from Admin Back Office
+                //This is very important to create User Local in LocalStorage in WorkAdventure
                 const resUserData = await adminService.fetchMemberDataByUuid(
                     authTokenData.identifier,
                     authTokenData.accessToken,
@@ -202,10 +215,13 @@ export class AuthenticateController extends BaseHttpController {
                 }
 
                 if (authTokenData.accessToken == undefined) {
+                    //if not nonce and code, anonymous user connected
+                    //get data with identifier and return token
                     res.json({
                         authToken: token,
                         username: authTokenData?.username,
                         locale: authTokenData?.locale,
+                        // TODO: replace ... with each property
                         ...resUserData,
                         matrixUserId: authTokenData?.matrixUserId,
                         matrixServerUrl: MATRIX_PUBLIC_URI,
@@ -221,6 +237,7 @@ export class AuthenticateController extends BaseHttpController {
                         locale: authTokenData?.locale,
                         matrixUserId: authTokenData?.matrixUserId,
                         matrixServerUrl: (resCheckTokenAuth.matrix_url as string | undefined) ?? MATRIX_PUBLIC_URI,
+                        // TODO: replace ... with each property
                         ...resUserData,
                         ...resCheckTokenAuth,
                     } satisfies MeResponse);
@@ -264,6 +281,18 @@ export class AuthenticateController extends BaseHttpController {
                     res.send("Invalid token");
                     return;
                 }
+
+                /*if (isAxiosError(err)) {
+                    const errorType = ErrorApiData.safeParse(err?.response?.data);
+                    if (errorType.success) {
+                        const status = err?.response?.status ?? 500;
+                        res.atomic(() => {
+                            res.sendStatus(status);
+                            res.json(errorType.data);
+                        });
+                        return;
+                    }
+                }*/
                 throw err;
             }
         });
@@ -290,6 +319,7 @@ export class AuthenticateController extends BaseHttpController {
          *       302:
          *         description: Redirects to play once authentication is done, unless we use an AdminAPI (in this case, we redirect to the AdminAPI with same parameters)
          */
+
         this.app.get("/openid-callback", async (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const playUri = req.cookies.playUri;
@@ -301,6 +331,7 @@ export class AuthenticateController extends BaseHttpController {
             try {
                 userInfo = await openIDClient.getUserInfo(req, res, playUri);
             } catch (err) {
+                //if no access on openid provider, return error
                 console.error("An error occurred while connecting to OpenID Provider => ", err);
                 res.status(500);
                 res.send("An error occurred while connecting to OpenID Provider");
@@ -322,7 +353,10 @@ export class AuthenticateController extends BaseHttpController {
 
             const matrixPublicUri = userInfo.matrix_url ?? MATRIX_PUBLIC_URI;
 
+            // If Matrix is configured, we need to get an access token for the Synapse server
             if (matrixPublicUri) {
+                // TODO: check Matrix server login parameters to be sure we can connect
+
                 const matrixCallbackUrl = new URL("/matrix-callback", PUSHER_URL).toString();
                 let redirectPath = "/_matrix/client/v3/login/sso/redirect";
                 if (userInfo.matrix_identity_provider) {
@@ -331,16 +365,21 @@ export class AuthenticateController extends BaseHttpController {
                 const matrixRedirectUrl = new URL(redirectPath, matrixPublicUri);
                 matrixRedirectUrl.searchParams.append("redirectUrl", matrixCallbackUrl);
 
+                // Note: the authToken cannot be saved in a cookie because sometimes, it can be pretty large (>4kB)
+                // Therefore, we use localStorage to store it. So we need to render an HTML page with a script that will
+                // save the token in localStorage
                 const html = Mustache.render(this.redirectToMatrixFile, {
                     authToken,
                     matrixRedirectUrl: matrixRedirectUrl.toString(),
                 });
 
                 res.type("html").send(html);
+
                 return;
             }
 
             res.clearCookie("playUri");
+            // FIXME: possibly redirect to Admin instead.
             res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
             return;
         });
@@ -450,6 +489,7 @@ export class AuthenticateController extends BaseHttpController {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const param = req.body;
 
+            //todo: what to do if the organizationMemberToken is already used?
             const organizationMemberToken: string | null = param.organizationMemberToken;
             const playUri: string | null = param.playUri;
 
@@ -511,6 +551,7 @@ export class AuthenticateController extends BaseHttpController {
     private anonymLogin(): void {
         this.app.post("/anonymLogin", async (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
+            // We refuse the anonymous login if the anonymous mode is disabled AND that the default woka name is not set
             if (DISABLE_ANONYMOUS) {
                 res.status(403).send("");
                 return;
@@ -568,6 +609,7 @@ export class AuthenticateController extends BaseHttpController {
             await openIDClient.checkTokenAuth(authTokenData.accessToken);
 
             const accessToken = authTokenData.accessToken;
+            //get login profile
             res.status(302);
             res.setHeader("Location", adminService.getProfileUrl(accessToken, playUri));
             res.send("");
@@ -594,11 +636,13 @@ export class AuthenticateController extends BaseHttpController {
          */
         this.app.get("/logout-callback", (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
+            // if no playUri, redirect to front
             if (!req.cookies.playUri) {
                 res.redirect(FRONT_URL);
                 return;
             }
 
+            // when user logout, redirect to playUri saved in cookie
             const logOutAdminUrl = new URL(req.cookies.playUri);
             res.clearCookie("playUri");
             res.redirect(logOutAdminUrl.toString());
@@ -643,16 +687,23 @@ export class AuthenticateController extends BaseHttpController {
             if (authTokenData.accessToken == undefined) {
                 throw Error("Cannot log out, no access token found.");
             }
+            // TODO: change that to use end session endpoint
+            // Use post logout redirect and id token hint to redirect on the logut session endpoint of the OpenId provider
+            // https://openid.net/specs/openid-connect-session-1_0.html#RPLogout
             await openIDClient.logoutUser(authTokenData.accessToken);
 
+            // if no redirect, redirect to playUri and connect user to the world
+            // if the world is with authentication mandatory, the user will be redirected to the login screen
+            // if the world is anonymous or with authentication optional, the user will be connected to the world
             if (!query.redirect) {
                 res.redirect(query.playUri);
                 return;
             }
 
+            // save the playUri in cookie to redirect to the world after logout
             res.cookie("playUri", query.playUri, {
-                httpOnly: true,
-                secure: req.secure,
+                httpOnly: true, // dont let browser javascript access cookie ever
+                secure: req.secure, // only use cookie over https
             });
             res.redirect(query.redirect);
         });

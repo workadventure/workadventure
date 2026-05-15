@@ -78,15 +78,19 @@ class OpenIDClient {
             }
 
             const code_verifier = generators.codeVerifier();
+            // store the code_verifier in your framework's session mechanism, if it is a cookie based solution
+            // it should be httpOnly (not readable by javascript) and encrypted.
             res.cookie("code_verifier", this.encrypt(code_verifier), {
-                httpOnly: true,
-                secure: req.secure,
+                httpOnly: true, // dont let browser javascript access cookie ever
+                secure: req.secure, // only use cookie over https
             });
 
+            // We also store the state in cookies. The state should not be needed, except for older OpenID client servers that
+            // don't understand PKCE
             const state = v4();
             res.cookie("oidc_state", state, {
-                httpOnly: true,
-                secure: req.secure,
+                httpOnly: true, // dont let browser javascript access cookie ever
+                secure: req.secure, // only use cookie over https
             });
 
             const code_challenge = generators.codeChallenge(code_verifier);
@@ -95,7 +99,11 @@ class OpenIDClient {
                 scope: OPID_SCOPE,
                 prompt: OPID_PROMPT,
                 state: state,
+                //nonce: nonce,
                 playUri,
+                // Whether the login was triggered by clicking on the "sign in" button (in which case the user was
+                // anonymous) or whether the login was triggered because user was not authenticated and authentication
+                // is mandatory.
                 manuallyTriggered,
                 chatRoomId,
                 providerId,
@@ -147,7 +155,11 @@ class OpenIDClient {
                 res.clearCookie("oidc_state");
 
                 return client
-                    .userinfo(tokenSet, { params: { playUri } })
+                    .userinfo(tokenSet, {
+                        params: {
+                            playUri,
+                        },
+                    })
                     .then((res) => {
                         return {
                             ...res,
