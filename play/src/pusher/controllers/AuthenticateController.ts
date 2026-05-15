@@ -698,6 +698,9 @@ export class AuthenticateController extends BaseHttpController {
             // Use post logout redirect and id token hint to redirect on the logut session endpoint of the OpenId provider
             // https://openid.net/specs/openid-connect-session-1_0.html#RPLogout
             await openIDClient.logoutUser(authTokenData.accessToken);
+            if (authTokenData.refreshToken) {
+                await openIDClient.logoutUser(authTokenData.refreshToken);
+            }
 
             // if no redirect, redirect to playUri and connect user to the world
             // if the world is with authentication mandatory, the user will be redirected to the login screen
