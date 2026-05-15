@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Request, Response, Application } from "express";
 import { AuthenticatedProviderController } from "../../src/pusher/controllers/AuthenticatedProviderController";
+import type { CreateAuthTokenOptions } from "../../src/pusher/services/JWTTokenManager";
 
 const NOT_A_SECRET = "foo";
 class MockAuthenticatedProviderController extends AuthenticatedProviderController<string> {
@@ -62,6 +63,7 @@ class FakeRequest {
 export interface MockAuthTokenData {
     identifier: string;
     accessToken?: string;
+    refreshToken?: string;
     username?: string;
     locale?: string;
 }
@@ -73,12 +75,7 @@ export class JWTTokenManagerMock {
         });
     }
 
-    public async createAuthToken(
-        identifier: string,
-        _accessToken?: string,
-        username?: string,
-        _locale?: string
-    ): Promise<string> {
+    public async createAuthToken(_options: CreateAuthTokenOptions): Promise<string> {
         return new Promise((resolve) => {
             resolve("");
         });

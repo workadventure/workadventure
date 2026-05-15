@@ -49,6 +49,16 @@ export const tokenInvalidException = "tokenInvalid";
 const secret = new TextEncoder().encode(SECRET_KEY ?? "");
 const adminSocketsSecret = new TextEncoder().encode(ADMIN_SOCKETS_TOKEN ?? "");
 
+export interface CreateAuthTokenOptions {
+    identifier: string;
+    accessToken?: string;
+    refreshToken?: string;
+    username?: string;
+    locale?: string;
+    tags?: string[];
+    matrixUserId?: string;
+}
+
 export class JWTTokenManager {
     public async verifyAdminSocketToken(token: string): Promise<AdminSocketTokenData> {
         if (!ADMIN_SOCKETS_TOKEN) {
@@ -60,15 +70,15 @@ export class JWTTokenManager {
         return AdminSocketTokenData.parse(verifiedToken);
     }
 
-    public async createAuthToken(
-        identifier: string,
-        accessToken?: string,
-        refreshToken?: string,
-        username?: string,
-        locale?: string,
-        tags?: string[],
-        matrixUserId?: string
-    ): Promise<string> {
+    public async createAuthToken({
+        identifier,
+        accessToken,
+        refreshToken,
+        username,
+        locale,
+        tags,
+        matrixUserId,
+    }: CreateAuthTokenOptions): Promise<string> {
         return new SignJWT({ identifier, accessToken, refreshToken, username, locale, tags, matrixUserId })
             .setExpirationTime("30d")
             .setProtectedHeader({ alg: "HS256" })
