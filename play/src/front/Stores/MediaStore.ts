@@ -29,6 +29,8 @@ import { hideHelpCameraSettings } from "./HelpSettingsStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 
 import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
+import { cameraPermissionStateStore } from "./MediaStatusStore";
+import { getLocalStreamForPublishing, getSynchronizedCameraState } from "./MediaPublishingUtils";
 
 export const inBackgroundSettingsStore = writable<boolean>(false);
 
@@ -100,6 +102,12 @@ function createEnableCameraSceneVisibilityStore() {
 export const requestedCameraState = createRequestedCameraState();
 export const requestedMicrophoneState = createRequestedMicrophoneState();
 export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilityStore();
+
+export const synchronizedCameraStateStore = derived(
+    [requestedCameraState, cameraPermissionStateStore],
+    ([$requestedCameraState, $cameraPermissionStateStore]) =>
+        getSynchronizedCameraState($requestedCameraState, $cameraPermissionStateStore)
+);
 
 /**
  * A store that is true when the megaphone screen is displayed.
@@ -949,34 +957,31 @@ export const localStreamStore = derived<
 );
 
 /**
- * When (unavailable status + in background settings), we expose the local stream without video tracks
- * so that LiveKit/WebRTC do not publish camera; preview in BackgroundSettingsPanel still uses localStreamStore.
+ * We expose the local stream without video tracks when the camera is not effectively publishable
+ * or when background settings must hide video while unavailable, so that LiveKit/WebRTC do not
+ * publish camera; preview in BackgroundSettingsPanel still uses localStreamStore.
  */
 export const localStreamStoreForPublishing = derived<
-    [typeof localStreamStore, typeof availabilityStatusStore, typeof inBackgroundSettingsStore],
+    [
+        typeof localStreamStore,
+        typeof availabilityStatusStore,
+        typeof inBackgroundSettingsStore,
+        typeof synchronizedCameraStateStore
+    ],
     LocalStreamStoreValue
 >(
-    [localStreamStore, availabilityStatusStore, inBackgroundSettingsStore],
-    ([$localStreamStore, $availabilityStatusStore, $inBackgroundSettingsStore], set) => {
+    [localStreamStore, availabilityStatusStore, inBackgroundSettingsStore, synchronizedCameraStateStore],
+    ([$localStreamStore, $availabilityStatusStore, $inBackgroundSettingsStore, $synchronizedCameraStateStore], set) => {
         const isUnavailableStatus =
             $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
             $availabilityStatusStore === AvailabilityStatus.SILENT ||
             $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
             $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
             $availabilityStatusStore === AvailabilityStatus.BUSY;
-        const shouldMaskVideoForPublishing = isUnavailableStatus && $inBackgroundSettingsStore;
+        const shouldMaskVideoForPublishing =
+            !$synchronizedCameraStateStore || (isUnavailableStatus && $inBackgroundSettingsStore);
 
-        if (
-            shouldMaskVideoForPublishing &&
-            $localStreamStore.type === "success" &&
-            $localStreamStore.stream &&
-            $localStreamStore.stream.getVideoTracks().length > 0
-        ) {
-            const audioOnlyStream = new MediaStream($localStreamStore.stream.getAudioTracks());
-            set({ type: "success", stream: audioOnlyStream });
-            return;
-        }
-        set($localStreamStore);
+        set(getLocalStreamForPublishing($localStreamStore, shouldMaskVideoForPublishing));
     }
 );
 
