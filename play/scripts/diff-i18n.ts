@@ -260,14 +260,16 @@ async function runDetailedCheck() {
 
         if (totalFiles > 0) {
             const completionRate = Math.floor((completeFiles * 100) / totalFiles);
-            if (!isQuietMode) {
+            const hasLocaleErrors = missingFiles > 0 || incompleteFiles > 0;
+
+            if (!isQuietMode || hasLocaleErrors) {
                 console.log(`🌍 ${lang}: ${completeFiles}/${totalFiles} complete files (${completionRate}%)`);
             }
-            if (missingFiles > 0 && !isQuietMode) {
+            if (missingFiles > 0) {
                 console.log(`   ❌ ${missingFiles} missing file(s)`);
                 hasErrors = 1;
             }
-            if (incompleteFiles > 0 && !isQuietMode) {
+            if (incompleteFiles > 0) {
                 console.log(`   ⚠️  ${incompleteFiles} incomplete file(s): ${incompleteFileNames.join(", ")}`);
                 hasErrors = 1;
             }
