@@ -54,8 +54,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private localCameraTrack: LocalVideoTrack | undefined;
     private localMicrophoneTrack: LocalAudioTrack | undefined;
     private screenShareUpdateQueue: Promise<void> = Promise.resolve();
-    private cameraUpdateQueue: Promise<void> = Promise.resolve();
-    private microphoneUpdateQueue: Promise<void> = Promise.resolve();
+    private mediaTrackUpdateQueue: Promise<void> = Promise.resolve();
     private unsubscribers: Unsubscriber[] = [];
     private rxjsSubscriptions: Subscription[] = [];
 
@@ -190,7 +189,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     private queueCameraTrackUpdate(localStream: LocalStreamStoreValue | undefined): void {
-        this.cameraUpdateQueue = this.cameraUpdateQueue
+        this.mediaTrackUpdateQueue = this.mediaTrackUpdateQueue
             .then(() => this.handleCameraTrack(localStream))
             .catch((err) => {
                 console.error("An error occurred while handling a camera update", err);
@@ -254,7 +253,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     private queueMicrophoneTrackUpdate(localStream: LocalStreamStoreValue | undefined): void {
-        this.microphoneUpdateQueue = this.microphoneUpdateQueue
+        this.mediaTrackUpdateQueue = this.mediaTrackUpdateQueue
             .then(() => this.handleMicrophoneTrack(localStream))
             .catch((err) => {
                 console.error("An error occurred while handling a microphone update", err);
