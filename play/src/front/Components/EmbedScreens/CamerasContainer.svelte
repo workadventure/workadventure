@@ -174,8 +174,7 @@
     $: {
         if (isOnOneLine) {
             const oneLineCount = Math.max(1, $oneLineStreamableCollectionStore.length);
-            const pipVerticalGrid =
-                $activePictureInPictureStore && oneLineMode === "vertical" && isOnOneLine;
+            const pipVerticalGrid = $activePictureInPictureStore && oneLineMode === "vertical" && isOnOneLine;
             const pipSortWindowCount = pipDockLocalCamera ? pipRemoteParticipantCount : oneLineCount;
 
             if (oneLineMode === "horizontal") {
