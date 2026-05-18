@@ -596,6 +596,10 @@ let rawStreamUpdateQueue: Promise<void> = Promise.resolve();
 
 type SetRawStreamIfCurrent = (value: LocalStreamStoreValue) => void;
 
+function hasLiveTrack(tracks: MediaStreamTrack[]): boolean {
+    return tracks.some((track) => track.readyState === "live");
+}
+
 function classifyMediaAccessError(error: unknown): MediaAccessIssue | null {
     const name = error instanceof Error ? error.name : "";
     if (name === "NotAllowedError" || name === "PermissionDeniedError" || name === "SecurityError") {
@@ -664,12 +668,12 @@ async function runRawStreamUpdate(
         audio: constraints.audio ?? false,
     };
 
+    const hasLiveVideoTrack = currentStream ? hasLiveTrack(currentStream.getVideoTracks()) : false;
+    const hasLiveAudioTrack = currentStream ? hasLiveTrack(currentStream.getAudioTracks()) : false;
     const mustRequestNewVideo =
-        (constraints.video && !deepEqual(oldConstraints.video, constraints.video)) ||
-        (!currentStream && constraints.video);
+        constraints.video !== false && (!deepEqual(oldConstraints.video, constraints.video) || !hasLiveVideoTrack);
     const mustRequestNewAudio =
-        (constraints.audio && !deepEqual(oldConstraints.audio, constraints.audio)) ||
-        (!currentStream && constraints.audio);
+        constraints.audio !== false && (!deepEqual(oldConstraints.audio, constraints.audio) || !hasLiveAudioTrack);
 
     if (currentStream) {
         const oldStream = currentStream;
