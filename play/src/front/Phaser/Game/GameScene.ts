@@ -2896,9 +2896,10 @@ ${escapedMessage}
             iframeListener.disablePlayerControlStream.subscribe((messageEventSource) => {
                 if (messageEventSource) {
                     this.userInputManager.disableControls(messageEventSource);
-
+                    this.userInputManager.disableRightClick();
                     iframeListener.onIframeCloseEvent(messageEventSource, () => {
                         this.userInputManager.restoreControls(messageEventSource);
+                        this.userInputManager.restoreRightClick();
                     });
                 }
             })
@@ -2908,6 +2909,7 @@ ${escapedMessage}
             iframeListener.enablePlayerControlStream.subscribe((messageEventSource) => {
                 if (messageEventSource) {
                     this.userInputManager.restoreControls(messageEventSource);
+                    this.userInputManager.restoreRightClick();
                 }
             })
         );
@@ -4118,6 +4120,7 @@ ${escapedMessage}
         this.cleanupClosingScene();
 
         this.userInputManager.disableControls("errorScreen");
+        this.userInputManager.disableRightClick();
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
@@ -4127,6 +4130,7 @@ ${escapedMessage}
         this.scene.stop(ReconnectingSceneName);
         this.scene.remove(ReconnectingSceneName);
         this.userInputManager.disableControls("errorScreen");
+        this.userInputManager.disableRightClick();
         //FIX ME to use status code
         if (message == undefined) {
             this.scene.start(ErrorSceneName, {

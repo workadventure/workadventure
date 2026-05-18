@@ -121,7 +121,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             return;
         }
 
-        if (!this.gameScene.userInputManager.isControlsEnabled) {
+        if (!this.gameScene.userInputManager.isControlsEnabled && !this.gameScene.userInputManager.isRightClickEnabled) {
             return;
         }
 
