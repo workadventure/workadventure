@@ -54,6 +54,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private localCameraTrack: LocalVideoTrack | undefined;
     private localMicrophoneTrack: LocalAudioTrack | undefined;
     private screenShareUpdateQueue: Promise<void> = Promise.resolve();
+    private cameraUpdateQueue: Promise<void> = Promise.resolve();
+    private microphoneUpdateQueue: Promise<void> = Promise.resolve();
     private unsubscribers: Unsubscriber[] = [];
     private rxjsSubscriptions: Subscription[] = [];
 
@@ -187,22 +189,25 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         return selectVideoPreset(height, width, isScreenShare, this.getQualitySetting(isScreenShare));
     }
 
-    private handleCameraTrack(localStream: LocalStreamStoreValue | undefined): void {
-        if (localStream === undefined || localStream.type !== "success" || !localStream.stream) {
-            this.unpublishCameraTrack().catch((err) => {
-                console.error("An error occurred while unpublishing camera track", err);
+    private queueCameraTrackUpdate(localStream: LocalStreamStoreValue | undefined): void {
+        this.cameraUpdateQueue = this.cameraUpdateQueue
+            .then(() => this.handleCameraTrack(localStream))
+            .catch((err) => {
+                console.error("An error occurred while handling a camera update", err);
                 Sentry.captureException(err);
             });
+    }
+
+    private async handleCameraTrack(localStream: LocalStreamStoreValue | undefined): Promise<void> {
+        if (localStream === undefined || localStream.type !== "success" || !localStream.stream) {
+            await this.unpublishCameraTrack();
             return;
         }
 
         const videoTrack = localStream.stream.getVideoTracks()[0];
 
         if (!videoTrack) {
-            this.unpublishCameraTrack().catch((err) => {
-                console.error("An error occurred while unpublishing camera track", err);
-                Sentry.captureException(err);
-            });
+            await this.unpublishCameraTrack();
             return;
         }
 
@@ -211,10 +216,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         // each time we stop and restart the camera.
         if (this.localCameraTrack && this.localCameraTrack.mediaStreamTrack.id === videoTrack.id) {
             if (this.localCameraTrack.isUpstreamPaused) {
-                this.localCameraTrack.resumeUpstream().catch((err) => {
-                    console.error("An error occurred while unmuting camera track", err);
-                    Sentry.captureException(err);
-                });
+                await this.localCameraTrack.resumeUpstream();
             }
             return;
         }
@@ -239,38 +241,37 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 maxFramerate: preset.fps,
             };
 
-            this.localParticipant.publishTrack(this.localCameraTrack, publishOptions).catch((err) => {
-                console.error("An error occurred while publishing camera track", err);
-                Sentry.captureException(err);
-            });
+            await this.localParticipant.publishTrack(this.localCameraTrack, publishOptions);
         } else {
-            this.localCameraTrack
-                .replaceTrack(videoTrack, {
-                    userProvidedTrack: true,
-                })
-                .catch((err) => {
-                    console.error("An error occurred while replacing camera track", err);
-                    Sentry.captureException(err);
-                });
+            await this.localCameraTrack.replaceTrack(videoTrack, {
+                userProvidedTrack: true,
+            });
+
+            if (this.localCameraTrack.isUpstreamPaused) {
+                await this.localCameraTrack.resumeUpstream();
+            }
         }
     }
 
-    private handleMicrophoneTrack(localStream: LocalStreamStoreValue | undefined): void {
-        if (localStream === undefined || localStream.type !== "success" || !localStream.stream) {
-            this.unpublishMicrophoneTrack().catch((err) => {
-                console.error("An error occurred while unpublishing microphone track", err);
+    private queueMicrophoneTrackUpdate(localStream: LocalStreamStoreValue | undefined): void {
+        this.microphoneUpdateQueue = this.microphoneUpdateQueue
+            .then(() => this.handleMicrophoneTrack(localStream))
+            .catch((err) => {
+                console.error("An error occurred while handling a microphone update", err);
                 Sentry.captureException(err);
             });
+    }
+
+    private async handleMicrophoneTrack(localStream: LocalStreamStoreValue | undefined): Promise<void> {
+        if (localStream === undefined || localStream.type !== "success" || !localStream.stream) {
+            await this.unpublishMicrophoneTrack();
             return;
         }
 
         const audioTrack = localStream.stream.getAudioTracks()[0];
 
         if (!audioTrack) {
-            this.unpublishMicrophoneTrack().catch((err) => {
-                console.error("An error occurred while unpublishing microphone track", err);
-                Sentry.captureException(err);
-            });
+            await this.unpublishMicrophoneTrack();
             return;
         }
 
@@ -279,10 +280,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         // each time we stop and restart the microphone.
         if (this.localMicrophoneTrack && this.localMicrophoneTrack.mediaStreamTrack.id === audioTrack.id) {
             if (this.localMicrophoneTrack.isUpstreamPaused) {
-                this.localMicrophoneTrack.resumeUpstream().catch((err) => {
-                    console.error("An error occurred while unmuting microphone track", err);
-                    Sentry.captureException(err);
-                });
+                await this.localMicrophoneTrack.resumeUpstream();
             }
             return;
         }
@@ -301,42 +299,33 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         if (!this.localMicrophoneTrack) {
             this.localMicrophoneTrack = new LocalAudioTrack(audioTrack);
 
-            this.localParticipant
-                .publishTrack(this.localMicrophoneTrack, {
-                    source: Track.Source.Microphone,
-                })
-                .catch((err) => {
-                    console.error("An error occurred while publishing microphone track", err);
-                    Sentry.captureException(err);
-                });
+            await this.localParticipant.publishTrack(this.localMicrophoneTrack, {
+                source: Track.Source.Microphone,
+            });
         } else {
-            this.localMicrophoneTrack
-                .replaceTrack(audioTrack, {
-                    userProvidedTrack: true,
-                })
-                .catch((err) => {
-                    console.error("An error occurred while replacing microphone track", err);
-                    Sentry.captureException(err);
-                });
+            await this.localMicrophoneTrack.replaceTrack(audioTrack, {
+                userProvidedTrack: true,
+            });
+
+            if (this.localMicrophoneTrack.isUpstreamPaused) {
+                await this.localMicrophoneTrack.resumeUpstream();
+            }
         }
     }
 
     private synchronizeMediaState() {
         this.unsubscribers.push(
             deriveSwitchStore(this._localStreamStore, this.space.isStreamingStore).subscribe((localStream) => {
-                this.handleCameraTrack(localStream);
+                this.queueCameraTrackUpdate(localStream);
 
                 if (
                     this.space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK &&
                     !this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId)?.megaphoneState
                 ) {
-                    this.unpublishMicrophoneTrack().catch((err) => {
-                        console.error("An error occurred while unpublishing microphone track", err);
-                        Sentry.captureException(err);
-                    });
+                    this.queueMicrophoneTrackUpdate(undefined);
                     return;
                 }
-                this.handleMicrophoneTrack(localStream);
+                this.queueMicrophoneTrackUpdate(localStream);
             })
         );
 
