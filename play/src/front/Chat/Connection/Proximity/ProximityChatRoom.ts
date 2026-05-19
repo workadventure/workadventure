@@ -475,14 +475,13 @@ export class ProximityChatRoom implements ChatRoom {
 
     private removeTypingUser(senderUserId: string): void {
         const sender = this.users?.get(senderUserId);
-        if (sender === undefined) {
-            return;
+        let userIdToRemove = senderUserId;
+        if (sender !== undefined) {
+            userIdToRemove = sender.spaceUserId.toString();
         }
 
-        const id = sender.spaceUserId.toString();
-
         this.typingMembers.update((typingMembers) => {
-            return typingMembers.filter((user) => user.id !== id);
+            return typingMembers.filter((user) => user.id !== userIdToRemove);
         });
     }
 

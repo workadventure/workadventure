@@ -86,18 +86,19 @@
 
     function sendMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
         if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
-        room.startTyping()
-            .then(() => {
-                stopTypingTimeOutID = setTimeout(() => {
-                    room.stopTyping().catch((error) => console.error(error));
-                    stopTypingTimeOutID = undefined;
-                }, TYPINT_TIMEOUT);
-            })
-            .catch((error) => console.error(error));
 
-        if (keyDownEvent.key === "Enter" || message == "" || message == undefined) {
-            if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
+        const isEmptyMessage = message.replace(/<br>/g, "").trim() == "" || message == undefined;
+        if (keyDownEvent.key === "Enter" || isEmptyMessage) {
             room.stopTyping().catch((error) => console.error(error));
+        } else {
+            room.startTyping()
+                .then(() => {
+                    stopTypingTimeOutID = setTimeout(() => {
+                        room.stopTyping().catch((error) => console.error(error));
+                        stopTypingTimeOutID = undefined;
+                    }, TYPINT_TIMEOUT);
+                })
+                .catch((error) => console.error(error));
         }
 
         if (keyDownEvent.key === "Enter" && keyDownEvent.shiftKey) {
@@ -107,7 +108,7 @@
             keyDownEvent.preventDefault();
         }
 
-        if (keyDownEvent.key === "Enter" && message.trim().length !== 0) {
+        if (keyDownEvent.key === "Enter" && !isEmptyMessage) {
             // message contains HTML tags. Actually, the only tags we allow are for the new line, ie. <br> tags.
             // We can turn those back into carriage returns.
             const messageToSend = message.replace(/<br>/g, "\n");
