@@ -5,6 +5,7 @@
         ChatRoomMembershipManagement,
         ChatRoomModeration,
         ChatRoomNotificationControl,
+        ChatRoomSettingsManagement,
     } from "../../Connection/ChatConnection";
     import { roomSidePanelStore, type RoomSidePanelSection } from "../../Stores/RoomSidePanelStore";
     import ThreadPanel from "./ThreadPanel.svelte";
@@ -15,7 +16,11 @@
     import { IconChevronLeft, IconX } from "@wa-icons";
 
     interface Props {
-        room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
+        room: ChatRoom &
+            ChatRoomMembershipManagement &
+            ChatRoomModeration &
+            ChatRoomNotificationControl &
+            ChatRoomSettingsManagement;
         showCloseButton?: boolean;
         closeOnTimelineFocus?: boolean;
     }

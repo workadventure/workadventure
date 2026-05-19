@@ -7,7 +7,7 @@
 
     let { reaction }: Props = $props();
 
-    let { reacted, key, users, component } = $derived(reaction);
+    let { reacted, key, users, component, canReact } = $derived(reaction);
     let ReactionComponent = $derived(component.component);
 </script>
 
@@ -17,6 +17,8 @@
     <div
         onclick={() => reaction.react()}
         class="w-[40px] reaction group flex flex-row space-x-1 py-1 px-1.5 hover:bg-white/20 text-white hover:cursor-pointer rounded-full"
+        class:opacity-50={!$canReact}
+        class:pointer-events-none={!$canReact}
         data-testid={`${key}_reactionButton`}
     >
         <div class="group-hover:scale-[2] group-hover:rotate-3 transition-all text-xs p-0 m-0 hover:cursor-pointer">
