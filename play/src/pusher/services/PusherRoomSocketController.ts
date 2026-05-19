@@ -184,6 +184,14 @@ export class PusherRoomSocketController {
                         "lastReceivedNonce"
                     );
 
+                    console.info("[PusherRoomSocketController] upgrade request", {
+                        path,
+                        tabId: query.tabId,
+                        hasReconnectNonce: clientLastReceivedNonce !== undefined,
+                        clientLastReceivedNonce,
+                        retentionMs: CLIENT_DISCONNECTION_RETENTION_MS,
+                    });
+
                     await config.upgrade({
                         query,
                         request: {
@@ -196,11 +204,20 @@ export class PusherRoomSocketController {
                         isAborted: () => upgradeAborted.aborted,
                         upgrade: (data) => {
                             if (clientLastReceivedNonce !== undefined) {
+                                console.info("[PusherRoomSocketController] storing reconnect nonce for tab", {
+                                    tabId: query.tabId,
+                                    clientLastReceivedNonce,
+                                });
                                 const tabContext = this.contextByTabKey.get(query.tabId) ?? {};
                                 tabContext.clientLastReceivedNonce = clientLastReceivedNonce;
                                 this.contextByTabKey.set(query.tabId, tabContext);
                             }
 
+                            console.info("[PusherRoomSocketController] upgrading socket", {
+                                tabId: query.tabId,
+                                rejected: data.rejected,
+                                aborted: upgradeAborted.aborted,
+                            });
                             this.upgradeSocket(
                                 upgradeAborted.aborted,
                                 res,
@@ -212,6 +229,11 @@ export class PusherRoomSocketController {
                             );
                         },
                         reject: (data) => {
+                            console.info("[PusherRoomSocketController] rejecting socket during upgrade", {
+                                tabId: query.tabId,
+                                reason: data.reason,
+                                aborted: upgradeAborted.aborted,
+                            });
                             this.upgradeSocket(
                                 upgradeAborted.aborted,
                                 res,
@@ -233,6 +255,9 @@ export class PusherRoomSocketController {
                 (async () => {
                     const socketData = ws.getUserData();
                     if (socketData.rejected === true) {
+                        console.info("[PusherRoomSocketController] rejected socket opened to send error", {
+                            reason: socketData.reason,
+                        });
                         await config.rejectedOpen(ws as SocketUpgradeFailed);
                         return;
                     }
@@ -243,10 +268,28 @@ export class PusherRoomSocketController {
                     const context = this.contextByTabKey.get(tabId);
                     const clientLastReceivedNonce = context?.clientLastReceivedNonce;
 
+                    console.info("[PusherRoomSocketController] socket open", {
+                        tabId,
+                        userUuid: socketData.userUuid,
+                        roomId: socketData.roomId,
+                        hasExistingContext: !!context?.socket,
+                        clientLastReceivedNonce,
+                    });
+
                     if (context?.socket && clientLastReceivedNonce !== undefined && !context.socket.isDisconnecting()) {
+                        console.info("[PusherRoomSocketController] attempting transport replacement", {
+                            tabId,
+                            userUuid: socketData.userUuid,
+                            clientLastReceivedNonce,
+                        });
                         const replaced = context.socket.replaceSocket(rawSocket, clientLastReceivedNonce);
 
                         if (replaced) {
+                            console.info("[PusherRoomSocketController] transport replacement succeeded", {
+                                tabId,
+                                userUuid: socketData.userUuid,
+                                clientLastReceivedNonce,
+                            });
                             this.clearContextCleanup(tabId);
                             context.clientLastReceivedNonce = undefined;
                             this.wrappersBySocket.set(rawSocket, context.socket);
@@ -256,6 +299,17 @@ export class PusherRoomSocketController {
                     }
 
                     if (clientLastReceivedNonce !== undefined) {
+                        console.warn(
+                            "[PusherRoomSocketController] reconnect refused: previous connection not retained",
+                            {
+                                tabId,
+                                userUuid: socketData.userUuid,
+                                hasContext: !!context,
+                                hasSocket: !!context?.socket,
+                                contextSocketDisconnecting: context?.socket?.isDisconnecting(),
+                                clientLastReceivedNonce,
+                            }
+                        );
                         if (!context?.socket) {
                             this.contextByTabKey.delete(tabId);
                         }
@@ -265,6 +319,11 @@ export class PusherRoomSocketController {
 
                     this.clearContextCleanup(tabId);
                     const socket = this.getOrCreateWrapper(rawSocket);
+                    console.info("[PusherRoomSocketController] opening new logical socket", {
+                        tabId,
+                        userUuid: socketData.userUuid,
+                        roomId: socketData.roomId,
+                    });
                     this.contextByTabKey.set(tabId, {
                         socket,
                     });
@@ -282,16 +341,26 @@ export class PusherRoomSocketController {
 
                 const rawSocket = ws as unknown as RawSocket;
                 const socket = this.getOrCreateWrapper(rawSocket);
+                const socketData = socket.getUserData();
 
                 let message;
                 try {
                     message = socket.decodeIncomingMessage(arrayBuffer);
                 } catch (e) {
+                    console.warn("[PusherRoomSocketController] invalid client websocket frame", {
+                        tabId: socketData.tabId,
+                        userUuid: socketData.userUuid,
+                        error: asError(e).message,
+                    });
                     console.error(e);
                     ws.end(1003, "Invalid message format");
                     return;
                 }
                 if (!message) {
+                    console.debug("[PusherRoomSocketController] duplicate/old client message ignored", {
+                        tabId: socketData.tabId,
+                        userUuid: socketData.userUuid,
+                    });
                     return;
                 }
 
@@ -307,6 +376,11 @@ export class PusherRoomSocketController {
                 const rawSocket = ws as unknown as RawSocket;
                 const socket = this.getOrCreateWrapper(rawSocket);
                 if (!socket.isCurrentTransport(rawSocket)) {
+                    const socketData = socket.getUserData();
+                    console.debug("[PusherRoomSocketController] drain ignored for stale transport", {
+                        tabId: socketData.tabId,
+                        userUuid: socketData.userUuid,
+                    });
                     return;
                 }
                 socket.handleDrain();
@@ -320,11 +394,19 @@ export class PusherRoomSocketController {
                 const rawSocket = ws as unknown as RawSocket;
                 const socket = this.wrappersBySocket.get(rawSocket);
                 if (!socket) {
+                    console.info("[PusherRoomSocketController] close ignored: no wrapper for raw socket", {
+                        tabId: socketData.tabId,
+                        userUuid: socketData.userUuid,
+                    });
                     return;
                 }
                 this.wrappersBySocket.delete(rawSocket);
 
                 if (!socket.isCurrentTransport(rawSocket)) {
+                    console.info("[PusherRoomSocketController] close ignored for replaced/stale transport", {
+                        tabId: socketData.tabId,
+                        userUuid: socketData.userUuid,
+                    });
                     return;
                 }
 
@@ -339,10 +421,23 @@ export class PusherRoomSocketController {
 
                 if (this.contextByTabKey.get(tabId)?.socket === socket) {
                     this.clearContextCleanup(tabId);
+                    console.info(
+                        "[PusherRoomSocketController] transport closed; retaining logical socket for reconnect",
+                        {
+                            tabId,
+                            userUuid: socketData.userUuid,
+                            retentionMs: CLIENT_DISCONNECTION_RETENTION_MS,
+                        }
+                    );
                     const timeout = setTimeout(() => {
                         this.contextCleanupTimeoutsByTabKey.delete(tabId);
 
                         if (this.contextByTabKey.get(tabId)?.socket === socket) {
+                            console.info("[PusherRoomSocketController] retention expired; closing logical socket", {
+                                tabId,
+                                userUuid: socketData.userUuid,
+                                retentionMs: CLIENT_DISCONNECTION_RETENTION_MS,
+                            });
                             Promise.resolve(config.close(socket)).then(forgetContext, (e) => {
                                 console.error(e);
                                 forgetContext();
@@ -354,6 +449,10 @@ export class PusherRoomSocketController {
                     return;
                 }
 
+                console.info("[PusherRoomSocketController] closing logical socket immediately", {
+                    tabId,
+                    userUuid: socketData.userUuid,
+                });
                 Promise.resolve(config.close(socket)).catch((e) => {
                     console.error(e);
                 });

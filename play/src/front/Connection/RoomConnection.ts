@@ -145,8 +145,11 @@ const manualPingDelay = 100_000;
 const recordingQueryTimeoutMs = 60_000;
 
 export class RoomConnection implements RoomConnection {
+    private static nextConnectionId = 1;
+
     public readonly socket: WorkAdventureWebSocket;
     public readonly websocketReconnectingStream: Observable<boolean>;
+    private readonly connectionId = RoomConnection.nextConnectionId++;
     private userId: number | null = null;
     private _closed = false;
     private tags: string[] = [];
@@ -320,11 +323,22 @@ export class RoomConnection implements RoomConnection {
             subProtocols = [token];
         }
 
+        this.logLifecycle("constructor", {
+            roomUrl,
+            websocketUrl: url,
+            tabId: connectionManager.tabId,
+            hasToken: !!token,
+            lastCommandId,
+        });
         this.socket = new WorkAdventureWebSocket(url, subProtocols);
         this.websocketReconnectingStream = this.socket.reconnectingStream;
 
         this.socket.onopen = () => {
-            console.info("Socket has been opened");
+            this.logLifecycle("socket open", {
+                lastReceivedNonce: this.socket.getLastReceivedNonce(),
+                roomConnectedMessageReceived: this.roomConnectedMessageReceived,
+                userId: this.userId,
+            });
             this.resetPingTimeout();
         };
 
@@ -505,6 +519,9 @@ export class RoomConnection implements RoomConnection {
                     if (this.roomConnectedMessageReceived) {
                         throw new Error("Received multiple roomConnectedMessage, this should never happen");
                     }
+                    this.logLifecycle("roomConnectedMessage received", {
+                        tags: message.roomConnectedMessage.tag,
+                    });
                     this.tags = message.roomConnectedMessage.tag;
                     this._roomConnectedPromise.resolve({
                         connection: this,
@@ -551,6 +568,13 @@ export class RoomConnection implements RoomConnection {
                     }*/
 
                     this.userId = roomJoinedMessage.currentUserId;
+                    this.logLifecycle("roomJoinedMessage received", {
+                        userId: this.userId,
+                        variables: roomJoinedMessage.variable.length,
+                        playerVariables: roomJoinedMessage.playerVariable.length,
+                        areaPropertyVariables: roomJoinedMessage.areaPropertyVariable?.length ?? 0,
+                        applications: roomJoinedMessage.applications?.length ?? 0,
+                    });
                     this._userRoomToken = roomJoinedMessage.userRoomToken;
                     //define if there is invite user option activated
                     inviteUserActivated.set(
@@ -765,13 +789,26 @@ export class RoomConnection implements RoomConnection {
 
     // Event handlers as arrow function in order not to have to bind this explicitly
     private handleSocketClose = (event: CloseEvent) => {
-        console.info("Socket has been closed", this.userId, this._closed, event);
+        this.logLifecycle("socket close", {
+            userId: this.userId,
+            closedByRoomConnection: this._closed,
+            code: event.code,
+            reason: event.reason,
+            wasClean: event.wasClean,
+            roomConnectedMessageReceived: this.roomConnectedMessageReceived,
+            connectionManagerUnloading: connectionManager.unloading,
+        });
         if (this.timeout) {
             clearTimeout(this.timeout);
+            this.timeout = undefined;
         }
 
         // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
         if (!this.roomConnectedMessageReceived && !this._closed) {
+            this.logLifecycle("rejecting roomConnectedPromise after early close", {
+                code: event.code,
+                reason: event.reason,
+            });
             this._roomConnectedPromise.reject(event);
             return;
         }
@@ -779,6 +816,10 @@ export class RoomConnection implements RoomConnection {
         // If the socket closes after connection but before the room is joined,
         // reject the roomJoined promise to avoid leaving callers hanging.
         if (!this.userId && !this._closed) {
+            this.logLifecycle("rejecting roomJoinedPromise after close before join", {
+                code: event.code,
+                reason: event.reason,
+            });
             this._roomJoinedPromise.reject(event);
         }
         if (event.code !== 1000) {
@@ -795,10 +836,21 @@ export class RoomConnection implements RoomConnection {
     };
 
     private handleSocketError = (event: Event) => {
+        this.logLifecycle("socket error", {
+            type: event.type,
+            userId: this.userId,
+            roomConnectedMessageReceived: this.roomConnectedMessageReceived,
+        });
         this._websocketErrorStream.next(event);
     };
 
     private cleanupConnection(isNormalClosure: boolean) {
+        this.logLifecycle("cleanupConnection", {
+            isNormalClosure,
+            alreadyClosed: this._closed,
+            unloading: connectionManager.unloading,
+            pendingQueries: this.queries.size,
+        });
         // Cleanup queries:
         for (const query of this.queries.values()) {
             query.reject(new ConnectionClosedError("Socket closed"));
@@ -812,9 +864,11 @@ export class RoomConnection implements RoomConnection {
 
         if (isNormalClosure) {
             // Normal closure case
+            this.logLifecycle("cleanupConnection completed after normal closure");
             return;
         }
 
+        this.logLifecycle("serverDisconnected emitted");
         this._serverDisconnected.next();
         this._serverDisconnected.complete();
     }
@@ -857,6 +911,12 @@ export class RoomConnection implements RoomConnection {
         viewport: ViewportInterface,
         availabilityStatus: AvailabilityStatus
     ): void {
+        this.logLifecycle("emitJoinRoom", {
+            name,
+            position: this.toPositionMessage(position.x, position.y, position.direction, position.moving),
+            viewport: this.toViewportMessage(viewport),
+            availabilityStatus,
+        });
         this.send({
             message: {
                 $case: "joinRoomFrontMessage",
@@ -1945,6 +2005,11 @@ export class RoomConnection implements RoomConnection {
             console.warn(
                 "Timeout detected. No ping from the server received. Is your connection down? Closing connection."
             );
+            this.logLifecycle("ping timeout", {
+                delayMs: manualPingDelay,
+                userId: this.userId,
+                lastReceivedNonce: this.socket.getLastReceivedNonce(),
+            });
             Sentry.captureMessage("RoomConnection: Ping timeout - closing connection");
             this.socket.close();
             this.cleanupConnection(false);
@@ -2161,11 +2226,20 @@ export class RoomConnection implements RoomConnection {
 
     private send(message: ClientToServerMessageTsProto): void {
         if (!this.socket.isOpen()) {
+            this.logLifecycle("send skipped because socket is closed", {
+                messageType: message.message?.$case,
+                userId: this.userId,
+                lastReceivedNonce: this.socket.getLastReceivedNonce(),
+            });
             console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
             return;
         }
 
         this.socket.send(message);
+    }
+
+    private logLifecycle(step: string, details?: Record<string, unknown>): void {
+        console.info(`[RoomConnection:${this.connectionId}] ${step}`, details ?? {});
     }
 
     private query<T extends Required<QueryMessage>["query"]>(

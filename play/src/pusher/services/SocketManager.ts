@@ -230,6 +230,13 @@ export class SocketManager implements ZoneEventListener {
 
         let streamToBack: BackConnection | undefined;
         try {
+            console.info("[SocketManager] handleConnectToRoom started", {
+                tabId: socketData.tabId,
+                userUuid: socketData.userUuid,
+                roomId: socketData.roomId,
+                lastCommandId: socketData.lastCommandId,
+                tags: socketData.tags,
+            });
             const connectToRoomMessage: ConnectToRoomMessage = {
                 roomId: socketData.roomId,
                 tag: socketData.tags,
@@ -238,6 +245,12 @@ export class SocketManager implements ZoneEventListener {
 
             debug("Calling connectToRoom '" + socketData.roomId + "'");
             const apiClient = await apiClientRepository.getClient(socketData.roomId, GRPC_MAX_MESSAGE_SIZE);
+            console.info("[SocketManager] opening back connectToRoom stream", {
+                tabId: socketData.tabId,
+                userUuid: socketData.userUuid,
+                roomId: socketData.roomId,
+                backTarget: apiClient.getChannel().getTarget(),
+            });
             streamToBack = apiClient.connectToRoom();
             let backConnectionCloseReason: string | undefined;
 
@@ -254,6 +267,13 @@ export class SocketManager implements ZoneEventListener {
                             socketData.userId = message.message.roomJoinedMessage.currentUserId;
                             socketData.spaceUserId =
                                 socketData.roomId + "_" + message.message.roomJoinedMessage.currentUserId;
+                            console.info("[SocketManager] roomJoinedMessage received from back", {
+                                tabId: socketData.tabId,
+                                userUuid: socketData.userUuid,
+                                roomId: socketData.roomId,
+                                userId: socketData.userId,
+                                spaceUserId: socketData.spaceUserId,
+                            });
 
                             // If this is the first message sent, send back the viewport.
                             this.handleViewport(client, client.getUserData().viewport);
@@ -266,13 +286,32 @@ export class SocketManager implements ZoneEventListener {
                         }
                         case "backConnectionCloseReasonMessage": {
                             backConnectionCloseReason = message.message.backConnectionCloseReasonMessage.reason;
+                            console.info("[SocketManager] back connection close reason received", {
+                                tabId: socketData.tabId,
+                                userUuid: socketData.userUuid,
+                                roomId: socketData.roomId,
+                                reason: backConnectionCloseReason,
+                            });
                             return;
                         }
                     }
 
                     // Let's pass data over from the back to the client.
                     if (!client.isDisconnecting()) {
+                        console.debug("[SocketManager] forwarding back message to client", {
+                            tabId: socketData.tabId,
+                            userUuid: socketData.userUuid,
+                            roomId: socketData.roomId,
+                            messageType: message.message.$case,
+                        });
                         client.send(message);
+                    } else {
+                        console.info("[SocketManager] back message not forwarded because client is disconnecting", {
+                            tabId: socketData.tabId,
+                            userUuid: socketData.userUuid,
+                            roomId: socketData.roomId,
+                            messageType: message.message.$case,
+                        });
                     }
                 })
                 .on("end", () => {
@@ -289,6 +328,12 @@ export class SocketManager implements ZoneEventListener {
                             }' and user '${socketData.userUuid}'/'${socketData.name}'. Reason: ${connectionCloseReason}`
                         );
                         this.closeWebsocketConnection(client, 1011, `Back lost: ${connectionCloseReason}`);
+                    } else {
+                        console.info("[SocketManager] back connection ended while client is already disconnecting", {
+                            tabId: socketData.tabId,
+                            userUuid: socketData.userUuid,
+                            roomId: socketData.roomId,
+                        });
                     }
                 })
                 .on("error", (err: Error) => {
@@ -307,6 +352,13 @@ export class SocketManager implements ZoneEventListener {
                     );
                     if (!client.isDisconnecting()) {
                         this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
+                    } else {
+                        console.info("[SocketManager] back connection errored while client is already disconnecting", {
+                            tabId: socketData.tabId,
+                            userUuid: socketData.userUuid,
+                            roomId: socketData.roomId,
+                            error: err.message,
+                        });
                     }
                 });
 
@@ -317,9 +369,19 @@ export class SocketManager implements ZoneEventListener {
                 },
             };
             writeWithBackpressure(streamToBack, pusherToBackMessage, {}, "pusher_connect_to_room");
+            console.info("[SocketManager] connectToRoomMessage sent to back", {
+                tabId: socketData.tabId,
+                userUuid: socketData.userUuid,
+                roomId: socketData.roomId,
+            });
 
             const pusherRoom = await this.getOrCreateRoom(socketData.roomId);
             pusherRoom.join(client);
+            console.info("[SocketManager] socket joined pusher room listener set", {
+                tabId: socketData.tabId,
+                userUuid: socketData.userUuid,
+                roomId: socketData.roomId,
+            });
         } catch (e) {
             Sentry.captureException(e);
             console.error(`An error occurred on "connect_to_room" event`, e);
@@ -345,6 +407,13 @@ export class SocketManager implements ZoneEventListener {
         const socketData = client.getUserData();
         const message = noUndefined(joinRoomFrontMessage);
 
+        console.info("[SocketManager] handleJoinRoom started", {
+            tabId: socketData.tabId,
+            userUuid: socketData.userUuid,
+            roomId: socketData.roomId,
+            name: message.name,
+            availabilityStatus: message.availabilityStatus,
+        });
         socketData.viewport = message.viewportMessage;
         socketData.name = message.name;
         socketData.availabilityStatus = message.availabilityStatus;
@@ -378,6 +447,12 @@ export class SocketManager implements ZoneEventListener {
             };
 
             debug("Calling joinRoom '" + socketData.roomId + "'");
+            console.info("[SocketManager] forwarding joinRoomMessage to back", {
+                tabId: socketData.tabId,
+                userUuid: socketData.userUuid,
+                roomId: socketData.roomId,
+                name: socketData.name,
+            });
             clientEventsEmitter.emitClientJoin(socketData.userUuid, socketData.roomId);
             joinRoomEventEmitted = true;
 
@@ -530,6 +605,14 @@ export class SocketManager implements ZoneEventListener {
     }
 
     private closeWebsocketConnection(client: Socket, code: number, reason: string): void {
+        const socketData = client.getUserData();
+        console.info("[SocketManager] closing websocket connection", {
+            tabId: socketData.tabId,
+            userUuid: socketData.userUuid,
+            roomId: socketData.roomId,
+            code,
+            reason,
+        });
         this.cleanupSocket(client);
         client.end(code, reason);
     }
@@ -537,10 +620,24 @@ export class SocketManager implements ZoneEventListener {
     public cleanupSocket(client: Socket): void {
         if (!client.startDisconnecting()) {
             // Cleanup already called
+            const socketData = client.getUserData();
+            console.info("[SocketManager] cleanupSocket skipped: already disconnecting", {
+                tabId: socketData.tabId,
+                userUuid: socketData.userUuid,
+                roomId: socketData.roomId,
+            });
             return;
         }
 
         const socketData = client.getUserData();
+        console.info("[SocketManager] cleanupSocket started", {
+            tabId: socketData.tabId,
+            userUuid: socketData.userUuid,
+            roomId: socketData.roomId,
+            userId: socketData.userId,
+            spaces: Array.from(socketData.spaces),
+            chatRooms: socketData.currentChatRoomArea,
+        });
 
         try {
             this.leaveRoom(client);
@@ -567,6 +664,11 @@ export class SocketManager implements ZoneEventListener {
             console.error(e);
         }
         socketData.currentChatRoomArea = [];
+        console.info("[SocketManager] cleanupSocket finished", {
+            tabId: socketData.tabId,
+            userUuid: socketData.userUuid,
+            roomId: socketData.roomId,
+        });
     }
 
     handleViewport(client: Socket, viewport: ViewportMessage): void {
@@ -743,6 +845,12 @@ export class SocketManager implements ZoneEventListener {
                     const room: PusherRoom | undefined = this.rooms.get(socketData.roomId);
                     if (room) {
                         debug("Leaving room %s.", socketData.roomId);
+                        console.info("[SocketManager] leaving pusher room", {
+                            tabId: socketData.tabId,
+                            userUuid: socketData.userUuid,
+                            roomId: socketData.roomId,
+                            userId: socketData.userId,
+                        });
 
                         room.leave(socket);
                         this.deleteRoomIfEmpty(room);
@@ -760,6 +868,11 @@ export class SocketManager implements ZoneEventListener {
             }
         } finally {
             if (socketData.backConnection) {
+                console.info("[SocketManager] closing back connection for socket", {
+                    tabId: socketData.tabId,
+                    userUuid: socketData.userUuid,
+                    roomId: socketData.roomId,
+                });
                 closeBackpressureWriter(socketData.backConnection, "target_closed");
                 socketData.backConnection.end();
             }
@@ -768,6 +881,12 @@ export class SocketManager implements ZoneEventListener {
 
     async leaveSpaces(socket: Socket) {
         const socketData = socket.getUserData();
+        console.info("[SocketManager] leaveSpaces started", {
+            tabId: socketData.tabId,
+            userUuid: socketData.userUuid,
+            roomId: socketData.roomId,
+            spaces: Array.from(socketData.spaces),
+        });
 
         // Create an array of operations to perform
         const leaveSpacePromises = Array.from(socketData.spaces).map(async (spaceName) => {

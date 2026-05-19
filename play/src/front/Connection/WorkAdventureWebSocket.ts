@@ -12,6 +12,7 @@ type WebSocketFactory = (url: string, protocols?: string[]) => WebSocket;
 
 export class WorkAdventureWebSocket {
     private static websocketFactory: WebSocketFactory | null = null;
+    private static nextConnectionId = 1;
 
     public static setWebsocketFactory(websocketFactory: WebSocketFactory | null): void {
         WorkAdventureWebSocket.websocketFactory = websocketFactory;
@@ -29,6 +30,8 @@ export class WorkAdventureWebSocket {
     private readonly protocols: string[] | undefined;
     private manuallyClosed = false;
     private reconnectAttempted = false;
+    private reconnectAttempt = 0;
+    private readonly connectionId = WorkAdventureWebSocket.nextConnectionId++;
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
@@ -40,6 +43,10 @@ export class WorkAdventureWebSocket {
     public constructor(url: string | URL, protocols?: string[]) {
         this.url = new URL(url);
         this.protocols = protocols;
+        this.logLifecycle("constructor", {
+            url: this.url.toString(),
+            retentionMs: CLIENT_DISCONNECTION_RETENTION_MS,
+        });
         this.socket = this.createSocket();
     }
 
@@ -56,6 +63,12 @@ export class WorkAdventureWebSocket {
         this.nextOutgoingNonce += 1;
         this.outgoingMessagesStore.add(nonce, payloadWithNonce);
 
+        this.logLifecycleDebug("send", {
+            nonce,
+            messageType: message.message?.$case,
+            readyState: this.socket.readyState,
+            bufferedMessages: this.outgoingMessagesStore.getAll().length,
+        });
         this.socket.send(payloadWithNonce);
     }
 
@@ -64,6 +77,11 @@ export class WorkAdventureWebSocket {
     }
 
     public close(code?: number, reason?: string): void {
+        this.logLifecycle("manual close requested", {
+            code,
+            reason,
+            readyState: this.socket.readyState,
+        });
         this.manuallyClosed = true;
         this.detachSocketListeners(this.socket);
         this._reconnectingStream.next(false);
@@ -73,9 +91,22 @@ export class WorkAdventureWebSocket {
 
     private handleOpenEvent = (): void => {
         const isReconnection = this.reconnectAttempted;
+        this.logLifecycle("open", {
+            isReconnection,
+            reconnectAttempt: this.reconnectAttempt,
+            lastReceivedNonce: this.lastReceivedNonce,
+            bufferedMessages: this.outgoingMessagesStore.getAll().length,
+        });
         this.reconnectAttempted = false;
         if (isReconnection) {
-            for (const { payload } of this.outgoingMessagesStore.getAll()) {
+            const messagesToReplay = this.outgoingMessagesStore.getAll();
+            this.logLifecycle("replay buffered client messages", {
+                count: messagesToReplay.length,
+                oldestNonce: messagesToReplay[0]?.nonce,
+                newestNonce: messagesToReplay[messagesToReplay.length - 1]?.nonce,
+            });
+            for (const { nonce, payload } of messagesToReplay) {
+                this.logLifecycleDebug("replay client message", { nonce });
                 this.socket.send(payload);
             }
             this._reconnectingStream.next(false);
@@ -85,15 +116,34 @@ export class WorkAdventureWebSocket {
     };
 
     private handleCloseEvent = (event: CloseEvent): void => {
+        this.logLifecycle("close event", {
+            code: event.code,
+            reason: event.reason,
+            wasClean: event.wasClean,
+            manuallyClosed: this.manuallyClosed,
+            reconnectAttempted: this.reconnectAttempted,
+            lastReceivedNonce: this.lastReceivedNonce,
+            bufferedMessages: this.outgoingMessagesStore.getAll().length,
+        });
         this.detachSocketListeners(this.socket);
 
         if (!this.manuallyClosed && this.shouldReconnect(event)) {
             this.reconnectAttempted = true;
+            this.reconnectAttempt += 1;
+            this.logLifecycle("starting reconnect", {
+                reconnectAttempt: this.reconnectAttempt,
+                lastReceivedNonce: this.lastReceivedNonce,
+            });
             this._reconnectingStream.next(true);
             this.socket = this.createSocket();
             return;
         }
 
+        this.logLifecycle("close propagated to room connection", {
+            code: event.code,
+            reason: event.reason,
+            wasClean: event.wasClean,
+        });
         this._reconnectingStream.next(false);
         const closeEvent = new CloseEvent("close", {
             code: event.code,
@@ -105,6 +155,10 @@ export class WorkAdventureWebSocket {
     };
 
     private handleErrorEvent = (event: Event): void => {
+        this.logLifecycle("error event", {
+            type: event.type,
+            readyState: this.socket.readyState,
+        });
         this.onerror?.call(this, event);
     };
 
@@ -118,6 +172,7 @@ export class WorkAdventureWebSocket {
         try {
             frame = PusherToFrontWebSocketMessage.decode(bytes);
         } catch (e) {
+            this.logLifecycle("invalid incoming frame", { error: e });
             console.error(e);
             this.close(1003, "Invalid message format");
             return;
@@ -132,17 +187,25 @@ export class WorkAdventureWebSocket {
             source: event.source,
         });
 
-        console.debug("Received message with nonce", frame.nonce, "and type", messageEvent.data.message?.$case);
+        this.logLifecycleDebug("received", {
+            nonce: frame.nonce,
+            messageType: messageEvent.data.message?.$case,
+        });
 
         this.onmessage?.call(this, messageEvent);
     };
 
     private createSocket(): WebSocket {
-        const socketUrl = this.url;
+        const socketUrl = new URL(this.url.toString());
         if (this.reconnectAttempted) {
             socketUrl.searchParams.set("lastReceivedNonce", this.lastReceivedNonce.toString());
         }
 
+        this.logLifecycle("creating websocket transport", {
+            url: socketUrl.toString(),
+            reconnectAttempt: this.reconnectAttempt,
+            lastReceivedNonce: this.reconnectAttempted ? this.lastReceivedNonce : undefined,
+        });
         const socket = WorkAdventureWebSocket.websocketFactory
             ? WorkAdventureWebSocket.websocketFactory(socketUrl.toString(), this.protocols)
             : new WebSocket(socketUrl, this.protocols);
@@ -153,9 +216,25 @@ export class WorkAdventureWebSocket {
     }
 
     private shouldReconnect(event: CloseEvent): boolean {
-        if (this.reconnectAttempted) return false;
+        if (this.reconnectAttempted) {
+            this.logLifecycle("reconnect refused", {
+                reason: "already attempted",
+                code: event.code,
+            });
+            return false;
+        }
         // Do not reconnect if handshake/auth was refused.
-        if (event.code === 1000 || event.code === 1008) return false;
+        if (event.code === 1000 || event.code === 1008) {
+            this.logLifecycle("reconnect refused", {
+                reason: event.code === 1000 ? "normal closure" : "policy/auth closure",
+                code: event.code,
+            });
+            return false;
+        }
+        this.logLifecycle("reconnect allowed", {
+            code: event.code,
+            reason: event.reason,
+        });
         return true;
     }
 
@@ -171,5 +250,13 @@ export class WorkAdventureWebSocket {
         socket.removeEventListener("close", this.handleCloseEvent);
         socket.removeEventListener("error", this.handleErrorEvent);
         socket.removeEventListener("message", this.handleMessageEvent);
+    }
+
+    private logLifecycle(step: string, details?: Record<string, unknown>): void {
+        console.info(`[WorkAdventureWebSocket:${this.connectionId}] ${step}`, details ?? {});
+    }
+
+    private logLifecycleDebug(step: string, details?: Record<string, unknown>): void {
+        console.debug(`[WorkAdventureWebSocket:${this.connectionId}] ${step}`, details ?? {});
     }
 }

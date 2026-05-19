@@ -287,7 +287,22 @@ export class IoSocketController {
                 const chatID = query.chatID ? query.chatID : undefined;
 
                 try {
+                    console.info("[IoSocketController] room websocket upgrade started", {
+                        tabId: query.tabId,
+                        roomId,
+                        version,
+                        expectedVersion: apiVersionHash,
+                        hasToken: !!token,
+                        lastCommandId,
+                        roomName,
+                    });
                     if (version !== apiVersionHash) {
+                        console.warn("[IoSocketController] room websocket upgrade refused: invalid version", {
+                            tabId: query.tabId,
+                            roomId,
+                            version,
+                            expectedVersion: apiVersionHash,
+                        });
                         if (isAborted()) {
                             // If the response points to nowhere, don't attempt an upgrade
                             return;
@@ -320,6 +335,12 @@ export class IoSocketController {
                             : query.characterTextureIds;
 
                     const tokenData = token ? await jwtTokenManager.verifyJWTToken(token) : null;
+                    console.info("[IoSocketController] token verified", {
+                        tabId: query.tabId,
+                        roomId,
+                        isLogged: !!tokenData?.accessToken,
+                        hasTokenData: !!tokenData,
+                    });
 
                     if (DISABLE_ANONYMOUS && !tokenData) {
                         throw new Error("Expecting token");
@@ -355,6 +376,14 @@ export class IoSocketController {
 
                     try {
                         try {
+                            console.info("[IoSocketController] fetching member data", {
+                                tabId: query.tabId,
+                                roomId,
+                                userIdentifier: userIdentifier || "anonymous",
+                                characterTextureIds,
+                                companionTextureId,
+                                chatID,
+                            });
                             const memberTagsFromToken = userData.tags;
                             userData = await adminService.fetchMemberDataByUuid(
                                 userIdentifier,
@@ -369,6 +398,14 @@ export class IoSocketController {
                             );
 
                             if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
+                                console.warn(
+                                    "[IoSocketController] room websocket upgrade refused: invalid character texture",
+                                    {
+                                        tabId: query.tabId,
+                                        roomId,
+                                        userIdentifier: userIdentifier || "anonymous",
+                                    }
+                                );
                                 reject({
                                     rejected: true,
                                     reason: "invalidTexture",
@@ -377,6 +414,14 @@ export class IoSocketController {
                                 return;
                             }
                             if (userData.status === "ok" && !userData.isCompanionTextureValid) {
+                                console.warn(
+                                    "[IoSocketController] room websocket upgrade refused: invalid companion texture",
+                                    {
+                                        tabId: query.tabId,
+                                        roomId,
+                                        userIdentifier: userIdentifier || "anonymous",
+                                    }
+                                );
                                 reject({
                                     rejected: true,
                                     reason: "invalidTexture",
@@ -392,6 +437,13 @@ export class IoSocketController {
                                 }
 
                                 const errorData = userData;
+                                console.warn("[IoSocketController] room websocket upgrade refused by admin API", {
+                                    tabId: query.tabId,
+                                    roomId,
+                                    userIdentifier: userIdentifier || "anonymous",
+                                    errorType: errorData.type,
+                                    errorCode: "code" in errorData ? errorData.code : undefined,
+                                });
                                 reject({
                                     rejected: true,
                                     reason: "error",
@@ -415,18 +467,34 @@ export class IoSocketController {
                         console.info(
                             "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
                         );
+                        console.warn("[IoSocketController] room websocket upgrade failed during access check", {
+                            tabId: query.tabId,
+                            roomId,
+                            userIdentifier: userIdentifier || "anonymous",
+                            error: asError(e).message,
+                        });
                         Sentry.captureException(e);
                         console.error(e);
                         throw new Error("User cannot access this world", { cause: e });
                     }
 
                     if (isAborted()) {
-                        console.info("Ouch! Client disconnected before we could upgrade it!");
+                        console.info("[IoSocketController] client disconnected before websocket upgrade", {
+                            tabId: query.tabId,
+                            roomId,
+                            userUuid: userData.userUuid,
+                        });
                         /* You must not upgrade now */
                         return;
                     }
 
-                    console.info(`Upgrading connection to WebSocket for tab ${query.tabId}`);
+                    console.info("[IoSocketController] upgrading connection to websocket", {
+                        tabId: query.tabId,
+                        roomId,
+                        userUuid: userData.userUuid,
+                        isLogged,
+                        world: userData.world,
+                    });
 
                     const socketData: ConnectingSocketData = {
                         rejected: false,
@@ -468,6 +536,11 @@ export class IoSocketController {
                     upgrade(socketData);
                 } catch (e) {
                     if (e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired) {
+                        console.warn("[IoSocketController] room websocket upgrade refused: token invalid/expired", {
+                            tabId: query.tabId,
+                            roomId,
+                            error: e.message,
+                        });
                         reject({
                             rejected: true,
                             reason: tokenInvalidException,
@@ -483,6 +556,10 @@ export class IoSocketController {
             rejectedOpen: (socket: SocketUpgradeFailed): void => {
                 const socketData = socket.getUserData();
                 debug("Rejected WebSocket connection established");
+                console.info("[IoSocketController] rejected websocket opened", {
+                    reason: socketData.reason,
+                    roomId: "roomId" in socketData ? socketData.roomId : undefined,
+                });
 
                 if ("roomId" in socketData) {
                     socketManager.deleteRoomIfEmptyFromId(socketData.roomId);
@@ -507,8 +584,20 @@ export class IoSocketController {
             open: async (socket) => {
                 const socketData = socket.getUserData();
                 debug("WebSocket connection established");
+                console.info("[IoSocketController] websocket open; connecting to back room", {
+                    tabId: socketData.tabId,
+                    userUuid: socketData.userUuid,
+                    roomId: socketData.roomId,
+                    world: socketData.world,
+                });
 
                 await socketManager.handleConnectToRoom(socket);
+                console.info("[IoSocketController] websocket connected to back room", {
+                    tabId: socketData.tabId,
+                    userUuid: socketData.userUuid,
+                    roomId: socketData.roomId,
+                    loginMessages: socketData.loginMessages.length,
+                });
 
                 for (const loginMessage of socketData.loginMessages) {
                     socket.send({
@@ -594,8 +683,21 @@ export class IoSocketController {
                             return;
                         }
 
+                        console.debug("[IoSocketController] client message received", {
+                            tabId: userData.tabId,
+                            userUuid: userData.userUuid,
+                            roomId: userData.roomId,
+                            messageType: message.message.$case,
+                        });
+
                         switch (message.message.$case) {
                             case "joinRoomFrontMessage": {
+                                console.info("[IoSocketController] joinRoomFrontMessage received", {
+                                    tabId: userData.tabId,
+                                    userUuid: userData.userUuid,
+                                    roomId: userData.roomId,
+                                    name: message.message.joinRoomFrontMessage.name,
+                                });
                                 await socketManager.handleJoinRoom(socket, message.message.joinRoomFrontMessage);
                                 break;
                             }
@@ -691,6 +793,13 @@ export class IoSocketController {
                             }
                             case "queryMessage": {
                                 try {
+                                    console.debug("[IoSocketController] queryMessage received", {
+                                        tabId: userData.tabId,
+                                        userUuid: userData.userUuid,
+                                        roomId: userData.roomId,
+                                        queryId: message.message.queryMessage.id,
+                                        queryType: message.message.queryMessage.query?.$case,
+                                    });
                                     const answerMessage: AnswerMessage = {
                                         id: message.message.queryMessage.id,
                                     };
@@ -1123,6 +1232,13 @@ export class IoSocketController {
                 });
             },
             close: (socket) => {
+                const socketData = socket.getUserData();
+                console.info("[IoSocketController] websocket logical close requested", {
+                    tabId: socketData.tabId,
+                    userUuid: socketData.userUuid,
+                    roomId: socketData.roomId,
+                    isDisconnecting: socket.isDisconnecting(),
+                });
                 socketManager.cleanupSocket(socket);
             },
         });
