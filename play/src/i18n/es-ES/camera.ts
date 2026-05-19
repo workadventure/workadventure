@@ -14,12 +14,23 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     help: {
         title: "Se necesita acceso a la cámara/micrófono",
+        cameraTitle: "Se necesita acceso a la cámara",
+        microphoneTitle: "Se necesita acceso al micrófono",
         permissionDenied: "Permiso denegado",
+        cameraPermissionDenied: "Permiso de cámara denegado",
+        microphonePermissionDenied: "Permiso de micrófono denegado",
+        cameraMicrophonePermissionDenied: "Permisos de cámara y micrófono denegados",
         content: "Debe permitir acceso a la cámara y el micrófono en el navegador.",
+        cameraContent: "Debe permitir acceso a la cámara en el navegador.",
+        microphoneContent: "Debe permitir acceso al micrófono en el navegador.",
         firefoxContent:
             'Por favor, haga clic en la caja "Recordar esta decisión", si no quiere que Firefox siga pidiéndole autorización.',
         allow: "Permitir webcam",
+        allowMicrophone: "Permitir micrófono",
+        allowCameraMicrophone: "Permitir webcam y micrófono",
         continue: "Continuar sin cámara",
+        continueWithoutMicrophone: "Continuar sin micrófono",
+        continueCameraMicrophone: "Continuar sin webcam ni micrófono",
         screen: {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

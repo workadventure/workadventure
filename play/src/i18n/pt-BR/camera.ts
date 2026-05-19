@@ -13,12 +13,23 @@ const camera: BaseTranslation = {
     },
     help: {
         title: "Necessário acesso à câmera/microfone",
+        cameraTitle: "Necessário acesso à câmera",
+        microphoneTitle: "Necessário acesso ao microfone",
         permissionDenied: "Permissão negada",
+        cameraPermissionDenied: "Permissão da câmera negada",
+        microphonePermissionDenied: "Permissão do microfone negada",
+        cameraMicrophonePermissionDenied: "Permissões da câmera e do microfone negadas",
         content: "Você deve permitir o acesso à câmera e ao microfone em seu navegador.",
+        cameraContent: "Você deve permitir o acesso à câmera em seu navegador.",
+        microphoneContent: "Você deve permitir o acesso ao microfone em seu navegador.",
         firefoxContent:
             'Por favor, clique na caixa de seleção "Lembrar esta decisão", se você não quiser que o Firefox continue pedindo a autorização.',
         allow: "Permitir webcam",
+        allowMicrophone: "Permitir microfone",
+        allowCameraMicrophone: "Permitir webcam e microfone",
         continue: "Continuar sem webcam",
+        continueWithoutMicrophone: "Continuar sem microfone",
+        continueCameraMicrophone: "Continuar sem webcam e microfone",
         screen: {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

@@ -14,12 +14,23 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     help: {
         title: "カメラとマイクへのアクセスが必要です",
+        cameraTitle: "カメラへのアクセスが必要です",
+        microphoneTitle: "マイクへのアクセスが必要です",
         permissionDenied: "拒否されました。",
+        cameraPermissionDenied: "カメラの権限が拒否されました",
+        microphonePermissionDenied: "マイクの権限が拒否されました",
+        cameraMicrophonePermissionDenied: "カメラとマイクの権限が拒否されました",
         content: "ブラウザからカメラとマイクへのアクセスを許可する必要があります。",
+        cameraContent: "ブラウザからカメラへのアクセスを許可する必要があります。",
+        microphoneContent: "ブラウザからマイクへのアクセスを許可する必要があります。",
         firefoxContent:
             "今後 Firefox からの問い合わせを受けたくない場合は「今後も同様に処理する」にチェックを付けてください。",
         allow: "ウェブカメラを許可",
+        allowMicrophone: "マイクを許可",
+        allowCameraMicrophone: "ウェブカメラとマイクを許可",
         continue: "カメラなしで続ける",
+        continueWithoutMicrophone: "マイクなしで続ける",
+        continueCameraMicrophone: "ウェブカメラとマイクなしで続ける",
         screen: {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

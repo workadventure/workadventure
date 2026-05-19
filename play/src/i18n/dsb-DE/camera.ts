@@ -14,12 +14,23 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     help: {
         title: "Pśistup ku kamerje a mikrofonoju jo trjebny",
+        cameraTitle: "Pśistup ku kamerje jo trjebny",
+        microphoneTitle: "Pśistup ku mikrofonoju jo trjebny",
         permissionDenied: "Pśistup njejo zwólony",
+        cameraPermissionDenied: "Zwólenje kamery jo wótpokazane",
+        microphonePermissionDenied: "Zwólenje mikrofona jo wótpokazane",
+        cameraMicrophonePermissionDenied: "Zwólenje kamery a mikrofona jo wótpokazane",
         content: "Pśistup ku kamerje a mikrofonoju musy se zwóliś we browseru.",
+        cameraContent: "Pśistup ku kamerje musy se zwóliś we browseru.",
+        microphoneContent: "Pśistup ku mikrofonoju musy se zwóliś we browseru.",
         firefoxContent:
             'Klikni na bublin "Te nastajenja zachowaś", aby njemusali kuždy raz wótnowotki to zwólenje we Firefoxu aktiwěrowaś',
         allow: "Webcam zwóliś",
+        allowMicrophone: "Mikrofon zwóliś",
+        allowCameraMicrophone: "Webcam a mikrofon zwóliś",
         continue: "Dalej mimo kamery",
+        continueWithoutMicrophone: "Dalej mimo mikrofona",
+        continueCameraMicrophone: "Dalej mimo webcamy a mikrofona",
         screen: {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",
