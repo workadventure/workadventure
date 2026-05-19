@@ -22,10 +22,8 @@ export type ConnectionStatusManager = {
 
 export class PusherWebSocket {
     private static readonly KEEP_ALIVE_INTERVAL_MS = 25_000;
-    private static nextConnectionId = 1;
 
     private socket: RawSocket;
-    private readonly connectionId = PusherWebSocket.nextConnectionId++;
     private keepAliveInterval: NodeJS.Timeout | undefined;
     private batchTimeout: NodeJS.Timeout | undefined;
     private pingBackpressured = false;
@@ -43,13 +41,6 @@ export class PusherWebSocket {
 
     public constructor(socket: RawSocket, private readonly connectionStatusManager: ConnectionStatusManager) {
         this.socket = socket;
-        const socketData = socket.getUserData();
-        this.logLifecycle("constructor", {
-            tabId: socketData.tabId,
-            userUuid: socketData.userUuid,
-            roomId: socketData.roomId,
-            retentionMs: CLIENT_DISCONNECTION_RETENTION_MS,
-        });
         this.startKeepAlive();
     }
 
@@ -66,20 +57,7 @@ export class PusherWebSocket {
         this.nextOutgoingNonce += 1;
         this.outgoingMessagesStore.add(nonce, payloadWithNonce);
 
-        this.logLifecycleDebug("send requested", {
-            nonce,
-            messageType: message.message?.$case,
-            transportAvailable: this.transportAvailable,
-            lastSentNonce: this.lastSentNonce,
-            bufferedMessages: this.outgoingMessagesStore.getAll().length,
-        });
-
         if (!this.transportAvailable || nonce > this.lastSentNonce + 1) {
-            this.logLifecycle("send deferred", {
-                nonce,
-                transportAvailable: this.transportAvailable,
-                lastSentNonce: this.lastSentNonce,
-            });
             return 0;
         }
 
@@ -88,28 +66,15 @@ export class PusherWebSocket {
 
     public handleDrain(): void {
         if (!this.transportAvailable) {
-            this.logLifecycleDebug("drain ignored because transport is unavailable");
             return;
         }
-
-        this.logLifecycle("drain", {
-            lastSentNonce: this.lastSentNonce,
-            bufferedMessages: this.outgoingMessagesStore.getAll().length,
-            pingBackpressured: this.pingBackpressured,
-        });
         for (const { nonce, payload } of this.outgoingMessagesStore.getAfter(this.lastSentNonce)) {
             if (this.sendStoredPayload(nonce, payload) !== 1) {
-                this.logLifecycle("drain stopped by backpressure", {
-                    nonce,
-                    lastSentNonce: this.lastSentNonce,
-                    bufferedAmount: this.getBufferedAmount(),
-                });
                 return;
             }
         }
 
         if (this.pingBackpressured && this.socket.ping() === 1) {
-            this.logLifecycle("ping backpressure cleared on drain");
             this.pingBackpressured = false;
         }
     }
@@ -148,18 +113,9 @@ export class PusherWebSocket {
             throw new Error("Invalid websocket payload: missing client message");
         }
         if (frame.nonce <= this.lastReceivedNonce) {
-            this.logLifecycleDebug("ignored duplicate/old client message", {
-                nonce: frame.nonce,
-                lastReceivedNonce: this.lastReceivedNonce,
-                messageType: frame.message.message?.$case,
-            });
             return undefined;
         }
         this.lastReceivedNonce = frame.nonce;
-        this.logLifecycleDebug("received client message", {
-            nonce: frame.nonce,
-            messageType: frame.message.message?.$case,
-        });
         return frame.message;
     }
 
@@ -182,15 +138,8 @@ export class PusherWebSocket {
     public startDisconnecting(): boolean {
         const started = this.connectionStatusManager.startDisconnecting(this);
         if (started) {
-            this.logLifecycle("start disconnecting", {
-                lastReceivedNonce: this.lastReceivedNonce,
-                lastSentNonce: this.lastSentNonce,
-                bufferedMessages: this.outgoingMessagesStore.getAll().length,
-            });
             this.stopKeepAlive();
             this.stopBatching();
-        } else {
-            this.logLifecycleDebug("start disconnecting ignored: already disconnecting");
         }
         return started;
     }
@@ -200,11 +149,6 @@ export class PusherWebSocket {
     }
 
     public handleTransportClosed(): void {
-        this.logLifecycle("transport closed", {
-            lastReceivedNonce: this.lastReceivedNonce,
-            lastSentNonce: this.lastSentNonce,
-            bufferedMessages: this.outgoingMessagesStore.getAll().length,
-        });
         this.transportAvailable = false;
         this.stopKeepAlive();
     }
@@ -268,13 +212,6 @@ export class PusherWebSocket {
         this.transportAvailable = true;
         this.lastSentNonce = clientLastReceivedNonce;
 
-        const messagesToReplay = this.outgoingMessagesStore.getAfter(clientLastReceivedNonce);
-        this.logLifecycle("transport replaced; replaying retained messages", {
-            clientLastReceivedNonce,
-            replayCount: messagesToReplay.length,
-            oldestReplayNonce: messagesToReplay[0]?.nonce,
-            newestReplayNonce: messagesToReplay[messagesToReplay.length - 1]?.nonce,
-        });
         this.startKeepAlive();
         this.handleDrain();
 
@@ -290,27 +227,16 @@ export class PusherWebSocket {
 
     private startKeepAlive(): void {
         if (this.keepAliveInterval) {
-            this.logLifecycleDebug("keepalive already running");
             return;
         }
 
-        this.logLifecycle("keepalive started", {
-            intervalMs: PusherWebSocket.KEEP_ALIVE_INTERVAL_MS,
-        });
         // Keep the pusher WebSocket active across proxies/load balancers; app-level ping can be delayed by browsers.
         this.keepAliveInterval = setInterval(() => {
             if (this.isDisconnecting() || this.pingBackpressured) {
-                this.logLifecycleDebug("keepalive tick skipped", {
-                    disconnecting: this.isDisconnecting(),
-                    pingBackpressured: this.pingBackpressured,
-                });
                 return;
             }
 
             if (this.socket.ping() !== 1) {
-                this.logLifecycle("keepalive ping backpressured", {
-                    bufferedAmount: this.getBufferedAmount(),
-                });
                 this.pingBackpressured = true;
             }
         }, PusherWebSocket.KEEP_ALIVE_INTERVAL_MS);
@@ -321,7 +247,6 @@ export class PusherWebSocket {
             return;
         }
 
-        this.logLifecycle("keepalive stopped");
         clearInterval(this.keepAliveInterval);
         this.keepAliveInterval = undefined;
     }
@@ -352,33 +277,7 @@ export class PusherWebSocket {
         const sendStatus = this.socket.send(payload, true);
         if (sendStatus === 1) {
             this.lastSentNonce = nonce;
-        } else {
-            this.logLifecycle("sendStoredPayload backpressured/dropped", {
-                nonce,
-                sendStatus,
-                bufferedAmount: this.getBufferedAmount(),
-            });
         }
         return sendStatus;
-    }
-
-    private logLifecycle(step: string, details?: Record<string, unknown>): void {
-        const socketData = this.socket.getUserData();
-        console.info(`[PusherWebSocket:${this.connectionId}] ${step}`, {
-            tabId: socketData.tabId,
-            userUuid: socketData.userUuid,
-            roomId: socketData.roomId,
-            ...details,
-        });
-    }
-
-    private logLifecycleDebug(step: string, details?: Record<string, unknown>): void {
-        const socketData = this.socket.getUserData();
-        console.debug(`[PusherWebSocket:${this.connectionId}] ${step}`, {
-            tabId: socketData.tabId,
-            userUuid: socketData.userUuid,
-            roomId: socketData.roomId,
-            ...details,
-        });
     }
 }
