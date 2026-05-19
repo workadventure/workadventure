@@ -12,16 +12,11 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
     {{- if .Values.play.ingress.sticky.enabled }}
-    # We add sticky sticky annotations for both Nginx and Traefik to cover a maximum number of ingress controllers
+    # Sticky annotations for Nginx are added at the ingress level, while for Traefik they are added at the service level (see play-service.yaml)
     nginx.ingress.kubernetes.io/affinity: "cookie"
     nginx.ingress.kubernetes.io/session-cookie-name: {{ .Values.play.ingress.sticky.cookie.name | quote }}
     nginx.ingress.kubernetes.io/session-cookie-secure: {{ .Values.play.ingress.sticky.cookie.secure | quote }}
     nginx.ingress.kubernetes.io/session-cookie-samesite: {{ .Values.play.ingress.sticky.cookie.sameSite | title | quote }}
-    traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
-    traefik.ingress.kubernetes.io/service.sticky.cookie.name: {{ .Values.play.ingress.sticky.cookie.name | quote }}
-    traefik.ingress.kubernetes.io/service.sticky.cookie.httpOnly: {{ .Values.play.ingress.sticky.cookie.httpOnly | quote }}
-    traefik.ingress.kubernetes.io/service.sticky.cookie.secure: {{ .Values.play.ingress.sticky.cookie.secure | quote }}
-    traefik.ingress.kubernetes.io/service.sticky.cookie.sameSite: {{ .Values.play.ingress.sticky.cookie.sameSite | quote }}
   {{- end }}
 
   {{- end }}
