@@ -2,13 +2,18 @@ import { DEPTH_INGAME_TEXT_INDEX } from "./DepthIndexes";
 import type { GameScene } from "./GameScene";
 
 type UsernameElement = {
-    element: HTMLParagraphElement;
+    element: HTMLDivElement;
     x: number;
     y: number;
     scale: number;
-    baseFontPx: number;
     zoomScale: number;
 };
+
+const PLAYER_NAME_BACKGROUND_COLOR = "rgba(27, 42, 65, 0.5)";
+const PLAYER_NAME_BACKGROUND_RADIUS = 8;
+const PLAYER_NAME_HEIGHT = 14;
+const PLAYER_NAME_PADDING = 6;
+const PLAYER_NAME_GAP = 4;
 
 export class UsernameDomLayer {
     private readonly container: HTMLDivElement;
@@ -30,34 +35,24 @@ export class UsernameDomLayer {
         this.domElement.setVisible(visible);
     }
 
-    public addUsername(
-        id: number,
-        playerName: string,
-        x: number,
-        y: number,
-        font: string,
-        fontSize: number,
-        displayScale: number,
-        zoomScale: number
-    ): void {
+    public addUsername(id: number, x: number, y: number, displayScale: number, zoomScale: number): HTMLDivElement {
         let username = this.usernames.get(id);
 
         if (!username) {
-            const element = document.createElement("p");
+            const element = document.createElement("div");
 
             element.ariaHidden = "true";
-            element.textContent = playerName;
 
             element.style.position = "absolute";
             element.style.top = "0";
             element.style.left = "0";
             element.style.margin = "0";
-            element.style.color = "#ffffff";
-            element.style.fontFamily = font;
-            element.style.fontSize = `${fontSize}px`;
-            element.style.whiteSpace = "nowrap";
+            element.style.display = "flex";
+            element.style.alignItems = "center";
+            element.style.boxSizing = "border-box";
+            element.style.background = PLAYER_NAME_BACKGROUND_COLOR;
             element.style.pointerEvents = "none";
-
+            element.style.transformOrigin = "center center";
             element.style.willChange = "transform";
 
             username = {
@@ -65,7 +60,6 @@ export class UsernameDomLayer {
                 x,
                 y,
                 scale: displayScale,
-                baseFontPx: fontSize,
                 zoomScale,
             };
 
@@ -73,11 +67,7 @@ export class UsernameDomLayer {
             this.usernames.set(id, username);
 
             this.applyTransform(username);
-            return;
-        }
-
-        if (username.element.textContent !== playerName) {
-            username.element.textContent = playerName;
+            return element;
         }
 
         username.x = x;
@@ -85,6 +75,7 @@ export class UsernameDomLayer {
         username.scale = displayScale;
         username.zoomScale = zoomScale;
         this.applyTransform(username);
+        return username.element;
     }
 
     public updateUsernamePosition(id: number, x: number, y: number): void {
@@ -116,6 +107,16 @@ export class UsernameDomLayer {
         this.applyTransform(username);
     }
 
+    public updateUsernameBackgroundColor(id: number, color: number | undefined): void {
+        const username = this.usernames.get(id);
+        if (!username) {
+            return;
+        }
+
+        username.element.style.background =
+            color === undefined ? PLAYER_NAME_BACKGROUND_COLOR : `#${color.toString(16).padStart(6, "0")}`;
+    }
+
     public removeUsername(id: number): void {
         const username = this.usernames.get(id);
         if (!username) {
@@ -136,9 +137,13 @@ export class UsernameDomLayer {
     }
 
     private applyTransform(username: UsernameElement): void {
-        const fontPx = username.baseFontPx * username.zoomScale * username.scale;
+        const domScale = username.zoomScale * username.scale;
         const scale = 1 / username.zoomScale;
-        username.element.style.fontSize = `${fontPx}px`;
+        username.element.style.setProperty("--username-dom-scale", domScale.toString());
+        username.element.style.height = `${PLAYER_NAME_HEIGHT * domScale}px`;
+        username.element.style.gap = `${PLAYER_NAME_GAP * domScale}px`;
+        username.element.style.padding = `0 ${PLAYER_NAME_PADDING * domScale}px`;
+        username.element.style.borderRadius = `${PLAYER_NAME_BACKGROUND_RADIUS * domScale}px`;
         username.element.style.transform = `translate3d(${username.x}px, ${username.y}px, 0) translate(-50%, -50%) scale(${scale})`;
     }
 }
