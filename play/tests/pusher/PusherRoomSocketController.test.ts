@@ -55,7 +55,42 @@ describe("PusherRoomSocketController reconnect retention", () => {
         expect(getContextMap(controller).has("tab-1")).toBe(true);
 
         vi.advanceTimersByTime(1);
+        await flushMicrotasks();
         expect(getContextMap(controller).has("tab-1")).toBe(false);
+    });
+
+    it("delays logical cleanup so a closed transport can still be replaced", async () => {
+        vi.useFakeTimers();
+
+        const close = vi.fn();
+        const controller = createController(
+            (handlers) => {
+                registeredHandlers = handlers;
+            },
+            vi.fn(),
+            close
+        );
+
+        const initialSocket = createSocket({ tabId: "tab-1" });
+        await registeredHandlers?.open(initialSocket as never);
+
+        const initialContext = getContextMap(controller).get("tab-1");
+        expect(initialContext).toBeDefined();
+        initialContext!.clientLastReceivedNonce = 0;
+
+        await registeredHandlers?.close(initialSocket as never);
+        await flushMicrotasks();
+
+        expect(close).not.toHaveBeenCalled();
+
+        const reconnectSocket = createSocket({ tabId: "tab-1" });
+        await registeredHandlers?.open(reconnectSocket as never);
+
+        vi.advanceTimersByTime(CLIENT_DISCONNECTION_RETENTION_MS);
+        await flushMicrotasks();
+
+        expect(close).not.toHaveBeenCalled();
+        expect(getContextMap(controller).get("tab-1")?.socket).toBe(initialContext?.socket);
     });
 
     it("cancels the scheduled cleanup when the same tab reconnects in time", async () => {
@@ -97,12 +132,87 @@ describe("PusherRoomSocketController reconnect retention", () => {
         await flushMicrotasks();
 
         vi.advanceTimersByTime(CLIENT_DISCONNECTION_RETENTION_MS);
+        await flushMicrotasks();
 
         const reconnectSocket = createSocket({ tabId: "tab-1" });
         await registeredHandlers?.open(reconnectSocket as never);
 
         expect(open).toHaveBeenCalledTimes(2);
         expect(getContextMap(controller).get("tab-1")?.socket).toBeDefined();
+    });
+
+    it("runs logical cleanup when no replacement arrives before retention expires", async () => {
+        vi.useFakeTimers();
+
+        const close = vi.fn();
+        createController(
+            (handlers) => {
+                registeredHandlers = handlers;
+            },
+            vi.fn(),
+            close
+        );
+
+        const initialSocket = createSocket({ tabId: "tab-1" });
+        await registeredHandlers?.open(initialSocket as never);
+        await registeredHandlers?.close(initialSocket as never);
+        await flushMicrotasks();
+
+        expect(close).not.toHaveBeenCalled();
+
+        vi.advanceTimersByTime(CLIENT_DISCONNECTION_RETENTION_MS);
+        await flushMicrotasks();
+
+        expect(close).toHaveBeenCalledTimes(1);
+    });
+
+    it("queues outgoing messages while a transport is closed and flushes them after replacement", async () => {
+        vi.useFakeTimers();
+
+        const controller = createController((handlers) => {
+            registeredHandlers = handlers;
+        });
+
+        const initialSocket = createSocket({ tabId: "tab-1" });
+        await registeredHandlers?.open(initialSocket as never);
+
+        const wrapper = getContextMap(controller).get("tab-1")?.socket as PusherWebSocket;
+        wrapper.send({ message: undefined } as never);
+
+        const initialContext = getContextMap(controller).get("tab-1");
+        expect(initialContext).toBeDefined();
+        initialContext!.clientLastReceivedNonce = 1;
+
+        await registeredHandlers?.close(initialSocket as never);
+        await flushMicrotasks();
+
+        wrapper.send({ message: undefined } as never);
+        expect(getSendMock(initialSocket)).toHaveBeenCalledTimes(1);
+
+        const reconnectSocket = createSocket({ tabId: "tab-1" });
+        await registeredHandlers?.open(reconnectSocket as never);
+
+        expect(getSendMock(reconnectSocket)).toHaveBeenCalledTimes(1);
+    });
+
+    it("rejects a reconnect when the previous logical connection is no longer retained", async () => {
+        vi.useFakeTimers();
+
+        const open = vi.fn();
+        const controller = createController((handlers) => {
+            registeredHandlers = handlers;
+        }, open);
+
+        getContextMap(controller).set("tab-1", { clientLastReceivedNonce: 4 });
+
+        const reconnectSocket = createSocket({ tabId: "tab-1" });
+        await registeredHandlers?.open(reconnectSocket as never);
+
+        expect(open).not.toHaveBeenCalled();
+        expect(getEndMock(reconnectSocket)).toHaveBeenCalledWith(
+            1008,
+            "Cannot replace socket: previous connection not retained"
+        );
     });
 
     it("lets the wrapper flush queued messages on drain even without an application drain handler", async () => {
@@ -191,9 +301,11 @@ function createController(
 
 function getContextMap(
     controller: PusherRoomSocketController
-): Map<string, { socket: unknown; clientLastReceivedNonce?: number }> {
+): Map<string, { socket?: unknown; clientLastReceivedNonce?: number }> {
     return (
-        controller as unknown as { contextByTabKey: Map<string, { socket: unknown; clientLastReceivedNonce?: number }> }
+        controller as unknown as {
+            contextByTabKey: Map<string, { socket?: unknown; clientLastReceivedNonce?: number }>;
+        }
     ).contextByTabKey;
 }
 
@@ -240,12 +352,15 @@ function createSocket(overrides: Partial<SocketData> = {}): RawSocket {
 
     const sendMock = vi.fn().mockReturnValue(1);
 
+    const endMock = vi.fn();
+
     return {
         getUserData: vi.fn(() => socketData),
         send: sendMock,
         sendMock,
         ping: vi.fn(),
-        end: vi.fn(),
+        end: endMock,
+        endMock,
         getBufferedAmount: vi.fn().mockReturnValue(0),
     } as unknown as RawSocket;
 }
@@ -259,6 +374,10 @@ function createPusherWebSocket(socket: RawSocket): PusherWebSocket {
 
 function getSendMock(socket: RawSocket): ReturnType<typeof vi.fn> {
     return (socket as unknown as { sendMock: ReturnType<typeof vi.fn> }).sendMock;
+}
+
+function getEndMock(socket: RawSocket): ReturnType<typeof vi.fn> {
+    return (socket as unknown as { endMock: ReturnType<typeof vi.fn> }).endMock;
 }
 
 async function flushMicrotasks(): Promise<void> {

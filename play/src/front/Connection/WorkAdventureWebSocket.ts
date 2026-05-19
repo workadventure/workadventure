@@ -132,6 +132,8 @@ export class WorkAdventureWebSocket {
             source: event.source,
         });
 
+        console.debug("Received message with nonce", frame.nonce, "and type", messageEvent.data.message?.$case);
+
         this.onmessage?.call(this, messageEvent);
     };
 
