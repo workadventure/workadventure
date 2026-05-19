@@ -69,6 +69,7 @@
     let applicationProperty: ApplicationProperty | undefined = $state(undefined);
     let isProximityChatRoom = $derived(room instanceof ProximityChatRoom);
     const cannotCreatePoll = readable(false);
+    let canSendMessages = $derived(room.canSendMessages ?? readable(true));
 
     function getPollCreationCapability(currentRoom: ChatConversation) {
         return hasChatRoomPollCreation(currentRoom) ? currentRoom.pollCreation : undefined;
@@ -89,6 +90,9 @@
     });
 
     function sendMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
+        if (!$canSendMessages) {
+            return;
+        }
         if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
 
         const isEmptyMessage = message.replace(/<br>/g, "").trim() == "" || message == undefined;
@@ -121,6 +125,9 @@
     }
 
     async function sendMessage(messageToSend: string) {
+        if (!$canSendMessages) {
+            return;
+        }
         if (applicationProperty && applicationProperty.link.length !== 0) {
             room?.sendMessage(applicationProperty.link);
         }
@@ -505,7 +512,7 @@
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 onclick={() => openFileAttachmentComponent()}
                 class:bg-secondary-800={fileAttachmentComponentOpened}
-                disabled={!fileAttachementEnabled || isProximityChatRoom}
+                disabled={!fileAttachementEnabled || isProximityChatRoom || !$canSendMessages}
             >
                 <IconPaperclip font-size={32} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.fileAttachment.title()}</h2>
@@ -770,7 +777,9 @@
         {focusout}
         bind:message
         bind:messageInput
-        disabled={(disabled && !isProximityChatRoom) || ($shouldDisableChatInProximityRoomStore && isProximityChatRoom)}
+        disabled={(disabled && !isProximityChatRoom) ||
+            ($shouldDisableChatInProximityRoomStore && isProximityChatRoom) ||
+            !$canSendMessages}
         inputClass="message-input flex-grow !m-0 px-4 py-2.5 max-h-36 overflow-auto h-full rounded-lg wa-searchbar block text-sm text-white placeholder:text-white/50 placeholder:text-sm border border-white/10 !bg-white/5 resize-none outline-none shadow-none focus:ring-0 focus:border-white/20"
         dataText={$LL.chat.enter()}
         dataTestid="messageInput"
@@ -797,7 +806,7 @@
         <button
             data-testid="sendMessageButton"
             class="disabled:opacity-30 disabled:!cursor-none disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-md"
-            disabled={applicationPropertyInProcessing}
+            disabled={applicationPropertyInProcessing || !$canSendMessages}
             onclick={() => sendMessage(message).catch((error) => console.error(error))}
         >
             <IconSend />
