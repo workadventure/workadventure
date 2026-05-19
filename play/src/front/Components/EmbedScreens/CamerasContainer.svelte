@@ -36,7 +36,9 @@
     import { onDestroy, onMount, setContext } from "svelte";
     import type { Writable } from "svelte/store";
     import { myCameraPeerStore, type MyLocalStreamable } from "../../Stores/StreamableCollectionStore";
+    import type { VideoBox as VideoBoxModel } from "../../Space/VideoBox";
     import VideoBox from "../Video/VideoBox.svelte";
+    import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -86,9 +88,29 @@
     // The minimum width of a media box in pixels
     const minMediaBoxWidth = 160;
 
+    /** Webcam locale dans `streamableCollectionStore` (`myCameraPeerStore`). */
+    const LOCAL_CAMERA_VIDEO_BOX_UNIQUE_ID = "-1";
+
     const gameScene = gameManager.getCurrentGameScene();
 
     $: myCameraStreamable = $myCameraPeerStore.streamable as Writable<MyLocalStreamable | undefined>;
+
+    function excludeLocalCamera(videoBoxes: VideoBoxModel[]): VideoBoxModel[] {
+        return videoBoxes.filter((box) => box.uniqueId !== LOCAL_CAMERA_VIDEO_BOX_UNIQUE_ID);
+    }
+
+    $: isPictureInPictureGridMode = $activePictureInPictureStore && oneLineMode === "vertical";
+    /** Plus de 8 participants en grille PiP : la cam locale sort de la grille (vignette fixe). */
+    $: pipDockLocalCamera =
+        isPictureInPictureGridMode &&
+        $oneLineStreamableCollectionStore.length > PIP_GRID_MAX_VIDEOS &&
+        $oneLineStreamableCollectionStore.some((box) => box.uniqueId === LOCAL_CAMERA_VIDEO_BOX_UNIQUE_ID);
+    $: pipRemoteParticipantCount = excludeLocalCamera($oneLineStreamableCollectionStore).length;
+
+    $: {
+        const inPipWithHighlight = $activePictureInPictureStore && $highlightedEmbedScreen != undefined;
+        $myCameraStreamable?.setDisplayInPictureInPictureMode(inPipWithHighlight && !pipDockLocalCamera);
+    }
 
     // Single IntersectionObserver shared across all VideoBox components
     let intersectionObserver: IntersectionObserver | undefined;
@@ -114,32 +136,16 @@
 
         // Subscriptions for store changes
         const unsubscriber = orderedStreamableCollectionStore.subscribe((orderedStreamableCollection) => {
+            // Sort the collection by priority
+            const sortedCollection = orderedStreamableCollection.sort((a, b) => b.priority - a.priority);
             // Each time the order of the videos changes, we update the displayOrder of each videoBox
-            for (let i = 0; i < orderedStreamableCollection.length; i++) {
-                orderedStreamableCollection[i].displayOrder.set(i);
+            for (let i = 0; i < sortedCollection.length; i++) {
+                sortedCollection[i].displayOrder.set(i);
             }
-        });
-
-        const unsubscribePictureInPictureMode = activePictureInPictureStore.subscribe((activePictureInPicture) => {
-            // If the picture in picture mode is activated, we update the displayInPictureInPictureMode of the local camera streamable
-            // To set true, the local camera streamable will appear like other camera boxes in the picture in picture mode
-            $myCameraStreamable?.setDisplayInPictureInPictureMode(
-                activePictureInPicture && $highlightedEmbedScreen != undefined
-            );
-        });
-
-        const unsubscribeHighlightedEmbedScreen = highlightedEmbedScreen.subscribe((highlightedEmbedScreen) => {
-            // If the highlighted embed screen is changed, we update the displayInPictureInPictureMode of the local camera streamable
-            // To set true, the local camera streamable will appear like other camera boxes in the picture in picture mode
-            $myCameraStreamable?.setDisplayInPictureInPictureMode(
-                highlightedEmbedScreen != undefined && $activePictureInPictureStore
-            );
         });
 
         return () => {
             unsubscriber();
-            unsubscribePictureInPictureMode();
-            unsubscribeHighlightedEmbedScreen();
             if (intersectionObserver) {
                 intersectionObserver.disconnect();
             }
@@ -167,17 +173,32 @@
 
     $: {
         if (isOnOneLine) {
+            const oneLineCount = Math.max(1, $oneLineStreamableCollectionStore.length);
+            const pipVerticalGrid = $activePictureInPictureStore && oneLineMode === "vertical" && isOnOneLine;
+            const pipSortWindowCount = pipDockLocalCamera ? pipRemoteParticipantCount : oneLineCount;
+
             if (oneLineMode === "horizontal") {
+                const countForTileSizing = pipVerticalGrid
+                    ? Math.min(PIP_GRID_MAX_VIDEOS, pipSortWindowCount)
+                    : oneLineCount;
                 videoWidth = Math.max(
-                    Math.min(maxMediaBoxWidth, containerWidth / $oneLineStreamableCollectionStore.length),
+                    Math.min(maxMediaBoxWidth, containerWidth / countForTileSizing),
                     minMediaBoxWidth
                 );
                 videoHeight = undefined;
-                maxVisibleVideosStore.set(Math.ceil(containerWidth / videoWidth));
+                if (pipVerticalGrid) {
+                    maxVisibleVideosStore.set(Math.min(PIP_GRID_MAX_VIDEOS, pipSortWindowCount));
+                } else {
+                    maxVisibleVideosStore.set(Math.ceil(containerWidth / videoWidth));
+                }
             } else {
                 videoWidth = containerWidth;
                 videoHeight = videoWidth * (9 / 16);
-                maxVisibleVideosStore.set(Math.ceil(containerHeight / videoHeight));
+                if (pipVerticalGrid) {
+                    maxVisibleVideosStore.set(Math.min(PIP_GRID_MAX_VIDEOS, pipSortWindowCount));
+                } else {
+                    maxVisibleVideosStore.set(Math.ceil(containerHeight / videoHeight));
+                }
             }
         } else {
             const layout = calculateOptimalLayout(containerWidth, containerHeight);
@@ -364,9 +385,10 @@
     let canScrollRight = false;
     let canScrollTop = false;
     let canScrollBottom = false;
-    $: isPictureInPictureGridMode = $activePictureInPictureStore && oneLineMode === "vertical";
     $: pipVideoBoxes = isPictureInPictureGridMode
-        ? $oneLineStreamableCollectionStore.slice(0, PIP_GRID_MAX_VIDEOS)
+        ? pipDockLocalCamera
+            ? excludeLocalCamera($orderedStreamableCollectionStore).slice(0, PIP_GRID_MAX_VIDEOS)
+            : $orderedStreamableCollectionStore.slice(0, PIP_GRID_MAX_VIDEOS)
         : $oneLineStreamableCollectionStore;
     $: pipLayout = computePictureInPictureGridLayout(
         pipVideoBoxes.length,
@@ -510,6 +532,14 @@
             </div>
         {/each}
     </div>
+    {#if pipDockLocalCamera}
+        <div
+            class="pointer-events-auto fixed bottom-20 right-2 z-30 aspect-video w-40 max-w-[14rem] min-w-[8.75rem] overflow-hidden rounded-lg shadow-xl"
+            data-testid="pip-local-camera-overlay"
+        >
+            <MediaBox videoBox={$myCameraPeerStore} />
+        </div>
+    {/if}
     {#if !isOnOneLine}
         <ResizeHandle
             minHeight={maxContainerHeight * 0.1}
