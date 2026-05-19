@@ -29,7 +29,7 @@ type UpgradeHandler<TQuery> = (context: UpgradeContext<TQuery>) => void | Promis
 type OpenHandler = (socket: Socket) => void | Promise<void>;
 type RejectedOpenHandler = (socket: SocketUpgradeFailed) => void | Promise<void>;
 type MessageHandler = (socket: Socket, message: ClientToServerMessage) => void | Promise<void>;
-type CloseHandler = (socket: Socket) => void | Promise<void>;
+type CloseHandler = (socket: Socket, code: number, reason: string) => void | Promise<void>;
 
 type RoomWsQuery = {
     tabId: string;
@@ -385,18 +385,21 @@ export class PusherRoomSocketController {
                 }
                 socket.handleDrain();
             },
-            close: (ws) => {
+            close: (ws, code, message) => {
                 const socketData = ws.getUserData();
                 if (socketData.rejected === true) {
                     return;
                 }
 
+                const reason = message ? Buffer.from(message).toString() : "";
                 const rawSocket = ws as unknown as RawSocket;
                 const socket = this.wrappersBySocket.get(rawSocket);
                 if (!socket) {
                     console.info("[PusherRoomSocketController] close ignored: no wrapper for raw socket", {
                         tabId: socketData.tabId,
                         userUuid: socketData.userUuid,
+                        code,
+                        reason,
                     });
                     return;
                 }
@@ -406,6 +409,8 @@ export class PusherRoomSocketController {
                     console.info("[PusherRoomSocketController] close ignored for replaced/stale transport", {
                         tabId: socketData.tabId,
                         userUuid: socketData.userUuid,
+                        code,
+                        reason,
                     });
                     return;
                 }
@@ -419,6 +424,20 @@ export class PusherRoomSocketController {
                     }
                 };
 
+                if (code === 1000) {
+                    console.info("[PusherRoomSocketController] normal transport close; cleaning logical socket now", {
+                        tabId,
+                        userUuid: socketData.userUuid,
+                        code,
+                        reason,
+                    });
+                    Promise.resolve(config.close(socket, code, reason)).then(forgetContext, (e) => {
+                        console.error(e);
+                        forgetContext();
+                    });
+                    return;
+                }
+
                 if (this.contextByTabKey.get(tabId)?.socket === socket) {
                     this.clearContextCleanup(tabId);
                     console.info(
@@ -426,6 +445,8 @@ export class PusherRoomSocketController {
                         {
                             tabId,
                             userUuid: socketData.userUuid,
+                            code,
+                            reason,
                             retentionMs: CLIENT_DISCONNECTION_RETENTION_MS,
                         }
                     );
@@ -436,9 +457,11 @@ export class PusherRoomSocketController {
                             console.info("[PusherRoomSocketController] retention expired; closing logical socket", {
                                 tabId,
                                 userUuid: socketData.userUuid,
+                                code,
+                                reason,
                                 retentionMs: CLIENT_DISCONNECTION_RETENTION_MS,
                             });
-                            Promise.resolve(config.close(socket)).then(forgetContext, (e) => {
+                            Promise.resolve(config.close(socket, code, reason)).then(forgetContext, (e) => {
                                 console.error(e);
                                 forgetContext();
                             });
@@ -452,8 +475,10 @@ export class PusherRoomSocketController {
                 console.info("[PusherRoomSocketController] closing logical socket immediately", {
                     tabId,
                     userUuid: socketData.userUuid,
+                    code,
+                    reason,
                 });
-                Promise.resolve(config.close(socket)).catch((e) => {
+                Promise.resolve(config.close(socket, code, reason)).catch((e) => {
                     console.error(e);
                 });
             },

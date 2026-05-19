@@ -20,7 +20,7 @@ import { PusherWebSocket, type RawSocket } from "../../src/pusher/services/Pushe
 
 type RegisteredHandlers = {
     open: (socket: unknown) => void | Promise<void>;
-    close: (socket: unknown) => void | Promise<void>;
+    close: (socket: unknown, code?: number, message?: ArrayBuffer) => void | Promise<void>;
     drain: (socket: unknown) => void | Promise<void>;
 };
 
@@ -159,6 +159,32 @@ describe("PusherRoomSocketController reconnect retention", () => {
         await flushMicrotasks();
 
         expect(close).not.toHaveBeenCalled();
+
+        vi.advanceTimersByTime(CLIENT_DISCONNECTION_RETENTION_MS);
+        await flushMicrotasks();
+
+        expect(close).toHaveBeenCalledTimes(1);
+    });
+
+    it("runs logical cleanup immediately on normal client close", async () => {
+        vi.useFakeTimers();
+
+        const close = vi.fn();
+        const controller = createController(
+            (handlers) => {
+                registeredHandlers = handlers;
+            },
+            vi.fn(),
+            close
+        );
+
+        const socket = createSocket({ tabId: "tab-1" });
+        await registeredHandlers?.open(socket as never);
+        await registeredHandlers?.close(socket as never, 1000, new TextEncoder().encode("Page unloading").buffer);
+        await flushMicrotasks();
+
+        expect(close).toHaveBeenCalledWith(expect.any(PusherWebSocket), 1000, "Page unloading");
+        expect(getContextMap(controller).has("tab-1")).toBe(false);
 
         vi.advanceTimersByTime(CLIENT_DISCONNECTION_RETENTION_MS);
         await flushMicrotasks();

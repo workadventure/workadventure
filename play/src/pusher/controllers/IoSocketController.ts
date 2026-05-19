@@ -1231,13 +1231,15 @@ export class IoSocketController {
                     });
                 });
             },
-            close: (socket) => {
+            close: (socket, code, reason) => {
                 const socketData = socket.getUserData();
                 console.info("[IoSocketController] websocket logical close requested", {
                     tabId: socketData.tabId,
                     userUuid: socketData.userUuid,
                     roomId: socketData.roomId,
                     isDisconnecting: socket.isDisconnecting(),
+                    code,
+                    reason,
                 });
                 socketManager.cleanupSocket(socket);
             },

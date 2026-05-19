@@ -345,6 +345,8 @@ export class RoomConnection implements RoomConnection {
         this.socket.onclose = this.handleSocketClose;
         this.socket.onmessage = this.handleSocketMessage;
         this.socket.onerror = this.handleSocketError;
+
+        window.addEventListener("pagehide", this.handlePageHide);
     }
 
     private handleSocketMessage = (messageEvent: MessageEvent<ServerToClientMessageTsProto>) => {
@@ -844,6 +846,14 @@ export class RoomConnection implements RoomConnection {
         this._websocketErrorStream.next(event);
     };
 
+    private handlePageHide = () => {
+        this.logLifecycle("pagehide: closing socket intentionally", {
+            userId: this.userId,
+            roomConnectedMessageReceived: this.roomConnectedMessageReceived,
+        });
+        this.socket.closeForPageUnload();
+    };
+
     private cleanupConnection(isNormalClosure: boolean) {
         this.logLifecycle("cleanupConnection", {
             isNormalClosure,
@@ -1004,7 +1014,8 @@ export class RoomConnection implements RoomConnection {
     }
 
     public closeConnection(): void {
-        this.socket?.close();
+        window.removeEventListener("pagehide", this.handlePageHide);
+        this.socket?.close(1000, "Room connection closed");
         this.cleanupConnection(true);
         this._closed = true;
     }

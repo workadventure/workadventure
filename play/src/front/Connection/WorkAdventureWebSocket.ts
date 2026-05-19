@@ -109,6 +109,18 @@ export class WorkAdventureWebSocket {
         this.socket.close(code, reason);
     }
 
+    public closeForPageUnload(): void {
+        this.logLifecycle("page unload close requested", {
+            readyState: this.socket.readyState,
+        });
+        this.manuallyClosed = true;
+        this.clearReconnectConnectTimeout();
+        if (this.socket.readyState === WebSocket.CLOSED) {
+            return;
+        }
+        this.socket.close(1000, "Page unloading");
+    }
+
     private handleOpenEvent = (): void => {
         const isReconnection = this.reconnectAttempted;
         this.clearReconnectConnectTimeout();
