@@ -11,6 +11,7 @@ import { CLIENT_DISCONNECTION_RETENTION_MS } from "../Enum/EnvironmentVariable";
 type WebSocketFactory = (url: string, protocols?: string[]) => WebSocket;
 
 export class WorkAdventureWebSocket {
+    private static readonly RECONNECT_CONNECT_TIMEOUT_MS = Math.min(5_000, CLIENT_DISCONNECTION_RETENTION_MS);
     private static websocketFactory: WebSocketFactory | null = null;
     private static nextConnectionId = 1;
 
@@ -31,6 +32,8 @@ export class WorkAdventureWebSocket {
     private manuallyClosed = false;
     private reconnectAttempted = false;
     private reconnectAttempt = 0;
+    private reconnectStartedAt: number | undefined;
+    private reconnectConnectTimeout: ReturnType<typeof setTimeout> | undefined;
     private readonly connectionId = WorkAdventureWebSocket.nextConnectionId++;
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
@@ -55,6 +58,13 @@ export class WorkAdventureWebSocket {
     }
 
     public send(message: ClientToServerMessage): void {
+        if (this.manuallyClosed) {
+            this.logLifecycle("send ignored because websocket was manually closed", {
+                messageType: message.message?.$case,
+            });
+            return;
+        }
+
         const nonce = this.nextOutgoingNonce;
         const payloadWithNonce = FrontToPusherWebSocketMessage.encode({
             nonce,
@@ -69,6 +79,15 @@ export class WorkAdventureWebSocket {
             readyState: this.socket.readyState,
             bufferedMessages: this.outgoingMessagesStore.getAll().length,
         });
+        if (this.socket.readyState !== WebSocket.OPEN) {
+            this.logLifecycle("send buffered until websocket reopens", {
+                nonce,
+                messageType: message.message?.$case,
+                readyState: this.socket.readyState,
+                reconnectAttempt: this.reconnectAttempt,
+            });
+            return;
+        }
         this.socket.send(payloadWithNonce);
     }
 
@@ -84,6 +103,7 @@ export class WorkAdventureWebSocket {
         });
         this.manuallyClosed = true;
         this.detachSocketListeners(this.socket);
+        this.clearReconnectConnectTimeout();
         this._reconnectingStream.next(false);
         this._reconnectingStream.complete();
         this.socket.close(code, reason);
@@ -91,6 +111,7 @@ export class WorkAdventureWebSocket {
 
     private handleOpenEvent = (): void => {
         const isReconnection = this.reconnectAttempted;
+        this.clearReconnectConnectTimeout();
         this.logLifecycle("open", {
             isReconnection,
             reconnectAttempt: this.reconnectAttempt,
@@ -98,6 +119,7 @@ export class WorkAdventureWebSocket {
             bufferedMessages: this.outgoingMessagesStore.getAll().length,
         });
         this.reconnectAttempted = false;
+        this.reconnectStartedAt = undefined;
         if (isReconnection) {
             const messagesToReplay = this.outgoingMessagesStore.getAll();
             this.logLifecycle("replay buffered client messages", {
@@ -116,6 +138,7 @@ export class WorkAdventureWebSocket {
     };
 
     private handleCloseEvent = (event: CloseEvent): void => {
+        this.clearReconnectConnectTimeout();
         this.logLifecycle("close event", {
             code: event.code,
             reason: event.reason,
@@ -130,9 +153,11 @@ export class WorkAdventureWebSocket {
         if (!this.manuallyClosed && this.shouldReconnect(event)) {
             this.reconnectAttempted = true;
             this.reconnectAttempt += 1;
+            this.reconnectStartedAt ??= Date.now();
             this.logLifecycle("starting reconnect", {
                 reconnectAttempt: this.reconnectAttempt,
                 lastReceivedNonce: this.lastReceivedNonce,
+                elapsedSinceReconnectStartedMs: Date.now() - this.reconnectStartedAt,
             });
             this._reconnectingStream.next(true);
             this.socket = this.createSocket();
@@ -212,17 +237,11 @@ export class WorkAdventureWebSocket {
         socket.binaryType = "arraybuffer";
 
         this.bindSocketListeners(socket);
+        this.scheduleReconnectConnectTimeout(socket);
         return socket;
     }
 
     private shouldReconnect(event: CloseEvent): boolean {
-        if (this.reconnectAttempted) {
-            this.logLifecycle("reconnect refused", {
-                reason: "already attempted",
-                code: event.code,
-            });
-            return false;
-        }
         // Do not reconnect if handshake/auth was refused.
         if (event.code === 1000 || event.code === 1008) {
             this.logLifecycle("reconnect refused", {
@@ -231,9 +250,22 @@ export class WorkAdventureWebSocket {
             });
             return false;
         }
+        if (this.reconnectStartedAt !== undefined) {
+            const elapsedMs = Date.now() - this.reconnectStartedAt;
+            if (elapsedMs >= CLIENT_DISCONNECTION_RETENTION_MS) {
+                this.logLifecycle("reconnect refused", {
+                    reason: "retention window expired",
+                    code: event.code,
+                    elapsedMs,
+                    retentionMs: CLIENT_DISCONNECTION_RETENTION_MS,
+                });
+                return false;
+            }
+        }
         this.logLifecycle("reconnect allowed", {
             code: event.code,
             reason: event.reason,
+            reconnectAttempt: this.reconnectAttempt,
         });
         return true;
     }
@@ -250,6 +282,36 @@ export class WorkAdventureWebSocket {
         socket.removeEventListener("close", this.handleCloseEvent);
         socket.removeEventListener("error", this.handleErrorEvent);
         socket.removeEventListener("message", this.handleMessageEvent);
+    }
+
+    private scheduleReconnectConnectTimeout(socket: WebSocket): void {
+        if (!this.reconnectAttempted) {
+            return;
+        }
+
+        this.clearReconnectConnectTimeout();
+        this.reconnectConnectTimeout = setTimeout(() => {
+            if (socket.readyState !== WebSocket.CONNECTING || socket !== this.socket) {
+                return;
+            }
+
+            this.logLifecycle("reconnect transport still connecting; forcing retry", {
+                reconnectAttempt: this.reconnectAttempt,
+                timeoutMs: WorkAdventureWebSocket.RECONNECT_CONNECT_TIMEOUT_MS,
+                elapsedSinceReconnectStartedMs:
+                    this.reconnectStartedAt === undefined ? undefined : Date.now() - this.reconnectStartedAt,
+            });
+            socket.close();
+        }, WorkAdventureWebSocket.RECONNECT_CONNECT_TIMEOUT_MS);
+    }
+
+    private clearReconnectConnectTimeout(): void {
+        if (!this.reconnectConnectTimeout) {
+            return;
+        }
+
+        clearTimeout(this.reconnectConnectTimeout);
+        this.reconnectConnectTimeout = undefined;
     }
 
     private logLifecycle(step: string, details?: Record<string, unknown>): void {

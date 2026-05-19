@@ -2225,8 +2225,8 @@ export class RoomConnection implements RoomConnection {
     }
 
     private send(message: ClientToServerMessageTsProto): void {
-        if (!this.socket.isOpen()) {
-            this.logLifecycle("send skipped because socket is closed", {
+        if (this._closed) {
+            this.logLifecycle("send skipped because room connection is closed", {
                 messageType: message.message?.$case,
                 userId: this.userId,
                 lastReceivedNonce: this.socket.getLastReceivedNonce(),
