@@ -11,7 +11,8 @@ import { CLIENT_DISCONNECTION_RETENTION_MS } from "../Enum/EnvironmentVariable";
 type WebSocketFactory = (url: string, protocols?: string[]) => WebSocket;
 
 export class WorkAdventureWebSocket {
-    private static readonly RECONNECT_CONNECT_TIMEOUT_MS = Math.min(5_000, CLIENT_DISCONNECTION_RETENTION_MS);
+    private static readonly RECONNECT_BASE_DELAY_MS = 500;
+    private static readonly RECONNECT_MAX_DELAY_MS = 5_000;
     private static websocketFactory: WebSocketFactory | null = null;
 
     public static setWebsocketFactory(websocketFactory: WebSocketFactory | null): void {
@@ -32,7 +33,7 @@ export class WorkAdventureWebSocket {
     private reconnectAttempted = false;
     private reconnectAttempt = 0;
     private reconnectStartedAt: number | undefined;
-    private reconnectConnectTimeout: ReturnType<typeof setTimeout> | undefined;
+    private reconnectionTimeout: ReturnType<typeof setTimeout> | undefined;
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
@@ -77,7 +78,7 @@ export class WorkAdventureWebSocket {
     public close(code?: number, reason?: string): void {
         this.manuallyClosed = true;
         this.detachSocketListeners(this.socket);
-        this.clearReconnectConnectTimeout();
+        this.clearReconnectionTimeout();
         this._reconnectingStream.next(false);
         this._reconnectingStream.complete();
         this.socket.close(code, reason);
@@ -85,7 +86,7 @@ export class WorkAdventureWebSocket {
 
     public closeForPageUnload(): void {
         this.manuallyClosed = true;
-        this.clearReconnectConnectTimeout();
+        this.clearReconnectionTimeout();
         if (this.socket.readyState === WebSocket.CLOSED) {
             return;
         }
@@ -94,8 +95,9 @@ export class WorkAdventureWebSocket {
 
     private handleOpenEvent = (): void => {
         const isReconnection = this.reconnectAttempted;
-        this.clearReconnectConnectTimeout();
+        this.clearReconnectionTimeout();
         this.reconnectAttempted = false;
+        this.reconnectAttempt = 0;
         this.reconnectStartedAt = undefined;
         if (isReconnection) {
             for (const { payload } of this.outgoingMessagesStore.getAll()) {
@@ -108,7 +110,7 @@ export class WorkAdventureWebSocket {
     };
 
     private handleCloseEvent = (event: CloseEvent): void => {
-        this.clearReconnectConnectTimeout();
+        this.clearReconnectionTimeout();
         this.detachSocketListeners(this.socket);
 
         if (!this.manuallyClosed && this.shouldReconnect(event)) {
@@ -116,7 +118,7 @@ export class WorkAdventureWebSocket {
             this.reconnectAttempt += 1;
             this.reconnectStartedAt ??= Date.now();
             this._reconnectingStream.next(true);
-            this.socket = this.createSocket();
+            this.scheduleReconnectAttempt();
             return;
         }
 
@@ -173,7 +175,6 @@ export class WorkAdventureWebSocket {
         socket.binaryType = "arraybuffer";
 
         this.bindSocketListeners(socket);
-        this.scheduleReconnectConnectTimeout(socket);
         return socket;
     }
 
@@ -205,27 +206,30 @@ export class WorkAdventureWebSocket {
         socket.removeEventListener("message", this.handleMessageEvent);
     }
 
-    private scheduleReconnectConnectTimeout(socket: WebSocket): void {
-        if (!this.reconnectAttempted) {
-            return;
-        }
-
-        this.clearReconnectConnectTimeout();
-        this.reconnectConnectTimeout = setTimeout(() => {
-            if (socket.readyState !== WebSocket.CONNECTING || socket !== this.socket) {
+    private scheduleReconnectAttempt(): void {
+        this.clearReconnectionTimeout();
+        this.reconnectionTimeout = setTimeout(() => {
+            if (this.manuallyClosed) {
                 return;
             }
 
-            socket.close();
-        }, WorkAdventureWebSocket.RECONNECT_CONNECT_TIMEOUT_MS);
+            this.socket = this.createSocket();
+        }, this.getReconnectDelayMs());
     }
 
-    private clearReconnectConnectTimeout(): void {
-        if (!this.reconnectConnectTimeout) {
+    private getReconnectDelayMs(): number {
+        return Math.min(
+            WorkAdventureWebSocket.RECONNECT_MAX_DELAY_MS,
+            WorkAdventureWebSocket.RECONNECT_BASE_DELAY_MS * 2 ** Math.max(0, this.reconnectAttempt - 1)
+        );
+    }
+
+    private clearReconnectionTimeout(): void {
+        if (!this.reconnectionTimeout) {
             return;
         }
 
-        clearTimeout(this.reconnectConnectTimeout);
-        this.reconnectConnectTimeout = undefined;
+        clearTimeout(this.reconnectionTimeout);
+        this.reconnectionTimeout = undefined;
     }
 }
