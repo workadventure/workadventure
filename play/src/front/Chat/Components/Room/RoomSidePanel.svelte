@@ -5,6 +5,7 @@
         ChatRoomMembershipManagement,
         ChatRoomModeration,
         ChatRoomNotificationControl,
+        ChatRoomSettingsManagement,
         ProximityChatSidePanelRoom,
     } from "../../Connection/ChatConnection";
     import { hasProximityChatSidePanel } from "../../Connection/ChatConnection";
@@ -22,7 +23,8 @@
     type MatrixSidePanelRoom = ChatRoom &
         ChatRoomMembershipManagement &
         ChatRoomModeration &
-        ChatRoomNotificationControl;
+        ChatRoomNotificationControl &
+        ChatRoomSettingsManagement;
     type SidePanelRoom = MatrixSidePanelRoom | ProximityChatSidePanelRoom;
     type ProximityRoomSidePanelSection = "home" | "participants" | "polls" | "questions";
 

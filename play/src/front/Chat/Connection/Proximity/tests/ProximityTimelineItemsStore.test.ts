@@ -34,7 +34,9 @@ function createMessage(id: string, date: Date, type: ChatMessage["type"]): ChatM
         edit: () => Promise.resolve(),
         isDeleted: readable(false),
         isModified: readable(false),
+        canEdit: readable(false),
         addReaction: () => Promise.resolve(),
+        canReact: readable(false),
         canDelete: readable(false),
     };
 }

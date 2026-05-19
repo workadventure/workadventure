@@ -12,12 +12,14 @@
         hasChatRoomMembershipManagement,
         hasChatRoomModeration,
         hasChatRoomNotificationControl,
+        hasChatRoomSettingsManagement,
         hasProximityChatSidePanel,
         type ChatConversation,
         type ChatRoom,
         type ChatRoomMembershipManagement,
         type ChatRoomModeration,
         type ChatRoomNotificationControl,
+        type ChatRoomSettingsManagement,
         type ChatThread,
         type ProximityChatSidePanelRoom,
     } from "../Connection/ChatConnection";
@@ -151,7 +153,11 @@
     function getRoomWithSidePanel(
         conversation: ChatConversation | undefined,
     ):
-        | (ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)
+        | (ChatRoom &
+              ChatRoomMembershipManagement &
+              ChatRoomModeration &
+              ChatRoomNotificationControl &
+              ChatRoomSettingsManagement)
         | ProximityChatSidePanelRoom
         | undefined {
         if (hasProximityChatSidePanel(conversation)) {
@@ -161,7 +167,8 @@
         if (
             hasChatRoomMembershipManagement(conversation) &&
             hasChatRoomModeration(conversation) &&
-            hasChatRoomNotificationControl(conversation)
+            hasChatRoomNotificationControl(conversation) &&
+            hasChatRoomSettingsManagement(conversation)
         ) {
             return conversation;
         }

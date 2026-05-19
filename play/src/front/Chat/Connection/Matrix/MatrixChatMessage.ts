@@ -1,7 +1,7 @@
 import type { MatrixEvent, Room } from "matrix-js-sdk";
 import { Direction, EventType, MatrixEventEvent, MsgType, RelationType } from "matrix-js-sdk";
-import type { Writable } from "svelte/store";
-import { writable } from "svelte/store";
+import type { Readable, Writable } from "svelte/store";
+import { derived, get, readable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { MapStore } from "@workadventure/store-utils";
 import type {
@@ -31,6 +31,8 @@ export class MatrixChatMessage implements ChatMessage {
     isModified: Writable<boolean>;
     reactions: MapStore<string, MatrixChatMessageReaction>;
     relations: MatrixChatRelation | undefined;
+    readonly canReact: Readable<boolean>;
+    readonly canEdit: Readable<boolean>;
     readonly canDelete: Writable<boolean>;
     threadSummary = writable<ChatThreadSummary | null>(null);
     openThread: (() => Promise<ChatThread | undefined>) | undefined;
@@ -54,6 +56,8 @@ export class MatrixChatMessage implements ChatMessage {
         private event: MatrixEvent,
         private room: Room,
         isQuotedMessage?: boolean,
+        canReactStore?: Readable<boolean>,
+        canSendMessagesStore?: Readable<boolean>
     ) {
         this.id = event.getId() ?? uuidv4();
         this.type = this.mapMatrixMessageTypeToChatMessage();
@@ -66,27 +70,25 @@ export class MatrixChatMessage implements ChatMessage {
         this.isModified = writable(this.getIsModified());
         this.reactions = new MapStore<string, MatrixChatMessageReaction>();
 
-        const myRoomMember = room.getMember(room.client.getSafeUserId());
-        const senderRoomMember = room.getMember(this.sender?.chatId || "");
-
-        let myPowerLevel = 0;
-        let senderPowerLevel = 0;
-
-        if (myRoomMember) {
-            myPowerLevel = myRoomMember.powerLevel;
-        }
-
-        if (senderRoomMember) {
-            senderPowerLevel = senderRoomMember.powerLevel;
-        }
-
-        const hasSufficientPowerLevel =
-            this.room
-                .getLiveTimeline()
-                .getState(Direction.Backward)
-                ?.hasSufficientPowerLevelFor("redact", myPowerLevel) ?? false;
-
-        this.canDelete = writable(this.isMyMessage || (hasSufficientPowerLevel && myPowerLevel > senderPowerLevel));
+        this.canDelete = writable(this.computeCanDelete());
+        this.canReact =
+            canReactStore ??
+            readable(
+                this.room
+                    .getLiveTimeline()
+                    .getState(Direction.Backward)
+                    ?.maySendEvent(EventType.Reaction, room.client.getSafeUserId()) ?? false
+            );
+        this.canEdit = derived(
+            canSendMessagesStore ??
+                readable(
+                    this.room
+                        .getLiveTimeline()
+                        .getState(Direction.Backward)
+                        ?.maySendEvent(EventType.RoomMessage, room.client.getSafeUserId()) ?? false
+                ),
+            (canSendMessages) => this.isMyMessage && this.type === "text" && canSendMessages
+        );
 
         event.on(MatrixEventEvent.Decrypted, this.decryptedListener);
         event.on(MatrixEventEvent.Replaced, this.replacedListener);
@@ -254,7 +256,7 @@ export class MatrixChatMessage implements ChatMessage {
         const sortedReactionByKey = reactionByKey.getSortedAnnotationsByKey() ?? [];
         sortedReactionByKey.forEach(([reactionKey, events]) => {
             events.forEach((event) => {
-                this.reactions.set(reactionKey, new MatrixChatMessageReaction(this.room, event));
+                this.reactions.set(reactionKey, new MatrixChatMessageReaction(this.room, event, this.canReact));
             });
         });
     }
@@ -280,6 +282,36 @@ export class MatrixChatMessage implements ChatMessage {
 
     private getIsModified() {
         return this.event.replacingEventId() !== undefined;
+    }
+
+    private computeCanDelete(): boolean {
+        const currentUserId = this.room.client.getSafeUserId();
+        const senderUserId = this.event.getSender();
+        if (!currentUserId || !senderUserId || this.event.status || this.event.isRedacted()) {
+            return false;
+        }
+
+        const roomState = this.room.getLiveTimeline().getState(Direction.Backward);
+        const canSendRedactionEvent = roomState?.maySendEvent(EventType.RoomRedaction, currentUserId) ?? false;
+        if (!canSendRedactionEvent) {
+            return false;
+        }
+
+        if (currentUserId === senderUserId) {
+            return true;
+        }
+
+        const myRoomMember = this.room.getMember(currentUserId);
+        const senderRoomMember = this.room.getMember(senderUserId);
+        const myPowerLevel = myRoomMember?.powerLevelNorm ?? 0;
+        const senderPowerLevel = senderRoomMember?.powerLevelNorm ?? 0;
+        const hasSufficientPowerLevel = roomState?.hasSufficientPowerLevelFor("redact", myPowerLevel) ?? false;
+
+        return hasSufficientPowerLevel && myPowerLevel > senderPowerLevel;
+    }
+
+    public refreshCanDelete() {
+        this.canDelete.set(this.computeCanDelete());
     }
 
     public getFormattedBody(): string {
@@ -312,6 +344,9 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     async edit(newContent: string): Promise<void> {
+        if (!get(this.canEdit)) {
+            throw new Error("Missing permission to edit this message");
+        }
         try {
             await this.room.client.sendEvent(this.room.roomId, EventType.RoomMessage, {
                 msgtype: MsgType.Text,
@@ -340,6 +375,9 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     async addReaction(reaction: string) {
+        if (!get(this.canReact)) {
+            throw new Error("Missing permission to send reactions in this room");
+        }
         try {
             await this.room.client.sendEvent(this.room.roomId, EventType.Reaction, {
                 "m.relates_to": { key: reaction, rel_type: RelationType.Annotation, event_id: this.id },

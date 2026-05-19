@@ -87,6 +87,7 @@
     );
     let proximityRoomJoined = $derived(room instanceof ProximityChatRoom ? room.isJoined : inactiveProximityState);
     const cannotCreatePoll = readable(false);
+    let canSendMessages = $derived(room.canSendMessages ?? readable(true));
 
     function getPollCreationCapability(currentRoom: ChatConversation) {
         return hasChatRoomPollCreation(currentRoom) ? currentRoom.pollCreation : undefined;
@@ -105,7 +106,7 @@
             isDefaultProximityRoom,
             isProximityChatDisabled: $proximityChatDisabled,
             isProximityRoomJoined: $proximityRoomJoined,
-        }),
+        }) || !$canSendMessages,
     );
     let canOpenQuestions = $derived(canOpenQuestionsPanel(room));
     let replyMessageId: string | null = null;
@@ -121,6 +122,9 @@
     });
 
     function sendMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
+        if (!$canSendMessages) {
+            return;
+        }
         if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
 
         const isEmptyMessage = message.replace(/<br>/g, "").trim() == "" || message == undefined;
@@ -153,6 +157,9 @@
     }
 
     async function sendMessage(messageToSend: string) {
+        if (!$canSendMessages) {
+            return;
+        }
         if (applicationProperty && applicationProperty.link.length !== 0) {
             room?.sendMessage(applicationProperty.link);
         }
@@ -555,7 +562,7 @@
                 class={applicationButtonClass}
                 onclick={() => openFileAttachmentComponent()}
                 class:bg-secondary-800={fileAttachmentComponentOpened}
-                disabled={!fileAttachementEnabled || isProximityChatRoom}
+                disabled={!fileAttachementEnabled || isProximityChatRoom || !$canSendMessages}
             >
                 <IconPaperclip font-size={32} />
                 <h2 class={applicationTitleClass}>{$LL.chat.fileAttachment.title()}</h2>
