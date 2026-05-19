@@ -120,16 +120,19 @@
             onFormOpen: () => {
                 // Disable the user inputs
                 gameManager.getCurrentGameScene().userInputManager.disableControls("store");
+                gameManager.getCurrentGameScene().userInputManager.disableRightClick();
                 // Close the menu
                 openedMenuStore.close("profileMenu");
             },
             onFormClose: () => {
                 gameManager.getCurrentGameScene().userInputManager.restoreControls("store");
+                gameManager.getCurrentGameScene().userInputManager.restoreRightClick();
                 // Remove the actor buttom from the DOM
                 form?.close();
             },
             onSubmitSuccess: () => {
                 gameManager.getCurrentGameScene().userInputManager.restoreControls("store");
+                gameManager.getCurrentGameScene().userInputManager.restoreRightClick();
                 // Remove the actor buttom from the DOM
                 form?.close();
             },

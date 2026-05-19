@@ -160,6 +160,7 @@ export class ExplorerTool implements MapEditorTool {
 
         // Restore controls of the scene
         this.scene.userInputManager.restoreControls("explorerTool");
+        this.scene.userInputManager.restoreRightClick();
 
         // Remove all controls for the exploration mode
         this.scene.input.keyboard?.off("keydown", this.keyDownHandler);
@@ -249,7 +250,7 @@ export class ExplorerTool implements MapEditorTool {
 
         // Disable controls of the scene
         this.scene.userInputManager.disableControls("explorerTool");
-
+        this.scene.userInputManager.disableRightClick();
         // Implement all controls for the exploration mode
         this.scene.input.setTopOnly(false);
         this.scene.input.keyboard?.on("keydown", this.keyDownHandler);
