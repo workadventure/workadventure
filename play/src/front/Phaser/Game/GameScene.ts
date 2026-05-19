@@ -464,9 +464,6 @@ export class GameScene extends DirtyScene {
 
         this.load.image("iconTalk", "/resources/icons/icon_talking.png");
         this.load.image("iconSpeaker", "/resources/icons/icon_speaking.png");
-        this.load.image("iconMegaphone", "/resources/icons/icon_megaphone.png");
-        this.load.image("iconStatusIndicatorInside", "/resources/icons/icon_status_indicator_inside.png");
-        this.load.image("iconStatusIndicatorOutline", "/resources/icons/icon_status_indicator_outline.png");
 
         this.load.image("iconFocus", "/resources/icons/icon_focus.png");
         this.load.image("iconLink", "/resources/icons/icon_link.png");
