@@ -6,9 +6,24 @@ metadata:
   name: {{ $fullName }}-root
   labels:
     {{- include "workadventure.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotationsRoot }}
+  {{- if or .Values.play.ingress.sticky.enabled .Values.ingress.annotationsRoot }}
   annotations:
+    {{- with .Values.ingress.annotationsRoot }}
     {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- if .Values.play.ingress.sticky.enabled }}
+    # We add sticky sticky annotations for both Nginx and Traefik to cover a maximum number of ingress controllers
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: {{ .Values.play.ingress.sticky.cookie.name | quote }}
+    nginx.ingress.kubernetes.io/session-cookie-secure: {{ .Values.play.ingress.sticky.cookie.secure | quote }}
+    nginx.ingress.kubernetes.io/session-cookie-samesite: {{ .Values.play.ingress.sticky.cookie.sameSite | title | quote }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
+    traefik.ingress.kubernetes.io/service.sticky.cookie.name: {{ .Values.play.ingress.sticky.cookie.name | quote }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie.httpOnly: {{ .Values.play.ingress.sticky.cookie.httpOnly | quote }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie.secure: {{ .Values.play.ingress.sticky.cookie.secure | quote }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie.sameSite: {{ .Values.play.ingress.sticky.cookie.sameSite | quote }}
+  {{- end }}
+
   {{- end }}
 spec:
   {{- if .Values.ingress.className }}
@@ -24,6 +39,13 @@ spec:
     - host: {{ .Values.domainName }}
       http:
         paths:
+          - path: /ws/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-play
+                port:
+                  number: {{ .Values.play.service.wsPort }}
           - path: /
             pathType: Prefix
             backend:

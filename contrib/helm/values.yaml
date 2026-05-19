@@ -318,7 +318,7 @@ play:
     # ClassName to use for the play container. If not set, will fallback to (root.ingress.className)
     className: ""
     sticky:
-      enabled: false
+      enabled: true
       cookie:
         name: "wa_ws_affinity"
         httpOnly: true
