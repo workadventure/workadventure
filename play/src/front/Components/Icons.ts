@@ -78,6 +78,7 @@ export { default as IconPlay } from "~icons/tabler/player-play";
 export { default as IconPlayFilled } from "~icons/tabler/player-play-filled";
 export { default as IconLockCog } from "~icons/tabler/lock-cog";
 export { default as IconDesk } from "~icons/tabler/desk";
+export { default as IconDeskExit } from "./Icons/DeskExitIcon.svelte";
 export { default as IconZoomInArea } from "~icons/tabler/zoom-in-area";
 export { default as IconFocus } from "~icons/tabler/photo-sensor";
 export { default as IconMicrophoneOff } from "~icons/tabler/microphone-off";

@@ -23,7 +23,7 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import { IconMapSearch, IconDesk, IconSpeakerPhone, IconMapEditor } from "@wa-icons";
+    import { IconMapSearch, IconDesk, IconDeskExit, IconSpeakerPhone, IconMapEditor } from "@wa-icons";
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -162,7 +162,7 @@
         on:click={unclaimPersonalDesk}
         classList="group/btn-personal-desk"
     >
-        <IconDesk font-size="20" />
+        <IconDeskExit font-size="20" />
     </ActionBarButton>
 {/if}
 
