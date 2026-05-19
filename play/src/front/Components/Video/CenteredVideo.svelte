@@ -130,7 +130,8 @@
     class:flex-col={$activePictureInPictureStore}
     class:justify-center={$activePictureInPictureStore}
     class:transition-all={$activePictureInPictureStore}
-    class:duration-500={$activePictureInPictureStore}
+    class:duration-100={$activePictureInPictureStore}
+    class:ease-out={$activePictureInPictureStore}
 >
     {#if media?.type === "component"}
         <div class="group/centered-video absolute inset-0 flex justify-center items-center overflow-hidden">
@@ -150,7 +151,8 @@
             class:border-yellow-200={isMegaphoneSpace}
             class:border-4={isMegaphoneSpace}
             class:transition-all={$activePictureInPictureStore}
-            class:duration-500={$activePictureInPictureStore}
+            class:duration-100={$activePictureInPictureStore}
+            class:ease-out={$activePictureInPictureStore}
             style={videoEnabled
                 ? "width: " +
                   overlayWidth +
@@ -260,7 +262,8 @@
             class:border-secondary={(!videoEnabled && isTalking) || isBlocked}
             class:hidden={videoEnabled && !overlayHeight && !isBlocked && status !== "connected"}
             class:transition-all={$activePictureInPictureStore}
-            class:duration-500={$activePictureInPictureStore}
+            class:duration-100={$activePictureInPictureStore}
+            class:ease-out={$activePictureInPictureStore}
             style={videoEnabled && !displayNoVideoWarning
                 ? "width: " +
                   overlayWidth +
