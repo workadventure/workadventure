@@ -4182,7 +4182,7 @@ ${escapedMessage}
             return;
         }
 
-        const time = zoomFactor > 1 ? (zoomFactor - 1) * 250 : (1 / zoomFactor - 1) * 250;
+        const time = zoomFactor > 1 ? zoomFactor * 250 : (1 / zoomFactor) * 250;
         this.cameraManager.zoomByFactor(zoomFactor, smooth ? time : 0);
     }
 
