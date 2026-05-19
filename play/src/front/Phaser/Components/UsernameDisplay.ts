@@ -9,6 +9,8 @@ const CORRECTION_RATE = 0.75;
 const PLAYER_NAME_HEIGHT = 14;
 const USERNAME_FONT_FAMILY = '"Press Start 2P"'; // Todo: Replace the font family with a better one
 const USERNAME_FONT_SIZE = 8;
+const USERNAME_SIZE_ANIMATION_DURATION = 375;
+const USERNAME_SIZE_ANIMATION_EASING = "cubic-bezier(0.2, 0, 0, 1)";
 
 type Position = { x: number; y: number };
 
@@ -22,6 +24,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     private displayScale: number;
     private readonly statusDisplay: UsernameStatusDisplay;
     private readonly megaphoneDisplay: UsernameMegaphoneDisplay;
+    private sizeAnimation: Animation | undefined;
     private readonly onZoomChanged = (zoomModifier: number): void => {
         this.displayScale = this.getDisplayScale(zoomModifier);
         this.setScale(this.displayScale);
@@ -62,7 +65,9 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     }
 
     private showMegaphone(show = true, forceClose = false): void {
-        this.megaphoneDisplay.show(show, forceClose);
+        this.animateSizeChange(() => {
+            this.megaphoneDisplay.show(show, forceClose);
+        }, show);
     }
 
     public setPlayerNameOutlineColor(outlineColor: number | undefined): void {
@@ -94,6 +99,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     }
 
     public override destroy(fromScene?: boolean): void {
+        this.stopSizeAnimation();
         this.gameScene.usernameDomLayer.removeUsername(this.domUsernameId);
         this.statusDisplay.destroy();
         this.megaphoneDisplay.destroy();
@@ -117,6 +123,49 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
             x: this.x,
             y: this.y - (PLAYER_NAME_HEIGHT / 2) * this.displayScale,
         };
+    }
+
+    private animateSizeChange(changeElement: () => void, megaphoneShownAfterChange: boolean): void {
+        this.stopSizeAnimation();
+
+        const previousWidth = this.element.offsetWidth;
+        changeElement();
+        const nextWidth = megaphoneShownAfterChange ? this.element.offsetWidth : this.measureWidthWithoutMegaphone();
+
+        if (previousWidth === nextWidth) {
+            return;
+        }
+
+        this.element.style.overflow = "hidden";
+        this.element.style.width = `${previousWidth}px`;
+
+        this.sizeAnimation = this.element.animate([{ width: `${previousWidth}px` }, { width: `${nextWidth}px` }], {
+            duration: USERNAME_SIZE_ANIMATION_DURATION,
+            easing: USERNAME_SIZE_ANIMATION_EASING,
+        });
+
+        this.sizeAnimation.onfinish = () => {
+            this.sizeAnimation = undefined;
+            this.element.style.overflow = "";
+            this.element.style.width = "";
+        };
+    }
+
+    private stopSizeAnimation(): void {
+        this.sizeAnimation?.cancel();
+        this.sizeAnimation = undefined;
+        this.element.style.overflow = "";
+        this.element.style.width = "";
+    }
+
+    private measureWidthWithoutMegaphone(): number {
+        const previousDisplay = this.megaphoneDisplay.element.style.display;
+
+        this.megaphoneDisplay.element.style.display = "none";
+        const width = this.element.offsetWidth;
+        this.megaphoneDisplay.element.style.display = previousDisplay;
+
+        return width;
     }
 
     private createPlayerNameElement(): HTMLParagraphElement {
