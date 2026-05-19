@@ -5,6 +5,7 @@
     import Debug from "debug";
     import * as Sentry from "@sentry/svelte";
     import type { Readable } from "svelte/store";
+    import { userActivationManager } from "../../../Stores/UserActivationStore";
 
     export let streamStore: Readable<MediaStream | undefined>;
     export let outputDeviceId: string | undefined = undefined;
@@ -26,6 +27,56 @@
     }
 
     let lastRequestedDeviceId: string | undefined;
+    let pendingPlaybackPromise: Promise<void> | undefined;
+
+    async function playAudio() {
+        if (destroyed || !audioElement || !stream) {
+            return;
+        }
+
+        try {
+            await audioElement.play();
+        } catch (error) {
+            if (destroyed) {
+                return;
+            }
+
+            if (!(error instanceof DOMException) || error.name !== "NotAllowedError") {
+                console.error("Error playing audio stream: ", error);
+                Sentry.captureException(error);
+                return;
+            }
+
+            await userActivationManager.waitForUserActivation();
+
+            if (destroyed || !audioElement || !stream) {
+                return;
+            }
+
+            try {
+                await audioElement.play();
+            } catch (retryError) {
+                if (destroyed) {
+                    return;
+                }
+
+                console.error("Error replaying audio stream after user activation: ", retryError);
+                Sentry.captureException(retryError);
+            }
+        }
+    }
+
+    function ensurePlayback() {
+        if (pendingPlaybackPromise) {
+            return pendingPlaybackPromise;
+        }
+
+        pendingPlaybackPromise = playAudio().finally(() => {
+            pendingPlaybackPromise = undefined;
+        });
+
+        return pendingPlaybackPromise;
+    }
 
     async function safeSetSinkId(deviceId: string, el: HTMLAudioElement) {
         if (destroyed) {
@@ -81,9 +132,17 @@
 
     $: stream = $streamStore ? $streamStore : undefined;
 
-    $: if (audioElement && stream) {
-        if (audioElement.srcObject !== stream) {
-            audioElement.srcObject = stream;
+    $: if (audioElement) {
+        const nextStream = stream ?? null;
+        if (audioElement.srcObject !== nextStream) {
+            audioElement.srcObject = nextStream;
+        }
+
+        if (stream) {
+            ensurePlayback().catch((e) => {
+                console.error("Error playing audio stream: ", e);
+                Sentry.captureException(e);
+            });
         }
     }
 
@@ -98,6 +157,8 @@
                 audioElement.srcObject = stream ?? null;
                 audioElement.volume = $volume;
             }
+
+            await ensurePlayback();
         })().catch((e) => {
             console.error(e);
             Sentry.captureException(e);
