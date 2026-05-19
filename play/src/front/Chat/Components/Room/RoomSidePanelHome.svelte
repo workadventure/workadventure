@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { EventType } from "matrix-js-sdk";
     import { onMount } from "svelte";
     import { openModal } from "svelte-modals";
     import { get, readable } from "svelte/store";
@@ -33,6 +34,12 @@
     } from "@wa-icons";
 
     export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
+
+    const canEditName = room.hasPermissionForRoomStateEvent(EventType.RoomName);
+    const canEditTopic = room.hasPermissionForRoomStateEvent(EventType.RoomTopic);
+    const canEditAccess = room.hasPermissionForRoomStateEvent(EventType.RoomJoinRules);
+    const canEditHistory = room.hasPermissionForRoomStateEvent(EventType.RoomHistoryVisibility);
+    const canEditPermissions = room.hasPermissionForRoomStateEvent(EventType.RoomPowerLevels);
 
     const emptyThreads = readable<readonly ChatThreadSummary[]>([]);
     const emptyPolls = readable<readonly ChatPollItem[]>([]);
@@ -94,6 +101,8 @@
         room.pollCatalogueHydrationState != null && $pollCatalogueHydrationState.status === "error"
             ? $LL.chat.roomPanel.pollsLoadError()
             : undefined;
+    $: hasAnyEditableSettingsField =
+        $canEditName || $canEditTopic || $canEditAccess || $canEditHistory || $canEditPermissions;
 
     function openSection(section: RoomSidePanelSection) {
         roomSidePanelStore.setActiveSection(section);
@@ -221,7 +230,9 @@
             >
                 <IconSettings font-size={18} />
                 <div class="mt-2 text-sm font-semibold">{$LL.chat.roomPanel.sections.settings()}</div>
-                <div class="mt-1 text-xs text-white/55">{$LL.chat.roomPanel.home.readOnly()}</div>
+                {#if !hasAnyEditableSettingsField}
+                    <div class="mt-1 text-xs text-white/55">{$LL.chat.roomPanel.home.readOnly()}</div>
+                {/if}
             </button>
         </div>
 

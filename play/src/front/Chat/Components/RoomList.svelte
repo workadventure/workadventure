@@ -12,6 +12,7 @@
         hasChatRoomMembershipManagement,
         hasChatRoomModeration,
         hasChatRoomNotificationControl,
+        hasChatRoomSettingsManagement,
         type ChatConversation,
         type ChatRoom,
         type ChatThread,
@@ -184,7 +185,8 @@
     $: selectedRoomWithSidePanel =
         hasChatRoomMembershipManagement($selectedRoomStore) &&
         hasChatRoomModeration($selectedRoomStore) &&
-        hasChatRoomNotificationControl($selectedRoomStore)
+        hasChatRoomNotificationControl($selectedRoomStore) &&
+        hasChatRoomSettingsManagement($selectedRoomStore)
             ? $selectedRoomStore
             : undefined;
     $: hasSelectedRoomWithSidePanel = selectedRoomWithSidePanel !== undefined;

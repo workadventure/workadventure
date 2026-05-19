@@ -1,5 +1,6 @@
 <script lang="ts">
     import { defaultColor } from "@workadventure/shared-utils";
+    import { EventType } from "matrix-js-sdk";
     import LL from "../../../../i18n/i18n-svelte";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import type { ChatRoomMember, ChatRoomMembership, ChatRoomModeration } from "../../Connection/ChatConnection";
@@ -115,10 +116,10 @@
         room.changePermissionLevelFor(member, target.value as ChatPermissionLevel).catch((e) => console.error(e));
     }
 
-    const isRoomAdmin = room.isCurrentUserRoomAdmin;
     const hasPermissionToInvite = room.hasPermissionTo("invite", member);
     const hasPermissionToKick = room.hasPermissionTo("kick", member);
     const hasPermissionToBan = room.hasPermissionTo("ban", member);
+    const hasPermissionToChangePowerLevels = room.hasPermissionForRoomStateEvent(EventType.RoomPowerLevels);
 
     $: availableRoles = room.canModifyRoleOf($permissionLevel) ? room.getAllowedRolesToAssign() : [];
     $: permissionLevelOptions =
@@ -177,13 +178,13 @@
                 value={$permissionLevel}
                 onChange={onPermissionLevelChange}
                 dataTestId={`${id}-permissionLevel`}
-                disabled={!$isRoomAdmin || availableRoles.length === 0 || $membership !== "join"}
+                disabled={!$hasPermissionToChangePowerLevels || availableRoles.length === 0 || $membership !== "join"}
                 outerClass="mb-0 w-full"
                 extraSelectClass="border-white/20 bg-black/20 text-sm"
             />
         </div>
         <div class="flex flex-wrap justify-end gap-1.5">
-            {#if $isRoomAdmin && $hasPermissionToInvite && $membership === "leave"}
+            {#if $hasPermissionToInvite && $membership === "leave"}
                 <button
                     type="button"
                     class="rounded-lg bg-success-900/25 px-2.5 py-1.5 text-xs font-medium text-white/95 transition hover:bg-success-900/45 disabled:opacity-50"
@@ -198,7 +199,7 @@
                     {/if}
                 </button>
             {/if}
-            {#if $isRoomAdmin && $hasPermissionToKick && $membership !== "leave" && $membership !== "ban"}
+            {#if $hasPermissionToKick && $membership !== "leave" && $membership !== "ban"}
                 <button
                     type="button"
                     class="rounded-lg bg-warning-900/25 px-2.5 py-1.5 text-xs font-medium text-white/95 transition hover:bg-warning-900/45 disabled:opacity-50"
@@ -213,7 +214,7 @@
                     {/if}
                 </button>
             {/if}
-            {#if $isRoomAdmin && $hasPermissionToBan}
+            {#if $hasPermissionToBan}
                 {#if $membership === "ban"}
                     <button
                         type="button"

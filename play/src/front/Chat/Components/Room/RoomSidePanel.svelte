@@ -5,6 +5,7 @@
         ChatRoomMembershipManagement,
         ChatRoomModeration,
         ChatRoomNotificationControl,
+        ChatRoomSettingsManagement,
     } from "../../Connection/ChatConnection";
     import { roomSidePanelStore, type RoomSidePanelSection } from "../../Stores/RoomSidePanelStore";
     import ThreadPanel from "./ThreadPanel.svelte";
@@ -14,7 +15,11 @@
     import RoomSidePanelSettings from "./RoomSidePanelSettings.svelte";
     import { IconChevronLeft, IconX } from "@wa-icons";
 
-    export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
+    export let room: ChatRoom &
+        ChatRoomMembershipManagement &
+        ChatRoomModeration &
+        ChatRoomNotificationControl &
+        ChatRoomSettingsManagement;
     export let showCloseButton = false;
     export let closeOnTimelineFocus = false;
 
