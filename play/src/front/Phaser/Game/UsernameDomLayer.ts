@@ -5,6 +5,7 @@ type UsernameElement = {
     element: HTMLDivElement;
     x: number;
     y: number;
+    depth: number;
     scale: number;
     zoomScale: number;
 };
@@ -35,30 +36,28 @@ export class UsernameDomLayer {
         this.domElement.setVisible(visible);
     }
 
-    public addUsername(id: number, x: number, y: number, displayScale: number, zoomScale: number): HTMLDivElement {
+    public addUsername(
+        id: number,
+        x: number,
+        y: number,
+        depth: number,
+        displayScale: number,
+        zoomScale: number
+    ): HTMLDivElement {
         let username = this.usernames.get(id);
 
         if (!username) {
             const element = document.createElement("div");
 
             element.ariaHidden = "true";
-
-            element.style.position = "absolute";
-            element.style.top = "0";
-            element.style.left = "0";
-            element.style.margin = "0";
-            element.style.display = "flex";
-            element.style.alignItems = "center";
-            element.style.boxSizing = "border-box";
+            element.className = "username-display";
             element.style.background = PLAYER_NAME_BACKGROUND_COLOR;
-            element.style.pointerEvents = "none";
-            element.style.transformOrigin = "center center";
-            element.style.willChange = "transform";
 
             username = {
                 element,
                 x,
                 y,
+                depth,
                 scale: displayScale,
                 zoomScale,
             };
@@ -67,14 +66,17 @@ export class UsernameDomLayer {
             this.usernames.set(id, username);
 
             this.applyTransform(username);
+            this.applyDepth(username);
             return element;
         }
 
         username.x = x;
         username.y = y;
+        username.depth = depth;
         username.scale = displayScale;
         username.zoomScale = zoomScale;
         this.applyTransform(username);
+        this.applyDepth(username);
         return username.element;
     }
 
@@ -107,6 +109,20 @@ export class UsernameDomLayer {
         this.applyTransform(username);
     }
 
+    public updateUsernameDepth(id: number, depth: number): void {
+        const username = this.usernames.get(id);
+        if (!username) {
+            return;
+        }
+
+        if (username.depth === depth) {
+            return;
+        }
+
+        username.depth = depth;
+        this.applyDepth(username);
+    }
+
     public updateUsernameBackgroundColor(id: number, color: number | undefined): void {
         const username = this.usernames.get(id);
         if (!username) {
@@ -123,13 +139,13 @@ export class UsernameDomLayer {
             return;
         }
 
-        username.element.remove();
+        this.removeUsernameElement(username);
         this.usernames.delete(id);
     }
 
     public destroy(): void {
         for (const username of this.usernames.values()) {
-            username.element.remove();
+            this.removeUsernameElement(username);
         }
 
         this.usernames.clear();
@@ -145,5 +161,13 @@ export class UsernameDomLayer {
         username.element.style.padding = `0 ${PLAYER_NAME_PADDING * domScale}px`;
         username.element.style.borderRadius = `${PLAYER_NAME_BACKGROUND_RADIUS * domScale}px`;
         username.element.style.transform = `translate3d(${username.x}px, ${username.y}px, 0) translate(-50%, -50%) scale(${scale})`;
+    }
+
+    private applyDepth(username: UsernameElement): void {
+        username.element.style.zIndex = `${Math.round(username.depth)}`;
+    }
+
+    private removeUsernameElement(username: UsernameElement): void {
+        username.element.remove();
     }
 }

@@ -49,6 +49,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
             this.domUsernameId,
             textPosition.x,
             textPosition.y,
+            this.depth,
             this.displayScale,
             waScaleManager.zoomModifier
         );
@@ -86,6 +87,10 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
 
     public getAvailabilityStatus(): AvailabilityStatus {
         return this.statusDisplay.availabilityStatus;
+    }
+
+    public setPlayerDepth(depth: number): void {
+        this.gameScene.usernameDomLayer.updateUsernameDepth(this.domUsernameId, depth);
     }
 
     public override setPosition(x?: number, y?: number, z?: number, w?: number): this {
