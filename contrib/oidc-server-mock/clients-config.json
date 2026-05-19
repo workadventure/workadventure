@@ -9,7 +9,7 @@
     "RequirePkce": false,
     "AllowedScopes": ["openid", "profile", "email", "tags-scope", "some-app-scope-1"],
     "IdentityTokenLifetime": 3600,
-    "AccessTokenLifetime": 3600,
+    "AccessTokenLifetime": 300,
     "RequireClientSecret": false
   },
   {
@@ -21,7 +21,7 @@
     "RedirectUris": ["http://*.workadventure.localhost", "https://*.test.workadventu.re"],
     "AllowedScopes": ["openid", "profile", "email", "tags-scope", "some-app-scope-1"],
     "IdentityTokenLifetime": 3600,
-    "AccessTokenLifetime": 3600,
+    "AccessTokenLifetime": 300,
     "RequireClientSecret": false
   }
 ]

@@ -7,6 +7,7 @@ import { errors } from "jose";
 import Mustache from "mustache";
 import type { Application } from "express";
 import Debug from "debug";
+import { errors as openIdErrors } from "openid-client";
 import type { AuthTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
@@ -19,6 +20,14 @@ import { getClientIpFromXForwardedFor } from "../services/ClientIp";
 import { BaseHttpController } from "./BaseHttpController";
 
 const debug = Debug("pusher:requests");
+
+function shouldRefreshAccessToken(err: unknown): boolean {
+    if (!(err instanceof openIdErrors.OPError)) {
+        return false;
+    }
+
+    return err.error === "invalid_token" || err.response?.statusCode === 401;
+}
 
 export class AuthenticateController extends BaseHttpController {
     private readonly redirectToMatrixFile: string;
@@ -242,7 +251,38 @@ export class AuthenticateController extends BaseHttpController {
                         ...resCheckTokenAuth,
                     } satisfies MeResponse);
                 } catch (err) {
+                    if (authTokenData.refreshToken && shouldRefreshAccessToken(err)) {
+                        try {
+                            const refreshed = await openIDClient.refreshAccessToken(authTokenData.refreshToken);
+                            const resCheckTokenAuth = await openIDClient.checkTokenAuth(refreshed.access_token);
+                            const newAuthToken = await jwtTokenManager.createAuthToken({
+                                identifier: authTokenData.identifier,
+                                accessToken: refreshed.access_token,
+                                refreshToken: refreshed.refresh_token ?? authTokenData.refreshToken,
+                                username: authTokenData.username,
+                                locale: authTokenData.locale,
+                                tags: authTokenData.tags,
+                                matrixUserId: authTokenData.matrixUserId,
+                            });
+                            res.json({
+                                username: authTokenData?.username,
+                                authToken: newAuthToken,
+                                locale: authTokenData?.locale,
+                                matrixUserId: authTokenData?.matrixUserId,
+                                matrixServerUrl:
+                                    (resCheckTokenAuth.matrix_url as string | undefined) ?? MATRIX_PUBLIC_URI,
+                                ...resUserData,
+                                ...resCheckTokenAuth,
+                            } satisfies MeResponse);
+                            return;
+                        } catch (refreshErr) {
+                            console.warn("OIDC silent refresh failed, forcing re-login", refreshErr);
+                        }
+                    }
                     console.warn("Error while checking token auth", err);
+                    if (!shouldRefreshAccessToken(err)) {
+                        throw err;
+                    }
                     throw new errors.JWTInvalid("Invalid token");
                 }
                 return;
@@ -312,14 +352,15 @@ export class AuthenticateController extends BaseHttpController {
             if (!email) {
                 throw new Error("No email in the response");
             }
-            const authToken = await jwtTokenManager.createAuthToken(
-                email,
-                userInfo?.access_token,
-                userInfo?.username,
-                userInfo?.locale,
-                userInfo?.tags,
-                email ? matrixProvider.getBareMatrixIdFromEmail(email) : undefined
-            );
+            const authToken = await jwtTokenManager.createAuthToken({
+                identifier: email,
+                accessToken: userInfo?.access_token,
+                refreshToken: userInfo?.refresh_token,
+                username: userInfo?.username,
+                locale: userInfo?.locale,
+                tags: userInfo?.tags,
+                matrixUserId: email ? matrixProvider.getBareMatrixIdFromEmail(email) : undefined,
+            });
 
             const matrixPublicUri = userInfo.matrix_url ?? MATRIX_PUBLIC_URI;
 
@@ -475,14 +516,11 @@ export class AuthenticateController extends BaseHttpController {
             const mapUrlStart = data.mapUrlStart;
             const matrixUserId = email ? matrixProvider.getBareMatrixIdFromEmail(email) : undefined;
 
-            const authToken = await jwtTokenManager.createAuthToken(
-                email || userUuid,
-                undefined,
-                undefined,
-                undefined,
-                [],
-                matrixUserId
-            );
+            const authToken = await jwtTokenManager.createAuthToken({
+                identifier: email || userUuid,
+                tags: [],
+                matrixUserId,
+            });
 
             res.json({
                 authToken,
@@ -526,7 +564,7 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             } else {
                 const userUuid = v4();
-                const authToken = await jwtTokenManager.createAuthToken(userUuid);
+                const authToken = await jwtTokenManager.createAuthToken({ identifier: userUuid });
                 res.json({
                     authToken,
                     userUuid,
@@ -660,6 +698,9 @@ export class AuthenticateController extends BaseHttpController {
             // Use post logout redirect and id token hint to redirect on the logut session endpoint of the OpenId provider
             // https://openid.net/specs/openid-connect-session-1_0.html#RPLogout
             await openIDClient.logoutUser(authTokenData.accessToken);
+            if (authTokenData.refreshToken) {
+                await openIDClient.logoutUser(authTokenData.refreshToken);
+            }
 
             // if no redirect, redirect to playUri and connect user to the world
             // if the world is with authentication mandatory, the user will be redirected to the login screen
