@@ -51,7 +51,7 @@ In your map directory, start by adding a `package.json` file. This file will con
   "devDependencies": {
     "@types/node": "^18.15.11",
     "@workadventure/iframe-api-typings": "^1.15.10",
-    "typescript": "^4.9.5",
+    "typescript": "^5.8.3",
     "vite": "^4.3.9",
     "wa-map-optimizer-vite": "^1.1.15"
   },
