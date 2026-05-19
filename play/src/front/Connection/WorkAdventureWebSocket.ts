@@ -84,14 +84,14 @@ export class WorkAdventureWebSocket {
         this.socket.close(code, reason);
     }
 
-    public closeForPageUnload(): void {
+    public closeForPageUnload = (): void => {
         this.manuallyClosed = true;
         this.clearReconnectionTimeout();
         if (this.socket.readyState === WebSocket.CLOSED) {
             return;
         }
         this.socket.close(1000, "Page unloading");
-    }
+    };
 
     private handleOpenEvent = (): void => {
         const isReconnection = this.reconnectAttempted;
@@ -197,6 +197,8 @@ export class WorkAdventureWebSocket {
         socket.addEventListener("close", this.handleCloseEvent);
         socket.addEventListener("error", this.handleErrorEvent);
         socket.addEventListener("message", this.handleMessageEvent);
+
+        window.addEventListener("pagehide", this.closeForPageUnload);
     }
 
     private detachSocketListeners(socket: WebSocket): void {
@@ -204,6 +206,8 @@ export class WorkAdventureWebSocket {
         socket.removeEventListener("close", this.handleCloseEvent);
         socket.removeEventListener("error", this.handleErrorEvent);
         socket.removeEventListener("message", this.handleMessageEvent);
+
+        window.removeEventListener("pagehide", this.closeForPageUnload);
     }
 
     private scheduleReconnectAttempt(): void {
