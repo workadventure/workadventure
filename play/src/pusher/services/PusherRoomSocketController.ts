@@ -249,12 +249,15 @@ export class PusherRoomSocketController {
                             userUuid: socketData.userUuid,
                             clientLastReceivedNonce,
                         });
-                        const replaced = context.socket.replaceSocket(rawSocket, clientLastReceivedNonce);
+                        try {
+                            const replaced = context.socket.replaceSocket(rawSocket, clientLastReceivedNonce);
 
-                        if (replaced) {
-                            this.clearContextCleanup(tabId);
+                            if (replaced) {
+                                this.clearContextCleanup(tabId);
+                                this.wrappersBySocket.set(rawSocket, context.socket);
+                            }
+                        } finally {
                             context.clientLastReceivedNonce = undefined;
-                            this.wrappersBySocket.set(rawSocket, context.socket);
                         }
 
                         return;
