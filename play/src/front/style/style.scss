@@ -844,3 +844,24 @@ div.emoji-picker {
     scrollbar-width: thin;
     scrollbar-color: #928ebb rgba(255, 255, 255, 0.1);
 }
+
+/* Username Display */
+.username-display {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    margin: 0;
+    box-sizing: border-box;
+    transform-origin: center center;
+
+    display: flex;
+    align-items: center;
+
+    pointer-events: auto;
+    will-change: transform;
+}
+
+.username-display:hover {
+    z-index: 2000000000 !important;
+}

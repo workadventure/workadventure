@@ -182,6 +182,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                 playerNameOutlineColor
             );
             this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true, true);
+            this.usernameDisplay.setPlayerDepth(this.depth);
 
             this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
                 this.usernameDisplay?.setPlayerNameOutlineColor(color);
@@ -250,6 +251,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     private setDepthIfNeeded(depth: number): void {
         if (this.depth !== depth) {
             this.setDepth(depth);
+            this.usernameDisplay?.setPlayerDepth(depth);
         }
     }
 
@@ -402,6 +404,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     setPosition(x: number, y: number): this {
         super.setPosition(Math.round(x), Math.round(y));
         this.setDepth(this.y + 16);
+        this.usernameDisplay?.setPlayerDepth(this.depth);
         this.updateUsernameDisplayPosition();
         return this;
     }
