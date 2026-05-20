@@ -228,8 +228,6 @@ test.describe("Variables @nomobile", () => {
                 return users;
             })
             .toBe(2);
-
-        await page2.close();
     });
 });
 

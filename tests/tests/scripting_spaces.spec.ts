@@ -242,8 +242,6 @@ test.describe("Scripting space-related functions @nowebkit", () => {
                 }),
             )
             .toBe(1);
-
-        await bob.close();
     });
 
     test("cannot join a space with a different filter on the same browser", async ({ browser, context, browserName }, {
@@ -308,8 +306,6 @@ test.describe("Scripting space-related functions @nowebkit", () => {
                 return null;
             }),
         ).toContain("type mismatch");
-
-        await bob.close();
     });
 
     test("can join a livestream space and see the user when it starts streaming", async ({
@@ -540,7 +536,5 @@ test.describe("Scripting space-related functions @nowebkit", () => {
                 }),
             )
             .toBe("world");
-
-        await bob.close();
     });
 });

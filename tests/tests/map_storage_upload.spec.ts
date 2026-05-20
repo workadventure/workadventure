@@ -80,8 +80,6 @@ test.describe("Map-storage Upload API @nomobile", () => {
         // Now let's check the user in map1 did reload, but not on map2
         await expect(page.locator(".test-class")).toHaveText("New version of map detected. Refresh needed");
         await expect(page2.getByText("New version of map detected. Refresh needed")).toBeHidden();
-
-        await page2.close();
     });
 
     test("users are informed and disconnected when a map is deleted", async ({ request, browser }) => {

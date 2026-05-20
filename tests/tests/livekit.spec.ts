@@ -192,13 +192,6 @@ test.describe("Meeting actions test", () => {
 
         await expectLivekitConnectionsCountToBe(page, 4);
         await expectWebRtcConnectionsCountToBe(page, 0);
-
-        // Clean up
-        await page.close();
-        await userBob.close();
-        await userEve.close();
-        await userMallory.close();
-        await userJohn.close();
     });
 
     test("Should create and join livekit room only when there is a speaker @oidc", async ({ browser, request }) => {
