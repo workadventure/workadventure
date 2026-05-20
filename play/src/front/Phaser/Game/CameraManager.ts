@@ -524,13 +524,19 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         const startZoomModifier = this.waScaleManager.zoomModifier;
         const startDate = Date.now();
 
+        const easeAlgo = Easing.QuintEaseOut;
+
         const zoomTween = this.scene.tweens.addCounter({
             from: startZoomModifier,
             to: targetZoomModifier,
             duration,
-            ease: Easing.SineEaseOut,
+            ease: easeAlgo,
             onUpdate: (tween: Phaser.Tweens.Tween) => {
-                this.waScaleManager.setZoomModifier(tween.getValue() ?? 0, this.camera, true);
+                const value = tween.getValue();
+                if (value === undefined) {
+                    return;
+                }
+                this.waScaleManager.setZoomModifier(value, this.camera, true);
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },
             onComplete: () => {
@@ -545,15 +551,19 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
                 let elapsedTime = Date.now() - startDate;
                 if (elapsedTime > duration) {
-                    elapsedTime = 1;
+                    elapsedTime = duration;
                 }
+
+                const easeFunction = Phaser.Tweens.Builders.GetEaseFunction(easeAlgo);
+
                 let value;
                 if (duration !== 0) {
-                    value = (elapsedTime / duration) * (targetZoomModifier - startZoomModifier) + startZoomModifier;
+                    value =
+                        easeFunction(elapsedTime / duration) * (targetZoomModifier - startZoomModifier) +
+                        startZoomModifier;
                 } else {
                     value = targetZoomModifier;
                 }
-
                 this.waScaleManager.setZoomModifier(value, this.camera, true);
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },

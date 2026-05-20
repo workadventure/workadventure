@@ -244,7 +244,7 @@ import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
 
-const MOUSE_WHEEL_ZOOM_RATE = 0.25;
+const MOUSE_WHEEL_ZOOM_RATE = 0.5;
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -4169,7 +4169,7 @@ ${escapedMessage}
 
         // Sometimes, deltaY can be really high (this happens when the browser is lagging for 1 second or so)
         // Let's clamp the value to avoid zooming too much
-        zoomFactor = Clamp(zoomFactor, 0.5, 2);
+        zoomFactor = Clamp(zoomFactor, 0.1, 10);
 
         debugZoom("DeltaY: ", deltaY, "Zoom factor", zoomFactor);
 
