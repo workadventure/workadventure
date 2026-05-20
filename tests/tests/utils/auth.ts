@@ -151,6 +151,7 @@ async function createUser(
 
     await page.context().storageState({ path: "./.auth/" + name + ".json" });
 
+    await page.close();
     await context.close();
 }
 
