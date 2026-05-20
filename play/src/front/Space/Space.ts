@@ -101,7 +101,7 @@ export class Space implements SpaceInterface {
     private readonly _isSpeakerStreamingStore: Writable<boolean>;
     private readonly _isListenerStreamingStore: Writable<boolean>;
     // Derived store that is true if either speaker or listener streaming is active, or if ALL_USERS filter with video properties
-    private readonly _isStreamingStore: Readable<boolean>;
+    private readonly _isStreamingVideoStore: Readable<boolean>;
     private readonly _isStreamingAudioStore: Readable<boolean>;
     private readonly _canRecordStore: Writable<boolean>;
     private readonly _isRecordingStore: Writable<boolean> = writable(false);
@@ -271,13 +271,14 @@ export class Space implements SpaceInterface {
         const isAllUsersVideoSpace = filterType === FilterType.ALL_USERS && this.isVideoSpace();
 
         // Derived store: true if speaker OR listener streaming is active, or if ALL_USERS video space
-        this._isStreamingStore = derived(
+        this._isStreamingVideoStore = derived(
             [this._isSpeakerStreamingStore, this._isListenerStreamingStore],
             ([$isSpeakerStreaming, $isListenerStreaming]) => {
                 return isAllUsersVideoSpace || $isSpeakerStreaming || $isListenerStreaming;
             }
         );
 
+        // Derived store: true if speaker is active, or if ALL_USERS video space
         this._isStreamingAudioStore = derived([this._isSpeakerStreamingStore], ([$isSpeakerStreaming]) => {
             return isAllUsersVideoSpace || $isSpeakerStreaming;
         });
@@ -319,7 +320,7 @@ export class Space implements SpaceInterface {
         // One can record if we are streaming or if there is at least one video or screen sharing peer and if we are authorized to record
         this.shouldDisplayRecordButton = derived(
             [
-                this.isStreamingStore,
+                this.isStreamingVideoStore,
                 this.videoStreamStore,
                 this.screenShareStreamStore,
                 this._canRecordStore,
@@ -1157,8 +1158,8 @@ export class Space implements SpaceInterface {
         this._isListenerStreamingStore.set(false);
     }
 
-    get isStreamingStore(): Readable<boolean> {
-        return this._isStreamingStore;
+    get isStreamingVideoStore(): Readable<boolean> {
+        return this._isStreamingVideoStore;
     }
 
     get isStreamingAudioStore(): Readable<boolean> {

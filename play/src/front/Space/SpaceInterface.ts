@@ -108,13 +108,19 @@ export interface SpaceInterface {
     stopListenerStreaming(): void;
 
     /**
-     * This store returns true if the local user is currently streaming their camera and microphone to other users in the space.
-     * In a ALL_USERS space, this store will always return true.
+     * This store returns true if the local user is currently streaming their camera to other users in the space.
+     * In a ALL_USERS space that syncs video/audio-related properties, this store will always return true.
+     * In a LIVE_STREAMING_USERS, this store will return true when the startStreaming() method has been called, and false when the stopStreaming() method has been called.
+     * In a LIVE_STREAMING_USERS_WITH_FEEDBACK, this store will return true when the startStreaming()/startListenerStreaming() method has been called, and false when the stopStreaming()/stopListenerStreaming() method has been called.
+     */
+    readonly isStreamingVideoStore: Readable<boolean>;
+
+    /**
+     * This store returns true if the local user is currently streaming their microphone to other users in the space.
+     * In a ALL_USERS space that syncs video/audio-related properties, this store will always return true.
      * In a LIVE_STREAMING_USERS, this store will return true when the startStreaming() method has been called, and false when the stopStreaming() method has been called.
      * In a LIVE_STREAMING_USERS_WITH_FEEDBACK, this store will return true when the startStreaming() method has been called, and false when the stopStreaming() method has been called.
      */
-    readonly isStreamingStore: Readable<boolean>;
-
     readonly isStreamingAudioStore: Readable<boolean>;
     readonly canAskToMuteAudioOrTurnOffVideo: Readable<boolean>;
     readonly shouldPublishScreenShareStore: Readable<boolean>;

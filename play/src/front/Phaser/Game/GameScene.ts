@@ -2312,7 +2312,8 @@ export class GameScene extends DirtyScene {
             })
             .catch((e) => {
                 const errorMessage = "Failed to get chatConnection from gameManager : " + e;
-                console.error(errorMessage);
+                console.error(errorMessage, e);
+                Sentry.captureException(e);
             });
 
         this._proximityChatRoom = new ProximityChatRoom(
