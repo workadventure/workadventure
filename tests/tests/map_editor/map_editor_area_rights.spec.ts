@@ -187,8 +187,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await expect(page2.locator("#map-editor-container")).toBeVisible();
         await expect(page2.locator("#AreaEditor")).toBeHidden();
         await expect(page2.locator("#EntityEditor")).toBeHidden();
-
-        await page2.close();
     });
 
     test("Area with restricted write access : Trying to add an object with write access", async ({
@@ -257,8 +255,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await expect(page2.locator("#map-editor-container")).toBeVisible();
         await expect(page2.locator("#AreaEditor")).toBeHidden();
         await expect(page2.locator("#EntityEditor")).toBeHidden();
-
-        await page2.close();
     });
 
     test("Area with restricted write access : Trying to remove an object with write access", async ({
@@ -303,8 +299,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         );
 
         await expect(page2.getByTestId("openWebsite")).toBeHidden();
-
-        await page2.close();
     });
 
     test("Area with restricted write access : Trying to remove an object outside the area", async ({
@@ -332,8 +326,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await expect(page2.locator("#map-editor-container")).toBeVisible();
         await expect(page2.locator("#AreaEditor")).toBeHidden();
         await expect(page2.locator("#EntityEditor")).toBeHidden();
-
-        await page2.close();
     });
 
     test("Claim personal area from allowed user", async ({ browser, request }) => {

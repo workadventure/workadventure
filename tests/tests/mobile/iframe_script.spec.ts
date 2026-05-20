@@ -57,8 +57,6 @@ test.describe("Iframe API @nodesktop", () => {
 
         // Check if the screen sharing is enabled
         await expect(page.getByTestId("screenShareButton")).toBeEnabled();
-
-        await pageBob.close();
     });
 
     test("disable right click user button", async ({ browser }) => {

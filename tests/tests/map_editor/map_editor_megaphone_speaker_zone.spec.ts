@@ -90,10 +90,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await page.getByRole("button", { name: "Stop megaphone" }).click();
         await expect(page.getByRole("heading", { name: "Global communication" })).toBeHidden();
-
-        await page2.close();
-
-        await page.close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
@@ -164,10 +160,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await page.getByRole("button", { name: "Stop megaphone" }).click();
         await expect(page.getByRole("heading", { name: "Global communication" })).toBeHidden();
-
-        await page2.close();
-
-        await page.close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
@@ -326,8 +318,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(2);
         await expect.poll(async () => await page2.getByTestId("webrtc-video").count()).toBe(2);
-
-        await page2.close();
     });
 
     // SCENARIO: Listener in audience zone with "See attendees" disabled must not see local camera feedback.
@@ -428,8 +418,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByTestId("messageInput").fill("Hello from Admin1 again");
         await page.getByTestId("sendMessageButton").click();
         await expect(page2.locator("#message").getByText("Hello from Admin1 again")).toBeVisible({ timeout: 20_000 });
-
-        await page2.close();
     });
 
     test('Successfully set "SpeakerZone" with see attendees option in the map editor', async ({ browser, request }) => {
@@ -512,8 +500,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByTestId("messageInput").fill("Hello from Admin1 again");
         await page.getByTestId("sendMessageButton").click();
         await expect(page2.locator("#message").getByText("Hello from Admin1 again")).toBeVisible({ timeout: 20_000 });
-
-        await page2.close();
     });
 
     test("Megaphone auditorium mode with 5 participants", async ({ browser, request }) => {
@@ -744,11 +730,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Stop the megaphone for the first speaker
         await pageSpeaker.getByRole("button", { name: "Stop megaphone" }).click();
         await expect(pageSpeaker.getByRole("heading", { name: "Global communication" })).toBeHidden();
-
-        // Close all contexts
-        for (const { page } of listeners) {
-            await page.close();
-        }
     });
 
     /**

@@ -101,8 +101,6 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         });
 
         expect(myvar).toBe(12);
-
-        await page2.close();
     });
 
     const runPersistenceTest = async (page: Page, browser: Browser) => {
@@ -466,10 +464,6 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
 
         await expect.poll(() => gotExpectedNotification).toBe(true);
         await expect.poll(() => gotUnexpectedNotification).toBe(false);
-
-        await page2.close();
-        //
-        //await page.close();
     });
 
     test("that a variable changed can be listened to locally.", async ({ browser }) => {

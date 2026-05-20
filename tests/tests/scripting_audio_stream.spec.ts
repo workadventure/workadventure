@@ -191,9 +191,6 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
 
         // After disconnect, alice2 should still receive the sound through WebRTC
         await hasAudioStream(alice2);
-
-        await alice.close();
-        await alice2.close();
     });
 
     test("can play and listen to sound files", async ({ browser }, { project }) => {

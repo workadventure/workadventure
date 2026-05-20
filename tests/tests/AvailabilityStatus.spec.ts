@@ -158,8 +158,6 @@ test.describe("Availability Status", () => {
 
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
                 expect(await isInBubble).toBeTruthy();
-
-                await userBob.close();
             });
 
             test("should return to online status after accept conversation @nowebkit @nomobile", async ({
@@ -200,8 +198,6 @@ test.describe("Availability Status", () => {
                 await page.getByText("Accept").first().click();
                 await Menu.openMenu(page);
                 await expect(page.getByRole("button", { name: "Online" }).locator("svg")).toBeVisible();
-
-                await userBob.close();
             });
 
             test("should keep busy status  after refuse conversation @nowebkit @nomobile", async ({
@@ -246,8 +242,6 @@ test.describe("Availability Status", () => {
                 await page.getByText("Accept").first().click();
                 await Menu.openMenu(page);
                 await expect(page.getByRole("button", { name: statusName }).locator("svg")).toBeVisible();
-
-                await userBob.close();
             });
         });
     });
@@ -350,8 +344,6 @@ test.describe("Availability Status", () => {
 
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 await expect(page.locator("button.chat-btn + div>span.animate-ping")).toBeHidden();
-
-                await userBob.close();
             });
         });
     });
@@ -456,8 +448,6 @@ test.describe("Availability Status", () => {
 
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 await expect(page.locator("button.chat-btn + div>span.animate-ping")).toBeHidden();
-
-                await userBob.close();
             });
         });
     });
