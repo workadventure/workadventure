@@ -11,18 +11,42 @@ import { dismissDoNotDisturbInfoToast } from "./doNotDisturbInfoToast";
 function disposeWithContext(page: Page): Page {
     const closePage = page.close.bind(page);
     const context = page.context();
+    let closePromise: Promise<void> | undefined;
+    let contextClosed = false;
 
-    page.close = async (...args: Parameters<Page["close"]>) => {
+    const closeContext = async () => {
+        if (contextClosed) {
+            return;
+        }
+        contextClosed = true;
+        try {
+            await context.close();
+        } catch (e) {
+            if (e instanceof Error && e.message.includes("has been closed")) {
+                return;
+            }
+            throw e;
+        }
+    };
+
+    const closePageAndContext = async (args: Parameters<Page["close"]>) => {
         if (!page.isClosed()) {
             await closePage(...args);
         }
-        await context.close();
+        await closeContext();
     };
 
-    Object.defineProperty(page, Symbol.asyncDispose, {
-        configurable: true,
-        value: () => page.close(),
-    });
+    page.close = (...args: Parameters<Page["close"]>) => {
+        closePromise ??= closePageAndContext(args);
+        return closePromise;
+    };
+
+    if (!(Symbol.asyncDispose in page)) {
+        Object.defineProperty(page, Symbol.asyncDispose, {
+            configurable: true,
+            value: () => page.close(),
+        });
+    }
 
     return page;
 }
