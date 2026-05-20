@@ -79,17 +79,19 @@ test.describe("Variables @nomobile", () => {
         });
         await expectVariableToBe(page, "new value");
 
+        const reconnectingIndicator = page
+            .getByTestId("websocket-reconnecting-toast")
+            .or(page.getByTestId("reconnecting-error-screen"));
+
         // Let's simulate a browser disconnection
         stopTraefik();
-        // Let's detect the reconnecting screen
-        await expect(page.getByText("Connection to server lost")).toBeVisible();
-
+        await expect(reconnectingIndicator).toBeVisible();
         startTraefik();
 
         try {
-            await expect(page.getByText("Connection to server lost")).toBeHidden();
+            await expect(reconnectingIndicator).toBeHidden();
         } catch (e) {
-            console.error("Error waiting for connection to server lost to be hidden", e);
+            console.error("Error waiting for the reconnecting toast to be hidden", e);
         }
 
         // Now, let's kill the reverse proxy to cut the connexion
