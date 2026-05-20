@@ -306,7 +306,7 @@ test.describe("Scripting space-related functions @nowebkit", () => {
                 }
                 return null;
             }),
-        ).toContain("type mismatch");
+        ).toMatch(/[Ff]ilter type mismatch/);
 
         await bob.close();
         await bob.context().close();
