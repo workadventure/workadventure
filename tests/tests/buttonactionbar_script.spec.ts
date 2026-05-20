@@ -9,6 +9,7 @@ test.describe("action bar @nomobile", () => {
     test.beforeEach(async ({ page }) => {
         test.skip(isMobile(page), "Skip on mobile devices");
     });
+
     test("Buttons in action bar and sub-menus", async ({ browser }) => {
         await using page = await getPage(
             browser,
@@ -71,8 +72,6 @@ test.describe("action bar @nomobile", () => {
         await expect(page.getByRole("button", { name: "Custom build button" })).toBeVisible();
         await page.getByRole("button", { name: "Custom build button" }).click();
         await expect(page.getByRole("button", { name: "Custom build button" })).toBeHidden();
-
-        await page.context().close();
     });
 
     test("Action button in action bar", async ({ browser }) => {
@@ -100,7 +99,5 @@ test.describe("action bar @nomobile", () => {
         await page.getByRole("button", { name: "Register" }).click();
         // Check if the register button is hidden
         await expect(page.getByRole("button", { name: "Register" })).toHaveCount(0);
-
-        await page.context().close();
     });
 });

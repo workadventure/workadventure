@@ -84,14 +84,6 @@ test.describe("Meeting actions test", () => {
         await expect(page.getByRole("cell", { name: "video/VP9" }).first()).toBeHidden();
 
         // Clean up
-        await page.close();
-        await userBob.close();
-        await userEve.close();
-        await userMallory.close();
-        await userBob.context().close();
-        await userEve.context().close();
-        await userMallory.context().close();
-        await page.context().close();
     });
 
     test("Should display 5 cameras on screen", async ({ browser }) => {
@@ -207,12 +199,6 @@ test.describe("Meeting actions test", () => {
         await userEve.close();
         await userMallory.close();
         await userJohn.close();
-
-        await userBob.context().close();
-        await userEve.context().close();
-        await userMallory.context().close();
-        await userJohn.context().close();
-        await page.context().close();
     });
 
     test("Should create and join livekit room only when there is a speaker @oidc", async ({ browser, request }) => {
@@ -312,12 +298,6 @@ test.describe("Meeting actions test", () => {
         await expectLivekitRoomsCountToBe(userAlice, 0);
         await expectLivekitRoomsCountToBe(userBob, 0);
         await expectLivekitRoomsCountToBe(userEve, 0);
-
-        await page2.context().close();
-        await page.context().close();
-        await userAlice.context().close();
-        await userBob.context().close();
-        await userEve.context().close();
     });
 
     test("should keep microphone and camera state when joining/leaving a livekit room @oidc", async ({
@@ -345,9 +325,6 @@ test.describe("Meeting actions test", () => {
         await Map.teleportToPosition(page, 0, 0);
         await Menu.expectButtonState(page, "camera-button", "normal");
         await Menu.expectButtonState(page, "microphone-button", "forbidden");
-
-        await page.context().close();
-        await page.close();
     });
 
     test("Should handle rapid transitions between podium and audience zones @oidc", async ({ browser, request }) => {
@@ -469,11 +446,5 @@ test.describe("Meeting actions test", () => {
         });
 
         // Cleanup
-        await speakerAdmin.context().close();
-        await speakerAlice.context().close();
-        await audienceEve.context().close();
-        await audienceJohn.context().close();
-        await audienceMallory.context().close();
-        await switchingUserPage.context().close();
     });
 });

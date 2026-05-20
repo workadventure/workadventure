@@ -76,8 +76,6 @@ test.describe("Scripting follow functions", () => {
 
         await waitForUnfollowPromise;
 
-        await page2.context().close();
-
-        await page.context().close();
+        await page2.close();
     });
 });

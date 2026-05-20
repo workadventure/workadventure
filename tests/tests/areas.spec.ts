@@ -35,8 +35,6 @@ test.describe("Areas @nomobile", () => {
         });
 
         await expect(page.getByText("Silent zone 🤐")).toBeVisible();
-
-        await page.context().close();
     });
 
     test("blocking audio areas", async ({ browser }) => {
@@ -78,8 +76,6 @@ test.describe("Areas @nomobile", () => {
             return;
         });
         await Menu.expectButtonState(page, "music-button", "disabled");
-
-        await page.context().close();
     });
 
     test("display warning on fail to load audio", async ({ browser }) => {
@@ -98,8 +94,6 @@ test.describe("Areas @nomobile", () => {
         });
         await Menu.expectButtonState(page, "music-button", "forbidden");
         await expect(page.getByText("Could not load sound")).toBeVisible();
-
-        await page.context().close();
     });
 
     test("can create an area dynamically and detect when we enter and leave", async ({ browser }) => {
@@ -152,7 +146,5 @@ test.describe("Areas @nomobile", () => {
         // Let's move back in
         await Map.teleportToPosition(page, 0.5 * 32, 5 * 32);
         await expect(page.getByText("Welcome to MyNewArea")).toBeVisible();
-
-        await page.context().close();
     });
 });

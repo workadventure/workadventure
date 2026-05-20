@@ -6,10 +6,12 @@ import { getBackDump, getPusherDump } from "./utils/debug";
 import { rebootBack } from "./utils/containers";
 
 test.setTimeout(180_000);
+
 test.describe("Spaces @nomobile @nowebkit", () => {
     test.beforeEach(async ({ page, browserName }) => {
         test.skip(isMobile(page) || browserName === "webkit", "Skip on mobile and WebKit, this is a mostly back test");
     });
+
     test("purges spaces if back restarts @docker @slow", async ({ browser, request }) => {
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "spaces"));
 
@@ -17,7 +19,6 @@ test.describe("Spaces @nomobile @nowebkit", () => {
         await expect.poll(() => getPusherDump()).toContain("Alice");
 
         await page.close();
-        await page.context().close();
 
         // Wait for the user to be removed from the spaces
         await expect.poll(() => getBackDump(), { timeout: 60_000 }).not.toContain("Alice");
@@ -37,7 +38,5 @@ test.describe("Spaces @nomobile @nowebkit", () => {
         // Wait for the user to be removed from the spaces
         await expect.poll(() => getPusherDump(), { timeout: 10_000 }).not.toContain("Alice");
         //await expect(getBackDump()).not.toContain("Alice");
-
-        await page2.context().close();
     });
 });

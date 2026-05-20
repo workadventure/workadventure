@@ -140,10 +140,5 @@ test.describe("Screen-sharing tests @nomobile @nowebkit @nofirefox", () => {
 
         // Mallory sees Alice screen-sharing in big (screen-sharing is forwarded from Livekit)
         await expect(userMallory.locator("#highlighted-media").getByText("Alice")).toBeVisible();
-
-        await userMallory.context().close();
-        await userEve.context().close();
-        await userBob.context().close();
-        await userAlice.context().close();
     });
 });

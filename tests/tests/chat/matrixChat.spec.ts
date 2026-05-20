@@ -31,9 +31,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await oidcMatrixUserLogin(page);
         await ChatUtils.openChat(page);
         await expect(page.getByTestId("chat")).toBeAttached();
-
-        await page.context().close();
     });
+
     test("Create a public chat room", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", Map.url("empty"));
         await oidcMatrixUserLogin(page);
@@ -45,9 +44,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByPlaceholder("Users").press("Enter");
         await page.getByTestId("createRoomButton").click();
         await expect(page.getByText(publicChatRoomName)).toBeAttached();
-
-        await page.context().close();
     });
+
     test("Send messages in public chat room", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", Map.url("empty"));
         await oidcMatrixUserLogin(page);
@@ -63,9 +61,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("messageInput").fill(chatMessageContent);
         await page.getByTestId("sendMessageButton").click();
         await expect(page.getByText(chatMessageContent)).toBeAttached();
-
-        await page.context().close();
     });
+
     test("Send application messages in public chat room", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", Map.url("empty"));
         await oidcMatrixUserLogin(page);
@@ -82,9 +79,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("messageInput").fill(chatMessageContent);
         await page.getByTestId("sendMessageButton").click();
         await expect(page.getByText(chatMessageContent)).toBeAttached();
-
-        await page.context().close();
     });
+
     test("Send application messages and youtube link in public chat room", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", Map.url("empty"));
         await oidcMatrixUserLogin(page);
@@ -139,9 +135,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await expect(page.getByText("https://www.youtube.com/embed/6ZfuNTqbHE8?feature=oembed")).toBeAttached();
         // check that the message is displayed
         await expect(page.getByText(chatMessageContent)).toBeAttached();
-
-        await page.context().close();
     });
+
     test("Send application messages and klaxoon link in public chat room", async ({ browser }) => {
         test.skip(
             process.env.IS_FORK === "true",
@@ -207,9 +202,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         //await expect(page.getByText("https://app.klaxoon.com/join/KXEWMSE3NF2M?from=aG3stVtZnDmhrhqKc17to1OlfvyyEUeV")).toBeAttached();
         // check that the message is displayed
         await expect(page.getByText(chatMessageContent)).toBeAttached();
-
-        await page.context().close();
     });
+
     test("Reply to message", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", Map.url("empty"));
         await oidcMatrixUserLogin(page);
@@ -228,8 +222,6 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("messageInput").fill("Sample response");
         await page.getByTestId("sendMessageButton").click();
         await expect(page.getByText(chatMessageContent)).toHaveCount(2);
-
-        await page.context().close();
     });
 
     test("React to message and remove reaction to message", async ({ browser }) => {
@@ -251,8 +243,6 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await expect(page.locator(".reactions-bar").getByText("❤️")).toBeVisible();
         await page.locator(".reactions-bar").getByText("❤️").click();
         await expect(page.locator(".reactions-bar").getByText("❤️")).toBeHidden();
-
-        await page.context().close();
     });
 
     test("Remove message", async ({ browser }) => {
@@ -271,8 +261,6 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("sendMessageButton").click();
         await page.getByTestId("removeMessageButton").click();
         await expect(page.getByText(chatMessageContent)).not.toBeAttached();
-
-        await page.context().close();
     });
 
     test("Edit message", async ({ browser }) => {
@@ -295,8 +283,6 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("saveMessageEditionButton").click();
         await expect(page.getByText(chatMessageEdited)).toBeAttached();
         await expect(page.getByText(chatMessageContent)).not.toBeAttached();
-        await page.close();
-        await page.context().close();
     });
 
     test("Cancel edit message", async ({ browser }) => {
@@ -319,12 +305,10 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("cancelMessageEditionButton").click();
         await expect(page.getByText(chatMessageEdited)).not.toBeAttached();
         await expect(page.getByText(chatMessageContent)).toBeAttached();
-        await page.close();
-        await page.context().close();
     });
 
     // test("Create a private chat room", async ({ browser }) => {
-    //   const page = await getPage(browser, 'Alice', Map.url("empty"));
+    //   await using page = await getPage(browser, 'Alice', Map.url("empty"));
     //   await oidcMatrixUserLogin(page);
     //   await ChatUtils.openChat(page);
     //   await ChatUtils.openCreateRoomDialog(page);
@@ -334,12 +318,12 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
     //   await page.getByTestId("createRoomButton").click();
     //   await expect(page.getByText(privateChatRoom)).toBeAttached();
     //   await page.close();
-    //   await page.context().close();
+    //   await page.close();
     // });
 
     // test("Create a private encrypted chat room (new user)", async ({
     //   browser }) => {
-    //   const page = await getPage(browser, 'Alice', Map.url("empty"));
+    //   await using page = await getPage(browser, 'Alice', Map.url("empty"));
     //   await oidcMatrixUserLogin(page);
     //   await ChatUtils.openChat(page);
     //   await ChatUtils.openCreateRoomDialog(page);
@@ -352,12 +336,12 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
     //   await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
     //   await expect(page.getByText(privateChatRoom)).toBeAttached();
     //   await page.close();
-    //   await page.context().close();
+    //   await page.close();
     // });
 
     // test("Send message in private chat room (new user)", async ({
     //   browser }) => {
-    //   const page = await getPage(browser, 'Alice', Map.url("empty"));
+    //   await using page = await getPage(browser, 'Alice', Map.url("empty"));
     //   await oidcMatrixUserLogin(page);
     //   await ChatUtils.openChat(page);
     //   await ChatUtils.openCreateRoomDialog(page);
@@ -374,7 +358,7 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
     //   await page.getByTestId("sendMessageButton").click();
     //   await expect(page.getByText(chatMessageContent)).toBeAttached();
     //   await page.close();
-    //   await page.context().close();
+    //   await page.close();
     // });
 
     test("Retrieve encrypted message", async ({ browser }) => {
@@ -417,8 +401,6 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByText(privateChatRoom).click();
         await ChatUtils.restoreEncryption(page);
         await expect(page.getByText(chatMessageContent)).toBeAttached();
-        await page.close();
-        await page.context().close();
     });
 
     test("Retrieve encrypted message after cancelling passphrase request", async ({ browser }) => {
@@ -467,8 +449,6 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.restoreEncryptionFromButton(page);
         await page.getByText(privateChatRoom).click();
         await expect(page.getByText(chatMessageContent)).toBeAttached();
-        await page.close();
-        await page.context().close();
     });
 
     test("Key creation should stop after the SSO process is canceled", async ({ browser }) => {
@@ -490,8 +470,6 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
 
         await expect(page.getByText("Chat recovery key creation")).not.toBeAttached();
         await expect(page.getByText("Encryption not configured")).toBeAttached();
-        await page.close();
-        await page.context().close();
     });
 
     test("Create a public folder", async ({ browser }) => {
@@ -507,8 +485,6 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("createFolderButton").click();
         await page.getByTestId("roomAccordeon").click();
         await expect(page.getByText(publicFolder)).toBeAttached();
-        await page.close();
-        await page.context().close();
     });
 
     test("Create a private folder", async ({ browser }) => {
@@ -524,8 +500,6 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("createFolderButton").click();
         await page.getByTestId("roomAccordeon").click();
         await expect(page.getByText(privateFolder)).toBeAttached();
-        await page.close();
-        await page.context().close();
     });
 
     test("Create a nested folder", async ({ browser }) => {
@@ -556,8 +530,6 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         });
         await page.getByText(privateFolder1).click();
         await expect(page.getByText(privateFolder2)).toBeVisible();
-        await page.close();
-        await page.context().close();
     });
 
     test("Create a room in a folder", async ({ browser }) => {
@@ -584,9 +556,6 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.waitForTimeout(1000);
         await page.getByText(privateFolder1).click();
         await expect(page.getByText(room)).toBeAttached();
-
-        await page.close();
-        await page.context().close();
     });
 
     test("Create a restricted room", async ({ browser }) => {
@@ -611,8 +580,6 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId(`toggleFolder${privateFolder1}`).click();
 
         await expect(page.getByText(room)).toBeAttached();
-        await page.close();
-        await page.context().close();
     });
 
     test("Verify a session with emoji", async ({ browser }) => {
@@ -649,8 +616,6 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await expect(page.getByTestId("understoodButton")).toBeAttached();
 
         await expect(otherPage.getByTestId("understoodButton")).toBeAttached();
-        await otherPage.context().close();
-        await page.context().close();
     });
 
     test("Verify a session with emoji , one device click on mismatch button", async ({ browser }) => {
@@ -671,7 +636,7 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
 
         await Map.teleportToPosition(page, 0, 0);
 
-        const otherPage = await getPage(browser, "Bob", Map.url("empty"));
+        await using otherPage = await getPage(browser, "Bob", Map.url("empty"));
         await Menu.openMenuIfMobile(otherPage);
         await oidcMatrixUserLogin(otherPage);
         await ChatUtils.openChat(otherPage);
@@ -685,10 +650,5 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await otherPage.getByTestId("mismatchButton").click();
 
         await expect(page.getByTestId("errorEmojiLabel")).toBeAttached();
-
-        await otherPage.close();
-        await otherPage.context().close();
-        await page.close();
-        await page.context().close();
     });
 });

@@ -91,9 +91,9 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByRole("button", { name: "Stop megaphone" }).click();
         await expect(page.getByRole("heading", { name: "Global communication" })).toBeHidden();
 
-        await page2.context().close();
+        await page2.close();
 
-        await page.context().close();
+        await page.close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
@@ -165,9 +165,9 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByRole("button", { name: "Stop megaphone" }).click();
         await expect(page.getByRole("heading", { name: "Global communication" })).toBeHidden();
 
-        await page2.context().close();
+        await page2.close();
 
-        await page.context().close();
+        await page.close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
@@ -277,11 +277,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await pageMeetingA.getByTestId("screenShareButton").click();
         await Menu.expectButtonState(pageMeetingA, "screenShareButton", "normal");
-
-        await pageMeetingA.context().close();
-        await pageMeetingB.context().close();
-        await pageOutsideC.context().close();
-        await pageOutsideD.context().close();
     });
 
     test('Successfully set "SpeakerZone" in the map editor', async ({ browser, request }) => {
@@ -332,9 +327,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(2);
         await expect.poll(async () => await page2.getByTestId("webrtc-video").count()).toBe(2);
 
-        await page2.context().close();
-
-        await page.context().close();
+        await page2.close();
     });
 
     // SCENARIO: Listener in audience zone with "See attendees" disabled must not see local camera feedback.
@@ -436,9 +429,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByTestId("sendMessageButton").click();
         await expect(page2.locator("#message").getByText("Hello from Admin1 again")).toBeVisible({ timeout: 20_000 });
 
-        await page2.context().close();
-
-        await page.context().close();
+        await page2.close();
     });
 
     test('Successfully set "SpeakerZone" with see attendees option in the map editor', async ({ browser, request }) => {
@@ -522,10 +513,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByTestId("sendMessageButton").click();
         await expect(page2.locator("#message").getByText("Hello from Admin1 again")).toBeVisible({ timeout: 20_000 });
 
-        await page2.context().close();
-
-        await page.context().close();
-        await page3.context().close();
+        await page2.close();
     });
 
     test("Megaphone auditorium mode with 5 participants", async ({ browser, request }) => {
@@ -674,7 +662,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         });
 
         // Close the late listener context after verification
-        await pageLateListener.context().close();
+        await pageLateListener.close();
 
         // ============================================================
         // SCENARIO: Second speaker (Admin2) joins the megaphone session
@@ -759,9 +747,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Close all contexts
         for (const { page } of listeners) {
-            await page.context().close();
+            await page.close();
         }
-        await pageSpeaker.context().close();
     });
 
     /**
@@ -841,8 +828,5 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // The cameras container should be hidden or show no remote streams
         // Wait for the listener to fully leave the space
         await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeHidden({ timeout: 20_000 });
-
-        await page2.context().close();
-        await page.context().close();
     });
 });

@@ -31,7 +31,11 @@ test.describe("Scripting space-related functions @nowebkit", () => {
             )
             .toBe(1);
 
-        const bob = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using bob = await getPage(
+            browser,
+            "Bob",
+            publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"),
+        );
 
         // Bob joins the same space
         await evaluateScript(bob, async () => {
@@ -240,10 +244,6 @@ test.describe("Scripting space-related functions @nowebkit", () => {
             .toBe(1);
 
         await bob.close();
-        await bob.context().close();
-
-        await page.close();
-        await page.context().close();
     });
 
     test("cannot join a space with a different filter on the same browser", async ({ browser, context, browserName }, {
@@ -270,9 +270,6 @@ test.describe("Scripting space-related functions @nowebkit", () => {
                 return null;
             }),
         ).toContain("Cannot join space some-test-space");
-
-        await page.close();
-        await page.context().close();
     });
 
     test("cannot join a space with a different filter in 2 browsers", async ({ browser, context, browserName }, {
@@ -295,7 +292,11 @@ test.describe("Scripting space-related functions @nowebkit", () => {
             await WA.spaces.joinSpace("some-test-space", "everyone", []);
         });
 
-        const bob = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using bob = await getPage(
+            browser,
+            "Bob",
+            publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"),
+        );
 
         expect(
             await evaluateScript(bob, async () => {
@@ -309,10 +310,6 @@ test.describe("Scripting space-related functions @nowebkit", () => {
         ).toContain("type mismatch");
 
         await bob.close();
-        await bob.context().close();
-
-        await page.close();
-        await page.context().close();
     });
 
     test("can join a livestream space and see the user when it starts streaming", async ({
@@ -346,7 +343,11 @@ test.describe("Scripting space-related functions @nowebkit", () => {
         });
 
         // Bob joins the same space
-        const bob = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using bob = await getPage(
+            browser,
+            "Bob",
+            publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"),
+        );
         await evaluateScript(bob, async () => {
             window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming", []);
         });
@@ -396,11 +397,6 @@ test.describe("Scripting space-related functions @nowebkit", () => {
                 }),
             )
             .toBe(0);
-
-        await bob.close();
-        await bob.context().close();
-        await page.close();
-        await page.context().close();
     });
 
     test("should reconnect to a space when backend is restarted @local @selfsigned", async ({
@@ -433,7 +429,11 @@ test.describe("Scripting space-related functions @nowebkit", () => {
         });
 
         // Bob joins the same space
-        const bob = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using bob = await getPage(
+            browser,
+            "Bob",
+            publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"),
+        );
         await evaluateScript(bob, async () => {
             window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming", []);
         });
@@ -492,11 +492,6 @@ test.describe("Scripting space-related functions @nowebkit", () => {
                 }),
             )
             .toBe(0);
-
-        await bob.close();
-        await bob.context().close();
-        await page.close();
-        await page.context().close();
     });
 
     test("should receive metadata when you join a space", async ({ browser, context, browserName }, { project }) => {
@@ -517,7 +512,7 @@ test.describe("Scripting space-related functions @nowebkit", () => {
         });
 
         // Bob joins the same space
-        const bob = await getPage(
+        await using bob = await getPage(
             browser,
             "Bob",
             publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related_metadata"),
@@ -547,9 +542,5 @@ test.describe("Scripting space-related functions @nowebkit", () => {
             .toBe("world");
 
         await bob.close();
-        await bob.context().close();
-
-        await page.close();
-        await page.context().close();
     });
 });

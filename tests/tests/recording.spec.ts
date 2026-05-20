@@ -139,13 +139,6 @@ test.describe("Recording test", () => {
         await page.getByTestId("recordingButton-list").click();
 
         await waitForRecordingToAppear(page, 2);
-
-        await page.close();
-        await page2.close();
-        await page3.close();
-        await page2.context().close();
-        await page.context().close();
-        await page3.context().close();
     });
 
     test("Recording configuration @oidc", async ({ browser, request }) => {
@@ -188,11 +181,6 @@ test.describe("Recording test", () => {
         await expect(page.getByTestId("recordingButton-start")).toBeVisible();
         // The member (with the "member" tag) should now see the recording button
         await expect(page2.getByTestId("recordingButton-start")).toBeVisible();
-
-        await page.close();
-        await page2.close();
-        await page2.context().close();
-        await page.context().close();
     });
 
     test("Recording can run in megaphone and discussion spaces at the same time @oidc", async ({
@@ -262,11 +250,6 @@ test.describe("Recording test", () => {
         await waitForRecordingToAppear(recorder, 1);
         await expect(recorder.getByTestId("recording-item-0")).toBeVisible();
         await expect(recorder.getByTestId("recording-item-1")).toBeVisible();
-
-        await recorder.close();
-        await participant.close();
-        await participant.context().close();
-        await recorder.context().close();
     });
 
     test("Recording auto-stops on recorder leave, then on megaphone source stop, in a single end-to-end flow @oidc", async ({
@@ -464,10 +447,5 @@ test.describe("Recording test", () => {
         await expect(adminListener.getByTestId("recordingButton-start")).toBeVisible();
         await expect(memberListener.getByTestId("recordingButton-start")).toBeVisible();
         await expect(memberListener.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible();
-
-        await adminListener.close();
-        await memberListener.close();
-        await memberListener.context().close();
-        await adminListener.context().close();
     });
 });

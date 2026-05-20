@@ -45,10 +45,12 @@ async function expectVariableToBe(page: Page, value: string) {
 }
 
 test.setTimeout(360000);
+
 test.describe("Variables @nomobile", () => {
     test.beforeEach(async ({ page }) => {
         test.skip(isMobile(page), "Skip on mobile devices");
     });
+
     // WARNING: Since this test restarts Traefik and other components, it might fail when run against the vite dev server.
     // when running with --headed you can manually reload the page to avoid this issue.
     // Or, if you want to reproduce exactly the CI experience, add the following env variables:
@@ -177,8 +179,6 @@ test.describe("Variables @nomobile", () => {
         // Redis will reconnect automatically and will store the variable on reconnect!
         // So we should see the new value.
         await expectVariableToBe(page, "value set after pusher restart");
-
-        await page.context().close();
     });
 
     test("cache doesnt prevent setting a variable in case the map changes @local @nowebkit", async ({
@@ -229,9 +229,7 @@ test.describe("Variables @nomobile", () => {
             })
             .toBe(2);
 
-        await page2.context().close();
-
-        await page.context().close();
+        await page2.close();
     });
 });
 

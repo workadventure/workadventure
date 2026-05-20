@@ -15,6 +15,7 @@ test.describe("Map-storage Upload API @nomobile", () => {
     test.beforeEach(async ({ page }) => {
         test.skip(isMobile(page), "Skip on mobile devices");
     });
+
     test("users are asked to reconnect when a map is updated", async ({ request, browser }) => {
         const uploadFile1 = await request.put("map1.wam", {
             multipart: {
@@ -80,9 +81,7 @@ test.describe("Map-storage Upload API @nomobile", () => {
         await expect(page.locator(".test-class")).toHaveText("New version of map detected. Refresh needed");
         await expect(page2.getByText("New version of map detected. Refresh needed")).toBeHidden();
 
-        await page2.context().close();
-
-        await page.context().close();
+        await page2.close();
     });
 
     test("users are informed and disconnected when a map is deleted", async ({ request, browser }) => {
@@ -132,9 +131,6 @@ test.describe("Map-storage Upload API @nomobile", () => {
 
         await expect(page.getByText("This map has been deleted")).toBeVisible();
         await expect(page2.getByText("This map has been deleted")).toBeHidden();
-
-        await page2.context().close();
-        await page.context().close();
     });
 
     test("can upload ZIP file", async ({ request }) => {

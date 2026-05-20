@@ -32,9 +32,8 @@ test.describe("Availability Status", () => {
             //move to trigger status change
             await Map.walkTo(page, "ArrowRight", 100);
             await expect(page.getByRole("button", { name: "Online" }).locator("svg")).toBeVisible();
-
-            await page.context().close();
         });
+
         test("should disable microphone and camera @nowebkit", async ({ browser }, { project }) => {
             test.skip(project.name === "webkit", "WebKit limitations");
             const statusName = "Busy";
@@ -57,8 +56,6 @@ test.describe("Availability Status", () => {
 
             await expect(page.getByTestId("camera-button").locator(".bg-danger")).toBeHidden();
             await expect(page.getByTestId("microphone-button").locator(".bg-danger")).toBeHidden();
-
-            await page.context().close();
         });
 
         test("should keep same webcam and microphone config when you go back to online status @nowebkit", async ({
@@ -86,9 +83,8 @@ test.describe("Availability Status", () => {
 
             await Menu.expectCameraOn(page);
             await Menu.expectMicrophoneOff(page);
-
-            await page.context().close();
         });
+
         test("should ask to change notification permission when you pass in Busy status and your browser notification permission is denied @nowebkit @nofirefox", async ({
             browser,
             browserName,
@@ -115,8 +111,6 @@ test.describe("Availability Status", () => {
             await page.getByText("Accept").click();
 
             await expect(page.getByText("Allow notifications?")).toBeHidden();
-
-            await page.context().close();
         });
 
         test.describe("busy interaction", () => {
@@ -165,10 +159,9 @@ test.describe("Availability Status", () => {
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
                 expect(await isInBubble).toBeTruthy();
 
-                await userBob.context().close();
-
-                await page.context().close();
+                await userBob.close();
             });
+
             test("should return to online status after accept conversation @nowebkit @nomobile", async ({
                 browser,
                 browserName,
@@ -208,10 +201,9 @@ test.describe("Availability Status", () => {
                 await Menu.openMenu(page);
                 await expect(page.getByRole("button", { name: "Online" }).locator("svg")).toBeVisible();
 
-                await userBob.context().close();
-
-                await page.context().close();
+                await userBob.close();
             });
+
             test("should keep busy status  after refuse conversation @nowebkit @nomobile", async ({
                 browser,
                 browserName,
@@ -255,12 +247,11 @@ test.describe("Availability Status", () => {
                 await Menu.openMenu(page);
                 await expect(page.getByRole("button", { name: statusName }).locator("svg")).toBeVisible();
 
-                await userBob.context().close();
-
-                await page.context().close();
+                await userBob.close();
             });
         });
     });
+
     test.describe("Back in a moment Status", () => {
         test("should return to online status when you move @nowebkit @nomobile", async ({ browser, browserName }) => {
             // Skip webkit because the moving player with the keyboard doesn't work
@@ -282,9 +273,8 @@ test.describe("Availability Status", () => {
             await expect(page.getByRole("button", { name: statusName }).locator("svg")).toBeVisible();
             await Map.walkTo(page, "ArrowRight", 100);
             await Menu.expectStatus(page, "Online");
-
-            await page.context().close();
         });
+
         test("should disable microphone and camera @nowebkit", async ({ browser, browserName }) => {
             const statusName = "Back in a moment";
             test.skip(browserName === "webkit", "WebKit limitations");
@@ -305,8 +295,6 @@ test.describe("Availability Status", () => {
 
             await Menu.expectCameraDisabled(page);
             await Menu.expectMicrophoneDisabled(page);
-
-            await page.context().close();
         });
 
         test("should keep same webcam and microphone config when you go back to online status @nowebkit", async ({
@@ -335,9 +323,8 @@ test.describe("Availability Status", () => {
 
             await Menu.expectCameraOn(page);
             await Menu.expectMicrophoneOff(page);
-
-            await page.context().close();
         });
+
         test.describe("Back in a moment interaction", () => {
             test("should not create a bubble", async ({ browser }) => {
                 const statusName = "Back in a moment";
@@ -365,12 +352,10 @@ test.describe("Availability Status", () => {
                 await expect(page.locator("button.chat-btn + div>span.animate-ping")).toBeHidden();
 
                 await userBob.close();
-                await userBob.context().close();
-
-                await page.context().close();
             });
         });
     });
+
     test.describe("Do not disturb Status", () => {
         test("should return to online status when you move @nowebkit @nomobile", async ({ browser, browserName }) => {
             // Skip webkit because the moving player with the keyboard doesn't work
@@ -394,9 +379,8 @@ test.describe("Availability Status", () => {
             //move to trigger status change
             await Map.walkTo(page, "ArrowRight", 100);
             await Menu.expectStatus(page, "Online");
-
-            await page.context().close();
         });
+
         test("should disable microphone and camera @nowebkit", async ({ browser, browserName }) => {
             test.skip(browserName === "webkit", "WebKit limitations");
             const statusName = "Do not disturb";
@@ -417,8 +401,6 @@ test.describe("Availability Status", () => {
 
             await Menu.expectCameraDisabled(page);
             await Menu.expectMicrophoneDisabled(page);
-
-            await page.context().close();
         });
 
         test("should keep same webcam and microphone config when you go back to online status @nowebkit", async ({
@@ -447,9 +429,8 @@ test.describe("Availability Status", () => {
 
             await Menu.expectCameraOn(page);
             await Menu.expectMicrophoneOff(page);
-
-            await page.context().close();
         });
+
         test.describe("Do not disturb interaction", () => {
             test("should not create a bubble", async ({ browser }) => {
                 const statusName = "Do not disturb";
@@ -476,9 +457,7 @@ test.describe("Availability Status", () => {
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 await expect(page.locator("button.chat-btn + div>span.animate-ping")).toBeHidden();
 
-                await userBob.context().close();
-
-                await page.context().close();
+                await userBob.close();
             });
         });
     });
