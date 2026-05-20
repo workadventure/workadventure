@@ -252,9 +252,7 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
 
         this.log(`${context.spaceName} : handleSelfRoleChange for ${user.spaceUserId}`);
 
-        for (const [spaceUserId, existingUser] of context.users.entries()) {
-            if (spaceUserId === user.spaceUserId) continue;
-
+        for (const existingUser of context.users.values()) {
             const existingUserRole = this.getUserRole(existingUser);
             const wasVisible = this.couldRoleSeeRole(previousRole, existingUserRole);
             const isVisible = this.couldRoleSeeRole(newRole, existingUserRole);
