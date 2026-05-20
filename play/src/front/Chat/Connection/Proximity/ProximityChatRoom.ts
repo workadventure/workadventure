@@ -310,7 +310,7 @@ export class ProximityChatRoom implements ChatRoom {
         };
 
         const spaceUser = this.users?.get(senderUserId);
-        let chatUser: AnyKindOfUser = this.unknownUser;
+        let chatUser: AnyKindOfUser = { ...this.unknownUser, spaceUserId: senderUserId };
         if (spaceUser) {
             chatUser = mapExtendedSpaceUserToChatUser(spaceUser);
         }
