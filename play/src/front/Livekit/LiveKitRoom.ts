@@ -44,11 +44,14 @@ type LivekitRoomCounter = {
 };
 
 export class LiveKitRoom implements LiveKitRoomInterface {
+    private static readonly SCRIPTING_AUDIO_TRACK_NAME = "workadventure-scripting-audio";
+
     private room: Room | undefined;
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
     // Stores LiveKit participants that connected before their corresponding spaceUser was available
     private pendingParticipants: Map<string, RemoteParticipant> = new Map();
     private localParticipant: LocalParticipant | undefined;
+    private scriptingAudioTrack: MediaStreamTrack | undefined;
     private localScreenSharingVideoTrack: LocalVideoTrack | undefined;
     private localScreenSharingAudioTrack: LocalAudioTrack | undefined;
     private localCameraTrack: LocalVideoTrack | undefined;
@@ -618,9 +621,15 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
 
+        if (this.scriptingAudioTrack && this.scriptingAudioTrack !== audioTrack) {
+            await this.localParticipant.unpublishTrack(this.scriptingAudioTrack, true);
+        }
+
         await this.localParticipant.publishTrack(audioTrack, {
+            name: LiveKitRoom.SCRIPTING_AUDIO_TRACK_NAME,
             source: Track.Source.Microphone,
         });
+        this.scriptingAudioTrack = audioTrack;
     }
 
     private handleParticipantConnected(participant: RemoteParticipant) {

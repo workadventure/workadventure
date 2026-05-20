@@ -25,6 +25,7 @@ import type { LivekitStreamable, Streamable } from "../Space/Streamable";
 // Maximize/minimize can briefly mount 2 video components for the same participant.
 // Delaying the final unsubscribe avoids sending a false->true bounce to LiveKit during that handoff.
 const VIDEO_UNSUBSCRIBE_DELAY_MS = 75;
+const SCRIPTING_AUDIO_TRACK_NAME = "workadventure-scripting-audio";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -65,8 +66,11 @@ export class LiveKitParticipant {
 
     private _cameraPublication: RemoteTrackPublication | undefined;
     private _microphonePublication: RemoteTrackPublication | undefined;
+    private _scriptingAudioPublication: RemoteTrackPublication | undefined;
     private _screenSharePublication: RemoteTrackPublication | undefined;
     private _screenShareAudioPublication: RemoteTrackPublication | undefined;
+    private _microphoneStream: MediaStream | undefined;
+    private _scriptingAudioStream: MediaStream | undefined;
 
     private boundHandleTrackPublished: (publication: RemoteTrackPublication) => void;
     private boundHandleTrackSubscribed: (track: RemoteTrack, publication: RemoteTrackPublication) => void;
@@ -230,6 +234,38 @@ export class LiveKitParticipant {
         this._screenSharePublication?.setSubscribed(this._screenShareVideoSubscribed);
     }
 
+    private isScriptingAudioPublication(publication: TrackPublication): boolean {
+        return (
+            publication.source === Track.Source.Microphone &&
+            publication.kind === Track.Kind.Audio &&
+            publication.trackName === SCRIPTING_AUDIO_TRACK_NAME
+        );
+    }
+
+    private refreshLivekitAudioStreamStore() {
+        const audioTracks = [
+            ...(this._microphoneStream?.getAudioTracks() ?? []),
+            ...(this._scriptingAudioStream?.getAudioTracks() ?? []),
+        ];
+
+        if (audioTracks.length === 0) {
+            this._audioStreamStore.set(undefined);
+            return;
+        }
+
+        if (this._microphoneStream && audioTracks.length === this._microphoneStream.getAudioTracks().length) {
+            this._audioStreamStore.set(this._microphoneStream);
+            return;
+        }
+
+        if (this._scriptingAudioStream && audioTracks.length === this._scriptingAudioStream.getAudioTracks().length) {
+            this._audioStreamStore.set(this._scriptingAudioStream);
+            return;
+        }
+
+        this._audioStreamStore.set(new MediaStream(audioTracks));
+    }
+
     private handleTrackPublished(publication: RemoteTrackPublication) {
         if (this.abortSignal.aborted) {
             return;
@@ -277,6 +313,19 @@ export class LiveKitParticipant {
             this._hasScreenShareAudio.set(true);
             this._isScreenShareAudioMuted.set(publication.isMuted);
             this.refreshLivekitScreenShareStreamStore();
+        } else if (this.isScriptingAudioPublication(publication)) {
+            if (this._scriptingAudioPublication && this._scriptingAudioPublication !== publication) {
+                console.warn(
+                    "Scripting audio track received on a publication that is not the one we expected. This should not happen."
+                );
+                Sentry.captureMessage(
+                    "Scripting audio track received on a publication that is not the one we expected. This should not happen."
+                );
+                this._scriptingAudioPublication.setSubscribed(false);
+            }
+            publication.setSubscribed(true);
+            this._scriptingAudioPublication = publication;
+            this._hasAudio.set(true);
         } else if (publication.source === Track.Source.Microphone) {
             if (this._microphonePublication && this._microphonePublication !== publication) {
                 console.warn(
@@ -318,8 +367,12 @@ export class LiveKitParticipant {
             }
         } else if (publication.source === Track.Source.ScreenShareAudio) {
             this._audioScreenShareStreamStore.set(track.mediaStream);
+        } else if (this.isScriptingAudioPublication(publication)) {
+            this._scriptingAudioStream = track.mediaStream;
+            this.refreshLivekitAudioStreamStore();
         } else if (publication.source === Track.Source.Microphone) {
-            this._audioStreamStore.set(track.mediaStream);
+            this._microphoneStream = track.mediaStream;
+            this.refreshLivekitAudioStreamStore();
         }
     }
 
@@ -348,12 +401,20 @@ export class LiveKitParticipant {
             this._hasScreenShareAudio.set(false);
             this._isScreenShareAudioMuted.set(true);
             this.refreshLivekitScreenShareStreamStore();
+        } else if (this.isScriptingAudioPublication(publication)) {
+            publication.setSubscribed(false);
+            if (this._scriptingAudioPublication === publication) {
+                this._scriptingAudioPublication = undefined;
+                this._scriptingAudioStream = undefined;
+                this.refreshLivekitAudioStreamStore();
+            }
         } else if (publication.source === Track.Source.Microphone) {
             publication.setSubscribed(false);
             if (this._microphonePublication === publication) {
                 this._microphonePublication = undefined;
+                this._microphoneStream = undefined;
+                this.refreshLivekitAudioStreamStore();
             }
-            this._audioStreamStore.set(undefined);
             this._isMuted.set(true);
         }
     }
@@ -369,8 +430,16 @@ export class LiveKitParticipant {
             }
         } else if (publication.source === Track.Source.ScreenShareAudio) {
             this._audioScreenShareStreamStore.set(undefined);
+        } else if (this.isScriptingAudioPublication(publication)) {
+            if (this._scriptingAudioPublication === publication) {
+                this._scriptingAudioStream = undefined;
+                this.refreshLivekitAudioStreamStore();
+            }
         } else if (publication.source === Track.Source.Microphone) {
-            this._audioStreamStore.set(undefined);
+            if (this._microphonePublication === publication) {
+                this._microphoneStream = undefined;
+                this.refreshLivekitAudioStreamStore();
+            }
         }
     }
 
@@ -587,6 +656,7 @@ export class LiveKitParticipant {
         this._screenShareVideoSubscribed = false;
         this._cameraPublication?.setSubscribed(false);
         this._microphonePublication?.setSubscribed(false);
+        this._scriptingAudioPublication?.setSubscribed(false);
         this._screenSharePublication?.setSubscribed(false);
         this._screenShareAudioPublication?.setSubscribed(false);
 
