@@ -314,16 +314,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
     private synchronizeMediaState() {
         this.unsubscribers.push(
-            deriveSwitchStore(this._localStreamStore, this.space.isStreamingStore).subscribe((localStream) => {
+            deriveSwitchStore(this._localStreamStore, this.space.isStreamingVideoStore).subscribe((localStream) => {
                 this.queueCameraTrackUpdate(localStream);
+            })
+        );
 
-                if (
-                    this.space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK &&
-                    !this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId)?.megaphoneState
-                ) {
-                    this.queueMicrophoneTrackUpdate(undefined);
-                    return;
-                }
+        this.unsubscribers.push(
+            deriveSwitchStore(this._localStreamStore, this.space.isStreamingAudioStore).subscribe((localStream) => {
                 this.queueMicrophoneTrackUpdate(localStream);
             })
         );
