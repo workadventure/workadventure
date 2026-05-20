@@ -6,6 +6,8 @@
     import LL from "../../../i18n/i18n-svelte";
     import { IconFocusCentered, IconMapSearch, IconMinus, IconPlus } from "@wa-icons";
 
+    export let mapEditorRightOffset = 0;
+
     function zoomIn() {
         analyticsClient.clickToZoomIn();
 
@@ -36,7 +38,8 @@
 </script>
 
 <div
-    class="absolute bottom-2 right-2 bg-contrast/80 rounded pointer-events-auto p-1 backdrop-blur hover:bg-contrast/100"
+    class="fixed bottom-2 bg-contrast/80 rounded pointer-events-auto p-1 backdrop-blur hover:bg-contrast/100"
+    style:right={`calc(${mapEditorRightOffset}px + 0.5rem)`}
     data-testid="actions-explorer"
 >
     <div class="flex flex-col justify-center gap-2">

@@ -451,7 +451,7 @@
             {/if}
             <ExternalComponents zone="centeredPopup" />
 
-            <ExplorerMenu />
+            <ExplorerMenu mapEditorRightOffset={mapEditorPanelVisible ? $mapEditorSideBarWidthStore : 0} />
         </section>
         <div class="">
             <!--<ActionBar />-->
