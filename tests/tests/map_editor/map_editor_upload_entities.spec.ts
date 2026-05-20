@@ -41,8 +41,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         const uploadedEntityLocator = await EntityEditor.searchEntity(page, EntityEditor.getTestAssetName());
         const uploadedEntityElement = await uploadedEntityLocator.innerHTML();
         expect(uploadedEntityElement).toContain(EntityEditor.getTestAssetName());
-
-        await page.context().close();
     });
 
     test("Successfully upload and use custom entity in the map", async ({ browser, request }) => {
@@ -91,9 +89,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Check if the iframe is visible with src https://workadventu.re/
         expect(page.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
         expect(page2.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
-
-        await page2.context().close();
-        await page.context().close();
     });
 
     test("Successfully upload and use custom entity with odd size in the map", async ({ browser, request }) => {
@@ -103,8 +98,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
         await Map.teleportToPosition(page, 0, 0);
 
-        // Second browser
-        const newBrowser = await browser.newContext();
         await using page2 = await getPage(browser, "Admin1", Map.url("empty"));
 
         // open map editor
@@ -147,10 +140,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Check that the iframe is visible with src https://workadventu.re/
         expect(page.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
         expect(page2.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
-
-        await newBrowser.close();
-
-        await page.context().close();
     });
 
     test("Successfully upload and edit asset name", async ({ browser, request }) => {
@@ -193,10 +182,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Expect inner html in string to contain the new entity name
         expect(uploadedEntityElement).toContain(newEntityName);
         expect(uploadedEntityElement2).toContain(newEntityName);
-
-        await page2.context().close();
-        await page.close();
-        await page.context().close();
     });
 
     test("Successfully upload and remove custom entity", async ({ browser, request }) => {
@@ -231,10 +216,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Expect both pages to have no entities
         await expect(page.getByTestId("entity-item")).toHaveCount(0);
         await expect(page2.getByTestId("entity-item")).toHaveCount(0);
-
-        await page2.context().close();
-        await page.close();
-        await page.context().close();
     });
 
     test("drop PDF file onto canvas inside #game", async ({ browser, request }) => {

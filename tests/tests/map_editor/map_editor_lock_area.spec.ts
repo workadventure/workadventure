@@ -133,8 +133,5 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         const alicePositionAfterAreaMove = await Map.getPosition(page2);
         expect(alicePositionAfterAreaMove.y).toBeGreaterThan(6 * 32);
         await expect(page2.getByText("This area is locked. You cannot enter.")).toBeHidden();
-
-        await page2.context().close();
-        await page.context().close();
     });
 });

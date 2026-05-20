@@ -8,6 +8,25 @@ import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
 import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
 import { dismissDoNotDisturbInfoToast } from "./doNotDisturbInfoToast";
 
+function disposeWithContext(page: Page): Page {
+    const closePage = page.close.bind(page);
+    const context = page.context();
+
+    page.close = async (...args: Parameters<Page["close"]>) => {
+        if (!page.isClosed()) {
+            await closePage(...args);
+        }
+        await context.close();
+    };
+
+    Object.defineProperty(page, Symbol.asyncDispose, {
+        configurable: true,
+        value: () => page.close(),
+    });
+
+    return page;
+}
+
 function selectWoka(name: string): number {
     let res = 0;
     for (let i = 0; i < name.length; i++) {
@@ -145,7 +164,7 @@ export async function getPage(
     await skipOnboardingWhenShown(page);
 
     await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
-    return page;
+    return disposeWithContext(page);
 }
 
 async function skipOnboardingWhenShown(page: Page) {

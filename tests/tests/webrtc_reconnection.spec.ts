@@ -61,10 +61,6 @@ test.describe("WebRTC/LiveKit Reconnection @nomobile @nowebkit", () => {
         await expect(userBob.locator("#cameras-container").getByText("Alice")).toBeVisible({ timeout: 30_000 });
 
         // Clean up
-        await page.close();
-        await userBob.close();
-        await page.context().close();
-        await userBob.context().close();
     });
 
     test("should reconnect LiveKit after WebSocket close", async ({ browser }) => {
@@ -116,15 +112,5 @@ test.describe("WebRTC/LiveKit Reconnection @nomobile @nowebkit", () => {
         await expect(page.locator("#cameras-container").getByText("John")).toBeVisible({ timeout: 30_000 });
 
         // Clean up
-        await page.close();
-        await userBob.close();
-        await userEve.close();
-        await userMallory.close();
-        await userJohn.close();
-        await page.context().close();
-        await userBob.context().close();
-        await userEve.context().close();
-        await userMallory.context().close();
-        await userJohn.context().close();
     });
 });

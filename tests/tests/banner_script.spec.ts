@@ -9,6 +9,7 @@ test.describe("Modal @nomobile", () => {
     test.beforeEach(async ({ page }) => {
         test.skip(isMobile(page), "Skip on mobile devices");
     });
+
     test("Open banner", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "banner_script"));
         // Create banner with scripting API
@@ -35,7 +36,5 @@ test.describe("Modal @nomobile", () => {
 
         // Check the component of the Webpage
         await expect(page.locator("#modalIframe")).toHaveCount(0);
-
-        await page.context().close();
     });
 });

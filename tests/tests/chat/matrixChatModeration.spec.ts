@@ -55,8 +55,6 @@ test.describe("chat moderation @matrix @nowebkit", () => {
                 .getByTestId("@john.doe:matrix.workadventure.localhost-participant")
                 .getByTestId("@john.doe:matrix.workadventure.localhost-membership"),
         ).toHaveText("Joined");
-
-        await page.context().close();
     });
 
     test("should manage participants and permissions in public chat room", async ({ browser }, testInfo) => {
@@ -134,7 +132,5 @@ test.describe("chat moderation @matrix @nowebkit", () => {
         const powerLevel = await matrixApi.getMemberPowerLevel(roomId);
 
         expect(powerLevel).toBe(50);
-
-        await page.context().close();
     });
 });

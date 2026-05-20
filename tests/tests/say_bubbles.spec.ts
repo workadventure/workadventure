@@ -41,8 +41,6 @@ test.describe("Say bubbles @nomobile @nowebkit", () => {
         await expect(bobPage.locator(".say-bubble")).toHaveText("Hello Bob, this is a test message!");
 
         // Close both pages
-        await alicePage.context().close();
-        await bobPage.context().close();
     });
 
     test("should display a thinking bubble and be received by other users", async ({ browser }) => {
@@ -74,8 +72,6 @@ test.describe("Say bubbles @nomobile @nowebkit", () => {
         await expect(bobPage.locator(".thinking-cloud")).toHaveText("This is a thinking message for Bob!");
 
         // Close both pages
-        await alicePage.context().close();
-        await bobPage.context().close();
     });
 
     test("should display a Say and Think bubble via action menu", async ({ browser }) => {
@@ -94,7 +90,5 @@ test.describe("Say bubbles @nomobile @nowebkit", () => {
         await menu.closeSayPopup(alicePage);
         // Open think popup
         await menu.clickOnThinkBubble(alicePage);
-
-        await alicePage.context().close();
     });
 });

@@ -10,6 +10,7 @@ test.describe("Iframe API @nowebkit", () => {
     test.beforeEach(async ({ page }) => {
         test.skip(isMobile(page), "Skip on mobile devices");
     });
+
     test("can be called from an iframe loading a script", async ({ browser }) => {
         await using page = await getPage(
             browser,
@@ -18,8 +19,6 @@ test.describe("Iframe API @nowebkit", () => {
         );
 
         await expect(page.getByText("The iframe opened by a script")).toBeVisible();
-
-        await page.context().close();
     });
 
     test("base room properties", async ({ browser }) => {
@@ -65,8 +64,6 @@ test.describe("Iframe API @nowebkit", () => {
 
         // Check if the map editor is enabled
         await expect(page.getByText("Map editor")).toBeVisible();
-
-        await page.context().close();
     });
 
     test("disable invite user button", async ({ browser }) => {
@@ -92,9 +89,6 @@ test.describe("Iframe API @nowebkit", () => {
 
         // Check if the screen sharing is enabled
         await expect(page.getByRole("button", { name: "Share" })).toBeVisible();
-
-        await page.close();
-        await page.context().close();
     });
 
     test("disable screen sharing @nofirefox @nowebkit", async ({ browser }) => {
@@ -126,9 +120,6 @@ test.describe("Iframe API @nowebkit", () => {
 
         // Check if the screen sharing is enabled
         await expect(page.getByTestId("screenShareButton")).toBeEnabled();
-
-        await pageBob.context().close();
-        await page.context().close();
     });
 
     test("disable right click user button @nofirefox @nowebkit", async ({ browser }) => {
@@ -168,9 +159,6 @@ test.describe("Iframe API @nowebkit", () => {
         });
 
         // TODO: check if the right click is enabled
-
-        await page.close();
-        await page.context().close();
     });
     // TODO: disable and restore wheel zoom
 });

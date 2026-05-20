@@ -81,10 +81,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // TODO : create this test in admin part (global message and text audio message if an admin feature)
         // TODO : change to use the global message feature for user through megaphon settings rights
 
-        await page2.context().close();
         await page2.close();
         await page.close();
-        await page.context().close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 });

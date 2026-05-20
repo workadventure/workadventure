@@ -126,8 +126,5 @@ test.describe("Matrix chat threads @oidc @matrix @nowebkit", () => {
         await expect(page.getByTestId("threadPanelTimeline").locator("li[data-event-id]").nth(1)).toContainText(
             "Thread reply",
         );
-
-        await page.close();
-        await page.context().close();
     });
 });

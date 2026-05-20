@@ -28,9 +28,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Check if the map editor is disabled
         await expect(page.getByText("Map editor")).toBeHidden();
-
-        await page.close();
-        await page.context().close();
     });
 
     test("Assert map explorer visible for guest", async ({ browser, request }) => {

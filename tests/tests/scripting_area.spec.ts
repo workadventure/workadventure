@@ -67,7 +67,5 @@ test.describe("Scripting for Map editor @oidc @nomobile @nowebkit", () => {
         // Let's move back in
         await Map.teleportToPosition(page, 2 * 32, 8 * 32);
         await expect(page.getByText("Welcome to MyZone")).toBeVisible();
-
-        await page.context().close();
     });
 });

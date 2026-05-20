@@ -12,6 +12,7 @@ test.describe("OpenId connect @oidc mobile @nofirefox @nodesktop", () => {
         // (this is specific to mobile format make sur it work on a regular format)
         test.skip(!isMobile(page) || browserName === "firefox", "Run only on mobile non-Firefox");
     });
+
     // https://github.com/element-hq/synapse/issues/19303 - skip webkit due to synapse v1.144.0 OIDC issues
     test("Can login and logout @nowebkit", async ({ browser }, { project }) => {
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "oidc"));
@@ -56,7 +57,5 @@ test.describe("OpenId connect @oidc mobile @nofirefox @nodesktop", () => {
         // Open the menu to check the user name
         await Menu.openMenu(page);
         await expect(page.getByRole("button", { name: "Online" })).toBeVisible();
-
-        await page.context().close();
     });
 });

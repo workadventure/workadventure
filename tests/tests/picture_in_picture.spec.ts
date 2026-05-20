@@ -34,9 +34,6 @@ test.describe("Picture In Picture", () => {
         const page2 = await page2Promise;
         await expect(page2.getByText("Alice")).toBeVisible();
         await expect(page2.getByText("You")).toBeVisible();
-
-        await alicePage.close();
-        await bobPage.close();
     });
 
     test("not available", async ({ page, browser, browserName }) => {
@@ -68,8 +65,5 @@ test.describe("Picture In Picture", () => {
         // Wait for the video call button to be visible
         await expect(bobPage.getByTestId("pictureInPictureButtonDisabled")).toBeVisible({ timeout: 10_000 });
         await expect(alicePage.getByTestId("pictureInPictureButtonDisabled")).toBeVisible({ timeout: 10_000 });
-
-        await alicePage.close();
-        await bobPage.close();
     });
 });
