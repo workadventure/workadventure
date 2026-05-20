@@ -326,19 +326,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
     private synchronizeMediaState() {
         this.unsubscribers.push(
-            deriveSwitchStore(this._localStreamStore, this.space.isStreamingStore).subscribe((localStream) => {
+            deriveSwitchStore(this._localStreamStore, this.space.isStreamingVideoStore).subscribe((localStream) => {
                 this.handleCameraTrack(localStream);
+            })
+        );
 
-                if (
-                    this.space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK &&
-                    !this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId)?.megaphoneState
-                ) {
-                    this.unpublishMicrophoneTrack().catch((err) => {
-                        console.error("An error occurred while unpublishing microphone track", err);
-                        Sentry.captureException(err);
-                    });
-                    return;
-                }
+        this.unsubscribers.push(
+            deriveSwitchStore(this._localStreamStore, this.space.isStreamingAudioStore).subscribe((localStream) => {
                 this.handleMicrophoneTrack(localStream);
             })
         );
