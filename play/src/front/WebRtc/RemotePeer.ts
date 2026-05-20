@@ -433,7 +433,7 @@ export class RemotePeer extends Peer implements Streamable {
 
         this.localStreamStoreSubscribe = deriveSwitchStore(
             this.localStreamStore,
-            this.space.isStreamingStore
+            this.space.isStreamingVideoStore
         ).subscribe((streamValue) => {
             if (streamValue === undefined) {
                 if (this.localStream) {
