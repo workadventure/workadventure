@@ -1,8 +1,8 @@
 import type { EmoteEventMessage, SetPlayerDetailsMessage, PlayerDetailsUpdatedMessage } from "@workadventure/messages";
+import type { Movable } from "@workadventure/shared-utils";
 import type { PositionInterface } from "../Model/PositionInterface";
 import type { RoomSocket } from "../RoomManager";
 import { User } from "./User";
-import type { Movable } from "./Movable";
 import { Group } from "./Group";
 import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 

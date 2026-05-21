@@ -11,7 +11,7 @@ import { throttle } from "throttle-debounce";
 import { ForwardableStore, MapStore } from "@workadventure/store-utils";
 import { MathUtils } from "@workadventure/math-utils";
 import CancelablePromise from "cancelable-promise";
-import { Deferred, SpatialHashGrid } from "@workadventure/shared-utils";
+import { Deferred, SpatialMap } from "@workadventure/shared-utils";
 import {
     AvailabilityStatus,
     availabilityStatusToJSON,
@@ -344,7 +344,7 @@ export class GameScene extends DirtyScene {
     private isReconnecting: boolean | undefined = undefined;
     private playerName!: string;
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
-    private remotePlayersSpatialIndex = new SpatialHashGrid<RemotePlayer>(CONVERSATION_BUBBLE_SPATIAL_GRID_SIZE);
+    private remotePlayersSpatialIndex = new SpatialMap<number, RemotePlayer>(CONVERSATION_BUBBLE_SPATIAL_GRID_SIZE);
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
     private outlineManager!: OutlineManager;
@@ -1418,7 +1418,6 @@ export class GameScene extends DirtyScene {
             }
             const previousPosition = { x: player.x, y: player.y };
             player.updatePosition(moveEvent);
-            this.remotePlayersSpatialIndex.set(userId, player.x, player.y, player);
             this.addConversationBubblesAffectedByPlayerMove(
                 userId,
                 previousPosition,
@@ -4043,7 +4042,7 @@ ${escapedMessage}
         }
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
-        this.remotePlayersSpatialIndex.set(player.userId, player.x, player.y, player);
+        this.remotePlayersSpatialIndex.set(player.userId, player);
 
         player.on(Phaser.Input.Events.POINTER_OVER, () => {
             this.activatablesManager.handlePointerOverActivatableObject(player);
