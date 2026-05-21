@@ -18,7 +18,7 @@ import type {
     SubToPusherRoomMessage,
 } from "@workadventure/messages";
 import { isMapDetailsData, RefreshRoomMessage, VariableWithTagMessage } from "@workadventure/messages";
-import { Jitsi, SpatialHashGrid } from "@workadventure/shared-utils";
+import { Jitsi, type Movable, SpatialMap } from "@workadventure/shared-utils";
 import type { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { asError } from "catch-unknown";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
@@ -38,7 +38,6 @@ import {
     STORE_VARIABLES_FOR_LOCAL_MAPS,
 } from "../Enum/EnvironmentVariable";
 import type { Admin } from "../Model/Admin";
-import type { Movable } from "../Model/Movable";
 import type { PositionInterface } from "../Model/PositionInterface";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import type {
@@ -81,19 +80,17 @@ const MEETING_INVITATION_REQUEST_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 export class GameRoom implements BrothersFinder {
     public readonly id: string;
     // Users, sorted by ID
-    private readonly users = new Map<number, User>();
+    private readonly users: SpatialMap<number, User>;
     private readonly usersByUuid = new Map<string, Set<User>>();
     // Users indexed by composite key (userUuid + tabId), used to detect reconnections from the same tab
     // and immediately kill stale connections instead of waiting for ping timeout
     private readonly usersByTabKey = new Map<string, User>();
-    private readonly groups: Map<number, Group> = new Map<number, Group>();
+    private readonly groups: SpatialMap<number, Group>;
     private readonly admins = new Set<Admin>();
 
     private itemsState = new Map<number, unknown>();
 
     private readonly positionNotifier: PositionNotifier;
-    private readonly usersSpatialIndex: SpatialHashGrid<User>;
-    private readonly groupsSpatialIndex: SpatialHashGrid<Group>;
 
     // Ephemeral variables attached to area properties (not persisted)
     private readonly areaPropertyVariablesManager = new AreaPropertyVariablesManager();
@@ -158,8 +155,8 @@ export class GameRoom implements BrothersFinder {
         );
 
         const spatialIndexCellSize = Math.max(this.minDistance, this.groupRadius, 1);
-        this.usersSpatialIndex = new SpatialHashGrid<User>(spatialIndexCellSize);
-        this.groupsSpatialIndex = new SpatialHashGrid<Group>(spatialIndexCellSize);
+        this.users = new SpatialMap<number, User>(spatialIndexCellSize);
+        this.groups = new SpatialMap<number, Group>(spatialIndexCellSize);
     }
 
     public static async create(
@@ -222,7 +219,7 @@ export class GameRoom implements BrothersFinder {
         return gameRoom;
     }
 
-    public getUsers(): Map<number, User> {
+    public getUsers(): ReadonlyMap<number, User> {
         return this.users;
     }
 
@@ -333,7 +330,6 @@ export class GameRoom implements BrothersFinder {
         );
 
         this.users.set(user.id, user);
-        this.usersSpatialIndex.set(user.id, position.x, position.y, user);
         let set = this.usersByUuid.get(user.uuid);
         if (set === undefined) {
             set = new Set<User>();
@@ -389,7 +385,6 @@ export class GameRoom implements BrothersFinder {
         }
 
         this.users.delete(user.id);
-        this.usersSpatialIndex.delete(user.id);
 
         const set = this.usersByUuid.get(user.uuid);
         if (set !== undefined) {
@@ -430,7 +425,6 @@ export class GameRoom implements BrothersFinder {
     public updatePosition(user: User, userPosition: PointInterface): void {
         const oldPosition = user.getPosition();
         user.setPosition(userPosition);
-        this.usersSpatialIndex.set(user.id, userPosition.x, userPosition.y, user);
         this.updateUserGroup(user);
         this._userMoveStream.next({ user, oldPosition });
     }
@@ -475,8 +469,6 @@ export class GameRoom implements BrothersFinder {
                         this.positionNotifier,
                     );
                     this.groups.set(group.getId(), group);
-                    const groupPosition = group.getPosition();
-                    this.groupsSpatialIndex.set(group.getId(), groupPosition.x, groupPosition.y, group);
                 }
             }
         } else {
@@ -561,8 +553,6 @@ export class GameRoom implements BrothersFinder {
                         this.positionNotifier,
                     );
                     this.groups.set(newGroup.getId(), newGroup);
-                    const groupPosition = newGroup.getPosition();
-                    this.groupsSpatialIndex.set(newGroup.getId(), groupPosition.x, groupPosition.y, newGroup);
                 } else {
                     this.leaveGroup(user);
                 }
@@ -571,11 +561,7 @@ export class GameRoom implements BrothersFinder {
 
         if (user.group) {
             user.group.updatePosition();
-            let groupPosition = user.group.getPosition();
-            this.groupsSpatialIndex.set(user.group.getId(), groupPosition.x, groupPosition.y, user.group);
             user.group.searchForNearbyUsers();
-            groupPosition = user.group.getPosition();
-            this.groupsSpatialIndex.set(user.group.getId(), groupPosition.x, groupPosition.y, user.group);
         }
     }
 
@@ -605,12 +591,9 @@ export class GameRoom implements BrothersFinder {
                 throw new Error(`Could not find group ${group.getId()} referenced by user ${user.id} in World.`);
             }
             this.groups.delete(group.getId());
-            this.groupsSpatialIndex.delete(group.getId());
             //todo: is the group garbage collected?
         } else {
             group.updatePosition();
-            const groupPosition = group.getPosition();
-            this.groupsSpatialIndex.set(group.getId(), groupPosition.x, groupPosition.y, group);
             //this.positionNotifier.updatePosition(group, group.getPosition(), oldPosition);
         }
     }
@@ -627,11 +610,7 @@ export class GameRoom implements BrothersFinder {
         let minimumDistanceFound: number = Math.max(this.minDistance, this.groupRadius);
         let matchingItem: User | Group | null = null;
         const userPosition = user.getPosition();
-        for (const currentUser of this.usersSpatialIndex.queryCircle(
-            userPosition.x,
-            userPosition.y,
-            this.minDistance
-        )) {
+        for (const currentUser of this.users.queryCircle(userPosition.x, userPosition.y, this.minDistance)) {
             // Let's only check users that are not part of a group
             if (typeof currentUser.group !== "undefined") {
                 continue;
@@ -651,7 +630,7 @@ export class GameRoom implements BrothersFinder {
             }
         }
 
-        for (const group of this.groupsSpatialIndex.queryCircle(userPosition.x, userPosition.y, this.groupRadius)) {
+        for (const group of this.groups.queryCircle(userPosition.x, userPosition.y, this.groupRadius)) {
             if (group.isFull() || group.isLocked()) {
                 continue;
             }

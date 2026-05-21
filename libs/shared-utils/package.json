@@ -26,6 +26,7 @@
     "axios": "^1.16.1",
     "catch-unknown": "^2.0.0",
     "debug": "^4.4.3",
+    "rxjs": "^7.8.2",
     "zod": "^3.25.76"
   },
   "devDependencies": {
