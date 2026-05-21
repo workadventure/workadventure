@@ -25,6 +25,7 @@ export const PUSHER_STREAM_BACKPRESSURE_MAX_QUEUED_MESSAGES = 1_000;
 export const PUSHER_STREAM_BACKPRESSURE_MAX_QUEUED_BYTES = 8 * 1024 * 1024;
 export const PUSHER_STREAM_BACKPRESSURE_DRAIN_TIMEOUT_MS = 10_000;
 export const PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES = 1024 * 1024;
+export const PUSHER_ROOM_WS_MAX_BACKPRESSURE_BYTES = 1024 * 1024;
 export const ALLOWED_CORS_ORIGIN: string | undefined = undefined;
 export const PUSHER_URL = "http://pusher.test";
 export const FRONT_URL = "http://front.test";

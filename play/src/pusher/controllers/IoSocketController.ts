@@ -17,6 +17,7 @@ import {
     ADMIN_SOCKETS_TOKEN,
     DISABLE_ANONYMOUS,
     PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES,
+    PUSHER_ROOM_WS_MAX_BACKPRESSURE_BYTES,
     PUSHER_STREAM_BACKPRESSURE_DRAIN_TIMEOUT_MS,
     SOCKET_IDLE_TIMER,
 } from "../enums/EnvironmentVariable";
@@ -256,7 +257,7 @@ export class IoSocketController {
             //compression: uWS.SHARED_COMPRESSOR,
             idleTimeout: SOCKET_IDLE_TIMER,
             maxPayloadLength: 16 * 1024 * 1024,
-            maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
+            maxBackpressure: PUSHER_ROOM_WS_MAX_BACKPRESSURE_BYTES,
             queryValidator: z.object({
                 roomId: z.string(),
                 characterTextureIds: z.union([z.string(), z.string().array()]).optional(),

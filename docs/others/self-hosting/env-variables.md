@@ -28,6 +28,7 @@ Environment variables for the Play service (frontend and pusher).
 | `PUSHER_STREAM_BACKPRESSURE_MAX_QUEUED_BYTES` | No | Maximum estimated bytes queued per pusher stream while waiting for drain. Defaults to 8388608. |
 | `PUSHER_STREAM_BACKPRESSURE_DRAIN_TIMEOUT_MS` | No | Maximum time, in milliseconds, to wait for a pusher stream drain before closing it. Defaults to 10000. |
 | `PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES` | No | Maximum uWebSockets backpressure bytes accepted on admin websocket connections. Defaults to 1048576. |
+| `PUSHER_ROOM_WS_MAX_BACKPRESSURE_BYTES` | No | Maximum uWebSockets backpressure bytes accepted on room websocket connections. Defaults to 1048576. |
 | `VITE_URL` | No | URL of the Vite development server (development only) |
 | `ALLOWED_CORS_ORIGIN` | No | Allowed CORS origin for API requests. Use '*' to allow any domain |
 | `PUSHER_URL` | No | Public URL of the pusher service |
