@@ -194,7 +194,8 @@ import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/Ch
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
 import { PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX } from "../Entity/Character";
-import { ConversationBubble } from "../Entity/ConversationBubble";
+import { type Avatar, ConversationBubble } from "../Entity/ConversationBubble";
+import { SpatialHashGrid } from "../Helpers/SpatialHashGrid";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
 import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVariablesStore";
@@ -245,6 +246,7 @@ import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
 
 const MOUSE_WHEEL_ZOOM_RATE = 0.5;
+const CONVERSATION_BUBBLE_SPATIAL_GRID_SIZE = 64;
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -264,6 +266,11 @@ interface DeleteGroupEventInterface {
 interface GroupUsersUpdatedEventInterface {
     type: "GroupUsersUpdatedEvent";
     event: GroupUsersUpdateMessage;
+}
+
+interface PositionCoordinates {
+    x: number;
+    y: number;
 }
 
 const WORLD_SPACE_NAME = "allWorldUser";
@@ -338,6 +345,7 @@ export class GameScene extends DirtyScene {
     private isReconnecting: boolean | undefined = undefined;
     private playerName!: string;
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
+    private remotePlayersSpatialIndex = new SpatialHashGrid<RemotePlayer>(CONVERSATION_BUBBLE_SPATIAL_GRID_SIZE);
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
     private outlineManager!: OutlineManager;
@@ -1304,6 +1312,10 @@ export class GameScene extends DirtyScene {
         this.dirty = false;
         this.currentTick = time;
 
+        const currentPlayerPreviousPosition = this.hasJoinedRoom
+            ? { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y }
+            : undefined;
+
         if (this.hasJoinedRoom) {
             this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
         }
@@ -1398,22 +1410,41 @@ export class GameScene extends DirtyScene {
         }
         // Let's move all users
         const updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
+        const conversationBubblesToUpdate = new Set<ConversationBubble>();
         updatedPlayersPositions.forEach((moveEvent: HasPlayerMovedInterface, userId: number) => {
             this.dirty = true;
             const player: RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
             if (player === undefined) {
                 throw new Error('Cannot find player with ID "' + userId + '"');
             }
+            const previousPosition = { x: player.x, y: player.y };
             player.updatePosition(moveEvent);
+            this.remotePlayersSpatialIndex.set(userId, player.x, player.y, player);
+            this.addConversationBubblesAffectedByPlayerMove(
+                userId,
+                previousPosition,
+                player,
+                conversationBubblesToUpdate
+            );
             // If the camera is following the player, we need to update the viewport
             if (this.cameraManager?.playerFollowing === player) {
                 this._sendViewportToServer();
             }
         });
-        // If any of the users (including me) has moved, we need to recompute the shape of all bubbles
+
+        if (this.hasMovedThisFrame && currentPlayerPreviousPosition !== undefined) {
+            this.addConversationBubblesAffectedByPlayerMove(
+                this.connection?.getUserId(),
+                currentPlayerPreviousPosition,
+                this.CurrentPlayer,
+                conversationBubblesToUpdate
+            );
+        }
+
+        // If a user close to a bubble has moved, we need to recompute that bubble shape.
         for (const group of this.groups.values()) {
-            if (updatedPlayersPositions.size > 0 || this.hasMovedThisFrame || group.isAnimating) {
-                group.step();
+            if (group.needsStep || group.isAnimating || conversationBubblesToUpdate.has(group)) {
+                group.step(this.getConversationBubbleAvatars(group));
             }
         }
         this.hasMovedThisFrame = false;
@@ -1421,6 +1452,69 @@ export class GameScene extends DirtyScene {
         if (DEBUG_MODE) {
             this.updateServerViewportDebugOverlay();
         }
+    }
+
+    private addConversationBubblesAffectedByPlayerMove(
+        userId: number | undefined,
+        previousPosition: PositionCoordinates,
+        currentPosition: PositionCoordinates,
+        conversationBubblesToUpdate: Set<ConversationBubble>
+    ): void {
+        for (const group of this.groups.values()) {
+            if (
+                (userId !== undefined && group.containsUserId(userId)) ||
+                this.isPointInConversationBubbleInfluence(group, previousPosition) ||
+                this.isPointInConversationBubbleInfluence(group, currentPosition)
+            ) {
+                conversationBubblesToUpdate.add(group);
+            }
+        }
+    }
+
+    private getConversationBubbleAvatars(group: ConversationBubble): Avatar[] {
+        const remotePlayers = new Map<number, RemotePlayer>();
+        for (const remotePlayer of this.remotePlayersSpatialIndex.queryCircle(
+            group.x,
+            group.y,
+            group.getInfluenceRadius()
+        )) {
+            remotePlayers.set(remotePlayer.userId, remotePlayer);
+        }
+        for (const userId of group.getUserIds()) {
+            const remotePlayer = this.MapPlayersByKey.get(userId);
+            if (remotePlayer !== undefined) {
+                remotePlayers.set(userId, remotePlayer);
+            }
+        }
+
+        const avatars: Avatar[] = [];
+        for (const remotePlayer of remotePlayers.values()) {
+            const avatar = group.turnInAvatar(remotePlayer);
+            if (avatar !== undefined) {
+                avatars.push(avatar);
+            }
+        }
+
+        const currentUserId = this.connection?.getUserId();
+        if (
+            currentUserId !== undefined &&
+            (group.containsUserId(currentUserId) ||
+                this.isPointInConversationBubbleInfluence(group, this.CurrentPlayer))
+        ) {
+            const avatar = group.turnInAvatar(this.CurrentPlayer);
+            if (avatar !== undefined) {
+                avatars.push(avatar);
+            }
+        }
+
+        return avatars;
+    }
+
+    private isPointInConversationBubbleInfluence(group: ConversationBubble, position: PositionCoordinates): boolean {
+        const influenceRadius = group.getInfluenceRadius();
+        const dx = position.x - group.x;
+        const dy = position.y - group.y;
+        return dx * dx + dy * dy <= influenceRadius * influenceRadius;
     }
 
     private updateServerViewportDebugOverlay(): void {
@@ -3490,6 +3584,7 @@ ${escapedMessage}
             }
         });
         this.MapPlayersByKey.clear();
+        this.remotePlayersSpatialIndex.clear();
     }
 
     private tryOpenMapEditorWithToolEditorParameter(): void {
@@ -3949,6 +4044,7 @@ ${escapedMessage}
         }
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
+        this.remotePlayersSpatialIndex.set(player.userId, player.x, player.y, player);
 
         player.on(Phaser.Input.Events.POINTER_OVER, () => {
             this.activatablesManager.handlePointerOverActivatableObject(player);
@@ -4021,6 +4117,7 @@ ${escapedMessage}
             }
         }
         this.MapPlayersByKey.delete(userId);
+        this.remotePlayersSpatialIndex.delete(userId);
         // console.debug("User removed in MapPlayersByKey in GameScene", userId);
         this.playersPositionInterpolator.removePlayer(userId);
     }
