@@ -18,7 +18,7 @@ import type {
     SubToPusherRoomMessage,
 } from "@workadventure/messages";
 import { isMapDetailsData, RefreshRoomMessage, VariableWithTagMessage } from "@workadventure/messages";
-import { Jitsi } from "@workadventure/shared-utils";
+import { Jitsi, SpatialHashGrid } from "@workadventure/shared-utils";
 import type { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { asError } from "catch-unknown";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
@@ -92,6 +92,8 @@ export class GameRoom implements BrothersFinder {
     private itemsState = new Map<number, unknown>();
 
     private readonly positionNotifier: PositionNotifier;
+    private readonly usersSpatialIndex: SpatialHashGrid<User>;
+    private readonly groupsSpatialIndex: SpatialHashGrid<Group>;
 
     // Ephemeral variables attached to area properties (not persisted)
     private readonly areaPropertyVariablesManager = new AreaPropertyVariablesManager();
@@ -154,6 +156,10 @@ export class GameRoom implements BrothersFinder {
             onPlayerDetailsUpdated,
             onGroupUsersUpdated,
         );
+
+        const spatialIndexCellSize = Math.max(this.minDistance, this.groupRadius, 1);
+        this.usersSpatialIndex = new SpatialHashGrid<User>(spatialIndexCellSize);
+        this.groupsSpatialIndex = new SpatialHashGrid<Group>(spatialIndexCellSize);
     }
 
     public static async create(
@@ -327,6 +333,7 @@ export class GameRoom implements BrothersFinder {
         );
 
         this.users.set(user.id, user);
+        this.usersSpatialIndex.set(user.id, position.x, position.y, user);
         let set = this.usersByUuid.get(user.uuid);
         if (set === undefined) {
             set = new Set<User>();
@@ -382,6 +389,7 @@ export class GameRoom implements BrothersFinder {
         }
 
         this.users.delete(user.id);
+        this.usersSpatialIndex.delete(user.id);
 
         const set = this.usersByUuid.get(user.uuid);
         if (set !== undefined) {
@@ -422,6 +430,7 @@ export class GameRoom implements BrothersFinder {
     public updatePosition(user: User, userPosition: PointInterface): void {
         const oldPosition = user.getPosition();
         user.setPosition(userPosition);
+        this.usersSpatialIndex.set(user.id, userPosition.x, userPosition.y, user);
         this.updateUserGroup(user);
         this._userMoveStream.next({ user, oldPosition });
     }
@@ -466,6 +475,8 @@ export class GameRoom implements BrothersFinder {
                         this.positionNotifier,
                     );
                     this.groups.set(group.getId(), group);
+                    const groupPosition = group.getPosition();
+                    this.groupsSpatialIndex.set(group.getId(), groupPosition.x, groupPosition.y, group);
                 }
             }
         } else {
@@ -550,14 +561,22 @@ export class GameRoom implements BrothersFinder {
                         this.positionNotifier,
                     );
                     this.groups.set(newGroup.getId(), newGroup);
+                    const groupPosition = newGroup.getPosition();
+                    this.groupsSpatialIndex.set(newGroup.getId(), groupPosition.x, groupPosition.y, newGroup);
                 } else {
                     this.leaveGroup(user);
                 }
             }
         }
 
-        user.group?.updatePosition();
-        user.group?.searchForNearbyUsers();
+        if (user.group) {
+            user.group.updatePosition();
+            let groupPosition = user.group.getPosition();
+            this.groupsSpatialIndex.set(user.group.getId(), groupPosition.x, groupPosition.y, user.group);
+            user.group.searchForNearbyUsers();
+            groupPosition = user.group.getPosition();
+            this.groupsSpatialIndex.set(user.group.getId(), groupPosition.x, groupPosition.y, user.group);
+        }
     }
 
     public sendToOthersInGroupIncludingUser(user: User, message: ServerToClientMessage): void {
@@ -586,9 +605,12 @@ export class GameRoom implements BrothersFinder {
                 throw new Error(`Could not find group ${group.getId()} referenced by user ${user.id} in World.`);
             }
             this.groups.delete(group.getId());
+            this.groupsSpatialIndex.delete(group.getId());
             //todo: is the group garbage collected?
         } else {
             group.updatePosition();
+            const groupPosition = group.getPosition();
+            this.groupsSpatialIndex.set(group.getId(), groupPosition.x, groupPosition.y, group);
             //this.positionNotifier.updatePosition(group, group.getPosition(), oldPosition);
         }
     }
@@ -604,16 +626,21 @@ export class GameRoom implements BrothersFinder {
     private searchClosestAvailableUserOrGroup(user: User): User | Group | null {
         let minimumDistanceFound: number = Math.max(this.minDistance, this.groupRadius);
         let matchingItem: User | Group | null = null;
-        this.users.forEach((currentUser) => {
+        const userPosition = user.getPosition();
+        for (const currentUser of this.usersSpatialIndex.queryCircle(
+            userPosition.x,
+            userPosition.y,
+            this.minDistance
+        )) {
             // Let's only check users that are not part of a group
             if (typeof currentUser.group !== "undefined") {
-                return;
+                continue;
             }
             if (currentUser === user) {
-                return;
+                continue;
             }
             if (currentUser.silent) {
-                return;
+                continue;
             }
 
             const distance = GameRoom.computeDistance(user, currentUser); // compute distance between peers.
@@ -622,18 +649,18 @@ export class GameRoom implements BrothersFinder {
                 minimumDistanceFound = distance;
                 matchingItem = currentUser;
             }
-        });
+        }
 
-        this.groups.forEach((group: Group) => {
+        for (const group of this.groupsSpatialIndex.queryCircle(userPosition.x, userPosition.y, this.groupRadius)) {
             if (group.isFull() || group.isLocked()) {
-                return;
+                continue;
             }
             const distance = GameRoom.computeDistanceBetweenPositions(user.getPosition(), group.getPosition());
             if (distance <= minimumDistanceFound && distance <= this.groupRadius) {
                 minimumDistanceFound = distance;
                 matchingItem = group;
             }
-        });
+        }
 
         return matchingItem;
     }
