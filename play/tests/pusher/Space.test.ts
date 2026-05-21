@@ -18,9 +18,6 @@ vi.mock("../../src/pusher/enums/EnvironmentVariable.ts", () => {
     return {
         API_URL: "http://localhost:3000",
         GRPC_MAX_MESSAGE_SIZE: 20 * 1024 * 1024,
-        PUSHER_STREAM_BACKPRESSURE_MAX_QUEUED_MESSAGES: 1_000,
-        PUSHER_STREAM_BACKPRESSURE_MAX_QUEUED_BYTES: 8 * 1024 * 1024,
-        PUSHER_STREAM_BACKPRESSURE_DRAIN_TIMEOUT_MS: 10_000,
     };
 });
 

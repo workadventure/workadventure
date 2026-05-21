@@ -84,7 +84,6 @@ import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { getMapStorageClient } from "./MapStorageClient";
 import { emitError, endUserConnectionWithReason } from "./MessageHelpers";
 import { cpuTracker } from "./CpuTracker";
-import { writeWithBackpressure } from "./StreamBackpressure";
 
 const debug = Debug("socketmanager");
 
@@ -93,7 +92,7 @@ function emitZoneMessage(subMessage: SubToPusherRoomMessage, socket: RoomSocket)
     const batchMessage: BatchToPusherRoomMessage = {
         payload: [subMessage],
     };
-    writeWithBackpressure(socket, batchMessage, {}, "back_room_socket");
+    socket.write(batchMessage);
 }
 
 export class SocketManager {
@@ -160,8 +159,7 @@ export class SocketManager {
         }
 
         await new Promise<void>((resolve, reject) => {
-            writeWithBackpressure(
-                socket,
+            socket.write(
                 {
                     message: {
                         $case: "roomConnectedMessage",
@@ -173,14 +171,12 @@ export class SocketManager {
                         },
                     },
                 },
-                {
-                    callback: (error: unknown) => {
-                        if (error) {
-                            reject(asError(error));
-                            return;
-                        }
-                        resolve();
-                    },
+                (error: unknown) => {
+                    if (error) {
+                        reject(asError(error));
+                        return;
+                    }
+                    resolve();
                 }
             );
         });
@@ -957,7 +953,7 @@ export class SocketManager {
             }
         }
 
-        writeWithBackpressure(call, batchMessage, {}, "back_room_socket");
+        call.write(batchMessage);
     }
 
     async removeZoneListener(call: RoomSocket, roomId: string, x: number, y: number): Promise<void> {

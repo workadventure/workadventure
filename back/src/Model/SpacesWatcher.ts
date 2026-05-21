@@ -3,7 +3,6 @@ import * as Sentry from "@sentry/node";
 import Debug from "debug";
 import type { SpaceSocket } from "../SpaceManager";
 import { socketManager } from "../Services/SocketManager";
-import { writeWithBackpressure } from "../Services/StreamBackpressure";
 
 const debug = Debug("space");
 
@@ -26,32 +25,25 @@ export class SpacesWatcher {
 
     private sendPing() {
         this.clearPongTimeout();
-        writeWithBackpressure(
-            this.socket,
-            {
-                message: {
-                    $case: "pingMessage",
-                    pingMessage: {},
-                },
+        this.socket.write({
+            message: {
+                $case: "pingMessage",
+                pingMessage: {},
             },
-            {
-                callback: () => {
-                    this.pongTimeout = setTimeout(() => {
-                        debug("SpacesWatcher %s => killed => no ping received from Watcher", this.id);
-                        clearInterval(this.pingInterval);
-                        this.pingInterval = undefined;
-                        try {
-                            socketManager.handleUnwatchAllSpaces(this);
-                        } catch (e) {
-                            console.error("Error while unwatching all spaces when pong not received", e);
-                            Sentry.captureException(e);
-                        }
-                        this.socket.end();
-                    }, 1000 * this.timeout);
-                },
-            },
-            "back_space_watcher_ping"
-        );
+        });
+
+        this.pongTimeout = setTimeout(() => {
+            debug("SpacesWatcher %s => killed => no ping received from Watcher", this.id);
+            clearInterval(this.pingInterval);
+            this.pingInterval = undefined;
+            try {
+                socketManager.handleUnwatchAllSpaces(this);
+            } catch (e) {
+                console.error("Error while unwatching all spaces when pong not received", e);
+                Sentry.captureException(e);
+            }
+            this.socket.end();
+        }, 1000 * this.timeout);
     }
 
     public clearPongTimeout() {
@@ -76,7 +68,7 @@ export class SpacesWatcher {
     }
 
     public write(message: BackToPusherSpaceMessage) {
-        writeWithBackpressure(this.socket, message, {}, "back_space_watcher");
+        this.socket.write(message);
     }
 
     public end() {

@@ -11,7 +11,6 @@ import { Color } from "@workadventure/shared-utils";
 
 import type { Socket } from "../services/SocketManager";
 import { clientEventsEmitter } from "../services/ClientEventsEmitter";
-import { closeBackpressureWriter, writeWithBackpressure } from "../services/StreamBackpressure";
 import type { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
 import type { EventProcessor } from "./EventProcessor";
 import type { SocketData } from "./Websocket/SocketData";
@@ -220,27 +219,22 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         this._space.spaceStreamToBackPromise
             .then((spaceStreamToBack) => {
                 if (spaceStreamToBack.closed) {
-                    closeBackpressureWriter(spaceStreamToBack, "target_closed");
                     console.warn("Trying to forward message to space back but the connection is closed", {
                         spaceName: this._space.name,
                         messageCase: pusherToBackSpaceMessage?.$case,
                     });
                     return;
                 }
-                writeWithBackpressure(
-                    spaceStreamToBack,
+                spaceStreamToBack.write(
                     {
                         message: pusherToBackSpaceMessage,
                     },
-                    {
-                        callback: (error: unknown) => {
-                            if (error) {
-                                console.error("Error while forwarding message to space back", error);
-                                Sentry.captureException(error);
-                            }
-                        },
-                    },
-                    "pusher_space_forwarder"
+                    (error: unknown) => {
+                        if (error) {
+                            console.error("Error while forwarding message to space back", error);
+                            Sentry.captureException(error);
+                        }
+                    }
                 );
 
                 if (pusherToBackSpaceMessage && pusherToBackSpaceMessage.$case) {

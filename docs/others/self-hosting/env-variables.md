@@ -24,9 +24,6 @@ Environment variables for the Play service (frontend and pusher).
 | `SOCKET_IDLE_TIMER` | No | maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling) |
 | `CLIENT_CONNECTION_RETRY_MAX_DURATION_MS` | No | Maximum time, in milliseconds, the client keeps retrying the room connection before giving up. Defaults to 30000. |
 | `CLIENT_DISCONNECTION_RETENTION_MS` | No | Maximum time, in milliseconds, the client keeps sent websocket messages for replay after a short disconnection. Defaults to 30000. |
-| `PUSHER_STREAM_BACKPRESSURE_MAX_QUEUED_MESSAGES` | No | Maximum number of gRPC messages queued per pusher stream while waiting for drain. Defaults to 1000. |
-| `PUSHER_STREAM_BACKPRESSURE_MAX_QUEUED_BYTES` | No | Maximum estimated bytes queued per pusher stream while waiting for drain. Defaults to 8388608. |
-| `PUSHER_STREAM_BACKPRESSURE_DRAIN_TIMEOUT_MS` | No | Maximum time, in milliseconds, to wait for a pusher stream drain before closing it. Defaults to 10000. |
 | `PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES` | No | Maximum uWebSockets backpressure bytes accepted on admin websocket connections. Defaults to 1048576. |
 | `VITE_URL` | No | URL of the Vite development server (development only) |
 | `ALLOWED_CORS_ORIGIN` | No | Allowed CORS origin for API requests. Use '*' to allow any domain |
@@ -161,9 +158,6 @@ Environment variables for the Back service (backend API).
 | `ENABLE_MAP_EDITOR` | No | Enable the built-in map editor. Defaults to false |
 | `HTTP_PORT` | No | HTTP port for the back service. Defaults to 8080 |
 | `GRPC_PORT` | No | gRPC port for the back service. Defaults to 50051 |
-| `BACK_STREAM_BACKPRESSURE_MAX_QUEUED_MESSAGES` | No | Maximum number of gRPC messages queued per back stream while waiting for drain. Defaults to 1000. |
-| `BACK_STREAM_BACKPRESSURE_MAX_QUEUED_BYTES` | No | Maximum estimated bytes queued per back stream while waiting for drain. Defaults to 8388608. |
-| `BACK_STREAM_BACKPRESSURE_DRAIN_TIMEOUT_MS` | No | Maximum time, in milliseconds, to wait for a back stream drain before closing it. Defaults to 10000. |
 | `MAX_PER_GROUP` | Yes | Maximum number of users in a bubble/group. Defaults to 4 |
 | `REDIS_HOST` | No | Redis server hostname or IP address |
 | `REDIS_PORT` | No | Redis server port. Defaults to 6379 |

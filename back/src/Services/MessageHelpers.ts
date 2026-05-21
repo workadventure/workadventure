@@ -5,7 +5,6 @@ import type {
 } from "@workadventure/messages";
 import type { UserSocket } from "../Model/User";
 import type { AdminSocket, RoomSocket } from "../RoomManager";
-import { closeBackpressureWriter, writeWithBackpressure } from "./StreamBackpressure";
 
 function getMessageFromError(error: unknown): string {
     if (error instanceof Error) {
@@ -30,30 +29,24 @@ export function emitError(Client: UserSocket, error: unknown): void {
     };
 
     //if (!Client.disconnecting) {
-    writeWithBackpressure(Client, serverToClientMessage, {}, "back_user_socket");
+    Client.write(serverToClientMessage);
     //}
     console.warn(message);
 }
 
 export function endUserConnectionWithReason(Client: UserSocket, reason: string): void {
     if (Client.writable) {
-        writeWithBackpressure(
-            Client,
-            {
-                message: {
-                    $case: "backConnectionCloseReasonMessage",
-                    backConnectionCloseReasonMessage: {
-                        reason,
-                    },
+        Client.write({
+            message: {
+                $case: "backConnectionCloseReasonMessage",
+                backConnectionCloseReasonMessage: {
+                    reason,
                 },
             },
-            {},
-            "back_user_socket"
-        );
+        });
     }
 
     Client.end();
-    closeBackpressureWriter(Client, "target_closed");
 }
 
 export function emitErrorOnAdminSocket(Client: AdminSocket, error: unknown): void {
@@ -69,7 +62,7 @@ export function emitErrorOnAdminSocket(Client: AdminSocket, error: unknown): voi
     };
 
     //if (!Client.disconnecting) {
-    writeWithBackpressure(Client, serverToClientMessage, {}, "back_admin_socket");
+    Client.write(serverToClientMessage);
     //}
     console.warn(message);
 }
@@ -92,7 +85,7 @@ export function emitErrorOnRoomSocket(Client: RoomSocket, error: unknown): void 
     };
 
     //if (!Client.disconnecting) {
-    writeWithBackpressure(Client, batchToPusherMessage, {}, "back_room_socket");
+    Client.write(batchToPusherMessage);
     //}
     console.warn(message);
 }
