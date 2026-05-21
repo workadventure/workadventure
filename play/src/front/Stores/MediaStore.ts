@@ -27,6 +27,7 @@ import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeet
 import { userMovingStore } from "./GameStore";
 import { hideHelpCameraSettings } from "./HelpSettingsStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
+import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
 
 import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
 
@@ -220,6 +221,17 @@ export const mouseIsHoveringCameraButton = writable(false);
 export const cameraNoEnergySavingStore = writable<boolean>(false);
 
 export const streamingMegaphoneStore = writable<boolean>(false);
+export const inJitsiStore = writable(false);
+export const inBbbStore = writable(false);
+export const isSpeakerStore = writable(false);
+export const inLivekitStore = writable(false);
+export const isListenerStore = writable(false);
+export const listenerWaitingMediaStore = writable<string | undefined>(undefined);
+/**
+ * When true, the listener has consented to share their camera with the speaker (seeAttendees feature).
+ * This store is set to true when the listener accepts the camera sharing popup.
+ */
+export const listenerSharingCameraStore = writable(false);
 
 export const requestedCameraDeviceIdStore: Writable<string | undefined> = writable(
     localUserStore.getPreferredVideoInputDevice() ? localUserStore.getPreferredVideoInputDevice() : undefined
@@ -304,6 +316,8 @@ export const cameraEnergySavingStore = derived(
         cameraNoEnergySavingStore,
         devicesNotLoaded,
         isLiveStreamingStore,
+        currentPlayerGroupIdStore,
+        inLivekitStore,
         displayedMegaphoneScreenStore,
     ],
     ([
@@ -314,6 +328,8 @@ export const cameraEnergySavingStore = derived(
         $cameraNoEnergySavingStore,
         $devicesNotLoaded,
         $isLiveStreamingStore,
+        $currentPlayerGroupIdStore,
+        $inLivekitStore,
         $displayedMegaphoneScreenStore,
     ]) => {
         return (
@@ -324,22 +340,12 @@ export const cameraEnergySavingStore = derived(
             !$cameraNoEnergySavingStore &&
             !$devicesNotLoaded &&
             !$isLiveStreamingStore &&
+            $currentPlayerGroupIdStore === undefined &&
+            !$inLivekitStore &&
             !$displayedMegaphoneScreenStore
         );
     }
 );
-
-export const inJitsiStore = writable(false);
-export const inBbbStore = writable(false);
-export const isSpeakerStore = writable(false);
-export const inLivekitStore = writable(false);
-export const isListenerStore = writable(false);
-export const listenerWaitingMediaStore = writable<string | undefined>(undefined);
-/**
- * When true, the listener has consented to share their camera with the speaker (seeAttendees feature).
- * This store is set to true when the listener accepts the camera sharing popup.
- */
-export const listenerSharingCameraStore = writable(false);
 
 export const requestedStatusStore: Writable<RequestedStatus | null> = writable(localUserStore.getRequestedStatus());
 
