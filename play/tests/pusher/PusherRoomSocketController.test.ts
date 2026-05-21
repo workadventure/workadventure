@@ -164,14 +164,34 @@ describe("PusherWebSocket backpressure", () => {
         expect(getSendMock(socket)).toHaveBeenCalledTimes(5);
     });
 
-    it("closes the transport when uWS drops a send because maxBackpressure was exceeded", () => {
+    it("waits for drain instead of sending when the uWS buffer is already near the limit", () => {
         const socket = createSocket();
-        getSendMock(socket).mockReturnValueOnce(2);
+        getBufferedAmountMock(socket)
+            .mockReturnValueOnce(1024 * 1024)
+            .mockReturnValue(0);
         const wrapper = createPusherWebSocket(socket);
 
-        expect(wrapper.send({ message: undefined } as never)).toBe(2);
+        expect(wrapper.send({ message: undefined } as never)).toBe(0);
 
-        expect(getEndMock(socket)).toHaveBeenCalledWith(1013, "Backpressure limit exceeded");
+        expect(getSendMock(socket)).not.toHaveBeenCalled();
+
+        wrapper.handleDrain();
+
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps a dropped uWS send queued and retries it on drain", () => {
+        const socket = createSocket();
+        getSendMock(socket).mockReturnValueOnce(2).mockReturnValue(1);
+        const wrapper = createPusherWebSocket(socket);
+
+        expect(wrapper.send({ message: undefined } as never)).toBe(0);
+
+        expect(getEndMock(socket)).not.toHaveBeenCalled();
+
+        wrapper.handleDrain();
+
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(2);
     });
 });
 
@@ -250,6 +270,7 @@ function createSocket(overrides: Partial<SocketData> = {}): RawSocket {
 
     const sendMock = vi.fn().mockReturnValue(1);
     const endMock = vi.fn();
+    const getBufferedAmountMock = vi.fn().mockReturnValue(0);
 
     return {
         getUserData: vi.fn(() => socketData),
@@ -258,7 +279,8 @@ function createSocket(overrides: Partial<SocketData> = {}): RawSocket {
         ping: vi.fn(),
         end: endMock,
         endMock,
-        getBufferedAmount: vi.fn().mockReturnValue(0),
+        getBufferedAmount: getBufferedAmountMock,
+        getBufferedAmountMock,
     } as unknown as RawSocket;
 }
 
@@ -275,6 +297,10 @@ function getSendMock(socket: RawSocket): ReturnType<typeof vi.fn> {
 
 function getEndMock(socket: RawSocket): ReturnType<typeof vi.fn> {
     return (socket as unknown as { endMock: ReturnType<typeof vi.fn> }).endMock;
+}
+
+function getBufferedAmountMock(socket: RawSocket): ReturnType<typeof vi.fn> {
+    return (socket as unknown as { getBufferedAmountMock: ReturnType<typeof vi.fn> }).getBufferedAmountMock;
 }
 
 async function flushMicrotasks(): Promise<void> {
