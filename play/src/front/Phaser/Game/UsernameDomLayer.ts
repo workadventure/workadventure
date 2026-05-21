@@ -65,7 +65,7 @@ export class UsernameDomLayer {
             this.container.appendChild(element);
             this.usernames.set(id, username);
 
-            this.applyTransform(username);
+            this.applyStyles(username);
             this.applyDepth(username);
             return element;
         }
@@ -75,7 +75,7 @@ export class UsernameDomLayer {
         username.depth = depth;
         username.scale = displayScale;
         username.zoomScale = zoomScale;
-        this.applyTransform(username);
+        this.applyStyles(username);
         this.applyDepth(username);
         return username.element;
     }
@@ -106,7 +106,7 @@ export class UsernameDomLayer {
 
         username.scale = displayScale;
         username.zoomScale = zoomScale;
-        this.applyTransform(username);
+        this.applyStyles(username);
     }
 
     public updateUsernameDepth(id: number, depth: number): void {
@@ -152,14 +152,18 @@ export class UsernameDomLayer {
         this.domElement.destroy();
     }
 
-    private applyTransform(username: UsernameElement): void {
+    private applyStyles(username: UsernameElement): void {
         const domScale = username.zoomScale * username.scale;
-        const scale = 1 / username.zoomScale;
         username.element.style.setProperty("--username-dom-scale", domScale.toString());
         username.element.style.height = `${PLAYER_NAME_HEIGHT * domScale}px`;
         username.element.style.gap = `${PLAYER_NAME_GAP * domScale}px`;
         username.element.style.padding = `0 ${PLAYER_NAME_PADDING * domScale}px`;
         username.element.style.borderRadius = `${PLAYER_NAME_BACKGROUND_RADIUS * domScale}px`;
+        this.applyTransform(username);
+    }
+
+    private applyTransform(username: UsernameElement): void {
+        const scale = 1 / username.zoomScale;
         username.element.style.transform = `translate3d(${username.x}px, ${username.y}px, 0) translate(-50%, -50%) scale(${scale})`;
     }
 
