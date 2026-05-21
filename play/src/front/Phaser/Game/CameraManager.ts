@@ -134,6 +134,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
         this.scene.game.events.off(WaScaleManagerEvent.RefreshFocusOnTarget);
         this.camera.off("followupdate", this.onFollowUpdate);
+        this.off(CameraManagerEvent.CameraUpdate, this.onCameraUpdate);
         this.unsubscribeMapEditorModeStore();
         super.destroy();
     }
@@ -456,7 +457,12 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         );
 
         this.camera.on("followupdate", this.onFollowUpdate);
+        this.on(CameraManagerEvent.CameraUpdate, this.onCameraUpdate);
     }
+
+    private onCameraUpdate = () => {
+        this.scene.sendViewportToServer();
+    };
 
     private getCameraUpdateEventData(): CameraManagerEventCameraUpdateData {
         return {

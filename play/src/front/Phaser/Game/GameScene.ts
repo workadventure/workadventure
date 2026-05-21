@@ -4273,8 +4273,4 @@ ${escapedMessage}
     public get focusFx() {
         return this._focusFx;
     }
-
-    public get throttledSendViewportToServer(): throttle<() => void> {
-        return this.throttledSendViewportToServer_;
-    }
 }

@@ -20,7 +20,6 @@ import type { EntitiesManager } from "../../GameMap/EntitiesManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { waScaleManager } from "../../../Services/WaScaleManager";
 import { enableUserInputsStore } from "../../../../Stores/UserInputStore";
-import { CameraManagerEvent } from "../../CameraManager";
 import type { MapEditorTool } from "./MapEditorTool";
 
 const logger = debug("explorer-tool");
@@ -127,10 +126,6 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.markDirty();
     };
 
-    private updateViewport = (): void => {
-        this.scene.throttledSendViewportToServer();
-    };
-
     constructor(private mapEditorModeManager: MapEditorModeManager, private readonly scene: GameScene) {
         this.entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
     }
@@ -170,8 +165,6 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.input.off("pointermove", this.pointerMoveHandler);
         this.scene.input.off("pointerup", this.pointerUpHandler);
         this.scene.input.off(Phaser.Input.Events.GAME_OUT, this.pointerUpHandler);
-        // Unsubscribe to camera updates
-        this.scene.getCameraManager().off(CameraManagerEvent.CameraUpdate, this.updateViewport);
 
         // Restore focus target
         waScaleManager.setFocusTarget(undefined);
@@ -271,10 +264,6 @@ export class ExplorerTool implements MapEditorTool {
 
         // Mark the scene as dirty
         this.scene.markDirty();
-
-        // Listen to camera updates
-        // We need to update the viewport when the camera is updated to ensure the viewport is always up to date
-        this.scene.getCameraManager().on(CameraManagerEvent.CameraUpdate, this.updateViewport);
     }
     public destroy(): void {
         this.clear();
