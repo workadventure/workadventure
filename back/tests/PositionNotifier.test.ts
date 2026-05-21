@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { AvailabilityStatus } from "@workadventure/messages";
+import type { Movable } from "@workadventure/shared-utils";
 import { describe, expect, it } from "vitest";
 import type { BrothersFinder } from "../src/Model/BrothersFinder";
-import type { Movable } from "../src/Model/Movable";
 import type { PositionInterface } from "../src/Model/PositionInterface";
 import { PositionNotifier } from "../src/Model/PositionNotifier";
 import type { UserSocket } from "../src/Model/User";

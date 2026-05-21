@@ -9,7 +9,7 @@
  * number of players around the current player.
  */
 import type { EmoteEventMessage, SetPlayerDetailsMessage } from "@workadventure/messages";
-import type { Movable } from "../Model/Movable";
+import type { Movable } from "@workadventure/shared-utils";
 import type { PositionInterface } from "../Model/PositionInterface";
 import type { RoomSocket } from "../RoomManager";
 import { User } from "../Model/User";
