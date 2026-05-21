@@ -7,7 +7,7 @@
     import { MINIMUM_DISTANCE, WOKA_SPEED } from "../../Enum/EnvironmentVariable";
     import { onboardingStore } from "../../Stores/OnboardingStore";
     import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
-    import { ConversationBubble } from "../../Phaser/Entity/ConversationBubble";
+    import { type Avatar, ConversationBubble } from "../../Phaser/Entity/ConversationBubble";
     import { RemotePlayer } from "../../Phaser/Entity/RemotePlayer";
     import { lazyLoadPlayerCharacterTextures } from "../../Phaser/Entity/PlayerTexturesLoadingManager";
     import { scriptingVideoStore } from "../../Stores/ScriptingVideoStore";
@@ -207,14 +207,15 @@
                 if (!currentPlayer || !scene) return;
 
                 if (sharedBubble && simulatedRemotePlayer) {
-                    const centerX = (currentPlayer.x + simulatedRemotePlayer.x) / 2;
-                    const centerY = (currentPlayer.y - 30 + (simulatedRemotePlayer.y - 30)) / 2;
-                    sharedBubble.setCenter(centerX, centerY);
-                    sharedBubble.step(); // Animate the bubble
+                    const avatars: Avatar[] = [
+                        { x: currentPlayer.x, y: currentPlayer.y, inside: true },
+                        { x: simulatedRemotePlayer.x, y: simulatedRemotePlayer.y, inside: true },
+                    ];
+                    sharedBubble.step(avatars); // Animate the bubble
 
                     // Hide bubble when user moves out of range, show when they come back close
                     const dx = currentPlayer.x - simulatedRemotePlayer.x;
-                    const dy = currentPlayer.y - 30 - (simulatedRemotePlayer.y - 30);
+                    const dy = currentPlayer.y - 30 - simulatedRemotePlayer.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     sharedBubble.setVisible(distance <= BUBBLE_VISIBILITY_DISTANCE);
 
