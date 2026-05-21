@@ -24,6 +24,8 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     private readonly segments = 64; // angular samples (higher = smoother)
     private readonly speed = 0.1; // If set to 1, the bubble size instantly matches the avatars position. Set between 0 and 1 to have a smooth transition.
     private readonly stopAnimationThreshold = 0.1; // As long as one of the radii changes more than this value, the bubble is considered animating.
+    private readonly influenceRadius = this.R0 + this.lambda * 2;
+    private readonly influenceRadiusSquared = this.influenceRadius * this.influenceRadius;
 
     // ==== Internal state ===================================================
     private center = new Phaser.Math.Vector2();
@@ -57,7 +59,7 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     }
 
     public getInfluenceRadius(): number {
-        return this.R0 + this.lambda * 2;
+        return this.influenceRadius;
     }
 
     public containsUserId(userId: number): boolean {
@@ -93,7 +95,7 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
             const dx = character.x - this.center.x;
             const dy = character.y - this.center.y;
             const dist = dx * dx + dy * dy;
-            if (dist < Math.pow(this.R0 + this.lambda * 2, 2)) {
+            if (dist < this.influenceRadiusSquared) {
                 return {
                     x: character.x,
                     y: character.y,
