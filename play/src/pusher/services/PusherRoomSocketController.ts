@@ -29,7 +29,7 @@ type UpgradeHandler<TQuery> = (context: UpgradeContext<TQuery>) => void | Promis
 type OpenHandler = (socket: Socket) => void | Promise<void>;
 type RejectedOpenHandler = (socket: SocketUpgradeFailed) => void | Promise<void>;
 type MessageHandler = (socket: Socket, message: ClientToServerMessage) => void | Promise<void>;
-type CloseHandler = (socket: Socket) => void | Promise<void>;
+type CloseHandler = (socket: Socket, code: number, reason: string) => void | Promise<void>;
 
 type RoomWsQuery = {
     tabId: string;
@@ -50,7 +50,7 @@ type RoomWsConfig<TQuery extends RoomWsQuery> = {
 };
 
 type WebSocketContext = {
-    socket: PusherWebSocket;
+    socket?: PusherWebSocket;
     clientLastReceivedNonce?: number;
 };
 
@@ -156,20 +156,6 @@ export class PusherRoomSocketController {
         this.contextCleanupTimeoutsByTabKey.delete(tabId);
     }
 
-    private scheduleContextCleanup(tabId: string, socket: PusherWebSocket): void {
-        this.clearContextCleanup(tabId);
-
-        const timeout = setTimeout(() => {
-            this.contextCleanupTimeoutsByTabKey.delete(tabId);
-
-            if (this.contextByTabKey.get(tabId)?.socket === socket) {
-                this.contextByTabKey.delete(tabId);
-            }
-        }, CLIENT_DISCONNECTION_RETENTION_MS);
-
-        this.contextCleanupTimeoutsByTabKey.set(tabId, timeout);
-    }
-
     public ws<TQuery extends RoomWsQuery>(path: string, config: RoomWsConfig<TQuery>): void {
         this.app.ws<ConnectingSocketData | UpgradeFailedData>(path, {
             idleTimeout: config.idleTimeout,
@@ -193,13 +179,10 @@ export class PusherRoomSocketController {
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
                     const urlSearchParams = new URLSearchParams(req.getQuery());
 
-                    const tabContext = this.contextByTabKey.get(query.tabId);
-                    if (tabContext) {
-                        tabContext.clientLastReceivedNonce = this.parseReconnectNonce(
-                            urlSearchParams.get("lastReceivedNonce") ?? undefined,
-                            "lastReceivedNonce"
-                        );
-                    }
+                    const clientLastReceivedNonce = this.parseReconnectNonce(
+                        urlSearchParams.get("lastReceivedNonce") ?? undefined,
+                        "lastReceivedNonce"
+                    );
 
                     await config.upgrade({
                         query,
@@ -212,6 +195,12 @@ export class PusherRoomSocketController {
                         },
                         isAborted: () => upgradeAborted.aborted,
                         upgrade: (data) => {
+                            if (clientLastReceivedNonce !== undefined) {
+                                const tabContext = this.contextByTabKey.get(query.tabId) ?? {};
+                                tabContext.clientLastReceivedNonce = clientLastReceivedNonce;
+                                this.contextByTabKey.set(query.tabId, tabContext);
+                            }
+
                             this.upgradeSocket(
                                 upgradeAborted.aborted,
                                 res,
@@ -252,14 +241,33 @@ export class PusherRoomSocketController {
 
                     const tabId = socketData.tabId;
                     const context = this.contextByTabKey.get(tabId);
-                    if (context && context.clientLastReceivedNonce !== undefined && !context.socket.isDisconnecting()) {
-                        const replaced = context.socket.replaceSocket(rawSocket, context.clientLastReceivedNonce);
+                    const clientLastReceivedNonce = context?.clientLastReceivedNonce;
 
-                        if (replaced) {
-                            this.clearContextCleanup(tabId);
-                            this.wrappersBySocket.set(rawSocket, context.socket);
+                    if (context?.socket && clientLastReceivedNonce !== undefined && !context.socket.isDisconnecting()) {
+                        console.info("[PusherRoomSocketController] attempting transport replacement", {
+                            tabId,
+                            userUuid: socketData.userUuid,
+                            clientLastReceivedNonce,
+                        });
+                        try {
+                            const replaced = context.socket.replaceSocket(rawSocket, clientLastReceivedNonce);
+
+                            if (replaced) {
+                                this.clearContextCleanup(tabId);
+                                this.wrappersBySocket.set(rawSocket, context.socket);
+                            }
+                        } finally {
+                            context.clientLastReceivedNonce = undefined;
                         }
 
+                        return;
+                    }
+
+                    if (clientLastReceivedNonce !== undefined) {
+                        if (!context?.socket) {
+                            this.contextByTabKey.delete(tabId);
+                        }
+                        ws.end(1008, "Cannot replace socket: previous connection not retained");
                         return;
                     }
 
@@ -311,12 +319,13 @@ export class PusherRoomSocketController {
                 }
                 socket.handleDrain();
             },
-            close: (ws) => {
+            close: (ws, code, message) => {
                 const socketData = ws.getUserData();
                 if (socketData.rejected === true) {
                     return;
                 }
 
+                const reason = message ? Buffer.from(message).toString() : "";
                 const rawSocket = ws as unknown as RawSocket;
                 const socket = this.wrappersBySocket.get(rawSocket);
                 if (!socket) {
@@ -328,16 +337,43 @@ export class PusherRoomSocketController {
                     return;
                 }
 
-                Promise.resolve(config.close(socket))
-                    .catch((e) => {
+                socket.handleTransportClosed();
+
+                const tabId = socketData.tabId;
+                const forgetContext = () => {
+                    if (this.contextByTabKey.get(tabId)?.socket === socket) {
+                        this.contextByTabKey.delete(tabId);
+                    }
+                };
+
+                if (code === 1000) {
+                    Promise.resolve(config.close(socket, code, reason)).then(forgetContext, (e) => {
                         console.error(e);
-                    })
-                    .finally(() => {
-                        const tabId = socketData.tabId;
-                        if (this.contextByTabKey.get(tabId)?.socket === socket) {
-                            this.scheduleContextCleanup(tabId, socket);
-                        }
+                        forgetContext();
                     });
+                    return;
+                }
+
+                if (this.contextByTabKey.get(tabId)?.socket === socket) {
+                    this.clearContextCleanup(tabId);
+                    const timeout = setTimeout(() => {
+                        this.contextCleanupTimeoutsByTabKey.delete(tabId);
+
+                        if (this.contextByTabKey.get(tabId)?.socket === socket) {
+                            Promise.resolve(config.close(socket, code, reason)).then(forgetContext, (e) => {
+                                console.error(e);
+                                forgetContext();
+                            });
+                        }
+                    }, CLIENT_DISCONNECTION_RETENTION_MS);
+
+                    this.contextCleanupTimeoutsByTabKey.set(tabId, timeout);
+                    return;
+                }
+
+                Promise.resolve(config.close(socket, code, reason)).catch((e) => {
+                    console.error(e);
+                });
             },
         });
     }

@@ -75,9 +75,5 @@ test.describe("Scripting follow functions", () => {
         await page2.getByRole("button", { name: "Stop following" }).click();
 
         await waitForUnfollowPromise;
-
-        await page2.context().close();
-
-        await page.context().close();
     });
 });

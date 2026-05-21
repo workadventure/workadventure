@@ -768,6 +768,7 @@ export class RoomConnection implements RoomConnection {
         console.info("Socket has been closed", this.userId, this._closed, event);
         if (this.timeout) {
             clearTimeout(this.timeout);
+            this.timeout = undefined;
         }
 
         // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
@@ -944,7 +945,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public closeConnection(): void {
-        this.socket?.close();
+        this.socket?.close(1000, "Room connection closed");
         this.cleanupConnection(true);
         this._closed = true;
     }
@@ -2160,7 +2161,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     private send(message: ClientToServerMessageTsProto): void {
-        if (!this.socket.isOpen()) {
+        if (this._closed) {
             console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
             return;
         }

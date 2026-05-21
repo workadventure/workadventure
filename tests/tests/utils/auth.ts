@@ -8,6 +8,49 @@ import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
 import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
 import { dismissDoNotDisturbInfoToast } from "./doNotDisturbInfoToast";
 
+function disposeWithContext(page: Page): Page {
+    const closePage = page.close.bind(page);
+    const context = page.context();
+    let closePromise: Promise<void> | undefined;
+    let contextClosed = false;
+
+    const closeContext = async () => {
+        if (contextClosed) {
+            return;
+        }
+        contextClosed = true;
+        try {
+            await context.close();
+        } catch (e) {
+            if (e instanceof Error && e.message.includes("has been closed")) {
+                return;
+            }
+            throw e;
+        }
+    };
+
+    const closePageAndContext = async (args: Parameters<Page["close"]>) => {
+        if (!page.isClosed()) {
+            await closePage(...args);
+        }
+        await closeContext();
+    };
+
+    page.close = (...args: Parameters<Page["close"]>) => {
+        closePromise ??= closePageAndContext(args);
+        return closePromise;
+    };
+
+    if (!(Symbol.asyncDispose in page)) {
+        Object.defineProperty(page, Symbol.asyncDispose, {
+            configurable: true,
+            value: () => page.close(),
+        });
+    }
+
+    return page;
+}
+
 function selectWoka(name: string): number {
     let res = 0;
     for (let i = 0; i < name.length; i++) {
@@ -108,6 +151,7 @@ async function createUser(
 
     await page.context().storageState({ path: "./.auth/" + name + ".json" });
 
+    await page.close();
     await context.close();
 }
 
@@ -145,7 +189,7 @@ export async function getPage(
     await skipOnboardingWhenShown(page);
 
     await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
-    return page;
+    return disposeWithContext(page);
 }
 
 async function skipOnboardingWhenShown(page: Page) {

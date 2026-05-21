@@ -11,6 +11,8 @@ import { CLIENT_DISCONNECTION_RETENTION_MS } from "../Enum/EnvironmentVariable";
 type WebSocketFactory = (url: string, protocols?: string[]) => WebSocket;
 
 export class WorkAdventureWebSocket {
+    private static readonly RECONNECT_BASE_DELAY_MS = 500;
+    private static readonly RECONNECT_MAX_DELAY_MS = 5_000;
     private static websocketFactory: WebSocketFactory | null = null;
 
     public static setWebsocketFactory(websocketFactory: WebSocketFactory | null): void {
@@ -29,6 +31,9 @@ export class WorkAdventureWebSocket {
     private readonly protocols: string[] | undefined;
     private manuallyClosed = false;
     private reconnectAttempted = false;
+    private reconnectAttempt = 0;
+    private reconnectStartedAt: number | undefined;
+    private reconnectionTimeout: ReturnType<typeof setTimeout> | undefined;
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
@@ -48,6 +53,10 @@ export class WorkAdventureWebSocket {
     }
 
     public send(message: ClientToServerMessage): void {
+        if (this.manuallyClosed) {
+            return;
+        }
+
         const nonce = this.nextOutgoingNonce;
         const payloadWithNonce = FrontToPusherWebSocketMessage.encode({
             nonce,
@@ -56,6 +65,9 @@ export class WorkAdventureWebSocket {
         this.nextOutgoingNonce += 1;
         this.outgoingMessagesStore.add(nonce, payloadWithNonce);
 
+        if (this.socket.readyState !== WebSocket.OPEN) {
+            return;
+        }
         this.socket.send(payloadWithNonce);
     }
 
@@ -66,14 +78,27 @@ export class WorkAdventureWebSocket {
     public close(code?: number, reason?: string): void {
         this.manuallyClosed = true;
         this.detachSocketListeners(this.socket);
+        this.clearReconnectionTimeout();
         this._reconnectingStream.next(false);
         this._reconnectingStream.complete();
         this.socket.close(code, reason);
     }
 
+    public closeForPageUnload = (): void => {
+        this.manuallyClosed = true;
+        this.clearReconnectionTimeout();
+        if (this.socket.readyState === WebSocket.CLOSED) {
+            return;
+        }
+        this.socket.close(1000, "Page unloading");
+    };
+
     private handleOpenEvent = (): void => {
         const isReconnection = this.reconnectAttempted;
+        this.clearReconnectionTimeout();
         this.reconnectAttempted = false;
+        this.reconnectAttempt = 0;
+        this.reconnectStartedAt = undefined;
         if (isReconnection) {
             for (const { payload } of this.outgoingMessagesStore.getAll()) {
                 this.socket.send(payload);
@@ -85,12 +110,15 @@ export class WorkAdventureWebSocket {
     };
 
     private handleCloseEvent = (event: CloseEvent): void => {
+        this.clearReconnectionTimeout();
         this.detachSocketListeners(this.socket);
 
         if (!this.manuallyClosed && this.shouldReconnect(event)) {
             this.reconnectAttempted = true;
+            this.reconnectAttempt += 1;
+            this.reconnectStartedAt ??= Date.now();
             this._reconnectingStream.next(true);
-            this.socket = this.createSocket();
+            this.scheduleReconnectAttempt();
             return;
         }
 
@@ -136,7 +164,7 @@ export class WorkAdventureWebSocket {
     };
 
     private createSocket(): WebSocket {
-        const socketUrl = this.url;
+        const socketUrl = new URL(this.url.toString());
         if (this.reconnectAttempted) {
             socketUrl.searchParams.set("lastReceivedNonce", this.lastReceivedNonce.toString());
         }
@@ -151,9 +179,16 @@ export class WorkAdventureWebSocket {
     }
 
     private shouldReconnect(event: CloseEvent): boolean {
-        if (this.reconnectAttempted) return false;
         // Do not reconnect if handshake/auth was refused.
-        if (event.code === 1000 || event.code === 1008) return false;
+        if (event.code === 1000 || event.code === 1008) {
+            return false;
+        }
+        if (this.reconnectStartedAt !== undefined) {
+            const elapsedMs = Date.now() - this.reconnectStartedAt;
+            if (elapsedMs >= CLIENT_DISCONNECTION_RETENTION_MS) {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -162,6 +197,9 @@ export class WorkAdventureWebSocket {
         socket.addEventListener("close", this.handleCloseEvent);
         socket.addEventListener("error", this.handleErrorEvent);
         socket.addEventListener("message", this.handleMessageEvent);
+
+        window.addEventListener("beforeunload", this.closeForPageUnload);
+        window.addEventListener("pagehide", this.closeForPageUnload);
     }
 
     private detachSocketListeners(socket: WebSocket): void {
@@ -169,5 +207,35 @@ export class WorkAdventureWebSocket {
         socket.removeEventListener("close", this.handleCloseEvent);
         socket.removeEventListener("error", this.handleErrorEvent);
         socket.removeEventListener("message", this.handleMessageEvent);
+
+        window.removeEventListener("beforeunload", this.closeForPageUnload);
+        window.removeEventListener("pagehide", this.closeForPageUnload);
+    }
+
+    private scheduleReconnectAttempt(): void {
+        this.clearReconnectionTimeout();
+        this.reconnectionTimeout = setTimeout(() => {
+            if (this.manuallyClosed) {
+                return;
+            }
+
+            this.socket = this.createSocket();
+        }, this.getReconnectDelayMs());
+    }
+
+    private getReconnectDelayMs(): number {
+        return Math.min(
+            WorkAdventureWebSocket.RECONNECT_MAX_DELAY_MS,
+            WorkAdventureWebSocket.RECONNECT_BASE_DELAY_MS * 2 ** Math.max(0, this.reconnectAttempt - 1)
+        );
+    }
+
+    private clearReconnectionTimeout(): void {
+        if (!this.reconnectionTimeout) {
+            return;
+        }
+
+        clearTimeout(this.reconnectionTimeout);
+        this.reconnectionTimeout = undefined;
     }
 }

@@ -34,6 +34,7 @@ export class PusherWebSocket {
     private nextOutgoingNonce = 1;
     private lastSentNonce = 0;
     private lastReceivedNonce = 0;
+    private transportAvailable = true;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
         CLIENT_DISCONNECTION_RETENTION_MS
     );
@@ -56,7 +57,7 @@ export class PusherWebSocket {
         this.nextOutgoingNonce += 1;
         this.outgoingMessagesStore.add(nonce, payloadWithNonce);
 
-        if (nonce > this.lastSentNonce + 1) {
+        if (!this.transportAvailable || nonce > this.lastSentNonce + 1) {
             return 0;
         }
 
@@ -64,17 +65,16 @@ export class PusherWebSocket {
     }
 
     public handleDrain(): void {
+        if (!this.transportAvailable) {
+            return;
+        }
         for (const { nonce, payload } of this.outgoingMessagesStore.getAfter(this.lastSentNonce)) {
             if (this.sendStoredPayload(nonce, payload) !== 1) {
                 return;
             }
         }
 
-        if (!this.pingBackpressured) {
-            return;
-        }
-
-        if (this.socket.ping() === 1) {
+        if (this.pingBackpressured && this.socket.ping() === 1) {
             this.pingBackpressured = false;
         }
     }
@@ -148,6 +148,11 @@ export class PusherWebSocket {
         return this.socket === rawSocket;
     }
 
+    public handleTransportClosed(): void {
+        this.transportAvailable = false;
+        this.stopKeepAlive();
+    }
+
     public replaceSocket(newSocket: RawSocket, clientLastReceivedNonce: number): boolean {
         const socketData = this.socket.getUserData();
         console.info(
@@ -204,8 +209,10 @@ export class PusherWebSocket {
         Object.assign(newSocketData, previousSocketData);
 
         this.socket = newSocket;
+        this.transportAvailable = true;
         this.lastSentNonce = clientLastReceivedNonce;
 
+        this.startKeepAlive();
         this.handleDrain();
 
         // Close the old transport only after rebinding so the logical connection keeps running.
@@ -263,6 +270,10 @@ export class PusherWebSocket {
     }
 
     private sendStoredPayload(nonce: number, payload: Uint8Array<ArrayBuffer>): ReturnType<RawSocket["send"]> {
+        if (!this.transportAvailable) {
+            return 0;
+        }
+
         const sendStatus = this.socket.send(payload, true);
         if (sendStatus === 1) {
             this.lastSentNonce = nonce;

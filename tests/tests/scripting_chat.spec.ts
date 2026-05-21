@@ -18,6 +18,7 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
             //await chatUtils.resetMatrixDatabase();
         },
     );
+
     test("can open / close chat + start / stop typing @chat", async ({ browser }) => {
         await using page = await getPage(browser, "Bob", Map.url("empty"));
         //await oidcMatrixUserLogin(page, false);
@@ -67,8 +68,6 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
             return WA.chat.close();
         });
         await expect(page.locator("#chat")).toBeHidden();
-
-        await page.context().close();
     });
 
     test("can send message to bubble users @chat", async ({ browser }) => {
@@ -144,8 +143,5 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
 
         await expect(alice.getByText("Charlie joined the discussion")).toBeVisible();
         await expect(bob.getByText("Charlie joined the discussion")).toBeVisible();
-
-        await alice.context().close();
-        await bob.context().close();
     });
 });

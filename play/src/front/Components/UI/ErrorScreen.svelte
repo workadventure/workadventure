@@ -54,6 +54,7 @@
 {#if $errorScreenStore}
     <main
         class="errorScreen bg-contrast pointer-events-auto w-full text-white text-center absolute flex flex-wrap items-center justify-center h-full top-0 left-0 right-0 mx-auto overflow-scroll py-5"
+        data-testid={$errorScreenStore.type === "reconnecting" ? "reconnecting-error-screen" : undefined}
         style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}
         transition:fly={{ y: -200, duration: 500 }}
     >
