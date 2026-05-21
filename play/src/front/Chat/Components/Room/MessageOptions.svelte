@@ -29,7 +29,7 @@
         message.addReaction(event.detail).catch((error) => console.error(error));
     }
 
-    const { content, isMyMessage, type, canDelete } = message;
+    const { content, canDelete, canReact, canEdit } = message;
 </script>
 
 <div class="flex flex-row gap-1 items-center">
@@ -60,8 +60,10 @@
             <IconMessageCircle2 font-size={16} />
         </button>
     {/if}
-    <EmojiButton on:change={addReaction} {messageRef} />
-    {#if isMyMessage && type === "text"}
+    {#if $canReact}
+        <EmojiButton on:change={addReaction} {messageRef} />
+    {/if}
+    {#if $canEdit}
         <button
             class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
             data-testid="editMessageButton"
