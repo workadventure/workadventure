@@ -97,8 +97,8 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
             // Is the player close enough to be considered?
             const dx = character.x - this.center.x;
             const dy = character.y - this.center.y;
-            const dist = dx + dy; // using an approximation of distance for performance
-            if (dist < this.R0 + this.lambda * 2) {
+            const dist = dx * dx + dy * dy;
+            if (dist < Math.pow(this.R0 + this.lambda * 2, 2)) {
                 return {
                     x: character.x,
                     y: character.y,
