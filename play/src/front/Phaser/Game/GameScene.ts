@@ -4165,6 +4165,11 @@ ${escapedMessage}
     }
 
     private doShareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface): void {
+        // NOTE: interestingly, the exact group position (x / y) is no longer used to draw the bubble.
+        // The center of the bubble is recomputed inside the ConversationBubble which allows having the center
+        // based on interpolated players position (so updated every frame and not every 200ms).
+        // The message is still useful for the bubble status (whether it's locked or not)
+
         const userId = this.connection?.getUserId();
         if (userId && groupPositionMessage.userIds.includes(userId)) {
             this.currentPlayerGroupId = groupPositionMessage.groupId;
@@ -4178,10 +4183,6 @@ ${escapedMessage}
         // TODO: keep a reference to the group sprite in the conversationBubble
         const existingGroup = this.groups.get(groupPositionMessage.groupId);
         if (existingGroup) {
-            existingGroup.setCenter(
-                Math.round(groupPositionMessage.position.x),
-                Math.round(groupPositionMessage.position.y)
-            );
             existingGroup.setLocked(
                 groupPositionMessage.groupSize === MAX_PER_GROUP || (groupPositionMessage.locked ?? false)
             );

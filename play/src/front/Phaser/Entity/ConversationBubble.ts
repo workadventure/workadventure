@@ -108,6 +108,7 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     public step(avatars: Avatar[]): void {
         this._needsStep = false;
         this._isAnimating = false; // reset animation state
+        this.updateCenterFromInsideAvatars(avatars);
 
         /* --- 1.  Update radius samples ----------------------------------- */
         for (let s = 0; s < this.segments; s++) {
@@ -154,6 +155,29 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     private angularFalloff(delta: number, isInside: boolean): number {
         const c = Math.cos(delta);
         return c <= 0 ? 0 : Math.pow(c, isInside ? this.kInside : this.kOutside);
+    }
+
+    private updateCenterFromInsideAvatars(avatars: Avatar[]): void {
+        let x = 0;
+        let y = 0;
+        let count = 0;
+
+        for (const avatar of avatars) {
+            if (!avatar.inside) {
+                continue;
+            }
+
+            x += avatar.x;
+            y += avatar.y;
+            count++;
+        }
+
+        if (count === 0) {
+            return;
+        }
+
+        this.center.set(x / count, y / count);
+        this.setPosition(this.center.x, this.center.y);
     }
 
     /**
@@ -236,13 +260,6 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     // -----------------------------------------------------------------------
     // Optional utilities
     // -----------------------------------------------------------------------
-
-    /** Move the whole bubble (e.g. follow the group's centroid). */
-    public setCenter(x: number, y: number): void {
-        this.center.set(x, y);
-        this.setPosition(x, y);
-        this._needsStep = true;
-    }
 
     public setLocked(locked: boolean): void {
         this.locked = locked;
