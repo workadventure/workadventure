@@ -163,6 +163,51 @@ describe("PusherWebSocket backpressure", () => {
 
         expect(getSendMock(socket)).toHaveBeenCalledTimes(5);
     });
+
+    it("waits for drain instead of sending when the uWS buffer is already near the limit", () => {
+        const socket = createSocket();
+        getBufferedAmountMock(socket)
+            .mockReturnValueOnce(1024 * 1024)
+            .mockReturnValue(0);
+        const wrapper = createPusherWebSocket(socket);
+
+        expect(wrapper.send({ message: undefined } as never)).toBe(0);
+
+        expect(getSendMock(socket)).not.toHaveBeenCalled();
+
+        wrapper.handleDrain();
+
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps a dropped uWS send queued and retries it on drain", () => {
+        const socket = createSocket();
+        getSendMock(socket).mockReturnValueOnce(2).mockReturnValue(1);
+        const wrapper = createPusherWebSocket(socket);
+
+        expect(wrapper.send({ message: undefined } as never)).toBe(0);
+
+        expect(getEndMock(socket)).not.toHaveBeenCalled();
+
+        wrapper.handleDrain();
+
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(2);
+    });
+
+    it("keeps unsent messages pending even after replay retention expires", () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
+
+        const socket = createSocket();
+        getSendMock(socket).mockReturnValueOnce(0).mockReturnValue(1);
+        const wrapper = createPusherWebSocket(socket);
+
+        wrapper.send({ message: undefined } as never);
+        vi.setSystemTime(Date.now() + CLIENT_DISCONNECTION_RETENTION_MS + 1);
+        wrapper.handleDrain();
+
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(2);
+    });
 });
 
 function createController(
@@ -239,14 +284,18 @@ function createSocket(overrides: Partial<SocketData> = {}): RawSocket {
     };
 
     const sendMock = vi.fn().mockReturnValue(1);
+    const endMock = vi.fn();
+    const getBufferedAmountMock = vi.fn().mockReturnValue(0);
 
     return {
         getUserData: vi.fn(() => socketData),
         send: sendMock,
         sendMock,
         ping: vi.fn(),
-        end: vi.fn(),
-        getBufferedAmount: vi.fn().mockReturnValue(0),
+        end: endMock,
+        endMock,
+        getBufferedAmount: getBufferedAmountMock,
+        getBufferedAmountMock,
     } as unknown as RawSocket;
 }
 
@@ -259,6 +308,14 @@ function createPusherWebSocket(socket: RawSocket): PusherWebSocket {
 
 function getSendMock(socket: RawSocket): ReturnType<typeof vi.fn> {
     return (socket as unknown as { sendMock: ReturnType<typeof vi.fn> }).sendMock;
+}
+
+function getEndMock(socket: RawSocket): ReturnType<typeof vi.fn> {
+    return (socket as unknown as { endMock: ReturnType<typeof vi.fn> }).endMock;
+}
+
+function getBufferedAmountMock(socket: RawSocket): ReturnType<typeof vi.fn> {
+    return (socket as unknown as { getBufferedAmountMock: ReturnType<typeof vi.fn> }).getBufferedAmountMock;
 }
 
 async function flushMicrotasks(): Promise<void> {
