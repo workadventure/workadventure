@@ -65,6 +65,8 @@ ENV UWS_HTTP_MAX_HEADERS_SIZE=16384
 RUN npm ci --omit=dev --workspace workadventure-play
 COPY --from=builder /usr/src/libs /usr/src/libs
 COPY --from=builder --chown=node:node /usr/src/play /usr/src/play
+# useful for profiling (with --prof) because it write a file in current directory
+RUN chown -R node:node /usr/src/play
 WORKDIR /usr/src/play
 
 HEALTHCHECK --interval=10s --timeout=7s --start-period=10s --retries=15 CMD curl -f http://localhost:3000/ping || exit 1
