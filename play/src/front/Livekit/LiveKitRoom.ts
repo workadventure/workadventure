@@ -29,6 +29,7 @@ import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPres
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
+import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 
@@ -44,8 +45,6 @@ type LivekitRoomCounter = {
 };
 
 export class LiveKitRoom implements LiveKitRoomInterface {
-    private static readonly SCRIPTING_AUDIO_TRACK_NAME = "workadventure-scripting-audio";
-
     private room: Room | undefined;
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
     // Stores LiveKit participants that connected before their corresponding spaceUser was available
@@ -625,8 +624,12 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             await this.localParticipant.unpublishTrack(this.scriptingAudioTrack, true);
         }
 
+        if (this.scriptingAudioTrack === audioTrack) {
+            return;
+        }
+
         await this.localParticipant.publishTrack(audioTrack, {
-            name: LiveKitRoom.SCRIPTING_AUDIO_TRACK_NAME,
+            name: SCRIPTING_AUDIO_TRACK_NAME,
             source: Track.Source.Microphone,
         });
         this.scriptingAudioTrack = audioTrack;

@@ -21,11 +21,11 @@ import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 import { subscribeToVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
 import type { LivekitStreamable, Streamable } from "../Space/Streamable";
+import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 
 // Maximize/minimize can briefly mount 2 video components for the same participant.
 // Delaying the final unsubscribe avoids sending a false->true bounce to LiveKit during that handoff.
 const VIDEO_UNSUBSCRIBE_DELAY_MS = 75;
-const SCRIPTING_AUDIO_TRACK_NAME = "workadventure-scripting-audio";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
