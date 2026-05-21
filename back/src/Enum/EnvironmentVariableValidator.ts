@@ -61,17 +61,6 @@ export const EnvironmentVariables = z.object({
     GRPC_PORT: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 50051))
         .describe("gRPC port for the back service. Defaults to 50051"),
-    BACK_STREAM_BACKPRESSURE_MAX_QUEUED_MESSAGES: PositiveIntAsString.optional()
-        .transform((val) => toNumber(val, 1_000))
-        .describe("Maximum number of gRPC messages queued per back stream while waiting for drain. Defaults to 1000."),
-    BACK_STREAM_BACKPRESSURE_MAX_QUEUED_BYTES: PositiveIntAsString.optional()
-        .transform((val) => toNumber(val, 8 * 1024 * 1024))
-        .describe("Maximum estimated bytes queued per back stream while waiting for drain. Defaults to 8388608."),
-    BACK_STREAM_BACKPRESSURE_DRAIN_TIMEOUT_MS: PositiveIntAsString.optional()
-        .transform((val) => toNumber(val, 10_000))
-        .describe(
-            "Maximum time, in milliseconds, to wait for a back stream drain before closing it. Defaults to 10000."
-        ),
     MAX_PER_GROUP: PositiveIntAsString.optional()
         .or(z.string().max(0))
         .transform((val) => toNumber(val, 4))

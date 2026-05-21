@@ -60,7 +60,6 @@ import { VariableError } from "../Services/VariableError";
 import { VariablesManager } from "../Services/VariablesManager";
 import type { AreaPropertyVariable } from "../Services/AreaPropertyVariablesManager";
 import { AreaPropertyVariablesManager } from "../Services/AreaPropertyVariablesManager";
-import { writeWithBackpressure } from "../Services/StreamBackpressure";
 import { AreaZoneTracker } from "./AreaZoneTracker";
 import type { BrothersFinder } from "./BrothersFinder";
 import { Group } from "./Group";
@@ -224,14 +223,9 @@ export class GameRoom implements BrothersFinder {
     public dispatchRoomMessage(message: SubToPusherRoomMessage): void {
         // Dispatch the message on the room listeners
         for (const socket of this.roomListeners) {
-            writeWithBackpressure(
-                socket,
-                {
-                    payload: [message],
-                },
-                {},
-                "back_room_socket"
-            );
+            socket.write({
+                payload: [message],
+            });
         }
     }
 
@@ -569,7 +563,7 @@ export class GameRoom implements BrothersFinder {
     public sendToOthersInGroupIncludingUser(user: User, message: ServerToClientMessage): void {
         user.group?.getUsers().forEach((currentUser: User) => {
             if (currentUser.id !== user.id) {
-                writeWithBackpressure(currentUser.socket, message, {}, "back_user_socket");
+                currentUser.socket.write(message);
             }
         });
     }
@@ -696,7 +690,7 @@ export class GameRoom implements BrothersFinder {
             // Dispatch the variable update to variable listeners
             const listeners = this.variableListeners.get(name);
             for (const listener of listeners ?? []) {
-                writeWithBackpressure(listener, JSON.parse(value), {}, "back_variable_listener");
+                listener.write(JSON.parse(value));
             }
         } catch (e) {
             if (e instanceof VariableError) {
@@ -1390,14 +1384,9 @@ export class GameRoom implements BrothersFinder {
     public sendSubMessageToRoom(subMessage: SubToPusherRoomMessage) {
         // Dispatch the message on the room listeners
         for (const socket of this.roomListeners) {
-            writeWithBackpressure(
-                socket,
-                {
-                    payload: [subMessage],
-                },
-                {},
-                "back_room_socket"
-            );
+            socket.write({
+                payload: [subMessage],
+            });
         }
     }
 
@@ -1540,15 +1529,10 @@ export class GameRoom implements BrothersFinder {
             // Dispatch to RoomApi listeners
             const listeners = this.eventListeners.get(name);
             for (const eventListener of listeners ?? []) {
-                writeWithBackpressure(
-                    eventListener,
-                    {
-                        senderId: senderId === "RoomApi" ? undefined : senderId,
-                        data,
-                    },
-                    {},
-                    "back_event_listener"
-                );
+                eventListener.write({
+                    senderId: senderId === "RoomApi" ? undefined : senderId,
+                    data,
+                });
             }
         } else {
             for (const targetUserId of targetUserIds) {

@@ -17,7 +17,6 @@ import {
     ADMIN_SOCKETS_TOKEN,
     DISABLE_ANONYMOUS,
     PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES,
-    PUSHER_STREAM_BACKPRESSURE_DRAIN_TIMEOUT_MS,
     SOCKET_IDLE_TIMER,
 } from "../enums/EnvironmentVariable";
 import type { AdminSocketData } from "../models/Websocket/AdminSocketData";
@@ -32,6 +31,7 @@ import { PusherRoomSocketController } from "../services/PusherRoomSocketControll
 import { AdminWebSocketBackpressureWriter } from "../services/AdminWebSocketBackpressureWriter";
 
 const debug = Debug("pusher:requests");
+const ADMIN_WS_BACKPRESSURE_DRAIN_TIMEOUT_MS = 10_000;
 
 type UpgradeFailedInvalidData = {
     rejected: true;
@@ -107,7 +107,7 @@ export class IoSocketController {
                 const writer = new AdminWebSocketBackpressureWriter(ws, {
                     maxQueuedMessages: 1_000,
                     maxQueuedBytes: PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES,
-                    drainTimeoutMs: PUSHER_STREAM_BACKPRESSURE_DRAIN_TIMEOUT_MS,
+                    drainTimeoutMs: ADMIN_WS_BACKPRESSURE_DRAIN_TIMEOUT_MS,
                     onDropped: (reason, priority) => {
                         console.warn(`Admin websocket dropped ${priority} message: ${reason}`);
                     },

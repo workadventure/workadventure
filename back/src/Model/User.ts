@@ -17,7 +17,6 @@ import type { PositionNotifier } from "../Model/PositionNotifier";
 import type { Zone } from "../Model/Zone";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
 import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
-import { writeWithBackpressure } from "../Services/StreamBackpressure";
 import type { BrothersFinder } from "./BrothersFinder";
 import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import type { Group } from "./Group";
@@ -361,36 +360,30 @@ export class User implements Movable, CustomJsonReplacerInterface {
      */
     public write(chunk: NonNullable<ServerToClientMessage["message"]>, cb?: (...args: unknown[]) => void): boolean {
         if (this.isRoomJoinedMessage) {
-            return writeWithBackpressure(
-                this.socket,
+            return this.socket.write(
                 {
                     message: chunk,
                 },
-                { callback: cb },
-                "back_user_socket"
+                cb
             );
         }
 
         if (chunk.$case === "roomJoinedMessage") {
             this.isRoomJoinedMessage = true;
 
-            writeWithBackpressure(
-                this.socket,
+            this.socket.write(
                 {
                     message: chunk,
                 },
-                { callback: cb },
-                "back_user_socket"
+                cb
             );
 
             this.pendingMessages.forEach((message) => {
-                writeWithBackpressure(
-                    this.socket,
+                this.socket.write(
                     {
                         message,
                     },
-                    { callback: cb },
-                    "back_user_socket"
+                    cb
                 );
             });
 
