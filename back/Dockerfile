@@ -26,6 +26,8 @@ COPY libs ./libs
 COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
 COPY back ./back
 COPY --from=proto-builder /usr/src/generated ./back/src/Messages/generated
+# useful for profiling (with --prof) because it write a file in current directory
+RUN chown -R node:node ./back
 WORKDIR /usr/src/back
 HEALTHCHECK --interval=10s --timeout=7s --start-period=10s --retries=15 CMD curl -f http://localhost:8080/ping || exit 1
 RUN mkdir ./dist
