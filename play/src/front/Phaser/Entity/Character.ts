@@ -3,7 +3,8 @@ import { get, readable } from "svelte/store";
 import type { CancelablePromise } from "cancelable-promise";
 import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventure/messages";
 import { SayMessageType, AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
-import { defaultWoka, Deferred } from "@workadventure/shared-utils";
+import { defaultWoka, Deferred, type Movable, type PositionInterface } from "@workadventure/shared-utils";
+import { Subject } from "rxjs";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import { createColorStore } from "../../Stores/OutlineColorStore";
@@ -38,7 +39,10 @@ export const PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX = "playtext-mediadevice-";
 
 export type PathFollowResult = { x: number; y: number; cancelled: boolean };
 
-export abstract class Character extends Container implements OutlineableInterface {
+export abstract class Character extends Container implements OutlineableInterface, Movable {
+    private readonly movedSubject = new Subject<PositionInterface>();
+    public readonly moved$ = this.movedSubject.asObservable();
+
     private bubble: RenderTexture | null | DOMElement = null;
     private usernameDisplay: UsernameDisplay | undefined;
     private availabilityStatus: AvailabilityStatusType = AvailabilityStatus.ONLINE;
@@ -266,7 +270,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         return this.clickable;
     }
 
-    public getPosition(): { x: number; y: number } {
+    public getPosition(): PositionInterface {
         return { x: this.x, y: this.y };
     }
 
@@ -391,6 +395,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.setDepth(this.y + 16);
         this.usernameDisplay?.setPlayerDepth(this.depth);
         this.updateUsernameDisplayPosition();
+        this.movedSubject?.next({ x: this.x, y: this.y });
         return this;
     }
 

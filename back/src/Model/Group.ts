@@ -1,6 +1,7 @@
+import { Subject } from "rxjs";
+import type { Movable } from "@workadventure/shared-utils";
 import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import type { PositionInterface } from "./PositionInterface";
-import type { Movable } from "./Movable";
 import type { PositionNotifier } from "./PositionNotifier";
 import type { Zone } from "./Zone";
 import type { User } from "./User";
@@ -9,6 +10,9 @@ import { GameRoom } from "./GameRoom";
 import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
 export class Group implements Movable, CustomJsonReplacerInterface {
+    private readonly movedSubject = new Subject<PositionInterface>();
+    public readonly moved$ = this.movedSubject.asObservable();
+
     private static nextId = 1;
 
     private id: number;
@@ -127,6 +131,7 @@ export class Group implements Movable, CustomJsonReplacerInterface {
 
         this.x = x;
         this.y = y;
+        this.movedSubject.next({ x, y });
 
         if (this.outOfBounds) {
             return;

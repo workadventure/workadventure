@@ -12,7 +12,8 @@ import type {
     SubMessage,
 } from "@workadventure/messages";
 import { AvailabilityStatus, SetPlayerVariableMessage_Scope } from "@workadventure/messages";
-import type { Movable } from "../Model/Movable";
+import type { Movable } from "@workadventure/shared-utils";
+import { Subject } from "rxjs";
 import type { PositionNotifier } from "../Model/PositionNotifier";
 import type { Zone } from "../Model/Zone";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
@@ -25,6 +26,9 @@ import type { PointInterface } from "./Websocket/PointInterface";
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
 export class User implements Movable, CustomJsonReplacerInterface {
+    private readonly movedSubject = new Subject<PointInterface>();
+    public readonly moved$ = this.movedSubject.asObservable();
+
     public listenedZones: Set<Zone>;
     public group?: Group;
     private _following: User | undefined;
@@ -134,6 +138,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
         const oldPosition = this.position;
         this.position = position;
         this.positionNotifier.updatePosition(this, position, oldPosition);
+        this.movedSubject.next(position);
     }
 
     public addFollower(follower: User): void {
