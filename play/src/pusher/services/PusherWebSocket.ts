@@ -266,6 +266,12 @@ export class PusherWebSocket {
         const sendStatus = this.socket.send(payload, true);
         if (sendStatus === 1) {
             this.lastSentNonce = nonce;
+        } else if (sendStatus === 2) {
+            try {
+                this.socket.end(1013, "Backpressure limit exceeded");
+            } catch {
+                // The socket may already be closing by the time uWS reports the dropped send.
+            }
         }
         return sendStatus;
     }

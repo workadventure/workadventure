@@ -163,6 +163,16 @@ describe("PusherWebSocket backpressure", () => {
 
         expect(getSendMock(socket)).toHaveBeenCalledTimes(5);
     });
+
+    it("closes the transport when uWS drops a send because maxBackpressure was exceeded", () => {
+        const socket = createSocket();
+        getSendMock(socket).mockReturnValueOnce(2);
+        const wrapper = createPusherWebSocket(socket);
+
+        expect(wrapper.send({ message: undefined } as never)).toBe(2);
+
+        expect(getEndMock(socket)).toHaveBeenCalledWith(1013, "Backpressure limit exceeded");
+    });
 });
 
 function createController(
@@ -239,13 +249,15 @@ function createSocket(overrides: Partial<SocketData> = {}): RawSocket {
     };
 
     const sendMock = vi.fn().mockReturnValue(1);
+    const endMock = vi.fn();
 
     return {
         getUserData: vi.fn(() => socketData),
         send: sendMock,
         sendMock,
         ping: vi.fn(),
-        end: vi.fn(),
+        end: endMock,
+        endMock,
         getBufferedAmount: vi.fn().mockReturnValue(0),
     } as unknown as RawSocket;
 }
@@ -259,6 +271,10 @@ function createPusherWebSocket(socket: RawSocket): PusherWebSocket {
 
 function getSendMock(socket: RawSocket): ReturnType<typeof vi.fn> {
     return (socket as unknown as { sendMock: ReturnType<typeof vi.fn> }).sendMock;
+}
+
+function getEndMock(socket: RawSocket): ReturnType<typeof vi.fn> {
+    return (socket as unknown as { endMock: ReturnType<typeof vi.fn> }).endMock;
 }
 
 async function flushMicrotasks(): Promise<void> {
