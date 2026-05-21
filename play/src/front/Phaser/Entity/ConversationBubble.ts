@@ -36,6 +36,7 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     private generatedTextureKey: string | null = null;
     // Whether the bubble is currently wobbling
     private _isAnimating: boolean = true;
+    private _needsStep: boolean = true;
 
     constructor(scene: GameScene, x: number, y: number, locked: boolean, userIds: number[]) {
         super(scene, x, y, "");
@@ -52,28 +53,22 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
 
     public updateUsers(userIds: number[]): void {
         this.userIds = userIds;
-        this.drawSpline();
+        this._needsStep = true;
     }
 
-    private getAvatarsList(): Avatar[] {
-        const avatars: Avatar[] = [];
-
-        for (const remotePlayer of this.gameScene.MapPlayersByKey.values()) {
-            const avatar = this.turnInAvatar(remotePlayer);
-            if (avatar) {
-                avatars.push(avatar);
-            }
-        }
-
-        const currentPlayerAvatar = this.turnInAvatar(this.gameScene.CurrentPlayer);
-        if (currentPlayerAvatar) {
-            avatars.push(currentPlayerAvatar);
-        }
-
-        return avatars;
+    public getInfluenceRadius(): number {
+        return this.R0 + this.lambda * 2;
     }
 
-    private turnInAvatar(character: Character): Avatar | undefined {
+    public containsUserId(userId: number): boolean {
+        return this.userIds.includes(userId);
+    }
+
+    public getUserIds(): readonly number[] {
+        return this.userIds;
+    }
+
+    public turnInAvatar(character: Character): Avatar | undefined {
         let userId: number;
         if (character instanceof RemotePlayer) {
             userId = character.userId;
@@ -110,9 +105,8 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     }
 
     /** Call once per frame with the avatars that might affect this bubble. */
-    public step(): void {
-        const avatars = this.getAvatarsList();
-
+    public step(avatars: Avatar[]): void {
+        this._needsStep = false;
         this._isAnimating = false; // reset animation state
 
         /* --- 1.  Update radius samples ----------------------------------- */
@@ -247,6 +241,7 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     public setCenter(x: number, y: number): void {
         this.center.set(x, y);
         this.setPosition(x, y);
+        this._needsStep = true;
     }
 
     public setLocked(locked: boolean): void {
@@ -270,5 +265,9 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
 
     public get isAnimating(): boolean {
         return this._isAnimating;
+    }
+
+    public get needsStep(): boolean {
+        return this._needsStep;
     }
 }
