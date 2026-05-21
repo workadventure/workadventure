@@ -193,6 +193,21 @@ describe("PusherWebSocket backpressure", () => {
 
         expect(getSendMock(socket)).toHaveBeenCalledTimes(2);
     });
+
+    it("keeps unsent messages pending even after replay retention expires", () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
+
+        const socket = createSocket();
+        getSendMock(socket).mockReturnValueOnce(0).mockReturnValue(1);
+        const wrapper = createPusherWebSocket(socket);
+
+        wrapper.send({ message: undefined } as never);
+        vi.setSystemTime(Date.now() + CLIENT_DISCONNECTION_RETENTION_MS + 1);
+        wrapper.handleDrain();
+
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(2);
+    });
 });
 
 function createController(

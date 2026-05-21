@@ -9,7 +9,7 @@ import {
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import { CLIENT_DISCONNECTION_RETENTION_MS, PUSHER_ROOM_WS_MAX_BACKPRESSURE_BYTES } from "../enums/EnvironmentVariable";
-import { NoncedMessageStore } from "../../common/NoncedMessageStore";
+import { NoncedMessageStore, type NoncedMessage } from "../../common/NoncedMessageStore";
 
 import type { SocketData } from "../models/Websocket/SocketData";
 
@@ -36,6 +36,7 @@ export class PusherWebSocket {
     private nextOutgoingNonce = 1;
     private lastSentNonce = 0;
     private lastReceivedNonce = 0;
+    private pendingOutgoingMessages: NoncedMessage<Uint8Array<ArrayBuffer>>[] = [];
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
         CLIENT_DISCONNECTION_RETENTION_MS
     );
@@ -58,20 +59,29 @@ export class PusherWebSocket {
         this.nextOutgoingNonce += 1;
         this.outgoingMessagesStore.add(nonce, payloadWithNonce);
 
-        if (nonce > this.lastSentNonce + 1) {
+        const outgoingMessage = { nonce, payload: payloadWithNonce };
+
+        if (this.pendingOutgoingMessages.length > 0 || nonce > this.lastSentNonce + 1) {
+            this.pendingOutgoingMessages.push(outgoingMessage);
             return 0;
         }
 
-        return this.sendStoredPayload(nonce, payloadWithNonce);
+        const sendStatus = this.sendPendingMessage(outgoingMessage);
+        if (sendStatus !== 1) {
+            this.pendingOutgoingMessages.push(outgoingMessage);
+        }
+        return sendStatus;
     }
 
     public handleDrain(): void {
         this.stopBackpressureRetry();
 
-        for (const { nonce, payload } of this.outgoingMessagesStore.getAfter(this.lastSentNonce)) {
-            if (this.sendStoredPayload(nonce, payload) !== 1) {
+        while (this.pendingOutgoingMessages.length > 0) {
+            const message = this.pendingOutgoingMessages[0];
+            if (!message || this.sendPendingMessage(message) !== 1) {
                 return;
             }
+            this.pendingOutgoingMessages.shift();
         }
 
         if (!this.pingBackpressured) {
@@ -210,6 +220,7 @@ export class PusherWebSocket {
 
         this.socket = newSocket;
         this.lastSentNonce = clientLastReceivedNonce;
+        this.pendingOutgoingMessages = this.outgoingMessagesStore.getAfter(clientLastReceivedNonce);
 
         this.handleDrain();
 
@@ -267,7 +278,10 @@ export class PusherWebSocket {
         };
     }
 
-    private sendStoredPayload(nonce: number, payload: Uint8Array<ArrayBuffer>): ReturnType<RawSocket["send"]> {
+    private sendPendingMessage({
+        nonce,
+        payload,
+    }: NoncedMessage<Uint8Array<ArrayBuffer>>): ReturnType<RawSocket["send"]> {
         if (this.shouldWaitForBackpressureDrain(payload)) {
             this.scheduleBackpressureRetry();
             return 0;
