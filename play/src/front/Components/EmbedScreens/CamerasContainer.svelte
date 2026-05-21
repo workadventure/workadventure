@@ -34,8 +34,7 @@
 -->
 <script lang="ts">
     import { onDestroy, onMount, setContext } from "svelte";
-    import type { Writable } from "svelte/store";
-    import { myCameraPeerStore, type MyLocalStreamable } from "../../Stores/StreamableCollectionStore";
+    import { myCameraPeerStore } from "../../Stores/StreamableCollectionStore";
     import type { VideoBox as VideoBoxModel } from "../../Space/VideoBox";
     import VideoBox from "../Video/VideoBox.svelte";
     import MediaBox from "../Video/MediaBox.svelte";
@@ -93,24 +92,16 @@
 
     const gameScene = gameManager.getCurrentGameScene();
 
-    $: myCameraStreamable = $myCameraPeerStore.streamable as Writable<MyLocalStreamable | undefined>;
-
     function excludeLocalCamera(videoBoxes: VideoBoxModel[]): VideoBoxModel[] {
         return videoBoxes.filter((box) => box.uniqueId !== LOCAL_CAMERA_VIDEO_BOX_UNIQUE_ID);
     }
 
     $: isPictureInPictureGridMode = $activePictureInPictureStore && oneLineMode === "vertical";
-    /** Plus de 8 participants en grille PiP : la cam locale sort de la grille (vignette fixe). */
     $: pipDockLocalCamera =
         isPictureInPictureGridMode &&
         $oneLineStreamableCollectionStore.length > PIP_GRID_MAX_VIDEOS &&
         $oneLineStreamableCollectionStore.some((box) => box.uniqueId === LOCAL_CAMERA_VIDEO_BOX_UNIQUE_ID);
     $: pipRemoteParticipantCount = excludeLocalCamera($oneLineStreamableCollectionStore).length;
-
-    $: {
-        const inPipWithHighlight = $activePictureInPictureStore && $highlightedEmbedScreen != undefined;
-        $myCameraStreamable?.setDisplayInPictureInPictureMode(inPipWithHighlight && !pipDockLocalCamera);
-    }
 
     // Single IntersectionObserver shared across all VideoBox components
     let intersectionObserver: IntersectionObserver | undefined;
@@ -526,7 +517,11 @@
                     {videoWidth}
                     {videoHeight}
                     intersectionObserver={isPictureInPictureGridMode ? undefined : intersectionObserver}
-                    forceDisplay={isPictureInPictureGridMode}
+                    forceDisplay={isPictureInPictureGridMode ||
+                        (videoBox.uniqueId === LOCAL_CAMERA_VIDEO_BOX_UNIQUE_ID &&
+                            isOnOneLine &&
+                            oneLineMode === "vertical" &&
+                            !pipDockLocalCamera)}
                     fitContainer={isPictureInPictureGridMode}
                 />
             </div>

@@ -16,6 +16,7 @@ import { myCameraStore } from "./MyMediaStore";
 import {
     availabilityStatusStore,
     cameraEnergySavingStore,
+    inLivekitStore,
     isListenerStore,
     listenerSharingCameraStore,
     localStreamStore,
@@ -32,14 +33,7 @@ import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 import { createDelayedUnsubscribeStore } from "./Utils/createDelayedUnsubscribeStore";
 import { cameraPermissionStateStore } from "./MediaStatusStore";
-
-// MyLocalStreamable is a streamable that is the local camera streamable
-// It is used to display the local camera stream in the picture in picture mode when the user have an highlighted embed screen
-export interface MyLocalStreamable extends Streamable {
-    // No readonly because it is used to update the displayInPictureInPictureMode of the local camera streamable
-    displayInPictureInPictureMode: boolean;
-    setDisplayInPictureInPictureMode: (displayInPictureInPictureMode: boolean) => void;
-}
+import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
 
 export const LISTENER_BOX_UNIQUE_ID = "listener-box";
 export const LISTENER_BOX_PRIORITY = -4;
@@ -58,7 +52,7 @@ const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
 const mutedLocalStream = muteMediaStreamStore(localstreamStoreValue);
 
 export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) => {
-    const streamable: MyLocalStreamable = {
+    const streamable: Streamable = {
         uniqueId: "-1",
         media: {
             type: "webrtc" as const,
@@ -94,9 +88,6 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) 
         canCloseStreamable: () => false,
         volume: writable(1),
         videoType: "video",
-        setDisplayInPictureInPictureMode: (displayInPictureInPictureMode: boolean) => {
-            streamable.displayInPictureInPictureMode = displayInPictureInPictureMode;
-        },
         webrtcStats: undefined,
     };
     const videoBox = VideoBox.fromLocalStreamable(streamable, -2);
@@ -152,6 +143,8 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             requestedCameraState,
             windowSize,
             isLiveStreamingStore,
+            currentPlayerGroupIdStore,
+            inLivekitStore,
             isListenerStore,
             listenerSharingCameraStore,
             availabilityStatusStore,
@@ -169,6 +162,8 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 $requestedCameraState,
                 $windowSize,
                 $isLiveStreamingStore,
+                $currentPlayerGroupIdStore,
+                $inLivekitStore,
                 $isListenerStore,
                 $listenerSharingCameraStore,
                 $availabilityStatusStore,
@@ -194,12 +189,22 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
 
             if ($myCameraStore && !$cameraEnergySavingStore && !$silentStore) {
                 let shouldAddMyCamera = true;
+                const isInActiveConversation =
+                    $currentPlayerGroupIdStore !== undefined ||
+                    $inLivekitStore ||
+                    $isLiveStreamingStore ||
+                    $videoStreamElementsStore.length > 0 ||
+                    $screenShareStreamElementsStore.length > 0 ||
+                    $scriptingVideoStore.size > 0;
+
                 if (isUnavailableStatus) {
                     shouldAddMyCamera = false;
                 }
-                // Are we the only one to display video AND are we not publishing a video stream? If so, let's hide the video.
-                // Are we the only one to display video AND we are on a small screen? If so, let's hide the video (because the webcam takes space and makes iPhones laggy when it starts)
-                if (!$isLiveStreamingStore && (!$requestedCameraState || $windowSize.width < 768)) {
+                if (!$requestedCameraState) {
+                    shouldAddMyCamera = false;
+                }
+                // On small screens, keep the local camera only while the user is actually in a conversation.
+                if ($windowSize.width < 768 && !isInActiveConversation) {
                     shouldAddMyCamera = false;
                 }
                 // Listeners can only show their camera if they have consented to share it (seeAttendees feature)
