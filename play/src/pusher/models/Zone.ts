@@ -19,19 +19,19 @@ import type {
     GroupLeftZoneMessage,
 } from "@workadventure/messages";
 import { AvailabilityStatus } from "@workadventure/messages";
-import type { Socket } from "../services/SocketManager";
+import type { PusherWebSocket } from "../services/PusherWebSocket";
 
 export interface ZoneEventListener {
-    onUserEnters(user: UserDescriptor, listener: Socket): void;
-    onUserMoves(user: UserDescriptor, listener: Socket): void;
-    onUserLeaves(userId: number, listener: Socket): void;
-    onGroupEnters(group: GroupDescriptor, listener: Socket): void;
-    onGroupMoves(group: GroupDescriptor, listener: Socket): void;
-    onGroupLeaves(groupId: number, listener: Socket): void;
-    onGroupUsersUpdated(group: GroupDescriptor, listener: Socket): void;
-    onEmote(emoteMessage: EmoteEventMessage, listener: Socket): void;
-    onError(errorMessage: ErrorMessage, listener: Socket): void;
-    onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: Socket): void;
+    onUserEnters(user: UserDescriptor, listener: PusherWebSocket): void;
+    onUserMoves(user: UserDescriptor, listener: PusherWebSocket): void;
+    onUserLeaves(userId: number, listener: PusherWebSocket): void;
+    onGroupEnters(group: GroupDescriptor, listener: PusherWebSocket): void;
+    onGroupMoves(group: GroupDescriptor, listener: PusherWebSocket): void;
+    onGroupLeaves(groupId: number, listener: PusherWebSocket): void;
+    onGroupUsersUpdated(group: GroupDescriptor, listener: PusherWebSocket): void;
+    onEmote(emoteMessage: EmoteEventMessage, listener: PusherWebSocket): void;
+    onError(errorMessage: ErrorMessage, listener: PusherWebSocket): void;
+    onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: PusherWebSocket): void;
 }
 
 export class UserDescriptor {
@@ -193,7 +193,7 @@ interface ZoneDescriptor {
 export class Zone {
     private users: Map<number, UserDescriptor> = new Map<number, UserDescriptor>();
     private groups: Map<number, GroupDescriptor> = new Map<number, GroupDescriptor>();
-    private listeners: Set<Socket> = new Set<Socket>();
+    private listeners: Set<PusherWebSocket> = new Set<PusherWebSocket>();
 
     constructor(private socketListener: ZoneEventListener, public readonly x: number, public readonly y: number) {}
 
@@ -379,7 +379,7 @@ export class Zone {
         }
     }
 
-    private isListeningZone(socket: Socket, x: number, y: number): boolean {
+    private isListeningZone(socket: PusherWebSocket, x: number, y: number): boolean {
         const zoneKey = `${x},${y}`;
         return socket.getUserData().listenedZones.has(zoneKey);
     }
@@ -399,7 +399,7 @@ export class Zone {
         }
     }
 
-    public startListening(listener: Socket): void {
+    public startListening(listener: PusherWebSocket): void {
         const userData = listener.getUserData();
         for (const [userId, user] of this.users.entries()) {
             if (userId !== userData.userId) {
@@ -415,7 +415,7 @@ export class Zone {
         userData.listenedZones.add(`${this.x},${this.y}`);
     }
 
-    public stopListening(listener: Socket): void {
+    public stopListening(listener: PusherWebSocket): void {
         const userData = listener.getUserData();
         for (const userId of this.users.keys()) {
             if (userId !== userData.userId) {

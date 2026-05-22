@@ -3,13 +3,13 @@ import { mock } from "vitest-mock-extended";
 
 vi.mock("../../src/pusher/enums/EnvironmentVariable", () => import("./mocks/pusherEnvironmentVariableMock"));
 
-import type { Socket } from "../../src/pusher/services/SocketManager";
 import { SocketManager } from "../../src/pusher/services/SocketManager";
 import type { Query } from "../../src/pusher/models/SpaceQuery";
 import type { SpaceInterface } from "../../src/pusher/models/Space";
+import type { PusherWebSocket } from "../../src/pusher/services/PusherWebSocket";
 
 describe("SocketManager recording queries", () => {
-    const createClient = (overrides: Partial<ReturnType<Socket["getUserData"]>> = {}): Socket => {
+    const createClient = (overrides: Partial<ReturnType<PusherWebSocket["getUserData"]>> = {}): PusherWebSocket => {
         const socketData = {
             canRecord: true,
             spaceUserId: "space-user-1",
@@ -18,7 +18,7 @@ describe("SocketManager recording queries", () => {
             ...overrides,
         };
 
-        return mock<Socket>({
+        return mock<PusherWebSocket>({
             getUserData: vi.fn().mockReturnValue(socketData),
         });
     };

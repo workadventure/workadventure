@@ -9,7 +9,7 @@
  * number of players around the current player.
  */
 import type { ZoneMessage } from "@workadventure/messages";
-import type { Socket } from "../services/SocketManager";
+import type { PusherWebSocket } from "../services/PusherWebSocket";
 import { Zone } from "./Zone";
 import type { ZoneEventListener } from "./Zone";
 import type { ViewportInterface } from "./Websocket/ViewportMessage";
@@ -45,7 +45,7 @@ export class PositionDispatcher {
     /**
      * Sets the viewport coordinates.
      */
-    public setViewport(socket: Socket, viewport: ViewportInterface): void {
+    public setViewport(socket: PusherWebSocket, viewport: ViewportInterface): void {
         if (viewport.left > viewport.right || viewport.top > viewport.bottom) {
             console.warn("Invalid viewport received: ", viewport);
             return;
@@ -76,7 +76,7 @@ export class PositionDispatcher {
         }
     }
 
-    private subscribeZone(socket: Socket, i: number, j: number): void {
+    private subscribeZone(socket: PusherWebSocket, i: number, j: number): void {
         const zoneKey = this.getZoneKey(i, j);
         const userData = socket.getUserData();
         let zone = this.zones.get(zoneKey);
@@ -96,7 +96,7 @@ export class PositionDispatcher {
         }
     }
 
-    private unsubscribeZone(socket: Socket, i: number, j: number): void {
+    private unsubscribeZone(socket: PusherWebSocket, i: number, j: number): void {
         const zoneKey = this.getZoneKey(i, j);
         const userData = socket.getUserData();
         const zone = this.zones.get(zoneKey);
@@ -113,7 +113,7 @@ export class PositionDispatcher {
         }
     }
 
-    public removeViewport(socket: Socket): void {
+    public removeViewport(socket: PusherWebSocket): void {
         const listenedZones = socket.getUserData().listenedZones;
         if (listenedZones) {
             for (const zoneKey of [...listenedZones]) {

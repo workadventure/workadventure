@@ -6,7 +6,7 @@ import { asError } from "catch-unknown";
 import { CLIENT_DISCONNECTION_RETENTION_MS } from "../enums/EnvironmentVariable";
 import type { ConnectingSocketData } from "../models/Websocket/SocketData";
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
-import type { Socket, SocketUpgradeFailed } from "./SocketManager";
+import type { SocketUpgradeFailed } from "./SocketManager";
 import { PusherWebSocket } from "./PusherWebSocket";
 import type { RawSocket } from "./PusherWebSocket";
 import { validateWebsocketQuery } from "./QueryValidator";
@@ -26,10 +26,10 @@ type UpgradeContext<TQuery> = {
 };
 
 type UpgradeHandler<TQuery> = (context: UpgradeContext<TQuery>) => void | Promise<void>;
-type OpenHandler = (socket: Socket) => void | Promise<void>;
+type OpenHandler = (socket: PusherWebSocket) => void | Promise<void>;
 type RejectedOpenHandler = (socket: SocketUpgradeFailed) => void | Promise<void>;
-type MessageHandler = (socket: Socket, message: ClientToServerMessage) => void | Promise<void>;
-type CloseHandler = (socket: Socket) => void | Promise<void>;
+type MessageHandler = (socket: PusherWebSocket, message: ClientToServerMessage) => void | Promise<void>;
+type CloseHandler = (socket: PusherWebSocket) => void | Promise<void>;
 
 type RoomWsQuery = {
     tabId: string;
@@ -58,7 +58,6 @@ export class PusherRoomSocketController {
     private readonly wrappersBySocket = new WeakMap<RawSocket, PusherWebSocket>();
     private readonly contextByTabKey = new Map<string, WebSocketContext>();
     private readonly contextCleanupTimeoutsByTabKey = new Map<string, ReturnType<typeof setTimeout>>();
-    private readonly disconnectingSockets = new WeakSet<PusherWebSocket>();
 
     public constructor(private readonly app: TemplatedApp) {}
 
@@ -67,17 +66,7 @@ export class PusherRoomSocketController {
         if (existingWrapper) {
             return existingWrapper;
         }
-        const wrapper = new PusherWebSocket(rawSocket, {
-            isDisconnecting: (socket) => this.disconnectingSockets.has(socket),
-            startDisconnecting: (socket) => {
-                if (this.disconnectingSockets.has(socket)) {
-                    return false;
-                }
-
-                this.disconnectingSockets.add(socket);
-                return true;
-            },
-        });
+        const wrapper = new PusherWebSocket(rawSocket);
         this.wrappersBySocket.set(rawSocket, wrapper);
         return wrapper;
     }
@@ -323,7 +312,6 @@ export class PusherRoomSocketController {
                     return;
                 }
                 this.wrappersBySocket.delete(rawSocket);
-
                 if (!socket.isCurrentTransport(rawSocket)) {
                     return;
                 }

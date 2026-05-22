@@ -251,10 +251,7 @@ function createSocket(overrides: Partial<SocketData> = {}): RawSocket {
 }
 
 function createPusherWebSocket(socket: RawSocket): PusherWebSocket {
-    return new PusherWebSocket(socket, {
-        isDisconnecting: () => false,
-        startDisconnecting: () => true,
-    });
+    return new PusherWebSocket(socket);
 }
 
 function getSendMock(socket: RawSocket): ReturnType<typeof vi.fn> {
