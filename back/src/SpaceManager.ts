@@ -16,7 +16,6 @@ import {
 import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import * as Sentry from "@sentry/node";
 import { socketManager } from "./Services/SocketManager";
-import { closeBackpressureWriter } from "./Services/StreamBackpressure";
 import { SpacesWatcher } from "./Model/SpacesWatcher";
 import { LivekitWebhookError } from "./Model/Services/LivekitService";
 
@@ -128,13 +127,11 @@ const spaceManager = {
             }
         })
             .on("error", (e) => {
-                closeBackpressureWriter(call, "target_error");
                 console.error("Error on watchSpace", e);
                 Sentry.captureException(e);
                 socketManager.handleUnwatchAllSpaces(pusher);
             })
             .on("end", () => {
-                closeBackpressureWriter(call, "target_closed");
                 socketManager.handleUnwatchAllSpaces(pusher);
                 pusher.end();
                 debug("watchSpace => ended %s", pusher.id);

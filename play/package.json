@@ -20,7 +20,7 @@
     "dev-pusher": "TSX_TSCONFIG_PATH=tsconfig-pusher.json tsx watch --clear-screen=false --inspect=0.0.0.0:9229 ./src/server.ts",
     "build": "echo \"Compiling with options: $NODE_OPTIONS \" && cross-env vite build",
     "typecheck": "cross-env tsc --noEmit",
-    "profile": "tsc && node --prof ./dist/server.js",
+    "profile": "if [ -n \"$STARTUP_COMMAND\" ]; then sh -c \"$STARTUP_COMMAND\"; fi && TSX_TSCONFIG_PATH=tsconfig-pusher.json node --prof --import tsx ./src/server.ts",
     "push-sentry-sourcemaps": "tsc --project tsconfig-pusher.json && sentry-cli releases new $SENTRY_RELEASE && sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps dist --log-level debug && sentry-cli releases finalize $SENTRY_RELEASE",
     "build-iframe-api": "vite --config iframe-api.vite.config.ts build",
     "watch-iframe-api": "npm run build-iframe-api -- --watch",

@@ -14,12 +14,23 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     help: {
         title: "Camera / Microfoon toegang nodig",
+        cameraTitle: "Cameratoegang nodig",
+        microphoneTitle: "Microfoontoegang nodig",
         permissionDenied: "Toegang geweigerd",
+        cameraPermissionDenied: "Cameratoestemming geweigerd",
+        microphonePermissionDenied: "Microfoontoestemming geweigerd",
+        cameraMicrophonePermissionDenied: "Camera- en microfoontoestemming geweigerd",
         content: "Je moet toegang tot de camera en microfoon toestaan in je browser.",
+        cameraContent: "Je moet toegang tot de camera toestaan in je browser.",
+        microphoneContent: "Je moet toegang tot de microfoon toestaan in je browser.",
         firefoxContent:
             'Vink het vakje "Deze beslissing onthouden" aan als je niet wilt dat Firefox je steeds om toestemming vraagt.',
         allow: "Webcam toestaan",
+        allowMicrophone: "Microfoon toestaan",
+        allowCameraMicrophone: "Webcam en microfoon toestaan",
         continue: "Doorgaan zonder webcam",
+        continueWithoutMicrophone: "Doorgaan zonder microfoon",
+        continueCameraMicrophone: "Doorgaan zonder webcam en microfoon",
         screen: {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

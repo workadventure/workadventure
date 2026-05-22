@@ -29,6 +29,7 @@ import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPres
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
+import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 
@@ -49,6 +50,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     // Stores LiveKit participants that connected before their corresponding spaceUser was available
     private pendingParticipants: Map<string, RemoteParticipant> = new Map();
     private localParticipant: LocalParticipant | undefined;
+    private scriptingAudioTrack: MediaStreamTrack | undefined;
     private localScreenSharingVideoTrack: LocalVideoTrack | undefined;
     private localScreenSharingAudioTrack: LocalAudioTrack | undefined;
     private localCameraTrack: LocalVideoTrack | undefined;
@@ -314,16 +316,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
     private synchronizeMediaState() {
         this.unsubscribers.push(
-            deriveSwitchStore(this._localStreamStore, this.space.isStreamingStore).subscribe((localStream) => {
+            deriveSwitchStore(this._localStreamStore, this.space.isStreamingVideoStore).subscribe((localStream) => {
                 this.queueCameraTrackUpdate(localStream);
+            })
+        );
 
-                if (
-                    this.space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK &&
-                    !this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId)?.megaphoneState
-                ) {
-                    this.queueMicrophoneTrackUpdate(undefined);
-                    return;
-                }
+        this.unsubscribers.push(
+            deriveSwitchStore(this._localStreamStore, this.space.isStreamingAudioStore).subscribe((localStream) => {
                 this.queueMicrophoneTrackUpdate(localStream);
             })
         );
@@ -618,9 +617,19 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
 
+        if (this.scriptingAudioTrack && this.scriptingAudioTrack !== audioTrack) {
+            await this.localParticipant.unpublishTrack(this.scriptingAudioTrack, true);
+        }
+
+        if (this.scriptingAudioTrack === audioTrack) {
+            return;
+        }
+
         await this.localParticipant.publishTrack(audioTrack, {
+            name: SCRIPTING_AUDIO_TRACK_NAME,
             source: Track.Source.Microphone,
         });
+        this.scriptingAudioTrack = audioTrack;
     }
 
     private handleParticipantConnected(participant: RemoteParticipant) {

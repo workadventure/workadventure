@@ -31,6 +31,7 @@ import { windowSize } from "./CoWebsiteStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 import { createDelayedUnsubscribeStore } from "./Utils/createDelayedUnsubscribeStore";
+import { cameraPermissionStateStore } from "./MediaStatusStore";
 
 // MyLocalStreamable is a streamable that is the local camera streamable
 // It is used to display the local camera stream in the picture in picture mode when the user have an highlighted embed screen
@@ -69,8 +70,13 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) 
         },
         volumeStore: localVolumeStore,
         hasVideo: derived(
-            mediaStreamConstraintsStore,
-            ($mediaStreamConstraintsStore) => $mediaStreamConstraintsStore.video !== false
+            [mediaStreamConstraintsStore, cameraPermissionStateStore],
+            ([mediaStreamConstraintsStore, cameraPermissionStateStore]) => {
+                return (
+                    mediaStreamConstraintsStore.video !== false &&
+                    (cameraPermissionStateStore === "granted" || cameraPermissionStateStore === null)
+                );
+            }
         ),
         // hasAudio = true because the webcam has a microphone attached and could potentially play sound
         hasAudio: writable(true),

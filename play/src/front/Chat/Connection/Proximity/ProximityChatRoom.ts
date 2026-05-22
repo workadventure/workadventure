@@ -328,7 +328,7 @@ export class ProximityChatRoom implements ChatRoom {
         };
 
         const spaceUser = this.users?.get(senderUserId);
-        let chatUser: AnyKindOfUser = this.unknownUser;
+        let chatUser: AnyKindOfUser = { ...this.unknownUser, spaceUserId: senderUserId };
         if (spaceUser) {
             chatUser = mapExtendedSpaceUserToChatUser(spaceUser);
         }
@@ -475,14 +475,13 @@ export class ProximityChatRoom implements ChatRoom {
 
     private removeTypingUser(senderUserId: string): void {
         const sender = this.users?.get(senderUserId);
-        if (sender === undefined) {
-            return;
+        let userIdToRemove = senderUserId;
+        if (sender !== undefined) {
+            userIdToRemove = sender.spaceUserId.toString();
         }
 
-        const id = sender.spaceUserId.toString();
-
         this.typingMembers.update((typingMembers) => {
-            return typingMembers.filter((user) => user.id !== id);
+            return typingMembers.filter((user) => user.id !== userIdToRemove);
         });
     }
 

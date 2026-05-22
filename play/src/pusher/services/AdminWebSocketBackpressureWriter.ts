@@ -1,11 +1,16 @@
-import type {
-    BackpressureCloseReason,
-    BackpressureDropReason,
-    BackpressurePriority,
-    BackpressureWriteOptions,
-} from "./BackpressureWriter";
-
 type SendStatus = number;
+type BackpressurePriority = "critical" | "volatile";
+type BackpressureCloseReason =
+    | "queue_limit_exceeded"
+    | "drain_timeout"
+    | "target_closed"
+    | "target_error"
+    | "write_after_close";
+type BackpressureDropReason = "volatile_coalesced" | "volatile_queue_limit";
+type BackpressureWriteOptions = {
+    priority?: BackpressurePriority;
+    coalesceKey?: string;
+};
 
 type AdminWebSocketTarget = {
     send: (payload: string) => SendStatus;

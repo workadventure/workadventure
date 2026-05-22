@@ -2,13 +2,19 @@ import { DEPTH_INGAME_TEXT_INDEX } from "./DepthIndexes";
 import type { GameScene } from "./GameScene";
 
 type UsernameElement = {
-    element: HTMLParagraphElement;
+    element: HTMLDivElement;
     x: number;
     y: number;
+    depth: number;
     scale: number;
-    baseFontPx: number;
     zoomScale: number;
 };
+
+const PLAYER_NAME_BACKGROUND_COLOR = "rgba(27, 42, 65, 0.5)";
+const PLAYER_NAME_BACKGROUND_RADIUS = 8;
+const PLAYER_NAME_HEIGHT = 14;
+const PLAYER_NAME_PADDING = 6;
+const PLAYER_NAME_GAP = 4;
 
 export class UsernameDomLayer {
     private readonly container: HTMLDivElement;
@@ -32,59 +38,46 @@ export class UsernameDomLayer {
 
     public addUsername(
         id: number,
-        playerName: string,
         x: number,
         y: number,
-        font: string,
-        fontSize: number,
+        depth: number,
         displayScale: number,
         zoomScale: number
-    ): void {
+    ): HTMLDivElement {
         let username = this.usernames.get(id);
 
         if (!username) {
-            const element = document.createElement("p");
+            const element = document.createElement("div");
 
             element.ariaHidden = "true";
-            element.textContent = playerName;
-
-            element.style.position = "absolute";
-            element.style.top = "0";
-            element.style.left = "0";
-            element.style.margin = "0";
-            element.style.color = "#ffffff";
-            element.style.fontFamily = font;
-            element.style.fontSize = `${fontSize}px`;
-            element.style.whiteSpace = "nowrap";
-            element.style.pointerEvents = "none";
-
-            element.style.willChange = "transform";
+            element.className = "username-display";
+            element.style.background = PLAYER_NAME_BACKGROUND_COLOR;
 
             username = {
                 element,
                 x,
                 y,
+                depth,
                 scale: displayScale,
-                baseFontPx: fontSize,
                 zoomScale,
             };
 
             this.container.appendChild(element);
             this.usernames.set(id, username);
 
-            this.applyTransform(username);
-            return;
-        }
-
-        if (username.element.textContent !== playerName) {
-            username.element.textContent = playerName;
+            this.applyStyles(username);
+            this.applyDepth(username);
+            return element;
         }
 
         username.x = x;
         username.y = y;
+        username.depth = depth;
         username.scale = displayScale;
         username.zoomScale = zoomScale;
-        this.applyTransform(username);
+        this.applyStyles(username);
+        this.applyDepth(username);
+        return username.element;
     }
 
     public updateUsernamePosition(id: number, x: number, y: number): void {
@@ -113,7 +106,31 @@ export class UsernameDomLayer {
 
         username.scale = displayScale;
         username.zoomScale = zoomScale;
-        this.applyTransform(username);
+        this.applyStyles(username);
+    }
+
+    public updateUsernameDepth(id: number, depth: number): void {
+        const username = this.usernames.get(id);
+        if (!username) {
+            return;
+        }
+
+        if (username.depth === depth) {
+            return;
+        }
+
+        username.depth = depth;
+        this.applyDepth(username);
+    }
+
+    public updateUsernameBackgroundColor(id: number, color: number | undefined): void {
+        const username = this.usernames.get(id);
+        if (!username) {
+            return;
+        }
+
+        username.element.style.background =
+            color === undefined ? PLAYER_NAME_BACKGROUND_COLOR : `#${color.toString(16).padStart(6, "0")}`;
     }
 
     public removeUsername(id: number): void {
@@ -122,23 +139,39 @@ export class UsernameDomLayer {
             return;
         }
 
-        username.element.remove();
+        this.removeUsernameElement(username);
         this.usernames.delete(id);
     }
 
     public destroy(): void {
         for (const username of this.usernames.values()) {
-            username.element.remove();
+            this.removeUsernameElement(username);
         }
 
         this.usernames.clear();
         this.domElement.destroy();
     }
 
+    private applyStyles(username: UsernameElement): void {
+        const domScale = username.zoomScale * username.scale;
+        username.element.style.setProperty("--username-dom-scale", domScale.toString());
+        username.element.style.height = `${PLAYER_NAME_HEIGHT * domScale}px`;
+        username.element.style.gap = `${PLAYER_NAME_GAP * domScale}px`;
+        username.element.style.padding = `0 ${PLAYER_NAME_PADDING * domScale}px`;
+        username.element.style.borderRadius = `${PLAYER_NAME_BACKGROUND_RADIUS * domScale}px`;
+        this.applyTransform(username);
+    }
+
     private applyTransform(username: UsernameElement): void {
-        const fontPx = username.baseFontPx * username.zoomScale * username.scale;
         const scale = 1 / username.zoomScale;
-        username.element.style.fontSize = `${fontPx}px`;
         username.element.style.transform = `translate3d(${username.x}px, ${username.y}px, 0) translate(-50%, -50%) scale(${scale})`;
+    }
+
+    private applyDepth(username: UsernameElement): void {
+        username.element.style.zIndex = `${Math.round(username.depth)}`;
+    }
+
+    private removeUsernameElement(username: UsernameElement): void {
+        username.element.remove();
     }
 }

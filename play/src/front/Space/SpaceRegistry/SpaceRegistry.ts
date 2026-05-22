@@ -118,7 +118,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             return () => {};
         }
 
-        const stores = Array.from($spaces.values(), (space) => space.isStreamingStore);
+        const stores = Array.from($spaces.values(), (space) => space.isStreamingVideoStore);
         return derived(stores, (list) => list.some(Boolean)).subscribe(set);
     });
 

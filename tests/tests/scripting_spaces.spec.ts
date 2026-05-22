@@ -305,7 +305,7 @@ test.describe("Scripting space-related functions @nowebkit", () => {
                 }
                 return null;
             }),
-        ).toContain("type mismatch");
+        ).toMatch(/[Ff]ilter type mismatch/);
     });
 
     test("can join a livestream space and see the user when it starts streaming", async ({

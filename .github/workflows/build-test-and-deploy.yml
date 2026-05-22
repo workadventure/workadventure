@@ -752,8 +752,23 @@ jobs:
           forceRedeploy: true
           play:
             replicaCount: 2
+            env:
+              PROMETHEUS_PORT: "9090"
             secretEnv:
               ROOM_API_SECRET_KEY: "password"
+            podAnnotations:
+              prometheus.io/scrape: 'true'
+              prometheus.io/path: '/metrics'
+              prometheus.io/port: '9090'
+          back:
+            env:
+              PROMETHEUS_PORT: "9090"
+        
+            podAnnotations:
+              prometheus.io/scrape: 'true'
+              prometheus.io/path: '/metrics'
+              prometheus.io/port: '9090'
+          
           mapstorage:
             env:
               AUTHENTICATION_USER: "john.doe"

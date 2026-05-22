@@ -24,6 +24,8 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     private readonly segments = 64; // angular samples (higher = smoother)
     private readonly speed = 0.1; // If set to 1, the bubble size instantly matches the avatars position. Set between 0 and 1 to have a smooth transition.
     private readonly stopAnimationThreshold = 0.1; // As long as one of the radii changes more than this value, the bubble is considered animating.
+    private readonly influenceRadius = this.R0 + this.lambda * 2;
+    private readonly influenceRadiusSquared = this.influenceRadius * this.influenceRadius;
 
     // ==== Internal state ===================================================
     private center = new Phaser.Math.Vector2();
@@ -36,6 +38,7 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     private generatedTextureKey: string | null = null;
     // Whether the bubble is currently wobbling
     private _isAnimating: boolean = true;
+    private _needsStep: boolean = true;
 
     constructor(scene: GameScene, x: number, y: number, locked: boolean, userIds: number[]) {
         super(scene, x, y, "");
@@ -52,28 +55,22 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
 
     public updateUsers(userIds: number[]): void {
         this.userIds = userIds;
-        this.drawSpline();
+        this._needsStep = true;
     }
 
-    private getAvatarsList(): Avatar[] {
-        const avatars: Avatar[] = [];
-
-        for (const remotePlayer of this.gameScene.MapPlayersByKey.values()) {
-            const avatar = this.turnInAvatar(remotePlayer);
-            if (avatar) {
-                avatars.push(avatar);
-            }
-        }
-
-        const currentPlayerAvatar = this.turnInAvatar(this.gameScene.CurrentPlayer);
-        if (currentPlayerAvatar) {
-            avatars.push(currentPlayerAvatar);
-        }
-
-        return avatars;
+    public getInfluenceRadius(): number {
+        return this.influenceRadius;
     }
 
-    private turnInAvatar(character: Character): Avatar | undefined {
+    public containsUserId(userId: number): boolean {
+        return this.userIds.includes(userId);
+    }
+
+    public getUserIds(): readonly number[] {
+        return this.userIds;
+    }
+
+    public turnInAvatar(character: Character): Avatar | undefined {
         let userId: number;
         if (character instanceof RemotePlayer) {
             userId = character.userId;
@@ -97,8 +94,8 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
             // Is the player close enough to be considered?
             const dx = character.x - this.center.x;
             const dy = character.y - this.center.y;
-            const dist = dx + dy; // using an approximation of distance for performance
-            if (dist < this.R0 + this.lambda * 2) {
+            const dist = dx * dx + dy * dy;
+            if (dist < this.influenceRadiusSquared) {
                 return {
                     x: character.x,
                     y: character.y,
@@ -110,10 +107,10 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     }
 
     /** Call once per frame with the avatars that might affect this bubble. */
-    public step(): void {
-        const avatars = this.getAvatarsList();
-
+    public step(avatars: Avatar[]): void {
+        this._needsStep = false;
         this._isAnimating = false; // reset animation state
+        this.updateCenterFromInsideAvatars(avatars);
 
         /* --- 1.  Update radius samples ----------------------------------- */
         for (let s = 0; s < this.segments; s++) {
@@ -160,6 +157,29 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     private angularFalloff(delta: number, isInside: boolean): number {
         const c = Math.cos(delta);
         return c <= 0 ? 0 : Math.pow(c, isInside ? this.kInside : this.kOutside);
+    }
+
+    private updateCenterFromInsideAvatars(avatars: Avatar[]): void {
+        let x = 0;
+        let y = 0;
+        let count = 0;
+
+        for (const avatar of avatars) {
+            if (!avatar.inside) {
+                continue;
+            }
+
+            x += avatar.x;
+            y += avatar.y;
+            count++;
+        }
+
+        if (count === 0) {
+            return;
+        }
+
+        this.center.set(x / count, y / count);
+        this.setPosition(this.center.x, this.center.y);
     }
 
     /**
@@ -243,12 +263,6 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     // Optional utilities
     // -----------------------------------------------------------------------
 
-    /** Move the whole bubble (e.g. follow the group's centroid). */
-    public setCenter(x: number, y: number): void {
-        this.center.set(x, y);
-        this.setPosition(x, y);
-    }
-
     public setLocked(locked: boolean): void {
         this.locked = locked;
         this.drawSpline(); // redraw with new style
@@ -270,5 +284,9 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
 
     public get isAnimating(): boolean {
         return this._isAnimating;
+    }
+
+    public get needsStep(): boolean {
+        return this._needsStep;
     }
 }

@@ -3,18 +3,27 @@ import type { FrontConfigurationInterface } from "../../src/common/FrontConfigur
 // Vitest setup: provide a minimal MediaStream polyfill for Node test environment
 
 class MediaStreamPolyfill {
-    constructor(_tracks?: unknown[]) {}
+    private tracks: unknown[];
+
+    constructor(tracks: unknown[] = []) {
+        this.tracks = tracks;
+    }
+
     getTracks(): unknown[] {
-        return [];
+        return this.tracks;
     }
     getAudioTracks(): unknown[] {
-        return [];
+        return this.tracks.filter((track) => (track as MediaStreamTrack).kind === "audio");
     }
     getVideoTracks(): unknown[] {
-        return [];
+        return this.tracks.filter((track) => (track as MediaStreamTrack).kind === "video");
     }
-    addTrack(_track: unknown): void {}
-    removeTrack(_track: unknown): void {}
+    addTrack(track: unknown): void {
+        this.tracks.push(track);
+    }
+    removeTrack(track: unknown): void {
+        this.tracks = this.tracks.filter((currentTrack) => currentTrack !== track);
+    }
 }
 
 if (typeof globalThis.MediaStream === "undefined") {

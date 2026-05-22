@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx watch --inspect=0.0.0.0:9229 src/server.ts",
     "runprod": "tsx src/server.ts",
-    "profile": "tsc && node --prof ./dist/server.js",
+    "profile": "node --prof --import tsx src/server.ts",
     "typecheck": "tsc --noEmit",
     "test": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config vitest.config.ts ",
     "test:coverage": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config vitest.config.ts --coverage -- --verbose=true",
