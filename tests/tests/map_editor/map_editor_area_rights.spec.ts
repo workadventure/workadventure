@@ -293,6 +293,8 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await AreaAccessRights.openAreaEditorAndAddAreaWithRights(page, ["member"], []);
         await AreaAccessRights.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(page);
         await oidcLogout(page);
+        await page.close();
+        await page.context().close();
 
         // Second browser with member user trying to read the object
         await using page2 = await getPage(browser, "Member1", Map.url("empty"));
@@ -307,14 +309,20 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         // check if removed or not
         // Expected to be removed
         await Menu.openMapEditor(page2);
+        await expect(page2.locator("#map-editor-container")).toBeVisible();
         await MapEditor.openTrashEditor(page2);
+        await expect(
+            page2.locator("section.side-bar-container .side-bar .tool-button button#TrashEditor"),
+        ).toBeVisible();
         await EntityEditor.moveAndClick(
             page2,
             AreaAccessRights.entityPositionInArea.x,
             AreaAccessRights.entityPositionInArea.y,
         );
         // Note: we need to use the "close button" in the tools bar because the other close button is minified.
+        await expect(page2.getByTestId("closeMapEditorButton")).toBeVisible();
         await page2.getByTestId("closeMapEditorButton").click();
+        await expect(page2.locator("#map-editor-container")).toBeHidden({ timeout: 20_000 });
         //await Menu.closeMapEditor(page2);
         await EntityEditor.moveAndClick(
             page2,
@@ -325,8 +333,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await expect(page2.getByTestId("openWebsite")).toBeHidden();
 
         await page2.context().close();
-
-        await page.context().close();
     });
 
     test("Area with restricted write access : Trying to remove an object outside the area", async ({

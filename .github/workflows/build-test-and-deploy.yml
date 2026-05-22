@@ -385,8 +385,33 @@ jobs:
         run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml ps
         if: failure()
       - name: Side-load docker compose logs in the playwright report
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml logs > tests/playwright-report/docker-compose.log
+        run: |
+          mkdir -p tests/playwright-report
+          docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml logs > tests/playwright-report/docker-compose.log || true
         if: failure()
+      - name: Add Playwright failure summary
+        if: failure()
+        working-directory: tests
+        run: |
+          mkdir -p playwright-report
+          {
+            echo "# Playwright failure summary"
+            echo
+            echo "- project: ${{ matrix.project }}"
+            echo "- browser: ${{ matrix.browser != '' && matrix.browser || matrix.project }}"
+            echo "- shard: ${{ matrix.shard }}/${{ matrix.nbShards }}"
+            echo "- run attempt: ${{ github.run_attempt }}"
+            echo
+            if compgen -G "playwright-report/data/*.md" > /dev/null; then
+              for report in playwright-report/data/*.md; do
+                echo "## $(basename "$report")"
+                sed -n '/# Test info/,/# Test source/p' "$report" | sed -n '1,80p'
+                echo
+              done
+            else
+              echo "No Playwright markdown failure reports were found."
+            fi
+          } > playwright-report/failure-summary.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -657,6 +682,29 @@ jobs:
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
+      - name: Add Playwright failure summary
+        if: failure()
+        working-directory: tests
+        run: |
+          mkdir -p playwright-report
+          {
+            echo "# Playwright failure summary"
+            echo
+            echo "- project: single-domain"
+            echo "- browser: chromium"
+            echo "- shard: ${{ matrix.shard }}/${{ matrix.nbShards }}"
+            echo "- run attempt: ${{ github.run_attempt }}"
+            echo
+            if compgen -G "playwright-report/data/*.md" > /dev/null; then
+              for report in playwright-report/data/*.md; do
+                echo "## $(basename "$report")"
+                sed -n '/# Test info/,/# Test source/p' "$report" | sed -n '1,80p'
+                echo
+              done
+            else
+              echo "No Playwright markdown failure reports were found."
+            fi
+          } > playwright-report/failure-summary.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -763,12 +811,12 @@ jobs:
           back:
             env:
               PROMETHEUS_PORT: "9090"
-        
+
             podAnnotations:
               prometheus.io/scrape: 'true'
               prometheus.io/path: '/metrics'
               prometheus.io/port: '9090'
-          
+
           mapstorage:
             env:
               AUTHENTICATION_USER: "john.doe"
@@ -983,6 +1031,29 @@ jobs:
           ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
           MAP_STORAGE_API_TOKEN: ${{ secrets.MAP_STORAGE_API_TOKEN }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
+      - name: Add Playwright failure summary
+        if: failure()
+        working-directory: tests
+        run: |
+          mkdir -p playwright-report
+          {
+            echo "# Playwright failure summary"
+            echo
+            echo "- project: helm"
+            echo "- browser: chromium"
+            echo "- shard: ${{ matrix.shard }}/${{ matrix.nbShards }}"
+            echo "- run attempt: ${{ github.run_attempt }}"
+            echo
+            if compgen -G "playwright-report/data/*.md" > /dev/null; then
+              for report in playwright-report/data/*.md; do
+                echo "## $(basename "$report")"
+                sed -n '/# Test info/,/# Test source/p' "$report" | sed -n '1,80p'
+                echo
+              done
+            else
+              echo "No Playwright markdown failure reports were found."
+            fi
+          } > playwright-report/failure-summary.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:

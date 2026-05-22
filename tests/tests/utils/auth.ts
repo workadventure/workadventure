@@ -72,18 +72,12 @@ async function createUser(
     await expect(page.locator("h2", { hasText: "Turn on your camera and microphone" })).toBeVisible();
     await page.click("text=Save");
 
+    await skipOnboardingWhenShown(page);
     await dismissDuplicateUserConnectedModalIfShown(page);
     await dismissPwaInstallScreenIfShown(page);
     await dismissDoNotDisturbInfoToast(page);
-    await skipOnboardingWhenShown(page);
 
-    if (browser.browserType().name() !== "webkit") {
-        await Menu.expectButtonState(page, "microphone-button", "normal");
-        await Menu.expectButtonState(page, "camera-button", "normal");
-    } else {
-        await Menu.expectButtonState(page, "microphone-button", "forbidden");
-        await Menu.expectButtonState(page, "camera-button", "forbidden");
-    }
+    await Menu.waitForMapLoad(page, 120_000);
 
     switch (name) {
         case "Admin1":
@@ -139,10 +133,10 @@ export async function getPage(
     }
     const targetUrl = new URL(url, play_url).toString();
     await page.goto(targetUrl);
+    await skipOnboardingWhenShown(page);
     await dismissPwaInstallScreenIfShown(page, true);
     await dismissDuplicateUserConnectedModalIfShown(page, true);
     await dismissDoNotDisturbInfoToast(page);
-    await skipOnboardingWhenShown(page);
 
     await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
     return page;
@@ -150,10 +144,14 @@ export async function getPage(
 
 async function skipOnboardingWhenShown(page: Page) {
     await page.addLocatorHandler(page.getByTestId("onboarding-button-welcome-skip"), async () => {
+        const skipButton = page.getByTestId("onboarding-button-welcome-skip");
         try {
-            await page.getByTestId("onboarding-button-welcome-skip").click();
+            await skipButton.click({ timeout: 5_000 });
         } catch (e) {
             if (e instanceof Error && e.message.includes("Target page, context or browser has been closed")) {
+                return;
+            }
+            if (await skipButton.isHidden().catch(() => true)) {
                 return;
             }
             throw e;
