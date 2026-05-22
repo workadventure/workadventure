@@ -18,17 +18,14 @@ import AreaLivekit from "./utils/AreaLivekit";
 
 test.setTimeout(240_000);
 
-test.describe("Meeting actions test", () => {
-    test.beforeEach(
-        "Ignore tests on mobilechromium because map editor not available for mobile devices",
-        ({ browserName, page, browser }) => {
-            //Map Editor not available on mobile adn webkit have issue with camera
-            if (browserName === "webkit" || isMobile(page) || browser.browserType().name() === "firefox") {
-                test.skip();
-                return;
-            }
-        },
-    );
+test.describe("Meeting actions test @nomobile @nofirefox @nowebkit", () => {
+    test.beforeEach("Ignore tests on firefox, mobile and webkit", ({ browserName, page, browser }) => {
+        //Map Editor not available on mobile adn webkit have issue with camera
+        if (browserName === "webkit" || isMobile(page) || browser.browserType().name() === "firefox") {
+            test.skip();
+            return;
+        }
+    });
 
     test("Should display 4 cameras on screen", async ({ browser }) => {
         // Go to the empty map
