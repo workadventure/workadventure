@@ -639,6 +639,7 @@ jobs:
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
+          ADMIN_API_TOKEN: "123"
       - name: Display docker compose logs on failure
         run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml logs
         if: failure()
