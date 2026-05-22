@@ -1,4 +1,3 @@
-import { AvailabilityStatus } from "@workadventure/messages";
 import type { Readable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
 import ListenerBox from "../Components/Video/ListenerBox.svelte";
@@ -6,6 +5,7 @@ import { LayoutMode } from "../WebRtc/LayoutManager";
 import LL from "../../i18n/i18n-svelte";
 import { VideoBox } from "../Space/VideoBox";
 import type { Streamable } from "../Space/Streamable";
+import { touchScreenManager } from "../Touch/TouchScreenManager";
 import { screenSharingLocalVideoBox } from "./ScreenSharingStore";
 
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
@@ -33,6 +33,7 @@ import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 import { createDelayedUnsubscribeStore } from "./Utils/createDelayedUnsubscribeStore";
 import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
+import { shouldDisplayLocalCameraPeer } from "./StreamableCollectionRules";
 
 export const LISTENER_BOX_UNIQUE_ID = "listener-box";
 export const LISTENER_BOX_PRIORITY = -4;
@@ -218,34 +219,21 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 }
             };
 
-            const isUnavailableStatus =
-                $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
-                $availabilityStatusStore === AvailabilityStatus.SILENT ||
-                $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
-                $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-                $availabilityStatusStore === AvailabilityStatus.BUSY;
-
-            if ($myCameraStore && !$cameraEnergySavingStore && !$silentStore) {
-                let shouldAddMyCamera = true;
-
-                if (isUnavailableStatus) {
-                    shouldAddMyCamera = false;
-                }
-                if (!$requestedCameraState) {
-                    shouldAddMyCamera = false;
-                }
-                // On small screens, keep the local camera only while the user is actually in a conversation.
-                if ($windowSize.width < 768 && !$isInActiveConversationStore) {
-                    shouldAddMyCamera = false;
-                }
-                // Listeners can only show their camera if they have consented to share it (seeAttendees feature)
-                if ($isListenerStore && !$listenerSharingCameraStore) {
-                    shouldAddMyCamera = false;
-                }
-
-                if (shouldAddMyCamera) {
-                    addPeer($myCameraPeerStore);
-                }
+            if (
+                shouldDisplayLocalCameraPeer({
+                    hasCameraDevice: $myCameraStore,
+                    isCameraEnergySaving: $cameraEnergySavingStore,
+                    isSilent: $silentStore,
+                    requestedCameraState: $requestedCameraState,
+                    windowWidth: $windowSize.width,
+                    isMobile: touchScreenManager.primaryTouchDevice,
+                    isInActiveConversation: $isInActiveConversationStore,
+                    isListener: $isListenerStore,
+                    listenerSharingCamera: $listenerSharingCameraStore,
+                    availabilityStatus: $availabilityStatusStore,
+                })
+            ) {
+                addPeer($myCameraPeerStore);
             }
 
             $screenShareStreamElementsStore.forEach(addPeer);
