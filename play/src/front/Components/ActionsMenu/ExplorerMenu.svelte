@@ -111,7 +111,7 @@
 <svelte:window on:blur={stopZoom} />
 
 <div
-    class="fixed bottom-2 bg-contrast/80 rounded pointer-events-auto p-1 backdrop-blur hover:bg-contrast/100"
+    class="fixed bottom-2 mobile:bottom-24 bg-contrast/80 rounded pointer-events-auto p-1 backdrop-blur hover:bg-contrast/100"
     style:right={`calc(${mapEditorRightOffset}px + 0.5rem)`}
     data-testid="actions-explorer"
 >
