@@ -356,7 +356,20 @@ jobs:
           docker image load --input /tmp/uploader.tar.gz
           docker image ls -a
       - name: Start WorkAdventure
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml up -d --scale egress=2
+        run: |
+          for attempt in 1 2 3; do
+            echo "Starting WorkAdventure, attempt ${attempt}/3"
+            if docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml up -d --scale egress=2; then
+              exit 0
+            fi
+
+            if [ "$attempt" = "3" ]; then
+              exit 1
+            fi
+
+            docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml down --remove-orphans || true
+            sleep 20
+          done
 
         
       - name: Upload test-map
