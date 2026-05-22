@@ -41,7 +41,7 @@ export async function getPusherRooms(request: APIRequestContext): Promise<APIRes
         // We are inside a container. Let's use a direct route
         url = "http://play:3000/rooms";
     }
-
+    console.log("DEBUG: ADMIN_API_TOKEN = ", ADMIN_API_TOKEN);
     return request.get(url, {
         headers: {
             Authorization: ADMIN_API_TOKEN,
