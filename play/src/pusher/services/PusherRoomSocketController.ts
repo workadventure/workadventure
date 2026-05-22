@@ -116,6 +116,27 @@ export class PusherRoomSocketController {
         return parsed;
     }
 
+    private canReplaceTransportWithoutUpgrade<TQuery extends RoomWsQuery>(
+        query: TQuery,
+        websocketProtocol: string,
+        tabContext: WebSocketContext | undefined
+    ): tabContext is WebSocketContext & { socket: PusherWebSocket } {
+        if (!tabContext?.socket || tabContext.socket.isDisconnecting()) {
+            return false;
+        }
+
+        const socketData = tabContext.socket.getUserData();
+        if (socketData.token !== websocketProtocol) {
+            return false;
+        }
+
+        if ("roomId" in query && typeof query.roomId === "string" && query.roomId !== socketData.roomId) {
+            return false;
+        }
+
+        return true;
+    }
+
     private upgradeSocket(
         aborted: boolean,
         res: HttpResponse,
@@ -172,6 +193,24 @@ export class PusherRoomSocketController {
                         urlSearchParams.get("lastReceivedNonce") ?? undefined,
                         "lastReceivedNonce"
                     );
+                    const tabContext = this.contextByTabKey.get(query.tabId);
+
+                    if (
+                        clientLastReceivedNonce !== undefined &&
+                        this.canReplaceTransportWithoutUpgrade(query, websocketProtocol, tabContext)
+                    ) {
+                        tabContext.clientLastReceivedNonce = clientLastReceivedNonce;
+                        this.upgradeSocket(
+                            upgradeAborted.aborted,
+                            res,
+                            { ...tabContext.socket.getUserData() },
+                            websocketKey,
+                            websocketProtocol,
+                            websocketExtensions,
+                            context
+                        );
+                        return;
+                    }
 
                     await config.upgrade({
                         query,
