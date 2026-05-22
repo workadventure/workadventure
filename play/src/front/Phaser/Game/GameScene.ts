@@ -1953,6 +1953,36 @@ export class GameScene extends DirtyScene {
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
 
+                // The serverDisconnected stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.serverDisconnected.subscribe(() => {
+                    showConnectionIssueMessage();
+                    console.info("Player disconnected from server. Waiting for pusher ping.");
+                    connectionManager
+                        .waitForPusherPing()
+                        .then(() => {
+                            console.info("Pusher reachable again. Reloading scene.");
+                            this.cleanupClosingScene();
+                            this.createSuccessorGameScene(true, true);
+                        })
+                        .catch((e) => {
+                            console.error(
+                                `Error while waiting for Pusher to come back online: ${asError(e).message}`,
+                                e
+                            );
+                            Sentry.captureException(e);
+                            this.handleErrorAndCleanup(
+                                e,
+                                "CONNECTION_BROKEN",
+                                "Unable to reconnect",
+                                "Error when trying to reconnect after the connection was lost"
+                            );
+                            hideConnectionIssueMessage();
+                            return;
+                        });
+                });
+                hideConnectionIssueMessage();
+
                 const commandsToApply = onConnect.roomConnectedMessage.editMapCommandsArrayMessage?.editMapCommands;
                 if (commandsToApply) {
                     try {
@@ -2081,36 +2111,6 @@ export class GameScene extends DirtyScene {
                         console.error(e);
                     }
                 });
-
-                // The serverDisconnected stream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.serverDisconnected.subscribe(() => {
-                    showConnectionIssueMessage();
-                    console.info("Player disconnected from server. Waiting for pusher ping.");
-                    connectionManager
-                        .waitForPusherPing()
-                        .then(() => {
-                            console.info("Pusher reachable again. Reloading scene.");
-                            this.cleanupClosingScene();
-                            this.createSuccessorGameScene(true, true);
-                        })
-                        .catch((e) => {
-                            console.error(
-                                `Error while waiting for Pusher to come back online: ${asError(e).message}`,
-                                e
-                            );
-                            Sentry.captureException(e);
-                            this.handleErrorAndCleanup(
-                                e,
-                                "CONNECTION_BROKEN",
-                                "Unable to reconnect",
-                                "Error when trying to reconnect after the connection was lost"
-                            );
-                            hideConnectionIssueMessage();
-                            return;
-                        });
-                });
-                hideConnectionIssueMessage();
 
                 // The itemEventMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
