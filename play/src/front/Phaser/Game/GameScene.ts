@@ -2242,7 +2242,10 @@ export class GameScene extends DirtyScene {
 
                 gameSceneStore.set(this);
             })
-            .catch((e) => console.error(e));
+            .catch((e) => {
+                Sentry.captureException(e);
+                console.error("Error while connecting to pusher", e);
+            });
     }
 
     /**
