@@ -145,6 +145,8 @@ export class PusherWebSocket {
         }
 
         this._isDisconnecting = true;
+        this.stopKeepAlive();
+        this.stopBatching();
         return true;
     }
 
