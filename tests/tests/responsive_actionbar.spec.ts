@@ -55,7 +55,7 @@ test.describe("Action bar responsiveness @nomobile", () => {
         await expect(actionBarButton(page, "Download")).toBeVisible();
         await expect(actionBarButton(page, "Inventory")).toBeVisible();
 
-        await page.setViewportSize({ width: 750, height: 600 });
+        await page.setViewportSize({ width: 650, height: 600 });
 
         await expect(actionBarButton(page, "Register")).toBeHidden({ timeout: 20_000 });
         await expect(actionBarButton(page, "Download")).toBeHidden({ timeout: 20_000 });

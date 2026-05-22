@@ -5,7 +5,11 @@ import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin }
 import Menu from "./menu";
 import { play_url } from "./urls";
 import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
-import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
+import {
+    dismissDuplicateUserConnectedModalIfShown,
+    installDuplicateUserConnectedModalHandler,
+    preventDuplicateUserConnectedModal,
+} from "./duplicateUserModal";
 import { dismissDoNotDisturbInfoToast } from "./doNotDisturbInfoToast";
 import { dismissOnboardingIfShown } from "./onboarding";
 
@@ -50,6 +54,8 @@ async function createUser(name: TestUserName, browser: Browser, url: string): Pr
     }
     const context: BrowserContext = await browser.newContext();
     const page: Page = await context.newPage();
+    await preventDuplicateUserConnectedModal(page);
+    await installDuplicateUserConnectedModalHandler(page);
     const targetUrl = new URL(url, play_url).toString();
 
     await page.goto(targetUrl);
@@ -116,6 +122,8 @@ export async function getPage(
     await createUser(name, browser, url);
     const newBrowser: BrowserContext = await browser.newContext({ storageState: "./.auth/" + name + ".json" });
     const page: Page = await newBrowser.newPage();
+    await preventDuplicateUserConnectedModal(page);
+    await installDuplicateUserConnectedModalHandler(page, true);
     if (options.pageCreatedHook) {
         options.pageCreatedHook(page);
     }

@@ -1,6 +1,51 @@
 import type { Page } from "@playwright/test";
 import { dismissOnboardingIfShown } from "./onboarding";
 
+const DUPLICATE_USER_DONT_REMIND_KEY = "workadventure_duplicate_user_dont_remind";
+
+export async function preventDuplicateUserConnectedModal(page: Page): Promise<void> {
+    await page.addInitScript((key) => {
+        localStorage.setItem(key, "1");
+    }, DUPLICATE_USER_DONT_REMIND_KEY);
+
+    await page
+        .evaluate((key) => {
+            localStorage.setItem(key, "1");
+        }, DUPLICATE_USER_DONT_REMIND_KEY)
+        .catch(() => undefined);
+}
+
+async function clickDuplicateUserContinue(page: Page, dontRemindAgain: boolean): Promise<boolean> {
+    const confirm = page.getByTestId("duplicate-user-confirm-continue");
+    const dontRemindCheckbox = page.getByTestId("duplicate-user-dont-remind-again");
+
+    if (!(await confirm.isVisible().catch(() => false))) {
+        return false;
+    }
+
+    if (dontRemindAgain && (await dontRemindCheckbox.isVisible().catch(() => false))) {
+        await dontRemindCheckbox.evaluate((element: HTMLInputElement) => {
+            if (!element.checked) {
+                element.click();
+            }
+        });
+    }
+
+    await confirm.evaluate((element: HTMLElement) => element.click());
+    await confirm.waitFor({ state: "hidden", timeout: 30_000 }).catch(() => undefined);
+
+    return true;
+}
+
+export async function installDuplicateUserConnectedModalHandler(
+    page: Page,
+    dontRemindAgain: boolean = false,
+): Promise<void> {
+    await page.addLocatorHandler(page.getByTestId("duplicate-user-confirm-continue"), async () => {
+        await clickDuplicateUserContinue(page, dontRemindAgain);
+    });
+}
+
 /**
  * After the room connection is established, the "already connected in another tab" modal may appear.
  * Waits until that screen, the game (microphone), or an error message is visible; if the duplicate-user
@@ -11,7 +56,6 @@ export async function dismissDuplicateUserConnectedModalIfShown(
     dontRemindAgain: boolean = false,
 ): Promise<void> {
     const confirm = page.getByTestId("duplicate-user-confirm-continue");
-    const dontRemindCheckbox = page.getByTestId("duplicate-user-dont-remind-again");
     const microphone = page.getByTestId("microphone-button");
     const mapLoadedControls = [
         page.locator("#game canvas").first(),
@@ -45,10 +89,7 @@ export async function dismissDuplicateUserConnectedModalIfShown(
         }
 
         if (visibleControl === "confirm") {
-            if (dontRemindAgain) {
-                await dontRemindCheckbox.check();
-            }
-            await confirm.click();
+            await clickDuplicateUserContinue(page, dontRemindAgain);
         }
 
         return;

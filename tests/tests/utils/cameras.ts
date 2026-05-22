@@ -30,6 +30,8 @@ export async function expectCameraParticipantVisible(
     options: { exact?: boolean; timeout?: number } = {},
 ) {
     const { exact = true, timeout = DEFAULT_CAMERA_CONTAINER_TIMEOUT } = options;
+    await expectCamerasContainerVisible(page, timeout);
+
     const participant = page.locator("#cameras-container").getByText(name, { exact }).first();
 
     try {
