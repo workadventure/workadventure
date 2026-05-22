@@ -1,6 +1,6 @@
 import { AvailabilityStatus } from "@workadventure/messages";
 
-export const LOCAL_CAMERA_SMALL_SCREEN_WIDTH = 700;
+export const LOCAL_CAMERA_SMALL_SCREEN_WIDTH = 768;
 
 export type LocalCameraPeerDisplayOptions = {
     hasCameraDevice: boolean;
