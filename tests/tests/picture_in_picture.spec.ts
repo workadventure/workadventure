@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { getPage } from "./utils/auth";
 import { publicTestMapUrl } from "./utils/urls";
 import { isMobile } from "./utils/isMobile";
+import { expectCamerasContainerVisible } from "./utils/cameras";
 
 test.describe("Picture In Picture", () => {
     test("available on chrome", async ({ page, browser, browserName }) => {
@@ -22,6 +23,8 @@ test.describe("Picture In Picture", () => {
         // Wait for both users to be connected
         await expect(alicePage.getByText("Bob", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
         await expect(bobPage.getByText("Alice", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
+        await expectCamerasContainerVisible(alicePage);
+        await expectCamerasContainerVisible(bobPage);
 
         // Move to a position where the video call button is visible
         await alicePage.mouse.move(300, 300);
@@ -60,6 +63,8 @@ test.describe("Picture In Picture", () => {
         // Wait for both users to be connected
         await expect(alicePage.getByText("Bob", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
         await expect(bobPage.getByText("Alice", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
+        await expectCamerasContainerVisible(alicePage);
+        await expectCamerasContainerVisible(bobPage);
 
         // Move to a position where the video call button is visible
         await alicePage.mouse.move(300, 300);

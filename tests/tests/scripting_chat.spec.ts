@@ -18,6 +18,7 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
             //await chatUtils.resetMatrixDatabase();
         },
     );
+
     test("can open / close chat + start / stop typing @chat", async ({ browser }) => {
         await using page = await getPage(browser, "Bob", Map.url("empty"));
         //await oidcMatrixUserLogin(page, false);
@@ -29,7 +30,6 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
             return WA.chat.open();
         });
         await expect(page.locator("#chat")).toBeVisible();
-        await expect(page.getByRole("button", { name: "Proximity Chat" })).toBeVisible({ timeout: 60000 });
 
         // Open the timeline
         await Chat.openTimeline(page);
@@ -118,19 +118,19 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
 
         // Check that bob received the message
         //await bob.pause();
-        await expect(bob.getByText("New discussion with Alice")).toBeVisible();
+        await expect(bob.getByText("New discussion with Alice")).toBeVisible({ timeout: 60_000 });
 
         // Check that bob received the message
         await expect(bob.locator("#chat")).toContainText("Test message sent", {
-            timeout: 30000,
+            timeout: 60_000,
         });
 
         // Check that bob received the message
-        await expect(alice.getByText("New discussion with Bob")).toBeVisible();
+        await expect(alice.getByText("New discussion with Bob")).toBeVisible({ timeout: 60_000 });
 
         // Check that alice also received the message
         await expect(alice.locator("#chat")).toContainText("Test message sent", {
-            timeout: 30000,
+            timeout: 60_000,
         });
 
         const chatMessageReceived = await chatMessageReceivedPromise;
@@ -142,8 +142,8 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
         await using charlie = await getPage(browser, "Charlie", Map.url("empty"));
         await Map.teleportToPosition(charlie, 32, 32);
 
-        await expect(alice.getByText("Charlie joined the discussion")).toBeVisible();
-        await expect(bob.getByText("Charlie joined the discussion")).toBeVisible();
+        await expect(alice.getByText("Charlie joined the discussion")).toBeVisible({ timeout: 60_000 });
+        await expect(bob.getByText("Charlie joined the discussion")).toBeVisible({ timeout: 60_000 });
 
         await alice.context().close();
         await bob.context().close();

@@ -9,6 +9,7 @@ test.describe("Iframe API @nodesktop", () => {
     test.beforeEach(async ({ page }) => {
         test.skip(!isMobile(page), "Run only on mobile");
     });
+
     test("disable invite user button", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
         await page.evaluate(() => localStorage.setItem("debug", "*"));
@@ -26,10 +27,10 @@ test.describe("Iframe API @nodesktop", () => {
 
         await page.context().close();
     });
+
     test("disable screen sharing @nowebkit", async ({ browser, browserName }) => {
-        // Skipping webkit because it has no webcam. Therefore, it opens the chat directly.
-        // The chat masks the buttons we are interested in.
-        test.skip(browserName === "webkit", "Skip on WebKit");
+        // Screen sharing controls are only rendered on mobile Chromium in Playwright.
+        test.skip(browserName !== "chromium", "Skip browsers without mobile screen sharing support");
 
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
         await page.evaluate(() => localStorage.setItem("debug", "*"));

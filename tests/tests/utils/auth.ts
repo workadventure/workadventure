@@ -5,8 +5,28 @@ import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin }
 import Menu from "./menu";
 import { play_url } from "./urls";
 import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
-import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
+import {
+    dismissDuplicateUserConnectedModalIfShown,
+    installDuplicateUserConnectedModalHandler,
+    preventDuplicateUserConnectedModal,
+} from "./duplicateUserModal";
 import { dismissDoNotDisturbInfoToast } from "./doNotDisturbInfoToast";
+import { dismissOnboardingIfShown } from "./onboarding";
+
+export type TestUserName =
+    | "Alice"
+    | "Bob"
+    | "Charlie"
+    | "Eve"
+    | "Mallory"
+    | "Admin1"
+    | "Admin2"
+    | "Member1"
+    | "UserMatrix"
+    | "UserLogin1"
+    | "John"
+    | "UserMatrix2"
+    | "User1";
 
 function selectWoka(name: string): number {
     let res = 0;
@@ -28,28 +48,14 @@ function isJsonCreate(name: string): boolean {
     return timeCreation > twoHoursAgo;
 }
 
-async function createUser(
-    name:
-        | "Alice"
-        | "Bob"
-        | "Eve"
-        | "Mallory"
-        | "Admin1"
-        | "Admin2"
-        | "Member1"
-        | "UserMatrix"
-        | "UserLogin1"
-        | "John"
-        | "UserMatrix2"
-        | "User1",
-    browser: Browser,
-    url: string,
-): Promise<void> {
+async function createUser(name: TestUserName, browser: Browser, url: string): Promise<void> {
     if (isJsonCreate(name)) {
         return;
     }
     const context: BrowserContext = await browser.newContext();
     const page: Page = await context.newPage();
+    await preventDuplicateUserConnectedModal(page);
+    await installDuplicateUserConnectedModalHandler(page);
     const targetUrl = new URL(url, play_url).toString();
 
     await page.goto(targetUrl);
@@ -72,18 +78,12 @@ async function createUser(
     await expect(page.locator("h2", { hasText: "Turn on your camera and microphone" })).toBeVisible();
     await page.click("text=Save");
 
+    await skipOnboardingWhenShown(page);
     await dismissDuplicateUserConnectedModalIfShown(page);
     await dismissPwaInstallScreenIfShown(page);
     await dismissDoNotDisturbInfoToast(page);
-    await skipOnboardingWhenShown(page);
 
-    if (browser.browserType().name() !== "webkit") {
-        await Menu.expectButtonState(page, "microphone-button", "normal");
-        await Menu.expectButtonState(page, "camera-button", "normal");
-    } else {
-        await Menu.expectButtonState(page, "microphone-button", "forbidden");
-        await Menu.expectButtonState(page, "camera-button", "forbidden");
-    }
+    await Menu.waitForMapLoad(page, 120_000);
 
     switch (name) {
         case "Admin1":
@@ -113,19 +113,7 @@ async function createUser(
 
 export async function getPage(
     browser: Browser,
-    name:
-        | "Alice"
-        | "Bob"
-        | "Eve"
-        | "Mallory"
-        | "Admin1"
-        | "Admin2"
-        | "Member1"
-        | "UserMatrix"
-        | "UserLogin1"
-        | "John"
-        | "UserMatrix2"
-        | "User1",
+    name: TestUserName,
     url: string,
     options: {
         pageCreatedHook?: (page: Page) => void;
@@ -134,29 +122,22 @@ export async function getPage(
     await createUser(name, browser, url);
     const newBrowser: BrowserContext = await browser.newContext({ storageState: "./.auth/" + name + ".json" });
     const page: Page = await newBrowser.newPage();
+    await preventDuplicateUserConnectedModal(page);
+    await installDuplicateUserConnectedModalHandler(page, true);
     if (options.pageCreatedHook) {
         options.pageCreatedHook(page);
     }
     const targetUrl = new URL(url, play_url).toString();
     await page.goto(targetUrl);
+    await skipOnboardingWhenShown(page);
     await dismissPwaInstallScreenIfShown(page, true);
     await dismissDuplicateUserConnectedModalIfShown(page, true);
     await dismissDoNotDisturbInfoToast(page);
-    await skipOnboardingWhenShown(page);
 
-    await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
+    await Menu.waitForMapLoad(page, 120_000);
     return page;
 }
 
 async function skipOnboardingWhenShown(page: Page) {
-    await page.addLocatorHandler(page.getByTestId("onboarding-button-welcome-skip"), async () => {
-        try {
-            await page.getByTestId("onboarding-button-welcome-skip").click();
-        } catch (e) {
-            if (e instanceof Error && e.message.includes("Target page, context or browser has been closed")) {
-                return;
-            }
-            throw e;
-        }
-    });
+    await dismissOnboardingIfShown(page);
 }

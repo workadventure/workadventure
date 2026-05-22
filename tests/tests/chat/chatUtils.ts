@@ -112,8 +112,15 @@ class ChatUtils {
     }
 
     public async sendMessage(page: Page, message: string) {
-        await page.getByTestId("messageInput").fill(message);
+        await this.fillMessageInput(page, message);
         await page.getByTestId("messageInput").press("Enter");
+    }
+
+    public async fillMessageInput(page: Page, message: string, timeout = 60_000) {
+        const messageInput = page.getByTestId("messageInput");
+
+        await expect(messageInput).toHaveAttribute("contenteditable", "true", { timeout });
+        await messageInput.fill(message);
     }
 
     public async expectProximityNotification(page: Page, message: string) {

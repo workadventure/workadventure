@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
 
 /**
  * When the audio context is still suspended, the "Do not disturb" info toast may appear with an
@@ -14,6 +15,7 @@ export async function dismissDoNotDisturbInfoToast(page: Page, timeoutMs: number
     ]).catch(() => undefined);
 
     if (visibleControl === "online") {
+        await dismissDuplicateUserConnectedModalIfShown(page, true);
         await onlineButton.click();
     }
 }

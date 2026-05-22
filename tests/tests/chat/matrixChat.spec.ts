@@ -34,6 +34,7 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
 
         await page.context().close();
     });
+
     test("Create a public chat room", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", Map.url("empty"));
         await oidcMatrixUserLogin(page);
@@ -48,6 +49,7 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
 
         await page.context().close();
     });
+
     test("Send messages in public chat room", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", Map.url("empty"));
         await oidcMatrixUserLogin(page);
@@ -60,12 +62,13 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("createRoomButton").click();
         await page.getByText(publicChatRoomName).click();
         const chatMessageContent = "This is a test message";
-        await page.getByTestId("messageInput").fill(chatMessageContent);
+        await ChatUtils.fillMessageInput(page, chatMessageContent);
         await page.getByTestId("sendMessageButton").click();
         await expect(page.getByText(chatMessageContent)).toBeAttached();
 
         await page.context().close();
     });
+
     test("Send application messages in public chat room", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", Map.url("empty"));
         await oidcMatrixUserLogin(page);
@@ -79,12 +82,13 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByText(publicChatRoomName).click();
         const chatMessageContent = "This is a test message";
         await page.getByTestId("messageInput").click();
-        await page.getByTestId("messageInput").fill(chatMessageContent);
+        await ChatUtils.fillMessageInput(page, chatMessageContent);
         await page.getByTestId("sendMessageButton").click();
         await expect(page.getByText(chatMessageContent)).toBeAttached();
 
         await page.context().close();
     });
+
     test("Send application messages and youtube link in public chat room", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", Map.url("empty"));
         await oidcMatrixUserLogin(page);
@@ -142,6 +146,7 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
 
         await page.context().close();
     });
+
     test("Send application messages and klaxoon link in public chat room", async ({ browser }) => {
         test.skip(
             process.env.IS_FORK === "true",
@@ -210,6 +215,7 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
 
         await page.context().close();
     });
+
     test("Reply to message", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", Map.url("empty"));
         await oidcMatrixUserLogin(page);
@@ -222,10 +228,10 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("createRoomButton").click();
         await page.getByText(publicChatRoomName).click();
         const chatMessageContent = "This is a test message";
-        await page.getByTestId("messageInput").fill(chatMessageContent);
+        await ChatUtils.fillMessageInput(page, chatMessageContent);
         await page.getByTestId("sendMessageButton").click();
         await page.getByTestId("replyToMessageButton").click();
-        await page.getByTestId("messageInput").fill("Sample response");
+        await ChatUtils.fillMessageInput(page, "Sample response");
         await page.getByTestId("sendMessageButton").click();
         await expect(page.getByText(chatMessageContent)).toHaveCount(2);
 
@@ -244,7 +250,7 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("createRoomButton").click();
         await page.getByText(publicChatRoomName).click();
         const chatMessageContent = "This is a test message";
-        await page.getByTestId("messageInput").fill(chatMessageContent);
+        await ChatUtils.fillMessageInput(page, chatMessageContent);
         await page.getByTestId("sendMessageButton").click();
         await page.getByTestId("openEmojiPickerButton").click();
         await page.getByRole("menu", { name: "Favorites" }).getByLabel("❤️, red heart, heart,").click();
@@ -267,7 +273,7 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("createRoomButton").click();
         await page.getByText(publicChatRoomName).click();
         const chatMessageContent = "This is a test message";
-        await page.getByTestId("messageInput").fill(chatMessageContent);
+        await ChatUtils.fillMessageInput(page, chatMessageContent);
         await page.getByTestId("sendMessageButton").click();
         await page.getByTestId("removeMessageButton").click();
         await expect(page.getByText(chatMessageContent)).not.toBeAttached();

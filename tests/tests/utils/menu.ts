@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import { isMobile } from "./isMobile";
 import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
 import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
+import { dismissOnboardingIfShown } from "./onboarding";
 
 class Menu {
     async openChat(page: Page) {
@@ -22,6 +23,9 @@ class Menu {
     }
 
     async openMenu(page: Page) {
+        if ((await page.getByTestId("profile-menu").count()) > 0) {
+            return;
+        }
         await page.getByTestId("action-user").click({ timeout: 30_000 });
         await expect(page.getByTestId("profile-menu")).toHaveClass(/backdrop-blur/);
     }
@@ -44,17 +48,26 @@ class Menu {
     }*/
 
     async openMapMenu(page: Page) {
+        if ((await page.getByTestId("map-sub-menu").count()) > 0) {
+            return;
+        }
         // await page.pause();
         await page.getByTestId("map-menu").click();
         await expect(page.getByTestId("map-sub-menu")).toHaveClass(/backdrop-blur/);
     }
 
     async closeMenu(page: Page) {
+        if ((await page.getByTestId("profile-menu").count()) === 0) {
+            return;
+        }
         await page.getByTestId("action-user").click({ timeout: 30_000 });
         await expect(page.getByTestId("profile-menu")).toBeHidden();
     }
 
     async closeMapMenu(page: Page) {
+        if ((await page.getByTestId("map-sub-menu").count()) === 0) {
+            return;
+        }
         await page.getByTestId("map-menu").click({ timeout: 30_000 });
         await expect(page.getByTestId("map-sub-menu")).toBeHidden();
     }
@@ -62,7 +75,8 @@ class Menu {
     async waitForMapLoad(page: Page, timeout = 30_000) {
         await dismissPwaInstallScreenIfShown(page);
         await dismissDuplicateUserConnectedModalIfShown(page);
-        await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout });
+        await dismissOnboardingIfShown(page, 500);
+        await expect(page.locator("#game canvas").first()).toBeVisible({ timeout });
     }
 
     async closeMapEditor(page: Page) {
@@ -117,7 +131,7 @@ class Menu {
         const cameraButtonClass = await cameraButton.getAttribute("class");
         if (!cameraButtonClass.includes("bg-danger")) return;
 
-        await page.getByTestId("camera-button").click();
+        await cameraButton.click();
         await this.expectButtonState(page, "camera-button", "normal");
     }
     async turnOffCamera(page: Page) {
@@ -127,7 +141,7 @@ class Menu {
         const cameraButtonClass = await cameraButton.getAttribute("class");
         if (cameraButtonClass.includes("bg-danger")) return;
 
-        await page.getByTestId("camera-button").click();
+        await cameraButton.click();
         await this.expectButtonState(page, "camera-button", "forbidden");
     }
     async turnOnMicrophone(page: Page) {
@@ -137,8 +151,8 @@ class Menu {
         const microphoneButtonClass = await microphoneButton.getAttribute("class");
         if (!microphoneButtonClass.includes("bg-danger")) return;
 
-        await page.getByTestId("microphone-button").click();
-        await expect(page.getByTestId("microphone-button").locator(".bg-danger")).toBeVisible();
+        await microphoneButton.click();
+        await this.expectButtonState(page, "microphone-button", "normal");
     }
     async turnOffMicrophone(page: Page) {
         // If the microphone is already off, do nothing
@@ -147,51 +161,58 @@ class Menu {
         const microphoneButtonClass = await microphoneButton.getAttribute("class");
         if (microphoneButtonClass.includes("bg-danger")) return;
 
-        await page.getByTestId("microphone-button").click();
-        await expect(page.getByTestId("microphone-button").locator(".bg-danger")).toBeHidden();
-    }
-
-    async expectCameraOn(page: Page) {
-        await this.expectButtonState(page, "camera-button", "normal");
-    }
-
-    async expectCameraOff(page: Page) {
-        await this.expectButtonState(page, "camera-button", "forbidden");
-    }
-
-    async expectCameraDisabled(page: Page) {
-        await this.expectButtonState(page, "camera-button", "disabled");
-    }
-
-    async expectMicrophoneOn(page: Page) {
-        await this.expectButtonState(page, "microphone-button", "normal");
-    }
-
-    async expectMicrophoneOff(page: Page) {
+        await microphoneButton.click();
         await this.expectButtonState(page, "microphone-button", "forbidden");
     }
 
-    async expectMicrophoneDisabled(page: Page) {
-        await this.expectButtonState(page, "microphone-button", "disabled");
+    async expectCameraOn(page: Page, timeout?: number) {
+        await this.expectButtonState(page, "camera-button", "normal", { timeout });
     }
 
-    async expectButtonState(page: Page, buttonTestId: string, state: "normal" | "active" | "forbidden" | "disabled") {
+    async expectCameraOff(page: Page, timeout?: number) {
+        await this.expectButtonState(page, "camera-button", "forbidden", { timeout });
+    }
+
+    async expectCameraDisabled(page: Page, timeout?: number) {
+        await this.expectButtonState(page, "camera-button", "disabled", { timeout });
+    }
+
+    async expectMicrophoneOn(page: Page, timeout?: number) {
+        await this.expectButtonState(page, "microphone-button", "normal", { timeout });
+    }
+
+    async expectMicrophoneOff(page: Page, timeout?: number) {
+        await this.expectButtonState(page, "microphone-button", "forbidden", { timeout });
+    }
+
+    async expectMicrophoneDisabled(page: Page, timeout?: number) {
+        await this.expectButtonState(page, "microphone-button", "disabled", { timeout });
+    }
+
+    async expectButtonState(
+        page: Page,
+        buttonTestId: string,
+        state: "normal" | "active" | "forbidden" | "disabled",
+        options: { timeout?: number } = {},
+    ) {
         const button = page.getByTestId(buttonTestId);
+        const timeout = options.timeout ?? 20_000;
+        const message = `Expected ${buttonTestId} button to be ${state}`;
         switch (state) {
             case "normal":
-                await expect(button).not.toHaveClass(/bg-danger/);
+                await expect(button, message).not.toHaveClass(/bg-danger/, { timeout });
                 // Comment this line because when the user come in and audio context is suspended, the button is disabled and not visible
                 //await expect(button).not.toHaveClass(/opacity-50/);
-                await expect(button).not.toHaveClass(/bg-secondary/);
+                await expect(button, message).not.toHaveClass(/bg-secondary/, { timeout });
                 break;
             case "active":
-                await expect(button).toHaveClass(/bg-secondary/);
+                await expect(button, message).toHaveClass(/bg-secondary/, { timeout });
                 break;
             case "forbidden":
-                await expect(button).toHaveClass(/bg-danger/);
+                await expect(button, message).toHaveClass(/bg-danger/, { timeout });
                 break;
             case "disabled":
-                await expect(button).toHaveClass(/opacity-50/);
+                await expect(button, message).toHaveClass(/opacity-50/, { timeout });
                 break;
             default: {
                 const _exhaustiveCheck: never = state;

@@ -4,15 +4,26 @@ import Menu from "./menu";
 import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
 import { dismissDoNotDisturbInfoToast } from "./doNotDisturbInfoToast";
 
-// for oidcLogin to work on mobile you must open the burger menu before calling this function
 export async function oidcLogin(page: Page, userName = "User1", password = "pwd") {
-    await page.getByRole("button", { name: "Login" }).click();
-    await page.fill("#Input_Username", userName, {
+    const oidcUsernameInput = page.locator("#Input_Username");
+    const appMenuButton = page.getByTestId("action-user");
+
+    await expect(
+        oidcUsernameInput.or(appMenuButton).first(),
+        "Expected either the WorkAdventure menu or the OIDC login form to be visible",
+    ).toBeVisible({ timeout: 40_000 });
+
+    if (!(await oidcUsernameInput.isVisible())) {
+        await Menu.openMenuIfMobile(page);
+        await page.getByRole("button", { name: "Login" }).click();
+    }
+
+    await oidcUsernameInput.fill(userName, {
         timeout: 40_000,
     });
-    await page.fill("#Input_Password", password);
+    await page.locator("#Input_Password").fill(password);
 
-    await page.click('button:has-text("Login")', {
+    await page.locator('button:has-text("Login")').click({
         // Give ample time for login to occur
         timeout: 50000,
     });

@@ -9,6 +9,11 @@ import Menu from "../utils/menu";
 import { map_storage_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
+import {
+    expectCameraParticipantHidden,
+    expectCameraParticipantVisible,
+    expectCamerasContainerVisible,
+} from "../utils/cameras";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -219,9 +224,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await pageOutsideC.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
         await pageOutsideC.locator(".close-btn").first().click();
 
-        await expect(pageMeetingA.locator("#cameras-container").getByText("Alice", { exact: true })).toBeVisible({
-            timeout: 20_000,
-        });
+        await expectCameraParticipantVisible(pageMeetingA, "Alice");
 
         // Meeting user A starts megaphone then screen share
         await Menu.clickSendGlobalMessage(pageMeetingA);
@@ -306,7 +309,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 3 * 32);
 
-        await expect(page.locator("#cameras-container").getByText("You")).toBeVisible();
+        await expectCameraParticipantVisible(page, "You", { exact: false });
 
         // Second browser
         await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
@@ -314,10 +317,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
 
         // The user in the listener zone can see the speaker
-        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page2, "Admin1", { exact: false });
         await expect.poll(async () => await page2.getByTestId("webrtc-video").count()).toBe(1);
         // The speaker cannot see the listener
-        await expect(page.locator("#cameras-container").getByText("Admin2")).toBeHidden({ timeout: 20_000 });
+        await expectCameraParticipantHidden(page, "Admin2", { exact: false });
 
         // Now, let's move player 2 to the speaker zone
         await Map.walkToPosition(page2, 4 * 32, 3 * 32);
@@ -325,9 +328,9 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         //await Map.teleportToPosition(page2, 4*32, 2*32);
 
         // The first speaker (player 1) can now see player2
-        await expect(page.locator("#cameras-container").getByText("Admin2")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page, "Admin2", { exact: false });
         // And the opposite is still true (player 2 can see player 1)
-        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page2, "Admin1", { exact: false });
 
         await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(2);
         await expect.poll(async () => await page2.getByTestId("webrtc-video").count()).toBe(2);
@@ -367,7 +370,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await Map.teleportToPosition(page, 4 * 32, 7 * 32);
 
-        await expect(page.locator("#cameras-container").getByText("You")).toBeHidden({ timeout: 10_000 });
+        await expectCameraParticipantHidden(page, "You", { exact: false, timeout: 10_000 });
     });
 
     test('Successfully set "SpeakerZone" with chat in the map editor', async ({ browser, request }) => {
@@ -393,7 +396,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 3 * 32);
 
-        await expect(page.locator("#cameras-container").getByText("You")).toBeVisible();
+        await expectCameraParticipantVisible(page, "You", { exact: false });
 
         // Second browser
         await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
@@ -401,10 +404,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
 
         // The user in the listener zone can see the speaker
-        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page2, "Admin1", { exact: false });
         await expect.poll(async () => await page2.getByTestId("webrtc-video").count()).toBe(1);
         // The speaker cannot see the listener
-        await expect(page.locator("#cameras-container").getByText("Admin2")).toBeHidden({ timeout: 20_000 });
+        await expectCameraParticipantHidden(page, "Admin2", { exact: false });
 
         await page.getByTestId("chat-btn").click();
         await page2.getByTestId("chat-btn").click();
@@ -423,9 +426,9 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         //await Map.teleportToPosition(page2, 4*32, 2*32);
 
         // The first speaker (player 1) can now see player2
-        await expect(page.locator("#cameras-container").getByText("Admin2")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page, "Admin2", { exact: false });
         // And the opposite is still true (player 2 can see player 1)
-        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page2, "Admin1", { exact: false });
 
         await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(2);
         await expect.poll(async () => await page2.getByTestId("webrtc-video").count()).toBe(2);
@@ -463,7 +466,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 3 * 32);
 
-        await expect(page.locator("#cameras-container").getByText("You")).toBeVisible();
+        await expectCameraParticipantVisible(page, "You", { exact: false });
 
         // Second browser
         await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
@@ -471,22 +474,22 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
 
         // The user in the listener zone can see the speaker
-        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page2, "Admin1", { exact: false });
         await expect.poll(async () => await page2.getByTestId("webrtc-video").count()).toBe(2);
 
         // The speaker can see the listener
-        await expect(page.locator("#cameras-container").getByText("Admin2")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page, "Admin2", { exact: false });
         await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(2);
 
         await using page3 = await getPage(browser, "John", Map.url("empty"));
         await Map.teleportToPosition(page3, 4 * 32, 7 * 32);
 
         // Admin2 can only see Admin1
-        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page2, "Admin1", { exact: false });
         await expect.poll(async () => await page2.getByTestId("webrtc-video").count()).toBe(2);
 
         //the speaker can see John and Admin2
-        await expect(page.locator("#cameras-container").getByText("John")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page, "John", { exact: false });
         await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(3);
 
         await page.getByTestId("chat-btn").click();
@@ -507,11 +510,11 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         //await Map.teleportToPosition(page2, 4*32, 2*32);
 
         // The first speaker (player 1) can now see player2
-        await expect(page.locator("#cameras-container").getByText("Admin2")).toBeVisible({ timeout: 20_000 });
-        await expect(page.locator("#cameras-container").getByText("John")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page, "Admin2", { exact: false });
+        await expectCameraParticipantVisible(page, "John", { exact: false });
         // And the opposite is still true (player 2 can see player 1)
-        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
-        await expect(page2.locator("#cameras-container").getByText("John")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page2, "Admin1", { exact: false });
+        await expectCameraParticipantVisible(page2, "John", { exact: false });
 
         await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(3);
         await expect.poll(async () => await page2.getByTestId("webrtc-video").count()).toBe(3);
@@ -588,48 +591,24 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Verify all listeners can see the speaker (Admin1)
         for (const { page } of listeners) {
-            await expect(page.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
-                timeout: 20_000,
-            });
+            await expectCameraParticipantVisible(page, "Admin1");
         }
 
         // In auditorium mode, the speaker should see all listeners
         for (const { name } of listeners) {
-            await expect(pageSpeaker.locator("#cameras-container").getByText(name, { exact: true })).toBeVisible({
-                timeout: 20_000,
-            });
+            await expectCameraParticipantVisible(pageSpeaker, name);
         }
 
         // Verify listeners cannot see each other (only the speaker)
         // Admin2 (listener1) should NOT see Alice, Bob, and John
-        await expect(
-            pageListener1.locator("#cameras-container").getByText("Alice", { exact: true }).first(),
-        ).toBeHidden({
-            timeout: 20_000,
-        });
-        await expect(pageListener1.locator("#cameras-container").getByText("Bob", { exact: true }).first()).toBeHidden({
-            timeout: 20_000,
-        });
-        await expect(pageListener1.locator("#cameras-container").getByText("John", { exact: true }).first()).toBeHidden(
-            {
-                timeout: 20_000,
-            },
-        );
+        await expectCameraParticipantHidden(pageListener1, "Alice");
+        await expectCameraParticipantHidden(pageListener1, "Bob");
+        await expectCameraParticipantHidden(pageListener1, "John");
 
         // Alice (listener2) should NOT see Admin2, Bob, and John
-        await expect(
-            pageListener2.locator("#cameras-container").getByText("Admin2", { exact: true }).first(),
-        ).toBeHidden({
-            timeout: 20_000,
-        });
-        await expect(pageListener2.locator("#cameras-container").getByText("Bob", { exact: true }).first()).toBeHidden({
-            timeout: 20_000,
-        });
-        await expect(pageListener2.locator("#cameras-container").getByText("John", { exact: true }).first()).toBeHidden(
-            {
-                timeout: 20_000,
-            },
-        );
+        await expectCameraParticipantHidden(pageListener2, "Admin2");
+        await expectCameraParticipantHidden(pageListener2, "Bob");
+        await expectCameraParticipantHidden(pageListener2, "John");
 
         // ============================================================
         // SCENARIO: Late listener (Eve) joins while speaker is broadcasting
@@ -642,36 +621,16 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.isThereMegaphoneButton(pageLateListener);
 
         // The late listener should see the speaker (Admin1)
-        await expect(pageLateListener.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
-            timeout: 20_000,
-        });
+        await expectCameraParticipantVisible(pageLateListener, "Admin1");
 
         // The speaker (Admin1) should see the late listener (Eve) in auditorium mode
-        await expect(pageSpeaker.locator("#cameras-container").getByText("Eve", { exact: true })).toBeVisible({
-            timeout: 20_000,
-        });
+        await expectCameraParticipantVisible(pageSpeaker, "Eve");
 
         // The late listener should NOT see other listeners (only the speaker)
-        await expect(
-            pageLateListener.locator("#cameras-container").getByText("Admin2", { exact: true }).first(),
-        ).toBeHidden({
-            timeout: 20_000,
-        });
-        await expect(
-            pageLateListener.locator("#cameras-container").getByText("Alice", { exact: true }).first(),
-        ).toBeHidden({
-            timeout: 20_000,
-        });
-        await expect(
-            pageLateListener.locator("#cameras-container").getByText("Bob", { exact: true }).first(),
-        ).toBeHidden({
-            timeout: 20_000,
-        });
-        await expect(
-            pageLateListener.locator("#cameras-container").getByText("John", { exact: true }).first(),
-        ).toBeHidden({
-            timeout: 20_000,
-        });
+        await expectCameraParticipantHidden(pageLateListener, "Admin2");
+        await expectCameraParticipantHidden(pageLateListener, "Alice");
+        await expectCameraParticipantHidden(pageLateListener, "Bob");
+        await expectCameraParticipantHidden(pageLateListener, "John");
 
         // Close the late listener context after verification
         await pageLateListener.context().close();
@@ -695,27 +654,17 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         ];
 
         for (const { page } of remainingListeners) {
-            await expect(page.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
-                timeout: 20_000,
-            });
-            await expect(page.locator("#cameras-container").getByText("Admin2", { exact: true })).toBeVisible({
-                timeout: 20_000,
-            });
+            await expectCameraParticipantVisible(page, "Admin1");
+            await expectCameraParticipantVisible(page, "Admin2");
         }
 
         // First speaker (Admin1) should see second speaker (Admin2) and all listeners
-        await expect(pageSpeaker.locator("#cameras-container").getByText("Admin2", { exact: true })).toBeVisible({
-            timeout: 20_000,
-        });
+        await expectCameraParticipantVisible(pageSpeaker, "Admin2");
 
         // Second speaker (Admin2) should see first speaker (Admin1) and all listeners
-        await expect(pageListener1.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
-            timeout: 20_000,
-        });
+        await expectCameraParticipantVisible(pageListener1, "Admin1");
         for (const { name } of remainingListeners) {
-            await expect(pageListener1.locator("#cameras-container").getByText(name, { exact: true })).toBeVisible({
-                timeout: 20_000,
-            });
+            await expectCameraParticipantVisible(pageListener1, name);
         }
 
         // ============================================================
@@ -728,29 +677,19 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Verify listeners can no longer see Admin2, but still see Admin1
         for (const { page } of remainingListeners) {
-            await expect(page.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
-                timeout: 20_000,
-            });
-            await expect(page.locator("#cameras-container").getByText("Admin2", { exact: true })).toBeHidden({
-                timeout: 20_000,
-            });
+            await expectCameraParticipantVisible(page, "Admin1");
+            await expectCameraParticipantHidden(page, "Admin2");
         }
 
         // Admin2 (now a listener again) should still see Admin1
-        await expect(pageListener1.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
-            timeout: 20_000,
-        });
+        await expectCameraParticipantVisible(pageListener1, "Admin1");
 
         // First speaker (Admin1) should still see their own camera (indicated by "You")
-        await expect(pageSpeaker.locator("#cameras-container").getByText("You")).toBeVisible({
-            timeout: 20_000,
-        });
+        await expectCameraParticipantVisible(pageSpeaker, "You", { exact: false });
 
         // First speaker should still see all listeners in auditorium mode
         for (const { name } of listeners) {
-            await expect(pageSpeaker.locator("#cameras-container").getByText(name, { exact: true })).toBeVisible({
-                timeout: 20_000,
-            });
+            await expectCameraParticipantVisible(pageSpeaker, name);
         }
 
         // Stop the megaphone for the first speaker
@@ -805,34 +744,34 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Map.walkToPosition(page2, 2 * 32, 7 * 32);
 
         // Wait for the listener zone to be joined - camera container should appear
-        await expect(page2.locator("#cameras-container")).toBeVisible({ timeout: 20_000 });
+        await expectCamerasContainerVisible(page2);
 
         // Now move page (Alice) to the speaker zone (podium)
         await Map.walkToPosition(page, 5 * 32, 7 * 32);
 
         // The speaker should be visible in their own container
-        await expect(page.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page, "You", { exact: false });
 
         // The listener (Bob) should see the speaker (Alice)
-        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page2, "Admin1", { exact: false });
 
         // Step 2: Move Bob INTO the podium zone (nested zone)
         // This should switch their role from listener to speaker WITHOUT leaving the space
         await Map.walkToPosition(page2, 5 * 32, 7 * 32);
 
         // Now both users should see each other as speakers
-        await expect(page.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 20_000 });
-        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page, "Bob", { exact: false });
+        await expectCameraParticipantVisible(page2, "Admin1", { exact: false });
 
         // Step 3: Move Bob OUT of the podium zone but STILL IN the listener zone
         // This should switch their role back to listener WITHOUT leaving the space
         await Map.walkToPosition(page2, 2 * 32, 7 * 32);
 
         // Bob should still see the speaker
-        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
+        await expectCameraParticipantVisible(page2, "Admin1", { exact: false });
 
         // The speaker should no longer see Bob (since Bob is now a listener again)
-        await expect(page.locator("#cameras-container").getByText("Bob")).toBeHidden({ timeout: 20_000 });
+        await expectCameraParticipantHidden(page, "Bob", { exact: false });
 
         // Step 4: Move Bob completely OUT of both zones
         // This should leave the space completely
@@ -840,7 +779,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // The cameras container should be hidden or show no remote streams
         // Wait for the listener to fully leave the space
-        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeHidden({ timeout: 20_000 });
+        await expectCameraParticipantHidden(page2, "Admin1", { exact: false });
 
         await page2.context().close();
         await page.context().close();
