@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import { isMobile } from "./isMobile";
 import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
 import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
+import { dismissOnboardingIfShown } from "./onboarding";
 
 class Menu {
     async openChat(page: Page) {
@@ -74,7 +75,8 @@ class Menu {
     async waitForMapLoad(page: Page, timeout = 30_000) {
         await dismissPwaInstallScreenIfShown(page);
         await dismissDuplicateUserConnectedModalIfShown(page);
-        await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout });
+        await dismissOnboardingIfShown(page, 500);
+        await expect(page.locator("#game canvas").first()).toBeVisible({ timeout });
     }
 
     async closeMapEditor(page: Page) {

@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { dismissOnboardingIfShown } from "./onboarding";
 
 /**
  * After the room connection is established, the "already connected in another tab" modal may appear.
@@ -12,13 +13,22 @@ export async function dismissDuplicateUserConnectedModalIfShown(
     const confirm = page.getByTestId("duplicate-user-confirm-continue");
     const dontRemindCheckbox = page.getByTestId("duplicate-user-dont-remind-again");
     const microphone = page.getByTestId("microphone-button");
+    const mapLoadedControls = [
+        page.locator("#game canvas").first(),
+        page.getByRole("button", { name: "Explore the room" }),
+        page.getByTestId("action-user"),
+        page.getByTestId("map-menu"),
+        microphone,
+    ];
     const onboardingSkip = page.getByTestId("onboarding-button-welcome-skip");
     const errorOccurred = page.getByText("An error occurred").first();
 
     for (let attempt = 0; attempt < 2; attempt++) {
         const visibleControl = await Promise.race([
             confirm.waitFor({ state: "visible", timeout: 90_000 }).then(() => "confirm" as const),
-            microphone.waitFor({ state: "visible", timeout: 90_000 }).then(() => "microphone" as const),
+            ...mapLoadedControls.map((control) =>
+                control.waitFor({ state: "visible", timeout: 90_000 }).then(() => "map" as const),
+            ),
             onboardingSkip.waitFor({ state: "visible", timeout: 90_000 }).then(() => "onboarding" as const),
             errorOccurred.waitFor({ state: "visible", timeout: 90_000 }).then(() => "error" as const),
         ]).catch(() => undefined);
@@ -30,7 +40,7 @@ export async function dismissDuplicateUserConnectedModalIfShown(
         }
 
         if (visibleControl === "onboarding") {
-            await onboardingSkip.click();
+            await dismissOnboardingIfShown(page, 500);
             continue;
         }
 

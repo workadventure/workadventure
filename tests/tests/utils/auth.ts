@@ -7,6 +7,22 @@ import { play_url } from "./urls";
 import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
 import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
 import { dismissDoNotDisturbInfoToast } from "./doNotDisturbInfoToast";
+import { dismissOnboardingIfShown } from "./onboarding";
+
+export type TestUserName =
+    | "Alice"
+    | "Bob"
+    | "Charlie"
+    | "Eve"
+    | "Mallory"
+    | "Admin1"
+    | "Admin2"
+    | "Member1"
+    | "UserMatrix"
+    | "UserLogin1"
+    | "John"
+    | "UserMatrix2"
+    | "User1";
 
 function selectWoka(name: string): number {
     let res = 0;
@@ -28,23 +44,7 @@ function isJsonCreate(name: string): boolean {
     return timeCreation > twoHoursAgo;
 }
 
-async function createUser(
-    name:
-        | "Alice"
-        | "Bob"
-        | "Eve"
-        | "Mallory"
-        | "Admin1"
-        | "Admin2"
-        | "Member1"
-        | "UserMatrix"
-        | "UserLogin1"
-        | "John"
-        | "UserMatrix2"
-        | "User1",
-    browser: Browser,
-    url: string,
-): Promise<void> {
+async function createUser(name: TestUserName, browser: Browser, url: string): Promise<void> {
     if (isJsonCreate(name)) {
         return;
     }
@@ -107,19 +107,7 @@ async function createUser(
 
 export async function getPage(
     browser: Browser,
-    name:
-        | "Alice"
-        | "Bob"
-        | "Eve"
-        | "Mallory"
-        | "Admin1"
-        | "Admin2"
-        | "Member1"
-        | "UserMatrix"
-        | "UserLogin1"
-        | "John"
-        | "UserMatrix2"
-        | "User1",
+    name: TestUserName,
     url: string,
     options: {
         pageCreatedHook?: (page: Page) => void;
@@ -138,23 +126,10 @@ export async function getPage(
     await dismissDuplicateUserConnectedModalIfShown(page, true);
     await dismissDoNotDisturbInfoToast(page);
 
-    await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
+    await Menu.waitForMapLoad(page, 120_000);
     return page;
 }
 
 async function skipOnboardingWhenShown(page: Page) {
-    await page.addLocatorHandler(page.getByTestId("onboarding-button-welcome-skip"), async () => {
-        const skipButton = page.getByTestId("onboarding-button-welcome-skip");
-        try {
-            await skipButton.click({ timeout: 5_000 });
-        } catch (e) {
-            if (e instanceof Error && e.message.includes("Target page, context or browser has been closed")) {
-                return;
-            }
-            if (await skipButton.isHidden().catch(() => true)) {
-                return;
-            }
-            throw e;
-        }
-    });
+    await dismissOnboardingIfShown(page);
 }

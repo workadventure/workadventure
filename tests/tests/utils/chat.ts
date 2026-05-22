@@ -57,8 +57,17 @@ class Chat {
         await this.get(page).locator("#chatZones .wa-chat-item .wa-dropdown .open").click();
     }
 
-    async openTimeline(page: Page) {
-        await page.getByRole("button", { name: "Proximity Chat" }).click();
+    async openTimeline(page: Page, timeout = 60_000) {
+        const proximityChatButton = page.getByRole("button", { name: "Proximity Chat" });
+        const proximityChatTimeline = page.getByTestId("roomName").filter({ hasText: "Proximity Chat" });
+
+        await expect(proximityChatButton.or(proximityChatTimeline).first()).toBeVisible({ timeout });
+
+        if (await proximityChatButton.isVisible()) {
+            await proximityChatButton.click();
+        }
+
+        await expect(page.getByTestId("roomName")).toHaveText("Proximity Chat", { timeout });
         await expect(page.locator("#chat.chatWindow")).toBeVisible();
     }
 
