@@ -11,7 +11,7 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
-import type { Socket, SocketUpgradeFailed } from "../services/SocketManager";
+import type { SocketUpgradeFailed } from "../services/SocketManager";
 import { socketManager } from "../services/SocketManager";
 import {
     ADMIN_SOCKETS_TOKEN,
@@ -29,6 +29,7 @@ import { ClientNotPartOfSpaceError, UserAlreadyAddedInSpaceError } from "../mode
 import { videoQualityAnalyticsQueue } from "../services/VideoQualityAnalyticsQueue";
 import { PusherRoomSocketController } from "../services/PusherRoomSocketController";
 import { AdminWebSocketBackpressureWriter } from "../services/AdminWebSocketBackpressureWriter";
+import type { PusherWebSocket } from "../services/PusherWebSocket";
 
 const debug = Debug("pusher:requests");
 const ADMIN_WS_BACKPRESSURE_DRAIN_TIMEOUT_MS = 10_000;
@@ -1128,7 +1129,7 @@ export class IoSocketController {
         });
     }
 
-    private sendAnswerMessage(socket: Socket, answerMessage: AnswerMessage) {
+    private sendAnswerMessage(socket: PusherWebSocket, answerMessage: AnswerMessage) {
         if (socket.isDisconnecting()) {
             // Avoid leaking Map entries when we bail out before scheduling the delayed delete below.
             socket.getUserData().queryAbortControllers.delete(answerMessage.id);

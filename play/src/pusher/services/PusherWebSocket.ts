@@ -15,15 +15,11 @@ import type { SocketData } from "../models/Websocket/SocketData";
 
 export type RawSocket = WebSocket<SocketData>;
 
-export type ConnectionStatusManager = {
-    isDisconnecting: (socket: PusherWebSocket) => boolean;
-    startDisconnecting: (socket: PusherWebSocket) => boolean;
-};
-
 export class PusherWebSocket {
     private static readonly KEEP_ALIVE_INTERVAL_MS = 25_000;
 
     private socket: RawSocket;
+    private _isDisconnecting = false;
     private keepAliveInterval: NodeJS.Timeout | undefined;
     private batchTimeout: NodeJS.Timeout | undefined;
     private pingBackpressured = false;
@@ -39,7 +35,7 @@ export class PusherWebSocket {
         CLIENT_DISCONNECTION_RETENTION_MS
     );
 
-    public constructor(socket: RawSocket, private readonly connectionStatusManager: ConnectionStatusManager) {
+    public constructor(socket: RawSocket) {
         this.socket = socket;
         this.startKeepAlive();
     }
@@ -124,6 +120,14 @@ export class PusherWebSocket {
     }
 
     public end(...args: Parameters<RawSocket["end"]>): ReturnType<RawSocket["end"]> {
+        if (this._isDisconnecting) {
+            console.trace("end already called on websocket");
+            return;
+        }
+        this._isDisconnecting = true;
+        this.stopKeepAlive();
+        this.stopBatching();
+        // TODO: send last batched messages?
         return this.socket.end(...args);
     }
 
@@ -132,16 +136,16 @@ export class PusherWebSocket {
     }
 
     public isDisconnecting(): boolean {
-        return this.connectionStatusManager.isDisconnecting(this);
+        return this._isDisconnecting;
     }
 
     public startDisconnecting(): boolean {
-        const started = this.connectionStatusManager.startDisconnecting(this);
-        if (started) {
-            this.stopKeepAlive();
-            this.stopBatching();
+        if (this._isDisconnecting) {
+            return false;
         }
-        return started;
+
+        this._isDisconnecting = true;
+        return true;
     }
 
     public isCurrentTransport(rawSocket: RawSocket): boolean {

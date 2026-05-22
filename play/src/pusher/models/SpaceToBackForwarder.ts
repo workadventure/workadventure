@@ -9,8 +9,8 @@ import * as Sentry from "@sentry/node";
 import Debug from "debug";
 import { Color } from "@workadventure/shared-utils";
 
-import type { Socket } from "../services/SocketManager";
 import { clientEventsEmitter } from "../services/ClientEventsEmitter";
+import type { PusherWebSocket } from "../services/PusherWebSocket";
 import type { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
 import type { EventProcessor } from "./EventProcessor";
 import type { SocketData } from "./Websocket/SocketData";
@@ -24,9 +24,9 @@ import {
 const debug = Debug("space-to-back-forwarder");
 
 export interface SpaceToBackForwarderInterface {
-    registerUser(client: Socket, filterType: FilterType): Promise<void>;
+    registerUser(client: PusherWebSocket, filterType: FilterType): Promise<void>;
     updateUser(spaceUser: PartialSpaceUser, updateMask: string[]): void;
-    unregisterUser(socket: Socket): Promise<void>;
+    unregisterUser(socket: PusherWebSocket): Promise<void>;
     updateMetadata(metadata: { [key: string]: unknown }, senderId: string): void;
     forwardMessageToSpaceBack(pusherToBackSpaceMessage: PusherToBackSpaceMessage["message"]): void;
     syncLocalUsersWithServer(localUsers: SpaceUser[]): void;
@@ -43,7 +43,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         private readonly eventProcessor: EventProcessor,
         private readonly _clientEventsEmitter = clientEventsEmitter
     ) {}
-    async registerUser(client: Socket, filterType: FilterType): Promise<void> {
+    async registerUser(client: PusherWebSocket, filterType: FilterType): Promise<void> {
         const socketData = client.getUserData();
         const spaceUserId = socketData.spaceUserId;
 
@@ -60,7 +60,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         }
         if (this._space._localConnectedUserWithSpaceUser.has(client)) {
             throw new SocketAlreadyRegisteredInSpaceError(
-                `Socket already registered in space ${this._space.name}`,
+                `PusherWebSocket already registered in space ${this._space.name}`,
                 this._space.name
             );
         }
@@ -149,7 +149,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         });
     }
 
-    async unregisterUser(socket: Socket): Promise<void> {
+    async unregisterUser(socket: PusherWebSocket): Promise<void> {
         const userData = socket.getUserData();
 
         const spaceUserId = userData.spaceUserId;
