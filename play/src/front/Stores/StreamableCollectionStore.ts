@@ -32,7 +32,6 @@ import { windowSize } from "./CoWebsiteStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 import { createDelayedUnsubscribeStore } from "./Utils/createDelayedUnsubscribeStore";
-import { cameraPermissionStateStore } from "./MediaStatusStore";
 import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
 
 export const LISTENER_BOX_UNIQUE_ID = "listener-box";
@@ -63,15 +62,13 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) 
             },
         },
         volumeStore: localVolumeStore,
-        hasVideo: derived(
-            [mediaStreamConstraintsStore, cameraPermissionStateStore],
-            ([mediaStreamConstraintsStore, cameraPermissionStateStore]) => {
-                return (
-                    mediaStreamConstraintsStore.video !== false &&
-                    (cameraPermissionStateStore === "granted" || cameraPermissionStateStore === null)
-                );
-            }
-        ),
+        hasVideo: derived([mediaStreamConstraintsStore, mutedLocalStream], ([mediaStreamConstraintsStore, stream]) => {
+            return (
+                mediaStreamConstraintsStore.video !== false &&
+                stream !== undefined &&
+                stream.getVideoTracks().length > 0
+            );
+        }),
         // hasAudio = true because the webcam has a microphone attached and could potentially play sound
         hasAudio: writable(true),
         isMuted: derived(requestedMicrophoneState, (micState) => !micState),
@@ -126,6 +123,51 @@ const listenerBoxStreamable: Streamable = {
 
 const listenerBoxVideoBox: VideoBox = VideoBox.fromLocalStreamable(listenerBoxStreamable, LISTENER_BOX_PRIORITY);
 
+// Store to track if we are in a conversation with someone else
+export const isInRemoteConversation = derived(
+    [videoStreamElementsStore, screenShareStreamElementsStore, scriptingVideoStore, silentStore, isLiveStreamingStore],
+    ([
+        $videoStreamElementsStore,
+        $screenShareStreamElementsStore,
+        $scriptingVideoStore,
+        $silentStore,
+        $isLiveStreamingStore,
+    ]) => {
+        // If we are live streaming, we are in a conversation
+        if ($isLiveStreamingStore) {
+            return true;
+        }
+
+        // If we are silent, we are not in a conversation
+        if ($silentStore) {
+            return false;
+        }
+
+        // Check if we have any peers
+        if ($videoStreamElementsStore.length > 0) {
+            return true;
+        }
+
+        // Check if we have any screen sharing streams
+        if ($screenShareStreamElementsStore.length > 0) {
+            return true;
+        }
+
+        // Check if we have any scripting videos
+        if ($scriptingVideoStore.size > 0) {
+            return true;
+        }
+
+        return false;
+    }
+);
+
+const isInActiveConversationStore = derived(
+    [isInRemoteConversation, currentPlayerGroupIdStore, inLivekitStore],
+    ([$isInRemoteConversation, $currentPlayerGroupIdStore, $inLivekitStore]) =>
+        $isInRemoteConversation || $currentPlayerGroupIdStore !== undefined || $inLivekitStore
+);
+
 /**
  * A store that contains everything that can produce a stream (so the peers + the local screen sharing stream)
  */
@@ -142,9 +184,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             silentStore,
             requestedCameraState,
             windowSize,
-            isLiveStreamingStore,
-            currentPlayerGroupIdStore,
-            inLivekitStore,
+            isInActiveConversationStore,
             isListenerStore,
             listenerSharingCameraStore,
             availabilityStatusStore,
@@ -161,9 +201,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 $silentStore,
                 $requestedCameraState,
                 $windowSize,
-                $isLiveStreamingStore,
-                $currentPlayerGroupIdStore,
-                $inLivekitStore,
+                $isInActiveConversationStore,
                 $isListenerStore,
                 $listenerSharingCameraStore,
                 $availabilityStatusStore,
@@ -189,13 +227,6 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
 
             if ($myCameraStore && !$cameraEnergySavingStore && !$silentStore) {
                 let shouldAddMyCamera = true;
-                const isInActiveConversation =
-                    $currentPlayerGroupIdStore !== undefined ||
-                    $inLivekitStore ||
-                    $isLiveStreamingStore ||
-                    $videoStreamElementsStore.length > 0 ||
-                    $screenShareStreamElementsStore.length > 0 ||
-                    $scriptingVideoStore.size > 0;
 
                 if (isUnavailableStatus) {
                     shouldAddMyCamera = false;
@@ -204,7 +235,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                     shouldAddMyCamera = false;
                 }
                 // On small screens, keep the local camera only while the user is actually in a conversation.
-                if ($windowSize.width < 768 && !isInActiveConversation) {
+                if ($windowSize.width < 768 && !$isInActiveConversationStore) {
                     shouldAddMyCamera = false;
                 }
                 // Listeners can only show their camera if they have consented to share it (seeAttendees feature)
@@ -242,45 +273,6 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
 }
 
 export const streamableCollectionStore = createStreamableCollectionStore();
-
-// Store to track if we are in a conversation with someone else
-export const isInRemoteConversation = derived(
-    [videoStreamElementsStore, screenShareStreamElementsStore, scriptingVideoStore, silentStore, isLiveStreamingStore],
-    ([
-        $screenSharingStreamStore,
-        $videoStreamElementsStore,
-        $scriptingVideoStore,
-        $silentStore,
-        $isLiveStreamingStore,
-    ]) => {
-        // If we are live streaming, we are in a conversation
-        if ($isLiveStreamingStore) {
-            return true;
-        }
-
-        // If we are silent, we are not in a conversation
-        if ($silentStore) {
-            return false;
-        }
-
-        // Check if we have any peers
-        if ($videoStreamElementsStore.length > 0) {
-            return true;
-        }
-
-        // Check if we have any screen sharing streams
-        if ($screenSharingStreamStore.length > 0) {
-            return true;
-        }
-
-        // Check if we have any scripting videos
-        if ($scriptingVideoStore.size > 0) {
-            return true;
-        }
-
-        return false;
-    }
-);
 
 // No need to unsubscribe, the store is global
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
