@@ -17,7 +17,7 @@ async function hideNoCameraIfWebkit(page: Page, browserName: string) {
     }
 }
 
-test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
+test.describe("matrix chat area property @matrix @nowebkit @nomobile", () => {
     test.beforeEach(
         "Ignore tests on mobilechromium because map editor not available for mobile devices",
         async ({ page, request }, { project }) => {
@@ -57,7 +57,6 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
 
         await expect(page.getByTestId("closeChatButton")).toBeVisible();
         await expect(page.getByTestId("roomName")).toHaveText("name of new room");
-        await page.context().close();
     });
 
     test("it should automatically close the chat when the user leaves the area", async ({ browser, browserName }) => {
@@ -83,8 +82,6 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         await Map.walkToPosition(page, 1, 1);
 
         expect(await chatUtils.isChatSidebarOpen(page)).toBeFalsy();
-
-        await page.context().close();
     });
 
     test("it should leave the matrix room when the user quits the room from an area with a matrix chat room link", async ({
@@ -115,8 +112,6 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         await chatUtils.openRoomAreaList(page);
 
         await expect(page.getByText("name of new room")).toBeHidden();
-
-        await page.context().close();
     });
 
     test("it should be moderator in room when he have a admin tag (access to manage participants / can delete other message)", async ({
@@ -159,8 +154,6 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         await expect(page.getByText("Manage participants")).toBeVisible({
             timeout: 60000,
         });
-
-        await page.context().close();
     });
 
     test("it shouldn't be moderator in room when he don't have a admin tag", async ({ browserName, browser }) => {
@@ -180,7 +173,7 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
 
         await Menu.closeMapEditor(page);
 
-        await page.context().close();
+        await page.close();
         await using page2 = await getPage(browser, "Bob", Map.url("empty"));
         await oidcMemberTagLogin(page2);
 

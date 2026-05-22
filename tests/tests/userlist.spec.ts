@@ -9,6 +9,7 @@ test.describe("Walk to @nomobile @nowebkit", () => {
     test.beforeEach(async ({ page, browserName }) => {
         test.skip(browserName === "webkit" || isMobile(page), "Skip on WebKit and mobile");
     });
+
     // FIXME: for some reason, this test fails in Helm. Find why
     test("walk to a user", async ({ browser }, { project }) => {
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
@@ -29,9 +30,6 @@ test.describe("Walk to @nomobile @nowebkit", () => {
         await expect(page.getByTestId("roomName")).toHaveText("Proximity Chat");
 
         await expect(page.locator(".messageTextBody")).toContainText("New discussion with Bob");
-
-        await userBob.context().close();
-        await page.context().close();
     });
 });
 
@@ -59,7 +57,6 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
         await chatUtils.UL_sendMessage(userBob, "Admin1");
 
         await expect(userBob.getByTestId("roomName")).toHaveText("Admin1");
-        await adminPage.context().close();
     });
 
     test("Send Message from User List to user not connected @oidc @matrix @chat @nomobile @nowebkit", async ({
@@ -82,8 +79,5 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
         await chatUtils.slideToUsers(userUserLogin1);
         // Click on chat button
         await expect(userUserLogin1.getByTestId(`send-message-Alice`)).toBeDisabled();
-
-        await userAlice.context().close();
-        await userUserLogin1.context().close();
     });
 });

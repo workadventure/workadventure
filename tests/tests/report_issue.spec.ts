@@ -17,7 +17,5 @@ test.describe("Report issue", () => {
         // Click on the report issue button
         await alicePage.getByRole("button", { name: "Report an issue" }).click();
         await expect(alicePage.getByRole("button", { name: "Send Bug Report" })).toBeVisible();
-
-        await alicePage.context().close();
     });
 });

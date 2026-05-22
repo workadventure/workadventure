@@ -274,6 +274,7 @@ export class RoomConnection implements RoomConnection {
     >();
     private lastQueryId = 0;
     private roomConnectedMessageReceived: boolean = false;
+    private joinRoomEmitted: boolean = false;
 
     /**
      *
@@ -768,6 +769,7 @@ export class RoomConnection implements RoomConnection {
         console.info("Socket has been closed", this.userId, this._closed, event);
         if (this.timeout) {
             clearTimeout(this.timeout);
+            this.timeout = undefined;
         }
 
         // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
@@ -857,6 +859,7 @@ export class RoomConnection implements RoomConnection {
         viewport: ViewportInterface,
         availabilityStatus: AvailabilityStatus
     ): void {
+        this.joinRoomEmitted = true;
         this.send({
             message: {
                 $case: "joinRoomFrontMessage",
@@ -944,7 +947,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public closeConnection(): void {
-        this.socket?.close();
+        this.socket?.close(1000, "Room connection closed");
         this.cleanupConnection(true);
         this._closed = true;
     }
@@ -976,6 +979,11 @@ export class RoomConnection implements RoomConnection {
     }
 
     public setViewport(viewport: ViewportInterface): void {
+        if (!this.joinRoomEmitted) {
+            // Only send the viewport if we already emitted the joinRoom message (that contains the first valid viewport)
+            // Any call to setViewport before might be triggered by Phaser because of the CameraManager on a bad viewport.
+            return;
+        }
         this.send({
             message: {
                 $case: "viewportMessage",
@@ -2160,7 +2168,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     private send(message: ClientToServerMessageTsProto): void {
-        if (!this.socket.isOpen()) {
+        if (this._closed) {
             console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
             return;
         }

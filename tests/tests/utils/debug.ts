@@ -36,12 +36,11 @@ export async function getBackDump(): Promise<Array<{ roomUrl: string }>> {
 }
 
 export async function getPusherRooms(request: APIRequestContext): Promise<APIResponse> {
-    let url = "/rooms";
+    let url = new URL("/rooms", play_url).toString();
     if (fs.existsSync("/project")) {
         // We are inside a container. Let's use a direct route
         url = "http://play:3000/rooms";
     }
-
     return request.get(url, {
         headers: {
             Authorization: ADMIN_API_TOKEN,

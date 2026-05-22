@@ -46,7 +46,7 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         await expect(events2).toContainText("User 'Alice' testVariable changed. New value: yeah (tracked locally)");
         await expect(events2).toContainText("Asserted value from event and from WA.players.state is the same");
 
-        await page2.context().close();
+        await page2.close();
         await expect(events.getByText("User left: Bob")).toBeVisible();
         // Possible race condition here? Sometimes, Bob is still in the list when we check. A bit weird because the leave event is received.
         // Seems it happens more in Kubernetes E2E tests....
@@ -55,7 +55,6 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         await page1.waitForTimeout(500);
         await getCoWebsiteIframe(page1).locator("#listCurrentPlayers").click();
         await expect(list).not.toContainText("Bob");
-        await page1.context().close();
     });
 
     test("exception if we forget to call WA.players.configureTracking", async ({ browser }) => {
@@ -66,8 +65,6 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         );
         await expect(getCoWebsiteIframe(page).locator("#onPlayerEntersException")).toHaveText("Yes");
         await expect(getCoWebsiteIframe(page).locator("#onPlayerLeavesException")).toHaveText("Yes");
-
-        await page.context().close();
     });
 
     test("that player B arriving after player A set his variables can read the variable.", async ({ browser }) => {
@@ -104,10 +101,6 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         });
 
         expect(myvar).toBe(12);
-
-        await page2.context().close();
-
-        await page.context().close();
     });
 
     const runPersistenceTest = async (page: Page, browser: Browser) => {
@@ -315,16 +308,12 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         await expect.poll(() => readLocalPlayerVariable("public_non_persisted", page)).toBe(undefined);
         await expect.poll(() => readLocalPlayerVariable("public_persisted", page)).toBe("public_persisted");
         await expect.poll(() => readLocalPlayerVariable("undefined_var", page)).toBe(undefined);
-
-        await page2.context().close();
     };
 
     test("variable persistence for anonymous users.", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", publicTestMapUrl(`tests/E2E/empty.json`, "api_players"));
 
         await runPersistenceTest(page, browser);
-
-        await page.context().close();
     });
 
     test("variable persistence for logged users. @oidc", async ({ browser }) => {
@@ -335,8 +324,6 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         await runPersistenceTest(page, browser);
 
         await oidcLogout(page);
-
-        await page.context().close();
     });
 
     test("variables are sent across frames.", async ({ browser }) => {
@@ -392,8 +379,6 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
             "embedded_iframe",
         );
         expect(variable).toBe(12);
-
-        await page.context().close();
     });
 
     // This test is testing that we are listening on the back side to variables modification inside Redis.
@@ -410,7 +395,7 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
 
         // We use a new tab to keep the same LocalStorage
 
-        const page2 = await page.context().newPage();
+        await using page2 = await page.context().newPage();
 
         await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
 
@@ -479,10 +464,6 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
 
         await expect.poll(() => gotExpectedNotification).toBe(true);
         await expect.poll(() => gotUnexpectedNotification).toBe(false);
-
-        await page2.context().close();
-        //
-        //await page.context().close();
     });
 
     test("that a variable changed can be listened to locally.", async ({ browser }) => {
@@ -522,8 +503,6 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         });
 
         await expect.poll(() => gotExpectedNotification).toBe(true);
-
-        await page.context().close();
     });
 
     test("cowebsites tab system", async ({ browser }) => {
@@ -550,7 +529,5 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         await getCoWebsiteIframe(page).locator(".link-to-siteB-page2").click();
         const eventpage2 = getCoWebsiteIframe(page).locator(".siteB-page2");
         await expect(eventpage2).toContainText("Site B Page 2");
-
-        await page.context().close();
     });
 });

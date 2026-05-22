@@ -140,9 +140,6 @@ test.describe("Matrix chat polls @oidc @matrix @nowebkit", () => {
 
         await page.getByTestId("deletePollButton").click();
         await expect(page.getByTestId("pollQuestion")).toBeHidden();
-
-        await page.close();
-        await page.context().close();
     });
 
     test("should hide closed-poll results until the poll is closed", async ({ browser }) => {
@@ -166,9 +163,6 @@ test.describe("Matrix chat polls @oidc @matrix @nowebkit", () => {
         await page.getByTestId("endPollButton").click();
         await expect(page.getByTestId("pollClosedNotice")).toBeVisible();
         await expect(page.getByTestId("pollCard")).toContainText("1 (100%)");
-
-        await page.close();
-        await page.context().close();
     });
 
     test("should synchronize poll votes between two participants", async ({ browser }) => {
@@ -210,10 +204,5 @@ test.describe("Matrix chat polls @oidc @matrix @nowebkit", () => {
         await expectPollResult(alicePage, "Tuesday", 0, 0);
         await expectPollResult(bobPage, "Monday", 2, 100);
         await expectPollResult(bobPage, "Tuesday", 0, 0);
-
-        await alicePage.close();
-        await bobPage.close();
-        await alicePage.context().close();
-        await bobPage.context().close();
     });
 });

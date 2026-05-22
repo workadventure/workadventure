@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/node";
 import type { FilterType, UpdateSpaceUserMessage, SetPlayerDetailsMessage } from "@workadventure/messages";
 import { SpaceUser, AvailabilityStatus } from "@workadventure/messages";
 import Debug from "debug";
-import type { Socket } from "../services/SocketManager";
+import type { PusherWebSocket } from "../services/PusherWebSocket";
 import type { BackSpaceConnection } from "./Websocket/SocketData";
 import type { EventProcessor } from "./EventProcessor";
 import type { SpaceToBackForwarderInterface } from "./SpaceToBackForwarder";
@@ -38,20 +38,20 @@ export interface SpaceInterface {
     query: Query;
     initSpace(): void;
     name: string;
-    handleWatch(watcher: Socket): Promise<void>;
-    handleUnwatch(watcher: Socket): void;
+    handleWatch(watcher: PusherWebSocket): Promise<void>;
+    handleUnwatch(watcher: PusherWebSocket): void;
     isEmpty(): boolean;
     filterType: FilterType;
     world: string;
     applyAndGetUpdatedFieldsForUserFromSetPlayerDetails(
-        client: Socket,
+        client: PusherWebSocket,
         playerDetailsMessage: SetPlayerDetailsMessage
     ): {
         changedFields: string[];
         partialSpaceUser: PartialSpaceUser;
     } | null;
     extractUpdatedFieldsFromUpdateSpaceUserMessage(
-        client: Socket,
+        client: PusherWebSocket,
         updateSpaceUserMessage: UpdateSpaceUserMessage
     ): {
         changedFields: string[];
@@ -72,8 +72,8 @@ export class Space implements SpaceForSpaceConnectionInterface {
 
     // The list of users connected to THIS pusher specifically.
     // Note: Space._localConnectedUser, Space._localConnectedUserWithSpaceUser and SocketData.spaces must be in sync.
-    public readonly _localConnectedUser: Map<string, Socket>;
-    public readonly _localConnectedUserWithSpaceUser = new Map<Socket, SpaceUserExtended>();
+    public readonly _localConnectedUser: Map<string, PusherWebSocket>;
+    public readonly _localConnectedUserWithSpaceUser = new Map<PusherWebSocket, SpaceUserExtended>();
     public readonly _localWatchers: Set<string> = new Set<string>();
     public spaceStreamToBackPromise: Promise<BackSpaceConnection> | undefined;
     public readonly forwarder: SpaceToBackForwarderInterface;
@@ -105,7 +105,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
     ) {
         this.users = new Map<string, SpaceUserExtended>();
         this.metadata = new Map<string, unknown>();
-        this._localConnectedUser = new Map<string, Socket>();
+        this._localConnectedUser = new Map<string, PusherWebSocket>();
         this.forwarder = this.SpaceToBackForwarderFactory(this, eventProcessor);
         this.dispatcher = this.SpaceToFrontDispatcherFactory(this, eventProcessor);
         this.query = new Query(this);
@@ -116,7 +116,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
         this.setSpaceStreamToBack(this.spaceConnection.getSpaceStreamToBackPromise(this));
     }
 
-    public async handleWatch(watcher: Socket) {
+    public async handleWatch(watcher: PusherWebSocket) {
         debug(`${this.name} : filter added for ${watcher.getUserData().userId}`);
 
         const spaceUser = this._localConnectedUserWithSpaceUser.get(watcher);
@@ -139,7 +139,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
         this.forwarder.addUserToNotify(spaceUser);
     }
 
-    public handleUnwatch(watcher: Socket) {
+    public handleUnwatch(watcher: PusherWebSocket) {
         const spaceUser = this._localConnectedUserWithSpaceUser.get(watcher);
         if (!spaceUser) {
             throw new Error("spaceUser not found");
@@ -265,7 +265,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
     }
 
     public applyAndGetUpdatedFieldsForUserFromSetPlayerDetails(
-        client: Socket,
+        client: PusherWebSocket,
         playerDetails: SetPlayerDetailsMessage
     ): {
         changedFields: string[];
@@ -326,7 +326,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
      * which is necessary to correctly detect role changes (previousRole vs newRole).
      */
     public extractUpdatedFieldsFromUpdateSpaceUserMessage(
-        client: Socket,
+        client: PusherWebSocket,
         updateSpaceUserMessage: UpdateSpaceUserMessage
     ): {
         changedFields: string[];

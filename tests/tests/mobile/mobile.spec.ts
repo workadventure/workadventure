@@ -32,7 +32,7 @@ test.describe("Mobile @nowebkit @nodesktop", () => {
         await Menu.closeMenu(page);
 
         // Second browser
-        const pageAlice = await getPage(browser, "Alice", Map.url("empty"));
+        await using pageAlice = await getPage(browser, "Alice", Map.url("empty"));
         await pageAlice.evaluate(() => localStorage.setItem("debug", "*"));
 
         // Move Alice and create a bubble with another user
@@ -48,7 +48,7 @@ test.describe("Mobile @nowebkit @nodesktop", () => {
         await pageAlice.locator("#cameras-container").locator("button.full-screen-button").nth(1).click();
 
         // Second browser
-        const pageJohn = await getPage(browser, "John", Map.url("empty"));
+        await using pageJohn = await getPage(browser, "John", Map.url("empty"));
         await pageJohn.evaluate(() => localStorage.setItem("debug", "*"));
 
         // Move John and create a bubble with another user
@@ -82,13 +82,6 @@ test.describe("Mobile @nowebkit @nodesktop", () => {
         await Menu.closeMenu(pageJohn);
 
         await pageJohn.locator("#cameras-container").locator("button.full-screen-button").nth(1).click();
-
-        await pageAlice.close();
-        await pageJohn.close();
-
-        await pageJohn.context().close();
-        await pageAlice.context().close();
-        await page.context().close();
     });
 
     test("Successfully jitsi cowebsite with mobile device", async ({ browser }) => {
@@ -113,8 +106,6 @@ test.describe("Mobile @nowebkit @nodesktop", () => {
         await expect(page.getByTestId("tab1").getByRole("button", { name: "Close" })).toBeHidden({
             timeout: 10000,
         });
-
-        await page.context().close();
     });
 
     // TODO: create test to interact with another object

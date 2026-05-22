@@ -6,8 +6,8 @@ import type { WAMFileFormat } from "@workadventure/map-editor";
 
 import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { apiClientRepository } from "../services/ApiClientRepository";
-import type { Socket } from "../services/SocketManager";
 import { socketManager } from "../services/SocketManager";
+import type { PusherWebSocket } from "../services/PusherWebSocket";
 import { PositionDispatcher } from "./PositionDispatcher";
 import type { ViewportInterface } from "./Websocket/ViewportMessage";
 import type { ZoneEventListener } from "./Zone";
@@ -20,7 +20,7 @@ export class PusherRoom {
 
     private backConnection!: ClientDuplexStream<PusherToBackRoomMessage, BatchToPusherRoomMessage>;
     private isClosing = false;
-    private listeners: Set<Socket> = new Set<Socket>();
+    private listeners: Set<PusherWebSocket> = new Set<PusherWebSocket>();
 
     private _wamSettings: WAMFileFormat["settings"] = {};
     private backConnectionClosedAbortController: AbortController = new AbortController();
@@ -30,14 +30,14 @@ export class PusherRoom {
         this.positionNotifier = new PositionDispatcher(this.roomUrl, 320, 320, this.socketListener, this);
     }
 
-    public setViewport(socket: Socket, viewport: ViewportInterface): void {
+    public setViewport(socket: PusherWebSocket, viewport: ViewportInterface): void {
         if (this.isClosing) {
             throw new Error(`Cannot set viewport in room ${this.roomUrl}, connection is closing`);
         }
         this.positionNotifier.setViewport(socket, viewport);
     }
 
-    public join(socket: Socket): void {
+    public join(socket: PusherWebSocket): void {
         if (this.isClosing) {
             throw new Error(`Cannot join room ${this.roomUrl}, connection is closing`);
         }
@@ -46,7 +46,7 @@ export class PusherRoom {
         socket.getUserData().pusherRoom = this;
     }
 
-    public leave(socket: Socket): void {
+    public leave(socket: PusherWebSocket): void {
         this.positionNotifier.removeViewport(socket);
         this.listeners.delete(socket);
         socket.getUserData().pusherRoom = undefined;

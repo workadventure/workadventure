@@ -14,7 +14,7 @@ import { applyFieldMask } from "protobuf-fieldmask";
 import { z } from "zod";
 import { Deferred } from "@workadventure/shared-utils";
 import { asError } from "catch-unknown";
-import type { Socket } from "../services/SocketManager";
+import type { PusherWebSocket } from "../services/PusherWebSocket";
 import type { EventProcessor } from "./EventProcessor";
 import type { SpaceUserExtended, Space, PartialSpaceUser } from "./Space";
 import type { SpaceNotificationContext, SpaceNotificationStrategy } from "./SpaceNotificationStrategy";
@@ -22,9 +22,9 @@ import { SpaceNotificationStrategyFactory } from "./SpaceNotificationStrategy";
 
 export interface SpaceToFrontDispatcherInterface {
     handleMessage(message: BackToPusherSpaceMessage): void;
-    notifyMe(watcher: Socket, subMessage: SubMessage): void;
-    notifyMeAddUser(watcher: Socket, user: SpaceUserExtended): void;
-    notifyMeInit(watcher: Socket): Promise<void>;
+    notifyMe(watcher: PusherWebSocket, subMessage: SubMessage): void;
+    notifyMeAddUser(watcher: PusherWebSocket, user: SpaceUserExtended): void;
+    notifyMeInit(watcher: PusherWebSocket): Promise<void>;
     /**
      * Notify all watchers in this space. Notification is done only to watchers.
      */
@@ -61,11 +61,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         return this._space._localWatchers;
     }
 
-    get localConnectedUser(): Map<string, Socket> {
+    get localConnectedUser(): Map<string, PusherWebSocket> {
         return this._space._localConnectedUser;
     }
 
-    get localConnectedUserWithSpaceUser(): Map<Socket, SpaceUserExtended> {
+    get localConnectedUserWithSpaceUser(): Map<PusherWebSocket, SpaceUserExtended> {
         return this._space._localConnectedUserWithSpaceUser;
     }
     handleMessage(message: BackToPusherSpaceMessage): void {
@@ -406,11 +406,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         });
     }
 
-    public notifyMe(watcher: Socket, subMessage: SubMessage) {
+    public notifyMe(watcher: PusherWebSocket, subMessage: SubMessage) {
         watcher.emitInBatch(subMessage);
     }
 
-    public notifyMeAddUser(watcher: Socket, user: SpaceUserExtended) {
+    public notifyMeAddUser(watcher: PusherWebSocket, user: SpaceUserExtended) {
         const subMessage: SubMessage = {
             message: {
                 $case: "addSpaceUserMessage",
@@ -423,7 +423,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         this.notifyMe(watcher, subMessage);
     }
 
-    public async notifyMeInit(watcher: Socket) {
+    public async notifyMeInit(watcher: PusherWebSocket) {
         await this.waitForInit();
 
         let users = Array.from(this._space.users.values());

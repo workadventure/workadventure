@@ -7,6 +7,7 @@ import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
 
 test.setTimeout(240_000);
+
 test.describe("Personal desk spawn on connect @oidc @nomobile @nowebkit", () => {
     test.beforeEach(({ page }) => {
         test.skip(isMobile(page), "Map editor is not available on mobile");
@@ -33,7 +34,7 @@ test.describe("Personal desk spawn on connect @oidc @nomobile @nowebkit", () => 
         await AreaAccessRights.openAreaEditorAndAddPersonalAreaWithDynamicClaim(adminPage);
         await Menu.closeMapEditor(adminPage);
 
-        await adminPage.context().close();
+        await adminPage.close();
 
         await using memberPage = await getPage(browser, "Member1", Map.url("empty"));
 
@@ -52,7 +53,5 @@ test.describe("Personal desk spawn on connect @oidc @nomobile @nowebkit", () => 
         await expect(goToDeskButton).toBeVisible({ timeout: 15_000 });
         // User should be inside their personal area: "Walk to my desk" button is disabled
         await expect(goToDeskButton).toHaveClass(/opacity-50|cursor-not-allowed/);
-
-        await memberPage.context().close();
     });
 });

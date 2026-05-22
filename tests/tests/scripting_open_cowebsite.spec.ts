@@ -53,7 +53,5 @@ test.describe("Scripting WA.nav.openCoWebsite function", () => {
         await page.getByTestId("tab2").click();
         await expect(getCoWebsiteIframe(page).locator('[id="\\#text_input"]')).toHaveValue("tab2");
         await expect(getCoWebsiteIframe(page).locator('[id="\\#text_input"]')).toBeVisible();
-
-        await page.context().close();
     });
 });

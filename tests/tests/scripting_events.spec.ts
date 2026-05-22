@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
-import { publicTestMapUrl } from "./utils/urls";
+import { play_url, publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
 
@@ -8,6 +8,7 @@ test.describe("Scripting API Events @nomobile", () => {
     test.beforeEach(async ({ page }) => {
         test.skip(isMobile(page), "Skip on mobile devices");
     });
+
     test("events", async ({ browser, request }) => {
         // Go to
         await using page = await getPage(
@@ -128,7 +129,7 @@ test.describe("Scripting API Events @nomobile", () => {
                 console.log("Global event triggered");
             });
         });
-        const result = await request.post("/global/event", {
+        const result = await request.post(new URL("/global/event", play_url).toString(), {
             headers: {
                 Authorization: process.env.ADMIN_API_TOKEN,
             },
@@ -141,9 +142,5 @@ test.describe("Scripting API Events @nomobile", () => {
         expect(await result.text()).toEqual("ok");
 
         await expect.poll(() => gotExpectedGlobalNotification).toBe(true);
-
-        await page2.context().close();
-
-        await page.context().close();
     });
 });

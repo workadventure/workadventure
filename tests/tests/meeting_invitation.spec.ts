@@ -5,7 +5,7 @@ import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
 import chatUtils from "./utils/chat";
 
-test.describe("Meeting invitation @nomobile", () => {
+test.describe("Meeting invitation @nomobile @nowebkit", () => {
     test.beforeEach(async ({ browserName, page }) => {
         test.skip(browserName === "webkit" || isMobile(page), "Skip on WebKit and mobile");
     });

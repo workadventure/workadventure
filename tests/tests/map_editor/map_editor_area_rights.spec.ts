@@ -39,7 +39,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await AreaAccessRights.openAreaEditorAndAddAreaWithRights(page, ["admin"], ["admin"]);
         await Menu.closeMapEditor(page);
 
-        await page.context().close();
+        await page.close();
 
         await using page2 = await getPage(browser, "User1", Map.url("empty"));
 
@@ -47,8 +47,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         //await Map.walkTo(page, "ArrowUp", 1000);
 
         await expect(page2.getByText("Sorry, you don't have access to this area")).toBeAttached();
-
-        await page2.context().close();
     });
 
     test("Access restricted area with right click to move", async ({ browser, request }) => {
@@ -91,8 +89,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         // Expect that the player is move to more or less that +32 or -32 pixels in x and y of the initial position
         expect(actualPositionAfterRightClickToMove.x).toBeCloseTo(userCurrentPosition.x, 32);
         expect(actualPositionAfterRightClickToMove.y).toBeCloseTo(userCurrentPosition.y, 32);
-
-        await page.context().close();
     });
 
     test("MapEditor is disabled for basic user because there are no thematics", async ({ browser, request }) => {
@@ -106,8 +102,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
       "section.side-bar-container .side-bar .tool-button button#EntityEditor"
     );
     await expect(entityEditorButton).not.toBeAttached();*/
-
-        await page.context().close();
     });
 
     test("Area with restricted write access : Trying to just read an object", async ({ browser, request }) => {
@@ -133,9 +127,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         );
 
         await expect(page2.getByTestId("openWebsite")).toBeHidden();
-
-        await page2.context().close();
-        await page.context().close();
     });
 
     test("Area with restricted write access : Trying to read an object with read/write access", async ({
@@ -151,7 +142,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await AreaAccessRights.openAreaEditorAndAddAreaWithRights(page, ["admin"], ["member"]);
         await AreaAccessRights.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(page);
         await oidcLogout(page);
-        await page.context().close();
+        await page.close();
 
         // Second browser with member user trying to read the object
         await using page2 = await getPage(browser, "Member1", Map.url("empty"));
@@ -173,9 +164,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await expect(page2.locator("#cowebsites-container")).toContainText("https://workadventu.re");
         // Check that the iframe is visible with src https://workadventu.re/
         expect(page2.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
-
-        await page2.close();
-        await page2.context().close();
     });
 
     test("Area with restricted write access : Trying to just add an object", async ({ browser, request }) => {
@@ -199,10 +187,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await expect(page2.locator("#map-editor-container")).toBeVisible();
         await expect(page2.locator("#AreaEditor")).toBeHidden();
         await expect(page2.locator("#EntityEditor")).toBeHidden();
-
-        await page2.context().close();
-
-        await page.context().close();
     });
 
     test("Area with restricted write access : Trying to add an object with write access", async ({
@@ -219,7 +203,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await oidcLogout(page);
 
         await page.close();
-        await page.context().close();
 
         // Second browser with member user trying to read the object
         await using page2 = await getPage(browser, "Member1", Map.url("empty"));
@@ -244,8 +227,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
             AreaAccessRights.entityPositionInArea.y,
         );
         await expect(page2.getByTestId("openWebsite")).toBeAttached();
-
-        await page2.context().close();
     });
 
     test("Area with restricted write access : Trying to remove an object", async ({ browser, request }) => {
@@ -258,7 +239,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await AreaAccessRights.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(page);
         await oidcLogout(page);
         await page.close();
-        await page.context().close();
 
         // Second browser with member user trying to read the object
         await using page2 = await getPage(browser, "Member1", Map.url("empty"));
@@ -275,10 +255,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await expect(page2.locator("#map-editor-container")).toBeVisible();
         await expect(page2.locator("#AreaEditor")).toBeHidden();
         await expect(page2.locator("#EntityEditor")).toBeHidden();
-
-        await page2.context().close();
-
-        await page.context().close();
     });
 
     test("Area with restricted write access : Trying to remove an object with write access", async ({
@@ -323,10 +299,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         );
 
         await expect(page2.getByTestId("openWebsite")).toBeHidden();
-
-        await page2.context().close();
-
-        await page.context().close();
     });
 
     test("Area with restricted write access : Trying to remove an object outside the area", async ({
@@ -354,15 +326,11 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await expect(page2.locator("#map-editor-container")).toBeVisible();
         await expect(page2.locator("#AreaEditor")).toBeHidden();
         await expect(page2.locator("#EntityEditor")).toBeHidden();
-
-        await page2.context().close();
-
-        await page.context().close();
     });
 
     test("Claim personal area from allowed user", async ({ browser, request }) => {
         await resetWamMaps(request);
-        const page = await getPage(browser, "Admin1", Map.url("empty"));
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
 
         await Menu.openMapEditor(page);
         await AreaAccessRights.openAreaEditorAndAddArea(page);
@@ -375,7 +343,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await page.close();
 
         // Second browser with member user trying to read the object
-        const page2 = await getPage(browser, "Member1", Map.url("empty"));
+        await using page2 = await getPage(browser, "Member1", Map.url("empty"));
 
         // Move to area and claim it
         await Map.teleportToPosition(
@@ -399,14 +367,11 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
             AreaAccessRights.entityPositionInArea.y,
         );
         //await expect(page2.getByTestId("openWebsite")).toBeAttached();
-        await page2.close();
-        await page2.context().close();
-        await page.context().close();
     });
 
     test("Claim personal area from unauthorized user", async ({ browser, request }) => {
         await resetWamMaps(request);
-        const page = await getPage(browser, "Admin1", Map.url("empty"));
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
 
         await Menu.openMapEditor(page);
         await AreaAccessRights.openAreaEditorAndAddArea(page);
@@ -419,7 +384,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await page.close();
 
         // Second browser with member user trying to read the object
-        const page2 = await getPage(browser, "Alice", Map.url("empty"));
+        await using page2 = await getPage(browser, "Alice", Map.url("empty"));
 
         // Move to area and claim it
         await Map.teleportToPosition(
@@ -428,15 +393,11 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
             AreaAccessRights.entityPositionInArea.y,
         );
         await expect(page2.getByTestId("claimPersonalAreaButton")).not.toBeAttached();
-        await page2.close();
-        await page.close();
-        await page2.context().close();
-        await page.context().close();
     });
 
     test("Claim multi personal area", async ({ browser, request }) => {
         await resetWamMaps(request);
-        const page = await getPage(browser, "Admin1", Map.url("empty"));
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
 
         // Add a first area
         await Menu.openMapEditor(page);
@@ -462,7 +423,5 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         // Check if the first area is not claimable
         await Map.teleportToPosition(page, 2 * 32, 2 * 32);
         await expect(page.getByTestId("claimPersonalAreaButton")).not.toBeAttached();
-        await page.close();
-        await page.context().close();
     });
 });

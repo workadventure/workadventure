@@ -6,11 +6,11 @@ import { EventProcessor } from "../../src/pusher/models/EventProcessor";
 import type { SpaceForSpaceConnectionInterface } from "../../src/pusher/models/Space";
 import { Space } from "../../src/pusher/models/Space";
 import type { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
-import type { Socket } from "../../src/pusher/services/SocketManager";
 import type { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
 import type { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
 import type { SpaceConnectionInterface } from "../../src/pusher/models/SpaceConnection";
 import { SpaceConnection } from "../../src/pusher/models/SpaceConnection";
+import type { PusherWebSocket } from "../../src/pusher/services/PusherWebSocket";
 
 const flushPromises = () => new Promise(setImmediate);
 
@@ -100,7 +100,7 @@ describe("Space", () => {
             space.users.set("foo_2", mockUsers[1]);
             space.users.set("foo_3", mockUsers[2]);
 
-            const mockSocket = mock<Socket>({
+            const mockSocket = mock<PusherWebSocket>({
                 getUserData: vi.fn().mockReturnValue({
                     spaceUser: mockUsers[0],
                 }),
@@ -190,7 +190,7 @@ describe("Space", () => {
             space.users.set("foo_3", mockUsers[2]);
             space._localWatchers.add("foo_1");
 
-            const mockSocket = mock<Socket>({
+            const mockSocket = mock<PusherWebSocket>({
                 getUserData: vi.fn().mockReturnValue({
                     spaceUser: mockUsers[0],
                 }),

@@ -1,6 +1,6 @@
 import type { SpaceUser, SubMessage } from "@workadventure/messages";
-import type { Socket } from "../../services/SocketManager";
 import type { SpaceUserExtended, PartialSpaceUser } from "../Space";
+import type { PusherWebSocket } from "../../services/PusherWebSocket";
 
 /**
  * Context interface that provides access to space data and notification methods.
@@ -11,11 +11,11 @@ export interface SpaceNotificationContext {
     readonly localName: string;
     readonly users: Map<string, SpaceUserExtended>;
     readonly localWatchers: Set<string>;
-    readonly localConnectedUser: Map<string, Socket>;
-    readonly localConnectedUserWithSpaceUser: Map<Socket, SpaceUserExtended>;
+    readonly localConnectedUser: Map<string, PusherWebSocket>;
+    readonly localConnectedUserWithSpaceUser: Map<PusherWebSocket, SpaceUserExtended>;
 
     // Notification methods
-    notifyMe(watcher: Socket, subMessage: SubMessage): void;
+    notifyMe(watcher: PusherWebSocket, subMessage: SubMessage): void;
     notifyAll(subMessage: SubMessage): void;
 
     // Message creation helpers

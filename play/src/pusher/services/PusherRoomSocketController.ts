@@ -6,7 +6,7 @@ import { asError } from "catch-unknown";
 import { CLIENT_DISCONNECTION_RETENTION_MS } from "../enums/EnvironmentVariable";
 import type { ConnectingSocketData } from "../models/Websocket/SocketData";
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
-import type { Socket, SocketUpgradeFailed } from "./SocketManager";
+import type { SocketUpgradeFailed } from "./SocketManager";
 import { PusherWebSocket } from "./PusherWebSocket";
 import type { RawSocket } from "./PusherWebSocket";
 import { validateWebsocketQuery } from "./QueryValidator";
@@ -26,10 +26,10 @@ type UpgradeContext<TQuery> = {
 };
 
 type UpgradeHandler<TQuery> = (context: UpgradeContext<TQuery>) => void | Promise<void>;
-type OpenHandler = (socket: Socket) => void | Promise<void>;
+type OpenHandler = (socket: PusherWebSocket) => void | Promise<void>;
 type RejectedOpenHandler = (socket: SocketUpgradeFailed) => void | Promise<void>;
-type MessageHandler = (socket: Socket, message: ClientToServerMessage) => void | Promise<void>;
-type CloseHandler = (socket: Socket) => void | Promise<void>;
+type MessageHandler = (socket: PusherWebSocket, message: ClientToServerMessage) => void | Promise<void>;
+type CloseHandler = (socket: PusherWebSocket, code: number, reason: string) => void | Promise<void>;
 
 type RoomWsQuery = {
     tabId: string;
@@ -50,7 +50,7 @@ type RoomWsConfig<TQuery extends RoomWsQuery> = {
 };
 
 type WebSocketContext = {
-    socket: PusherWebSocket;
+    socket?: PusherWebSocket;
     clientLastReceivedNonce?: number;
 };
 
@@ -58,7 +58,6 @@ export class PusherRoomSocketController {
     private readonly wrappersBySocket = new WeakMap<RawSocket, PusherWebSocket>();
     private readonly contextByTabKey = new Map<string, WebSocketContext>();
     private readonly contextCleanupTimeoutsByTabKey = new Map<string, ReturnType<typeof setTimeout>>();
-    private readonly disconnectingSockets = new WeakSet<PusherWebSocket>();
 
     public constructor(private readonly app: TemplatedApp) {}
 
@@ -67,17 +66,7 @@ export class PusherRoomSocketController {
         if (existingWrapper) {
             return existingWrapper;
         }
-        const wrapper = new PusherWebSocket(rawSocket, {
-            isDisconnecting: (socket) => this.disconnectingSockets.has(socket),
-            startDisconnecting: (socket) => {
-                if (this.disconnectingSockets.has(socket)) {
-                    return false;
-                }
-
-                this.disconnectingSockets.add(socket);
-                return true;
-            },
-        });
+        const wrapper = new PusherWebSocket(rawSocket);
         this.wrappersBySocket.set(rawSocket, wrapper);
         return wrapper;
     }
@@ -127,6 +116,27 @@ export class PusherRoomSocketController {
         return parsed;
     }
 
+    private canReplaceTransportWithoutUpgrade<TQuery extends RoomWsQuery>(
+        query: TQuery,
+        websocketProtocol: string,
+        tabContext: WebSocketContext | undefined
+    ): tabContext is WebSocketContext & { socket: PusherWebSocket } {
+        if (!tabContext?.socket || tabContext.socket.isDisconnecting()) {
+            return false;
+        }
+
+        const socketData = tabContext.socket.getUserData();
+        if (socketData.token !== websocketProtocol) {
+            return false;
+        }
+
+        if ("roomId" in query && typeof query.roomId === "string" && query.roomId !== socketData.roomId) {
+            return false;
+        }
+
+        return true;
+    }
+
     private upgradeSocket(
         aborted: boolean,
         res: HttpResponse,
@@ -156,20 +166,6 @@ export class PusherRoomSocketController {
         this.contextCleanupTimeoutsByTabKey.delete(tabId);
     }
 
-    private scheduleContextCleanup(tabId: string, socket: PusherWebSocket): void {
-        this.clearContextCleanup(tabId);
-
-        const timeout = setTimeout(() => {
-            this.contextCleanupTimeoutsByTabKey.delete(tabId);
-
-            if (this.contextByTabKey.get(tabId)?.socket === socket) {
-                this.contextByTabKey.delete(tabId);
-            }
-        }, CLIENT_DISCONNECTION_RETENTION_MS);
-
-        this.contextCleanupTimeoutsByTabKey.set(tabId, timeout);
-    }
-
     public ws<TQuery extends RoomWsQuery>(path: string, config: RoomWsConfig<TQuery>): void {
         this.app.ws<ConnectingSocketData | UpgradeFailedData>(path, {
             idleTimeout: config.idleTimeout,
@@ -193,12 +189,27 @@ export class PusherRoomSocketController {
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
                     const urlSearchParams = new URLSearchParams(req.getQuery());
 
+                    const clientLastReceivedNonce = this.parseReconnectNonce(
+                        urlSearchParams.get("lastReceivedNonce") ?? undefined,
+                        "lastReceivedNonce"
+                    );
                     const tabContext = this.contextByTabKey.get(query.tabId);
-                    if (tabContext) {
-                        tabContext.clientLastReceivedNonce = this.parseReconnectNonce(
-                            urlSearchParams.get("lastReceivedNonce") ?? undefined,
-                            "lastReceivedNonce"
+
+                    if (
+                        clientLastReceivedNonce !== undefined &&
+                        this.canReplaceTransportWithoutUpgrade(query, websocketProtocol, tabContext)
+                    ) {
+                        tabContext.clientLastReceivedNonce = clientLastReceivedNonce;
+                        this.upgradeSocket(
+                            upgradeAborted.aborted,
+                            res,
+                            { ...tabContext.socket.getUserData() },
+                            websocketKey,
+                            websocketProtocol,
+                            websocketExtensions,
+                            context
                         );
+                        return;
                     }
 
                     await config.upgrade({
@@ -212,6 +223,12 @@ export class PusherRoomSocketController {
                         },
                         isAborted: () => upgradeAborted.aborted,
                         upgrade: (data) => {
+                            if (clientLastReceivedNonce !== undefined) {
+                                const tabContext = this.contextByTabKey.get(query.tabId) ?? {};
+                                tabContext.clientLastReceivedNonce = clientLastReceivedNonce;
+                                this.contextByTabKey.set(query.tabId, tabContext);
+                            }
+
                             this.upgradeSocket(
                                 upgradeAborted.aborted,
                                 res,
@@ -252,14 +269,33 @@ export class PusherRoomSocketController {
 
                     const tabId = socketData.tabId;
                     const context = this.contextByTabKey.get(tabId);
-                    if (context && context.clientLastReceivedNonce !== undefined && !context.socket.isDisconnecting()) {
-                        const replaced = context.socket.replaceSocket(rawSocket, context.clientLastReceivedNonce);
+                    const clientLastReceivedNonce = context?.clientLastReceivedNonce;
 
-                        if (replaced) {
-                            this.clearContextCleanup(tabId);
-                            this.wrappersBySocket.set(rawSocket, context.socket);
+                    if (context?.socket && clientLastReceivedNonce !== undefined && !context.socket.isDisconnecting()) {
+                        console.info("[PusherRoomSocketController] attempting transport replacement", {
+                            tabId,
+                            userUuid: socketData.userUuid,
+                            clientLastReceivedNonce,
+                        });
+                        try {
+                            const replaced = context.socket.replaceSocket(rawSocket, clientLastReceivedNonce);
+
+                            if (replaced) {
+                                this.clearContextCleanup(tabId);
+                                this.wrappersBySocket.set(rawSocket, context.socket);
+                            }
+                        } finally {
+                            context.clientLastReceivedNonce = undefined;
                         }
 
+                        return;
+                    }
+
+                    if (clientLastReceivedNonce !== undefined) {
+                        if (!context?.socket) {
+                            this.contextByTabKey.delete(tabId);
+                        }
+                        ws.end(1008, "Cannot replace socket: previous connection not retained");
                         return;
                     }
 
@@ -311,33 +347,59 @@ export class PusherRoomSocketController {
                 }
                 socket.handleDrain();
             },
-            close: (ws) => {
+            close: (ws, code, message) => {
                 const socketData = ws.getUserData();
                 if (socketData.rejected === true) {
                     return;
                 }
 
+                const reason = message ? Buffer.from(message).toString() : "";
                 const rawSocket = ws as unknown as RawSocket;
                 const socket = this.wrappersBySocket.get(rawSocket);
                 if (!socket) {
                     return;
                 }
                 this.wrappersBySocket.delete(rawSocket);
-
                 if (!socket.isCurrentTransport(rawSocket)) {
                     return;
                 }
 
-                Promise.resolve(config.close(socket))
-                    .catch((e) => {
+                socket.handleTransportClosed();
+
+                const tabId = socketData.tabId;
+                const forgetContext = () => {
+                    if (this.contextByTabKey.get(tabId)?.socket === socket) {
+                        this.contextByTabKey.delete(tabId);
+                    }
+                };
+                if (code === 1000 || code === 1001) {
+                    Promise.resolve(config.close(socket, code, reason)).then(forgetContext, (e) => {
                         console.error(e);
-                    })
-                    .finally(() => {
-                        const tabId = socketData.tabId;
-                        if (this.contextByTabKey.get(tabId)?.socket === socket) {
-                            this.scheduleContextCleanup(tabId, socket);
-                        }
+                        forgetContext();
                     });
+                    return;
+                }
+
+                if (this.contextByTabKey.get(tabId)?.socket === socket) {
+                    this.clearContextCleanup(tabId);
+                    const timeout = setTimeout(() => {
+                        this.contextCleanupTimeoutsByTabKey.delete(tabId);
+
+                        if (this.contextByTabKey.get(tabId)?.socket === socket) {
+                            Promise.resolve(config.close(socket, code, reason)).then(forgetContext, (e) => {
+                                console.error(e);
+                                forgetContext();
+                            });
+                        }
+                    }, CLIENT_DISCONNECTION_RETENTION_MS);
+
+                    this.contextCleanupTimeoutsByTabKey.set(tabId, timeout);
+                    return;
+                }
+
+                Promise.resolve(config.close(socket, code, reason)).catch((e) => {
+                    console.error(e);
+                });
             },
         });
     }

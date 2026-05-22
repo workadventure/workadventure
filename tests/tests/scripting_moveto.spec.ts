@@ -24,7 +24,5 @@ test.describe("Scripting moveto function", () => {
 
         expect(position.x).toBe(5*32);
         expect(position.y).toBe(5*32);*/
-
-        await page.context().close();
     });
 });

@@ -15,15 +15,11 @@ import type { SocketData } from "../models/Websocket/SocketData";
 
 export type RawSocket = WebSocket<SocketData>;
 
-export type ConnectionStatusManager = {
-    isDisconnecting: (socket: PusherWebSocket) => boolean;
-    startDisconnecting: (socket: PusherWebSocket) => boolean;
-};
-
 export class PusherWebSocket {
     private static readonly KEEP_ALIVE_INTERVAL_MS = 25_000;
 
     private socket: RawSocket;
+    private _isDisconnecting = false;
     private keepAliveInterval: NodeJS.Timeout | undefined;
     private batchTimeout: NodeJS.Timeout | undefined;
     private pingBackpressured = false;
@@ -34,11 +30,12 @@ export class PusherWebSocket {
     private nextOutgoingNonce = 1;
     private lastSentNonce = 0;
     private lastReceivedNonce = 0;
+    private transportAvailable = true;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
         CLIENT_DISCONNECTION_RETENTION_MS
     );
 
-    public constructor(socket: RawSocket, private readonly connectionStatusManager: ConnectionStatusManager) {
+    public constructor(socket: RawSocket) {
         this.socket = socket;
         this.startKeepAlive();
     }
@@ -56,7 +53,7 @@ export class PusherWebSocket {
         this.nextOutgoingNonce += 1;
         this.outgoingMessagesStore.add(nonce, payloadWithNonce);
 
-        if (nonce > this.lastSentNonce + 1) {
+        if (!this.transportAvailable || nonce > this.lastSentNonce + 1) {
             return 0;
         }
 
@@ -64,17 +61,16 @@ export class PusherWebSocket {
     }
 
     public handleDrain(): void {
+        if (!this.transportAvailable) {
+            return;
+        }
         for (const { nonce, payload } of this.outgoingMessagesStore.getAfter(this.lastSentNonce)) {
             if (this.sendStoredPayload(nonce, payload) !== 1) {
                 return;
             }
         }
 
-        if (!this.pingBackpressured) {
-            return;
-        }
-
-        if (this.socket.ping() === 1) {
+        if (this.pingBackpressured && this.socket.ping() === 1) {
             this.pingBackpressured = false;
         }
     }
@@ -124,6 +120,14 @@ export class PusherWebSocket {
     }
 
     public end(...args: Parameters<RawSocket["end"]>): ReturnType<RawSocket["end"]> {
+        if (this._isDisconnecting) {
+            console.trace("end already called on websocket");
+            return;
+        }
+        this._isDisconnecting = true;
+        this.stopKeepAlive();
+        this.stopBatching();
+        // TODO: send last batched messages?
         return this.socket.end(...args);
     }
 
@@ -132,20 +136,27 @@ export class PusherWebSocket {
     }
 
     public isDisconnecting(): boolean {
-        return this.connectionStatusManager.isDisconnecting(this);
+        return this._isDisconnecting;
     }
 
     public startDisconnecting(): boolean {
-        const started = this.connectionStatusManager.startDisconnecting(this);
-        if (started) {
-            this.stopKeepAlive();
-            this.stopBatching();
+        if (this._isDisconnecting) {
+            return false;
         }
-        return started;
+
+        this._isDisconnecting = true;
+        this.stopKeepAlive();
+        this.stopBatching();
+        return true;
     }
 
     public isCurrentTransport(rawSocket: RawSocket): boolean {
         return this.socket === rawSocket;
+    }
+
+    public handleTransportClosed(): void {
+        this.transportAvailable = false;
+        this.stopKeepAlive();
     }
 
     public replaceSocket(newSocket: RawSocket, clientLastReceivedNonce: number): boolean {
@@ -204,8 +215,10 @@ export class PusherWebSocket {
         Object.assign(newSocketData, previousSocketData);
 
         this.socket = newSocket;
+        this.transportAvailable = true;
         this.lastSentNonce = clientLastReceivedNonce;
 
+        this.startKeepAlive();
         this.handleDrain();
 
         // Close the old transport only after rebinding so the logical connection keeps running.
@@ -263,6 +276,10 @@ export class PusherWebSocket {
     }
 
     private sendStoredPayload(nonce: number, payload: Uint8Array<ArrayBuffer>): ReturnType<RawSocket["send"]> {
+        if (!this.transportAvailable) {
+            return 0;
+        }
+
         const sendStatus = this.socket.send(payload, true);
         if (sendStatus === 1) {
             this.lastSentNonce = nonce;

@@ -61,7 +61,5 @@ test.describe("Scripting for enter / leave layer event", () => {
         });
 
         await expect(page.getByText("Welcome back to start initial")).toBeVisible();
-
-        await page.context().close();
     });
 });
