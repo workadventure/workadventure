@@ -862,6 +862,223 @@ describe("MatrixChatConnection", () => {
             );
         });
     });
+    describe("external rooms", () => {
+        it("should parse a matrix.to permalink with via servers and event id", async () => {
+            const mockMatrixClient = {} as unknown as MatrixClient;
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            const parsed = matrixChatConnection.parseExternalRoomAddress(
+                "https://matrix.to/#/!abc:server.org/$event:server.org?via=server1.org&via=server2.org"
+            );
+
+            expect(parsed).toEqual({
+                roomId: "!abc:server.org",
+                eventId: "$event:server.org",
+                viaServers: ["server1.org", "server2.org"],
+            });
+        });
+
+        it("should resolve the same alias once and reuse cached via servers", async () => {
+            const getRoomIdForAliasMock = vi.fn().mockResolvedValue({
+                room_id: "!resolved:server.org",
+                servers: ["server.org", "server2.org"],
+            });
+            const mockMatrixClient = {
+                getRoomIdForAlias: getRoomIdForAliasMock,
+            } as unknown as MatrixClient;
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            const firstPreview = await matrixChatConnection.previewExistingRoom({
+                roomAlias: "#room:server.org",
+                shouldPeek: false,
+            });
+            const secondPreview = await matrixChatConnection.previewExistingRoom({
+                roomAlias: "#room:server.org",
+                shouldPeek: false,
+            });
+
+            expect(getRoomIdForAliasMock).toHaveBeenCalledOnce();
+            expect(firstPreview.roomId).toBe("!resolved:server.org");
+            expect(secondPreview.viaServers).toEqual(["server.org", "server2.org"]);
+        });
+
+        it("should search external public rooms with server and search term", async () => {
+            const mockPublicRooms = vi.fn().mockResolvedValue({
+                chunk: [
+                    {
+                        room_id: "!public:server.org",
+                        name: "Public room",
+                        canonical_alias: "#public:server.org",
+                        topic: "A public room",
+                        avatar_url: "mxc://server.org/avatar",
+                        num_joined_members: 12,
+                        join_rule: "public",
+                        world_readable: true,
+                        guest_can_join: true,
+                    },
+                ],
+            });
+            const mockMatrixClient = {
+                publicRooms: mockPublicRooms,
+            } as unknown as MatrixClient;
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            const result = await matrixChatConnection.searchExternalPublicRooms("public", "matrix.org");
+
+            expect(mockPublicRooms).toHaveBeenCalledWith({
+                limit: 20,
+                server: "matrix.org",
+                include_all_networks: false,
+                third_party_instance_id: undefined,
+                filter: {
+                    generic_search_term: "public",
+                    room_types: undefined,
+                },
+            });
+            expect(result).toEqual([
+                {
+                    roomId: "!public:server.org",
+                    name: "Public room",
+                    roomAlias: "#public:server.org",
+                    aliases: undefined,
+                    topic: "A public room",
+                    avatarUrl: "mxc://server.org/avatar",
+                    numJoinedMembers: 12,
+                    joinRule: "public",
+                    worldReadable: true,
+                    guestCanJoin: true,
+                    roomType: undefined,
+                    viaServers: ["server.org"],
+                },
+            ]);
+        });
+
+        it("should join an alias with via servers and focus the permalink event", async () => {
+            const joinedMatrixRoom = {
+                roomId: "!joined:server.org",
+                getDMInviter: vi.fn().mockReturnValue(undefined),
+            };
+            const joinRoomMock = vi.fn().mockResolvedValue(joinedMatrixRoom);
+            const chatRoom = { id: "!joined:server.org" };
+            const mockMatrixClient = {
+                off: vi.fn(),
+                on: vi.fn().mockImplementation((_, funcToResolve) => {
+                    funcToResolve(SyncState.Syncing);
+                }),
+                joinRoom: joinRoomMock,
+                getRoom: vi.fn().mockReturnValue(joinedMatrixRoom),
+            } as unknown as MatrixClient;
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+            matrixChatConnection["addDMRoomInAccountData"] = vi.fn();
+            matrixChatConnection["createAndAddNewRootRoom"] = vi.fn().mockReturnValue(chatRoom);
+
+            const result = await matrixChatConnection.joinExistingRoom({
+                roomAlias: "#room:server.org",
+                roomId: "!joined:server.org",
+                viaServers: ["server.org", "server2.org"],
+                eventId: "$event:server.org",
+            });
+
+            expect(joinRoomMock).toHaveBeenCalledWith("#room:server.org", {
+                viaServers: ["server.org", "server2.org"],
+                inviteSignUrl: undefined,
+            });
+            expect(result).toEqual({
+                mode: "joined",
+                room: chatRoom,
+                eventId: "$event:server.org",
+            });
+        });
+
+        it("should expose ask to join after a forbidden join error", async () => {
+            const forbiddenError = Object.assign(new Error("Forbidden"), {
+                httpStatus: 403,
+                errcode: "M_FORBIDDEN",
+            });
+            const mockMatrixClient = {
+                joinRoom: vi.fn().mockRejectedValue(forbiddenError),
+            } as unknown as MatrixClient;
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            const result = await matrixChatConnection.joinExistingRoom({
+                roomId: "!private:server.org",
+                viaServers: ["server.org"],
+            });
+
+            expect(result).toEqual({
+                mode: "ask_to_join",
+                roomId: "!private:server.org",
+                roomAlias: undefined,
+                viaServers: ["server.org"],
+                errorState: "forbidden",
+            });
+        });
+
+        it("should knock a room with reason and via servers", async () => {
+            const knockRoomMock = vi.fn().mockResolvedValue({ room_id: "!knock:server.org" });
+            const mockMatrixClient = {
+                knockRoom: knockRoomMock,
+            } as unknown as MatrixClient;
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            const result = await matrixChatConnection.knockExistingRoom({
+                roomId: "!knock:server.org",
+                reason: "Please let me in",
+                viaServers: ["server.org"],
+            });
+
+            expect(knockRoomMock).toHaveBeenCalledWith("!knock:server.org", {
+                reason: "Please let me in",
+                viaServers: ["server.org"],
+            });
+            expect(result).toEqual({
+                mode: "knocked",
+                roomId: "!knock:server.org",
+            });
+        });
+
+        it("should peek world-readable rooms and stop peeking after collecting text messages", async () => {
+            const textEvent = {
+                getType: vi.fn().mockReturnValue(EventType.RoomMessage),
+                getContent: vi.fn().mockReturnValue({ msgtype: "m.text", body: "Hello" }),
+                getSender: vi.fn().mockReturnValue("@alice:server.org"),
+                getDate: vi.fn().mockReturnValue(new Date("2026-05-26T10:00:00.000Z")),
+                getId: vi.fn().mockReturnValue("$event:server.org"),
+            };
+            const imageEvent = {
+                getType: vi.fn().mockReturnValue(EventType.RoomMessage),
+                getContent: vi.fn().mockReturnValue({ msgtype: "m.image", body: "image.png" }),
+            };
+            const peekInRoomMock = vi.fn().mockResolvedValue({
+                getLiveTimeline: vi.fn().mockReturnValue({
+                    getEvents: vi.fn().mockReturnValue([imageEvent, textEvent]),
+                }),
+            });
+            const stopPeekingMock = vi.fn();
+            const mockMatrixClient = {
+                peekInRoom: peekInRoomMock,
+                stopPeeking: stopPeekingMock,
+            } as unknown as MatrixClient;
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            const preview = await matrixChatConnection.previewExistingRoom({
+                roomId: "!peek:server.org",
+                worldReadable: true,
+                shouldPeek: true,
+            });
+
+            expect(peekInRoomMock).toHaveBeenCalledWith("!peek:server.org");
+            expect(stopPeekingMock).toHaveBeenCalledOnce();
+            expect(preview.timelinePreview).toEqual([
+                {
+                    id: "$event:server.org",
+                    sender: "@alice:server.org",
+                    body: "Hello",
+                    date: new Date("2026-05-26T10:00:00.000Z"),
+                },
+            ]);
+        });
+    });
     describe("addDMRoomInAccountData", () => {
         it("should create and set account data when account data is undefined", async () => {
             const mockStartClient = vi.fn();

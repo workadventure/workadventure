@@ -334,6 +334,43 @@ const chat: DeepPartial<Translation["chat"]> = {
         creationSuccessNotification: "Śpa napórana",
         restrictedDescription: "Widobny jano za cłonkow nadzarěda: {folderName}",
     },
+    joinExternalRoom: {
+        menuTitle: "Eksternej śpě se pśizamknuś",
+        title: "Eksternej śpě se pśizamknuś",
+        address: {
+            label: "Adresa śpy",
+            placeholder: "#room:server.org, !room:server.org abo Matrix-permalink",
+        },
+        directory: {
+            searchLabel: "Zjawny zapis pśepytaś",
+            searchPlaceholder: "Śpy pytaś",
+            serverLabel: "Serwer",
+            serverPlaceholder: "matrix.org",
+            emptySearch: "Zapódajśo pytański wuraz, aby zjawne rumy pytał.",
+            noResults: "Za toś to pytanje njejsu se zjawne rumy namakali.",
+        },
+        buttons: {
+            preview: "Pśeglěd",
+            search: "Pytaś",
+            cancel: "Pśetergnuś",
+            join: "Pśizamknuś",
+            askToJoin: "Pśizamknjenje pominaś",
+            cancelRequest: "Napšašowanje pśetergnuś",
+        },
+        preview: {
+            members: "{count} cłonkow",
+            worldReadable: "Za wšyknych cytajobny",
+            recentMessages: "Nejnowše powěsći",
+        },
+        reason: {
+            label: "Pśicyna",
+            placeholder: "Opcionalna powěsć",
+        },
+        knocked: "Napšašowanje pósłane",
+        errors: {
+            forbidden: "Njamaš pšawo, se direktnje toś tej śpě pśizamknuś.",
+        },
+    },
     createFolder: {
         title: "Nowy zarěd napóraś",
         name: "Mě",

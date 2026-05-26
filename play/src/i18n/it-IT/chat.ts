@@ -334,6 +334,43 @@ const chat: DeepPartial<Translation["chat"]> = {
         creationSuccessNotification: "Stanza creata",
         restrictedDescription: "Visibile solo ai membri della cartella padre: {folderName}",
     },
+    joinExternalRoom: {
+        menuTitle: "Unisciti a stanza esterna",
+        title: "Unisciti a stanza esterna",
+        address: {
+            label: "Indirizzo stanza",
+            placeholder: "#room:server.org, !room:server.org o permalink Matrix",
+        },
+        directory: {
+            searchLabel: "Cerca nella directory pubblica",
+            searchPlaceholder: "Cerca stanze",
+            serverLabel: "Server",
+            serverPlaceholder: "matrix.org",
+            emptySearch: "Inserisci un termine di ricerca per cercare stanze pubbliche.",
+            noResults: "Nessuna stanza pubblica trovata per questa ricerca.",
+        },
+        buttons: {
+            preview: "Anteprima",
+            search: "Cerca",
+            cancel: "Annulla",
+            join: "Unisciti",
+            askToJoin: "Richiedi accesso",
+            cancelRequest: "Annulla richiesta",
+        },
+        preview: {
+            members: "{count} membri",
+            worldReadable: "Leggibile da tutti",
+            recentMessages: "Messaggi recenti",
+        },
+        reason: {
+            label: "Motivo",
+            placeholder: "Messaggio opzionale",
+        },
+        knocked: "Richiesta inviata",
+        errors: {
+            forbidden: "Non hai il permesso di unirti direttamente a questa stanza.",
+        },
+    },
     createFolder: {
         title: "Crea nuova cartella",
         name: "Nome",

@@ -333,6 +333,43 @@ const chat: DeepPartial<Translation["chat"]> = {
         creationSuccessNotification: "Sala creada",
         restrictedDescription: "Esta sala será visible solo para los miembros de la carpeta padre: {folderName}",
     },
+    joinExternalRoom: {
+        menuTitle: "Unirse a sala externa",
+        title: "Unirse a sala externa",
+        address: {
+            label: "Dirección de la sala",
+            placeholder: "#room:server.org, !room:server.org o enlace permanente de Matrix",
+        },
+        directory: {
+            searchLabel: "Buscar en el directorio público",
+            searchPlaceholder: "Buscar salas",
+            serverLabel: "Servidor",
+            serverPlaceholder: "matrix.org",
+            emptySearch: "Introduce un término de búsqueda para buscar salas públicas.",
+            noResults: "No se encontraron salas públicas para esta búsqueda.",
+        },
+        buttons: {
+            preview: "Vista previa",
+            search: "Buscar",
+            cancel: "Cancelar",
+            join: "Unirse",
+            askToJoin: "Solicitar unirse",
+            cancelRequest: "Cancelar solicitud",
+        },
+        preview: {
+            members: "{count} miembros",
+            worldReadable: "Legible públicamente",
+            recentMessages: "Mensajes recientes",
+        },
+        reason: {
+            label: "Motivo",
+            placeholder: "Mensaje opcional",
+        },
+        knocked: "Solicitud enviada",
+        errors: {
+            forbidden: "No tiene permiso para unirse directamente a esta sala.",
+        },
+    },
     createFolder: {
         title: "Crear nueva carpeta",
         name: "Nombre",

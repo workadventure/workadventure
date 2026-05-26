@@ -44,11 +44,19 @@ import type {
     ChatUser,
     ConnectionStatus,
     CreateRoomOptions,
+    ExternalRoomDirectoryResult,
+    ExternalRoomErrorState,
+    ExternalRoomPreview,
+    ExternalRoomPreviewMessage,
+    JoinExistingRoomInput,
+    JoinExistingRoomResult,
+    KnockExistingRoomResult,
     MatrixChatCapabilities,
     MatrixPeerProfileDiagnostics,
     MatrixUserSettingsDiagnostics,
 } from "../ChatConnection";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
 import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
 import { currentPlayerWokaStore } from "../../../Stores/CurrentPlayerWokaStore";
 import LL from "../../../../i18n/i18n-svelte";
@@ -104,6 +112,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private readonly parentRoomIdsByRoomId = new Map<string, Set<string>>();
     private readonly childRoomIdsBySpaceId = new Map<string, Set<string>>();
     private readonly folderShellsByRoomId = new Map<string, MatrixRoomFolder>();
+    private readonly externalRoomAliasCache = new Map<string, { roomId: string; viaServers: string[] }>();
     private readonly rawUnreadRooms = writable<Map<string, RawUnreadRoom>>(new Map());
     private readonly rawUnreadRoomUnsubscribers = new Map<string, () => void>();
     /** Aggregates DM unread totals incrementally instead of scanning all DMs on every update. */
@@ -1663,6 +1672,216 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         }
         return asError(error);
     }
+
+    private parseMatrixPermalink(address: string): JoinExistingRoomInput | undefined {
+        try {
+            const url = new URL(address);
+            const isMatrixTo = url.hostname === "matrix.to";
+            const isMatrixScheme = url.protocol === "matrix:";
+            if (!isMatrixTo && !isMatrixScheme) {
+                return undefined;
+            }
+
+            if (isMatrixTo) {
+                const hashValue = url.hash.startsWith("#/") ? url.hash.substring(2) : url.hash.substring(1);
+                const [path, query = ""] = hashValue.split("?");
+                const pathParts = path
+                    .split("/")
+                    .filter(Boolean)
+                    .map((part) => this.safeDecodeURIComponent(part));
+                const identifier = pathParts[0];
+                const eventId = pathParts[1];
+                const searchParams = new URLSearchParams(query);
+
+                return this.buildExternalRoomInputFromIdentifier(identifier, searchParams, eventId);
+            }
+
+            const matrixPath = `${url.pathname}${url.search}`;
+            const [path, query = ""] = matrixPath.split("?");
+            const pathParts = path.split("/").filter(Boolean);
+            const identifierType = pathParts[0];
+            const identifierValue = pathParts[1] ? this.safeDecodeURIComponent(pathParts[1]) : undefined;
+            const identifier =
+                identifierType === "r" && identifierValue
+                    ? `#${identifierValue}`
+                    : identifierType === "roomid" && identifierValue
+                    ? `!${identifierValue}`
+                    : undefined;
+
+            return this.buildExternalRoomInputFromIdentifier(identifier, new URLSearchParams(query), undefined);
+        } catch {
+            return undefined;
+        }
+    }
+
+    private buildExternalRoomInputFromIdentifier(
+        identifier: string | undefined,
+        searchParams: URLSearchParams,
+        eventId: string | undefined
+    ): JoinExistingRoomInput | undefined {
+        if (!identifier) {
+            return undefined;
+        }
+
+        const input: JoinExistingRoomInput = {
+            viaServers: this.uniqueDefined(searchParams.getAll("via")),
+        };
+
+        if (identifier.startsWith("#")) {
+            input.roomAlias = identifier;
+        } else if (identifier.startsWith("!")) {
+            input.roomId = identifier;
+        }
+
+        if (eventId) {
+            input.eventId = eventId;
+        }
+
+        input.inviteSignUrl = searchParams.get("inviteSignUrl") ?? searchParams.get("signurl") ?? undefined;
+
+        return input.roomId || input.roomAlias ? input : undefined;
+    }
+
+    private safeDecodeURIComponent(value: string): string {
+        try {
+            return decodeURIComponent(value);
+        } catch {
+            return value;
+        }
+    }
+
+    private async resolveExternalRoomInput(input: JoinExistingRoomInput): Promise<JoinExistingRoomInput> {
+        if (!this.client) {
+            throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+        }
+
+        const viaServers = this.uniqueDefined(input.viaServers ?? []);
+
+        if (!input.roomId && input.roomAlias) {
+            const cachedAlias = this.externalRoomAliasCache.get(input.roomAlias);
+            if (cachedAlias) {
+                return {
+                    ...input,
+                    roomId: cachedAlias.roomId,
+                    viaServers: viaServers.length > 0 ? viaServers : cachedAlias.viaServers,
+                };
+            }
+
+            const resolved = await this.client.getRoomIdForAlias(input.roomAlias);
+            const resolvedViaServers = this.uniqueDefined(resolved.servers ?? []);
+            this.externalRoomAliasCache.set(input.roomAlias, {
+                roomId: resolved.room_id,
+                viaServers: resolvedViaServers,
+            });
+
+            return {
+                ...input,
+                roomId: resolved.room_id,
+                viaServers: viaServers.length > 0 ? viaServers : resolvedViaServers,
+            };
+        }
+
+        return {
+            ...input,
+            viaServers:
+                viaServers.length > 0
+                    ? viaServers
+                    : this.getViaServersFromRoomAddress(input.roomAlias ?? input.roomId ?? ""),
+        };
+    }
+
+    private async createChatRoomAfterJoinSync(roomId: string | undefined): Promise<ChatRoom> {
+        if (!roomId) {
+            throw new Error("Missing joined room id");
+        }
+
+        await this.waitForNextSync();
+
+        if (!this.client) {
+            throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+        }
+
+        const roomAfterSync = this.client.getRoom(roomId);
+        if (!roomAfterSync) {
+            throw new Error("Room not present after synchronization");
+        }
+
+        const dmInviterId = roomAfterSync.getDMInviter();
+        if (dmInviterId) {
+            await this.addDMRoomInAccountData(dmInviterId, roomId);
+        }
+
+        const existingRoom = await this.findRoomOrFolder(roomAfterSync.roomId);
+        if (existingRoom instanceof MatrixChatRoom) {
+            return existingRoom;
+        }
+
+        return this.createAndAddNewRootRoom(roomAfterSync);
+    }
+
+    private async peekExternalRoomTimeline(roomId: string): Promise<ExternalRoomPreviewMessage[]> {
+        if (!this.client) {
+            throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+        }
+
+        try {
+            const room = await this.client.peekInRoom(roomId);
+            const events = room.getLiveTimeline().getEvents();
+            return events
+                .filter((event) => event.getType() === EventType.RoomMessage)
+                .map((event): ExternalRoomPreviewMessage | undefined => {
+                    const content = event.getContent();
+                    if (content?.msgtype !== "m.text" || typeof content.body !== "string") {
+                        return undefined;
+                    }
+                    return {
+                        id: event.getId(),
+                        sender: event.getSender(),
+                        body: content.body,
+                        date: event.getDate() ?? undefined,
+                    };
+                })
+                .filter((message): message is ExternalRoomPreviewMessage => message !== undefined)
+                .slice(-10);
+        } finally {
+            this.client.stopPeeking();
+        }
+    }
+
+    private getExternalRoomErrorState(error: unknown): ExternalRoomErrorState {
+        const matrixLikeError = error as {
+            httpStatus?: number;
+            statusCode?: number;
+            errcode?: string;
+            name?: string;
+        };
+        const status = matrixLikeError.httpStatus ?? matrixLikeError.statusCode;
+
+        if (status === 403) {
+            return "forbidden";
+        }
+        if (status === 404) {
+            return "not_found";
+        }
+        if (matrixLikeError.errcode === "M_INCOMPATIBLE_ROOM_VERSION") {
+            return "incompatible_version";
+        }
+        if (matrixLikeError.name === "ConnectionError" || status === 504 || status === 524) {
+            return "network";
+        }
+
+        return "error";
+    }
+
+    private getViaServersFromRoomAddress(address: string): string[] {
+        const serverName = address.split(":")[1];
+        return serverName ? [serverName] : [];
+    }
+
+    private uniqueDefined(values: Array<string | undefined>): string[] {
+        return Array.from(new Set(values.filter((value): value is string => value !== undefined && value.length > 0)));
+    }
+
     private mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions: CreateRoomOptions): ICreateRoomOpts {
         const roomName = roomOptions.name;
         if (roomName === undefined) {
@@ -1824,6 +2043,175 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             Sentry.captureException(error);
         }
         return;
+    }
+
+    parseExternalRoomAddress(address: string): JoinExistingRoomInput {
+        const trimmedAddress = address.trim();
+        if (trimmedAddress.length === 0) {
+            return {};
+        }
+
+        const parsedPermalink = this.parseMatrixPermalink(trimmedAddress);
+        if (parsedPermalink) {
+            return parsedPermalink;
+        }
+
+        if (trimmedAddress.startsWith("#")) {
+            return { roomAlias: trimmedAddress };
+        }
+
+        if (trimmedAddress.startsWith("!")) {
+            return { roomId: trimmedAddress };
+        }
+
+        return {};
+    }
+
+    async searchExternalPublicRooms(searchText: string, server?: string): Promise<ExternalRoomDirectoryResult[]> {
+        if (!this.client) {
+            throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+        }
+
+        const searchOption: IRoomDirectoryOptions = {
+            limit: 20,
+            server: server?.trim() || undefined,
+            include_all_networks: false,
+            third_party_instance_id: undefined,
+            filter: {
+                generic_search_term: searchText,
+                room_types: undefined,
+            },
+        };
+
+        const { chunk } = await this.client.publicRooms(searchOption);
+
+        return chunk
+            .filter(({ room_id }) => !this.roomList.has(room_id))
+            .map((room) => {
+                const roomAlias = room.canonical_alias ?? room.aliases?.[0];
+                return {
+                    roomId: room.room_id,
+                    name: room.name,
+                    roomAlias,
+                    aliases: room.aliases,
+                    topic: room.topic,
+                    avatarUrl: room.avatar_url,
+                    numJoinedMembers: room.num_joined_members,
+                    joinRule: room.join_rule,
+                    worldReadable: room.world_readable,
+                    guestCanJoin: room.guest_can_join,
+                    roomType: room.room_type,
+                    viaServers: this.getViaServersFromRoomAddress(roomAlias ?? room.room_id),
+                };
+            });
+    }
+
+    async previewExistingRoom(input: JoinExistingRoomInput): Promise<ExternalRoomPreview> {
+        const resolvedInput = await this.resolveExternalRoomInput(input);
+        const roomId = resolvedInput.roomId;
+
+        if (!roomId && !resolvedInput.roomAlias) {
+            throw new Error("Missing roomId or roomAlias");
+        }
+
+        const timelinePreview =
+            resolvedInput.shouldPeek && resolvedInput.worldReadable && roomId
+                ? await this.peekExternalRoomTimeline(roomId)
+                : undefined;
+
+        return {
+            roomId: roomId ?? "",
+            name: resolvedInput.name,
+            roomAlias: resolvedInput.roomAlias,
+            aliases: undefined,
+            topic: resolvedInput.topic,
+            avatarUrl: resolvedInput.avatarUrl,
+            numJoinedMembers: resolvedInput.numJoinedMembers,
+            joinRule: resolvedInput.joinRule,
+            worldReadable: resolvedInput.worldReadable,
+            guestCanJoin: resolvedInput.guestCanJoin,
+            roomType: resolvedInput.roomType,
+            viaServers: resolvedInput.viaServers ?? [],
+            eventId: resolvedInput.eventId,
+            timelinePreview,
+        };
+    }
+
+    async joinExistingRoom(input: JoinExistingRoomInput): Promise<JoinExistingRoomResult> {
+        if (!this.client) {
+            throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+        }
+
+        const resolvedInput = await this.resolveExternalRoomInput(input);
+        const address = resolvedInput.roomAlias ?? resolvedInput.roomId;
+
+        if (!address) {
+            throw new Error("Missing roomId or roomAlias");
+        }
+
+        try {
+            const joinedRoom = await this.client.joinRoom(address, {
+                viaServers: resolvedInput.viaServers ?? [],
+                inviteSignUrl: resolvedInput.inviteSignUrl,
+            });
+            const roomId = joinedRoom.roomId ?? resolvedInput.roomId;
+            const chatRoom = await this.createChatRoomAfterJoinSync(roomId);
+            selectedRoomStore.set(chatRoom);
+
+            if (resolvedInput.eventId) {
+                roomSidePanelStore.focusTimelineEvent(chatRoom.id, resolvedInput.eventId);
+            }
+
+            return {
+                mode: "joined",
+                room: chatRoom,
+                eventId: resolvedInput.eventId,
+            };
+        } catch (error) {
+            const errorState = this.getExternalRoomErrorState(error);
+            if (errorState === "forbidden") {
+                return {
+                    mode: "ask_to_join",
+                    roomId: resolvedInput.roomId,
+                    roomAlias: resolvedInput.roomAlias,
+                    viaServers: resolvedInput.viaServers ?? [],
+                    errorState,
+                };
+            }
+
+            throw this.handleMatrixError(error);
+        }
+    }
+
+    async knockExistingRoom(input: JoinExistingRoomInput): Promise<KnockExistingRoomResult> {
+        if (!this.client) {
+            throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+        }
+
+        const resolvedInput = await this.resolveExternalRoomInput(input);
+        const address = resolvedInput.roomAlias ?? resolvedInput.roomId;
+
+        if (!address) {
+            throw new Error("Missing roomId or roomAlias");
+        }
+
+        const { room_id } = await this.client.knockRoom(address, {
+            reason: resolvedInput.reason,
+            viaServers: resolvedInput.viaServers ?? [],
+        });
+
+        return {
+            mode: "knocked",
+            roomId: room_id,
+        };
+    }
+
+    async cancelExternalRoomRequest(roomId: string): Promise<void> {
+        if (!this.client) {
+            throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+        }
+
+        await this.client.leave(roomId);
     }
 
     async searchAccessibleRooms(searchText = ""): Promise<

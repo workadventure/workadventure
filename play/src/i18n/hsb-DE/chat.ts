@@ -334,6 +334,43 @@ const chat: DeepPartial<Translation["chat"]> = {
         creationSuccessNotification: "Rum naporowany",
         restrictedDescription: "Widźomny jenož za čłonkow nadzarěda: {folderName}",
     },
+    joinExternalRoom: {
+        menuTitle: "Eksternemu rumej přistupić",
+        title: "Eksternemu rumej přistupić",
+        address: {
+            label: "Adresa ruma",
+            placeholder: "#room:server.org, !room:server.org abo Matrix-permalink",
+        },
+        directory: {
+            searchLabel: "Zjawny zapis přepytać",
+            searchPlaceholder: "Rumy pytać",
+            serverLabel: "Serwer",
+            serverPlaceholder: "matrix.org",
+            emptySearch: "Zapodaj pytanski wuraz, zo by zjawne rumy pytał.",
+            noResults: "Za tute pytanje zjawne rumy namakane njejsu.",
+        },
+        buttons: {
+            preview: "Přehlad",
+            search: "Pytać",
+            cancel: "Přetorhnyć",
+            join: "Přistupić",
+            askToJoin: "Přistup požadać",
+            cancelRequest: "Naprašowanje přetorhnyć",
+        },
+        preview: {
+            members: "{count} čłonkow",
+            worldReadable: "Za wšěch čitajomny",
+            recentMessages: "Najnowše powěsće",
+        },
+        reason: {
+            label: "Přičina",
+            placeholder: "Opcionalna powěsć",
+        },
+        knocked: "Naprašowanje pósłane",
+        errors: {
+            forbidden: "Nimaš prawo, so direktnje tutomu rumej přizamknyć.",
+        },
+    },
     createFolder: {
         title: "Nowy zarěd napořeć",
         name: "Mjeno",

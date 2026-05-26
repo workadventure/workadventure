@@ -7,8 +7,9 @@
     import ManageParticipantsModal from "./ManageParticipantsModal.svelte";
     import CreateFolderModal from "./CreateFolderModal.svelte";
     import CreateRoomModal from "./CreateRoomModal.svelte";
+    import JoinExistingRoomModal from "./JoinExistingRoomModal.svelte";
     import RoomOption from "./RoomMenu/RoomOption.svelte";
-    import { IconDots, IconFolder, IconLogout, IconMessage, IconUserEdit } from "@wa-icons";
+    import { IconDots, IconFolder, IconLogout, IconMessage, IconUserEdit, IconWorldSearch } from "@wa-icons";
     import { modals } from "@wa-modals";
 
     interface Props {
@@ -48,6 +49,10 @@
         modals.open(CreateRoomModal, {
             parentID,
         });
+        hideFolderOptions = true;
+    }
+    function closeMenuAndOpenJoinExistingRoom() {
+        modals.open(JoinExistingRoomModal);
         hideFolderOptions = true;
     }
     function closeMenuAndLeaveFolder() {
@@ -97,6 +102,14 @@
             title={$LL.chat.createFolder.title()}
             onclick={openCreateSpace}
         />
+        {#if !folder}
+            <RoomOption
+                dataTestId="openJoinExternalRoomModalButton"
+                IconComponent={IconWorldSearch}
+                title={$LL.chat.joinExternalRoom.menuTitle()}
+                onclick={closeMenuAndOpenJoinExistingRoom}
+            />
+        {/if}
         {#if shouldDisplayManageParticipantButton && folder}
             <RoomOption
                 dataTestId="manageParticipantOption"
