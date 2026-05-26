@@ -33,6 +33,8 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         this.gameScene.usernameDomLayer.updateUsernameScale(this.domUsernameId, this.displayScale, zoomModifier);
         this.gameScene.usernameDomLayer.updateUsernamePosition(this.domUsernameId, textPosition.x, textPosition.y);
     };
+    private toForeFront: boolean = false;
+    private htmlDepth: number = 0;
 
     constructor(scene: GameScene, x: number, y: number, playerName: string, outlineColor: number | undefined) {
         super(scene, x, y);
@@ -94,7 +96,15 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     }
 
     public setPlayerDepth(depth: number): void {
-        this.gameScene.usernameDomLayer.updateUsernameDepth(this.domUsernameId, depth);
+        this.htmlDepth = depth;
+        this.updatePlayerDepth();
+    }
+
+    private updatePlayerDepth(): void {
+        this.gameScene.usernameDomLayer.updateUsernameDepth(
+            this.domUsernameId,
+            this.htmlDepth + (this.toForeFront ? 2000000000 : 0)
+        );
     }
 
     public override setPosition(x?: number, y?: number, z?: number, w?: number): this {
@@ -191,5 +201,13 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         element.style.pointerEvents = "none";
 
         return element;
+    }
+
+    /**
+     * If true, the z-index is updated to be at the very top. Used when we hover over a Woka.
+     */
+    public setToForeFront(toForeFront: boolean): void {
+        this.toForeFront = toForeFront;
+        this.updatePlayerDepth();
     }
 }
