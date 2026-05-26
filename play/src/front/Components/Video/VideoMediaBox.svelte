@@ -220,7 +220,7 @@
 </script>
 
 <div
-    class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox screen-blocker z-20"
+    class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox screen-blocker z-20 select-none"
 >
     <div
         class={"w-full transition-all bg-center bg-no-repeat " +
