@@ -12,7 +12,7 @@ import { userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
-import { CLIENT_CONNECTION_RETRY_MAX_DURATION_MS, ENABLE_OPENID } from "../Enum/EnvironmentVariable";
+import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
@@ -433,7 +433,6 @@ class ConnectionManager {
         characterTextureIds: string[],
         companionTextureId: string | null,
         lastCommandId?: string,
-        retryStartedAt = Date.now(),
         retryAttempt = 0
     ): Promise<OnConnectInterface> {
         return new Promise<OnConnectInterface>((resolve, reject) => {
@@ -514,19 +513,6 @@ class ConnectionManager {
                 });
         }).catch((err) => {
             console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => err", err);
-            const elapsedTime = Date.now() - retryStartedAt;
-            if (elapsedTime >= CLIENT_CONNECTION_RETRY_MAX_DURATION_MS) {
-                errorScreenStore.setError(
-                    ErrorScreenMessage.fromPartial({
-                        type: "error",
-                        code: "CONNECTION_FAILED",
-                        title: get(LL).warning.connectionLostTitle(),
-                        subtitle: get(LL).error.connectionRetry.unableConnect(),
-                        image: gameManager?.currentStartedRoom?.loadingLogo ?? waLogo,
-                    })
-                );
-                throw err;
-            }
 
             errorScreenStore.setError(
                 ErrorScreenMessage.fromPartial({
@@ -537,7 +523,7 @@ class ConnectionManager {
                     image: gameManager?.currentStartedRoom?.loadingLogo ?? waLogo,
                 })
             );
-            const retryDelay = this.getConnectionRetryDelay(retryAttempt, elapsedTime);
+            const retryDelay = this.getConnectionRetryDelay(retryAttempt);
             return new Promise<OnConnectInterface>((resolve, reject) => {
                 console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => reconnectingTimeout");
 
@@ -557,7 +543,6 @@ class ConnectionManager {
                         characterTextureIds,
                         companionTextureId,
                         lastCommandId,
-                        retryStartedAt,
                         retryAttempt + 1
                     )
                         .then((connection) => {
@@ -583,12 +568,11 @@ class ConnectionManager {
         });
     }
 
-    private getConnectionRetryDelay(retryAttempt: number, elapsedTime: number): number {
+    private getConnectionRetryDelay(retryAttempt: number): number {
         const exponentialDelay = connectionRetryBaseDelayMs * 2 ** retryAttempt;
         const jitter = Math.floor(Math.random() * connectionRetryJitterMs);
-        const remainingRetryTime = CLIENT_CONNECTION_RETRY_MAX_DURATION_MS - elapsedTime;
 
-        return Math.max(0, Math.min(connectionRetryMaxDelayMs, exponentialDelay + jitter, remainingRetryTime));
+        return Math.max(0, Math.min(connectionRetryMaxDelayMs, exponentialDelay + jitter));
     }
 
     get getConnexionType() {

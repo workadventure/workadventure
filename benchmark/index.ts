@@ -24,8 +24,7 @@ async function startOneUser(): Promise<void> {
             left: 500,
             right: 800
         },
-        null,
-        AvailabilityStatus.ONLINE);
+        0);
 
     const connection = onConnect.connection;
 
