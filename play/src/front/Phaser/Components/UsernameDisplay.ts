@@ -67,6 +67,9 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     }
 
     private showMegaphone(show = true, forceClose = false): void {
+        if (show === this.megaphoneDisplay.isShown()) {
+            return;
+        }
         this.animateSizeChange(() => {
             this.megaphoneDisplay.show(show, forceClose);
         }, show);

@@ -24,6 +24,7 @@ export class UsernameStatusDisplay {
         this.element.style.height = `calc(${STATUS_DOT_SIZE}px * var(--username-dom-scale, 1))`;
         this.element.style.borderRadius = "50%";
         this.element.style.boxSizing = "border-box";
+        this.element.style.userSelect = "none";
         this.redraw();
     }
 
