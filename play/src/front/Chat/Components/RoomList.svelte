@@ -36,7 +36,13 @@
     import RequireConnection from "./requireConnection.svelte";
     import RefreshChat from "./RefreshChat.svelte";
     import RoomSidePanel from "./Room/RoomSidePanel.svelte";
-    import { getRoomSidePanelPlacement, shouldShowRoomSidePanelToggle, shouldShowRoomTimeline } from "./RoomListLayout";
+    import {
+        CHAT_TWO_COLUMN_LAYOUT_LIMIT,
+        canDisplayRoomListAndTimeline,
+        getRoomSidePanelPlacement,
+        shouldShowRoomSidePanelToggle,
+        shouldShowRoomTimeline,
+    } from "./RoomListLayout";
     import { IconChevronUp, IconCloudLock, IconPlus, IconRefresh } from "@wa-icons";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
@@ -51,7 +57,6 @@
     const shouldRetrySendingEvents = chat.shouldRetrySendingEvents;
 
     const chatConnectionStatus = chat.connectionStatus;
-    const CHAT_LAYOUT_LIMIT = INITIAL_SIDEBAR_WIDTH * 2;
     const THREAD_PANEL_LAYOUT_LIMIT = INITIAL_SIDEBAR_WIDTH * 3;
 
     let directRooms = chat.directRooms;
@@ -171,7 +176,10 @@
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
 
-    $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
+    $: displayTwoColumnLayout = canDisplayRoomListAndTimeline({
+        minimumTwoColumnWidth: CHAT_TWO_COLUMN_LAYOUT_LIMIT,
+        sideBarWidth,
+    });
     $: displayThreeColumnLayout = sideBarWidth >= THREAD_PANEL_LAYOUT_LIMIT;
     $: selectedRoomWithSidePanel =
         hasChatRoomMembershipManagement($selectedRoomStore) &&
@@ -200,7 +208,7 @@
     }
     $: roomListGridClass = showRoomSidePanelInThirdColumn
         ? "grid-cols-[335px_minmax(0,1fr)_360px]"
-        : sideBarWidth > INITIAL_SIDEBAR_WIDTH * 2 && $navChat.key === "chat"
+        : displayTwoColumnLayout && $navChat.key === "chat"
         ? "grid-cols-[auto_minmax(0,1fr)]"
         : "grid-cols-[1fr]";
 </script>
@@ -419,7 +427,7 @@
                 {/key}
             {/if}
         </div>
-    {:else if $selectedRoomStore === undefined && sideBarWidth >= CHAT_LAYOUT_LIMIT}
+    {:else if $selectedRoomStore === undefined && displayTwoColumnLayout}
         <div class="flex flex-col flex-1 ps-4 items-center pt-8">
             <div class="text-center px-3 max-w-md">
                 <img src={getCloseImg} alt={$LL.chat.getCloserTitle()} draggable="false" />
