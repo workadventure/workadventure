@@ -8,13 +8,14 @@ export class UsernameMegaphoneDisplay {
 
     constructor() {
         this.element = document.createElement("img");
-        this.element.src = "/resources/icons/icon_megaphone.png";
+        this.element.src = "/resources/icons/icon_megaphone.svg";
         this.element.alt = "";
         this.element.draggable = false;
         this.element.style.display = "none";
         this.element.style.flex = "0 0 auto";
         this.element.style.width = `calc(${MEGAPHONE_DISPLAY_SIZE}px * var(--username-dom-scale, 1))`;
         this.element.style.height = `calc(${MEGAPHONE_DISPLAY_SIZE}px * var(--username-dom-scale, 1))`;
+        this.element.style.marginLeft = `calc(-2px * var(--username-dom-scale, 1))`;
         this.element.style.opacity = "0";
         this.element.style.pointerEvents = "none";
         this.element.style.transformOrigin = "center";
