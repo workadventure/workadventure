@@ -335,6 +335,43 @@ const chat: DeepPartial<Translation["chat"]> = {
         creationSuccessNotification: "방이 생성되었습니다",
         restrictedDescription: "이 방은 상위 폴더의 멤버에게만 보입니다: {folderName}",
     },
+    joinExternalRoom: {
+        menuTitle: "외부 방 참가",
+        title: "외부 방 참가",
+        address: {
+            label: "방 주소",
+            placeholder: "#room:server.org, !room:server.org 또는 Matrix 영구 링크",
+        },
+        directory: {
+            searchLabel: "공개 디렉터리 검색",
+            searchPlaceholder: "방 검색",
+            serverLabel: "서버",
+            serverPlaceholder: "matrix.org",
+            emptySearch: "공개 방을 검색하려면 검색어를 입력하세요.",
+            noResults: "이 검색에 해당하는 공개 방을 찾을 수 없습니다.",
+        },
+        buttons: {
+            preview: "미리보기",
+            search: "검색",
+            cancel: "취소",
+            join: "참가",
+            askToJoin: "참가 요청",
+            cancelRequest: "요청 취소",
+        },
+        preview: {
+            members: "{count}명",
+            worldReadable: "공개 읽기 가능",
+            recentMessages: "최근 메시지",
+        },
+        reason: {
+            label: "사유",
+            placeholder: "선택 메시지",
+        },
+        knocked: "요청을 보냈습니다",
+        errors: {
+            forbidden: "이 방에 직접 참가할 권한이 없습니다.",
+        },
+    },
     createFolder: {
         title: "새 폴더 만들기",
         name: "이름",

@@ -9,6 +9,11 @@ import type {
     ConnectionStatus,
     ChatUser,
     ChatRoomMembershipManagement,
+    ExternalRoomDirectoryResult,
+    ExternalRoomPreview,
+    JoinExistingRoomInput,
+    JoinExistingRoomResult,
+    KnockExistingRoomResult,
 } from "./ChatConnection";
 
 export class VoidChatConnection implements ChatConnectionInterface {
@@ -47,6 +52,30 @@ export class VoidChatConnection implements ChatConnectionInterface {
 
     searchAccessibleRooms(searchText: string): Promise<{ id: string; name: string | undefined }[]> {
         return Promise.resolve([]);
+    }
+
+    parseExternalRoomAddress(address: string): JoinExistingRoomInput {
+        return {};
+    }
+
+    searchExternalPublicRooms(searchText: string, server?: string): Promise<ExternalRoomDirectoryResult[]> {
+        return Promise.resolve([]);
+    }
+
+    previewExistingRoom(input: JoinExistingRoomInput): Promise<ExternalRoomPreview> {
+        return Promise.reject(new Error("VoidChatConnection: previewExistingRoom is not implemented."));
+    }
+
+    joinExistingRoom(input: JoinExistingRoomInput): Promise<JoinExistingRoomResult> {
+        return Promise.reject(new Error("VoidChatConnection: joinExistingRoom is not implemented."));
+    }
+
+    knockExistingRoom(input: JoinExistingRoomInput): Promise<KnockExistingRoomResult> {
+        return Promise.reject(new Error("VoidChatConnection: knockExistingRoom is not implemented."));
+    }
+
+    cancelExternalRoomRequest(roomId: string): Promise<void> {
+        return Promise.resolve();
     }
 
     joinRoom(roomId: string): Promise<ChatRoom | undefined> {

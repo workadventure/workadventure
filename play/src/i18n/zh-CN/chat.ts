@@ -331,6 +331,43 @@ const chat: DeepPartial<Translation["chat"]> = {
         creationSuccessNotification: "房间已创建",
         restrictedDescription: "此房间仅对父文件夹的成员可见: {folderName}",
     },
+    joinExternalRoom: {
+        menuTitle: "加入外部房间",
+        title: "加入外部房间",
+        address: {
+            label: "房间地址",
+            placeholder: "#room:server.org、!room:server.org 或 Matrix 永久链接",
+        },
+        directory: {
+            searchLabel: "搜索公共目录",
+            searchPlaceholder: "搜索房间",
+            serverLabel: "服务器",
+            serverPlaceholder: "matrix.org",
+            emptySearch: "请输入搜索词以搜索公开房间。",
+            noResults: "未找到匹配此搜索的公开房间。",
+        },
+        buttons: {
+            preview: "预览",
+            search: "搜索",
+            cancel: "取消",
+            join: "加入",
+            askToJoin: "请求加入",
+            cancelRequest: "取消请求",
+        },
+        preview: {
+            members: "{count} 名成员",
+            worldReadable: "全网可读",
+            recentMessages: "最近消息",
+        },
+        reason: {
+            label: "原因",
+            placeholder: "可选消息",
+        },
+        knocked: "请求已发送",
+        errors: {
+            forbidden: "您没有权限直接加入此房间。",
+        },
+    },
     createFolder: {
         title: "创建新文件夹",
         name: "名称",

@@ -334,6 +334,43 @@ const chat: DeepPartial<Translation["chat"]> = {
         creationSuccessNotification: "ルームが作成されました",
         restrictedDescription: "親フォルダーのメンバーのみ表示: {folderName}",
     },
+    joinExternalRoom: {
+        menuTitle: "外部ルームに参加",
+        title: "外部ルームに参加",
+        address: {
+            label: "ルームアドレス",
+            placeholder: "#room:server.org、!room:server.org、または Matrix パーマリンク",
+        },
+        directory: {
+            searchLabel: "公開ディレクトリを検索",
+            searchPlaceholder: "ルームを検索",
+            serverLabel: "サーバー",
+            serverPlaceholder: "matrix.org",
+            emptySearch: "公開ルームを検索するには検索語を入力してください。",
+            noResults: "この検索に一致する公開ルームは見つかりませんでした。",
+        },
+        buttons: {
+            preview: "プレビュー",
+            search: "検索",
+            cancel: "キャンセル",
+            join: "参加",
+            askToJoin: "参加をリクエスト",
+            cancelRequest: "リクエストをキャンセル",
+        },
+        preview: {
+            members: "{count} 人のメンバー",
+            worldReadable: "誰でも閲覧可能",
+            recentMessages: "最近のメッセージ",
+        },
+        reason: {
+            label: "理由",
+            placeholder: "任意のメッセージ",
+        },
+        knocked: "リクエストを送信しました",
+        errors: {
+            forbidden: "このルームに直接参加する権限がありません。",
+        },
+    },
     createFolder: {
         title: "新しいフォルダーの作成",
         name: "フォルダー名",

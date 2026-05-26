@@ -332,6 +332,43 @@ const chat: DeepPartial<Translation["chat"]> = {
         creationSuccessNotification: "تم إنشاء الغرفة",
         restrictedDescription: "ستكون هذه الغرفة مرئية فقط لأعضاء المجلد الأب: {folderName}",
     },
+    joinExternalRoom: {
+        menuTitle: "الانضمام إلى غرفة خارجية",
+        title: "الانضمام إلى غرفة خارجية",
+        address: {
+            label: "عنوان الغرفة",
+            placeholder: "#room:server.org أو !room:server.org أو رابط Matrix دائم",
+        },
+        directory: {
+            searchLabel: "البحث في الدليل العام",
+            searchPlaceholder: "البحث عن غرف",
+            serverLabel: "الخادم",
+            serverPlaceholder: "matrix.org",
+            emptySearch: "أدخل عبارة بحث للبحث عن غرف عامة.",
+            noResults: "لم يتم العثور على غرف عامة لهذا البحث.",
+        },
+        buttons: {
+            preview: "معاينة",
+            search: "بحث",
+            cancel: "إلغاء",
+            join: "انضمام",
+            askToJoin: "طلب الانضمام",
+            cancelRequest: "إلغاء الطلب",
+        },
+        preview: {
+            members: "{count} عضو",
+            worldReadable: "قابلة للقراءة للجميع",
+            recentMessages: "الرسائل الأخيرة",
+        },
+        reason: {
+            label: "السبب",
+            placeholder: "رسالة اختيارية",
+        },
+        knocked: "تم إرسال الطلب",
+        errors: {
+            forbidden: "ليس لديك إذن للانضمام إلى هذه الغرفة مباشرة.",
+        },
+    },
     createFolder: {
         title: "إنشاء مجلد جديد",
         name: "الاسم",

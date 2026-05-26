@@ -335,6 +335,43 @@ const chat: DeepPartial<Translation["chat"]> = {
         creationSuccessNotification: "Salon créé",
         restrictedDescription: "Visible seulement pour les membres du dossier parent: {folderName}",
     },
+    joinExternalRoom: {
+        menuTitle: "Rejoindre une room externe",
+        title: "Rejoindre une room externe",
+        address: {
+            label: "Adresse de la room",
+            placeholder: "#room:server.org, !room:server.org ou permalink Matrix",
+        },
+        directory: {
+            searchLabel: "Rechercher dans le directory public",
+            searchPlaceholder: "Rechercher des rooms",
+            serverLabel: "Serveur",
+            serverPlaceholder: "matrix.org",
+            emptySearch: "Saisissez un terme de recherche pour chercher des rooms publiques.",
+            noResults: "Aucune room publique trouvée pour cette recherche.",
+        },
+        buttons: {
+            preview: "Aperçu",
+            search: "Rechercher",
+            cancel: "Annuler",
+            join: "Rejoindre",
+            askToJoin: "Demander à rejoindre",
+            cancelRequest: "Annuler la demande",
+        },
+        preview: {
+            members: "{count} membres",
+            worldReadable: "Lisible par tout le monde",
+            recentMessages: "Messages récents",
+        },
+        reason: {
+            label: "Raison",
+            placeholder: "Message optionnel",
+        },
+        knocked: "Demande envoyée",
+        errors: {
+            forbidden: "Vous n'avez pas la permission de rejoindre cette room directement.",
+        },
+    },
     createFolder: {
         title: "Créer un nouveau dossier",
         name: "Nom",
