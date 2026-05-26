@@ -860,8 +860,6 @@ div.emoji-picker {
 
     pointer-events: auto;
     will-change: transform;
-}
 
-.username-display:hover {
-    z-index: 2000000000 !important;
+    user-select: none;
 }

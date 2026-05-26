@@ -748,10 +748,12 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public pointerOverOutline(color: number): void {
         this.outlineColorStore.pointerOver(color);
+        this.usernameDisplay?.setToForeFront(true);
     }
 
     public pointerOutOutline(): void {
         this.outlineColorStore.pointerOut();
+        this.usernameDisplay?.setToForeFront(false);
     }
 
     public characterCloseByOutline(color: number): void {
