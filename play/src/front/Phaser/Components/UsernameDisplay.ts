@@ -7,8 +7,9 @@ import { UsernameStatusDisplay } from "./UsernameStatusDisplay";
 
 const CORRECTION_RATE = 0.75;
 const PLAYER_NAME_HEIGHT = 14;
-const USERNAME_FONT_FAMILY = '"Press Start 2P"'; // Todo: Replace the font family with a better one
-const USERNAME_FONT_SIZE = 8;
+const USERNAME_FONT_FAMILY = "Roboto";
+const USERNAME_FONT_SIZE = 10;
+const USERNAME_FONT_WEIGHT = 700;
 const USERNAME_SIZE_ANIMATION_DURATION = 375;
 const USERNAME_SIZE_ANIMATION_EASING = "cubic-bezier(0.2, 0, 0, 1)";
 
@@ -178,9 +179,11 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
 
         element.textContent = this.playerName;
         element.style.margin = "0";
+        element.style.marginRight = `calc(2px * var(--username-dom-scale, 1))`;
         element.style.color = "#ffffff";
         element.style.fontFamily = USERNAME_FONT_FAMILY;
         element.style.fontSize = `calc(${USERNAME_FONT_SIZE}px * var(--username-dom-scale, 1))`;
+        element.style.fontWeight = `${USERNAME_FONT_WEIGHT}`;
         element.style.whiteSpace = "nowrap";
         element.style.pointerEvents = "none";
 
