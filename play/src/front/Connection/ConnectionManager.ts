@@ -26,6 +26,7 @@ import waLogo from "../Components/images/logo.svg";
 import WebsocketReconnectingToast from "../Components/Toasts/WebsocketReconnectingToast.svelte";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { toastStore } from "../Stores/ToastStore";
+import { newsStore } from "../Stores/NewsStore";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -612,6 +613,8 @@ class ConnectionManager {
         if (response.status === "error") {
             return response;
         }
+
+        newsStore.setNews(response.news, playUri);
 
         const { authToken, userUuid, email, username, locale, visitCardUrl, matrixUserId, matrixServerUrl } = response;
 

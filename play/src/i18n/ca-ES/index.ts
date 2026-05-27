@@ -29,6 +29,7 @@ import megaphone from "./megaphone";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
 import recording from "./recording";
+import news from "./news";
 
 const ca_ES = merge(en_US, {
     audio,
@@ -60,6 +61,7 @@ const ca_ES = merge(en_US, {
     randomNames,
     onboarding,
     recording,
+    news,
 });
 
 export default ca_ES;

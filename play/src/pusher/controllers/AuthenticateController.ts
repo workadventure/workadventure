@@ -62,6 +62,7 @@ export class AuthenticateController extends BaseHttpController {
     routes(): void {
         this.openIDLogin();
         this.me();
+        this.newsBulkRead();
         this.openIDCallback();
         this.matrixCallback();
         this.logoutCallback();
@@ -264,6 +265,67 @@ export class AuthenticateController extends BaseHttpController {
                         return;
                     }
                 }*/
+                throw err;
+            }
+        });
+    }
+
+    private newsBulkRead(): void {
+        const NewsBulkReadRequest = z.object({
+            token: z.string(),
+            playUri: z.string(),
+        });
+
+        /**
+         * @openapi
+         * /news/bulk-read:
+         *   post:
+         *     description: Mark news as read
+         *     parameters:
+         *      - name: "token"
+         *        in: "body"
+         *        description: "A JWT authentication token"
+         *        required: true
+         *        type: "string"
+         *      - name: "playUri"
+         *        in: "body"
+         *        description: "The full URL of WorkAdventure"
+         *        required: true
+         *        type: "string"
+         *        example: "http://play.workadventure.localhost/@/teamSlug/worldSlug/roomSlug"
+         *     responses:
+         *       204:
+         *         description: News marked as read
+         *       400:
+         *         description: Invalid request
+         *       401:
+         *         description: Invalid token
+         */
+        this.app.post("/news/bulk-read", async (req, res) => {
+            debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
+            const body = NewsBulkReadRequest.safeParse(req.body);
+
+            if (!body.success) {
+                res.status(400);
+                res.json({ error: "Invalid news bulk read request" });
+                return;
+            }
+
+            try {
+                const authTokenData = await jwtTokenManager.verifyJWTToken(body.data.token, false);
+                const playUri = new URL(body.data.playUri).toString();
+                if (!playUri) {
+                    throw new Error("Invalid playUri");
+                }
+                await adminService.bulkReadNews(playUri, authTokenData.identifier, authTokenData.accessToken);
+                res.status(204);
+                res.send("");
+            } catch (err) {
+                if (err instanceof errors.JWTInvalid || err instanceof errors.JWTExpired) {
+                    res.status(401);
+                    res.send("Invalid token");
+                    return;
+                }
                 throw err;
             }
         });

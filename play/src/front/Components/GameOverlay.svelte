@@ -41,6 +41,7 @@
     import WokaScene from "./Woka/WokaScene.svelte";
     import Onboarding from "./Onboarding/Onboarding.svelte";
     import PwaInstallScreen from "./PwaInstall/PwaInstallScreen.svelte";
+    import NewsModal from "./News/NewsModal.svelte";
 
     export let game: Game;
 
@@ -116,6 +117,7 @@
         <MainLayout />
     {/key}
     <MainModal />
+    <NewsModal />
 
     {#if $calendarIsActivatedStore && $isCalendarVisibleStore}
         <Calendar />

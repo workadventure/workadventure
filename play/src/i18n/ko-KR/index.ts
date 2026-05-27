@@ -29,6 +29,7 @@ import locate from "./locate";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
 import recording from "./recording";
+import news from "./news";
 
 const ko_KR = merge(en_US, {
     area,
@@ -60,6 +61,7 @@ const ko_KR = merge(en_US, {
     randomNames,
     onboarding,
     recording,
+    news,
 });
 
 export default ko_KR;

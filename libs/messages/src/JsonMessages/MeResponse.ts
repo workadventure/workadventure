@@ -1,7 +1,7 @@
 import {z} from "zod";
 import {extendApi} from "@anatine/zod-openapi";
 import {ErrorApiData} from "./ErrorApiData";
-import {WokaDetail} from "./PlayerTextures";
+import {NewsData} from "./NewsData";
 
 export const MeSuccessResponse = extendApi(
     z.object({
@@ -57,6 +57,10 @@ export const MeSuccessResponse = extendApi(
         matrixServerUrl: extendApi(z.string().nullable().optional(), {
             description:
                 "The matrix server url for this user.",
+        }),
+        news: extendApi(z.array(NewsData).optional(), {
+            description:
+                "News items to display to the user once they enter the room.",
         }),
         /*isMatrixRegistered: extendApi(z.boolean(), {
             description:

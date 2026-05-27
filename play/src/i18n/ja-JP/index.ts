@@ -29,6 +29,7 @@ import refreshPrompt from "./refreshPrompt";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
 import recording from "./recording";
+import news from "./news";
 
 const ja_JP = merge(en_US, {
     area,
@@ -60,6 +61,7 @@ const ja_JP = merge(en_US, {
     randomNames,
     onboarding,
     recording,
+    news,
 });
 
 export default ja_JP;
