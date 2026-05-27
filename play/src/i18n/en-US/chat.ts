@@ -313,6 +313,8 @@ const chat: BaseTranslation = {
     nothingToDisplay: "Nothing to display",
     showMore: "Show {number} more",
     showLess: "Show less",
+    showFullMessage: "Show more",
+    showLessMessage: "Show less",
     addRoomToFolderError: "Impossible to add the room to the folder",
     createRoom: {
         title: "Create new room",
@@ -638,6 +640,8 @@ const chat: BaseTranslation = {
     whoops: "Whoops ! something went wrong",
     failedToOpenRoom: "Failed to open room : {roomId}",
     failedToSendAttachments: "Failed to send attachments. Please try again.",
+    failedToSendMessage: "Failed to send message. Please try again.",
+    partiallyFailedToSendMessage: "Part of the message was sent. The unsent text was kept in the input.",
     refreshChatError: "Failed to refresh chat",
     discord: {
         chatBand: {
