@@ -42,6 +42,8 @@ const actionbar: BaseTranslation = {
         disabled: "Your microphone is disabled",
         activate: "Activate your microphone",
         noDevices: "No microphone device found",
+        temporaryOn: "Microphone temporarily on",
+        temporaryRelease: "Release Space to mute again.",
         noSoundWarning:
             "No sound detected from your microphone. There may be a problem; try changing your microphone in settings.",
         noSoundWarningPressEnter: "No sound detected from your microphone. Press Enter to open settings.",

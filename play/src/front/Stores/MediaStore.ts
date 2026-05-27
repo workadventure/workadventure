@@ -51,6 +51,7 @@ import { NoiseSuppressionController } from "./NoiseSuppressionController";
 import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
 import { audioPlaybackStore } from "./AudioPlaybackStore";
 import { browserNotificationStore } from "./BrowserNotificationStore";
+import { canStartPushToTalk, isUnavailableForMicrophone, shouldEnableAudioConstraint } from "./PushToTalkStore";
 
 export const inBackgroundSettingsStore = writable<boolean>(false);
 
@@ -106,6 +107,16 @@ function createRequestedMicrophoneState() {
     };
 }
 
+function createTemporaryMicrophoneState() {
+    const { subscribe, set } = writable(false);
+
+    return {
+        subscribe,
+        enableTemporaryMicrophone: () => set(true),
+        disableTemporaryMicrophone: () => set(false),
+    };
+}
+
 /**
  * A store that contains whether the EnableCameraScene is shown or not.
  */
@@ -121,6 +132,7 @@ function createEnableCameraSceneVisibilityStore() {
 
 export const requestedCameraState = createRequestedCameraState();
 export const requestedMicrophoneState = createRequestedMicrophoneState();
+export const temporaryMicrophoneState = createTemporaryMicrophoneState();
 export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilityStore();
 
 /**
@@ -248,6 +260,16 @@ export const isSpeakerStore = writable(false);
 export const inLivekitStore = writable(false);
 export const isListenerStore = writable(false);
 export const listenerWaitingMediaStore = writable<string | undefined>(undefined);
+
+export const pushToTalkAvailabilityStore = derived(
+    [requestedMicrophoneState, currentPlayerGroupIdStore, inLivekitStore],
+    ([$requestedMicrophoneState, $currentPlayerGroupIdStore, $inLivekitStore]) =>
+        canStartPushToTalk({
+            requestedMicrophoneState: $requestedMicrophoneState,
+            isInConversationBubble: $currentPlayerGroupIdStore !== undefined,
+            isInLivekit: $inLivekitStore,
+        })
+);
 /**
  * When true, the listener has consented to share their camera with the speaker (seeAttendees feature).
  * This store is set to true when the listener accepts the camera sharing popup.
@@ -464,6 +486,7 @@ availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
 
 let previousComputedVideoConstraint: boolean | MediaTrackConstraints = false;
 let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;
+let previousComputedAudioRequestSource: "none" | "persistent" | "temporary" = "none";
 
 /**
  * A store containing the media constraints we want to apply.
@@ -472,6 +495,7 @@ export const mediaStreamConstraintsStore = derived(
     [
         requestedCameraState,
         requestedMicrophoneState,
+        temporaryMicrophoneState,
         myCameraStore,
         myMicrophoneStore,
         inExternalServiceStore,
@@ -488,6 +512,7 @@ export const mediaStreamConstraintsStore = derived(
         [
             $requestedCameraState,
             $requestedMicrophoneState,
+            $temporaryMicrophoneState,
             $myCameraStore,
             $myMicrophoneStore,
             $inExternalServiceStore,
@@ -513,25 +538,23 @@ export const mediaStreamConstraintsStore = derived(
         // Shared conditions for disabling media
         const isInExternalService = $inExternalServiceStore === true;
         const isEnergySaving = $cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false;
-        const isUnavailableStatus =
-            $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
-            $availabilityStatusStore === AvailabilityStatus.SILENT ||
-            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
-            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-            $availabilityStatusStore === AvailabilityStatus.BUSY;
         const shouldDisableMicrophoneForPrivacy =
             $privacyShutdownStore === true && !localUserStore.getMicrophonePrivacySettings();
         const shouldDisableCameraForPrivacy =
             $privacyShutdownStore === true && !localUserStore.getCameraPrivacySettings();
+        const isUnavailableStatus = isUnavailableForMicrophone($availabilityStatusStore);
 
         // Audio constraints always apply
         if (
-            $requestedMicrophoneState === false ||
-            $myMicrophoneStore === false ||
-            isInExternalService ||
-            shouldDisableMicrophoneForPrivacy ||
-            isEnergySaving ||
-            isUnavailableStatus
+            !shouldEnableAudioConstraint({
+                requestedMicrophoneState: $requestedMicrophoneState,
+                temporaryMicrophoneState: $temporaryMicrophoneState,
+                myMicrophone: $myMicrophoneStore,
+                isInExternalService,
+                shouldDisableMicrophoneForPrivacy,
+                isEnergySaving,
+                availabilityStatus: $availabilityStatusStore,
+            })
         ) {
             currentAudioConstraint = false;
         }
@@ -550,12 +573,17 @@ export const mediaStreamConstraintsStore = derived(
             }
         }
         // Let's make the changes only if the new value is different from the old one.
+        const currentAudioRequestSource =
+            currentAudioConstraint === false ? "none" : $temporaryMicrophoneState ? "temporary" : "persistent";
+
         if (
             !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
-            !deepEqual(previousComputedAudioConstraint, currentAudioConstraint)
+            !deepEqual(previousComputedAudioConstraint, currentAudioConstraint) ||
+            previousComputedAudioRequestSource !== currentAudioRequestSource
         ) {
             previousComputedVideoConstraint = currentVideoConstraint;
             previousComputedAudioConstraint = currentAudioConstraint;
+            previousComputedAudioRequestSource = currentAudioRequestSource;
             // Let's copy the objects.
             if (typeof previousComputedVideoConstraint !== "boolean") {
                 previousComputedVideoConstraint = { ...previousComputedVideoConstraint };
@@ -567,21 +595,30 @@ export const mediaStreamConstraintsStore = derived(
             set({
                 video: currentVideoConstraint,
                 audio: currentAudioConstraint,
+                audioRequestSource: currentAudioRequestSource,
             });
         }
     },
     {
         video: false,
         audio: false,
+        audioRequestSource: "none",
     } as {
         video: false | MediaTrackConstraints;
         audio: false | MediaTrackConstraints;
+        audioRequestSource: "none" | "persistent" | "temporary";
     },
 );
 
 export type { LocalStreamStoreValue } from "./LocalStreamTypes";
 
 let currentStream: MediaStream | undefined = undefined;
+type ComputedMediaStreamConstraints = {
+    video: MediaTrackConstraints | false;
+    audio: MediaTrackConstraints | false;
+    audioRequestSource: "none" | "persistent" | "temporary";
+};
+
 let oldConstraints: { video: MediaTrackConstraints | false; audio: MediaTrackConstraints | false } = {
     video: false,
     audio: false,
@@ -678,7 +715,7 @@ function emitCurrentStreamOrError(setIfCurrent: SetRawStreamIfCurrent, error: un
 }
 
 async function runRawStreamUpdate(
-    constraints: { video: false | MediaTrackConstraints; audio: false | MediaTrackConstraints },
+    constraints: ComputedMediaStreamConstraints,
     setIfCurrent: SetRawStreamIfCurrent,
     generation: number,
 ): Promise<{ video: false | MediaTrackConstraints; audio: false | MediaTrackConstraints }> {
@@ -816,6 +853,9 @@ async function runRawStreamUpdate(
                     navigator.mediaDevices?.getSupportedConstraints().voiceIsolation === true &&
                         audioTrackSettings?.voiceIsolation !== undefined,
                 );
+                if (constraints.audioRequestSource === "persistent") {
+                    requestedMicrophoneState.enableMicrophone();
+                }
             } else {
                 voiceIsolationSupportedStore.setSupported(false);
             }

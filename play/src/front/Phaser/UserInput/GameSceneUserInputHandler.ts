@@ -17,11 +17,14 @@ import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
+import { pushToTalkAvailabilityStore, temporaryMicrophoneState } from "../../Stores/MediaStore";
+import { shouldIgnorePushToTalkKeyboardEvent } from "../../Stores/PushToTalkStore";
 import type { Shortcut } from "./UserInputManager";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
     private controlKeyisPressed: boolean = false;
+    private pushToTalkSpaceKeyConsumed: boolean = false;
     public shortcuts: Shortcut[] = [];
 
     constructor(gameScene: GameScene) {
@@ -47,6 +50,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             {
                 key: "R",
                 description: get(LL).menu.shortcuts.rotatePlayer(),
+            },
+            {
+                key: "Space",
+                description: get(LL).menu.shortcuts.pushToTalk(),
             },
             {
                 key: "1",
@@ -212,6 +219,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         }
 
         switch (event.code) {
+            case "Space": {
+                if (this.tryStartPushToTalk(event)) {
+                    return event;
+                }
+                break;
+            }
             case "KeyE": {
                 if (get(mapManagerActivated) == false) return event;
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));
@@ -285,6 +298,18 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         return event;
     }
 
+    private tryStartPushToTalk(event: KeyboardEvent): boolean {
+        if (event.repeat || shouldIgnorePushToTalkKeyboardEvent(event.target) || !get(pushToTalkAvailabilityStore)) {
+            return false;
+        }
+
+        temporaryMicrophoneState.enableTemporaryMicrophone();
+        this.pushToTalkSpaceKeyConsumed = true;
+        event.preventDefault();
+        event.stopPropagation();
+        return true;
+    }
+
     private openSayPopup(): void {
         if (!this.gameScene.room.isSayEnabled) {
             return;
@@ -315,6 +340,13 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
             // SPACE
             case " ": {
+                if (this.pushToTalkSpaceKeyConsumed) {
+                    this.pushToTalkSpaceKeyConsumed = false;
+                    temporaryMicrophoneState.disableTemporaryMicrophone();
+                    event.preventDefault();
+                    event.stopPropagation();
+                    break;
+                }
                 this.handleActivableEntity();
                 break;
             }
