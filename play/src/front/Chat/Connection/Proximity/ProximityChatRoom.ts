@@ -18,6 +18,9 @@ import type {
     ChatMessage,
     ChatMessageContent,
     ChatMessageReaction,
+    ChatPollCreateOptions,
+    ChatPollCreationCapability,
+    ChatPollItem,
     ChatMessageType,
     ChatRoom,
 } from "../ChatConnection";
@@ -51,6 +54,13 @@ import type { PictureStore } from "../../../Stores/PictureStore";
 import { CharacterLayerManager } from "../../../Phaser/Entity/CharacterLayerManager";
 import { BubbleNotification as BasicNotification } from "../../../Notification/BubbleNotification";
 import { DEFAULT_PROXIMITY_SPACE_NAME, type ProximityChatRoomKind } from "./ProximityChatRoomManager";
+import { ProximityChatPoll } from "./ProximityChatPoll";
+import {
+    getProximityPollDefinitionMetadataKey,
+    isProximityPollDeleted,
+    parseProximityPollMetadata,
+    type ProximityPollDefinitionMetadata,
+} from "./ProximityPollMetadata";
 import { createProximityTimelineItemsStore } from "./ProximityTimelineItemsStore";
 
 const debug = Debug("ProximityChatRoom");
@@ -105,7 +115,25 @@ export class ProximityChatRoom implements ChatRoom {
     pictureStore = readable(undefined);
     avatarFallbackColor = readable(undefined);
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
-    timelineItems = createProximityTimelineItemsStore(this.messages);
+    /** Space users of the current space (forwarded from _space.usersStore on join, empty map on leave). */
+    public readonly spaceUsersStore = new ForwardableStore<Map<string, SpaceUserExtended>>(new Map());
+    private readonly spaceMetadataStore = writable<Map<string, unknown>>(new Map());
+    readonly pollItems: Readable<readonly ChatPollItem[]> = derived(
+        [this.spaceMetadataStore, this.spaceUsersStore],
+        ([$metadata, $users]) => this.createPollItems($metadata, $users),
+    );
+    timelineItems = createProximityTimelineItemsStore(this.messages, this.pollItems);
+    readonly pollCreation: ChatPollCreationCapability = {
+        canCreate: derived(this.spaceUsersStore, (users) => users.has(this._spaceUserId)),
+        supportedKinds: ["open", "closed"],
+        limits: {
+            questionMaxLength: 340,
+            answerMaxLength: 240,
+            minAnswers: 2,
+            maxAnswers: 20,
+        },
+        create: (options) => this.createPoll(options),
+    };
     messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>> = new MapStore();
     hasPreviousMessage = writable(false);
     isEncrypted = writable(false);
@@ -113,6 +141,8 @@ export class ProximityChatRoom implements ChatRoom {
     private _space: SpaceInterface | undefined;
     private spaceMessageSubscription: Subscription | undefined;
     private spaceIsTypingSubscription: Subscription | undefined;
+    private spaceMetadataSubscription: Subscription | undefined;
+    private readonly proximityPolls = new Map<string, ProximityChatPoll>();
     private observeUserJoinedSubscription: Subscription | undefined;
     private observeUserLeftSubscription: Subscription | undefined;
     // Users by spaceUserId
@@ -129,8 +159,6 @@ export class ProximityChatRoom implements ChatRoom {
     isChatDisabled = writable(false);
     intentionallyClosed = writable(false);
     hasUserMessages = writable(false);
-    /** Space users of the current space (forwarded from _space.usersStore on join, empty map on leave). */
-    public readonly spaceUsersStore = new ForwardableStore<Map<string, SpaceUserExtended>>(new Map());
     readonly joinedMemberCount = derived(this.spaceUsersStore, (users) => users.size);
     /** Participants currently in the same meeting/space (reactive list from space users). */
     private _currentMeetingParticipantsStore = writable<MeetingParticipant[]>([]);
@@ -359,6 +387,117 @@ export class ProximityChatRoom implements ChatRoom {
     sendFiles(files: FileList): Promise<void> {
         return Promise.resolve();
     }
+
+    private createPoll(options: ChatPollCreateOptions): Promise<void> {
+        const currentVoterId = this.getCurrentVoterId(this.users ?? new Map());
+        const pollId = uuidv4();
+        const definition: ProximityPollDefinitionMetadata = {
+            id: pollId,
+            question: options.question,
+            kind: options.kind,
+            answers: options.answers.map((answer) => ({
+                id: uuidv4(),
+                text: answer,
+            })),
+            maxSelections: 1,
+            senderId: currentVoterId,
+            senderName: this.users?.get(this._spaceUserId)?.name,
+            createdAt: Date.now(),
+        };
+
+        this.emitPollMetadataUpdate(new Map([[getProximityPollDefinitionMetadataKey(pollId), definition]]));
+        return Promise.resolve();
+    }
+
+    private createPollItems(
+        metadata: Map<string, unknown>,
+        users: Map<string, SpaceUserExtended>,
+    ): readonly ChatPollItem[] {
+        const parsedMetadata = parseProximityPollMetadata(metadata);
+        const activePollIds = new Set<string>();
+
+        const pollItems = parsedMetadata.polls
+            .filter((poll) => !isProximityPollDeleted(poll, parsedMetadata.deletions))
+            .map((poll) => {
+                activePollIds.add(poll.id);
+                const sender = this.findPollSender(poll, users);
+                const end = parsedMetadata.ends.find(
+                    (candidateEnd) => candidateEnd.pollId === poll.id && candidateEnd.senderId === poll.senderId,
+                );
+                const existingPoll = this.proximityPolls.get(poll.id);
+
+                if (existingPoll) {
+                    existingPoll.update({
+                        votes: parsedMetadata.votes,
+                        end,
+                        currentVoterId: this.getCurrentVoterId(users),
+                        sender,
+                    });
+                    return existingPoll;
+                }
+
+                const proximityPoll = new ProximityChatPoll({
+                    definition: poll,
+                    votes: parsedMetadata.votes,
+                    end,
+                    currentVoterId: this.getCurrentVoterId(users),
+                    sender,
+                    updateMetadata: (update) => this.emitPollMetadataUpdate(update),
+                });
+
+                this.proximityPolls.set(poll.id, proximityPoll);
+                return proximityPoll;
+            });
+        this.deleteInactivePolls(activePollIds);
+        return pollItems;
+    }
+
+    private deleteInactivePolls(activePollIds: Set<string>): void {
+        for (const pollId of this.proximityPolls.keys()) {
+            if (!activePollIds.has(pollId)) {
+                this.proximityPolls.delete(pollId);
+            }
+        }
+    }
+
+    private findPollSender(
+        poll: ProximityPollDefinitionMetadata,
+        users: Map<string, SpaceUserExtended>,
+    ): AnyKindOfUser | undefined {
+        for (const user of users.values()) {
+            if (this.getUserVoterId(user) === poll.senderId) {
+                return mapExtendedSpaceUserToChatUser(user);
+            }
+        }
+
+        return {
+            ...this.unknownUser,
+            chatId: poll.senderId,
+            uuid: poll.senderId,
+            username: poll.senderName ?? this.unknownUser.username,
+            spaceUserId: poll.senderId,
+        };
+    }
+
+    private getCurrentVoterId(users: Map<string, SpaceUserExtended>): string {
+        const user = users.get(this._spaceUserId);
+
+        if (!user) {
+            return this._spaceUserId;
+        }
+
+        return this.getUserVoterId(user);
+    }
+
+    private getUserVoterId(user: SpaceUserExtended): string {
+        return user.uuid || user.spaceUserId;
+    }
+
+    private emitPollMetadataUpdate(metadata: Map<string, unknown>): void {
+        this._space?.setMetadata(metadata);
+        this._space?.emitUpdateSpaceMetadata(metadata);
+    }
+
     setTimelineAsRead(): void {
         console.info("setTimelineAsRead => Method not implemented yet!");
     }
@@ -540,6 +679,11 @@ export class ProximityChatRoom implements ChatRoom {
         let hasUserInProximityChat = false;
 
         this.spaceUsersStore.forward(this._space.usersStore);
+        this.spaceMetadataStore.set(new Map(this._space.getMetadata()));
+        this.spaceMetadataSubscription?.unsubscribe();
+        this.spaceMetadataSubscription = this._space.observeMetadata.subscribe((metadata) => {
+            this.spaceMetadataStore.set(new Map(metadata));
+        });
 
         this.usersUnsubscriber = this._space.usersStore.subscribe((users) => {
             this.users = users;
@@ -768,6 +912,8 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceMessageSubscription = undefined;
         this.spaceIsTypingSubscription?.unsubscribe();
         this.spaceIsTypingSubscription = undefined;
+        this.spaceMetadataSubscription?.unsubscribe();
+        this.spaceMetadataSubscription = undefined;
         this.spaceWatcherUserJoinedObserver?.unsubscribe();
         this.spaceWatcherUserJoinedObserver = undefined;
         this.spaceWatcherUserLeftObserver?.unsubscribe();
@@ -781,6 +927,7 @@ export class ProximityChatRoom implements ChatRoom {
         this.scriptingInputAudioStreamManager?.close();
         this.scriptingInputAudioStreamManager = undefined;
         this.spaceUsersStore.forward(readable(new Map()));
+        this.spaceMetadataStore.set(new Map());
         this._space = undefined;
         this.isJoined.set(false);
         this.isChatDisabled.set(false);
@@ -918,6 +1065,7 @@ export class ProximityChatRoom implements ChatRoom {
         chatNotificationStore.clearRoom(this.id);
 
         this.spaceUsersStore.forward(readable(new Map()));
+        this.spaceMetadataStore.set(new Map());
         this._space = undefined;
         this.isJoined.set(false);
         this._currentMeetingParticipantsStore.set([]);
@@ -980,6 +1128,8 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
+        this.spaceMetadataSubscription?.unsubscribe();
+        this.spaceMetadataSubscription = undefined;
 
         this.scriptingOutputAudioStreamManager?.close();
         this.scriptingInputAudioStreamManager?.close();
@@ -1081,6 +1231,7 @@ export class ProximityChatRoom implements ChatRoom {
     public destroy(): void {
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
+        this.spaceMetadataSubscription?.unsubscribe();
 
         this.scriptingOutputAudioStreamManager?.close();
         this.scriptingInputAudioStreamManager?.close();
