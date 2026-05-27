@@ -77,6 +77,7 @@ import { chatNotificationStore } from "../../../Stores/ProximityNotificationStor
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { waitForGameSceneStore } from "../../../Stores/GameSceneStore";
+import { MAX_MATRIX_MESSAGE_CHARS } from "../../Services/ChatMessageSplitter";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatLightPoll } from "./MatrixChatLightPoll";
 import { MatrixChatPoll } from "./MatrixChatPoll";
@@ -88,7 +89,6 @@ import { resolveChatUserColor } from "./services/WaMatrixProfileService";
 import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
 import { matrixAvatarProfile } from "./services/MatrixAvatarProfile";
 import { getThreadSummary, shouldDisplayEventInRoomTimeline } from "./MatrixThreadUtils";
-import { MAX_MATRIX_MESSAGE_CHARS } from "../../Services/ChatMessageSplitter";
 import { sendMatrixTextMessageInChunks } from "./MatrixSendMessage";
 
 type EventId = string;
@@ -1629,7 +1629,7 @@ export class MatrixChatRoom
 
     async sendMessage(message: string): Promise<ChatSendMessageResult> {
         const result = await sendMatrixTextMessageInChunks(message, MAX_MATRIX_MESSAGE_CHARS, (chunk) =>
-            this.matrixRoom.client.sendMessage(this.matrixRoom.roomId, this.getMessageContent(chunk))
+            this.matrixRoom.client.sendMessage(this.matrixRoom.roomId, this.getMessageContent(chunk)),
         );
 
         if (result.status === "sent") {

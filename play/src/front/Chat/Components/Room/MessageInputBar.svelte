@@ -121,27 +121,56 @@
         }
     }
 
-    async function sendMessage(messageToSend: string) {
+    function acquireSendingMessageLock() {
         if (sendingMessage) {
-            return;
+            return undefined;
         }
 
         sendingMessage = true;
+        return () => {
+            sendingMessage = false;
+        };
+    }
+
+    function getApplicationLink() {
+        return applicationProperty?.link;
+    }
+
+    async function sendApplicationLinkMessage(applicationLink: string | undefined) {
+        if (!applicationLink || applicationLink.length === 0) {
+            return true;
+        }
+
+        const applicationMessageResult = await room.sendMessage(applicationLink);
+        if (applicationMessageResult.status === "sent") {
+            return true;
+        }
+
+        warningMessageStore.addWarningMessage($LL.chat.failedToSendMessage(), {
+            closable: true,
+            id: "chat-message-send-error",
+        });
+        return false;
+    }
+
+    function closeApplicationPart() {
+        applicationProperty = undefined;
+        applicationComponentOpened = false;
+    }
+
+    async function sendMessage(messageToSend: string) {
+        const releaseSendingMessage = acquireSendingMessageLock();
+        if (!releaseSendingMessage) {
+            return;
+        }
 
         try {
-            if (applicationProperty && applicationProperty.link.length !== 0) {
-                const applicationMessageResult = await room.sendMessage(applicationProperty.link);
-                if (applicationMessageResult.status !== "sent") {
-                    warningMessageStore.addWarningMessage($LL.chat.failedToSendMessage(), {
-                        closable: true,
-                        id: "chat-message-send-error",
-                    });
-                    return;
-                }
+            const isApplicationMessageSent = await sendApplicationLinkMessage(getApplicationLink());
+            if (!isApplicationMessageSent) {
+                return;
             }
             // close application part
-            applicationProperty = undefined;
-            applicationComponentOpened = false;
+            closeApplicationPart();
 
             // send files
             if (files && files.length > 0) {
@@ -190,7 +219,7 @@
                 }
             }
         } finally {
-            sendingMessage = false;
+            releaseSendingMessage();
         }
     }
 

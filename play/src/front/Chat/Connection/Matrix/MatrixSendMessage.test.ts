@@ -5,8 +5,9 @@ describe("MatrixSendMessage", () => {
     it("sends chunks sequentially and reports success", async () => {
         const sentChunks: string[] = [];
 
-        const result = await sendMatrixTextMessageInChunks("alpha beta gamma", 6, async (chunk) => {
+        const result = await sendMatrixTextMessageInChunks("alpha beta gamma", 6, (chunk) => {
             sentChunks.push(chunk);
+            return Promise.resolve();
         });
 
         expect(result).toEqual({ status: "sent" });
