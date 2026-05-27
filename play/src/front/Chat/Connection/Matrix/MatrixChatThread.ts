@@ -27,11 +27,11 @@ import type {
 import LL from "../../../../i18n/i18n-svelte";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
 import type { PictureStore } from "../../../Stores/PictureStore";
+import { MAX_MATRIX_MESSAGE_CHARS } from "../../Services/ChatMessageSplitter";
 import type { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import type { MatrixChatRoom } from "./MatrixChatRoom";
 import { applyThreadRelationToContent, isThreadReplyEvent } from "./MatrixThreadUtils";
-import { MAX_MATRIX_MESSAGE_CHARS } from "../../Services/ChatMessageSplitter";
 import { sendMatrixTextMessageInChunks } from "./MatrixSendMessage";
 
 export class MatrixChatThread implements ChatThread {
@@ -499,7 +499,7 @@ export class MatrixChatThread implements ChatThread {
         const result = await sendMatrixTextMessageInChunks(message, MAX_MATRIX_MESSAGE_CHARS, (chunk) =>
             this.parentRoom
                 .getMatrixRoom()
-                .client.sendMessage(this.parentRoom.id, this.id, this.getMessageContent(chunk))
+                .client.sendMessage(this.parentRoom.id, this.id, this.getMessageContent(chunk)),
         );
 
         if (result.status === "sent") {

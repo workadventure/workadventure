@@ -36,6 +36,7 @@ function createMatrixEvent({
         getId: () => id,
         getDate: () => new Date(0),
         getSender: () => "@alice:matrix.test",
+        getContent: () => content,
         getOriginalContent: () => content,
         getUnsigned: () => ({}),
         isDecryptionFailure: () => false,

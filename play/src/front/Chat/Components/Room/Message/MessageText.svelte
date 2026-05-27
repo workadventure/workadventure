@@ -91,7 +91,11 @@
     });
 
     $effect(() => {
+        // Re-run the measurement whenever the rendered html or the expanded state changes
+        // (updateLongMessageState itself only reads the DOM element).
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         html;
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         expanded;
         updateLongMessageState();
     });
