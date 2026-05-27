@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { afterUpdate, beforeUpdate, onMount, tick } from "svelte";
+    import { onMount, tick } from "svelte";
     import { get, readable } from "svelte/store";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import type {
@@ -31,11 +31,21 @@
     import { shouldReserveFloatingCloseButtonSpace } from "./RoomTimelineHeaderLayout";
     import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox, IconInfoCircle } from "@wa-icons";
 
-    export let room: ChatConversation;
-    export let backAction: (() => void) | undefined = undefined;
-    export let backButtonTestId = "chatBackward";
-    export let timelineTestId = "roomTimeline";
-    export let showRoomSidePanelToggle = false;
+    interface Props {
+        room: ChatConversation;
+        backAction?: (() => void);
+        backButtonTestId?: string;
+        timelineTestId?: string;
+        showRoomSidePanelToggle?: boolean;
+    }
+
+    let {
+        room,
+        backAction = undefined,
+        backButtonTestId = "chatBackward",
+        timelineTestId = "roomTimeline",
+        showRoomSidePanelToggle = false,
+    }: Props = $props();
 
     const chatConnection = gameManager.chatConnection;
     const shouldRetrySendingEvents = chatConnection.shouldRetrySendingEvents;
@@ -44,16 +54,16 @@
     // Time gap threshold for message grouping (5 minutes)
     const TIME_GAP_THRESHOLD = 5 * 60 * 1000;
 
-    let messageListRef: HTMLDivElement;
-    let autoScroll = true;
-    let onScrollTop = false;
-    let oldScrollHeight = 0;
-    let loadingMessagePromise: Promise<void> | undefined = undefined;
+    let messageListRef: HTMLDivElement | undefined = $state();
+    let autoScroll = $state(true);
+    let onScrollTop = $state(false);
+    let oldScrollHeight = $state(0);
+    let loadingMessagePromise: Promise<void> | undefined = $state();
     let scrollTimer: ReturnType<typeof setTimeout>;
-    let shouldDisplayLoader = false;
-    let messageInputBarRef: MessageInputBar;
-    let lastTimelineFocusSequence = 0;
-    let initialMessagesLoaded = false;
+    let shouldDisplayLoader = $state(false);
+    let messageInputBarRef: MessageInputBar | undefined = $state();
+    let lastTimelineFocusSequence = $state(0);
+    let initialMessagesLoaded = $state(false);
 
     const gameScene = gameManager.getCurrentGameScene();
     const chatRoomsEnableInAdmin = gameScene.room.isChatEnabled;
@@ -65,24 +75,26 @@
 
     const emptyThreadSummaries = readable<readonly ChatThreadSummary[]>([]);
 
-    $: roomSidePanelToggleIsOpen = $roomSidePanelStore.isOpen ?? false;
-    $: roomName = room?.name;
-    $: typingMembers = room.typingMembers;
-    $: timelineItems = room.timelineItems;
-    $: initializationState = room.initializationState;
-    $: initializationError = room.initializationError;
+    let roomSidePanelToggleIsOpen = $derived($roomSidePanelStore.isOpen ?? false);
+    let roomName = $derived(room?.name);
+    let typingMembers = $derived(room.typingMembers);
+    let timelineItems = $derived(room.timelineItems);
+    let initializationState = $derived(room.initializationState);
+    let initializationError = $derived(room.initializationError);
     // threads exist only on ChatRoom, not when this timeline shows a thread (ThreadPanel).
-    $: threadsStore = isChatRoom(room) ? room.threads : undefined;
-    $: threadSummariesStore = threadsStore ?? emptyThreadSummaries;
-    $: unreadThreadCount = $threadSummariesStore.filter((thread) => thread.hasUnreadMessages).length;
-    $: shouldReserveHeaderEndSpace = shouldReserveFloatingCloseButtonSpace(
+    let threadsStore = $derived(isChatRoom(room) ? room.threads : undefined);
+    let threadSummariesStore = $derived(threadsStore ?? emptyThreadSummaries);
+    let unreadThreadCount = $derived($threadSummariesStore.filter((thread) => thread.hasUnreadMessages).length);
+    let shouldReserveHeaderEndSpace = $derived(shouldReserveFloatingCloseButtonSpace(
         $hideActionBarStoreBecauseOfChatBar,
         showRoomSidePanelToggle,
         roomSidePanelToggleIsOpen
-    );
-    $: if (initialMessagesLoaded && $roomTimelineFocusStore) {
-        focusTimelineEvent($roomTimelineFocusStore).catch((error) => console.error(error));
-    }
+    ));
+    $effect(() => {
+        if (initialMessagesLoaded && $roomTimelineFocusStore) {
+            focusTimelineEvent($roomTimelineFocusStore).catch((error) => console.error(error));
+        }
+    });
 
     type RenderItem =
         | { kind: "separator"; key: string; label: string }
@@ -108,8 +120,9 @@
         const yesterday = new Date();
         yesterday.setDate(today.getDate() - 1);
 
-        if (isSameLocalDay(d, today)) return $LL.chat.timeLine.today();
-        if (isSameLocalDay(d, yesterday)) return $LL.chat.timeLine.yesterday();
+        const labels = get(LL);
+        if (isSameLocalDay(d, today)) return labels.chat.timeLine.today();
+        if (isSameLocalDay(d, yesterday)) return labels.chat.timeLine.yesterday();
 
         return new Intl.DateTimeFormat(undefined, {
             weekday: "short",
@@ -125,7 +138,7 @@
         return `${y}-${m}-${dd}`;
     }
 
-    $: renderItems = (() => {
+    let renderItems = $derived.by(() => {
         const out: RenderItem[] = [];
         let lastDayKey: string | null = null;
         let previousMessage: ChatMessage | undefined = undefined;
@@ -175,7 +188,7 @@
         }
 
         return out;
-    })();
+    });
 
     onMount(() => {
         initMessages()
@@ -234,7 +247,7 @@
         scrollToMessageListBottom();
     }
 
-    beforeUpdate(() => {
+    $effect.pre(() => {
         if (messageListRef) {
             oldScrollHeight = messageListRef.scrollHeight;
             const scrollableDistance = messageListRef.scrollHeight - messageListRef.offsetHeight;
@@ -243,13 +256,13 @@
         }
     });
 
-    afterUpdate(() => {
+    $effect(() => {
         if ($initializationState === "ready") {
             room.setTimelineAsRead();
         }
         if (autoScroll) {
             scrollToMessageListBottom();
-        } else if (onScrollTop) {
+        } else if (onScrollTop && messageListRef) {
             const oldFirstListItem = messageListRef.querySelector<HTMLLIElement>('li[data-first-li="true"]');
 
             if (oldFirstListItem !== null) {
@@ -297,6 +310,9 @@
         loadingMessagePromise = new Promise<void>((resolve) => {
             (async () => {
                 const loadMessages = async () => {
+                    if (!messageListRef) {
+                        return;
+                    }
                     if (messageListRef.scrollTop === 0) {
                         shouldDisplayLoader = true;
                     }
@@ -337,6 +353,7 @@
     }
 
     function setFirstListItem() {
+        if (!messageListRef) return;
         const oldFirstListItem = messageListRef.querySelector<HTMLLIElement>('li[data-first-li="true"]');
         oldFirstListItem?.removeAttribute("data-first-li");
 
@@ -345,29 +362,21 @@
     }
 
     function isViewportNotFilled() {
-        return messageListRef.scrollHeight <= messageListRef.clientHeight;
+        return messageListRef ? messageListRef.scrollHeight <= messageListRef.clientHeight : false;
     }
 
-    function onUpdateMessageBody(event: CustomEvent) {
+    function onUpdateMessageBody(event: { id: string }) {
         const currentTimelineItems = get(timelineItems);
         const lastTimelineItem = currentTimelineItems[currentTimelineItems.length - 1];
         const lastMessage = lastTimelineItem?.kind === "message" ? lastTimelineItem.message : undefined;
-        if (
-            autoScroll ||
-            (event.detail != undefined &&
-                lastMessage &&
-                event.detail.id === lastMessage.id &&
-                lastMessage.sender?.chatId === myChatID)
-        ) {
+        if (autoScroll || (lastMessage && event.id === lastMessage.id && lastMessage.sender?.chatId === myChatID)) {
             scrollToMessageListBottom();
         }
     }
 
     function onDropFiles(event: DragEvent) {
         if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
-            messageInputBarRef.handleFiles({
-                detail: event.dataTransfer.files,
-            } as CustomEvent<FileList>);
+            messageInputBarRef?.handleFiles(event.dataTransfer.files);
         }
     }
 
@@ -405,12 +414,16 @@
     }
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
     class="flex flex-col flex-auto h-full w-full max-w-full"
     data-testid={timelineTestId}
-    on:dragover|preventDefault
-    on:drop|preventDefault|stopPropagation={onDropFiles}
+    ondragover={(event) => event.preventDefault()}
+    ondrop={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onDropFiles(event);
+    }}
 >
     {#if room !== undefined}
         <div class="flex flex-col gap-2">
@@ -423,7 +436,7 @@
                     <button
                         class="back-roomlist p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white shrink-0"
                         data-testid={backButtonTestId}
-                        on:click={goBackAndClearSelectedChatMessage}
+                        onclick={goBackAndClearSelectedChatMessage}
                     >
                         {#if direction === "rtl"}
                             <IconChevronRight font-size="20" />
@@ -432,7 +445,7 @@
                         {/if}
                     </button>
                 {:else}
-                    <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" />
+                    <div class="p-3 rounded aspect-square w-12 h-12 shrink-0"></div>
                 {/if}
                 <div class="text-sm font-bold min-w-0 grow text-center px-2 truncate" data-testid="roomName">
                     {$roomName}
@@ -449,18 +462,18 @@
                             ? $LL.chat.roomPanel.toggleClose()
                             : $LL.chat.roomPanel.toggleOpen()}
                         aria-pressed={roomSidePanelToggleIsOpen}
-                        on:click={() => roomSidePanelStore.toggle()}
+                        onclick={() => roomSidePanelStore.toggle()}
                     >
                         <IconInfoCircle font-size="20" />
                         {#if unreadThreadCount > 0}
                             <span
                                 class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border border-solid border-contrast bg-success"
                                 data-testid="toggleRoomSidePanelUnreadBadge"
-                            />
+                            ></span>
                         {/if}
                     </button>
                 {:else}
-                    <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" aria-hidden="true" />
+                    <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" aria-hidden="true"></div>
                 {/if}
             </div>
             {#if shouldDisplayLoader}
@@ -472,7 +485,7 @@
         <div
             bind:this={messageListRef}
             class="flex overflow-auto h-full justify-center items-end relative"
-            on:scroll={handleScroll}
+            onscroll={handleScroll}
         >
             <ul
                 class="list-none p-0 flex-1 flex flex-col max-w-full max-h-full pt-10 gap-1 {$timelineItems.length === 0
@@ -491,7 +504,7 @@
                         </div>
                         <button
                             class="px-3 py-2 rounded bg-white/10 hover:bg-white/20 text-sm"
-                            on:click={retryInitialization}
+                            onclick={retryInitialization}
                         >
                             {$LL.chat.timeLine.retry()}
                         </button>
@@ -541,7 +554,7 @@
                             <PollCard poll={item.timelineItem.poll} />
                         {:else}
                             <Message
-                                on:updateMessageBody={onUpdateMessageBody}
+                                updateMessageBody={onUpdateMessageBody}
                                 message={item.timelineItem.message}
                                 showHeader={item.showHeader}
                                 membersForMessageAvatars={room.membersForMessageAvatars}

@@ -1,6 +1,6 @@
 import type { Writable } from "svelte/store";
 import { writable } from "svelte/store";
-import type CancelablePromise from "cancelable-promise";
+import type { CancelablePromise } from "cancelable-promise";
 import { PositionMessage_Direction } from "@workadventure/messages";
 import type { PictureStore } from "../../Stores/PictureStore";
 import { TexturesHelper } from "../Helpers/TexturesHelper";

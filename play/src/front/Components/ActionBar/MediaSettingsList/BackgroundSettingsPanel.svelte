@@ -33,7 +33,7 @@
         backgroundConfigStore.setBackgroundVideo(videoUrl);
     }
 
-    $: isNoEffectSelected = $backgroundConfigStore.mode === "none";
+    let isNoEffectSelected = $derived($backgroundConfigStore.mode === "none");
 </script>
 
 <!-- Camera Preview -->
@@ -45,7 +45,7 @@
             autoplay
             muted
             playsinline
-        />
+        ></video>
     {:else}
         <div class="w-full h-full flex items-center justify-center text-white/50">
             <IconCamera font-size="32" />
@@ -56,7 +56,7 @@
 <SectionDivider />
 <div class="scrollable-content overflow-y-auto flex flex-col gap-2 flex-1 min-h-0">
     <!-- No Effect Button -->
-    <button class="relative z-10 flex flex-col gap-1 group text-left" on:click={() => setBackgroundMode("none")}>
+    <button class="relative z-10 flex flex-col gap-1 group text-left" onclick={() => setBackgroundMode("none")}>
         <div
             class="relative w-1/3 h-full aspect-square rounded-lg bg-white/10 flex flex-col items-center justify-center transition-all gap-1 hover:brightness-50 border-2 {isNoEffectSelected
                 ? 'border-white border-solid'
@@ -78,7 +78,7 @@
             {#each blurOptions as option (option.amount)}
                 {@const isSelected =
                     $backgroundConfigStore.mode === "blur" && $backgroundConfigStore.blurAmount === option.amount}
-                <button class="flex flex-col items-center group px-0" on:click={() => setBackgroundBlur(option.amount)}>
+                <button class="flex flex-col items-center group px-0" onclick={() => setBackgroundBlur(option.amount)}>
                     <div class="relative w-full aspect-square transition-all hover:brightness-50">
                         <div
                             class="absolute inset-0 rounded-sm overflow-hidden border-2 {isSelected
@@ -115,7 +115,7 @@
                     name={preset.name}
                     isSelected={$backgroundConfigStore.mode === "image" &&
                         $backgroundConfigStore.backgroundImage === preset.url}
-                    onClick={() => setBackgroundImage(preset.url)}
+                    onclick={() => setBackgroundImage(preset.url)}
                 />
             {/each}
         </div>
@@ -131,7 +131,7 @@
                     name={preset.name}
                     isSelected={$backgroundConfigStore.mode === "video" &&
                         $backgroundConfigStore.backgroundVideo === preset.url}
-                    onClick={() => setBackgroundVideo(preset.url)}
+                    onclick={() => setBackgroundVideo(preset.url)}
                 />
             {/each}
         </div>

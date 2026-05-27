@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { status, type ServiceError } from "@grpc/grpc-js";
+import { status } from "@grpc/grpc-js";
 
 vi.mock("../enums/EnvironmentVariable", () => import("../../../tests/pusher/mocks/pusherEnvironmentVariableMock"));
 
@@ -51,7 +51,7 @@ describe("LivekitWebhookService", () => {
             callback({
                 code: status.UNAUTHENTICATED,
                 message: "sha256 checksum of body does not match",
-            } as ServiceError);
+            });
         });
         const service = new LivekitWebhookService(
             {

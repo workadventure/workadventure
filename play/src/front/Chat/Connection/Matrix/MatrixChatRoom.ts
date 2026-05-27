@@ -2153,10 +2153,10 @@ export class MatrixChatRoom
         const currentRoomMemberPowerLevel = MatrixChatRoomMember.getPowerLevel(currentRoomMemberPermissionLevel);
 
         for (const permissionLevel of Object.values(ChatPermissionLevel)) {
-            const permissionLevelPower = MatrixChatRoomMember.getPowerLevel(permissionLevel as ChatPermissionLevel);
+            const permissionLevelPower = MatrixChatRoomMember.getPowerLevel(permissionLevel);
 
             if (currentRoomMemberPowerLevel >= permissionLevelPower) {
-                allowedRolesToAssign.push(permissionLevel as ChatPermissionLevel);
+                allowedRolesToAssign.push(permissionLevel);
             }
         }
 

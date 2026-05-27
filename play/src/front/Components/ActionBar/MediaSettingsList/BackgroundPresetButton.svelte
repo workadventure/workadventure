@@ -1,16 +1,26 @@
 <script lang="ts">
     import SelectionCheckOverlay from "./SelectionCheckOverlay.svelte";
 
-    export let thumbnail: string;
-    export let name: string;
-    export let isSelected: boolean;
-    export let onClick: () => void;
-    export let blurClass: string = "";
+    interface Props {
+        thumbnail: string;
+        name: string;
+        isSelected: boolean;
+        onclick: () => void;
+        blurClass?: string;
+    }
+
+    let {
+        thumbnail,
+        name,
+        isSelected,
+        onclick,
+        blurClass = ""
+    }: Props = $props();
 </script>
 
 <button
     class="relative w-full aspect-square rounded-md border-2 transition-all hover:brightness-50"
-    on:click={onClick}
+    onclick={onclick}
     title={name}
 >
     <div

@@ -488,7 +488,7 @@ export class GameManager {
         }
 
         const data = await response.json();
-        return data as unknown as WokaData;
+        return data;
     }
 }
 

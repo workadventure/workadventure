@@ -2,7 +2,12 @@
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import type { VideoBox } from "../../Space/VideoBox";
     import reportImg from "./images/report.svg";
-    export let videoBox: VideoBox;
+
+    interface Props {
+        videoBox: VideoBox;
+    }
+
+    let { videoBox }: Props = $props();
 
     function openReport(videoBox: VideoBox) {
         const extendedSpaceUser = videoBox.spaceUser;
@@ -19,7 +24,10 @@
 
 <button
     class="report-ban-btn bg-pop-red flex justify-center h-7 w-7 md:h-5 md:w-5 p-1 min-h-[1px]"
-    on:click|stopPropagation={() => openReport(videoBox)}
+    onclick={(event) => {
+        event.stopPropagation();
+        openReport(videoBox);
+    }}
 >
     <img alt="Report this user" draggable="false" src={reportImg} class="w-3 h-3 flex" />
 </button>

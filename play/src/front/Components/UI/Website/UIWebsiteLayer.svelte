@@ -4,20 +4,24 @@
     import { iframeListener } from "../../../Api/IframeListener";
     import { gameManager } from "../../../Phaser/Game/GameManager";
 
-    export let uiWebsite: UIWebsiteEvent;
+    interface Props {
+        uiWebsite: UIWebsiteEvent;
+    }
+
+    let { uiWebsite }: Props = $props();
 
     let iframeEl: HTMLIFrameElement;
 
-    $: iframeSrc = new URL(uiWebsite.url, gameManager.getCurrentGameScene().getMapUrl()).toString();
-    $: iframeStyles =
-        `border: 0; height: ${uiWebsite.size.height}; width: ${uiWebsite.size.width}; visibility: ${
+    let iframeSrc = $derived(new URL(uiWebsite.url, gameManager.getCurrentGameScene().getMapUrl()).toString());
+    let iframeStyles =
+        $derived(`border: 0; height: ${uiWebsite.size.height}; width: ${uiWebsite.size.width}; visibility: ${
             uiWebsite.visible ? "visible" : "hidden"
         };` +
         (uiWebsite.margin
             ? ` margin: ${uiWebsite.margin.top || 0} ${uiWebsite.margin.right || 0} ${uiWebsite.margin.bottom || 0} ${
                   uiWebsite.margin.left || 0
               };`
-            : "");
+            : ""));
 
     onMount(() => {
         if (uiWebsite.allowApi) {
@@ -53,7 +57,7 @@
         allow={uiWebsite.allowPolicy ?? ""}
         style={iframeStyles}
         bind:this={iframeEl}
-    />
+    ></iframe>
 </div>
 
 <style lang="scss">

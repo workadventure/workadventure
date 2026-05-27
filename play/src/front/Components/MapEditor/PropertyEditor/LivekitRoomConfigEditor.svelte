@@ -1,19 +1,12 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from "svelte";
+    import { onMount } from "svelte";
     import type { LivekitRoomConfigData } from "@workadventure/map-editor";
-    import { closeModal } from "svelte-modals";
     import { LL } from "../../../../i18n/i18n-svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import Input from "../../Input/Input.svelte";
     import PopUpContainer from "../../PopUp/PopUpContainer.svelte";
     import ButtonClose from "../../Input/ButtonClose.svelte";
-    export let isOpen: boolean;
-    export let onSave: (config: LivekitRoomConfigData & { livekitRoomAdminTag: string }) => void;
-
-    const dispatch = createEventDispatcher<{
-        change: undefined;
-        close: undefined;
-    }>();
+    import { modals } from "@wa-modals";
 
     let defaultConfig: LivekitRoomConfigData = {
         startWithAudioMuted: false,
@@ -27,15 +20,30 @@
         (key) => key as LivekitRoomConfigDataKeys
     );
 
-    export let visibilityValue: boolean;
-    export let config: LivekitRoomConfigData;
-    export let livekitRoomAdminTag = "";
-    export let shouldDisableDisableChatButton: boolean;
-    let currentConfig = {
+    interface Props {
+        isOpen: boolean;
+        onsave: (config: LivekitRoomConfigData & { livekitRoomAdminTag: string }) => void;
+        onclose?: () => void;
+        visibilityValue: boolean;
+        config: LivekitRoomConfigData;
+        livekitRoomAdminTag: string;
+        shouldDisableDisableChatButton: boolean;
+    }
+
+    let {
+        isOpen,
+        onsave,
+        onclose,
+        visibilityValue = $bindable(),
+        config,
+        livekitRoomAdminTag = $bindable(""),
+        shouldDisableDisableChatButton
+    }: Props = $props();
+    let currentConfig = $state({
         startWithAudioMuted: false,
         startWithVideoMuted: false,
         disableChat: false,
-    };
+    });
 
     onMount(() => {
         currentConfig = {
@@ -50,12 +58,12 @@
 
     function close() {
         visibilityValue = false;
-        closeModal();
-        dispatch("close");
+        modals.close();
+        onclose?.();
     }
 
     function saveAndClose() {
-        onSave({ ...currentConfig, livekitRoomAdminTag });
+        onsave({ ...currentConfig, livekitRoomAdminTag });
         close();
     }
 
@@ -66,7 +74,7 @@
     }
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window onkeydown={onKeyDown} />
 {#if isOpen}
     <div class="absolute flex items-center justify-center w-full h-full">
         <div
@@ -77,7 +85,7 @@
                     <span class="font-bold text-xl pl-4"
                         >{$LL.mapEditor.properties.livekitRoomProperty.moreOptionsLabel()}
                     </span>
-                    <ButtonClose on:click={close} />
+                    <ButtonClose onclick={close} />
                 </div>
                 <div class="config-element-container mt-5">
                     {#each defaultConfigKeys as configKey (configKey)}
@@ -104,18 +112,20 @@
                     </div>
                 </div>
 
-                <div slot="buttons" class="w-full flex justify-between gap-2 p-2">
-                    <button class=" btn btn-light btn-border w-full h-12" on:click={closeModal}>
-                        {$LL.mapEditor.properties.livekitRoomProperty.livekitRoomConfig.cancel()}
-                    </button>
-                    <button
-                        class=" btn btn-secondary w-full h-12"
-                        data-testid="livekitRoomConfigValidateButton"
-                        on:click={saveAndClose}
-                    >
-                        {$LL.mapEditor.properties.livekitRoomProperty.livekitRoomConfig.validate()}
-                    </button>
-                </div>
+                {#snippet buttons()}
+                    <div  class="w-full flex justify-between gap-2 p-2">
+                        <button class=" btn btn-light btn-border w-full h-12" onclick={() => modals.close()}>
+                            {$LL.mapEditor.properties.livekitRoomProperty.livekitRoomConfig.cancel()}
+                        </button>
+                        <button
+                            class=" btn btn-secondary w-full h-12"
+                            data-testid="livekitRoomConfigValidateButton"
+                            onclick={saveAndClose}
+                        >
+                            {$LL.mapEditor.properties.livekitRoomProperty.livekitRoomConfig.validate()}
+                        </button>
+                    </div>
+                {/snippet}
             </PopUpContainer>
         </div>
     </div>

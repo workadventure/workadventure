@@ -3,7 +3,7 @@ import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import type { IframeMessagePortData, IframeMessagePortMap } from "../Events/MessagePortEvents";
-import type { IframeEvent, IframeQuery, IframeQueryMap, IframeQueryWrapper } from "../Events/IframeEvent";
+import type { IframeEvent, IframeQuery, IframeQueryMap } from "../Events/IframeEvent";
 import { CheckedIframeMessagePort } from "./CheckedIframeMessagePort";
 
 export function sendToWorkadventure(content: IframeEvent, transfer?: Transferable[]) {
@@ -63,7 +63,7 @@ export function queryWorkadventure<T extends keyof IframeQueryMap>(
             {
                 id: queryNumber,
                 query: content,
-            } as IframeQueryWrapper<T>,
+            },
             "*",
             options?.transfer
         );

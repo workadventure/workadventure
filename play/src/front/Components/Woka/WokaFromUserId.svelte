@@ -4,11 +4,15 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import Woka from "./Woka.svelte";
 
-    export let userId: number | string;
-    export let placeholderSrc: string;
-    export let customWidth: string;
+    interface Props {
+        userId: number | string;
+        placeholderSrc: string;
+        customWidth: string;
+    }
 
-    let src: string;
+    let { userId, placeholderSrc, customWidth }: Props = $props();
+
+    let src: string | undefined = $state();
     let unsubscribe: Unsubscriber | undefined;
 
     function subscribeToPlayerPictureStore(currentUserId: number | string, currentPlaceholderSrc: string) {
@@ -39,7 +43,9 @@
         });
     }
 
-    $: subscribeToPlayerPictureStore(userId, placeholderSrc);
+    $effect(() => {
+        subscribeToPlayerPictureStore(userId, placeholderSrc);
+    });
 
     onDestroy(() => {
         if (unsubscribe) unsubscribe();

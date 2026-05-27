@@ -30,13 +30,13 @@
     import BrowserNotSupported from "./BrowserNotSupported/BrowserNotSupported.svelte";
 
     let WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
-    let game: Game;
-    let gameDiv: HTMLDivElement;
-    let activeCowebsite = $coWebsites[0];
-    let gameContainer: HTMLDivElement;
+    let game: Game | undefined = $state();
+    let gameDiv: HTMLDivElement | undefined = $state();
+    let activeCowebsite = $state($coWebsites[0]);
+    let gameContainer: HTMLDivElement | undefined = $state();
     let canvas: HTMLCanvasElement;
     let handleCanvasClick: () => void;
-    let browserNotSupported = false;
+    let browserNotSupported = $state(false);
 
     onMount(() => {
         // Check browser compatibility before initializing the app
@@ -122,6 +122,10 @@
 
         const hdpiManager = new HdpiManager(640 * 480, 196 * 196);
         const { game: gameSize, real: realSize } = hdpiManager.getOptimalGameSize({ width, height });
+
+        if (!gameDiv) {
+            return;
+        }
 
         const config: Phaser.Types.Core.GameConfig = {
             type: mode,
@@ -214,18 +218,22 @@
         desktopApi.init();
     });
 
-    $: if ($coWebsites.length > 0) {
-        activeCowebsite = $coWebsites[0];
-    }
+    $effect(() => {
+        if ($coWebsites.length > 0) {
+            activeCowebsite = $coWebsites[0];
+        }
+    });
 
     function closeCoWebsiteFullScreen() {
-        gameContainer.classList.remove("hidden");
+        gameContainer?.classList.remove("hidden");
         coWebsites.remove(activeCowebsite);
     }
 
-    $: if ($fullScreenCowebsite && $coWebsites.length < 1) {
-        closeCoWebsiteFullScreen();
-    }
+    $effect(() => {
+        if ($fullScreenCowebsite && $coWebsites.length < 1) {
+            closeCoWebsiteFullScreen();
+        }
+    });
 
     //$: $coWebsites.length < 1 ? (flexBasis = undefined) : null;
 
@@ -261,7 +269,9 @@
             class="relative flex-1 overflow-hidden {$fullScreenCowebsite ? 'hidden' : ''}"
             bind:this={gameDiv}
         >
-            <GameOverlay {game} />
+            {#if game}
+                <GameOverlay {game} />
+            {/if}
         </div>
         {#if $coWebsites.length > 0}
             <div class="flex-1">

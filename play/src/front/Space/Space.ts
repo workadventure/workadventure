@@ -867,7 +867,7 @@ export class Space implements SpaceInterface {
                 spaceUserId: extendedUser.spaceUserId,
                 roomName: extendedUser.roomName,
                 playUri: extendedUser.playUri,
-            } as unknown as ReactiveSpaceUser,
+            },
             {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 get(target: any, property: PropertyKey, receiver: unknown) {

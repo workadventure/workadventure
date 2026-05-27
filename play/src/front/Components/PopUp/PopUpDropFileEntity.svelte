@@ -24,15 +24,19 @@
     import PopUpContainer from "./PopUpContainer.svelte";
     import DropFileEntityPicker from "./DropFileEntityPicker.svelte";
 
-    export let file: File;
+    interface Props {
+        file: File;
+    }
 
-    let entity = {
+    let { file }: Props = $props();
+
+    let entity = $state({
         prefabRef: {
             id: "basic office decoration:Books (Variant 5):black:Down",
             collectionName: "basic office decoration",
         },
-        name: file.name,
-    };
+        name: (() => file.name)(),
+    });
 
     let entityPrefab: EntityPrefab | undefined = undefined;
 
@@ -138,21 +142,21 @@
 
 <PopUpContainer reduceOnSmallScreen={true}>
     <div class="flex flex-col gap-4 p-2 max-h-[80vh] overflow-y-auto">
-        <DropFileEntityPicker {entitiesPrefabsVariants} on:select={(event) => selectEntity(event.detail)} />
+        <DropFileEntityPicker {entitiesPrefabsVariants} onselect={selectEntity} />
 
         <Input label={$LL.mapEditor.entityEditor.objectName()} id="linkButton" bind:value={entity.name} />
     </div>
 
-    <svelte:fragment slot="buttons">
+    {#snippet buttons()}
         <button
             class="btn btn-secondary btn-sm w-full max-w-96 justify-center"
-            on:click={onSave}
+            onclick={onSave}
             data-testid="dropFileSave"
         >
             {$LL.mapEditor.entityEditor.buttons.save()}
         </button>
-        <button class="btn bg-white/10 hover:bg-white/30 btn-sm w-full max-w-96 justify-center" on:click={removePopup}>
+        <button class="btn bg-white/10 hover:bg-white/30 btn-sm w-full max-w-96 justify-center" onclick={removePopup}>
             {$LL.mapEditor.entityEditor.buttons.cancel()}
         </button>
-    </svelte:fragment>
+    {/snippet}
 </PopUpContainer>

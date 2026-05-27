@@ -614,7 +614,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             ease: easeAlgo,
             onUpdate: (tween: Phaser.Tweens.Tween) => {
                 const value = tween.getValue();
-                if (value === undefined) {
+                if (value === null) {
                     return;
                 }
                 this.waScaleManager.setZoomModifier(value, this.camera, true);

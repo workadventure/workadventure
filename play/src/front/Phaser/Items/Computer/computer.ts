@@ -3,7 +3,6 @@ import { z } from "zod";
 import type { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import { ActionableItem } from "../ActionableItem";
 import type { GameScene } from "../../Game/GameScene";
-import type { ItemFactoryInterface } from "../ItemFactoryInterface";
 
 export const isComputerState = z.object({
     status: z.string(),
@@ -92,4 +91,4 @@ export default {
         return item;
         //scene.add.sprite(object.x, object.y, 'computer');
     },
-} as ItemFactoryInterface;
+};

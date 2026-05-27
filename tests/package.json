@@ -13,10 +13,10 @@
     "axios": "^1.15.2",
     "dockerode": "^3.3.4",
     "dotenv-cli": "^6.0.0",
-    "eslint": "^9.35.0",
+    "eslint": "^9.39.4",
     "eslint-plugin-playwright": "^2.2.2",
     "lint-staged": "^13.0.3",
-    "prettier": "^3.3.0"
+    "prettier": "^3.8.3"
   },
   "scripts": {
     "lint": "eslint tests/",

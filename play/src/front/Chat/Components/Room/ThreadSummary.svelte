@@ -1,18 +1,14 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import type { ChatThreadSummary } from "../../Connection/ChatConnection";
     import { IconMessageCircle2 } from "@wa-icons";
 
-    export let summary: ChatThreadSummary;
-
-    const dispatch = createEventDispatcher<{
-        openThread: undefined;
-    }>();
-
-    function openThread() {
-        dispatch("openThread");
+    interface Props {
+        summary: ChatThreadSummary;
+        openThread?: () => void;
     }
+
+    let { summary, openThread = () => {} }: Props = $props();
 </script>
 
 <button
@@ -21,7 +17,7 @@
         ? 'font-bold ring-1 ring-success/40'
         : ''}"
     data-testid="threadSummary"
-    on:click={openThread}
+    onclick={openThread}
 >
     <div class="flex items-center gap-2 text-xs font-semibold opacity-90" data-testid="threadSummaryCount">
         <IconMessageCircle2 font-size={14} />

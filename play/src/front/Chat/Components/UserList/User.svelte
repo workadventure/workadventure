@@ -18,34 +18,38 @@
     import UserActionButton from "./UserActionButton.svelte";
     import { IconLoader, IconSend } from "@wa-icons";
 
-    export let user: ChatUser;
 
-    export let isMatrixChatEnabled = true;
+    interface Props {
+        user: ChatUser;
+        isMatrixChatEnabled: boolean;
+    }
+
+    let { user, isMatrixChatEnabled = true }: Props = $props();
 
     let showRoomCreationInProgress = false;
 
-    $: ({ chatId, availabilityStatus, username = "", color, isAdmin, pictureStore } = user);
+    let { chatId, availabilityStatus, username = "", color, isAdmin, pictureStore } = $derived(user);
 
     /** Tint: local name, Matrix `account_data`, or peer cache — deps keep the row in sync. */
-    $: resolvedAvatarColor =
-        chatId !== undefined && chatId !== ""
+    let resolvedAvatarColor =
+        $derived(chatId !== undefined && chatId !== ""
             ? resolveChatUserColor(chatId, color, getMatrixClientForChatTint()) ?? defaultColor
-            : defaultColor;
+            : defaultColor);
 
-    $: isMe = user.chatId === localUserStore.getChatId() || user.uuid === localUserStore.getLocalUser()?.uuid;
+    let isMe = $derived(user.chatId === localUserStore.getChatId() || user.uuid === localUserStore.getLocalUser()?.uuid);
 
-    $: userStatus = isMe ? availabilityStatusStore : availabilityStatus;
+    let userStatus = $derived(isMe ? availabilityStatusStore : availabilityStatus);
 
-    let sendButtonTooltipVisible = false;
+    let sendButtonTooltipVisible = $state(false);
     const [sendButtonFloatingRef, sendButtonFloatingContent, sendButtonArrowAction] = createFloatingUiActions(
         { placement: "top" },
         8
     );
 
-    $: chunks = highlightWords({
+    let chunks = $derived(highlightWords({
         text: username.match(/\[\d*]/) ? username.substring(0, username.search(/\[\d*]/)) : username,
         query: $chatSearchBarValue,
-    });
+    }));
 
     const roomCreationInProgress = gameManager.chatConnection.roomCreationInProgress;
 
@@ -110,19 +114,25 @@
                 ? 'admin'
                 : 'user'} group/chatItem relative mb-[1px] text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer"
         >
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
                 class="relative shrink-0 wa-avatar {!$userStatus ? 'opacity-50' : ''} cursor-pointer"
-                on:click|stopPropagation={openWokaMenu}
+                onclick={(event) => {
+                    event.stopPropagation();
+                    openWokaMenu();
+                }}
             >
                 <Avatar compact {pictureStore} fallbackName={username || "?"} color={resolvedAvatarColor} />
             </div>
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
                 class={`flex-auto ms-1 ${!$userStatus && "opacity-50"} cursor-pointer`}
-                on:click|stopPropagation={openWokaMenu}
+                onclick={(event) => {
+                    event.stopPropagation();
+                    openWokaMenu();
+                }}
             >
                 <div class="flex items-center h-4">
                     <div class="text-sm font-bold mb-0 flex items-center text-nowrap">
@@ -158,7 +168,7 @@
                             <div
                                 class="rounded-full me-1 h-1.5 w-1.5"
                                 style="background:{getColorHexOfStatus($userStatus)}"
-                            />
+                            ></div>
                             {getNameOfAvailabilityStatus($userStatus)}
                         </div>
                     {:else}
@@ -173,12 +183,12 @@
                     {/if}
                 </div>
                 {#if !isMe && !showRoomCreationInProgress && isMatrixChatEnabled}
-                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                    <!-- svelte-ignore a11y_no_static_element_interactions -->
                     <div
                         class="relative"
                         use:sendButtonFloatingRef
-                        on:mouseenter={() => (sendButtonTooltipVisible = true)}
-                        on:mouseleave={() => (sendButtonTooltipVisible = false)}
+                        onmouseenter={() => (sendButtonTooltipVisible = true)}
+                        onmouseleave={() => (sendButtonTooltipVisible = false)}
                     >
                         <button
                             class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center m-0"
@@ -186,7 +196,8 @@
                             class:text-gray-400={user.chatId === undefined}
                             data-testId={`send-message-${user.username}`}
                             disabled={user.chatId === undefined}
-                            on:click|stopPropagation={() => {
+                            onclick={(event) => {
+                                event.stopPropagation();
                                 openDirectChatRoom(chatId).catch((error) => {
                                     console.error("Error opening direct chat room:", error);
                                     Sentry.captureException(error, {
@@ -208,7 +219,7 @@
                                 use:sendButtonFloatingContent
                                 class="send-button-tooltip absolute z-50 bg-contrast/90 backdrop-blur-xl text-white text-nowrap p-2 rounded text-sm"
                             >
-                                <div class="!top-[30%] !-translate-x-1/2" use:sendButtonArrowAction />
+                                <div class="!top-[30%] !-translate-x-1/2" use:sendButtonArrowAction></div>
                                 {#if user.chatId === undefined}
                                     {$LL.chat.remoteUserNotConnected()}
                                 {:else}

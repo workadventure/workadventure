@@ -1,5 +1,4 @@
 import * as Sentry from "@sentry/svelte";
-import { openModal } from "svelte-modals";
 import { get } from "svelte/store";
 import type { MatrixClient } from "matrix-js-sdk";
 import { analyticsClient } from "../Administration/AnalyticsClient";
@@ -18,6 +17,7 @@ import { hasMatrixChatCapabilities } from "./Connection/ChatConnection";
 import { navChat } from "./Stores/ChatStore";
 import { selectedRoomStore } from "./Stores/SelectRoomStore";
 import RequiresLoginForChatModal from "./Components/RequiresLoginForChatModal.svelte";
+import { modals } from "@wa-modals";
 
 export type OpenCoWebsiteObject = {
     url: string;
@@ -74,7 +74,7 @@ export const openTab = (url: string) => {
 export const openDirectChatRoom = async (chatID: string) => {
     try {
         if (!get(userIsConnected)) {
-            openModal(RequiresLoginForChatModal);
+            modals.open(RequiresLoginForChatModal);
             return;
         }
         const chatConnection = await gameManager.getChatConnection();
@@ -100,7 +100,7 @@ export const openDirectChatRoom = async (chatID: string) => {
 export const openChatRoom = async (roomId: string) => {
     try {
         if (!get(userIsConnected)) {
-            openModal(RequiresLoginForChatModal);
+            modals.open(RequiresLoginForChatModal);
             return;
         }
         const chatConnection = await gameManager.getChatConnection();

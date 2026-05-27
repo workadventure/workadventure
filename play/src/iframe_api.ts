@@ -68,7 +68,7 @@ export type {
     SendChatMessageOptions,
     SendLocalChatMessageOptions,
     SendBubbleChatMessageOptions,
-} from "../../libs/shared-utils/src/Events/ChatEvent";
+} from "@workadventure/shared-utils";
 export type { RoomState } from "./front/Api/Iframe/RoomState";
 export type { PrivatePlayerState } from "./front/Api/Iframe/PrivatePlayerState";
 export type { PublicPlayerState } from "./front/Api/Iframe/PublicPlayerState";

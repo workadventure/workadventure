@@ -1,7 +1,32 @@
-import {generateConfig} from "@workadventure/eslint-config";
+import { generateConfig } from "@workadventure/eslint-config";
+import svelteParser from "svelte-eslint-parser";
 
 export default [
     ...generateConfig(import.meta.dirname),
+    {
+        files: ["**/*.svelte"],
+        languageOptions: {
+            parser: svelteParser,
+            parserOptions: {
+                svelteFeatures: {
+                    runes: true,
+                },
+            },
+            globals: {
+                $bindable: "readonly",
+                $derived: "readonly",
+                $effect: "readonly",
+                $host: "readonly",
+                $inspect: "readonly",
+                $props: "readonly",
+                $state: "readonly",
+            },
+        },
+        rules: {
+            "svelte/prefer-svelte-reactivity": "off",
+            "svelte/prefer-writable-derived": "off",
+        },
+    },
     {
         rules: {
             "@typescript-eslint/no-unsafe-call": "off",

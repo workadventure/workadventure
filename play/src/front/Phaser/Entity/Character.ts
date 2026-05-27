@@ -1,6 +1,6 @@
 import type { Unsubscriber, Readable } from "svelte/store";
 import { get, readable } from "svelte/store";
-import type CancelablePromise from "cancelable-promise";
+import type { CancelablePromise } from "cancelable-promise";
 import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventure/messages";
 import { SayMessageType, AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
 import { defaultWoka, Deferred } from "@workadventure/shared-utils";

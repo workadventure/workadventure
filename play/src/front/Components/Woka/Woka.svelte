@@ -1,11 +1,11 @@
 <script lang="ts">
-    export let src: string;
-    export let customWidth: string | undefined = undefined;
-    export let grayscale = false;
-
-    function noDrag() {
-        return false;
+    interface Props {
+        src: string;
+        customWidth?: string;
+        grayscale?: boolean;
     }
+
+    let { src, customWidth = undefined, grayscale = false }: Props = $props();
 </script>
 
 <img
@@ -13,9 +13,12 @@
     alt=""
     class="noselect"
     class:grayscale
-    style="    {customWidth ? `--theme-width: ${customWidth};` : ''}"
+    style={customWidth ? `--theme-width: ${customWidth};` : ""}
     draggable="false"
-    on:dragstart|preventDefault={noDrag}
+    ondragstart={(event) => {
+        event.preventDefault();
+        return false;
+    }}
 />
 
 <style lang="scss">

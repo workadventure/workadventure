@@ -12,19 +12,29 @@
     import type { StreamCategory } from "../../Space/Streamable";
     import { IconAlertTriangle, IconUser, IconMute, IconUnMute } from "@wa-icons";
 
-    export let spaceUser: SpaceUserExtended;
-    export let videoEnabled: boolean;
-    export let videoType: StreamCategory | undefined;
-    export let onClose: () => void;
-    export let volumeStore: Writable<number> = writable(1);
+    interface Props {
+        spaceUser: SpaceUserExtended;
+        videoEnabled: boolean;
+        videoType?: StreamCategory;
+        onClose: () => void;
+        volumeStore: Writable<number>;
+    }
 
-    const isScreenSharing = videoType === "screenSharing";
+    let {
+        spaceUser,
+        videoEnabled,
+        videoType,
+        onClose,
+        volumeStore = writable(1)
+    }: Props = $props();
 
-    const isMicrophoneEnabled = spaceUser.reactiveUser.microphoneState;
-    const isVideoEnabled = spaceUser.reactiveUser.cameraState;
-    const canAskToMuteAudioOrTurnOffVideo = spaceUser.space.canAskToMuteAudioOrTurnOffVideo;
+    let isScreenSharing = $derived(videoType === "screenSharing");
 
-    let moreActionOpened = false;
+    let isMicrophoneEnabled = $derived(spaceUser.reactiveUser.microphoneState);
+    let isVideoEnabled = $derived(spaceUser.reactiveUser.cameraState);
+    let canAskToMuteAudioOrTurnOffVideo = $derived(spaceUser.space.canAskToMuteAudioOrTurnOffVideo);
+
+    let moreActionOpened = $state(false);
 
     function muteAudio(spaceUser: SpaceUserExtended) {
         analyticsClient.muteMicrophoneMeetingAction();
@@ -107,12 +117,16 @@
 <div
     class="flex flex-col p-1 w-48 bg-contrast/80 backdrop-blur-md bg-opacity-10 rounded-md max-h-max z-50 cursor-pointer select-none"
     class:mt-[0.2rem]={!videoEnabled}
-    on:click={() => analyticsClient.moreActionMetting()}
-    on:click|preventDefault|stopPropagation={() => toggleActionMenu(!moreActionOpened)}
+    onclick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        analyticsClient.moreActionMetting();
+        toggleActionMenu(!moreActionOpened);
+    }}
     role="button"
     tabindex="0"
-    on:keydown={() => toggleActionMenu(!moreActionOpened)}
-    on:mouseleave={() => close()}
+    onkeydown={() => toggleActionMenu(!moreActionOpened)}
+    onmouseleave={() => close()}
 >
     <!-- Volume control -->
     <div
@@ -121,11 +135,19 @@
         aria-label="Volume control"
     >
         {#if $volumeStore === 0}
-            <button on:click|preventDefault|stopPropagation={() => volumeStore.set(1)}>
+            <button onclick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                volumeStore.set(1);
+            }}>
                 <IconMute class="w-4 h-4 text-white flex-shrink-0" />
             </button>
         {:else}
-            <button on:click|preventDefault|stopPropagation={() => volumeStore.set(0)}>
+            <button onclick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                volumeStore.set(0);
+            }}>
                 <IconUnMute class="w-4 h-4 text-white flex-shrink-0" />
             </button>
         {/if}
@@ -147,7 +169,11 @@
     {#if ($userIsAdminStore || $canAskToMuteAudioOrTurnOffVideo) && !isScreenSharing}
         <button
             class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
-            on:click|preventDefault|stopPropagation={() => muteAudio(spaceUser)}
+            onclick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                muteAudio(spaceUser);
+            }}
             disabled={!$isMicrophoneEnabled}
         >
             <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" draggable="false" />
@@ -163,7 +189,11 @@
     {#if $userIsAdminStore}
         <button
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
-            on:click|preventDefault|stopPropagation={() => muteAudioEveryBody(spaceUser)}
+            onclick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                muteAudioEveryBody(spaceUser);
+            }}
         >
             <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" draggable="false" />
             {$LL.camera.menu.muteAudioEveryBody()}
@@ -175,7 +205,11 @@
         <button
             id="mute-video-user"
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
-            on:click|preventDefault|stopPropagation={() => muteVideo(spaceUser)}
+            onclick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                muteVideo(spaceUser);
+            }}
             disabled={!$isVideoEnabled}
         >
             <img src={NoVideoSvg} class="w-4 h-4" alt="" draggable="false" />
@@ -191,7 +225,11 @@
     {#if $userIsAdminStore}
         <button
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
-            on:click|preventDefault|stopPropagation={() => muteVideoEveryBody(spaceUser)}
+            onclick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                muteVideoEveryBody(spaceUser);
+            }}
         >
             <img src={NoVideoSvg} class="w-4 h-4" alt="" draggable="false" />
             {$LL.camera.menu.muteVideoEveryBody()}
@@ -203,7 +241,11 @@
         <button
             id="kickoff-user"
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
-            on:click|preventDefault|stopPropagation={() => kickoff(spaceUser)}
+            onclick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                kickoff(spaceUser);
+            }}
         >
             <img src={banUserSvg} class="w-4 h-4" alt="" draggable="false" />
             {$LL.camera.menu.kickoffUser()}
@@ -213,8 +255,12 @@
     <!-- Send private message -->
     <!--    <button-->
     <!--        class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"-->
-    <!--        on:click={() => analyticsClient.sendPrivateMessageMeetingAction()}-->
-    <!--        on:click|preventDefault|stopPropagation={() => sendPrivateMessage()}-->
+    <!--        onclick={(event) => {-->
+    <!--            event.preventDefault();-->
+    <!--            event.stopPropagation();-->
+    <!--            analyticsClient.sendPrivateMessageMeetingAction();-->
+    <!--            sendPrivateMessage();-->
+    <!--        }}-->
     <!--    >-->
     <!--        <img src={BubbleTalkPng} class="w-8 h-8" alt="" />-->
     <!--        <Tooltip text={$LL.camera.menu.senPrivateMessage()} rightPosition="true" />-->
@@ -224,8 +270,12 @@
     {#if spaceUser.visitCardUrl}
         <button
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
-            on:click={() => analyticsClient.sendPrivateMessageMeetingAction()}
-            on:click|preventDefault|stopPropagation={() => visitCard(spaceUser)}
+            onclick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                analyticsClient.sendPrivateMessageMeetingAction();
+                visitCard(spaceUser);
+            }}
         >
             <IconUser />
             {$LL.chat.menu.visitCard()}
@@ -234,7 +284,11 @@
     <!-- Block or report user -->
     <button
         class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
-        on:click|preventDefault|stopPropagation={() => openBlockOrReportPopup(spaceUser)}
+        onclick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openBlockOrReportPopup(spaceUser);
+        }}
     >
         <IconAlertTriangle />
         {$LL.camera.menu.blockOrReportUser()}

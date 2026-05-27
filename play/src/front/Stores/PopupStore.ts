@@ -1,20 +1,15 @@
 import { derived, get, writable } from "svelte/store";
-import type { ComponentType, SvelteComponent } from "svelte";
 import { v4 } from "uuid";
+import type { WorkAdventureComponent, WorkAdventureComponentProps } from "../../types/component";
 
 export const bannerVisible = writable(true);
 export const currentBannerIndex = writable(0);
 export const showPopup = writable(false);
 
-type Props = Record<string, unknown>;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SvelteComponentType = ComponentType<SvelteComponent<any, any, any>>;
-
 interface Popup {
     uuid: string;
-    component: SvelteComponentType;
-    props: Props;
+    component: WorkAdventureComponent;
+    props: WorkAdventureComponentProps;
     callback?: () => void;
 }
 
@@ -24,7 +19,7 @@ function createPopupStore() {
 
     return {
         subscribe,
-        addPopup: (popup: SvelteComponentType, props: Props, uuid: string | undefined): void => {
+        addPopup: (popup: WorkAdventureComponent, props: WorkAdventureComponentProps, uuid: string | undefined): void => {
             update((list: Popup[]) => {
                 if (uuid === undefined) {
                     uuid = v4();

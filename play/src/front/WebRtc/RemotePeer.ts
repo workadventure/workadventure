@@ -21,10 +21,7 @@ import type { WebRtcStats } from "../Components/Video/WebRtcStats";
 import type { Streamable, StreamCategory, WebRtcStreamable } from "../Space/Streamable";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
-import type { StreamStoppedMessage } from "./P2PMessages/P2PMessage";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
-import type { BlockMessage } from "./P2PMessages/BlockMessage";
-import type { UnblockMessage } from "./P2PMessages/UnblockMessage";
 import { subscribeToVideoQualityAnalytics } from "./VideoQualityAnalytics";
 import { createWebRtcStats } from "./WebRtcStatsFactory";
 import { selectVideoPreset, type VideoQualitySetting } from "./VideoPresets";
@@ -231,8 +228,8 @@ export class RemotePeer extends Peer implements Streamable {
 
     private connectTimeout: ReturnType<typeof setTimeout> | undefined;
     private localStream: MediaStream | undefined;
-    private localAudioTrack: MediaStreamAudioTrack | undefined;
-    private localVideoTrack: MediaStreamVideoTrack | undefined;
+    private localAudioTrack: MediaStreamTrack | undefined;
+    private localVideoTrack: MediaStreamTrack | undefined;
 
     constructor(
         public user: UserSimplePeerInterface,
@@ -261,7 +258,7 @@ export class RemotePeer extends Peer implements Streamable {
                 ...(firefoxBrowser && {
                     iceCandidatePoolSize: 10,
                     bundlePolicy: "max-bundle" as RTCBundlePolicy,
-                    rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
+                    rtcpMuxPolicy: "require",
                 }),
             },
             preferredCodecs: { video: ["video/VP9", "video/VP8"] },
@@ -446,8 +443,8 @@ export class RemotePeer extends Peer implements Streamable {
                 return;
             }
             if (streamValue.type === "success") {
-                let newVideoTrack: MediaStreamVideoTrack | undefined;
-                let newAudioTrack: MediaStreamAudioTrack | undefined;
+                let newVideoTrack: MediaStreamTrack | undefined;
+                let newAudioTrack: MediaStreamTrack | undefined;
                 if (streamValue.stream) {
                     if (this.localStream) {
                         newVideoTrack = streamValue.stream.getVideoTracks()[0];
@@ -509,7 +506,7 @@ export class RemotePeer extends Peer implements Streamable {
             new Buffer(
                 JSON.stringify({
                     type: blocking ? "blocked" : "unblocked",
-                } as BlockMessage | UnblockMessage)
+                })
             )
         );
     }
@@ -728,7 +725,7 @@ export class RemotePeer extends Peer implements Streamable {
             new Buffer(
                 JSON.stringify({
                     type: STREAM_STOPPED_MESSAGE_TYPE,
-                } as StreamStoppedMessage)
+                })
             )
         );
     }
@@ -857,7 +854,7 @@ export class RemotePeer extends Peer implements Streamable {
                 Buffer.from(
                     JSON.stringify({
                         type: STREAM_STOPPED_MESSAGE_TYPE,
-                    } as StreamStoppedMessage)
+                    })
                 )
             );
         }

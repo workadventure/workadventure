@@ -8,12 +8,16 @@
         ChatRoomPrivacyState,
     } from "../../Connection/ChatConnection";
 
-    export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration;
+    interface Props {
+        room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration;
+    }
+
+    let { room }: Props = $props();
 
     const emptyPrivacyState = readable<ChatRoomPrivacyState>({});
-    $: roomType = room.type;
-    $: isEncrypted = room.isEncrypted;
-    $: privacyState = room.privacyState ?? emptyPrivacyState;
+    let roomType = $derived(room.type);
+    let isEncrypted = $derived(room.isEncrypted);
+    let privacyState = $derived(room.privacyState ?? emptyPrivacyState);
 </script>
 
 <div class="flex h-full min-h-0 flex-col bg-white/[0.02]" data-testid="roomSidePanelSettings">

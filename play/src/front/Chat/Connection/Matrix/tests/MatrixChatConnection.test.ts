@@ -1279,7 +1279,10 @@ describe("MatrixChatConnection", () => {
                 basicMockMatrixSecurity
             );
             matrixChatConnection["client"] = matrixClient as never;
-            vi.spyOn(matrixChatConnection as never, "removeRoomFromAllFolders").mockResolvedValue(false);
+            vi.spyOn(
+                matrixChatConnection as unknown as { removeRoomFromAllFolders: (roomId: string) => Promise<boolean> },
+                "removeRoomFromAllFolders"
+            ).mockResolvedValue(false);
             const handleOrphanRoom = vi
                 .spyOn(
                     matrixChatConnection as unknown as { handleOrphanRoom: (room: unknown) => void },
@@ -1319,7 +1322,7 @@ describe("MatrixChatConnection", () => {
             } as unknown as MatrixClient;
 
             const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
-            matrixChatConnection["roomFolders"].set(parentId, parentFolder as never);
+            matrixChatConnection["roomFolders"].set(parentId, parentFolder);
             const scheduleReconciliationSpy = vi.spyOn(
                 matrixChatConnection as unknown as { scheduleRoomPlacementReconciliation: (id: string) => void },
                 "scheduleRoomPlacementReconciliation"

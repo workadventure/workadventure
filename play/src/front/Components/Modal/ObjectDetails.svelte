@@ -28,7 +28,7 @@
     let iconProperties = writable<Map<string, AddPropertyButtonType>>(new Map());
     let oldEntity: Entity | AreaPreview | undefined;
     let mapExplorationObjectSelectedStoreSubscription: Unsubscriber;
-    let description: string | undefined;
+    let description: string | undefined = $state();
 
     onMount(() => {
         if ($mapExplorationObjectSelectedStore instanceof Entity) {
@@ -165,13 +165,13 @@
         }
     }
 
-    $: actionButtonText =
-        $mapExplorationObjectSelectedStore instanceof Entity ||
+    let actionButtonText =
+        $derived($mapExplorationObjectSelectedStore instanceof Entity ||
         $mapExplorationObjectSelectedStore instanceof AreaPreview
             ? $mapExplorationObjectSelectedStore.actionButtonLabel
-            : "";
+            : "");
 
-    $: objectDisplayName = (() => {
+    let objectDisplayName = $derived((() => {
         if ($mapExplorationObjectSelectedStore instanceof Entity) {
             const name = $mapExplorationObjectSelectedStore.getEntityData().name;
             if (name != undefined && name != "") return name;
@@ -183,7 +183,7 @@
             return $mapExplorationObjectSelectedStore.nameFromProperties;
         }
         return "";
-    })();
+    })());
 </script>
 
 <div class="absolute bottom-0 w-full h-fit flex flex-row justify-center">
@@ -212,10 +212,10 @@
             </div>
             <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
                 <div class="flex flex-row justify-center w-full gap-2">
-                    <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}
+                    <button class="btn btn-outline w-full hover:bg-contrast-600/50" onclick={close}
                         >{$LL.mapEditor.explorer.details.close()}
                     </button>
-                    <button class="btn btn-secondary w-full whitespace-nowrap" on:click={goTo}>
+                    <button class="btn btn-secondary w-full whitespace-nowrap" onclick={goTo}>
                         {actionButtonText}
                     </button>
                 </div>
@@ -236,10 +236,10 @@
             </div>
             <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
                 <div class="flex flex-row justify-center w-full gap-2">
-                    <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}>
+                    <button class="btn btn-outline w-full hover:bg-contrast-600/50" onclick={close}>
                         {$LL.mapEditor.explorer.details.close()}
                     </button>
-                    <button class="btn btn-secondary w-full whitespace-nowrap" on:click={goTo}>
+                    <button class="btn btn-secondary w-full whitespace-nowrap" onclick={goTo}>
                         {actionButtonText}
                     </button>
                 </div>

@@ -1,6 +1,6 @@
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
-import type CancelablePromise from "cancelable-promise";
+import type { CancelablePromise } from "cancelable-promise";
 import { AskPositionMessage_AskType, PositionMessage_Direction } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import type { ActiveEventList } from "../UserInput/UserInputManager";

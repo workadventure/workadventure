@@ -1,20 +1,24 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { get } from "svelte/store";
-    import { openModal } from "svelte-modals";
     import LL from "../../../../i18n/i18n-svelte";
     import type { ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration } from "../../Connection/ChatConnection";
     import ManageParticipantsModal from "./ManageParticipantsModal.svelte";
     import RoomSidePanelParticipantRow from "./RoomSidePanelParticipantRow.svelte";
     import { IconLoader } from "@wa-icons";
+    import { modals } from "@wa-modals";
 
-    export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration;
+    interface Props {
+        room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration;
+    }
 
-    $: members = room.members;
-    $: canInvite = room.hasPermissionTo("invite");
+    let { room }: Props = $props();
 
-    let loadingMembers = true;
-    let membersLoadingError: string | undefined = undefined;
+    let members = $derived(room.members);
+    let canInvite = $derived(room.hasPermissionTo("invite"));
+
+    let loadingMembers = $state(true);
+    let membersLoadingError: string | undefined = $state(undefined);
 
     onMount(() => {
         loadMembers().catch((error) => console.error(error));
@@ -34,12 +38,12 @@
     }
 
     function openManageParticipantsModal() {
-        openModal(ManageParticipantsModal, { room });
+        modals.open(ManageParticipantsModal, { room });
     }
 
-    $: joinedMembers = [...$members]
+    let joinedMembers = $derived([...$members]
         .filter((member) => get(member.membership) === "join")
-        .sort((memberA, memberB) => get(memberA.name).localeCompare(get(memberB.name)));
+        .sort((memberA, memberB) => get(memberA.name).localeCompare(get(memberB.name))));
 </script>
 
 <div class="flex h-full min-h-0 flex-col bg-white/[0.02]" data-testid="roomSidePanelParticipants">
@@ -54,7 +58,7 @@
                     type="button"
                     class="m-0 rounded-lg border border-solid border-white/10 bg-white/10 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/15"
                     data-testid="roomSidePanelInviteButton"
-                    on:click={openManageParticipantsModal}
+                    onclick={openManageParticipantsModal}
                 >
                     {$LL.chat.manageRoomUsers.buttons.invite()}
                 </button>
@@ -79,7 +83,7 @@
                 <button
                     type="button"
                     class="btn btn-secondary"
-                    on:click={() => loadMembers().catch((e) => console.error(e))}
+                    onclick={() => loadMembers().catch((e) => console.error(e))}
                 >
                     {$LL.chat.load()}
                 </button>

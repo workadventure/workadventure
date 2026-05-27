@@ -73,8 +73,8 @@
 <!-- Room list part -->
 {#if $roomListActivated || $userIsAdminStore}
     <ActionBarButton
-        on:click={showRoomList}
-        on:keydown={showRoomList}
+        onclick={showRoomList}
+        onkeydown={showRoomList}
         label={$LL.actionbar.help.roomList.title()}
         state={$roomListActivated ? "normal" : "disabled"}
     >
@@ -85,7 +85,7 @@
 {#if recording?.buttonState !== "hidden" && $userIsConnected}
     <ActionBarButton
         classList="group/btn-recording-list"
-        on:click={() => {
+        onclick={() => {
             analyticsClient.openedRecordingList();
             $showRecordingList = true;
             openedMenuStore.closeAll();
@@ -101,7 +101,7 @@
 <!-- Calendar integration -->
 {#if $isCalendarActivatedStore || $userIsAdminStore}
     <ActionBarButton
-        on:click={openExternalModuleCalendar}
+        onclick={openExternalModuleCalendar}
         label={$LL.actionbar.calendar()}
         state={$isCalendarActivatedStore ? "normal" : "disabled"}
     >
@@ -111,7 +111,7 @@
 
 {#if $isTodoListActivatedStore || $userIsAdminStore}
     <ActionBarButton
-        on:click={openExternalModuleTodoList}
+        onclick={openExternalModuleTodoList}
         label={$LL.actionbar.todoList()}
         state={$isTodoListActivatedStore ? "normal" : "disabled"}
     >

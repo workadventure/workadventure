@@ -1,15 +1,16 @@
 <script lang="ts">
     import type { Readable, Unsubscriber } from "svelte/store";
     import { Marked } from "marked";
-    import { onDestroy, onMount, createEventDispatcher } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import type { ChatMessageContent } from "../../../Connection/ChatConnection";
     import { sanitizeHTML } from "./WA-HTML-Sanitizer";
-    export let content: Readable<ChatMessageContent>;
-    export let hasDepth: false;
+    interface Props {
+        content: Readable<ChatMessageContent>;
+        hasDepth: false;
+        updateMessageBody?: () => void;
+    }
 
-    const dispatch = createEventDispatcher<{
-        updateMessageBody: void;
-    }>();
+    let { content, hasDepth, updateMessageBody = () => {} }: Props = $props();
 
     async function getMarked(body: string): Promise<Marked> {
         let marked: Marked;
@@ -35,8 +36,9 @@
 
         // Custom renderer for links
         const renderer = new marked.Renderer();
-        renderer.link = (href: string, title: string, text: string) => {
+        renderer.link = ({ href, title, tokens }) => {
             const titleAttr = title ? `title="${title}"` : "";
+            const text = renderer.parser.parseInline(tokens);
             return `<a href="${href}" target="_blank" rel="noopener noreferrer" ${titleAttr} style="color: white;">${text}</a>`;
         };
 
@@ -49,7 +51,7 @@
         return marked;
     }
 
-    let html = "";
+    let html = $state("");
 
     let unsubscriber: Unsubscriber | undefined;
     onMount(() => {
@@ -64,7 +66,7 @@
                     html = $content.body;
                 })
                 .finally(() => {
-                    dispatch("updateMessageBody");
+                    updateMessageBody();
                 });
         });
     });

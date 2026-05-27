@@ -1,4 +1,4 @@
-import merge from "ts-deepmerge";
+import { deepmerge } from "deepmerge-ts";
 import en_US from "../en-US";
 import audio from "./audio";
 import camera from "./camera";
@@ -30,7 +30,7 @@ import randomNames from "./randomNames";
 import onboarding from "./onboarding";
 import recording from "./recording";
 
-const it_IT = merge(en_US, {
+const it_IT = deepmerge(en_US, {
     area,
     audio,
     camera,

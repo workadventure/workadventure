@@ -1495,7 +1495,7 @@ export class RoomConnection implements RoomConnection {
                     receiverUserId,
                 },
             },
-        } as ClientToServerMessageTsProto);
+        });
     }
 
     public emitMeetingInvitationResponse(accept: boolean, requestSenderUserUuid: string): void {
@@ -1507,7 +1507,7 @@ export class RoomConnection implements RoomConnection {
                     requestSenderUserUuid,
                 },
             },
-        } as ClientToServerMessageTsProto);
+        });
     }
 
     public emitAddSpaceFilter(filter: AddSpaceFilterMessage) {

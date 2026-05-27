@@ -10,8 +10,12 @@
     import RoomSidePanelPollItem from "./RoomSidePanelPollItem.svelte";
     import { IconLoader } from "@wa-icons";
 
-    export let room: ChatRoom;
-    export let closeOnTimelineFocus = false;
+    interface Props {
+        room: ChatRoom;
+        closeOnTimelineFocus: boolean;
+    }
+
+    let { room, closeOnTimelineFocus = false }: Props = $props();
 
     const emptyPollItems = readable<readonly ChatPollItem[]>([]);
     const idleHydrationState = readable<ChatRoomSidePanelHydrationState>({ status: "idle" });
@@ -64,11 +68,11 @@
         return currentRoom.pollItems ?? emptyPollItems;
     }
 
-    $: pollItems = getPollItemsStore(room);
-    $: pollRichHydrationState = room.pollRichHydrationState ?? idleHydrationState;
-    $: richWarnings = $pollRichHydrationState.warnings ?? [];
-    $: pollItemErrorWarning = richWarnings.find((warning) => warning.reason === "poll_item_error");
-    $: polls = [...$pollItems].sort((left, right) => {
+    let pollItems = $derived(getPollItemsStore(room));
+    let pollRichHydrationState = $derived(room.pollRichHydrationState ?? idleHydrationState);
+    let richWarnings = $derived($pollRichHydrationState.warnings ?? []);
+    let pollItemErrorWarning = $derived(richWarnings.find((warning) => warning.reason === "poll_item_error"));
+    let polls = $derived([...$pollItems].sort((left, right) => {
         const leftState = get(left.state);
         const rightState = get(right.state);
 
@@ -77,7 +81,7 @@
         }
 
         return (right.date?.getTime() ?? 0) - (left.date?.getTime() ?? 0);
-    });
+    }));
 </script>
 
 <div class="flex h-full min-h-0 flex-col bg-white/[0.02]" data-testid="roomSidePanelPolls">
@@ -106,7 +110,7 @@
                     type="button"
                     class="m-0 mt-3 rounded-lg border border-solid border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white"
                     data-testid="roomSidePanelPollsRetry"
-                    on:click={retryPollRichHydration}
+                    onclick={retryPollRichHydration}
                 >
                     {$LL.chat.roomPanel.status.retry()}
                 </button>

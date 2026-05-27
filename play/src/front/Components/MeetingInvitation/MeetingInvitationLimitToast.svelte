@@ -2,7 +2,11 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import ToastContainer from "../Toasts/ToastContainer.svelte";
 
-    export let toastUuid = "";
+    interface Props {
+        toastUuid: string;
+    }
+
+    let { toastUuid = "" }: Props = $props();
     const duration = 4000;
 </script>
 

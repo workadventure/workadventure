@@ -20,15 +20,12 @@ import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connection/ConnectionManager";
 
 import { gameManager } from "../Phaser/Game/GameManager";
-import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
 import type { OpenTabEvent } from "./Events/OpenTabEvent";
-import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
 import type { ClosePopupEvent } from "./Events/ClosePopupEvent";
 import { scriptUtils } from "./ScriptUtils";
-import type { IframeErrorAnswerEvent, IframeQueryMap, IframeResponseEvent } from "./Events/IframeEvent";
+import type { IframeQueryMap, IframeResponseEvent } from "./Events/IframeEvent";
 import { isIframeEventWrapper, isIframeQueryWrapper, isLookingLikeIframeEventWrapper } from "./Events/IframeEvent";
-import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
 import type { PlaySoundEvent } from "./Events/PlaySoundEvent";
 import type { StopSoundEvent } from "./Events/StopSoundEvent";
 import type { LoadSoundEvent } from "./Events/LoadSoundEvent";
@@ -50,14 +47,11 @@ import type { SetStatusEvent } from "./Events/SetStatusEvent";
 
 import type { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
 import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
-import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
-import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import type { ModalEvent } from "./Events/ModalEvent";
 import type { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
 import type { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent";
 import type {
-    IframeErrorMessagePortEvent,
     IframeMessagePortMap,
     IframeSuccessMessagePortEvent,
 } from "./Events/MessagePortEvents";
@@ -343,7 +337,7 @@ class IframeListener {
                                     id: queryId,
                                     type: payload.type,
                                     error: errorMsg,
-                                } as IframeErrorAnswerEvent,
+                                },
                                 "*"
                             );
                             return;
@@ -362,7 +356,7 @@ class IframeListener {
                                     id: queryId,
                                     messagePort: true,
                                     error: reasonMsg,
-                                } as IframeErrorMessagePortEvent,
+                                },
                                 "*"
                             );
                         };
@@ -400,7 +394,7 @@ class IframeListener {
                                     id: queryId,
                                     type: query.type,
                                     error: errorMsg,
-                                } as IframeErrorAnswerEvent,
+                                },
                                 "*"
                             );
                             return;
@@ -416,7 +410,7 @@ class IframeListener {
                                     id: queryId,
                                     type: query.type,
                                     error: reasonMsg,
-                                } as IframeErrorAnswerEvent,
+                                },
                                 "*"
                             );
                         };
@@ -841,7 +835,7 @@ class IframeListener {
                 data: {
                     message,
                     senderId,
-                } as UserInputChatEvent,
+                },
             },
             exceptOrigin
         );
@@ -864,7 +858,7 @@ class IframeListener {
             type: "joinProximityMeetingEvent",
             data: {
                 users: formattedUsers,
-            } as JoinProximityMeetingEvent,
+            },
         });
     }
 
@@ -881,7 +875,7 @@ class IframeListener {
                     position: user.position,
                     variables: user.variables,
                 },
-            } as ParticipantProximityMeetingEvent,
+            },
         });
     }
 
@@ -898,7 +892,7 @@ class IframeListener {
                     position: user.position,
                     variables: user.variables,
                 },
-            } as ParticipantProximityMeetingEvent,
+            },
         });
     }
 
@@ -932,7 +926,7 @@ class IframeListener {
             type: "enterEvent",
             data: {
                 name: name,
-            } as EnterLeaveEvent,
+            },
         });
     }
 
@@ -941,7 +935,7 @@ class IframeListener {
             type: "leaveEvent",
             data: {
                 name: name,
-            } as EnterLeaveEvent,
+            },
         });
     }
 
@@ -996,7 +990,7 @@ class IframeListener {
             data: {
                 popupId,
                 buttonId,
-            } as ButtonClickedEvent,
+            },
         });
     }
 

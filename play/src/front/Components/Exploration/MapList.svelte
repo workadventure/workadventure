@@ -18,7 +18,7 @@
         entitiesSearchable?: boolean;
     }
 
-    let search = "";
+    let search = $state("");
     const currentRoomUrl = gameManager.getCurrentGameScene().room.href;
     const roomList = new Map<string, RoomData>();
     const roomListFiltered = writable<Map<string, RoomData>>(new Map<string, RoomData>());
@@ -95,7 +95,7 @@
                                     type="text"
                                     placeholder={$LL.mapEditor.listRoom.searchPlaceholder()}
                                     bind:value={search}
-                                    on:input={onUpdateSearch}
+                                    oninput={onUpdateSearch}
                                     class="grow input-search input-search-lg peer w-full"
                                 />
                                 <svg
@@ -123,15 +123,15 @@
                             {:else}
                                 <div class="relative w-full flex space-x-6 snap-mandatory snap-x overflow-x-auto">
                                     <div class="snap-center shrink-0">
-                                        <div class="shrink-0" />
+                                        <div class="shrink-0"></div>
                                     </div>
                                     {#each Array.from($roomListFiltered) as [roomUrl, roomData] (roomUrl)}
-                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                        <!-- svelte-ignore a11y_no_static_element_interactions -->
                                         <div
                                             id={roomUrl}
                                             class="flex flex-col items-center snap-center shrink-0 first:pl-8 last:pr-8 rounded-lg overflow-hidden"
-                                            on:click={() => clickRoom(roomData.roomUrl, roomData.name)}
+                                            onclick={() => clickRoom(roomData.roomUrl, roomData.name)}
                                         >
                                             <div
                                                 class="w-full rounded-lg relative overflow-hidden group cursor-pointer"
@@ -141,13 +141,13 @@
                                                     new URL(roomData.roomUrl, window.location.href).toString()
                                                         ? 'from-secondary-900'
                                                         : 'from-contrast'}"
-                                                />
+                                                ></div>
                                                 <img
                                                     draggable="false"
                                                     src={roomData.thumbnail ?? defaultMapImg}
                                                     alt={roomData.name}
                                                     class="shrink-0 w-80 h-52 shadow-xl bg-white object-cover group-hover:scale-110 transition-all z-0"
-                                                    on:error={function () {
+                                                    onerror={() => {
                                                         this.src = defaultMapImg;
                                                     }}
                                                 />
@@ -177,7 +177,7 @@
                                         </div>
                                     {/each}
                                     <div class="snap-center shrink-0">
-                                        <div class="shrink-0" />
+                                        <div class="shrink-0"></div>
                                     </div>
                                 </div>
                             {/if}
@@ -185,11 +185,13 @@
                     </div>
                 {/if}
             </div>
-            <div slot="buttons" class="flex flex-row justify-center w-full">
-                <button class="btn btn-lg btn-secondary w-1/2 m-auto" on:click={close}>
-                    {$LL.mapEditor.listRoom.close()}
-                </button>
-            </div>
+            {#snippet buttons()}
+                <div class="flex flex-row justify-center w-full">
+                    <button class="btn btn-lg btn-secondary w-1/2 m-auto" onclick={close}>
+                        {$LL.mapEditor.listRoom.close()}
+                    </button>
+                </div>
+            {/snippet}
         </PopUpContainer>
     </div>
 </div>

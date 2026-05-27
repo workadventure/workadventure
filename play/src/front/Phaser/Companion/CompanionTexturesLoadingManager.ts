@@ -1,4 +1,4 @@
-import type CancelablePromise from "cancelable-promise";
+import type { CancelablePromise } from "cancelable-promise";
 import type { CompanionTexture } from "@workadventure/messages";
 import { CompanionTextureCollection } from "@workadventure/messages";
 import { gameManager } from "../Game/GameManager";

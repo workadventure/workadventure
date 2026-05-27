@@ -9,10 +9,14 @@
     import Avatar from "../Avatar.svelte";
     import { IconLoader } from "@wa-icons";
 
-    export let room: { id: string; name: string | undefined };
+    interface Props {
+        room: { id: string; name: string | undefined };
+    }
+
+    let { room }: Props = $props();
     const chat = gameManager.chatConnection;
-    let isJoiningRoom = false;
-    let joinRoomError: string | undefined = undefined;
+    let isJoiningRoom = $state(false);
+    let joinRoomError: string | undefined = $state(undefined);
 
     async function joinRoom() {
         try {
@@ -36,14 +40,14 @@
         }
     }
 
-    $: chunks = highlightWords({
+    let chunks = $derived(highlightWords({
         text: room.name?.match(/\[\d*]/)
             ? room.name?.substring(0, room.name?.search(/\[\d*]/))
             : room.name
             ? room.name
             : "",
         query: $chatSearchBarValue,
-    });
+    }));
 </script>
 
 <div
@@ -54,15 +58,15 @@
     </div>
     <div class="min-w-0">
         {#each chunks as chunk (chunk.key)}
-            <span class:text-light-blue={chunk.match} class="cursor-default text-sm font-bold text-white/75"
-                >{chunk.text}</span
-            >
+            <span class:text-light-blue={chunk.match} class="cursor-default text-sm font-bold text-white/75">
+                {chunk.text}
+            </span>
         {/each}
     </div>
 </div>
 {#if !isJoiningRoom}
     <div class="flex">
-        <button class="text-blue-300" on:click={() => joinRoom()}>{$LL.chat.join()}</button>
+        <button class="text-blue-300" onclick={() => joinRoom()}>{$LL.chat.join()}</button>
     </div>
 {:else}
     <div class="min-h-[30px] text-md flex gap-2 justify-center flex-row items-center p-1">

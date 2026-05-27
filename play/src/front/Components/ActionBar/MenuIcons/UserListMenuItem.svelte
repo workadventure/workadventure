@@ -7,7 +7,11 @@
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
 
-    export let state: "normal" | "active" | "forbidden" | "disabled" = "normal";
+    interface Props {
+        state?: "normal" | "active" | "forbidden" | "disabled";
+    }
+
+    let { state: buttonState = "normal" }: Props = $props();
 
     function toggleUserList() {
         if (!$chatVisibilityStore) {
@@ -18,7 +22,7 @@
         navChat.switchToUserList();
     }
 
-    let chatAvailable = false;
+    let chatAvailable = $state(false);
     gameManager
         .getChatConnection()
         .then(() => {
@@ -30,11 +34,11 @@
 </script>
 
 <ActionBarButton
-    on:click={toggleUserList}
+    onclick={toggleUserList}
     classList="group/btn-users hidden @sm/actions:flex"
     tooltipTitle={$LL.actionbar.help.users.title()}
     desc={$LL.actionbar.help.users.desc()}
-    state={chatAvailable ? state : "disabled"}
+    state={chatAvailable ? buttonState : "disabled"}
     dataTestId="user-list-button"
     disabledHelp={false}
     media="./static/Videos/UserList.mp4"

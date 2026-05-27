@@ -1,5 +1,4 @@
 <script lang="ts">
-    import type { AreaData } from "@workadventure/map-editor";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import { isInsidePersonalAreaStore, personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
     import {
@@ -110,7 +109,7 @@
                 return;
             }
             // Use unclaim personal area method of the map editor mode manager
-            await mapEditorModeManager.unclaimPersonalArea($personalAreaDataStore as unknown as AreaData);
+            await mapEditorModeManager.unclaimPersonalArea($personalAreaDataStore);
 
             // Send analytics event
             analyticsClient.unclaimPersonalDesk();
@@ -126,7 +125,7 @@
 
 {#if $mapEditorMenuVisibleStore}
     <ActionBarButton
-        on:click={toggleMapEditorMode}
+        onclick={toggleMapEditorMode}
         label={$LL.actionbar.mapEditor()}
         state={$mapEditorModeStore && !$mapExplorationModeStore ? "active" : "normal"}
     >
@@ -135,7 +134,7 @@
 {/if}
 {#if $mapManagerActivated}
     <ActionBarButton
-        on:click={toggleMapExplorerMode}
+        onclick={toggleMapExplorerMode}
         label={$LL.mapEditor.sideBar.exploreTheRoom()}
         state={$mapExplorationModeStore ? "active" : "normal"}
     >
@@ -143,7 +142,7 @@
     </ActionBarButton>
 {/if}
 {#if $globalMessageVisibleStore}
-    <ActionBarButton on:click={toggleGlobalMessage} label={$LL.actionbar.globalMessage()}>
+    <ActionBarButton onclick={toggleGlobalMessage} label={$LL.actionbar.globalMessage()}>
         <IconSpeakerPhone font-size="20" />
     </ActionBarButton>
 {/if}
@@ -151,7 +150,7 @@
     <ActionBarButton
         dataTestId="go-to-personal-desk-button"
         label={$LL.actionbar.personalDesk.label()}
-        on:click={goToPersonalDesk}
+        onclick={goToPersonalDesk}
         state={$isInsidePersonalAreaStore ? "disabled" : "normal"}
         classList="group/btn-personal-desk"
     >
@@ -159,7 +158,7 @@
     </ActionBarButton>
     <ActionBarButton
         label={$LL.actionbar.personalDesk.unclaim()}
-        on:click={unclaimPersonalDesk}
+        onclick={unclaimPersonalDesk}
         classList="group/btn-personal-desk"
     >
         <IconDeskExit font-size="20" />

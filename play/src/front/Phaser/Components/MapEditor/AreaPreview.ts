@@ -10,7 +10,6 @@ import { GameObjects } from "phaser";
 import { get } from "svelte/store";
 import { DEPTH_MAP_EDITOR_AREAS_INDEX } from "../../Game/DepthIndexes";
 import { GameScene } from "../../Game/GameScene";
-import type { CopyAreaEventData } from "../../Game/GameMap/EntitiesManager";
 import { SpeechDomElement } from "../../Entity/SpeechDomElement";
 import LL from "../../../../i18n/i18n-svelte";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
@@ -356,7 +355,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                         height: this.areaData.height,
                         name: this.areaData.name,
                         properties: structuredClone(this.areaData.properties),
-                    } as CopyAreaEventData);
+                    });
                 }
                 this.updateAreaDataWithSquaresAdjustments();
                 const data: AtLeast<AreaData, "id"> = {

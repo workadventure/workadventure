@@ -1,27 +1,40 @@
 <script lang="ts">
-    import type { ComponentType } from "svelte";
-    import { createEventDispatcher } from "svelte";
+    import type { WorkAdventureComponent } from "../../../../../types/component";
 
-    export let IconComponent: ComponentType;
-    export let title: string;
-    /** Optional second line, e.g. a small colored tag (see {@link tagText}). */
-    export let tagText: string | undefined = undefined;
-    export let dataTestId: string | undefined = undefined;
-    export let bg = "hover:bg-white/10";
-    export let disabled = false;
-    const dispatch = createEventDispatcher<{
-        click: void;
-    }>();
+    interface Props {
+        IconComponent: WorkAdventureComponent;
+        title: string;
+        /** Optional second line, e.g. a small colored tag (see {@link tagText}). */
+        tagText?: string;
+        dataTestId?: string;
+        bg?: string;
+        disabled?: boolean;
+        onclick?: () => void;
+    }
+
+    let {
+        IconComponent,
+        title,
+        tagText = undefined,
+        dataTestId = undefined,
+        bg = "hover:bg-white/10",
+        disabled = false,
+        onclick,
+    }: Props = $props();
 </script>
 
 <button
     class="flex gap-2 {tagText ? 'items-start' : 'items-center'} {bg} m-0 p-2 w-full text-sm rounded text-left"
     data-testid={dataTestId}
-    on:click|stopPropagation|preventDefault={() => dispatch("click")}
+    onclick={(event) => {
+        event.stopPropagation();
+        event.preventDefault();
+        onclick?.();
+    }}
     {disabled}
 >
     <div class="flex shrink-0 {tagText ? 'pt-0.5' : ''}">
-        <svelte:component this={IconComponent} />
+        <IconComponent />
     </div>
     {#if tagText}
         <div class="flex min-w-0 flex-col gap-1">

@@ -1,14 +1,14 @@
 <script lang="ts">
     import { LL } from "../../../i18n/i18n-svelte";
-    import TextGlobalMessage from "./TextGlobalMessage.svelte";
-    import AudioGlobalMessage from "./AudioGlobalMessage.svelte";
+    import TextGlobalMessage, { type TextGlobalMessageHandle } from "./TextGlobalMessage.svelte";
+    import AudioGlobalMessage, { type AudioGlobalMessageHandle } from "./AudioGlobalMessage.svelte";
 
-    let handleSendText: { sendTextMessage(broadcast: boolean): void };
-    let handleSendAudio: { sendAudioMessage(broadcast: boolean): Promise<void> };
+    let handleSendText: TextGlobalMessageHandle | undefined = $state();
+    let handleSendAudio: AudioGlobalMessageHandle | undefined = $state();
 
-    let inputSendTextActive = true;
-    let uploadAudioActive = !inputSendTextActive;
-    let broadcastToWorld = false;
+    let inputSendTextActive = $state(true);
+    let uploadAudioActive = $state((() => !inputSendTextActive)());
+    let broadcastToWorld = $state(false);
 
     function activateInputText() {
         inputSendTextActive = true;
@@ -20,12 +20,12 @@
         uploadAudioActive = true;
     }
 
-    async function send(): Promise<void> {
+    function send(): void {
         if (inputSendTextActive) {
-            return handleSendText.sendTextMessage(broadcastToWorld);
+            handleSendText?.sendTextMessage(broadcastToWorld);
         }
-        if (uploadAudioActive) {
-            return handleSendAudio.sendAudioMessage(broadcastToWorld);
+        else if (uploadAudioActive) {
+            handleSendAudio?.sendAudioMessage(broadcastToWorld);
         }
     }
 </script>
@@ -38,15 +38,23 @@
                 class="py-6 px-12 text-lg bold relative {inputSendTextActive
                     ? "after:content-[''] after:absolute after:w-full after:h-2 after:bg-secondary after:-bottom-[4px] after:left-0 after:rounded-lg"
                     : 'opacity-50'}"
-                on:click|preventDefault={activateInputText}>{$LL.menu.globalMessage.text()}</button
-            >
+                onclick={(event) => {
+                    event.preventDefault();
+                    activateInputText();
+                }}>
+                {$LL.menu.globalMessage.text()}
+            </button>
             <button
                 type="button"
                 class="py-6 px-12 text-lg bold relative {uploadAudioActive
                     ? "after:content-[''] after:absolute after:w-full after:h-2 after:bg-secondary after:-bottom-[4px] after:left-0 after:rounded-lg"
                     : 'opacity-50'}"
-                on:click|preventDefault={activateUploadAudio}>{$LL.menu.globalMessage.audio()}</button
-            >
+                onclick={(event) => {
+                    event.preventDefault();
+                    activateUploadAudio();
+                }}>
+                {$LL.menu.globalMessage.audio()}
+            </button>
         </section>
     </div>
     <div class="global-message-content">
@@ -63,7 +71,12 @@
             <span>{$LL.menu.globalMessage.warning()}</span>
         </label>
         <section class="centered-column">
-            <button class="light" on:click|preventDefault={send}>{$LL.menu.globalMessage.send()}</button>
+            <button class="light" onclick={(event) => {
+                event.preventDefault();
+                send();
+            }}>
+                {$LL.menu.globalMessage.send()}
+            </button>
         </section>
     </div>
 </div>

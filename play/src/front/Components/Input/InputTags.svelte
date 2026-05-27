@@ -1,27 +1,39 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    import type { Snippet } from "svelte";
     import Select from "svelte-select";
     import LL from "../../../i18n/i18n-svelte";
     import type { InputTagOption } from "./InputTagOption";
     import InfoButton from "./InfoButton.svelte";
-    const dispatch = createEventDispatcher<{
-        change: InputTagOption[] | undefined;
-    }>();
 
-    export let optional = false;
-    export let label: string | undefined = undefined;
-    export let value: InputTagOption[] | undefined;
-    export let options: InputTagOption[] = [];
-    export let placeholder: string | undefined = undefined;
-    export let onFocus = () => {};
-    export let onBlur = () => {};
-    export let handleChange = () => {};
-    export let testId: string | undefined = undefined;
-    export let queryOptions: undefined | ((filterText: string) => Promise<{ value: string; label: string }[]>) =
-        undefined;
+    interface Props {
+        optional?: boolean;
+        label?: string;
+        value?: InputTagOption[];
+        options?: InputTagOption[];
+        placeholder?: string;
+        onfocus?: () => void;
+        onblur?: () => void;
+        onchange?: (value?: InputTagOption[]) => void;
+        testId?: string;
+        queryOptions?: ((filterText: string) => Promise<{ value: string; label: string }[]>);
+        info?: Snippet;
+    }
 
-    let filterText = "";
-    const SLOTS = $$slots;
+    let {
+        optional = false,
+        label,
+        value = $bindable(),
+        options = $bindable([]),
+        placeholder,
+        onfocus,
+        onblur,
+        onchange,
+        testId,
+        queryOptions,
+        info
+    }: Props = $props();
+
+    let filterText = $state("");
 
     function handleFilter() {
         if (value?.find((i) => i.label === filterText)) return;
@@ -37,21 +49,21 @@
             delete i.created;
             return { ...i };
         });
-        dispatch("change", value);
+        onchange?.(value);
     }
 </script>
 
 <div class="flex flex-col text-dark-purple">
-    <div class="input-label" class:hidden={!label && !SLOTS.info && !optional}>
+    <div class="input-label" class:hidden={!label && !info && !optional}>
         {#if label}
             <label for="selector" class="text-white relative grow">
                 {label}
             </label>
         {/if}
 
-        {#if SLOTS.info}
+        {#if info}
             <InfoButton>
-                <slot name="info" />
+                {@render info()}
             </InfoButton>
         {/if}
 
@@ -66,14 +78,14 @@
         bind:filterText
         loadOptions={queryOptions}
         on:change={_handleChange}
-        on:input={handleChange}
-        on:select={handleChange}
+        on:input={() => onchange?.(value)}
+        on:select={() => onchange?.(value)}
         items={filterText.trim().length === 0 ? [] : options}
         bind:value
         multiple={true}
         placeholder={placeholder ?? "Select rights"}
-        on:focus={onFocus}
-        on:blur={onBlur}
+        on:focus={() => onfocus?.()}
+        on:blur={() => onblur?.()}
         showChevron={true}
         listAutoWidth={false}
         --clear-select-color="hsl(var(--danger-500))"

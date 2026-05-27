@@ -4,10 +4,19 @@
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { iframeListener } from "../../../Api/IframeListener";
 
-    export let button: CustomButtonActionBarDescriptor;
-    export let first: boolean | undefined = undefined;
-    export let last: boolean | undefined = undefined;
-    export let classList: string | undefined = undefined;
+    interface Props {
+        button: CustomButtonActionBarDescriptor;
+        first?: boolean;
+        last?: boolean;
+        classList?: string;
+    }
+
+    let {
+        button,
+        first = undefined,
+        last = undefined,
+        classList = undefined
+    }: Props = $props();
 
     function buttonActionBarTrigger(button: CustomButtonActionBarDescriptor) {
         analyticsClient.clickOnCustomButton(button.id, button.label, button.tooltipTitle, button.imageSrc);
@@ -23,7 +32,7 @@
     textColor={button.textColor}
     hasImage={!!button.imageSrc}
     isGradient={button.isGradient}
-    on:click={() => {
+    onclick={() => {
         buttonActionBarTrigger(button);
     }}
     {first}

@@ -6,16 +6,16 @@
 
     let gameScene = gameManager.getCurrentGameScene();
 
-    let expandedMapCopyright = false;
-    let expandedTilesetCopyright = false;
-    let expandedAudioCopyright = false;
+    let expandedMapCopyright = $state(false);
+    let expandedTilesetCopyright = $state(false);
+    let expandedAudioCopyright = $state(false);
 
-    let mapName = "";
-    let mapLink = "";
-    let mapDescription = "";
-    let mapCopyright: string = $LL.menu.about.copyrights.map.empty();
-    let tilesetCopyright: string[] = [];
-    let audioCopyright: string[] = [];
+    let mapName = $state("");
+    let mapLink = $state("");
+    let mapDescription = $state("");
+    let mapCopyright: string = $state($LL.menu.about.copyrights.map.empty());
+    let tilesetCopyright: string[] = $state([]);
+    let audioCopyright: string[] = $state([]);
 
     onMount(() => {
         if (gameScene.mapFile.properties !== undefined) {
@@ -73,13 +73,13 @@
                 >{$LL.menu.about.mapLink()}</a
             >
         {/if}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
             class="mt-4 text-lg font-bold flex items-center py-4 px-8 border-y border-x-0 border-solid border-white/20 {expandedMapCopyright
                 ? 'bg-secondary'
                 : 'bg-contrast/50 hover:bg-contrast'}"
-            on:click={() => (expandedMapCopyright = !expandedMapCopyright)}
+            onclick={() => (expandedMapCopyright = !expandedMapCopyright)}
         >
             <div class="grow text-left">{$LL.menu.about.copyrights.map.title()}</div>
             <svg
@@ -99,13 +99,13 @@
             </svg>
         </div>
         <p class="whitespace-pre-line" hidden={!expandedMapCopyright}>{mapCopyright}</p>
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
             class="text-lg font-bold flex items-center py-4 px-8 border-y-0 border-x-0 border-b border-solid border-white/20 {expandedTilesetCopyright
                 ? 'bg-secondary'
                 : 'bg-contrast/50 hover:bg-contrast'}"
-            on:click={() => (expandedTilesetCopyright = !expandedTilesetCopyright)}
+            onclick={() => (expandedTilesetCopyright = !expandedTilesetCopyright)}
         >
             <div class="grow text-left">{$LL.menu.about.copyrights.tileset.title()}</div>
             <svg
@@ -131,13 +131,13 @@
                 <p>{$LL.menu.about.copyrights.tileset.empty()}</p>
             {/each}
         </section>
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
             class="text-lg font-bold flex items-center py-4 px-8 border-y-0 border-x-0 border-b border-solid border-white/20 {expandedAudioCopyright
                 ? 'bg-secondary'
                 : 'bg-contrast/50 hover:bg-contrast'}"
-            on:click={() => (expandedAudioCopyright = !expandedAudioCopyright)}
+            onclick={() => (expandedAudioCopyright = !expandedAudioCopyright)}
         >
             <div class="grow text-left">{$LL.menu.about.copyrights.audio.title()}</div>
             <svg

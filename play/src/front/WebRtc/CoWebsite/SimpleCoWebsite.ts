@@ -1,4 +1,4 @@
-import type CancelablePromise from "cancelable-promise";
+import type { CancelablePromise } from "cancelable-promise";
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import { ICON_URL } from "../../Enum/EnvironmentVariable";
 import type { CoWebsite } from "./CoWebsite";

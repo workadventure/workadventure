@@ -24,7 +24,7 @@
     import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
     import { IconChevronUp, IconEye, IconWalk } from "@wa-icons";
 
-    let filter = "";
+    let filter = $state("");
     let selectFilters = writable<Array<string>>(new Array<string>());
     let entitiesListFiltered = writable<Map<string, Entity>>(new Map());
     let areasListFiltered = writable<Map<string, AreaPreview>>(new Map());
@@ -106,8 +106,8 @@
         });
         onChangeFilterHandle();
     }
-    let entityListActive = false;
-    let areaListActive = false;
+    let entityListActive = $state(false);
+    let areaListActive = $state(false);
     function toggleEntityList() {
         entityListActive = !entityListActive;
     }
@@ -248,9 +248,9 @@
             <Input
                 rounded
                 bind:value={filter}
-                onInput={onChangeFilterHandle}
-                onFocusin={focusin}
-                onFocusout={focusout}
+                oninput={onChangeFilterHandle}
+                onfocusin={focusin}
+                onfocusout={focusout}
                 placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
             />
         </div>
@@ -258,87 +258,87 @@
             <AddPropertyButtonWrapper
                 property="personalAreaPropertyData"
                 isActive={$selectFilters.includes("personalAreaPropertyData")}
-                on:click={() => addFilter("personalAreaPropertyData")}
+                onclick={() => addFilter("personalAreaPropertyData")}
             />
             <AddPropertyButtonWrapper
                 property="restrictedRightsPropertyData"
                 isActive={$selectFilters.includes("restrictedRightsPropertyData")}
-                on:click={() => addFilter("restrictedRightsPropertyData")}
+                onclick={() => addFilter("restrictedRightsPropertyData")}
             />
             <AddPropertyButtonWrapper
                 property="jitsiRoomProperty"
                 isActive={$selectFilters.includes("jitsiRoomProperty")}
-                on:click={() => {
+                onclick={() => {
                     addFilter("jitsiRoomProperty");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="playAudio"
                 isActive={$selectFilters.includes("playAudio")}
-                on:click={() => {
+                onclick={() => {
                     addFilter("playAudio");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 isActive={$selectFilters.includes("openWebsite")}
-                on:click={() => {
+                onclick={() => {
                     addFilter("openWebsite");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="speakerMegaphone"
                 isActive={$selectFilters.includes("speakerMegaphone")}
-                on:click={() => {
+                onclick={() => {
                     addFilter("speakerMegaphone");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="listenerMegaphone"
                 isActive={$selectFilters.includes("listenerMegaphone")}
-                on:click={() => {
+                onclick={() => {
                     addFilter("listenerMegaphone");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="exit"
                 isActive={$selectFilters.includes("exit")}
-                on:click={() => {
+                onclick={() => {
                     addFilter("exit");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="start"
                 isActive={$selectFilters.includes("start")}
-                on:click={() => {
+                onclick={() => {
                     addFilter("start");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="focusable"
                 isActive={$selectFilters.includes("focusable")}
-                on:click={() => {
+                onclick={() => {
                     addFilter("focusable");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="matrixRoomPropertyData"
                 isActive={$selectFilters.includes("matrixRoomPropertyData")}
-                on:click={() => {
+                onclick={() => {
                     addFilter("matrixRoomPropertyData");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openFile"
                 isActive={$selectFilters.includes("openFile")}
-                on:click={() => {
+                onclick={() => {
                     addFilter("openFile");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="livekitRoomProperty"
                 isActive={$selectFilters.includes("livekitRoomProperty")}
-                on:click={() => {
+                onclick={() => {
                     addFilter("livekitRoomProperty");
                 }}
             />
@@ -347,7 +347,7 @@
                 <AddPropertyButtonWrapper
                     property="openWebsite"
                     subProperty={app.name}
-                    on:click={() => {
+                    onclick={() => {
                         addFilter(app.name);
                     }}
                 />
@@ -355,11 +355,11 @@
         </div>
 
         <div class="flex flex-col gap-2">
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
                 class="group entities p-2 rounded flex flex-row justify-between items-center cursor-pointer hover:bg-white/10 transition-all"
-                on:click={toggleEntityList}
+                onclick={toggleEntityList}
             >
                 <div class="flex flex-row items-center justify-start gap-2">
                     <img
@@ -387,7 +387,10 @@
                 <button
                     class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
                     data-testid="toggleFolderEntity"
-                    on:click|stopPropagation={toggleEntityList}
+                    onclick={(event) => {
+                        event.stopPropagation();
+                        toggleEntityList();
+                    }}
                 >
                     <IconChevronUp class={`transform transition ${!entityListActive ? "" : "rotate-180"}`} />
                 </button>
@@ -396,13 +399,13 @@
             {#if entityListActive && $entitiesListFiltered.size > 0}
                 <div class="entity-items p-2 flex flex-col">
                     {#each [...$entitiesListFiltered] as [key, entity] (key)}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
                         <div
                             id={entity.entityId}
-                            on:mouseenter={() => highlightEntity(entity)}
-                            on:mouseleave={() => unhighlightEntity(entity)}
-                            on:click={() => handlerToSelectEntity(entity)}
+                            onmouseenter={() => highlightEntity(entity)}
+                            onmouseleave={() => unhighlightEntity(entity)}
+                            onclick={() => handlerToSelectEntity(entity)}
                             class="item p-2 rounded flex flex-row justify-start gap-2 items-center cursor-pointer hover:bg-white/10 transition-all"
                             class:active={$mapExplorationObjectSelectedStore === entity}
                         >
@@ -420,13 +423,21 @@
                             >
                             <button
                                 class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center m-0"
-                                on:click|preventDefault|stopPropagation={() => goTo(entity)}
+                                onclick={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    goTo(entity);
+                                }}
                             >
                                 <IconWalk font-size="16" />
                             </button>
                             <button
                                 class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center m-0"
-                                on:click|preventDefault|stopPropagation={() => handlerToSelectEntity(entity)}
+                                onclick={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    handlerToSelectEntity(entity);
+                                }}
                             >
                                 <IconEye font-size="16" />
                             </button>
@@ -435,11 +446,11 @@
                 </div>
             {/if}
 
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
                 class="group areas p-2 rounded flex flex-row justify-between items-center cursor-pointer hover:bg-white/10 transition-all"
-                on:click={toggleAreaList}
+                onclick={toggleAreaList}
             >
                 <div class="flex flex-row items-center justify-start gap-2">
                     <img draggable="false" class="w-10 h-auto pointer-events-none" src={AreaToolImg} alt="link icon" />
@@ -461,7 +472,10 @@
                 <button
                     class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
                     data-testid="toggleFolderArea"
-                    on:click|stopPropagation={toggleAreaList}
+                    onclick={(event) => {
+                        event.stopPropagation();
+                        toggleAreaList();
+                    }}
                 >
                     <IconChevronUp class={`transform transition ${!areaListActive ? "" : "rotate-180"}`} />
                 </button>
@@ -470,13 +484,13 @@
                 <div class="area-items p-2 flex flex-col">
                     {#if $areasListFiltered.size > 0}
                         {#each [...$areasListFiltered] as [key, area] (key)}
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <!-- svelte-ignore a11y-no-static-element-interactions -->
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <!-- svelte-ignore a11y_no_static_element_interactions -->
                             <div
                                 id={key}
-                                on:mouseenter={() => highlightArea(area)}
-                                on:mouseleave={() => unhighlightArea(area)}
-                                on:click={() => handlerToSelectArea(area)}
+                                onmouseenter={() => highlightArea(area)}
+                                onmouseleave={() => unhighlightArea(area)}
+                                onclick={() => handlerToSelectArea(area)}
                                 class="item p-2 rounded flex flex-row justify-start gap-2 items-center cursor-pointer hover:bg-white/10 transition-all"
                                 class:active={$mapExplorationObjectSelectedStore === area}
                                 title={area.getAreaData().name || "No name"}
@@ -496,13 +510,21 @@
                                 </span>
                                 <button
                                     class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center m-0"
-                                    on:click|preventDefault|stopPropagation={() => goTo(area)}
+                                    onclick={(event) => {
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                        goTo(area);
+                                    }}
                                 >
                                     <IconWalk font-size="16" />
                                 </button>
                                 <button
                                     class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center m-0"
-                                    on:click|preventDefault|stopPropagation={() => handlerToSelectArea(area)}
+                                    onclick={(event) => {
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                        handlerToSelectArea(area);
+                                    }}
                                 >
                                     <IconEye font-size="16" />
                                 </button>

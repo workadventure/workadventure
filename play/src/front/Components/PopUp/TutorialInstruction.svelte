@@ -1,14 +1,17 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    import type { Snippet } from "svelte";
     import ChevronLeftIcon from "../Icons/ChevronLeftIcon.svelte";
     import ChevronRightIcon from "../Icons/ChevronRightIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import { currentBannerIndex } from "../../Stores/PopupStore";
     import PopUpContainer from "./PopUpContainer.svelte";
 
-    const dispatch = createEventDispatcher<{
-        close: void;
-    }>();
+    interface Props {
+        onclose?: () => void;
+        children?: Snippet;
+    }
+
+    let { onclose, children }: Props = $props();
 
     function goToPreviousBanner() {
         if ($currentBannerIndex === 0) return;
@@ -21,7 +24,7 @@
     }
 
     function closeBanner() {
-        dispatch("close");
+        onclose?.();
     }
 </script>
 
@@ -34,7 +37,7 @@
                     ? ''
                     : 'opacity-20'}"
                 id="chevron-left"
-                on:click={goToPreviousBanner}
+                onclick={goToPreviousBanner}
                 aria-label="Previous"
             >
                 <ChevronLeftIcon height="h-4" width="w-4" />
@@ -47,7 +50,7 @@
                     ? 'opacity-20 disabled'
                     : ''}"
                 id="chevron-right"
-                on:click={goToNextBanner}
+                onclick={goToNextBanner}
                 aria-label="Next"
             >
                 <ChevronRightIcon height="h-4" width="w-4" />
@@ -56,7 +59,7 @@
         <div class="min-w-[2.5rem] sm:min-w-0">
             <button
                 class="btn btn-secondary btn-sm min-h-10 min-w-10 sm:min-h-0 sm:min-w-0 p-2"
-                on:click={closeBanner}
+                onclick={closeBanner}
                 aria-label="Close"
             >
                 <XIcon height="h-4" width="w-4" />
@@ -211,10 +214,10 @@
             </svg>
         </div>
         <div class="flex flex-col w-full min-w-0 text-center sm:text-left">
-            <slot />
+            {@render children?.()}
         </div>
     </div>
-    <svelte:fragment slot="buttons">
+    {#snippet buttons()}
         <div class="tutorial-buttons flex flex-col-reverse sm:flex-row w-full gap-2 sm:gap-2 sm:space-x-2">
             <button
                 class="btn btn-light btn-sm btn-ghost flex-1 min-h-10 sm:min-h-0 justify-center tutorial-btn-secondary"
@@ -223,12 +226,12 @@
             <button
                 data-testId="close-tutorial-button"
                 class="btn btn-secondary btn-sm flex-1 min-h-10 sm:min-h-0 justify-center"
-                on:click={closeBanner}
+                onclick={closeBanner}
             >
                 Close
             </button>
         </div>
-    </svelte:fragment>
+    {/snippet}
 </PopUpContainer>
 
 <style>

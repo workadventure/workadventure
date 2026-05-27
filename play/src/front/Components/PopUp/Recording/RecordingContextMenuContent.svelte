@@ -7,10 +7,19 @@
     import type { RoomConnection } from "../../../Connection/RoomConnection.ts";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 
-    export let currentRecord: NonUndefinedFields<Recording>;
-    export let connection: RoomConnection | undefined = undefined;
-    export let onDelete: () => void;
-    export let onClose: () => void;
+    interface Props {
+        currentRecord: NonUndefinedFields<Recording>;
+        connection?: RoomConnection;
+        onDelete: () => void;
+        onClose: () => void;
+    }
+
+    let {
+        currentRecord,
+        connection = undefined,
+        onDelete,
+        onClose
+    }: Props = $props();
 
     async function downloadFile(filename: string) {
         try {
@@ -83,18 +92,18 @@
     >
         <button
             class="w-full p-2 text-left flex items-center gap-2 bg-secondary-800 hover:bg-secondary cursor-pointer rounded"
-            on:click={() => downloadFile(currentRecord.videoFile.filename)}
+            onclick={() => downloadFile(currentRecord.videoFile.filename)}
         >
             <DownloadIcon height="h-4" width="w-4" />
             {$LL.recording.download()}
         </button>
 
-        <div class="h-[1px] w-full bg-white/20" />
+        <div class="h-[1px] w-full bg-white/20"></div>
 
         <button
             data-testid="recording-context-menu-delete"
             class="w-full p-2 text-left hover:bg-red-500 text-red-400 hover:text-white flex items-center gap-2 rounded"
-            on:click={() => handleDelete()}
+            onclick={() => handleDelete()}
         >
             {$LL.recording.contextMenu.delete()}
         </button>

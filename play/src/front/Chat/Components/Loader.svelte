@@ -1,7 +1,11 @@
 <script lang="ts">
-    export let text: string = "";
-    export let height = "h-dvh";
-    export let className: string = "";
+    interface Props {
+        text?: string;
+        height?: string;
+        className?: string;
+    }
+
+    let { text = "", height = "h-dvh", className = "" }: Props = $props();
 </script>
 
 <div class="grid place-items-center {height} loader {className}">

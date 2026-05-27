@@ -3,9 +3,13 @@
     import type { UserInputManager } from "../../Phaser/UserInput/UserInputManager";
     import PopUpContainer from "./PopUpContainer.svelte";
 
-    export let message: string;
-    export let click: () => void;
-    export let userInputManager: UserInputManager;
+    interface Props {
+        message: string;
+        click: () => void;
+        userInputManager: UserInputManager;
+    }
+
+    let { message, click, userInputManager }: Props = $props();
 
     onMount(() => {
         userInputManager.addSpaceEventListener(click);
@@ -18,7 +22,7 @@
 
 <PopUpContainer reduceOnSmallScreen={true}>
     {message}
-    <svelte:fragment slot="buttons">
-        <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" on:click={click}>Enter Jitsi</button>
-    </svelte:fragment>
+    {#snippet buttons()}
+        <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" onclick={click}>Enter Jitsi</button>
+    {/snippet}
 </PopUpContainer>

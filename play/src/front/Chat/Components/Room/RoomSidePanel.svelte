@@ -14,15 +14,19 @@
     import RoomSidePanelSettings from "./RoomSidePanelSettings.svelte";
     import { IconChevronLeft, IconX } from "@wa-icons";
 
-    export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
-    export let showCloseButton = false;
-    export let closeOnTimelineFocus = false;
+    interface Props {
+        room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
+        showCloseButton?: boolean;
+        closeOnTimelineFocus?: boolean;
+    }
+
+    let { room, showCloseButton = false, closeOnTimelineFocus = false }: Props = $props();
 
     function activateSection(section: RoomSidePanelSection) {
         roomSidePanelStore.setActiveSection(section);
     }
 
-    $: shouldShowCloseButton = showCloseButton || $roomSidePanelStore.activeSection === "settings";
+    let shouldShowCloseButton = $derived(showCloseButton || $roomSidePanelStore.activeSection === "settings");
 </script>
 
 <div class="flex h-full min-h-0 flex-col bg-white/[0.02]" data-testid="roomSidePanel">
@@ -36,7 +40,7 @@
                         data-testid="roomSidePanelBackButton"
                         title={$LL.chat.roomPanel.back()}
                         aria-label={$LL.chat.roomPanel.back()}
-                        on:click={() => activateSection("home")}
+                        onclick={() => activateSection("home")}
                     >
                         <IconChevronLeft font-size={18} />
                     </button>
@@ -52,7 +56,7 @@
                         {/if}
                     </div>
                 {:else}
-                    <div class="min-w-0 flex-1" />
+                    <div class="min-w-0 flex-1"></div>
                 {/if}
                 {#if shouldShowCloseButton}
                     <button
@@ -61,7 +65,7 @@
                         data-testid="closeRoomSidePanelButton"
                         title={$LL.chat.roomPanel.toggleClose()}
                         aria-label={$LL.chat.roomPanel.toggleClose()}
-                        on:click={() => roomSidePanelStore.close()}
+                        onclick={() => roomSidePanelStore.close()}
                     >
                         <IconX font-size={18} />
                     </button>

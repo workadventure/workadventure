@@ -22,7 +22,11 @@
         ["recording-start", recordingStartImg],
     ]);
 
-    export let notification: Notification;
+    interface Props {
+        notification: Notification;
+    }
+
+    let { notification }: Props = $props();
 
     onMount(() => {
         // Clear notification after 5 seconds

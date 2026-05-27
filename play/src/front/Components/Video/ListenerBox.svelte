@@ -14,7 +14,7 @@
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             referrerpolicy="strict-origin-when-cross-origin"
             allowfullscreen
-        />
+        ></iframe>
     {:else}
         <Loader text={$LL.mapEditor.properties.listenerMegaphone.waitingSpeaker()} className="m-4" />
     {/if}

@@ -7,7 +7,11 @@
     import { toastStore } from "../../Stores/ToastStore";
     import ToastContainer from "./ToastContainer.svelte";
 
-    export let toastUuid: string;
+    interface Props {
+        toastUuid: string;
+    }
+
+    let { toastUuid }: Props = $props();
 
     function handleOpenSettings(): void {
         mediaSettingsOpenStore.set(true);
@@ -29,12 +33,16 @@
             {$LL.actionbar.microphone.noSoundWarning()}
         </p>
     </div>
-    <svelte:fragment slot="buttons">
+    {#snippet buttons()}
         <button
             type="button"
             class="btn btn-ghost btn-sm flex-1"
             data-testid="no-microphone-sound-ignore"
-            on:click|stopPropagation|preventDefault={closeToast}
+            onclick={(event) => {
+                event.stopPropagation();
+                event.preventDefault();
+                closeToast();
+            }}
         >
             {$LL.actionbar.microphone.ignore()}
         </button>
@@ -42,9 +50,13 @@
             type="button"
             class="btn btn-danger btn-sm flex-1"
             data-testid="no-microphone-sound-open-settings"
-            on:click|stopPropagation|preventDefault={handleOpenSettings}
+            onclick={(event) => {
+                event.stopPropagation();
+                event.preventDefault();
+                handleOpenSettings();
+            }}
         >
             {$LL.actionbar.microphone.openSettings()}
         </button>
-    </svelte:fragment>
+    {/snippet}
 </ToastContainer>

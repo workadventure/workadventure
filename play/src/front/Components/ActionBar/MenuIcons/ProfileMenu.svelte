@@ -3,7 +3,6 @@
     import { clickOutside } from "svelte-outside";
     import { AvailabilityStatus } from "@workadventure/messages";
     import { setContext } from "svelte";
-    import type { SvelteComponentTyped } from "svelte";
     import type { Readable } from "svelte/store";
     import { derived, get } from "svelte/store";
     import {
@@ -149,9 +148,9 @@
         8
     );
 
-    $: forceBurgerMode = $inJitsiStore || $inBbbStore || $inLivekitStore || $isInRemoteConversation;
+    let forceBurgerMode = $derived($inJitsiStore || $inBbbStore || $inLivekitStore || $isInRemoteConversation);
 
-    let rightActionBarMenuItemsInBurgerMenu: Readable<RightMenuItem<SvelteComponentTyped>[]> = derived(
+    let rightActionBarMenuItemsInBurgerMenu: Readable<RightMenuItem[]> = derived(
         rightActionBarMenuItems,
         ($rightActionBarMenuItems, set) => {
             const theDerived = derived(
@@ -176,14 +175,15 @@
     }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div data-testid="action-user" class="flex items-center transition-all pointer-events-auto">
     <div
         class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2 cursor-pointer"
         class:profile-menu-force-burger={forceBurgerMode}
         use:floatingUiRef
-        on:click|preventDefault={() => {
+        onclick={(event) => {
+            event.preventDefault();
             openedMenuStore.toggle("profileMenu");
         }}
     >
@@ -215,7 +215,7 @@
                     <div
                         class="aspect-square h-2 w-2 rounded-full me-1.5"
                         style="background-color: {getColorHexOfStatus($availabilityStatusStore)}"
-                    />
+                    ></div>
                     <div
                         class="hidden @xl/actions:block"
                         style="color: {getColorHexOfStatus($availabilityStatusStore)};filter: brightness(200%);"
@@ -244,7 +244,7 @@
                 openedMenuStore.close("profileMenu");
             }}
         >
-            <div use:arrowAction />
+            <div use:arrowAction></div>
             <div class="p-0 m-0 list-none overflow-y-auto max-h-[calc(100vh-96px)]">
                 <ExternalComponents zone="menuTop" />
                 <AvailabilityStatusList statusInformation={getStatusInformation(statusToShow)} />
@@ -252,7 +252,7 @@
                 {#if showWokaNameMenuItem()}
                     <ActionBarButton
                         label={$LL.actionbar.profil()}
-                        on:click={() => {
+                        onclick={() => {
                             openEditNameScene();
                             analyticsClient.editName();
                         }}
@@ -262,7 +262,7 @@
                 {/if}
                 <ActionBarButton
                     label={$LL.actionbar.woka()}
-                    on:click={() => {
+                    onclick={() => {
                         openEditSkinScene();
                         analyticsClient.editWoka();
                     }}
@@ -271,7 +271,7 @@
                 </ActionBarButton>
                 <ActionBarButton
                     label={$LL.actionbar.companion()}
-                    on:click={() => {
+                    onclick={() => {
                         openEditCompanionScene();
                         analyticsClient.editCompanion();
                     }}
@@ -294,19 +294,19 @@
                 <!--                                    <div class="text-left flex items-center">{$LL.actionbar.quest()}</div>-->
                 <!--                                </button>-->
                 <HeaderMenuItem label={$LL.menu.sub.settings()} />
-                <ActionBarButton label={$LL.actionbar.editCamMic()} on:click={openEnableCameraScene}>
+                <ActionBarButton label={$LL.actionbar.editCamMic()} onclick={openEnableCameraScene}>
                     <CamSettingsIcon />
                 </ActionBarButton>
 
                 {#if SENTRY_DSN_FRONT != undefined && connectionManager.currentRoom?.isIssueReportEnabled}
-                    <ActionBarButton label={$LL.actionbar.issueReport.menuAction()} on:click={openFeedbackScene}>
+                    <ActionBarButton label={$LL.actionbar.issueReport.menuAction()} onclick={openFeedbackScene}>
                         <IconBug font-size="22" />
                     </ActionBarButton>
                 {/if}
 
                 <ActionBarButton
                     label={$LL.actionbar.allSettings()}
-                    on:click={() => {
+                    onclick={() => {
                         showMenuItem(SubMenusInterface.settings);
                         analyticsClient.openedMenu();
                         openedMenuStore.close("profileMenu");
@@ -322,14 +322,15 @@
                 <AdditionalMenuItems menu="profileMenu" />
 
                 {#each $rightActionBarMenuItemsInBurgerMenu ?? [] as button (button.id)}
-                    <svelte:component this={button.component} {...button.props} />
+                    {@const ButtonComponent = button.component}
+                    <ButtonComponent {...button.props} />
                 {/each}
 
                 {#if $pwaInstallProfileMenuEligibleStore === true}
                     <button
                         data-testid="profile-menu-install-web-app"
                         disabled={$pwaInstallProfileMenuEligibleStore !== true}
-                        on:click={openPwaInstallPrompt}
+                        onclick={openPwaInstallPrompt}
                         class="group flex p-2 gap-2 items-center font-bold text-sm w-full pointer-events-auto text-start rounded transition-all {$pwaInstallProfileMenuEligibleStore ===
                         true
                             ? 'hover:bg-white/10 cursor-pointer'
@@ -345,7 +346,7 @@
                 {/if}
 
                 <button
-                    on:click={() => {
+                    onclick={() => {
                         onboardingStore.restart();
                         openedMenuStore.close("profileMenu");
                     }}
@@ -361,8 +362,10 @@
 
                 {#if ENABLE_OPENID && $userIsConnected}
                     <button
-                        on:click={() => analyticsClient.logout()}
-                        on:click={() => connectionManager.logout()}
+                        onclick={() => {
+                            analyticsClient.logout();
+                            connectionManager.logout();
+                        }}
                         class="group flex p-2 gap-2 items-center hover:bg-danger-600 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
                     >
                         <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">

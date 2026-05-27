@@ -1,37 +1,50 @@
 <script lang="ts">
-    import { closeModal } from "svelte-modals";
     import PopupGeneric from "../Modal/Popup.svelte";
     import LL from "../../../i18n/i18n-svelte";
+    import { modals } from "@wa-modals";
 
-    export let isOpen: boolean;
-    export let onDeleteEntities: () => void;
-    export let onKeepEntities: () => void;
-    export let onCancel: () => void;
+    interface Props {
+        isOpen: boolean;
+        onDeleteEntities: () => void;
+        onKeepEntities: () => void;
+        onCancel: () => void;
+    }
+
+    let {
+        isOpen,
+        onDeleteEntities,
+        onKeepEntities,
+        onCancel
+    }: Props = $props();
 </script>
 
 <PopupGeneric {isOpen}>
-    <h1 slot="title">{$LL.mapEditor.areaEditor.actionPopupOnPersonalAreaWithEntities.title()}</h1>
-    <div slot="content" class="whitespace-nowrap">
-        {$LL.mapEditor.areaEditor.actionPopupOnPersonalAreaWithEntities.description()}
-    </div>
-    <svelte:fragment slot="action">
+    {#snippet title()}
+        <h1>{$LL.mapEditor.areaEditor.actionPopupOnPersonalAreaWithEntities.title()}</h1>
+    {/snippet}
+    {#snippet content()}
+        <div class="whitespace-nowrap">
+            {$LL.mapEditor.areaEditor.actionPopupOnPersonalAreaWithEntities.description()}
+        </div>
+    {/snippet}
+    {#snippet action()}
         <button
-            on:click={() => {
+            onclick={() => {
                 onDeleteEntities();
-                closeModal();
+                modals.close();
             }}>{$LL.mapEditor.areaEditor.actionPopupOnPersonalAreaWithEntities.buttons.remove()}</button
         >
         <button
-            on:click={() => {
+            onclick={() => {
                 onKeepEntities();
-                closeModal();
+                modals.close();
             }}>{$LL.mapEditor.areaEditor.actionPopupOnPersonalAreaWithEntities.buttons.keep()}</button
         >
         <button
-            on:click={() => {
+            onclick={() => {
                 onCancel();
-                closeModal();
+                modals.close();
             }}>{$LL.mapEditor.areaEditor.actionPopupOnPersonalAreaWithEntities.buttons.cancel()}</button
         >
-    </svelte:fragment>
+    {/snippet}
 </PopupGeneric>

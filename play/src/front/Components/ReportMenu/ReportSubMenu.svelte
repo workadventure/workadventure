@@ -4,12 +4,16 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import TextArea from "../Input/TextArea.svelte";
 
-    export let userUUID: string | undefined;
-    export let userName: string | undefined;
+    interface Props {
+        userUUID?: string;
+        userName?: string;
+    }
 
-    let reportMessage: string;
-    let hiddenError = true;
-    let hiddenUuidError = true;
+    let { userUUID, userName }: Props = $props();
+
+    let reportMessage: string = $state("");
+    let hiddenError = $state(true);
+    let hiddenUuidError = $state(true);
 
     function submitReport() {
         hiddenUuidError = true;
@@ -40,7 +44,7 @@
     <p>{$LL.report.content()}</p>
     <form>
         <section class="mb-0 pb-0">
-            <TextArea label={$LL.report.message.title()} bind:value={reportMessage} onKeyPress={() => {}} />
+            <TextArea label={$LL.report.message.title()} bind:value={reportMessage} onkeypress={() => {}} />
             {#if !hiddenError}
                 <p class="text-pop-red mb-0 pb-0">{$LL.report.message.empty()}</p>
             {/if}
@@ -49,9 +53,13 @@
             {/if}
         </section>
         <section>
-            <button type="submit" class="btn btn-danger w-full" on:click|preventDefault|stopPropagation={submitReport}
-                >{$LL.report.submit()}</button
-            >
+            <button type="submit" class="btn btn-danger w-full" onclick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                submitReport();
+            }}>
+                {$LL.report.submit()}
+            </button>
         </section>
     </form>
 </div>

@@ -58,11 +58,11 @@
         return lockableProperty.allowedTags.some((tag) => userTagsSet.has(tag));
     }
 
-    $: lockableAreas = $currentPlayerLockableAreasStore;
-    $: showAreaLock = lockableAreas.length > 0;
-    $: showGroupLock = !showAreaLock && $currentPlayerGroupLockStateStore !== undefined;
+    let lockableAreas = $derived($currentPlayerLockableAreasStore);
+    let showAreaLock = $derived(lockableAreas.length > 0);
+    let showGroupLock = $derived(!showAreaLock && $currentPlayerGroupLockStateStore !== undefined);
 
-    $: areasWithPermission = (() => {
+    let areasWithPermission = $derived((() => {
         const set = new Set<string>();
         for (const entry of lockableAreas) {
             if (canLockEntry(entry)) {
@@ -70,17 +70,17 @@
             }
         }
         return set;
-    })();
+    })());
 
-    $: canLockAtLeastOne = areasWithPermission.size > 0;
+    let canLockAtLeastOne = $derived(areasWithPermission.size > 0);
 
-    $: hasBubbleOption = $currentPlayerGroupLockStateStore !== undefined;
-    $: showPicker = lockableAreas.length > 1 || (lockableAreas.length === 1 && hasBubbleOption);
+    let hasBubbleOption = $derived($currentPlayerGroupLockStateStore !== undefined);
+    let showPicker = $derived(lockableAreas.length > 1 || (lockableAreas.length === 1 && hasBubbleOption));
     /** True when user can lock at least one area OR can lock the bubble (picker with bubble row). */
-    $: canLockSomething = canLockAtLeastOne || (showPicker && hasBubbleOption);
+    let canLockSomething = $derived(canLockAtLeastOne || (showPicker && hasBubbleOption));
 
     let closeFloatingUi: (() => void) | undefined = undefined;
-    let triggerElement: HTMLElement | undefined = undefined;
+    let triggerElement: HTMLElement | undefined = $state(undefined);
 
     function closePicker(): void {
         closeFloatingUi?.();
@@ -135,7 +135,7 @@
                     },
                     { placement: "bottom" },
                     8,
-                    true
+                    true,
                 );
                 return;
             }
@@ -147,7 +147,7 @@
         }
     }
 
-    $: lockState = (() => {
+    let lockState = $derived((() => {
         if (showAreaLock) {
             if (lockableAreas.length === 0) {
                 return undefined;
@@ -161,17 +161,19 @@
             return $currentPlayerGroupLockStateStore;
         }
         return undefined;
-    })();
+    })());
 
     type ButtonState = "active" | "normal" | "disabled" | "disabledForbidden" | "forbidden";
-    let buttonState: ButtonState = "normal";
+    let buttonState: ButtonState = $state("normal");
 
-    $: buttonState = (() => {
-        if (showAreaLock && !canLockSomething) {
-            return lockState ? "disabledForbidden" : "disabled";
-        }
-        return lockState ? "forbidden" : "normal";
-    })();
+    $effect(() => {
+        buttonState = (() => {
+            if (showAreaLock && !canLockSomething) {
+                return lockState ? "disabledForbidden" : "disabled";
+            }
+            return lockState ? "forbidden" : "normal";
+        })();
+    });
 
     onDestroy(() => {
         closePicker();
@@ -180,7 +182,7 @@
 
 {#if showAreaLock || showGroupLock}
     <ActionBarButton
-        on:click={handleClick}
+        onclick={handleClick}
         classList="group/btn-lock"
         tooltipTitle={$LL.actionbar.help.lock.title()}
         tooltipDesc={$LL.actionbar.help.lock.desc()}

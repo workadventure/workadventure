@@ -9,9 +9,13 @@
     import { ignoreSuggestedRoom } from "../../Stores/ChatStore";
     import { IconLoader } from "@wa-icons";
 
-    export let roomInformation: { name: string; id: string; pictureStore: PictureStore };
-    let roomName = roomInformation.name;
-    let loadingInvitation = false;
+    interface Props {
+        roomInformation: { name: string; id: string; pictureStore?: PictureStore };
+    }
+
+    let { roomInformation }: Props = $props();
+    let roomName = $derived(roomInformation.name);
+    let loadingInvitation = $state(false);
 
     async function joinRoom() {
         loadingInvitation = true;
@@ -63,14 +67,14 @@
                 type="button"
                 class="border border-solid border-white/35 text-white/80 hover:bg-white/10 rounded text-xs py-1 px-2 m-0"
                 data-testid="ignoreSuggestedRoomButton"
-                on:click={onIgnoreClick}
+                onclick={onIgnoreClick}
             >
                 {$LL.chat.ignoreSuggestedRoom()}
             </button>
             <button
                 class="border border-solid border-success text-success hover:bg-success-400/10 rounded text-xs py-1 px-2 m-0"
                 data-testid="acceptInvitationButton"
-                on:click={() => joinRoom()}
+                onclick={() => joinRoom()}
             >
                 {$LL.chat.join()}
             </button>

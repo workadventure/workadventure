@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount, createEventDispatcher } from "svelte";
+    import { onMount } from "svelte";
     import { get } from "svelte/store";
     import * as Sentry from "@sentry/svelte";
     import Select from "svelte-select";
@@ -8,16 +8,18 @@
     import type { SelectItem } from "./Room/searchChatMembersRule";
     import { searchChatMembersRule } from "./Room/searchChatMembersRule";
     import { IconUsers } from "@wa-icons";
-    export let value: SelectItem[] = [];
-    export let placeholder = "";
-    export let filterText = "";
+    interface Props {
+        value?: SelectItem[];
+        placeholder?: string;
+        filterText?: string;
+        onerror?: (error: string) => void;
+    }
 
-    let items: SelectItem[] = [];
+    let { value = $bindable([]), placeholder = "", filterText = "", onerror }: Props = $props();
+
+    let items: SelectItem[] = $state([]);
     const chat = gameManager.chatConnection;
 
-    const dispatch = createEventDispatcher<{
-        error: { error: string };
-    }>();
     const { searchWorldMembers } = searchChatMembersRule();
 
     function handleFilter(e: CustomEvent) {
@@ -50,7 +52,7 @@
 
         const hasInvalidItems = verificationResults.some(({ isValid }) => !isValid);
         if (hasInvalidItems) {
-            dispatch("error", { error: get(LL).chat.matrixUserSelect.userNotFound() });
+            onerror?.(get(LL).chat.matrixUserSelect.userNotFound());
         }
 
         return validItems;
@@ -62,7 +64,7 @@
                 items = newItems;
             })
             .catch((error) => {
-                dispatch("error", { error: get(LL).chat.matrixUserSelect.failedToLoadUsers() });
+                onerror?.(get(LL).chat.matrixUserSelect.failedToLoadUsers());
                 console.error(error);
                 Sentry.captureException(error);
             });

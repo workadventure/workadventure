@@ -301,7 +301,7 @@ describe("SpaceFilter", () => {
             const space = await Space.create(
                 "space-name",
                 FilterType.ALL_USERS,
-                mockRoomConnection as unknown as RoomConnection,
+                mockRoomConnection,
                 [],
                 signal,
                 {
@@ -333,7 +333,7 @@ describe("SpaceFilter", () => {
             const space = await Space.create(
                 "space-name",
                 FilterType.ALL_USERS,
-                mockRoomConnection as unknown as RoomConnection,
+                mockRoomConnection,
                 [],
                 signal,
                 {

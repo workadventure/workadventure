@@ -5,12 +5,12 @@ import type { ICreateClientOpts, MatrixClient, SecretStorage } from "matrix-js-s
 import { createClient, IndexedDBCryptoStore, IndexedDBStore } from "matrix-js-sdk";
 
 import type { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
-import { openModal } from "svelte-modals";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
 import type { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { matrixSecurity } from "./MatrixSecurity";
 import { customMatrixLogger } from "./CustomMatrixLogger";
+import { modals } from "@wa-modals";
 
 globalThis.Olm = Olm;
 window.Buffer = Buffer;
@@ -290,7 +290,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 resolve(null);
                 return;
             }
-            openModal(AccessSecretStorageDialog, {
+            modals.open(AccessSecretStorageDialog, {
                 keyInfo,
                 matrixClient: this.client,
                 onClose: (key: Uint8Array | null) => resolve(key),

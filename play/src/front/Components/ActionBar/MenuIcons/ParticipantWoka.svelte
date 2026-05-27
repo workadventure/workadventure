@@ -3,8 +3,12 @@
     import Woka from "../../Woka/Woka.svelte";
     import Spinner from "../../Icons/Spinner.svelte";
 
-    export let pictureStore: Readable<string | undefined>;
-    export let fallbackName: string;
+    interface Props {
+        pictureStore: Readable<string | undefined>;
+        fallbackName: string;
+    }
+
+    let { pictureStore, fallbackName }: Props = $props();
 
     function getInitial(name: string): string {
         return name.trim().charAt(0).toUpperCase() || "?";

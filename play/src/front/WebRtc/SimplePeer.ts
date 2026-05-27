@@ -897,9 +897,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * @returns Information about the triggered failure, or null if no peers exist
      */
     public forceFirstPeerFailure(): { userId: string; triggered: boolean } | null {
-        const firstEntry = this.videoPeers.entries().next().value as
-            | [string, { promise: Promise<RemotePeer>; abortController: AbortController }]
-            | undefined;
+        const firstEntry = this.videoPeers.entries().next().value;
 
         if (!firstEntry) {
             console.warn("[DEBUG] No video peers found to force failure");

@@ -25,9 +25,9 @@
     <div
         class="fixed z-[9998] top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-20 bg-black"
         style="background-image: url({bgMap});"
-    />
+    ></div>
     <!-- Background color overlay -->
-    <div class="fixed z-[9998] top-0 left-0 w-full h-full backdrop-blur-md opacity-70" />
+    <div class="fixed z-[9998] top-0 left-0 w-full h-full backdrop-blur-md opacity-70"></div>
     <div
         class="bg-contrast/95 backdrop-blur-md text-white z-[10000] w-[90%] m-auto left-0 right-0 sm:max-w-[600px] rounded-3xl max-h-full overflow-y-auto pointer-events-auto shadow-2xl"
     >
@@ -56,10 +56,10 @@
         </div>
 
         <div class="footer flex flex-row justify-evenly items-center bg-contrast/80 w-full p-4 gap-3 rounded-b-3xl">
-            <button class="btn btn-secondary flex-1" on:click={handleUpdateBrowser} data-testid="update-browser-button">
+            <button class="btn btn-secondary flex-1" onclick={handleUpdateBrowser} data-testid="update-browser-button">
                 {$LL.warning.browserNotSupported.updateBrowser()}
             </button>
-            <button class="btn btn-ghost btn-light flex-1" on:click={handleLeave} data-testid="leave-button">
+            <button class="btn btn-ghost btn-light flex-1" onclick={handleLeave} data-testid="leave-button">
                 {$LL.warning.browserNotSupported.leave()}
             </button>
         </div>

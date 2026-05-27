@@ -1,4 +1,4 @@
-import CancelablePromise from "cancelable-promise";
+import { CancelablePromise } from "cancelable-promise";
 import type { Scene } from "phaser";
 import Debug from "debug";
 import Texture = Phaser.Textures.Texture;

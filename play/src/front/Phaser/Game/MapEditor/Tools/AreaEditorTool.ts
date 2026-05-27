@@ -3,7 +3,6 @@ import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { v4 as uuid } from "uuid";
-import { openModal } from "svelte-modals";
 import type { MapEditorAreaToolMode } from "../../../../Stores/MapEditorStore";
 import { mapEditorAreaModeStore, mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
@@ -23,6 +22,7 @@ import { SpeechDomElement } from "../../../Entity/SpeechDomElement";
 import { LL } from "../../../../../i18n/i18n-svelte";
 import { MapEditorTool } from "./MapEditorTool";
 import type { TrashEditorTool } from "./TrashEditorTool";
+import { modals } from "@wa-modals";
 
 export class AreaEditorTool extends MapEditorTool {
     private scene: GameScene;
@@ -190,7 +190,7 @@ export class AreaEditorTool extends MapEditorTool {
         if (isPersonalArea) {
             const entitiesInsideArea = this.getEntitiesInsideArea(areaId);
             if (entitiesInsideArea.size > 0) {
-                openModal(ActionPopupOnPersonalAreaWithEntities, {
+                modals.open(ActionPopupOnPersonalAreaWithEntities, {
                     onDeleteEntities: () => this.executeDeletePersonalAreaWithEntities(areaId, deleteAreaCommand, true),
                     onKeepEntities: () => this.executeDeletePersonalAreaWithEntities(areaId, deleteAreaCommand),
                     onCancel: () => {},

@@ -10,13 +10,17 @@
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import { NameNotValidError, NameTooLongError } from "../../Exception/NameError";
 
-    export let game: Game;
+    interface Props {
+        game: Game;
+    }
 
-    const loginScene = game.scene.getScene(LoginSceneName) as LoginScene;
+    let { game }: Props = $props();
 
-    let name = gameManager.getPlayerName() || "";
-    let startValidating = false;
-    let errorName = "";
+    let loginScene = $derived(game.scene.getScene(LoginSceneName) as LoginScene);
+
+    let name = $state(gameManager.getPlayerName() || "");
+    let startValidating = $state(false);
+    let errorName = $state("");
 
     let logo = gameManager.currentStartedRoom.loginSceneLogo ?? logoImg;
     let legals = gameManager.currentStartedRoom?.legals ?? {};
@@ -52,7 +56,7 @@
         );
     }
 
-    let legalString: string | undefined;
+    let legalString: string | undefined = $state();
     if (legalStrings.length > 0) {
         if (Intl.ListFormat) {
             const formatter = new Intl.ListFormat($locale, { style: "long", type: "conjunction" });
@@ -103,14 +107,19 @@
 
 <form
     class="loginScene h-dvh flex flex-col items-center justify-center pointer-events-auto relative z-30"
-    on:submit|preventDefault={submit}
+    onsubmit={(event) => {
+        event.preventDefault();
+        submit().catch((error) => {
+            console.error("Failed to submit login", error);
+        });
+    }}
 >
     <div class="w-full sm:w-96 md:w-10/12 lg:w-1/2 xl:w-1/3 rounded mx-auto text-center p-8">
         <section class="text-center flex h-fit flex-col justify-center items-center mb-0">
             <span class="text-white text-lg bold">
                 {$LL.login.input.name.placeholder()}
             </span>
-            <!-- svelte-ignore a11y-autofocus -->
+            <!-- svelte-ignore a11y_autofocus -->
             <input
                 type="text"
                 name="fname"
@@ -120,7 +129,7 @@
                 autofocus
                 maxlength={MAX_USERNAME_LENGTH}
                 bind:value={name}
-                on:keypress={() => {
+                onkeypress={() => {
                     startValidating = true;
                 }}
                 class:border-danger={(name.trim() === "" && startValidating) || errorName !== ""}
@@ -161,5 +170,5 @@
 <div
     class="absolute left-0 top-0 w-full h-full z-20 bg-contrast opacity-80"
     style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}
-/>
-<div class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{sceneBg}');" />
+></div>
+<div class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{sceneBg}');"></div>

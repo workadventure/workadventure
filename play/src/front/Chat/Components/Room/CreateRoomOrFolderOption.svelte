@@ -1,6 +1,5 @@
 <script lang="ts">
     import { readable } from "svelte/store";
-    import { openModal } from "svelte-modals";
     import { EventType } from "matrix-js-sdk";
     import LL from "../../../../i18n/i18n-svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
@@ -10,35 +9,41 @@
     import CreateRoomModal from "./CreateRoomModal.svelte";
     import RoomOption from "./RoomMenu/RoomOption.svelte";
     import { IconDots, IconFolder, IconLogout, IconMessage, IconUserEdit } from "@wa-icons";
+    import { modals } from "@wa-modals";
 
-    export let parentID: string | undefined = undefined;
-    export let parentName = "";
-    export let folder: (RoomFolder & ChatRoomModeration) | undefined;
-    let optionButtonRef: HTMLButtonElement | undefined = undefined;
-    let hideFolderOptions = true;
+    interface Props {
+        parentID?: string;
+        parentName: string;
+        folder?: RoomFolder & ChatRoomModeration;
+    }
 
-    let hasPermissionToCreateRoom = folder?.hasPermissionForRoomStateEvent(EventType.SpaceChild) ?? readable(false);
-    const hasPermissionToInvite = folder?.hasPermissionTo("invite") ?? readable(false);
-    const hasPermissionToKick = folder?.hasPermissionTo("kick") ?? readable(false);
-    const hasPermissionToBan = folder?.hasPermissionTo("ban") ?? readable(false);
+    let { parentID = undefined, parentName = "", folder }: Props = $props();
+    let optionButtonRef: HTMLButtonElement | undefined = $state(undefined);
+    let hideFolderOptions = $state(true);
 
-    $: shouldDisplayManageParticipantButton = $hasPermissionToInvite || $hasPermissionToKick || $hasPermissionToBan;
+    let hasPermissionToCreateRoom = $derived(
+        folder?.hasPermissionForRoomStateEvent(EventType.SpaceChild) ?? readable(false)
+    );
+    let hasPermissionToInvite = $derived(folder?.hasPermissionTo("invite") ?? readable(false));
+    let hasPermissionToKick = $derived(folder?.hasPermissionTo("kick") ?? readable(false));
+    let hasPermissionToBan = $derived(folder?.hasPermissionTo("ban") ?? readable(false));
+
+    let shouldDisplayManageParticipantButton = $derived($hasPermissionToInvite || $hasPermissionToKick || $hasPermissionToBan);
 
     function toggleSpaceOption() {
-        hasPermissionToCreateRoom = folder?.hasPermissionForRoomStateEvent(EventType.SpaceChild) ?? readable(false);
         if (optionButtonRef === undefined) {
             return;
         }
         hideFolderOptions = !hideFolderOptions;
     }
     function openCreateSpace() {
-        openModal(CreateFolderModal, {
+        modals.open(CreateFolderModal, {
             parentID,
         });
         hideFolderOptions = true;
     }
     function closeMenuAndOpenCreateRoom() {
-        openModal(CreateRoomModal, {
+        modals.open(CreateRoomModal, {
             parentID,
         });
         hideFolderOptions = true;
@@ -55,7 +60,7 @@
 
     function openManageParticipantsModal() {
         if (!folder) return;
-        openModal(ManageParticipantsModal, { room: folder });
+        modals.open(ManageParticipantsModal, { room: folder });
     }
 </script>
 
@@ -65,7 +70,10 @@
         ? 'bg-transparent'
         : 'bg-secondary'}"
     bind:this={optionButtonRef}
-    on:click|preventDefault|stopPropagation={toggleSpaceOption}
+    onclick={(event) => {
+        event.preventDefault();
+        toggleSpaceOption();
+    }}
 >
     <IconDots />
 </button>
@@ -79,20 +87,20 @@
             dataTestId={`openCreateRoomModalButton${parentName}`}
             IconComponent={IconMessage}
             title={folder ? $LL.chat.createRoom.title() : $LL.chat.createRoom.rootTitle()}
-            on:click={closeMenuAndOpenCreateRoom}
+            onclick={closeMenuAndOpenCreateRoom}
         />
         <RoomOption
             dataTestId={`openCreateFolderModalButton${parentName}`}
             IconComponent={IconFolder}
             title={$LL.chat.createFolder.title()}
-            on:click={openCreateSpace}
+            onclick={openCreateSpace}
         />
         {#if shouldDisplayManageParticipantButton && folder}
             <RoomOption
                 dataTestId="manageParticipantOption"
                 IconComponent={IconUserEdit}
                 title={$LL.chat.manageRoomUsers.roomOption()}
-                on:click={openManageParticipantsModal}
+                onclick={openManageParticipantsModal}
             />
         {/if}
     {/if}
@@ -102,7 +110,7 @@
             IconComponent={IconLogout}
             title={$LL.chat.folderMenu.leaveFolder.label()}
             bg="bg-danger-900 hover:bg-danger"
-            on:click={closeMenuAndLeaveFolder}
+            onclick={closeMenuAndLeaveFolder}
         />
     {/if}
 </div>

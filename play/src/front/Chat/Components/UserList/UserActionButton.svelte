@@ -17,42 +17,55 @@
     import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
     import { IconForbid, IconDots, IconCamera, IconMapPin, IconUserPlus } from "@wa-icons";
 
-    export let user: ChatUser;
+    interface Props {
+        user: ChatUser;
+    }
 
-    let popoversElement: HTMLDivElement;
+    let { user }: Props = $props();
+
+    let popoversElement: HTMLDivElement | undefined = $state();
 
     let buttonElement: HTMLButtonElement;
 
-    let chatMenuActive = false;
+    let chatMenuActive = $state(false);
 
     let usersByRoomStore:
         | Readable<Map<string | undefined, { roomName: string | undefined; users: ChatUser[] }>>
-        | undefined = undefined;
+        | undefined = $state(undefined);
 
     let cleanup: undefined | (() => void);
 
-    $: if (popoversElement && buttonElement) {
-        cleanup = autoUpdate(buttonElement, popoversElement, repositionIfOverflowing);
-    }
-    $: usersByRoomMap = usersByRoomStore && $usersByRoomStore ? $usersByRoomStore : new Map();
-    // Flatten usersByRoomMap into a list of users with playUri from their room
-    $: usersWithRoomPlayUri = (() => {
-        const usersList: (ChatUser & { playUri: string })[] = [];
-        for (const [playUri, roomData] of usersByRoomMap.entries()) {
-            for (const user of roomData.users) {
-                usersList.push({
-                    ...user,
-                    playUri: playUri ?? user.playUri ?? "",
-                });
-            }
+    $effect(() => {
+        if (popoversElement && buttonElement) {
+            cleanup = autoUpdate(buttonElement, popoversElement, repositionIfOverflowing);
+            return () => {
+                cleanup?.();
+                cleanup = undefined;
+            };
         }
-        return usersList;
-    })();
-    $: userToLocate = usersWithRoomPlayUri.find((u) => u.uuid === user.uuid);
+        return undefined;
+    });
+    let usersByRoomMap = $derived(usersByRoomStore && $usersByRoomStore ? $usersByRoomStore : new Map());
+    // Flatten usersByRoomMap into a list of users with playUri from their room
+    let usersWithRoomPlayUri = $derived(
+        (() => {
+            const usersList: (ChatUser & { playUri: string })[] = [];
+            for (const [playUri, roomData] of usersByRoomMap.entries()) {
+                for (const user of roomData.users) {
+                    usersList.push({
+                        ...user,
+                        playUri: playUri ?? user.playUri ?? "",
+                    });
+                }
+            }
+            return usersList;
+        })(),
+    );
+    let userToLocate = $derived(usersWithRoomPlayUri.find((u) => u.uuid === user.uuid));
 
     const { connection, roomUrl } = gameManager.getCurrentGameScene();
 
-    const isInTheSameMap = user.playUri === roomUrl;
+    let isInTheSameMap = $derived(user.playUri === roomUrl);
 
     const iAmAdmin = connection?.hasTag("admin");
 
@@ -68,11 +81,12 @@
 
     function repositionIfOverflowing() {
         if (!buttonElement || !popoversElement) return;
-        computePosition(buttonElement, popoversElement, {
+        const currentPopoversElement = popoversElement;
+        computePosition(buttonElement, currentPopoversElement, {
             middleware: [offset(6), flip(), shift({ padding: 5 })],
         })
             .then(({ x, y }) => {
-                Object.assign(popoversElement.style, {
+                Object.assign(currentPopoversElement.style, {
                     left: `${x}px`,
                     top: `${y}px`,
                 });
@@ -159,33 +173,37 @@
         currentScerne.connection?.emitAskPosition(
             userToLocate.uuid ?? "",
             userToLocate.playUri ?? "",
-            AskPositionMessage_AskType.LOCATE
+            AskPositionMessage_AskType.LOCATE,
         );
         closeChatUserMenu();
     }
 </script>
 
-<svelte:window on:click={handleClickOutside} on:touchstart={handleClickOutside} />
+<svelte:window onclick={handleClickOutside} ontouchstart={handleClickOutside} />
 <div class="wa-dropdown">
     <button
         class="m-0 p-2 flex items-center rounded-md hover:bg-white/10 bg-transparent !text-white"
         bind:this={buttonElement}
-        on:click|stopPropagation={toggleChatUSerMenu}
+        onclick={(event) => {
+            event.stopPropagation();
+            toggleChatUSerMenu();
+        }}
     >
         <IconDots font-size="16" />
     </button>
-    <!-- on:mouseleave={closeChatUserMenu} -->
+    <!-- onmouseleave={closeChatUserMenu} -->
     {#if chatMenuActive}
         <div
             bind:this={popoversElement}
             class="wa-dropdown-menu z-10 mr-1 fixed bg-contrast/80 backdrop-blur-md rounded-md p-1"
         >
             {#if isInTheSameMap}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
                     class="walk-to wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
-                    on:click|stopPropagation={() => {
+                    onclick={(event) => {
+                        event.stopPropagation();
                         goTo("user", user.playUri ?? "", user.uuid ?? "");
                         closeChatUserMenu();
                     }}
@@ -193,23 +211,27 @@
                     <IconCamera class="w-4" />
                     {$LL.chat.userList.TalkTo()}</span
                 >
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
                     class={`follow wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded ${
                         userToLocate == undefined ? "opacity-50 cursor-not-allowed pointer-events-none" : ""
                     }`}
-                    on:click|stopPropagation={locateUser}
+                    onclick={(event) => {
+                        event.stopPropagation();
+                        locateUser();
+                    }}
                 >
                     <IconMapPin class="w-4" />
                     {$LL.chat.userList.follow()}
                 </span>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
                     class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
                     data-testid="user-list-invite"
-                    on:click|stopPropagation={() => {
+                    onclick={(event) => {
+                        event.stopPropagation();
                         if (user.uuid) {
                             const scene = gameManager.getCurrentGameScene();
                             const sent = scene.inviteManager?.requestMeetingInvitation(user.uuid);
@@ -229,11 +251,12 @@
                     {$LL.chat.userList.invite()}
                 </span>
             {:else if user.playUri}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
                     class="teleport wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
-                    on:click|stopPropagation={() => {
+                    onclick={(event) => {
+                        event.stopPropagation();
                         goTo("room", user.playUri ?? "", user.uuid ?? "");
                         closeChatUserMenu();
                     }}
@@ -247,12 +270,13 @@
                     />
                     {$LL.chat.userList.teleport()}</span
                 >
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
                     class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
                     data-testid="user-list-invite"
-                    on:click|stopPropagation={() => {
+                    onclick={(event) => {
+                        event.stopPropagation();
                         if (user.uuid) {
                             const scene = gameManager.getCurrentGameScene();
                             const sent = scene.inviteManager?.requestMeetingInvitation(user.uuid);
@@ -272,12 +296,15 @@
                     {$LL.chat.userList.invite()}
                 </span>
             {/if}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
             {#if user.visitCardUrl}
                 <span
                     class="businessCard wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
-                    on:click|stopPropagation={() => showBusinessCard(user.visitCardUrl)}
+                    onclick={(event) => {
+                        event.stopPropagation();
+                        showBusinessCard(user.visitCardUrl);
+                    }}
                     ><img
                         class="noselect"
                         src={businessCard}
@@ -291,11 +318,12 @@
             {/if}
 
             {#if iAmAdmin}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
                     class="ban wa-dropdown-item text-pop-red text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
-                    on:click|stopPropagation={() => {
+                    onclick={(event) => {
+                        event.stopPropagation();
                         if (user.username && user.uuid) {
                             showReportScreenStore.set({ userUuid: user.uuid, userName: user.username });
                         }

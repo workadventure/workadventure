@@ -16,22 +16,26 @@
     import { getItemsPerRow } from "./ItemsPerRow";
     import WokaImage from "./WokaImage.svelte";
 
-    export let back: () => void;
-    export let saveAndContinue: (texturesId: string[]) => void;
+    interface Props {
+        back: () => void;
+        saveAndContinue: (texturesId: string[]) => void;
+    }
 
-    let wokaData: WokaData | null = null;
-    let selectedBodyPart: WokaBodyPart = "body";
-    let selectedTextures: Record<WokaBodyPart, string> = {
+    let { back, saveAndContinue }: Props = $props();
+
+    let wokaData: WokaData | null = $state(null);
+    let selectedBodyPart: WokaBodyPart = $state("body");
+    let selectedTextures: Record<WokaBodyPart, string> = $state({
         body: "",
         eyes: "",
         hair: "",
         clothes: "",
         hat: "",
         accessory: "",
-    };
-    let isLoading = true;
-    let error = "";
-    let assetsDirection: number = 0;
+    });
+    let isLoading = $state(true);
+    let error = $state("");
+    let assetsDirection: number = $state(0);
 
     const bodyPartOrder: WokaBodyPart[] = ["body", "eyes", "hair", "clothes", "hat", "accessory"];
 
@@ -265,12 +269,12 @@
     >
         {#if isLoading}
             <div class="flex items-center justify-center h-64">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
         {:else if error}
             <div class="text-center text-red-600 mb-4">
                 <p>{error}</p>
-                <button class="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" on:click={loadWokaData}>
+                <button class="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" onclick={loadWokaData}>
                     Retry
                 </button>
             </div>
@@ -282,15 +286,15 @@
                             {selectedTextures}
                             {wokaData}
                             {getTextureUrl}
-                            on:rotate={(e) => {
-                                assetsDirection = e.detail.direction;
+                            onrotate={(direction) => {
+                                assetsDirection = direction;
                             }}
                         />
 
                         <div class="mt-4 space-y-2">
                             <button
                                 class="btn btn-sm btn-light btn-border w-full px-4 py-2 bg-white/10 text-white rounded hover:bg-white/10 flex flex-row items-center justify-center gap-2"
-                                on:click={randomizeOutfit}
+                                onclick={randomizeOutfit}
                             >
                                 <ShuffleIcon fillColor="white" width="w-4" height="h-4" />
                                 <span>{$LL.woka.customWoka.randomize()}</span>
@@ -299,16 +303,16 @@
                     </div>
                     <div class="flex flex-col gap-0 mb-4 w-full lg:w-fit sm:hidden">
                         {#each bodyPartOrder as bodyPart (bodyPart)}
+                            {@const BodyPartIcon = getBodyPartIcon(bodyPart)}
                             <button
                                 class="flex-1 px-4 py-2 flex-grow capitalize flex flex-row items-center justify-center gap-2 border-b-2 {selectedBodyPart ===
                                 bodyPart
                                     ? 'text-white border-white'
                                     : 'text-white/50 border-white/10'}"
-                                on:click={() => (selectedBodyPart = bodyPart)}
+                                onclick={() => (selectedBodyPart = bodyPart)}
                                 style="border-bottom-style: solid;"
                             >
-                                <svelte:component
-                                    this={getBodyPartIcon(bodyPart)}
+                                <BodyPartIcon
                                     height="h-5"
                                     width="w-5"
                                     strokeColor={selectedBodyPart === bodyPart ? "stroke-white " : "stroke-white/50"}
@@ -323,16 +327,16 @@
                 <div class="flex flex-col flex-1 h-full min-h-0 min-w-0">
                     <div class="flex-wrap gap-0 mb-4 w-full sm:flex hidden">
                         {#each bodyPartOrder as bodyPart (bodyPart)}
+                            {@const BodyPartIcon = getBodyPartIcon(bodyPart)}
                             <button
                                 class="flex-1 px-4 py-2 capitalize flex flex-row items-center justify-center gap-2 border-b-2 {selectedBodyPart ===
                                 bodyPart
                                     ? 'text-white border-white'
                                     : 'text-white/50 border-white/10'}"
-                                on:click={() => selectBodyPart(bodyPart)}
+                                onclick={() => selectBodyPart(bodyPart)}
                                 style="border-bottom-style: solid;"
                             >
-                                <svelte:component
-                                    this={getBodyPartIcon(bodyPart)}
+                                <BodyPartIcon
                                     height="h-5"
                                     width="w-5"
                                     strokeColor={selectedBodyPart === bodyPart ? "stroke-white " : "stroke-white/50"}
@@ -363,7 +367,7 @@
                                             ] === texture.id
                                                 ? 'bg-white/50 border-white'
                                                 : 'bg-white/10 hover:bg-white/20 border-transparent'}"
-                                            on:click={() => selectTexture(selectedBodyPart, texture.id)}
+                                            onclick={() => selectTexture(selectedBodyPart, texture.id)}
                                             id={`texture-${selectedBodyPart}-${texture.id}`}
                                         >
                                             <WokaImage
@@ -385,12 +389,12 @@
                 class="w-full p-3 flex flex-row items-center gap-2 border-t-2 border-t-white/10"
                 style="border-top-style: solid;"
             >
-                <button class="w-full px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded" on:click={back}>
+                <button class="w-full px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded" onclick={back}>
                     {$LL.woka.customWoka.navigation.backToDefaultWoka()}
                 </button>
                 <button
                     class="selectCharacterSceneFormSubmit w-full px-4 py-3 bg-secondary text-white rounded hover:bg-secondary-600"
-                    on:click={handlerSaveAndContinue}
+                    onclick={handlerSaveAndContinue}
                 >
                     {$LL.woka.customWoka.navigation.finish()}
                 </button>

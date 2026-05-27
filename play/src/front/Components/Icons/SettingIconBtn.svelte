@@ -1,5 +1,5 @@
 <div>
-    <button class="btn btn-xs btn-secondary btn-square absolute top-0 bottom-2 m-auto h-9 right-1">
+    <button aria-label="Settings" class="btn btn-xs btn-secondary btn-square absolute top-0 bottom-2 m-auto h-9 right-1">
         <svg
             class="btn-icon fill-inherit"
             fill="none"

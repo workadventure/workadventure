@@ -1,7 +1,11 @@
 <script lang="ts">
     import followImg from "../images/follow.svg";
 
-    export let hidden: boolean;
+    interface Props {
+        hidden: boolean;
+    }
+
+    let { hidden }: Props = $props();
 
     let cancelButton = false;
 </script>

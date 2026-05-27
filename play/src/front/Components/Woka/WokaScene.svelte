@@ -9,8 +9,8 @@
     import WokaSelectScene from "./WokaSelectScene.svelte";
     import WokaCustomizeScene from "./WokaCustomizeScene.svelte";
 
-    let buildOwnWoka = false;
-    let error: string | null = null;
+    let buildOwnWoka = $state(false);
+    let error: string | null = $state(null);
 
     async function saveAndContinue(texturesId: string[]) {
         error = null; // Reset error message
@@ -40,7 +40,7 @@
         }
     }
 
-    let mounted = false;
+    let mounted = $state(false);
 
     onMount(() => {
         mounted = true;

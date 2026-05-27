@@ -1,10 +1,14 @@
 <script lang="ts">
     import type { ChatMessageReaction } from "../../Connection/ChatConnection";
     import Reaction from "./Reaction.svelte";
-    export let reactions: ChatMessageReaction[];
-    export let classes = "";
+    interface Props {
+        reactions: ChatMessageReaction[];
+        classes: string;
+    }
 
-    $: reactionBarWidth = `${Math.max(reactions.length * 40)}px`;
+    let { reactions, classes = "" }: Props = $props();
+
+    let reactionBarWidth = $derived(`${Math.max(reactions.length * 40)}px`);
 </script>
 
 <div

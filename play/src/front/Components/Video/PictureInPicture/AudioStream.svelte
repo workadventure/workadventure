@@ -1,29 +1,34 @@
-<svelte:options immutable={true} />
-
 <script lang="ts">
-    import { createEventDispatcher, onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import Debug from "debug";
     import * as Sentry from "@sentry/svelte";
     import type { Readable } from "svelte/store";
 
-    export let streamStore: Readable<MediaStream | undefined>;
-    export let outputDeviceId: string | undefined = undefined;
-    export let isBlocked: Readable<boolean>;
+    interface Props {
+        streamStore: Readable<MediaStream | undefined>;
+        outputDeviceId?: string;
+        isBlocked: Readable<boolean>;
+        volume: Readable<number>;
+        onselectoutputaudiodeviceerror?: () => void;
+    }
+
+    let {
+        streamStore,
+        outputDeviceId = undefined,
+        isBlocked,
+        volume,
+        onselectoutputaudiodeviceerror,
+    }: Props = $props();
 
     const debug = Debug("AudioStream");
 
-    const dispatch = createEventDispatcher<{
-        selectOutputAudioDeviceError: void;
-    }>();
+    let audioElement: HTMLAudioElement | undefined = $state();
 
-    export let volume: Readable<number>;
-    let audioElement: HTMLAudioElement;
-
-    $: {
+    $effect(() => {
         if (audioElement) {
             audioElement.volume = $volume;
         }
-    }
+    });
 
     let lastRequestedDeviceId: string | undefined;
 
@@ -60,7 +65,7 @@
                     console.error("Error resetting the audio output device: ", e);
                 }
 
-                dispatch("selectOutputAudioDeviceError");
+                onselectoutputaudiodeviceerror?.();
                 return false;
             }
             console.error("Error setting the audio output device: ", e);
@@ -68,28 +73,30 @@
         }
     }
 
-    $: {
+    $effect(() => {
         if (outputDeviceId && audioElement) {
             safeSetSinkId(outputDeviceId, audioElement).catch((e) => {
                 console.error("Error setting the audio output device: ", e);
                 Sentry.captureException(e);
             });
         }
-    }
+    });
 
     let destroyed = false;
 
-    $: stream = $streamStore ? $streamStore : undefined;
+    let stream = $derived($streamStore ? $streamStore : undefined);
 
-    $: if (audioElement && stream) {
-        if (audioElement.srcObject !== stream) {
-            audioElement.srcObject = stream;
+    $effect(() => {
+        if (audioElement && stream) {
+            if (audioElement.srcObject !== stream) {
+                audioElement.srcObject = stream;
+            }
         }
-    }
+    });
 
     onMount(() => {
         (async () => {
-            if (outputDeviceId) {
+            if (outputDeviceId && audioElement) {
                 // Because of a bug in Chrome, we need to wait for setSinkId to resolve before setting the srcObject.
                 await safeSetSinkId(outputDeviceId, audioElement);
                 if (destroyed || !audioElement) {
@@ -110,5 +117,5 @@
 </script>
 
 {#if !$isBlocked}
-    <audio bind:this={audioElement} autoplay={true} />
+    <audio bind:this={audioElement} autoplay={true}></audio>
 {/if}

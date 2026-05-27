@@ -207,7 +207,7 @@ function createMatrixEvent(serializedEvent: IPartialEvent<object>, sender: strin
         sender,
         user_id: sender,
         origin_server_ts: ts,
-        content: serializedEvent.content as Record<string, unknown>,
+        content: serializedEvent.content,
         unsigned: redacted
             ? {
                   redacted_because: {
@@ -221,5 +221,5 @@ function createMatrixEvent(serializedEvent: IPartialEvent<object>, sender: strin
                   },
               }
             : undefined,
-    } as never);
+    });
 }

@@ -13,8 +13,8 @@
     const oldRights: string[] = gameManager.getCurrentGameScene().wamFile?.settings?.recording?.rights ?? [];
     const oldEnableSounds: boolean =
         gameManager.getCurrentGameScene().wamFile?.settings?.recording?.enableSounds ?? true;
-    let rights: InputTagOption[] = [];
-    let enableSounds = oldEnableSounds;
+    let rights: InputTagOption[] = $state([]);
+    let enableSounds = $state(oldEnableSounds);
     let loading = false;
 
     async function getTags(): Promise<InputTagOption[]> {

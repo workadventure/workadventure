@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+<script module lang="ts">
     // Create interface for the property
     export interface ApplicationProperty {
         name: string;
@@ -15,7 +15,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { readable } from "svelte/store";
-    import { openModal } from "svelte-modals";
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { defaultNativeIntegrationAppName } from "@workadventure/shared-utils";
@@ -45,41 +44,44 @@
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
     import { IconList, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
+    import { modals } from "@wa-modals";
 
-    export let room: ChatConversation;
-    export let disabled = false;
+    interface Props {
+        room: ChatConversation;
+        disabled: boolean;
+    }
 
-    let message = "";
-    let messageInput: HTMLDivElement;
+    let { room, disabled = false }: Props = $props();
+
+    let message = $state("");
+    let messageInput: HTMLDivElement | undefined = $state();
     let messageBarRef: HTMLDivElement;
     let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
-    let files: { id: string; file: File }[] = [];
-    let filesPreview: { id: string; size: number; name: string; type: string; url: FileReader["result"] }[] = [];
+    let files: { id: string; file: File }[] = $state([]);
+    let filesPreview: { id: string; size: number; name: string; type: string; url: FileReader["result"] }[] = $state([]);
     const TYPINT_TIMEOUT = 10000;
 
-    let applicationComponentOpened = false;
-    let fileAttachmentComponentOpened = false;
-    let fileAttachementEnabled = false;
-    let applicationProperty: ApplicationProperty | undefined = undefined;
-    const isProximityChatRoom = room instanceof ProximityChatRoom;
+    let applicationComponentOpened = $state(false);
+    let fileAttachmentComponentOpened = $state(false);
+    let fileAttachementEnabled = $state(false);
+    let applicationProperty: ApplicationProperty | undefined = $state(undefined);
+    let isProximityChatRoom = $derived(room instanceof ProximityChatRoom);
     const cannotCreatePoll = readable(false);
 
     function getPollCreationCapability(currentRoom: ChatConversation) {
         return hasChatRoomPollCreation(currentRoom) ? currentRoom.pollCreation : undefined;
     }
 
-    let pollCreation = getPollCreationCapability(room);
-    let canCreatePoll = cannotCreatePoll;
-    $: pollCreation = getPollCreationCapability(room);
-    $: canCreatePoll = pollCreation?.canCreate ?? cannotCreatePoll;
+    let pollCreation = $derived(getPollCreationCapability(room));
+    let canCreatePoll = $derived(pollCreation?.canCreate ?? cannotCreatePoll);
     let replyMessageId: string | null = null;
-    const draftId = `${room.id}-${localUserStore.getChatId() ?? "0"}`;
+    let draftId = $derived(`${room.id}-${localUserStore.getChatId() ?? "0"}`);
 
     const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
     const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
         if (chatMessage !== null) {
-            messageInput.focus();
+            messageInput?.focus();
             replyMessageId = chatMessage.id;
         }
     });
@@ -149,7 +151,9 @@
         // send message
         if (messageToSend.trim().length !== 0) {
             room?.sendMessage(messageToSend);
-            messageInput.innerText = "";
+            if (messageInput) {
+                messageInput.innerText = "";
+            }
             message = "";
             if (stopTypingTimeOutID) {
                 clearTimeout(stopTypingTimeOutID);
@@ -230,8 +234,8 @@
         }
     }
 
-    export function handleFiles(event: CustomEvent<FileList>) {
-        const newFiles = [...event.detail].map((file) => ({ id: uuid(), file }));
+    export function handleFiles(filesToAdd: FileList) {
+        const newFiles = [...filesToAdd].map((file) => ({ id: uuid(), file }));
         files = [...files, ...newFiles];
         addToPreviews(newFiles);
     }
@@ -298,7 +302,7 @@
         applicationComponentOpened = false;
         applicationProperty = undefined;
         fileAttachmentComponentOpened = false;
-        openModal(PollCreateDialog, { pollCreation });
+        modals.open(PollCreateDialog, { pollCreation });
     }
     // This function open the application part to propose to the user to add a new application or close application part
     function toggleApplicationComponent() {
@@ -433,11 +437,11 @@
         };
     }
 
-    function onUpdatApplicationProperty(applicationPropertyEvent: CustomEvent<ApplicationProperty>) {
-        applicationProperty = applicationPropertyEvent.detail;
+    function onUpdatApplicationProperty(nextApplicationProperty: ApplicationProperty) {
+        applicationProperty = nextApplicationProperty;
     }
 
-    let applicationPropertyInProcessing = false;
+    let applicationPropertyInProcessing = $state(false);
     function onProcessingApplicationProperty() {
         applicationPropertyInProcessing = true;
     }
@@ -446,7 +450,7 @@
         applicationPropertyInProcessing = false;
     }
 
-    $: quotedMessageContent = $selectedChatMessageToReply?.content;
+    let quotedMessageContent = $derived($selectedChatMessageToReply?.content);
 </script>
 
 {#if files.length > 0 && !(room instanceof ProximityChatRoom)}
@@ -462,7 +466,7 @@
                 >
                     <button
                         class="border-2 border-white border-solid absolute flex items-center justify-center rounded-full bg-secondary hover:bg-secondary-600 p-0.5 -start-2 -top-2"
-                        on:click={() => deleteFile(preview.id)}
+                        onclick={() => deleteFile(preview.id)}
                     >
                         <IconX font-size="12" />
                     </button>
@@ -497,7 +501,7 @@
             <button
                 data-testid="fileAttachmentButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
-                on:click={() => openFileAttachmentComponent()}
+                onclick={() => openFileAttachmentComponent()}
                 class:bg-secondary-800={fileAttachmentComponentOpened}
                 disabled={!fileAttachementEnabled || isProximityChatRoom}
             >
@@ -513,7 +517,7 @@
             <button
                 data-testid="createPollButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
-                on:click={openPollCreationModal}
+                onclick={openPollCreationModal}
                 disabled={!pollCreation || !$canCreatePoll}
             >
                 <IconList font-size={32} />
@@ -528,7 +532,7 @@
             <button
                 data-testid="youtubeApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
-                on:click={() => openLinkForm("youtube")}
+                onclick={() => openLinkForm("youtube")}
                 class:bg-secondary-800={applicationProperty?.name === "youtube"}
                 disabled={!applicationManager.youtubeToolActivated}
             >
@@ -544,7 +548,7 @@
             <button
                 data-testid="klaxoonApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
-                on:click={() => openLinkForm("klaxoon")}
+                onclick={() => openLinkForm("klaxoon")}
                 class:bg-secondary-800={applicationProperty?.name === "klaxoon"}
                 disabled={!applicationManager.klaxoonToolActivated}
             >
@@ -560,7 +564,7 @@
             <button
                 data-testid="googleSheetsApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
-                on:click={() => openLinkForm("googleSheets")}
+                onclick={() => openLinkForm("googleSheets")}
                 class:bg-secondary-800={applicationProperty?.name === "googleSheets"}
                 disabled={!applicationManager.googleSheetsToolActivated}
             >
@@ -576,7 +580,7 @@
             <button
                 data-testid="googleDocsApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
-                on:click={() => openLinkForm("googleDocs")}
+                onclick={() => openLinkForm("googleDocs")}
                 class:bg-secondary-800={applicationProperty?.name === "googleDocs"}
                 disabled={!applicationManager.googleDocsToolActivated}
             >
@@ -592,7 +596,7 @@
             <button
                 data-testid="googleSlidesApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
-                on:click={() => openLinkForm("googleSlides")}
+                onclick={() => openLinkForm("googleSlides")}
                 class:bg-secondary-800={applicationProperty?.name === "googleSlides"}
                 disabled={!applicationManager.googleSlidesToolActivated}
             >
@@ -608,7 +612,7 @@
             <button
                 data-testid="googleDriveApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
-                on:click={() => openLinkForm("googleDrive")}
+                onclick={() => openLinkForm("googleDrive")}
                 class:bg-secondary-800={applicationProperty?.name === "googleDrive"}
                 disabled={!applicationManager.googleDriveToolActivated}
             >
@@ -624,7 +628,7 @@
             <button
                 data-testid="eraserApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
-                on:click={() => openLinkForm("eraser")}
+                onclick={() => openLinkForm("eraser")}
                 class:bg-secondary-800={applicationProperty?.name === "eraser"}
                 disabled={!applicationManager.eraserToolActivated}
             >
@@ -640,7 +644,7 @@
             <button
                 data-testid="excalidrawApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
-                on:click={() => openLinkForm("excalidraw")}
+                onclick={() => openLinkForm("excalidraw")}
                 class:bg-secondary-800={applicationProperty?.name === "excalidraw"}
                 disabled={!applicationManager.excalidrawToolActivated}
             >
@@ -656,7 +660,7 @@
             <button
                 data-testid="cardsApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
-                on:click={() => openLinkForm("cards")}
+                onclick={() => openLinkForm("cards")}
                 class:bg-secondary-800={applicationProperty?.name === "cards"}
                 disabled={!applicationManager.cardsToolActivated}
             >
@@ -672,7 +676,7 @@
             <button
                 data-testid="tldrawApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
-                on:click={() => openLinkForm("tldraw")}
+                onclick={() => openLinkForm("tldraw")}
                 class:bg-secondary-800={applicationProperty?.name === "tldraw"}
                 disabled={!applicationManager.tldrawToolActivated}
             >
@@ -692,7 +696,7 @@
                     data-testid="{app.name}ApplicationButton"
                     class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                     class:bg-secondary-800={applicationProperty?.name === app.name}
-                    on:click={() => openLinkForm(app.name)}
+                    onclick={() => openLinkForm(app.name)}
                 >
                     <img draggable="false" class="w-8" src={app.image} alt={$LL.chat.a11y.applicationIcon()} />
                     <h2 class="text-sm p-0 m-0">{app.name}</h2>
@@ -710,21 +714,21 @@
     >
         <ApplicationFormWrapper
             property={applicationProperty}
-            on:close={() => (applicationProperty = undefined)}
-            on:update={onUpdatApplicationProperty}
-            on:processing={onProcessingApplicationProperty}
-            on:processed={onProcessedApplicationProperty}
+            close={() => (applicationProperty = undefined)}
+            update={onUpdatApplicationProperty}
+            processing={onProcessingApplicationProperty}
+            processed={onProcessedApplicationProperty}
         />
     </div>
 {/if}
 {#if fileAttachmentComponentOpened}
     <MessageFileInput
         {room}
-        on:filesSelected={(e) => {
-            handleFiles(e);
+        filesSelected={(files) => {
+            handleFiles(files);
             closeFileAttachmentComponent();
         }}
-        on:fileUploaded={() => closeFileAttachmentComponent()}
+        fileUploaded={() => closeFileAttachmentComponent()}
     />
 {/if}
 <div
@@ -739,7 +743,7 @@
                         <span class="text-sm text-gray-400">
                             {$LL.chat.replyTo()}
                         </span>
-                        <button class="p-2 m-0" on:click={unselectChatMessageToReply}>
+                        <button class="p-2 m-0" onclick={unselectChatMessageToReply}>
                             <!--<IconCircleX />-->
                             <IconX font-size={18} />
                         </button>
@@ -757,9 +761,9 @@
         </div>
     {/if}
     <MessageInput
-        onKeyDown={sendMessageOrEscapeLine}
-        onInput={onInputHandler}
-        on:pasteFiles={handleFiles}
+        onkeydown={sendMessageOrEscapeLine}
+        oninput={onInputHandler}
+        pasteFiles={handleFiles}
         {focusin}
         {focusout}
         bind:message
@@ -773,7 +777,7 @@
         data-testid="addApplicationButton"
         class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0"
         class:bg-secondary-800={applicationComponentOpened}
-        on:click={toggleApplicationComponent}
+        onclick={toggleApplicationComponent}
     >
         <IconX
             font-size={18}
@@ -783,7 +787,7 @@
     </button>
     <button
         class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0"
-        on:click={openCloseEmojiPicker}
+        onclick={openCloseEmojiPicker}
     >
         <IconMoodSmile font-size={18} />
     </button>
@@ -792,7 +796,7 @@
             data-testid="sendMessageButton"
             class="disabled:opacity-30 disabled:!cursor-none disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-md"
             disabled={applicationPropertyInProcessing}
-            on:click={() => sendMessage(message).catch((error) => console.error(error))}
+            onclick={() => sendMessage(message).catch((error) => console.error(error))}
         >
             <IconSend />
         </button>

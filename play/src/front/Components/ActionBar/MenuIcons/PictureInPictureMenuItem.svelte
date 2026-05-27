@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { openedMenuStore } from "../../../Stores/MenuStore";
 
@@ -14,16 +13,18 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
 
-    const dispatch = createEventDispatcher<{
-        click: void;
-    }>();
+    interface Props {
+        onclick?: () => void;
+    }
+
+    const { onclick }: Props = $props();
 
     function pictureInPictureClick() {
         // Analytics
         analyticsClient.clickPictureInPicture(!$askPictureInPictureActivatingStore);
 
         // Create request to the navigateur to enter picture in picture mode
-        dispatch("click");
+        onclick?.();
 
         // If the settings of user do not allow picture in picture, we enable it
         if (!localUserStore.getAllowPictureInPicture()) {
@@ -44,7 +45,7 @@
         ? $LL.actionbar.help.pictureInPicture.desc()
         : $LL.actionbar.help.pictureInPicture.descDisabled()}
     media="./static/Videos/PictureInPicture.mp4"
-    on:click={pictureInPictureClick}
+    onclick={pictureInPictureClick}
 >
     {#if $activePictureInPictureStore}
         <PictureInPictureOffIcon />

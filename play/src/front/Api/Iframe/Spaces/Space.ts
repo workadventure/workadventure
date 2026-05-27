@@ -36,7 +36,10 @@ export class Space {
                     break;
                 }
                 case "onDeleteUser": {
-                    this._userLeftSubscriber?.next(this.users.get(event.data.data.spaceUserId));
+                    const user = this.users.get(event.data.data.spaceUserId);
+                    if (user !== undefined) {
+                        this._userLeftSubscriber?.next(user);
+                    }
                     this.users.delete(event.data.data.spaceUserId);
                     break;
                 }
@@ -113,7 +116,7 @@ export class Space {
         return new Proxy(
             {
                 spaceUserId: user.spaceUserId,
-            } as unknown as ReactiveSpaceUser,
+            },
             {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 get(target: any, property: PropertyKey, receiver: unknown) {

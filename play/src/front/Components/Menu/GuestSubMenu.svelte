@@ -19,10 +19,10 @@
 
     const initialPrefs = get(invitePreferencesStore);
 
-    let walkAutomatically = initialPrefs.walkAutomatically;
-    let showZoneSelect = initialPrefs.showZoneSelect;
-    let entryPoint = "";
-    let linkCopied = false;
+    let walkAutomatically = $state(initialPrefs.walkAutomatically);
+    let showZoneSelect = $state(initialPrefs.showZoneSelect);
+    let entryPoint = $state("");
+    let linkCopied = $state(false);
     let timeout: ReturnType<typeof setTimeout> | null = null;
 
     function getGameScene(): GameScene | null {
@@ -33,23 +33,28 @@
         }
     }
 
-    $: gameScene = $gameSceneStore ?? getGameScene();
-    $: startPositions = gameScene ? gameScene.getStartPositionNames() : [];
-    $: playerPos = gameScene
-        ? { x: Math.floor(gameScene.CurrentPlayer.x), y: Math.floor(gameScene.CurrentPlayer.y) }
-        : { x: 0, y: 0 };
+    let gameScene = $derived($gameSceneStore ?? getGameScene());
+    let startPositions = $derived(gameScene ? gameScene.getStartPositionNames() : []);
+    let playerPos = $derived(
+        gameScene
+            ? { x: Math.floor(gameScene.CurrentPlayer.x), y: Math.floor(gameScene.CurrentPlayer.y) }
+            : { x: 0, y: 0 }
+    );
 
-    $: validEntryPointFromStore =
+    let validEntryPointFromStore = $derived(
         startPositions.length > 0
             ? (() => {
                   const saved = getInviteEntryPoint();
-                  return saved && startPositions.includes(saved) ? saved : startPositions[0] ?? "";
+                  return saved && startPositions.includes(saved) ? saved : (startPositions[0] ?? "");
               })()
-            : "";
+            : ""
+    );
 
-    $: if (startPositions.length > 0 && (entryPoint === "" || !startPositions.includes(entryPoint))) {
-        entryPoint = validEntryPointFromStore;
-    }
+    $effect(() => {
+        if (startPositions.length > 0 && (entryPoint === "" || !startPositions.includes(entryPoint))) {
+            entryPoint = validEntryPointFromStore;
+        }
+    });
 
     function syncEntryPointToStore(value: string) {
         setInviteEntryPoint(value);
@@ -134,8 +139,8 @@
                 <div class="pb-4 text-lg font-semibold">
                     {$LL.menu.invite.description()}
                 </div>
-                <button type="button" class="btn btn-secondary w-full" on:click={shareLink}>
-                    <IconShare font-size="20" stroke={1.5} class="me-2" />
+                <button type="button" class="btn btn-secondary w-full" onclick={shareLink}>
+                    <IconShare font-size="20" stroke="1.5" class="me-2" />
                     <span class="text-lg font-bold">
                         {$LL.menu.invite.share()}
                     </span>
@@ -156,8 +161,10 @@
                     class="flex items-center btn btn-sm absolute right-2 transition-all text-center justify-center {linkCopied
                         ? 'btn-success'
                         : 'btn-secondary'}"
-                    on:click={changeCopyLinkButtonStatus}
-                    on:click={copyLink}
+                    onclick={() => {
+                        changeCopyLinkButtonStatus();
+                        copyLink();
+                    }}
                 >
                     <span class="flex items-center justify-center {linkCopied ? '' : 'hidden'}">
                         <IconCheck class="text-white" />
@@ -174,7 +181,7 @@
             <InputSwitch
                 id="showZoneSelect"
                 bind:value={showZoneSelect}
-                onChange={() => {
+                onchange={() => {
                     syncShowZoneSelectToStore(showZoneSelect);
                     updateInputFieldValue();
                     linkCopied = false;
@@ -189,7 +196,7 @@
                 </div>
                 <Select
                     bind:value={entryPoint}
-                    onChange={() => {
+                    onchange={() => {
                         syncEntryPointToStore(entryPoint);
                         updateInputFieldValue();
                         linkCopied = false;
@@ -205,7 +212,7 @@
             <InputSwitch
                 id="walkto"
                 bind:value={walkAutomatically}
-                onChange={() => {
+                onchange={() => {
                     syncWalkAutomaticallyToStore(walkAutomatically);
                     updateInputFieldValue();
                 }}

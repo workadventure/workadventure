@@ -89,7 +89,7 @@
 </script>
 
 <ActionBarButton
-    on:click={microphoneClick}
+    onclick={microphoneClick}
     classList="group/btn-mic peer/mic"
     disabledHelp={$openedMenuStore !== undefined}
     state={$microphoneButtonStateStore}

@@ -2,7 +2,6 @@
     import { clickOutside } from "svelte-outside";
     import { getContext, setContext } from "svelte";
     import { derived, get, type Readable } from "svelte/store";
-    import VirtualList from "@sveltejs/svelte-virtual-list";
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import { navChat } from "../../../Chat/Stores/ChatStore";
@@ -30,11 +29,14 @@
 
     const inProfileMenu = getContext("profileMenu");
 
-    // Useless properties. They are here only to avoid a warning because we set the "first" or "classList" prop on all the right menu items
-    // svelte-ignore unused-export-let
-    export let first: boolean | undefined = undefined;
-    // svelte-ignore unused-export-let
-    export let classList: string | undefined = undefined;
+    interface Props {
+        first?: boolean;
+        classList?: string;
+    }
+
+    // Useless properties. They are here only because we set the "first" or "classList" prop on all the right menu items.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    let { first = undefined, classList = undefined }: Props = $props();
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
         {
@@ -119,26 +121,27 @@
     const PARTICIPANT_LIST_MAX_HEIGHT_PX = 400;
 
     /** List viewport height: (row height × count), capped at max (400px and viewport - 260px). */
-    $: participantsListHeightPx = (() => {
+    let participantsListHeightPx = $derived.by(() => {
         const contentH = $participantsList.length * PARTICIPANT_ROW_HEIGHT_PX;
         const maxVh =
             typeof window !== "undefined" ? Math.max(PARTICIPANT_ROW_HEIGHT_PX, window.innerHeight - 260) : 400;
         return Math.min(contentH, PARTICIPANT_LIST_MAX_HEIGHT_PX, maxVh);
-    })();
+    });
 
     /** True when menu is visible but game scene / proximityChatRoom is not ready yet. */
-    $: loading = $participantMenuVisibleStore && !$gameSceneStore?.proximityChatRoom;
+    let loading = $derived($participantMenuVisibleStore && !$gameSceneStore?.proximityChatRoom);
 </script>
 
 {#if $participantMenuVisibleStore}
     {#if !inProfileMenu}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
             data-testid="participant-menu"
             class="items-center relative cursor-pointer pointer-events-auto ps-2 pe-2"
             use:floatingUiRef
-            on:click|preventDefault={() => {
+            onclick={(event) => {
+                event.preventDefault();
                 openedMenuStore.toggle("participantMenu");
             }}
         >
@@ -189,7 +192,7 @@
                     </div>
 
                     <IconChevronDown
-                        stroke={2}
+                        stroke="2"
                         class="h-4 w-4 aspect-square transition-all opacity-50 flex-shrink-0 {$openedMenuStore ===
                         'participantMenu'
                             ? 'rotate-180'
@@ -207,7 +210,7 @@
                 use:floatingUiContent
                 use:clickOutside={closeParticipantMenu}
             >
-                <div use:arrowAction />
+                <div use:arrowAction></div>
                 <div class="p-1 m-0 max-h-[calc(100vh-96px)] overflow-y-auto flex flex-col items-stretch">
                     <div class="flex-shrink-0 px-2 py-1.5 text-xxs text-white/70 font-semibold uppercase tracking-wide">
                         {$LL.actionbar.participantListPlaceholder()}
@@ -236,59 +239,49 @@
                             class="participant-list-viewport flex-shrink-0 overflow-y-auto w-full"
                             style="height: {participantsListHeightPx}px;"
                         >
-                            <VirtualList
-                                items={$participantsList}
-                                itemHeight={PARTICIPANT_ROW_HEIGHT_PX}
-                                height="100%"
-                                let:item
-                            >
-                                {#key item.spaceUserId}
-                                    <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+                            {#each $participantsList as item (item.spaceUserId)}
+                                <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+                                <div
+                                    class="flex items-center gap-3 py-1 px-1 rounded hover:bg-white/10 transition-colors pointer-events-auto cursor-pointer"
+                                    data-testid="participant-row"
+                                    role="button"
+                                    tabindex="0"
+                                    onclick={() => openParticipantWokaMenu(item)}
+                                    onkeydown={(e) =>
+                                        (e.key === "Enter" || e.key === " ") &&
+                                        (e.preventDefault(), openParticipantWokaMenu(item))}
+                                >
                                     <div
-                                        class="flex items-center gap-3 py-1 px-1 rounded hover:bg-white/10 transition-colors pointer-events-auto cursor-pointer"
-                                        data-testid="participant-row"
-                                        role="button"
-                                        tabindex="0"
-                                        on:click={() => openParticipantWokaMenu(item)}
-                                        on:keydown={(e) =>
-                                            (e.key === "Enter" || e.key === " ") &&
-                                            (e.preventDefault(), openParticipantWokaMenu(item))}
+                                        class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
+                                        aria-hidden="true"
                                     >
-                                        <div
-                                            class="flex-shrink-0 w-9 h-9 rounded-ful flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
-                                            aria-hidden="true"
-                                        >
-                                            <ParticipantWoka
-                                                pictureStore={item.pictureStore}
-                                                fallbackName={item.name}
-                                            />
-                                        </div>
-                                        <div class="min-w-0 flex-1 overflow-hidden">
-                                            <div class="font-medium text-white text-sm truncate" title={item.name}>
-                                                {item.name}
-                                            </div>
-                                            {#if item.uuid?.includes("@")}
-                                                <div class="text-xxs text-white/70 truncate" title={item.uuid}>
-                                                    {item.uuid}
-                                                </div>
-                                            {/if}
-                                        </div>
+                                        <ParticipantWoka pictureStore={item.pictureStore} fallbackName={item.name} />
                                     </div>
-                                {/key}
-                            </VirtualList>
+                                    <div class="min-w-0 flex-1 overflow-hidden">
+                                        <div class="font-medium text-white text-sm truncate" title={item.name}>
+                                            {item.name}
+                                        </div>
+                                        {#if item.uuid?.includes("@")}
+                                            <div class="text-xxs text-white/70 truncate" title={item.uuid}>
+                                                {item.uuid}
+                                            </div>
+                                        {/if}
+                                    </div>
+                                </div>
+                            {/each}
                         </div>
                     {/if}
                     <div class="flex-shrink-0 border-t border-white/20 mt-1 pt-1 flex flex-col gap-0.5">
                         <ActionBarButton
                             label={$LL.actionbar.participantSendMessage()}
-                            on:click={onSendMessage}
+                            onclick={onSendMessage}
                             dataTestId="participant-send-message"
                         >
                             <IconMessageCircle2 font-size="20" />
                         </ActionBarButton>
                         <ActionBarButton
                             label={$LL.actionbar.participantInviteUser()}
-                            on:click={onInviteUser}
+                            onclick={onInviteUser}
                             dataTestId="participant-invite-user"
                         >
                             <IconUserPlus font-size="20" />
@@ -323,52 +316,50 @@
                 class="participant-list-viewport flex-shrink-0 overflow-y-auto"
                 style="height: {participantsListHeightPx}px;"
             >
-                <VirtualList items={$participantsList} itemHeight={PARTICIPANT_ROW_HEIGHT_PX} height="100%" let:item>
-                    {#key item.spaceUserId}
-                        <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+                {#each $participantsList as item (item.spaceUserId)}
+                    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+                    <div
+                        class="flex items-center gap-3 py-1 px-1 rounded hover:bg-white/10 transition-colors pointer-events-auto cursor-pointer"
+                        data-testid="participant-row"
+                        role="button"
+                        tabindex="0"
+                        onclick={() => openParticipantWokaMenu(item)}
+                        onkeydown={(e) =>
+                            (e.key === "Enter" || e.key === " ") &&
+                            (e.preventDefault(), openParticipantWokaMenu(item))}
+                    >
                         <div
-                            class="flex items-center gap-3 py-1 px-1 rounded hover:bg-white/10 transition-colors pointer-events-auto cursor-pointer"
-                            data-testid="participant-row"
-                            role="button"
-                            tabindex="0"
-                            on:click={() => openParticipantWokaMenu(item)}
-                            on:keydown={(e) =>
-                                (e.key === "Enter" || e.key === " ") &&
-                                (e.preventDefault(), openParticipantWokaMenu(item))}
+                            class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
+                            aria-hidden="true"
                         >
-                            <div
-                                class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
-                                aria-hidden="true"
-                            >
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <ParticipantWoka pictureStore={item.pictureStore} fallbackName={item.name} />
-                                </div>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <div class="font-medium text-white text-sm truncate">
-                                    {item.name}
-                                </div>
-                                {#if item.roomName}
-                                    <div class="text-xxs text-white/70 truncate" title={item.roomName}>
-                                        {item.roomName}
-                                    </div>
-                                {/if}
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <ParticipantWoka pictureStore={item.pictureStore} fallbackName={item.name} />
                             </div>
                         </div>
-                    {/key}
-                </VirtualList>
+                        <div class="min-w-0 flex-1">
+                            <div class="font-medium text-white text-sm truncate">
+                                {item.name}
+                            </div>
+                            {#if item.roomName}
+                                <div class="text-xxs text-white/70 truncate" title={item.roomName}>
+                                    {item.roomName}
+                                </div>
+                            {/if}
+                        </div>
+                    </div>
+                {/each}
             </div>
         {/if}
         <ActionBarButton
             label={$LL.actionbar.participantSendMessage()}
-            on:click={onSendMessage}
+            onclick={onSendMessage}
             dataTestId="participant-send-message"
         >
             <IconMessageCircle2 font-size="20" />
         </ActionBarButton>
         <ActionBarButton
             label={$LL.actionbar.participantInviteUser()}
-            on:click={onInviteUser}
+            onclick={onInviteUser}
             dataTestId="participant-invite-user"
         >
             <IconUserPlus font-size="20" />

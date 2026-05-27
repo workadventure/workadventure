@@ -21,28 +21,28 @@
   "author": "WorkAdventure",
   "license": "ISC",
   "dependencies": {
-    "@types/uuid": "^8.3.4",
+    "@types/uuid": "^10.0.0",
     "@workadventure/math-utils": "1.0.0",
     "@workadventure/messages": "1.0.0",
     "@workadventure/shared-utils": "^1.0.0",
     "@workadventure/tiled-map-type-guard": "^2.1.2",
-    "axios": "^1.15.2",
+    "axios": "^1.16.1",
     "catch-unknown": "^2.0.0",
     "deepmerge-ts": "^7.1.5",
-    "ipaddr.js": "^2.0.1",
-    "uuid": "^9.0.0",
-    "zod": "^3.23.8",
-    "zod-to-json-schema": "^3.20.4"
+    "ipaddr.js": "^2.4.0",
+    "uuid": "^14.0.0",
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
-    "@types/node": "^18.11.18",
+    "@types/node": "^25.9.1",
     "@workadventure/eslint-config": "1.0.0",
-    "eslint": "^9.35.0",
-    "lint-staged": "^13.1.0",
-    "prettier": "^2.8.2",
-    "tsx": "^4.7.1",
-    "typescript": "^5.7.2",
-    "vitest": "^1.4.0"
+    "eslint": "^9.39.4",
+    "lint-staged": "^17.0.5",
+    "prettier": "^3.8.3",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7"
   },
   "files": [
     "src"

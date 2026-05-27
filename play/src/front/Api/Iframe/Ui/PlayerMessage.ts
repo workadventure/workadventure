@@ -1,10 +1,5 @@
 import { v4 as uuid } from "uuid";
-import {
-    type PlayerMessageType,
-    type MessageReferenceEvent,
-    type TriggerPlayerMessageEvent,
-    triggerPlayerMessage,
-} from "../../Events/Ui/TriggerPlayerMessageEvent";
+import { type PlayerMessageType, triggerPlayerMessage } from "../../Events/Ui/TriggerPlayerMessageEvent";
 import { removePlayerMessage } from "../../Events/Ui/TriggerPlayerMessageEvent";
 import { queryWorkadventure } from "../IframeApiContribution";
 import type { PlayerMessageOptions } from "../ui";
@@ -30,7 +25,7 @@ export class PlayerMessage {
                 message: this.message,
                 type: this.type,
                 uuid: this.uuid,
-            } as TriggerPlayerMessageEvent,
+            },
         });
     }
 
@@ -39,7 +34,7 @@ export class PlayerMessage {
             type: removePlayerMessage,
             data: {
                 uuid: this.uuid,
-            } as MessageReferenceEvent,
+            },
         });
         this.onRemove();
     }

@@ -3,7 +3,11 @@
     import ToastContainer from "./ToastContainer.svelte";
     import { IconNetworkOff } from "@wa-icons";
 
-    export let toastUuid = "";
+    interface Props {
+        toastUuid?: string;
+    }
+
+    let { toastUuid = "" }: Props = $props();
 </script>
 
 <ToastContainer theme="error" extraClasses="" {toastUuid}>

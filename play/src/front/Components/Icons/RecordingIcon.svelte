@@ -1,12 +1,23 @@
 <script lang="ts">
-    export let status: "idle" | "active" = "idle";
-    export let width = "28";
-    export let height = "28";
-    export let classList = "";
-    /** Full Tailwind class for hover color (e.g. group-hover/btn-recording:text-red-500). Must be a complete class name so Tailwind includes it. */
-    export let hoverClass = "group-hover/btn-recording:text-red-500";
+    
+    interface Props {
+        status?: "idle" | "active";
+        width?: string;
+        height?: string;
+        classList?: string;
+        /** Full Tailwind class for hover color (e.g. group-hover/btn-recording:text-red-500). Must be a complete class name so Tailwind includes it. */
+        hoverClass?: string;
+    }
 
-    $: colorClass = status === "active" ? "text-red-500" : "text-white";
+    let {
+        status = "idle",
+        width = "28",
+        height = "28",
+        classList = "",
+        hoverClass = "group-hover/btn-recording:text-red-500"
+    }: Props = $props();
+
+    let colorClass = $derived(status === "active" ? "text-red-500" : "text-white");
 </script>
 
 <svg

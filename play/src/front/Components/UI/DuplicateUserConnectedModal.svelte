@@ -3,7 +3,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { localUserStore } from "../../Connection/LocalUserStore";
 
-    let dontRemindAgain = false;
+    let dontRemindAgain = $state(false);
 
     function confirmAndContinue() {
         if (dontRemindAgain) {
@@ -44,7 +44,7 @@
                 <button
                     type="button"
                     class="btn btn-secondary"
-                    on:click={confirmAndContinue}
+                    onclick={confirmAndContinue}
                     data-testid="duplicate-user-confirm-continue"
                 >
                     {$LL.warning.duplicateUserConnected.confirmContinue()}

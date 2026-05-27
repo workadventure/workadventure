@@ -1,24 +1,26 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { IconMicrophoneOff } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
-    const dispatch = createEventDispatcher<{
-        change: undefined;
-        close: undefined;
-    }>();
+    interface Props {
+        onclose?: () => void;
+    }
+
+    let { onclose }: Props = $props();
 </script>
 
 <PropertyEditorBase
-    on:close={() => {
-        dispatch("close");
+    onclose={() => {
+        onclose?.();
     }}
 >
-    <span slot="header" class="flex justify-center items-center">
-        <IconMicrophoneOff font-size="18" class="mr-2" />
-        {$LL.mapEditor.properties.silent.label()}
-    </span>
+    {#snippet header()}
+        <span class="flex justify-center items-center">
+            <IconMicrophoneOff font-size="18" class="mr-2" />
+            {$LL.mapEditor.properties.silent.label()}
+        </span>
+    {/snippet}
 </PropertyEditorBase>
 
 <style lang="scss">

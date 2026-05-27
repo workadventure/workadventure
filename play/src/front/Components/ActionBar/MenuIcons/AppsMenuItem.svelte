@@ -34,7 +34,7 @@
 
 {#if !inProfileMenu}
     <ActionBarButton
-        on:click={() => {
+        onclick={() => {
             if ($roomListVisibilityStore) return roomListVisibilityStore.set(false);
             openedMenuStore.toggle("appMenu");
         }}
@@ -65,7 +65,7 @@
             }}
         >
             <div class="flex justify-center m-[unset]" data-testid="apps-menu">
-                <div use:arrowAction />
+                <div use:arrowAction></div>
                 <div class="bottom-action-bar">
                     <div
                         class="bottom-action-section flex flex-col animate bg-contrast/80 backdrop-blur rounded-md p-1"

@@ -1,13 +1,12 @@
 import * as Sentry from "@sentry/svelte";
 import { get } from "svelte/store";
-import type CancelablePromise from "cancelable-promise";
+import type { CancelablePromise } from "cancelable-promise";
 import {
     AskPositionMessage_AskType,
     type PositionMessage,
     type PositionMessage_Direction,
     type SayMessage,
 } from "@workadventure/messages";
-import { openModal } from "svelte-modals";
 import type { WokaMenuAction } from "../../Stores/WokaMenuStore";
 import { wokaMenuStore } from "../../Stores/WokaMenuStore";
 import { Character } from "../Entity/Character";
@@ -25,6 +24,7 @@ import { userIsConnected } from "../../Stores/MenuStore";
 import RequiresLoginForChatModal from "../../Chat/Components/RequiresLoginForChatModal.svelte";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { IconCamera, IconUserPlus } from "@wa-icons";
+import { modals } from "@wa-modals";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
@@ -255,7 +255,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                     analyticsClient.openedChat();
 
                     if (!get(userIsConnected)) {
-                        openModal(RequiresLoginForChatModal);
+                        modals.open(RequiresLoginForChatModal);
                         return;
                     }
 

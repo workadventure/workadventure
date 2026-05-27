@@ -17,10 +17,10 @@
     import { detectIos, markPwaPromptNeverShow } from "../../Utils/PwaInstallEligibility";
     import { IconApps, IconAppWindow, IconHistory } from "@wa-icons";
 
-    let logo = logoImg;
-    let sceneBg = bgMap;
+    let logo = $state(logoImg);
+    let sceneBg = $state(bgMap);
 
-    let neverShowAgain = false;
+    let neverShowAgain = $state(false);
     let unsubscribePwa: (() => void) | undefined;
 
     onMount(() => {
@@ -77,7 +77,7 @@
         class="absolute inset-0 z-0 bg-cover bg-center h-full w-full"
         style="background-image: url('{sceneBg}');"
         aria-hidden="true"
-    />
+    ></div>
     <!-- Dim overlay (room tint or default blue) -->
     <div
         class="absolute inset-0 z-[1] backdrop-blur-[2px] h-full w-full"
@@ -85,7 +85,7 @@
             ? `background-color: ${getBackgroundColor()}; opacity: 0.82;`
             : "background-color: rgb(15 28 48 / 0.82);"}
         aria-hidden="true"
-    />
+    ></div>
 
     <div
         class="relative z-10 mx-auto flex w-full max-w-[min(510px,calc(100vw-2rem))] flex-col items-center gap-6 px-4 py-10"
@@ -96,7 +96,7 @@
                 <div class="absolute inset-0 bg-cover bg-center" aria-hidden="true">
                     <img draggable="false" src={pwaDefaultBackground} alt="" class="h-full w-full object-cover" />
                 </div>
-                <div class="absolute inset-0 bg-black/40" aria-hidden="true" />
+                <div class="absolute inset-0 bg-black/40" aria-hidden="true"></div>
                 <div
                     class="absolute flex flex-col justify-center content-center items-center gap-4 px-6 py-4 text-center w-full h-full"
                 >
@@ -181,7 +181,7 @@
                         <button
                             type="button"
                             class="btn btn-secondary !text-lg"
-                            on:click={handleInstall}
+                            onclick={handleInstall}
                             disabled={$pwaInstallUiStore.installing}
                             data-testid="pwa-install-button"
                         >
@@ -202,7 +202,7 @@
                     <button
                         type="button"
                         class="btn btn-light !bg-white/10 !text-lg !text-white hover:!bg-white/20"
-                        on:click={() => {
+                        onclick={() => {
                             analyticsClient.pwaContinueInBrowserClick();
                             handleContinue();
                         }}
@@ -217,7 +217,7 @@
                             role="switch"
                             aria-checked={neverShowAgain}
                             class="flex cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-sm text-white/95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 rounded max-h-5"
-                            on:click={toggleNeverShow}
+                            onclick={toggleNeverShow}
                             data-testid="pwa-install-never-show-input"
                         >
                             <span
@@ -229,7 +229,7 @@
                                     class="pointer-events-none absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white transition-transform {neverShowAgain
                                         ? 'translate-x-3'
                                         : 'translate-x-0'}"
-                                />
+                                ></span>
                             </span>
                             <span class="text-lg">{$LL.warning.pwaInstall.neverShowPage()}</span>
                         </button>

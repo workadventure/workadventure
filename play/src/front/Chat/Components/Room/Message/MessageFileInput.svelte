@@ -1,36 +1,37 @@
 <script lang="ts">
     import { get } from "svelte/store";
-    import { createEventDispatcher, onMount } from "svelte";
+    import { onMount } from "svelte";
     import type { ChatConversation } from "../../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../../Stores/ChatStore";
     import { ProximityChatRoom } from "../../../Connection/Proximity/ProximityChatRoom";
     import { chatInputFocusStore } from "../../../../Stores/ChatStore";
     import { IconLoader, IconPaperclip, IconX } from "@wa-icons";
 
-    const dispatch = createEventDispatcher<{
-        filesSelected: FileList;
-        fileUploaded: void;
-    }>();
-
-    let files: FileList | undefined = undefined;
+    let files: FileList | undefined = $state(undefined);
     let fileInputElement: HTMLInputElement;
-    export let room: ChatConversation;
-    const isProximityChatRoom = room instanceof ProximityChatRoom;
+    interface Props {
+        room: ChatConversation;
+        filesSelected?: (files: FileList) => void;
+        fileUploaded?: () => void;
+    }
 
-    $: {
+    let { room, filesSelected = () => {}, fileUploaded = () => {} }: Props = $props();
+    let isProximityChatRoom = $derived(room instanceof ProximityChatRoom);
+
+    $effect(() => {
         if (files && files.length > 0) {
-            dispatch("filesSelected", files);
-            dispatch("fileUploaded");
+            filesSelected(files);
+            fileUploaded();
             files = undefined;
             fileInputElement.value = "";
         }
-    }
+    });
 
     function unselectChatMessageToReplyIfSelected() {
         if (get(selectedChatMessageToReply) !== null) {
             selectedChatMessageToReply.set(null);
         }
-        dispatch("fileUploaded");
+        fileUploaded();
     }
 
     function focusChatInput() {
@@ -59,8 +60,8 @@
         bind:files
         bind:this={fileInputElement}
         data-testid="uploadChatCustomAsset"
-        on:focusin={focusChatInput}
-        on:focusout={unfocusChatInput}
+        onfocusin={focusChatInput}
+        onfocusout={unfocusChatInput}
     />
     <label
         id="labelUpload"
@@ -78,7 +79,7 @@
     </label>
     <button
         class="absolute top-0 right-0 m-1 hover:bg-white/10 cursor-pointer"
-        on:click={() => unselectChatMessageToReplyIfSelected()}
+        onclick={() => unselectChatMessageToReplyIfSelected()}
     >
         <IconX class=" text-white/50 hover:text-white transition-all" font-size={16} />
     </button>

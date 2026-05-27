@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
@@ -10,12 +9,14 @@
     import ScreenShareOffIcon from "../../Icons/ScreenShareOffIcon.svelte";
     import { isScreenSharingSupported, requestedScreenSharingState } from "../../../Stores/ScreenSharingStore";
 
-    const dispatch = createEventDispatcher<{
-        click: void;
-    }>();
+    interface Props {
+        onclick?: () => void;
+    }
+
+    let { onclick }: Props = $props();
 
     function screenSharingClick(): void {
-        dispatch("click");
+        onclick?.();
         analyticsClient.screenSharing();
         if ($silentStore && !$isSpeakerStore) return;
         if ($requestedScreenSharingState === true) {
@@ -28,7 +29,7 @@
 
 {#if isScreenSharingSupported()}
     <ActionBarButton
-        on:click={screenSharingClick}
+        onclick={screenSharingClick}
         classList="group/btn-screen-share"
         tooltipTitle={$LL.actionbar.help.share.title()}
         disabledHelp={$openedMenuStore !== undefined}

@@ -4,13 +4,12 @@ import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError
 import Phaser from "phaser";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
-import type { ComponentType } from "svelte";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
 import { ForwardableStore, MapStore } from "@workadventure/store-utils";
 import { MathUtils } from "@workadventure/math-utils";
-import CancelablePromise from "cancelable-promise";
+import { CancelablePromise } from "cancelable-promise";
 import { Deferred } from "@workadventure/shared-utils";
 import {
     AvailabilityStatus,
@@ -1751,7 +1750,7 @@ export class GameScene extends DirtyScene {
     }
 
     public getPlayerVariablesManager(): PlayerVariablesManager | undefined {
-        return this.playerVariablesManager as PlayerVariablesManager | undefined;
+        return this.playerVariablesManager;
     }
 
     public getActivatablesManager(): ActivatablesManager {
@@ -2521,7 +2520,7 @@ export class GameScene extends DirtyScene {
                             connectionManager.logout();
                         },
                         externalRestrictedMapEditorProperties: mapEditorRestrictedPropertiesStore,
-                        showComponentInChat(component: ComponentType, props: Record<string, unknown>) {
+                        showComponentInChat(component, props?) {
                             navChat.switchToCustomComponent(component, props);
                             chatVisibilityStore.set(true);
                         },

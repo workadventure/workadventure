@@ -43,24 +43,32 @@
             applicationManager.eraserToolActivated
         );
     }
-
-    function noDrag() {
-        return false;
-    }
 </script>
 
 {#if oneApplicationIsActivated()}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
         in:fly={{}}
-        on:dragstart|preventDefault={noDrag}
-        on:keyup|preventDefault={noDrag}
-        on:keypress|preventDefault={noDrag}
-        on:keydown|preventDefault={noDrag}
-        on:focus|preventDefault={noDrag}
-        on:blur|preventDefault={noDrag}
-        on:click={() => {
+        ondragstart={(event) => {
+            event.preventDefault();
+        }}
+        onkeyup={(event) => {
+            event.preventDefault();
+        }}
+        onkeypress={(event) => {
+            event.preventDefault();
+        }}
+        onkeydown={(event) => {
+            event.preventDefault();
+        }}
+        onfocus={(event) => {
+            event.preventDefault();
+        }}
+        onblur={(event) => {
+            event.preventDefault();
+        }}
+        onclick={() => {
             openedMenuStore.toggle("appMenu");
         }}
         class="bottom-action-button"
@@ -87,7 +95,7 @@
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.klaxoon.label()} />
                         <button
-                            on:click={() => {
+                            onclick={() => {
                                 klaxoonButtonHandler();
                                 openedMenuStore.close("appMenu");
                             }}
@@ -104,7 +112,7 @@
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleDrive.label()} />
                         <button
-                            on:click={() => {
+                            onclick={() => {
                                 window.open(`https://drive.google.com/drive/home`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}
@@ -119,7 +127,7 @@
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleDocs.label()} />
                         <button
-                            on:click={() => {
+                            onclick={() => {
                                 window.open(`https://docs.google.com/document/u/1/`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}
@@ -134,7 +142,7 @@
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleSheets.label()} />
                         <button
-                            on:click={() => {
+                            onclick={() => {
                                 window.open(`https://docs.google.com/spreadsheets/u/1/`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}
@@ -149,7 +157,7 @@
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleSlides.label()} />
                         <button
-                            on:click={() => {
+                            onclick={() => {
                                 window.open(`https://docs.google.com/presentation/u/1/`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}
@@ -164,7 +172,7 @@
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.eraser.label()} />
                         <button
-                            on:click={() => {
+                            onclick={() => {
                                 window.open(`https://app.eraser.io/dashboard/all`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}
@@ -179,7 +187,7 @@
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.excalidraw.label()} />
                         <button
-                            on:click={() => {
+                            onclick={() => {
                                 window.open(`https://excalidraw.com`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}
@@ -194,7 +202,7 @@
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.cards.label()} />
                         <button
-                            on:click={() => {
+                            onclick={() => {
                                 window.open(`https://excalidraw.com`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}
@@ -209,7 +217,7 @@
                     <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.tldraw.label()} />
                         <button
-                            on:click={() => {
+                            onclick={() => {
                                 window.open(`https://www.tldraw.com`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}

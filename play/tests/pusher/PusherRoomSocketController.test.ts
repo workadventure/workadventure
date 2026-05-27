@@ -42,11 +42,11 @@ describe("PusherRoomSocketController reconnect retention", () => {
         });
 
         const socket = createSocket({ tabId: "tab-1" });
-        await registeredHandlers?.open(socket as never);
+        await registeredHandlers?.open(socket);
 
         expect(getContextMap(controller).has("tab-1")).toBe(true);
 
-        await registeredHandlers?.close(socket as never);
+        await registeredHandlers?.close(socket);
         await flushMicrotasks();
 
         expect(getContextMap(controller).has("tab-1")).toBe(true);
@@ -72,19 +72,19 @@ describe("PusherRoomSocketController reconnect retention", () => {
         );
 
         const initialSocket = createSocket({ tabId: "tab-1" });
-        await registeredHandlers?.open(initialSocket as never);
+        await registeredHandlers?.open(initialSocket);
 
         const initialContext = getContextMap(controller).get("tab-1");
         expect(initialContext).toBeDefined();
         initialContext!.clientLastReceivedNonce = 0;
 
-        await registeredHandlers?.close(initialSocket as never);
+        await registeredHandlers?.close(initialSocket);
         await flushMicrotasks();
 
         expect(close).not.toHaveBeenCalled();
 
         const reconnectSocket = createSocket({ tabId: "tab-1" });
-        await registeredHandlers?.open(reconnectSocket as never);
+        await registeredHandlers?.open(reconnectSocket);
 
         vi.advanceTimersByTime(CLIENT_DISCONNECTION_RETENTION_MS);
         await flushMicrotasks();
@@ -101,17 +101,17 @@ describe("PusherRoomSocketController reconnect retention", () => {
         });
 
         const initialSocket = createSocket({ tabId: "tab-1" });
-        await registeredHandlers?.open(initialSocket as never);
+        await registeredHandlers?.open(initialSocket);
 
         const initialContext = getContextMap(controller).get("tab-1");
         expect(initialContext).toBeDefined();
         initialContext!.clientLastReceivedNonce = 0;
 
-        await registeredHandlers?.close(initialSocket as never);
+        await registeredHandlers?.close(initialSocket);
         await flushMicrotasks();
 
         const reconnectSocket = createSocket({ tabId: "tab-1" });
-        await registeredHandlers?.open(reconnectSocket as never);
+        await registeredHandlers?.open(reconnectSocket);
 
         vi.advanceTimersByTime(CLIENT_DISCONNECTION_RETENTION_MS);
 
@@ -127,15 +127,15 @@ describe("PusherRoomSocketController reconnect retention", () => {
         }, open);
 
         const initialSocket = createSocket({ tabId: "tab-1" });
-        await registeredHandlers?.open(initialSocket as never);
-        await registeredHandlers?.close(initialSocket as never);
+        await registeredHandlers?.open(initialSocket);
+        await registeredHandlers?.close(initialSocket);
         await flushMicrotasks();
 
         vi.advanceTimersByTime(CLIENT_DISCONNECTION_RETENTION_MS);
         await flushMicrotasks();
 
         const reconnectSocket = createSocket({ tabId: "tab-1" });
-        await registeredHandlers?.open(reconnectSocket as never);
+        await registeredHandlers?.open(reconnectSocket);
 
         expect(open).toHaveBeenCalledTimes(2);
         expect(getContextMap(controller).get("tab-1")?.socket).toBeDefined();
@@ -154,8 +154,8 @@ describe("PusherRoomSocketController reconnect retention", () => {
         );
 
         const initialSocket = createSocket({ tabId: "tab-1" });
-        await registeredHandlers?.open(initialSocket as never);
-        await registeredHandlers?.close(initialSocket as never);
+        await registeredHandlers?.open(initialSocket);
+        await registeredHandlers?.close(initialSocket);
         await flushMicrotasks();
 
         expect(close).not.toHaveBeenCalled();
@@ -179,8 +179,8 @@ describe("PusherRoomSocketController reconnect retention", () => {
         );
 
         const socket = createSocket({ tabId: "tab-1" });
-        await registeredHandlers?.open(socket as never);
-        await registeredHandlers?.close(socket as never, 1000, new TextEncoder().encode("Page unloading").buffer);
+        await registeredHandlers?.open(socket);
+        await registeredHandlers?.close(socket, 1000, new TextEncoder().encode("Page unloading").buffer);
         await flushMicrotasks();
 
         expect(close).toHaveBeenCalledWith(expect.any(PusherWebSocket), 1000, "Page unloading");
@@ -200,23 +200,23 @@ describe("PusherRoomSocketController reconnect retention", () => {
         });
 
         const initialSocket = createSocket({ tabId: "tab-1" });
-        await registeredHandlers?.open(initialSocket as never);
+        await registeredHandlers?.open(initialSocket);
 
         const wrapper = getContextMap(controller).get("tab-1")?.socket as PusherWebSocket;
-        wrapper.send({ message: undefined } as never);
+        wrapper.send({ message: undefined });
 
         const initialContext = getContextMap(controller).get("tab-1");
         expect(initialContext).toBeDefined();
         initialContext!.clientLastReceivedNonce = 1;
 
-        await registeredHandlers?.close(initialSocket as never);
+        await registeredHandlers?.close(initialSocket);
         await flushMicrotasks();
 
-        wrapper.send({ message: undefined } as never);
+        wrapper.send({ message: undefined });
         expect(getSendMock(initialSocket)).toHaveBeenCalledTimes(1);
 
         const reconnectSocket = createSocket({ tabId: "tab-1" });
-        await registeredHandlers?.open(reconnectSocket as never);
+        await registeredHandlers?.open(reconnectSocket);
 
         expect(getSendMock(reconnectSocket)).toHaveBeenCalledTimes(1);
     });
@@ -232,7 +232,7 @@ describe("PusherRoomSocketController reconnect retention", () => {
         getContextMap(controller).set("tab-1", { clientLastReceivedNonce: 4 });
 
         const reconnectSocket = createSocket({ tabId: "tab-1" });
-        await registeredHandlers?.open(reconnectSocket as never);
+        await registeredHandlers?.open(reconnectSocket);
 
         expect(open).not.toHaveBeenCalled();
         expect(getEndMock(reconnectSocket)).toHaveBeenCalledWith(
@@ -249,15 +249,15 @@ describe("PusherRoomSocketController reconnect retention", () => {
         const socket = createSocket({ tabId: "tab-1" });
         getSendMock(socket).mockReturnValueOnce(0).mockReturnValue(1);
 
-        await registeredHandlers?.open(socket as never);
+        await registeredHandlers?.open(socket);
 
         const wrapper = getContextMap(controller).get("tab-1")?.socket as PusherWebSocket;
-        wrapper.send({ message: undefined } as never);
-        wrapper.send({ message: undefined } as never);
+        wrapper.send({ message: undefined });
+        wrapper.send({ message: undefined });
 
         expect(getSendMock(socket)).toHaveBeenCalledTimes(1);
 
-        await registeredHandlers?.drain(socket as never);
+        await registeredHandlers?.drain(socket);
 
         expect(getSendMock(socket)).toHaveBeenCalledTimes(3);
     });
@@ -274,8 +274,8 @@ describe("PusherWebSocket backpressure", () => {
         getSendMock(socket).mockReturnValueOnce(0).mockReturnValue(1);
         const wrapper = createPusherWebSocket(socket);
 
-        expect(wrapper.send({ message: undefined } as never)).toBe(0);
-        expect(wrapper.send({ message: undefined } as never)).toBe(0);
+        expect(wrapper.send({ message: undefined })).toBe(0);
+        expect(wrapper.send({ message: undefined })).toBe(0);
         expect(getSendMock(socket)).toHaveBeenCalledTimes(1);
 
         wrapper.handleDrain();
@@ -288,10 +288,10 @@ describe("PusherWebSocket backpressure", () => {
         getSendMock(socket).mockReturnValueOnce(0).mockReturnValueOnce(1).mockReturnValueOnce(0).mockReturnValue(1);
         const wrapper = createPusherWebSocket(socket);
 
-        wrapper.send({ message: undefined } as never);
-        wrapper.send({ message: undefined } as never);
+        wrapper.send({ message: undefined });
+        wrapper.send({ message: undefined });
         wrapper.handleDrain();
-        wrapper.send({ message: undefined } as never);
+        wrapper.send({ message: undefined });
 
         expect(getSendMock(socket)).toHaveBeenCalledTimes(3);
 
@@ -316,10 +316,10 @@ function createController(
     controller.ws("/test", {
         queryValidator: z.object({ tabId: z.string() }) as never,
         upgrade: vi.fn(),
-        open: openHandler as never,
+        open: openHandler,
         rejectedOpen: vi.fn(),
         message: vi.fn(),
-        close: closeHandler as never,
+        close: closeHandler,
     });
 
     return controller;

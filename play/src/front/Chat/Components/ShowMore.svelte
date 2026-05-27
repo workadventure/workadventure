@@ -1,26 +1,35 @@
-<script lang="ts">
+<script lang="ts" generics="T extends object">
+    import type { Snippet } from "svelte";
     import LL from "../../../i18n/i18n-svelte";
 
-    // When generics are available, use them instead of "any"
-    // See https://www.reddit.com/r/sveltejs/comments/t10qgb/help_typing_generics_for_slot_props/
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
-    export let items: any[];
-    export let maxNumber = 8;
-    export let idKey = "id";
-    export let showNothingToDisplayMessage = true;
+    interface Props<T extends object> {
+        items: T[];
+        maxNumber?: number;
+        idKey?: keyof T;
+        showNothingToDisplayMessage?: boolean;
+        children?: Snippet<[{ item: T }]>;
+    }
 
-    let showMore = false;
-    $: filteredItems = showMore ? items : items.slice(0, maxNumber);
+    let {
+        items,
+        maxNumber = 8,
+        idKey = "id" as keyof T,
+        showNothingToDisplayMessage = true,
+        children
+    }: Props<T> = $props();
+
+    let showMore = $state(false);
+    let filteredItems = $derived(showMore ? items : items.slice(0, maxNumber));
 </script>
 
 {#each filteredItems as item (item[idKey])}
-    <slot {item} />
+    {@render children?.({ item, })}
 {/each}
 {#if items.length > 8}
     <div class="flex justify-center">
         <button
             class="flex-col p-0 m-0 text-gray-400 text-center w-full text-sm"
-            on:click={() => (showMore = !showMore)}
+            onclick={() => (showMore = !showMore)}
         >
             {showMore ? $LL.chat.showLess() : $LL.chat.showMore({ number: items.length - 8 })}
         </button>

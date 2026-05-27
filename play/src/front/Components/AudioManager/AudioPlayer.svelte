@@ -169,5 +169,5 @@
 </script>
 
 {#if $audioManagerFileStore !== "" && $audioManagerVolumeStore.stopped === false}
-    <audio preload="auto" class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
+    <audio preload="auto" class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer}></audio>
 {/if}

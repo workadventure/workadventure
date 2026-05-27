@@ -4,9 +4,13 @@
     import EntityItem from "./EntityItem/EntityItem.svelte";
     import { IconPhotoOff } from "@wa-icons";
 
-    export let entityPrefabVariants: EntityVariant[];
-    export let onSelectEntity: (entityVariant: EntityVariant) => void;
-    export let currentSelectedEntityId: string | undefined;
+    interface Props {
+        entityPrefabVariants: EntityVariant[];
+        onSelectEntity: (entityVariant: EntityVariant) => void;
+        currentSelectedEntityId: string | undefined;
+    }
+
+    let { entityPrefabVariants, onSelectEntity, currentSelectedEntityId }: Props = $props();
 </script>
 
 {#if entityPrefabVariants.length === 0}
@@ -18,7 +22,7 @@
     <div class="grid grid-cols-[repeat(auto-fit,minmax(64px,3.6em))] gap-2 justify-center">
         {#each entityPrefabVariants as entityPrefabVariant (entityPrefabVariant.defaultPrefab.id)}
             <EntityItem
-                on:selectEntity={(event) => onSelectEntity(event.detail)}
+                onselectentity={onSelectEntity}
                 entityVariant={entityPrefabVariant}
                 isActive={entityPrefabVariant.defaultPrefab.id === currentSelectedEntityId}
             />

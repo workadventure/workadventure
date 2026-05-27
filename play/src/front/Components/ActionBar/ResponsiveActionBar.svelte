@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { Snippet } from "svelte";
     import debug from "debug";
     import { onMount } from "svelte";
     import { videoStreamElementsStore } from "../../Stores/PeerStore";
@@ -7,27 +8,46 @@
 
     const logger = debug("responsive-action-bar");
 
-    let centerPlusRightDiv: HTMLDivElement;
-    export let rightDiv: HTMLDivElement;
-    let rightDivContent: HTMLDivElement;
-    export let actionBarWidth: number;
-    let centerDivWidth: number;
-    let leftDivWidth: number;
-    let leftToCenterWidth: number;
+    interface Props {
+        rightDiv?: HTMLDivElement;
+        actionBarWidth: number;
+        left?: Snippet;
+        center?: Snippet;
+        right?: Snippet;
+    }
 
-    $: if (centerPlusRightDiv)
-        centerPlusRightDiv.style.minWidth = `${
-            mode === "wide"
-                ? Math.min(actionBarWidth * 0.5 + centerDivWidth * 0.5, actionBarWidth - leftDivWidth)
-                : actionBarWidth - leftDivWidth
-        }px`;
-    $: if (centerPlusRightDiv) centerPlusRightDiv.style.maxWidth = `${actionBarWidth - leftDivWidth}px`;
+    let {
+        rightDiv = $bindable(),
+        actionBarWidth = $bindable(),
+        left,
+        center,
+        right,
+    }: Props = $props();
+
+    let centerPlusRightDiv: HTMLDivElement;
+    let rightDivContent: HTMLDivElement;
+    let centerDivWidth: number = $state(0);
+    let leftDivWidth: number = $state(0);
+    let leftToCenterWidth: number = $state(0);
+
+    $effect(() => {
+        if (centerPlusRightDiv)
+            centerPlusRightDiv.style.minWidth = `${
+                mode === "wide"
+                    ? Math.min(actionBarWidth * 0.5 + centerDivWidth * 0.5, actionBarWidth - leftDivWidth)
+                    : actionBarWidth - leftDivWidth
+            }px`;
+    });
+
+    $effect(() => {
+        if (centerPlusRightDiv) centerPlusRightDiv.style.maxWidth = `${actionBarWidth - leftDivWidth}px`;
+    });
 
     // In "wide" mode, all buttons are displayed and there is space between left and center buttons
     // In "shrunk" mode, some buttons are hidden and there is no space between left and center buttons
     // We go in "shrunk" mode when the space between left and center buttons is 0px
     // We go back in "wide" mode when all buttons are visible
-    let mode: "wide" | "shrunk" = "wide";
+    let mode: "wide" | "shrunk" = $state("wide");
 
     function switchToShrunkMode() {
         // Additional delay: we make sure the right bar is not touching the center bar. Why?
@@ -44,16 +64,20 @@
         }, 1);
     }
 
-    $: if (leftToCenterWidth === 0) {
-        switchToShrunkMode();
-    }
+    $effect(() => {
+        if (leftToCenterWidth === 0) {
+            switchToShrunkMode();
+        }
+    });
 
-    let fullMenuVisible: boolean;
+    let fullMenuVisible: boolean = $state(false);
 
-    $: if (fullMenuVisible) {
-        logger("Switching to wide mode");
-        mode = "wide";
-    }
+    $effect(() => {
+        if (fullMenuVisible) {
+            logger("Switching to wide mode");
+            mode = "wide";
+        }
+    });
 
     onMount(() => {
         const observer = new IntersectionObserver(
@@ -87,10 +111,10 @@
             <!-- Left bar -->
             <div class="flex-1 flex">
                 <div class="flex-none" bind:offsetWidth={leftDivWidth}>
-                    <slot name="left" />
+                    {@render left?.()}
                 </div>
                 {#if mode === "wide"}
-                    <div class="w-0 flex-1 min-w-0 flex justify-end" bind:offsetWidth={leftToCenterWidth} />
+                    <div class="w-0 flex-1 min-w-0 flex justify-end" bind:offsetWidth={leftToCenterWidth}></div>
                 {/if}
             </div>
             <!-- Center + right bar -->
@@ -102,7 +126,7 @@
             >
                 <!-- Center bar -->
                 <div class="flex justify-end" bind:offsetWidth={centerDivWidth}>
-                    <slot name="center" />
+                    {@render center?.()}
                 </div>
                 <!-- Right bar -->
                 <div
@@ -112,7 +136,7 @@
                     bind:this={rightDiv}
                 >
                     <div class="flex flew-row flex-none h-full" bind:this={rightDivContent}>
-                        <slot name="right" />
+                        {@render right?.()}
                     </div>
                 </div>
             </div>

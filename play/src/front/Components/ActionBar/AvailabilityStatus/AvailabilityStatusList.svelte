@@ -12,8 +12,12 @@
     import AvailabilityStatusCircle from "./AvailabilityStatusCircle.svelte";
     import { IconCheck } from "@wa-icons";
 
-    export let statusInformation: Array<StatusInformationInterface>;
-    export let align: "end" | "start" = "start";
+    interface Props {
+        statusInformation: Array<StatusInformationInterface>;
+        align?: "end" | "start";
+    }
+
+    let { statusInformation, align = "start" }: Props = $props();
 
     const handleKeyPress = (e: KeyboardEvent, newStatus: RequestedStatus | AvailabilityStatus.ONLINE | null) => {
         if (newStatus === AvailabilityStatus.ONLINE) newStatus = null;
@@ -52,10 +56,13 @@
                 class="status-button group flex px-2 py-1 gap-2 items-center transition-all cursor-pointer text-sm text-neutral-100 w-full pointer-events-auto text-start rounded active:outline-none focus:outline-none"
                 class:justify-end={align === "end"}
                 class:disabled={$availabilityStatusStore === statusInformationValue.AvailabilityStatus}
-                on:keyup={(e) => {
+                onkeyup={(e) => {
                     handleKeyPress(e, statusInformationValue.AvailabilityStatus);
                 }}
-                on:click|stopPropagation={() => handleClick(statusInformationValue.AvailabilityStatus)}
+                onclick={(event) => {
+                    event.stopPropagation();
+                    handleClick(statusInformationValue.AvailabilityStatus);
+                }}
             >
                 <AvailabilityStatusCircle
                     cursorType="pointer"

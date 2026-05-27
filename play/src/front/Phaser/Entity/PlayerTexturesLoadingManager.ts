@@ -1,4 +1,4 @@
-import CancelablePromise from "cancelable-promise";
+import { CancelablePromise } from "cancelable-promise";
 import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { PlayerTexturesKey } from "./PlayerTextures";
 import type { WokaTextureDescriptionInterface, PlayerTextures } from "./PlayerTextures";

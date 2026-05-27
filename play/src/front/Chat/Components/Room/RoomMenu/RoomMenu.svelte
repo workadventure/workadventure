@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { openModal } from "svelte-modals";
     import type { Readable } from "svelte/store";
     import { AskPositionMessage_AskType } from "@workadventure/messages";
     import { hasMatrixChatCapabilities } from "../../../Connection/ChatConnection";
@@ -36,16 +35,21 @@
         IconUserPlus,
         IconSettings,
     } from "@wa-icons";
+    import { modals } from "@wa-modals";
 
-    export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomNotificationControl & ChatRoomModeration;
-    const roomType = room.type;
-    const areNotificationsMuted = room.areNotificationsMuted;
-    const roomMembers = room.members;
-    let optionButtonRef: HTMLButtonElement | undefined = undefined;
-    let hideOptions = true;
+    interface Props {
+        room: ChatRoom & ChatRoomMembershipManagement & ChatRoomNotificationControl & ChatRoomModeration;
+    }
+
+    let { room }: Props = $props();
+    let roomType = $derived(room.type);
+    let areNotificationsMuted = $derived(room.areNotificationsMuted);
+    let roomMembers = $derived(room.members);
+    let optionButtonRef: HTMLButtonElement | undefined = $state(undefined);
+    let hideOptions = $state(true);
     let usersByRoomStore:
         | Readable<Map<string | undefined, { roomName: string | undefined; users: ChatUser[] }>>
-        | undefined = undefined;
+        | undefined = $state(undefined);
 
     const { connection } = gameManager.getCurrentGameScene();
 
@@ -109,7 +113,7 @@
     }
 
     function openManageParticipantsModal() {
-        openModal(ManageParticipantsModal, { room });
+        modals.open(ManageParticipantsModal, { room });
     }
 
     function closeMenuAndSetMuteStatus() {
@@ -125,10 +129,10 @@
         });
     }
 
-    $: usersByRoomMap = usersByRoomStore && $usersByRoomStore ? $usersByRoomStore : new Map();
+    let usersByRoomMap = $derived(usersByRoomStore && $usersByRoomStore ? $usersByRoomStore : new Map());
 
     // Flatten usersByRoomMap into a list of users with playUri from their room
-    $: usersWithRoomPlayUri = (() => {
+    let usersWithRoomPlayUri = $derived((() => {
         const usersList: (ChatUser & { playUri: string })[] = [];
         for (const [playUri, roomData] of usersByRoomMap.entries()) {
             for (const user of roomData.users) {
@@ -139,13 +143,13 @@
             }
         }
         return usersList;
-    })();
+    })());
 
-    $: matrixChatUser =
-        $roomType === "direct" ? $roomMembers.find((u) => u.id !== localUserStore.getChatId()) : undefined;
+    let matrixChatUser =
+        $derived($roomType === "direct" ? $roomMembers.find((u) => u.id !== localUserStore.getChatId()) : undefined);
 
-    $: chatUser = usersWithRoomPlayUri.find((u) => u.chatId === matrixChatUser?.id);
-    $: isInTheSameMap = chatUser?.playUri === gameManager.getCurrentGameScene().roomUrl;
+    let chatUser = $derived(usersWithRoomPlayUri.find((u) => u.chatId === matrixChatUser?.id));
+    let isInTheSameMap = $derived(chatUser?.playUri === gameManager.getCurrentGameScene().roomUrl);
 
     function locateUser() {
         if (chatUser == undefined || chatUser.uuid == undefined) return;
@@ -190,16 +194,16 @@
     }
 
     /** Reactive on `$isMatrixChatEnabledStore` so the connection appears when Matrix chat connects. */
-    $: matrixChatConnection = $isMatrixChatEnabledStore ? matrixConnectionFromGameManager() : undefined;
+    let matrixChatConnection = $derived($isMatrixChatEnabledStore ? matrixConnectionFromGameManager() : undefined);
 
-    $: showMatrixPeerProfileDebug =
-        DEBUG_MODE && matrixChatConnection !== undefined && $roomType === "direct" && Boolean(matrixChatUser?.id);
+    let showMatrixPeerProfileDebug =
+        $derived(DEBUG_MODE && matrixChatConnection !== undefined && $roomType === "direct" && Boolean(matrixChatUser?.id));
 
     function openMatrixPeerProfileDebug() {
         if (!matrixChatConnection || matrixChatUser?.id === undefined) {
             return;
         }
-        openModal(MatrixPeerProfileDebugModal, {
+        modals.open(MatrixPeerProfileDebugModal, {
             connection: matrixChatConnection,
             matrixUserId: matrixChatUser.id,
             label: chatUser?.username,
@@ -211,14 +215,18 @@
 <button
     data-testid="toggleRoomMenu"
     bind:this={optionButtonRef}
-    on:click|preventDefault|stopPropagation={toggleRoomOptions}
+    onclick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleRoomOptions();
+    }}
     class="m-0 p-0 flex items-center justify-center h-7 w-7 hover:bg-white/10 rounded"
 >
     <IconDots font-size="16" />
 </button>
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-    on:mouseleave={toggleRoomOptions}
+    onmouseleave={toggleRoomOptions}
     class="bg-contrast/50 backdrop-blur-md rounded-md overflow-hidden z-[99] w-max end-2 top-10 p-1"
     class:absolute={optionButtonRef !== undefined}
     class:hidden={hideOptions}
@@ -228,21 +236,21 @@
         <RoomOption
             IconComponent={IconCamera}
             title={$LL.chat.userList.TalkTo()}
-            on:click={talkToUser}
+            onclick={talkToUser}
             disabled={chatUser == undefined || chatUser.uuid == undefined}
         />
         <!-- Create Room Option to locate to the user -->
         <RoomOption
             IconComponent={IconMapPin}
             title={$LL.chat.userList.follow()}
-            on:click={locateUser}
+            onclick={locateUser}
             disabled={chatUser == undefined || isInTheSameMap == false}
         />
         <!-- Create Room Option to invite the user to the meeting -->
         <RoomOption
             IconComponent={IconUserPlus}
             title={$LL.chat.userList.invite()}
-            on:click={inviteUserToMeeting}
+            onclick={inviteUserToMeeting}
             disabled={chatUser == undefined || chatUser.uuid == undefined}
         />
         {#if showMatrixPeerProfileDebug}
@@ -251,7 +259,7 @@
                 IconComponent={IconSettings}
                 title={$LL.chat.matrixPeerProfileDebug.menuItemTitle()}
                 tagText={$LL.chat.matrixPeerProfileDebug.menuItemDebugTag()}
-                on:click={openMatrixPeerProfileDebug}
+                onclick={openMatrixPeerProfileDebug}
             />
         {/if}
     {/if}
@@ -260,20 +268,20 @@
             dataTestId="manageParticipantOption"
             IconComponent={IconUserEdit}
             title={$LL.chat.manageRoomUsers.roomOption()}
-            on:click={openManageParticipantsModal}
+            onclick={openManageParticipantsModal}
         />
     {/if}
 
     <RoomOption
         IconComponent={$areNotificationsMuted ? IconUnMute : IconMute}
         title={$areNotificationsMuted ? $LL.chat.roomMenu.unmuteRoom() : $LL.chat.roomMenu.muteRoom()}
-        on:click={closeMenuAndSetMuteStatus}
+        onclick={closeMenuAndSetMuteStatus}
     />
 
     <RoomOption
         IconComponent={IconLogout}
         title={$LL.chat.roomMenu.leaveRoom.label()}
         bg="bg-danger-900 hover:bg-danger"
-        on:click={closeMenuAndLeaveRoom}
+        onclick={closeMenuAndLeaveRoom}
     />
 </div>

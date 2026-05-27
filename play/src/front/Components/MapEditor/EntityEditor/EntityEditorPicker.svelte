@@ -29,11 +29,11 @@
     const entitiesPrefabsVariants = entitiesCollectionsManager.getEntitiesPrefabsVariantStore();
     const MOST_USED_CATEGORY_LIMIT = 12;
 
-    let pickedEntity: EntityPrefab | undefined = undefined;
-    let pickedEntityVariant: EntityVariant | undefined = undefined;
-    let selectedColor: string;
+    let pickedEntity: EntityPrefab | undefined = $state(undefined);
+    let pickedEntityVariant: EntityVariant | undefined = $state(undefined);
+    let selectedColor = $state("");
 
-    let searchTerm = "";
+    let searchTerm = $state("");
 
     const mapEditorSelectedEntityPrefabStoreUnsubscriber = mapEditorSelectedEntityPrefabStore.subscribe(
         (prefab?: EntityPrefab) => {
@@ -101,7 +101,7 @@
         mapEditorSelectedEntityPrefabStore.set(undefined);
     }
 
-    let isEditingCustomEntity = false;
+    let isEditingCustomEntity = $state(false);
     function setIsEditingCustomEntity(isEditing: boolean) {
         isEditingCustomEntity = isEditing;
     }
@@ -193,9 +193,9 @@
         if (category.kind === "special") {
             switch (category.tag) {
                 case "custom":
-                    return $LL.mapEditor.entityEditor.specialTags.customLabel();
+                    return get(LL).mapEditor.entityEditor.specialTags.customLabel();
                 case "most_used":
-                    return $LL.mapEditor.entityEditor.specialTags.mostUsedLabel();
+                    return get(LL).mapEditor.entityEditor.specialTags.mostUsedLabel();
             }
         }
         return category.tag;
@@ -204,7 +204,7 @@
     function getEntitiesPrefabsVariantsFilteredByTag(
         entitiesPrefabsVariants: EntityVariant[],
         tag: SelectableTag,
-        searchTerm: string
+        searchTerm: string,
     ) {
         if (tag === undefined) {
             return entitiesPrefabsVariants.filter(
@@ -235,6 +235,13 @@
         );
     }
 
+    let entitiesPrefabsVariantsWithCategories = $derived(
+        getForEntitiesPrefabsVariantsWithCategories($entitiesPrefabsVariants),
+    );
+    let filteredEntityPrefabVariants = $derived(
+        getEntitiesPrefabsVariantsFilteredByTag($entitiesPrefabsVariants, $selectCategoryStore, searchTerm),
+    );
+
     onDestroy(() => {
         mapEditorSelectedEntityPrefabStoreUnsubscriber();
         entitiesPrefabsVariantStoreUnsubscriber();
@@ -252,7 +259,7 @@
                     <button
                         class="p-2 rounded-full flex flex-row items-center hover:bg-white/10"
                         data-testid="clearCurrentSelection"
-                        on:click={displayTagListAndClearCurrentSelection}
+                        onclick={displayTagListAndClearCurrentSelection}
                     >
                         <IconChevronLeft />{$LL.mapEditor.entityEditor.buttons.back()}
                     </button>
@@ -276,10 +283,10 @@
     <div class="flex-1 overflow-auto">
         {#if $selectCategoryStore === undefined && searchTerm === ""}
             <ul class="list-none !p-0 min-w-full">
-                {#each getForEntitiesPrefabsVariantsWithCategories($entitiesPrefabsVariants) as { category, entitiesPrefabsVariants } (`${category.kind}-${category.tag}`)}
+                {#each entitiesPrefabsVariantsWithCategories as { category, entitiesPrefabsVariants } (`${category.kind}-${category.tag}`)}
                     <TagListItem
-                        on:onSelectedTag={(event) => {
-                            onSelectedTag(event.detail);
+                        selectedTag={(category) => {
+                            onSelectedTag(category);
                         }}
                         tag={category}
                         label={getCategoryLabel(category)}
@@ -295,13 +302,13 @@
                     {#if isEditingCustomEntity}
                         <CustomEntityEditionForm
                             customEntity={pickedEntity}
-                            on:closeForm={() => {
+                            closeForm={() => {
                                 setIsEditingCustomEntity(false);
                             }}
-                            on:removeEntity={({ detail: { entityId } }) => {
+                            removeEntity={({ entityId }) => {
                                 removeEntity(entityId);
                             }}
-                            on:applyEntityModifications={({ detail: customModifiedEntity }) =>
+                            applyEntityModifications={(customModifiedEntity) =>
                                 saveCustomEntityModifications(customModifiedEntity)}
                         />
                     {:else}
@@ -327,13 +334,13 @@
                             <button
                                 class="btn btn-secondary"
                                 data-testid="editEntity"
-                                on:click={() => setIsEditingCustomEntity(true)}
+                                onclick={() => setIsEditingCustomEntity(true)}
                                 ><IconPencil font-size={16} />{$LL.mapEditor.entityEditor.buttons.editEntity()}</button
                             >
                         {/if}
                         <div class="absolute top-1 right-1 p-1">
                             <ButtonClose
-                                on:click={clearEntitySelection}
+                                onclick={clearEntitySelection}
                                 dataTestId="clearEntitySelection"
                                 size="sm"
                                 bgColor="bg-white/30"
@@ -343,7 +350,7 @@
                         <!-- <button
                             class="self-start absolute top-1 right-1"
                             data-testid="clearEntitySelection"
-                            on:click={clearEntitySelection}><IconDeselect font-size={20} /></button
+                            onclick={clearEntitySelection}><IconDeselect font-size={20} /></button
                         > -->
                     {/if}
                 </div>
@@ -356,11 +363,7 @@
                         </span>
                     {/if}
                     <EntitiesGrid
-                        entityPrefabVariants={getEntitiesPrefabsVariantsFilteredByTag(
-                            $entitiesPrefabsVariants,
-                            $selectCategoryStore,
-                            searchTerm
-                        )}
+                        entityPrefabVariants={filteredEntityPrefabVariants}
                         onSelectEntity={onPickEntityVariant}
                         currentSelectedEntityId={pickedEntity?.id}
                     />

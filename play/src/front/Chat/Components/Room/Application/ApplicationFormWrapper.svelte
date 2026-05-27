@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher, onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import type { KlaxoonEvent } from "@workadventure/shared-utils";
     import {
         ApplicationService,
@@ -14,21 +14,20 @@
     import type { ApplicationProperty } from "../MessageInputBar.svelte";
     import { gameManager } from "../../../../Phaser/Game/GameManager";
 
-    const dispatch = createEventDispatcher<{
-        update: ApplicationProperty;
-        // Currently resolving oEmbed link
-        processing: void;
-        // Resolved oEmbed link
-        processed: void;
-        close: void;
-        input: string;
-    }>();
-
     const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
-    export let property: ApplicationProperty;
+    interface Props {
+        property: ApplicationProperty;
+        close?: () => void;
+        update?: (property: ApplicationProperty) => void;
+        processing?: () => void;
+        processed?: () => void;
+        input?: (link: string) => void;
+    }
 
-    let errorLink: string | undefined;
+    let { property, close = () => {}, update = () => {}, processing = () => {}, processed = () => {}, input: inputCallback = () => {} }: Props = $props();
+
+    let errorLink: string | undefined = $state();
     let htmlElementInput: HTMLInputElement;
     let timeOutToFocusElement: ReturnType<typeof setTimeout>;
     let timeOutToHtmlInpuElement: ReturnType<typeof setTimeout>;
@@ -48,7 +47,7 @@
                                 new URL(payload.url),
                                 applicationManager.klaxoonToolClientId
                             );
-                            dispatch("update", { ...property, link });
+                            update({ ...property, link });
                         }
                     );
                     break;
@@ -88,12 +87,12 @@
             console.error(error);
             link = "";
         } finally {
-            dispatch("update", { ...property, link });
+            update({ ...property, link });
         }
     }
 
     async function unFocus() {
-        dispatch("processing");
+        processing();
         errorLink = undefined;
         let link = htmlElementInput.value.trim();
         try {
@@ -116,8 +115,8 @@
             link = "";
             errorLink = getErrorFromPropertyName() ?? errorLink ?? (error as Error).message;
         } finally {
-            dispatch("processed");
-            dispatch("update", { ...property, link });
+            processed();
+            update({ ...property, link });
         }
     }
 
@@ -180,8 +179,8 @@
         <img draggable="false" class="w-8" src={property.img} alt={$LL.chat.a11y.applicationIcon()} />
         <h2 class="text-sm p-0 m-0">{property.title}</h2>
         <CloseButton
-            on:click={() => {
-                dispatch("close");
+            onclick={() => {
+                close();
             }}
         />
     </div>
@@ -195,18 +194,18 @@
         class="border rounded w-full !m-0 text-black"
         value={property.link}
         bind:this={htmlElementInput}
-        on:input={() => {
-            dispatch("input", property.link);
+        oninput={() => {
+            inputCallback(property.link);
+            input();
         }}
-        on:focusout={unFocus}
-        on:keydown={(event) => {
+        onfocusout={unFocus}
+        onkeydown={(event) => {
             if (event.key === "Enter") {
                 unFocus().catch((error) => {
                     console.error(error);
                 });
             }
         }}
-        on:input={input}
         placeholder={property.placeholder}
     />
 

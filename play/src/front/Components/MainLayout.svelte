@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { afterUpdate, onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { get } from "svelte/store";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpNotificationSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
@@ -42,6 +42,7 @@
     import { selectedRoomStore } from "../Chat/Stores/SelectRoomStore";
     import { chatNotificationStore } from "../Stores/ProximityNotificationStore";
     import { analyticsClient } from "../Administration/AnalyticsClient";
+    import type { WorkAdventureComponent } from "../../types/component";
     import { LL } from "../../i18n/i18n-svelte";
     import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
@@ -81,8 +82,11 @@
     import ChevronLeftIcon from "./Icons/ChevronLeftIcon.svelte";
     import { IconArrowsMinimize, IconMessageCircle2, IconUserPlus } from "@wa-icons";
 
+    const loadDesktopCapturerSourcePicker = () =>
+        import("./Video/DesktopCapturerSourcePicker.svelte") as Promise<{ default: WorkAdventureComponent }>;
+
     /** When false, the right-hand participant strip in highlight fullscreen is collapsed (toggle with the edge arrow). */
-    let highlightParticipantCamerasListOpen = true;
+    let highlightParticipantCamerasListOpen = $state(true);
 
     const HIGHLIGHT_FULLSCREEN_PARTICIPANT_LIST_AUTO_HIDE_MS = 5000;
     const MAP_EDITOR_TOOLBAR_WIDTH = 64;
@@ -93,7 +97,7 @@
     let wasHighlightFullscreenActive = false;
 
     /** On entering highlight fullscreen, show the list then auto-hide after 5s (uses existing slide animation). */
-    afterUpdate(() => {
+    $effect(() => {
         const active = Boolean($highlightedEmbedScreen && $highlightFullScreen);
         if (active && !wasHighlightFullscreenActive) {
             chatVisibilityStore.set(false);
@@ -178,16 +182,17 @@
         }
     });
 
-    $: marginLeft = $chatVisibilityStore ? $chatSidebarWidthStore : 0;
-    $: mapEditorPanelVisible =
-        $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor;
-    $: mapEditorToolbarVisible = $windowSize.width >= 768 || !$mapEditorVisibilityStore;
-    $: marginRight = getMapEditorRightReservedSpace({
+    let marginLeft = $derived($chatVisibilityStore ? $chatSidebarWidthStore : 0);
+    let mapEditorPanelVisible = $derived(
+        $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor
+    );
+    let mapEditorToolbarVisible = $derived($windowSize.width >= 768 || !$mapEditorVisibilityStore);
+    let marginRight = $derived(getMapEditorRightReservedSpace({
         isMapEditorActive: $mapEditorModeStore,
         isMapEditorPanelVisible: mapEditorPanelVisible,
         isMapEditorToolbarVisible: mapEditorToolbarVisible,
         mapEditorPanelWidth: $mapEditorSideBarWidthStore,
-    });
+    }));
 
     function onHighlightFullscreenSendMessage() {
         if (get(chatVisibilityStore) && get(navChat).key === "chat") {
@@ -268,7 +273,7 @@
                     <ActionBarButton
                         context="menu"
                         label={$LL.actionbar.participantSendMessage()}
-                        on:click={onHighlightFullscreenSendMessage}
+                        onclick={onHighlightFullscreenSendMessage}
                         dataTestId="highlight-fullscreen-send-message"
                     >
                         <IconMessageCircle2 font-size="20" />
@@ -276,7 +281,7 @@
                     <ActionBarButton
                         context="menu"
                         label={$LL.actionbar.participantInviteUser()}
-                        on:click={onHighlightFullscreenInviteUser}
+                        onclick={onHighlightFullscreenInviteUser}
                         dataTestId="highlight-fullscreen-invite-user"
                     >
                         <IconUserPlus font-size="20" />
@@ -284,7 +289,7 @@
                     <ActionBarButton
                         context="menu"
                         label={$LL.actionbar.participantExitFullscreen()}
-                        on:click={exitHighlightFullscreen}
+                        onclick={exitHighlightFullscreen}
                         dataTestId="highlight-fullscreen-exit"
                     >
                         <IconArrowsMinimize font-size="20" />
@@ -300,7 +305,7 @@
                 aria-controls="highlightFullScreenParticipantCamerasList"
                 aria-label={highlightParticipantCamerasListOpen ? "Hide participant list" : "Show participant list"}
                 data-testid="toggle-highlight-participant-cameras-list"
-                on:click={() => (highlightParticipantCamerasListOpen = !highlightParticipantCamerasListOpen)}
+                onclick={() => (highlightParticipantCamerasListOpen = !highlightParticipantCamerasListOpen)}
             >
                 <span
                     class="inline-flex transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
@@ -319,11 +324,11 @@
             <div class="fixed z-[1000] bottom-0 start-0 right-0 m-auto w-max mobile:w-[98vw] md:max-w-[80%]">
                 <div class="popups flex items-end relative w-full justify-center mobile:mb-24 mb-4 h-[calc(100%-96px)]">
                     {#each $popupStore.slice().reverse() as popup, index (popup.uuid)}
+                        {@const PopupComponent = popup.component}
                         <div class="popupwrapper popupwrapper-{index} w-full flex-1" in:fly={{ y: 150, duration: 550 }}>
-                            <svelte:component
-                                this={popup.component}
+                            <PopupComponent
                                 {...popup.props}
-                                on:close={() => popupStore.removePopup(popup.uuid)}
+                                onclose={() => popupStore.removePopup(popup.uuid)}
                             />
                         </div>
                     {/each}
@@ -332,7 +337,7 @@
 
             <Lazy
                 when={$showDesktopCapturerSourcePicker}
-                component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}
+                component={loadDesktopCapturerSourcePicker}
             />
             {#if $modalVisibilityStore}
                 <Modal />
@@ -388,7 +393,8 @@
                 <div class="absolute top-0 right-2 z-[999] flex flex-col gap-2 items-end">
                     {#each [...$toastStore.entries()] as toastEntry (toastEntry[0])}
                         {@const toast = toastEntry[1]}
-                        <svelte:component this={toast.component} {...toast.props} />
+                        {@const ToastComponent = toast.component}
+                        <ToastComponent {...toast.props} />
                     {/each}
                 </div>
             {/if}
@@ -398,8 +404,10 @@
             {/if}
 
             {#if !$highlightFullScreen}
-                <PictureInPicture let:inPictureInPicture>
-                    <PresentationLayout {inPictureInPicture} />
+                <PictureInPicture>
+                    {#snippet children({ inPictureInPicture })}
+                        <PresentationLayout {inPictureInPicture} />
+                    {/snippet}
                 </PictureInPicture>
             {/if}
 

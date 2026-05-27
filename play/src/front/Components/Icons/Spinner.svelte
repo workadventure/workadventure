@@ -1,10 +1,14 @@
 <script lang="ts">
-    export let size: "xs" | "sm" | "md" | "lg" = "md";
 
-    export let fillColor: string = "fill-secondary";
+    interface Props {
+        size?: "xs" | "sm" | "md" | "lg";
+        fillColor?: string;
+    }
 
-    $: sizeClasses =
-        size === "xs"
+    let { size = "md", fillColor = "fill-secondary" }: Props = $props();
+
+    let sizeClasses =
+        $derived(size === "xs"
             ? "h-4 w-4"
             : size === "sm"
             ? "h-6 w-6"
@@ -12,7 +16,7 @@
             ? "h-8 w-8"
             : size === "lg"
             ? "h-10 w-10"
-            : "h-12 w-12";
+            : "h-12 w-12");
 </script>
 
 <div role="status" class={sizeClasses}>

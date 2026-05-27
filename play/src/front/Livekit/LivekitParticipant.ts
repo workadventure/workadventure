@@ -20,7 +20,7 @@ import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 
 import { subscribeToVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
-import type { LivekitStreamable, Streamable } from "../Space/Streamable";
+import type { Streamable } from "../Space/Streamable";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 
 // Maximize/minimize can briefly mount 2 video components for the same participant.
@@ -542,7 +542,7 @@ export class LiveKitParticipant {
                     $blockedUsersStore.has(this._spaceUser.spaceUserId)
                 ),
                 acquireVideoSubscription: () => this.acquireVideoSubscription("camera"),
-            } as LivekitStreamable,
+            },
             volumeStore: writable(undefined),
             volume: writable(this.defaultVolume),
             closeStreamable: () => {},
@@ -576,7 +576,7 @@ export class LiveKitParticipant {
                     $blockedUsersStore.has(this._spaceUser.spaceUserId)
                 ),
                 acquireVideoSubscription: () => this.acquireVideoSubscription("screenShare"),
-            } as LivekitStreamable,
+            },
             volumeStore: writable(undefined),
             volume: writable(this.defaultVolume),
             closeStreamable: () => {},

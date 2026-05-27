@@ -19,7 +19,7 @@
 </script>
 
 <ActionBarButton
-    on:click={() => {
+    onclick={() => {
         audioManagerVolumeStore.togglePause();
     }}
     classList="group/btn-music-paused"
@@ -47,7 +47,7 @@
 </ActionBarButton>
 <ActionBarButton
     classList="group/btn-music-stop"
-    on:click={() => {
+    onclick={() => {
         // Stop audio
         audioManagerVolumeStore.stopSound(true);
         audioManagerFileStore.unloadAudio();
@@ -73,7 +73,7 @@
     <PlayerStopIcon />
 </ActionBarButton>
 <ActionBarButton
-    on:click={() => {
+    onclick={() => {
         if (
             $audioManagerVisibilityStore === "visible" &&
             $audioManagerPlayerState !== "not_allowed" &&

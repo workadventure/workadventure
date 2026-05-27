@@ -8,7 +8,11 @@
     import LL from "../../../i18n/i18n-svelte";
     import { IconFocusCentered, IconMapSearch, IconMinus, IconPlus } from "@wa-icons";
 
-    export let mapEditorRightOffset = 0;
+    interface Props {
+        mapEditorRightOffset?: number;
+    }
+
+    let { mapEditorRightOffset = 0 }: Props = $props();
 
     // Keep click and long-press as the same gesture: a press always starts with one smooth zoom step,
     // then turns into continuous zoom if the user keeps the pointer down.
@@ -108,7 +112,7 @@
     });
 </script>
 
-<svelte:window on:blur={stopZoom} />
+<svelte:window onblur={stopZoom} />
 
 <div
     class="fixed bottom-2 mobile:bottom-24 bg-contrast/80 rounded pointer-events-auto p-1 backdrop-blur hover:bg-contrast/100"
@@ -117,14 +121,14 @@
 >
     <div class="flex flex-col justify-center gap-2">
         <div class="flex flex-col justify-center gap-1">
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
                 class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
-                on:pointerdown={(event) => startZoom("in", event)}
-                on:pointerup={stopZoom}
-                on:pointercancel={stopZoom}
-                on:pointerleave={stopZoom}
+                onpointerdown={(event) => startZoom("in", event)}
+                onpointerup={stopZoom}
+                onpointercancel={stopZoom}
+                onpointerleave={stopZoom}
             >
                 <IconPlus />
                 <div
@@ -133,14 +137,14 @@
                     {$LL.mapEditor.explorer.zoomIn()}
                 </div>
             </div>
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
                 class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
-                on:pointerdown={(event) => startZoom("out", event)}
-                on:pointerup={stopZoom}
-                on:pointercancel={stopZoom}
-                on:pointerleave={stopZoom}
+                onpointerdown={(event) => startZoom("out", event)}
+                onpointerup={stopZoom}
+                onpointercancel={stopZoom}
+                onpointerleave={stopZoom}
             >
                 <IconMinus />
                 <div
@@ -151,11 +155,11 @@
             </div>
         </div>
         {#if $mapExplorationModeStore === false}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
                 class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
-                on:click={openMapExplorer}
+                onclick={openMapExplorer}
             >
                 <IconMapSearch />
                 <div
@@ -165,11 +169,11 @@
                 </div>
             </div>
         {:else}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
                 class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
-                on:click={centerToUser}
+                onclick={centerToUser}
             >
                 <IconFocusCentered />
                 <div

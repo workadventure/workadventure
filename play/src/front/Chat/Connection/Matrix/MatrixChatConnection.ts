@@ -763,7 +763,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.client.on(ClientEvent.Room, this.handleRoom);
         this.client.on(ClientEvent.DeleteRoom, this.handleDeleteRoom);
         this.client.on(RoomEvent.MyMembership, this.handleMyMembership);
-        this.client.on(RoomStateEvent.Events as EmittedEvents, this.handleRoomStateEvent);
+        this.client.on(RoomStateEvent.Events, this.handleRoomStateEvent);
         this.client.on(RoomEvent.Name, this.handleName);
         this.client.on(ClientEvent.AccountData, this.handleAccountDataEvent);
         this.client.on(UserEvent.Presence, this.handleUserPresence);

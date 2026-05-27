@@ -1,6 +1,4 @@
 <script lang="ts">
-    import type { ComponentType } from "svelte";
-    import { createEventDispatcher } from "svelte";
     import { derived, readable } from "svelte/store";
     import type { Readable } from "svelte/store";
     import type {
@@ -9,6 +7,7 @@
         ChatRoomMember,
         ChatThreadSummary,
     } from "../../Connection/ChatConnection";
+    import type { WorkAdventureComponent } from "../../../../types/component";
     import LL, { locale } from "../../../../i18n/i18n-svelte";
     import Avatar from "../Avatar.svelte";
 
@@ -28,24 +27,33 @@
     import MessageReactions from "./MessageReactions.svelte";
     import MessageIncoming from "./Message/MessageIncoming.svelte";
     import MessageOutcoming from "./Message/MessageOutcoming.svelte";
+    import Message from "./Message.svelte";
     import ThreadSummary from "./ThreadSummary.svelte";
     import { IconTrash } from "@wa-icons";
 
-    export let message: ChatMessage;
-    export let replyDepth = 0;
-    export let showHeader = true;
-    /** Matrix rooms: member avatars follow Matrix profile (same pipeline as DM row / room list). */
-    export let membersForMessageAvatars: Readable<readonly ChatRoomMember[]> | undefined = undefined;
-    /** Root message reply preview; hide inside an open thread timeline (main room only). */
-    export let showThreadSummary = true;
+    interface Props {
+        message: ChatMessage;
+        replyDepth?: number;
+        showHeader?: boolean;
+        /** Matrix rooms: member avatars follow Matrix profile (same pipeline as DM row / room list). */
+        membersForMessageAvatars?: Readable<readonly ChatRoomMember[]>;
+        /** Root message reply preview; hide inside an open thread timeline (main room only). */
+        showThreadSummary?: boolean;
+        updateMessageBody?: (event: { id: string }) => void;
+    }
 
-    let messageRef: HTMLDivElement | undefined;
+    let {
+        message,
+        replyDepth = 0,
+        showHeader = true,
+        membersForMessageAvatars = undefined,
+        showThreadSummary = true,
+        updateMessageBody = () => {}
+    }: Props = $props();
 
-    const dispatch = createEventDispatcher<{
-        updateMessageBody: { id: string };
-    }>();
+    let messageRef: HTMLDivElement | undefined = $state();
 
-    const {
+    let {
         id,
         sender,
         isMyMessage,
@@ -57,52 +65,54 @@
         isDeleted,
         isModified,
         reactions,
-    } = message;
+    } = $derived(message);
 
-    const updateMessageBody = () => {
-        dispatch("updateMessageBody", {
+    const handleUpdateMessageBody = () => {
+        updateMessageBody({
             id: message.id,
         });
     };
 
-    const messageFromSystem = type === "incoming" || type === "outcoming";
+    let messageFromSystem = $derived(type === "incoming" || type === "outcoming");
 
-    const messageType: { [key in ChatMessageType]: ComponentType } = {
-        image: MessageImage as ComponentType,
-        text: MessageText as ComponentType,
-        file: MessageFile as ComponentType,
-        audio: MessageAudioFile as ComponentType,
-        video: MessageVideoFile as ComponentType,
-        incoming: MessageIncoming as ComponentType,
-        outcoming: MessageOutcoming as ComponentType,
-        proximity: MessageText as ComponentType,
+    const messageType: { [key in ChatMessageType]: WorkAdventureComponent } = {
+        image: MessageImage,
+        text: MessageText,
+        file: MessageFile,
+        audio: MessageAudioFile,
+        video: MessageVideoFile,
+        incoming: MessageIncoming,
+        outcoming: MessageOutcoming,
+        proximity: MessageText,
     };
 
-    const reactionsWithUsers = derived(
+    let reactionsWithUsers = $derived(derived(
         [reactions, ...Array.from(reactions.values()).map((reaction) => reaction.users)],
         ([$reactions, ...$users]) => {
             return Array.from($reactions.values()).filter((reaction) => reaction.users.size > 0);
         }
-    );
+    ));
     const emptyThreadSummary = readable<ChatThreadSummary | null>(null);
 
-    $: messageSenderAvatarColor = resolveChatUserColor(
+    let messageSenderAvatarColor = $derived(resolveChatUserColor(
         message.sender?.chatId ?? "",
         message.sender?.color,
         getMatrixClientForChatTint()
-    );
+    ));
 
-    $: roomMembersList = membersForMessageAvatars ? $membersForMessageAvatars : undefined;
-    $: memberForSender =
+    let roomMembersList = $derived(membersForMessageAvatars ? $membersForMessageAvatars : undefined);
+    let memberForSender = $derived(
         roomMembersList && message.sender?.chatId
             ? roomMembersList.find((m) => m.id === message.sender!.chatId)
-            : undefined;
-    $: messageAvatarPictureStore = memberForSender?.pictureStore ?? message.sender?.pictureStore;
-    $: waParensStore = memberForSender?.waDisplayNameIfDifferent;
-    $: waDisplayNameParens = waParensStore ? $waParensStore : undefined;
-    $: threadSummary = message.threadSummary ?? emptyThreadSummary;
-    $: hasThreadSummary =
-        showThreadSummary && replyDepth === 0 && !isQuotedMessage && !!$threadSummary && $threadSummary.replyCount > 0;
+            : undefined
+    );
+    let messageAvatarPictureStore = $derived(memberForSender?.pictureStore ?? message.sender?.pictureStore);
+    let waParensStore = $derived(memberForSender?.waDisplayNameIfDifferent);
+    let waDisplayNameParens = $derived($waParensStore ? $waParensStore : undefined);
+    let threadSummary = $derived(message.threadSummary ?? emptyThreadSummary);
+    let hasThreadSummary = $derived(
+        showThreadSummary && replyDepth === 0 && !isQuotedMessage && !!$threadSummary && $threadSummary.replyCount > 0
+    );
 
     async function openThread() {
         const thread = await message.openThread?.();
@@ -202,7 +212,8 @@
                         </div>
                     {/if}
 
-                    <svelte:component this={messageType[type]} on:updateMessageBody={updateMessageBody} {content} />
+                    {@const MessageComponent = messageType[type]}
+                    <MessageComponent updateMessageBody={handleUpdateMessageBody} {content} />
 
                     {#if $reactionsWithUsers.length > 0}
                         <MessageReactions
@@ -220,7 +231,7 @@
                 {#if quotedMessage && replyDepth < 1 && !$isDeleted}
                     <div class="p-1 opacity-80">
                         <div class="response bg-white/10 rounded">
-                            <svelte:self
+                            <Message
                                 replyDepth={replyDepth + 1}
                                 message={quotedMessage}
                                 {membersForMessageAvatars}
@@ -240,7 +251,7 @@
             {/if}
 
             {#if hasThreadSummary && $threadSummary}
-                <ThreadSummary summary={$threadSummary} on:openThread={openThread} />
+                <ThreadSummary summary={$threadSummary} {openThread} />
             {/if}
         </div>
     </div>

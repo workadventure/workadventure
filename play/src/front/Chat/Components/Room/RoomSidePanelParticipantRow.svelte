@@ -1,6 +1,5 @@
 <script lang="ts">
     import { defaultColor } from "@workadventure/shared-utils";
-    import { openModal } from "svelte-modals";
     import LL from "../../../../i18n/i18n-svelte";
     import { DEBUG_MODE } from "../../../Enum/EnvironmentVariable";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -14,12 +13,17 @@
     import MatrixPeerProfileDebugModal from "../MatrixPeerProfileDebugModal.svelte";
     import Avatar from "../Avatar.svelte";
     import { IconSettings } from "@wa-icons";
+    import { modals } from "@wa-modals";
 
-    export let member: ChatRoomMember;
+    interface Props {
+        member: ChatRoomMember;
+    }
 
-    $: memberNameStore = member.name;
-    $: memberPermissionLevelStore = member.permissionLevel;
-    $: memberAvatarColorStore = member.avatarFallbackColor;
+    let { member }: Props = $props();
+
+    let memberNameStore = $derived(member.name);
+    let memberPermissionLevelStore = $derived(member.permissionLevel);
+    let memberAvatarColorStore = $derived(member.avatarFallbackColor);
 
     function matrixConnectionFromGameManager(): MatrixChatConnectionLike | undefined {
         try {
@@ -30,14 +34,14 @@
         }
     }
 
-    $: matrixChatConnection = $isMatrixChatEnabledStore ? matrixConnectionFromGameManager() : undefined;
-    $: showMatrixPeerProfileDebug = DEBUG_MODE && matrixChatConnection !== undefined && Boolean(member.id);
+    let matrixChatConnection = $derived($isMatrixChatEnabledStore ? matrixConnectionFromGameManager() : undefined);
+    let showMatrixPeerProfileDebug = $derived(DEBUG_MODE && matrixChatConnection !== undefined && Boolean(member.id));
 
     function openMatrixPeerProfileDebug() {
         if (!matrixChatConnection) {
             return;
         }
-        openModal(MatrixPeerProfileDebugModal, {
+        modals.open(MatrixPeerProfileDebugModal, {
             connection: matrixChatConnection,
             matrixUserId: member.id,
             label: $memberNameStore,
@@ -76,7 +80,10 @@
             title={$LL.chat.matrixPeerProfileDebug.menuItemTitle()}
             aria-label={$LL.chat.matrixPeerProfileDebug.menuItemTitle()}
             data-testid="participant-matrix-peer-profile-debug"
-            on:click|stopPropagation={openMatrixPeerProfileDebug}
+            onclick={(event) => {
+                event.stopPropagation();
+                openMatrixPeerProfileDebug();
+            }}
         >
             <IconSettings font-size={16} />
         </button>

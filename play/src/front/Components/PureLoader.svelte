@@ -1,10 +1,19 @@
 <script lang="ts">
     import { LL } from "../../i18n/i18n-svelte";
 
-    export let size = 6;
-    export let color = "brand-blue";
-    export let loadingText = $LL.mapEditor.settings.loading();
-    export let customClass = "";
+    interface Props {
+        size?: number;
+        color?: string;
+        loadingText?: string;
+        customClass?: string;
+    }
+
+    let {
+        size = 6,
+        color = "brand-blue",
+        loadingText = $LL.mapEditor.settings.loading(),
+        customClass = ""
+    }: Props = $props();
 </script>
 
 <div aria-label="Loading..." class={`pure-loader flex flex-wrap flex-col items-center justify-center ${customClass}`}>

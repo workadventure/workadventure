@@ -39,18 +39,12 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
                     return;
                 }
 
-                // So far, we have no way to check at runtime the type of the value, so we cast it to any
-                // In an ideal world, the map and the script would share a common schema (for instance with https://github.com/sinclairzx81/typebox)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                remotePlayer.setVariable(payloadData.key, payloadData.value as any);
+                remotePlayer.setVariable(payloadData.key, payloadData.value);
                 const stream = this.sharedPlayersVariableStream[payloadData.key];
                 if (stream) {
                     stream.next({
                         player: remotePlayer,
-                        // So far, we have no way to check at runtime the type of the value, so we cast it to any
-                        // In an ideal world, the map and the script would share a common schema (for instance with https://github.com/sinclairzx81/typebox)
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        value: payloadData.value as any,
+                        value: payloadData.value,
                     });
                 }
             },

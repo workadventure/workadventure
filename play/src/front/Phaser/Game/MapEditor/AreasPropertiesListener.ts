@@ -107,6 +107,14 @@ interface MegaphoneZoneState {
     waitingLink: string | undefined;
 }
 
+type AreaDataPropertyUpdate = {
+    [Type in AreaDataProperty["type"]]: {
+        type: Type;
+        oldProperty: Extract<AreaDataProperty, { type: Type }>;
+        newProperty: Extract<AreaDataProperty, { type: Type }>;
+    };
+}[AreaDataProperty["type"]];
+
 export class AreasPropertiesListener {
     private scene: GameScene;
 
@@ -448,10 +456,15 @@ export class AreasPropertiesListener {
         }
     }
 
-    private updatePropertyFilter(oldProperty: AreaDataProperty, newProperty: AreaDataProperty, area: AreaData) {
-        if (oldProperty.type !== newProperty.type) {
+    private updatePropertyFilter(previousProperty: AreaDataProperty, nextProperty: AreaDataProperty, area: AreaData) {
+        if (previousProperty.type !== nextProperty.type) {
             throw new Error("Cannot update a property with a different type");
         }
+        const { type, oldProperty, newProperty } = {
+            type: previousProperty.type,
+            oldProperty: previousProperty,
+            newProperty: nextProperty,
+        } as AreaDataPropertyUpdate;
 
         const oldAbortController = this.abortControllers.get(oldProperty.id);
         if (oldAbortController) {
@@ -461,29 +474,25 @@ export class AreasPropertiesListener {
         const newAbortController = new AbortController();
         this.abortControllers.set(newProperty.id, newAbortController);
 
-        switch (oldProperty.type) {
+        switch (type) {
             case "openWebsite": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleOpenWebsitePropertiesOnLeave(oldProperty);
                 this.handleOpenWebsitePropertyOnEnter(newProperty);
                 break;
             }
             case "playAudio": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handlePlayAudioPropertyOnUpdate(newProperty);
                 break;
             }
             case "focusable": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleFocusablePropertiesOnEnter(area.x, area.y, area.width, area.height, newProperty);
                 break;
             }
             case "highlight": {
-                this.handleHighlightPropertyOnEnter(area, newProperty as HighlightPropertyData);
+                this.handleHighlightPropertyOnEnter(area, newProperty);
                 break;
             }
             case "jitsiRoomProperty": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleJitsiRoomPropertyOnLeave(oldProperty);
                 this.handleJitsiRoomPropertyOnEnter(newProperty);
                 break;
@@ -491,7 +500,6 @@ export class AreasPropertiesListener {
             case "livekitRoomProperty": {
                 this.handleLivekitRoomPropertyOnLeave(oldProperty)
                     .then(() => {
-                        newProperty = newProperty as typeof oldProperty;
                         return this.handleLivekitRoomPropertyOnEnter(newProperty, newAbortController.signal);
                     })
                     .catch((e) => {
@@ -504,7 +512,6 @@ export class AreasPropertiesListener {
                 break;
             }
             case "speakerMegaphone": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleSpeakerMegaphonePropertyOnLeave(oldProperty).catch((e) => {
                     console.error("Error while leaving space");
                     Sentry.captureException(new Error("Error while leaving space"));
@@ -516,7 +523,6 @@ export class AreasPropertiesListener {
                 break;
             }
             case "listenerMegaphone": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleListenerMegaphonePropertyOnLeave(oldProperty).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
@@ -531,7 +537,6 @@ export class AreasPropertiesListener {
                 break;
             }
             case "exit": {
-                newProperty = newProperty as typeof oldProperty;
                 let url = `${newProperty.url}`;
                 if (newProperty.areaName && newProperty.areaName !== "") {
                     url = `${newProperty.url}#${newProperty.areaName}`;
@@ -540,25 +545,21 @@ export class AreasPropertiesListener {
                 break;
             }
             case "personalAreaPropertyData": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handlePersonalAreaPropertyOnLeave(oldProperty);
                 this.handlePersonalAreaPropertyOnEnter(newProperty, area);
                 break;
             }
             case "matrixRoomPropertyData": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleMatrixRoomAreaOnLeave(oldProperty);
                 this.handleMatrixRoomAreaOnEnter(newProperty);
                 break;
             }
             case "tooltipPropertyData": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleTooltipPropertyOnLeave(oldProperty);
                 this.handleTooltipPropertyOnEnter(newProperty);
                 break;
             }
             case "openFile": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleOpenFileOnLeave(oldProperty);
                 this.handleOpenFileOnEnter(newProperty, newAbortController.signal).catch((error) =>
                     console.error("Error opening file:", error)

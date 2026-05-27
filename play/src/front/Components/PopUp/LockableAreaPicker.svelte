@@ -1,32 +1,36 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { clickOutside } from "svelte-outside";
     import { LL } from "../../../i18n/i18n-svelte";
     import type { LockableAreaEntry } from "../../Stores/CurrentPlayerAreaLockStore";
     import LockIcon from "../Icons/LockIcon.svelte";
     import LockOpenIcon from "../Icons/LockOpenIcon.svelte";
 
-    export let areas: LockableAreaEntry[] = [];
-    export let areasWithPermission: Set<string> = new Set();
-    export let onSelect: (entry: LockableAreaEntry) => void;
-    export let onClose: (() => void) | undefined = undefined;
+    interface Props {
+        areas: LockableAreaEntry[];
+        areasWithPermission?: Set<string>;
+        onselect?: (entry: LockableAreaEntry) => void;
+        onclose?: () => void;
+        /** When defined, show a row for the discussion bubble (group lock) in the list. */
+        groupLockState?: boolean;
+        /** Callback when the user selects the bubble row. Only used when groupLockState is defined. */
+        onSelectGroupLock?: (() => void);
+    }
 
-    /** When defined, show a row for the discussion bubble (group lock) in the list. */
-    export let groupLockState: boolean | undefined = undefined;
-    /** Callback when the user selects the bubble row. Only used when groupLockState is defined. */
-    export let onSelectGroupLock: (() => void) | undefined = undefined;
-
-    const dispatch = createEventDispatcher<{
-        close: void;
-    }>();
+    let {
+        areas = [],
+        areasWithPermission = new Set(),
+        onselect,
+        onclose,
+        groupLockState = undefined,
+        onSelectGroupLock = undefined
+    }: Props = $props();
 
     function handleClose(): void {
-        dispatch("close");
-        onClose?.();
+        onclose?.();
     }
 
     function handleSelect(entry: LockableAreaEntry): void {
-        onSelect(entry);
+        onselect?.(entry);
         handleClose();
     }
 
@@ -43,7 +47,7 @@
         return areasWithPermission.has(entryKey(entry));
     }
 
-    $: showBubbleRow = groupLockState !== undefined && onSelectGroupLock !== undefined;
+    let showBubbleRow = $derived(groupLockState !== undefined && onSelectGroupLock !== undefined);
 </script>
 
 <div
@@ -62,7 +66,7 @@
                 ? 'bg-red-500/30 hover:bg-red-500/40'
                 : 'hover:bg-white/10'}"
             data-testid="lockable-area-option-bubble"
-            on:click={handleSelectGroupLock}
+            onclick={handleSelectGroupLock}
         >
             {#if groupLockState}
                 <LockIcon />
@@ -83,7 +87,7 @@
                 : 'hover:bg-white/10'}"
             data-testid="lockable-area-option-{index}"
             disabled={!canLock(entry)}
-            on:click={() => canLock(entry) && handleSelect(entry)}
+            onclick={() => canLock(entry) && handleSelect(entry)}
         >
             {#if entry.lockState}
                 <LockIcon />

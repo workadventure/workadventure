@@ -1,25 +1,32 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { clickOutside } from "svelte-outside";
-    import { createEventDispatcher, onDestroy } from "svelte";
+    import { onDestroy } from "svelte";
     import { inBackgroundSettingsStore } from "../../../Stores/MediaStore";
     import MediaSettingsListHeader from "./MediaSettingsListHeader.svelte";
     import MediaSettingsPanel from "./MediaSettingsPanel.svelte";
     import BackgroundSettingsPanel from "./BackgroundSettingsPanel.svelte";
 
-    export let mediaSettingsDisplayed = false;
+    interface Props {
+        mediaSettingsDisplayed?: boolean;
+        onclose?: () => void;
+    }
 
-    let mode: "settings" | "background" = "settings";
+    let { mediaSettingsDisplayed = $bindable(false), onclose }: Props = $props();
 
-    $: inBackgroundSettingsStore.set(mode === "background");
+    let mode: "settings" | "background" = $state("settings");
+
+    $effect(() => {
+        inBackgroundSettingsStore.set(mode === "background");
+    });
 
     onDestroy(() => {
         inBackgroundSettingsStore.set(false);
     });
 
-    const dispatch = createEventDispatcher<{
-        close: void;
-    }>();
+    function handleClose() {
+        onclose?.();
+    }
 
     function handleCameraSelected() {
         mediaSettingsDisplayed = false;
@@ -29,7 +36,7 @@
 <div
     class="absolute pb-2 top-20 bottom-auto mobile:top-auto mobile:bottom-20 start-1/2 transform -translate-x-1/2 text-white rounded-md w-64 before:content-[''] before:absolute before:w-full before:h-full before:-z-10 before:start-0 before:top-0 before:rounded-lg before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:-z-20 after:w-full after:bg-transparent after:h-full after:-top-4 after:-start-0 transition-all"
     in:fly={{ y: 40, duration: 150 }}
-    use:clickOutside={() => dispatch("close")}
+    use:clickOutside={handleClose}
 >
     <div class="flex flex-col gap-2 p-1 relative" style="max-height: calc(100vh - 160px);">
         <div class="sticky top-0 z-20 -mx-1 px-1 pt-1 -mt-1">
@@ -38,7 +45,7 @@
 
         <div class="flex flex-col gap-2 flex-1 min-h-0">
             {#if mode === "settings"}
-                <MediaSettingsPanel on:cameraSelected={handleCameraSelected} />
+                <MediaSettingsPanel oncameraselected={handleCameraSelected} />
             {:else if mode === "background"}
                 <BackgroundSettingsPanel />
             {/if}

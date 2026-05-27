@@ -12,9 +12,9 @@
     import { getColorHexOfStatus, getStatusLabel } from "../../Utils/AvailabilityStatus";
     import type { WokaMenuAction, WokaMenuData } from "../../Stores/WokaMenuStore";
 
-    let wokaMenuData: WokaMenuData | undefined;
-    let sortedActions: WokaMenuAction[] | undefined;
-    let remotePlayer: { chatID?: string; availabilityStatus: AvailabilityStatus } | undefined;
+    let wokaMenuData: WokaMenuData | undefined = $state();
+    let sortedActions: WokaMenuAction[] | undefined = $state();
+    let remotePlayer: { chatID?: string; availabilityStatus: AvailabilityStatus } | undefined = $state();
 
     let wokaMenuStoreUnsubscriber: Unsubscriber | null;
 
@@ -32,7 +32,7 @@
         currentScerne.CurrentPlayer.emitAskPosition();
     }
 
-    let buttonsLayout: "row" | "column" | "wrap" = "row";
+    let buttonsLayout: "row" | "column" | "wrap" = $state("row");
 
     wokaMenuStoreUnsubscriber = wokaMenuStore.subscribe((value) => {
         wokaMenuData = value;
@@ -70,7 +70,7 @@
     });
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window onkeydown={onKeyDown} />
 
 {#if wokaMenuData}
     <div
@@ -80,7 +80,7 @@
         <div>
             <div class="w-full bg-cover relative">
                 <div class="absolute top-2 right-2">
-                    <ButtonClose on:click={closeActionsMenu} />
+                    <ButtonClose onclick={closeActionsMenu} />
                 </div>
 
                 <div class="flex items-center justify-center p-2">
@@ -106,7 +106,7 @@
                                     <div
                                         class="aspect-square h-2 w-2 rounded-full me-2.5"
                                         style="background-color: {getColorHexOfStatus(remotePlayer.availabilityStatus)}"
-                                    />
+                                    ></div>
                                     <div
                                         style="color: {getColorHexOfStatus(
                                             remotePlayer.availabilityStatus
@@ -135,7 +135,7 @@
                             <div
                                 class="bg-primary h-2 rounded-full transition-all duration-300"
                                 style="width: {$wokaMenuProgressStore.progress}%"
-                            />
+                            ></div>
                         </div>
                         <p class="text-white/80 text-sm text-center animate-pulse">
                             {$wokaMenuProgressStore.message}
@@ -159,8 +159,9 @@
                         class="btn btn-light btn-ghost text-nowrap justify-center my-2 mx-1 min-w-0 {action.style ??
                             ''}"
                         class:mx-2={buttonsLayout === "column"}
-                        on:click={() => analyticsClient.clickPropertyMapEditor(action.actionName, action.style)}
-                        on:click|preventDefault={() => {
+                        onclick={(event) => {
+                            analyticsClient.clickPropertyMapEditor(action.actionName, action.style);
+                            event.preventDefault();
                             closeActionsMenu();
                             action.callback();
                         }}
@@ -171,7 +172,8 @@
                                     <img src={action.actionIcon} class="w-full h-full" alt="" />
                                 </div>
                             {:else if action.actionIcon && typeof action.actionIcon === "function"}
-                                <svelte:component this={action.actionIcon} class="w-6 h-6" />
+                                {@const ActionIcon = action.actionIcon}
+                                <ActionIcon class="w-6 h-6" />
                             {/if}
                             {action.actionName}
                         </span>
@@ -182,7 +184,11 @@
                     <button
                         type="button"
                         class="btn btn-light btn-ghost text-nowrap justify-center my-2 mx-1 w-fit"
-                        on:click|preventDefault|stopPropagation={closeActionsMenu}
+                        onclick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            closeActionsMenu();
+                        }}
                     >
                         {$LL.actionbar.close()}
                     </button>

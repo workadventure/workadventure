@@ -7,10 +7,10 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { IconX, IconArrowsMaximize, IconArrowsMinimize } from "@wa-icons";
 
-    let modalIframe: HTMLIFrameElement;
+    let modalIframe: HTMLIFrameElement | undefined = $state();
     let mainModal: HTMLDivElement;
 
-    let isFullScreened = false;
+    let isFullScreened = $state(false);
 
     function close() {
         modalVisibilityStore.set(false);
@@ -30,7 +30,7 @@
 
     onMount(() => {
         resizeObserver.observe(mainModal);
-        if ($modalIframeStore?.allowApi) {
+        if ($modalIframeStore?.allowApi && modalIframe) {
             iframeListener.registerIframe(modalIframe);
         }
         // Note: the fullscreen functionality is not implemented yet
@@ -44,7 +44,9 @@
         // because of a possible race condition where the $modalIframeStore store is emptied before onDestroy is called,
         // which would lead to an error in unregisterIframe.
         //if ($modalIframeStore?.allowApi) {
-        iframeListener.unregisterIframe(modalIframe);
+        if (modalIframe) {
+            iframeListener.unregisterIframe(modalIframe);
+        }
         //}
     });
 
@@ -52,13 +54,13 @@
         ? new URL($modalIframeStore.src, gameManager.currentStartedRoom.mapUrl).toString()
         : undefined;
 
-    let isMobile = isMediaBreakpointUp("md");
+    let isMobile = $state(isMediaBreakpointUp("md"));
     const resizeObserver = new ResizeObserver(() => {
         isMobile = isMediaBreakpointUp("md");
     });
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window onkeydown={onKeyDown} />
 
 <div
     class="menu-container fixed h-dvh w-dvw z-[2000] pointer-events-auto top-0 transition-all {isMobile
@@ -84,7 +86,7 @@
                 {#if $modalIframeStore?.allowFullScreen}
                     <button
                         class="btn btn-light btn-ghost rounded hidden @lg/main-layout:block"
-                        on:click={() => (isFullScreened = !isFullScreened)}
+                        onclick={() => (isFullScreened = !isFullScreened)}
                     >
                         {#if isFullScreened}
                             <IconArrowsMinimize font-size="20" class="text-white" />
@@ -96,7 +98,10 @@
             {/if}
             {#if $modalIframeStore?.closable == undefined || $modalIframeStore?.closable == true}
                 <button
-                    on:click|preventDefault|stopPropagation={close}
+                    onclick={(event) => {
+                        event.preventDefault();
+                        close();
+                    }}
                     class="btn btn-danger rounded m-0"
                     style={isFullScreened == true ? "" : "margin: 0px;"}
                     data-testid="close-modal-button"
@@ -117,7 +122,7 @@
                 class="border-0 relative z-40"
                 allowtransparency
                 style="color-scheme: auto"
-            />
+            ></iframe>
         {/if}
     </div>
 </div>

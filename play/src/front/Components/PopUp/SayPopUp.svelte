@@ -1,6 +1,6 @@
 <script lang="ts">
     import { AvailabilityStatus, SayMessageType } from "@workadventure/messages";
-    import { createEventDispatcher, onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { inputFormFocusStore } from "../../Stores/UserInputStore";
     import { popupJustClosed } from "../../Phaser/Game/Say/SayManager";
@@ -12,21 +12,25 @@
     import PopUpContainer from "./PopUpContainer.svelte";
     import { IconSend } from "@wa-icons";
 
-    export let type: "say" | "think" = "say";
-    let message = "";
+    interface Props {
+        type: "say" | "think";
+        onclose?: () => void;
+    }
+
+    let { type = "say", onclose }: Props = $props();
+
+    let message = $state("");
     let messageInput: Input;
 
-    const dispatch = createEventDispatcher<{ close: void }>();
-
     function closeBanner() {
-        dispatch("close");
+        onclose?.();
     }
 
     onMount(() => {
         messageInput.focusInput();
     });
 
-    $: {
+    $effect(() => {
         switch ($availabilityStatusStore) {
             case AvailabilityStatus.JITSI:
             case AvailabilityStatus.BBB:
@@ -49,7 +53,7 @@
                 break;
             }
         }
-    }
+    });
 
     onDestroy(() => {
         // Firefox does not trigger the "blur" event when the input is removed from the DOM.
@@ -100,11 +104,11 @@
     }
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window onkeydown={onKeyDown} />
 <PopUpContainer reduceOnSmallScreen={true} fullContent={true}>
     <div class="flex flex-row w-full items-center gap-2 min-w-80" data-testid="say-popup">
         <ButtonClose
-            on:click={closeBanner}
+            onclick={closeBanner}
             bgColor="bg-constrast"
             hoverColor="bg-white/20"
             size="md"
@@ -128,14 +132,14 @@
         </div>
         <div class="flex flex-row gap-2">
             <!--            <MessageInput-->
-            <!--                onKeyDown={sendMessageOrEscapeLine}-->
+            <!--                onkeydown={sendMessageOrEscapeLine}-->
             <!--                bind:message-->
             <!--                bind:messageInput-->
             <!--                inputClass="message-input flex-grow !m-0 px-1 py-2.5 max-h-36 overflow-auto  h-full rounded-xl wa-searchbar block text-white placeholder:text-base border-light-purple border !bg-transparent resize-none border-none outline-none shadow-none focus:ring-0"-->
             <!--            />-->
 
             <Input
-                onKeyDown={sendMessageOrEscapeLine}
+                onkeydown={sendMessageOrEscapeLine}
                 bind:value={message}
                 bind:this={messageInput}
                 placeholder={$LL.say.placeholder()}
@@ -146,7 +150,7 @@
                 class="h-10 {message.length > 0
                     ? 'w-10'
                     : 'w-0'} p-0 aspect-square bg-secondary rounded flex items-center justify-center cursor-pointer transition-all"
-                on:click={sendMessageOrEscapeLine}
+                onclick={sendMessageOrEscapeLine}
             >
                 <IconSend />
             </button>
@@ -155,7 +159,7 @@
     <!--    <div slot="buttons">-->
     <!--            <button-->
     <!--                class="btn btn-secondary w-full !p-0 h-8 items-center btn-sm z-50 pointer-events-auto"-->
-    <!--                on:click={sendMessageOrEscapeLine}-->
+    <!--                onclick={sendMessageOrEscapeLine}-->
     <!--            >-->
     <!--                {$LL.say.send()}-->
     <!--                {#if type === "say"}-->

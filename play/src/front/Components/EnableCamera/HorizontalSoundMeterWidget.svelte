@@ -1,5 +1,5 @@
 <script lang="ts">
-    export let spectrum = [0, 0, 0, 0, 0, 0, 0];
+    let { spectrum = [0, 0, 0, 0, 0, 0, 0] } = $props();
 
     const NB_BARS = 30;
 
@@ -27,7 +27,7 @@
     class:active={spectrum !== undefined}
 >
     {#each [...Array(NB_BARS).keys()] as i (i)}
-        <div class="flex-1 h-4" style={color(i, spectrum)} />
+        <div class="flex-1 h-4" style={color(i, spectrum)}></div>
     {/each}
 </div>
 

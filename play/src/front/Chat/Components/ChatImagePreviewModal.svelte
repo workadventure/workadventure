@@ -1,19 +1,23 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
-    import { closeModal } from "svelte-modals";
     import ButtonClose from "../../Components/Input/ButtonClose.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { IconExternalLink } from "@wa-icons";
+    import { modals } from "@wa-modals";
 
-    export let url: string;
-    export let alt: string | undefined = undefined;
+    interface Props {
+        url: string;
+        alt?: string;
+    }
+
+    let { url, alt = undefined }: Props = $props();
 
     let containerRef: HTMLDivElement;
 
     function handleKeydown(event: KeyboardEvent) {
         if (event.key === "Escape") {
             event.preventDefault();
-            closeModal();
+            modals.close();
         }
     }
 
@@ -36,13 +40,15 @@
         type="button"
         class="absolute inset-0 w-full h-full cursor-default"
         aria-label={$LL.chat.imagePreview.close()}
-        on:click={() => closeModal()}
-    />
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
+        onclick={() => modals.close()}
+    ></button>
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
         class="relative flex flex-col bg-contrast/75 backdrop-blur-md text-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden pointer-events-auto shadow-xl"
-        on:click|stopPropagation
+        onclick={(event) => {
+            event.stopPropagation();
+        }}
     >
         <div class="relative flex items-center justify-center min-h-0 p-2">
             {#if url}
@@ -70,7 +76,7 @@
                         <IconExternalLink class="h-6 w-6" />
                     </a>
                 {/if}
-                <ButtonClose dataTestId="close-image-preview-modal" size="sm" on:click={() => closeModal()} />
+                <ButtonClose dataTestId="close-image-preview-modal" size="sm" onclick={() => modals.close()} />
             </div>
         </div>
     </div>

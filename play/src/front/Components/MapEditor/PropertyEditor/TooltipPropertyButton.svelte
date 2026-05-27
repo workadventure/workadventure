@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import type { TooltipPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import TextArea from "../../Input/TextArea.svelte";
@@ -8,73 +7,76 @@
     import infoBulleSvg from "../../images/icon_infobulle.svg";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
-    export let property: TooltipPropertyData;
-    let infinity = property.duration == -1;
+    interface Props {
+        property: TooltipPropertyData;
+        onchange?: () => void;
+        onclose?: () => void;
+    }
 
-    const dispatch = createEventDispatcher<{
-        change: undefined;
-        close: undefined;
-    }>();
+    let { property = $bindable(), onchange, onclose }: Props = $props();
+    let infinity = $state(property.duration == -1);
 
     function onValueChange() {
-        dispatch("change");
+        onchange?.();
     }
 
     function onInfinityChange() {
         if (infinity) property.duration = -1;
         else property.duration = 2;
-        dispatch("change");
+        onchange?.();
     }
 </script>
 
 <PropertyEditorBase
-    on:close={() => {
-        dispatch("close");
+    onclose={() => {
+        onclose?.();
     }}
 >
-    <span slot="header" class="flex justify-center items-center">
-        <img
-            class="w-6 mr-1"
-            src={infoBulleSvg}
-            alt={$LL.mapEditor.properties.tooltipPropertyData.label()}
-            draggable="false"
-        />
-        <label for="contentTooltip">{$LL.mapEditor.properties.tooltipPropertyData.label()}</label>
-    </span>
-    {$LL.mapEditor.properties.tooltipPropertyData.label()}
-    <span slot="content">
-        <TextArea
-            id="contentTooltip"
-            label={$LL.mapEditor.properties.tooltipPropertyData.description()}
-            placeHolder={$LL.mapEditor.properties.tooltipPropertyData.contentPlaceholder()}
-            bind:value={property.content}
-            onChange={onValueChange}
-            onKeyPress={() => {}}
-        />
+    {#snippet header()}
+        <span class="flex justify-center items-center">
+            <img
+                class="w-6 mr-1"
+                src={infoBulleSvg}
+                alt={$LL.mapEditor.properties.tooltipPropertyData.label()}
+                draggable="false"
+            />
+            <label for="contentTooltip">{$LL.mapEditor.properties.tooltipPropertyData.label()}</label>
+        </span>
+    {/snippet}
+    {#snippet content()}
+        <span>
+            <TextArea
+                id="contentTooltip"
+                label={$LL.mapEditor.properties.tooltipPropertyData.description()}
+                placeHolder={$LL.mapEditor.properties.tooltipPropertyData.contentPlaceholder()}
+                bind:value={property.content}
+                onchange={onValueChange}
+            />
 
-        <div class="value-switch">
-            <InputSwitch
-                id="durationInfinityTooltip"
-                label={$LL.mapEditor.properties.tooltipPropertyData.infinityDuration()}
-                bind:value={infinity}
-                onChange={onInfinityChange}
-            />
-        </div>
-        {#if !infinity}
-            <Input
-                id="durationTooltip"
-                type="number"
-                label={$LL.mapEditor.properties.tooltipPropertyData.duration()}
-                min={1}
-                step={1}
-                max={20}
-                disabled={infinity}
-                bind:value={property.duration}
-                on:change={onValueChange}
-                onInput={onValueChange}
-            />
-        {/if}
-    </span>
+            <div class="value-switch">
+                <InputSwitch
+                    id="durationInfinityTooltip"
+                    label={$LL.mapEditor.properties.tooltipPropertyData.infinityDuration()}
+                    bind:value={infinity}
+                    onchange={onInfinityChange}
+                />
+            </div>
+            {#if !infinity}
+                <Input
+                    id="durationTooltip"
+                    type="number"
+                    label={$LL.mapEditor.properties.tooltipPropertyData.duration()}
+                    min={1}
+                    step={1}
+                    max={20}
+                    disabled={infinity}
+                    bind:value={property.duration}
+                    onchange={onValueChange}
+                    oninput={onValueChange}
+                />
+            {/if}
+        </span>
+    {/snippet}
 </PropertyEditorBase>
 
 <style lang="scss">

@@ -90,7 +90,7 @@
 </script>
 
 <ActionBarButton
-    on:click={cameraClick}
+    onclick={cameraClick}
     classList="group/btn-cam"
     disabledHelp={$openedMenuStore !== undefined}
     state={$cameraButtonStateStore}
@@ -98,11 +98,11 @@
     tooltipTitle={$cameraActionBarTooltipStore.title}
     desc={$cameraActionBarTooltipStore.desc}
     media={$cameraActionBarTooltipStore.media}
-    on:mouseenter={() => {
+    onmouseenter={() => {
         if ($availabilityStatusStore === AvailabilityStatus.ONLINE) mouseIsHoveringCameraButton.set(true);
         else mouseIsHoveringCameraButton.set(false);
     }}
-    on:mouseleave={() => mouseIsHoveringCameraButton.set(false)}
+    onmouseleave={() => mouseIsHoveringCameraButton.set(false)}
 >
     {#if $requestedCameraState && !$silentStore && $cameraListStore && $cameraListStore.length > 0}
         <CamOnIcon />

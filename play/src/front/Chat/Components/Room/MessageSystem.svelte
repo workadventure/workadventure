@@ -1,9 +1,13 @@
 <script lang="ts">
     import type { ChatMessage } from "../../Connection/ChatConnection";
 
-    export let message: Pick<ChatMessage, "date" | "content">;
+    interface Props {
+        message: Pick<ChatMessage, "date" | "content">;
+    }
 
-    const { date, content } = message;
+    let { message }: Props = $props();
+
+    let { date, content } = $derived(message);
 </script>
 
 <div class="message group flex flex-col justify-center items-center mb-3">

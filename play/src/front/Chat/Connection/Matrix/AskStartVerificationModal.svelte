@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { closeModal } from "svelte-modals";
     import type { ShowSasCallbacks, Verifier } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationRequestEvent, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationMethod } from "matrix-js-sdk/lib/types";
@@ -9,13 +8,18 @@
     import LL from "../../../../i18n/i18n-svelte";
     import type { AskStartVerificationModalProps } from "./MatrixSecurity";
     import { matrixSecurity } from "./MatrixSecurity";
+    import { modals } from "@wa-modals";
 
-    export let isOpen: boolean;
-    export let props: AskStartVerificationModalProps;
-    const { request, otherDeviceInformation } = props;
-    let errorLabel: string | undefined = "";
+    interface Props {
+        isOpen: boolean;
+        props: AskStartVerificationModalProps;
+    }
+
+    let { isOpen, props: modalProps }: Props = $props();
+    let { request, otherDeviceInformation } = $derived(modalProps);
+    let errorLabel: string | undefined = $state("");
     const doneDeferred = new Deferred<void>();
-    let verifier: Verifier | undefined;
+    let verifier: Verifier | undefined = $state();
 
     async function acceptToStartVerification() {
         try {
@@ -49,7 +53,7 @@
 
         if (!emojis) return;
 
-        closeModal();
+        modals.close();
 
         matrixSecurity.openVerificationEmojiDialog({
             emojis,
@@ -87,14 +91,16 @@
         } catch (error) {
             console.error(`Failed to cancel verification request : ${error}`);
         } finally {
-            closeModal();
+            modals.close();
         }
     }
 </script>
 
 <Popup {isOpen}>
-    <h1 slot="title">{$LL.chat.askStartVerificationModal.title()}</h1>
-    <div slot="content">
+    {#snippet title()}
+        <h1>{$LL.chat.askStartVerificationModal.title()}</h1>
+    {/snippet}
+    {#snippet content()}
         {#if otherDeviceInformation.name}
             {otherDeviceInformation.name}
         {/if}
@@ -105,16 +111,16 @@
         {#if otherDeviceInformation.ip}
             {otherDeviceInformation.ip}
         {/if}
-    </div>
-    <svelte:fragment slot="action">
+    {/snippet}
+    {#snippet action()}
         {#if !errorLabel}
-            <button class="btn flex-1 justify-center bg-danger-900" on:click={refuseToStartVerification}>
+            <button class="btn flex-1 justify-center bg-danger-900" onclick={refuseToStartVerification}>
                 {$LL.chat.askStartVerificationModal.ignore()}
             </button>
             <button
                 class="btn btn-secondary flex-1 justify-center bg-secondary"
                 data-testid="VerifyTheSessionButton"
-                on:click={acceptToStartVerification}
+                onclick={acceptToStartVerification}
             >
                 {$LL.chat.askStartVerificationModal.accept()}
             </button>
@@ -123,5 +129,5 @@
                 {errorLabel}
             </div>
         {/if}
-    </svelte:fragment>
+    {/snippet}
 </Popup>

@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ICreateClientOpts } from "matrix-js-sdk";
 import type { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
-import { openModal } from "svelte-modals";
 import type { MatrixClientWrapperInterface, MatrixLocalUserStore } from "../MatrixClientWrapper";
 import { MatrixClientWrapper } from "../MatrixClientWrapper";
 import { matrixSecurity } from "../MatrixSecurity";
+import { modals } from "@wa-modals";
 
 // @vitest-environment jsdom
 vi.mock("../AccessSecretStorageDialog.svelte", () => {
@@ -22,9 +22,11 @@ vi.mock("../../../Stores/ChatStore.ts", () => {
     return {};
 });
 
-vi.mock("svelte-modals", () => {
+vi.mock("@wa-modals", () => {
     return {
-        openModal: vi.fn(),
+        modals: {
+            open: vi.fn(),
+        },
     };
 });
 
@@ -64,7 +66,7 @@ describe("MatrixClientWrapper", () => {
             setMatrixRefreshToken: vi.fn(),
             setMatrixAccessTokenExpireDate: vi.fn(),
             getName: vi.fn().mockReturnValue(null),
-        } as unknown as MatrixLocalUserStore;
+        };
 
         it("should throw a error when localUserStore uuid is undefined or null", async () => {
             const createClient = vi.fn().mockReturnValue(basicMockClient);
@@ -94,7 +96,7 @@ describe("MatrixClientWrapper", () => {
                     matrixUserId: "",
                 }),
                 getMatrixAccessToken: vi.fn().mockReturnValue(null),
-            } as unknown as MatrixLocalUserStore;
+            };
 
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
@@ -121,7 +123,7 @@ describe("MatrixClientWrapper", () => {
                 }),
                 getMatrixAccessToken: vi.fn().mockReturnValue("accessToken"),
                 getMatrixUserId: vi.fn().mockReturnValue(null),
-            } as unknown as MatrixLocalUserStore;
+            };
 
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
@@ -151,7 +153,7 @@ describe("MatrixClientWrapper", () => {
                 getMatrixAccessToken: vi.fn().mockReturnValue("accessToken"),
                 getMatrixUserId: vi.fn().mockReturnValue("matrixUserId"),
                 setMatrixDeviceId: vi.fn().mockReturnValue(null),
-            } as unknown as MatrixLocalUserStore;
+            };
 
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
@@ -197,7 +199,7 @@ describe("MatrixClientWrapper", () => {
                     matrixUserId: "matrixIdFromLocalUser",
                 }),
                 getMatrixDeviceId: vi.fn().mockReturnValue("deviceID"),
-            } as unknown as MatrixLocalUserStore;
+            };
 
             // eslint-disable-next-line
             vi.spyOn(MatrixClientWrapper.prototype as any, "matrixWebClientStore").mockReturnValue({});
@@ -244,7 +246,7 @@ describe("MatrixClientWrapper", () => {
                 getMatrixRefreshToken: vi.fn().mockReturnValue("RefreshToken"),
                 getMatrixUserId: vi.fn().mockReturnValue("UserId"),
                 getMatrixLoginToken: vi.fn().mockReturnValue("LoginToken"),
-            } as unknown as MatrixLocalUserStore;
+            };
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 localUserStoreMock,
@@ -302,7 +304,7 @@ describe("MatrixClientWrapper", () => {
                 getMatrixRefreshToken: vi.fn().mockReturnValue("refreshToken"),
                 getMatrixUserId: vi.fn().mockReturnValue("userId"),
                 getMatrixLoginToken: vi.fn().mockReturnValue("loginToken"),
-            } as unknown as MatrixLocalUserStore;
+            };
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 localUserStoreMock,
@@ -350,7 +352,7 @@ describe("MatrixClientWrapper", () => {
                 getMatrixUserId: vi.fn().mockReturnValue(userId),
                 getMatrixDeviceId: vi.fn().mockReturnValue(deviceId),
                 getMatrixLoginToken: vi.fn().mockReturnValue(null),
-            } as unknown as MatrixLocalUserStore;
+            };
 
             // eslint-disable-next-line
             vi.spyOn(MatrixClientWrapper.prototype as any, "matrixWebClientStore").mockReturnValue({});
@@ -388,9 +390,9 @@ describe("MatrixClientWrapper", () => {
             const firstRequest = getSecretStorageKey(keyRequest, "m.cross_signing.master");
             const secondRequest = getSecretStorageKey(keyRequest, "m.cross_signing.master");
 
-            await vi.waitFor(() => expect(openModal).toHaveBeenCalledOnce());
+            await vi.waitFor(() => expect(modals.open).toHaveBeenCalledOnce());
 
-            const openModalProps = vi.mocked(openModal).mock.calls[0][1] as {
+            const openModalProps = vi.mocked(modals.open).mock.calls[0][1] as {
                 onClose: (key: Uint8Array | null) => void;
             };
             openModalProps.onClose(secretStorageKey);

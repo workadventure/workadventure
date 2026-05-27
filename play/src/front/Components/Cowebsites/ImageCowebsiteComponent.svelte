@@ -5,14 +5,18 @@
     import LL from "../../../i18n/i18n-svelte";
     import { IconExternalLink, IconMinus, IconPlus } from "@wa-icons";
 
-    export let actualCowebsite: ImageCoWebsite;
-    export let visible: boolean;
+    interface Props {
+        actualCowebsite: ImageCoWebsite;
+        visible: boolean;
+    }
 
-    let canvas: HTMLCanvasElement | undefined;
-    let image: HTMLImageElement | undefined;
-    let isLoading = false;
-    let hasError = false;
-    let loadedUrl: string | undefined;
+    let { actualCowebsite, visible }: Props = $props();
+
+    let canvas: HTMLCanvasElement | undefined = $state();
+    let image: HTMLImageElement | undefined = $state();
+    let isLoading = $state(false);
+    let hasError = $state(false);
+    let loadedUrl: string | undefined = $state();
 
     function render(ctx: CanvasRenderingContext2D): void {
         if (!image) {
@@ -76,8 +80,8 @@
         window.open(imageUrl, "_blank", "noopener,noreferrer");
     }
 
-    $: imageUrl = actualCowebsite.getUrl().toString();
-    $: viewerOptions =
+    let imageUrl = $derived(actualCowebsite.getUrl().toString());
+    let viewerOptions = $derived(
         image === undefined
             ? undefined
             : ({
@@ -87,14 +91,17 @@
                   maxZoom: 12,
                   friction: 0.9,
                   render,
-              } satisfies PanZoomOptions);
+              } satisfies PanZoomOptions)
+    );
 
-    $: if (imageUrl && imageUrl !== loadedUrl) {
-        loadedUrl = imageUrl;
-        loadImage(imageUrl).catch((e) => {
-            console.error("Failed to load image co-website", e);
-        });
-    }
+    $effect(() => {
+        if (imageUrl && imageUrl !== loadedUrl) {
+            loadedUrl = imageUrl;
+            loadImage(imageUrl).catch((e) => {
+                console.error("Failed to load image co-website", e);
+            });
+        }
+    });
 </script>
 
 <div class="relative h-full w-full overflow-hidden bg-black" class:hidden={!visible}>
@@ -103,11 +110,11 @@
     >
         <div class="flex flex-col justify-center gap-2">
             <div class="flex flex-col justify-center gap-1">
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div
                     class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
-                    on:click={zoomIn}
+                    onclick={zoomIn}
                 >
                     <IconPlus />
                     <div
@@ -116,11 +123,11 @@
                         {$LL.mapEditor.explorer.zoomIn()}
                     </div>
                 </div>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div
                     class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
-                    on:click={zoomOut}
+                    onclick={zoomOut}
                 >
                     <IconMinus />
                     <div
@@ -131,11 +138,11 @@
                 </div>
             </div>
             {#if !actualCowebsite.getHideUrl()}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div
                     class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
-                    on:click={openInNewTab}
+                    onclick={openInNewTab}
                 >
                     <IconExternalLink />
                     <div
@@ -155,7 +162,7 @@
                 use:panzoom={viewerOptions}
                 class="relative h-full w-full select-none touch-none"
                 aria-label={$LL.chat.imagePreview.label()}
-            />
+            ></canvas>
         {/key}
     {:else if isLoading}
         <div class="relative flex h-full items-center justify-center text-sm text-white/80">

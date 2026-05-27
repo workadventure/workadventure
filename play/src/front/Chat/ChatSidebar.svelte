@@ -8,7 +8,7 @@
     import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore";
     import { IconX } from "@wa-icons";
 
-    let container: HTMLElement;
+    let container: HTMLElement | undefined = $state();
 
     const gameScene = gameManager.getCurrentGameScene();
 
@@ -20,9 +20,9 @@
         chatVisibilityStore.set(false);
     }
 
-    $: isInSpecificDiscussion = $selectedRoomStore !== undefined;
+    let isInSpecificDiscussion = $derived($selectedRoomStore !== undefined);
 
-    let sideBarWidth: number = $chatSidebarWidthStore;
+    let sideBarWidth: number = $state($chatSidebarWidthStore);
 
     const isRTL: boolean = document.documentElement.dir === "rtl";
 
@@ -86,7 +86,9 @@
         reposition();
     };
 
-    $: chatSidebarWidthStore.set(sideBarWidth);
+    $effect(() => {
+        chatSidebarWidthStore.set(sideBarWidth);
+    });
 
     const onresize = () => {
         if (isChatSidebarLargerThanWindow() && container) {
@@ -104,15 +106,15 @@
     };
 </script>
 
-<svelte:window on:resize={onresize} />
+<svelte:window {onresize} />
 {#if $chatVisibilityStore}
     <section
         bind:this={container}
         id="chat"
         data-testid="chat"
         transition:fly={{ duration: 200, x: isRTL ? sideBarWidth : -sideBarWidth }}
-        on:introend={reposition}
-        on:outroend={reposition}
+        onintroend={reposition}
+        onoutroend={reposition}
         style="width: {sideBarWidth}px; max-width: {sideBarWidth}px;"
         class=" chatWindow !min-w-[150px] max-sm:!min-w-[150px] bg-contrast/50 backdrop-blur-md p-0 screen-blocker"
     >
@@ -121,7 +123,7 @@
                 <button
                     class="hover:bg-white/10 rounded aspect-square w-8 h-8 m-0 flex items-center justify-center !text-white"
                     data-testid="closeChatButton"
-                    on:click={closeChat}
+                    onclick={closeChat}
                 >
                     <IconX font-size="20" />
                 </button>
@@ -129,14 +131,14 @@
         {/if}
 
         <Chat {sideBarWidth} />
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
             class="!absolute !end-1 !top-0 !bottom-0 !m-auto !w-1 !h-32 !bg-white !rounded !cursor-col-resize select-none"
             id="resize-bar"
-            on:mousedown={handleMousedown}
-            on:dblclick={handleDbClick}
-            on:touchstart={handleTouchStart}
-        />
+            onmousedown={handleMousedown}
+            ondblclick={handleDbClick}
+            ontouchstart={handleTouchStart}
+        ></div>
     </section>
 {/if}
 

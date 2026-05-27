@@ -4,9 +4,13 @@
     import LL from "../../../i18n/i18n-svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
 
-    export let message: string;
-    export let click: () => void;
-    export let userInputManager: UserInputManager;
+    interface Props {
+        message: string;
+        click: () => void;
+        userInputManager: UserInputManager;
+    }
+
+    let { message, click, userInputManager }: Props = $props();
 
     onMount(() => {
         userInputManager.addSpaceEventListener(click);
@@ -19,9 +23,9 @@
 
 <PopUpContainer reduceOnSmallScreen={true}>
     {message}
-    <svelte:fragment slot="buttons">
-        <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" on:click={click}
-            >{$LL.mapEditor.properties.openFile.label()}</button
-        >
-    </svelte:fragment>
+    {#snippet buttons()}
+        <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" onclick={click}>
+            {$LL.mapEditor.properties.openFile.label()}
+        </button>
+    {/snippet}
 </PopUpContainer>

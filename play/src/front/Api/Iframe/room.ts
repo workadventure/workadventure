@@ -45,14 +45,14 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
     callbacks = [
         apiCallback({
             callback: (payloadData: EnterLeaveEvent) => {
-                enterStreams.get(payloadData.name)?.next();
+                enterStreams.get(payloadData.name)?.next(payloadData);
             },
             type: "enterEvent",
         }),
         apiCallback({
             type: "leaveEvent",
             callback: (payloadData) => {
-                leaveStreams.get(payloadData.name)?.next();
+                leaveStreams.get(payloadData.name)?.next(payloadData);
             },
         }),
     ];
