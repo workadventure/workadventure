@@ -88,6 +88,7 @@
                         class="h-full min-h-0 w-full border-none"
                         src={iframeUrl}
                         title={$LL.news.label()}
+                        data-testid="news-iframe"
                         sandbox="allow-downloads allow-forms allow-popups allow-same-origin allow-scripts"
                     />
                 {/if}
@@ -102,7 +103,7 @@
                 <div class="flex flex-1 justify-end gap-3">
                     <button
                         type="button"
-                        class="btn btn-secondary"
+                        class="btn btn-light btn-ghost"
                         disabled={isSubmitting}
                         on:click={markAsReadAndClose}
                     >
@@ -111,7 +112,7 @@
                     {#if hasMultipleNews}
                         <button
                             type="button"
-                            class="btn btn-secondary"
+                            class="btn btn-light btn-ghost"
                             disabled={!hasPreviousNews || isSubmitting}
                             on:click={previous}
                         >
@@ -119,13 +120,13 @@
                         </button>
                     {/if}
                     {#if hasNextNews}
-                        <button type="button" class="btn btn-primary" disabled={isSubmitting} on:click={next}>
+                        <button type="button" class="btn btn-secondary" disabled={isSubmitting} on:click={next}>
                             {$LL.news.next()}
                         </button>
                     {:else}
                         <button
                             type="button"
-                            class="btn btn-primary"
+                            class="btn btn-secondary"
                             disabled={isSubmitting}
                             on:click={markAsReadAndClose}
                         >
