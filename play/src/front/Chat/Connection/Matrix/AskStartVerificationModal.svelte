@@ -16,8 +16,16 @@
     let errorLabel: string | undefined = "";
     const doneDeferred = new Deferred<void>();
     let verifier: Verifier | undefined;
+    let acceptVerificationPromise: Promise<void> | undefined;
 
-    async function acceptToStartVerification() {
+    function acceptToStartVerification() {
+        if (acceptVerificationPromise) {
+            return;
+        }
+        acceptVerificationPromise = startVerification();
+    }
+
+    async function startVerification() {
         try {
             await request.accept();
         } catch (error) {
@@ -26,11 +34,26 @@
             return;
         }
 
-        verifier = await request.startVerification(VerificationMethod.Sas);
+        try {
+            verifier = await request.startVerification(VerificationMethod.Sas);
 
-        request.on(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
+            request.on(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
 
-        verifier.on(VerifierEvent.ShowSas, handleVerifierEventShowSas);
+            verifier.on(VerifierEvent.ShowSas, handleVerifierEventShowSas);
+            verifier.verify().catch((error) => {
+                console.error("error with verify ...", error);
+                errorLabel = "Failed to start verification ...";
+                doneDeferred.reject(error);
+                verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
+                request.off(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
+            });
+        } catch (error) {
+            console.error("Failed to start verification:", error);
+            errorLabel = "Failed to start verification ...";
+            doneDeferred.reject(error);
+            verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
+            request.off(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
+        }
     }
 
     const handleVerifierEventShowSas = (showSasCallbacks: ShowSasCallbacks) => {
@@ -42,9 +65,7 @@
         };
 
         const mismatchCallback = () => {
-            //TODO : use showSasCallbacks.mismatch(); after matris-js-sdk update
-            //showSasCallbacks.mismatch();
-            return request.cancel({ reason: "m.mismatched_sas" });
+            showSasCallbacks.mismatch();
         };
 
         if (!emojis) return;
@@ -57,14 +78,6 @@
             mismatchCallback,
             donePromise: doneDeferred.promise,
             isThisDeviceVerification: request.initiatedByMe,
-        });
-
-        verifier.verify().catch((error) => {
-            console.error("error with verify ...", error);
-            errorLabel = "Failed to start verification ...";
-            doneDeferred.reject();
-            verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
-            request.off(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
         });
     };
     const handleChangeVerificationRequestEvent = () => {

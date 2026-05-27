@@ -35,10 +35,6 @@
                 })
                 .catch((error) => {
                     console.error("Failed to verify with emojis validation:", error);
-                    return mismatchCallback();
-                })
-                .catch((error) => {
-                    console.error("Failed to verify with emojis validation:", error);
                 })
                 .finally(() => {
                     closeTimeout = setTimeout(() => {

@@ -537,7 +537,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Ihr Gerät überprüfen",
         description: "Überprüfungsmethode wählen",
         withOtherDevice: "Mit einem anderen Gerät überprüfen",
-        withPassphrase: "Mit der Sicherheitsphrase überprüfen",
+        withPassphrase: "Mit Wiederherstellungsschlüssel oder Sicherheitsphrase überprüfen",
     },
     askStartVerificationModal: {
         title: "Überprüfung erforderlich",
