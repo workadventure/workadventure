@@ -11,7 +11,7 @@ export type MovesCallback = (
     thing: Movable,
     currentZone: Zone,
     position: PositionInterface,
-    listener: RoomSocket
+    listener: RoomSocket,
 ) => void;
 export type LeavesCallback = (thing: Movable, currentZone: Zone, newZone: Zone | null, listener: RoomSocket) => void;
 export type EmoteCallback = (emoteEventMessage: EmoteEventMessage, currentZone: Zone, listener: RoomSocket) => void;
@@ -20,7 +20,7 @@ export type GroupUsersUpdatedCallback = (currentZone: Zone, group: Group, listen
 export type PlayerDetailsUpdatedCallback = (
     currentZone: Zone,
     playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage,
-    listener: RoomSocket
+    listener: RoomSocket,
 ) => void;
 
 export interface ZonePosition {
@@ -41,7 +41,7 @@ export class Zone implements CustomJsonReplacerInterface, ZonePosition {
         private onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
         private onGroupUsersUpdated: GroupUsersUpdatedCallback,
         public readonly x: number,
-        public readonly y: number
+        public readonly y: number,
     ) {}
 
     /**
@@ -58,7 +58,7 @@ export class Zone implements CustomJsonReplacerInterface, ZonePosition {
                 throw new Error(
                     `Could not find group ${thing.getId()} in zone (${this.x},${this.y}). Position of group: (${
                         thing.getPosition().x
-                    },${thing.getPosition().y})`
+                    },${thing.getPosition().y})`,
                 );
             }
         }
@@ -151,7 +151,7 @@ export class Zone implements CustomJsonReplacerInterface, ZonePosition {
                     userId: user.id,
                     details: playerDetails,
                 },
-                listener
+                listener,
             );
         }
     }

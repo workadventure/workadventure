@@ -48,13 +48,13 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             (_) => {
                 return [
                     ...Array.from(this.roomList.values()).filter(
-                        (room) => get(room.myMembership) === KnownMembership.Invite
+                        (room) => get(room.myMembership) === KnownMembership.Invite,
                     ),
                     ...Array.from(this.folderList.values()).filter(
-                        (folder) => get(folder.myMembership) === KnownMembership.Invite
+                        (folder) => get(folder.myMembership) === KnownMembership.Invite,
                     ),
                 ];
-            }
+            },
         );
 
         this.rooms = derived(
@@ -62,10 +62,10 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             (_) => {
                 return [
                     ...Array.from(this.roomList.values()).filter(
-                        (room) => get(room.myMembership) === KnownMembership.Join
+                        (room) => get(room.myMembership) === KnownMembership.Join,
                     ),
                 ];
-            }
+            },
         );
 
         this.folders = derived(
@@ -73,10 +73,10 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             (_) => {
                 return [
                     ...Array.from(this.folderList.values()).filter(
-                        (folder) => get(folder.myMembership) === KnownMembership.Join
+                        (folder) => get(folder.myMembership) === KnownMembership.Join,
                     ),
                 ];
-            }
+            },
         );
 
         this.suggestedRooms = derived(
@@ -88,12 +88,12 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                     ...$folders.map((folder) => folder.id),
                 ]);
                 return $allSuggestedRooms.filter((room) => !existingIds.has(room.id) && !$ignoredIds.has(room.id));
-            }
+            },
         );
 
         this.joinableRooms = derived(
             [this.availableRooms, ignoredSuggestedRoomIdsStore],
-            ([$allChildRooms, $ignoredIds]) => $allChildRooms.filter((room) => !$ignoredIds.has(room.id))
+            ([$allChildRooms, $ignoredIds]) => $allChildRooms.filter((room) => !$ignoredIds.has(room.id)),
         );
 
         if (get(this.myMembership) === KnownMembership.Join) this.joinRoomDeferred.resolve();
@@ -224,7 +224,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             const foldersID = Array.from(this.roomList.keys());
 
             const nestedRoomIDs = await Promise.all(
-                Array.from(folders.values()).map((folder) => folder.getRoomsIdInNode())
+                Array.from(folders.values()).map((folder) => folder.getRoomsIdInNode()),
             );
 
             return [...roomIDs, ...foldersID, ...nestedRoomIDs.flat()];

@@ -25,7 +25,7 @@ function createChatNotificationStore() {
             message: string,
             room: ChatRoom,
             messageId?: string,
-            openRoomOnClick = true
+            openRoomOnClick = true,
         ): string => {
             const id = uuidv4();
             update((notifications: ProximityNotification[]) => {

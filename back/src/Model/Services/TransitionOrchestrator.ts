@@ -38,7 +38,7 @@ export class TransitionOrchestrator implements ITransitionOrchestrator {
      */
     async executeImmediateTransition(
         type: CommunicationType,
-        context: TransitionContext
+        context: TransitionContext,
     ): Promise<ICommunicationState<ICommunicationStrategy> | null> {
         const abortController = new AbortController();
         this._pendingTransitionAbortController = abortController;
@@ -49,7 +49,7 @@ export class TransitionOrchestrator implements ITransitionOrchestrator {
                 context.space,
                 context.users,
                 context.usersToNotify,
-                { playUri: context.playUri }
+                { playUri: context.playUri },
             );
 
             // Check if aborted during async state creation
@@ -89,7 +89,7 @@ export class TransitionOrchestrator implements ITransitionOrchestrator {
         type: CommunicationType,
         context: TransitionContext,
         onComplete: TransitionCompleteCallback,
-        onError?: TransitionErrorCallback
+        onError?: TransitionErrorCallback,
     ): StateTransitionResult<ICommunicationStrategy> {
         // If a transition is already scheduled, return the existing abort controller
         if (this._pendingTransitionAbortController && this._pendingTransitionTimeout) {
@@ -117,7 +117,7 @@ export class TransitionOrchestrator implements ITransitionOrchestrator {
                             context.space,
                             context.users,
                             context.usersToNotify,
-                            { playUri: context.playUri }
+                            { playUri: context.playUri },
                         );
 
                         // Final check before resolving

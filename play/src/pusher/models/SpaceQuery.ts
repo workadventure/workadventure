@@ -21,7 +21,7 @@ export class Query {
             // Timeout in milliseconds. Defaults to 10000 (10 seconds)
             timeout?: number;
             signal?: AbortSignal;
-        }
+        },
     ): Promise<Required<SpaceAnswerMessage>["answer"]> {
         const connection = await this._space.spaceStreamToBackPromise;
         if (!connection || connection.closed) {
@@ -69,7 +69,7 @@ export class Query {
 
                     // TODO: we can improve this by sending a cancellation message to the back
                 },
-                { once: true }
+                { once: true },
             );
 
             this._lastQueryId++;
@@ -86,7 +86,7 @@ export class Query {
             console.error(
                 "Received an answer for a query we have no record of. This might mean we received an answer after a query timeout.",
                 queryId,
-                answer
+                answer,
             );
             return;
         }

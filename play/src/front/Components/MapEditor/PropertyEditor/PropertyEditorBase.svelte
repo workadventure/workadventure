@@ -21,7 +21,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<div class="property-settings-container" role="group" onkeypress={onkeypress}>
+<div class="property-settings-container" role="group" {onkeypress}>
     <div class="header relative font-bold flex items-center flex-col gap-2 px-3">
         <div class="flex items-center justify-between w-full">
             {#if header}

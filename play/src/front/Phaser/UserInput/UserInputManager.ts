@@ -345,13 +345,13 @@ export class UserInputManager {
                 gameObjects: Phaser.GameObjects.GameObject[],
                 deltaX: number,
                 deltaY: number,
-                deltaZ: number
+                deltaZ: number,
             ) => {
                 if (this.isInputDisabled) {
                     return;
                 }
                 this.userInputHandler.handleMouseWheelEvent(pointer, gameObjects, deltaX, deltaY, deltaZ);
-            }
+            },
         );
 
         this.scene.input.on(
@@ -364,7 +364,7 @@ export class UserInputManager {
                 if (pointer.downElement?.nodeName === "CANVAS" && document.activeElement instanceof HTMLIFrameElement) {
                     document.activeElement.blur();
                 }
-            }
+            },
         );
 
         this.scene.input.on(
@@ -385,7 +385,7 @@ export class UserInputManager {
                 } else {
                     this.joystick?.hide(30_000);
                 }
-            }
+            },
         );
 
         this.scene.input.on(
@@ -395,7 +395,7 @@ export class UserInputManager {
                     return;
                 }
                 this.userInputHandler.handlePointerMoveEvent(pointer, gameObjects);
-            }
+            },
         );
 
         this.scene.input.keyboard?.on("keyup", (event: KeyboardEvent) => {

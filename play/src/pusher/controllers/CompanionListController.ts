@@ -9,7 +9,10 @@ import { AuthenticatedProviderController } from "./AuthenticatedProviderControll
  */
 export class CompanionListController extends AuthenticatedProviderController<CompanionTextureCollection[]> {
     private companionService: CompanionServiceInterface | undefined;
-    constructor(protected app: Application, protected jwtTokenManager: JWTTokenManager) {
+    constructor(
+        protected app: Application,
+        protected jwtTokenManager: JWTTokenManager,
+    ) {
         super(app, jwtTokenManager);
     }
     public setCompanionService(companionService: CompanionServiceInterface) {

@@ -67,23 +67,27 @@
         }
     }
 
-    let cameraDenied =
-        $derived($cameraPermissionStateStore === "denied" ||
-        ($cameraAccessIssueStore === "permission_denied" && $cameraPermissionStateStore !== "granted"));
-    let microphoneDenied =
-        $derived($microphonePermissionStateStore === "denied" ||
-        ($microphoneAccessIssueStore === "permission_denied" && $microphonePermissionStateStore !== "granted"));
+    let cameraDenied = $derived(
+        $cameraPermissionStateStore === "denied" ||
+            ($cameraAccessIssueStore === "permission_denied" && $cameraPermissionStateStore !== "granted"),
+    );
+    let microphoneDenied = $derived(
+        $microphonePermissionStateStore === "denied" ||
+            ($microphoneAccessIssueStore === "permission_denied" && $microphonePermissionStateStore !== "granted"),
+    );
 
-    let cameraLoaded =
-        $derived(($rawLocalStreamStore.type === "success" &&
+    let cameraLoaded = $derived(
+        ($rawLocalStreamStore.type === "success" &&
             $rawLocalStreamStore.stream &&
             $rawLocalStreamStore.stream.getVideoTracks().length > 0) ||
-        ($requestedCameraState && $usedCameraDeviceIdStore !== undefined));
-    let microphoneLoaded =
-        $derived(($rawLocalStreamStore.type === "success" &&
+            ($requestedCameraState && $usedCameraDeviceIdStore !== undefined),
+    );
+    let microphoneLoaded = $derived(
+        ($rawLocalStreamStore.type === "success" &&
             $rawLocalStreamStore.stream &&
             $rawLocalStreamStore.stream.getAudioTracks().length > 0) ||
-        ($requestedMicrophoneState && $usedMicrophoneDeviceIdStore !== undefined));
+            ($requestedMicrophoneState && $usedMicrophoneDeviceIdStore !== undefined),
+    );
 </script>
 
 <div class="scrollable-content overflow-y-auto flex flex-col gap-2 flex-1 min-h-0">

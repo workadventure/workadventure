@@ -38,7 +38,7 @@
     let playerPos = $derived(
         gameScene
             ? { x: Math.floor(gameScene.CurrentPlayer.x), y: Math.floor(gameScene.CurrentPlayer.y) }
-            : { x: 0, y: 0 }
+            : { x: 0, y: 0 },
     );
 
     let validEntryPointFromStore = $derived(
@@ -47,7 +47,7 @@
                   const saved = getInviteEntryPoint();
                   return saved && startPositions.includes(saved) ? saved : (startPositions[0] ?? "");
               })()
-            : ""
+            : "",
     );
 
     $effect(() => {

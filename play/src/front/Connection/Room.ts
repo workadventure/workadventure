@@ -19,7 +19,10 @@ import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { axiosWithRetry } from "./AxiosUtils";
 import { localUserStore } from "./LocalUserStore";
 export class MapDetail {
-    constructor(public readonly mapUrl?: string, public readonly wamUrl?: string) {}
+    constructor(
+        public readonly mapUrl?: string,
+        public readonly wamUrl?: string,
+    ) {}
 }
 
 export interface RoomRedirect {
@@ -120,7 +123,7 @@ export class Room {
     public static getRoomPathFromExitSceneUrl(
         exitSceneUrl: string,
         currentRoomUrl: string,
-        currentMapUrl: string
+        currentMapUrl: string,
     ): URL {
         const absoluteExitSceneUrl = new URL(exitSceneUrl, currentMapUrl);
         const baseUrl = new URL(currentRoomUrl);

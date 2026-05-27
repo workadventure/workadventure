@@ -25,7 +25,7 @@
             .filter(
                 (entityVariant) =>
                     entityVariant.defaultPrefab.name.toLowerCase().includes(search.toLowerCase()) ||
-                    entityVariant.defaultPrefab.tags.join(",").toLowerCase().includes(search.toLowerCase())
+                    entityVariant.defaultPrefab.tags.join(",").toLowerCase().includes(search.toLowerCase()),
             )
             .slice(0, 9);
     }

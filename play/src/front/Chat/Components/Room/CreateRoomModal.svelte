@@ -32,7 +32,7 @@
                 options.visibility = "restricted"; // Set to folder members only
             }
             return options;
-        })()
+        })(),
     );
     let createRoomError: string | undefined = $state(undefined);
 

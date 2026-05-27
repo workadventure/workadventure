@@ -163,7 +163,7 @@ export class FrontController extends BaseHttpController {
                 res,
                 z.object({
                     url: z.string(),
-                })
+                }),
             );
             if (query === undefined) {
                 return;
@@ -203,7 +203,7 @@ export class FrontController extends BaseHttpController {
                     res.status(526).send("Fail on challenging hostname");
                     return;
                 }
-            }
+            },
         );
 
         this.app.get("/server.json", (req: Request, res: Response) => {

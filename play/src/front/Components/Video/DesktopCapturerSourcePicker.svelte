@@ -62,10 +62,13 @@
         {#each desktopCapturerSources as source (source.id)}
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div class="media-box clickable" onclick={(event) => {
-                event.preventDefault();
-                selectDesktopCapturerSource(source)
-            }}>
+            <div
+                class="media-box clickable"
+                onclick={(event) => {
+                    event.preventDefault();
+                    selectDesktopCapturerSource(source);
+                }}
+            >
                 <img src={source.thumbnailURL} alt={source.name} draggable="false" />
                 <div class="container">
                     {source.name}

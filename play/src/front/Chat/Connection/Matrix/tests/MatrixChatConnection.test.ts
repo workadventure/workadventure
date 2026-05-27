@@ -71,7 +71,7 @@ describe("MatrixChatConnection", () => {
 
     const getMatrixConnection = async (
         clientPromise: Promise<MatrixClient>,
-        matrixSecurity = basicMockMatrixSecurity
+        matrixSecurity = basicMockMatrixSecurity,
     ) => {
         const matrixChatConnection = new MatrixChatConnection(clientPromise, basicStatusStore, matrixSecurity);
         await matrixChatConnection.init();
@@ -197,7 +197,7 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = await getMatrixConnection(clientPromise, mockMatrixSecurity);
 
             expect(matrixChatConnection["isEncryptionRequiredAndNotSet"]).toBe(
-                mockMatrixSecurity.isEncryptionRequiredAndNotSet
+                mockMatrixSecurity.isEncryptionRequiredAndNotSet,
             );
         });
         it.each([[true], [false]])(
@@ -215,7 +215,7 @@ describe("MatrixChatConnection", () => {
                 const matrixChatConnection = await getMatrixConnection(clientPromise, mockMatrixSecurity);
 
                 expect(matrixChatConnection["isEncryptionRequiredAndNotSet"]).toBe(expected);
-            }
+            },
         );
 
         it("should call startMatrixClient when client promise resolve", async () => {
@@ -458,8 +458,8 @@ describe("MatrixChatConnection", () => {
 
             expect(
                 matrixChatConnection["computeInitialState"](roomOptions).find(
-                    (option) => option.type === EventType.RoomHistoryVisibility
-                )
+                    (option) => option.type === EventType.RoomHistoryVisibility,
+                ),
             ).toEqual(undefined);
         });
     });
@@ -861,7 +861,7 @@ describe("MatrixChatConnection", () => {
             matrixChatConnection["addDMRoomInAccountData"] = vi.fn();
 
             await expect(matrixChatConnection.joinRoom(roomID)).rejects.toThrow(
-                "Room not present after synchronization"
+                "Room not present after synchronization",
             );
         });
     });
@@ -1042,7 +1042,7 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 Promise.resolve(matrixClient as unknown as MatrixClient),
                 basicStatusStore,
-                basicMockMatrixSecurity
+                basicMockMatrixSecurity,
             );
 
             expect(matrixChatConnection["getParentRoomID"](room as never)).toEqual([directParentId]);
@@ -1087,7 +1087,7 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 Promise.resolve(matrixClient as unknown as MatrixClient),
                 basicStatusStore,
-                basicMockMatrixSecurity
+                basicMockMatrixSecurity,
             );
 
             expect(matrixChatConnection["getParentRoomID"](room as never)).toEqual([]);
@@ -1134,7 +1134,7 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 Promise.resolve({} as MatrixClient),
                 basicStatusStore,
-                basicMockMatrixSecurity
+                basicMockMatrixSecurity,
             );
             matrixChatConnection["roomFolders"].set(folderId, folder);
             const reconcileRoomPlacement = vi
@@ -1142,14 +1142,14 @@ describe("MatrixChatConnection", () => {
                     matrixChatConnection as unknown as {
                         reconcileRoomPlacement: (roomId: string) => Promise<"root">;
                     },
-                    "reconcileRoomPlacement"
+                    "reconcileRoomPlacement",
                 )
                 .mockResolvedValue("root");
 
             matrixChatConnection["onRoomEventMembership"](
                 { roomId: folderId, name: "Left space" } as never,
                 KnownMembership.Leave,
-                KnownMembership.Join
+                KnownMembership.Join,
             );
             await flushPromises();
 
@@ -1223,7 +1223,7 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 Promise.resolve(matrixClient as unknown as MatrixClient),
                 basicStatusStore,
-                basicMockMatrixSecurity
+                basicMockMatrixSecurity,
             );
             matrixChatConnection["client"] = matrixClient as never;
             matrixChatConnection["roomFolders"].set(parentFolderId, parentFolder);
@@ -1232,14 +1232,14 @@ describe("MatrixChatConnection", () => {
                     matrixChatConnection as unknown as {
                         addRoomToParentFolder: (room: unknown, folder: MatrixRoomFolder) => void;
                     },
-                    "addRoomToParentFolder"
+                    "addRoomToParentFolder",
                 )
                 .mockImplementation(() => undefined);
 
             matrixChatConnection["onRoomEventMembership"](
                 { roomId: leftFolderId, name: "Left nested space" } as never,
                 KnownMembership.Leave,
-                KnownMembership.Join
+                KnownMembership.Join,
             );
             await flushPromises();
 
@@ -1276,17 +1276,17 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = new MatrixChatConnection(
                 Promise.resolve(matrixClient as unknown as MatrixClient),
                 basicStatusStore,
-                basicMockMatrixSecurity
+                basicMockMatrixSecurity,
             );
             matrixChatConnection["client"] = matrixClient as never;
             vi.spyOn(
                 matrixChatConnection as unknown as { removeRoomFromAllFolders: (roomId: string) => Promise<boolean> },
-                "removeRoomFromAllFolders"
+                "removeRoomFromAllFolders",
             ).mockResolvedValue(false);
             const handleOrphanRoom = vi
                 .spyOn(
                     matrixChatConnection as unknown as { handleOrphanRoom: (room: unknown) => void },
-                    "handleOrphanRoom"
+                    "handleOrphanRoom",
                 )
                 .mockImplementation(() => undefined);
 
@@ -1325,7 +1325,7 @@ describe("MatrixChatConnection", () => {
             matrixChatConnection["roomFolders"].set(parentId, parentFolder);
             const scheduleReconciliationSpy = vi.spyOn(
                 matrixChatConnection as unknown as { scheduleRoomPlacementReconciliation: (id: string) => void },
-                "scheduleRoomPlacementReconciliation"
+                "scheduleRoomPlacementReconciliation",
             );
 
             const event = {
@@ -1415,7 +1415,7 @@ describe("MatrixChatConnection", () => {
             matrixChatConnection["reconcileRoomPlacement"] = vi.fn().mockReturnValue(
                 new Promise((resolve) => {
                     resolveReconciliation = resolve;
-                })
+                }),
             ) as never;
 
             matrixChatConnection["scheduleRoomPlacementReconciliation"](roomId);
@@ -1494,7 +1494,7 @@ describe("MatrixChatConnection", () => {
             matrixChatConnection["roomList"].set(roomId, rootRoom);
             const scheduleReconciliationSpy = vi.spyOn(
                 matrixChatConnection as unknown as { scheduleRoomPlacementReconciliation: (id: string) => void },
-                "scheduleRoomPlacementReconciliation"
+                "scheduleRoomPlacementReconciliation",
             );
 
             const event = {
@@ -1532,7 +1532,7 @@ describe("MatrixChatConnection", () => {
             };
 
             const matrixChatConnection = await getMatrixConnection(
-                Promise.resolve({ isGuest: vi.fn().mockReturnValue(true) } as unknown as MatrixClient)
+                Promise.resolve({ isGuest: vi.fn().mockReturnValue(true) } as unknown as MatrixClient),
             );
             matrixChatConnection["roomFolders"].set(roomId, { id: roomId, destroy: vi.fn() } as never);
 

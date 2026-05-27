@@ -70,17 +70,22 @@
         </div>
     </section>
     <section class="flex row justify-center p-4 bg-contrast">
-        <button class="btn bg-white/10 hover:bg-white/20 mr-2 w-full justify-center" onclick={(event) => {
-            event.preventDefault();
-            refresh();
-        }}
+        <button
+            class="btn bg-white/10 hover:bg-white/20 mr-2 w-full justify-center"
+            onclick={(event) => {
+                event.preventDefault();
+                refresh();
+            }}
         >
             {$LL.notification.help.refresh()}
         </button>
-        <button type="submit" class="btn btn-danger w-full justify-center" onclick={(event) => {
-            event.preventDefault();
-            close();
-        }}
+        <button
+            type="submit"
+            class="btn btn-danger w-full justify-center"
+            onclick={(event) => {
+                event.preventDefault();
+                close();
+            }}
         >
             {$LL.notification.help.continue()}
         </button>

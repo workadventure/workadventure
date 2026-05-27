@@ -48,22 +48,26 @@
     <ResponsiveActionBar bind:rightDiv bind:actionBarWidth>
         {#snippet left()}
             <div class="justify-start flex-none">
-            <div class="flex relative transition-all duration-150 z-[2]" data-testid="chat-action">
-                {#if !$chatVisibilityStore}
-                    <ChatMenuItem chatEnabledInAdmin={showChatButton} last={isSmallScreen ? true : undefined} />
-                    {#if !isSmallScreen && showUserListButton}
-                        <UserListMenuItem state={showUserListButton ? "normal" : "disabled"} />
+                <div class="flex relative transition-all duration-150 z-[2]" data-testid="chat-action">
+                    {#if !$chatVisibilityStore}
+                        <ChatMenuItem chatEnabledInAdmin={showChatButton} last={isSmallScreen ? true : undefined} />
+                        {#if !isSmallScreen && showUserListButton}
+                            <UserListMenuItem state={showUserListButton ? "normal" : "disabled"} />
+                        {/if}
+                    {:else}
+                        <CloseChatMenuItem />
                     {/if}
-                {:else}
-                    <CloseChatMenuItem />
-                {/if}
+                </div>
             </div>
-        </div>
         {/snippet}
 
         {#snippet center()}
-            <div class="@xxs/actions:justify-center justify-end main-action pointer-events-auto min-w-32 @sm/actions:min-w-[192px]">
-                <div class="flex justify-center relative gap-1 @md/actions:gap-2 @xl/actions:gap-4 z-[1] mx-1 @md/actions:mx-2 @xl/actions:mx-4">
+            <div
+                class="@xxs/actions:justify-center justify-end main-action pointer-events-auto min-w-32 @sm/actions:min-w-[192px]"
+            >
+                <div
+                    class="flex justify-center relative gap-1 @md/actions:gap-2 @xl/actions:gap-4 z-[1] mx-1 @md/actions:mx-2 @xl/actions:mx-4"
+                >
                     <div class="hidden @sm/actions:flex items-center">
                         <ContextualMenuItems />
                     </div>

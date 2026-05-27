@@ -39,7 +39,9 @@
     let blockAudio: boolean = $state(localUserStore.getBlockAudio());
     let forceCowebsiteTrigger: boolean = $state(localUserStore.getForceCowebsiteTrigger());
     let ignoreFollowRequests: boolean = $state(localUserStore.getIgnoreFollowRequests());
-    let decreaseAudioPlayerVolumeWhileTalking: boolean = $state(localUserStore.getDecreaseAudioPlayerVolumeWhileTalking());
+    let decreaseAudioPlayerVolumeWhileTalking: boolean = $state(
+        localUserStore.getDecreaseAudioPlayerVolumeWhileTalking(),
+    );
     let disableAnimations: boolean = $state(localUserStore.getDisableAnimations());
     let valueLocale: string = $state($locale);
     let valueCameraPrivacySettings = $state(localUserStore.getCameraPrivacySettings());
@@ -47,8 +49,9 @@
     const initialVideoQuality = localUserStore.getVideoQuality();
     let valueVideoQuality = $state(initialVideoQuality === "high" ? 3 : initialVideoQuality === "low" ? 1 : 2);
     const initialScreenShareQuality = localUserStore.getScreenShareQuality();
-    let valueScreenShareQuality =
-        $state(initialScreenShareQuality === "high" ? 3 : initialScreenShareQuality === "low" ? 1 : 2);
+    let valueScreenShareQuality = $state(
+        initialScreenShareQuality === "high" ? 3 : initialScreenShareQuality === "low" ? 1 : 2,
+    );
     let bandwidthConstrainedPreference = $state(localUserStore.getBandwidthConstrainedScreenSharePreference());
 
     let volumeProximityDiscussion = $state(localUserStore.getVolumeProximityDiscussion());
@@ -246,8 +249,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueVideoQuality = 1;
-                            }}
-                            >{$LL.menu.settings.videoBandwidth.low()}</span
+                            }}>{$LL.menu.settings.videoBandwidth.low()}</span
                         >
                     </li>
                     <li
@@ -263,8 +265,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueVideoQuality = 2;
-                            }}
-                            >{$LL.menu.settings.videoBandwidth.recommended()}</span
+                            }}>{$LL.menu.settings.videoBandwidth.recommended()}</span
                         >
                     </li>
                     <li
@@ -280,8 +281,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueVideoQuality = 3;
-                            }}
-                            >{$LL.menu.settings.videoBandwidth.high()}</span
+                            }}>{$LL.menu.settings.videoBandwidth.high()}</span
                         >
                     </li>
                 </ul>
@@ -318,8 +318,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueScreenShareQuality = 1;
-                            }}
-                            >{$LL.menu.settings.shareScreenBandwidth.low()}</span
+                            }}>{$LL.menu.settings.shareScreenBandwidth.low()}</span
                         >
                     </li>
                     <li
@@ -335,8 +334,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueScreenShareQuality = 2;
-                            }}
-                            >{$LL.menu.settings.shareScreenBandwidth.recommended()}</span
+                            }}>{$LL.menu.settings.shareScreenBandwidth.recommended()}</span
                         >
                     </li>
                     <li
@@ -352,8 +350,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueScreenShareQuality = 3;
-                            }}
-                            >{$LL.menu.settings.shareScreenBandwidth.high()}</span
+                            }}>{$LL.menu.settings.shareScreenBandwidth.high()}</span
                         >
                     </li>
                 </ul>

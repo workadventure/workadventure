@@ -12,7 +12,7 @@ export class CreateEntityFrontCommand extends CreateEntityCommand implements Fro
         entityData: WAMEntityData,
         commandId: string | undefined,
         private entitiesManager: EntitiesManager,
-        private entityDimensions: EntityDimensions
+        private entityDimensions: EntityDimensions,
     ) {
         super(wamFile, entityId, entityData, commandId);
     }

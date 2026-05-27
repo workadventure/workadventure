@@ -5,8 +5,6 @@
     import { textMessageStore } from "../../Stores/TypeMessageStore/TextMessageStore";
     import ButtonClose from "../Input/ButtonClose.svelte";
 
-    
-
     interface Props {
         /* eslint-disable svelte/no-at-html-tags */
         message: Message;

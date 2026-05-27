@@ -25,7 +25,14 @@
         input?: (link: string) => void;
     }
 
-    let { property, close = () => {}, update = () => {}, processing = () => {}, processed = () => {}, input: inputCallback = () => {} }: Props = $props();
+    let {
+        property,
+        close = () => {},
+        update = () => {},
+        processing = () => {},
+        processed = () => {},
+        input: inputCallback = () => {},
+    }: Props = $props();
 
     let errorLink: string | undefined = $state();
     let htmlElementInput: HTMLInputElement;
@@ -45,17 +52,17 @@
                         (payload: KlaxoonEvent) => {
                             link = KlaxoonService.getKlaxoonEmbedUrl(
                                 new URL(payload.url),
-                                applicationManager.klaxoonToolClientId
+                                applicationManager.klaxoonToolClientId,
                             );
                             update({ ...property, link });
-                        }
+                        },
                     );
                     break;
                 case defaultNativeIntegrationAppName.GOOGLE_DRIVE:
                     if (GOOGLE_DRIVE_PICKER_CLIENT_ID == undefined || GOOGLE_DRIVE_PICKER_APP_ID == undefined) return;
                     link = await GoogleWorkSpaceService.initGooglePicker(
                         GOOGLE_DRIVE_PICKER_CLIENT_ID,
-                        GOOGLE_DRIVE_PICKER_APP_ID
+                        GOOGLE_DRIVE_PICKER_APP_ID,
                     );
                     break;
                 case defaultNativeIntegrationAppName.GOOGLE_DOCS:
@@ -63,7 +70,7 @@
                     link = await GoogleWorkSpaceService.initGooglePicker(
                         GOOGLE_DRIVE_PICKER_CLIENT_ID,
                         GOOGLE_DRIVE_PICKER_APP_ID,
-                        window.google.picker.ViewId.DOCS
+                        window.google.picker.ViewId.DOCS,
                     );
                     break;
                 case defaultNativeIntegrationAppName.GOOGLE_SHEETS:
@@ -71,7 +78,7 @@
                     link = await GoogleWorkSpaceService.initGooglePicker(
                         GOOGLE_DRIVE_PICKER_CLIENT_ID,
                         GOOGLE_DRIVE_PICKER_APP_ID,
-                        window.google.picker.ViewId.SPREADSHEETS
+                        window.google.picker.ViewId.SPREADSHEETS,
                     );
                     break;
                 case defaultNativeIntegrationAppName.GOOGLE_SLIDES:
@@ -79,7 +86,7 @@
                     link = await GoogleWorkSpaceService.initGooglePicker(
                         GOOGLE_DRIVE_PICKER_CLIENT_ID,
                         GOOGLE_DRIVE_PICKER_APP_ID,
-                        window.google.picker.ViewId.PRESENTATIONS
+                        window.google.picker.ViewId.PRESENTATIONS,
                     );
                     break;
             }
@@ -107,7 +114,7 @@
                     new URL(link),
                     property.regexUrl,
                     $LL.mapEditor.properties.openWebsite.errorEmbeddableLink(),
-                    property.targetEmbedableUrl
+                    property.targetEmbedableUrl,
                 );
             }
         } catch (error) {

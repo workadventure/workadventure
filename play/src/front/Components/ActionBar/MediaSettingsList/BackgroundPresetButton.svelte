@@ -9,18 +9,12 @@
         blurClass?: string;
     }
 
-    let {
-        thumbnail,
-        name,
-        isSelected,
-        onclick,
-        blurClass = ""
-    }: Props = $props();
+    let { thumbnail, name, isSelected, onclick, blurClass = "" }: Props = $props();
 </script>
 
 <button
     class="relative w-full aspect-square rounded-md border-2 transition-all hover:brightness-50"
-    onclick={onclick}
+    {onclick}
     title={name}
 >
     <div

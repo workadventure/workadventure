@@ -1,14 +1,11 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { get } from "svelte/store";
-    import type {
-        RoomFolder,
-        ChatRoomModeration,
-    } from "../Connection/ChatConnection";
+    import type { RoomFolder, ChatRoomModeration } from "../Connection/ChatConnection";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import RoomSubFolder from './RoomFolder.svelte';
+    import RoomSubFolder from "./RoomFolder.svelte";
     import Room from "./Room/Room.svelte";
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
@@ -23,14 +20,17 @@
 
     let { rootFolder, folder }: Props = $props();
 
-    let { name, folders, invitations, rooms, id, suggestedRooms, joinableRooms, joinableRoomsLoading } = $derived(folder);
+    let { name, folders, invitations, rooms, id, suggestedRooms, joinableRooms, joinableRoomsLoading } =
+        $derived(folder);
     let isOpen: boolean = $state((() => localUserStore.hasFolderOpened(folder.id) ?? false)());
     let joinableRoomsOpen = $state(false);
     const isFoldersOpen: { [key: string]: boolean } = {};
 
-    let filteredRoom = $derived($rooms
-        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)));
+    let filteredRoom = $derived(
+        $rooms
+            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+    );
 
     $folders?.forEach((folder) => {
         if (!(folder.id in isFoldersOpen)) {
@@ -38,9 +38,9 @@
         }
     });
 
-    let filteredJoinableRooms = $derived($joinableRooms.filter(
-        (joinable) => !$suggestedRooms.some((suggested) => suggested.id === joinable.id)
-    ));
+    let filteredJoinableRooms = $derived(
+        $joinableRooms.filter((joinable) => !$suggestedRooms.some((suggested) => suggested.id === joinable.id)),
+    );
 
     let hasSuggestedRooms = $derived($suggestedRooms.length > 0);
 
@@ -177,12 +177,7 @@
                 {#each Array.from($folders.values()) as folder (folder.id)}
                     <RoomSubFolder {folder} rootFolder={false} />
                 {/each}
-                <ShowMore
-                    items={filteredRoom}
-                    maxNumber={8}
-                    idKey="id"
-                    showNothingToDisplayMessage={false}
-                >
+                <ShowMore items={filteredRoom} maxNumber={8} idKey="id" showNothingToDisplayMessage={false}>
                     {#snippet children({ item: room })}
                         <Room {room} />
                     {/snippet}

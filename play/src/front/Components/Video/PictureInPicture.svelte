@@ -36,7 +36,7 @@
                     preferInitialWindowPlacement: z.boolean(),
                     height: z.string(),
                     width: z.string(),
-                })
+                }),
             )
             .returns(z.promise(z.instanceof(Window))),
     });
@@ -230,7 +230,7 @@
             <div
                 class="fixed z-0 top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-20 bg-black"
                 style="background-image: url({mapImage});"
-></div>
+            ></div>
         {/if}
         {@render children?.({ inPictureInPicture: $activePictureInPictureStore })}
     </div>

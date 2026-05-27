@@ -20,17 +20,18 @@
         textColor = "text-white",
         size = "lg",
         extraButtonClasses = "",
-        onclick
+        onclick,
     }: Props = $props();
 
-    let sizeClasses =
-        $derived(size === "xs"
+    let sizeClasses = $derived(
+        size === "xs"
             ? "h-6 w-6 text-sm"
             : size === "sm"
-            ? "h-8 w-8 text-base"
-            : size === "md"
-            ? "h-10 w-10 text-lg"
-            : "h-12 w-12 text-2xl");
+              ? "h-8 w-8 text-base"
+              : size === "md"
+                ? "h-10 w-10 text-lg"
+                : "h-12 w-12 text-2xl",
+    );
 
     function handleClick(event: MouseEvent) {
         event.preventDefault();

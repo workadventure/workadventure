@@ -42,13 +42,13 @@
         {
             placement: "bottom-end",
         },
-        8
+        8,
     );
 
     const participantMenuVisibleStore = derived(
         [inLivekitStore, isSpeakerStore, inBbbStore, inJitsiStore, isInRemoteConversation],
         ([inLivekitStore, isSpeakerStore, inBbbStore, inJitsiStore, isInRemoteConversation]) =>
-            inLivekitStore || isSpeakerStore || inBbbStore || inJitsiStore || isInRemoteConversation
+            inLivekitStore || isSpeakerStore || inBbbStore || inJitsiStore || isInRemoteConversation,
     );
 
     function closeParticipantMenu() {
@@ -113,7 +113,7 @@
                 const localUuid = localUserStore.getLocalUser()?.uuid ?? "";
                 set(Array.from(usersMap.values()).filter((u) => u.uuid !== localUuid));
             });
-        }
+        },
     );
 
     const PARTICIPANT_ROW_HEIGHT_PX = 44;
@@ -325,8 +325,7 @@
                         tabindex="0"
                         onclick={() => openParticipantWokaMenu(item)}
                         onkeydown={(e) =>
-                            (e.key === "Enter" || e.key === " ") &&
-                            (e.preventDefault(), openParticipantWokaMenu(item))}
+                            (e.key === "Enter" || e.key === " ") && (e.preventDefault(), openParticipantWokaMenu(item))}
                     >
                         <div
                             class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"

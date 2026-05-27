@@ -18,7 +18,7 @@
         hover = "group-hover/btn-picture-in-picture:fill-white",
         strokeWidth = "1.5",
         classList = "aspect-ratio transition-all",
-        ariaLabel = undefined
+        ariaLabel = undefined,
     }: Props = $props();
 </script>
 

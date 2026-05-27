@@ -42,11 +42,11 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
     protected shiftKey?: Phaser.Input.Keyboard.Key;
     protected pointerMoveEventHandler!: (
         pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[]
+        gameObjects: Phaser.GameObjects.GameObject[],
     ) => void;
     protected pointerDownEventHandler!: (
         pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[]
+        gameObjects: Phaser.GameObjects.GameObject[],
     ) => void;
 
     protected mapEditorEntityUploadStoreUnsubscriber: Unsubscriber | undefined;
@@ -97,7 +97,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
 
                 if (!entityPrefab) {
                     console.warn(
-                        `NO PREFAB WAS FOUND FOR: ${createEntityMessage.collectionName} ${createEntityMessage.prefabId}`
+                        `NO PREFAB WAS FOUND FOR: ${createEntityMessage.collectionName} ${createEntityMessage.prefabId}`,
                     );
                     return;
                 }
@@ -131,8 +131,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         entityData,
                         commandId,
                         this.entitiesManager,
-                        { width: createEntityMessage.width, height: createEntityMessage.height }
-                    )
+                        { width: createEntityMessage.width, height: createEntityMessage.height },
+                    ),
                 );
                 break;
             }
@@ -143,8 +143,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         this.scene.getGameMap().getWamFile()!,
                         id,
                         commandId,
-                        this.entitiesManager
-                    )
+                        this.entitiesManager,
+                    ),
                 );
                 break;
             }
@@ -163,8 +163,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         commandId,
                         undefined,
                         this.entitiesManager,
-                        this.scene
-                    )
+                        this.scene,
+                    ),
                 );
                 break;
             }
@@ -174,8 +174,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                     new UploadEntityFrontCommand(
                         uploadEntityMessage,
                         this.entitiesManager,
-                        this.scene.getEntitiesCollectionsManager()
-                    )
+                        this.scene.getEntitiesCollectionsManager(),
+                    ),
                 );
                 break;
             }
@@ -187,8 +187,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         modifyCustomEntityMessage,
                         this.scene.getEntitiesCollectionsManager(),
                         this.scene.getGameMapFrontWrapper(),
-                        this.entitiesManager
-                    )
+                        this.entitiesManager,
+                    ),
                 );
                 break;
             }
@@ -200,8 +200,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         deleteCustomEntityMessage,
                         this.scene.getGameMap().getWamFile(),
                         this.entitiesManager,
-                        this.scene.getEntitiesCollectionsManager()
-                    )
+                        this.scene.getEntitiesCollectionsManager(),
+                    ),
                 );
                 break;
             }
@@ -249,8 +249,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                             new UploadEntityFrontCommand(
                                 uploadEntityMessage,
                                 this.entitiesManager,
-                                this.scene.getEntitiesCollectionsManager()
-                            )
+                                this.scene.getEntitiesCollectionsManager(),
+                            ),
                         );
                         mapEditorEntityUploadEventStore.set(undefined);
                     })().catch((e) => {
@@ -258,7 +258,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         Sentry.captureException(e);
                     });
                 }
-            }
+            },
         );
     }
 
@@ -272,8 +272,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                                 modifyCustomEntityMessage,
                                 this.scene.getEntitiesCollectionsManager(),
                                 this.scene.getGameMapFrontWrapper(),
-                                this.entitiesManager
-                            )
+                                this.entitiesManager,
+                            ),
                         );
                         mapEditorModifyCustomEntityEventStore.set(undefined);
                     })().catch((e) => {
@@ -281,7 +281,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         Sentry.captureException(e);
                     });
                 }
-            }
+            },
         );
     }
 
@@ -295,8 +295,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                                 deleteCustomEntityMessage,
                                 this.scene.getGameMap().getWamFile(),
                                 this.entitiesManager,
-                                this.scene.getEntitiesCollectionsManager()
-                            )
+                                this.scene.getEntitiesCollectionsManager(),
+                            ),
                         );
                         mapEditorDeleteCustomEntityEventStore.set(undefined);
                     })().catch((e) => {
@@ -304,13 +304,13 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         Sentry.captureException(e);
                     });
                 }
-            }
+            },
         );
     }
 
     protected handlePointerMoveEvent(
         pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[]
+        gameObjects: Phaser.GameObjects.GameObject[],
     ): void {
         // TODO: add shadow when moving into the area
         // .setDropShadow(4, 4, 0x000000);
@@ -322,7 +322,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             const offset = this.getEntityPrefabAlignWithGridOffset();
             this.entityPrefabPreview.setPosition(
                 Math.floor(pointer.worldX / 32) * 32 + offset.x,
-                Math.floor(pointer.worldY / 32) * 32 + offset.y
+                Math.floor(pointer.worldY / 32) * 32 + offset.y,
             );
         } else {
             this.entityPrefabPreview.setPosition(Math.floor(pointer.worldX), Math.floor(pointer.worldY));
@@ -330,7 +330,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         this.entityPrefabPreview.setDepth(
             this.entityPrefabPreview.y +
                 this.entityPrefabPreview.displayHeight * 0.5 +
-                (this.entityPrefab.depthOffset ?? 0)
+                (this.entityPrefab.depthOffset ?? 0),
         );
         this.changePreviewTint();
     }
@@ -353,7 +353,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
 
     protected handlePointerDownEvent(
         pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[]
+        gameObjects: Phaser.GameObjects.GameObject[],
     ): void {
         const clickedAreaPreview = this.isAreaPreviewClicked(pointer, gameObjects);
 
@@ -412,8 +412,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                     entityData,
                     undefined,
                     this.entitiesManager,
-                    { width: this.entityPrefabPreview.width, height: this.entityPrefabPreview.height }
-                )
+                    { width: this.entityPrefabPreview.width, height: this.entityPrefabPreview.height },
+                ),
             )
             .then(() => {
                 const openEntity = this.entitiesManager.getEntities().get(entityId);
@@ -459,7 +459,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             structuredClone(areaConfig),
             false,
             this.shiftKey,
-            this.ctrlKey
+            this.ctrlKey,
         );
         areaPreview.setDepth(ENTITY_EDITOR_AREA_PREVIEW_DEPTH);
         areaPreview.disableInteractive();
@@ -510,7 +510,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             this.entityPrefabPreview.displayHeight,
             this.entityPrefab.collisionGrid,
             undefined,
-            this.shiftKey?.isDown
+            this.shiftKey?.isDown,
         );
     }
 
@@ -527,8 +527,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                     undefined,
                     undefined,
                     this.entitiesManager,
-                    this.scene
-                )
+                    this.scene,
+                ),
             )
             .catch((e) => console.error(e));
     }
@@ -551,8 +551,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                     entityData,
                     undefined,
                     this.entitiesManager,
-                    data.entityDimensions
-                )
+                    data.entityDimensions,
+                ),
             )
             .catch((e) => console.error(e));
         this.cleanPreview();

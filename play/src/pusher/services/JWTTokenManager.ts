@@ -65,7 +65,7 @@ export class JWTTokenManager {
         username?: string,
         locale?: string,
         tags?: string[],
-        matrixUserId?: string
+        matrixUserId?: string,
     ): Promise<string> {
         return new SignJWT({ identifier, accessToken, username, locale, tags, matrixUserId })
             .setExpirationTime("30d")

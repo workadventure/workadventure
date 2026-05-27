@@ -109,7 +109,7 @@
                                     ></div>
                                     <div
                                         style="color: {getColorHexOfStatus(
-                                            remotePlayer.availabilityStatus
+                                            remotePlayer.availabilityStatus,
                                         )};filter: brightness(200%);"
                                         class="text-base font-bold"
                                     >

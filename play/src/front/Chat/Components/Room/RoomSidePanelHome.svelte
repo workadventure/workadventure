@@ -45,7 +45,7 @@
     onMount(() => {
         room.ensureThreadsHydrated?.().catch((error) => console.error("Failed to hydrate room threads", error));
         room.ensurePollCatalogueHydrated?.().catch((error) =>
-            console.error("Failed to hydrate room polls catalogue", error)
+            console.error("Failed to hydrate room polls catalogue", error),
         );
     });
 
@@ -61,13 +61,17 @@
     let pollCatalogueHydrationState = $derived(room.pollCatalogueHydrationState ?? idleHydrationState);
     let joinedMembers = $derived($members.filter((member) => get(member.membership) === "join"));
     let joinedMemberCountStore = $derived(room.joinedMemberCount);
-    let participantBadgeCount = $derived(joinedMemberCountStore != null ? $joinedMemberCountStore : joinedMembers.length);
+    let participantBadgeCount = $derived(
+        joinedMemberCountStore != null ? $joinedMemberCountStore : joinedMembers.length,
+    );
     let unreadThreadCount = $derived($threads.filter((thread) => thread.hasUnreadMessages).length);
     let openPollCount = $derived($pollItems.filter((poll) => !get(poll.state).isEnded).length);
     let avatarColorStore = $derived(room.avatarFallbackColor);
     let leaveRoomNotification = $derived($LL.chat.roomMenu.leaveRoom.notification());
     let threadWarnings = $derived($threadsHydrationState.warnings ?? []);
-    let hasUnsupportedThreadHistory = $derived(threadWarnings.some((warning) => warning.reason === "server_unsupported"));
+    let hasUnsupportedThreadHistory = $derived(
+        threadWarnings.some((warning) => warning.reason === "server_unsupported"),
+    );
     let threadCardValue = $derived(
         room.threadsHydrationState == null
             ? `${$threads.length}`
@@ -77,7 +81,7 @@
                 ? $LL.chat.roomPanel.status.retry()
                 : hasUnsupportedThreadHistory
                   ? "?"
-                  : `${$threads.length}`
+                  : `${$threads.length}`,
     );
     let threadCardHint = $derived(
         room.threadsHydrationState == null
@@ -86,7 +90,7 @@
               ? $LL.chat.roomPanel.threadsLoadError()
               : hasUnsupportedThreadHistory
                 ? $LL.chat.roomPanel.status.partialHistory()
-                : undefined
+                : undefined,
     );
     let pollCardValue = $derived(
         room.pollCatalogueHydrationState == null
@@ -95,12 +99,12 @@
               ? $LL.chat.loading()
               : $pollCatalogueHydrationState.status === "error"
                 ? $LL.chat.roomPanel.status.retry()
-                : `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`
+                : `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`,
     );
     let pollCardHint = $derived(
         room.pollCatalogueHydrationState != null && $pollCatalogueHydrationState.status === "error"
             ? $LL.chat.roomPanel.pollsLoadError()
-            : undefined
+            : undefined,
     );
 
     function openSection(section: RoomSidePanelSection) {

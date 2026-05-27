@@ -47,17 +47,23 @@
 </section>
 <section class="category flex flex-row justify-center">
     {#if $collectionsSizeStore > 1 && $selectedCollection}
-        <button class="light mr-2 selectCharacterButton" onclick={(event) => {
-            event.preventDefault();
-            selectLeftCollection();
-        }}>
+        <button
+            class="light mr-2 selectCharacterButton"
+            onclick={(event) => {
+                event.preventDefault();
+                selectLeftCollection();
+            }}
+        >
             <IconChevronLeft />
         </button>
         <strong class="category-text">{$selectedCollection}</strong>
-        <button class="outline ml-2 selectCharacterButton" onclick={(event) => {
-            event.preventDefault();
-            selectRightCollection();
-        }}>
+        <button
+            class="outline ml-2 selectCharacterButton"
+            onclick={(event) => {
+                event.preventDefault();
+                selectRightCollection();
+            }}
+        >
             <IconChevronRight />
         </button>
     {/if}
@@ -73,7 +79,8 @@
             onclick={(event) => {
                 event.preventDefault();
                 noCompanion();
-            }}>
+            }}
+        >
             {$LL.companion.select.any()}
         </button>
         <button
@@ -83,7 +90,8 @@
                 event.preventDefault();
                 analyticsClient.selectCompanion();
                 selectCompanion();
-            }}>
+            }}
+        >
             {$LL.companion.select.continue()}
         </button>
     </section>

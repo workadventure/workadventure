@@ -93,7 +93,7 @@ export class RemotePlayer implements RemotePlayerInterface {
                     }
                     return p.toString() in variables;
                 },
-            }
+            },
         );
     }
 

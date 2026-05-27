@@ -78,7 +78,9 @@
                 {#if !isLoading}
                     {coWebsite.getTitle()}
                 {:else}
-                    <div class="w-[100px] h-2 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}"></div>
+                    <div
+                        class="w-[100px] h-2 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}"
+                    ></div>
                 {/if}
             </div>
             {#if !coWebsite.getHideUrl()}

@@ -55,7 +55,7 @@
             notificationPlayingStore.playNotification(
                 row.action === "start"
                     ? get(LL).recording.notification.startFailedNotification()
-                    : get(LL).recording.notification.stopFailedNotification()
+                    : get(LL).recording.notification.stopFailedNotification(),
             );
         }
     }
@@ -86,7 +86,7 @@
                 placement: "bottom",
             },
             8,
-            true
+            true,
         );
     }
 
@@ -121,12 +121,12 @@
     tooltipTitle={$recordingMenuState.hasOwnRecording
         ? $LL.recording.actionbar.title.stop()
         : $recordingMenuState.hasPendingRequest
-        ? $LL.recording.actionbar.title.inProgress()
-        : $recordingMenuState.hasActionableStart
-        ? $LL.recording.actionbar.title.start()
-        : $recordingMenuState.hasOtherRecording
-        ? $LL.recording.actionbar.title.inProgress()
-        : $LL.recording.actionbar.title.start()}
+          ? $LL.recording.actionbar.title.inProgress()
+          : $recordingMenuState.hasActionableStart
+            ? $LL.recording.actionbar.title.start()
+            : $recordingMenuState.hasOtherRecording
+              ? $LL.recording.actionbar.title.inProgress()
+              : $LL.recording.actionbar.title.start()}
     state={$recordingMenuState.buttonState}
     dataTestId="recordingButton-{$recordingMenuState.actionMode}"
     media="./static/Videos/Record.mp4"

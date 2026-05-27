@@ -1,8 +1,4 @@
-import {
-    Modals,
-    modals as svelteModals,
-    onBeforeClose,
-} from "svelte-modals";
+import { Modals, modals as svelteModals, onBeforeClose } from "svelte-modals";
 
 type ModalOpenOptions = Parameters<typeof svelteModals.open>[2];
 type SvelteModalComponent = Parameters<typeof svelteModals.open>[0];

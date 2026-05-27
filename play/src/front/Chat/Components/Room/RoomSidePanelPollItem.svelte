@@ -33,13 +33,15 @@
     });
 
     let winningAnswers = $derived($pollState.answers.filter((answer) => answer.isWinning));
-    let sortedAnswers = $derived([...$pollState.answers].sort((left, right) => {
-        if (left.isWinning !== right.isWinning) {
-            return left.isWinning ? -1 : 1;
-        }
+    let sortedAnswers = $derived(
+        [...$pollState.answers].sort((left, right) => {
+            if (left.isWinning !== right.isWinning) {
+                return left.isWinning ? -1 : 1;
+            }
 
-        return right.votes - left.votes;
-    }));
+            return right.votes - left.votes;
+        }),
+    );
 
     function getAnswerResult(answer: ChatPollAnswer) {
         return `${answer.votes} (${answer.percentage}%)`;

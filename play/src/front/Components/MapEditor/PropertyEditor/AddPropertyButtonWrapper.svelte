@@ -45,13 +45,7 @@
         onclick?: (event: MouseEvent) => void;
     }
 
-    let {
-        property,
-        subProperty = undefined,
-        isActive = false,
-        disabled = false,
-        onclick
-    }: Props = $props();
+    let { property, subProperty = undefined, isActive = false, disabled = false, onclick }: Props = $props();
 
     const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
@@ -63,7 +57,7 @@
             }
             return acc;
         },
-        []
+        [],
     );
 </script>
 

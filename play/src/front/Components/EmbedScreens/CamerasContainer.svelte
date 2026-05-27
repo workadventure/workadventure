@@ -105,7 +105,7 @@
     let pipDockLocalCamera = $derived(
         isPictureInPictureGridMode &&
             $oneLineStreamableCollectionStore.length > PIP_GRID_MAX_VIDEOS &&
-            $oneLineStreamableCollectionStore.some((box) => box.uniqueId === LOCAL_CAMERA_VIDEO_BOX_UNIQUE_ID)
+            $oneLineStreamableCollectionStore.some((box) => box.uniqueId === LOCAL_CAMERA_VIDEO_BOX_UNIQUE_ID),
     );
     let pipRemoteParticipantCount = $derived(excludeLocalCamera($oneLineStreamableCollectionStore).length);
 
@@ -127,7 +127,7 @@
                 {
                     root: camerasContainer,
                     threshold: 0,
-                }
+                },
             );
         }
 
@@ -180,7 +180,7 @@
                     : oneLineCount;
                 videoWidth = Math.max(
                     Math.min(maxMediaBoxWidth, containerWidth / countForTileSizing),
-                    minMediaBoxWidth
+                    minMediaBoxWidth,
                 );
                 videoHeight = undefined;
                 if (pipVerticalGrid) {
@@ -225,7 +225,7 @@
         // Calculate maximum number of videos that can fit in one row at minimum size
         const maxVideosPerRow = Math.min(
             Math.floor((containerWidth + gap) / (minMediaBoxWidth + gap)),
-            $oneLineStreamableCollectionStore.length
+            $oneLineStreamableCollectionStore.length,
         );
 
         let lastValidConfig = null;
@@ -386,14 +386,14 @@
             ? pipDockLocalCamera
                 ? excludeLocalCamera($orderedStreamableCollectionStore).slice(0, PIP_GRID_MAX_VIDEOS)
                 : $orderedStreamableCollectionStore.slice(0, PIP_GRID_MAX_VIDEOS)
-            : $oneLineStreamableCollectionStore
+            : $oneLineStreamableCollectionStore,
     );
     let pipLayout = $derived(
         computePictureInPictureGridLayout(
             pipVideoBoxes.length,
             Math.max(1, containerWidth || 0),
-            Math.max(1, camerasContainerHeight || 0)
-        )
+            Math.max(1, camerasContainerHeight || 0),
+        ),
     );
 
     function updateScrollIndicators() {
@@ -729,7 +729,9 @@
         background: rgba(0, 0, 0, 0.55);
         color: white;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-        transition: transform 0.2s ease, background 0.2s ease;
+        transition:
+            transform 0.2s ease,
+            background 0.2s ease;
     }
 
     .scroll-indicator-chevron :global(svg) {

@@ -208,7 +208,7 @@ export class MatrixChatRoom
             const messageToDisplay =
                 messageBody.length > numberOfChar ? messageBody.slice(0, numberOfChar) + "..." : messageBody;
             chatNotificationStore.addNotification(username, messageToDisplay, this, message.id);
-        }
+        },
     ) {
         this.id = matrixRoom.roomId;
         this.name = writable(matrixRoom.name);
@@ -217,7 +217,7 @@ export class MatrixChatRoom
         this.hasUnreadMessages = writable(matrixRoom.getUnreadNotificationCount() > 0);
         this.unreadNotificationCount = writable(matrixRoom.getUnreadNotificationCount());
         const roomAvatarStore: PictureStore = readable(
-            matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined
+            matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined,
         );
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.timelinePolls = new SearchableArrayStore((item: MatrixChatPoll) => item.id);
@@ -244,7 +244,7 @@ export class MatrixChatRoom
                         id: message.id,
                         date: message.date,
                         message,
-                    })
+                    }),
                 ),
                 ...Array.from(
                     $polls.filter((poll) => poll.context.kind === "room"),
@@ -253,7 +253,7 @@ export class MatrixChatRoom
                         id: poll.id,
                         date: poll.date,
                         poll,
-                    })
+                    }),
                 ),
             ];
 
@@ -281,8 +281,8 @@ export class MatrixChatRoom
                         this.directRoomPeerAvatarMember!,
                         this.matrixRoom.client.baseUrl,
                         this.matrixRoom.client,
-                        get(this.userProviderMergerStore)
-                    )
+                        get(this.userProviderMergerStore),
+                    ),
             );
         }
 
@@ -304,7 +304,7 @@ export class MatrixChatRoom
                 }
                 return this.directRoomPeerAvatarStore.subscribe(set);
             },
-            undefined
+            undefined,
         );
         this.pictureStore = {
             subscribe: roomPictureStore.subscribe,
@@ -362,14 +362,14 @@ export class MatrixChatRoom
                 }
                 return other.waDisplayNameIfDifferent.subscribe((v) => set(v));
             },
-            undefined as string | undefined
+            undefined as string | undefined,
         );
 
         this.hasPreviousMessage = writable(false);
 
         this.currentRoomMember = derived(
             this.members,
-            (members) => members.filter((member) => member.id === this.matrixRoom.myUserId)[0]
+            (members) => members.filter((member) => member.id === this.matrixRoom.myUserId)[0],
         );
 
         this.isCurrentUserRoomAdmin = derived(
@@ -384,7 +384,7 @@ export class MatrixChatRoom
                     set(level === ChatPermissionLevel.ADMIN);
                 });
             },
-            false
+            false,
         );
 
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());
@@ -403,12 +403,12 @@ export class MatrixChatRoom
                             typingByUser.delete(member.id);
                         }
                         sync();
-                    })
+                    }),
                 );
                 sync();
                 return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
             },
-            []
+            [],
         );
         this.isRoomFolder = matrixRoom.isSpaceRoom();
         this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
@@ -422,7 +422,7 @@ export class MatrixChatRoom
                         return true;
                     }
                     return false;
-                })
+                }),
         );
 
         this.startHandlingChatRoomShellEvents();
@@ -563,7 +563,7 @@ export class MatrixChatRoom
                 pollStartEvents
                     .map((event) => event.getId())
                     .filter((eventId): eventId is string => !!eventId)
-                    .map((pollId) => this.resolveHistoricalPollEndEvent(pollId))
+                    .map((pollId) => this.resolveHistoricalPollEndEvent(pollId)),
             );
 
             this.rebuildSidePanelPollCatalogue();
@@ -603,8 +603,8 @@ export class MatrixChatRoom
                 [...this.sidePanelPolls].map((pollItem) =>
                     limit(() => {
                         return this.retryPollRichHydration(pollItem.id, { updateGlobalState: false });
-                    })
-                )
+                    }),
+                ),
             );
 
             this.refreshPollRichHydrationState();
@@ -676,7 +676,7 @@ export class MatrixChatRoom
                   }
                 : {
                       status: "ready",
-                  }
+                  },
         );
     }
 
@@ -753,8 +753,8 @@ export class MatrixChatRoom
             // eslint-disable-next-line no-await-in-loop
             await Promise.all(
                 relations.events.map((event) =>
-                    this.matrixRoom.client.decryptEventIfNeeded(event).catch(() => undefined)
-                )
+                    this.matrixRoom.client.decryptEventIfNeeded(event).catch(() => undefined),
+                ),
             );
 
             const endEvent = relations.events.find((event) => M_POLL_END.matches(event.getType()));
@@ -806,7 +806,7 @@ export class MatrixChatRoom
         pollId: string,
         options?: {
             updateGlobalState?: boolean;
-        }
+        },
     ): Promise<void> {
         const poll = this.matrixRoom.polls.get(pollId);
         if (!poll || !this.shouldTrackPoll(poll)) {
@@ -841,7 +841,7 @@ export class MatrixChatRoom
 
     private refreshPollRichHydrationState(): void {
         const erroredPollItems = [...this.sidePanelPolls].filter(
-            (poll) => get(poll.hydrationState ?? readable({ status: "ready" })).status === "error"
+            (poll) => get(poll.hydrationState ?? readable({ status: "ready" })).status === "error",
         );
 
         this.pollRichHydrationState.set(
@@ -857,7 +857,7 @@ export class MatrixChatRoom
                   }
                 : {
                       status: "ready",
-                  }
+                  },
         );
     }
 
@@ -874,7 +874,7 @@ export class MatrixChatRoom
             const wrappedMember = new MatrixChatRoomMember(
                 member,
                 this.matrixRoom.client.baseUrl,
-                this.matrixRoom.client
+                this.matrixRoom.client,
             );
             if (merger) {
                 wrappedMember.setUserProviderMergerContext(merger);
@@ -984,7 +984,7 @@ export class MatrixChatRoom
 
     private async readEventsToAddMessagesAndReactions(
         event: MatrixEvent,
-        messages: SearchableArrayStore<string, MatrixChatMessage>
+        messages: SearchableArrayStore<string, MatrixChatMessage>,
     ): Promise<MatrixChatMessage | undefined> {
         if (event.isEncrypted()) {
             await this.matrixRoom.client.decryptEventIfNeeded(event).catch(() => {
@@ -1079,7 +1079,7 @@ export class MatrixChatRoom
         options?: {
             hydrationState?: ChatRoomSidePanelHydrationState;
             retryHydration?: () => Promise<void>;
-        }
+        },
     ): ChatPollItem {
         const existingPoll = this.sidePanelPolls.get(poll.pollId);
         if (existingPoll instanceof MatrixChatPoll) {
@@ -1109,7 +1109,7 @@ export class MatrixChatRoom
         poll: Poll,
         options?: {
             retryHydration?: () => Promise<void>;
-        }
+        },
     ): Promise<ChatPollItem> {
         const existingPoll = this.sidePanelPolls.get(poll.pollId);
         if (existingPoll instanceof MatrixChatPoll) {
@@ -1137,7 +1137,7 @@ export class MatrixChatRoom
         const visiblePollIds = new Set(
             Array.from(this.matrixRoom.polls.entries())
                 .filter(([, poll]) => this.shouldTrackPoll(poll))
-                .map(([pollId]) => pollId)
+                .map(([pollId]) => pollId),
         );
 
         for (const timelinePoll of [...this.timelinePolls]) {
@@ -1238,7 +1238,7 @@ export class MatrixChatRoom
         const threadSummary = getThreadSummary(
             this.matrixRoom.getThread(threadRootMessageId),
             this.matrixRoom,
-            threadRootMessageId
+            threadRootMessageId,
         );
 
         return {
@@ -1315,7 +1315,7 @@ export class MatrixChatRoom
     private static isNewLiveTimelineEvent(
         removed: boolean,
         data: IRoomTimelineData | undefined,
-        toStartOfTimeline: boolean | undefined
+        toStartOfTimeline: boolean | undefined,
     ): boolean {
         return !removed && !!data?.liveEvent && !toStartOfTimeline;
     }
@@ -1325,7 +1325,7 @@ export class MatrixChatRoom
         room: Room | undefined,
         toStartOfTimeline: boolean | undefined,
         removed: boolean,
-        data: IRoomTimelineData
+        data: IRoomTimelineData,
     ) {
         if (removed) {
             return;
@@ -1385,7 +1385,7 @@ export class MatrixChatRoom
 
     private onRoomUpdateUnreadNotificationCount(
         unreadNotifications?: Partial<Record<NotificationCountType, number>>,
-        threadId?: string
+        threadId?: string,
     ) {
         this.hasUnreadMessages.set(this.matrixRoom.getUnreadNotificationCount() > 0);
         this.unreadNotificationCount.set(this.matrixRoom.getUnreadNotificationCount());
@@ -1466,7 +1466,7 @@ export class MatrixChatRoom
                 }
                 existingMessageWithReactions.reactions.set(
                     reactionKey,
-                    new MatrixChatMessageReaction(this.matrixRoom, event)
+                    new MatrixChatMessageReaction(this.matrixRoom, event),
                 );
                 return;
             }
@@ -1631,7 +1631,7 @@ export class MatrixChatRoom
             this.matrixRoom.roomId,
             threadId ?? null,
             event.type as keyof TimelineEvents,
-            event.content as TimelineEvents[keyof TimelineEvents]
+            event.content as TimelineEvents[keyof TimelineEvents],
         );
     }
 
@@ -1833,8 +1833,8 @@ export class MatrixChatRoom
                 typeof restrictedRoomId === "string"
                     ? restrictedRoomId
                     : typeof spaceParentEvent?.getStateKey() === "string"
-                    ? spaceParentEvent.getStateKey()
-                    : undefined,
+                      ? spaceParentEvent.getStateKey()
+                      : undefined,
         };
     }
 
@@ -1846,7 +1846,7 @@ export class MatrixChatRoom
         return this.matrixRoom
             .getMembers()
             .filter(
-                (member) => member.membership === KnownMembership.Join || member.membership === KnownMembership.Invite
+                (member) => member.membership === KnownMembership.Join || member.membership === KnownMembership.Invite,
             );
     }
 
@@ -1873,7 +1873,7 @@ export class MatrixChatRoom
         const directRoomsPerUsers = this.matrixRoom.client.getAccountData(EventType.Direct)?.getContent();
 
         const isDirectBasedOnRoomData = members.some(
-            (member) => directRoomsPerUsers && directRoomsPerUsers[member.userId]?.includes(this.id)
+            (member) => directRoomsPerUsers && directRoomsPerUsers[member.userId]?.includes(this.id),
         );
 
         if (isDirectBasedOnRoomData || members.length === 2 || this.isRoomCreatedAsDirect()) {
@@ -1976,7 +1976,7 @@ export class MatrixChatRoom
     async unmuteNotification() {
         try {
             const overrideMuteRule = this.matrixRoom.client.pushRules?.global.override?.find(
-                (rule) => rule.rule_id === this.id
+                (rule) => rule.rule_id === this.id,
             );
             if (overrideMuteRule) {
                 await this.matrixRoom.client.deletePushRule("global", PushRuleKind.Override, overrideMuteRule.rule_id);
@@ -2054,7 +2054,7 @@ export class MatrixChatRoom
                             ?.hasSufficientPowerLevelFor(action, currentUserPowerLevel) ?? false;
 
                     return hasSufficientPowerLevel && currentUserPowerLevel > otherUserPowerLevel;
-                }
+                },
             );
         }
 
@@ -2073,7 +2073,7 @@ export class MatrixChatRoom
                         ?.hasSufficientPowerLevelFor(action, currentRoomMemberPowerLevel) ?? false;
 
                 return hasSufficientPowerLevel && currentRoomMemberPowerLevel > otherUserPowerLevel;
-            }
+            },
         );
     }
 
@@ -2232,7 +2232,7 @@ export class MatrixChatRoom
         }
         const timeline = await this.matrixRoom.client.getEventTimeline(
             this.matrixRoom.getUnfilteredTimelineSet(),
-            messageId
+            messageId,
         );
         return timeline?.getEvents().find((ev) => ev.getId() === messageId);
     }

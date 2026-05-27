@@ -42,14 +42,14 @@
         unsubscriberActiveSubMenuStore = activeSubMenuStore.subscribe((value) => {
             if ($subMenusStore.length >= value - 1) {
                 switchMenu($subMenusStore[value]).catch((e) =>
-                    console.error("Failed to switch menu on activeSubMenuStore change", e)
+                    console.error("Failed to switch menu on activeSubMenuStore change", e),
                 );
             }
         });
         unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
             if (!$subMenusStore.includes(activeSubMenu)) {
                 switchMenu($subMenusStore[$activeSubMenuStore]).catch((e) =>
-                    console.error("Failed to switch menu on subMenusStore change", e)
+                    console.error("Failed to switch menu on subMenusStore change", e),
                 );
             }
         });
@@ -135,9 +135,9 @@
         }
     }
 
-    let subMenuTranslations = $derived($subMenusStore.map((subMenu) =>
-        subMenu.type === "scripting" ? subMenu.label : $LL.menu.sub[subMenu.key]()
-    ));
+    let subMenuTranslations = $derived(
+        $subMenusStore.map((subMenu) => (subMenu.type === "scripting" ? subMenu.label : $LL.menu.sub[subMenu.key]())),
+    );
 
     const SvelteComponent = $derived(activeComponent);
 </script>

@@ -7,13 +7,7 @@
         isActive?: boolean;
     }
 
-    let {
-        colorHex,
-        position,
-        cursorType = "auto",
-        componentClass = "",
-        isActive = false
-    }: Props = $props();
+    let { colorHex, position, cursorType = "auto", componentClass = "", isActive = false }: Props = $props();
 </script>
 
 <div class="relative cursor-{cursorType} {componentClass}" style="--color:{colorHex}">

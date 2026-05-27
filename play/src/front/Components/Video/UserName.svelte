@@ -27,7 +27,7 @@
         position = "",
         grayscale = false,
         isBlocked = false,
-        children
+        children,
     }: Props = $props();
 </script>
 

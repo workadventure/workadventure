@@ -50,7 +50,7 @@ export interface SpaceNotificationStrategy {
         context: SpaceNotificationContext,
         user: SpaceUserExtended,
         partialUser: PartialSpaceUser,
-        updateMask: string[]
+        updateMask: string[],
     ): void;
 
     /**
@@ -66,7 +66,7 @@ export interface SpaceNotificationStrategy {
     filterUsersForObserver(
         context: SpaceNotificationContext,
         observer: SpaceUserExtended,
-        users: SpaceUserExtended[]
+        users: SpaceUserExtended[],
     ): SpaceUserExtended[];
 
     /**

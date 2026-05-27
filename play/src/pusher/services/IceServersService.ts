@@ -19,7 +19,7 @@ export class IceServersService {
             iceServers.push(
                 IceServer.fromPartial({
                     urls: STUN_SERVER.split(",").map((url: string) => url.trim()),
-                })
+                }),
             );
         }
 
@@ -34,7 +34,7 @@ export class IceServersService {
                     credential: credentials.webRtcPassword || TURN_PASSWORD,
                     // Always include credentialType for maximum browser compatibility
                     credentialType: "password",
-                })
+                }),
             );
         }
 

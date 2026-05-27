@@ -15,12 +15,7 @@
         children?: Snippet;
     }
 
-    let {
-        parent,
-        onVisibilityChange = () => {},
-        isVisible = true,
-        children
-    }: Props = $props();
+    let { parent, onVisibilityChange = () => {}, isVisible = true, children }: Props = $props();
 
     onMount(() => {
         const observer = new IntersectionObserver(
@@ -33,7 +28,7 @@
             {
                 root: parent,
                 threshold: 1,
-            }
+            },
         );
 
         observer.observe(divElement);

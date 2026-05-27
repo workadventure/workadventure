@@ -282,10 +282,13 @@
         </div>
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-        <p onclick={(event) => {
-            event.preventDefault();
-            backToSelectObject();
-        }} class="flex flex-row items-center text-xs m-0">
+        <p
+            onclick={(event) => {
+                event.preventDefault();
+                backToSelectObject();
+            }}
+            class="flex flex-row items-center text-xs m-0"
+        >
             <IconArrowLeft font-size="12" class="cursor-pointer" />
             <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
         </p>
@@ -404,8 +407,7 @@
                         event.preventDefault();
                         event.stopPropagation();
                         toggleDescriptionField();
-                    }}
-                    >+ {$LL.mapEditor.entityEditor.addDescriptionField()}</a
+                    }}>+ {$LL.mapEditor.entityEditor.addDescriptionField()}</a
                 >
             {:else}
                 <button class="pl-0 text-blue-500 flex flex-row items-center" onclick={toggleDescriptionField}>

@@ -23,7 +23,7 @@
         value,
         variant = undefined,
         group = $bindable(),
-        children
+        children,
     }: Props = $props();
 
     let uniqueId = (() => id || `input-${Math.random().toString(36).substring(2, 9)} `)();
@@ -37,9 +37,9 @@
             type="radio"
             bind:group
             {value}
-            onchange={onchange}
-            onfocusin={onfocusin}
-            onfocusout={onfocusout}
+            {onchange}
+            {onfocusin}
+            {onfocusout}
             {disabled}
         />
 

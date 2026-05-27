@@ -22,16 +22,19 @@ interface CheckedWorkAdventureMessagePortInterface<K extends keyof IframeMessage
  * A wrapper around a MessagePort that ensures the messages sent and received conform to a specific type.
  * This class is used on the WorkAdventure side to communicate with the iframes.
  */
-export class CheckedWorkAdventureMessagePort<K extends keyof IframeMessagePortMap>
-    implements CheckedWorkAdventureMessagePortInterface<K>
-{
+export class CheckedWorkAdventureMessagePort<
+    K extends keyof IframeMessagePortMap,
+> implements CheckedWorkAdventureMessagePortInterface<K> {
     private readonly port: MessagePort;
     private readonly _messages: Subject<MessagePortMessageEvent<K>> = new Subject<MessagePortMessageEvent<K>>();
     public readonly messages: Observable<MessagePortMessageEvent<K>> = this._messages.asObservable();
     private readonly _closeEvent: Subject<void> = new Subject<void>();
     public readonly closeEvent: Observable<void> = this._closeEvent.asObservable();
 
-    constructor(port: MessagePort, private type: K) {
+    constructor(
+        port: MessagePort,
+        private type: K,
+    ) {
         this.port = port;
 
         this.port.onmessage = (event: MessageEvent) => {

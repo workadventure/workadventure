@@ -248,7 +248,7 @@
             currentPlayer.x,
             currentPlayer.y - 30, // Offset to center on player body
             isLocked, // Always start unlocked (white)
-            bubbleUserIds // Current player and simulated player in the bubble
+            bubbleUserIds, // Current player and simulated player in the bubble
         );
 
         // Ensure update interval exists for bubble animation

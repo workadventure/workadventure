@@ -12,22 +12,22 @@ interface DocumentPictureInPicture extends EventTarget {
     addEventListener(
         type: string,
         callback: EventListenerOrEventListenerObject | null,
-        options?: boolean | AddEventListenerOptions
+        options?: boolean | AddEventListenerOptions,
     ): void;
     addEventListener(
         type: "enter",
         listener: (event: DocumentPictureInPictureEvent) => void,
-        options?: boolean | AddEventListenerOptions
+        options?: boolean | AddEventListenerOptions,
     ): void;
     removeEventListener(
         type: string,
         callback: EventListenerOrEventListenerObject | null,
-        options?: boolean | EventListenerOptions
+        options?: boolean | EventListenerOptions,
     ): void;
     removeEventListener(
         type: "enter",
         listener: (event: DocumentPictureInPictureEvent) => void,
-        options?: boolean | EventListenerOptions
+        options?: boolean | EventListenerOptions,
     ): void;
 }
 

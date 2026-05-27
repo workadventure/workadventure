@@ -36,7 +36,7 @@
             .getAreas()
             .forEach((area) => {
                 const speakerMegaphonePropertyRaw = area.properties?.find(
-                    (areaProperty) => areaProperty.type === "speakerMegaphone"
+                    (areaProperty) => areaProperty.type === "speakerMegaphone",
                 );
                 if (speakerMegaphonePropertyRaw) {
                     const speakerMegaphoneProperty =

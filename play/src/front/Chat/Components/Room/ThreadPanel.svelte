@@ -50,7 +50,9 @@
     let threadSummaries = $derived(getThreadsStore(room));
     let threadHydrationState = $derived(room.threadsHydrationState ?? idleHydrationState);
     let threadWarnings = $derived($threadHydrationState.warnings ?? []);
-    let hasUnsupportedThreadHistory = $derived(threadWarnings.some((warning) => warning.reason === "server_unsupported"));
+    let hasUnsupportedThreadHistory = $derived(
+        threadWarnings.some((warning) => warning.reason === "server_unsupported"),
+    );
     let degradedThreadWarning = $derived(threadWarnings.find((warning) => warning.reason === "thread_root_missing"));
 </script>
 

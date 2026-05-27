@@ -72,7 +72,7 @@ class MatrixProvider {
                 requestConfig.headers.Authorization = `Bearer ${refreshedAccessToken}`;
 
                 return axiosInstance.request(requestConfig);
-            }
+            },
         );
 
         return axiosInstance;
@@ -288,7 +288,7 @@ class MatrixProvider {
         await this.ensureAdminRateLimitOverridden();
         const axiosInstance = await this.getAxios();
         const actualPowerLevelsResponse = await axiosInstance.get(
-            `_matrix/client/r0/rooms/${roomID}/state/m.room.power_levels`
+            `_matrix/client/r0/rooms/${roomID}/state/m.room.power_levels`,
         );
 
         if (actualPowerLevelsResponse.status !== 200) {
@@ -467,7 +467,7 @@ class MatrixProvider {
     private async getChatFolderAreaID(): Promise<string | undefined> {
         const axiosInstance = await this.getAxios();
         const response = await axiosInstance.get(
-            `_matrix/client/r0/directory/room/%23${this.roomAreaFolderName}:${MATRIX_DOMAIN}`
+            `_matrix/client/r0/directory/room/%23${this.roomAreaFolderName}:${MATRIX_DOMAIN}`,
         );
         if (response.status === 200) {
             return Promise.resolve(response.data.room_id);
@@ -491,7 +491,7 @@ class MatrixProvider {
         const axiosInstance = await this.getAxios();
         const response = await axiosInstance.put(
             `_matrix/client/r0/rooms/${roomAreaFolderID}/state/m.space.child/${roomID}`,
-            roomLinkContent
+            roomLinkContent,
         );
         if (response.status === 200) {
             return roomID;
@@ -521,7 +521,7 @@ class MatrixProvider {
                 }
                 return acc;
             },
-            []
+            [],
         );
         try {
             await Promise.all(kickMembersPromises);

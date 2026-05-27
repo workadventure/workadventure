@@ -205,7 +205,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
      */
     public registerMenuCommand(
         commandDescriptor: string,
-        options: MenuOptions | ((commandDescriptor: string) => void)
+        options: MenuOptions | ((commandDescriptor: string) => void),
     ): Menu {
         if (typeof options === "function") {
             options = {
@@ -250,7 +250,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
             });
         } else {
             throw new Error(
-                "When adding a menu with WA.ui.registerMenuCommand, you must pass either an iframe or a callback"
+                "When adding a menu with WA.ui.registerMenuCommand, you must pass either an iframe or a callback",
             );
         }
 

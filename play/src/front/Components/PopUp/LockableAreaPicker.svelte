@@ -13,7 +13,7 @@
         /** When defined, show a row for the discussion bubble (group lock) in the list. */
         groupLockState?: boolean;
         /** Callback when the user selects the bubble row. Only used when groupLockState is defined. */
-        onSelectGroupLock?: (() => void);
+        onSelectGroupLock?: () => void;
     }
 
     let {
@@ -22,7 +22,7 @@
         onselect,
         onclose,
         groupLockState = undefined,
-        onSelectGroupLock = undefined
+        onSelectGroupLock = undefined,
     }: Props = $props();
 
     function handleClose(): void {

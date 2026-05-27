@@ -21,7 +21,7 @@
         {
             placement: "bottom",
         },
-        12
+        12,
     );
 
     let hoverTimeout: ReturnType<typeof setTimeout> | undefined;

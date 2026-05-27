@@ -6,13 +6,13 @@ import { AreaDataProperties, PersonalAreaPropertyData, RestrictedRightsPropertyD
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<AreaData>,
-    allAreasOnNewPosition: Array<AreaData>
+    allAreasOnNewPosition: Array<AreaData>,
 ) => void;
 
 export type AreaUpdateCallback = (
     area: AreaData,
     oldProperties: AreaDataProperties | undefined,
-    newProperties: AreaDataProperties | undefined
+    newProperties: AreaDataProperties | undefined,
 ) => void;
 
 export class GameMapAreas {
@@ -40,7 +40,7 @@ export class GameMapAreas {
      */
     public triggerAreasChange(
         oldPosition: { x: number; y: number } | undefined,
-        position: { x: number; y: number } | undefined
+        position: { x: number; y: number } | undefined,
     ): boolean {
         const areasByOldPosition = oldPosition ? this.getAreasOnPosition(oldPosition, this.areasPositionOffsetY) : [];
         const areasByNewPosition = position ? this.getAreasOnPosition(position, this.areasPositionOffsetY) : [];
@@ -98,7 +98,7 @@ export class GameMapAreas {
         userUUID = "",
         width: number,
         height: number,
-        floating: boolean
+        floating: boolean,
     ): boolean {
         const areas = this.getAreasOnPosition(entityCenterCoordinates);
         const topLeftCoordinates = {
@@ -131,7 +131,7 @@ export class GameMapAreas {
 
     public isUserHasReadAccessOnAreaForEntityCoordinates(
         entityCenterCoordinates: EntityCoordinates,
-        userConnectedTags: string[]
+        userConnectedTags: string[],
     ): boolean {
         const areas = this.getAreasOnPosition(entityCenterCoordinates);
         if (areas?.length === 0) {
@@ -329,7 +329,7 @@ export class GameMapAreas {
     public triggerSpecificAreaOnUpdate(
         area: AreaData,
         oldProperties: AreaDataProperties | undefined,
-        newProperties: AreaDataProperties | undefined
+        newProperties: AreaDataProperties | undefined,
     ): void {
         for (const callback of this.updateAreaCallbacks) {
             callback(area, oldProperties, newProperties);
@@ -402,7 +402,7 @@ export class GameMapAreas {
 
     private getAreaRightPropertyData(area: AreaData): RestrictedRightsPropertyData | undefined {
         const areaRightPropertyData = area.properties.find(
-            (property) => property.type === "restrictedRightsPropertyData"
+            (property) => property.type === "restrictedRightsPropertyData",
         );
         const areaRights = areaRightPropertyData
             ? RestrictedRightsPropertyData.parse(areaRightPropertyData)
@@ -419,7 +419,7 @@ export class GameMapAreas {
 
     private getPersonalAreaRightPropertyData(area: AreaData): PersonalAreaPropertyData | undefined {
         const personalAreaPropertyData = area.properties.find(
-            (property) => property.type === "personalAreaPropertyData"
+            (property) => property.type === "personalAreaPropertyData",
         );
         if (personalAreaPropertyData !== undefined) {
             return PersonalAreaPropertyData.parse(personalAreaPropertyData);

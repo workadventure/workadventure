@@ -38,7 +38,7 @@
                     placement: "top-end",
                 },
                 12,
-                true
+                true,
             );
         }
     }

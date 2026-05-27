@@ -12,7 +12,7 @@
         size = 6,
         color = "brand-blue",
         loadingText = $LL.mapEditor.settings.loading(),
-        customClass = ""
+        customClass = "",
     }: Props = $props();
 </script>
 

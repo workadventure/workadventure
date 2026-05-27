@@ -9,7 +9,7 @@
         value?: boolean;
         variant?: "white";
         children?: Snippet;
-        [key: string]: unknown
+        [key: string]: unknown;
     }
 
     let {
@@ -34,7 +34,7 @@
             class="sr-only peer"
             type="checkbox"
             bind:checked={value}
-            onchange={onchange}
+            {onchange}
             {...rest}
             {disabled}
         />

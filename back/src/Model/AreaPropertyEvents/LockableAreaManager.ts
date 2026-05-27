@@ -12,7 +12,10 @@ export class LockableAreaManager {
     private leaveSubscription: Subscription | undefined;
     private readonly usersInArea = new Map<string, number>();
 
-    constructor(private gameRoom: GameRoom, private areaZoneTracker: AreaZoneTracker) {
+    constructor(
+        private gameRoom: GameRoom,
+        private areaZoneTracker: AreaZoneTracker,
+    ) {
         this.enterSubscription = this.areaZoneTracker
             .registerEventListener("enter", "lockableAreaPropertyData")
             .subscribe((area) => {

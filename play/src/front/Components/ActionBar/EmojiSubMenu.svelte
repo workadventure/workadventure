@@ -94,7 +94,7 @@
                     placement: "bottom",
                 },
                 12,
-                true
+                true,
             );
         }
     }

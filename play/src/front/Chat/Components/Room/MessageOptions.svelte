@@ -8,7 +8,7 @@
     interface Props {
         message: ChatMessage;
         messageRef?: HTMLDivElement;
-        onOpenThread?: (() => Promise<void>);
+        onOpenThread?: () => Promise<void>;
     }
 
     let { message, messageRef, onOpenThread = undefined }: Props = $props();

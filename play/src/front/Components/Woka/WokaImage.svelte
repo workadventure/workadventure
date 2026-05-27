@@ -87,10 +87,5 @@
     });
 </script>
 
-<canvas
-    bind:this={canvas}
-    width={canvasSize}
-    height={canvasSize}
-    style="image-rendering: pixelated;"
-    class={classList}
+<canvas bind:this={canvas} width={canvasSize} height={canvasSize} style="image-rendering: pixelated;" class={classList}
 ></canvas>

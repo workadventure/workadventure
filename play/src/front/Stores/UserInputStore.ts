@@ -42,5 +42,5 @@ export const enableUserInputsStore = derived(
             !$refreshPromptStore &&
             !$mapDeletedPromptStore
         );
-    }
+    },
 );

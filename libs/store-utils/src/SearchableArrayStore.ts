@@ -148,7 +148,7 @@ export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Arr
             } as {
                 newItems: V[];
                 updatedItems: V[];
-            }
+            },
         );
     }
 }

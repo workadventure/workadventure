@@ -33,7 +33,7 @@ export class MatrixSecurity {
     constructor(
         private initializingEncryptionPromise: Promise<void> | undefined = undefined,
         private restoreRoomMessagesPromise: Promise<void> | undefined = undefined,
-        private _openModal = modals.open
+        private _openModal = modals.open,
     ) {}
 
     initClientCryptoConfiguration = async (): Promise<void> => {
@@ -94,13 +94,13 @@ export class MatrixSecurity {
                                             resolve(generatedKey);
                                         },
                                     });
-                                }
+                                },
                             );
 
                             if (generatedKey === null) {
                                 this.isEncryptionRequiredAndNotSet.set(true);
                                 const createSecretStorageKeyError = new Error(
-                                    "createSecretStorageKey : no generated key storage"
+                                    "createSecretStorageKey : no generated key storage",
                                 );
                                 initializingEncryptionReject(createSecretStorageKeyError);
                                 return Promise.reject(createSecretStorageKeyError);
@@ -170,7 +170,7 @@ export class MatrixSecurity {
     }
 
     static makeInputToKey(
-        keyInfo: SecretStorage.SecretStorageKeyDescription
+        keyInfo: SecretStorage.SecretStorageKeyDescription,
     ): (keyParams: KeyParams) => Promise<Uint8Array> {
         return ({ passphrase, recoveryKey }): Promise<Uint8Array> => {
             if (passphrase) {
@@ -247,7 +247,7 @@ export class MatrixSecurity {
                     if (generatedKey === null) {
                         this.isEncryptionRequiredAndNotSet.set(true);
                         const createSecretStorageKeyError = new Error(
-                            "createSecretStorageKey : no generated secret storage key"
+                            "createSecretStorageKey : no generated secret storage key",
                         );
                         return Promise.reject(createSecretStorageKeyError);
                     }

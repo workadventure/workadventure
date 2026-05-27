@@ -8,7 +8,7 @@ export class BackInAMomentStatusStrategy extends BasicStatusStrategy {
         protected status: AvailabilityStatus = AvailabilityStatus.BACK_IN_A_MOMENT,
         protected basicRules: Array<() => void> = [],
         protected timedRules: Array<TimedRules> = [],
-        protected interactionRules: Array<() => void> = []
+        protected interactionRules: Array<() => void> = [],
     ) {
         super(status, basicRules, timedRules, interactionRules);
         timedRules.push({

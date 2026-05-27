@@ -184,15 +184,17 @@
 
     let marginLeft = $derived($chatVisibilityStore ? $chatSidebarWidthStore : 0);
     let mapEditorPanelVisible = $derived(
-        $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor
+        $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor,
     );
     let mapEditorToolbarVisible = $derived($windowSize.width >= 768 || !$mapEditorVisibilityStore);
-    let marginRight = $derived(getMapEditorRightReservedSpace({
-        isMapEditorActive: $mapEditorModeStore,
-        isMapEditorPanelVisible: mapEditorPanelVisible,
-        isMapEditorToolbarVisible: mapEditorToolbarVisible,
-        mapEditorPanelWidth: $mapEditorSideBarWidthStore,
-    }));
+    let marginRight = $derived(
+        getMapEditorRightReservedSpace({
+            isMapEditorActive: $mapEditorModeStore,
+            isMapEditorPanelVisible: mapEditorPanelVisible,
+            isMapEditorToolbarVisible: mapEditorToolbarVisible,
+            mapEditorPanelWidth: $mapEditorSideBarWidthStore,
+        }),
+    );
 
     function onHighlightFullscreenSendMessage() {
         if (get(chatVisibilityStore) && get(navChat).key === "chat") {
@@ -326,19 +328,13 @@
                     {#each $popupStore.slice().reverse() as popup, index (popup.uuid)}
                         {@const PopupComponent = popup.component}
                         <div class="popupwrapper popupwrapper-{index} w-full flex-1" in:fly={{ y: 150, duration: 550 }}>
-                            <PopupComponent
-                                {...popup.props}
-                                onclose={() => popupStore.removePopup(popup.uuid)}
-                            />
+                            <PopupComponent {...popup.props} onclose={() => popupStore.removePopup(popup.uuid)} />
                         </div>
                     {/each}
                 </div>
             </div>
 
-            <Lazy
-                when={$showDesktopCapturerSourcePicker}
-                component={loadDesktopCapturerSourcePicker}
-            />
+            <Lazy when={$showDesktopCapturerSourcePicker} component={loadDesktopCapturerSourcePicker} />
             {#if $modalVisibilityStore}
                 <Modal />
             {/if}

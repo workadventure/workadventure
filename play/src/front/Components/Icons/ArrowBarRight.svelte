@@ -12,7 +12,7 @@
         width = "w-6",
         strokeColor = "stroke-white",
         fillColor = "fill-transparent",
-        classList = "aspect-ratio transition-all"
+        classList = "aspect-ratio transition-all",
     }: Props = $props();
 </script>
 

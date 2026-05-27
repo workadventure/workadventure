@@ -16,7 +16,7 @@ export class StartPositionCalculator {
         private readonly gameMapFrontWrapper: GameMapFrontWrapper,
         private readonly mapFile: ITiledMap,
         private readonly initPosition?: PositionInterface,
-        startPositionName?: string
+        startPositionName?: string,
     ) {
         this.startPositionName = startPositionName || "";
         this.computeStartPosition(startPositionName);
@@ -136,7 +136,7 @@ export class StartPositionCalculator {
         // Still no start position? Something is wrong with the map, we need a "start" layer.
         if (startPosition === undefined) {
             console.warn(
-                'This map is missing a layer named "start" that contains the available default start positions.'
+                'This map is missing a layer named "start" that contains the available default start positions.',
             );
             // Let's start in the middle of the map
             startPosition = {
@@ -150,7 +150,7 @@ export class StartPositionCalculator {
 
     private getStartPositionFromTiledArea(
         startPositionName: string,
-        needStartProperty = false
+        needStartProperty = false,
     ): PositionInterface | undefined {
         const tiledAreas = this.gameMapFrontWrapper.dynamicAreas;
         for (const [name, tiledArea] of tiledAreas.entries()) {
@@ -213,7 +213,7 @@ export class StartPositionCalculator {
      */
     private static randomPositionFromRects(
         rectangles: { x: number; y: number; width: number; height: number }[],
-        margin = 0
+        margin = 0,
     ): { x: number; y: number } {
         const rectangle = rectangles[Math.floor(Math.random() * rectangles.length)];
         return MathUtils.randomPositionFromRect(rectangle, margin);
@@ -244,7 +244,7 @@ export class StartPositionCalculator {
             }
         } else {
             foundLayer = tileLayers.find(
-                (layer) => layer.name === this.DEFAULT_START_NAME || layer.name.endsWith("/" + this.DEFAULT_START_NAME)
+                (layer) => layer.name === this.DEFAULT_START_NAME || layer.name.endsWith("/" + this.DEFAULT_START_NAME),
             );
             if (!foundLayer) {
                 for (const layer of tileLayers) {

@@ -81,7 +81,7 @@ export class UserProviderMerger {
 
                     mergedUsers.set(
                         (mergedUser.chatId as ChatId | undefined) ?? (mergedUser.uuid as UserUuid),
-                        fullUser
+                        fullUser,
                     );
                 }
 
@@ -108,7 +108,7 @@ export class UserProviderMerger {
 
                 return usersByRoom;
             },
-            new Map()
+            new Map(),
         );
     }
 

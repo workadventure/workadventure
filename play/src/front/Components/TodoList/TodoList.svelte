@@ -103,7 +103,7 @@
                                 >
                                     <div class="text-center">
                                         {todoList.tasks.filter(
-                                            (task) => task.status === "notStarted" || task.status === "inProgress"
+                                            (task) => task.status === "notStarted" || task.status === "inProgress",
                                         ).length}
                                     </div>
                                 </div>

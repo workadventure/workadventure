@@ -24,7 +24,7 @@
             class="light m-auto cursor-pointer px-3"
             onclick={(event) => {
                 event.preventDefault();
-                window.location.reload()
+                window.location.reload();
             }}
             >{`${$LL.refreshPrompt.refresh()} (${timeToRefreshSeconds})`}
         </button>

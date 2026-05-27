@@ -33,7 +33,7 @@
                 return "disabled";
             }
             return $requestedCameraState ? "normal" : "forbidden";
-        }
+        },
     );
 
     const cameraActionBarTooltipStore = derived(
@@ -75,7 +75,7 @@
                 };
             }
             return { title: "", desc: "", media: "" };
-        }
+        },
     );
 
     function cameraClick(): void {

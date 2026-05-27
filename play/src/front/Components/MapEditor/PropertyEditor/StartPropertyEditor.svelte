@@ -23,7 +23,7 @@
                     .trim()
                     .replace(/[^a-zA-Z0-9 !@#$%^&*]/g, "")
                     .replaceAll(" ", "-")
-                    .toLowerCase()
+                    .toLowerCase(),
             );
         onchange?.();
     }

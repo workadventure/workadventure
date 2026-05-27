@@ -45,7 +45,7 @@ export class DarkenOutsideAreaEffect {
     constructor(
         scene: Phaser.Scene,
         camera: Phaser.Cameras.Scene2D.Camera = scene.cameras.main,
-        opts: DarkenOutsideOptions = {}
+        opts: DarkenOutsideOptions = {},
     ) {
         this.scene = scene;
         this.camera = camera;

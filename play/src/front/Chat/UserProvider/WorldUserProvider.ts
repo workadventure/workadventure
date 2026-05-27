@@ -18,7 +18,7 @@ export class WorldUserProvider implements UserProviderInterface {
                     .filter((user) => user.name.toLowerCase().includes(filter.toLowerCase()))
                     .map(mapExtendedSpaceUserToChatUser);
             },
-            []
+            [],
         );
         this.userCount = derived(this.users, (users) => {
             // TOOD FIXME: this is workaround for the fact that we are not using the uuid as the key in the map

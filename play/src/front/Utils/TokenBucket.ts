@@ -49,7 +49,7 @@ export class TokenBucket {
     constructor(
         private readonly capacity: number,
         private readonly refillRate: number,
-        private readonly refillInterval: number = 1000
+        private readonly refillInterval: number = 1000,
     ) {
         if (capacity <= 0) {
             throw new Error("Capacity must be greater than 0");

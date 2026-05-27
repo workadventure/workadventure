@@ -21,7 +21,7 @@
                 value: writeTag,
                 label: writeTag,
                 created: false,
-            })))()
+            })))(),
     );
     let readTags: InputTagOption[] | undefined = $state(
         (() =>
@@ -29,7 +29,7 @@
                 value: readTag,
                 label: readTag,
                 created: false,
-            })))()
+            })))(),
     );
     let _tag: InputTagOption[] = [];
 

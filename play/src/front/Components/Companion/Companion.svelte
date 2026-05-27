@@ -9,12 +9,7 @@
         height: string;
     }
 
-    let {
-        userId,
-        placeholderSrc,
-        width = "62px",
-        height = "62px"
-    }: Props = $props();
+    let { userId, placeholderSrc, width = "62px", height = "62px" }: Props = $props();
 
     const gameScene = gameManager.getCurrentGameScene();
     let companionSrc: string | undefined = $state();

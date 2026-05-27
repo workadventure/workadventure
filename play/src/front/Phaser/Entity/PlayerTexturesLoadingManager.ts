@@ -12,7 +12,7 @@ export interface FrameConfig {
 
 export const loadAllLayers = (
     load: LoaderPlugin,
-    playerTextures: PlayerTextures
+    playerTextures: PlayerTextures,
 ): WokaTextureDescriptionInterface[][] => {
     const returnArray: WokaTextureDescriptionInterface[][] = [];
     playerTextures.getLayers().forEach((layer) => {
@@ -31,7 +31,7 @@ export const loadAllLayers = (
 };
 export const loadAllDefaultModels = (
     load: LoaderPlugin,
-    playerTextures: PlayerTextures
+    playerTextures: PlayerTextures,
 ): WokaTextureDescriptionInterface[] => {
     const returnArray = Object.values(playerTextures.getTexturesResources(PlayerTexturesKey.Woka));
     returnArray.forEach((playerResource: WokaTextureDescriptionInterface) => {
@@ -46,7 +46,7 @@ export const loadAllDefaultModels = (
 
 export const loadWokaTexture = (
     superLoaderPlugin: SuperLoaderPlugin,
-    texture: WokaTextureDescriptionInterface
+    texture: WokaTextureDescriptionInterface,
 ): CancelablePromise<Texture> => {
     return superLoaderPlugin.spritesheet(texture.id, texture.url, {
         frameWidth: 32,
@@ -56,7 +56,7 @@ export const loadWokaTexture = (
 
 export const lazyLoadPlayerCharacterTextures = (
     superLoaderPlugin: SuperLoaderPlugin,
-    textures: WokaTextureDescriptionInterface[]
+    textures: WokaTextureDescriptionInterface[],
 ): CancelablePromise<string[]> => {
     const promisesList: CancelablePromise<Texture>[] = [];
     for (const texture of textures) {
@@ -64,7 +64,7 @@ export const lazyLoadPlayerCharacterTextures = (
             superLoaderPlugin.spritesheet(texture.id, texture.url, {
                 frameWidth: 32,
                 frameHeight: 32,
-            })
+            }),
         );
     }
     const returnPromise: CancelablePromise<Texture[]> = CancelablePromise.all(promisesList);
@@ -72,6 +72,6 @@ export const lazyLoadPlayerCharacterTextures = (
     return returnPromise.then(() =>
         textures.map((key) => {
             return key.id;
-        })
+        }),
     );
 };

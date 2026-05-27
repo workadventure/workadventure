@@ -40,14 +40,16 @@
         }
     }
 
-    let chunks = $derived(highlightWords({
-        text: room.name?.match(/\[\d*]/)
-            ? room.name?.substring(0, room.name?.search(/\[\d*]/))
-            : room.name
-            ? room.name
-            : "",
-        query: $chatSearchBarValue,
-    }));
+    let chunks = $derived(
+        highlightWords({
+            text: room.name?.match(/\[\d*]/)
+                ? room.name?.substring(0, room.name?.search(/\[\d*]/))
+                : room.name
+                  ? room.name
+                  : "",
+            query: $chatSearchBarValue,
+        }),
+    );
 </script>
 
 <div

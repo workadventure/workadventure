@@ -17,7 +17,7 @@
     type LivekitRoomConfigDataKeys = "startWithAudioMuted" | "startWithVideoMuted" | "disableChat";
 
     const defaultConfigKeys: LivekitRoomConfigDataKeys[] = Object.keys(defaultConfig).map(
-        (key) => key as LivekitRoomConfigDataKeys
+        (key) => key as LivekitRoomConfigDataKeys,
     );
 
     interface Props {
@@ -37,7 +37,7 @@
         visibilityValue = $bindable(),
         config,
         livekitRoomAdminTag = $bindable(""),
-        shouldDisableDisableChatButton
+        shouldDisableDisableChatButton,
     }: Props = $props();
     let currentConfig = $state({
         startWithAudioMuted: false,
@@ -113,7 +113,7 @@
                 </div>
 
                 {#snippet buttons()}
-                    <div  class="w-full flex justify-between gap-2 p-2">
+                    <div class="w-full flex justify-between gap-2 p-2">
                         <button class=" btn btn-light btn-border w-full h-12" onclick={() => modals.close()}>
                             {$LL.mapEditor.properties.livekitRoomProperty.livekitRoomConfig.cancel()}
                         </button>

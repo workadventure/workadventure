@@ -6,12 +6,7 @@
         strokeWidth?: string;
     }
 
-    let {
-        size = "100",
-        color1 = "stroke-secondary",
-        color2 = "stroke-white",
-        strokeWidth = "1"
-    }: Props = $props();
+    let { size = "100", color1 = "stroke-secondary", color2 = "stroke-white", strokeWidth = "1" }: Props = $props();
 </script>
 
 <svg

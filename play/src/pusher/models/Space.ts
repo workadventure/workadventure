@@ -45,14 +45,14 @@ export interface SpaceInterface {
     world: string;
     applyAndGetUpdatedFieldsForUserFromSetPlayerDetails(
         client: PusherWebSocket,
-        playerDetailsMessage: SetPlayerDetailsMessage
+        playerDetailsMessage: SetPlayerDetailsMessage,
     ): {
         changedFields: string[];
         partialSpaceUser: PartialSpaceUser;
     } | null;
     extractUpdatedFieldsFromUpdateSpaceUserMessage(
         client: PusherWebSocket,
-        updateSpaceUserMessage: UpdateSpaceUserMessage
+        updateSpaceUserMessage: UpdateSpaceUserMessage,
     ): {
         changedFields: string[];
         partialSpaceUser: PartialSpaceUser;
@@ -94,14 +94,14 @@ export class Space implements SpaceForSpaceConnectionInterface {
         private propertiesToSync: string[] = [],
         private SpaceToBackForwarderFactory: (
             space: Space,
-            eventProcessor: EventProcessor
+            eventProcessor: EventProcessor,
         ) => SpaceToBackForwarderInterface = (space: Space, eventProcessor: EventProcessor) =>
             new SpaceToBackForwarder(space, eventProcessor),
         private SpaceToFrontDispatcherFactory: (
             space: Space,
-            eventProcessor: EventProcessor
+            eventProcessor: EventProcessor,
         ) => SpaceToFrontDispatcherInterface = (space: Space, eventProcessor: EventProcessor) =>
-            new SpaceToFrontDispatcher(space, eventProcessor)
+            new SpaceToFrontDispatcher(space, eventProcessor),
     ) {
         this.users = new Map<string, SpaceUserExtended>();
         this.metadata = new Map<string, unknown>();
@@ -185,14 +185,14 @@ export class Space implements SpaceForSpaceConnectionInterface {
                             console.warn(
                                 `Space cleanup: space not found in socket spaces for ${this.name} / ${
                                     socket.getUserData().name
-                                }`
+                                }`,
                             );
                             Sentry.captureException(
                                 new Error(
                                     `Space cleanup: space not found in socket spaces for ${this.name} / ${
                                         socket.getUserData().name
-                                    }`
-                                )
+                                    }`,
+                                ),
                             );
                         }
                         socket.getUserData().joinSpacesPromise.delete(this.name);
@@ -251,7 +251,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
                         spaceStream.off("error", onConnectionCut);
                         spaceStream.off("end", onConnectionCut);
                     },
-                    { once: true }
+                    { once: true },
                 );
             })
             .catch((err) => {
@@ -266,7 +266,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
 
     public applyAndGetUpdatedFieldsForUserFromSetPlayerDetails(
         client: PusherWebSocket,
-        playerDetails: SetPlayerDetailsMessage
+        playerDetails: SetPlayerDetailsMessage,
     ): {
         changedFields: string[];
         partialSpaceUser: PartialSpaceUser;
@@ -277,7 +277,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
             throw new Error(
                 `spaceUser not found while trying to update player details: ${client.getUserData().spaceUserId} ${
                     client.getUserData().name
-                }`
+                }`,
             );
         }
 
@@ -327,7 +327,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
      */
     public extractUpdatedFieldsFromUpdateSpaceUserMessage(
         client: PusherWebSocket,
-        updateSpaceUserMessage: UpdateSpaceUserMessage
+        updateSpaceUserMessage: UpdateSpaceUserMessage,
     ): {
         changedFields: string[];
         partialSpaceUser: PartialSpaceUser;
@@ -340,27 +340,27 @@ export class Space implements SpaceForSpaceConnectionInterface {
         // This is important when the same userUuid has multiple connections (e.g., multiple tabs)
         const messageSpaceUserId = updateSpaceUserMessage.user.spaceUserId;
         const spaceUser = Array.from(this._localConnectedUserWithSpaceUser.values()).find(
-            (user) => user.spaceUserId === messageSpaceUserId
+            (user) => user.spaceUserId === messageSpaceUserId,
         );
         if (!spaceUser) {
             // Fallback to userUuid for backward compatibility
             const userUuid = client.getUserData().userUuid;
             const spaceUserByUuid = Array.from(this._localConnectedUserWithSpaceUser.values()).find(
-                (user) => user.uuid === userUuid
+                (user) => user.uuid === userUuid,
             );
             if (!spaceUserByUuid) {
                 throw new Error(`spaceUser not found by spaceUserId ${messageSpaceUserId} or userUuid ${userUuid}`);
             }
             console.warn(
                 `[Space.applyFromUpdateSpaceUserMessage] User found by userUuid fallback, not by spaceUserId. ` +
-                    `messageSpaceUserId: ${messageSpaceUserId}, foundSpaceUserId: ${spaceUserByUuid.spaceUserId}`
+                    `messageSpaceUserId: ${messageSpaceUserId}, foundSpaceUserId: ${spaceUserByUuid.spaceUserId}`,
             );
         }
 
         const targetUser =
             spaceUser ??
             Array.from(this._localConnectedUserWithSpaceUser.values()).find(
-                (user) => user.uuid === client.getUserData().userUuid
+                (user) => user.uuid === client.getUserData().userUuid,
             );
         if (!targetUser) {
             throw new Error(`spaceUser not found for message spaceUserId ${messageSpaceUserId}`);

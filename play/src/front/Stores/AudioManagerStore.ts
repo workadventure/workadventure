@@ -96,7 +96,9 @@ function createAudioManagerFileStore() {
                 file = new URL(audioPath, mapUrl).toString();
 
                 audioManagerVolumeStore.setVolume(
-                    volume ? Math.min(volume, get(audioManagerVolumeStore).volume) : get(audioManagerVolumeStore).volume
+                    volume
+                        ? Math.min(volume, get(audioManagerVolumeStore).volume)
+                        : get(audioManagerVolumeStore).volume,
                 );
                 audioManagerVolumeStore.setLoop(loop);
                 audioManagerVolumeStore.setMuted(false);

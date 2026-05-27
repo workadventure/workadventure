@@ -94,11 +94,11 @@
     });
 
     const directRoomsUnsubscriber = directRooms.subscribe((directRooms) =>
-        openDirectRoomsIfCollapsedBeforeNewRoom(directRooms)
+        openDirectRoomsIfCollapsedBeforeNewRoom(directRooms),
     );
     const roomsUnsubscriber = rooms.subscribe((rooms) => openRoomsIfCollapsedBeforeNewRoom(rooms));
     const roomInvitationsUnsubscriber = roomInvitations.subscribe((roomInvitations) =>
-        openRoomInvitationsIfCollapsedBeforeNewRoom(roomInvitations)
+        openRoomInvitationsIfCollapsedBeforeNewRoom(roomInvitations),
     );
 
     onDestroy(() => {
@@ -170,35 +170,45 @@
         return conversation?.conversationKind === "thread";
     }
 
-    let filteredDirectRoom = $derived($directRooms
-        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)));
-    let filteredRooms = $derived($rooms
-        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)));
-    let filteredRoomInvitations = $derived($roomInvitations
-        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)));
+    let filteredDirectRoom = $derived(
+        $directRooms
+            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+    );
+    let filteredRooms = $derived(
+        $rooms
+            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+    );
+    let filteredRoomInvitations = $derived(
+        $roomInvitations
+            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+    );
 
-    let displayTwoColumnLayout = $derived(canDisplayRoomListAndTimeline({
-        minimumTwoColumnWidth: CHAT_TWO_COLUMN_LAYOUT_LIMIT,
-        sideBarWidth,
-    }));
+    let displayTwoColumnLayout = $derived(
+        canDisplayRoomListAndTimeline({
+            minimumTwoColumnWidth: CHAT_TWO_COLUMN_LAYOUT_LIMIT,
+            sideBarWidth,
+        }),
+    );
     let displayThreeColumnLayout = $derived(sideBarWidth >= THREAD_PANEL_LAYOUT_LIMIT);
     let selectedRoomWithSidePanel = $derived(
         hasChatRoomMembershipManagement($selectedRoomStore) &&
-        hasChatRoomModeration($selectedRoomStore) &&
-        hasChatRoomNotificationControl($selectedRoomStore)
+            hasChatRoomModeration($selectedRoomStore) &&
+            hasChatRoomNotificationControl($selectedRoomStore)
             ? $selectedRoomStore
-            : undefined
+            : undefined,
     );
     let hasSelectedRoomWithSidePanel = $derived(selectedRoomWithSidePanel !== undefined);
     let showRoomSidePanelToggle = $derived(shouldShowRoomSidePanelToggle(hasSelectedRoomWithSidePanel));
-    let roomSidePanelPlacement = $derived(getRoomSidePanelPlacement({
-        canDisplayThirdColumn: displayThreeColumnLayout,
-        hasCompatibleRoom: hasSelectedRoomWithSidePanel,
-        isOpen: $roomSidePanelStore.isOpen,
-    }));
+    let roomSidePanelPlacement = $derived(
+        getRoomSidePanelPlacement({
+            canDisplayThirdColumn: displayThreeColumnLayout,
+            hasCompatibleRoom: hasSelectedRoomWithSidePanel,
+            isOpen: $roomSidePanelStore.isOpen,
+        }),
+    );
     let showRoomSidePanelInThirdColumn = $derived(roomSidePanelPlacement === "third-column");
     let showRoomSidePanelInTimelineColumn = $derived(roomSidePanelPlacement === "timeline-column");
     $effect(() => {
@@ -219,11 +229,13 @@
         selectedRoomStore.set($selectedThreadStore);
         selectedThreadStore.clear();
     });
-    let roomListGridClass = $derived(showRoomSidePanelInThirdColumn
-        ? "grid-cols-[335px_minmax(0,1fr)_360px]"
-        : displayTwoColumnLayout && $navChat.key === "chat"
-        ? "grid-cols-[auto_minmax(0,1fr)]"
-        : "grid-cols-[1fr]");
+    let roomListGridClass = $derived(
+        showRoomSidePanelInThirdColumn
+            ? "grid-cols-[335px_minmax(0,1fr)_360px]"
+            : displayTwoColumnLayout && $navChat.key === "chat"
+              ? "grid-cols-[auto_minmax(0,1fr)]"
+              : "grid-cols-[1fr]",
+    );
 </script>
 
 <div class="overflow-auto h-full grid grid-rows-[1fr_auto] {roomListGridClass}">
@@ -299,7 +311,9 @@
                             </div>
                             {#if $proximityHasUnreadMessages}
                                 <div class="relative flex h-7 w-7 items-center justify-center">
-                                    <span class="absolute top-1 start-2 block h-4 w-4 rounded-full bg-white animate-ping"></span>
+                                    <span
+                                        class="absolute top-1 start-2 block h-4 w-4 rounded-full bg-white animate-ping"
+                                    ></span>
                                     <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white"></span>
                                     <div
                                         class="flex aspect-square h-5 w-5 items-center justify-center rounded-full bg-success text-sm font-bold leading-none text-contrast z-10"
@@ -344,7 +358,7 @@
                             <div class="flex flex-col overflow-auto ps-3 pr-4 pb-3">
                                 <ShowMore items={filteredRoomInvitations} maxNumber={8} idKey="id">
                                     {#snippet children({ item: room })}
-                                    <RoomInvitation {room} />
+                                        <RoomInvitation {room} />
                                     {/snippet}
                                 </ShowMore>
                             </div>
@@ -395,7 +409,7 @@
                         <div class="flex flex-col px-2 pb-2">
                             <ShowMore items={filteredDirectRoom} maxNumber={8} idKey="id">
                                 {#snippet children({ item: room })}
-                                <Room {room} />
+                                    <Room {room} />
                                 {/snippet}
                             </ShowMore>
                         </div>
@@ -427,7 +441,7 @@
                         <div class="px-2 pb-2">
                             <ShowMore items={filteredRooms} maxNumber={8} idKey="id">
                                 {#snippet children({ item: room })}
-                                <Room {room} />
+                                    <Room {room} />
                                 {/snippet}
                             </ShowMore>
                         </div>

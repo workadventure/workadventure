@@ -16,8 +16,9 @@ import type {
 export class VoidChatConnection implements ChatConnectionInterface {
     directRoomsUsers: Readable<ChatUser[]> = readable([]);
     connectionStatus: Readable<ConnectionStatus> = writable("OFFLINE");
-    directRooms: Readable<(ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]> =
-        writable([]);
+    directRooms: Readable<
+        (ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]
+    > = writable([]);
     rooms: Readable<(ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]> =
         writable([]);
     invitations: Readable<(ChatRoom & ChatRoomMembershipManagement)[]> = writable([]);

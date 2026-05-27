@@ -80,7 +80,10 @@ export class MatrixChatThread implements ChatThread {
     private readonly handleRoomRedaction = this.onRoomRedaction.bind(this);
     private readonly updateUnreadNotificationCount = this.onThreadUpdateUnreadNotificationCount.bind(this);
 
-    constructor(private readonly thread: Thread, parentRoom: MatrixChatRoom) {
+    constructor(
+        private readonly thread: Thread,
+        parentRoom: MatrixChatRoom,
+    ) {
         this.id = thread.id;
         this.parentRoom = parentRoom;
         this.type = parentRoom.type;
@@ -115,13 +118,13 @@ export class MatrixChatThread implements ChatThread {
                         id: message.id,
                         date: message.date,
                         message,
-                    })
+                    }),
                 ),
             ].sort((left, right) => {
                 const leftTs = left.date?.getTime() ?? 0;
                 const rightTs = right.date?.getTime() ?? 0;
                 return leftTs - rightTs;
-            })
+            }),
         );
         this.timelineWindow = new TimelineWindow(parentRoom.getMatrixRoom().client, thread.getUnfilteredTimelineSet());
 
@@ -249,7 +252,7 @@ export class MatrixChatThread implements ChatThread {
     private static isNewLiveTimelineEvent(
         removed: boolean,
         data: IRoomTimelineData | undefined,
-        toStartOfTimeline: boolean | undefined
+        toStartOfTimeline: boolean | undefined,
     ): boolean {
         return !removed && !!data?.liveEvent && !toStartOfTimeline;
     }
@@ -259,7 +262,7 @@ export class MatrixChatThread implements ChatThread {
         room: Room | undefined,
         toStartOfTimeline: boolean | undefined,
         removed: boolean,
-        data: IRoomTimelineData
+        data: IRoomTimelineData,
     ) {
         if (!room || !MatrixChatThread.isNewLiveTimelineEvent(removed, data, toStartOfTimeline)) {
             return;
@@ -448,10 +451,10 @@ export class MatrixChatThread implements ChatThread {
         this.timelineWindow.unpaginate(existingEventsBeforePagination.length, false);
         const paginatedEvents = this.timelineWindow.getEvents();
         const messages = await Promise.all(
-            paginatedEvents.map((event) => this.readEventsToAddMessagesAndReactions(event))
+            paginatedEvents.map((event) => this.readEventsToAddMessagesAndReactions(event)),
         );
         this.replyMessages.unshift(
-            ...messages.filter((message): message is MatrixChatMessage => message !== undefined)
+            ...messages.filter((message): message is MatrixChatMessage => message !== undefined),
         );
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
 

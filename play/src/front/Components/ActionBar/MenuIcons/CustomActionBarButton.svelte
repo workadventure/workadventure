@@ -11,12 +11,7 @@
         classList?: string;
     }
 
-    let {
-        button,
-        first = undefined,
-        last = undefined,
-        classList = undefined
-    }: Props = $props();
+    let { button, first = undefined, last = undefined, classList = undefined }: Props = $props();
 
     function buttonActionBarTrigger(button: CustomButtonActionBarDescriptor) {
         analyticsClient.clickOnCustomButton(button.id, button.label, button.tooltipTitle, button.imageSrc);

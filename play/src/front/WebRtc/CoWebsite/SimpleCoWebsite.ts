@@ -20,7 +20,7 @@ export class SimpleCoWebsite implements CoWebsite {
         allowPolicy?: string,
         widthPercent?: number,
         closable?: boolean,
-        hideUrl?: boolean
+        hideUrl?: boolean,
     ) {
         this.id = coWebsiteManager.generateUniqueId();
         this.url = url;
@@ -74,7 +74,7 @@ export class SimpleCoWebsite implements CoWebsite {
 
     getIcon(): string {
         return `${ICON_URL}/icon?url=${encodeURIComponent(
-            this.url.toString()
+            this.url.toString(),
         )}&size=64..96..256&fallback_icon_color=14304c`;
     }
 

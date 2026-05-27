@@ -21,7 +21,10 @@ export function isPopupJustClosed(): boolean {
 export class SayManager {
     private bubbleDestroyTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
-    public constructor(private roomConnection: RoomConnection, private currentPlayer: Player) {}
+    public constructor(
+        private roomConnection: RoomConnection,
+        private currentPlayer: Player,
+    ) {}
 
     public say(text: string, type: SayMessageType, duration: number | undefined): void {
         if (this.bubbleDestroyTimeout) {

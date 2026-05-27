@@ -39,44 +39,50 @@
 
     let usersByRoom = $derived(userProviderMerger.usersByRoomStore);
 
-    let roomsWithUsers = $derived(Array.from($usersByRoom.entries())
-        .reduce((roomsWithUsersAcc, [currentPlayUri, currentRoomWithUsers]) => {
-            let roomName =
-                currentRoomWithUsers.roomName ??
-                (currentPlayUri
-                    ? new URL(currentPlayUri, window.location.href).pathname
-                    : $LL.chat.userList.disconnected());
+    let roomsWithUsers = $derived(
+        Array.from($usersByRoom.entries())
+            .reduce(
+                (roomsWithUsersAcc, [currentPlayUri, currentRoomWithUsers]) => {
+                    let roomName =
+                        currentRoomWithUsers.roomName ??
+                        (currentPlayUri
+                            ? new URL(currentPlayUri, window.location.href).pathname
+                            : $LL.chat.userList.disconnected());
 
-            if (currentPlayUri === gameManager?.getCurrentGameScene()?.roomUrl) roomName = $LL.chat.userList.isHere();
+                    if (currentPlayUri === gameManager?.getCurrentGameScene()?.roomUrl)
+                        roomName = $LL.chat.userList.isHere();
 
-            const mySpaceUserId = gameManager.getCurrentGameScene().connection?.getSpaceUserId();
+                    const mySpaceUserId = gameManager.getCurrentGameScene().connection?.getSpaceUserId();
 
-            const users = currentRoomWithUsers.users
-                .filter(({ username }) => {
-                    return username
-                        ? username.toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
-                        : false;
-                })
-                .sort((chatUserA: ChatUser, chatUserB: ChatUser) => {
-                    if (chatUserA.spaceUserId === mySpaceUserId) return -1;
-                    if (chatUserB.spaceUserId === mySpaceUserId) return 1;
-                    return chatUserA.username?.localeCompare(chatUserB.username || "") || -1;
-                })
-                .slice(0, USERS_BY_ROOM_LIMITATION);
+                    const users = currentRoomWithUsers.users
+                        .filter(({ username }) => {
+                            return username
+                                ? username.toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase())
+                                : false;
+                        })
+                        .sort((chatUserA: ChatUser, chatUserB: ChatUser) => {
+                            if (chatUserA.spaceUserId === mySpaceUserId) return -1;
+                            if (chatUserB.spaceUserId === mySpaceUserId) return 1;
+                            return chatUserA.username?.localeCompare(chatUserB.username || "") || -1;
+                        })
+                        .slice(0, USERS_BY_ROOM_LIMITATION);
 
-            if (users.length > 0) roomsWithUsersAcc.push([roomName, users]);
+                    if (users.length > 0) roomsWithUsersAcc.push([roomName, users]);
 
-            return roomsWithUsersAcc;
-        }, [] as [string, ChatUser[]][])
-        .sort(([aKey, _aValue]: [string, ChatUser[]], [bKey, _bValue]: [string, ChatUser[]]) => {
-            if (aKey === $LL.chat.userList.disconnected()) return 1;
-            if (bKey === $LL.chat.userList.disconnected()) return -1;
+                    return roomsWithUsersAcc;
+                },
+                [] as [string, ChatUser[]][],
+            )
+            .sort(([aKey, _aValue]: [string, ChatUser[]], [bKey, _bValue]: [string, ChatUser[]]) => {
+                if (aKey === $LL.chat.userList.disconnected()) return 1;
+                if (bKey === $LL.chat.userList.disconnected()) return -1;
 
-            if (aKey === $LL.chat.userList.isHere()) return -1;
-            if (bKey === $LL.chat.userList.isHere()) return 1;
+                if (aKey === $LL.chat.userList.isHere()) return -1;
+                if (bKey === $LL.chat.userList.isHere()) return 1;
 
-            return aKey.localeCompare(bKey);
-        }));
+                return aKey.localeCompare(bKey);
+            }),
+    );
 
     let inviteButtonElement: HTMLButtonElement | undefined = $state();
     let closeInviteFloatingUi: (() => void) | undefined = undefined;
@@ -100,7 +106,7 @@
                 () => {
                     isInviteMenuOpen = false;
                     closeInviteFloatingUi = undefined;
-                }
+                },
             );
             isInviteMenuOpen = true;
         }

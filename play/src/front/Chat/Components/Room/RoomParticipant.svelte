@@ -131,7 +131,7 @@
                   value: permissionLevelOption,
                   label: getTranslatedPermissionLevel(permissionLevelOption),
               }))
-            : [{ value: $permissionLevel, label: getTranslatedPermissionLevel($permissionLevel) }]
+            : [{ value: $permissionLevel, label: getTranslatedPermissionLevel($permissionLevel) }],
     );
 
     let memberAvatarColorStore = $derived(member.avatarFallbackColor);

@@ -17,13 +17,7 @@
         compact?: boolean;
     }
 
-    let {
-        pictureStore,
-        fallbackName = "A",
-        color = null,
-        isChatAvatar = false,
-        compact = false
-    }: Props = $props();
+    let { pictureStore, fallbackName = "A", color = null, isChatAvatar = false, compact = false }: Props = $props();
 
     let forceFallback = $state(false);
     let previousPictureUrl: string | undefined = $state();
@@ -31,7 +25,7 @@
     let sizeClass = $derived(
         compact
             ? "h-7 w-7 min-h-[1.75rem] min-w-[1.75rem] shrink-0 rounded-md overflow-hidden"
-            : "h-10 w-10 min-h-10 min-w-10 shrink-0 rounded-sm overflow-hidden"
+            : "h-10 w-10 min-h-10 min-w-10 shrink-0 rounded-sm overflow-hidden",
     );
 
     $effect(() => {

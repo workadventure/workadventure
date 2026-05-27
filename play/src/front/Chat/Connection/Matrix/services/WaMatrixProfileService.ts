@@ -19,7 +19,7 @@ export type SyncWokaAvatarToMatrixResult = "synced" | "unchanged" | "skipped_no_
 
 export function syncWokaAvatarToMatrixProfileOnWokaChange(
     client: MatrixClient,
-    wokaImageSrc: string | undefined
+    wokaImageSrc: string | undefined,
 ): Promise<SyncWokaAvatarToMatrixResult> {
     const next = syncChain.then(() => runSyncWokaAvatarToMatrixGlobalProfile(client, wokaImageSrc));
     syncChain = next.catch(() => undefined);
@@ -28,7 +28,7 @@ export function syncWokaAvatarToMatrixProfileOnWokaChange(
 
 async function runSyncWokaAvatarToMatrixGlobalProfile(
     client: MatrixClient,
-    wokaImageSrc: string | undefined
+    wokaImageSrc: string | undefined,
 ): Promise<SyncWokaAvatarToMatrixResult> {
     if (client.isGuest()) {
         debug("sync WOKA→Matrix profile skipped: guest");
@@ -117,7 +117,7 @@ function matrixOrPlainUrlToHttp(client: MatrixClient, src: string): string | und
  */
 export async function pushLocalWokaAndNameToMatrixProfile(
     client: MatrixClient,
-    options: { localDisplayName: string | undefined; wokaImageSrc: string | undefined; forceSync: boolean }
+    options: { localDisplayName: string | undefined; wokaImageSrc: string | undefined; forceSync: boolean },
 ): Promise<void> {
     if (client.isGuest()) {
         return;
@@ -184,7 +184,7 @@ export async function pushLocalWokaAndNameToMatrixProfile(
 
 export function getWokaPictureUrlFromUserProviderMerger(
     matrixUserId: string,
-    merger: UserProviderMerger
+    merger: UserProviderMerger,
 ): string | undefined {
     for (const [, { users }] of get(merger.usersByRoomStore)) {
         const user = users.find((u) => u.chatId === matrixUserId);
@@ -207,7 +207,7 @@ export function resolveDirectMessagePeerAvatarUrl(
     matrixUserId: string,
     roomMemberHttpAvatar: string | null | undefined,
     matrixClient: MatrixClient,
-    merger: UserProviderMerger | undefined
+    merger: UserProviderMerger | undefined,
 ): string | undefined {
     if (roomMemberHttpAvatar) {
         return roomMemberHttpAvatar;
@@ -227,12 +227,12 @@ export function resolveDirectMessagePeerAvatarUrl(
 
 function chatTintFromDisplayName(name: string | undefined): string | undefined {
     const t = name?.trim();
-    return t ? getColorByString(t) ?? undefined : undefined;
+    return t ? (getColorByString(t) ?? undefined) : undefined;
 }
 
 function matrixProfileDisplayNameForTint(
     matrixClient: MatrixClient | undefined,
-    matrixUserId: string
+    matrixUserId: string,
 ): string | undefined {
     const dn = matrixClient?.getUser(matrixUserId)?.displayName?.trim();
     return dn || undefined;
@@ -241,13 +241,13 @@ function matrixProfileDisplayNameForTint(
 export function resolveChatUserColor(
     matrixUserId: string,
     colorFromMerger: string | undefined,
-    matrixClient?: MatrixClient
+    matrixClient?: MatrixClient,
 ): string | undefined {
     const myId = localUserStore.getChatId();
     if (myId && matrixUserId === myId) {
         const selfTint = chatTintFromDisplayName(
             localUserStore.getDisplayNameForMatrixProfile() ||
-                matrixProfileDisplayNameForTint(matrixClient, matrixUserId)
+                matrixProfileDisplayNameForTint(matrixClient, matrixUserId),
         );
         if (selfTint) {
             return selfTint;

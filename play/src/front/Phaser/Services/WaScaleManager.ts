@@ -21,7 +21,10 @@ export class WaScaleManager {
 
     private focusTarget?: WaScaleManagerFocusTarget;
 
-    public constructor(private minGamePixelsNumber: number, private absoluteMinPixelNumber: number) {
+    public constructor(
+        private minGamePixelsNumber: number,
+        private absoluteMinPixelNumber: number,
+    ) {
         this.hdpiManager = new HdpiManager(minGamePixelsNumber, absoluteMinPixelNumber);
     }
 
@@ -103,7 +106,7 @@ export class WaScaleManager {
         if (this.focusTarget.width && this.focusTarget.height) {
             this.setZoomModifier(
                 this.getTargetZoomModifierFor(this.focusTarget.width, this.focusTarget.height),
-                camera
+                camera,
             );
         }
 

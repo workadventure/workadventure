@@ -114,7 +114,7 @@ export class ActivatablesManager {
     public updateActivatableObjectsDistances(objects: ActivatableInterface[]): void {
         this.activatableObjectsDistances.clear();
         const playerCenter = this.currentPlayer.getDirectionalActivationPosition(
-            this.directionalActivationPositionShift
+            this.directionalActivationPositionShift,
         );
         const currentPlayerPos = this.currentPlayer.getDirectionalActivationPosition(0);
         for (const object of objects) {
@@ -153,7 +153,7 @@ export class ActivatablesManager {
 
     private findNearestActivatableObject(): ActivatableInterface | undefined {
         const playerCenter = this.currentPlayer.getDirectionalActivationPosition(
-            this.directionalActivationPositionShift
+            this.directionalActivationPositionShift,
         );
         let shortestDistanceToCenter = Infinity;
         let closestObject: ActivatableInterface | undefined = undefined;

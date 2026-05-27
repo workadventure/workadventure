@@ -146,7 +146,7 @@ describe("SpaceRegistry", () => {
             "space-name",
             FilterType.ALL_USERS,
             [],
-            new AbortController().signal
+            new AbortController().signal,
         );
 
         roomConnection.updateSpaceMetadataMessageStream.next(updateSpaceMetadataMessage);

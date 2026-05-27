@@ -24,14 +24,15 @@
     let normalizedAnswers = $derived(answers.map((answer) => answer.trim()).filter((answer) => answer.length > 0));
     let canAddAnswer = $derived(answers.length < limits.maxAnswers);
     let hasInvalidAnswerLength = $derived(answers.some((answer) => answer.length > limits.answerMaxLength));
-    let canSubmit =
-        $derived($canCreatePoll &&
-        supportedKinds.length > 0 &&
-        question.trim().length > 0 &&
-        question.length <= limits.questionMaxLength &&
-        normalizedAnswers.length >= limits.minAnswers &&
-        !hasInvalidAnswerLength &&
-        !isSubmitting);
+    let canSubmit = $derived(
+        $canCreatePoll &&
+            supportedKinds.length > 0 &&
+            question.trim().length > 0 &&
+            question.length <= limits.questionMaxLength &&
+            normalizedAnswers.length >= limits.minAnswers &&
+            !hasInvalidAnswerLength &&
+            !isSubmitting,
+    );
 
     function addAnswer() {
         if (!canAddAnswer) {
@@ -82,7 +83,8 @@
     {#snippet content()}
         <div class="w-full flex flex-col gap-4">
             <div class="w-full">
-                <label class="text-sm font-bold mb-2 block" for="poll-question">{$LL.chat.poll.create.question()}</label>
+                <label class="text-sm font-bold mb-2 block" for="poll-question">{$LL.chat.poll.create.question()}</label
+                >
                 <textarea
                     data-testid="createPollQuestionInput"
                     id="poll-question"
@@ -91,7 +93,7 @@
                     maxlength={limits.questionMaxLength}
                     class="wa-searchbar block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 resize-none outline-none shadow-none focus:ring-0 focus:border-white/20"
                     placeholder={$LL.chat.poll.create.questionPlaceholder()}
-            ></textarea>
+                ></textarea>
                 <div class="mt-1 text-xs text-white/50 text-right">{question.length}/{limits.questionMaxLength}</div>
             </div>
 

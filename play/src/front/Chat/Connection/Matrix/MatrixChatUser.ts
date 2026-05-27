@@ -12,7 +12,7 @@ type ChatUserFactoryOptions = {
 export const chatUserFactory: (
     matrixChatUser: User,
     matrixClient: MatrixClient,
-    options?: ChatUserFactoryOptions
+    options?: ChatUserFactoryOptions,
 ) => ChatUser = (matrixChatUser, matrixClient, options: ChatUserFactoryOptions = {}) => {
     const resolvedUsername =
         options.username?.trim() ||
@@ -26,7 +26,7 @@ export const chatUserFactory: (
         roomName: undefined,
         playUri: undefined,
         pictureStore: matrixAvatarProfile.createLazyAvatarStore(matrixChatUser.userId, () =>
-            matrixAvatarProfile.resolveUserAvatarUrl(matrixChatUser.userId, matrixClient)
+            matrixAvatarProfile.resolveUserAvatarUrl(matrixChatUser.userId, matrixClient),
         ),
         color: undefined,
         spaceUserId: undefined,

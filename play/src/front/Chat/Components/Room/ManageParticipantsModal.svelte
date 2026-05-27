@@ -72,17 +72,16 @@
         <h1 class="text-lg font-semibold tracking-tight sm:text-xl">{$LL.chat.manageRoomUsers.title()}</h1>
     {/snippet}
     {#snippet content()}
-        <div
-            class="w-full max-w-full flex flex-col gap-5 px-1 sm:px-0"
-            data-testid="inviteParticipantsModalContent"
-        >
+        <div class="w-full max-w-full flex flex-col gap-5 px-1 sm:px-0" data-testid="inviteParticipantsModalContent">
             <button
                 type="button"
                 data-testid="roomID"
                 class="group flex w-full max-w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-left text-xs text-white/70 transition hover:border-white/20 hover:bg-white/[0.07]"
                 onclick={() => navigator.clipboard.writeText(room.id)}
             >
-                <span class="line-clamp-2 flex-1 text-center">{$LL.chat.manageRoomUsers.roomID({ roomId: room.id })}</span>
+                <span class="line-clamp-2 flex-1 text-center"
+                    >{$LL.chat.manageRoomUsers.roomID({ roomId: room.id })}</span
+                >
                 <IconLink class="h-4 w-4 shrink-0 opacity-50 transition group-hover:opacity-90" aria-hidden="true" />
             </button>
 
@@ -113,7 +112,8 @@
                         transition:fade
                         class="rounded-xl border border-red-400/40 bg-red-500/15 px-3 py-2 text-sm text-red-100"
                     >
-                        {$LL.chat.manageRoomUsers.error()} : <span class="font-medium italic">{invitationToRoomError}</span>
+                        {$LL.chat.manageRoomUsers.error()} :
+                        <span class="font-medium italic">{invitationToRoomError}</span>
                     </div>
                 {/if}
 

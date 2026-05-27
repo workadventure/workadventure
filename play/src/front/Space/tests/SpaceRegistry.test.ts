@@ -155,13 +155,13 @@ describe("SpaceProviderInterface implementation", () => {
 
                 const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(
                     defaultRoomConnectionMock,
-                    new Subject()
+                    new Subject(),
                 );
                 await spaceRegistry.joinSpace(
                     newSpace.getName(),
                     FilterType.ALL_USERS,
                     [],
-                    new AbortController().signal
+                    new AbortController().signal,
                 );
                 expect(spaceRegistry.get(newSpace.getName())).toBeInstanceOf(Space);
             });
@@ -174,16 +174,16 @@ describe("SpaceProviderInterface implementation", () => {
 
                 const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(
                     defaultRoomConnectionMock,
-                    new Subject()
+                    new Subject(),
                 );
                 await spaceRegistry.joinSpace(
                     newSpace.getName(),
                     FilterType.ALL_USERS,
                     [],
-                    new AbortController().signal
+                    new AbortController().signal,
                 );
                 await expect(
-                    spaceRegistry.joinSpace(newSpace.getName(), FilterType.ALL_USERS, [], new AbortController().signal)
+                    spaceRegistry.joinSpace(newSpace.getName(), FilterType.ALL_USERS, [], new AbortController().signal),
                 ).rejects.toThrow(SpaceAlreadyExistError);
             });
         });
@@ -197,14 +197,14 @@ describe("SpaceProviderInterface implementation", () => {
 
                 const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(
                     defaultRoomConnectionMock,
-                    new Subject()
+                    new Subject(),
                 );
 
                 await spaceRegistry.joinSpace(
                     newSpace.getName(),
                     FilterType.ALL_USERS,
                     [],
-                    new AbortController().signal
+                    new AbortController().signal,
                 );
 
                 const result: boolean = spaceRegistry.exist(newSpace.getName());
@@ -219,7 +219,7 @@ describe("SpaceProviderInterface implementation", () => {
                 } as SpaceInterface;
                 const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(
                     defaultRoomConnectionMock,
-                    new Subject()
+                    new Subject(),
                 );
                 const result: boolean = spaceRegistry.exist(newSpace.getName());
                 expect(result).toBeFalsy();
@@ -236,7 +236,7 @@ describe("SpaceProviderInterface implementation", () => {
                     "space-to-delete",
                     FilterType.ALL_USERS,
                     [],
-                    new AbortController().signal
+                    new AbortController().signal,
                 );
 
                 await spaceRegistry.leaveSpace(spaceToDelete);
@@ -251,7 +251,7 @@ describe("SpaceProviderInterface implementation", () => {
                 } as SpaceInterface;
                 const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(
                     defaultRoomConnectionMock,
-                    new Subject()
+                    new Subject(),
                 );
 
                 await expect(spaceRegistry.leaveSpace(newSpace)).rejects.toThrow(SpaceDoesNotExistError);
@@ -282,7 +282,7 @@ describe("SpaceProviderInterface implementation", () => {
                     "race-condition-test",
                     FilterType.ALL_USERS,
                     [],
-                    new AbortController().signal
+                    new AbortController().signal,
                 );
                 expect(spaceRegistry.exist("race-condition-test")).toBeTruthy();
 
@@ -304,7 +304,7 @@ describe("SpaceProviderInterface implementation", () => {
                     "race-condition-test",
                     FilterType.ALL_USERS,
                     [],
-                    new AbortController().signal
+                    new AbortController().signal,
                 );
 
                 // Complete the leave operation

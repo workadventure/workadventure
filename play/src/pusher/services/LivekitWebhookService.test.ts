@@ -30,7 +30,7 @@ describe("LivekitWebhookService", () => {
             authorizationHeader: "jwt-token",
         });
         expect(Buffer.from((capturedRequest as { rawBody: Uint8Array }).rawBody).toString("utf-8")).toBe(
-            rawBody.toString("utf-8")
+            rawBody.toString("utf-8"),
         );
     });
 
@@ -39,7 +39,7 @@ describe("LivekitWebhookService", () => {
         const service = new LivekitWebhookService({ getSpaceClient }, 1024);
 
         await expect(
-            service.handleWebhook(Buffer.alloc(0), "jwt-token", "space-name", "session-1")
+            service.handleWebhook(Buffer.alloc(0), "jwt-token", "space-name", "session-1"),
         ).rejects.toMatchObject({
             statusCode: 400,
         });
@@ -57,11 +57,11 @@ describe("LivekitWebhookService", () => {
             {
                 getSpaceClient: vi.fn().mockResolvedValue({ handleLivekitWebhook }),
             },
-            1024
+            1024,
         );
 
         await expect(
-            service.handleWebhook(Buffer.from("{}"), "jwt-token", "space-name", "session-1")
+            service.handleWebhook(Buffer.from("{}"), "jwt-token", "space-name", "session-1"),
         ).rejects.toMatchObject({
             statusCode: 401,
         });

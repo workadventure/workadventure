@@ -85,7 +85,7 @@ class LocalAdmin implements AdminInterface {
         characterTextureIds: string[],
         companionTextureId?: string,
         locale?: string,
-        tags?: string[]
+        tags?: string[],
     ): Promise<FetchMemberDataByUuidResponse> {
         let canEdit = false;
         let canRecord = false;
@@ -257,7 +257,7 @@ class LocalAdmin implements AdminInterface {
     fetchMapDetails(
         playUri: string,
         authToken?: string,
-        locale?: string
+        locale?: string,
     ): Promise<MapDetailsData | RoomRedirect | ErrorApiData> {
         const roomUrl = new URL(playUri);
 
@@ -319,7 +319,7 @@ class LocalAdmin implements AdminInterface {
             enableSay: ENABLE_SAY,
             enableIssueReport: ENABLE_ISSUE_REPORT,
             enableMatrixChat: Boolean(
-                MATRIX_PUBLIC_URI && MATRIX_API_URI && MATRIX_ADMIN_USER && MATRIX_ADMIN_PASSWORD && MATRIX_DOMAIN
+                MATRIX_PUBLIC_URI && MATRIX_API_URI && MATRIX_ADMIN_USER && MATRIX_ADMIN_PASSWORD && MATRIX_DOMAIN,
             ),
             defaultWokaName: DEFAULT_WOKA_NAME || undefined,
             defaultWokaTexture: DEFAULT_WOKA_TEXTURE || undefined,
@@ -343,7 +343,7 @@ class LocalAdmin implements AdminInterface {
     async fetchMemberDataByToken(
         organizationMemberToken: string,
         playUri: string | null,
-        locale?: string
+        locale?: string,
     ): Promise<AdminApiData> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
@@ -357,7 +357,7 @@ class LocalAdmin implements AdminInterface {
         reportedUserComment: string,
         reporterUserUuid: string,
         roomUrl: string,
-        locale?: string
+        locale?: string,
     ): Promise<unknown> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
@@ -366,7 +366,7 @@ class LocalAdmin implements AdminInterface {
         userUuid: string,
         ipAddress: string,
         roomUrl: string,
-        locale?: string
+        locale?: string,
     ): Promise<AdminBannedData> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
@@ -413,7 +413,7 @@ class LocalAdmin implements AdminInterface {
         playUri: string,
         name: string,
         message: string,
-        byUserUuid: string
+        byUserUuid: string,
     ): Promise<boolean> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }

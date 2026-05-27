@@ -30,7 +30,7 @@
             placement: "bottom-end",
             //strategy: 'fixed',
         },
-        8
+        8,
     );
 
     function closeMapMenu() {

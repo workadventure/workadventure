@@ -12,7 +12,10 @@ const debug = Debug("pusher:requests");
  * Base class to expose authenticated pusher endpoints that will provide data based on room url
  */
 export abstract class AuthenticatedProviderController<T> extends BaseHttpController {
-    constructor(protected app: Application, protected jwtTokenManager: JWTTokenManager) {
+    constructor(
+        protected app: Application,
+        protected jwtTokenManager: JWTTokenManager,
+    ) {
         super(app);
     }
     /**
@@ -29,7 +32,7 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
             debug(
                 `AuthenticatedProviderController => [${req.method}] ${req.originalUrl} — IP: ${
                     req.ip
-                } — Time: ${Date.now()}`
+                } — Time: ${Date.now()}`,
             );
             const token = req.header("Authorization");
 
@@ -55,7 +58,7 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
                 res,
                 z.object({
                     roomUrl: z.string(),
-                })
+                }),
             );
 
             if (query === undefined) {

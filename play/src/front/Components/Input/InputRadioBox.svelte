@@ -19,14 +19,14 @@
         value,
         group = $bindable(),
         outerClass = undefined,
-        children
+        children,
     }: Props = $props();
 
     let uniqueId = (() => id || `input-${Math.random().toString(36).substring(2, 9)} `)();
 </script>
 
 <div class={outerClass}>
-    <input id={uniqueId} class="hidden peer radio-ds" type="radio" bind:group {value} onchange={onchange} {disabled} />
+    <input id={uniqueId} class="hidden peer radio-ds" type="radio" bind:group {value} {onchange} {disabled} />
     <label
         for={uniqueId}
         class="inline-flex items-center justify-between w-full h-full p-5 text-white bg-transparent border border-solid border-white rounded-lg cursor-pointer opacity-50 peer-checked:bg-white/10 peer-checked:opacity-100 hover:bg-white/10 bg-no-repeat bg-[center_left_1rem] pl-14 min-w-[170px]"

@@ -132,21 +132,24 @@
     let usersByRoomMap = $derived(usersByRoomStore && $usersByRoomStore ? $usersByRoomStore : new Map());
 
     // Flatten usersByRoomMap into a list of users with playUri from their room
-    let usersWithRoomPlayUri = $derived((() => {
-        const usersList: (ChatUser & { playUri: string })[] = [];
-        for (const [playUri, roomData] of usersByRoomMap.entries()) {
-            for (const user of roomData.users) {
-                usersList.push({
-                    ...user,
-                    playUri: playUri ?? user.playUri ?? "",
-                });
+    let usersWithRoomPlayUri = $derived(
+        (() => {
+            const usersList: (ChatUser & { playUri: string })[] = [];
+            for (const [playUri, roomData] of usersByRoomMap.entries()) {
+                for (const user of roomData.users) {
+                    usersList.push({
+                        ...user,
+                        playUri: playUri ?? user.playUri ?? "",
+                    });
+                }
             }
-        }
-        return usersList;
-    })());
+            return usersList;
+        })(),
+    );
 
-    let matrixChatUser =
-        $derived($roomType === "direct" ? $roomMembers.find((u) => u.id !== localUserStore.getChatId()) : undefined);
+    let matrixChatUser = $derived(
+        $roomType === "direct" ? $roomMembers.find((u) => u.id !== localUserStore.getChatId()) : undefined,
+    );
 
     let chatUser = $derived(usersWithRoomPlayUri.find((u) => u.chatId === matrixChatUser?.id));
     let isInTheSameMap = $derived(chatUser?.playUri === gameManager.getCurrentGameScene().roomUrl);
@@ -196,8 +199,9 @@
     /** Reactive on `$isMatrixChatEnabledStore` so the connection appears when Matrix chat connects. */
     let matrixChatConnection = $derived($isMatrixChatEnabledStore ? matrixConnectionFromGameManager() : undefined);
 
-    let showMatrixPeerProfileDebug =
-        $derived(DEBUG_MODE && matrixChatConnection !== undefined && $roomType === "direct" && Boolean(matrixChatUser?.id));
+    let showMatrixPeerProfileDebug = $derived(
+        DEBUG_MODE && matrixChatConnection !== undefined && $roomType === "direct" && Boolean(matrixChatUser?.id),
+    );
 
     function openMatrixPeerProfileDebug() {
         if (!matrixChatConnection || matrixChatUser?.id === undefined) {

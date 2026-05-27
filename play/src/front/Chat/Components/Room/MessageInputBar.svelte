@@ -58,7 +58,9 @@
     let messageBarRef: HTMLDivElement;
     let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
     let files: { id: string; file: File }[] = $state([]);
-    let filesPreview: { id: string; size: number; name: string; type: string; url: FileReader["result"] }[] = $state([]);
+    let filesPreview: { id: string; size: number; name: string; type: string; url: FileReader["result"] }[] = $state(
+        [],
+    );
     const TYPINT_TIMEOUT = 10000;
 
     let applicationComponentOpened = $state(false);
@@ -229,7 +231,7 @@
                     placement: "top-end",
                 },
                 12,
-                true
+                true,
             );
         }
     }

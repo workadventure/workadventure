@@ -53,7 +53,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         areaData: AreaData,
         private overrideDepth = false,
         shiftKey?: Phaser.Input.Keyboard.Key,
-        ctrlKey?: Phaser.Input.Keyboard.Key
+        ctrlKey?: Phaser.Input.Keyboard.Key,
     ) {
         super(
             scene,
@@ -62,7 +62,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
             areaData.width,
             areaData.height,
             DEFAULT_COLOR,
-            0.5
+            0.5,
         );
 
         this.oldPosition = this.getPosition();
@@ -108,14 +108,14 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
     public get description(): string | undefined {
         const descriptionProperty = this.areaData.properties.find(
-            (p): p is AreaDescriptionPropertyData => p.type === "areaDescriptionProperties"
+            (p): p is AreaDescriptionPropertyData => p.type === "areaDescriptionProperties",
         );
         return descriptionProperty?.description;
     }
 
     public get searchable(): boolean | undefined {
         const descriptionProperty = this.areaData.properties.find(
-            (p): p is AreaDescriptionPropertyData => p.type === "areaDescriptionProperties"
+            (p): p is AreaDescriptionPropertyData => p.type === "areaDescriptionProperties",
         );
         return descriptionProperty?.searchable;
     }
@@ -173,7 +173,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     public updateProperty(changes: AreaDataProperty, removeAreaEntities?: boolean): void {
         const oldAreaData = structuredClone(this.areaData);
         this.areaData.properties = this.areaData.properties.map((property) =>
-            property.id === changes.id ? changes : property
+            property.id === changes.id ? changes : property,
         );
         this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData, removeAreaEntities);
     }
@@ -239,7 +239,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                         this.scene,
                         (this.getTopLeft().x ?? 0) + 10 + counter * 15,
                         (this.getTopLeft().y ?? 0) + 10,
-                        `icon${iconProperties.name}`
+                        `icon${iconProperties.name}`,
                     );
                     icon.setScale(0.12);
                     icon.setDepth(this.depth + 1);
@@ -274,7 +274,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     this.scene,
                     (this.getTopLeft().x ?? 0) + 10 + counter * 15,
                     (this.getTopLeft().y ?? 0) + 10,
-                    `icon${iconProperties.name}`
+                    `icon${iconProperties.name}`,
                 );
                 icon.setScale(0.12);
                 icon.setDepth(this.depth + 1);
@@ -307,7 +307,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     return;
                 }
                 this.emit(AreaPreviewEvent.Clicked);
-            }
+            },
         );
         this.on(
             Phaser.Input.Events.POINTER_UP,
@@ -316,7 +316,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     return;
                 }
                 this.emit(AreaPreviewEvent.Released);
-            }
+            },
         );
         this.on(Phaser.Input.Events.DRAG_START, () => {
             this.oldPosition = this.getPosition();
@@ -577,7 +577,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 this.scene,
                 x,
                 this.y - this.height / 2 - 30,
-                () => this.destroyText()
+                () => this.destroyText(),
             );
             this.scene.add.existing(this.speechDomElement);
             // Need to put the element at the top because

@@ -64,7 +64,7 @@ export const backgroundConfigStore = createBackgroundConfigStore();
  */
 export const backgroundProcessingEnabledStore = derived(
     backgroundConfigStore,
-    ($backgroundConfig) => $backgroundConfig.mode !== "none"
+    ($backgroundConfig) => $backgroundConfig.mode !== "none",
 );
 
 /**

@@ -53,7 +53,7 @@ describe("MapFetcher", () => {
         vi.spyOn(dnsPromises, "lookup").mockRejectedValueOnce(new Error("ENOTFOUND"));
 
         await expect(
-            mapFetcher.isLocalUrl("https://this.domain.name.doesnotexistfoobgjkgfdjkgldf.com")
+            mapFetcher.isLocalUrl("https://this.domain.name.doesnotexistfoobgjkgfdjkgldf.com"),
         ).rejects.toThrowError();
     });
 });

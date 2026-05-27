@@ -45,7 +45,7 @@
             return false;
         }
         const lockableProperty = area.properties.find(
-            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData",
         );
         if (!lockableProperty) {
             return false;
@@ -62,15 +62,17 @@
     let showAreaLock = $derived(lockableAreas.length > 0);
     let showGroupLock = $derived(!showAreaLock && $currentPlayerGroupLockStateStore !== undefined);
 
-    let areasWithPermission = $derived((() => {
-        const set = new Set<string>();
-        for (const entry of lockableAreas) {
-            if (canLockEntry(entry)) {
-                set.add(entryKey(entry));
+    let areasWithPermission = $derived(
+        (() => {
+            const set = new Set<string>();
+            for (const entry of lockableAreas) {
+                if (canLockEntry(entry)) {
+                    set.add(entryKey(entry));
+                }
             }
-        }
-        return set;
-    })());
+            return set;
+        })(),
+    );
 
     let canLockAtLeastOne = $derived(areasWithPermission.size > 0);
 
@@ -147,21 +149,23 @@
         }
     }
 
-    let lockState = $derived((() => {
-        if (showAreaLock) {
-            if (lockableAreas.length === 0) {
-                return undefined;
+    let lockState = $derived(
+        (() => {
+            if (showAreaLock) {
+                if (lockableAreas.length === 0) {
+                    return undefined;
+                }
+                if (lockableAreas.length === 1) {
+                    return lockableAreas[0].lockState;
+                }
+                return lockableAreas.every((e) => e.lockState) ? true : false;
             }
-            if (lockableAreas.length === 1) {
-                return lockableAreas[0].lockState;
+            if (showGroupLock) {
+                return $currentPlayerGroupLockStateStore;
             }
-            return lockableAreas.every((e) => e.lockState) ? true : false;
-        }
-        if (showGroupLock) {
-            return $currentPlayerGroupLockStateStore;
-        }
-        return undefined;
-    })());
+            return undefined;
+        })(),
+    );
 
     type ButtonState = "active" | "normal" | "disabled" | "disabledForbidden" | "forbidden";
     let buttonState: ButtonState = $state("normal");

@@ -10,7 +10,10 @@ export class PlayerMessage {
     private readonly message: string;
     private readonly callback: () => void;
 
-    constructor(playerMessageOptions: PlayerMessageOptions, private onRemove: () => void) {
+    constructor(
+        playerMessageOptions: PlayerMessageOptions,
+        private onRemove: () => void,
+    ) {
         this.uuid = uuid();
         this.message = playerMessageOptions.message;
         this.type = playerMessageOptions.type ?? "message";

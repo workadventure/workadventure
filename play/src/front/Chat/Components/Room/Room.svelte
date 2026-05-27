@@ -29,10 +29,12 @@
     let isEncrypted = $derived(room.isEncrypted);
     let areNotificationsMuted = $derived(room.areNotificationsMuted);
 
-    let chunks = $derived(highlightWords({
-        text: $roomName.match(/\[\d*]/) ? $roomName.substring(0, $roomName.search(/\[\d*]/)) : $roomName,
-        query: $chatSearchBarValue,
-    }));
+    let chunks = $derived(
+        highlightWords({
+            text: $roomName.match(/\[\d*]/) ? $roomName.substring(0, $roomName.search(/\[\d*]/)) : $roomName,
+            query: $chatSearchBarValue,
+        }),
+    );
 
     let isSelected = $derived($selectedRoomStore?.id === room.id);
     let peerAvatarColorStore = $derived(room.avatarFallbackColor);
@@ -66,7 +68,7 @@
             compact
             pictureStore={room.pictureStore}
             fallbackName={$roomName}
-            color={$roomType === "direct" ? $peerAvatarColorStore ?? defaultColor : null}
+            color={$roomType === "direct" ? ($peerAvatarColorStore ?? defaultColor) : null}
         />
 
         {#if $isEncrypted}

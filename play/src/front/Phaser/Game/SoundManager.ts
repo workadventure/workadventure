@@ -29,7 +29,7 @@ class SoundManager {
         loadPlugin: LoaderPlugin,
         soundManager: BaseSoundManager,
         soundUrl: string,
-        config: Phaser.Types.Sound.SoundConfig | undefined
+        config: Phaser.Types.Sound.SoundConfig | undefined,
     ): Promise<void> {
         const sound = await this.loadSound(loadPlugin, soundManager, soundUrl);
         if (config === undefined) sound.play();

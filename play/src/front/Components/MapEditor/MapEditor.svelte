@@ -20,7 +20,7 @@
     let mapEditorSideBarWidth = $derived(
         $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor
             ? $mapEditorSideBarWidthStore
-            : 0
+            : 0,
     );
 
     function onResize(width: number) {

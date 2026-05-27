@@ -10,13 +10,7 @@
         dataTestid: string;
     }
 
-    let {
-        minHeight,
-        maxHeight,
-        onResize,
-        onResizeEnd = () => {},
-        dataTestid = "resize-handle"
-    }: Props = $props();
+    let { minHeight, maxHeight, onResize, onResizeEnd = () => {}, dataTestid = "resize-handle" }: Props = $props();
 
     let dragHandle: HTMLElement;
     let parentElement: HTMLElement;

@@ -15,7 +15,7 @@
         maxNumber = 8,
         idKey = "id" as keyof T,
         showNothingToDisplayMessage = true,
-        children
+        children,
     }: Props<T> = $props();
 
     let showMore = $state(false);
@@ -23,7 +23,7 @@
 </script>
 
 {#each filteredItems as item (item[idKey])}
-    {@render children?.({ item, })}
+    {@render children?.({ item })}
 {/each}
 {#if items.length > 8}
     <div class="flex justify-center">

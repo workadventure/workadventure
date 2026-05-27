@@ -24,7 +24,7 @@ export class LivekitState
             livekitHost: LIVEKIT_HOST ?? "",
         },
         users: ReadonlyMap<string, SpaceUser>,
-        usersToNotify: ReadonlyMap<string, SpaceUser>
+        usersToNotify: ReadonlyMap<string, SpaceUser>,
     ) {
         super(
             _space,
@@ -35,11 +35,11 @@ export class LivekitState
                     _livekitServerCredentials.livekitApiKey,
                     _livekitServerCredentials.livekitApiSecret,
                     _livekitServerCredentials.livekitHost.replace("http", "ws"),
-                    PLAY_URL
-                )
+                    PLAY_URL,
+                ),
             ),
             users,
-            usersToNotify
+            usersToNotify,
         );
     }
     async handleUserDeleted(user: SpaceUser): Promise<void> {
@@ -75,7 +75,7 @@ export class LivekitState
         rawBody: Buffer | Uint8Array,
         authorizationHeader: string | undefined,
         spaceName: string,
-        recordingSessionId: string
+        recordingSessionId: string,
     ): Promise<HandleRecordingWebhookRequest | "ignored"> {
         return this._currentStrategy.handleLivekitWebhook(rawBody, authorizationHeader, spaceName, recordingSessionId);
     }

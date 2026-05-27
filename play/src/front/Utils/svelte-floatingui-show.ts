@@ -14,7 +14,7 @@ export const floatingUiComponents = writable(
             action: ContentAction;
             arrowAction: ArrowAction | undefined;
         }
-    >()
+    >(),
 );
 
 /**
@@ -32,7 +32,7 @@ export function showFloatingUi(
     offsetMainAxis = 0,
     withArrow = true,
     closeOnClickOutside = false,
-    onClose?: () => void
+    onClose?: () => void,
 ): () => void {
     let arrowNode: HTMLElement | undefined;
     let contentNode: HTMLElement | undefined;

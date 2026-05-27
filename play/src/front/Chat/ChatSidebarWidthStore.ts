@@ -25,5 +25,5 @@ export const hideActionBarStoreBecauseOfChatBar = derived(
                 ($mapEditorModeStore ? $mapEditorWidthStore : 0) <
             285
         );
-    }
+    },
 );

@@ -14,7 +14,7 @@
         strokeColor = "stroke-white",
         fillColor = "fill-white",
         hover = "group-hover/btn-emoji:fill-white",
-        classList = "aspect-ratio transition-all"
+        classList = "aspect-ratio transition-all",
     }: Props = $props();
 </script>
 

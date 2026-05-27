@@ -55,7 +55,7 @@
             const savedTextureIds = gameManager.getCharacterTextureIds();
             // find the collection used to select the Woka
             const collectionIndex = wokaData?.["woka"]?.collections.findIndex((c: WokaCollection) =>
-                c.textures.find((t: WokaTexture) => t.id === savedTextureIds?.[0])
+                c.textures.find((t: WokaTexture) => t.id === savedTextureIds?.[0]),
             );
             if (collectionIndex === undefined || collectionIndex < 0) {
                 throw new Error("No valid Woka collection found for the saved texture ID");
@@ -64,7 +64,7 @@
                 collectionIndex,
                 savedTextureIds != null
                     ? savedTextureIds[0]
-                    : wokaData?.["woka"]?.collections?.[0]?.textures?.[0]?.id || ""
+                    : wokaData?.["woka"]?.collections?.[0]?.textures?.[0]?.id || "",
             );
 
             // Scroll to the selected collection
@@ -79,7 +79,7 @@
         } finally {
             // Find the collection used to select the Woka
             currentWokaCollection = (wokaData as WokaData)["woka"].collections.find((c: WokaCollection) =>
-                c.textures.find((t: WokaTexture) => t.id === selectedWokaTextureId["woka"])
+                c.textures.find((t: WokaTexture) => t.id === selectedWokaTextureId["woka"]),
             ) as WokaCollection;
             selectCurrentCollection(currentWokaCollection.name);
         }
@@ -145,7 +145,7 @@
         ) {
             event.preventDefault();
             const currentCollectionIndex = wokaData?.["woka"]?.collections.findIndex(
-                (c: WokaCollection) => c.name === currentWokaCollection?.name
+                (c: WokaCollection) => c.name === currentWokaCollection?.name,
             );
             if (currentCollectionIndex === undefined || currentCollectionIndex < 0) return;
 

@@ -27,7 +27,6 @@
             imageError = true;
         }
     }
-
 </script>
 
 {#if imageRetry}

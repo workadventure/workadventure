@@ -95,7 +95,7 @@ export class FileListener {
                         }),
                         {
                             closable: true,
-                        }
+                        },
                     );
                     draggingFile.set(false);
                     return;
@@ -108,14 +108,14 @@ export class FileListener {
                             {
                                 file: file,
                             },
-                            "popupDropFileEntity"
+                            "popupDropFileEntity",
                         );
                     }
                 } else {
                     console.error("File format not supported", file?.type);
                     warningMessageStore.addWarningMessage(
                         get(LL).mapEditor.entityEditor.uploadEntity.errorOnFileFormat(),
-                        { closable: true }
+                        { closable: true },
                     );
                 }
             }

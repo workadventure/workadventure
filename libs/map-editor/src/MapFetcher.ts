@@ -12,7 +12,7 @@ class MapFetcher {
         mapUrl: string | undefined,
         wamUrl: string | undefined,
         internalMapStorageUrl: string | undefined = undefined,
-        stripPrefix: string | undefined = undefined
+        stripPrefix: string | undefined = undefined,
     ): Promise<string> {
         if (mapUrl) {
             return mapUrl;
@@ -31,7 +31,7 @@ class MapFetcher {
     async fetchWamFile(
         wamUrl: string,
         internalMapStorageUrl: string | undefined,
-        stripPrefix: string | undefined
+        stripPrefix: string | undefined,
     ): Promise<WAMFileFormat> {
         try {
             const result = await this.fetchFile(wamUrl, true, true, internalMapStorageUrl, stripPrefix);
@@ -53,7 +53,7 @@ class MapFetcher {
         canLoadLocalUrl = false,
         storeVariableForLocalMaps = false,
         internalMapStorageUrl: string | undefined = undefined,
-        stripPrefix: string | undefined = undefined
+        stripPrefix: string | undefined = undefined,
     ): Promise<ITiledMap> {
         const url = await this.getMapUrl(mapUrl, wamUrl, internalMapStorageUrl, stripPrefix);
         // Before trying to make the query, let's verify the map is actually on the open internet (and not a local test map)
@@ -75,7 +75,7 @@ class MapFetcher {
         canLoadLocalUrl = false,
         storeVariableForLocalMaps = false,
         internalUrl: string | undefined = undefined,
-        stripPrefix: string | undefined = undefined
+        stripPrefix: string | undefined = undefined,
     ) {
         // Note: mapUrl is provided by the client. A possible attack vector would be to use a rogue DNS server that
         // returns local URLs. Alas, Axios cannot pin a URL to a given IP. So "isLocalUrl" and axios.get could potentially

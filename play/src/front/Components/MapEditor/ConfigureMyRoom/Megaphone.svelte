@@ -28,8 +28,9 @@
     let title: string = $state(currentMegaphoneSettings?.title ?? "MyMegaphone");
     let scope: string = $state(currentMegaphoneSettings?.scope ?? "WORLD");
     let enableSoundNotifications: boolean = $state(currentMegaphoneSettings?.enableSoundNotifications ?? true);
-    let notificationSoundUrl: string =
-        $state(currentMegaphoneSettings?.notificationSoundUrl ?? DEFAULT_MEGAPHONE_NOTIFICATION_SOUND_URL);
+    let notificationSoundUrl: string = $state(
+        currentMegaphoneSettings?.notificationSoundUrl ?? DEFAULT_MEGAPHONE_NOTIFICATION_SOUND_URL,
+    );
     let scopes = [
         { value: "ROOM", label: $LL.mapEditor.settings.megaphone.inputs.room() },
         { value: "WORLD", label: $LL.mapEditor.settings.megaphone.inputs.world() },
@@ -44,17 +45,23 @@
         { value: "/resources/objects/megaphone/megaphone7.mp3", label: "Megaphone 7" },
         { value: "/resources/objects/megaphone/megaphone8.mp3", label: "Megaphone 8" },
     ];
-    let hasCustomNotificationSound = $derived(!baseNotificationSoundOptions.some(
-        (option) => option.value === notificationSoundUrl
-    ));
-    let notificationSoundOptions = $derived(hasCustomNotificationSound
-        ? baseNotificationSoundOptions.concat([
-              { value: notificationSoundUrl, label: $LL.mapEditor.settings.megaphone.inputs.notificationSoundCustom() },
-          ])
-        : baseNotificationSoundOptions);
+    let hasCustomNotificationSound = $derived(
+        !baseNotificationSoundOptions.some((option) => option.value === notificationSoundUrl),
+    );
+    let notificationSoundOptions = $derived(
+        hasCustomNotificationSound
+            ? baseNotificationSoundOptions.concat([
+                  {
+                      value: notificationSoundUrl,
+                      label: $LL.mapEditor.settings.megaphone.inputs.notificationSoundCustom(),
+                  },
+              ])
+            : baseNotificationSoundOptions,
+    );
 
-    let audienceVideoFeedbackActivated: boolean =
-        $state(gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.audienceVideoFeedbackActivated ?? false);
+    let audienceVideoFeedbackActivated: boolean = $state(
+        gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.audienceVideoFeedbackActivated ?? false,
+    );
 
     let loading = $state(false);
 
@@ -118,7 +125,7 @@
         }));
         const _tags = ((await gameManager.getCurrentGameScene().connection?.queryRoomTags()) ?? []).concat(
             oldRights ?? [],
-            oldRecordingRights ?? []
+            oldRecordingRights ?? [],
         );
         loading = false;
         return _tags

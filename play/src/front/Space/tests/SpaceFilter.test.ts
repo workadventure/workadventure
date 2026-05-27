@@ -147,7 +147,7 @@ describe("SpaceFilter", () => {
                 signal,
                 {
                     metadata: new Map<string, unknown>(),
-                }
+                },
             );
             const spaceUserId = "foo_0";
             const user: Pick<SpaceUserExtended, "spaceUserId"> = {
@@ -167,7 +167,7 @@ describe("SpaceFilter", () => {
                 signal,
                 {
                     metadata: new Map<string, unknown>(),
-                }
+                },
             );
             const spaceUserId = "foo_1";
 
@@ -196,7 +196,7 @@ describe("SpaceFilter", () => {
                 signal,
                 {
                     metadata: new Map<string, unknown>(),
-                }
+                },
             );
             const spaceUserId = "";
 
@@ -228,7 +228,7 @@ describe("SpaceFilter", () => {
                 signal,
                 {
                     metadata: new Map<string, unknown>(),
-                }
+                },
             );
             const spaceUserId = "";
 
@@ -265,7 +265,7 @@ describe("SpaceFilter", () => {
                 FilterType.ALL_USERS,
                 defaultRoomConnectionMock,
                 [],
-                new AbortController().signal
+                new AbortController().signal,
             );
             const spaceUserId = "";
 
@@ -298,16 +298,9 @@ describe("SpaceFilter", () => {
                 emitJoinSpace: vi.fn(),
             } as unknown as RoomConnection;
 
-            const space = await Space.create(
-                "space-name",
-                FilterType.ALL_USERS,
-                mockRoomConnection,
-                [],
-                signal,
-                {
-                    metadata: new Map<string, unknown>(),
-                }
-            );
+            const space = await Space.create("space-name", FilterType.ALL_USERS, mockRoomConnection, [], signal, {
+                metadata: new Map<string, unknown>(),
+            });
 
             const unsubscribe = space.usersStore.subscribe(() => {});
 
@@ -330,16 +323,9 @@ describe("SpaceFilter", () => {
                 emitJoinSpace: vi.fn(),
             } as unknown as RoomConnection;
 
-            const space = await Space.create(
-                "space-name",
-                FilterType.ALL_USERS,
-                mockRoomConnection,
-                [],
-                signal,
-                {
-                    metadata: new Map<string, unknown>(),
-                }
-            );
+            const space = await Space.create("space-name", FilterType.ALL_USERS, mockRoomConnection, [], signal, {
+                metadata: new Map<string, unknown>(),
+            });
 
             const unsubscribe = space.usersStore.subscribe(() => {});
             unsubscribe();

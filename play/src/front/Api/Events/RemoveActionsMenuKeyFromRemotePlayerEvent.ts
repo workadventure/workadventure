@@ -8,5 +8,5 @@ export const isRemoveActionsMenuKeyFromRemotePlayerEvent = z.object({
 export type RemoveActionsMenuKeyFromRemotePlayerEvent = z.infer<typeof isRemoveActionsMenuKeyFromRemotePlayerEvent>;
 
 export type RemoveActionsMenuKeyFromRemotePlayerEventCallback = (
-    event: RemoveActionsMenuKeyFromRemotePlayerEvent
+    event: RemoveActionsMenuKeyFromRemotePlayerEvent,
 ) => void;

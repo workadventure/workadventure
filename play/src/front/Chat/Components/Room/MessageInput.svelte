@@ -28,7 +28,7 @@
         focusout = (event: FocusEvent) => {
             console.info("Not used focusout", event);
         },
-        pasteFiles = () => {}
+        pasteFiles = () => {},
     }: Props = $props();
 
     let isComposing = false;
@@ -111,7 +111,7 @@
         onkeydown={handleKeyDown}
         oncompositionstart={onCompositionStart}
         oncompositionend={onCompositionEnd}
-        oninput={oninput}
+        {oninput}
         onpaste={onPasteHandler}
         onfocusin={focusin}
         onfocusout={focusout}

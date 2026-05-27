@@ -54,7 +54,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
             textPosition.y,
             this.depth,
             this.displayScale,
-            waScaleManager.zoomModifier
+            waScaleManager.zoomModifier,
         );
         this.element.append(this.statusDisplay.element, this.playerNameElement, this.megaphoneDisplay.element);
         this.gameScene.usernameDomLayer.updateUsernameBackgroundColor(this.domUsernameId, outlineColor);
@@ -103,7 +103,7 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     private updatePlayerDepth(): void {
         this.gameScene.usernameDomLayer.updateUsernameDepth(
             this.domUsernameId,
-            this.htmlDepth + (this.toForeFront ? 2000000000 : 0)
+            this.htmlDepth + (this.toForeFront ? 2000000000 : 0),
         );
     }
 

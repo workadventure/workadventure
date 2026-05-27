@@ -67,14 +67,14 @@ export class MatrixAvatarProfile {
         roomMember: RoomMember,
         baseUrl: string,
         matrixClient: MatrixClient,
-        mergerContext: UserProviderMerger | undefined
+        mergerContext: UserProviderMerger | undefined,
     ): string | undefined {
         const http = roomMember.getAvatarUrl(baseUrl, 96, 96, "scale", false, false);
         const avatarUrl = resolveDirectMessagePeerAvatarUrl(
             matrixUserId,
             http ?? undefined,
             matrixClient,
-            mergerContext
+            mergerContext,
         );
         return avatarUrl;
     }
@@ -113,7 +113,7 @@ export class MatrixAvatarProfile {
     private getCachedAvatarUrl(
         matrixUserId: string,
         resolveAvatarUrl: () => string | undefined,
-        forceRefresh: boolean
+        forceRefresh: boolean,
     ): Promise<string | undefined> {
         const entry = this.avatarUrlCache.get(matrixUserId);
         if (!forceRefresh && entry?.valid && entry.value !== undefined) {
@@ -140,7 +140,7 @@ export class MatrixAvatarProfile {
                         this.avatarUrlCache.delete(matrixUserId);
                     }
                     throw error;
-                }
+                },
             );
 
         this.avatarUrlCache.set(matrixUserId, {

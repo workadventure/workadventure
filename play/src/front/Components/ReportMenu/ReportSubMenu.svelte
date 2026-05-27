@@ -53,11 +53,15 @@
             {/if}
         </section>
         <section>
-            <button type="submit" class="btn btn-danger w-full" onclick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                submitReport();
-            }}>
+            <button
+                type="submit"
+                class="btn btn-danger w-full"
+                onclick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    submitReport();
+                }}
+            >
                 {$LL.report.submit()}
             </button>
         </section>

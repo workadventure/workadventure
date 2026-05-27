@@ -12,7 +12,7 @@ export class DeleteAreaMapStorageCommand extends DeleteAreaCommand {
         id: string,
         commandId: string | undefined,
         private hostname: string,
-        private hookManager: HookManager
+        private hookManager: HookManager,
     ) {
         super(wamFile, id, commandId);
     }
@@ -27,7 +27,7 @@ export class DeleteAreaMapStorageCommand extends DeleteAreaCommand {
                             await this.hookManager.fireAreaPropertyDelete(this.areaConfig, property, this.hostname);
                         }
                         if (resourceUrl) return _axios.delete(resourceUrl, { data: property });
-                    })
+                    }),
                 );
 
                 return acc;

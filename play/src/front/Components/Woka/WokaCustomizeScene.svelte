@@ -70,7 +70,7 @@
                 ...wokaData.hat.collections,
                 ...wokaData.accessory.collections,
             ].find((collection) =>
-                collection.textures.find((texture) => savedTextureIds != null && savedTextureIds.includes(texture.id))
+                collection.textures.find((texture) => savedTextureIds != null && savedTextureIds.includes(texture.id)),
             );
 
             // Initialize textures of customize Woka scene
@@ -178,7 +178,7 @@
             if (!element) {
                 // Get the first texture of the body part element
                 element = document.querySelector(
-                    `#texture-${selectedBodyPart}-${wokaData?.[selectedBodyPart]?.collections?.[0]?.textures?.[0]?.id}`
+                    `#texture-${selectedBodyPart}-${wokaData?.[selectedBodyPart]?.collections?.[0]?.textures?.[0]?.id}`,
                 );
                 if (!element) return; // If still not found, exit
             }

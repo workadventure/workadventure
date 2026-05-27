@@ -140,7 +140,7 @@ export class MapStore<K, V> extends Map<K, V> implements Readable<Map<K, V>> {
      */
     getAggregatedStore<T, U>(
         accessor: (value: V) => Readable<T> | undefined,
-        reducer: (stores: T[]) => U
+        reducer: (stores: T[]) => U,
     ): Readable<U | undefined> {
         const initArray = new Array<T>();
 

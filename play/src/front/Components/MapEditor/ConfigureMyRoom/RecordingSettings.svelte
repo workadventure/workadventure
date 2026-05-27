@@ -21,7 +21,7 @@
         loading = true;
         rights = oldRights.map((right) => ({ value: right, label: right.toLocaleUpperCase(), created: undefined }));
         const tags = ((await gameManager.getCurrentGameScene().connection?.queryRoomTags()) ?? []).concat(
-            oldRights ?? []
+            oldRights ?? [],
         );
         loading = false;
         return tags

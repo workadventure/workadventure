@@ -136,7 +136,7 @@ export class Space {
                         }
                     }
                 },
-            }
+            },
         );
     }
 

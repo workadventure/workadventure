@@ -33,7 +33,7 @@
                     placement: "bottom",
                 },
                 12,
-                true
+                true,
             );
         }
         displayTooltip = !displayTooltip;

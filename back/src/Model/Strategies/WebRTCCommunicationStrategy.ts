@@ -60,7 +60,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         private readonly _space: ICommunicationSpace,
         private users: ReadonlyMap<string, SpaceUser>,
         private usersToNotify: ReadonlyMap<string, SpaceUser>,
-        private readonly _connections: ConnectionManager = new ConnectionManager()
+        private readonly _connections: ConnectionManager = new ConnectionManager(),
     ) {}
     addUserReady(userId: string): void {}
     canSwitch(): boolean {
@@ -88,7 +88,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                     "An error occurred while adding a new user to WebRTC discussion",
                     newUser,
                     existingUser,
-                    error
+                    error,
                 );
                 Sentry.captureException(error);
             }
@@ -134,7 +134,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                     "An error occurred while adding a user to notify in WebRTCCommunicationStrategy",
                     user,
                     userInFilter,
-                    error
+                    error,
                 );
                 Sentry.captureException(error);
             }
@@ -165,7 +165,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                 "An error occurred while sending a disconnect in WebRTCCommunicationStrategy shutdownConnection 1",
                 user,
                 otherUser,
-                error
+                error,
             );
             Sentry.captureException(error);
         }
@@ -176,7 +176,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                 "An error occurred while sending a disconnect in WebRTCCommunicationStrategy shutdownConnection 2",
                 otherUser,
                 user,
-                error
+                error,
             );
             Sentry.captureException(error);
         }
@@ -259,7 +259,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                         "An error occurred while initializing WebRTCCommunicationStrategy",
                         user1,
                         user2,
-                        error
+                        error,
                     );
                     Sentry.captureException(error);
                 }
@@ -270,7 +270,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
     public handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
-        senderUserId: string
+        senderUserId: string,
     ) {
         const receiverId = meetingConnectionRestartMessage.userId;
         if (!receiverId) {

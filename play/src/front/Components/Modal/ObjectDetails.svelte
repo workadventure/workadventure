@@ -146,7 +146,7 @@
                         y: $mapExplorationObjectSelectedStore.y,
                     },
                     true,
-                    WOKA_SPEED * 2.5
+                    WOKA_SPEED * 2.5,
                 )
                 .catch((error) => {
                     console.warn("Error while moving to the entity or area", error);
@@ -165,25 +165,28 @@
         }
     }
 
-    let actionButtonText =
-        $derived($mapExplorationObjectSelectedStore instanceof Entity ||
-        $mapExplorationObjectSelectedStore instanceof AreaPreview
+    let actionButtonText = $derived(
+        $mapExplorationObjectSelectedStore instanceof Entity ||
+            $mapExplorationObjectSelectedStore instanceof AreaPreview
             ? $mapExplorationObjectSelectedStore.actionButtonLabel
-            : "");
+            : "",
+    );
 
-    let objectDisplayName = $derived((() => {
-        if ($mapExplorationObjectSelectedStore instanceof Entity) {
-            const name = $mapExplorationObjectSelectedStore.getEntityData().name;
-            if (name != undefined && name != "") return name;
-            return $mapExplorationObjectSelectedStore.getPrefab().name;
-        }
-        if ($mapExplorationObjectSelectedStore instanceof AreaPreview) {
-            const name = $mapExplorationObjectSelectedStore.getAreaData().name;
-            if (name != undefined && name != "") return name;
-            return $mapExplorationObjectSelectedStore.nameFromProperties;
-        }
-        return "";
-    })());
+    let objectDisplayName = $derived(
+        (() => {
+            if ($mapExplorationObjectSelectedStore instanceof Entity) {
+                const name = $mapExplorationObjectSelectedStore.getEntityData().name;
+                if (name != undefined && name != "") return name;
+                return $mapExplorationObjectSelectedStore.getPrefab().name;
+            }
+            if ($mapExplorationObjectSelectedStore instanceof AreaPreview) {
+                const name = $mapExplorationObjectSelectedStore.getAreaData().name;
+                if (name != undefined && name != "") return name;
+                return $mapExplorationObjectSelectedStore.nameFromProperties;
+            }
+            return "";
+        })(),
+    );
 </script>
 
 <div class="absolute bottom-0 w-full h-fit flex flex-row justify-center">

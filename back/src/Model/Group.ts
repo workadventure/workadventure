@@ -34,7 +34,7 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         private groupRadius: number,
         private connectCallback: ConnectCallback,
         private disconnectCallback: DisconnectCallback,
-        private positionNotifier: PositionNotifier
+        private positionNotifier: PositionNotifier,
     ) {
         this.roomId = roomId;
         this.users = new Set<User>();

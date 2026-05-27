@@ -6,7 +6,7 @@ import { UpdateWAMSettingFrontCommand } from "./WAM/UpdateWAMSettingFrontCommand
  * A simple facade function that creates a UpdateWAMSettingFrontCommand and executes it.
  */
 export async function executeUpdateWAMSettings(
-    updateWAMSettingsMessage: UpdateWAMSettingsMessage["message"]
+    updateWAMSettingsMessage: UpdateWAMSettingsMessage["message"],
 ): Promise<void> {
     const scene = gameManager.getCurrentGameScene();
     const wamFile = scene.wamFile ?? scene.getGameMap().getWamFile()?.getWam();
@@ -20,7 +20,7 @@ export async function executeUpdateWAMSettings(
                 message: updateWAMSettingsMessage,
             },
             scene.connection?.getAllTags(),
-            scene.roomUrl
-        )
+            scene.roomUrl,
+        ),
     );
 }

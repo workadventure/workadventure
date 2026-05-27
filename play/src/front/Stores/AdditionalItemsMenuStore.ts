@@ -15,7 +15,7 @@ const derivedStores: {
 } = {};
 
 export function getAdditionalMenuItemStore(
-    location: "top" | "appsMenu" | "buildMenu" | "profileMenu"
+    location: "top" | "appsMenu" | "buildMenu" | "profileMenu",
 ): Readable<Map<string, AdditionalMenuItem>> {
     return (derivedStores[location] ??= derived(additionalMenuItemStores, ($items) => {
         const filteredItems = new Map<string, AdditionalMenuItem>();

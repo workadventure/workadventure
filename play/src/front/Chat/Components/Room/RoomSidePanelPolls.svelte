@@ -72,16 +72,18 @@
     let pollRichHydrationState = $derived(room.pollRichHydrationState ?? idleHydrationState);
     let richWarnings = $derived($pollRichHydrationState.warnings ?? []);
     let pollItemErrorWarning = $derived(richWarnings.find((warning) => warning.reason === "poll_item_error"));
-    let polls = $derived([...$pollItems].sort((left, right) => {
-        const leftState = get(left.state);
-        const rightState = get(right.state);
+    let polls = $derived(
+        [...$pollItems].sort((left, right) => {
+            const leftState = get(left.state);
+            const rightState = get(right.state);
 
-        if (leftState.isEnded !== rightState.isEnded) {
-            return leftState.isEnded ? 1 : -1;
-        }
+            if (leftState.isEnded !== rightState.isEnded) {
+                return leftState.isEnded ? 1 : -1;
+            }
 
-        return (right.date?.getTime() ?? 0) - (left.date?.getTime() ?? 0);
-    }));
+            return (right.date?.getTime() ?? 0) - (left.date?.getTime() ?? 0);
+        }),
+    );
 </script>
 
 <div class="flex h-full min-h-0 flex-col bg-white/[0.02]" data-testid="roomSidePanelPolls">

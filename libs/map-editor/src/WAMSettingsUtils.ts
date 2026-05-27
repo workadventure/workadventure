@@ -18,7 +18,7 @@ export class WAMSettingsUtils {
     static getMegaphoneUrl(
         wamSettings: WAMSettings | undefined,
         roomGroup: string | null,
-        roomUrl: string
+        roomUrl: string,
     ): string | undefined {
         if (wamSettings && wamSettings.megaphone && wamSettings.megaphone.enabled && wamSettings.megaphone.scope) {
             let mainURI = roomGroup;
@@ -56,7 +56,7 @@ export class WAMSettingsUtils {
     static canStartRecordingMegaphone(
         wamSettings: WAMSettings | undefined,
         tags: string[],
-        isLogged: boolean
+        isLogged: boolean,
     ): boolean {
         const megaphoneSettings = wamSettings?.megaphone;
         if (!megaphoneSettings?.enabled || megaphoneSettings.recording?.enabled !== true) {

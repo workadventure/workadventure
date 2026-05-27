@@ -64,5 +64,5 @@ export const isOnOneLine = derived(
             $highlightedEmbedScreen !== undefined ||
             $activePictureInPictureStore
         );
-    }
+    },
 );

@@ -18,7 +18,6 @@
     import UserActionButton from "./UserActionButton.svelte";
     import { IconLoader, IconSend } from "@wa-icons";
 
-
     interface Props {
         user: ChatUser;
         isMatrixChatEnabled: boolean;
@@ -31,25 +30,30 @@
     let { chatId, availabilityStatus, username = "", color, isAdmin, pictureStore } = $derived(user);
 
     /** Tint: local name, Matrix `account_data`, or peer cache — deps keep the row in sync. */
-    let resolvedAvatarColor =
-        $derived(chatId !== undefined && chatId !== ""
-            ? resolveChatUserColor(chatId, color, getMatrixClientForChatTint()) ?? defaultColor
-            : defaultColor);
+    let resolvedAvatarColor = $derived(
+        chatId !== undefined && chatId !== ""
+            ? (resolveChatUserColor(chatId, color, getMatrixClientForChatTint()) ?? defaultColor)
+            : defaultColor,
+    );
 
-    let isMe = $derived(user.chatId === localUserStore.getChatId() || user.uuid === localUserStore.getLocalUser()?.uuid);
+    let isMe = $derived(
+        user.chatId === localUserStore.getChatId() || user.uuid === localUserStore.getLocalUser()?.uuid,
+    );
 
     let userStatus = $derived(isMe ? availabilityStatusStore : availabilityStatus);
 
     let sendButtonTooltipVisible = $state(false);
     const [sendButtonFloatingRef, sendButtonFloatingContent, sendButtonArrowAction] = createFloatingUiActions(
         { placement: "top" },
-        8
+        8,
     );
 
-    let chunks = $derived(highlightWords({
-        text: username.match(/\[\d*]/) ? username.substring(0, username.search(/\[\d*]/)) : username,
-        query: $chatSearchBarValue,
-    }));
+    let chunks = $derived(
+        highlightWords({
+            text: username.match(/\[\d*]/) ? username.substring(0, username.search(/\[\d*]/)) : username,
+            query: $chatSearchBarValue,
+        }),
+    );
 
     const roomCreationInProgress = gameManager.chatConnection.roomCreationInProgress;
 
@@ -98,7 +102,7 @@
         currentScene.connection?.emitAskPosition(
             user.uuid ?? "",
             user.playUri ?? "",
-            AskPositionMessage_AskType.LOCATE
+            AskPositionMessage_AskType.LOCATE,
         );
     }
 </script>

@@ -25,7 +25,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
         overlap?: boolean,
         // FIXME: remove this, this is useless
         private connection = gameManager.getCurrentGameScene().connection,
-        private areasManager?: AreasManager
+        private areasManager?: AreasManager,
     ) {
         const collide = areasManager?.shouldAreaCollide(areaData.id) ?? false;
         super(
@@ -36,7 +36,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
             areaData.width,
             areaData.height + 1,
             collide ? 0xff0000 : overlap ? 0x0000ff : 0x000000,
-            collide || overlap ? 0.1 : 0
+            collide || overlap ? 0.1 : 0,
         );
         this.scene.add.existing(this).setVisible(false);
         this.scene.physics.add.existing(this, true);
@@ -94,7 +94,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
     private applyCollider() {
         if (this.areaCollider === undefined) {
             this.areaCollider = this.scene.physics.add.collider(this.scene.CurrentPlayer, this, () =>
-                this.onCollideAction()
+                this.onCollideAction(),
             );
             // If the user is already inside the area when the collider is applied, we need to mark it so we don't
             // trigger the collide action until they leave and re-enter the area.
@@ -167,7 +167,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
                         if (this.connection?.hasTag("admin")) {
                             const lockableProperty = this.areaData.properties.find(
                                 (property): property is LockableAreaPropertyData =>
-                                    property.type === "lockableAreaPropertyData"
+                                    property.type === "lockableAreaPropertyData",
                             );
 
                             if (lockableProperty) {
@@ -205,7 +205,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
             5000, // Display for 5 seconds
             callback,
             true, // Create stack animation
-            "warning" // Use warning type for styling
+            "warning", // Use warning type for styling
         );
     }
 

@@ -38,7 +38,7 @@
     const mapEditorSelectedEntityPrefabStoreUnsubscriber = mapEditorSelectedEntityPrefabStore.subscribe(
         (prefab?: EntityPrefab) => {
             pickedEntity = prefab;
-        }
+        },
     );
 
     const entitiesPrefabsVariantStoreUnsubscriber = entitiesCollectionsManager
@@ -46,7 +46,7 @@
         .subscribe((entitiesPrefabsVariants) => {
             if (pickedEntityVariant) {
                 pickedEntityVariant = entitiesPrefabsVariants.find(
-                    (entityPrefabVariant) => pickedEntityVariant?.id === entityPrefabVariant.id
+                    (entityPrefabVariant) => pickedEntityVariant?.id === entityPrefabVariant.id,
                 );
                 pickedEntity = pickedEntityVariant?.defaultPrefab;
             }
@@ -107,7 +107,7 @@
     }
 
     function getForEntitiesPrefabsVariantsWithCategories(
-        entitiesPrefabsVariants: EntityVariant[]
+        entitiesPrefabsVariants: EntityVariant[],
     ): { category: CategoryTag; entitiesPrefabsVariants: EntityVariant[] }[] {
         const entitiesPrefabsVariantsGroupedByTag = entitiesPrefabsVariants.reduce(
             (groupByTag: { [tag: string]: EntityVariant[] }, entityPrefabVariant) => {
@@ -118,11 +118,11 @@
                 });
                 return groupByTag;
             },
-            {}
+            {},
         );
         const customEntitiesPrefabsVariants = {
             Custom: entitiesPrefabsVariants.filter(
-                (entityPrefabVariant) => entityPrefabVariant.defaultPrefab.type === "Custom"
+                (entityPrefabVariant) => entityPrefabVariant.defaultPrefab.type === "Custom",
             ),
         };
         const mostUsedEntitiesPrefabsVariants = getMostUsedEntitiesPrefabsVariants(entitiesPrefabsVariants);
@@ -147,7 +147,7 @@
                 .map(([tag, groupedPrefabsVariants]) => ({
                     category: { kind: "tag", tag } as const,
                     entitiesPrefabsVariants: groupedPrefabsVariants,
-                }))
+                })),
         );
 
         return groupedCategories;
@@ -175,7 +175,7 @@
                 entityPrefabVariant,
                 count: entityPrefabVariant.prefabIds.reduce(
                     (count, prefabId) => count + (usageCountByPrefabId.get(prefabId) ?? 0),
-                    0
+                    0,
                 ),
             }))
             .filter(({ count }) => count > 0)
@@ -213,25 +213,25 @@
                         .join(",")
                         .toLocaleLowerCase()
                         .indexOf(searchTerm.toLocaleLowerCase()) != -1 ||
-                    entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
+                    entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase()),
             );
         }
         if (tag.kind === "special" && tag.tag === "custom") {
             return entitiesPrefabsVariants.filter(
                 (entityPrefabVariant) =>
                     entityPrefabVariant.defaultPrefab.type === "Custom" &&
-                    entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
+                    entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase()),
             );
         }
         if (tag.kind === "special" && tag.tag === "most_used") {
             return getMostUsedEntitiesPrefabsVariants(entitiesPrefabsVariants).filter((entityPrefabVariant) =>
-                entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
+                entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase()),
             );
         }
         return entitiesPrefabsVariants.filter(
             (entityPrefabVariant) =>
                 entityPrefabVariant.defaultPrefab.tags.includes(tag.tag) &&
-                entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
+                entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase()),
         );
     }
 

@@ -15,12 +15,7 @@
         onClose: (key: Uint8Array | null) => void;
     }
 
-    let {
-        isOpen,
-        keyInfo,
-        matrixClient,
-        onClose
-    }: Props = $props();
+    let { isOpen, keyInfo, matrixClient, onClose }: Props = $props();
     let accessSecretStorageMethod: "passphrase" | "recoveryKey" = $state("passphrase");
     let recoveryKeyInput = $state("");
     let passphraseInput = $state("");
@@ -91,10 +86,11 @@
         chatInputFocusStore.set(false);
     }
 
-    let confirmInputDisabled =
-        $derived(accessSecretStorageMethod === "passphrase"
+    let confirmInputDisabled = $derived(
+        accessSecretStorageMethod === "passphrase"
             ? passphraseInput.trim().length === 0
-            : recoveryKeyInput.trim().length === 0);
+            : recoveryKeyInput.trim().length === 0,
+    );
 
     const changeAccessSecretStorageMethodButtonClass = "self-end text-blue-500";
 </script>
@@ -117,10 +113,10 @@
                     placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.passphrase()}`}
                     bind:value={passphraseInput}
                     onkeydown={(key) => {
-                    if (key.key === "Enter") {
-                        checkAndSubmitRecoveryOrPassphraseIfValid().catch((error) => console.error(error));
-                    }
-                }}
+                        if (key.key === "Enter") {
+                            checkAndSubmitRecoveryOrPassphraseIfValid().catch((error) => console.error(error));
+                        }
+                    }}
                     onfocusin={focusChatInput}
                     onfocusout={unfocusChatInput}
                 />
@@ -129,7 +125,10 @@
                         <IconRestore />
                         {$LL.menu.chat.resetKeyStorageUpButtonLabel()}
                     </button>
-                    <button onclick={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}>
+                    <button
+                        onclick={changeAccessSecretStorageMethod}
+                        class={changeAccessSecretStorageMethodButtonClass}
+                    >
                         <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.buttons.useRecoveryKey()}</button
                     >
                 </div>
@@ -154,7 +153,10 @@
                         <IconRestore />
                         {$LL.menu.chat.resetKeyStorageUpButtonLabel()}
                     </button>
-                    <button onclick={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}>
+                    <button
+                        onclick={changeAccessSecretStorageMethod}
+                        class={changeAccessSecretStorageMethodButtonClass}
+                    >
                         <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.buttons.usePassphrase()}</button
                     >
                 </div>

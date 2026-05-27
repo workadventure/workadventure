@@ -80,7 +80,7 @@
                                     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings}
                                 onclick={() =>
                                     mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
-                                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings
+                                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings,
                                     )}
                             >
                                 <span>{$LL.mapEditor.settings.room.title()}</span>
@@ -94,7 +94,7 @@
                                 WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone}
                             onclick={() =>
                                 mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
-                                    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone
+                                    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone,
                                 )}
                         >
                             <span>{$LL.mapEditor.settings.megaphone.title()}</span>
@@ -107,7 +107,7 @@
                                     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Recording}
                                 onclick={() =>
                                     mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
-                                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Recording
+                                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Recording,
                                     )}
                             >
                                 <span>{$LL.mapEditor.settings.recording.title()}</span>

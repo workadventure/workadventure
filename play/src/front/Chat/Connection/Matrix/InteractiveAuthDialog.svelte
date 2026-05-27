@@ -15,27 +15,24 @@
         makeRequest: (auth: AuthDict | null) => Promise<UIAResponse<void>>;
     }
 
-    let {
-        isOpen,
-        matrixClient,
-        onFinished,
-        makeRequest
-    }: Props = $props();
+    let { isOpen, matrixClient, onFinished, makeRequest }: Props = $props();
 
     let isInteractiveAuthFinished = false;
 
     let uiAuthStage: AuthType | string | undefined = $state();
     let uiAuthPhase: INTERACTIVE_AUTH_PHASE | undefined = $state();
 
-    let interactiveAuth = $derived(new InteractiveAuth({
-        matrixClient,
-        doRequest(auth: AuthDict | null): Promise<UIAResponse<void>> {
-            return makeRequest(auth);
-        },
-        stateUpdated: onPhaseChange,
-        requestEmailToken: mandatoryButNotUsedRequestEmailTokenFunction,
-        supportedStages: [AuthType.Sso, AuthType.SsoUnstable],
-    }));
+    let interactiveAuth = $derived(
+        new InteractiveAuth({
+            matrixClient,
+            doRequest(auth: AuthDict | null): Promise<UIAResponse<void>> {
+                return makeRequest(auth);
+            },
+            stateUpdated: onPhaseChange,
+            requestEmailToken: mandatoryButNotUsedRequestEmailTokenFunction,
+            supportedStages: [AuthType.Sso, AuthType.SsoUnstable],
+        }),
+    );
 
     function mandatoryButNotUsedRequestEmailTokenFunction(): Promise<{ sid: string }> {
         return Promise.reject(new Error("Not supposed to be called"));

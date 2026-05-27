@@ -96,7 +96,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     constructor(
         private scene: GameScene,
         private mapSize: { width: number; height: number },
-        waScaleManager: WaScaleManager
+        waScaleManager: WaScaleManager,
     ) {
         super();
 
@@ -122,7 +122,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                     -this.mapSize.width,
                     -this.mapSize.height,
                     this.mapSize.width * 3,
-                    this.mapSize.height * 3
+                    this.mapSize.height * 3,
                 );
             } else {
                 // We set the bounds back after a call to start following the player
@@ -133,7 +133,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         // Set zoom out to the maximum possible value
         this.waScaleManager.maxZoomOut = this.waScaleManager.getTargetZoomModifierFor(
             this.mapSize.width,
-            this.mapSize.height
+            this.mapSize.height,
         );
 
         this.scene.game.events.on(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
@@ -163,7 +163,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private animateToFocus(
         target: Character | { x: number; y: number },
         duration: number,
-        callback?: () => void
+        callback?: () => void,
     ): void {
         this.cameraAnimation?.onInterrupt();
 
@@ -185,7 +185,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             1,
             1,
             this.camera.followOffset.x,
-            this.camera.followOffset.y
+            this.camera.followOffset.y,
         );
 
         // Note: if duration = 0, the addCounter onUpdate is directly triggered to the "1" progress value.
@@ -428,7 +428,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         }
         const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(
             width * multiplier,
-            height * multiplier
+            height * multiplier,
         );
         const currentZoomModifier = this.waScaleManager.zoomModifier;
         return targetZoomModifier - currentZoomModifier;
@@ -470,7 +470,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 this.camera.centerOn(focusOn.x, focusOn.y);
 
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
-            }
+            },
         );
 
         this.camera.on("followupdate", this.onFollowUpdate);
@@ -555,7 +555,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.smoothButtonZoomTargetModifier = getRetargetedButtonZoomModifier(
             this.waScaleManager.zoomModifier,
             zoomFactor,
-            this.smoothButtonZoomTargetModifier
+            this.smoothButtonZoomTargetModifier,
         );
         this.smoothButtonZoomStartModifier = this.waScaleManager.zoomModifier;
         this.smoothButtonZoomElapsedMs = 0;
@@ -734,7 +734,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             startZoomModifier,
             targetZoomModifier,
             this.smoothButtonZoomElapsedMs,
-            SMOOTH_BUTTON_ZOOM_DURATION
+            SMOOTH_BUTTON_ZOOM_DURATION,
         );
 
         this.updateButtonZoomModifier(nextZoomModifier, true);
@@ -753,7 +753,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         const cameraSpeed = this.cameraAnimation;
         if (cameraSpeed?.type !== "speed") {
             console.warn(
-                "Camera animation is not in speed mode but animate callback is called. This should not happen."
+                "Camera animation is not in speed mode but animate callback is called. This should not happen.",
             );
             return;
         }

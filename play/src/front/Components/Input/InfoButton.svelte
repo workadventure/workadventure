@@ -13,7 +13,7 @@
             placement: "top",
             //strategy: 'fixed',
         },
-        8
+        8,
     );
 
     let showTooltip = $state(false);

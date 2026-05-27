@@ -1,7 +1,6 @@
 <script lang="ts">
     import type { MatrixClient } from "matrix-js-sdk";
 
-    
     interface Props {
         // A valid Matrix reaction key is either a Unicode emoji or an mxc URI pointing to an image, or even some text.
         key: string;

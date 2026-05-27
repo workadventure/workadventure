@@ -28,7 +28,7 @@
             placement: "bottom-start",
             //strategy: 'fixed',
         },
-        8
+        8,
     );
 </script>
 

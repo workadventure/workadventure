@@ -37,7 +37,7 @@ export class WorkAdventureWebSocket {
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
-        CLIENT_DISCONNECTION_RETENTION_MS
+        CLIENT_DISCONNECTION_RETENTION_MS,
     );
 
     private socket: WebSocket;
@@ -226,7 +226,7 @@ export class WorkAdventureWebSocket {
     private getReconnectDelayMs(): number {
         return Math.min(
             WorkAdventureWebSocket.RECONNECT_MAX_DELAY_MS,
-            WorkAdventureWebSocket.RECONNECT_BASE_DELAY_MS * 2 ** Math.max(0, this.reconnectAttempt - 1)
+            WorkAdventureWebSocket.RECONNECT_BASE_DELAY_MS * 2 ** Math.max(0, this.reconnectAttempt - 1),
         );
     }
 

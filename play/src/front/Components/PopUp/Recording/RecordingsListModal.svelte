@@ -84,7 +84,7 @@
                 new URL(signedUrl),
                 filename,
                 50, // 50% width
-                true // closable
+                true, // closable
             );
             coWebsites.add(videoCoWebsite);
         } catch (error) {
@@ -291,10 +291,13 @@
                                 >
                                     <button
                                         type="button"
-                                        onclick={() => openVideoInCoWebsite(record.videoFile.key, record.videoFile.filename)}
+                                        onclick={() =>
+                                            openVideoInCoWebsite(record.videoFile.key, record.videoFile.filename)}
                                         data-testid="recording-item-{index}"
                                     >
-                                        <span class="relative w-40 min-w-40 shrink-0 overflow-hidden rounded bg-black/30 aspect-video">
+                                        <span
+                                            class="relative w-40 min-w-40 shrink-0 overflow-hidden rounded bg-black/30 aspect-video"
+                                        >
                                             <img
                                                 class="absolute inset-0 h-full w-full object-cover"
                                                 src={hoveredRecordIndex === index
@@ -415,7 +418,8 @@
                                         class="flex min-w-0 flex-1 cursor-pointer flex-col overflow-hidden rounded border-none bg-transparent p-0 m-0 text-left text-inherit focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
                                         onmouseenter={() => startThumbnailCycle(index, record.thumbnails)}
                                         onmouseleave={stopThumbnailCycle}
-                                        onclick={() => openVideoInCoWebsite(record.videoFile.key, record.videoFile.filename)}
+                                        onclick={() =>
+                                            openVideoInCoWebsite(record.videoFile.key, record.videoFile.filename)}
                                         data-testid="recording-item-{index}"
                                     >
                                         <span

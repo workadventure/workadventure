@@ -11,7 +11,10 @@ export class ProximitySpaceManager {
     private joinSpaceRequestMessageSubscription: Subscription;
     private leaveSpaceRequestMessageSubscription: Subscription;
 
-    public constructor(roomConnection: RoomConnection, private proximityChatRoom: ProximityChatRoom) {
+    public constructor(
+        roomConnection: RoomConnection,
+        private proximityChatRoom: ProximityChatRoom,
+    ) {
         this.joinSpaceRequestMessageSubscription = roomConnection.joinSpaceRequestMessage.subscribe(
             ({ spaceName, propertiesToSync }) => {
                 this.proximityChatRoom.joinSpace(spaceName, propertiesToSync).catch((e) => {
@@ -22,7 +25,7 @@ export class ProximitySpaceManager {
                     console.error(e);
                     Sentry.captureException(e);
                 });
-            }
+            },
         );
 
         this.leaveSpaceRequestMessageSubscription = roomConnection.leaveSpaceRequestMessage.subscribe(
@@ -31,7 +34,7 @@ export class ProximitySpaceManager {
                     console.error("Error while leaving space", e);
                     Sentry.captureException(e);
                 });
-            }
+            },
         );
     }
 

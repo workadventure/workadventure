@@ -101,7 +101,7 @@
             <div
                 class="pip-test-grid h-full w-full gap-2 p-2"
                 style="display: grid; grid-template-columns: {pipGridTemplateColumns(
-                    layout.columnTracks
+                    layout.columnTracks,
                 )}; grid-template-rows: {pipGridTemplateRows(layout.rowTracks)};"
             >
                 {#each layout.tiles as tile, i (i)}

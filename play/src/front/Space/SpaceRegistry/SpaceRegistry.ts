@@ -144,7 +144,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
-        private connectStream = connectionManager.roomConnectionStream
+        private connectStream = connectionManager.roomConnectionStream,
     ) {
         this.initSpaceUsersMessageStreamSubscription = roomConnection.initSpaceUsersMessageStream.subscribe(
             (message) => {
@@ -162,7 +162,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
                 space.initUsers(message.users);
                 space.initMetadata(message.metadata);
-            }
+            },
         );
 
         this.spacesEligibleForRecording = derived(this.spaces, ($spaces, set) => {
@@ -175,7 +175,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
             return derived(
                 spaces.map((space) => space.shouldDisplayRecordButton),
-                (eligibilityBySpace) => spaces.filter((_, index) => eligibilityBySpace[index])
+                (eligibilityBySpace) => spaces.filter((_, index) => eligibilityBySpace[index]),
             ).subscribe(set);
         });
 
@@ -195,7 +195,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 }
 
                 this.spaces.get(message.spaceName)?.updateUserData(message.user, message.updateMask);
-            }
+            },
         );
 
         this.removeSpaceUserMessageStreamSubscription = roomConnection.removeSpaceUserMessageStream.subscribe(
@@ -205,7 +205,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 }
 
                 this.spaces.get(message.spaceName)?.removeUser(message.spaceUserId);
-            }
+            },
         );
 
         this.updateSpaceMetadataMessageStreamSubscription = roomConnection.updateSpaceMetadataMessageStream.subscribe(
@@ -231,14 +231,14 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 }
 
                 space.setMetadata(metadata);
-            }
+            },
         );
 
         this.proximityPublicMessageEventSubscription = roomConnection.spacePublicMessageEvent.subscribe((message) => {
             const space = this.spaces.get(message.spaceName);
             if (!space) {
                 console.warn(
-                    `Received a public message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
+                    `Received a public message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`,
                 );
                 return;
             }
@@ -249,7 +249,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             const space = this.spaces.get(message.spaceName);
             if (!space) {
                 console.warn(
-                    `Received a private message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
+                    `Received a private message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`,
                 );
                 return;
             }
@@ -259,7 +259,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.spaceDestroyedMessageSubscription = roomConnection.spaceDestroyedMessage.subscribe((message) => {
             console.error(`Space ${message.spaceName} destroyed. Something went wrong server-side.`);
             Sentry.captureException(
-                new Error(`Space ${message.spaceName} destroyed. Something went wrong server-side.`)
+                new Error(`Space ${message.spaceName} destroyed. Something went wrong server-side.`),
             );
 
             const space = this.spaces.get(message.spaceName);
@@ -278,7 +278,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             metadata?: Map<string, unknown>;
             // True if the user is allowed to start/stop recording in the space. Defaults to false.
             canRecord?: boolean;
-        }
+        },
     ): Promise<SpaceInterface> {
         const leavingPromise = this.leavingSpacesPromises.get(spaceName);
         if (leavingPromise) {
@@ -292,7 +292,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             this.roomConnection,
             propertiesToSync,
             signal,
-            options
+            options,
         );
         this.spaces.set(newSpace.getName(), newSpace);
         return newSpace;
@@ -353,7 +353,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     this.spaces.delete(space.getName());
                 }
                 console.warn(`Space "${space.getName()}" was not destroyed properly.`);
-            })
+            }),
         );
     }
 }

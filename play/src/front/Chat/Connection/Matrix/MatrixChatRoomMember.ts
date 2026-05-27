@@ -30,7 +30,11 @@ export class MatrixChatRoomMember implements ChatRoomMember {
 
     private mergerColorStore = writable<UserProviderMerger | undefined>(undefined);
 
-    constructor(private roomMember: RoomMember, private baseUrl: string, private matrixClient: MatrixClient) {
+    constructor(
+        private roomMember: RoomMember,
+        private baseUrl: string,
+        private matrixClient: MatrixClient,
+    ) {
         this.id = roomMember.userId;
         this.name = writable(this.roomMember.name);
         this.membership = writable(this.roomMember.membership);
@@ -41,8 +45,8 @@ export class MatrixChatRoomMember implements ChatRoomMember {
                 this.roomMember,
                 this.baseUrl,
                 this.matrixClient,
-                this.mergerContext
-            )
+                this.mergerContext,
+            ),
         );
         this.startHandlingChatRoomMemberEvents();
         const matrixUser = this.matrixClient.getUser(this.id);
@@ -70,7 +74,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
                     set(resolveChatUserColor(this.id, mergerColor, this.matrixClient));
                 });
             },
-            undefined
+            undefined,
         );
 
         const myUserId = matrixClient.getUserId();
@@ -91,7 +95,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
                 [this.name, this.mergerColorStore],
                 (
                     [matrixName, merger]: [string, UserProviderMerger | undefined],
-                    set: (value: string | undefined) => void
+                    set: (value: string | undefined) => void,
                 ) => {
                     const m = (matrixName ?? "").trim();
                     if (!merger) {
@@ -112,7 +116,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
                         set(!m || !w || m === w ? undefined : w);
                     });
                 },
-                undefined
+                undefined,
             );
         }
     }
@@ -169,8 +173,8 @@ export class MatrixChatRoomMember implements ChatRoomMember {
         return powerLevel >= 100
             ? ChatPermissionLevel.ADMIN
             : powerLevel >= 50
-            ? ChatPermissionLevel.MODERATOR
-            : ChatPermissionLevel.USER;
+              ? ChatPermissionLevel.MODERATOR
+              : ChatPermissionLevel.USER;
     }
     static getPowerLevel(chatPermissionLevel: ChatPermissionLevel): number {
         switch (chatPermissionLevel) {

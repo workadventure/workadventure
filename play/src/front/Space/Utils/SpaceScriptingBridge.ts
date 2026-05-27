@@ -18,7 +18,7 @@ export class SpaceScriptingBridge {
     constructor(
         private space: SpaceInterface,
         private port: CheckedWorkAdventureMessagePort<"joinSpace">,
-        private onSpaceLeft: () => void
+        private onSpaceLeft: () => void,
     ) {
         this.messagesSubscription = this.port.messages.subscribe((event) => {
             switch (event.data.type) {
@@ -87,7 +87,7 @@ export class SpaceScriptingBridge {
                     if (this.watchCount === 0) {
                         if (!this.userJoinedSubscription || !this.userLeftSubscription) {
                             throw new Error(
-                                "userJoinedSubscription or userLeftSubscription is not defined, this should not happen"
+                                "userJoinedSubscription or userLeftSubscription is not defined, this should not happen",
                             );
                         }
                         this.userJoinedSubscription.unsubscribe();

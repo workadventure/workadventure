@@ -50,7 +50,7 @@ export function pipGridTemplateRows(rowTracks: number): string {
 export function computePictureInPictureGridLayout(
     videoCount: number,
     containerWidth: number,
-    containerHeight: number
+    containerHeight: number,
 ): PipGridLayout {
     const n = clampCount(videoCount);
     const portrait = containerHeight > containerWidth;

@@ -93,7 +93,7 @@
                     value != ""
                         ? [...options, { value: value.trim(), label: value.trim(), created: undefined }]
                         : options,
-                []
+                [],
             );
     });
 

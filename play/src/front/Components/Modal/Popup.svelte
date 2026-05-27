@@ -12,13 +12,7 @@
         action?: Snippet;
     }
 
-    let {
-        isOpen = false,
-        withAction = true,
-        title,
-        content,
-        action
-    }: Props = $props();
+    let { isOpen = false, withAction = true, title, content, action }: Props = $props();
 </script>
 
 {#if isOpen}

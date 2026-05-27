@@ -8,14 +8,14 @@
     let { webRtcStats }: Props = $props();
 
     let fpsStdDevDisplay = $derived(
-        webRtcStats?.fpsStdDev === undefined ? "-" : Math.round(webRtcStats.fpsStdDev * 100) / 100
+        webRtcStats?.fpsStdDev === undefined ? "-" : Math.round(webRtcStats.fpsStdDev * 100) / 100,
     );
     let statsColorClass = $derived(
         webRtcStats?.fpsStdDev !== undefined && webRtcStats.fpsStdDev > 10
             ? "text-red-300 bg-red-950/50"
             : webRtcStats?.fpsStdDev !== undefined && webRtcStats.fpsStdDev > 4
-            ? "text-yellow-300 bg-yellow-950/50"
-            : "text-green-300 bg-green-950/50"
+              ? "text-yellow-300 bg-yellow-950/50"
+              : "text-green-300 bg-green-950/50",
     );
 </script>
 

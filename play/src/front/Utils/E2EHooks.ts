@@ -89,7 +89,7 @@ function getGameToBrowserCoordinatesSnapshot(gameCoordinates: Coordinates): Coor
     const canvasPoint = cameraWithTransform.matrix.transformPoint(
         gameCoordinates.x - camera.scrollX,
         gameCoordinates.y - camera.scrollY,
-        { x: 0, y: 0 }
+        { x: 0, y: 0 },
     );
     const x = canvasRect.left + canvasPoint.x * scaleX;
     const y = canvasRect.top + canvasPoint.y * scaleY;
@@ -106,7 +106,7 @@ function getGameToBrowserCoordinatesSnapshot(gameCoordinates: Coordinates): Coor
                         y: roundTrip.y,
                     },
                     tolerance: DEFAULT_COORDINATE_STABILITY_TOLERANCE,
-                })
+                }),
         );
     }
 
@@ -122,7 +122,7 @@ function areCoordinatesClose(first: Coordinates, second: Coordinates, tolerance:
 
 async function gameToBrowserCoordinates(
     gameCoordinates: Coordinates,
-    options: E2ECoordinateOptions = {}
+    options: E2ECoordinateOptions = {},
 ): Promise<Coordinates> {
     const timeoutMs = options.timeoutMs ?? DEFAULT_COORDINATE_STABILITY_TIMEOUT_MS;
     const retryIntervalMs = options.retryIntervalMs ?? DEFAULT_COORDINATE_STABILITY_RETRY_INTERVAL_MS;
@@ -156,7 +156,7 @@ async function gameToBrowserCoordinates(
                         cameraWasAnimating,
                         cameraIsAnimating,
                         tolerance,
-                    })
+                    }),
             );
         }
 
@@ -183,7 +183,7 @@ function testWebRtcRetry(): { spaceName: string; userId: string; triggered: bool
                 const result = simplePeer.forceFirstPeerFailure();
                 if (result) {
                     console.info(
-                        `[DEBUG] Retry test triggered for space "${space.getName()}", userId: ${result.userId}`
+                        `[DEBUG] Retry test triggered for space "${space.getName()}", userId: ${result.userId}`,
                     );
                     return { spaceName: space.getName(), ...result };
                 }

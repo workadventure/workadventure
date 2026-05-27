@@ -34,7 +34,7 @@ function getTextColorByBackgroundColor(color: string | null): string {
         (parseInt(rgb[0] + rgb[1], 16) * 299 +
             parseInt(rgb[2] + rgb[3], 16) * 587 +
             parseInt(rgb[4] + rgb[5], 16) * 114) /
-            1000
+            1000,
     );
     return brightness > 125 ? "black" : "white";
 }

@@ -74,7 +74,7 @@ export class ExplorerTool implements MapEditorTool {
         gameObjects: Phaser.GameObjects.GameObject[],
         deltaX: number,
         deltaY: number,
-        deltaZ: number
+        deltaZ: number,
     ) => {
         this.scene.handleMouseWheel(deltaY);
     };
@@ -126,7 +126,10 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.markDirty();
     };
 
-    constructor(private mapEditorModeManager: MapEditorModeManager, private readonly scene: GameScene) {
+    constructor(
+        private mapEditorModeManager: MapEditorModeManager,
+        private readonly scene: GameScene,
+    ) {
         this.entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
     }
 
@@ -277,7 +280,7 @@ export class ExplorerTool implements MapEditorTool {
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
         // Refresh the entities store
         mapExplorationEntitiesStore.set(
-            gameManager.getCurrentGameScene().getGameMapFrontWrapper().getEntitiesManager().getEntities()
+            gameManager.getCurrentGameScene().getGameMapFrontWrapper().getEntitiesManager().getEntities(),
         );
         return Promise.resolve();
     }

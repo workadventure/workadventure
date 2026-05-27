@@ -22,7 +22,7 @@ class TelemetryService {
             if (response.status !== 201) {
                 console.error("Failed to send telemetry data:", response.status, response.data);
                 Sentry.captureException(
-                    `Failed to send telemetry data:  ${response.status} ${JSON.stringify(response.data)}`
+                    `Failed to send telemetry data:  ${response.status} ${JSON.stringify(response.data)}`,
                 );
             }
             debug("Telemetry data sent.");

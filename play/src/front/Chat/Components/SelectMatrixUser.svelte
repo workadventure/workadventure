@@ -43,7 +43,7 @@
                     console.error(error);
                     return { item, isValid: false };
                 }
-            })
+            }),
         );
 
         const validItems = verificationResults

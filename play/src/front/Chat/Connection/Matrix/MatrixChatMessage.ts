@@ -40,7 +40,11 @@ export class MatrixChatMessage implements ChatMessage {
     private attachmentMediaAbortController: AbortController | undefined;
     private readonly decryptedListener = () => this.updateMessageContentOnDecryptedEvent();
 
-    constructor(private event: MatrixEvent, private room: Room, isQuotedMessage?: boolean) {
+    constructor(
+        private event: MatrixEvent,
+        private room: Room,
+        isQuotedMessage?: boolean,
+    ) {
         this.id = event.getId() ?? uuidv4();
         this.type = this.mapMatrixMessageTypeToChatMessage();
         this.date = event.getDate();

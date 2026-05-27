@@ -19,7 +19,7 @@ export default {
         loader.atlas(
             "computer",
             "/resources/items/computer/computer.png",
-            "/resources/items/computer/computer_atlas.json"
+            "/resources/items/computer/computer_atlas.json",
         );
     },
     create: (scene: GameScene): void => {

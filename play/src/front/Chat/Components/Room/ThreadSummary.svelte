@@ -39,7 +39,8 @@
 
     {#if summary.lastReplyPreview}
         <div class="mt-1 text-xs opacity-70 truncate max-w-[26rem]" data-testid="threadSummaryPreview">
-            {#if summary.lastReplySenderName}{summary.lastReplySenderName}: {/if}{summary.lastReplyPreview}
+            {#if summary.lastReplySenderName}{summary.lastReplySenderName}:
+            {/if}{summary.lastReplyPreview}
         </div>
     {/if}
 </button>

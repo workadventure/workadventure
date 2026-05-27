@@ -15,7 +15,7 @@
         disabled = false,
         onChangeSearchHandler = (value: string) => {
             searchValue.set(value);
-        }
+        },
     }: Props = $props();
 </script>
 

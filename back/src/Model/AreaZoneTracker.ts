@@ -66,7 +66,7 @@ export class AreaZoneTracker {
                         previousArea,
                         area,
                         previousTrackedPropertyTypes,
-                        updatedTrackedPropertyTypes
+                        updatedTrackedPropertyTypes,
                     );
                 }
 
@@ -83,7 +83,7 @@ export class AreaZoneTracker {
     private refreshTrackedArea(
         areaId: string,
         updatedArea: AreaData,
-        trackedPropertyTypes: Set<AreaDataProperty["type"]> = this.getTrackedPropertyTypes(updatedArea)
+        trackedPropertyTypes: Set<AreaDataProperty["type"]> = this.getTrackedPropertyTypes(updatedArea),
     ): void {
         if (trackedPropertyTypes.size === 0) {
             this.trackedAreas.delete(areaId);
@@ -111,7 +111,7 @@ export class AreaZoneTracker {
         previousArea: AreaData,
         updatedArea: AreaData,
         previousTrackedPropertyTypes: Set<AreaDataProperty["type"]>,
-        updatedTrackedPropertyTypes: Set<AreaDataProperty["type"]>
+        updatedTrackedPropertyTypes: Set<AreaDataProperty["type"]>,
     ): void {
         const allTrackedPropertyTypes = new Set<AreaDataProperty["type"]>([
             ...previousTrackedPropertyTypes,
@@ -161,7 +161,7 @@ export class AreaZoneTracker {
      */
     public registerEventListener(
         eventType: "enter" | "leave",
-        propertyType: AreaDataProperty["type"]
+        propertyType: AreaDataProperty["type"],
     ): Observable<AreaData> {
         this.propertyTypesSet.add(propertyType);
 

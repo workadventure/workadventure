@@ -52,7 +52,7 @@
         isBlocked = false,
         status = "connecting",
         isMegaphoneSpace = false,
-        children
+        children,
     }: Props = $props();
 
     function handleVideo(): void {

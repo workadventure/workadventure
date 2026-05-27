@@ -64,7 +64,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
     constructor(
         private baseUrl: string,
         private localUserStore: MatrixLocalUserStore,
-        private _createClient: (opts: ICreateClientOpts) => MatrixClient = createClient
+        private _createClient: (opts: ICreateClientOpts) => MatrixClient = createClient,
     ) {}
 
     public async initMatrixClient(): Promise<MatrixClient> {
@@ -183,7 +183,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
         const indexDbCryptoStore = new IndexedDBCryptoStore(
             globalThis.indexedDB,
-            `crypto-store-${this.baseUrl}-${matrixUserId}`
+            `crypto-store-${this.baseUrl}-${matrixUserId}`,
         );
 
         return { matrixStore: indexDbStore, matrixCryptoStore: indexDbCryptoStore };
@@ -191,7 +191,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
     private async retrieveMatrixConnectionDataFromLoginToken(
         matrixServerUrl: string,
-        loginToken: string
+        loginToken: string,
     ): Promise<{
         matrixUserId: string;
         accessToken: string;
@@ -210,7 +210,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 {
                     token: loginToken,
                     initial_device_display_name: "WorkAdventure",
-                }
+                },
             );
 
             this.localUserStore.setMatrixUserId(user_id);
@@ -283,7 +283,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
     private async openSecretStorageKeyDialog(
         keyId: string,
-        keyInfo: SecretStorage.SecretStorageKeyDescription
+        keyInfo: SecretStorage.SecretStorageKeyDescription,
     ): Promise<[string, Uint8Array] | null> {
         const key = await new Promise<Uint8Array | null>((resolve) => {
             if (!matrixSecurity.shouldDisplayModal) {

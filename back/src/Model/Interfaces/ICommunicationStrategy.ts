@@ -17,7 +17,7 @@ export interface ICommunicationStrategy {
     cleanup(): void;
     handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
-        senderUserId?: string
+        senderUserId?: string,
     ): void;
 }
 
@@ -28,6 +28,6 @@ export interface IRecordableStrategy extends ICommunicationStrategy {
         rawBody: Buffer | Uint8Array,
         authorizationHeader: string | undefined,
         spaceName: string,
-        recordingSessionId: string
+        recordingSessionId: string,
     ): Promise<HandleRecordingWebhookRequest | "ignored">;
 }

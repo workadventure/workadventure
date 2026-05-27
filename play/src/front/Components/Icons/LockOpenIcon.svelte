@@ -18,7 +18,7 @@
         hover = "group-hover/btn-lock:fill-white",
         hover2 = "group-hover/btn-lock:stroke-contrast",
         strokeWidth = "1.5",
-        classList = "aspect-ratio transition-all"
+        classList = "aspect-ratio transition-all",
     }: Props = $props();
 </script>
 

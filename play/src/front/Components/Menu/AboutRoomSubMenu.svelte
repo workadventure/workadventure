@@ -28,7 +28,7 @@
                 mapLink = propertyLink.value;
             }
             const propertyDescription = gameScene.mapFile.properties.find(
-                (property) => property.name === "mapDescription"
+                (property) => property.name === "mapDescription",
             );
             if (propertyDescription !== undefined && typeof propertyDescription.value === "string") {
                 mapDescription = propertyDescription.value;
@@ -42,7 +42,7 @@
         for (const tileset of gameScene.mapFile.tilesets) {
             if ("properties" in tileset && tileset.properties !== undefined) {
                 const propertyTilesetCopyright = tileset.properties.find(
-                    (property) => property.name === "tilesetCopyright"
+                    (property) => property.name === "tilesetCopyright",
                 );
                 if (propertyTilesetCopyright !== undefined && typeof propertyTilesetCopyright.value === "string") {
                     // Assignment needed to trigger Svelte's reactivity (remove duplicates)

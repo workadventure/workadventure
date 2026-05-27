@@ -44,10 +44,11 @@
         onclose?.();
     }
 
-    let showButtons =
-        $derived(($followStateStore === "requesting" && $followRoleStore === "follower") ||
-        $followStateStore === "ending" ||
-        $followStateStore === "active");
+    let showButtons = $derived(
+        ($followStateStore === "requesting" && $followRoleStore === "follower") ||
+            $followStateStore === "ending" ||
+            $followStateStore === "active",
+    );
 </script>
 
 <svelte:window onkeydown={onKeyDown} />
@@ -147,8 +148,11 @@
         {/if}
 
         {#if $followStateStore === "ending"}
-            <button type="button" class="btn btn-secondary w-1/2 justify-center" onclick={(event) => {
-                event.preventDefault();
+            <button
+                type="button"
+                class="btn btn-secondary w-1/2 justify-center"
+                onclick={(event) => {
+                    event.preventDefault();
                     reset();
                 }}
             >

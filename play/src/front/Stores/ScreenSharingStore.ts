@@ -94,7 +94,7 @@ export const screenSharingConstraintsStore = derived(
             $screenShareStreamElementsStore,
             $isSpeakerStore,
         ],
-        set
+        set,
     ) => {
         let currentVideoConstraint: boolean | MediaTrackConstraints = true;
         //TODO : passer a true si on veut que le son soit activé par défaut dans le screen sharing
@@ -142,7 +142,7 @@ export const screenSharingConstraintsStore = derived(
     {
         video: false,
         audio: false,
-    } as MediaStreamConstraints
+    } as MediaStreamConstraints,
 );
 
 export function isScreenSharingSupported(): boolean {
@@ -268,7 +268,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 });
             }
         })().catch((e) => console.error(e));
-    }
+    },
 );
 
 export interface ScreenSharingLocalMedia {
@@ -286,11 +286,11 @@ const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, func
 
     const hasAudio = derived(
         localMediaStreamStore,
-        ($localMediaStreamStore) => ($localMediaStreamStore?.getAudioTracks().length ?? 0) > 0
+        ($localMediaStreamStore) => ($localMediaStreamStore?.getAudioTracks().length ?? 0) > 0,
     );
     const isMediaMuted = derived(
         localMediaStreamStore,
-        ($localMediaStreamStore) => ($localMediaStreamStore?.getAudioTracks().length ?? 0) === 0
+        ($localMediaStreamStore) => ($localMediaStreamStore?.getAudioTracks().length ?? 0) === 0,
     );
 
     const localMedia = {
@@ -358,7 +358,7 @@ export const screenSharingLocalVideoBox: Readable<VideoBox | undefined> = derive
         return () => {
             videoBox.destroy();
         };
-    }
+    },
 );
 
 export const showDesktopCapturerSourcePicker = writable(false);

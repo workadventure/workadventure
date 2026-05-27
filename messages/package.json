@@ -9,7 +9,7 @@
     "proto:watch-files": "chokidar 'protos/*.proto' -c 'npm run proto-all'",
     "tag-version": "sed -i \"s/apiVersionHash = \\\".*\\\"/apiVersionHash = \\\"$(sha1sum protos/messages.proto ../libs/messages/src/JsonMessages/* | sha1sum | cut -c1-8)\\\"/g\" ../libs/messages/src/JsonMessages/ApiVersion.ts",
     "precommit": "lint-staged",
-    "pretty": "npm prettier --write '../libs/messages/src/JsonMessages/**/*.ts'"
+    "pretty": "prettier --write '../libs/messages/src/JsonMessages/**/*.ts'"
   },
   "dependencies": {
     "@anatine/zod-openapi": "^2.2.8",
@@ -32,8 +32,8 @@
     "eslint-config-airbnb-typescript": "^18.0.0",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-sonarjs": "^4.0.3",
-    "grpc-tools": "^1.13.1",
     "grpc_tools_node_protoc_ts": "^5.3.3",
+    "grpc-tools": "^1.13.1",
     "lint-staged": "^17.0.5",
     "prettier": "^3.8.3",
     "rimraf": "^6.1.3",

@@ -37,7 +37,7 @@ export const getStatusLabel = (status: AvailabilityStatus): string => {
 };
 
 export const getStatusInformation = (
-    statusToShow: Array<RequestedStatus | AvailabilityStatus.ONLINE>
+    statusToShow: Array<RequestedStatus | AvailabilityStatus.ONLINE>,
 ): Array<StatusInformationInterface> => {
     const labelStatusMap: Map<RequestedStatus | AvailabilityStatus.ONLINE, LocalizedString> = new Map([
         [AvailabilityStatus.BACK_IN_A_MOMENT, get(LL).actionbar.status.BACK_IN_A_MOMENT()],

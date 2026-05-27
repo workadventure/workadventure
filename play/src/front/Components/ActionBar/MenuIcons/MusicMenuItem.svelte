@@ -31,10 +31,10 @@
             ? "active"
             : "forbidden"
         : $audioManagerVisibilityStore === "error"
-        ? "forbidden"
-        : $audioManagerVisibilityStore === "disabledBySettings"
-        ? "disabled"
-        : undefined}
+          ? "forbidden"
+          : $audioManagerVisibilityStore === "disabledBySettings"
+            ? "disabled"
+            : undefined}
     dataTestId="music-pause-button"
 >
     {#if $audioManagerPlayerState === "loading"}
@@ -64,10 +64,10 @@
             ? "active"
             : "forbidden"
         : $audioManagerVisibilityStore === "error"
-        ? "forbidden"
-        : $audioManagerVisibilityStore === "disabledBySettings"
-        ? "disabled"
-        : undefined}
+          ? "forbidden"
+          : $audioManagerVisibilityStore === "disabledBySettings"
+            ? "disabled"
+            : undefined}
     dataTestId="music-stop-button"
 >
     <PlayerStopIcon />
@@ -100,10 +100,10 @@
                 : "active"
             : "forbidden"
         : $audioManagerVisibilityStore === "error"
-        ? "forbidden"
-        : $audioManagerVisibilityStore === "disabledBySettings"
-        ? "disabled"
-        : undefined}
+          ? "forbidden"
+          : $audioManagerVisibilityStore === "disabledBySettings"
+            ? "disabled"
+            : undefined}
     dataTestId="music-button"
 >
     <PlayerMusicIcon />

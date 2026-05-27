@@ -24,7 +24,7 @@
     });
 
     let senderDisplayName = $derived(
-        poll.sender?.username && poll.sender.username !== poll.sender.chatId ? poll.sender.username : undefined
+        poll.sender?.username && poll.sender.username !== poll.sender.chatId ? poll.sender.username : undefined,
     );
     let winningAnswers = $derived($pollState.answers.filter((answer) => answer.isWinning));
     let sortedAnswers = $derived(
@@ -34,7 +34,7 @@
             }
 
             return right.votes - left.votes;
-        })
+        }),
     );
 
     function getAnswerResult(answer: ChatPollAnswer) {

@@ -90,7 +90,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         frame: string | number,
         isClickable: boolean,
         companionTexturePromise: CancelablePromise<string> | undefined,
-        userId?: string | null
+        userId?: string | null,
     ) {
         super(scene, x, y /*, texture, frame*/);
         this.scene = scene;
@@ -179,7 +179,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.x,
                 this.y + playerNameY,
                 this.playerName,
-                playerNameOutlineColor
+                playerNameOutlineColor,
             );
             this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true, true);
             this.usernameDisplay.setPlayerDepth(this.depth);
@@ -543,7 +543,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                     this.scene,
                     0,
                     0 - CHARACTER_BODY_HEIGHT / 2 - 50,
-                    speechBubble.getElement()
+                    speechBubble.getElement(),
                 );
                 this.add(this.bubble);
                 break;
@@ -601,7 +601,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         callback = () => this.destroyText(id),
         createStackAnimation = true,
         type: "warning" | "message" = "message",
-        escapeCallback?: () => void
+        escapeCallback?: () => void,
     ) {
         if (this.texts.has(id)) {
             this.destroyText(id);
@@ -622,7 +622,7 @@ export abstract class Character extends Container implements OutlineableInterfac
             -30 + this.texts.size * 2,
             callback,
             type,
-            escapeCallback
+            escapeCallback,
         );
         this.add(speechDomElement);
         this.texts.set(id, speechDomElement);

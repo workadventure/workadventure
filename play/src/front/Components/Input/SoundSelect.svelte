@@ -25,7 +25,7 @@
         volume = 0.2,
         disabled = false,
         outerClass = "",
-        playLabel = "▶"
+        playLabel = "▶",
     }: Props = $props();
 
     const sound = new Audio();

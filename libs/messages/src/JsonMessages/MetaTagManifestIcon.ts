@@ -23,7 +23,8 @@ export const isMetaTagManifestIcon = extendApi(
     }),
   }),
   {
-    description: "An icon as represented in the manifest.json file (for the web app)",
-  }
+    description:
+      "An icon as represented in the manifest.json file (for the web app)",
+  },
 );
 export type MetaTagManifestIcon = z.infer<typeof isMetaTagManifestIcon>;

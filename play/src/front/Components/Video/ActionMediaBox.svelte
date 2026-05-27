@@ -20,13 +20,7 @@
         volumeStore: Writable<number>;
     }
 
-    let {
-        spaceUser,
-        videoEnabled,
-        videoType,
-        onClose,
-        volumeStore = writable(1)
-    }: Props = $props();
+    let { spaceUser, videoEnabled, videoType, onClose, volumeStore = writable(1) }: Props = $props();
 
     let isScreenSharing = $derived(videoType === "screenSharing");
 
@@ -135,19 +129,23 @@
         aria-label="Volume control"
     >
         {#if $volumeStore === 0}
-            <button onclick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                volumeStore.set(1);
-            }}>
+            <button
+                onclick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    volumeStore.set(1);
+                }}
+            >
                 <IconMute class="w-4 h-4 text-white flex-shrink-0" />
             </button>
         {:else}
-            <button onclick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                volumeStore.set(0);
-            }}>
+            <button
+                onclick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    volumeStore.set(0);
+                }}
+            >
                 <IconUnMute class="w-4 h-4 text-white flex-shrink-0" />
             </button>
         {/if}

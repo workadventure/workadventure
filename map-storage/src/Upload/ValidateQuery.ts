@@ -8,7 +8,7 @@ import type { Request, Response } from "express";
 export function validateQuery<T extends ZodObject<ZodRawShape>>(
     req: Request,
     res: Response,
-    validator: T
+    validator: T,
 ): z.infer<T> | undefined {
     const result = validator.safeParse(req.query);
 

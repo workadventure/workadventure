@@ -42,7 +42,7 @@
     const mapEditorEntityUploadEventStoreUnsubscriber = mapEditorEntityUploadEventStore.subscribe(
         (uploadEntityMessage) => {
             completeAndResetUpload(uploadEntityMessage);
-        }
+        },
     );
 
     function isASupportedFormat(format: string): boolean {

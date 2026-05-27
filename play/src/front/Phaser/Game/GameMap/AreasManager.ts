@@ -31,7 +31,7 @@ export class AreasManager {
         private userConnectedTags: string[],
         private userCanEdit: boolean,
         private _personalAreaDataStore = personalAreaDataStore,
-        private onCollisionStateChanged?: () => void
+        private onCollisionStateChanged?: () => void,
     ) {
         this.areaPermissions = new AreaPermissions(gameMapAreas, userConnectedTags, userCanEdit);
         this.initializeAreas();
@@ -69,7 +69,7 @@ export class AreasManager {
     public addArea(areaData: AreaData): void {
         this.areas.set(
             areaData.id,
-            new Area(this.scene, areaData, this.areaPermissions.isOverlappingArea(areaData.id), undefined, this)
+            new Area(this.scene, areaData, this.areaPermissions.isOverlappingArea(areaData.id), undefined, this),
         );
         this.updateMapEditorOptionForSpecificAreas();
 
@@ -121,7 +121,7 @@ export class AreasManager {
             }
             this.areas.set(
                 areaData.id,
-                new Area(this.scene, areaData, this.areaPermissions.isOverlappingArea(areaData.id), undefined, this)
+                new Area(this.scene, areaData, this.areaPermissions.isOverlappingArea(areaData.id), undefined, this),
             );
         });
         this.updateMapEditorOptionForSpecificAreas();
@@ -185,7 +185,7 @@ export class AreasManager {
         }
 
         const lockableProperty = area.properties.find(
-            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData",
         );
 
         if (!lockableProperty) {
@@ -213,7 +213,7 @@ export class AreasManager {
         }
 
         const maxUsersProperty = area.properties.find(
-            (property): property is MaxUsersInAreaPropertyData => property.type === "maxUsersInAreaPropertyData"
+            (property): property is MaxUsersInAreaPropertyData => property.type === "maxUsersInAreaPropertyData",
         );
         if (!maxUsersProperty) {
             return false;

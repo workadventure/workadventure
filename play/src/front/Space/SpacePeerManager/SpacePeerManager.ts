@@ -110,7 +110,7 @@ export interface PeerFactoryInterface {
         space: SpaceInterface,
         streamableSubjects: StreamableSubjects,
         blockedUsersStore: Readable<Set<string>>,
-        screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>
+        screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>,
     ): SimplePeerConnectionInterface;
 }
 export class SpacePeerManager {
@@ -158,13 +158,13 @@ export class SpacePeerManager {
         _screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStreamStore,
         _bindMuteEventsToSpace: (space: SpaceInterface) => void = bindMuteEventsToSpace,
         private _notificationPlayingStore = notificationPlayingStore,
-        private _recordingStore = recordingStore
+        private _recordingStore = recordingStore,
     ) {
         this._communicationState = new DefaultCommunicationState();
 
         this._effectiveScreenSharingLocalStreamStore = deriveSwitchStore(
             _screenSharingLocalStreamStore,
-            this.space.shouldPublishScreenShareStore
+            this.space.shouldPublishScreenShareStore,
         );
 
         this.rxJsUnsubscribers.push(
@@ -173,10 +173,10 @@ export class SpacePeerManager {
                 console.warn("Switching communication strategy to " + message.switchMessage.strategy);
                 if (this._toFinalizeState && !(this._toFinalizeState instanceof DefaultCommunicationState)) {
                     console.error(
-                        "A state is already pending finalization. The back should have send us a finalize message before."
+                        "A state is already pending finalization. The back should have send us a finalize message before.",
                     );
                     Sentry.captureMessage(
-                        "A state is already pending finalization. The back should have send us a finalize message before."
+                        "A state is already pending finalization. The back should have send us a finalize message before.",
                     );
                 }
                 this._toFinalizeState = this._communicationState;
@@ -188,14 +188,14 @@ export class SpacePeerManager {
                         this.space,
                         this._streamableSubjects,
                         blockedUsersStore,
-                        this._effectiveScreenSharingLocalStreamStore
+                        this._effectiveScreenSharingLocalStreamStore,
                     );
                 } else if (message.switchMessage.strategy === CommunicationType.LIVEKIT) {
                     this._communicationState = new LivekitState(
                         this.space,
                         this._streamableSubjects,
                         blockedUsersStore,
-                        this._effectiveScreenSharingLocalStreamStore
+                        this._effectiveScreenSharingLocalStreamStore,
                     );
                 } else {
                     console.error("Unknown communication strategy: " + message.switchMessage.strategy);
@@ -204,7 +204,7 @@ export class SpacePeerManager {
 
                 microphoneValidatedForDeviceIdStore.set(undefined);
                 this.setState(this._communicationState);
-            })
+            }),
         );
 
         this.rxJsUnsubscribers.push(
@@ -212,17 +212,17 @@ export class SpacePeerManager {
                 debug("Finalizing previous communication strategy " + message.finalizeSwitchMessage.strategy);
                 if (!this._toFinalizeState) {
                     console.error(
-                        "No state is pending finalization. The back should have send us a switch message before."
+                        "No state is pending finalization. The back should have send us a switch message before.",
                     );
                     Sentry.captureMessage(
-                        "No state is pending finalization. The back should have send us a switch message before."
+                        "No state is pending finalization. The back should have send us a switch message before.",
                     );
                     return;
                 }
 
                 this._toFinalizeState.destroy();
                 this._toFinalizeState = undefined;
-            })
+            }),
         );
 
         this.rxJsUnsubscribers.push(
@@ -231,9 +231,9 @@ export class SpacePeerManager {
                 .subscribe(() => {
                     this._notificationPlayingStore.playNotification(
                         get(LL).recording.notification.unexpectedlyStoppedNotification(),
-                        "recording-stop"
+                        "recording-stop",
                     );
-                })
+                }),
         );
 
         this.rxJsUnsubscribers.push(
@@ -242,7 +242,7 @@ export class SpacePeerManager {
                     throw new Error("Received a video peer with undefined spaceUserId");
                 }
                 this.videoPeers.set(streamable.spaceUserId, streamable);
-            })
+            }),
         );
 
         this.rxJsUnsubscribers.push(
@@ -251,7 +251,7 @@ export class SpacePeerManager {
                     throw new Error("Received a video peer with undefined spaceUserId");
                 }
                 this.videoPeers.delete(streamable.spaceUserId);
-            })
+            }),
         );
 
         this.rxJsUnsubscribers.push(
@@ -260,7 +260,7 @@ export class SpacePeerManager {
                     throw new Error("Received a screen-sharing peer with undefined spaceUserId");
                 }
                 this.screenSharingPeers.set(streamable.spaceUserId, streamable);
-            })
+            }),
         );
 
         this.rxJsUnsubscribers.push(
@@ -269,7 +269,7 @@ export class SpacePeerManager {
                     throw new Error("Received a screen-sharing peer with undefined spaceUserId");
                 }
                 this.screenSharingPeers.delete(streamable.spaceUserId);
-            })
+            }),
         );
 
         _bindMuteEventsToSpace(this.space);
@@ -301,7 +301,7 @@ export class SpacePeerManager {
                     // Play notification that the recording is complete
                     this._notificationPlayingStore.playNotification(
                         get(LL).recording.notification.recordingComplete(),
-                        "recording-stop"
+                        "recording-stop",
                     );
                 }
 
@@ -330,7 +330,7 @@ export class SpacePeerManager {
                 recording.data.status,
                 isRecorder,
                 recorderSpaceUserId,
-                recorderName
+                recorderName,
             );
 
             const enteredConfirmedRecording =
@@ -342,7 +342,7 @@ export class SpacePeerManager {
                 if (isRecorder) {
                     this._notificationPlayingStore.playNotification(
                         get(LL).recording.notification.recordingIsInProgress(),
-                        "recording-start"
+                        "recording-start",
                     );
                 } else if (recorderName === null) {
                     this.resolveRecorderNameWithTimeout(spaceName, recorderSpaceUserId);
@@ -415,7 +415,7 @@ export class SpacePeerManager {
     private isCurrentRecorderNameResolution(
         spaceName: string,
         token: number,
-        recorderSpaceUserId: string | null
+        recorderSpaceUserId: string | null,
     ): boolean {
         const pendingResolution = this.pendingRecorderNameResolutionBySpace.get(spaceName);
 
@@ -442,7 +442,7 @@ export class SpacePeerManager {
     private shouldShowRecorderInfoPopup(
         spaceName: string,
         recorderSpaceUserId: string | null,
-        recorderName: string | null
+        recorderName: string | null,
     ): boolean {
         if (recorderName === null) {
             return false;
@@ -478,14 +478,14 @@ export class SpacePeerManager {
                 this.space.emitUpdateUser({
                     microphoneState: state,
                 });
-            })
+            }),
         );
         this.unsubscribes.push(
             this.cameraStateStore.subscribe((state) => {
                 this.space.emitUpdateUser({
                     cameraState: state,
                 });
-            })
+            }),
         );
 
         this.unsubscribes.push(
@@ -499,7 +499,7 @@ export class SpacePeerManager {
                         screenSharingState: false,
                     });
                 }
-            })
+            }),
         );
     }
 

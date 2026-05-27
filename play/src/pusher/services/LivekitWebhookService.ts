@@ -11,7 +11,10 @@ type ApiClientRepositoryLike = {
 };
 
 export class LivekitWebhookHttpError extends Error {
-    constructor(message: string, public readonly statusCode: number) {
+    constructor(
+        message: string,
+        public readonly statusCode: number,
+    ) {
         super(message);
     }
 }
@@ -19,14 +22,14 @@ export class LivekitWebhookHttpError extends Error {
 export class LivekitWebhookService {
     constructor(
         private readonly _apiClientRepository: ApiClientRepositoryLike = apiClientRepository,
-        private readonly _grpcMaxMessageSize = GRPC_MAX_MESSAGE_SIZE
+        private readonly _grpcMaxMessageSize = GRPC_MAX_MESSAGE_SIZE,
     ) {}
 
     async handleWebhook(
         rawBody: Buffer,
         authHeader: string | undefined,
         spaceName: string,
-        recordingSessionId: string
+        recordingSessionId: string,
     ): Promise<"forwarded"> {
         if (!Buffer.isBuffer(rawBody) || rawBody.length === 0) {
             throw new LivekitWebhookHttpError("Missing webhook body", 400);

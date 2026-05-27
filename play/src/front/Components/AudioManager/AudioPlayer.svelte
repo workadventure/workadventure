@@ -155,7 +155,7 @@
                                 gameScene.CurrentPlayer.destroyText("audio-not-allowed");
                                 // When the user clicks on the message, we try to play the audio again
                                 tryPlay();
-                            }
+                            },
                         );
                     }
                 } else {

@@ -30,7 +30,7 @@ class IceServersManager {
                         this.renewalTimer = undefined;
                     }
                 },
-                { once: true }
+                { once: true },
             );
         }
 

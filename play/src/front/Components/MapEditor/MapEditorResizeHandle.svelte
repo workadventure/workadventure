@@ -8,12 +8,7 @@
         onResize: (width: number) => void;
     }
 
-    let {
-        minWidth,
-        maxWidth,
-        currentWidth,
-        onResize
-    }: Props = $props();
+    let { minWidth, maxWidth, currentWidth, onResize }: Props = $props();
 
     let dragHandle: HTMLElement;
 

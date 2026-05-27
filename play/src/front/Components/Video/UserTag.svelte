@@ -10,12 +10,7 @@
         minimal: boolean;
     }
 
-    let {
-        name,
-        isMe = false,
-        wokaSrc,
-        minimal = true
-    }: Props = $props();
+    let { name, isMe = false, wokaSrc, minimal = true }: Props = $props();
 
     let size = $derived(minimal ? 20 : 32);
 

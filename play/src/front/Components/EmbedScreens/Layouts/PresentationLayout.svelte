@@ -82,27 +82,31 @@
 
     let oneLineMaxHeight = $derived(containerHeight * 0.2);
     let pipHighlightLayoutEnabled = $derived(
-        inPictureInPicture && $activePictureInPictureStore && $highlightedEmbedScreen != undefined
+        inPictureInPicture && $activePictureInPictureStore && $highlightedEmbedScreen != undefined,
     );
     let pipHighlightLandscape = $derived(pipHighlightLayoutEnabled && containerWidth > containerHeight);
-    let pipCameraContainerStyle = $derived(pipHighlightLayoutEnabled
-        ? pipHighlightLandscape
-            ? "flex: 0 0 20%; max-width: 20%; min-width: 20%;"
-            : "flex: 0 0 20%; max-height: 20%; min-height: 20%;"
-        : "");
-    let pipHighlightContainerStyle = $derived(pipHighlightLayoutEnabled
-        ? pipHighlightLandscape
-            ? "flex: 0 0 80%; max-width: 80%; min-width: 80%;"
-            : "flex: 0 0 80%; max-height: 80%; min-height: 80%;"
-        : "");
+    let pipCameraContainerStyle = $derived(
+        pipHighlightLayoutEnabled
+            ? pipHighlightLandscape
+                ? "flex: 0 0 20%; max-width: 20%; min-width: 20%;"
+                : "flex: 0 0 20%; max-height: 20%; min-height: 20%;"
+            : "",
+    );
+    let pipHighlightContainerStyle = $derived(
+        pipHighlightLayoutEnabled
+            ? pipHighlightLandscape
+                ? "flex: 0 0 80%; max-width: 80%; min-width: 80%;"
+                : "flex: 0 0 80%; max-height: 80%; min-height: 80%;"
+            : "",
+    );
     $effect(() => {
         pipOneLineMode = pipHighlightLayoutEnabled
             ? pipHighlightLandscape
                 ? "vertical"
                 : "horizontal"
             : inPictureInPicture
-            ? "vertical"
-            : "horizontal";
+              ? "vertical"
+              : "horizontal";
     });
 </script>
 

@@ -15,7 +15,7 @@
         onblur?: () => void;
         onchange?: (value?: InputTagOption[]) => void;
         testId?: string;
-        queryOptions?: ((filterText: string) => Promise<{ value: string; label: string }[]>);
+        queryOptions?: (filterText: string) => Promise<{ value: string; label: string }[]>;
         info?: Snippet;
     }
 
@@ -30,7 +30,7 @@
         onchange,
         testId,
         queryOptions,
-        info
+        info,
     }: Props = $props();
 
     let filterText = $state("");

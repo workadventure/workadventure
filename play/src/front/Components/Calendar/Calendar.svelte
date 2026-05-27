@@ -40,7 +40,7 @@
                     event.id,
                     event.start,
                     event.end,
-                    event.resource?.onlineMeeting?.passcode
+                    event.resource?.onlineMeeting?.passcode,
                 );
                 returnValue = true;
             }

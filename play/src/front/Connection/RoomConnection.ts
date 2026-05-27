@@ -289,7 +289,7 @@ export class RoomConnection implements RoomConnection {
         private roomUrl: string,
         characterTextureIds: string[],
         companionTextureId: string | null,
-        lastCommandId?: string
+        lastCommandId?: string,
     ) {
         const urlObj = new URL("ws/room", ABSOLUTE_PUSHER_URL);
         urlObj.protocol = urlObj.protocol.replace("http", "ws");
@@ -357,7 +357,7 @@ export class RoomConnection implements RoomConnection {
                                 }
                                 case "userJoinedMessage": {
                                     this._userJoinedMessageStream.next(
-                                        this.toMessageUserJoined(subMessage.userJoinedMessage)
+                                        this.toMessageUserJoined(subMessage.userJoinedMessage),
                                     );
                                     break;
                                 }
@@ -371,7 +371,7 @@ export class RoomConnection implements RoomConnection {
                                 }
                                 case "groupUpdateMessage": {
                                     this._groupUpdateMessageStream.next(
-                                        this.toGroupCreatedUpdatedMessage(subMessage.groupUpdateMessage)
+                                        this.toGroupCreatedUpdatedMessage(subMessage.groupUpdateMessage),
                                     );
                                     break;
                                 }
@@ -394,7 +394,7 @@ export class RoomConnection implements RoomConnection {
                                 }
                                 case "playerDetailsUpdatedMessage": {
                                     this._playerDetailsUpdatedMessageStream.next(
-                                        subMessage.playerDetailsUpdatedMessage
+                                        subMessage.playerDetailsUpdatedMessage,
                                     );
                                     break;
                                 }
@@ -517,7 +517,7 @@ export class RoomConnection implements RoomConnection {
                 case "roomJoinedMessage": {
                     if (this.userId) {
                         throw new Error(
-                            "Received roomJoinedMessage but userId is already set, this should never happen"
+                            "Received roomJoinedMessage but userId is already set, this should never happen",
                         );
                     }
 
@@ -557,7 +557,7 @@ export class RoomConnection implements RoomConnection {
                     inviteUserActivated.set(
                         roomJoinedMessage.activatedInviteUser != undefined
                             ? roomJoinedMessage.activatedInviteUser
-                            : true
+                            : true,
                     );
                     this.canEdit = roomJoinedMessage.canEdit;
                     mapEditorActivated.set(ENABLE_MAP_EDITOR && this.canEdit);
@@ -577,7 +577,7 @@ export class RoomConnection implements RoomConnection {
                     }
 
                     const characterTextures = roomJoinedMessage.characterTextures.map(
-                        this.mapWokaTextureToResourceDescription.bind(this)
+                        this.mapWokaTextureToResourceDescription.bind(this),
                     );
 
                     this._roomJoinedPromise.resolve({
@@ -599,7 +599,7 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "invalidCharacterTextureMessage": {
                     console.warn(
-                        "One of your Woka textures is invalid for this world, you will be redirect to the Woka selection screen"
+                        "One of your Woka textures is invalid for this world, you will be redirect to the Woka selection screen",
                     );
                     this.goToSelectYourWokaScene();
 
@@ -608,7 +608,7 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "invalidCompanionTextureMessage": {
                     console.warn(
-                        "Your companion texture is invalid for this world, you will be redirect to the companion selection screen"
+                        "Your companion texture is invalid for this world, you will be redirect to the companion selection screen",
                     );
                     this.goToSelectYourCompanionScene();
 
@@ -702,7 +702,7 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "meetingInvitationResponseReceivedMessage": {
                     this._meetingInvitationResponseReceivedStream.next(
-                        message.meetingInvitationResponseReceivedMessage
+                        message.meetingInvitationResponseReceivedMessage,
                     );
                     break;
                 }
@@ -790,7 +790,7 @@ export class RoomConnection implements RoomConnection {
                     ", reason: " +
                     event.reason +
                     "wasClean: " +
-                    event.wasClean
+                    event.wasClean,
             );
         }
         this.cleanupConnection(event.code === 1000);
@@ -846,7 +846,7 @@ export class RoomConnection implements RoomConnection {
                         'Value received: "' +
                         serializedValue +
                         '". Error: ',
-                    e
+                    e,
                 );
             }
         }
@@ -857,7 +857,7 @@ export class RoomConnection implements RoomConnection {
         name: string,
         position: PositionMessageTsProto,
         viewport: ViewportInterface,
-        availabilityStatus: AvailabilityStatus
+        availabilityStatus: AvailabilityStatus,
     ): void {
         this.joinRoomEmitted = true;
         this.send({
@@ -869,7 +869,7 @@ export class RoomConnection implements RoomConnection {
                         position.x,
                         position.y,
                         position.direction,
-                        position.moving
+                        position.moving,
                     ),
                     viewportMessage: this.toViewportMessage(viewport),
                     availabilityStatus,
@@ -917,7 +917,7 @@ export class RoomConnection implements RoomConnection {
         this.sendPlayerDetailsMessage(
             SetPlayerDetailsMessageTsProto.fromPartial({
                 sayMessage,
-            })
+            }),
         );
     }
 
@@ -957,7 +957,7 @@ export class RoomConnection implements RoomConnection {
         y: number,
         direction: PositionMessage_Direction,
         moving: boolean,
-        viewport: ViewportInterface
+        viewport: ViewportInterface,
     ): void {
         if (!this.socket) {
             return;
@@ -1290,7 +1290,7 @@ export class RoomConnection implements RoomConnection {
         commandId: string,
         entityId: string,
         config: AtLeast<WAMEntityData, "x" | "y">,
-        entityDimensions: EntityDimensions
+        entityDimensions: EntityDimensions,
     ): void {
         this.send({
             message: {
@@ -1319,7 +1319,7 @@ export class RoomConnection implements RoomConnection {
         commandId: string,
         entityId: string,
         config: WAMEntityData,
-        entityDimensions: EntityDimensions
+        entityDimensions: EntityDimensions,
     ): void {
         this.send({
             message: {
@@ -1402,7 +1402,7 @@ export class RoomConnection implements RoomConnection {
 
     public emitModifiyWAMMetadataMessage(
         commandId: string,
-        modifiyWAMMetadataMessage: ModifiyWAMMetadataMessage
+        modifiyWAMMetadataMessage: ModifiyWAMMetadataMessage,
     ): void {
         this.send({
             message: {
@@ -1422,7 +1422,7 @@ export class RoomConnection implements RoomConnection {
 
     public emitMapEditorModifyCustomEntity(
         commandId: string,
-        modifyCustomEntityMessage: ModifyCustomEntityMessage
+        modifyCustomEntityMessage: ModifyCustomEntityMessage,
     ): void {
         this.send({
             message: {
@@ -1442,7 +1442,7 @@ export class RoomConnection implements RoomConnection {
 
     public emitMapEditorDeleteCustomEntity(
         commandId: string,
-        deleteCustomEntityMessage: DeleteCustomEntityMessage
+        deleteCustomEntityMessage: DeleteCustomEntityMessage,
     ): void {
         this.send({
             message: {
@@ -1471,7 +1471,7 @@ export class RoomConnection implements RoomConnection {
         uuid: string,
         playUri: string,
         type: AskPositionMessage_AskType = AskPositionMessageAskType.MOVE,
-        userId?: number
+        userId?: number,
     ) {
         this.send({
             message: {
@@ -1549,7 +1549,7 @@ export class RoomConnection implements RoomConnection {
             },
             {
                 signal,
-            }
+            },
         );
         if (answer.$case !== "mapStorageJwtAnswer") {
             throw new Error("Unexpected answer");
@@ -1570,7 +1570,7 @@ export class RoomConnection implements RoomConnection {
 
     public async queryBBBMeetingUrl(
         meetingId: string,
-        props: Map<string, string | number | boolean>
+        props: Map<string, string | number | boolean>,
     ): Promise<JoinBBBMeetingAnswer> {
         const meetingName = props.get("meetingName") as string;
         const localMeetingId = props.get("bbbMeeting") as string;
@@ -1627,7 +1627,7 @@ export class RoomConnection implements RoomConnection {
         spaceName: string,
         filterType: FilterType,
         propertiesToSync: string[],
-        options?: { signal: AbortSignal }
+        options?: { signal: AbortSignal },
     ): Promise<SpaceUser["spaceUserId"]> {
         const answer = await this.query(
             {
@@ -1638,7 +1638,7 @@ export class RoomConnection implements RoomConnection {
                     propertiesToSync,
                 },
             },
-            options
+            options,
         );
 
         if (answer.$case !== "joinSpaceAnswer") {
@@ -1778,7 +1778,7 @@ export class RoomConnection implements RoomConnection {
                     searchText,
                 },
             },
-            { signal }
+            { signal },
         );
         if (answer.$case !== "chatMembersAnswer") {
             throw new Error("Unexpected answer");
@@ -1845,7 +1845,7 @@ export class RoomConnection implements RoomConnection {
             },
             {
                 timeout: recordingQueryTimeoutMs,
-            }
+            },
         );
 
         if (answer.$case !== "startRecordingAnswer") {
@@ -1865,7 +1865,7 @@ export class RoomConnection implements RoomConnection {
             },
             {
                 timeout: recordingQueryTimeoutMs,
-            }
+            },
         );
 
         if (answer.$case !== "stopRecordingAnswer") {
@@ -1878,7 +1878,7 @@ export class RoomConnection implements RoomConnection {
     public async getOauthRefreshToken(
         tokenToRefresh: string,
         provider?: string,
-        userIdentifier?: string
+        userIdentifier?: string,
     ): Promise<OauthRefreshToken> {
         try {
             const answer = await this.query({
@@ -1898,7 +1898,7 @@ export class RoomConnection implements RoomConnection {
             Debug(
                 `RoomConnection => getOauthRefreshToken => Error getting oauth refresh token: ${
                     (error as Error).message
-                }`
+                }`,
             );
             throw error;
         }
@@ -1951,7 +1951,7 @@ export class RoomConnection implements RoomConnection {
         }
         this.timeout = setTimeout(() => {
             console.warn(
-                "Timeout detected. No ping from the server received. Is your connection down? Closing connection."
+                "Timeout detected. No ping from the server received. Is your connection down? Closing connection.",
             );
             Sentry.captureMessage("RoomConnection: Ping timeout - closing connection");
             this.socket.close();
@@ -1985,7 +1985,7 @@ export class RoomConnection implements RoomConnection {
     public emitPrivateSpaceEvent(
         spaceName: string,
         spaceEvent: NonNullable<PrivateSpaceEvent["event"]>,
-        receiverUserId: string
+        receiverUserId: string,
     ): void {
         this.send({
             message: {
@@ -2017,7 +2017,7 @@ export class RoomConnection implements RoomConnection {
         x: number,
         y: number,
         direction: PositionMessage_Direction,
-        moving: boolean
+        moving: boolean,
     ): PositionMessageTsProto {
         return {
             x: Math.floor(x),
@@ -2044,7 +2044,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     private mapCompanionTextureToResourceDescription(
-        texture: CompanionTextureMessage
+        texture: CompanionTextureMessage,
     ): CompanionTextureDescriptionInterface {
         return {
             id: texture.id,
@@ -2182,7 +2182,7 @@ export class RoomConnection implements RoomConnection {
             signal?: AbortSignal;
             // timeout in milliseconds, default is 15000ms
             timeout?: number;
-        }
+        },
     ): Promise<Required<AnswerMessage>["answer"]> {
         if (options?.signal?.aborted) {
             return Promise.reject(asError(options?.signal?.reason));
@@ -2194,7 +2194,7 @@ export class RoomConnection implements RoomConnection {
             signals.push(options.signal);
         }
         signals.push(
-            abortTimeout(options?.timeout ?? 15000, new AbortError("The query took too long and was aborted"))
+            abortTimeout(options?.timeout ?? 15000, new AbortError("The query took too long and was aborted")),
         );
         const finalSignal = abortAny(signals);
 

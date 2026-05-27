@@ -55,7 +55,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         companionTexturePromise: CancelablePromise<string> | undefined,
         activationRadius?: number,
         private chatID: string | undefined = undefined,
-        sayMessage?: SayMessage
+        sayMessage?: SayMessage,
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companionTexturePromise);
 
@@ -96,7 +96,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     public async moveToPosition(
         position: { x: number; y: number },
         tryFindingNearestAvailable = false,
-        speed: number | undefined = undefined
+        speed: number | undefined = undefined,
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
         this.stopMoveTo();
 
@@ -238,7 +238,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                             this.userUuid,
                             this.scene.roomUrl,
                             AskPositionMessage_AskType.MOVE,
-                            this.userId
+                            this.userId,
                         );
                 },
                 actionIcon: IconCamera,

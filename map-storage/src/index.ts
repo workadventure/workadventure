@@ -91,7 +91,7 @@ app.use(
     bodyParser.json({
         type: ["application/json", "application/json-patch+json"],
         limit: BODY_PARSER_JSON_SIZE_LIMIT,
-    })
+    }),
 );
 
 for (const passportStrategy of passportStrategies) {
@@ -133,7 +133,7 @@ app.get(
     (req, res, next) => {
         Promise.resolve(verifyJWT(req, res, next)).catch(next);
     },
-    proxyFiles(fileSystem)
+    proxyFiles(fileSystem),
 );
 
 app.use(proxyFiles(fileSystem));

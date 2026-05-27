@@ -10,7 +10,7 @@ export const CONTINUOUS_BUTTON_ZOOM_STEP_DURATION = 375;
 export const SMOOTH_BUTTON_ZOOM_TARGET_EPSILON = 0.001;
 export const BUTTON_ZOOM_FACTOR_PER_SECOND = Math.pow(
     BUTTON_ZOOM_STEP_FACTOR,
-    1000 / CONTINUOUS_BUTTON_ZOOM_STEP_DURATION
+    1000 / CONTINUOUS_BUTTON_ZOOM_STEP_DURATION,
 );
 
 /**
@@ -20,7 +20,7 @@ export const BUTTON_ZOOM_FACTOR_PER_SECOND = Math.pow(
 export function getRetargetedButtonZoomModifier(
     currentZoomModifier: number,
     zoomFactor: number,
-    targetZoomModifier: number | undefined
+    targetZoomModifier: number | undefined,
 ): number {
     return (targetZoomModifier ?? currentZoomModifier) * zoomFactor;
 }
@@ -33,7 +33,7 @@ export function getSmoothButtonZoomModifier(
     currentZoomModifier: number,
     targetZoomModifier: number,
     deltaMs: number,
-    durationMs = SMOOTH_BUTTON_ZOOM_DURATION
+    durationMs = SMOOTH_BUTTON_ZOOM_DURATION,
 ): number {
     if (durationMs <= 0) {
         return targetZoomModifier;

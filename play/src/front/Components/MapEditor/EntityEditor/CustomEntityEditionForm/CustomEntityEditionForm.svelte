@@ -23,12 +23,15 @@
         isUploadForm = false,
         closeForm = () => {},
         removeEntity = () => {},
-        applyEntityModifications = () => {}
+        applyEntityModifications = () => {},
     }: Props = $props();
 
-    let { name, tags, collisionGrid: customEntityCollisionGrid, depthOffset: depthOffsetCustomEntity } = $state(
-        (() => customEntity)()
-    );
+    let {
+        name,
+        tags,
+        collisionGrid: customEntityCollisionGrid,
+        depthOffset: depthOffsetCustomEntity,
+    } = $state((() => customEntity)());
     let inputTagOptions: InputTagOption[] | undefined = $state(tags.map((tag) => ({ value: tag, label: tag })));
 
     let collisionGrid = $state(customEntityCollisionGrid ?? []);
@@ -46,7 +49,7 @@
     type DepthOption = (typeof depthOptions)[keyof typeof depthOptions];
 
     let selectedDepthOption: DepthOption = $state(
-        (() => (depthOffset === 0 ? depthOptions.STANDING : depthOptions.CUSTOM))()
+        (() => (depthOffset === 0 ? depthOptions.STANDING : depthOptions.CUSTOM))(),
     );
 
     function getModifiedCustomEntity(): EntityPrefab {

@@ -97,7 +97,7 @@
         gameScene.sayManager.say(
             message,
             type === "say" ? SayMessageType.SpeechBubble : SayMessageType.ThinkingCloud,
-            type === "say" ? 5000 : undefined
+            type === "say" ? 5000 : undefined,
         );
         message = "";
         closeBanner();

@@ -15,7 +15,7 @@ const authenticators: string[] = [];
 
 if (ENV_VARS.AUTHENTICATION_STRATEGY) {
     console.warn(
-        `[${new Date().toISOString()}] The AUTHENTICATION_STRATEGY environment variable is deprecated. Use ENABLE_BEARER_AUTHENTICATION, ENABLE_BASIC_AUTHENTICATION or ENABLE_DIGEST_AUTHENTICATION instead`
+        `[${new Date().toISOString()}] The AUTHENTICATION_STRATEGY environment variable is deprecated. Use ENABLE_BEARER_AUTHENTICATION, ENABLE_BASIC_AUTHENTICATION or ENABLE_DIGEST_AUTHENTICATION instead`,
     );
     switch (ENV_VARS.AUTHENTICATION_STRATEGY) {
         case "Bearer":
@@ -31,7 +31,7 @@ if (ENV_VARS.AUTHENTICATION_STRATEGY) {
             break;
         default: {
             throw new Error(
-                "Invalid AUTHENTICATION_STRATEGY environment variable, must be Bearer, Basic, Digest or empty"
+                "Invalid AUTHENTICATION_STRATEGY environment variable, must be Bearer, Basic, Digest or empty",
             );
         }
     }
@@ -46,7 +46,7 @@ if (ENV_VARS.ENABLE_BEARER_AUTHENTICATION) {
         request,
         token: string,
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
-        done: (error: any, user?: any, options?: any) => void
+        done: (error: any, user?: any, options?: any) => void,
     ) => {
         console.info(`[${new Date().toISOString()}] Bearer authentication received:`, token);
         if (authToken && token === authToken) {
@@ -98,7 +98,7 @@ if (ENV_VARS.ENABLE_BASIC_AUTHENTICATION) {
                     name: userid,
                 });
             }
-        })
+        }),
     );
     authenticators.push("basic");
 }
@@ -122,10 +122,10 @@ if (ENV_VARS.ENABLE_DIGEST_AUTHENTICATION) {
                     {
                         name: userid,
                     },
-                    configuredPassword
+                    configuredPassword,
                 );
             }
-        })
+        }),
     );
     authenticators.push("digest");
 }

@@ -102,7 +102,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         gameObjects: Phaser.GameObjects.GameObject[],
         deltaX: number,
         deltaY: number,
-        deltaZ: number
+        deltaZ: number,
     ): void {
         this.gameScene.handleMouseWheel(deltaY);
     }
@@ -146,7 +146,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                     x: worldPoint.x,
                     y: worldPoint.y,
                 },
-                true
+                true,
             )
             .catch((reason) => {
                 console.warn(reason);

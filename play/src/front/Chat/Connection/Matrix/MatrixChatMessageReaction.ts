@@ -17,7 +17,10 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
     users: MapStore<string, ChatUserWithEventId>;
     reacted: Writable<boolean>;
 
-    constructor(private matrixRoom: Room, event: MatrixEvent) {
+    constructor(
+        private matrixRoom: Room,
+        event: MatrixEvent,
+    ) {
         const relation = event.getRelation();
         if (relation === null || relation.rel_type !== "m.annotation") {
             throw Error("Wrong matrix event object for MessageReaction");

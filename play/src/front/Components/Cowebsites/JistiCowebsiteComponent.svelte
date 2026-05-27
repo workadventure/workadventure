@@ -84,7 +84,7 @@
     };
 
     function getCurrentParticipantId(
-        participants: { displayName: string; participantId: string }[]
+        participants: { displayName: string; participantId: string }[],
     ): string | undefined {
         const currentPlayerName = gameManager.getPlayerName();
         for (const participant of participants) {

@@ -32,7 +32,7 @@
                 return "disabled";
             }
             return $requestedMicrophoneState ? "normal" : "forbidden";
-        }
+        },
     );
 
     const microphoneActionBarTooltipStore = derived(
@@ -74,7 +74,7 @@
                 };
             }
             return { title: "", desc: "", media: "" };
-        }
+        },
     );
 
     function microphoneClick(): void {

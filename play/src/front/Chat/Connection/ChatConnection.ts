@@ -404,7 +404,9 @@ export type UserUuid = string & { __userUuidBrand: never };
 export type ChatSpaceRoom = ChatRoom;
 export interface ChatConnectionInterface {
     connectionStatus: Readable<ConnectionStatus>;
-    directRooms: Readable<(ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]>;
+    directRooms: Readable<
+        (ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]
+    >;
     rooms: Readable<(ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]>;
     invitations: Readable<(ChatRoom & ChatRoomMembershipManagement)[]>;
     folders: Readable<RoomFolder[]>;
@@ -466,7 +468,7 @@ export function hasChatRoomPollCreation(room: ChatConversation): room is ChatCon
 }
 
 export function hasChatRoomMembershipManagement(
-    conversation: ChatConversation | undefined
+    conversation: ChatConversation | undefined,
 ): conversation is ChatRoom & ChatRoomMembershipManagement {
     const candidate = conversation as (ChatRoom & Partial<ChatRoomMembershipManagement>) | undefined;
     return (
@@ -478,7 +480,7 @@ export function hasChatRoomMembershipManagement(
 }
 
 export function hasChatRoomModeration(
-    conversation: ChatConversation | undefined
+    conversation: ChatConversation | undefined,
 ): conversation is ChatRoom & ChatRoomModeration {
     const candidate = conversation as (ChatRoom & Partial<ChatRoomModeration>) | undefined;
     return (
@@ -489,7 +491,7 @@ export function hasChatRoomModeration(
 }
 
 export function hasChatRoomNotificationControl(
-    conversation: ChatConversation | undefined
+    conversation: ChatConversation | undefined,
 ): conversation is ChatRoom & ChatRoomNotificationControl {
     const candidate = conversation as (ChatRoom & Partial<ChatRoomNotificationControl>) | undefined;
     return (

@@ -196,7 +196,7 @@ describe("LiveKitParticipant", () => {
         participant["handleTrackPublished"](unpublishedScriptingPublication);
         participant["handleTrackSubscribed"](
             createRemoteAudioTrack(unpublishedScriptingStream),
-            unpublishedScriptingPublication
+            unpublishedScriptingPublication,
         );
 
         participant["handleTrackUnpublished"](unpublishedScriptingPublication);
@@ -249,7 +249,7 @@ function createParticipant({ publications }: { publications: RemoteTrackPublicat
         "wss://livekit.example.com",
         streamableSubjects,
         writable(new Set<string>()),
-        new AbortController().signal
+        new AbortController().signal,
     );
 }
 

@@ -25,12 +25,13 @@
     let normalizedAnswers = $derived(answers.map((answer) => answer.trim()).filter((answer) => answer.length > 0));
     let canAddAnswer = $derived(answers.length < MAX_ANSWERS);
     let hasInvalidAnswerLength = $derived(answers.some((answer) => answer.length > MAX_ANSWER_LENGTH));
-    let canSubmit =
-        $derived(question.trim().length > 0 &&
-        question.length <= MAX_QUESTION_LENGTH &&
-        normalizedAnswers.length >= MIN_ANSWERS &&
-        !hasInvalidAnswerLength &&
-        !isSubmitting);
+    let canSubmit = $derived(
+        question.trim().length > 0 &&
+            question.length <= MAX_QUESTION_LENGTH &&
+            normalizedAnswers.length >= MIN_ANSWERS &&
+            !hasInvalidAnswerLength &&
+            !isSubmitting,
+    );
 
     function addAnswer() {
         if (!canAddAnswer) {
@@ -77,7 +78,8 @@
     {#snippet content()}
         <div class="w-full flex flex-col gap-4">
             <div class="w-full">
-                <label class="text-sm font-bold mb-2 block" for="poll-question">{$LL.chat.poll.create.question()}</label>
+                <label class="text-sm font-bold mb-2 block" for="poll-question">{$LL.chat.poll.create.question()}</label
+                >
                 <textarea
                     data-testid="createPollQuestionInput"
                     id="poll-question"
@@ -158,7 +160,7 @@
     {/snippet}
 
     {#snippet action()}
-        <div  class="flex w-full gap-3">
+        <div class="flex w-full gap-3">
             <button class="btn btn-light btn-ghost flex-1 justify-center" onclick={() => modals.close()}>
                 {$LL.chat.poll.create.cancel()}
             </button>

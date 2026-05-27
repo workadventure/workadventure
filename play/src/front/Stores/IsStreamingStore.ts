@@ -27,7 +27,7 @@ export const isLiveStreamingStore: Readable<boolean> = derived(
         return gameSceneStore.spaceRegistry.isLiveStreamingStore.subscribe((isLive) => {
             set(isLive);
         });
-    }
+    },
 );
 
 /**

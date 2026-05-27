@@ -15,7 +15,7 @@ function createSpace(
         metadata?: Map<string, unknown>;
         mySpaceUserId?: string;
         recorderNamesById?: Record<string, string>;
-    }
+    },
 ): SpaceInterface {
     const metadata = options?.metadata ?? new Map<string, unknown>();
     if (options?.isMegaphone) {
@@ -55,7 +55,7 @@ describe("RecordingMenuUtils", () => {
         const rows = [createStartRow(discussionSpace)];
 
         expect(
-            getDirectRecordingActionRow(rows, [discussionSpace, megaphoneSpace], [discussionSpace, megaphoneSpace])
+            getDirectRecordingActionRow(rows, [discussionSpace, megaphoneSpace], [discussionSpace, megaphoneSpace]),
         ).toBeUndefined();
     });
 

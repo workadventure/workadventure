@@ -1,5 +1,4 @@
 <script lang="ts">
-
     interface Props {
         size?: "xs" | "sm" | "md" | "lg";
         fillColor?: string;
@@ -7,16 +6,17 @@
 
     let { size = "md", fillColor = "fill-secondary" }: Props = $props();
 
-    let sizeClasses =
-        $derived(size === "xs"
+    let sizeClasses = $derived(
+        size === "xs"
             ? "h-4 w-4"
             : size === "sm"
-            ? "h-6 w-6"
-            : size === "md"
-            ? "h-8 w-8"
-            : size === "lg"
-            ? "h-10 w-10"
-            : "h-12 w-12");
+              ? "h-6 w-6"
+              : size === "md"
+                ? "h-8 w-8"
+                : size === "lg"
+                  ? "h-10 w-10"
+                  : "h-12 w-12",
+    );
 </script>
 
 <div role="status" class={sizeClasses}>

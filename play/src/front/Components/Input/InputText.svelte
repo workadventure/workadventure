@@ -22,7 +22,7 @@
         onkeypress = () => {},
         onclick = () => {},
         errorHelperText = undefined,
-        error = false
+        error = false,
     }: Props = $props();
 </script>
 
@@ -35,11 +35,11 @@
         type="text"
         placeholder={placeHolder}
         bind:value
-        onchange={onchange}
-        onfocus={onfocus}
-        onblur={onblur}
-        onkeypress={onkeypress}
-        onclick={onclick}
+        {onchange}
+        {onfocus}
+        {onblur}
+        {onkeypress}
+        {onclick}
         class:error={errorHelperText || error}
         class:!border-red-500={errorHelperText || error}
     />

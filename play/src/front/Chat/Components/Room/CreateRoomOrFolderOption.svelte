@@ -22,13 +22,15 @@
     let hideFolderOptions = $state(true);
 
     let hasPermissionToCreateRoom = $derived(
-        folder?.hasPermissionForRoomStateEvent(EventType.SpaceChild) ?? readable(false)
+        folder?.hasPermissionForRoomStateEvent(EventType.SpaceChild) ?? readable(false),
     );
     let hasPermissionToInvite = $derived(folder?.hasPermissionTo("invite") ?? readable(false));
     let hasPermissionToKick = $derived(folder?.hasPermissionTo("kick") ?? readable(false));
     let hasPermissionToBan = $derived(folder?.hasPermissionTo("ban") ?? readable(false));
 
-    let shouldDisplayManageParticipantButton = $derived($hasPermissionToInvite || $hasPermissionToKick || $hasPermissionToBan);
+    let shouldDisplayManageParticipantButton = $derived(
+        $hasPermissionToInvite || $hasPermissionToKick || $hasPermissionToBan,
+    );
 
     function toggleSpaceOption() {
         if (optionButtonRef === undefined) {

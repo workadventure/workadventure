@@ -48,7 +48,7 @@
         showHeader = true,
         membersForMessageAvatars = undefined,
         showThreadSummary = true,
-        updateMessageBody = () => {}
+        updateMessageBody = () => {},
     }: Props = $props();
 
     let messageRef: HTMLDivElement | undefined = $state();
@@ -86,32 +86,32 @@
         proximity: MessageText,
     };
 
-    let reactionsWithUsers = $derived(derived(
-        [reactions, ...Array.from(reactions.values()).map((reaction) => reaction.users)],
-        ([$reactions, ...$users]) => {
-            return Array.from($reactions.values()).filter((reaction) => reaction.users.size > 0);
-        }
-    ));
+    let reactionsWithUsers = $derived(
+        derived(
+            [reactions, ...Array.from(reactions.values()).map((reaction) => reaction.users)],
+            ([$reactions, ...$users]) => {
+                return Array.from($reactions.values()).filter((reaction) => reaction.users.size > 0);
+            },
+        ),
+    );
     const emptyThreadSummary = readable<ChatThreadSummary | null>(null);
 
-    let messageSenderAvatarColor = $derived(resolveChatUserColor(
-        message.sender?.chatId ?? "",
-        message.sender?.color,
-        getMatrixClientForChatTint()
-    ));
+    let messageSenderAvatarColor = $derived(
+        resolveChatUserColor(message.sender?.chatId ?? "", message.sender?.color, getMatrixClientForChatTint()),
+    );
 
     let roomMembersList = $derived(membersForMessageAvatars ? $membersForMessageAvatars : undefined);
     let memberForSender = $derived(
         roomMembersList && message.sender?.chatId
             ? roomMembersList.find((m) => m.id === message.sender!.chatId)
-            : undefined
+            : undefined,
     );
     let messageAvatarPictureStore = $derived(memberForSender?.pictureStore ?? message.sender?.pictureStore);
     let waParensStore = $derived(memberForSender?.waDisplayNameIfDifferent);
     let waDisplayNameParens = $derived($waParensStore ? $waParensStore : undefined);
     let threadSummary = $derived(message.threadSummary ?? emptyThreadSummary);
     let hasThreadSummary = $derived(
-        showThreadSummary && replyDepth === 0 && !isQuotedMessage && !!$threadSummary && $threadSummary.replyCount > 0
+        showThreadSummary && replyDepth === 0 && !isQuotedMessage && !!$threadSummary && $threadSummary.replyCount > 0,
     );
 
     async function openThread() {
@@ -231,11 +231,7 @@
                 {#if quotedMessage && replyDepth < 1 && !$isDeleted}
                     <div class="p-1 opacity-80">
                         <div class="response bg-white/10 rounded">
-                            <Message
-                                replyDepth={replyDepth + 1}
-                                message={quotedMessage}
-                                {membersForMessageAvatars}
-                            />
+                            <Message replyDepth={replyDepth + 1} message={quotedMessage} {membersForMessageAvatars} />
                         </div>
                     </div>
                 {/if}

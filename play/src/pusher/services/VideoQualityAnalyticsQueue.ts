@@ -85,7 +85,7 @@ export type VideoQualityAnalyticsQueueStats = {
 type HttpPost = (
     url: string,
     payload: VideoQualityAnalyticsBatch,
-    options: { headers: Record<string, string>; timeout: number }
+    options: { headers: Record<string, string>; timeout: number },
 ) => Promise<unknown>;
 
 export class VideoQualityAnalyticsQueue {
@@ -105,7 +105,7 @@ export class VideoQualityAnalyticsQueue {
         private readonly config: VideoQualityAnalyticsQueueConfig,
         private readonly post: HttpPost = (url, payload, options) => axios.post(url, payload, options),
         private readonly now: () => Date = () => new Date(),
-        private readonly random: () => number = Math.random
+        private readonly random: () => number = Math.random,
     ) {
         this.endpointUrl = config.adminApiUrl
             ? `${config.adminApiUrl.replace(/\/+$/, "")}/api/analytics/video-quality-batch`
@@ -210,7 +210,7 @@ export class VideoQualityAnalyticsQueue {
         sample: VideoQualitySampleMessage,
         socketData: SocketData,
         pusherReceivedAt: string,
-        reporterClientIp: string | null
+        reporterClientIp: string | null,
     ): VideoQualityAnalyticsSample | undefined {
         const streamCategory = toStreamCategory(sample.streamCategory);
         const transportType = toTransportType(sample.transportType);
@@ -317,7 +317,7 @@ export class VideoQualityAnalyticsQueue {
             return undefined;
         }
 
-        const fpsStdDev = Number.isFinite(sample.fpsStdDev) ? sample.fpsStdDev ?? null : null;
+        const fpsStdDev = Number.isFinite(sample.fpsStdDev) ? (sample.fpsStdDev ?? null) : null;
 
         return {
             clientEventTime: clientEventDate.toISOString(),
@@ -419,7 +419,7 @@ function toTransportType(transportType: VideoQualityTransportType): VideoQuality
 }
 
 function toRelayProtocol(
-    relayProtocol: VideoQualityRelayProtocol | undefined
+    relayProtocol: VideoQualityRelayProtocol | undefined,
 ): VideoQualityAnalyticsRelayProtocol | null {
     if (relayProtocol === VideoQualityRelayProtocol.VIDEO_QUALITY_RELAY_PROTOCOL_UDP) {
         return "udp";

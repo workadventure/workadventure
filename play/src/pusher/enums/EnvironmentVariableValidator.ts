@@ -18,23 +18,23 @@ export const EnvironmentVariables = z.object({
         .describe("Secret key used to encode JWT tokens. Set this to a random unguessable string."),
     API_URL: z.string().min(1).describe("URL of the back server API"),
     ADMIN_API_URL: AbsoluteOrRelativeUrl.optional().describe(
-        "The URL to the admin API. If in the same network, you can use a local name here."
+        "The URL to the admin API. If in the same network, you can use a local name here.",
     ),
     ADMIN_URL: AbsoluteOrRelativeUrl.optional().describe(
-        "The URL to the admin. This should be a publicly accessible URL."
+        "The URL to the admin. This should be a publicly accessible URL.",
     ),
     ADMIN_BO_URL: AbsoluteOrRelativeUrl.optional().describe(
-        "The URL to the admin dashboard. Will be used to redirect the user to the admin dashboard. You can put it a URL that will automatically connect the user."
+        "The URL to the admin dashboard. Will be used to redirect the user to the admin dashboard. You can put it a URL that will automatically connect the user.",
     ),
     ADMIN_API_TOKEN: z.string().optional().describe("Authentication token for the admin API"),
     AUTOLOGIN_URL: AbsoluteOrRelativeUrl.optional().describe(
-        "The URL to be used to automatically log someone given a token."
+        "The URL to be used to automatically log someone given a token.",
     ),
     ADMIN_SOCKETS_TOKEN: z
         .string()
         .optional()
         .describe(
-            "Authentication token to connect to 'play' admin websocket endpoint. This endpoint is typically used to list users connected to a given room."
+            "Authentication token to connect to 'play' admin websocket endpoint. This endpoint is typically used to list users connected to a given room.",
         ),
     CPU_OVERHEAT_THRESHOLD: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 80))
@@ -48,17 +48,17 @@ export const EnvironmentVariables = z.object({
     SOCKET_IDLE_TIMER: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 120))
         .describe(
-            "maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling)"
+            "maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling)",
         ),
     CLIENT_DISCONNECTION_RETENTION_MS: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 30_000))
         .describe(
-            "Maximum time, in milliseconds, the client keeps sent websocket messages for replay after a short disconnection. Defaults to 30000."
+            "Maximum time, in milliseconds, the client keeps sent websocket messages for replay after a short disconnection. Defaults to 30000.",
         ),
     PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 1024 * 1024))
         .describe(
-            "Maximum uWebSockets backpressure bytes accepted on admin websocket connections. Defaults to 1048576."
+            "Maximum uWebSockets backpressure bytes accepted on admin websocket connections. Defaults to 1048576.",
         ),
     // Used only in development
     VITE_URL: z.string().url().optional().describe("URL of the Vite development server (development only)"),
@@ -120,7 +120,7 @@ export const EnvironmentVariables = z.object({
         .transform((val) => {
             if (val !== null && val !== undefined) {
                 console.warn(
-                    "Using OPID_CLIENT_REDIRECT_URL is deprecated. Please use OPENID_CLIENT_REDIRECT_URL instead."
+                    "Using OPID_CLIENT_REDIRECT_URL is deprecated. Please use OPENID_CLIENT_REDIRECT_URL instead.",
                 );
             }
             return val;
@@ -131,7 +131,7 @@ export const EnvironmentVariables = z.object({
         .transform((val) => {
             if (val !== null && val !== undefined) {
                 console.warn(
-                    "Using OPID_CLIENT_REDIRECT_LOGOUT_URL is deprecated. Please use OPENID_CLIENT_REDIRECT_LOGOUT_URL instead."
+                    "Using OPID_CLIENT_REDIRECT_LOGOUT_URL is deprecated. Please use OPENID_CLIENT_REDIRECT_LOGOUT_URL instead.",
                 );
             }
             return val;
@@ -142,7 +142,7 @@ export const EnvironmentVariables = z.object({
         .transform((val) => {
             if (val !== null && val !== undefined) {
                 console.warn(
-                    "Using OPID_PROFILE_SCREEN_PROVIDER is deprecated. Please use OPENID_PROFILE_SCREEN_PROVIDER instead."
+                    "Using OPID_PROFILE_SCREEN_PROVIDER is deprecated. Please use OPENID_PROFILE_SCREEN_PROVIDER instead.",
                 );
             }
             return val;
@@ -220,7 +220,7 @@ export const EnvironmentVariables = z.object({
         .describe("JWT claim to use as the username. Defaults to 'preferred_username'"),
     OPENID_LOCALE_CLAIM: z.string().optional().describe("JWT claim to use for user locale. Defaults to 'locale'"),
     OPENID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional().describe(
-        "Policy for avatar naming: 'user_input' or 'openid_nickname'"
+        "Policy for avatar naming: 'user_input' or 'openid_nickname'",
     ),
     OPENID_TAGS_CLAIM: z.string().optional().describe("JWT claim containing user tags/roles"),
 
@@ -231,7 +231,7 @@ export const EnvironmentVariables = z.object({
     PROMETHEUS_PORT: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 0))
         .describe(
-            "The port to access the Prometheus metrics. If not set, the default port is used AND an authorization token is required."
+            "The port to access the Prometheus metrics. If not set, the default port is used AND an authorization token is required.",
         ),
     ENABLE_CHAT: BoolAsString.optional()
         .transform((val) => toBool(val, true))
@@ -254,21 +254,21 @@ export const EnvironmentVariables = z.object({
     BYPASS_PWA: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe(
-            "When true, LocalAdmin map details set bypassPwa so the client never shows the Web App install flow. Defaults to false."
+            "When true, LocalAdmin map details set bypassPwa so the client never shows the Web App install flow. Defaults to false.",
         ),
     PROVIDE_DEFAULT_WOKA_NAME: z
         .enum(["no", "random", "fix", "fix-plus-random-numbers", ""])
         .optional()
         .transform((val) => (val === "" ? undefined : val))
         .describe(
-            "How woka names are assigned: 'no' (manual input), 'random' (random name), 'fix' (use DEFAULT_WOKA_NAME), 'fix-plus-random-numbers' (use DEFAULT_WOKA_NAME with random numbers appended)."
+            "How woka names are assigned: 'no' (manual input), 'random' (random name), 'fix' (use DEFAULT_WOKA_NAME), 'fix-plus-random-numbers' (use DEFAULT_WOKA_NAME with random numbers appended).",
         ),
     PROVIDE_DEFAULT_WOKA_TEXTURE: z
         .enum(["no", "random", "fix", ""])
         .optional()
         .transform((val) => (val === "" ? undefined : val))
         .describe(
-            "How woka textures/avatars are assigned: 'no' (manual selection), 'random' (random texture), 'fix' (use DEFAULT_WOKA_TEXTURE)."
+            "How woka textures/avatars are assigned: 'no' (manual selection), 'random' (random texture), 'fix' (use DEFAULT_WOKA_TEXTURE).",
         ),
     ENABLE_SAY: BoolAsString.optional()
         .transform((val) => toBool(val, true))
@@ -324,12 +324,12 @@ export const EnvironmentVariables = z.object({
         .optional()
         .transform(emptyStringToUndefined)
         .describe(
-            "The auth secret to generate TURN credentials on the fly (enabled by the --use-auth-secret and --auth-secret in Coturn)."
+            "The auth secret to generate TURN credentials on the fly (enabled by the --use-auth-secret and --auth-secret in Coturn).",
         ),
     TURN_CREDENTIALS_RENEWAL_TIME: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 3 * 60 * 60 * 1000))
         .describe(
-            "Time interval (in milliseconds) for renewing TURN server credentials. Defaults to 10800000 milliseconds (3 hours)"
+            "Time interval (in milliseconds) for renewing TURN server credentials. Defaults to 10800000 milliseconds (3 hours)",
         ),
     JITSI_URL: z.string().optional().describe("URL of the Jitsi Meet server for video conferencing"),
     JITSI_PRIVATE_MODE: BoolAsString.optional()
@@ -344,7 +344,7 @@ export const EnvironmentVariables = z.object({
     MAX_DISPLAYED_VIDEOS: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 16))
         .describe(
-            "An approximation of the maximum number of videos displayed at once. If there are more videos to display, the user will have to scroll. The number of videos can sometimes be slightly greater (MAX_DISPLAYED_VIDEOS + number of videos to display % number of videos per row). This is useful to avoid overloading the Livekit server when a lot of people are in the same room."
+            "An approximation of the maximum number of videos displayed at once. If there are more videos to display, the user will have to scroll. The number of videos can sometimes be slightly greater (MAX_DISPLAYED_VIDEOS + number of videos to display % number of videos per row). This is useful to avoid overloading the Livekit server when a lot of people are in the same room.",
         ),
     NODE_ENV: z.string().optional().describe("Node.js environment: 'development', 'production', or 'test'"),
     CONTACT_URL: AbsoluteOrRelativeUrl.optional().describe("URL for users to contact support or administrators"),
@@ -400,7 +400,7 @@ export const EnvironmentVariables = z.object({
     MAP_EDITOR_ALLOW_ALL_USERS: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe(
-            'If set to true, all users can edit the map. If set to false, only the users in MAP_EDITOR_ALLOWED_USERS or users with the "admin" or "editor" tag can edit the map. Note: this setting is ignored if an Admin API is configured.'
+            'If set to true, all users can edit the map. If set to false, only the users in MAP_EDITOR_ALLOWED_USERS or users with the "admin" or "editor" tag can edit the map. Note: this setting is ignored if an Admin API is configured.',
         ),
     WOKA_SPEED: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 9))
@@ -465,7 +465,7 @@ export const EnvironmentVariables = z.object({
         .optional()
         .transform((val) => toNumber(val, 2 / 3))
         .describe(
-            "Pixel density multiplier for LiveKit adaptive streams. 1 means LiveKit will use a better simulcast layer as soon as the video box is bigger than the stream. Lower values delay upgrades to larger simulcast layers. Defaults to 0.666666 (i.e. allow a 50% upscale of the video before switching to the higher simulcast layer)"
+            "Pixel density multiplier for LiveKit adaptive streams. 1 means LiveKit will use a better simulcast layer as soon as the video box is bigger than the stream. Lower values delay upgrades to larger simulcast layers. Defaults to 0.666666 (i.e. allow a 50% upscale of the video before switching to the higher simulcast layer)",
         ),
     MATRIX_API_URI: z.string().optional().describe("Matrix homeserver API URI (internal)"),
     MATRIX_PUBLIC_URI: z.string().optional().describe("Matrix homeserver public URI"),
@@ -515,7 +515,7 @@ export const EnvironmentVariables = z.object({
         .enum(["tasks-vision", "selfie-segmentation", ""])
         .optional()
         .describe(
-            "Virtual background transformer engine: 'tasks-vision' (GPU-accelerated, experimental) or 'selfie-segmentation' (CPU-based, stable). Currently defaults to 'selfie-segmentation'; 'tasks-vision' is intended as the future default once considered stable."
+            "Virtual background transformer engine: 'tasks-vision' (GPU-accelerated, experimental) or 'selfie-segmentation' (CPU-based, stable). Currently defaults to 'selfie-segmentation'; 'tasks-vision' is intended as the future default once considered stable.",
         ),
 });
 

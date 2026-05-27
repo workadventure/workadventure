@@ -28,7 +28,7 @@ export class Player extends Character {
         texturesPromise: CancelablePromise<string[]>,
         direction: PositionMessage_Direction,
         moving: boolean,
-        companionTexturePromise: CancelablePromise<string> | undefined
+        companionTexturePromise: CancelablePromise<string> | undefined,
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companionTexturePromise, "me");
         //the current player model should be push away by other players to prevent conflict
@@ -88,7 +88,7 @@ export class Player extends Character {
 
     public setPathToFollow(
         path: { x: number; y: number }[],
-        speed?: number
+        speed?: number,
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
         this.getBody().setDirectControl(true);
         return super.setPathToFollow(path, speed);
@@ -244,7 +244,7 @@ export class Player extends Character {
         this.scene.connection?.emitAskPosition(
             localUserStore.getLocalUser()?.uuid ?? "",
             this.scene.roomUrl,
-            AskPositionMessage_AskType.LOCATE
+            AskPositionMessage_AskType.LOCATE,
         );
     }
 

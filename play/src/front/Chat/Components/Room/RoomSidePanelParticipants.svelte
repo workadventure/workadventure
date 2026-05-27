@@ -41,9 +41,11 @@
         modals.open(ManageParticipantsModal, { room });
     }
 
-    let joinedMembers = $derived([...$members]
-        .filter((member) => get(member.membership) === "join")
-        .sort((memberA, memberB) => get(memberA.name).localeCompare(get(memberB.name))));
+    let joinedMembers = $derived(
+        [...$members]
+            .filter((member) => get(member.membership) === "join")
+            .sort((memberA, memberB) => get(memberA.name).localeCompare(get(memberB.name))),
+    );
 </script>
 
 <div class="flex h-full min-h-0 flex-col bg-white/[0.02]" data-testid="roomSidePanelParticipants">

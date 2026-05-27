@@ -81,17 +81,22 @@
         />
     </section>
     <section class="justify-center bottom-0 w-full bg-contrast p-4 flex flex-row space-x-4 mt-4 rounded-b-lg">
-        <button class="btn bg-white/10 hover:bg-white/20 grow" onclick={(event) => {
-            event.preventDefault();
-            refresh();
-        }}
+        <button
+            class="btn bg-white/10 hover:bg-white/20 grow"
+            onclick={(event) => {
+                event.preventDefault();
+                refresh();
+            }}
         >
             {$LL.camera.webrtc.refresh()}
         </button>
-        <button type="submit" class="btn btn-secondary grow" onclick={(event) => {
-            event.preventDefault();
-            close();
-        }}
+        <button
+            type="submit"
+            class="btn btn-secondary grow"
+            onclick={(event) => {
+                event.preventDefault();
+                close();
+            }}
         >
             {$LL.camera.webrtc.continue()}
         </button>

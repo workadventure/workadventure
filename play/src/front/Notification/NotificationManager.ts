@@ -18,7 +18,10 @@ type SelectedRoomStore = {
 class NotificationManager {
     private channels: Map<string, BroadcastChannel> = new Map();
 
-    constructor(private proximityMeetingStore: Writable<boolean>, private selectedRoomStore: SelectedRoomStore) {
+    constructor(
+        private proximityMeetingStore: Writable<boolean>,
+        private selectedRoomStore: SelectedRoomStore,
+    ) {
         this.createNotificationMessageChannel();
     }
 

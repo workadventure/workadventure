@@ -1,5 +1,4 @@
 <script lang="ts">
-    
     interface Props {
         status?: "idle" | "active";
         width?: string;
@@ -14,7 +13,7 @@
         width = "28",
         height = "28",
         classList = "",
-        hoverClass = "group-hover/btn-recording:text-red-500"
+        hoverClass = "group-hover/btn-recording:text-red-500",
     }: Props = $props();
 
     let colorClass = $derived(status === "active" ? "text-red-500" : "text-white");

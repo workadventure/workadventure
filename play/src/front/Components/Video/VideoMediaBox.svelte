@@ -30,12 +30,7 @@
         activeUserName?: boolean;
     }
 
-    let {
-        fullScreen = false,
-        videoBox,
-        miniMode = false,
-        activeUserName = true,
-    }: Props = $props();
+    let { fullScreen = false, videoBox, miniMode = false, activeUserName = true }: Props = $props();
 
     let streamableStore = $derived(videoBox.streamable);
     let streamablesStore = $derived(videoBox.streamables);
@@ -89,7 +84,7 @@
     let isLocalUserStreamingMegaphone = $derived(
         isLocalUser &&
             $requestedMegaphoneStore &&
-            ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState)
+            ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState),
     );
 
     let blackListSubject: Subscription | undefined;
@@ -157,7 +152,7 @@
                     placement: "bottom",
                 },
                 8,
-                false
+                false,
             );
             // onclose={() => (showUserSubMenu = false)}
         } else {
@@ -283,7 +278,7 @@
                 >
                     <CenteredVideo
                         media={streamableEntry.streamable.media}
-                        videoEnabled={streamableEntry.isPending ? true : videoEnabled ?? false}
+                        videoEnabled={streamableEntry.isPending ? true : (videoEnabled ?? false)}
                         status={streamableEntry.isPending ? "connected" : effectiveStatus}
                         verticalAlign={!inCameraContainer && !inHighlightFullscreenParticipantList && !fullScreen
                             ? "top"
@@ -295,11 +290,11 @@
                         isBlocked={streamableEntry.isPending ? false : ($isBlockedStore ?? false)}
                         withBackground={streamableEntry.isPending
                             ? false
-                            : (((inCameraContainer || inHighlightFullscreenParticipantList) &&
+                            : ((((inCameraContainer || inHighlightFullscreenParticipantList) &&
                                   effectiveStatus !== "connecting" &&
                                   effectiveStatus !== "reconnecting") ||
                                   $isBlockedStore) ??
-                              false}
+                              false)}
                         isMegaphoneSpace={streamableEntry.isPending
                             ? false
                             : (isMegaphoneSpace && $megaphoneState) || isLocalUserStreamingMegaphone || false}
@@ -320,7 +315,8 @@
                                 name={name ?? "unknown"}
                                 picture={pictureStore}
                                 isPlayingAudio={showVoiceIndicator ?? false}
-                                isCameraDisabled={(!(videoEnabled ?? false) && !miniMode) || effectiveStatus !== "connected"}
+                                isCameraDisabled={(!(videoEnabled ?? false) && !miniMode) ||
+                                    effectiveStatus !== "connected"}
                                 isBlocked={$isBlockedStore ?? false}
                                 position={videoEnabled && !$isBlockedStore && effectiveStatus === "connected"
                                     ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"

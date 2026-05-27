@@ -28,7 +28,7 @@
                         const language = hljsModule.default.getLanguage(lang) ? lang : "plaintext";
                         return hljsModule.default.highlight(code, { language }).value;
                     },
-                })
+                }),
             );
         } else {
             marked = new Marked();

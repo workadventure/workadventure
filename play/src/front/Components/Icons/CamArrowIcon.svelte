@@ -6,12 +6,7 @@
         strokeWidth?: string;
     }
 
-    let {
-        height = "h-6",
-        width = "w-6",
-        stroke = "#ffffff",
-        strokeWidth = "1.5"
-    }: Props = $props();
+    let { height = "h-6", width = "w-6", stroke = "#ffffff", strokeWidth = "1.5" }: Props = $props();
 </script>
 
 <svg

@@ -12,12 +12,7 @@
         refuseRequest: () => void;
     }
 
-    let {
-        sender,
-        message,
-        acceptRequest,
-        refuseRequest
-    }: Props = $props();
+    let { sender, message, acceptRequest, refuseRequest }: Props = $props();
 
     let pictureStore = $derived(sender ? sender.pictureStore : readable<string | undefined>(undefined));
 </script>

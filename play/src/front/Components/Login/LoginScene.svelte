@@ -34,7 +34,7 @@
                 encodeURI(legals.termsOfUseUrl) +
                 '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' +
                 $LL.login.termsOfUse() +
-                "</a>"
+                "</a>",
         );
     }
     if (legals?.privacyPolicyUrl) {
@@ -43,7 +43,7 @@
                 encodeURI(legals.privacyPolicyUrl) +
                 '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' +
                 $LL.login.privacyPolicy() +
-                "</a>"
+                "</a>",
         );
     }
     if (legals?.cookiePolicyUrl) {
@@ -52,7 +52,7 @@
                 encodeURI(legals.cookiePolicyUrl) +
                 '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' +
                 $LL.login.cookiePolicy() +
-                "</a>"
+                "</a>",
         );
     }
 

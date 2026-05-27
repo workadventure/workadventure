@@ -145,7 +145,7 @@
         {
             placement: "bottom-end",
         },
-        8
+        8,
     );
 
     let forceBurgerMode = $derived($inJitsiStore || $inBbbStore || $inLivekitStore || $isInRemoteConversation);
@@ -159,13 +159,13 @@
                     //set(items);
                     // Each time we enter here, a fallsInBurgerMenuStore has been updated OR a rightActionBarMenuItems has been updated
                     return items;
-                }
+                },
             );
             const ghostSubscriptionUnsubscribe = theDerived.subscribe(() => {
                 set(get(rightActionBarMenuItems).filter((item) => get(item.fallsInBurgerMenuStore)));
             });
             return () => ghostSubscriptionUnsubscribe();
-        }
+        },
     );
 
     function openPwaInstallPrompt(): void {

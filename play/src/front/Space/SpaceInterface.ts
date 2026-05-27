@@ -57,7 +57,7 @@ export interface SpaceInterface {
     emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void;
     emitPrivateMessage(
         message: NonNullable<PrivateSpaceEvent["event"]>,
-        receiverUserId: SpaceUser["spaceUserId"]
+        receiverUserId: SpaceUser["spaceUserId"],
     ): void;
     emitBackEvent(message: NonNullable<BackEventMessage["backEvent"]>): void;
     emitVideoQualityReport(message: VideoQualityReportMessage): void;

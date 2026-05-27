@@ -26,7 +26,7 @@
                 options.visibility = "restricted";
             }
             return options;
-        })()
+        })(),
     );
     let createFolderError: string | undefined = $state(undefined);
 

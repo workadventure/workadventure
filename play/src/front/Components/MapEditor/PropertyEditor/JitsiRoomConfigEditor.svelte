@@ -16,7 +16,7 @@
     type JitsiRoomConfigDataKeys = "startWithAudioMuted" | "startWithVideoMuted";
 
     const defaultConfigKeys: JitsiRoomConfigDataKeys[] = Object.keys(defaultConfig).map(
-        (key) => key as JitsiRoomConfigDataKeys
+        (key) => key as JitsiRoomConfigDataKeys,
     );
 
     interface Props {
@@ -34,7 +34,7 @@
         onclose,
         visibilityValue = $bindable(),
         config,
-        jitsiRoomAdminTag = $bindable("")
+        jitsiRoomAdminTag = $bindable(""),
     }: Props = $props();
     let currentConfig: JitsiRoomConfigData = $state({});
 

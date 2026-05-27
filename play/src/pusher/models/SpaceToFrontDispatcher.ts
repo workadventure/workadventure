@@ -39,7 +39,10 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
     private initDeferred = new Deferred<void>();
     private readonly strategy: SpaceNotificationStrategy;
 
-    constructor(private readonly _space: Space, private readonly eventProcessor: EventProcessor) {
+    constructor(
+        private readonly _space: Space,
+        private readonly eventProcessor: EventProcessor,
+    ) {
         this.strategy = SpaceNotificationStrategyFactory.getStrategy(_space.filterType);
     }
 
@@ -146,7 +149,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                     }
                     this._space.query.receiveAnswer(
                         message.message.spaceAnswerMessage.id,
-                        message.message.spaceAnswerMessage.answer
+                        message.message.spaceAnswerMessage.answer,
                     );
                     break;
                 }
@@ -167,7 +170,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         for (const spaceUser of spaceUsers) {
             if (this._space.users.has(spaceUser.spaceUserId)) {
                 throw new Error(
-                    `During init... user ${spaceUser.spaceUserId} already exists in space ${this._space.name}`
+                    `During init... user ${spaceUser.spaceUserId} already exists in space ${this._space.name}`,
                 );
             }
 
@@ -186,11 +189,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                     // This indicates an unexpected state - socket exists but user object doesn't
                     console.warn(
                         `[SpaceToFrontDispatcher.initSpaceUsersMessage] Local socket found but no user in ` +
-                            `_localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}. Creating new object.`
+                            `_localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}. Creating new object.`,
                     );
                     Sentry.captureMessage(
                         `Local socket found but no user in _localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}`,
-                        "warning"
+                        "warning",
                     );
                     user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
                 }
@@ -248,11 +251,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                 // This indicates an unexpected state - socket exists but user object doesn't
                 console.warn(
                     `[SpaceToFrontDispatcher.addUser] Local socket found but no user in ` +
-                        `_localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}. Creating new object.`
+                        `_localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}. Creating new object.`,
                 );
                 Sentry.captureMessage(
                     `Local socket found but no user in _localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}`,
-                    "warning"
+                    "warning",
                 );
                 user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
             }
@@ -471,7 +474,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                     },
                 },
             },
-            message.senderUserId
+            message.senderUserId,
         );
     }
 
@@ -488,7 +491,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
 
         if (!receiver) {
             console.warn(
-                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}. Possibly disconnected or left the space.`
+                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}. Possibly disconnected or left the space.`,
             );
             return;
         }
@@ -496,7 +499,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         const receiverSpaceUser = this._space._localConnectedUserWithSpaceUser.get(receiver);
         if (!receiverSpaceUser) {
             console.warn(
-                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}. Possibly disconnected or left the space.`
+                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}. Possibly disconnected or left the space.`,
             );
             return;
         }

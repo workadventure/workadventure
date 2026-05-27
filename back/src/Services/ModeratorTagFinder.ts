@@ -17,7 +17,7 @@ export class ModeratorTagFinder {
         private map: ITiledMap,
         private parseProperty: (properties: ITiledMapProperty[]) => { mainValue: string; tagValue: string } | undefined,
         private roomId?: string,
-        private wamFileProperties?: WAMFileFormat
+        private wamFileProperties?: WAMFileFormat,
     ) {
         for (const layer of map.layers) {
             this.findModeratorTagInLayer(layer);

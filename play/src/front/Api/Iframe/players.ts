@@ -34,7 +34,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
                 if (remotePlayer === undefined) {
                     console.warn(
                         'Received a variable message for a player that isn\'t connected. Did you forget to call "WA.players.configureTracking()"?. Ignoring.',
-                        payloadData
+                        payloadData,
                     );
                     return;
                 }
@@ -147,7 +147,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      * If you are looking to listen for variable changes of only one player, look at `RemotePlayer.onVariableChange` instead.
      */
     public onVariableChange<K extends keyof PublicPlayerState>(
-        variableName: K
+        variableName: K,
     ): Observable<PlayerVariableChanged<PublicPlayerState[K]>> {
         let stream = this.sharedPlayersVariableStream[variableName];
         if (!stream) {
@@ -173,7 +173,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
     public get onPlayerEnters(): Observable<RemotePlayerInterface> {
         if (!this.trackingPlayers) {
             throw new Error(
-                "Cannot call WA.players.onPlayerEnters. You forgot to call WA.players.configureTracking() first."
+                "Cannot call WA.players.onPlayerEnters. You forgot to call WA.players.configureTracking() first.",
             );
         }
         return this.newRemotePlayersStream;
@@ -195,7 +195,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
     public get onPlayerLeaves(): Observable<RemotePlayerInterface> {
         if (!this.trackingPlayers) {
             throw new Error(
-                "Cannot call WA.players.onPlayerLeaves. You forgot to call WA.players.configureTracking() first."
+                "Cannot call WA.players.onPlayerLeaves. You forgot to call WA.players.configureTracking() first.",
             );
         }
         return this.removeRemotePlayersStream;
@@ -215,7 +215,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
     public get onPlayerMoves(): Observable<RemotePlayerMoved> {
         if (!this.trackingMovement) {
             throw new Error(
-                "Cannot call WA.players.onPlayerMoves(). You forgot to call WA.players.configureTracking() first."
+                "Cannot call WA.players.onPlayerMoves(). You forgot to call WA.players.configureTracking() first.",
             );
         }
         return this.playersMovedStream;

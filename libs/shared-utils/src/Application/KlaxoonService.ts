@@ -29,7 +29,7 @@ export const initWindowKlaxoonActivityPicker = () => {
                 s = window.open(
                     `https://${o}/auth-ui?redirect=%2Factivity-picker%3FclientId%3D${t}%26directSelection%3D${e}`,
                     undefined,
-                    n.map((t) => t.join("=")).join(",")
+                    n.map((t) => t.join("=")).join(","),
                 );
             window.addEventListener(
                 "AcitivityPickerFromWorkAdventure",
@@ -37,7 +37,7 @@ export const initWindowKlaxoonActivityPicker = () => {
                     const { type: e, payload: o } = t.data;
                     "activity-picker-result" === e && (i(o), s?.close());
                 },
-                { once: !0 }
+                { once: !0 },
             );
             return s;
         },
@@ -46,7 +46,7 @@ export const initWindowKlaxoonActivityPicker = () => {
 
     console.info(
         "A new function was added into the browser window: KlaxoonActivityPicker",
-        window.KlaxoonActivityPicker
+        window.KlaxoonActivityPicker,
     );
 };
 

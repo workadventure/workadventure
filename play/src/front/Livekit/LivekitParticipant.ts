@@ -35,7 +35,7 @@ export class LiveKitParticipant {
     private _actualScreenShare: Streamable | undefined;
 
     private _audioScreenShareStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(
-        undefined
+        undefined,
     );
 
     private _nameStore: Writable<string>;
@@ -47,10 +47,10 @@ export class LiveKitParticipant {
     private _isScreenShareAudioMuted = writable<boolean>(true);
     private _spaceUser: SpaceUserExtended;
     private _videoRemoteTrack: Writable<RemoteVideoTrack | undefined> = writable<RemoteVideoTrack | undefined>(
-        undefined
+        undefined,
     );
     private _screenShareRemoteTrack: Writable<RemoteVideoTrack | undefined> = writable<RemoteVideoTrack | undefined>(
-        undefined
+        undefined,
     );
     private _isActiveSpeaker = writable<boolean>(false);
     private _muteAudioStore: Writable<boolean> = writable<boolean>(false);
@@ -89,7 +89,7 @@ export class LiveKitParticipant {
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
         private abortSignal: AbortSignal,
-        private defaultVolume: number = get(volumeProximityDiscussionStore)
+        private defaultVolume: number = get(volumeProximityDiscussionStore),
     ) {
         incrementLivekitConnectionsCount();
         this.boundHandleTrackPublished = this.handleTrackPublished.bind(this);
@@ -134,7 +134,7 @@ export class LiveKitParticipant {
         this.updateLivekitVideoStreamStore();
         this.analyticsStatsUnsubscribers.push(this.subscribeToAnalyticsStats("video", this.videoWebrtcStats));
         this.analyticsStatsUnsubscribers.push(
-            this.subscribeToAnalyticsStats("screenShare", this.screenShareWebrtcStats)
+            this.subscribeToAnalyticsStats("screenShare", this.screenShareWebrtcStats),
         );
     }
 
@@ -274,10 +274,10 @@ export class LiveKitParticipant {
         if (publication.source === Track.Source.Camera) {
             if (this._cameraPublication && this._cameraPublication !== publication) {
                 console.warn(
-                    "Camera track received on a publication that is not the one we expected. This should not happen."
+                    "Camera track received on a publication that is not the one we expected. This should not happen.",
                 );
                 Sentry.captureMessage(
-                    "Camera track received on a publication that is not the one we expected. This should not happen."
+                    "Camera track received on a publication that is not the one we expected. This should not happen.",
                 );
                 this._cameraPublication.setSubscribed(false);
             }
@@ -287,10 +287,10 @@ export class LiveKitParticipant {
         } else if (publication.source === Track.Source.ScreenShare) {
             if (this._screenSharePublication && this._screenSharePublication !== publication) {
                 console.warn(
-                    "Screen share track received on a publication that is not the one we expected. This should not happen."
+                    "Screen share track received on a publication that is not the one we expected. This should not happen.",
                 );
                 Sentry.captureMessage(
-                    "Screen share track received on a publication that is not the one we expected. This should not happen."
+                    "Screen share track received on a publication that is not the one we expected. This should not happen.",
                 );
                 this._screenSharePublication.setSubscribed(false);
             }
@@ -301,10 +301,10 @@ export class LiveKitParticipant {
         } else if (publication.source === Track.Source.ScreenShareAudio) {
             if (this._screenShareAudioPublication && this._screenShareAudioPublication !== publication) {
                 console.warn(
-                    "Screen share audio track received on a publication that is not the one we expected. This should not happen."
+                    "Screen share audio track received on a publication that is not the one we expected. This should not happen.",
                 );
                 Sentry.captureMessage(
-                    "Screen share audio track received on a publication that is not the one we expected. This should not happen."
+                    "Screen share audio track received on a publication that is not the one we expected. This should not happen.",
                 );
                 this._screenShareAudioPublication.setSubscribed(false);
             }
@@ -316,10 +316,10 @@ export class LiveKitParticipant {
         } else if (this.isScriptingAudioPublication(publication)) {
             if (this._scriptingAudioPublication && this._scriptingAudioPublication !== publication) {
                 console.warn(
-                    "Scripting audio track received on a publication that is not the one we expected. This should not happen."
+                    "Scripting audio track received on a publication that is not the one we expected. This should not happen.",
                 );
                 Sentry.captureMessage(
-                    "Scripting audio track received on a publication that is not the one we expected. This should not happen."
+                    "Scripting audio track received on a publication that is not the one we expected. This should not happen.",
                 );
                 this._scriptingAudioPublication.setSubscribed(false);
             }
@@ -329,10 +329,10 @@ export class LiveKitParticipant {
         } else if (publication.source === Track.Source.Microphone) {
             if (this._microphonePublication && this._microphonePublication !== publication) {
                 console.warn(
-                    "Microphone track received on a publication that is not the one we expected. This should not happen."
+                    "Microphone track received on a publication that is not the one we expected. This should not happen.",
                 );
                 Sentry.captureMessage(
-                    "Microphone track received on a publication that is not the one we expected. This should not happen."
+                    "Microphone track received on a publication that is not the one we expected. This should not happen.",
                 );
                 this._microphonePublication.setSubscribed(false);
             }
@@ -516,13 +516,13 @@ export class LiveKitParticipant {
                 [this._spaceUser.reactiveUser.cameraState, this._hasVideo],
                 ([$spaceCameraState, $livekitHasVideo]) => {
                     return $spaceCameraState && $livekitHasVideo;
-                }
+                },
             ),
             isMuted: derived(
                 [this._spaceUser.reactiveUser.microphoneState, this._isMuted],
                 ([$spaceMicrophoneState, $livekitIsMuted]) => {
                     return !$spaceMicrophoneState || $livekitIsMuted;
-                }
+                },
             ),
             statusStore: writable("connected"),
             spaceUserId: this._spaceUser.spaceUserId,
@@ -539,7 +539,7 @@ export class LiveKitParticipant {
                 // Important note: the stream store only contains the audio track:
                 streamStore: this._audioStreamStore,
                 isBlocked: derived(this._blockedUsersStore, ($blockedUsersStore) =>
-                    $blockedUsersStore.has(this._spaceUser.spaceUserId)
+                    $blockedUsersStore.has(this._spaceUser.spaceUserId),
                 ),
                 acquireVideoSubscription: () => this.acquireVideoSubscription("camera"),
             },
@@ -573,7 +573,7 @@ export class LiveKitParticipant {
                 // Important note: the stream store contains the audio track from ScreenShareAudio
                 streamStore: this._audioScreenShareStreamStore,
                 isBlocked: derived(this._blockedUsersStore, ($blockedUsersStore) =>
-                    $blockedUsersStore.has(this._spaceUser.spaceUserId)
+                    $blockedUsersStore.has(this._spaceUser.spaceUserId),
                 ),
                 acquireVideoSubscription: () => this.acquireVideoSubscription("screenShare"),
             },
@@ -604,7 +604,7 @@ export class LiveKitParticipant {
 
     private subscribeToAnalyticsStats(
         type: "video" | "screenShare",
-        statsStore: Readable<WebRtcStats | undefined>
+        statsStore: Readable<WebRtcStats | undefined>,
     ): Unsubscriber {
         return subscribeToVideoQualityAnalytics(
             statsStore,
@@ -617,7 +617,7 @@ export class LiveKitParticipant {
                 spaceName: this.space.getName(),
                 livekitServerUrl: this.livekitServerUrl,
             },
-            (message) => this.space.emitVideoQualityReport(message)
+            (message) => this.space.emitVideoQualityReport(message),
         );
     }
 

@@ -79,7 +79,7 @@
             },
             () => {
                 onvideo?.();
-            }
+            },
         );
 
         noVideoOutputDetector.expectVideoWithin5Seconds();

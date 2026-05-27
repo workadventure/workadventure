@@ -9,7 +9,7 @@ export class MessageNotification implements NotificationWA {
         private message: string,
         private chatRoomId: string,
         private chatRoomName: string,
-        private options = defaultOptions
+        private options = defaultOptions,
     ) {}
 
     public async sendNotification() {

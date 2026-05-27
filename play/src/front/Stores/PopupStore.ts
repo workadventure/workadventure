@@ -19,7 +19,11 @@ function createPopupStore() {
 
     return {
         subscribe,
-        addPopup: (popup: WorkAdventureComponent, props: WorkAdventureComponentProps, uuid: string | undefined): void => {
+        addPopup: (
+            popup: WorkAdventureComponent,
+            props: WorkAdventureComponentProps,
+            uuid: string | undefined,
+        ): void => {
             update((list: Popup[]) => {
                 if (uuid === undefined) {
                     uuid = v4();

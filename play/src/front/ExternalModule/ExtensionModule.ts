@@ -15,7 +15,7 @@ export interface ExternalSvelteComponentServiceInterface {
         zone: ExternalComponentZones,
         key: string,
         componentType: WorkAdventureComponent,
-        props?: WorkAdventureComponentProps
+        props?: WorkAdventureComponentProps,
     ): void;
     removeComponentFromZone(zone: ExternalComponentZones, key: string): void;
 }
@@ -34,7 +34,7 @@ export interface ExtensionModuleOptions {
     getOauthRefreshToken?: (
         tokenToRefresh: string,
         provider?: string,
-        userIdentifier?: string
+        userIdentifier?: string,
     ) => Promise<OauthRefreshToken>;
     spaceRegistry?: SpaceRegistryInterface;
     calendarEventsStoreUpdate?: (this: void, updater: Updater<Map<string, CalendarEventInterface>>) => void;
@@ -65,7 +65,7 @@ export interface ExtensionModule {
         meetingId: string,
         startDateTime: Date,
         endDateTime: Date,
-        passcode?: string
+        passcode?: string,
     ) => void;
     calendarSynchronised: boolean;
     todoListSynchronized: boolean;
@@ -84,7 +84,7 @@ export const RoomMetadataType = z.object({
                             .optional()
                             .nullable()
                             .describe("Scopes associated with the token, separated by spaces"),
-                    })
+                    }),
                 )
                 .optional(),
         })

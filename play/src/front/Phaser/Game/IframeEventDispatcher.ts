@@ -18,7 +18,7 @@ export class IframeEventDispatcher {
                 iframeListener.onIframeCloseEvent(source, () => {
                     this.targets.delete(source);
                     this.unsubscribers.delete(source);
-                })
+                }),
             );
             return true;
         } else {

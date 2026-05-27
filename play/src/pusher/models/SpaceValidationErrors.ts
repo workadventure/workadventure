@@ -17,7 +17,7 @@ export class UserAlreadyAddedInSpaceError extends Error {
         message: string,
         public readonly spaceName: string,
         public readonly spaceUserId: string,
-        options?: { cause?: Error }
+        options?: { cause?: Error },
     ) {
         super(message, options);
         this.name = "UserAlreadyAddedInSpaceError";
@@ -26,7 +26,11 @@ export class UserAlreadyAddedInSpaceError extends Error {
 
 /** Thrown when the socket is already registered in the space. */
 export class SocketAlreadyRegisteredInSpaceError extends Error {
-    constructor(message: string, public readonly spaceName: string, options?: { cause?: Error }) {
+    constructor(
+        message: string,
+        public readonly spaceName: string,
+        options?: { cause?: Error },
+    ) {
         super(message, options);
         this.name = "SocketAlreadyRegisteredInSpaceError";
     }
@@ -38,7 +42,7 @@ export class UserAlreadyInSpaceError extends Error {
         message: string,
         public readonly spaceName: string,
         public readonly userName: string,
-        options?: { cause?: Error }
+        options?: { cause?: Error },
     ) {
         super(message, options);
         this.name = "UserAlreadyInSpaceError";
@@ -50,7 +54,11 @@ export class UserAlreadyInSpaceError extends Error {
  * Used to avoid sending expected validation errors to Sentry.
  */
 export class ClientNotPartOfSpaceError extends Error {
-    constructor(message: string, public readonly spaceName: string, options?: { cause?: Error }) {
+    constructor(
+        message: string,
+        public readonly spaceName: string,
+        options?: { cause?: Error },
+    ) {
         super(message, options);
         this.name = "ClientNotPartOfSpaceError";
     }

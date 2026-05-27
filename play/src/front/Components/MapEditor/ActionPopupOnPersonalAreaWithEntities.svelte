@@ -10,12 +10,7 @@
         onCancel: () => void;
     }
 
-    let {
-        isOpen,
-        onDeleteEntities,
-        onKeepEntities,
-        onCancel
-    }: Props = $props();
+    let { isOpen, onDeleteEntities, onKeepEntities, onCancel }: Props = $props();
 </script>
 
 <PopupGeneric {isOpen}>

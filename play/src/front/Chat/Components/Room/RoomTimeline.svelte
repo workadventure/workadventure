@@ -33,7 +33,7 @@
 
     interface Props {
         room: ChatConversation;
-        backAction?: (() => void);
+        backAction?: () => void;
         backButtonTestId?: string;
         timelineTestId?: string;
         showRoomSidePanelToggle?: boolean;
@@ -85,11 +85,13 @@
     let threadsStore = $derived(isChatRoom(room) ? room.threads : undefined);
     let threadSummariesStore = $derived(threadsStore ?? emptyThreadSummaries);
     let unreadThreadCount = $derived($threadSummariesStore.filter((thread) => thread.hasUnreadMessages).length);
-    let shouldReserveHeaderEndSpace = $derived(shouldReserveFloatingCloseButtonSpace(
-        $hideActionBarStoreBecauseOfChatBar,
-        showRoomSidePanelToggle,
-        roomSidePanelToggleIsOpen
-    ));
+    let shouldReserveHeaderEndSpace = $derived(
+        shouldReserveFloatingCloseButtonSpace(
+            $hideActionBarStoreBecauseOfChatBar,
+            showRoomSidePanelToggle,
+            roomSidePanelToggleIsOpen,
+        ),
+    );
     $effect(() => {
         if (initialMessagesLoaded && $roomTimelineFocusStore) {
             focusTimelineEvent($roomTimelineFocusStore).catch((error) => console.error(error));
@@ -231,7 +233,7 @@
     }
 
     function hasPendingTimelineFocusRequest(
-        request: RoomTimelineFocusRequest | undefined
+        request: RoomTimelineFocusRequest | undefined,
     ): request is RoomTimelineFocusRequest {
         return request !== undefined && request.roomId === room.id && request.sequence > lastTimelineFocusSequence;
     }
@@ -388,7 +390,7 @@
         await tick();
 
         let target = Array.from(messageListRef?.querySelectorAll<HTMLLIElement>("li[data-event-id]") ?? []).find(
-            (element) => element.dataset.eventId === request.eventId
+            (element) => element.dataset.eventId === request.eventId,
         );
 
         if (!target) {
@@ -396,7 +398,7 @@
             if (wasMadeVisible) {
                 await tick();
                 target = Array.from(messageListRef?.querySelectorAll<HTMLLIElement>("li[data-event-id]") ?? []).find(
-                    (element) => element.dataset.eventId === request.eventId
+                    (element) => element.dataset.eventId === request.eventId,
                 );
             }
         }

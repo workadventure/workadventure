@@ -53,12 +53,12 @@ const MetaTagsData = z.object({
       .string()
       .optional()
       .default(
-        "Create your own digital office, Metaverse and meet online with the world."
+        "Create your own digital office, Metaverse and meet online with the world.",
       ),
     {
       description: "Description of the webpage",
       example: "My awesome world in WorkAdventure",
-    }
+    },
   ),
   author: extendApi(z.string().optional().default("WorkAdventure team"), {
     description: "Author of the webpage",
@@ -310,14 +310,22 @@ export const isMapDetailsData = z.object({
       "True if the UUID passed in parameter belongs to a legitimate user. Return false for anonymous users.",
   }),
   // Woka access settings
-  provideDefaultWokaName: extendApi(z.enum(["no", "random", "fix", "fix-plus-random-numbers"]).optional(), {
-    description: "How woka names are assigned: manually, randomly, fixed, or fixed with random numbers",
-    example: "random",
-  }),
-  provideDefaultWokaTexture: extendApi(z.enum(["no", "random", "fix"]).optional(), {
-    description: "How woka textures/avatars are assigned: manually, randomly, or fixed",
-    example: "random",
-  }),
+  provideDefaultWokaName: extendApi(
+    z.enum(["no", "random", "fix", "fix-plus-random-numbers"]).optional(),
+    {
+      description:
+        "How woka names are assigned: manually, randomly, fixed, or fixed with random numbers",
+      example: "random",
+    },
+  ),
+  provideDefaultWokaTexture: extendApi(
+    z.enum(["no", "random", "fix"]).optional(),
+    {
+      description:
+        "How woka textures/avatars are assigned: manually, randomly, or fixed",
+      example: "random",
+    },
+  ),
   skipCameraPage: extendApi(z.boolean().optional(), {
     description: "Whether to skip the camera permission request page",
     example: true,

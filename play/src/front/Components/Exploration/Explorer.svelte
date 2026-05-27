@@ -220,7 +220,7 @@
                     y: object.y,
                 },
                 true,
-                WOKA_SPEED * 2.5
+                WOKA_SPEED * 2.5,
             )
             .catch((error) => {
                 console.warn("Error while moving to the entity or area", error);

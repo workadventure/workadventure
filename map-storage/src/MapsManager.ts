@@ -171,7 +171,7 @@ class MapsManager {
                 }
             } else {
                 console.error(
-                    `[${new Date().toISOString()}] Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`
+                    `[${new Date().toISOString()}] Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`,
                 );
             }
         }, this.COMMAND_TIME_IN_QUEUE_MS);
@@ -193,7 +193,7 @@ class MapsManager {
                     }
                     if (lastChangeTimestamp + this.NO_CHANGE_DETECTED_MS < +new Date()) {
                         console.info(
-                            `[${new Date().toISOString()}] NO CHANGES ON THE MAP ${key} DETECTED. STOP AUTOSAVING`
+                            `[${new Date().toISOString()}] NO CHANGES ON THE MAP ${key} DETECTED. STOP AUTOSAVING`,
                         );
                         this.clearSaveMapInterval(key);
                     }
@@ -202,7 +202,7 @@ class MapsManager {
                     this.clearSaveMapInterval(key);
                     Sentry.captureException(e);
                 });
-            }, intervalMS)
+            }, intervalMS),
         );
     }
 }

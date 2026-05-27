@@ -49,7 +49,7 @@
                 encodeURI(legals.termsOfUseUrl) +
                 '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' +
                 $LL.login.termsOfUse() +
-                "</a>"
+                "</a>",
         );
     }
     if (legals?.privacyPolicyUrl) {
@@ -58,7 +58,7 @@
                 encodeURI(legals.privacyPolicyUrl) +
                 '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' +
                 $LL.login.privacyPolicy() +
-                "</a>"
+                "</a>",
         );
     }
     if (legals?.cookiePolicyUrl) {
@@ -67,7 +67,7 @@
                 encodeURI(legals.cookiePolicyUrl) +
                 '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' +
                 $LL.login.cookiePolicy() +
-                "</a>"
+                "</a>",
         );
     }
 
@@ -190,10 +190,13 @@
     /* eslint-disable svelte/no-at-html-tags */
 </script>
 
-<form class="enableCameraScene pointer-events-auto relative z-30 m-0 px-2" onsubmit={(event) => {
-    event.preventDefault();
-    submit();
-}}>
+<form
+    class="enableCameraScene pointer-events-auto relative z-30 m-0 px-2"
+    onsubmit={(event) => {
+        event.preventDefault();
+        submit();
+    }}
+>
     <section class="flex min-h-dvh">
         <div
             class="text-white justify-center items-center overflow-hidden w-[100vw] container flex flex-col min-h-dvh pb-36 pt-8 lg:pt-0 relative"
@@ -216,13 +219,13 @@
                     selectedDevice={selectedMicrophone}
                 >
                     {#snippet icon()}
-                        <IconMicrophoneOn font-size="24"  />
+                        <IconMicrophoneOn font-size="24" />
                     {/snippet}
                     {#snippet title()}
-                        <span >{$LL.actionbar.subtitle.microphone()}</span>
+                        <span>{$LL.actionbar.subtitle.microphone()}</span>
                     {/snippet}
                     {#snippet widget()}
-                        <div class="absolute top-4 start-0 flex justify-center w-full" >
+                        <div class="absolute top-4 start-0 flex justify-center w-full">
                             <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
                         </div>
                     {/snippet}
@@ -235,13 +238,13 @@
                     selectedDevice={selectedCamera}
                 >
                     {#snippet icon()}
-                        <IconCamera font-size="24"  />
+                        <IconCamera font-size="24" />
                     {/snippet}
                     {#snippet title()}
-                        <span >{$LL.camera.editCam()}</span>
+                        <span>{$LL.camera.editCam()}</span>
                     {/snippet}
                     {#snippet widget()}
-                        <span >
+                        <span>
                             {#if selectedCamera !== undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
                                 <video
                                     class="myCamVideoSetup bg-contrast/80 backdrop-blur flex items-center justify-center w-full aspect-video overflow-hidden scale-x-[-1]"

@@ -16,13 +16,7 @@
         right?: Snippet;
     }
 
-    let {
-        rightDiv = $bindable(),
-        actionBarWidth = $bindable(),
-        left,
-        center,
-        right,
-    }: Props = $props();
+    let { rightDiv = $bindable(), actionBarWidth = $bindable(), left, center, right }: Props = $props();
 
     let centerPlusRightDiv: HTMLDivElement;
     let rightDivContent: HTMLDivElement;
@@ -89,7 +83,7 @@
             {
                 root: rightDiv,
                 threshold: 1.0,
-            }
+            },
         );
 
         observer.observe(rightDivContent);

@@ -24,13 +24,15 @@
 
     let { personalAreaPropertyData = $bindable(), onchange, onclose }: Props = $props();
 
-    let _tags: InputTagOption[] | undefined = $state(personalAreaPropertyData.allowedTags
-        ? personalAreaPropertyData.allowedTags.map((allowedTag) => ({
-              value: allowedTag,
-              created: false,
-              label: allowedTag,
-          }))
-        : undefined);
+    let _tags: InputTagOption[] | undefined = $state(
+        personalAreaPropertyData.allowedTags
+            ? personalAreaPropertyData.allowedTags.map((allowedTag) => ({
+                  value: allowedTag,
+                  created: false,
+                  label: allowedTag,
+              }))
+            : undefined,
+    );
 
     let personalAreaOwner: string | null = $state(personalAreaPropertyData.ownerId);
 
@@ -44,8 +46,8 @@
                 personalAreaOwner = member.name
                     ? `${member.name} ${member.email ? `(${member.email})` : ""}`
                     : member.email
-                    ? member.email
-                    : member.id;
+                      ? member.email
+                      : member.id;
             }
         }
     });

@@ -40,7 +40,7 @@ export class OutlineManager {
 
     public add(
         gameObject: Phaser.GameObjects.GameObject,
-        getOutline: () => { thickness: number; color?: number }
+        getOutline: () => { thickness: number; color?: number },
     ): void {
         this.gameObjects.set(gameObject, getOutline);
 

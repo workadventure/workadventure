@@ -17,7 +17,7 @@
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         fillColor = "fill-white",
         hover = "group-hover/btn-emoji:fill-white",
-        classList = "aspect-ratio transition-all"
+        classList = "aspect-ratio transition-all",
     }: Props = $props();
 </script>
 

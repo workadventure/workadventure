@@ -19,7 +19,7 @@ export function findBiggestAvailableArea(gameSize: { width: number; height: numb
 
     //clamp the blockers to the screen
     const clampedBlockers = clampAllBoxesToScreen(blockers, wholeScreenBox).filter(
-        (box) => !isBoxTakingWholeScreen(box, gameSize)
+        (box) => !isBoxTakingWholeScreen(box, gameSize),
     );
 
     // populate with all vertices

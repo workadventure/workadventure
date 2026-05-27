@@ -37,7 +37,10 @@ function decodeBase64Unpadded(value: string): Uint8Array<ArrayBuffer> {
     return bytes;
 }
 
-async function assertCipherHash(cipherText: Uint8Array<ArrayBuffer>, expectedSha256: string | undefined): Promise<void> {
+async function assertCipherHash(
+    cipherText: Uint8Array<ArrayBuffer>,
+    expectedSha256: string | undefined,
+): Promise<void> {
     if (expectedSha256 === undefined) {
         return;
     }
@@ -56,7 +59,7 @@ async function assertCipherHash(cipherText: Uint8Array<ArrayBuffer>, expectedSha
 
 async function decryptEncryptedFile(
     cipherText: Uint8Array<ArrayBuffer>,
-    encryptedFile: EncryptedFile
+    encryptedFile: EncryptedFile,
 ): Promise<ArrayBuffer> {
     await assertCipherHash(cipherText, encryptedFile.hashes?.sha256);
     const keyData = decodeBase64Unpadded(encryptedFile.key.k);
@@ -146,7 +149,7 @@ async function resolveEncryptedBlobUrl(
     encryptedFile: EncryptedFile,
     mimeType: string | undefined,
     blobRegistry: BlobUrlRegistry,
-    signal: AbortSignal
+    signal: AbortSignal,
 ): Promise<string> {
     const downloadUrl = getHttpUrl(client, encryptedFile.url);
     if (downloadUrl === undefined) {
@@ -165,7 +168,7 @@ async function resolveEncryptedBlobUrl(
 export async function resolveImageMediaFromEvent(
     event: MatrixEvent,
     client: MatrixClient,
-    signal: AbortSignal
+    signal: AbortSignal,
 ): Promise<MatrixResolvedImageMedia> {
     const rawContent = event.getOriginalContent();
     const content = toMediaEventContent(rawContent);
@@ -213,7 +216,7 @@ export async function resolveImageMediaFromEvent(
             encryptedSourceFile,
             content.info?.mimetype,
             blobRegistry,
-            signal
+            signal,
         );
         const thumbnailFile = getThumbnailEncryptedFile(content);
         if (thumbnailFile === undefined) {
@@ -237,7 +240,7 @@ export async function resolveImageMediaFromEvent(
                     | undefined
             )?.thumbnail_info?.mimetype,
             blobRegistry,
-            signal
+            signal,
         );
         return { sourceUrl, thumbnailUrl, isEncrypted: true, error: undefined, cleanup: blobRegistry.cleanup };
     } catch (error) {
@@ -258,7 +261,7 @@ export async function resolveImageMediaFromEvent(
 export async function resolveAttachmentMediaFromEvent(
     event: MatrixEvent,
     client: MatrixClient,
-    signal: AbortSignal
+    signal: AbortSignal,
 ): Promise<MatrixResolvedAttachmentMedia> {
     const rawContent = event.getOriginalContent();
     const content = toAttachmentMediaEventContent(rawContent);
@@ -296,7 +299,7 @@ export async function resolveAttachmentMediaFromEvent(
             encryptedSourceFile,
             content.info?.mimetype,
             blobRegistry,
-            signal
+            signal,
         );
         return { sourceUrl, isEncrypted: true, error: undefined, cleanup: blobRegistry.cleanup };
     } catch (error) {

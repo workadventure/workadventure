@@ -57,7 +57,7 @@
         if (!defaultEntityPrefab) {
             defaultEntityPrefab = await entitiesCollectionsManager.getEntityPrefab(
                 "All Object Collection",
-                "basic office decoration:Books (Variant 5):black:Down"
+                "basic office decoration:Books (Variant 5):black:Down",
             );
         }
 

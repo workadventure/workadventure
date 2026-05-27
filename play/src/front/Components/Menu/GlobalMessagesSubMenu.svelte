@@ -23,8 +23,7 @@
     function send(): void {
         if (inputSendTextActive) {
             handleSendText?.sendTextMessage(broadcastToWorld);
-        }
-        else if (uploadAudioActive) {
+        } else if (uploadAudioActive) {
             handleSendAudio?.sendAudioMessage(broadcastToWorld);
         }
     }
@@ -41,7 +40,8 @@
                 onclick={(event) => {
                     event.preventDefault();
                     activateInputText();
-                }}>
+                }}
+            >
                 {$LL.menu.globalMessage.text()}
             </button>
             <button
@@ -52,7 +52,8 @@
                 onclick={(event) => {
                     event.preventDefault();
                     activateUploadAudio();
-                }}>
+                }}
+            >
                 {$LL.menu.globalMessage.audio()}
             </button>
         </section>
@@ -71,10 +72,13 @@
             <span>{$LL.menu.globalMessage.warning()}</span>
         </label>
         <section class="centered-column">
-            <button class="light" onclick={(event) => {
-                event.preventDefault();
-                send();
-            }}>
+            <button
+                class="light"
+                onclick={(event) => {
+                    event.preventDefault();
+                    send();
+                }}
+            >
                 {$LL.menu.globalMessage.send()}
             </button>
         </section>

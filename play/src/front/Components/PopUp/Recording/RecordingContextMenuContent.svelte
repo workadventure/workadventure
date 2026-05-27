@@ -14,12 +14,7 @@
         onClose: () => void;
     }
 
-    let {
-        currentRecord,
-        connection = undefined,
-        onDelete,
-        onClose
-    }: Props = $props();
+    let { currentRecord, connection = undefined, onDelete, onClose }: Props = $props();
 
     async function downloadFile(filename: string) {
         try {

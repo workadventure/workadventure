@@ -36,8 +36,8 @@
         state={!$screenSharingActivatedStore
             ? "disabled"
             : $requestedScreenSharingState && !$silentStore
-            ? "active"
-            : "normal"}
+              ? "active"
+              : "normal"}
         dataTestId="screenShareButton"
         media="./static/images/screensharing.mp4"
         desc={$LL.actionbar.help.share.desc()}

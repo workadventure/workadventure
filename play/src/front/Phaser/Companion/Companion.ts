@@ -103,7 +103,7 @@ export class Companion extends Container {
             const speed = 256;
             this.getBody().setVelocity(
                 Math.min(Math.abs(xDist * 2.5), speed) * xDir,
-                Math.min(Math.abs(yDist * 2.5), speed) * yDir
+                Math.min(Math.abs(yDist * 2.5), speed) * yDir,
             );
 
             if (Math.abs(xDist) > Math.abs(yDist)) {

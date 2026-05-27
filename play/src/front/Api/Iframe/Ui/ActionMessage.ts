@@ -16,7 +16,10 @@ export class ActionMessage {
     private readonly message: string;
     private readonly callback: () => void;
 
-    constructor(actionMessageOptions: ActionMessageOptions, private onRemove: () => void) {
+    constructor(
+        actionMessageOptions: ActionMessageOptions,
+        private onRemove: () => void,
+    ) {
         this.uuid = uuidv4();
         this.message = actionMessageOptions.message;
         this.type = actionMessageOptions.type ?? "message";

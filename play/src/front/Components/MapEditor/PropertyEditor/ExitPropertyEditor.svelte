@@ -19,13 +19,15 @@
     let { property = $bindable(), onchange, onclose }: Props = $props();
 
     // Key: room URL
-    let mapsUrl = $state(new Map<
-        string,
-        {
-            name: string;
-            wamUrl: string | undefined;
-        }
-    >());
+    let mapsUrl = $state(
+        new Map<
+            string,
+            {
+                name: string;
+                wamUrl: string | undefined;
+            }
+        >(),
+    );
     let startAreas: string[] = $state([]);
     function onValueChange() {
         onchange?.();

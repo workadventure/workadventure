@@ -144,7 +144,7 @@ export class EntitiesCollectionsManager {
         name: string,
         tags: string[],
         depthOffset?: number,
-        collisionGrid?: number[][]
+        collisionGrid?: number[][],
     ): void {
         this.entitiesPrefabsStore.update((currentEntitiesPrefabs) => {
             const indexOfCustomEntity = currentEntitiesPrefabs.findIndex((entityPrefab) => entityPrefab.id === id);
@@ -208,13 +208,13 @@ export class EntitiesCollectionsManager {
 
     private parseRawCollection(
         rawCollection: EntityCollectionRaw,
-        rawCollectionType: EntityPrefabType
+        rawCollectionType: EntityPrefabType,
     ): EntityCollection {
         return {
             collectionName: rawCollection.collectionName,
             tags: [...rawCollection.tags],
             collection: rawCollection.collection.map((rawPrefab: EntityRawPrefab) =>
-                this.parseRawEntityPrefab(rawCollection.collectionName, rawPrefab, rawCollectionType)
+                this.parseRawEntityPrefab(rawCollection.collectionName, rawPrefab, rawCollectionType),
             ),
         };
     }
@@ -222,7 +222,7 @@ export class EntitiesCollectionsManager {
     private parseRawEntityPrefab(
         collectionName: string,
         rawPrefab: EntityRawPrefab,
-        entityPrefabType: EntityPrefabType
+        entityPrefabType: EntityPrefabType,
     ): EntityPrefab {
         return {
             ...rawPrefab,

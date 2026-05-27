@@ -28,7 +28,7 @@ export class LivekitConnection {
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
         private _screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>,
-        private _streamingMegaphoneStore = streamingMegaphoneStore
+        private _streamingMegaphoneStore = streamingMegaphoneStore,
     ) {
         this.initialize();
     }
@@ -36,7 +36,7 @@ export class LivekitConnection {
     private createLivekitRoom(
         serverUrl: string,
         token: string,
-        shutdownAbortSignal: AbortSignal
+        shutdownAbortSignal: AbortSignal,
     ): LiveKitRoomInterface {
         this.livekitRoom = new LiveKitRoom(
             serverUrl,
@@ -45,7 +45,7 @@ export class LivekitConnection {
             this._streamableSubjects,
             this._blockedUsersStore,
             shutdownAbortSignal,
-            this._screenSharingLocalStreamStore
+            this._screenSharingLocalStreamStore,
         );
         this._streamingMegaphoneStore.set(true);
         return this.livekitRoom;
@@ -83,7 +83,7 @@ export class LivekitConnection {
                     console.error("An error occurred in LivekitConnection initialize", err);
                     Sentry.captureException(err);
                 });
-            })
+            }),
         );
         this.unsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_DISCONNECT_MESSAGE).subscribe((message) => {
@@ -96,7 +96,7 @@ export class LivekitConnection {
                 this.shutdownAbortController = undefined;
                 this.livekitRoom?.destroy();
                 this.livekitRoom = undefined;
-            })
+            }),
         );
     }
 

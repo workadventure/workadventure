@@ -14,14 +14,7 @@
         widget?: Snippet;
     }
 
-    let {
-        selectedDevice = undefined,
-        deviceList,
-        onselectdevice,
-        icon,
-        title,
-        widget
-    }: Props = $props();
+    let { selectedDevice = undefined, deviceList, onselectdevice, icon, title, widget }: Props = $props();
 </script>
 
 <div

@@ -29,7 +29,7 @@
     const BYTES_TO_MB = 1024 * 1024;
 
     const filesUploadFormat = FILE_UPLOAD_SUPPORTED_FORMATS_FRONT.split(",").map(
-        (format) => format.trim().split("/")[1]
+        (format) => format.trim().split("/")[1],
     );
 
     $effect(() => {

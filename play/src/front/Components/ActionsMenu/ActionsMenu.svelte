@@ -56,7 +56,7 @@
     });
 </script>
 
-<svelte:window onkeydown={onkeydown} />
+<svelte:window {onkeydown} />
 
 {#if actionsMenuData}
     <div
@@ -114,7 +114,7 @@
                             ''}"
                         class:mx-2={buttonsLayout === "column"}
                         onclick={(event) => {
-                            analyticsClient.clickPropertyMapEditor(action.actionName, action.style)
+                            analyticsClient.clickPropertyMapEditor(action.actionName, action.style);
                             event.preventDefault();
                             Promise.resolve(action.callback()).catch((error) => {
                                 console.error("Failed to run action", error);

@@ -150,7 +150,7 @@
                     value != ""
                         ? [...options, { value: value.trim(), label: value.trim(), created: undefined }]
                         : options,
-                []
+                [],
             );
 
         if (property.forceNewTab == true) {
@@ -194,7 +194,7 @@
                 } else if (property.application == "klaxoon") {
                     property.link = KlaxoonService.getKlaxoonEmbedUrl(
                         new URL(property.link),
-                        applicationManager.klaxoonToolClientId
+                        applicationManager.klaxoonToolClientId,
                     );
                 } else if (property.application == "cards") {
                     property.link = CardsService.getCardsLink(new URL(property.link), localUserStore.getAuthToken());
@@ -231,8 +231,8 @@
                     property.buttonLabel =
                         property.buttonLabel != undefined && property.buttonLabel != ""
                             ? property.buttonLabel
-                            : YoutubeService.getTitleFromYoutubeUrl(new URL(property.link)) ??
-                              $LL.mapEditor.properties.youtube.label();
+                            : (YoutubeService.getTitleFromYoutubeUrl(new URL(property.link)) ??
+                              $LL.mapEditor.properties.youtube.label());
 
                 embeddable = true;
                 optionAdvancedActivated = false;
@@ -409,7 +409,7 @@
             (payload: KlaxoonEvent) => {
                 property.link = KlaxoonService.getKlaxoonEmbedUrl(
                     new URL(payload.url),
-                    applicationManager.klaxoonToolClientId
+                    applicationManager.klaxoonToolClientId,
                 );
                 property.poster = payload.imageUrl ?? undefined;
                 property.buttonLabel = payload.title ?? undefined;
@@ -417,7 +417,7 @@
                 checkWebsiteProperty().catch((e) => {
                     console.error("Error checking embeddable website", e);
                 });
-            }
+            },
         );
     }
 
@@ -448,7 +448,7 @@
                 GoogleWorkSpaceService.initGooglePicker(
                     GOOGLE_DRIVE_PICKER_CLIENT_ID,
                     GOOGLE_DRIVE_PICKER_APP_ID,
-                    window.google.picker.ViewId.DOCUMENTS
+                    window.google.picker.ViewId.DOCUMENTS,
                 )
                     .then(handlerLinkSelected)
                     .catch(handlerLinkError);
@@ -459,7 +459,7 @@
                 GoogleWorkSpaceService.initGooglePicker(
                     GOOGLE_DRIVE_PICKER_CLIENT_ID,
                     GOOGLE_DRIVE_PICKER_APP_ID,
-                    window.google.picker.ViewId.SPREADSHEETS
+                    window.google.picker.ViewId.SPREADSHEETS,
                 )
                     .then(handlerLinkSelected)
                     .catch(handlerLinkError);
@@ -470,7 +470,7 @@
                 GoogleWorkSpaceService.initGooglePicker(
                     GOOGLE_DRIVE_PICKER_CLIENT_ID,
                     GOOGLE_DRIVE_PICKER_APP_ID,
-                    window.google.picker.ViewId.PRESENTATIONS
+                    window.google.picker.ViewId.PRESENTATIONS,
                 )
                     .then(handlerLinkSelected)
                     .catch(handlerLinkError);
@@ -481,7 +481,7 @@
                 GoogleWorkSpaceService.initGooglePicker(
                     GOOGLE_DRIVE_PICKER_CLIENT_ID,
                     GOOGLE_DRIVE_PICKER_APP_ID,
-                    window.google.picker.ViewId.DOCS
+                    window.google.picker.ViewId.DOCS,
                 )
                     .then(handlerLinkSelected)
                     .catch(handlerLinkError);
@@ -594,7 +594,12 @@
                 <img class="w-6 me-1" src={excalidrawSvg} alt={$LL.mapEditor.properties.excalidraw.description()} />
                 {$LL.mapEditor.properties.excalidraw.label()}
             {:else if property.application === "cards"}
-                <img class="w-6 me-1" src={cardPng} alt={$LL.mapEditor.properties.cards.description()} draggable="false" />
+                <img
+                    class="w-6 me-1"
+                    src={cardPng}
+                    alt={$LL.mapEditor.properties.cards.description()}
+                    draggable="false"
+                />
                 {$LL.mapEditor.properties.cards.label()}
             {:else if property.application === "tldraw"}
                 <img class="w-6 me-1" src={tldrawJpeg} alt={$LL.mapEditor.properties.tldraw.description()} />
@@ -673,7 +678,10 @@
                                     openPicker();
                                 }}
                             />
-                            <Tooltip text={$LL.mapEditor.properties.openWebsite.openPickerSelector()} leftPosition="true" />
+                            <Tooltip
+                                text={$LL.mapEditor.properties.openWebsite.openPickerSelector()}
+                                leftPosition="true"
+                            />
                         </div>
                     {:else if property.application === "cards" || property.application === "eraser" || property.application === "excalidraw" || property.application === "tldraw"}
                         <div class="flex flex-row items-center justify-center">

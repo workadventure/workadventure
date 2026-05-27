@@ -18,7 +18,7 @@
         hover = "group-hover/btn-emoji:fill-white",
         hover2 = "group-hover/btn-emoji:stroke-contrast",
         strokeWidth = "1.5",
-        classList = "aspect-ratio transition-all"
+        classList = "aspect-ratio transition-all",
     }: Props = $props();
 </script>
 

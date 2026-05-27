@@ -56,7 +56,7 @@ export function createBackgroundTransformer(config: BackgroundConfig): Backgroun
     } catch (error) {
         console.error(
             "[BackgroundTransformer] Failed to create Selfie Segmentation transformer, using fallback:",
-            error
+            error,
         );
         return new FallbackBackgroundTransformer();
     }

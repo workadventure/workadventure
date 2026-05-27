@@ -20,7 +20,7 @@
         onPhaseChange,
         onCancel,
         submitAuthDict,
-        errorText = undefined
+        errorText = undefined,
     }: Props = $props();
 
     $effect(() => {

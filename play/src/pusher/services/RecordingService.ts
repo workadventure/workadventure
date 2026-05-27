@@ -119,7 +119,7 @@ export default class RecordingService {
         const recordings: Recording[] = await Promise.all(
             sortedSessions.map(async (session) => {
                 const sortedThumbnails = session.thumbnails.sort(
-                    (a, b) => (a.sequenceNumber || 0) - (b.sequenceNumber || 0)
+                    (a, b) => (a.sequenceNumber || 0) - (b.sequenceNumber || 0),
                 );
 
                 // Generate signed URLs for thumbnails
@@ -131,7 +131,7 @@ export default class RecordingService {
                         size: thumb.size,
                         sequenceNumber: thumb.sequenceNumber,
                         timestampSeconds: thumb.timestampSeconds,
-                    }))
+                    })),
                 );
 
                 return {
@@ -140,7 +140,7 @@ export default class RecordingService {
                     videoFile: session.videoFile,
                     thumbnails: thumbnailsWithSignedUrls,
                 };
-            })
+            }),
         );
 
         return recordings;
@@ -271,7 +271,7 @@ export default class RecordingService {
             LIVEKIT_RECORDING_S3_ENDPOINT,
             LIVEKIT_RECORDING_S3_ACCESS_KEY,
             LIVEKIT_RECORDING_S3_SECRET_KEY,
-            LIVEKIT_RECORDING_S3_REGION
+            LIVEKIT_RECORDING_S3_REGION,
         );
     }
 
@@ -291,7 +291,7 @@ export default class RecordingService {
             LIVEKIT_RECORDING_S3_CDN_ENDPOINT || LIVEKIT_RECORDING_S3_ENDPOINT!,
             LIVEKIT_RECORDING_S3_ACCESS_KEY,
             LIVEKIT_RECORDING_S3_SECRET_KEY,
-            LIVEKIT_RECORDING_S3_REGION
+            LIVEKIT_RECORDING_S3_REGION,
         );
     }
 

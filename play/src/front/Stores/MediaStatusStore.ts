@@ -70,5 +70,5 @@ export const mediaPermissionDeniedStore = derived(
     {
         camera: false,
         microphone: false,
-    }
+    },
 );

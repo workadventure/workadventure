@@ -23,7 +23,7 @@
         videoHeight,
         intersectionObserver,
         forceDisplay = false,
-        fitContainer = false
+        fitContainer = false,
     }: Props = $props();
 
     let streamable = $derived(videoBox.streamable);

@@ -88,9 +88,11 @@
         onclick?.(event);
     }
 
-    let styleVars = $derived([bgColor ? `--bg-color: ${bgColor};` : "", textColor ? `--text-color: ${textColor};` : ""]
-        .filter(Boolean)
-        .join(" "));
+    let styleVars = $derived(
+        [bgColor ? `--bg-color: ${bgColor};` : "", textColor ? `--text-color: ${textColor};` : ""]
+            .filter(Boolean)
+            .join(" "),
+    );
 </script>
 
 {#if !isInMenu}
@@ -128,7 +130,7 @@
                 event.preventDefault();
                 handleClick(event);
             }}
-            onkeydown={onkeydown}
+            {onkeydown}
             onmouseenter={(event) => {
                 helpActive = true;
                 onmouseenter?.(event);
@@ -161,7 +163,9 @@
         class="group flex p-2 gap-2 mb-1 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-start rounded select-none
                     {buttonState === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
                     {buttonState === 'disabledForbidden' ? 'bg-danger opacity-70 cursor-not-allowed' : ''}
-                    {buttonState === 'active' && !isGradient ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
+                    {buttonState === 'active' && !isGradient
+            ? 'bg-secondary hover:bg-secondary-600 cursor-pointer'
+            : ''}
                     {buttonState === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
                     {isGradient ? 'gradient overflow-hidden' : ''}
                     {bgColor && !isGradient ? 'bg-[var(--bg-color)]' : ''}
@@ -169,9 +173,9 @@
                     {isGradient ? 'relative' : ''}"
         use:action
         onclick={handleClick}
-        onkeydown={onkeydown}
-        onmouseenter={onmouseenter}
-        onmouseleave={onmouseleave}
+        {onkeydown}
+        {onmouseenter}
+        {onmouseleave}
         style={styleVars}
         data-testid={dataTestId}
         bind:this={wrapperDiv}

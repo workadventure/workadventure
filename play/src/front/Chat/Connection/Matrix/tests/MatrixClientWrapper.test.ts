@@ -76,7 +76,7 @@ describe("MatrixClientWrapper", () => {
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 basicLocalUserStoreMock,
-                createClient
+                createClient,
             );
 
             await expect(matrixClientWrapperInstance.initMatrixClient()).rejects.toThrow();
@@ -101,11 +101,11 @@ describe("MatrixClientWrapper", () => {
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 localUserStoreMock,
-                createClient
+                createClient,
             );
 
             await expect(matrixClientWrapperInstance.initMatrixClient()).rejects.toThrow(
-                "Unable to connect to matrix, access token is null"
+                "Unable to connect to matrix, access token is null",
             );
         });
         it("should throw a error when matrixUserId is null", async () => {
@@ -128,12 +128,12 @@ describe("MatrixClientWrapper", () => {
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 localUserStoreMock,
-                createClient
+                createClient,
             );
 
             // matrixClientWrapperInstance.initMatrixClient()
             await expect(matrixClientWrapperInstance.initMatrixClient()).rejects.toThrow(
-                "Unable to connect to matrix, matrixUserId is null"
+                "Unable to connect to matrix, matrixUserId is null",
             );
         });
 
@@ -158,12 +158,12 @@ describe("MatrixClientWrapper", () => {
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 localUserStoreMock,
-                createClient
+                createClient,
             );
 
             // matrixClientWrapperInstance.initMatrixClient()
             await expect(matrixClientWrapperInstance.initMatrixClient()).rejects.toThrow(
-                "Unable to connect to matrix, matrixDeviceId is null"
+                "Unable to connect to matrix, matrixDeviceId is null",
             );
         });
 
@@ -207,7 +207,7 @@ describe("MatrixClientWrapper", () => {
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 localUserStoreMock,
-                createClient
+                createClient,
             );
 
             await matrixClientWrapperInstance.initMatrixClient();
@@ -250,7 +250,7 @@ describe("MatrixClientWrapper", () => {
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 localUserStoreMock,
-                createClient
+                createClient,
             );
 
             await matrixClientWrapperInstance.initMatrixClient();
@@ -308,7 +308,7 @@ describe("MatrixClientWrapper", () => {
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 localUserStoreMock,
-                createClient
+                createClient,
             );
 
             await matrixClientWrapperInstance.initMatrixClient();
@@ -360,7 +360,7 @@ describe("MatrixClientWrapper", () => {
             const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
                 matrixBaseURL,
                 localUserStoreMock,
-                createClient
+                createClient,
             );
 
             await matrixClientWrapperInstance.initMatrixClient();

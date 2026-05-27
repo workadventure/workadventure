@@ -8,7 +8,7 @@ export class UpdateWAMSettingCommand extends Command {
     constructor(
         protected wam: WAMFileFormat,
         protected updateWAMSettingsMessage: UpdateWAMSettingsMessage,
-        id?: string
+        id?: string,
     ) {
         super(id);
         this.oldConfig = structuredClone(this.wam.settings);
@@ -27,13 +27,13 @@ export class UpdateWAMSettingCommand extends Command {
         switch (message.$case) {
             case "updateMegaphoneSettingMessage": {
                 this.wam.settings.megaphone = MegaphoneSettings.optional().parse(
-                    message.updateMegaphoneSettingMessage.settings
+                    message.updateMegaphoneSettingMessage.settings,
                 );
                 break;
             }
             case "updateRecordingSettingMessage": {
                 this.wam.settings.recording = RecordingSettings.optional().parse(
-                    message.updateRecordingSettingMessage.settings
+                    message.updateRecordingSettingMessage.settings,
                 );
                 break;
             }

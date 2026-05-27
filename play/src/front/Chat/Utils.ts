@@ -31,7 +31,7 @@ export type OpenCoWebsiteObject = {
 //enlever les events lié au chat dans iframelistener
 export const openCoWebSite = (
     { url, allowApi, allowPolicy, widthPercent, closable }: OpenCoWebsiteObject,
-    source: MessageEventSource | null
+    source: MessageEventSource | null,
 ) => {
     if (!url || !source) {
         throw new Error("Unknown query source");
@@ -42,7 +42,7 @@ export const openCoWebSite = (
         allowApi,
         allowPolicy,
         widthPercent,
-        closable
+        closable,
     );
 
     return openSimpleCowebsite(coWebsite);
@@ -136,7 +136,7 @@ export const openCoWebSiteWithoutSource = ({
         allowPolicy,
         widthPercent,
         closable,
-        hideUrl
+        hideUrl,
     );
 
     return openSimpleCowebsite(coWebsite);

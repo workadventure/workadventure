@@ -37,7 +37,7 @@ class WamFileMigration {
                         //@ts-ignore
                         {
                             cause: error,
-                        }
+                        },
                     );
                 }
             }
@@ -81,13 +81,13 @@ class WamFileMigration {
             version: "2.1.0",
             areas: fileContent?.areas?.map((area: any) => {
                 const livekitRoomProperty = area.properties?.find(
-                    (property: any) => property.type === "livekitRoomProperty"
+                    (property: any) => property.type === "livekitRoomProperty",
                 );
                 const jitsiRoomProperty = area.properties?.find(
-                    (property: any) => property.type === "jitsiRoomProperty"
+                    (property: any) => property.type === "jitsiRoomProperty",
                 );
                 const speakerMegaphoneProperty = area.properties?.find(
-                    (property: any) => property.type === "speakerMegaphone"
+                    (property: any) => property.type === "speakerMegaphone",
                 );
 
                 const parentProperty = livekitRoomProperty || jitsiRoomProperty || speakerMegaphoneProperty;

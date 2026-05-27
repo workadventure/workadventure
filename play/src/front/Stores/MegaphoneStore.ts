@@ -38,12 +38,12 @@ export const liveStreamingEnabledStore: Readable<boolean> = derived(
             $requestedMicrophoneState,
             $requestedScreenSharingState,
         ],
-        set
+        set,
     ) => {
         set(
             $isSpeakerStore ||
                 ($requestedMegaphoneStore &&
-                    ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState))
+                    ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState)),
         );
         if (
             $requestedMegaphoneStore &&
@@ -53,5 +53,5 @@ export const liveStreamingEnabledStore: Readable<boolean> = derived(
         ) {
             requestedMegaphoneStore.set(false);
         }
-    }
+    },
 );

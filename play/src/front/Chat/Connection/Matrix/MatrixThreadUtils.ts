@@ -32,7 +32,7 @@ export function shouldRenderQuotedReply(event: MatrixEvent): boolean {
 export function buildThreadRelationContent(
     threadRootId: string,
     fallbackEventId: string,
-    replyToEventId?: string
+    replyToEventId?: string,
 ): ThreadRelationContent {
     const replyTargetId = replyToEventId ?? fallbackEventId;
 
@@ -50,7 +50,7 @@ export function applyThreadRelationToContent(
     content: IContent,
     threadRootId: string,
     fallbackEventId: string,
-    replyToEventId?: string
+    replyToEventId?: string,
 ): void {
     content["m.relates_to"] = buildThreadRelationContent(threadRootId, fallbackEventId, replyToEventId);
 }

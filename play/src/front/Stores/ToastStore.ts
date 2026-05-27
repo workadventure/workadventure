@@ -12,7 +12,11 @@ function createToastStore() {
 
     return {
         subscribe: innerStore.subscribe.bind(innerStore),
-        addToast: (toast: WorkAdventureComponent, props: WorkAdventureComponentProps, uuid: string | undefined): void => {
+        addToast: (
+            toast: WorkAdventureComponent,
+            props: WorkAdventureComponentProps,
+            uuid: string | undefined,
+        ): void => {
             const toastUuid = uuid ?? v4();
             innerStore.set(toastUuid, {
                 component: toast,

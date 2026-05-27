@@ -53,7 +53,7 @@
             compact
             pictureStore={room.pictureStore}
             fallbackName={$roomName}
-            color={$roomType === "direct" ? $peerAvatarColorStore ?? defaultColor : null}
+            color={$roomType === "direct" ? ($peerAvatarColorStore ?? defaultColor) : null}
         />
     </div>
     <div class="m-0 grow text-sm font-bold">

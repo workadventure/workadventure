@@ -36,7 +36,7 @@
         variant = undefined,
         size = undefined,
         height = "h-[85px]",
-        info
+        info,
     }: Props = $props();
 
     let uniqueId = (() => id || `input-${Math.random().toString(36).substring(2, 9)} `)();
@@ -77,11 +77,11 @@
             class:input-text-lg={size === "lg"}
             bind:value
             placeholder={placeHolder}
-            onkeypress={onkeypress}
-            onfocus={onfocus}
-            onblur={onblur}
-            onchange={onchange}
-            onclick={onclick}
+            {onkeypress}
+            {onfocus}
+            {onblur}
+            {onchange}
+            {onclick}
             oninput={autoResize}
             {disabled}
         ></textarea>

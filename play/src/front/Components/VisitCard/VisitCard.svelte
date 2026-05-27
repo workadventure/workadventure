@@ -18,12 +18,7 @@
         maxHeigth?: number;
     }
 
-    let {
-        visitCardUrl,
-        isEmbedded = false,
-        showSendMessageButton = true,
-        maxHeigth = 350
-    }: Props = $props();
+    let { visitCardUrl, isEmbedded = false, showSendMessageButton = true, maxHeigth = 350 }: Props = $props();
     let w = "100%";
     let h = $state(250);
     let hidden = $state(true);

@@ -104,7 +104,7 @@
             .getAreas()
             .forEach((area) => {
                 const speakerMegaphonePropertyRaw = area.properties?.find(
-                    (property) => property.type === "speakerMegaphone"
+                    (property) => property.type === "speakerMegaphone",
                 );
                 if (speakerMegaphonePropertyRaw) {
                     const speakerMegaphoneProperty =
@@ -167,7 +167,7 @@
                             .find((p) => p.type === "lockableAreaPropertyData")
                     ) {
                         $mapEditorSelectedAreaPreviewStore?.addProperty(
-                            getPropertyFromType("lockableAreaPropertyData")
+                            getPropertyFromType("lockableAreaPropertyData"),
                         );
                     }
                     if (!$mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight")) {
@@ -193,7 +193,7 @@
                             .find((p) => p.type === "lockableAreaPropertyData")
                     ) {
                         $mapEditorSelectedAreaPreviewStore?.addProperty(
-                            getPropertyFromType("lockableAreaPropertyData")
+                            getPropertyFromType("lockableAreaPropertyData"),
                         );
                     }
                     if (!$mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight")) {
@@ -290,7 +290,7 @@
                             .find((p) => p.type === "lockableAreaPropertyData")
                     ) {
                         $mapEditorSelectedAreaPreviewStore?.addProperty(
-                            getPropertyFromType("lockableAreaPropertyData")
+                            getPropertyFromType("lockableAreaPropertyData"),
                         );
                     }
                     if (!$mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight")) {
@@ -456,7 +456,7 @@
         if ($mapEditorSelectedAreaPreviewStore) {
             analyticsClient.removeMapEditorProperty(
                 "area",
-                properties.find((property) => property.id === id)?.type || "unknown"
+                properties.find((property) => property.id === id)?.type || "unknown",
             );
             $mapEditorSelectedAreaPreviewStore.deleteProperty(id, removeAreaEntities);
             // refresh properties
@@ -556,7 +556,7 @@
             }
             return acc;
         },
-        []
+        [],
     );
 </script>
 
@@ -648,7 +648,7 @@
                         onAddProperty("matrixRoomPropertyData");
                         if (hasLivekitRoomProperty) {
                             const livekitRoomProperty = properties.find(
-                                (property) => property.type === "livekitRoomProperty"
+                                (property) => property.type === "livekitRoomProperty",
                             );
                             if (livekitRoomProperty) {
                                 const config = livekitRoomProperty.livekitRoomConfig ?? {
@@ -985,7 +985,8 @@
                         {:else if property.type === "extensionModule" && extensionModulesAreaMapEditor.length > 0}
                             {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
                                 {#if extensionModuleAreaMapEditor[property.subtype] != undefined}
-                                    {@const AreaPropertyEditor = extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
+                                    {@const AreaPropertyEditor =
+                                        extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
                                     <AreaPropertyEditor
                                         {extensionModuleAreaMapEditor}
                                         {property}

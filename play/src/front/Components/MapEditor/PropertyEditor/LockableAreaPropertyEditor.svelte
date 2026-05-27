@@ -17,10 +17,11 @@
 
     // Local state for tags, initialized once from property (same pattern as PersonalAreaPropertyEditor).
     // No reactive sync from property to avoid overwriting user removals when parent re-renders with stale data.
-    let _allowedTags: InputTagOption[] | undefined =
-        $state(property.allowedTags && property.allowedTags.length > 0
+    let _allowedTags: InputTagOption[] | undefined = $state(
+        property.allowedTags && property.allowedTags.length > 0
             ? property.allowedTags.map((tag) => ({ value: tag, label: tag }))
-            : undefined);
+            : undefined,
+    );
 
     function handleTagChange(tags: InputTagOption[] | undefined) {
         if (tags && tags.length > 0) {

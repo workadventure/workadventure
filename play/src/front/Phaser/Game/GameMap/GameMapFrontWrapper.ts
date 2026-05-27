@@ -39,23 +39,23 @@ export type DynamicArea = {
 
 export type LayerChangeCallback = (
     layersChangedByAction: Array<ITiledMapLayer>,
-    allLayersOnNewPosition: Array<ITiledMapLayer>
+    allLayersOnNewPosition: Array<ITiledMapLayer>,
 ) => void;
 
 export type TiledAreaChangeCallback = (
     areasChangedByAction: Array<ITiledMapObject>,
-    allAreasOnNewPosition: Array<ITiledMapObject>
+    allAreasOnNewPosition: Array<ITiledMapObject>,
 ) => void;
 
 export type DynamicAreaChangeCallback = (
     areasChangedByAction: Array<DynamicArea>,
-    allAreasOnNewPosition: Array<DynamicArea>
+    allAreasOnNewPosition: Array<DynamicArea>,
 ) => void;
 
 export type PropertyChangeCallback = (
     newValue: string | number | boolean | undefined,
     oldValue: string | number | boolean | undefined,
-    allProps: Map<string, string | boolean | number>
+    allProps: Map<string, string | boolean | number>,
 ) => void;
 
 export class GameMapFrontWrapper {
@@ -142,7 +142,7 @@ export class GameMapFrontWrapper {
         scene: GameScene,
         gameMap: GameMap,
         phaserMap: Phaser.Tilemaps.Tilemap,
-        terrains: Array<Phaser.Tilemaps.Tileset>
+        terrains: Array<Phaser.Tilemaps.Tileset>,
     ) {
         this.scene = scene;
         this.gameMap = gameMap;
@@ -159,7 +159,7 @@ export class GameMapFrontWrapper {
                     layer.name,
                     terrains,
                     (layer.x || 0) * 32,
-                    (layer.y || 0) * 32
+                    (layer.y || 0) * 32,
                 );
                 if (phaserLayer) {
                     this.phaserLayers.push(
@@ -168,7 +168,7 @@ export class GameMapFrontWrapper {
                             .setScrollFactor(layer.parallaxx ?? 1, layer.parallaxy ?? 1)
                             .setAlpha(layer.opacity)
                             .setVisible(layer.visible)
-                            .setSize(layer.width, layer.height)
+                            .setSize(layer.width, layer.height),
                     );
                 }
             }
@@ -233,7 +233,7 @@ export class GameMapFrontWrapper {
         // Spawn first entities from WAM file on the map
         const addEntityPromises: Promise<Entity>[] = [];
         for (const [entityId, entityData] of Object.entries(
-            this.gameMap.getWamFile()?.getGameMapEntities().getEntities() ?? {}
+            this.gameMap.getWamFile()?.getGameMapEntities().getEntities() ?? {},
         )) {
             addEntityPromises.push(this.entitiesManager.addEntity(entityId, entityData, undefined, undefined, false));
             // We need to AWAIT for all entities to be created.
@@ -281,7 +281,7 @@ export class GameMapFrontWrapper {
                 userConnectedTags,
                 userCanEdit,
                 undefined,
-                () => this.invalidateCollisionGrid({ areasLayerDirty: true })
+                () => this.invalidateCollisionGrid({ areasLayerDirty: true }),
             );
             gameMapAreas.triggerAreasChange(undefined, this.position);
             // Initialize the cache of areas with maxUsersInAreaPropertyData
@@ -367,7 +367,7 @@ export class GameMapFrontWrapper {
                 console.warn(
                     'Could not find layer with name that contains "' +
                         layerName +
-                        '" when calling WA.hideLayer / WA.showLayer'
+                        '" when calling WA.hideLayer / WA.showLayer',
                 );
                 return;
             }
@@ -392,7 +392,7 @@ export class GameMapFrontWrapper {
         y: number,
         name: string,
         collisionGrid: number[][],
-        withGridUpdate = true
+        withGridUpdate = true,
     ): void {
         const coords = this.entitiesCollisionLayer.worldToTileXY(x, y, true);
         for (let y = 0; y < collisionGrid.length; y += 1) {
@@ -402,7 +402,7 @@ export class GameMapFrontWrapper {
                     const tile = this.entitiesCollisionLayer.putTileAt(
                         this.existingTileIndex,
                         coords.x + x,
-                        coords.y + y
+                        coords.y + y,
                     );
                     if (tile !== null) {
                         tile.properties["collides"] = true;
@@ -558,7 +558,7 @@ export class GameMapFrontWrapper {
         const meetingAreas: AreaData[] = [];
         for (const area of gameMapAreas.getAreas().values()) {
             const hasMeeting = area.properties.some(
-                (p) => p.type === "jitsiRoomProperty" || p.type === "livekitRoomProperty"
+                (p) => p.type === "jitsiRoomProperty" || p.type === "livekitRoomProperty",
             );
             const hasPersonalDesk = area.properties.some((p) => p.type === "personalAreaPropertyData");
             if (hasPersonalDesk) {
@@ -805,7 +805,7 @@ export class GameMapFrontWrapper {
         height: number,
         collisionGrid?: number[][],
         oldTopLeftPos?: { x: number; y: number },
-        ignoreCollisionGrid?: boolean
+        ignoreCollisionGrid?: boolean,
     ): boolean {
         const canEntityBePlaced = this.canEntityBePlaced(
             topLeftPos,
@@ -813,7 +813,7 @@ export class GameMapFrontWrapper {
             height,
             collisionGrid,
             oldTopLeftPos,
-            ignoreCollisionGrid
+            ignoreCollisionGrid,
         );
 
         const entityCenterCoordinates = {
@@ -833,7 +833,7 @@ export class GameMapFrontWrapper {
         height: number,
         collisionGrid?: number[][],
         oldTopLeftPos?: { x: number; y: number },
-        ignoreCollisionGrid?: boolean
+        ignoreCollisionGrid?: boolean,
     ): boolean {
         const isOutOfBounds = this.scene
             .getGameMapFrontWrapper()
@@ -880,7 +880,7 @@ export class GameMapFrontWrapper {
                         .isSpaceAvailable(
                             topLeftPos.x + x * tileDim.width,
                             topLeftPos.y + y * tileDim.height,
-                            ignoreCollisionGrid
+                            ignoreCollisionGrid,
                         )
                 ) {
                     return false;
@@ -903,7 +903,7 @@ export class GameMapFrontWrapper {
         }
         const playersPositions = [
             ...Array.from(this.scene.getRemotePlayersRepository().getPlayers().values()).map(
-                (player) => player.position
+                (player) => player.position,
             ),
             this.scene.CurrentPlayer.getPosition(),
         ];
@@ -956,7 +956,7 @@ export class GameMapFrontWrapper {
     public setLayerProperty(
         layerName: string,
         propertyName: string,
-        propertyValue: string | number | undefined | boolean
+        propertyValue: string | number | undefined | boolean,
     ) {
         const layer = this.findLayer(layerName);
         if (layer === undefined) {
@@ -1008,7 +1008,7 @@ export class GameMapFrontWrapper {
 
     public getTiledObjectProperty(
         object: { properties?: ITiledMapProperty[] },
-        propertyName: string
+        propertyName: string,
     ): Json | undefined {
         return this.gameMap.getTiledObjectProperty(object, propertyName);
     }
@@ -1055,7 +1055,7 @@ export class GameMapFrontWrapper {
     public triggerSpecificAreaOnUpdate(
         area: AreaData,
         oldProperties: AreaDataProperties | undefined,
-        newProperties: AreaDataProperties | undefined
+        newProperties: AreaDataProperties | undefined,
     ): void {
         this.gameMap.getWamFile()?.getGameMapAreas().triggerSpecificAreaOnUpdate(area, oldProperties, newProperties);
     }
@@ -1082,7 +1082,7 @@ export class GameMapFrontWrapper {
 
     private isPlayerInsideAreaByCoordinates(
         areaCoordinates: { x: number; y: number; width: number; height: number },
-        playerPosition: { x: number; y: number }
+        playerPosition: { x: number; y: number },
     ): boolean {
         return this.isInsideAreaByCoordinates(areaCoordinates, playerPosition);
     }
@@ -1151,7 +1151,7 @@ export class GameMapFrontWrapper {
         // Update cache if maxUsersInAreaPropertyData was added or removed
         if (newConfig.properties) {
             const hasMaxUsersProperty = newConfig.properties.some(
-                (property) => property.type === "maxUsersInAreaPropertyData"
+                (property) => property.type === "maxUsersInAreaPropertyData",
             );
             if (hasMaxUsersProperty) {
                 this.areasWithMaxUsersProperty.add(newConfig.id);
@@ -1405,15 +1405,15 @@ export class GameMapFrontWrapper {
                 tile.properties?.[GameMapProperties.COLLIDES]
                     ? 1
                     : (isExitLayer && tile.index !== -1) ||
-                      tile.properties?.[GameMapProperties.EXIT_URL] ||
-                      tile.properties?.[GameMapProperties.EXIT_SCENE_URL]
-                    ? 2
-                    : (isStartLayer && tile.index !== -1) ||
-                      tile.properties?.[GameMapProperties.START] ||
-                      tile.properties?.[GameMapProperties.START_LAYER]
-                    ? 3
-                    : 0
-            )
+                        tile.properties?.[GameMapProperties.EXIT_URL] ||
+                        tile.properties?.[GameMapProperties.EXIT_SCENE_URL]
+                      ? 2
+                      : (isStartLayer && tile.index !== -1) ||
+                          tile.properties?.[GameMapProperties.START] ||
+                          tile.properties?.[GameMapProperties.START_LAYER]
+                        ? 3
+                        : 0,
+            ),
         );
     }
 
@@ -1494,7 +1494,7 @@ export class GameMapFrontWrapper {
         propName: string,
         oldValue: string | number | boolean | undefined,
         newValue: string | number | boolean | undefined,
-        allProps: Map<string, string | boolean | number>
+        allProps: Map<string, string | boolean | number>,
     ) {
         const callbacksArray = this.propertiesChangeCallbacks.get(propName);
         if (callbacksArray !== undefined) {
@@ -1535,7 +1535,7 @@ export class GameMapFrontWrapper {
 
     private triggerDynamicAreasChange(
         oldPosition: { x: number; y: number } | undefined,
-        position: { x: number; y: number } | undefined
+        position: { x: number; y: number } | undefined,
     ): boolean {
         const areasByOldPosition = oldPosition ? this.getDynamicAreasOnPosition(oldPosition) : [];
         const areasByNewPosition = position ? this.getDynamicAreasOnPosition(position) : [];
@@ -1576,7 +1576,7 @@ export class GameMapFrontWrapper {
             if (
                 MathUtils.isOverlappingWithRectangle(
                     { x: position.x, y: position.y + offsetY },
-                    { x: dynamicArea.x, y: dynamicArea.y, width: dynamicArea.width, height: dynamicArea.height }
+                    { x: dynamicArea.x, y: dynamicArea.y, width: dynamicArea.width, height: dynamicArea.height },
                 )
             ) {
                 overlappedDynamicAreas.push(dynamicArea);
@@ -1606,7 +1606,7 @@ export class GameMapFrontWrapper {
 
     public isInsideAreaByCoordinates(
         areaCoordinates: { x: number; y: number; width: number; height: number },
-        objectCoordinates: { x: number; y: number }
+        objectCoordinates: { x: number; y: number },
     ) {
         return MathUtils.isOverlappingWithRectangle(objectCoordinates, areaCoordinates);
     }

@@ -151,7 +151,7 @@
                     <div class="flex gap-1">
                         <kbd
                             class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
-                                'ArrowUp'
+                                'ArrowUp',
                             )
                                 ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                                 : ''}"
@@ -160,7 +160,7 @@
                         </kbd>
                         <kbd
                             class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
-                                'ArrowLeft'
+                                'ArrowLeft',
                             )
                                 ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                                 : ''}"
@@ -169,7 +169,7 @@
                         </kbd>
                         <kbd
                             class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
-                                'ArrowDown'
+                                'ArrowDown',
                             )
                                 ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                                 : ''}"
@@ -178,7 +178,7 @@
                         </kbd>
                         <kbd
                             class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
-                                'ArrowRight'
+                                'ArrowRight',
                             )
                                 ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                                 : ''}"

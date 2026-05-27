@@ -26,5 +26,5 @@ export const bottomActionBarVisibilityStore = derived(
                 (!$silentStore || $followStateStore != "off" || $screenSharingAvailableStore)) ||
             $isSpeakerStore
         );
-    }
+    },
 );

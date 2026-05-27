@@ -18,7 +18,7 @@
             placement: "left",
             //strategy: 'fixed',
         },
-        16
+        16,
     );
 </script>
 

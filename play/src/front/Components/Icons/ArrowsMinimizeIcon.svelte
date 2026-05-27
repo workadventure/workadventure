@@ -16,7 +16,7 @@
         fillColor = "fill-transparent",
         hover = "group-hover/btn-arrows-maximize:fill-white",
         strokeWidth = "1.5",
-        classList = "aspect-ratio transition-all"
+        classList = "aspect-ratio transition-all",
     }: Props = $props();
 </script>
 

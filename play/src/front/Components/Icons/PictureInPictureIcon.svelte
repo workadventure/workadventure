@@ -18,7 +18,7 @@
         hoverFillWhite = "group-hover/btn-picture-in-picture:fill-white",
         hoverFillNone = "group-hover/btn-picture-in-picture:fill-none",
         strokeWidth = "1.5",
-        classList = "aspect-ratio transition-all"
+        classList = "aspect-ratio transition-all",
     }: Props = $props();
 </script>
 

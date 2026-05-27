@@ -18,7 +18,7 @@ export class WAError extends Error {
         timeToRetry: number,
         canRetryManual: boolean,
         urlToRedirect: string,
-        buttonTitle: string
+        buttonTitle: string,
     ) {
         super(title + " - " + subtitle + " - " + details);
 

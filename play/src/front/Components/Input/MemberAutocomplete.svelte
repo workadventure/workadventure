@@ -18,7 +18,7 @@
                       label: value,
                       value,
                   }
-                : undefined)()
+                : undefined)(),
     );
 
     async function searchMembers(filterText: string) {
@@ -31,8 +31,8 @@
                     label: member.name
                         ? `${member.name} ${member.email ? `(${member.email})` : ""}`
                         : member.email
-                        ? member.email
-                        : member.id,
+                          ? member.email
+                          : member.id,
                 }));
             } catch (error) {
                 console.error(error);

@@ -146,15 +146,17 @@
     }
 
     // Sync with MediaSettingsList: prefer used store, then requested, then current stream
-    let cameraSelectValue =
-        $derived($usedCameraDeviceIdStore ??
-        $requestedCameraDeviceIdStore ??
-        stream?.getVideoTracks()[0]?.getSettings()?.deviceId);
+    let cameraSelectValue = $derived(
+        $usedCameraDeviceIdStore ??
+            $requestedCameraDeviceIdStore ??
+            stream?.getVideoTracks()[0]?.getSettings()?.deviceId,
+    );
 
-    let microphoneSelectValue =
-        $derived($usedMicrophoneDeviceIdStore ??
-        $requestedMicrophoneDeviceIdStore ??
-        stream?.getAudioTracks()[0]?.getSettings()?.deviceId);
+    let microphoneSelectValue = $derived(
+        $usedMicrophoneDeviceIdStore ??
+            $requestedMicrophoneDeviceIdStore ??
+            stream?.getAudioTracks()[0]?.getSettings()?.deviceId,
+    );
 
     function selectCamera(deviceId: string) {
         requestedCameraDeviceIdStore.set(deviceId);
@@ -248,10 +250,7 @@
                         class="flex flex-col md:w-1/3 w-full px-5 mb-6 h-full justify-between"
                     >
                         <h4 class="text-white mb-2">
-                            <IconSpeakerPhone
-                                class="h-8 w-8 mr-1 inline"
-                                font-size="22"
-                            />
+                            <IconSpeakerPhone class="h-8 w-8 mr-1 inline" font-size="22" />
                             {$LL.megaphone.modal.liveMessage.title()}
                         </h4>
 
@@ -294,9 +293,7 @@
                         class="flex flex-col md:w-1/3 w-full px-5 mb-6 h-full justify-between"
                     >
                         <h4 class="text-white mb-2">
-                            <IconMessageShare
-                                class="h-8 w-8 mr-1 inline"
-                            />
+                            <IconMessageShare class="h-8 w-8 mr-1 inline" />
                             {$LL.megaphone.modal.textMessage.title()}
                         </h4>
 
@@ -339,9 +336,7 @@
                         class="flex flex-col md:w-1/3 w-full px-5 mb-6 h-full justify-between"
                     >
                         <h4 class="text-white mb-2">
-                            <IconMusicShare
-                                class="h-8 w-8 mr-1 inline"
-                            />
+                            <IconMusicShare class="h-8 w-8 mr-1 inline" />
                             {$LL.megaphone.modal.audioMessage.title()}
                         </h4>
 
@@ -407,10 +402,13 @@
                     </div>
                     <div class="flex justify-center">
                         <section class="centered-column">
-                            <button class="btn btn-light" onclick={(event) => {
-                                event.preventDefault();
-                                send();
-                            }}>
+                            <button
+                                class="btn btn-light"
+                                onclick={(event) => {
+                                    event.preventDefault();
+                                    send();
+                                }}
+                            >
                                 {$LL.menu.globalMessage.send()}
                             </button>
                         </section>
@@ -421,10 +419,7 @@
                 <div id="active-liveMessage" class="flex flex-col p-5 text-white">
                     <div>
                         <h3>
-                            <IconSpeakerPhone
-                                class="h-8 w-8 mr-1 text-white"
-                                font-size="22"
-                            />
+                            <IconSpeakerPhone class="h-8 w-8 mr-1 text-white" font-size="22" />
                             {$LL.megaphone.modal.liveMessage.title()}
                         </h3>
                     </div>

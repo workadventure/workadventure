@@ -28,12 +28,12 @@
         } else if (Number.isInteger(currentUserId)) {
             playerWokaPictureStore = gameScene.MapPlayersByKey.getNestedStore(
                 currentUserId as number,
-                (item) => item.pictureStore
+                (item) => item.pictureStore,
             );
         } else {
             // eslint-disable-next-line svelte/require-store-reactive-access
             playerWokaPictureStore = [...gameScene.MapPlayersByKey].find(
-                ([, player]) => player.userUuid === (currentUserId as string)
+                ([, player]) => player.userUuid === (currentUserId as string),
             )?.[1].pictureStore;
         }
 

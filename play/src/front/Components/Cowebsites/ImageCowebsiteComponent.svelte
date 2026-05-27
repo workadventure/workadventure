@@ -91,7 +91,7 @@
                   maxZoom: 12,
                   friction: 0.9,
                   render,
-              } satisfies PanZoomOptions)
+              } satisfies PanZoomOptions),
     );
 
     $effect(() => {

@@ -5,7 +5,6 @@
     import { inputFormFocusStore } from "../../Stores/UserInputStore";
     import InfoButton from "./InfoButton.svelte";
 
-    
     interface Props {
         id?: string;
         dataTestId?: string;
@@ -40,7 +39,7 @@
         info?: Snippet;
         inputAppend?: Snippet;
         helper?: Snippet;
-        [key: string]: unknown
+        [key: string]: unknown;
     }
 
     let {
@@ -161,17 +160,17 @@
                 {...rest}
                 bind:value
                 {placeholder}
-                onkeypress={onkeypress}
+                {onkeypress}
                 onkeydown={handleKeyDown}
                 oncompositionstart={onCompositionStart}
                 oncompositionend={onCompositionEnd}
-                onchange={onchange}
-                onclick={onclick}
+                {onchange}
+                {onclick}
                 oninput={validateInput}
-                onfocusin={onfocusin}
-                onfocusout={onfocusout}
-                onerror={onerror}
-                onblur={onblur}
+                {onfocusin}
+                {onfocusout}
+                {onerror}
+                {onblur}
                 {disabled}
                 bind:this={inputElement}
                 {maxlength}
@@ -195,10 +194,10 @@
                 data-testid={dataTestId}
                 bind:value
                 {placeholder}
-                onchange={onchange}
-                onclick={onclick}
+                {onchange}
+                {onclick}
                 oninput={validateInput}
-                onblur={onblur}
+                {onblur}
                 min="{min}.toString()"
                 {max}
                 {step}
@@ -219,10 +218,10 @@
                 data-testid={dataTestId}
                 bind:value
                 {placeholder}
-                onchange={onchange}
-                onclick={onclick}
+                {onchange}
+                {onclick}
                 oninput={validateInput}
-                onblur={onblur}
+                {onblur}
                 {min}
                 {max}
                 {step}
@@ -243,10 +242,10 @@
                 data-testid={dataTestId}
                 bind:value
                 {placeholder}
-                onchange={onchange}
-                onclick={onclick}
+                {onchange}
+                {onclick}
                 oninput={validateInput}
-                onblur={onblur}
+                {onblur}
                 {min}
                 {max}
                 {step}

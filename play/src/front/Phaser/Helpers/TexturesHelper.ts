@@ -36,7 +36,7 @@ export class TexturesHelper {
                             rt.destroy();
                         },
                         "image/png",
-                        1
+                        1,
                     );
                 } catch (error) {
                     rt.destroy();
@@ -57,7 +57,7 @@ export class TexturesHelper {
         sourceTextureKey: string,
         sourceTextureFrame?: number | string,
         sourceTextureWidth = 32,
-        sourceTextureHeight = 32
+        sourceTextureHeight = 32,
     ): void {
         const rt = scene.make.renderTexture({ x: 0, y: 0, width, height }, false);
         const widthTiles = Math.ceil(width / sourceTextureWidth);
@@ -78,7 +78,7 @@ export class TexturesHelper {
         textureKey: string,
         width: number,
         height: number,
-        color: number
+        color: number,
     ): void {
         const rectangleTexture = scene.add.graphics().fillStyle(color, 1).fillRect(0, 0, width, height);
         rectangleTexture.generateTexture(textureKey, width, height);
@@ -91,7 +91,7 @@ export class TexturesHelper {
         radius: number,
         color: number,
         outlineColor?: number,
-        outlineThickness?: number
+        outlineThickness?: number,
     ): void {
         const circleTexture = scene.add.graphics().fillStyle(color, 1).fillCircle(radius, radius, radius);
         if (outlineColor) {

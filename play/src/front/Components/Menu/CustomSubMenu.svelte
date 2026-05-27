@@ -2,7 +2,6 @@
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
 
-
     interface Props {
         url: string;
         allowApi: boolean;

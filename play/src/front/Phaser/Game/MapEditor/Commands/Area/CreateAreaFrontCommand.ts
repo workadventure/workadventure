@@ -14,7 +14,7 @@ export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCo
         commandId: string | undefined,
         private areaEditorTool: AreaEditorTool | TrashEditorTool,
         private localCommand: boolean,
-        private gameMapFrontWrapper: GameMapFrontWrapper
+        private gameMapFrontWrapper: GameMapFrontWrapper,
     ) {
         super(wamFile, areaObjectConfig, commandId);
     }
@@ -31,7 +31,7 @@ export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCo
             this.areaConfig.id,
             undefined,
             this.areaEditorTool,
-            this.gameMapFrontWrapper
+            this.gameMapFrontWrapper,
         );
     }
 

@@ -30,7 +30,7 @@ export class SuperLoaderPlugin {
         key: string,
         url: string,
         frameConfig?: Phaser.Types.Loader.FileTypes.ImageFrameConfig,
-        xhrSettings?: Phaser.Types.Loader.XHRSettingsObject
+        xhrSettings?: Phaser.Types.Loader.XHRSettingsObject,
     ) {
         return this.loadResource<Texture>(
             () => {
@@ -44,7 +44,7 @@ export class SuperLoaderPlugin {
                 }
                 return undefined;
             },
-            "spritesheet"
+            "spritesheet",
         );
     }
 
@@ -61,7 +61,7 @@ export class SuperLoaderPlugin {
                 }
                 return undefined;
             },
-            "image"
+            "image",
         );
     }
 
@@ -77,7 +77,7 @@ export class SuperLoaderPlugin {
         url: string,
         dataKey?: string,
         xhrSettings?: Phaser.Types.Loader.XHRSettingsObject,
-        immediateCallback?: (key: string, type: string, data: unknown) => void
+        immediateCallback?: (key: string, type: string, data: unknown) => void,
     ) {
         return this.loadResource<unknown>(
             () => {
@@ -92,7 +92,7 @@ export class SuperLoaderPlugin {
                 return undefined;
             },
             "json",
-            immediateCallback
+            immediateCallback,
         );
     }
 
@@ -110,7 +110,7 @@ export class SuperLoaderPlugin {
         url: string,
         fromCache: () => T | undefined,
         type: string,
-        immediateCallback?: (key: string, type: string, data: unknown) => void
+        immediateCallback?: (key: string, type: string, data: unknown) => void,
     ): CancelablePromise<T> {
         // If for some reason, the "url" is empty, let's reject the promise.
         if (!url) {

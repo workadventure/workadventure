@@ -105,7 +105,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         data: WAMEntityData,
         imagePathPrefix?: string,
         interactive?: boolean,
-        withGridUpdate?: boolean
+        withGridUpdate?: boolean,
     ): Promise<Entity> {
         const prefab = await this.scene
             .getEntitiesCollectionsManager()
@@ -113,7 +113,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         if (prefab === undefined) {
             console.warn(`Could not find entity ${data.prefabRef.id} in collection ${data.prefabRef.collectionName}`);
             return Promise.reject(
-                new Error(`Could not find entity ${data.prefabRef.id} in collection ${data.prefabRef.collectionName}`)
+                new Error(`Could not find entity ${data.prefabRef.id} in collection ${data.prefabRef.collectionName}`),
             );
         }
 
@@ -282,7 +282,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             (...datas: { propertyName: string; propertyValue: string | number | boolean }[]) => {
                 datas.forEach((data) => this.properties.set(data.propertyName, data.propertyValue));
                 this.gameMapFrontWrapper.handleEntityActionTrigger();
-            }
+            },
         );
         entity.on(EntityEvent.Updated, (data: EntityData) => {
             this.emit(EntitiesManagerEvent.UpdateEntity, data);
@@ -328,7 +328,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                             entity.displayHeight,
                             entity.getCollisionGrid(),
                             entity.getOldPosition(),
-                            this.shiftKey?.isDown
+                            this.shiftKey?.isDown,
                         )
                 ) {
                     const oldPos = entity.getOldPosition();
@@ -436,7 +436,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     entity.displayHeight,
                     entity.getCollisionGrid(),
                     entity.getOldPosition(),
-                    this.shiftKey?.isDown
+                    this.shiftKey?.isDown,
                 )
         ) {
             entity.setTint(0xff0000);
@@ -484,7 +484,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     {
                         x: entity.getBounds().centerX,
                         y: entity.getBounds().centerY,
-                    }
+                    },
                 )
             ) {
                 entitiesInsideArea.set(entityId, entity);

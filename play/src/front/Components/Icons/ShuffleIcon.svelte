@@ -14,7 +14,7 @@
         strokeColor = "stroke-white",
         fillColor = "fill-transparent",
         strokeWidth = "1.5",
-        classList = "aspect-ratio transition-all"
+        classList = "aspect-ratio transition-all",
     }: Props = $props();
 </script>
 

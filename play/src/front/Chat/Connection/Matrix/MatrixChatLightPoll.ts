@@ -36,7 +36,7 @@ export class MatrixChatLightPoll implements ChatPollItem {
         options?: {
             hydrationState?: ChatRoomSidePanelHydrationState;
             retryHydration?: () => Promise<void>;
-        }
+        },
     ) {
         this.id = poll.pollId;
         this.sender = this.getSender();
@@ -47,7 +47,7 @@ export class MatrixChatLightPoll implements ChatPollItem {
         this.hydrationStateStore = writable<ChatRoomSidePanelHydrationState>(
             options?.hydrationState ?? {
                 status: "ready",
-            }
+            },
         );
         this.hydrationState = this.hydrationStateStore;
         this.retryHydration = options?.retryHydration;

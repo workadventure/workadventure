@@ -21,7 +21,7 @@ export class ActionableItem implements ActivatableInterface {
         private sprite: Sprite,
         private eventHandler: GameScene,
         public readonly activationRadius: number,
-        private onActivateCallback: (item: ActionableItem) => void
+        private onActivateCallback: (item: ActionableItem) => void,
     ) {
         this.activationRadiusSquared = activationRadius * activationRadius;
 

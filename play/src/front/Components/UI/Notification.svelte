@@ -41,7 +41,7 @@
     transition:fly={{ x: 210, duration: 500 }}
 >
     <img
-        src={notification.icon ? icons.get(notification.icon) ?? notification.icon : waImg}
+        src={notification.icon ? (icons.get(notification.icon) ?? notification.icon) : waImg}
         alt="Audio playing"
         class="bg-white/10 rounded-md h-12"
         draggable="false"

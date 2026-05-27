@@ -51,8 +51,9 @@
     const nbUnreadInvitationsMessages = gameManager.chatConnection.nbUnreadInvitationsMessages;
 
     // Calculate total unread count and format it (max 99+)
-    let totalUnreadCount =
-        $derived($nbUnreadRoomsMessages + $nbUnreadDirectRoomsMessages + $nbUnreadInvitationsMessages + $unreadMessagesCount);
+    let totalUnreadCount = $derived(
+        $nbUnreadRoomsMessages + $nbUnreadDirectRoomsMessages + $nbUnreadInvitationsMessages + $unreadMessagesCount,
+    );
     let displayCount = $derived(totalUnreadCount > 99 ? "99" : totalUnreadCount.toString());
 </script>
 

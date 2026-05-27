@@ -42,7 +42,7 @@ export class UsernameDomLayer {
         y: number,
         depth: number,
         displayScale: number,
-        zoomScale: number
+        zoomScale: number,
     ): HTMLDivElement {
         let username = this.usernames.get(id);
 
