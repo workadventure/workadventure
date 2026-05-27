@@ -13,8 +13,9 @@
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
     import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
-    import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+    import { requestedCameraState, requestedMicrophoneState, temporaryMicrophoneState } from "../../Stores/MediaStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+    import { shouldShowMicrophoneAsEnabled } from "../../Stores/PushToTalkStore";
     import { blackListManager } from "../../WebRtc/BlackListManager";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { blocker } from "../../Utils/screenBlocker";
@@ -159,9 +160,13 @@
     // We also need to check if they are actually streaming (camera, mic, or screen)
     let isLocalUserStreamingMegaphone = $derived(
         isLocalUser &&
-            $requestedMegaphoneStore &&
-            ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState),
-    );
+        $requestedMegaphoneStore &&
+        ($requestedCameraState ||
+            shouldShowMicrophoneAsEnabled({
+                requestedMicrophoneState: $requestedMicrophoneState,
+                temporaryMicrophoneState: $temporaryMicrophoneState,
+            }) ||
+            $requestedScreenSharingState);
 
     let blackListSubject: Subscription | undefined;
     let unBlackListSubject: Subscription | undefined;
