@@ -45,8 +45,9 @@ import type {
     BackEventFrontToPusherMessage,
     ConnectToRoomMessage,
     JoinRoomFrontMessage,
+    ServerToClientMessage,
 } from "@workadventure/messages";
-import { noUndefined, ServerToClientMessage } from "@workadventure/messages";
+import { noUndefined } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
@@ -943,72 +944,49 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    public emitWorldFullMessage(client: PusherWebSocket): void {
-        if (!client.isDisconnecting()) {
-            client.send({
-                message: {
-                    $case: "worldFullMessage",
-                    worldFullMessage: {},
-                },
-            });
-        }
+    public getTokenExpiredMessage(): ServerToClientMessage {
+        return {
+            message: {
+                $case: "tokenExpiredMessage",
+                tokenExpiredMessage: {},
+            },
+        };
     }
 
-    public emitTokenExpiredMessage(client: SocketUpgradeFailed): void {
-        client.send(
-            ServerToClientMessage.encode({
-                message: {
-                    $case: "tokenExpiredMessage",
-                    tokenExpiredMessage: {},
+    public getInvalidCharacterTextureMessage(): ServerToClientMessage {
+        return {
+            message: {
+                $case: "invalidCharacterTextureMessage",
+                invalidCharacterTextureMessage: {
+                    message: "Invalid character textures",
                 },
-            }).finish(),
-            true
-        );
+            },
+        };
     }
 
-    public emitInvalidCharacterTextureMessage(client: SocketUpgradeFailed): void {
-        client.send(
-            ServerToClientMessage.encode({
-                message: {
-                    $case: "invalidCharacterTextureMessage",
-                    invalidCharacterTextureMessage: {
-                        message: "Invalid character textures",
-                    },
+    public getInvalidCompanionTextureMessage(): ServerToClientMessage {
+        return {
+            message: {
+                $case: "invalidCompanionTextureMessage",
+                invalidCompanionTextureMessage: {
+                    message: "Invalid companion texture",
                 },
-            }).finish(),
-            true
-        );
+            },
+        };
     }
 
-    public emitInvalidCompanionTextureMessage(client: SocketUpgradeFailed): void {
-        client.send(
-            ServerToClientMessage.encode({
-                message: {
-                    $case: "invalidCompanionTextureMessage",
-                    invalidCompanionTextureMessage: {
-                        message: "Invalid companion texture",
-                    },
+    public toConnectionErrorMessage(message: string): ServerToClientMessage {
+        return {
+            message: {
+                $case: "worldConnectionMessage",
+                worldConnectionMessage: {
+                    message,
                 },
-            }).finish(),
-            true
-        );
+            },
+        };
     }
 
-    public emitConnectionErrorMessage(client: SocketUpgradeFailed, message: string): void {
-        client.send(
-            ServerToClientMessage.encode({
-                message: {
-                    $case: "worldConnectionMessage",
-                    worldConnectionMessage: {
-                        message,
-                    },
-                },
-            }).finish(),
-            true
-        );
-    }
-
-    public emitErrorScreenMessage(client: SocketUpgradeFailed, errorApi: ErrorApiData): void {
+    public toErrorScreenMessage(errorApi: ErrorApiData): ServerToClientMessage {
         // FIXME: improve typing of ErrorScreenMessage
         const errorScreenMessage: ErrorScreenMessage = {
             type: errorApi.type,
@@ -1046,17 +1024,12 @@ export class SocketManager implements ZoneEventListener {
             errorScreenMessage.urlToRedirect = errorApi.urlToRedirect;
         }
 
-        //if (!client.disconnecting) {
-        client.send(
-            ServerToClientMessage.encode({
-                message: {
-                    $case: "errorScreenMessage",
-                    errorScreenMessage,
-                },
-            }).finish(),
-            true
-        );
-        //}
+        return {
+            message: {
+                $case: "errorScreenMessage",
+                errorScreenMessage,
+            },
+        };
     }
 
     private refreshRoomData(roomId: string, versionNumber: number): void {
