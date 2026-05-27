@@ -1,6 +1,7 @@
 import type { Subscription } from "rxjs";
 import type { MeetingInvitationRequestReceivedMessage } from "@workadventure/messages";
 import { AskPositionMessage_AskType } from "@workadventure/messages";
+import { get } from "svelte/store";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
 import { toastStore } from "../../Stores/ToastStore";
@@ -79,10 +80,21 @@ export class InviteManager {
                 meetingInvitationRequestStore.set(null);
             })
         );
+
+        // Clear the invitation if the user left the room
+        this.subscriptions.push(
+            this.connection.userLeftMessageStream.subscribe((payload) => {
+                if (payload.userId === get(meetingInvitationRequestStore)?.senderUserId) {
+                    meetingInvitationRequestStore.set(null);
+                }
+            })
+        );
     }
 
     public handleAccept(request: MeetingInvitationRequestReceivedMessage): void {
         this.connection.emitMeetingInvitationResponse(true, request.senderUserUuid);
+        // TODO: Change emitAskPosition to a server query to allow for error handling
+        // NOTE: For now, if the user leaves while their position is being requested, nothing happens
         this.connection.emitAskPosition(
             request.senderUserUuid,
             request.senderPlayUri,
