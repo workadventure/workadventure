@@ -67,7 +67,7 @@ import type {
 import { ChatPermissionLevel } from "../ChatConnection";
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, botsChatIds } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
-import { gameManager } from "../../../Phaser/Game/GameManager";
+import { gameManager, GameSceneNotFoundError } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MessageNotification } from "../../../Notification/MessageNotification";
 import { notificationManager } from "../../../Notification/NotificationManager";
@@ -190,7 +190,15 @@ export class MatrixChatRoom
             const isRoomIsDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
             const isNotificationIsMuted = get(this.areNotificationsMuted);
             if (canPlaySound && !isRoomIsDisplayed && !isNotificationIsMuted) {
-                gameManager.getCurrentGameScene().playSound("new-message");
+                try {
+                    gameManager.getCurrentGameScene().playSound("new-message");
+                } catch (e) {
+                    // If the game scene is not found, it means the message is received before the room is loaded.
+                    // It's ok to skip playing notifications in this case.
+                    if (!(e instanceof GameSceneNotFoundError)) {
+                        throw e;
+                    }
+                }
             }
 
             if (isNotificationIsMuted || isRoomIsDisplayed) {
