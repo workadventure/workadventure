@@ -26,6 +26,7 @@ import type {
     ChatQuestionCreationCapability,
     ChatQuestionItem,
     ChatRoom,
+    ChatSendMessageResult,
 } from "../ChatConnection";
 import LL, { locale } from "../../../../i18n/i18n-svelte";
 import { iframeListener } from "../../../Api/IframeListener";
@@ -295,7 +296,11 @@ export class ProximityChatRoom implements ChatRoom {
         );
     }
 
-    sendMessage(message: string, action: ChatMessageType = "proximity", broadcast = true): void {
+    sendMessage(
+        message: string,
+        action: ChatMessageType = "proximity",
+        broadcast = true
+    ): Promise<ChatSendMessageResult> {
         // Create content message
         const newChatMessageContent = {
             body: message,
@@ -346,6 +351,8 @@ export class ProximityChatRoom implements ChatRoom {
                 console.error("Error while sending message to WorkAdventure scripting API", e);
             }
         }
+
+        return Promise.resolve({ status: "sent" });
     }
 
     private addEnteringChatWithUsers(users: SpaceUserExtended[]) {

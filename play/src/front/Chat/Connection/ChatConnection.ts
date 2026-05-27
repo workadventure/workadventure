@@ -137,7 +137,7 @@ export interface ChatConversation {
     readonly activateVisibleProfileSync?: () => () => void;
     readonly messages: Readable<readonly ChatMessage[]>;
     readonly timelineItems: Readable<readonly ChatTimelineItem[]>;
-    readonly sendMessage: (message: string) => void;
+    readonly sendMessage: (message: string) => Promise<ChatSendMessageResult>;
     readonly sendFiles: (files: FileList) => Promise<void>;
     readonly canSendMessages?: Readable<boolean>;
     readonly canSendReactions?: Readable<boolean>;
@@ -153,6 +153,15 @@ export interface ChatConversation {
     readonly getMessageById?: (messageId: string) => Promise<ChatMessage | undefined>;
     readonly ensureTimelineEventVisible?: (eventId: string) => Promise<boolean>;
 }
+
+export type ChatSendMessageResult =
+    | {
+          status: "sent";
+      }
+    | {
+          status: "partial" | "failed";
+          remainingMessage: string;
+      };
 
 export interface ChatRoom extends ChatConversation {
     readonly conversationKind: "room";

@@ -66,6 +66,7 @@ import type {
     ChatRoomPrivacyState,
     ChatRoomSettingsManagement,
     ChatRoomSettingsUpdate,
+    ChatSendMessageResult,
     ChatTimelineItem,
     ChatThreadSummary,
     memberTypingInformation,
@@ -94,7 +95,9 @@ import { resolveChatUserColor } from "./services/WaMatrixProfileService";
 import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
 import { matrixAvatarProfile } from "./services/MatrixAvatarProfile";
 import { getThreadSummary, shouldDisplayEventInRoomTimeline } from "./MatrixThreadUtils";
+import { MAX_MATRIX_MESSAGE_CHARS } from "../../Services/ChatMessageSplitter";
 import { buildRoomPowerLevelsContent, getRoomPermissionsState } from "./MatrixRoomPowerLevels";
+import { sendMatrixTextMessageInChunks } from "./MatrixSendMessage";
 
 type EventId = string;
 
@@ -1716,15 +1719,16 @@ export class MatrixChatRoom
             .catch((error) => console.error(error));
     }
 
-    sendMessage(message: string) {
-        this.matrixRoom.client
-            .sendMessage(this.matrixRoom.roomId, this.getMessageContent(message))
-            .then(() => {
-                selectedChatMessageToReply.set(null);
-            })
-            .catch((error) => {
-                console.error(error);
-            });
+    async sendMessage(message: string): Promise<ChatSendMessageResult> {
+        const result = await sendMatrixTextMessageInChunks(message, MAX_MATRIX_MESSAGE_CHARS, (chunk) =>
+            this.matrixRoom.client.sendMessage(this.matrixRoom.roomId, this.getMessageContent(chunk))
+        );
+
+        if (result.status === "sent") {
+            selectedChatMessageToReply.set(null);
+        }
+
+        return result;
     }
 
     async createPoll(question: string, answers: string[], visibility: ChatPollKind, threadId?: string): Promise<void> {
@@ -1773,7 +1777,7 @@ export class MatrixChatRoom
     }
 
     private getMessageContent(message: string): RoomMessageEventContent {
-        const content: RoomMessageEventContent = { body: message, msgtype: MsgType.Text, formatted_body: message };
+        const content: RoomMessageEventContent = { body: message, msgtype: MsgType.Text };
         this.applyReplyContentIfReplyTo(content);
         return content;
     }

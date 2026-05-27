@@ -317,6 +317,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     nothingToDisplay: "Rien à afficher",
     showMore: "En afficher {number} de plus",
     showLess: "En afficher moins",
+    showFullMessage: "Voir plus",
+    showLessMessage: "Voir moins",
     addRoomToFolderError: "Impossible d'ajouter le salon au dossier",
     createRoom: {
         title: "Créer un nouveau salon",
@@ -669,6 +671,9 @@ const chat: DeepPartial<Translation["chat"]> = {
     whoops: "Oups ! une erreur est survenue",
     failedToOpenRoom: "Impossible d'ouvrir le salon : {roomId}",
     failedToSendAttachments: "Échec de l'envoi des pièces jointes. Veuillez réessayer.",
+    failedToSendMessage: "Échec de l'envoi du message. Veuillez réessayer.",
+    partiallyFailedToSendMessage:
+        "Une partie du message a été envoyée. Le texte non envoyé a été conservé dans le champ de saisie.",
     refreshChatError: "Impossible de rafraîchir le chat",
     discord: {
         chatBand: {
