@@ -1,9 +1,11 @@
 <script lang="ts">
     import type { Readable, Unsubscriber } from "svelte/store";
     import { Marked } from "marked";
-    import { onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount, tick } from "svelte";
     import type { ChatMessageContent } from "../../../Connection/ChatConnection";
+    import LL from "../../../../../i18n/i18n-svelte";
     import { sanitizeHTML } from "./WA-HTML-Sanitizer";
+    import { isMessageLongerThanCollapsedHeight } from "./MessageTextLayout";
 
     interface Props {
         content: Readable<ChatMessageContent>;
@@ -53,18 +55,28 @@
     }
 
     let html = $state("");
+    let expanded = $state(false);
+    let isLongMessage = $state(false);
+    let messageBubbleElement: HTMLDivElement | undefined = $state();
 
     let unsubscriber: Unsubscriber | undefined;
     onMount(() => {
         unsubscriber = content.subscribe((value) => {
+            expanded = false;
             let promiseHtml = getMarked(value.body).then((marked) => marked.parse(value.body));
             promiseHtml
                 .then((result) => {
                     html = result;
+                    tick()
+                        .then(updateLongMessageState)
+                        .catch((error) => console.error("Failed to measure chat message", error));
                 })
                 .catch((error) => {
                     console.error("Failed to parse markdown content", error);
                     html = $content.body;
+                    tick()
+                        .then(updateLongMessageState)
+                        .catch((error) => console.error("Failed to measure chat message", error));
                 })
                 .finally(() => {
                     updateMessageBody();
@@ -78,12 +90,48 @@
         }
     });
 
+    $effect(() => {
+        html;
+        expanded;
+        updateLongMessageState();
+    });
+
+    function updateLongMessageState() {
+        if (!messageBubbleElement) {
+            return;
+        }
+
+        const lineHeight = Number.parseFloat(getComputedStyle(messageBubbleElement).lineHeight);
+        isLongMessage = isMessageLongerThanCollapsedHeight(messageBubbleElement.scrollHeight, lineHeight);
+    }
+
     /* eslint-disable svelte/no-at-html-tags */
 </script>
 
-<div class="message-bubble m-0 {hasDepth ? 'text-xs leading-4' : 'text-sm'} text-white py-1 px-3" lang="">
+<div
+    class="message-bubble m-0 {hasDepth ? 'text-xs leading-4' : 'text-sm'} text-white py-1 px-3"
+    class:collapsed-message={isLongMessage && !expanded}
+    bind:this={messageBubbleElement}
+    lang=""
+>
     {@html sanitizeHTML(html)}
 </div>
+{#if isLongMessage}
+    <button
+        type="button"
+        class="m-0 px-3 pb-1 pt-0 text-xs font-semibold text-white/70 hover:text-white"
+        onclick={() => (expanded = !expanded)}
+    >
+        {expanded ? $LL.chat.showLessMessage() : $LL.chat.showFullMessage()}
+    </button>
+{/if}
 
 <style>
+    .collapsed-message {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 8;
+        line-clamp: 8;
+        overflow: hidden;
+    }
 </style>

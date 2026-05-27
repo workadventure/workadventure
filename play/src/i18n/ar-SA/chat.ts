@@ -295,6 +295,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     nothingToDisplay: "لا يوجد شيء لعرضه",
     showMore: "عرض {number} المزيد",
     showLess: "عرض أقل",
+    showFullMessage: "Show more",
+    showLessMessage: "Show less",
     addRoomToFolderError: "لا يمكن إضافة الغرفة إلى المجلد",
     createRoom: {
         title: "إنشاء غرفة جديدة",
@@ -620,6 +622,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     whoops: "عذرًا! حدث خطأ ما", // Whoops! Something went wrong
     failedToOpenRoom: "فشل في فتح الغرفة: {roomId}", // Failed to open room: {roomId}
     failedToSendAttachments: "فشل إرسال المرفقات. يرجى المحاولة مرة أخرى.", // Failed to send attachments. Please try again.
+    failedToSendMessage: "Failed to send message. Please try again.",
+    partiallyFailedToSendMessage: "Part of the message was sent. The unsent text was kept in the input.",
     refreshChatError: "فشل في تحديث الدردشة", // Failed to refresh chat
     discord: {
         chatBand: {
