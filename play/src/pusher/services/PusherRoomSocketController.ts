@@ -1,12 +1,15 @@
 import type { TemplatedApp, HttpResponse, HttpRequest, us_socket_context_t } from "uWebSockets.js";
-import type { ClientToServerMessage } from "@workadventure/messages";
+import {
+    type ClientToServerMessage,
+    PusherToFrontWebSocketMessage,
+    type ServerToClientMessage,
+} from "@workadventure/messages";
 import type { ZodObject, ZodRawShape, ZodTypeAny } from "zod";
 import * as Sentry from "@sentry/node";
 import { asError } from "catch-unknown";
 import { CLIENT_DISCONNECTION_RETENTION_MS } from "../enums/EnvironmentVariable";
 import type { ConnectingSocketData } from "../models/Websocket/SocketData";
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
-import type { SocketUpgradeFailed } from "./SocketManager";
 import { PusherWebSocket } from "./PusherWebSocket";
 import type { RawSocket } from "./PusherWebSocket";
 import { validateWebsocketQuery } from "./QueryValidator";
@@ -27,7 +30,8 @@ type UpgradeContext<TQuery> = {
 
 type UpgradeHandler<TQuery> = (context: UpgradeContext<TQuery>) => void | Promise<void>;
 type OpenHandler = (socket: PusherWebSocket) => void | Promise<void>;
-type RejectedOpenHandler = (socket: SocketUpgradeFailed) => void | Promise<void>;
+// The rejected open handler should return the unique error message that will be sent over the websocket before closing it.
+type RejectedOpenHandler = (socketData: UpgradeFailedData) => ServerToClientMessage | Promise<ServerToClientMessage>;
 type MessageHandler = (socket: PusherWebSocket, message: ClientToServerMessage) => void | Promise<void>;
 type CloseHandler = (socket: PusherWebSocket, code: number, reason: string) => void | Promise<void>;
 
@@ -260,8 +264,17 @@ export class PusherRoomSocketController {
             open: (ws) => {
                 (async () => {
                     const socketData = ws.getUserData();
+
                     if (socketData.rejected === true) {
-                        await config.rejectedOpen(ws as SocketUpgradeFailed);
+                        const errorMessage = await config.rejectedOpen(socketData);
+                        ws.send(
+                            PusherToFrontWebSocketMessage.encode({
+                                nonce: 1,
+                                message: errorMessage,
+                            }).finish(),
+                            true
+                        );
+                        ws.end(1000, "Error message sent");
                         return;
                     }
 

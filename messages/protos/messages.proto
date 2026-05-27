@@ -1082,9 +1082,6 @@ message RefreshRoomMessage{
 message DeleteMapMessage{
 }
 
-message WorldFullMessage{
-}
-
 message TokenExpiredMessage{
 }
 
@@ -1345,7 +1342,6 @@ message ServerToClientMessage {
     BanUserMessage banUserMessage = 13;
     //AdminRoomMessage adminRoomMessage = 14;
     WorldFullWarningMessage worldFullWarningMessage = 15;
-    WorldFullMessage worldFullMessage = 16;
     RefreshRoomMessage refreshRoomMessage = 17;
     WorldConnectionMessage worldConnectionMessage = 18;
     //EmoteEventMessage emoteEventMessage = 19;
