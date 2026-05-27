@@ -1,7 +1,6 @@
 import { AvailabilityStatus } from "@workadventure/messages";
 import { getColorOfStatus } from "../../Utils/AvailabilityStatus";
 
-const STATUS_DOT_SIZE = 8;
 const STATUS_DOT_BORDER_WIDTH = 1;
 
 const colorNumberToHex = (color: number): string => `#${color.toString(16).padStart(6, "0")}`;
@@ -20,8 +19,8 @@ export class UsernameStatusDisplay {
         this.element.style.alignItems = "center";
         this.element.style.justifyContent = "center";
         this.element.style.flex = "0 0 auto";
-        this.element.style.width = `calc(${STATUS_DOT_SIZE}px * var(--username-dom-scale, 1))`;
-        this.element.style.height = `calc(${STATUS_DOT_SIZE}px * var(--username-dom-scale, 1))`;
+        this.element.style.height = `50%`;
+        this.element.style.aspectRatio = "1 / 1";
         this.element.style.borderRadius = "50%";
         this.element.style.boxSizing = "border-box";
         this.redraw();
@@ -54,7 +53,7 @@ export class UsernameStatusDisplay {
         this.stopAnimation();
 
         this.animation = this.element.animate(
-            [{ transform: "scale(1)" }, { transform: "scale(0)" }, { transform: "scale(1)" }],
+            [{ transform: "scale(1)" }, { transform: "scale(0.25)" }, { transform: "scale(1)" }],
             {
                 duration: 300,
                 easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
