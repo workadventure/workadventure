@@ -2,6 +2,11 @@ import type { PrivateSpaceEvent, ProximityFileTransferOfferMessage } from "@work
 import type { Observable } from "rxjs";
 import { Subject, Subscription } from "rxjs";
 import { v4 as uuidv4 } from "uuid";
+import type {
+    IncomingProximityFileTransferOffer,
+    ProximityFileTransferUpdate,
+    ProximityFileTransferTransport,
+} from "./ProximityFileTransferTransport";
 import {
     decodeProximityFileChunkFrame,
     decodeProximityFileControlMessage,
@@ -41,28 +46,9 @@ export type ProximityFileTransferOffer = {
     recipients: string[];
 };
 
-export type IncomingProximityFileTransferOffer = ProximityFileTransferOfferMessage & {
-    senderSpaceUserId: string;
-};
+export type { IncomingProximityFileTransferOffer, ProximityFileTransferTransport };
 
-export type ProximityFileTransferUpdate =
-    | {
-          transferId: string;
-          state: "pending" | "connecting" | "downloading";
-          progress: number;
-      }
-    | {
-          transferId: string;
-          state: "ready";
-          progress: 1;
-          url: string;
-      }
-    | {
-          transferId: string;
-          state: "error";
-          progress: number;
-          error: string;
-      };
+export type { ProximityFileTransferUpdate };
 
 type ProximityFileTransferSignalPayload =
     | {
@@ -99,9 +85,11 @@ export type ProximityFileTransferSpace = {
 export type ProximityFileTransferServiceOptions = {
     localSpaceUserId: string;
     space: ProximityFileTransferSpace;
-    getIceServers: () => Promise<RTCIceServer[]>;
+    getIceServers?: () => Promise<RTCIceServer[]>;
     createPeerConnection?: (configuration: RTCConfiguration) => RTCPeerConnection;
     canExchangeWith?: (spaceUserId: string) => boolean;
+    transferTransport?: ProximityFileTransferTransport;
+    getTransferTransport?: () => ProximityFileTransferTransport | undefined;
 };
 
 type PeerSession = {
@@ -131,6 +119,7 @@ export class ProximityFileTransferService {
     private readonly receivingTransfers = new Map<string, ReceivingTransfer>();
     private readonly peerSessions = new Map<string, PeerSession>();
     private readonly subscriptions = new Subscription();
+    private readonly observedTransferTransports = new WeakSet<ProximityFileTransferTransport>();
     private readonly incomingOfferSubject = new Subject<IncomingProximityFileTransferOffer>();
     public readonly incomingOffers: Observable<IncomingProximityFileTransferOffer> = this.incomingOfferSubject;
     private readonly transferUpdateSubject = new Subject<ProximityFileTransferUpdate>();
@@ -155,7 +144,7 @@ export class ProximityFileTransferService {
         this.subscriptions.add(
             this.options.space.observePrivateEvent("proximityFileTransferSignal").subscribe((event) => {
                 const senderSpaceUserId = typeof event.sender === "string" ? event.sender : event.sender.spaceUserId;
-                this.handleSignal(senderSpaceUserId, event.proximityFileTransferSignal).catch((error) => {
+                this.handleTransferSignal(senderSpaceUserId, event.proximityFileTransferSignal).catch((error) => {
                     console.error("Error while handling proximity file transfer signal", error);
                 });
             })
@@ -184,6 +173,7 @@ export class ProximityFileTransferService {
                 recipients: recipientIds,
             };
             this.outgoingTransfers.set(transferId, offer);
+            this.getTransferTransport()?.sendFile(file, transferId, recipientIds);
 
             for (const recipientId of recipientIds) {
                 this.options.space.emitPrivateMessage(
@@ -214,6 +204,12 @@ export class ProximityFileTransferService {
         }
 
         this.transferUpdateSubject.next({ transferId, state: "connecting", progress: 0 });
+        const transferTransport = this.getTransferTransport();
+        if (transferTransport) {
+            await transferTransport.requestDownload(offer);
+            return;
+        }
+
         const session = await this.ensureInitiatorPeerSession(offer.senderSpaceUserId, transferId);
         const dataChannel = await session.openPromise;
         this.sendControlMessage(dataChannel, {
@@ -229,6 +225,7 @@ export class ProximityFileTransferService {
         this.outgoingTransfers.clear();
         this.incomingTransfers.clear();
         this.receivingTransfers.clear();
+        this.options.transferTransport?.destroy();
         for (const session of this.peerSessions.values()) {
             clearTimeout(session.negotiationTimeout);
             session.dataChannel?.close();
@@ -263,6 +260,9 @@ export class ProximityFileTransferService {
         const peerConnectionFactory =
             this.options.createPeerConnection ??
             ((configuration: RTCConfiguration) => new RTCPeerConnection(configuration));
+        if (!this.options.getIceServers) {
+            throw new Error("Missing WebRTC ICE server provider");
+        }
         const peerConnection = peerConnectionFactory({ iceServers: await this.options.getIceServers() });
         let resolveOpen!: (dataChannel: RTCDataChannel) => void;
         let rejectOpen!: (error: Error) => void;
@@ -369,6 +369,20 @@ export class ProximityFileTransferService {
         }
 
         await session.peerConnection.addIceCandidate(signal.candidate);
+    }
+
+    private async handleTransferSignal(
+        senderSpaceUserId: string,
+        signalMessage: { transferId: string; connectionId: string; signal: string }
+    ): Promise<void> {
+        const signal = JSON.parse(signalMessage.signal) as { type?: string };
+        const transferTransport = this.getTransferTransport();
+        if (signal.type !== "description" && signal.type !== "candidate" && transferTransport?.handleSignal) {
+            await transferTransport.handleSignal(senderSpaceUserId, signalMessage);
+            return;
+        }
+
+        await this.handleSignal(senderSpaceUserId, signalMessage);
     }
 
     private async handleDataChannelMessage(session: PeerSession, data: unknown): Promise<void> {
@@ -551,6 +565,19 @@ export class ProximityFileTransferService {
 
     private canExchangeWith(spaceUserId: string): boolean {
         return this.options.canExchangeWith?.(spaceUserId) ?? true;
+    }
+
+    private getTransferTransport(): ProximityFileTransferTransport | undefined {
+        const transferTransport = this.options.transferTransport ?? this.options.getTransferTransport?.();
+        if (transferTransport?.transferUpdates && !this.observedTransferTransports.has(transferTransport)) {
+            this.observedTransferTransports.add(transferTransport);
+            this.subscriptions.add(
+                transferTransport.transferUpdates.subscribe((update) => {
+                    this.transferUpdateSubject.next(update);
+                })
+            );
+        }
+        return transferTransport;
     }
 }
 
