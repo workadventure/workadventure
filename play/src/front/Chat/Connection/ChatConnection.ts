@@ -188,6 +188,7 @@ export interface ChatMessage {
     reactions: MapStore<string, ChatMessageReaction>;
     remove: () => void;
     edit: (newContent: string) => Promise<void>;
+    downloadAttachment?: () => Promise<void>;
     isDeleted: Readable<boolean>;
     isModified: Readable<boolean>;
     addReaction: (reaction: string) => Promise<void>;
@@ -325,7 +326,8 @@ export type ChatMessageContent = {
     body: string;
     url: string | undefined;
     thumbnailUrl?: string;
-    mediaState?: "ready" | "loading" | "error";
+    mediaState?: "ready" | "pendingDownload" | "loading" | "error";
+    mediaProgress?: number;
     mediaErrorKind?: "download" | "decrypt";
 };
 export const historyVisibilityOptions = ["joined", "invited", "world_readable"] as const;

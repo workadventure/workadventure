@@ -152,23 +152,21 @@
 
         // send files
         if (files && files.length > 0) {
-            if (!(room instanceof ProximityChatRoom)) {
-                const idsToSend = files.map((f) => f.id);
-                const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
-                    fileListAcc.items.add(currentFile.file);
-                    return fileListAcc;
-                }, new DataTransfer()).files;
+            const idsToSend = files.map((f) => f.id);
+            const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
+                fileListAcc.items.add(currentFile.file);
+                return fileListAcc;
+            }, new DataTransfer()).files;
 
-                try {
-                    await room.sendFiles(fileList);
-                    files = files.filter((f) => !idsToSend.includes(f.id));
-                    filesPreview = filesPreview.filter((p) => !idsToSend.includes(p.id));
-                } catch (error) {
-                    console.error(error);
-                    warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), {
-                        closable: true,
-                    });
-                }
+            try {
+                await room.sendFiles(fileList);
+                files = files.filter((f) => !idsToSend.includes(f.id));
+                filesPreview = filesPreview.filter((p) => !idsToSend.includes(p.id));
+            } catch (error) {
+                console.error(error);
+                warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), {
+                    closable: true,
+                });
             }
         }
 
@@ -477,7 +475,7 @@
     let quotedMessageContent = $derived($selectedChatMessageToReply?.content);
 </script>
 
-{#if files.length > 0 && !(room instanceof ProximityChatRoom)}
+{#if files.length > 0}
     <div class="w-full min-w-0 p-1">
         <div
             class="flex flex-row flex-nowrap gap-2 w-full min-w-[200px] overflow-x-auto no-scroll-bar rounded-lg p-2 bg-contrast/80"
@@ -527,12 +525,12 @@
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 onclick={() => openFileAttachmentComponent()}
                 class:bg-secondary-800={fileAttachmentComponentOpened}
-                disabled={!fileAttachementEnabled || isProximityChatRoom}
+                disabled={!fileAttachementEnabled}
             >
                 <IconPaperclip font-size={32} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.fileAttachment.title()}</h2>
                 <p class="text-xs p-0 m-0 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                    {fileAttachementEnabled && !isProximityChatRoom
+                    {fileAttachementEnabled
                         ? $LL.chat.fileAttachment.description()
                         : $LL.chat.fileAttachment.featureComingSoon()}
                 </p>
