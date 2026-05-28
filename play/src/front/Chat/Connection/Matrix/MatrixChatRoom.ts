@@ -75,6 +75,7 @@ import type { LazyPictureStore, PictureStore } from "../../../Stores/PictureStor
 import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
+import { waitForGameSceneStore } from "../../../Stores/GameSceneStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatLightPoll } from "./MatrixChatLightPoll";
 import { MatrixChatPoll } from "./MatrixChatPoll";
@@ -436,14 +437,16 @@ export class MatrixChatRoom
         this.startHandlingChatRoomShellEvents();
         this.refreshJoinedMemberCount();
 
-        this.userProviderMergerPromise = gameManager
-            .getCurrentGameScene()
-            .userProviderMerger.then((merger) => {
-                this.userProviderMergerStore.set(merger);
-                get(this.members).forEach((m) => m.setUserProviderMergerContext(merger));
-                return merger;
+        this.userProviderMergerPromise = waitForGameSceneStore()
+            .then((gameScene) => {
+                return gameScene.userProviderMerger.then((merger) => {
+                    this.userProviderMergerStore.set(merger);
+                    get(this.members).forEach((m) => m.setUserProviderMergerContext(merger));
+                    return merger;
+                });
             })
-            .catch(() => {
+            .catch((e) => {
+                console.error(e);
                 /* chat list can work without merger */
                 return undefined;
             });
