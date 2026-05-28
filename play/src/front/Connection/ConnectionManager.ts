@@ -529,7 +529,7 @@ class ConnectionManager {
 
                 this.reconnectingTimeout = setTimeout(() => {
                     console.info(
-                        "[ConnectionManager] connectToRoomSocket => catch => ew Promise[OnConnectInterface] reconnectingTimeout => setTimeout",
+                        "[ConnectionManager] connectToRoomSocket => catch => new Promise[OnConnectInterface] reconnectingTimeout => setTimeout",
                         roomUrl,
                         name,
                         characterTextureIds,
