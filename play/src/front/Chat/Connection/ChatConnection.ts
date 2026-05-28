@@ -126,6 +126,7 @@ export interface ChatRoom extends ChatConversation {
     readonly openThread?: (rootMessageId: string) => Promise<ChatThread | undefined>;
     readonly threads?: Readable<readonly ChatThreadSummary[]>;
     readonly pollItems?: Readable<readonly ChatPollItem[]>;
+    readonly qaItems?: Readable<readonly ChatQuestionItem[]>;
     readonly threadsHydrationState?: Readable<ChatRoomSidePanelHydrationState>;
     readonly pollCatalogueHydrationState?: Readable<ChatRoomSidePanelHydrationState>;
     readonly pollRichHydrationState?: Readable<ChatRoomSidePanelHydrationState>;
@@ -172,6 +173,10 @@ export type ProximityChatSidePanelParticipant = {
 
 export interface ProximityChatSidePanelRoom extends ChatRoom, ChatRoomNotificationControl {
     readonly currentMeetingParticipantsStore: Readable<readonly ProximityChatSidePanelParticipant[]>;
+    readonly qaItems?: Readable<readonly ChatQuestionItem[]>;
+    readonly unreadQuestionCount?: Readable<number>;
+    readonly questionCreation?: ChatQuestionCreationCapability;
+    readonly canModerateQuestions?: Readable<boolean>;
 }
 
 export interface ChatRoomModeration {
@@ -261,6 +266,43 @@ export interface ChatPollCreationCapability {
 
 export interface ChatRoomPollCreation {
     readonly pollCreation: ChatPollCreationCapability;
+}
+
+export type ChatQuestionCreateOptions = {
+    body: string;
+};
+
+export interface ChatQuestionCreationCapability {
+    readonly canCreate: Readable<boolean>;
+    readonly maxLength: number;
+    readonly create: (options: ChatQuestionCreateOptions) => Promise<void>;
+}
+
+export type ChatQuestionState = {
+    id: string;
+    body: string;
+    senderId: string;
+    senderName: string | undefined;
+    createdAt: number;
+    isAnswered: boolean;
+    upvoteCount: number;
+    hasUpvoted: boolean;
+    canUpvote: boolean;
+    canDelete: boolean;
+    canMarkAnswered: boolean;
+};
+
+export interface ChatQuestionItem {
+    id: string;
+    sender: AnyKindOfUser | undefined;
+    date: Date | null;
+    state: Readable<ChatQuestionState>;
+    canUpvote: Readable<boolean>;
+    canDelete: Readable<boolean>;
+    canMarkAnswered: Readable<boolean>;
+    toggleUpvote: () => Promise<void>;
+    remove: () => Promise<void>;
+    markAnswered: () => Promise<void>;
 }
 
 export type ChatPollAnswer = {

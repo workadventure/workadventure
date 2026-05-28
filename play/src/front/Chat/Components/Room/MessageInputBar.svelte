@@ -18,8 +18,13 @@
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { defaultNativeIntegrationAppName } from "@workadventure/shared-utils";
-    import { hasChatRoomPollCreation, type ChatConversation } from "../../Connection/ChatConnection";
+    import {
+        hasChatRoomPollCreation,
+        hasProximityChatSidePanel,
+        type ChatConversation,
+    } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
+    import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import LL from "../../../../i18n/i18n-svelte";
@@ -87,6 +92,10 @@
         return hasChatRoomPollCreation(currentRoom) ? currentRoom.pollCreation : undefined;
     }
 
+    function canOpenQuestionsPanel(currentRoom: ChatConversation): boolean {
+        return hasProximityChatSidePanel(currentRoom);
+    }
+
     let pollCreation = $derived(getPollCreationCapability(room));
     let canCreatePoll = $derived(pollCreation?.canCreate ?? cannotCreatePoll);
     let messageInputDisabled = $derived(
@@ -98,6 +107,7 @@
             isProximityRoomJoined: $proximityRoomJoined,
         }),
     );
+    let canOpenQuestions = $derived(canOpenQuestionsPanel(room));
     let replyMessageId: string | null = null;
     let draftId = $derived(`${room.id}-${localUserStore.getChatId() ?? "0"}`);
 
@@ -328,6 +338,18 @@
         fileAttachmentComponentOpened = false;
         modals.open(PollCreateDialog, { pollCreation });
     }
+
+    function openQuestionsPanel() {
+        if (!canOpenQuestions) {
+            return;
+        }
+
+        applicationComponentOpened = false;
+        applicationProperty = undefined;
+        fileAttachmentComponentOpened = false;
+        roomSidePanelStore.setActiveSection("questions");
+    }
+
     // This function open the application part to propose to the user to add a new application or close application part
     function toggleApplicationComponent() {
         applicationComponentOpened = !applicationComponentOpened;
@@ -548,6 +570,19 @@
                 <h2 class="text-sm p-0 m-0">{$LL.chat.poll.title()}</h2>
                 <p class="text-xs p-0 m-0 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {pollCreation && $canCreatePoll ? $LL.chat.poll.create.description() : $LL.chat.disabled()}
+                </p>
+            </button>
+
+            <button
+                data-testid="openQuestionsPanelButton"
+                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                onclick={openQuestionsPanel}
+                disabled={!canOpenQuestions}
+            >
+                <IconList font-size={32} />
+                <h2 class="text-sm p-0 m-0">Questions</h2>
+                <p class="text-xs p-0 m-0 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                    {canOpenQuestions ? "Open meeting questions" : $LL.chat.disabled()}
                 </p>
             </button>
         </div>

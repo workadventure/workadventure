@@ -2,7 +2,7 @@ import { get, writable } from "svelte/store";
 import type { ChatConversation } from "../Connection/ChatConnection";
 import { selectedThreadStore } from "./SelectedThreadStore";
 
-export type RoomSidePanelSection = "home" | "threads" | "polls" | "participants" | "settings";
+export type RoomSidePanelSection = "home" | "threads" | "polls" | "participants" | "questions" | "settings";
 export type RoomTimelineFocusRequest = {
     roomId: string;
     eventId: string;
