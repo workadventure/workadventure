@@ -232,4 +232,12 @@ export class UsernameDisplay {
         this.element.style.background =
             color === undefined ? PLAYER_NAME_BACKGROUND_COLOR : `#${color.toString(16).padStart(6, "0")}`;
     }
+
+    public setTalking(talking: boolean): void {
+        if (talking) {
+            this.element.classList.add("talking");
+        } else {
+            this.element.classList.remove("talking");
+        }
+    }
 }
