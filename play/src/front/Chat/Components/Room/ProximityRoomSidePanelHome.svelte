@@ -5,6 +5,7 @@
     import { navChat } from "../../Stores/ChatStore";
     import type {
         ChatPollItem,
+        ChatQuestionItem,
         ChatRoomSidePanelHydrationState,
         ProximityChatSidePanelRoom,
     } from "../../Connection/ChatConnection";
@@ -12,21 +13,32 @@
     import Avatar from "../Avatar.svelte";
     import { IconBellOff, IconCheckList, IconLoader, IconUnMute, IconUserPlus, IconUsersGroup } from "@wa-icons";
 
-    export let room: ProximityChatSidePanelRoom;
+    interface Props {
+        room: ProximityChatSidePanelRoom;
+    }
+
+    let { room }: Props = $props();
 
     const emptyPollItems = readable<readonly ChatPollItem[]>([]);
+    const emptyQuestionItems = readable<readonly ChatQuestionItem[]>([]);
+    const emptyUnreadQuestionCount = readable(0);
     const readyHydrationState = readable<ChatRoomSidePanelHydrationState>({ status: "ready" });
 
-    $: roomName = room.name;
-    $: participants = room.currentMeetingParticipantsStore;
-    $: pollItems = room.pollItems ?? emptyPollItems;
-    $: pollCatalogueHydrationState = room.pollCatalogueHydrationState ?? readyHydrationState;
-    $: areNotificationsMuted = room.areNotificationsMuted;
-    $: avatarColorStore = room.avatarFallbackColor;
-    $: openPollCount = $pollItems.filter((poll) => !get(poll.state).isEnded).length;
-    $: pollCardValue = `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`;
-    $: isPollCatalogueLoading =
-        $pollCatalogueHydrationState.status === "loading" || $pollCatalogueHydrationState.status === "idle";
+    let roomName = $derived(room.name);
+    let participants = $derived(room.currentMeetingParticipantsStore);
+    let pollItems = $derived(room.pollItems ?? emptyPollItems);
+    let questionItems = $derived(room.qaItems ?? emptyQuestionItems);
+    let unreadQuestionCount = $derived(room.unreadQuestionCount ?? emptyUnreadQuestionCount);
+    let pollCatalogueHydrationState = $derived(room.pollCatalogueHydrationState ?? readyHydrationState);
+    let areNotificationsMuted = $derived(room.areNotificationsMuted);
+    let avatarColorStore = $derived(room.avatarFallbackColor);
+    let openPollCount = $derived($pollItems.filter((poll) => !get(poll.state).isEnded).length);
+    let openQuestionCount = $derived($questionItems.filter((question) => !get(question.state).isAnswered).length);
+    let pollCardValue = $derived(`${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`);
+    let questionCardValue = $derived(`${$questionItems.length} · ${openQuestionCount} open`);
+    let isPollCatalogueLoading = $derived(
+        $pollCatalogueHydrationState.status === "loading" || $pollCatalogueHydrationState.status === "idle",
+    );
 
     function openSection(section: RoomSidePanelSection) {
         roomSidePanelStore.setActiveSection(section);
@@ -75,7 +87,7 @@
                 type="button"
                 class="m-0 rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3 text-left text-white transition-colors hover:bg-white/[0.08]"
                 data-testid="proximityRoomSidePanelHomeParticipants"
-                on:click={() => openSection("participants")}
+                onclick={() => openSection("participants")}
             >
                 <IconUsersGroup font-size={18} />
                 <div class="mt-2 text-sm font-semibold">{$LL.chat.roomPanel.sections.participants()}</div>
@@ -86,7 +98,7 @@
                 type="button"
                 class="m-0 rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3 text-left text-white transition-colors hover:bg-white/[0.08]"
                 data-testid="proximityRoomSidePanelHomePolls"
-                on:click={() => openSection("polls")}
+                onclick={() => openSection("polls")}
             >
                 <IconCheckList font-size={18} />
                 <div class="mt-2 text-sm font-semibold">{$LL.chat.roomPanel.sections.polls()}</div>
@@ -98,6 +110,23 @@
                     {/if}
                 </div>
             </button>
+
+            <button
+                type="button"
+                class="relative m-0 rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3 text-left text-white transition-colors hover:bg-white/[0.08]"
+                data-testid="proximityRoomSidePanelHomeQuestions"
+                onclick={() => openSection("questions")}
+            >
+                {#if $unreadQuestionCount > 0}
+                    <span
+                        class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border border-solid border-contrast bg-success"
+                        data-testid="proximityRoomSidePanelHomeQuestionsUnreadBadge"
+                    ></span>
+                {/if}
+                <IconCheckList font-size={18} />
+                <div class="mt-2 text-sm font-semibold">Questions</div>
+                <div class="mt-1 text-xs text-white/55">{questionCardValue}</div>
+            </button>
         </div>
 
         <div class="mt-3 flex flex-col gap-2">
@@ -105,7 +134,7 @@
                 type="button"
                 class="m-0 flex items-center gap-2 rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
                 data-testid="proximityRoomSidePanelHomeInvite"
-                on:click={openInvite}
+                onclick={openInvite}
             >
                 <IconUserPlus font-size={17} />
                 {$LL.chat.manageRoomUsers.buttons.invite()}
@@ -115,7 +144,7 @@
                 type="button"
                 class="m-0 flex items-center gap-2 rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
                 data-testid="proximityRoomSidePanelHomeMute"
-                on:click={toggleMute}
+                onclick={toggleMute}
             >
                 {#if $areNotificationsMuted}
                     <IconUnMute font-size={17} />
