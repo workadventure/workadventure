@@ -55,6 +55,7 @@ import { CharacterLayerManager } from "../../../Phaser/Entity/CharacterLayerMana
 import { BubbleNotification as BasicNotification } from "../../../Notification/BubbleNotification";
 import { DEFAULT_PROXIMITY_SPACE_NAME, type ProximityChatRoomKind } from "./ProximityChatRoomManager";
 import { ProximityChatPoll } from "./ProximityChatPoll";
+import { muteProximityChatNotifications, unmuteProximityChatNotifications } from "./ProximityNotificationControl";
 import {
     getProximityPollDefinitionMetadataKey,
     isProximityPollDeleted,
@@ -500,6 +501,14 @@ export class ProximityChatRoom implements ChatRoom {
 
     setTimelineAsRead(): void {
         console.info("setTimelineAsRead => Method not implemented yet!");
+    }
+
+    muteNotification(): Promise<void> {
+        return muteProximityChatNotifications(this.areNotificationsMuted);
+    }
+
+    unmuteNotification(): Promise<void> {
+        return unmuteProximityChatNotifications(this.areNotificationsMuted);
     }
 
     loadMorePreviousMessages(): Promise<void> {
