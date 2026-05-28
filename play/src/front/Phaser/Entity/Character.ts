@@ -321,10 +321,12 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public toggleTalk(show = true, forceClose = false): void {
         if (this.getAvailabilityStatus() === AvailabilityStatus.SPEAKER) {
-            this.talkIcon.show(false, forceClose);
+            //this.talkIcon.show(false, forceClose);
+            this.usernameDisplay?.setTalking(false);
             this.speakerIcon.show(show, forceClose);
         } else {
-            this.talkIcon.show(show, forceClose);
+            //this.talkIcon.show(show, forceClose);
+            this.usernameDisplay?.setTalking(show);
             this.speakerIcon.show(false, forceClose);
         }
     }
