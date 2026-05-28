@@ -160,6 +160,20 @@ export interface ChatRoomNotificationControl {
     readonly muteNotification: () => Promise<void>;
 }
 
+export type ProximityChatSidePanelParticipant = {
+    readonly spaceUserId: string;
+    readonly name: string | undefined;
+    readonly uuid?: string;
+    readonly pictureStore?: PictureStore;
+    readonly playUri?: string;
+    readonly roomName?: string;
+    readonly tags?: string[];
+};
+
+export interface ProximityChatSidePanelRoom extends ChatRoom, ChatRoomNotificationControl {
+    readonly currentMeetingParticipantsStore: Readable<readonly ProximityChatSidePanelParticipant[]>;
+}
+
 export interface ChatRoomModeration {
     readonly id: string;
     /** True when the current user is room admin (Matrix power level). Used to gate invite / kick / ban / role changes in the UI. */
@@ -496,6 +510,20 @@ export function hasChatRoomNotificationControl(
     const candidate = conversation as (ChatRoom & Partial<ChatRoomNotificationControl>) | undefined;
     return (
         candidate?.conversationKind === "room" &&
+        typeof candidate.areNotificationsMuted?.subscribe === "function" &&
+        typeof candidate.muteNotification === "function" &&
+        typeof candidate.unmuteNotification === "function"
+    );
+}
+
+export function hasProximityChatSidePanel(
+    conversation: Partial<ChatConversation> | undefined
+): conversation is ProximityChatSidePanelRoom {
+    const candidate = conversation as (ChatRoom & Partial<ProximityChatSidePanelRoom>) | undefined;
+    return (
+        candidate?.conversationKind === "room" &&
+        typeof candidate.pollItems?.subscribe === "function" &&
+        typeof candidate.currentMeetingParticipantsStore?.subscribe === "function" &&
         typeof candidate.areNotificationsMuted?.subscribe === "function" &&
         typeof candidate.muteNotification === "function" &&
         typeof candidate.unmuteNotification === "function"
