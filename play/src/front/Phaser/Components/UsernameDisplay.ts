@@ -65,6 +65,7 @@ export class UsernameDisplay {
         this.updateUsernameBackgroundColor(outlineColor);
 
         this.gameScene.usernameDomLayer.addUsername(this.element);
+        this.element.style.setProperty("--username-dom-scale", this.displayScale.toString());
 
         this.scene.game.events.on(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
     }
