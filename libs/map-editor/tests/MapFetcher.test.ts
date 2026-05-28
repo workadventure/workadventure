@@ -7,8 +7,7 @@ import { mapFetcher } from "../src/MapFetcher";
 
 type LookupWithAll = (hostname: string, options: LookupAllOptions) => Promise<LookupAddress[]>;
 
-const mockLookup = (): MockInstance<Parameters<LookupWithAll>, ReturnType<LookupWithAll>> =>
-    vi.spyOn(dnsPromises, "lookup") as unknown as MockInstance<Parameters<LookupWithAll>, ReturnType<LookupWithAll>>;
+const mockLookup = (): MockInstance<LookupWithAll> => vi.spyOn(dnsPromises, "lookup");
 
 describe("MapFetcher", () => {
     afterEach(() => {
