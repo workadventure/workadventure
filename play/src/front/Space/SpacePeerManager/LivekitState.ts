@@ -3,10 +3,13 @@ import type { Readable } from "svelte/store";
 import { LivekitConnection } from "../../Livekit/LivekitConnection";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
+import type { ProximityFileTransferTransport } from "../../Chat/Connection/Proximity/ProximityFileTransferTransport";
+import { LiveKitFileTransferTransport } from "../../Chat/Connection/Proximity/LiveKitFileTransferTransport";
 import type { SimplePeerConnectionInterface, ICommunicationState, StreamableSubjects } from "./SpacePeerManager";
 
 export class LivekitState implements ICommunicationState {
     private livekitConnection: LivekitConnection;
+    private fileTransferTransport: LiveKitFileTransferTransport | undefined;
     constructor(
         private _space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
@@ -22,11 +25,30 @@ export class LivekitState implements ICommunicationState {
     }
 
     destroy() {
+        this.fileTransferTransport?.destroy();
+        this.fileTransferTransport = undefined;
         this.livekitConnection.destroy();
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {
         return undefined;
+    }
+
+    getProximityFileTransferTransport(): ProximityFileTransferTransport | undefined {
+        const liveKitRoom = this.livekitConnection.getProximityFileTransferRoom();
+        if (!liveKitRoom) {
+            return undefined;
+        }
+
+        if (!this.fileTransferTransport) {
+            this.fileTransferTransport = new LiveKitFileTransferTransport({
+                localSpaceUserId: this._space.mySpaceUserId,
+                space: this._space,
+                liveKitRoom,
+            });
+        }
+
+        return this.fileTransferTransport;
     }
 
     shouldSynchronizeMediaState(): boolean {
@@ -45,6 +67,8 @@ export class LivekitState implements ICommunicationState {
      * but any asynchronous operation receiving a new stream should be ignored after this call.
      */
     shutdown(): void {
+        this.fileTransferTransport?.destroy();
+        this.fileTransferTransport = undefined;
         this.livekitConnection.shutdown();
     }
 

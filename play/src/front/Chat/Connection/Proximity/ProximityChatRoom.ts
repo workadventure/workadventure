@@ -423,6 +423,7 @@ export class ProximityChatRoom implements ChatRoom {
             localSpaceUserId: this._spaceUserId,
             space: space as unknown as ProximityFileTransferSpace,
             getIceServers: () => iceServersManager.getIceServersConfig(),
+            getTransferTransport: () => space.spacePeerManager.getProximityFileTransferTransport(),
             canExchangeWith: (spaceUserId) => !this.isBlackListedSpaceUser(spaceUserId),
         });
         this.fileTransferIncomingOfferSubscription = this.fileTransferService.incomingOffers.subscribe((offer) => {
