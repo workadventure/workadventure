@@ -227,11 +227,9 @@ export class PusherRoomSocketController {
                         },
                         isAborted: () => upgradeAborted.aborted,
                         upgrade: (data) => {
-                            if (clientLastReceivedNonce !== undefined) {
-                                const tabContext = this.contextByTabKey.get(query.tabId) ?? {};
-                                tabContext.clientLastReceivedNonce = clientLastReceivedNonce;
-                                this.contextByTabKey.set(query.tabId, tabContext);
-                            }
+                            const tabContext = this.contextByTabKey.get(query.tabId) ?? {};
+                            tabContext.clientLastReceivedNonce = clientLastReceivedNonce;
+                            this.contextByTabKey.set(query.tabId, tabContext);
 
                             this.upgradeSocket(
                                 upgradeAborted.aborted,
