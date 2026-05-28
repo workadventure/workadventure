@@ -62,7 +62,7 @@ export class DiskFileSystem implements FileSystemInterface {
         const fullPath = this.getFullPath(virtualPath);
         const newFullPath = this.getFullPath(newVirtualPath);
 
-        await fs.copy(fullPath, newFullPath, { recursive: true, errorOnExist: true });
+        await fs.copy(fullPath, newFullPath, { errorOnExist: true });
     }
 
     async writeFile(zipEntry: unzipper.File, targetFilePath: string): Promise<void> {
