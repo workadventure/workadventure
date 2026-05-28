@@ -7,6 +7,7 @@ import type { SpaceInterface } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { CommunicationMessageType } from "../Space/SpacePeerManager/CommunicationMessageType";
 import { streamingMegaphoneStore, type LocalStreamStoreValue } from "../Stores/MediaStore";
+import type { LiveKitProximityFileTransferRoom } from "../Chat/Connection/Proximity/LiveKitFileTransferTransport";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 import { LiveKitRoom } from "./LiveKitRoom";
 
@@ -113,6 +114,10 @@ export class LivekitConnection {
             Sentry.captureException(err);
             throw err;
         }
+    }
+
+    getProximityFileTransferRoom(): LiveKitProximityFileTransferRoom | undefined {
+        return this.livekitRoom;
     }
 
     destroy() {

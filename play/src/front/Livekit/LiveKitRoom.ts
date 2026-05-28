@@ -29,6 +29,8 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
 import { audioPlaybackStore } from "../Stores/AudioPlaybackStore";
+import { PROXIMITY_FILE_TRANSFER_LIVEKIT_TOPIC } from "../Chat/Connection/Proximity/LiveKitFileTransferTransport";
+import type { LiveKitProximityFileStreamHandler } from "../Chat/Connection/Proximity/LiveKitFileTransferTransport";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
@@ -601,6 +603,66 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private getParticipantId(participant: Participant): string {
         const metadata = this.parseParticipantMetadata(participant);
         return metadata.userId;
+    }
+
+    public getIdentityForSpaceUserId(spaceUserId: string): string | undefined {
+        if (spaceUserId === this.space.mySpaceUserId) {
+            return this.localParticipant?.identity;
+        }
+
+        const participant = this.getRemoteParticipantForSpaceUserId(spaceUserId);
+        return participant?.identity;
+    }
+
+    public hasParticipant(spaceUserId: string): boolean {
+        return this.getIdentityForSpaceUserId(spaceUserId) !== undefined;
+    }
+
+    public async sendFileToIdentities(
+        file: File,
+        options: { transferId: string; destinationIdentities: string[]; topic: string }
+    ): Promise<void> {
+        if (!this.localParticipant) {
+            throw new Error("Local participant not found");
+        }
+
+        await this.localParticipant.sendFile(file, {
+            topic: options.topic,
+            destinationIdentities: options.destinationIdentities,
+            mimeType: file.type,
+        });
+    }
+
+    public registerProximityFileHandler(handler: LiveKitProximityFileStreamHandler): () => void {
+        if (!this.room) {
+            return () => undefined;
+        }
+
+        this.room.registerByteStreamHandler(PROXIMITY_FILE_TRANSFER_LIVEKIT_TOPIC, (reader, participantInfo) => {
+            handler(reader, participantInfo.identity).catch((error) => {
+                console.error("Error while handling LiveKit proximity file stream", error);
+                Sentry.captureException(error);
+            });
+        });
+        return () => undefined;
+    }
+
+    private getRemoteParticipantForSpaceUserId(spaceUserId: string): RemoteParticipant | undefined {
+        if (!this.room) {
+            return undefined;
+        }
+
+        for (const participant of this.room.remoteParticipants.values()) {
+            try {
+                if (this.getParticipantId(participant) === spaceUserId) {
+                    return participant;
+                }
+            } catch (error) {
+                console.warn("Unable to read LiveKit participant metadata", error);
+            }
+        }
+
+        return undefined;
     }
 
     public leaveRoom() {
