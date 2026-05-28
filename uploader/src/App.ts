@@ -1,5 +1,6 @@
 // lib/app.ts
-import express, {Express} from 'express';
+import type {Express} from 'express';
+import express from 'express';
 import cors from 'cors';
 import bodyParser from "body-parser";
 import morgan from "morgan";

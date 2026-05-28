@@ -1,8 +1,8 @@
 import { v4 } from "uuid";
 //import {HttpRequest, HttpResponse} from "uWebSockets.js";
 //import {Readable} from 'stream'
-import axios, { AxiosError } from "axios";
-import { Express } from "express";
+import axios from "axios";
+import type { Express } from "express";
 import multer from "multer";
 import { uploaderService } from "../Service/UploaderService";
 import { ByteLenghtBufferException } from "../Exception/ByteLenghtBufferException";
@@ -20,6 +20,20 @@ const upload = multer({
 
 class DisabledChat extends Error {}
 class NotLoggedUser extends Error {}
+
+interface UploadedFile {
+  name: string;
+  id: string;
+  location: string;
+  size: number;
+  lastModified: Date;
+  type?: string;
+}
+
+interface FileSizeLimitErrorResponse {
+  message?: string;
+  maxFileSize?: string;
+}
 
 export class FileController {
   constructor(private App: Express) {
@@ -69,7 +83,7 @@ export class FileController {
         .getTemp(id)
         .then((buffer) => {
           const targetDevice = new HttpResponseDevice(id, response);
-          return targetDevice.copyFromBuffer(buffer);
+          return targetDevice.copyFromBuffer(Buffer.from(buffer ?? ""));
         })
         .catch((e) => {
           console.error(e);
@@ -93,19 +107,12 @@ export class FileController {
       }
       const files = request.files as Express.Multer.File[];
 
-      const userRoomToken = request.body.userRoomToken;
+      const body = request.body as Partial<Record<string, string>>;
+      const userRoomToken = body.userRoomToken;
 
       try {
-        const uploadedFiles: {
-          name: string;
-          id: string;
-          location: string;
-          size: number;
-          lastModified: Date;
-          type?: string;
-        }[] = [];
-
-        for (const file of files) {
+        const uploadedFiles: UploadedFile[] = await Promise.all(
+          files.map(async (file) => {
           // This is needed because of a bug in busboy. Remove this when https://github.com/expressjs/multer/pull/1158 is merged
           const filename = Buffer.from(file.originalname, "latin1").toString(
             "utf8"
@@ -145,15 +152,16 @@ export class FileController {
             file.mimetype
           );
           const location = `${UPLOADER_URL}/upload-file/${fileUuid}`;
-          uploadedFiles.push({
+          return {
             name: filename,
             id: fileUuid,
             location: location,
             size: file.buffer.byteLength,
             lastModified: new Date(),
             type: file.mimetype,
-          });
-        }
+          };
+          })
+        );
 
         if (uploadedFiles.length === 0) {
           throw new Error("Error upload file");
@@ -168,7 +176,7 @@ export class FileController {
             message: err.message,
             maxFileSize: UPLOAD_MAX_FILESIZE,
           });
-        } else if (err instanceof AxiosError) {
+        } else if (axios.isAxiosError<FileSizeLimitErrorResponse>(err)) {
           const status = err.response?.status;
           if (status) {
             if (status == 413) {
@@ -180,7 +188,7 @@ export class FileController {
             }
             return response.json({
               message: err.response?.data?.message,
-              maxFileSize: err.response?.data.maxFileSize,
+              maxFileSize: err.response?.data?.maxFileSize,
             });
           }
         } else if (err instanceof DisabledChat) {

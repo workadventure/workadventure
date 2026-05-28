@@ -1,5 +1,7 @@
-import {ChildProcess} from "child_process";
-import {MinioContainer, StartedMinioContainer} from "@testcontainers/minio";
+import type {ChildProcess} from "child_process";
+import { asError } from "catch-unknown";
+import type { StartedMinioContainer} from "@testcontainers/minio";
+import {MinioContainer} from "@testcontainers/minio";
 import AWS from "aws-sdk";
 import {describe, expect, vi, it, beforeAll, beforeEach, afterAll, afterEach} from 'vitest';
 import {PLAY_URL} from "../src/Enum/EnvironmentVariable";
@@ -108,16 +110,19 @@ describe("S3 Uploader tests", () => {
 
     it("should upload one file to s3", async ()=> {
         const responseData = await uploadSingleFileTest(UPLOADER_URL);
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             s3.listObjects({Bucket: TEST_BUCKET}, (err, objects) => {
-                if (err) reject()
+                if (err) {
+                    reject(err)
+                    return;
+                }
                 const files = objects?.Contents || []
                 try {
                     expect(files[0]?.Key).toEqual(responseData.id)
-                    resolve(0)
+                    resolve()
                 } catch (e) {
                     console.error(e)
-                    reject()
+                    reject(asError(e))
                 }
             })
         })
@@ -128,14 +133,17 @@ describe("S3 Uploader tests", () => {
         const file1 = responseData[0]
         const file2 = responseData[1]
 
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             s3.listObjects({Bucket: TEST_BUCKET}, (err, objects) => {
-                if (err) reject()
+                if (err) {
+                    reject(err)
+                    return;
+                }
                 const files = objects?.Contents || []
                 const fileNames = files.map(f=>f.Key)
                 expect(fileNames).toContain(file1.id)
                 expect(fileNames).toContain(file2.id)
-                resolve(0)
+                resolve()
             })
         })
     })
