@@ -70,6 +70,7 @@
 
     let pollItems = $derived(getPollItemsStore(room));
     let pollRichHydrationState = $derived(room.pollRichHydrationState ?? idleHydrationState);
+    let hasPollRichHydrationState = $derived(room.pollRichHydrationState != null);
     let richWarnings = $derived($pollRichHydrationState.warnings ?? []);
     let pollItemErrorWarning = $derived(richWarnings.find((warning) => warning.reason === "poll_item_error"));
     let polls = $derived(
@@ -94,7 +95,7 @@
     </div>
 
     <div class="flex-1 overflow-y-auto px-3 py-3">
-        {#if $pollRichHydrationState.status === "loading" || $pollRichHydrationState.status === "idle"}
+        {#if hasPollRichHydrationState && ($pollRichHydrationState.status === "loading" || $pollRichHydrationState.status === "idle")}
             <div
                 class="rounded-lg border border-dashed border-white/10 px-4 py-6 text-center text-sm opacity-60"
                 data-testid="roomSidePanelPollsLoading"
@@ -103,7 +104,7 @@
                     <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={24} />
                 </div>
             </div>
-        {:else if $pollRichHydrationState.status === "error"}
+        {:else if hasPollRichHydrationState && $pollRichHydrationState.status === "error"}
             <div
                 class="rounded-lg border border-solid border-danger-900/50 bg-danger-900/20 px-4 py-4 text-sm text-white/85"
             >

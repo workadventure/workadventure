@@ -12,9 +12,14 @@
         hasChatRoomMembershipManagement,
         hasChatRoomModeration,
         hasChatRoomNotificationControl,
+        hasProximityChatSidePanel,
         type ChatConversation,
         type ChatRoom,
+        type ChatRoomMembershipManagement,
+        type ChatRoomModeration,
+        type ChatRoomNotificationControl,
         type ChatThread,
+        type ProximityChatSidePanelRoom,
     } from "../Connection/ChatConnection";
     import { INITIAL_SIDEBAR_WIDTH, loginTokenErrorStore } from "../../Stores/ChatStore";
     import { userIsConnected } from "../../Stores/MenuStore";
@@ -143,6 +148,27 @@
         return conversation?.conversationKind === "thread";
     }
 
+    function getRoomWithSidePanel(
+        conversation: ChatConversation | undefined,
+    ):
+        | (ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)
+        | ProximityChatSidePanelRoom
+        | undefined {
+        if (hasProximityChatSidePanel(conversation)) {
+            return conversation;
+        }
+
+        if (
+            hasChatRoomMembershipManagement(conversation) &&
+            hasChatRoomModeration(conversation) &&
+            hasChatRoomNotificationControl(conversation)
+        ) {
+            return conversation;
+        }
+
+        return undefined;
+    }
+
     let filteredDirectRoom = $derived(
         $directRooms
             .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
@@ -166,13 +192,7 @@
         }),
     );
     let displayThreeColumnLayout = $derived(sideBarWidth >= THREAD_PANEL_LAYOUT_LIMIT);
-    let selectedRoomWithSidePanel = $derived(
-        hasChatRoomMembershipManagement($selectedRoomStore) &&
-            hasChatRoomModeration($selectedRoomStore) &&
-            hasChatRoomNotificationControl($selectedRoomStore)
-            ? $selectedRoomStore
-            : undefined,
-    );
+    let selectedRoomWithSidePanel = $derived(getRoomWithSidePanel($selectedRoomStore));
     let hasSelectedRoomWithSidePanel = $derived(selectedRoomWithSidePanel !== undefined);
     let showRoomSidePanelToggle = $derived(shouldShowRoomSidePanelToggle(hasSelectedRoomWithSidePanel));
     let roomSidePanelPlacement = $derived(
