@@ -56,6 +56,7 @@ import { BubbleNotification as BasicNotification } from "../../../Notification/B
 import { DEFAULT_PROXIMITY_SPACE_NAME, type ProximityChatRoomKind } from "./ProximityChatRoomManager";
 import { ProximityChatPoll } from "./ProximityChatPoll";
 import { muteProximityChatNotifications, unmuteProximityChatNotifications } from "./ProximityNotificationControl";
+import { getNewRemoteProximityPolls, getProximityPollNotificationMessage } from "./ProximityPollNotification";
 import {
     getProximityPollDefinitionMetadataKey,
     isProximityPollDeleted,
@@ -410,6 +411,35 @@ export class ProximityChatRoom implements ChatRoom {
         return Promise.resolve();
     }
 
+    private notifyNewPolls(previousMetadata: Map<string, unknown>, nextMetadata: Map<string, unknown>): void {
+        const currentVoterId = this.getCurrentVoterId(this.users ?? new Map());
+        const newPolls = getNewRemoteProximityPolls(previousMetadata, nextMetadata, currentVoterId);
+        if (newPolls.length === 0) {
+            return;
+        }
+
+        if (get(selectedRoomStore) !== this) {
+            this.hasUnreadMessages.set(true);
+            this.unreadNotificationCount.set(get(this.unreadNotificationCount) + newPolls.length);
+        }
+
+        if (!get(intentionallyClosedChatDuringMeetingStore)) {
+            chatVisibilityStore.set(true);
+            chatNotificationStore.clearAll();
+            return;
+        }
+
+        this.unreadMessagesCount.set(get(this.unreadMessagesCount) + newPolls.length);
+        for (const poll of newPolls) {
+            chatNotificationStore.addNotification(
+                poll.senderName ?? this.unknownUser.username ?? "unknown",
+                getProximityPollNotificationMessage(poll, get(LL).chat.poll.title()),
+                this,
+                poll.id
+            );
+        }
+    }
+
     private createPollItems(
         metadata: Map<string, unknown>,
         users: Map<string, SpaceUserExtended>,
@@ -691,7 +721,10 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceMetadataStore.set(new Map(this._space.getMetadata()));
         this.spaceMetadataSubscription?.unsubscribe();
         this.spaceMetadataSubscription = this._space.observeMetadata.subscribe((metadata) => {
-            this.spaceMetadataStore.set(new Map(metadata));
+            const previousMetadata = get(this.spaceMetadataStore);
+            const nextMetadata = new Map(metadata);
+            this.notifyNewPolls(previousMetadata, nextMetadata);
+            this.spaceMetadataStore.set(nextMetadata);
         });
 
         this.usersUnsubscriber = this._space.usersStore.subscribe((users) => {
