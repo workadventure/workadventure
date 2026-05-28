@@ -1217,6 +1217,8 @@ message PrivateSpaceEvent {
     UnblockUserMessage unblockUserMessage = 21;
     MeetingConnectionRestartMessage meetingConnectionRestartMessage = 22;
     RecordingUnexpectedlyStoppedPrivateMessage recordingUnexpectedlyStoppedMessage = 23;
+    ProximityFileTransferOfferMessage proximityFileTransferOffer = 24;
+    ProximityFileTransferSignalMessage proximityFileTransferSignal = 25;
   }
 }
 
@@ -1256,6 +1258,22 @@ message SpaceIsTyping {
   bool isTyping = 1;
   repeated CharacterTextureMessage characterTextures = 2;
   optional string name = 3;
+}
+
+message ProximityFileTransferOfferMessage {
+  string transferId = 1;
+  string fileName = 2;
+  string mimeType = 3;
+  uint64 size = 4;
+  string messageType = 5;
+  repeated CharacterTextureMessage characterTextures = 6;
+  optional string name = 7;
+}
+
+message ProximityFileTransferSignalMessage {
+  string transferId = 1;
+  string connectionId = 2;
+  string signal = 3;
 }
 
 message BackEventMessage {
