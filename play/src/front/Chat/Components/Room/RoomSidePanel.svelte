@@ -16,6 +16,7 @@
     import RoomSidePanelSettings from "./RoomSidePanelSettings.svelte";
     import ProximityRoomSidePanelHome from "./ProximityRoomSidePanelHome.svelte";
     import ProximityRoomSidePanelParticipants from "./ProximityRoomSidePanelParticipants.svelte";
+    import ProximityRoomSidePanelQuestions from "./ProximityRoomSidePanelQuestions.svelte";
     import { IconChevronLeft, IconX } from "@wa-icons";
 
     type MatrixSidePanelRoom = ChatRoom &
@@ -23,7 +24,7 @@
         ChatRoomModeration &
         ChatRoomNotificationControl;
     type SidePanelRoom = MatrixSidePanelRoom | ProximityChatSidePanelRoom;
-    type ProximityRoomSidePanelSection = "home" | "participants" | "polls";
+    type ProximityRoomSidePanelSection = "home" | "participants" | "polls" | "questions";
 
     interface Props {
         room: SidePanelRoom;
@@ -38,7 +39,7 @@
     }
 
     function isProximityRoomSidePanelSection(section: RoomSidePanelSection): section is ProximityRoomSidePanelSection {
-        return section === "home" || section === "participants" || section === "polls";
+        return section === "home" || section === "participants" || section === "polls" || section === "questions";
     }
 
     function getMatrixSidePanelRoom(currentRoom: SidePanelRoom): MatrixSidePanelRoom | undefined {
@@ -87,6 +88,8 @@
                             {$LL.chat.roomPanel.sections.polls()}
                         {:else if displayedSection === "participants"}
                             {$LL.chat.roomPanel.sections.participants()}
+                        {:else if displayedSection === "questions"}
+                            Questions
                         {:else if displayedSection === "settings"}
                             {$LL.chat.roomPanel.sections.settings()}
                         {/if}
@@ -117,6 +120,8 @@
                     <ProximityRoomSidePanelParticipants room={proximityRoom} />
                 {:else if displayedSection === "polls"}
                     <RoomSidePanelPolls room={proximityRoom} {closeOnTimelineFocus} />
+                {:else if displayedSection === "questions"}
+                    <ProximityRoomSidePanelQuestions room={proximityRoom} />
                 {:else}
                     <ProximityRoomSidePanelHome room={proximityRoom} />
                 {/if}

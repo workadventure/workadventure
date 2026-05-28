@@ -705,6 +705,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             .find((user: SpaceUser) => user.spaceUserId === spaceUserId);
     }
 
+    public getMetadataValue(key: string): unknown {
+        return this.metadata.get(key);
+    }
+
     public getSpaceName(): string {
         return this.name;
     }

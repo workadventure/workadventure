@@ -2,12 +2,13 @@
     import { onMount, tick } from "svelte";
     import { get, readable } from "svelte/store";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import type {
-        ChatConversation,
-        ChatMessage,
-        ChatRoom,
-        ChatThreadSummary,
-        ChatTimelineItem,
+    import {
+        hasProximityChatSidePanel,
+        type ChatConversation,
+        type ChatMessage,
+        type ChatRoom,
+        type ChatThreadSummary,
+        type ChatTimelineItem,
     } from "../../Connection/ChatConnection";
     import getCloseImg from "../../images/get-close.png";
     import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
@@ -73,6 +74,7 @@
     }
 
     const emptyThreadSummaries = readable<readonly ChatThreadSummary[]>([]);
+    const emptyUnreadQuestionCount = readable(0);
 
     let roomSidePanelToggleIsOpen = $derived($roomSidePanelStore.isOpen ?? false);
     let roomName = $derived(room?.name);
@@ -84,6 +86,9 @@
     let threadsStore = $derived(isChatRoom(room) ? room.threads : undefined);
     let threadSummariesStore = $derived(threadsStore ?? emptyThreadSummaries);
     let unreadThreadCount = $derived($threadSummariesStore.filter((thread) => thread.hasUnreadMessages).length);
+    let proximitySidePanelRoom = $derived(hasProximityChatSidePanel(room) ? room : undefined);
+    let unreadQuestionCountStore = $derived(proximitySidePanelRoom?.unreadQuestionCount ?? emptyUnreadQuestionCount);
+    let unreadSidePanelCount = $derived(unreadThreadCount + $unreadQuestionCountStore);
     let shouldReserveHeaderEndSpace = $derived(
         shouldReserveFloatingCloseButtonSpace(
             $hideActionBarStoreBecauseOfChatBar,
@@ -467,7 +472,7 @@
                         onclick={() => roomSidePanelStore.toggle()}
                     >
                         <IconInfoCircle font-size="20" />
-                        {#if unreadThreadCount > 0}
+                        {#if unreadSidePanelCount > 0}
                             <span
                                 class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border border-solid border-contrast bg-success"
                                 data-testid="toggleRoomSidePanelUnreadBadge"
