@@ -1,15 +1,16 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
     import LL from "../../../../../i18n/i18n-svelte";
-    import type { ChatMessageContent } from "../../../Connection/ChatConnection";
+    import type { ChatMessage, ChatMessageContent } from "../../../Connection/ChatConnection";
     import ChatImagePreviewModal from "../../ChatImagePreviewModal.svelte";
     import { modals } from "@wa-modals";
 
     interface Props {
         content: Readable<ChatMessageContent>;
+        message?: ChatMessage;
     }
 
-    let { content }: Props = $props();
+    let { content, message = undefined }: Props = $props();
 
     let previewUrl = $derived($content.url ?? $content.thumbnailUrl);
     let displayUrl = $derived($content.thumbnailUrl ?? $content.url);
@@ -17,6 +18,10 @@
 
     function openImagePreview(url: string, alt: string | undefined) {
         modals.open(ChatImagePreviewModal, { url, alt });
+    }
+
+    async function downloadAttachment() {
+        await message?.downloadAttachment?.();
     }
 </script>
 
@@ -57,7 +62,12 @@
             </a>
         {/if}
     </div>
-    {#if canDisplayImage}
+    {#if $content.mediaState === "pendingDownload"}
+        <button class="text-xs text-white/80 px-2 py-1 hover:bg-white/10 rounded" onclick={downloadAttachment}>
+            {$LL.chat.file.download()}
+            {$content.body}
+        </button>
+    {:else if canDisplayImage}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
@@ -75,7 +85,12 @@
             <img class="w-full object-cover max-h-52 rounded" src={displayUrl} alt={$content.body} draggable="false" />
         </div>
     {:else if $content.mediaState === "loading"}
-        <div class="text-xs text-white/80 px-2 py-1">{$LL.chat.imagePreview.loading()}</div>
+        <div class="text-xs text-white/80 px-2 py-1">
+            {$LL.chat.imagePreview.loading()}
+            {#if $content.mediaProgress !== undefined}
+                {Math.round($content.mediaProgress * 100)}%
+            {/if}
+        </div>
     {:else}
         <div class="text-xs text-white/80 px-2 py-1">
             {$content.mediaErrorKind === "decrypt"
