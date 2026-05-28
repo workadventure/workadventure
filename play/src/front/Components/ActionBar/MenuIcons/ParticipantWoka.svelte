@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
+    import { getColorByString } from "../../../Utils/ColorGenerator";
     import Woka from "../../Woka/Woka.svelte";
     import Spinner from "../../Icons/Spinner.svelte";
 
@@ -11,14 +12,17 @@
     }
 </script>
 
-{#if $pictureStore !== undefined}
-    {#if $pictureStore}
-        <Woka src={$pictureStore} customWidth="36px" />
+<div
+    class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full text-white font-semibold text-sm"
+    style:background-color={getColorByString(fallbackName)}
+>
+    {#if $pictureStore !== undefined}
+        {#if $pictureStore}
+            <Woka src={$pictureStore} customWidth="36px" />
+        {:else}
+            <span>{getInitial(fallbackName)}</span>
+        {/if}
     {:else}
-        <span class="text-white font-semibold text-sm">{getInitial(fallbackName)}</span>
-    {/if}
-{:else}
-    <div class="flex items-center justify-center w-9 h-9" aria-label="Loading avatar">
         <Spinner size="sm" fillColor="fill-white" />
-    </div>
-{/if}
+    {/if}
+</div>

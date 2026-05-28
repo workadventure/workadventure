@@ -11,6 +11,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { gameSceneStore } from "../../../Stores/GameSceneStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import { getColorByString } from "../../../Utils/ColorGenerator";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import ActionBarButton from "../ActionBarButton.svelte";
@@ -128,6 +129,8 @@
 
     /** True when menu is visible but game scene / proximityChatRoom is not ready yet. */
     $: loading = $participantMenuVisibleStore && !$gameSceneStore?.proximityChatRoom;
+
+    $: localParticipantName = localUserStore.getName()?.trim() || $LL.camera.my.nameTag();
 </script>
 
 {#if $participantMenuVisibleStore}
@@ -148,8 +151,9 @@
                 >
                     <div class="participant-stack flex items-center flex-shrink-0 -space-x-4" aria-hidden="true">
                         <div
-                            class="participant-avatar w-9 h-9"
+                            class="participant-avatar w-9 h-9 rounded-full overflow-hidden flex items-center justify-center"
                             style="z-index: {$participantsList.length + 1};"
+                            style:background-color={getColorByString(localParticipantName)}
                             title={$LL.camera.my.nameTag()}
                         >
                             <WokaFromUserId userId={-1} placeholderSrc="" customWidth="36px" />
@@ -218,6 +222,7 @@
                     >
                         <div
                             class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
+                            style:background-color={getColorByString(localParticipantName)}
                             aria-hidden="true"
                         >
                             <span class="flex items-center justify-center w-full h-full">?</span>
@@ -305,6 +310,7 @@
         >
             <div
                 class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
+                style:background-color={getColorByString(localParticipantName)}
                 aria-hidden="true"
             >
                 <span class="flex items-center justify-center w-full h-full">?</span>
