@@ -210,4 +210,12 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
         this.toForeFront = toForeFront;
         this.updatePlayerDepth();
     }
+
+    public setTalking(talking: boolean): void {
+        if (talking) {
+            this.element.classList.add("talking");
+        } else {
+            this.element.classList.remove("talking");
+        }
+    }
 }
