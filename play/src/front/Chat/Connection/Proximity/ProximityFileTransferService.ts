@@ -15,24 +15,56 @@ import {
 } from "./ProximityFileTransferProtocol";
 
 export const PROXIMITY_FILE_TRANSFER_MAX_FILES = 3;
-export const PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE = 25 * 1024 * 1024;
+//TODO : Change max file size to 100MB
+// Maximum allowed size for a proximity file transfer: 10 GB
+export const PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE = 10 * 1024 * 1024 * 1024;
 const PROXIMITY_FILE_TRANSFER_CHUNK_SIZE = 64 * 1024;
 const PROXIMITY_FILE_TRANSFER_BUFFERED_AMOUNT_LOW_THRESHOLD = 256 * 1024;
 const PROXIMITY_FILE_TRANSFER_NEGOTIATION_TIMEOUT = 15_000;
 
 export type ProximityFileValidationResult = { ok: true } | { ok: false; reason: "too-many-files" | "file-too-large" };
 
-export function validateProximityFiles(files: Iterable<File>): ProximityFileValidationResult {
-    const fileArray = Array.from(files);
-    if (fileArray.length > PROXIMITY_FILE_TRANSFER_MAX_FILES) {
+export function validateProximityFiles(files: File[]): ProximityFileValidationResult {
+    if (files.length > PROXIMITY_FILE_TRANSFER_MAX_FILES) {
         return { ok: false, reason: "too-many-files" };
     }
 
-    if (fileArray.some((file) => file.size > PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE)) {
+    if (files.some((file) => file.size > PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE)) {
         return { ok: false, reason: "file-too-large" };
     }
 
     return { ok: true };
+}
+
+type ProximityFileTransferBackpressureDataChannel = {
+    readonly bufferedAmount: number;
+    bufferedAmountLowThreshold: number;
+    addEventListener: EventTarget["addEventListener"];
+    removeEventListener: EventTarget["removeEventListener"];
+};
+
+export function waitForProximityFileTransferBackpressure(
+    dataChannel: ProximityFileTransferBackpressureDataChannel
+): Promise<void> {
+    dataChannel.bufferedAmountLowThreshold = PROXIMITY_FILE_TRANSFER_BUFFERED_AMOUNT_LOW_THRESHOLD;
+
+    if (dataChannel.bufferedAmount <= PROXIMITY_FILE_TRANSFER_BUFFERED_AMOUNT_LOW_THRESHOLD) {
+        return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+        const resolveWhenReady = () => {
+            if (dataChannel.bufferedAmount > PROXIMITY_FILE_TRANSFER_BUFFERED_AMOUNT_LOW_THRESHOLD) {
+                return;
+            }
+
+            dataChannel.removeEventListener("bufferedamountlow", resolveWhenReady);
+            resolve();
+        };
+
+        dataChannel.addEventListener("bufferedamountlow", resolveWhenReady);
+        resolveWhenReady();
+    });
 }
 
 export type ProximityFileTransferRecipient = {
@@ -151,10 +183,7 @@ export class ProximityFileTransferService {
         );
     }
 
-    createOutgoingOffers(
-        files: Iterable<File>,
-        recipients: ProximityFileTransferRecipient[]
-    ): ProximityFileTransferOffer[] {
+    createOutgoingOffers(files: File[], recipients: ProximityFileTransferRecipient[]): ProximityFileTransferOffer[] {
         const validation = validateProximityFiles(files);
         if (!validation.ok) {
             throw new Error(validation.reason);
@@ -164,7 +193,7 @@ export class ProximityFileTransferService {
             .map((recipient) => recipient.spaceUserId)
             .filter((spaceUserId) => spaceUserId !== this.options.localSpaceUserId);
 
-        return Array.from(files).map((file) => {
+        return files.map((file) => {
             const transferId = uuidv4();
             const offer: ProximityFileTransferOffer = {
                 transferId,
