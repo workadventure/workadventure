@@ -183,7 +183,6 @@
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-dist": "^5.32.6",
     "throttle-debounce": "^5.0.2",
-    "ts-deepmerge": "^8.0.0",
     "ts-proto-descriptors": "^2.1.0",
     "tsx": "^4.22.3",
     "typesafe-i18n": "^5.27.1",

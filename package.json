@@ -20,5 +20,10 @@
     "play/packages/iframe-api-typings",
     "tests",
     "contrib/tools/generate-env-docs"
-  ]
+  ],
+  "overrides": {
+    "typesafe-i18n": {
+      "typescript": "^5.9.3"
+    }
+  }
 }
