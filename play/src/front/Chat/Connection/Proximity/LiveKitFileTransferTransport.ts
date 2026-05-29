@@ -2,9 +2,11 @@ import type { PrivateSpaceEvent } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import type {
     IncomingProximityFileTransferOffer,
+    ProximityFileTransferDownloadSecurity,
     ProximityFileTransferUpdate,
     ProximityFileTransferTransport,
 } from "./ProximityFileTransferTransport";
+import { decryptProximityFileBlob, hashProximityFileBlob } from "./ProximityFileTransferSecurity";
 
 export const PROXIMITY_FILE_TRANSFER_LIVEKIT_TOPIC = "wa:proximity-file-transfer";
 const DEFAULT_BATCH_DELAY_MS = 1_000;
@@ -54,12 +56,17 @@ type PendingBatch = {
     timeout: ReturnType<typeof setTimeout>;
 };
 
+type ExpectedLiveKitDownload = {
+    offer: IncomingProximityFileTransferOffer;
+    security: ProximityFileTransferDownloadSecurity | undefined;
+};
+
 export class LiveKitFileTransferTransport implements ProximityFileTransferTransport {
     readonly kind = "livekit" as const;
     private readonly transferUpdateSubject = new Subject<ProximityFileTransferUpdate>();
     readonly transferUpdates = this.transferUpdateSubject.asObservable();
     private readonly outgoingTransfers = new Map<string, OutgoingLiveKitTransfer>();
-    private readonly expectedDownloads = new Map<string, IncomingProximityFileTransferOffer>();
+    private readonly expectedDownloads = new Map<string, ExpectedLiveKitDownload>();
     private readonly pendingBatches = new Map<string, PendingBatch>();
     private readonly unregisterHandler: () => void;
 
@@ -73,8 +80,11 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
         return this.options.liveKitRoom.hasParticipant(spaceUserId);
     }
 
-    requestDownload(offer: IncomingProximityFileTransferOffer): Promise<void> {
-        this.expectedDownloads.set(offer.transferId, offer);
+    requestDownload(
+        offer: IncomingProximityFileTransferOffer,
+        security?: ProximityFileTransferDownloadSecurity
+    ): Promise<void> {
+        this.expectedDownloads.set(offer.transferId, { offer, security });
         this.options.space.emitPrivateMessage(
             {
                 $case: "proximityFileTransferSignal",
@@ -168,24 +178,60 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
     }
 
     private async handleIncomingStream(reader: LiveKitProximityFileStream, participantIdentity: string): Promise<void> {
-        const matchingEntry = Array.from(this.expectedDownloads.entries()).find(([, offer]) => {
-            const senderIdentity = this.options.liveKitRoom.getIdentityForSpaceUserId(offer.senderSpaceUserId);
+        const matchingEntry = Array.from(this.expectedDownloads.entries()).find(([, expectedDownload]) => {
+            const senderIdentity = this.options.liveKitRoom.getIdentityForSpaceUserId(
+                expectedDownload.offer.senderSpaceUserId
+            );
             return (
                 senderIdentity === participantIdentity &&
-                offer.fileName === reader.info.name &&
-                offer.mimeType === reader.info.mimeType
+                expectedDownload.offer.fileName === reader.info.name &&
+                expectedDownload.offer.mimeType === reader.info.mimeType
             );
         });
         if (!matchingEntry) {
             return;
         }
 
-        const [transferId, offer] = matchingEntry;
+        const [transferId, expectedDownload] = matchingEntry;
         this.transferUpdateSubject.next({ transferId, state: "downloading", progress: 0 });
         const chunks = await reader.readAll();
-        const blob = new Blob(chunks, { type: offer.mimeType });
+        const blob = await this.createVerifiedBlob(chunks, expectedDownload);
+        if (!blob) {
+            return;
+        }
         const url = URL.createObjectURL(blob);
         this.expectedDownloads.delete(transferId);
         this.transferUpdateSubject.next({ transferId, state: "ready", progress: 1, url });
+    }
+
+    private async createVerifiedBlob(
+        chunks: BlobPart[],
+        expectedDownload: ExpectedLiveKitDownload
+    ): Promise<Blob | undefined> {
+        const { offer, security } = expectedDownload;
+        if (!security) {
+            return new Blob(chunks, { type: offer.mimeType });
+        }
+
+        const encryptedBlob = new Blob(chunks, { type: "application/octet-stream" });
+        const decryptedBlob = await decryptProximityFileBlob(
+            encryptedBlob,
+            await security.encryptionKey,
+            await security.encryptionMetadata
+        );
+        if (
+            decryptedBlob.size !== Number(offer.size) ||
+            (await hashProximityFileBlob(decryptedBlob)) !== offer.sha256
+        ) {
+            this.expectedDownloads.delete(offer.transferId);
+            this.transferUpdateSubject.next({
+                transferId: offer.transferId,
+                state: "error",
+                progress: 0,
+                error: "integrity-check-failed",
+            });
+            return undefined;
+        }
+        return decryptedBlob;
     }
 }
