@@ -33,6 +33,7 @@
   },
   "exclude": [
     "dist",
+    "node_modules",
     "public/iframe_api.js",
     "packages/iframe-api-typings",
     "eslint.config.js",

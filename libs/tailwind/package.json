@@ -18,11 +18,13 @@
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/forms": "^0.5.11",
     "@workadventure/design-system": "^2.0.4",
+    "jiti": "^1.21.7",
     "postcss": "^8.5.15",
-    "tailwindcss": "^4.3.0"
+    "tailwindcss": "^3.4.17"
   },
   "files": [
     "src",
-    "style"
+    "style",
+    "tailwind.config.ts"
   ]
 }
