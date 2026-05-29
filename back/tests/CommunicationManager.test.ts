@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
     HandleLivekitWebhookRequest,
     HandleRecordingWebhookRequest,
+    FilterType,
     RecordingWebhookPhase,
     SpaceUser,
 } from "@workadventure/messages";
@@ -64,6 +65,7 @@ describe("CommunicationManager", () => {
 
     // Real space implementation (no complex mock)
     const createSpace = (users: SpaceUser[] = []): ICommunicationSpace => ({
+        filterType: FilterType.ALL_USERS,
         getAllUsers: () => users,
         getUsersInFilter: () => users,
         getUsersToNotify: () => [],

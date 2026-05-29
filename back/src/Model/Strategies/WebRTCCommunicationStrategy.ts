@@ -1,4 +1,4 @@
-import type { SpaceUser, MeetingConnectionRestartMessage } from "@workadventure/messages";
+import { FilterType, type SpaceUser, type MeetingConnectionRestartMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import { v4 as uuidv4 } from "uuid";
 import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
@@ -158,8 +158,16 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     public updateUser(user: SpaceUser): void {
-        // TODO: remove the handleUserMediaUpdate function after testing
-        //this.handleUserMediaUpdate(user);
+        for (const peer of this.getOtherKnownUsers(user.spaceUserId)) {
+            const hasExistingConnection = this.hasAnyExistingConnection(user.spaceUserId, peer.spaceUserId);
+            if (hasExistingConnection && !this.canEstablishConnection(user, peer)) {
+                this.shutdownConnection(user.spaceUserId, peer.spaceUserId);
+                continue;
+            }
+            if (!hasExistingConnection && this.shouldEstablishConnection(user, peer)) {
+                this.establishConnection(user, peer);
+            }
+        }
     }
     private shutdownConnection(user: string, otherUser: string): void {
         try {
@@ -187,9 +195,29 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     private shouldEstablishConnection(user1: SpaceUser, user2: SpaceUser): boolean {
-        const hasExisting = this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId);
+        const hasExisting = this.hasAnyExistingConnection(user1.spaceUserId, user2.spaceUserId);
         // Only establish if we need media connection AND don't already have one
-        return !hasExisting;
+        return !hasExisting && this.canEstablishConnection(user1, user2);
+    }
+
+    private canEstablishConnection(user1: SpaceUser, user2: SpaceUser): boolean {
+        if (this._space.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            return true;
+        }
+
+        return (
+            this.hasFeedbackStreamingRole(user1) &&
+            this.hasFeedbackStreamingRole(user2) &&
+            this.hasSpeaker(user1, user2)
+        );
+    }
+
+    private hasFeedbackStreamingRole(user: SpaceUser): boolean {
+        return user.megaphoneState || user.attendeesState;
+    }
+
+    private hasSpeaker(user1: SpaceUser, user2: SpaceUser): boolean {
+        return user1.megaphoneState || user2.megaphoneState;
     }
 
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {
@@ -208,6 +236,20 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
     private hasExistingConnection(userId1: string, userId2: string): boolean {
         return this._connections.hasConnection(userId1, userId2);
+    }
+
+    private hasAnyExistingConnection(userId1: string, userId2: string): boolean {
+        return this.hasExistingConnection(userId1, userId2) || this.hasExistingConnection(userId2, userId1);
+    }
+
+    private getOtherKnownUsers(userId: string): SpaceUser[] {
+        const knownUsers = new Map<string, SpaceUser>([...this.users, ...this.usersToNotify]);
+        knownUsers.delete(userId);
+        return Array.from(knownUsers.values());
+    }
+
+    private getKnownUser(userId: string): SpaceUser | undefined {
+        return this.users.get(userId) ?? this.usersToNotify.get(userId) ?? this._space.getUser(userId);
     }
 
     private sendWebRTCStart(senderId: string, receiverId: string, isInitiator: boolean, connectionId: string): void {
@@ -248,13 +290,15 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     initialize(users: ReadonlyMap<string, SpaceUser>, usersToNotify: ReadonlyMap<string, SpaceUser>): Promise<void> {
+        this.users = users;
+        this.usersToNotify = usersToNotify;
         users.forEach((user1) => {
             usersToNotify.forEach((user2) => {
                 if (user1.spaceUserId === user2.spaceUserId) {
                     return;
                 }
                 try {
-                    if (!this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId)) {
+                    if (this.shouldEstablishConnection(user1, user2)) {
                         this.establishConnection(user1, user2);
                         return;
                     }
@@ -298,6 +342,15 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             meetingConnectionRestartMessage.connectionId !== undefined &&
             meetingConnectionRestartMessage.connectionId !== existingConnectionId
         ) {
+            return;
+        }
+
+        // The peers may no longer be allowed to talk P2P (e.g. a feedback attendee lost their
+        // role): tear the connection down instead of restarting it.
+        const sender = this.getKnownUser(senderUserId);
+        const receiver = this.getKnownUser(receiverId);
+        if (!sender || !receiver || !this.canEstablishConnection(sender, receiver)) {
+            this.shutdownConnection(senderUserId, receiverId);
             return;
         }
 
