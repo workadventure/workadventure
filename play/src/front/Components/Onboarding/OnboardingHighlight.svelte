@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, tick } from "svelte";
-    import Phaser from "phaser";
+    import * as Phaser from "phaser";
     import { PositionMessage_Direction } from "@workadventure/messages";
     import { CancelablePromise } from "cancelable-promise";
     import { gameManager } from "../../Phaser/Game/GameManager";
