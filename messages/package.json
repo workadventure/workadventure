@@ -39,7 +39,7 @@
     "rimraf": "^6.1.3",
     "shelljs": "^0.10.0",
     "sync-directory": "^6.0.5",
-    "typescript": "^6.0.3"
+    "typescript": "^5.9.3"
   },
   "repository": {
     "type": "git",

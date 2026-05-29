@@ -3,7 +3,7 @@
   "private": true,
   "devDependencies": {
     "husky": "^9.1.7",
-    "typescript": "^6.0.3"
+    "typescript": "^5.9.3"
   },
   "scripts": {
     "prepare": "husky install || echo 'Husky not found. Maybe you are installing only a subproject.'",
@@ -20,10 +20,5 @@
     "play/packages/iframe-api-typings",
     "tests",
     "contrib/tools/generate-env-docs"
-  ],
-  "overrides": {
-    "typesafe-i18n": {
-      "typescript": "^5.9.3"
-    }
-  }
+  ]
 }

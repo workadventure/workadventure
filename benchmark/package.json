@@ -24,7 +24,7 @@
     "@types/ws": "^8.18.1",
     "@workadventure/messages": "1.0.0",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^6.0.3",
+    "typescript": "^5.9.3",
     "ws": "^8.21.0"
   }
 }

@@ -56,7 +56,7 @@
     "qs": "^6.15.2",
     "redis": "^5.12.1",
     "tsx": "^4.22.3",
-    "typescript": "^6.0.3",
+    "typescript": "^5.9.3",
     "uuid": "^14.0.0"
   },
   "devDependencies": {
