@@ -4,7 +4,7 @@
 // - converts a WORLD rect to a SCREEN rect each frame,
 // - provides show()/hide() with tweened darkness.
 
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 import { DarkenOutsideAreaPipeline } from "./DarkenOutsideAreaPipeline";
 import Linear = Phaser.Math.Linear;
 

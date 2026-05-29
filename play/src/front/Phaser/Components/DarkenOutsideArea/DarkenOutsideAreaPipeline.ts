@@ -2,7 +2,7 @@
 // Phaser 3 PostFX pipeline that darkens everything outside a given screen-space rect.
 // Feather and darkness are configurable via uniforms.
 
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 
 export class DarkenOutsideAreaPipeline extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
     private _rect = new Phaser.Math.Vector4(0, 0, 0, 0);

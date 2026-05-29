@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/svelte";
 import type { Subscription } from "rxjs";
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
 import type { Readable, Unsubscriber } from "svelte/store";

@@ -48,6 +48,7 @@ describe("MatrixChatConnection", () => {
 
     afterEach(() => {
         vi.useRealTimers();
+        vi.restoreAllMocks();
     });
 
     const basicStatusStore: Readable<
@@ -227,11 +228,8 @@ describe("MatrixChatConnection", () => {
 
             await getMatrixConnection(clientPromise);
 
-            clientPromise
-                .then(() => {
-                    expect(startMatrixClientSpy).toHaveBeenCalledOnce();
-                })
-                .catch((e) => console.error(e));
+            await clientPromise;
+            expect(startMatrixClientSpy).toHaveBeenCalledOnce();
         });
         it("should not call startMatrixClient when client promise reject", async () => {
             const clientPromise = Promise.reject(new Error(""));
@@ -240,9 +238,8 @@ describe("MatrixChatConnection", () => {
 
             await getMatrixConnection(clientPromise);
 
-            clientPromise.catch(() => {
-                expect(startMatrixClientSpy).not.toHaveBeenCalled();
-            });
+            await expect(clientPromise).rejects.toThrow();
+            expect(startMatrixClientSpy).not.toHaveBeenCalled();
         });
     });
 

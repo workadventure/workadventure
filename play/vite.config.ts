@@ -68,6 +68,7 @@ export default defineConfig(({ mode }) => {
         ],
         resolve: {
             alias: {
+                phaser: fileURLToPath(new URL("./node_modules/phaser/dist/phaser.esm.js", import.meta.url)),
                 events: "events",
                 "@wa-icons": fileURLToPath(new URL("./src/front/Components/Icons.ts", import.meta.url)),
                 "@wa-modals": fileURLToPath(new URL("./src/front/Components/Modal/modalManager.ts", import.meta.url)),
@@ -116,7 +117,7 @@ export default defineConfig(({ mode }) => {
                     },
                     finalize: true,
                 },
-            })
+            }),
         );
     } else {
         console.info("Sentry plugin disabled");

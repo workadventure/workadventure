@@ -107,6 +107,22 @@ if (typeof window !== "undefined" && window.env === undefined) {
     window.env = defaultEnv;
 }
 
+if (typeof window !== "undefined" && typeof window.matchMedia === "undefined") {
+    Object.defineProperty(window, "matchMedia", {
+        writable: true,
+        value: (query: string) => ({
+            matches: false,
+            media: query,
+            onchange: null,
+            addListener: () => undefined,
+            removeListener: () => undefined,
+            addEventListener: () => undefined,
+            removeEventListener: () => undefined,
+            dispatchEvent: () => false,
+        }),
+    });
+}
+
 // jsdom does not implement CanvasRenderingContext2D; Phaser expects it during import.
 // Provide a minimal stub so canvas feature detection does not crash in tests.
 const createStubContext = () => {
@@ -125,3 +141,6 @@ const createStubContext = () => {
 HTMLCanvasElement.prototype.getContext = function getContext() {
     return createStubContext();
 };
+
+const PhaserModule = await import("phaser");
+globalThis.Phaser = PhaserModule.default ?? PhaserModule;

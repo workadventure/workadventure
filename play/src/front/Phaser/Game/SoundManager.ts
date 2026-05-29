@@ -1,6 +1,6 @@
-import LoaderPlugin = Phaser.Loader.LoaderPlugin;
-import BaseSoundManager = Phaser.Sound.BaseSoundManager;
-import BaseSound = Phaser.Sound.BaseSound;
+type LoaderPlugin = Phaser.Loader.LoaderPlugin;
+type BaseSoundManager = Phaser.Sound.BaseSoundManager;
+type BaseSound = Phaser.Sound.BaseSound;
 
 class SoundManager {
     private soundPromises: Map<string, Promise<BaseSound>> = new Map<string, Promise<Phaser.Sound.BaseSound>>();
