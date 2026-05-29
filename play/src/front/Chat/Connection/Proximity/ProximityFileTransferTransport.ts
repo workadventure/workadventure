@@ -1,5 +1,9 @@
 import type { ProximityFileTransferOfferMessage } from "@workadventure/messages";
 import type { Observable } from "rxjs";
+import type {
+    ProximityFileTransferEncryptionKey,
+    ProximityFileTransferEncryptionMetadata,
+} from "./ProximityFileTransferSecurity";
 
 export type IncomingProximityFileTransferOffer = ProximityFileTransferOfferMessage & {
     senderSpaceUserId: string;
@@ -24,11 +28,19 @@ export type ProximityFileTransferUpdate =
           error: string;
       };
 
+export type ProximityFileTransferDownloadSecurity = {
+    encryptionKey: Promise<ProximityFileTransferEncryptionKey>;
+    encryptionMetadata: Promise<ProximityFileTransferEncryptionMetadata>;
+};
+
 export interface ProximityFileTransferTransport {
     readonly kind: "livekit" | "webrtc";
     readonly transferUpdates?: Observable<ProximityFileTransferUpdate>;
     canTransferTo(spaceUserId: string): boolean;
-    requestDownload(offer: IncomingProximityFileTransferOffer): Promise<void>;
+    requestDownload(
+        offer: IncomingProximityFileTransferOffer,
+        security?: ProximityFileTransferDownloadSecurity
+    ): Promise<void>;
     sendFile(file: File, transferId: string, recipients: readonly string[]): void;
     handleSignal?(
         senderSpaceUserId: string,
