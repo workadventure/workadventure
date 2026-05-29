@@ -855,11 +855,17 @@ div.emoji-picker {
     box-sizing: border-box;
     transform-origin: center center;
 
-    display: flex;
     align-items: center;
 
     pointer-events: auto;
     will-change: transform;
 
     user-select: none;
+
+    // By default, we hide the name and only start showing it when the full GameScene is shown
+    display: none;
+}
+
+.game-scene-loaded .username-display {
+    display: flex;
 }

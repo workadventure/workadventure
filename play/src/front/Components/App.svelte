@@ -25,6 +25,7 @@
     import { urlManager } from "../Url/UrlManager";
     import { FileListener } from "../Phaser/FileUpload/FileListener";
     import { isStructuredCloneSupported } from "../Utils/BrowserCompatibility";
+    import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import BrowserNotSupported from "./BrowserNotSupported/BrowserNotSupported.svelte";
@@ -259,6 +260,7 @@
         <div
             id="game"
             class="relative flex-1 overflow-hidden {$fullScreenCowebsite ? 'hidden' : ''}"
+            class:game-scene-loaded={$gameSceneIsLoadedStore}
             bind:this={gameDiv}
         >
             <GameOverlay {game} />
