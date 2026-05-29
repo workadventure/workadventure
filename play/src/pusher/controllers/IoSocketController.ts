@@ -11,7 +11,6 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
-import type { SocketUpgradeFailed } from "../services/SocketManager";
 import { socketManager } from "../services/SocketManager";
 import {
     ADMIN_SOCKETS_TOKEN,
@@ -481,8 +480,7 @@ export class IoSocketController {
                 }
             },
             /* Handlers */
-            rejectedOpen: (socket: SocketUpgradeFailed): void => {
-                const socketData = socket.getUserData();
+            rejectedOpen: (socketData: UpgradeFailedData) => {
                 debug("Rejected WebSocket connection established");
 
                 if ("roomId" in socketData) {
@@ -490,20 +488,18 @@ export class IoSocketController {
                 }
 
                 if (socketData.reason === tokenInvalidException) {
-                    socketManager.emitTokenExpiredMessage(socket);
+                    return socketManager.getTokenExpiredMessage();
                 } else if (socketData.reason === "error") {
-                    socketManager.emitErrorScreenMessage(socket, socketData.error);
+                    return socketManager.toErrorScreenMessage(socketData.error);
                 } else if (socketData.reason === "invalidTexture") {
                     if (socketData.entityType === "character") {
-                        socketManager.emitInvalidCharacterTextureMessage(socket);
+                        return socketManager.getInvalidCharacterTextureMessage();
                     } else {
-                        socketManager.emitInvalidCompanionTextureMessage(socket);
+                        return socketManager.getInvalidCompanionTextureMessage();
                     }
                 } else {
-                    socketManager.emitConnectionErrorMessage(socket, socketData.message.toString());
+                    return socketManager.toConnectionErrorMessage(socketData.message.toString());
                 }
-
-                socket.end(1000, "Error message sent");
             },
             open: async (socket) => {
                 const socketData = socket.getUserData();

@@ -1,5 +1,4 @@
 import { AvailabilityStatus } from "@workadventure/messages";
-import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import type { GameScene } from "../Game/GameScene";
 import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
 import { UsernameMegaphoneDisplay } from "./UsernameMegaphoneDisplay";
@@ -15,7 +14,7 @@ const USERNAME_SIZE_ANIMATION_EASING = "cubic-bezier(0.2, 0, 0, 1)";
 
 type Position = { x: number; y: number };
 
-export class UsernameDisplay extends Phaser.GameObjects.Container {
+export class UsernameDisplay {
     private static nextDomUsernameId = 0;
     private readonly domUsernameId = UsernameDisplay.nextDomUsernameId++;
     private readonly element: HTMLDivElement;
@@ -26,20 +25,24 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     private readonly statusDisplay: UsernameStatusDisplay;
     private readonly megaphoneDisplay: UsernameMegaphoneDisplay;
     private sizeAnimation: Animation | undefined;
+
     private readonly onZoomChanged = (zoomModifier: number): void => {
         this.displayScale = this.getDisplayScale(zoomModifier);
-        this.setScale(this.displayScale);
         const textPosition = this.getDomPosition();
         this.gameScene.usernameDomLayer.updateUsernameScale(this.domUsernameId, this.displayScale, zoomModifier);
         this.gameScene.usernameDomLayer.updateUsernamePosition(this.domUsernameId, textPosition.x, textPosition.y);
     };
     private toForeFront: boolean = false;
-    private htmlDepth: number = 0;
+    private depth: number = 0;
 
-    constructor(scene: GameScene, x: number, y: number, playerName: string, outlineColor: number | undefined) {
-        super(scene, x, y);
+    constructor(
+        private scene: GameScene,
+        private x: number,
+        private y: number,
+        playerName: string,
+        outlineColor: number | undefined
+    ) {
         this.playerName = playerName;
-        this.setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.displayScale = this.getDisplayScale(waScaleManager.zoomModifier);
 
         this.playerNameOutlineColor = outlineColor;
@@ -52,15 +55,13 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
             this.domUsernameId,
             textPosition.x,
             textPosition.y,
-            this.depth,
+            y,
             this.displayScale,
             waScaleManager.zoomModifier,
         );
         this.element.append(this.statusDisplay.element, this.playerNameElement, this.megaphoneDisplay.element);
         this.gameScene.usernameDomLayer.updateUsernameBackgroundColor(this.domUsernameId, outlineColor);
 
-        this.scene.add.existing(this);
-        this.setScale(this.displayScale);
         this.scene.game.events.on(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
     }
 
@@ -96,38 +97,38 @@ export class UsernameDisplay extends Phaser.GameObjects.Container {
     }
 
     public setPlayerDepth(depth: number): void {
-        this.htmlDepth = depth;
+        this.depth = depth;
         this.updatePlayerDepth();
     }
 
     private updatePlayerDepth(): void {
         this.gameScene.usernameDomLayer.updateUsernameDepth(
             this.domUsernameId,
-            this.htmlDepth + (this.toForeFront ? 2000000000 : 0),
+            this.depth + (this.toForeFront ? 2000000000 : 0)
         );
     }
 
-    public override setPosition(x?: number, y?: number, z?: number, w?: number): this {
+    public setPosition(x: number, y: number): this {
         if (x === this.x && y === this.y) {
             return this;
         }
 
-        super.setPosition(x, y, z, w);
+        this.x = x;
+        this.y = y;
         this.updateDomPosition();
         return this;
     }
 
-    public override destroy(fromScene?: boolean): void {
+    public destroy(): void {
         this.stopSizeAnimation();
         this.gameScene.usernameDomLayer.removeUsername(this.domUsernameId);
         this.statusDisplay.destroy();
         this.megaphoneDisplay.destroy();
         this.scene.game.events.off(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
-        super.destroy(fromScene);
     }
 
     private get gameScene(): GameScene {
-        return this.scene as GameScene;
+        return this.scene;
     }
 
     private updateDomPosition(): void {

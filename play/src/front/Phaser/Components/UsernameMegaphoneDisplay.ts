@@ -1,5 +1,3 @@
-const MEGAPHONE_DISPLAY_SIZE = 9.6;
-
 export class UsernameMegaphoneDisplay {
     public readonly element: HTMLImageElement;
 
@@ -13,8 +11,7 @@ export class UsernameMegaphoneDisplay {
         this.element.draggable = false;
         this.element.style.display = "none";
         this.element.style.flex = "0 0 auto";
-        this.element.style.width = `calc(${MEGAPHONE_DISPLAY_SIZE}px * var(--username-dom-scale, 1))`;
-        this.element.style.height = `calc(${MEGAPHONE_DISPLAY_SIZE}px * var(--username-dom-scale, 1))`;
+        this.element.style.height = `75%`;
         this.element.style.marginLeft = `calc(-2px * var(--username-dom-scale, 1))`;
         this.element.style.opacity = "0";
         this.element.style.pointerEvents = "none";

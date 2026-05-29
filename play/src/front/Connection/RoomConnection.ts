@@ -592,11 +592,6 @@ export class RoomConnection implements RoomConnection {
 
                     break;
                 }
-                case "worldFullMessage": {
-                    this._worldFullMessageStream.next(null);
-                    this.closeConnection();
-                    break;
-                }
                 case "invalidCharacterTextureMessage": {
                     console.warn(
                         "One of your Woka textures is invalid for this world, you will be redirect to the Woka selection screen",
