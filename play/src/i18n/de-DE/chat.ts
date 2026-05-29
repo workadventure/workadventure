@@ -183,6 +183,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     notification: {
         discussion: "möchte mit dir diskutieren",
         message: "sendet eine Nachricht",
+        file: "hat eine Datei gesendet: {fileName}",
         forum: "im Forum",
         in: "in",
     },

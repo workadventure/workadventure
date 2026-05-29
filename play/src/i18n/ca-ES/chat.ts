@@ -181,6 +181,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     notification: {
         discussion: "vol parlar amb tu",
         message: "ha enviat un missatge",
+        file: "ha enviat un fitxer: {fileName}",
         forum: "al fòrum",
         in: "a",
     },

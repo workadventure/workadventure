@@ -79,6 +79,7 @@ export class ProximityChatMessage implements ChatMessage {
         public isMyMessage: boolean,
         public type: ChatMessageType,
         public downloadAttachment?: () => Promise<void>,
+        public refuseAttachment?: () => Promise<void>,
     ) {}
 
     remove(): void {
@@ -477,6 +478,7 @@ export class ProximityChatRoom implements ChatRoom {
             false,
             this.sanitizeFileMessageType(offer.messageType),
             () => this.fileTransferService?.download(offer.transferId) ?? Promise.resolve(),
+            () => this.refuseIncomingFileOffer(offer.transferId),
         );
 
         this.fileTransferMessages.set(offer.transferId, message);
@@ -485,16 +487,20 @@ export class ProximityChatRoom implements ChatRoom {
         this.lastMessageTimestamp = message.date.getTime();
         this.notifyNewMessage(message);
 
-        if (get(selectedRoomStore) !== this) {
+        const isRoomDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
+        if (!isRoomDisplayed) {
             this.hasUnreadMessages.set(true);
             this.unreadNotificationCount.set(get(this.unreadNotificationCount) + 1);
-        }
-
-        if (!get(this.intentionallyClosed)) {
-            chatVisibilityStore.set(true);
-            chatNotificationStore.clearRoom(this.id);
-        } else {
             this.unreadMessagesCount.set(get(this.unreadMessagesCount) + 1);
+
+            if (!get(this.areNotificationsMuted)) {
+                chatNotificationStore.addNotification(
+                    message.sender.username ?? "unknown",
+                    get(LL).chat.notification.file({ fileName: offer.fileName }),
+                    this,
+                    message.id,
+                );
+            }
         }
     }
 
@@ -519,9 +525,9 @@ export class ProximityChatRoom implements ChatRoom {
         if (update.state === "error") {
             content.update((currentContent) => ({
                 ...currentContent,
-                mediaState: "error",
+                mediaState: currentContent.url !== undefined ? "ready" : "error",
                 mediaProgress: update.progress,
-                mediaErrorKind: "download",
+                mediaErrorKind: currentContent.url !== undefined ? undefined : "download",
             }));
             return;
         }
@@ -532,6 +538,27 @@ export class ProximityChatRoom implements ChatRoom {
             mediaProgress: update.progress,
             mediaErrorKind: undefined,
         }));
+    }
+
+    private refuseIncomingFileOffer(transferId: string): Promise<void> {
+        const content = this.fileTransferContents.get(transferId);
+        if (!content) {
+            return Promise.resolve();
+        }
+
+        content.update((currentContent) => {
+            if (currentContent.url !== undefined) {
+                return currentContent;
+            }
+
+            return {
+                ...currentContent,
+                mediaState: "refused",
+                mediaProgress: 0,
+                mediaErrorKind: undefined,
+            };
+        });
+        return Promise.resolve();
     }
 
     private sanitizeFileMessageType(messageType: string): ChatMessageType {

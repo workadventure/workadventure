@@ -172,8 +172,9 @@ export class ProximityFileTransferService {
                 messageType: getMessageTypeFromFile(file),
                 recipients: recipientIds,
             };
+            const transferTransport = this.getTransferTransport();
             this.outgoingTransfers.set(transferId, offer);
-            this.getTransferTransport()?.sendFile(file, transferId, recipientIds);
+            transferTransport?.sendFile(file, transferId, recipientIds);
 
             for (const recipientId of recipientIds) {
                 this.options.space.emitPrivateMessage(
