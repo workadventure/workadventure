@@ -270,7 +270,7 @@ export class PusherRoomSocketController {
                                 nonce: 1,
                                 message: errorMessage,
                             }).finish(),
-                            true
+                            true,
                         );
                         ws.end(1000, "Error message sent");
                         return;
