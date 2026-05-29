@@ -4,13 +4,18 @@ import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager"
 import { UsernameMegaphoneDisplay } from "./UsernameMegaphoneDisplay";
 import { UsernameStatusDisplay } from "./UsernameStatusDisplay";
 
-const CORRECTION_RATE = 0.75;
-const PLAYER_NAME_HEIGHT = 14;
+const CORRECTION_RATE = 0.65; // When one game pixel is smaller than one screen pixel (zoomed-out), we zoom out the Woka name, but only up to CORRECTION_RATE. After that, the Woka name will stay at its current screen size even if we zoom out more (to keep the text readable)
 const USERNAME_FONT_FAMILY = "Roboto";
 const USERNAME_FONT_SIZE = 10;
 const USERNAME_FONT_WEIGHT = 500;
 const USERNAME_SIZE_ANIMATION_DURATION = 375;
 const USERNAME_SIZE_ANIMATION_EASING = "cubic-bezier(0.2, 0, 0, 1)";
+
+const PLAYER_NAME_BACKGROUND_COLOR = "rgba(27, 42, 65, 0.5)";
+const PLAYER_NAME_BACKGROUND_RADIUS = 8;
+const PLAYER_NAME_HEIGHT = 14;
+const PLAYER_NAME_PADDING = 4;
+const PLAYER_NAME_GAP = 4;
 
 type Position = { x: number; y: number };
 
@@ -28,9 +33,7 @@ export class UsernameDisplay {
 
     private readonly onZoomChanged = (zoomModifier: number): void => {
         this.displayScale = this.getDisplayScale(zoomModifier);
-        const textPosition = this.getDomPosition();
-        this.gameScene.usernameDomLayer.updateUsernameScale(this.domUsernameId, this.displayScale, zoomModifier);
-        this.gameScene.usernameDomLayer.updateUsernamePosition(this.domUsernameId, textPosition.x, textPosition.y);
+        this.applyStyles();
     };
     private toForeFront: boolean = false;
     private depth: number = 0;
@@ -40,7 +43,7 @@ export class UsernameDisplay {
         private x: number,
         private y: number,
         playerName: string,
-        outlineColor: number | undefined
+        outlineColor: number | undefined,
     ) {
         this.playerName = playerName;
         this.displayScale = this.getDisplayScale(waScaleManager.zoomModifier);
@@ -50,17 +53,18 @@ export class UsernameDisplay {
         this.megaphoneDisplay = new UsernameMegaphoneDisplay();
         this.playerNameElement = this.createPlayerNameElement();
 
-        const textPosition = this.getDomPosition();
-        this.element = this.gameScene.usernameDomLayer.addUsername(
-            this.domUsernameId,
-            textPosition.x,
-            textPosition.y,
-            y,
-            this.displayScale,
-            waScaleManager.zoomModifier,
-        );
+        this.element = document.createElement("div");
+
+        this.element.ariaHidden = "true";
+        this.element.className = "username-display";
+        this.element.style.background = PLAYER_NAME_BACKGROUND_COLOR;
+
+        this.applyStyles();
+        this.updatePlayerDepth();
         this.element.append(this.statusDisplay.element, this.playerNameElement, this.megaphoneDisplay.element);
-        this.gameScene.usernameDomLayer.updateUsernameBackgroundColor(this.domUsernameId, outlineColor);
+        this.updateUsernameBackgroundColor(outlineColor);
+
+        this.gameScene.usernameDomLayer.addUsername(this.element);
 
         this.scene.game.events.on(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
     }
@@ -84,7 +88,7 @@ export class UsernameDisplay {
         }
         this.playerNameOutlineColor = outlineColor;
 
-        this.gameScene.usernameDomLayer.updateUsernameBackgroundColor(this.domUsernameId, outlineColor);
+        this.updateUsernameBackgroundColor(outlineColor);
     }
 
     public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant = false, forceClose = false): void {
@@ -102,10 +106,7 @@ export class UsernameDisplay {
     }
 
     private updatePlayerDepth(): void {
-        this.gameScene.usernameDomLayer.updateUsernameDepth(
-            this.domUsernameId,
-            this.depth + (this.toForeFront ? 2000000000 : 0)
-        );
+        this.element.style.zIndex = `${Math.round(this.depth + (this.toForeFront ? 2000000000 : 0))}`;
     }
 
     public setPosition(x: number, y: number): this {
@@ -121,7 +122,7 @@ export class UsernameDisplay {
 
     public destroy(): void {
         this.stopSizeAnimation();
-        this.gameScene.usernameDomLayer.removeUsername(this.domUsernameId);
+        this.element.remove();
         this.statusDisplay.destroy();
         this.megaphoneDisplay.destroy();
         this.scene.game.events.off(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
@@ -133,8 +134,7 @@ export class UsernameDisplay {
 
     private updateDomPosition(): void {
         this.scene.events.once(Phaser.Scenes.Events.RENDER, () => {
-            const textPosition = this.getDomPosition();
-            this.gameScene?.usernameDomLayer.updateUsernamePosition(this.domUsernameId, textPosition.x, textPosition.y);
+            this.applyTransform();
         });
     }
 
@@ -210,5 +210,26 @@ export class UsernameDisplay {
     public setToForeFront(toForeFront: boolean): void {
         this.toForeFront = toForeFront;
         this.updatePlayerDepth();
+    }
+
+    private applyTransform(): void {
+        const scale = 1 / waScaleManager.zoomModifier;
+        const position = this.getDomPosition();
+        this.element.style.transform = `translate3d(${position.x}px, ${position.y}px, 0) translate(-50%, -50%) scale(${scale})`;
+    }
+
+    private applyStyles(): void {
+        const domScale = waScaleManager.zoomModifier * this.displayScale;
+        this.element.style.setProperty("--username-dom-scale", domScale.toString());
+        this.element.style.height = `${PLAYER_NAME_HEIGHT * domScale}px`;
+        this.element.style.gap = `${PLAYER_NAME_GAP * domScale}px`;
+        this.element.style.padding = `0 ${PLAYER_NAME_PADDING * domScale}px`;
+        this.element.style.borderRadius = `${PLAYER_NAME_BACKGROUND_RADIUS * domScale}px`;
+        this.applyTransform();
+    }
+
+    private updateUsernameBackgroundColor(color: number | undefined): void {
+        this.element.style.background =
+            color === undefined ? PLAYER_NAME_BACKGROUND_COLOR : `#${color.toString(16).padStart(6, "0")}`;
     }
 }
