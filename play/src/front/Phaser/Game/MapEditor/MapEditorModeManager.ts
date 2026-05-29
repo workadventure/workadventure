@@ -408,6 +408,9 @@ export class MapEditorModeManager {
         if (this.activeTool === tool) {
             return;
         }
+        if (this.activeTool !== undefined && this.activeTool !== EditorToolName.CloseMapEditor) {
+            this.lastlyUsedTool = this.activeTool;
+        }
         this.clearToNeutralState();
         this.activeTool = tool;
 
@@ -415,6 +418,25 @@ export class MapEditorModeManager {
             this.activateTool();
         }
         mapEditorSelectedToolStore.set(tool);
+    }
+
+    public returnToLastMode(): boolean {
+        if (!this.active) {
+            return false;
+        }
+
+        if (this.activeTool === EditorToolName.ExploreTheRoom) {
+            this.scene.getCameraManager().setExplorationMode();
+            return true;
+        }
+
+        if (this.lastlyUsedTool !== EditorToolName.ExploreTheRoom) {
+            return false;
+        }
+
+        this.equipTool(EditorToolName.ExploreTheRoom);
+
+        return true;
     }
 
     private emitMapEditorUpdate(command: FrontCommandInterface, delay = 0): void {
