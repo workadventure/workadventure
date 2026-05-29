@@ -23,7 +23,7 @@ describe("validateProximityFiles", () => {
 });
 
 describe("ProximityFileTransferService", () => {
-    it("should emit one private offer per recipient", () => {
+    it("should emit one private offer per recipient", async () => {
         const emitPrivateMessage = vi.fn();
         const service = new ProximityFileTransferService({
             localSpaceUserId: "sender",
@@ -34,7 +34,7 @@ describe("ProximityFileTransferService", () => {
             getIceServers: () => Promise.resolve([]),
         });
 
-        service.createOutgoingOffers(
+        await service.createOutgoingOffers(
             [new File(["hello"], "hello.txt", { type: "text/plain" })],
             [{ spaceUserId: "recipient-1" }, { spaceUserId: "recipient-2" }]
         );
@@ -50,7 +50,7 @@ describe("ProximityFileTransferService", () => {
         ]);
     });
 
-    it("should register outgoing files on the injected transfer transport", () => {
+    it("should register outgoing files on the injected transfer transport", async () => {
         const sendFile = vi.fn();
         const transport: ProximityFileTransferTransport = {
             kind: "webrtc",
@@ -69,9 +69,77 @@ describe("ProximityFileTransferService", () => {
             transferTransport: transport,
         });
 
-        const [offer] = service.createOutgoingOffers([file], [{ spaceUserId: "recipient-1" }]);
+        const [offer] = await service.createOutgoingOffers([file], [{ spaceUserId: "recipient-1" }]);
 
         expect(sendFile).toHaveBeenCalledWith(file, offer.transferId, ["recipient-1"]);
+    });
+
+    it("should emit legacy offers without security metadata when the security flag is disabled", async () => {
+        const emitPrivateMessage = vi.fn();
+        const service = new ProximityFileTransferService({
+            localSpaceUserId: "sender",
+            space: {
+                emitPrivateMessage,
+                observePrivateEvent: () => new Subject() as never,
+            },
+            isSecurityEnabled: () => false,
+        });
+
+        await service.createOutgoingOffers(
+            [new File(["hello"], "hello.txt", { type: "text/plain" })],
+            [{ spaceUserId: "recipient-1" }]
+        );
+
+        expect(emitPrivateMessage).toHaveBeenCalledWith(
+            expect.objectContaining({
+                proximityFileTransferOffer: expect.not.objectContaining({
+                    sha256: expect.any(String),
+                    encryptionAlgorithm: expect.any(String),
+                    encryptionKeyId: expect.any(String),
+                }),
+            }),
+            "recipient-1"
+        );
+    });
+
+    it("should emit encrypted offers and register encrypted files when the security flag is enabled", async () => {
+        const emitPrivateMessage = vi.fn();
+        const sendFile = vi.fn();
+        const file = new File(["hello"], "hello.txt", { type: "text/plain" });
+        const service = new ProximityFileTransferService({
+            localSpaceUserId: "sender",
+            space: {
+                emitPrivateMessage,
+                observePrivateEvent: () => new Subject() as never,
+            },
+            transferTransport: {
+                kind: "livekit",
+                canTransferTo: () => true,
+                requestDownload: vi.fn().mockResolvedValue(undefined),
+                sendFile,
+                destroy: vi.fn(),
+            },
+            isSecurityEnabled: () => true,
+        });
+
+        const [offer] = await service.createOutgoingOffers([file], [{ spaceUserId: "recipient-1" }]);
+        const emittedOffer = emitPrivateMessage.mock.calls[0]?.[0] as {
+            proximityFileTransferOffer: {
+                sha256?: string;
+                encryptionAlgorithm?: string;
+                encryptionKeyId?: string;
+            };
+        };
+        const encryptedFile = sendFile.mock.calls[0]?.[0] as File;
+
+        expect(offer.sha256).toBe("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824");
+        expect(emittedOffer.proximityFileTransferOffer).toMatchObject({
+            sha256: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+            encryptionAlgorithm: "XCHACHA20-POLY1305",
+            encryptionKeyId: offer.transferId,
+        });
+        expect(encryptedFile.size).toBeGreaterThan(file.size);
+        expect(sendFile).toHaveBeenCalledWith(encryptedFile, offer.transferId, ["recipient-1"]);
     });
 
     it("should request downloads through the injected transfer transport", async () => {
@@ -126,7 +194,8 @@ describe("ProximityFileTransferService", () => {
         await service.download("transfer-1");
 
         expect(requestDownload).toHaveBeenCalledWith(
-            expect.objectContaining({ transferId: "transfer-1", senderSpaceUserId: "sender" })
+            expect.objectContaining({ transferId: "transfer-1", senderSpaceUserId: "sender" }),
+            undefined
         );
     });
 
