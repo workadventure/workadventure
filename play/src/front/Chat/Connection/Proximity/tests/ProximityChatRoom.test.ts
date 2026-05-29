@@ -1,0 +1,163 @@
+import { get } from "svelte/store";
+import { Subject } from "rxjs";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { loadLocale } from "../../../../../i18n/i18n-util.sync";
+import { setLocale } from "../../../../../i18n/i18n-svelte";
+import { chatVisibilityStore, intentionallyClosedChatDuringMeetingStore } from "../../../../Stores/ChatStore";
+import { chatNotificationStore } from "../../../../Stores/ProximityNotificationStore";
+import { selectedRoomStore } from "../../../Stores/SelectRoomStore";
+import type { IncomingProximityFileTransferOffer, ProximityFileTransferUpdate } from "../ProximityFileTransferService";
+import { ProximityChatRoom } from "../ProximityChatRoom";
+
+vi.mock("../../../../Phaser/Game/GameManager", () => ({
+    gameManager: {
+        getCurrentGameScene: () => ({
+            playSound: vi.fn(),
+        }),
+    },
+}));
+vi.mock("../../../Phaser/Game/GameManager", () => ({
+    gameManager: {
+        getCurrentGameScene: () => ({
+            playSound: vi.fn(),
+        }),
+    },
+}));
+vi.mock("../../../../Phaser/Game/GameScene", () => ({}));
+vi.mock("../../../Phaser/Game/GameScene", () => ({}));
+
+function createRoom() {
+    return new ProximityChatRoom(
+        "recipient",
+        {
+            leaveSpace: vi.fn().mockResolvedValue(undefined),
+        } as never,
+        {
+            newChatMessageWritingStatusStream: new Subject(),
+        },
+        {
+            getPlayers: () => new Map(),
+        } as never,
+        {
+            playBubbleInSound: vi.fn(),
+            playBubbleOutSound: vi.fn(),
+            playMeetingInSound: vi.fn(),
+            playMeetingOutSound: vi.fn(),
+        },
+        undefined,
+        [],
+        vi.fn()
+    );
+}
+
+function createOffer(): IncomingProximityFileTransferOffer {
+    return {
+        transferId: "transfer-1",
+        fileName: "hello.txt",
+        mimeType: "text/plain",
+        size: 5,
+        messageType: "file",
+        characterTextures: [],
+        name: "Sender",
+        senderSpaceUserId: "sender",
+    };
+}
+
+describe("ProximityChatRoom file transfers", () => {
+    beforeEach(() => {
+        loadLocale("en-US");
+        setLocale("en-US");
+        selectedRoomStore.set(undefined);
+        chatVisibilityStore.set(false);
+        intentionallyClosedChatDuringMeetingStore.set(false);
+        chatNotificationStore.clearAll();
+    });
+
+    it("should notify an incoming file transfer request without opening the chat", () => {
+        const room = createRoom();
+
+        Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+
+        expect(get(room.messages)).toHaveLength(1);
+        expect(get(room.hasUnreadMessages)).toBe(true);
+        expect(get(room.unreadNotificationCount)).toBe(1);
+        expect(get(room.unreadMessagesCount)).toBe(1);
+        expect(get(chatNotificationStore)).toMatchObject([
+            {
+                userName: "Sender",
+                message: "sent a file: hello.txt",
+                messageId: "transfer-1",
+                room,
+            },
+        ]);
+        expect(get(chatVisibilityStore)).toBe(false);
+    });
+
+    it("should not count or notify an incoming file transfer request when the room is visible", () => {
+        const room = createRoom();
+        selectedRoomStore.set(room);
+        chatVisibilityStore.set(true);
+
+        Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+
+        expect(get(room.messages)).toHaveLength(1);
+        expect(get(room.hasUnreadMessages)).toBe(false);
+        expect(get(room.unreadNotificationCount)).toBe(0);
+        expect(get(room.unreadMessagesCount)).toBe(0);
+        expect(get(chatNotificationStore)).toHaveLength(0);
+        expect(get(chatVisibilityStore)).toBe(true);
+    });
+
+    it("should count an incoming file transfer request without an in-game notification when notifications are muted", () => {
+        const room = createRoom();
+        room.areNotificationsMuted.set(true);
+
+        Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+
+        expect(get(room.hasUnreadMessages)).toBe(true);
+        expect(get(room.unreadNotificationCount)).toBe(1);
+        expect(get(room.unreadMessagesCount)).toBe(1);
+        expect(get(chatNotificationStore)).toHaveLength(0);
+        expect(get(chatVisibilityStore)).toBe(false);
+    });
+
+    it("should keep a received file available when a later transfer error is received", () => {
+        const room = createRoom();
+        Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+        const readyUpdate: ProximityFileTransferUpdate = {
+            transferId: "transfer-1",
+            state: "ready",
+            progress: 1,
+            url: "blob:received-file",
+        };
+        const unavailableUpdate: ProximityFileTransferUpdate = {
+            transferId: "transfer-1",
+            state: "error",
+            progress: 1,
+            error: "unavailable",
+        };
+
+        Reflect.get(room, "applyFileTransferUpdate").call(room, readyUpdate);
+        Reflect.get(room, "applyFileTransferUpdate").call(room, unavailableUpdate);
+
+        const [message] = get(room.messages);
+        expect(get(message.content)).toMatchObject({
+            url: "blob:received-file",
+            mediaState: "ready",
+            mediaProgress: 1,
+        });
+    });
+
+    it("should mark an incoming file transfer request as refused locally", async () => {
+        const room = createRoom();
+        Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+        const [message] = get(room.messages);
+
+        await Reflect.get(message, "refuseAttachment")?.();
+
+        expect(get(message.content)).toMatchObject({
+            mediaState: "refused",
+            mediaProgress: 0,
+        });
+    });
+});

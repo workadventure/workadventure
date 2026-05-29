@@ -23,6 +23,10 @@
     async function downloadAttachment() {
         await message?.downloadAttachment?.();
     }
+
+    async function refuseAttachment() {
+        await message?.refuseAttachment?.();
+    }
 </script>
 
 <div class="cursor-pointer relative group block p-1 pb-0">
@@ -62,12 +66,7 @@
             </a>
         {/if}
     </div>
-    {#if $content.mediaState === "pendingDownload"}
-        <button class="text-xs text-white/80 px-2 py-1 hover:bg-white/10 rounded" onclick={downloadAttachment}>
-            {$LL.chat.file.download()}
-            {$content.body}
-        </button>
-    {:else if canDisplayImage}
+    {#if canDisplayImage}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
@@ -84,6 +83,24 @@
         >
             <img class="w-full object-cover max-h-52 rounded" src={displayUrl} alt={$content.body} draggable="false" />
         </div>
+    {:else if $content.mediaState === "pendingDownload"}
+        <div class="text-xs text-white/80 px-2 py-1">
+            <div class="truncate font-bold text-white">{$content.body}</div>
+            <div class="flex gap-1 mt-1">
+                <button
+                    class="border border-solid border-success text-success hover:bg-success-400/10 rounded text-xs py-1 px-2 m-0"
+                    onclick={downloadAttachment}
+                >
+                    {$LL.chat.accept()}
+                </button>
+                <button
+                    class="border border-solid border-danger text-danger hover:bg-danger-400/10 rounded text-xs py-1 px-2 m-0"
+                    onclick={refuseAttachment}
+                >
+                    {$LL.chat.decline()}
+                </button>
+            </div>
+        </div>
     {:else if $content.mediaState === "loading"}
         <div class="text-xs text-white/80 px-2 py-1">
             {$LL.chat.imagePreview.loading()}
@@ -91,6 +108,8 @@
                 {Math.round($content.mediaProgress * 100)}%
             {/if}
         </div>
+    {:else if $content.mediaState === "refused"}
+        <div class="text-xs text-white/80 px-2 py-1">{$LL.chat.decline()}</div>
     {:else}
         <div class="text-xs text-white/80 px-2 py-1">
             {$content.mediaErrorKind === "decrypt"
