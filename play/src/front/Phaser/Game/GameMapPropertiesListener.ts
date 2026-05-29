@@ -28,9 +28,6 @@ import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 
 import type { Area } from "../Entity/Area";
 import { popupStore } from "../../Stores/PopupStore";
-import PopUpJitsi from "../../Components/PopUp/PopUpJitsi.svelte";
-import PopUpTab from "../../Components/PopUp/PopUpTab.svelte";
-import PopUpCowebsite from "../../Components/PopUp/PopupCowebsite.svelte";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
@@ -58,12 +55,23 @@ export class GameMapPropertiesListener {
         this.areasPropertiesListener = new AreasPropertiesListener(scene);
     }
 
+    private showActionTriggerText(actionId: string, message: string | number | boolean, callback: () => void): void {
+        this.scene.CurrentPlayer.destroyText(actionId);
+        this.scene.CurrentPlayer.playText(actionId, String(message), -1, () => {
+            try {
+                callback();
+            } finally {
+                this.scene.CurrentPlayer.destroyText(actionId);
+            }
+        });
+    }
+
     register() {
         // TODO: properly free those listeners.
         // Website on new tab
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
-                popupStore.removePopup("openTab");
+                this.scene.CurrentPlayer.destroyText("openTab");
                 // TODO: this is the old new way of doing popups.
                 /*this.scene.CurrentPlayer.destroyText("openTab");
                 const callback = this.actionTriggerCallback.get("openTab");
@@ -87,45 +95,9 @@ export class GameMapPropertiesListener {
                             : get(LL).trigger.newTab();
                     }
 
-                    popupStore.addPopup(
-                        PopUpTab,
-                        {
-                            message: message,
-                            click: () => {
-                                popupStore.removePopup("openTab");
-                                scriptUtils.openTab(newValue);
-                            },
-                            userInputManager: this.scene.userInputManager,
-                        },
-                        "openTab"
-                    );
-                    // TODO: this is the old new way of doing popups
-                    // Create callback and play text message
-                    /*const callback = () => {
+                    this.showActionTriggerText("openTab", message, () => {
                         scriptUtils.openTab(newValue);
-                        this.scene.CurrentPlayer.destroyText("openTab");
-                        this.scene.userInputManager.removeSpaceEventListener(callback);
-                        this.actionTriggerCallback.delete("openTab");
-                    };
-                    this.scene.CurrentPlayer.playText("openTab", `${message}`, -1, callback);
-                    this.scene.userInputManager?.addSpaceEventListener(callback);
-                    this.actionTriggerCallback.set("openTab", callback);*/
-
-                    /**
-                     * @DEPRECATED - This is the old way to show trigger message
-                    layoutManagerActionStore.addAction({
-                        uuid: "openTab",
-                        type: "message",
-                            message: message,
-                            click: () => {
-                                popupStore.removePopup("openTab");
-                                scriptUtils.openTab(newValue);
-                            },
-                            userInputManager: this.scene.userInputManager,
-                        },
-                        "openTab"
-                    );
-                    */
+                    });
                 } else {
                     scriptUtils.openTab(newValue);
                 }
@@ -135,18 +107,7 @@ export class GameMapPropertiesListener {
         // Jitsi room
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.JITSI_ROOM, (newValue, oldValue, allProps) => {
             if (newValue === undefined || newValue !== oldValue) {
-                popupStore.removePopup("jitsi");
-                // TODO: this is the old new way of doing popups
-                /*this.scene.CurrentPlayer.destroyText("jitsi");
-                const callback = this.actionTriggerCallback.get("jitsi");
-                if (callback) {
-                    this.scene.userInputManager.removeSpaceEventListener(callback);
-                    this.actionTriggerCallback.delete("jitsi");
-                }*/
-                /**
-                 * @DEPRECATED - This is the old way to show trigger message
-                layoutManagerActionStore.removeAction("jitsi");
-                */
+                this.scene.CurrentPlayer.destroyText("jitsi");
                 coWebsites.keepOnly((coWebsite) => !(coWebsite instanceof JitsiCoWebsite));
                 inJitsiStore.set(false);
                 if (newValue === undefined) {
@@ -240,18 +201,7 @@ export class GameMapPropertiesListener {
 
                 analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
-                popupStore.removePopup("jitsi");
-                // TODO: this is the old new way of doing popups
-                /*this.scene.CurrentPlayer.destroyText("jitsi");
-                const callback = this.actionTriggerCallback.get("jitsi");
-                if (callback) {
-                    this.scene.userInputManager.removeSpaceEventListener(callback);
-                    this.actionTriggerCallback.delete("jitsi");
-                }*/
-                /**
-                 * @DEPRECATED - This is the old way to show trigger message
-                layoutManagerActionStore.removeAction("jitsi");
-                */
+                this.scene.CurrentPlayer.destroyText("jitsi");
             };
 
             const jitsiTriggerValue = allProps.get(GameMapProperties.JITSI_TRIGGER);
@@ -264,43 +214,9 @@ export class GameMapPropertiesListener {
                         : get(LL).trigger.jitsiRoom();
                 }
 
-                popupStore.addPopup(
-                    PopUpJitsi,
-                    {
-                        message: message,
-                        click: () => {
-                            openJitsiRoomFunction().catch((e) => console.error(e));
-                        },
-                        userInputManager: this.scene.userInputManager,
-                    },
-                    "jitsi"
-                );
-                // TODO: this is the old new way of doing popups
-                // Create callback and play text message
-                /*const callback = () => {
+                this.showActionTriggerText("jitsi", message, () => {
                     openJitsiRoomFunction().catch((e) => console.error(e));
-                    this.scene.CurrentPlayer.destroyText("jitsi");
-                    this.scene.userInputManager.removeSpaceEventListener(callback);
-                    this.actionTriggerCallback.delete("jitsi");
-                };
-                this.scene.CurrentPlayer.playText("jitsi", `${message}`, -1, callback);
-                this.scene.userInputManager?.addSpaceEventListener(callback);
-                this.actionTriggerCallback.set("jitsi", callback);*/
-
-                /**
-                 * @DEPRECATED - This is the old way to show trigger message
-                layoutManagerActionStore.addAction({
-                    uuid: "jitsi",
-                    type: "message",
-                        message: message,
-                        click: () => {
-                            openJitsiRoomFunction().catch((e) => console.error(e));
-                        },
-                        userInputManager: this.scene.userInputManager,
-                    },
-                    "jitsi"
-                );
-                 */
+                });
             } else {
                 openJitsiRoomFunction().catch((e) => console.error(e));
             }
@@ -601,7 +517,7 @@ export class GameMapPropertiesListener {
         this.coWebsitesOpenByPlace.set(this.getIdFromPlace(place), coWebsiteOpen);
 
         const loadCoWebsiteFunction = (/*coWebsite: CoWebsite*/) => {
-            popupStore.removePopup(actionId);
+            this.scene.CurrentPlayer.destroyText(actionId);
             // FIXME: the fact that the loadCoWebsiteFunction does not load the cowebsite but only removes the popup is weird.
 
             // TODO: this is the old new way of doing popups
@@ -661,42 +577,9 @@ export class GameMapPropertiesListener {
 
             this.coWebsitesActionTriggerByPlace.set(this.getIdFromPlace(place), actionId);
 
-            popupStore.addPopup(
-                PopUpCowebsite,
-                {
-                    message: websiteTriggerMessageProperty,
-                    click: () => {
-                        openCoWebsiteFunction();
-                    },
-                    userInputManager: this.scene.userInputManager,
-                },
-                actionId
-            );
-            // TODO: this is the old new way of doing popups
-            // Create callback and play text message
-            /*const callback = () => {
+            this.showActionTriggerText(actionId, websiteTriggerMessageProperty, () => {
                 openCoWebsiteFunction();
-                this.scene.CurrentPlayer.destroyText(actionId);
-                this.scene.userInputManager.removeSpaceEventListener(callback);
-                this.actionTriggerCallback.delete(actionId);
-            };
-            this.scene.CurrentPlayer.playText(actionId, `${websiteTriggerMessageProperty}`, -1, callback);
-            this.scene.userInputManager?.addSpaceEventListener(callback);
-            this.actionTriggerCallback.set(actionId, callback);*/
-            /**
-             * @DEPRECATED - This is the old way to show trigger message
-            layoutManagerActionStore.addAction({
-                uuid: actionId,
-                type: "message",
-                    message: websiteTriggerMessageProperty,
-                    click: () => {
-                        openCoWebsiteFunction();
-                    },
-                    userInputManager: this.scene.userInputManager,
-                },
-                actionId
-            );
-            */
+            });
         } else if (websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
             // Check URl and get the correct one
             let urlStr = openWebsiteProperty ?? "";
@@ -920,7 +803,6 @@ export class GameMapPropertiesListener {
         }
         */
 
-        popupStore.removePopup(actionTriggerUuid);
         this.coWebsitesActionTriggerByPlace.delete(this.getIdFromPlace(place));
     }
 
