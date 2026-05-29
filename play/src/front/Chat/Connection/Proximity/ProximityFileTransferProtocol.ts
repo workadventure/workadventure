@@ -17,6 +17,17 @@ export const ProximityFileTransferControlMessage = z.union([
         fileName: z.string(),
         mimeType: z.string(),
         size: z.number().nonnegative(),
+        sha256: z.string().optional(),
+        encryptionAlgorithm: z.literal("XCHACHA20-POLY1305").optional(),
+        encryptionIv: z.string().optional(),
+        plainMimeType: z.string().optional(),
+    }),
+    z.object({
+        type: z.literal("proximity_file_key"),
+        transferId: z.string(),
+        rawKey: z.string(),
+        encryptionIv: z.string().optional(),
+        plainMimeType: z.string().optional(),
     }),
     z.object({
         type: z.literal("proximity_file_complete"),

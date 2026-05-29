@@ -160,4 +160,57 @@ describe("ProximityChatRoom file transfers", () => {
             mediaProgress: 0,
         });
     });
+
+    it("should show a local preparing state while outgoing files are secured before offer emission", async () => {
+        vi.stubGlobal("URL", { createObjectURL: vi.fn().mockReturnValue("blob:transfer-1") });
+        const room = createRoom();
+        let resolveOffers!: (value: unknown[]) => void;
+        const offersPromise = new Promise<unknown[]>((resolve) => {
+            resolveOffers = resolve;
+        });
+        Reflect.set(room, "fileTransferService", {
+            createOutgoingOffers: () => offersPromise,
+        });
+        const file = new File(["hello"], "hello.txt", { type: "text/plain" });
+
+        const sendPromise = room.sendFiles(createFileList(file));
+
+        const [message] = get(room.messages);
+        expect(get(message.content)).toMatchObject({
+            body: "hello.txt",
+            mediaState: "loading",
+            mediaProgress: 0,
+        });
+        resolveOffers([
+            {
+                transferId: "transfer-1",
+                file,
+                messageType: "file",
+                recipients: [],
+            },
+        ]);
+        await sendPromise;
+        vi.unstubAllGlobals();
+    });
 });
+
+function createFileList(file: File): FileList {
+    return new SingleFileList(file);
+}
+
+class SingleFileList implements FileList {
+    [index: number]: File;
+    readonly length = 1;
+
+    constructor(file: File) {
+        this[0] = file;
+    }
+
+    item(index: number): File | null {
+        return index === 0 ? this[0] : null;
+    }
+
+    *[Symbol.iterator](): IterableIterator<File> {
+        yield this[0];
+    }
+}

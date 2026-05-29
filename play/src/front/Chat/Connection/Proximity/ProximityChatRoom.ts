@@ -80,6 +80,7 @@ import { getUnreadRemoteQuestionIds } from "./ProximityQAUnread";
 import { createProximityTimelineItemsStore } from "./ProximityTimelineItemsStore";
 import {
     getMessageTypeFromFile,
+    isProximityFileTransferSecurityEnabled,
     ProximityFileTransferService,
     validateProximityFiles,
     type IncomingProximityFileTransferOffer,
@@ -464,7 +465,7 @@ export class ProximityChatRoom implements ChatRoom {
         }
     }
 
-    sendFiles(files: FileList): Promise<void> {
+    async sendFiles(files: FileList): Promise<void> {
         if (!this.fileTransferService) {
             return Promise.reject(new Error("Proximity file transfer service is not initialized"));
         }
@@ -472,7 +473,7 @@ export class ProximityChatRoom implements ChatRoom {
         const fileArray = Array.from(files);
         const validation = validateProximityFiles(fileArray);
         if (!validation.ok) {
-            return Promise.reject(new Error(validation.reason));
+            throw new Error(validation.reason);
         }
 
         const recipients = Array.from(this.users?.values() ?? [])
@@ -480,31 +481,45 @@ export class ProximityChatRoom implements ChatRoom {
             .filter((user) => !blackListManager.isBlackListed(user.uuid))
             .map((user) => ({ spaceUserId: user.spaceUserId }));
 
-        const offers = this.fileTransferService.createOutgoingOffers(fileArray, recipients);
         const spaceUser = this.users?.get(this._spaceUserId);
         const chatUser = spaceUser ? mapExtendedSpaceUserToChatUser(spaceUser) : this.unknownUser;
-
-        for (const offer of offers) {
-            const objectUrl = URL.createObjectURL(offer.file);
-            this.fileTransferObjectUrls.add(objectUrl);
+        const pendingMessages = fileArray.map((file) => {
             const content = writable<ChatMessageContent>({
-                body: offer.file.name,
-                url: objectUrl,
-                mediaState: "ready",
+                body: file.name,
+                url: undefined,
+                mediaState: "loading",
+                mediaProgress: 0,
             });
             const message = new ProximityChatMessage(
-                offer.transferId,
+                uuidv4(),
                 chatUser,
                 content,
                 new Date(),
                 true,
-                getMessageTypeFromFile(offer.file),
+                getMessageTypeFromFile(file),
             );
             this.messages.push(message);
-            this.lastMessageTimestamp = message.date.getTime();
-        }
+            return { file, message, content };
+        });
 
-        return Promise.resolve();
+        const offers = await this.fileTransferService.createOutgoingOffers(fileArray, recipients);
+
+        for (const offer of offers) {
+            const objectUrl = URL.createObjectURL(offer.file);
+            this.fileTransferObjectUrls.add(objectUrl);
+            const pendingMessage = pendingMessages.find(({ file }) => file === offer.file);
+            const message = pendingMessage?.message;
+            pendingMessage?.content.set({
+                body: offer.file.name,
+                url: objectUrl,
+                mediaState: "ready",
+                mediaProgress: 1,
+            });
+            if (message) {
+                message.id = offer.transferId;
+                this.lastMessageTimestamp = message.date.getTime();
+            }
+        }
     }
 
     private createPoll(options: ChatPollCreateOptions): Promise<void> {
@@ -862,6 +877,7 @@ export class ProximityChatRoom implements ChatRoom {
             getIceServers: () => iceServersManager.getIceServersConfig(),
             getTransferTransport: () => space.spacePeerManager.getProximityFileTransferTransport(),
             canExchangeWith: (spaceUserId) => !this.isBlackListedSpaceUser(spaceUserId),
+            isSecurityEnabled: isProximityFileTransferSecurityEnabled,
         });
         this.fileTransferIncomingOfferSubscription = this.fileTransferService.incomingOffers.subscribe((offer) => {
             if (this.isBlackListedSpaceUser(offer.senderSpaceUserId)) {

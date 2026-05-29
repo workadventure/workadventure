@@ -3,6 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 import { LiveKitFileTransferTransport } from "../LiveKitFileTransferTransport";
 import type { LiveKitProximityFileStreamHandler } from "../LiveKitFileTransferTransport";
 import type { ProximityFileTransferUpdate } from "../ProximityFileTransferTransport";
+import {
+    encryptProximityFileBlob,
+    generateProximityFileEncryptionKey,
+    hashProximityFileBlob,
+} from "../ProximityFileTransferSecurity";
 
 describe("LiveKitFileTransferTransport", () => {
     it("should batch LiveKit download requests by transfer id", async () => {
@@ -132,4 +137,121 @@ describe("LiveKitFileTransferTransport", () => {
         subscription.unsubscribe();
         vi.unstubAllGlobals();
     });
+
+    it("should decrypt and verify an expected encrypted LiveKit stream", async () => {
+        vi.stubGlobal("URL", { createObjectURL: vi.fn().mockReturnValue("blob:transfer-1") });
+        const key = await generateProximityFileEncryptionKey();
+        const source = new Blob(["hello"], { type: "text/plain" });
+        const encrypted = await encryptProximityFileBlob(source, key);
+        let streamHandler: LiveKitProximityFileStreamHandler | undefined;
+        const transport = createReceivingTransport((handler) => {
+            streamHandler = handler;
+        });
+        const updates: ProximityFileTransferUpdate[] = [];
+        const subscription = transport.transferUpdates.subscribe((update) => updates.push(update));
+        await transport.requestDownload(
+            {
+                transferId: "transfer-1",
+                fileName: "hello.txt",
+                mimeType: "text/plain",
+                size: 5,
+                messageType: "file",
+                characterTextures: [],
+                name: undefined,
+                senderSpaceUserId: "sender",
+                sha256: await hashProximityFileBlob(source),
+                encryptionAlgorithm: encrypted.metadata.algorithm,
+                encryptionKeyId: "transfer-1",
+            },
+            { encryptionKey: Promise.resolve(key), encryptionMetadata: Promise.resolve(encrypted.metadata) }
+        );
+
+        await streamHandler?.(
+            {
+                info: {
+                    name: "hello.txt",
+                    mimeType: "text/plain",
+                    size: encrypted.blob.size,
+                },
+                readAll: () => Promise.resolve([encrypted.blob]),
+            },
+            "identity-sender"
+        );
+
+        expect(updates).toEqual([
+            { transferId: "transfer-1", state: "downloading", progress: 0 },
+            expect.objectContaining({ transferId: "transfer-1", state: "ready", progress: 1 }),
+        ]);
+        subscription.unsubscribe();
+        vi.unstubAllGlobals();
+    });
+
+    it("should reject an encrypted LiveKit stream when the decrypted digest does not match", async () => {
+        vi.stubGlobal("URL", { createObjectURL: vi.fn().mockReturnValue("blob:transfer-1") });
+        const key = await generateProximityFileEncryptionKey();
+        const encrypted = await encryptProximityFileBlob(new Blob(["hello"], { type: "text/plain" }), key);
+        let streamHandler: LiveKitProximityFileStreamHandler | undefined;
+        const transport = createReceivingTransport((handler) => {
+            streamHandler = handler;
+        });
+        const updates: ProximityFileTransferUpdate[] = [];
+        const subscription = transport.transferUpdates.subscribe((update) => updates.push(update));
+        await transport.requestDownload(
+            {
+                transferId: "transfer-1",
+                fileName: "hello.txt",
+                mimeType: "text/plain",
+                size: 5,
+                messageType: "file",
+                characterTextures: [],
+                name: undefined,
+                senderSpaceUserId: "sender",
+                sha256: "wrong-digest",
+                encryptionAlgorithm: encrypted.metadata.algorithm,
+                encryptionKeyId: "transfer-1",
+            },
+            { encryptionKey: Promise.resolve(key), encryptionMetadata: Promise.resolve(encrypted.metadata) }
+        );
+
+        await streamHandler?.(
+            {
+                info: {
+                    name: "hello.txt",
+                    mimeType: "text/plain",
+                    size: encrypted.blob.size,
+                },
+                readAll: () => Promise.resolve([encrypted.blob]),
+            },
+            "identity-sender"
+        );
+
+        expect(updates).toContainEqual({
+            transferId: "transfer-1",
+            state: "error",
+            progress: 0,
+            error: "integrity-check-failed",
+        });
+        subscription.unsubscribe();
+        vi.unstubAllGlobals();
+    });
 });
+
+function createReceivingTransport(
+    onRegister: (handler: LiveKitProximityFileStreamHandler) => void
+): LiveKitFileTransferTransport {
+    return new LiveKitFileTransferTransport({
+        localSpaceUserId: "recipient",
+        space: {
+            emitPrivateMessage: vi.fn(),
+        },
+        liveKitRoom: {
+            getIdentityForSpaceUserId: (spaceUserId) => `identity-${spaceUserId}`,
+            hasParticipant: () => true,
+            sendFileToIdentities: vi.fn().mockResolvedValue(undefined),
+            registerProximityFileHandler: (handler) => {
+                onRegister(handler);
+                return () => undefined;
+            },
+        },
+    });
+}
