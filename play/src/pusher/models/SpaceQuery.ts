@@ -7,7 +7,7 @@ export class Query {
         number,
         {
             answerType: string;
-            resolve: (message: Required<SpaceAnswerMessage>["answer"]) => void;
+            resolve: (message: NonNullable<SpaceAnswerMessage["answer"]>) => void;
             reject: (e: unknown) => void;
         }
     >();
@@ -15,14 +15,14 @@ export class Query {
 
     constructor(private readonly _space: Space) {}
 
-    public async send<T extends Required<SpaceQueryMessage>["query"]>(
+    public async send<T extends NonNullable<SpaceQueryMessage["query"]>>(
         message: T,
         options?: {
             // Timeout in milliseconds. Defaults to 10000 (10 seconds)
             timeout?: number;
             signal?: AbortSignal;
         },
-    ): Promise<Required<SpaceAnswerMessage>["answer"]> {
+    ): Promise<NonNullable<SpaceAnswerMessage["answer"]>> {
         const connection = await this._space.spaceStreamToBackPromise;
         if (!connection || connection.closed) {
             throw new Error("Connection to the back is closed");
@@ -76,7 +76,7 @@ export class Query {
         });
     }
 
-    public receiveAnswer(queryId: number, answer: Required<SpaceAnswerMessage>["answer"]) {
+    public receiveAnswer(queryId: number, answer: NonNullable<SpaceAnswerMessage["answer"]>) {
         if (answer === undefined) {
             throw new Error("Invalid message received. Answer missing.");
         }

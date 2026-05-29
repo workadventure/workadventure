@@ -268,7 +268,7 @@ export class RoomConnection implements RoomConnection {
         number,
         {
             answerType: string;
-            resolve: (message: Required<AnswerMessage>["answer"]) => void;
+            resolve: (message: NonNullable<AnswerMessage["answer"]>) => void;
             reject: (e: unknown) => void;
         }
     >();
@@ -2171,14 +2171,14 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(message);
     }
 
-    private query<T extends Required<QueryMessage>["query"]>(
+    private query<T extends NonNullable<QueryMessage["query"]>>(
         message: T,
         options?: {
             signal?: AbortSignal;
             // timeout in milliseconds, default is 15000ms
             timeout?: number;
         },
-    ): Promise<Required<AnswerMessage>["answer"]> {
+    ): Promise<NonNullable<AnswerMessage["answer"]>> {
         if (options?.signal?.aborted) {
             return Promise.reject(asError(options?.signal?.reason));
         }
@@ -2193,7 +2193,7 @@ export class RoomConnection implements RoomConnection {
         );
         const finalSignal = abortAny(signals);
 
-        return new Promise<Required<AnswerMessage>["answer"]>((resolve, reject) => {
+        return new Promise<NonNullable<AnswerMessage["answer"]>>((resolve, reject) => {
             if (!message.$case.endsWith("Query")) {
                 throw new Error("Query types are supposed to be suffixed with Query");
             }

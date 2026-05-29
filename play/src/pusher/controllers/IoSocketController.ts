@@ -30,6 +30,8 @@ import { PusherRoomSocketController } from "../services/PusherRoomSocketControll
 import { AdminWebSocketBackpressureWriter } from "../services/AdminWebSocketBackpressureWriter";
 import type { PusherWebSocket } from "../services/PusherWebSocket";
 
+type PendingAnswerMessage = Omit<AnswerMessage, "answer"> & { answer?: AnswerMessage["answer"] };
+
 const debug = Debug("pusher:requests");
 const ADMIN_WS_BACKPRESSURE_DRAIN_TIMEOUT_MS = 10_000;
 
@@ -688,7 +690,7 @@ export class IoSocketController {
                             }
                             case "queryMessage": {
                                 try {
-                                    const answerMessage: AnswerMessage = {
+                                    const answerMessage: PendingAnswerMessage = {
                                         id: message.message.queryMessage.id,
                                     };
                                     const abortController = new AbortController();
@@ -861,7 +863,7 @@ export class IoSocketController {
                                                         error.response?.status,
                                                         error.response?.data,
                                                     );
-                                                const answerMessage: AnswerMessage = {
+                                                const answerMessage: PendingAnswerMessage = {
                                                     id: message.message.queryMessage.id,
                                                 };
                                                 answerMessage.answer = {
@@ -996,11 +998,11 @@ export class IoSocketController {
                                     }
                                     const answerMessage: AnswerMessage = {
                                         id: message.message.queryMessage.id,
-                                    };
-                                    answerMessage.answer = {
-                                        $case: "error",
-                                        error: {
-                                            message: err.message,
+                                        answer: {
+                                            $case: "error",
+                                            error: {
+                                                message: err.message,
+                                            },
                                         },
                                     };
                                     this.sendAnswerMessage(socket, answerMessage);
@@ -1124,11 +1126,14 @@ export class IoSocketController {
         });
     }
 
-    private sendAnswerMessage(socket: PusherWebSocket, answerMessage: AnswerMessage) {
+    private sendAnswerMessage(socket: PusherWebSocket, answerMessage: PendingAnswerMessage) {
         if (socket.isDisconnecting()) {
             // Avoid leaking Map entries when we bail out before scheduling the delayed delete below.
             socket.getUserData().queryAbortControllers.delete(answerMessage.id);
             return;
+        }
+        if (answerMessage.answer === undefined) {
+            throw new Error("Invalid answer message. Answer missing.");
         }
         // We don't delete the abort controller right away because between the moment where we send the answer
         // and the moment where it is received by the client, the client could send an abort message.
@@ -1136,10 +1141,14 @@ export class IoSocketController {
         setTimeout(() => {
             socket.getUserData().queryAbortControllers.delete(answerMessage.id);
         }, 5000);
+        const completeAnswerMessage: AnswerMessage = {
+            id: answerMessage.id,
+            answer: answerMessage.answer,
+        };
         socket.send({
             message: {
                 $case: "answerMessage",
-                answerMessage,
+                answerMessage: completeAnswerMessage,
             },
         });
     }
