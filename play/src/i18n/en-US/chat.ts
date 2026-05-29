@@ -181,6 +181,7 @@ const chat: BaseTranslation = {
     notification: {
         discussion: "wants to discuss with you",
         message: "sends a message",
+        file: "sent a file: {fileName}",
         forum: "on the forum",
         in: "in",
     },

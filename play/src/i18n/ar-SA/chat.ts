@@ -180,6 +180,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     notification: {
         discussion: "يريد مناقشة معك",
         message: "يرسل رسالة",
+        file: "أرسل ملفًا: {fileName}",
         forum: "في المنتدى",
         in: "في",
     },
