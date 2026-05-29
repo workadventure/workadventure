@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
     import type { AvailabilityStatus } from "@workadventure/messages";
-    import { onDestroy } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { wokaMenuStore, wokaMenuProgressStore } from "../../Stores/WokaMenuStore";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import VisitCard from "../VisitCard/VisitCard.svelte";
@@ -11,6 +11,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { getColorHexOfStatus, getStatusLabel } from "../../Utils/AvailabilityStatus";
     import type { WokaMenuAction, WokaMenuData } from "../../Stores/WokaMenuStore";
+    import { startMovingEventName } from "../../Phaser/Player/Player";
 
     let wokaMenuData: WokaMenuData | undefined;
     let sortedActions: WokaMenuAction[] | undefined;
@@ -63,7 +64,16 @@
         }
     });
 
+    const onStartMoving = () => {
+        wokaMenuStore.clear();
+    };
+
+    onMount(() => {
+        gameManager.getCurrentGameScene().CurrentPlayer.on(startMovingEventName, onStartMoving);
+    });
+
     onDestroy(() => {
+        gameManager.getCurrentGameScene().CurrentPlayer.off(startMovingEventName, onStartMoving);
         if (wokaMenuStoreUnsubscriber) {
             wokaMenuStoreUnsubscriber();
         }
