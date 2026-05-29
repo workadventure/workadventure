@@ -181,8 +181,10 @@ export class AuthenticateController extends BaseHttpController {
          */
 
         this.app.get("/me", async (req, res) => {
-            debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const IPAddress = getClientIpFromXForwardedFor(req.header("x-forwarded-for"));
+            debug(
+                `AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${IPAddress} — Time: ${Date.now()}`
+            );
             const query = validateQuery(req, res, MeRequest);
             if (query === undefined) {
                 return;
