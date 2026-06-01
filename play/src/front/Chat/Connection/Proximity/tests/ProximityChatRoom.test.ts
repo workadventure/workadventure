@@ -304,7 +304,7 @@ class SingleFileList implements FileList {
         return index === 0 ? this[0] : null;
     }
 
-    *[Symbol.iterator](): IterableIterator<File> {
-        yield this[0];
+    [Symbol.iterator](): ArrayIterator<File> {
+        return [this[0]][Symbol.iterator]();
     }
 }
