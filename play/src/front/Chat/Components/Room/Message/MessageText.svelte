@@ -4,6 +4,7 @@
     import { onDestroy, onMount } from "svelte";
     import type { ChatMessageContent } from "../../../Connection/ChatConnection";
     import { sanitizeHTML } from "./WA-HTML-Sanitizer";
+
     interface Props {
         content: Readable<ChatMessageContent>;
         hasDepth: false;
@@ -36,9 +37,9 @@
 
         // Custom renderer for links
         const renderer = new marked.Renderer();
-        renderer.link = ({ href, title, tokens }) => {
+        renderer.link = function ({ href, title, tokens }) {
             const titleAttr = title ? `title="${title}"` : "";
-            const text = renderer.parser.parseInline(tokens);
+            const text = this.parser.parseInline(tokens);
             return `<a href="${href}" target="_blank" rel="noopener noreferrer" ${titleAttr} style="color: white;">${text}</a>`;
         };
 

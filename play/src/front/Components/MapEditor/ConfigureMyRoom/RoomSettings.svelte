@@ -23,7 +23,7 @@
     let thumbnail = "";
     let copyright = $state("");
     let tags: InputTagOption[] = $state([]);
-    let _tag: InputTagOption[] = [
+    let _tag: InputTagOption[] = $state([
         {
             value: "member",
             label: "member",
@@ -34,7 +34,7 @@
             label: "admin",
             created: false,
         },
-    ];
+    ]);
 
     let confirmSaving = writable<boolean>(false);
 
@@ -43,10 +43,13 @@
         description = gameManager.getCurrentGameScene()?.wamFile?.metadata?.description ?? "";
         thumbnail = gameManager.getCurrentGameScene()?.wamFile?.metadata?.thumbnail ?? "";
         copyright = gameManager.getCurrentGameScene()?.wamFile?.metadata?.copyright ?? "";
-        (gameManager.getCurrentGameScene()?.wamFile?.vendor as { tags: string[] })?.tags?.forEach((tag) => {
-            tags.push({ value: tag, label: tag, created: false });
-            _tag.push({ value: tag, label: tag, created: false });
-        });
+        const vendorTags =
+            (gameManager.getCurrentGameScene()?.wamFile?.vendor as { tags: string[] } | undefined)?.tags?.map(
+                (tag) => ({ value: tag, label: tag, created: false }),
+            ) ?? [];
+
+        tags = vendorTags;
+        _tag = [..._tag, ...vendorTags];
     });
 
     async function save(): Promise<string> {

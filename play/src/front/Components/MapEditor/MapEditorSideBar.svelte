@@ -13,19 +13,19 @@
     import type { WorkAdventureComponent } from "../../../types/component";
     import { IconX, IconTexture, IconLamp, IconMapSearch, IconSettings, IconTrash } from "@wa-icons";
 
-    const availableTools: {
+    type SideBarTool = {
         toolName: EditorToolName;
         iconComponent: WorkAdventureComponent;
         tooltiptext: LocalizedString;
-    }[] = [];
+    };
 
     const direction = document.documentElement.getAttribute("dir") || "ltr";
 
-    availableTools.push({
+    const exploreTheRoomTool = {
         toolName: EditorToolName.ExploreTheRoom,
         iconComponent: IconMapSearch,
         tooltiptext: $LL.mapEditor.sideBar.exploreTheRoom(),
-    });
+    };
 
     const entityEditorTool = {
         toolName: EditorToolName.EntityEditor,
@@ -38,28 +38,29 @@
         tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
     };
 
-    $effect(() => {
-        if ($mapEditorActivatedForThematics && !$mapEditorActivated) {
-            availableTools.push(entityEditorTool);
-            availableTools.push(trashEditorTool);
-        }
-    });
+    let availableTools = $derived.by<SideBarTool[]>(() => {
+        const tools: SideBarTool[] = [exploreTheRoomTool];
 
-    $effect(() => {
+        if ($mapEditorActivatedForThematics && !$mapEditorActivated) {
+            tools.push(entityEditorTool, trashEditorTool);
+        }
+
         if ($mapEditorActivated && !isMobile) {
-            availableTools.push({
+            tools.push({
                 toolName: EditorToolName.AreaEditor,
                 iconComponent: IconTexture,
                 tooltiptext: $LL.mapEditor.sideBar.areaEditor(),
             });
-            availableTools.push(entityEditorTool);
-            availableTools.push({
+            tools.push(entityEditorTool);
+            tools.push({
                 toolName: EditorToolName.WAMSettingsEditor,
                 iconComponent: IconSettings,
                 tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
             });
-            availableTools.push(trashEditorTool);
+            tools.push(trashEditorTool);
         }
+
+        return tools;
     });
 
     function switchTool(newTool: EditorToolName) {

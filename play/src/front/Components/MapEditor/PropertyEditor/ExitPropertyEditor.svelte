@@ -39,14 +39,15 @@
         const response = await gameManager.getCurrentGameScene().connection?.queryRoomsFromSameWorld();
 
         if (response) {
+            const nextMapsUrl = new Map(mapsUrl);
             for (const room of response) {
                 //const url = new URL(room.url);
-                mapsUrl.set(room.roomUrl, {
+                nextMapsUrl.set(room.roomUrl, {
                     name: room.name,
                     wamUrl: room.wamUrl,
                 });
             }
-            mapsUrl = mapsUrl;
+            mapsUrl = nextMapsUrl;
         }
     }
 
