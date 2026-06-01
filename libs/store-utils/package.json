@@ -20,7 +20,6 @@
   "author": "WorkAdventure",
   "license": "ISC",
   "devDependencies": {
-    "@tsconfig/svelte": "^5.0.8",
     "@types/debug": "^4.1.13",
     "@types/node": "^25.9.1",
     "@workadventure/eslint-config": "1.0.0",
