@@ -93,8 +93,8 @@ export function decodeProximityFileChunkFrame(frame: ArrayBuffer | ArrayBufferVi
     }
 
     return {
-        transferId: textDecoder.decode(bytes.slice(HEADER_LENGTH, chunkOffset)),
-        chunk: toArrayBufferBackedUint8Array(bytes.slice(chunkOffset)),
+        transferId: textDecoder.decode(bytes.subarray(HEADER_LENGTH, chunkOffset)),
+        chunk: toArrayBufferBackedUint8Array(bytes.subarray(chunkOffset)),
     };
 }
 
