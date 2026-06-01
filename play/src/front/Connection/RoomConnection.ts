@@ -2174,7 +2174,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    // force is used to send a message before the room is joined, when the room is joined, the messages are sent in the correct order , useful for joinRoomFrontMessage
+    // "force" bypasses pre-join queuing for messages that must be sent before the room is joined (e.g. joinRoomFrontMessage).
     private send(message: ClientToServerMessageTsProto, force: boolean = false): void {
         if (this._closed) {
             console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
@@ -2243,7 +2243,7 @@ export class RoomConnection implements RoomConnection {
                     resolve: () => {},
                     reject: () => {},
                 });
-                // After 10 seconds, let's remove the query to avoid memory leaks. If the answer arrives after that, we will have a warning in the console, but it's better than a memory leak.
+                // After 35 seconds, let's remove the query to avoid memory leaks. If the answer arrives after that, we will have a warning in the console, but it's better than a memory leak.
                 setTimeout(() => {
                     this.queries.delete(queryId);
                 }, 35000);
