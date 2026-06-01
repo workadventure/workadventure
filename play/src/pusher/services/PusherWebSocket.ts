@@ -119,7 +119,7 @@ export class PusherWebSocket {
         return this.socket.ping(...args);
     }
 
-    public end(...args: Parameters<RawSocket["end"]>): ReturnType<RawSocket["end"]> {
+    public end(...args: Parameters<RawSocket["end"]>): void {
         if (this._isDisconnecting) {
             console.trace("end already called on websocket");
             return;
@@ -127,8 +127,11 @@ export class PusherWebSocket {
         this._isDisconnecting = true;
         this.stopKeepAlive();
         this.stopBatching();
-        // TODO: send last batched messages?
-        return this.socket.end(...args);
+
+        if (this.transportAvailable) {
+            // TODO: send last batched messages?
+            return this.socket.end(...args);
+        }
     }
 
     public getBufferedAmount(): number {
