@@ -87,6 +87,7 @@ import {
     type ProximityFileTransferSpace,
     type ProximityFileTransferUpdate,
 } from "./ProximityFileTransferService";
+import { estimateProximityFileTransferRemainingSeconds } from "./ProximityFileTransferEta";
 
 const debug = Debug("ProximityChatRoom");
 
@@ -248,6 +249,7 @@ export class ProximityChatRoom implements ChatRoom {
     private fileTransferMessages = new Map<string, ProximityChatMessage>();
     private fileTransferContents = new Map<string, Writable<ChatMessageContent>>();
     private fileTransferObjectUrls = new Set<string>();
+    private fileTransferDownloadStartedAt = new Map<string, number>();
     private screenWakeRelease: undefined | (() => Promise<void>);
 
     constructor(
@@ -514,6 +516,7 @@ export class ProximityChatRoom implements ChatRoom {
                 url: objectUrl,
                 mediaState: "ready",
                 mediaProgress: 1,
+                mediaEstimatedRemainingSeconds: undefined,
             });
             if (message) {
                 message.id = offer.transferId;
@@ -963,33 +966,55 @@ export class ProximityChatRoom implements ChatRoom {
         }
 
         if (update.state === "ready") {
+            this.fileTransferDownloadStartedAt.delete(update.transferId);
             this.fileTransferObjectUrls.add(update.url);
             content.update((currentContent) => ({
                 ...currentContent,
                 url: update.url,
                 mediaState: "ready",
                 mediaProgress: 1,
+                mediaEstimatedRemainingSeconds: undefined,
                 mediaErrorKind: undefined,
             }));
             return;
         }
 
         if (update.state === "error") {
+            this.fileTransferDownloadStartedAt.delete(update.transferId);
             content.update((currentContent) => ({
                 ...currentContent,
                 mediaState: currentContent.url !== undefined ? "ready" : "error",
                 mediaProgress: update.progress,
+                mediaEstimatedRemainingSeconds: undefined,
                 mediaErrorKind: currentContent.url !== undefined ? undefined : "download",
             }));
             return;
         }
 
+        const mediaEstimatedRemainingSeconds =
+            update.state === "downloading"
+                ? this.estimateFileTransferRemainingSeconds(update.transferId, update.progress)
+                : undefined;
+        if (update.state !== "downloading") {
+            this.fileTransferDownloadStartedAt.delete(update.transferId);
+        }
         content.update((currentContent) => ({
             ...currentContent,
             mediaState: update.state === "pending" ? "pendingDownload" : "loading",
             mediaProgress: update.progress,
+            mediaEstimatedRemainingSeconds,
             mediaErrorKind: undefined,
         }));
+    }
+
+    private estimateFileTransferRemainingSeconds(transferId: string, progress: number): number | undefined {
+        let startedAt = this.fileTransferDownloadStartedAt.get(transferId);
+        if (startedAt === undefined) {
+            startedAt = Date.now();
+            this.fileTransferDownloadStartedAt.set(transferId, startedAt);
+        }
+
+        return estimateProximityFileTransferRemainingSeconds(progress, Date.now() - startedAt);
     }
 
     private refuseIncomingFileOffer(transferId: string): Promise<void> {
@@ -1007,6 +1032,7 @@ export class ProximityChatRoom implements ChatRoom {
                 ...currentContent,
                 mediaState: "refused",
                 mediaProgress: 0,
+                mediaEstimatedRemainingSeconds: undefined,
                 mediaErrorKind: undefined,
             };
         });
@@ -1839,6 +1865,7 @@ export class ProximityChatRoom implements ChatRoom {
         this.fileTransferService = undefined;
         this.fileTransferMessages.clear();
         this.fileTransferContents.clear();
+        this.fileTransferDownloadStartedAt.clear();
         for (const objectUrl of this.fileTransferObjectUrls) {
             URL.revokeObjectURL(objectUrl);
         }

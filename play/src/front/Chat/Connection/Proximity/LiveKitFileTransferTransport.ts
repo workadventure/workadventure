@@ -28,6 +28,7 @@ export type LiveKitProximityFileStream = {
         mimeType?: string;
         size?: number;
     };
+    onProgress?: (progress: number | undefined) => void;
     readAll(): Promise<BlobPart[]>;
 };
 
@@ -201,6 +202,16 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
         }
 
         this.transferUpdateSubject.next({ transferId, state: "downloading", progress: 0 });
+        reader.onProgress = (progress) => {
+            if (progress === undefined || !Number.isFinite(progress)) {
+                return;
+            }
+            this.transferUpdateSubject.next({
+                transferId,
+                state: "downloading",
+                progress: Math.min(Math.max(progress, 0), 1),
+            });
+        };
         const chunks = await reader.readAll();
         const blob = await this.createVerifiedBlob(chunks, expectedDownload);
         if (!blob) {
