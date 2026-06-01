@@ -136,11 +136,11 @@ test.describe("Areas @nomobile", () => {
 
         // Let's first check the onEnter is triggered when we are already in the area when we subscribe.
         await expect(page.getByText("Welcome to MyNewArea")).toBeVisible();
-        await page.getByRole("button", { name: "Close" }).first().click();
+        await page.getByText("Welcome to MyNewArea").click();
         // Let's move out
         await Map.teleportToPosition(page, 9 * 32, 9 * 32);
         await expect(page.getByText("Goodbye MyNewArea")).toBeVisible();
-        await page.getByRole("button", { name: "Close" }).click();
+        await page.getByText("Goodbye MyNewArea").click();
         await expect(page.locator("span.characterTriggerAction")).toBeHidden();
 
         // Let's move back in
