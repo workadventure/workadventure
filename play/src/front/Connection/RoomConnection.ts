@@ -275,6 +275,9 @@ export class RoomConnection implements RoomConnection {
     private lastQueryId = 0;
     private roomConnectedMessageReceived: boolean = false;
     private joinRoomEmitted: boolean = false;
+    private isRoomJoined: boolean = false;
+
+    private eventBeforeRoomJoinedQueue: ClientToServerMessageTsProto[] = [];
 
     /**
      *
@@ -589,6 +592,12 @@ export class RoomConnection implements RoomConnection {
                         areaPropertyVariables,
                         applications: applications,
                     } as RoomJoinedMessageInterface);
+                    this.isRoomJoined = true;
+
+                    for (const event of this.eventBeforeRoomJoinedQueue) {
+                        this.send(event);
+                    }
+                    this.eventBeforeRoomJoinedQueue = [];
 
                     break;
                 }
@@ -855,22 +864,25 @@ export class RoomConnection implements RoomConnection {
         availabilityStatus: AvailabilityStatus
     ): void {
         this.joinRoomEmitted = true;
-        this.send({
-            message: {
-                $case: "joinRoomFrontMessage",
-                joinRoomFrontMessage: {
-                    name,
-                    positionMessage: this.toPositionMessage(
-                        position.x,
-                        position.y,
-                        position.direction,
-                        position.moving
-                    ),
-                    viewportMessage: this.toViewportMessage(viewport),
-                    availabilityStatus,
+        this.send(
+            {
+                message: {
+                    $case: "joinRoomFrontMessage",
+                    joinRoomFrontMessage: {
+                        name,
+                        positionMessage: this.toPositionMessage(
+                            position.x,
+                            position.y,
+                            position.direction,
+                            position.moving
+                        ),
+                        viewportMessage: this.toViewportMessage(viewport),
+                        availabilityStatus,
+                    },
                 },
             },
-        });
+            true
+        );
     }
 
     public emitPlayerShowVoiceIndicator(show: boolean): void {
@@ -2162,9 +2174,16 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    private send(message: ClientToServerMessageTsProto): void {
+    // force is used to send a message before the room is joined, when the room is joined, the messages are sent in the correct order , useful for joinRoomFrontMessage
+    private send(message: ClientToServerMessageTsProto, force: boolean = false): void {
         if (this._closed) {
             console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
+            return;
+        }
+
+        if (!this.isRoomJoined && !force) {
+            this.eventBeforeRoomJoinedQueue.push(message);
+            Sentry.captureMessage("RoomConnection: Event before room joined queue: " + message.message?.$case);
             return;
         }
 
@@ -2227,7 +2246,7 @@ export class RoomConnection implements RoomConnection {
                 // After 10 seconds, let's remove the query to avoid memory leaks. If the answer arrives after that, we will have a warning in the console, but it's better than a memory leak.
                 setTimeout(() => {
                     this.queries.delete(queryId);
-                }, 10000);
+                }, 35000);
                 reject(new AbortError());
             };
 
