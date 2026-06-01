@@ -362,7 +362,16 @@ export class S3FileSystem implements FileSystemInterface {
                         // we do not want cache file to be downloaded
                         continue;
                     }
-                    archive.entry(Body as Readable, { name: key.substring(virtualPath.length) });
+
+                    await new Promise<void>((resolve, reject) => {
+                        archive.entry(Body as Readable, { name: key.substring(virtualPath.length) }, (err) => {
+                            if (err) {
+                                reject(err);
+                                return;
+                            }
+                            resolve();
+                        });
+                    });
                 }
             }
             continuationToken = listObjectsResponse.NextContinuationToken;
