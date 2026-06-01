@@ -1,4 +1,4 @@
-import { GameObjects, type Loader } from "phaser";
+import * as Phaser from "phaser";
 import { z } from "zod";
 import type { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import { ActionableItem } from "../ActionableItem";
@@ -15,7 +15,7 @@ let state: ComputerState = {
 };
 
 export default {
-    preload: (loader: Loader.LoaderPlugin): void => {
+    preload: (loader: Phaser.Loader.LoaderPlugin): void => {
         loader.atlas(
             "computer",
             "/resources/items/computer/computer.png",
@@ -62,7 +62,7 @@ export default {
             }
         }
 
-        const computer = new GameObjects.Sprite(scene, object.x, object.y, "computer");
+        const computer = new Phaser.GameObjects.Sprite(scene, object.x, object.y, "computer");
         scene.add.existing(computer);
         if (state.status === "on") {
             computer.anims.play("computer_run");

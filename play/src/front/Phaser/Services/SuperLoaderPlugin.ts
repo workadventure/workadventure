@@ -1,5 +1,5 @@
 import { CancelablePromise } from "cancelable-promise";
-import type { Scene } from "phaser";
+import * as Phaser from "phaser";
 import Debug from "debug";
 import Texture = Phaser.Textures.Texture;
 
@@ -13,7 +13,7 @@ const debug = Debug("SuperLoad");
  * So there is no risk of trying to add a resource on a closed scene.
  */
 export class SuperLoaderPlugin {
-    constructor(private scene: Scene) {}
+    constructor(private scene: Phaser.Scene) {}
 
     /**
      * Add any promise to the loader.

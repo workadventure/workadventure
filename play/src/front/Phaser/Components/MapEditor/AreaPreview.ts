@@ -6,7 +6,7 @@ import type {
     AreaDescriptionPropertyData,
     AtLeast,
 } from "@workadventure/map-editor";
-import { GameObjects } from "phaser";
+import * as Phaser from "phaser";
 import { get } from "svelte/store";
 import { DEPTH_MAP_EDITOR_AREAS_INDEX } from "../../Game/DepthIndexes";
 import { GameScene } from "../../Game/GameScene";
@@ -44,7 +44,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
     private shiftKey?: Phaser.Input.Keyboard.Key;
     private ctrlKey?: Phaser.Input.Keyboard.Key;
-    private propertiesIcon: GameObjects.Image[] = [];
+    private propertiesIcon: Phaser.GameObjects.Image[] = [];
 
     private speechDomElement: SpeechDomElement | null = null;
 
@@ -226,7 +226,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
     public resetColor() {
         if (this.areaData != undefined) {
-            this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.destroy());
+            this.propertiesIcon.forEach((icon: Phaser.GameObjects.Image) => icon.destroy());
             let counter = 0;
             if (this.areaData.properties.length > 0) {
                 let color = "FFFFFF";
@@ -235,7 +235,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     if (iconProperties.name !== "") {
                         color = iconProperties.color;
                     }
-                    const icon = new GameObjects.Image(
+                    const icon = new Phaser.GameObjects.Image(
                         this.scene,
                         (this.getTopLeft().x ?? 0) + 10 + counter * 15,
                         (this.getTopLeft().y ?? 0) + 10,
@@ -255,14 +255,14 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     private showPropertiesIcon(value: boolean) {
-        this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.setVisible(value));
+        this.propertiesIcon.forEach((icon: Phaser.GameObjects.Image) => icon.setVisible(value));
     }
 
     private drawAreaPreviewFromAreaData(areaData: AreaData | AtLeast<AreaData, "id">): void {
         if (areaData.properties !== undefined) {
             this.areaData.properties = areaData.properties;
 
-            this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.destroy());
+            this.propertiesIcon.forEach((icon: Phaser.GameObjects.Image) => icon.destroy());
             let color = "FFFFFF";
             let counter = 0;
             for (const property of this.areaData.properties) {
@@ -270,7 +270,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 if (iconProperties.name !== "") {
                     color = iconProperties.color;
                 }
-                const icon = new GameObjects.Image(
+                const icon = new Phaser.GameObjects.Image(
                     this.scene,
                     (this.getTopLeft().x ?? 0) + 10 + counter * 15,
                     (this.getTopLeft().y ?? 0) + 10,
