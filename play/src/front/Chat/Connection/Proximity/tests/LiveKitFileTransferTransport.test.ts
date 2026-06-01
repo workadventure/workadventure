@@ -1,8 +1,11 @@
 import type { PrivateSpaceEvent } from "@workadventure/messages";
 import { describe, expect, it, vi } from "vitest";
-import { LiveKitFileTransferTransport } from "../LiveKitFileTransferTransport";
+import { getProximityFileTransferLiveKitTopic, LiveKitFileTransferTransport } from "../LiveKitFileTransferTransport";
 import type { LiveKitProximityFileStreamHandler } from "../LiveKitFileTransferTransport";
-import type { ProximityFileTransferUpdate } from "../ProximityFileTransferTransport";
+import type {
+    IncomingProximityFileTransferOffer,
+    ProximityFileTransferUpdate,
+} from "../ProximityFileTransferTransport";
 import {
     encryptProximityFileBlob,
     generateProximityFileEncryptionKey,
@@ -43,9 +46,8 @@ describe("LiveKitFileTransferTransport", () => {
         await vi.advanceTimersByTimeAsync(1_000);
 
         expect(sendFileToIdentities).toHaveBeenCalledWith(file, {
-            transferId: "transfer-1",
             destinationIdentities: ["identity-recipient-1", "identity-recipient-2"],
-            topic: "wa:proximity-file-transfer",
+            topic: getProximityFileTransferLiveKitTopic("transfer-1"),
         });
         vi.useRealTimers();
     });
@@ -99,7 +101,7 @@ describe("LiveKitFileTransferTransport", () => {
                 getIdentityForSpaceUserId: (spaceUserId) => `identity-${spaceUserId}`,
                 hasParticipant: () => true,
                 sendFileToIdentities: vi.fn().mockResolvedValue(undefined),
-                registerProximityFileHandler: (handler) => {
+                registerProximityFileHandler: (_topic, handler) => {
                     streamHandler = handler;
                     return () => undefined;
                 },
@@ -134,6 +136,62 @@ describe("LiveKitFileTransferTransport", () => {
             { transferId: "transfer-1", state: "downloading", progress: 0 },
             expect.objectContaining({ transferId: "transfer-1", state: "ready", progress: 1 }),
         ]);
+        subscription.unsubscribe();
+        vi.unstubAllGlobals();
+    });
+
+    it("should route same-name LiveKit streams by transfer topic", async () => {
+        vi.stubGlobal("URL", { createObjectURL: vi.fn((blob: Blob) => `blob:${blob.size}`) });
+        const streamHandlers = new Map<string, LiveKitProximityFileStreamHandler>();
+        const transport = new LiveKitFileTransferTransport({
+            localSpaceUserId: "recipient",
+            space: {
+                emitPrivateMessage: vi.fn(),
+            },
+            liveKitRoom: {
+                getIdentityForSpaceUserId: (spaceUserId) => `identity-${spaceUserId}`,
+                hasParticipant: () => true,
+                sendFileToIdentities: vi.fn().mockResolvedValue(undefined),
+                registerProximityFileHandler: (topic, handler) => {
+                    streamHandlers.set(topic, handler);
+                    return () => {
+                        streamHandlers.delete(topic);
+                    };
+                },
+            },
+        });
+        const updates: ProximityFileTransferUpdate[] = [];
+        const subscription = transport.transferUpdates.subscribe((update) => updates.push(update));
+        const baseOffer: Omit<IncomingProximityFileTransferOffer, "transferId"> = {
+            fileName: "hello.txt",
+            mimeType: "text/plain",
+            size: 5,
+            messageType: "file",
+            characterTextures: [],
+            name: undefined,
+            senderSpaceUserId: "sender",
+        };
+        await transport.requestDownload({ ...baseOffer, transferId: "transfer-1" });
+        await transport.requestDownload({ ...baseOffer, transferId: "transfer-2" });
+
+        await streamHandlers.get(getProximityFileTransferLiveKitTopic("transfer-2"))?.(
+            {
+                info: {
+                    name: "hello.txt",
+                    mimeType: "text/plain",
+                    size: 5,
+                },
+                readAll: () => Promise.resolve(["hello"]),
+            },
+            "identity-sender"
+        );
+
+        expect(updates).toEqual([
+            { transferId: "transfer-2", state: "downloading", progress: 0 },
+            expect.objectContaining({ transferId: "transfer-2", state: "ready", progress: 1 }),
+        ]);
+        expect(streamHandlers.has(getProximityFileTransferLiveKitTopic("transfer-1"))).toBe(true);
+        expect(streamHandlers.has(getProximityFileTransferLiveKitTopic("transfer-2"))).toBe(false);
         subscription.unsubscribe();
         vi.unstubAllGlobals();
     });
@@ -248,7 +306,7 @@ function createReceivingTransport(
             getIdentityForSpaceUserId: (spaceUserId) => `identity-${spaceUserId}`,
             hasParticipant: () => true,
             sendFileToIdentities: vi.fn().mockResolvedValue(undefined),
-            registerProximityFileHandler: (handler) => {
+            registerProximityFileHandler: (_topic, handler) => {
                 onRegister(handler);
                 return () => undefined;
             },
