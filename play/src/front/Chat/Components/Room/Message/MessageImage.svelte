@@ -2,6 +2,7 @@
     import type { Readable } from "svelte/store";
     import LL from "../../../../../i18n/i18n-svelte";
     import type { ChatMessage, ChatMessageContent } from "../../../Connection/ChatConnection";
+    import { formatProximityFileTransferRemainingTime } from "../../../Connection/Proximity/ProximityFileTransferEta";
     import ChatImagePreviewModal from "../../ChatImagePreviewModal.svelte";
     import { modals } from "@wa-modals";
 
@@ -15,6 +16,11 @@
     let previewUrl = $derived($content.url ?? $content.thumbnailUrl);
     let displayUrl = $derived($content.thumbnailUrl ?? $content.url);
     let canDisplayImage = $derived(displayUrl !== undefined);
+    let estimatedRemainingTime = $derived(
+        $content.mediaEstimatedRemainingSeconds === undefined
+            ? undefined
+            : formatProximityFileTransferRemainingTime($content.mediaEstimatedRemainingSeconds),
+    );
 
     function openImagePreview(url: string, alt: string | undefined) {
         modals.open(ChatImagePreviewModal, { url, alt });
@@ -106,6 +112,9 @@
             {$LL.chat.imagePreview.loading()}
             {#if $content.mediaProgress !== undefined}
                 {Math.round($content.mediaProgress * 100)}%
+            {/if}
+            {#if estimatedRemainingTime !== undefined}
+                · {$LL.chat.file.remainingTime({ time: estimatedRemainingTime })}
             {/if}
         </div>
     {:else if $content.mediaState === "refused"}

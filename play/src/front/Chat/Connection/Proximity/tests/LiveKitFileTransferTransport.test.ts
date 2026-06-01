@@ -140,6 +140,51 @@ describe("LiveKitFileTransferTransport", () => {
         vi.unstubAllGlobals();
     });
 
+    it("should forward LiveKit stream progress while reading", async () => {
+        vi.stubGlobal("URL", { createObjectURL: vi.fn().mockReturnValue("blob:transfer-1") });
+        let streamHandler: LiveKitProximityFileStreamHandler | undefined;
+        const transport = createReceivingTransport((handler) => {
+            streamHandler = handler;
+        });
+        const updates: ProximityFileTransferUpdate[] = [];
+        const subscription = transport.transferUpdates.subscribe((update) => updates.push(update));
+        await transport.requestDownload({
+            transferId: "transfer-1",
+            fileName: "hello.txt",
+            mimeType: "text/plain",
+            size: 10,
+            messageType: "file",
+            characterTextures: [],
+            name: undefined,
+            senderSpaceUserId: "sender",
+        });
+        const stream: {
+            info: { name: string; mimeType: string; size: number };
+            onProgress?: (progress: number | undefined) => void;
+            readAll(): Promise<BlobPart[]>;
+        } = {
+            info: {
+                name: "hello.txt",
+                mimeType: "text/plain",
+                size: 10,
+            },
+            readAll() {
+                stream.onProgress?.(0.4);
+                return Promise.resolve(["hello"]);
+            },
+        };
+
+        await streamHandler?.(stream, "identity-sender");
+
+        expect(updates).toEqual([
+            { transferId: "transfer-1", state: "downloading", progress: 0 },
+            { transferId: "transfer-1", state: "downloading", progress: 0.4 },
+            expect.objectContaining({ transferId: "transfer-1", state: "ready", progress: 1 }),
+        ]);
+        subscription.unsubscribe();
+        vi.unstubAllGlobals();
+    });
+
     it("should route same-name LiveKit streams by transfer topic", async () => {
         vi.stubGlobal("URL", { createObjectURL: vi.fn((blob: Blob) => `blob:${blob.size}`) });
         const streamHandlers = new Map<string, LiveKitProximityFileStreamHandler>();

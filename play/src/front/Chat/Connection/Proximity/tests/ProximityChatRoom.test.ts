@@ -7,6 +7,7 @@ import { chatVisibilityStore, intentionallyClosedChatDuringMeetingStore } from "
 import { chatNotificationStore } from "../../../../Stores/ProximityNotificationStore";
 import { selectedRoomStore } from "../../../Stores/SelectRoomStore";
 import type { IncomingProximityFileTransferOffer, ProximityFileTransferUpdate } from "../ProximityFileTransferService";
+import { formatProximityFileTransferRemainingTime } from "../ProximityFileTransferEta";
 import { ProximityChatRoom } from "../ProximityChatRoom";
 
 vi.mock("../../../../Phaser/Game/GameManager", () => ({
@@ -148,6 +149,85 @@ describe("ProximityChatRoom file transfers", () => {
         });
     });
 
+    it("should estimate remaining time only after download progress is stable enough", () => {
+        vi.useFakeTimers();
+        try {
+            const room = createRoom();
+            Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+            vi.setSystemTime(new Date("2024-01-01T00:00:00.000Z"));
+
+            Reflect.get(room, "applyFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                state: "downloading",
+                progress: 0,
+            } satisfies ProximityFileTransferUpdate);
+            Reflect.get(room, "applyFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                state: "downloading",
+                progress: 0.5,
+            } satisfies ProximityFileTransferUpdate);
+
+            const [message] = get(room.messages);
+            expect(get(message.content).mediaEstimatedRemainingSeconds).toBeUndefined();
+
+            vi.setSystemTime(new Date("2024-01-01T00:00:02.000Z"));
+            Reflect.get(room, "applyFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                state: "downloading",
+                progress: 0.04,
+            } satisfies ProximityFileTransferUpdate);
+            expect(get(message.content).mediaEstimatedRemainingSeconds).toBeUndefined();
+
+            Reflect.get(room, "applyFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                state: "downloading",
+                progress: 0.5,
+            } satisfies ProximityFileTransferUpdate);
+
+            expect(get(message.content)).toMatchObject({
+                mediaState: "loading",
+                mediaProgress: 0.5,
+                mediaEstimatedRemainingSeconds: 2,
+            });
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("should clear estimated remaining time when a transfer stops loading", () => {
+        vi.useFakeTimers();
+        try {
+            const room = createRoom();
+            Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+            vi.setSystemTime(new Date("2024-01-01T00:00:00.000Z"));
+            Reflect.get(room, "applyFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                state: "downloading",
+                progress: 0,
+            } satisfies ProximityFileTransferUpdate);
+            vi.setSystemTime(new Date("2024-01-01T00:00:02.000Z"));
+            Reflect.get(room, "applyFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                state: "downloading",
+                progress: 0.5,
+            } satisfies ProximityFileTransferUpdate);
+
+            const [message] = get(room.messages);
+            expect(get(message.content).mediaEstimatedRemainingSeconds).toBe(2);
+
+            Reflect.get(room, "applyFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                state: "error",
+                progress: 0.5,
+                error: "unavailable",
+            } satisfies ProximityFileTransferUpdate);
+
+            expect(get(message.content).mediaEstimatedRemainingSeconds).toBeUndefined();
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
     it("should mark an incoming file transfer request as refused locally", async () => {
         const room = createRoom();
         Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
@@ -191,6 +271,20 @@ describe("ProximityChatRoom file transfers", () => {
         ]);
         await sendPromise;
         vi.unstubAllGlobals();
+    });
+});
+
+describe("formatProximityFileTransferRemainingTime", () => {
+    it("should format valid remaining times with stable short units", () => {
+        expect(formatProximityFileTransferRemainingTime(45)).toBe("45 s");
+        expect(formatProximityFileTransferRemainingTime(61)).toBe("2 min");
+        expect(formatProximityFileTransferRemainingTime(3_601)).toBe("2 h");
+    });
+
+    it("should ignore invalid remaining times", () => {
+        expect(formatProximityFileTransferRemainingTime(0)).toBeUndefined();
+        expect(formatProximityFileTransferRemainingTime(Number.NaN)).toBeUndefined();
+        expect(formatProximityFileTransferRemainingTime(Number.POSITIVE_INFINITY)).toBeUndefined();
     });
 });
 

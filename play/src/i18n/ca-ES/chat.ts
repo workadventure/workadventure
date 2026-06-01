@@ -277,6 +277,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         download: "descarregar",
         openCoWebsite: "Obrir en co-website",
         loadingAttachment: "S'està carregant el fitxer adjunt...",
+        remainingTime: "queden ~{time}",
         attachmentDownloadError: "No s'ha pogut descarregar aquest fitxer adjunt.",
         attachmentDecryptError: "No s'ha pogut desxifrar aquest fitxer adjunt.",
         copy: "copiar l'enllaç",

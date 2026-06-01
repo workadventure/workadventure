@@ -329,6 +329,7 @@ export type ChatMessageContent = {
     thumbnailUrl?: string;
     mediaState?: "ready" | "pendingDownload" | "loading" | "error" | "refused";
     mediaProgress?: number;
+    mediaEstimatedRemainingSeconds?: number;
     mediaErrorKind?: "download" | "decrypt";
 };
 export const historyVisibilityOptions = ["joined", "invited", "world_readable"] as const;

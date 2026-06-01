@@ -278,6 +278,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         download: "Ześěgnuś",
         openCoWebsite: "Na co-webboku wótcyniś",
         loadingAttachment: "Pśiłožk se zacytujo...",
+        remainingTime: "hyšći ~{time}",
         attachmentDownloadError: "Toś ten pśiłožk njedajo se ześěgnuś.",
         attachmentDecryptError: "Toś ten pśiłožk njedajo se dešifrěrowaś.",
         copy: "Link kopěrowaś",
