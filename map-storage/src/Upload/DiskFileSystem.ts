@@ -156,7 +156,7 @@ export class DiskFileSystem implements FileSystemInterface {
     ): Promise<void> {
         const entries = await fs.readdir(directory, { withFileTypes: true });
         for (const entry of entries) {
-            if (entry.name === MapListService.CACHE_NAME) {
+            if (entry.name === MapListService.CACHE_NAME || entry.name.startsWith(".")) {
                 continue;
             }
 
