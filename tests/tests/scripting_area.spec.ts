@@ -57,11 +57,11 @@ test.describe("Scripting for Map editor @oidc @nomobile @nowebkit", () => {
 
         // Let's first check the onEnter is triggered when we are already in the area when we subscribe.
         await expect(page.getByText("Welcome to MyZone")).toBeVisible();
-        await page.getByRole("button", { name: "Close" }).first().click();
+        await page.getByText("Welcome to MyZone").click();
         // Let's move out
         await Map.teleportToPosition(page, 9 * 32, 9 * 32);
         await expect(page.getByText("Goodbye to MyZone")).toBeVisible();
-        await page.getByRole("button", { name: "Close" }).click();
+        await page.getByText("Goodbye to MyZone").click();
         await expect(page.locator("span.characterTriggerAction")).toBeHidden();
 
         // Let's move back in
