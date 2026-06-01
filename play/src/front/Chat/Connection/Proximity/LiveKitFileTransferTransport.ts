@@ -8,17 +8,18 @@ import type {
 } from "./ProximityFileTransferTransport";
 import { decryptProximityFileBlob, hashProximityFileBlob } from "./ProximityFileTransferSecurity";
 
-export const PROXIMITY_FILE_TRANSFER_LIVEKIT_TOPIC = "wa:proximity-file-transfer";
+const PROXIMITY_FILE_TRANSFER_LIVEKIT_TOPIC_PREFIX = "wa:proximity-file-transfer:";
 const DEFAULT_BATCH_DELAY_MS = 1_000;
+
+export function getProximityFileTransferLiveKitTopic(transferId: string): string {
+    return `${PROXIMITY_FILE_TRANSFER_LIVEKIT_TOPIC_PREFIX}${transferId}`;
+}
 
 export type LiveKitProximityFileTransferRoom = {
     getIdentityForSpaceUserId(spaceUserId: string): string | undefined;
     hasParticipant(spaceUserId: string): boolean;
-    sendFileToIdentities(
-        file: File,
-        options: { transferId: string; destinationIdentities: string[]; topic: string }
-    ): Promise<void>;
-    registerProximityFileHandler(handler: LiveKitProximityFileStreamHandler): () => void;
+    sendFileToIdentities(file: File, options: { destinationIdentities: string[]; topic: string }): Promise<void>;
+    registerProximityFileHandler(topic: string, handler: LiveKitProximityFileStreamHandler): () => void;
 };
 
 export type LiveKitProximityFileStream = {
@@ -59,6 +60,7 @@ type PendingBatch = {
 type ExpectedLiveKitDownload = {
     offer: IncomingProximityFileTransferOffer;
     security: ProximityFileTransferDownloadSecurity | undefined;
+    unregisterHandler: () => void;
 };
 
 export class LiveKitFileTransferTransport implements ProximityFileTransferTransport {
@@ -68,13 +70,8 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
     private readonly outgoingTransfers = new Map<string, OutgoingLiveKitTransfer>();
     private readonly expectedDownloads = new Map<string, ExpectedLiveKitDownload>();
     private readonly pendingBatches = new Map<string, PendingBatch>();
-    private readonly unregisterHandler: () => void;
 
-    constructor(private readonly options: LiveKitFileTransferOptions) {
-        this.unregisterHandler = options.liveKitRoom.registerProximityFileHandler((reader, participantIdentity) =>
-            this.handleIncomingStream(reader, participantIdentity)
-        );
-    }
+    constructor(private readonly options: LiveKitFileTransferOptions) {}
 
     canTransferTo(spaceUserId: string): boolean {
         return this.options.liveKitRoom.hasParticipant(spaceUserId);
@@ -84,7 +81,12 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
         offer: IncomingProximityFileTransferOffer,
         security?: ProximityFileTransferDownloadSecurity
     ): Promise<void> {
-        this.expectedDownloads.set(offer.transferId, { offer, security });
+        this.clearExpectedDownload(offer.transferId);
+        const unregisterHandler = this.options.liveKitRoom.registerProximityFileHandler(
+            getProximityFileTransferLiveKitTopic(offer.transferId),
+            (reader, participantIdentity) => this.handleIncomingStream(offer.transferId, reader, participantIdentity)
+        );
+        this.expectedDownloads.set(offer.transferId, { offer, security, unregisterHandler });
         this.options.space.emitPrivateMessage(
             {
                 $case: "proximityFileTransferSignal",
@@ -125,9 +127,10 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
         }
         this.pendingBatches.clear();
         this.outgoingTransfers.clear();
-        this.expectedDownloads.clear();
+        for (const transferId of this.expectedDownloads.keys()) {
+            this.clearExpectedDownload(transferId);
+        }
         this.transferUpdateSubject.complete();
-        this.unregisterHandler();
     }
 
     private queueRequest(transferId: string, requesterSpaceUserId: string): void {
@@ -171,28 +174,32 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
         }
 
         await this.options.liveKitRoom.sendFileToIdentities(transfer.file, {
-            transferId,
             destinationIdentities,
-            topic: PROXIMITY_FILE_TRANSFER_LIVEKIT_TOPIC,
+            topic: getProximityFileTransferLiveKitTopic(transferId),
         });
     }
 
-    private async handleIncomingStream(reader: LiveKitProximityFileStream, participantIdentity: string): Promise<void> {
-        const matchingEntry = Array.from(this.expectedDownloads.entries()).find(([, expectedDownload]) => {
-            const senderIdentity = this.options.liveKitRoom.getIdentityForSpaceUserId(
-                expectedDownload.offer.senderSpaceUserId
-            );
-            return (
-                senderIdentity === participantIdentity &&
-                expectedDownload.offer.fileName === reader.info.name &&
-                expectedDownload.offer.mimeType === reader.info.mimeType
-            );
-        });
-        if (!matchingEntry) {
+    private async handleIncomingStream(
+        transferId: string,
+        reader: LiveKitProximityFileStream,
+        participantIdentity: string
+    ): Promise<void> {
+        const expectedDownload = this.expectedDownloads.get(transferId);
+        if (!expectedDownload) {
             return;
         }
 
-        const [transferId, expectedDownload] = matchingEntry;
+        const senderIdentity = this.options.liveKitRoom.getIdentityForSpaceUserId(
+            expectedDownload.offer.senderSpaceUserId
+        );
+        if (
+            senderIdentity !== participantIdentity ||
+            expectedDownload.offer.fileName !== reader.info.name ||
+            expectedDownload.offer.mimeType !== reader.info.mimeType
+        ) {
+            return;
+        }
+
         this.transferUpdateSubject.next({ transferId, state: "downloading", progress: 0 });
         const chunks = await reader.readAll();
         const blob = await this.createVerifiedBlob(chunks, expectedDownload);
@@ -200,7 +207,7 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
             return;
         }
         const url = URL.createObjectURL(blob);
-        this.expectedDownloads.delete(transferId);
+        this.clearExpectedDownload(transferId);
         this.transferUpdateSubject.next({ transferId, state: "ready", progress: 1, url });
     }
 
@@ -223,7 +230,7 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
             decryptedBlob.size !== Number(offer.size) ||
             (await hashProximityFileBlob(decryptedBlob)) !== offer.sha256
         ) {
-            this.expectedDownloads.delete(offer.transferId);
+            this.clearExpectedDownload(offer.transferId);
             this.transferUpdateSubject.next({
                 transferId: offer.transferId,
                 state: "error",
@@ -233,5 +240,11 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
             return undefined;
         }
         return decryptedBlob;
+    }
+
+    private clearExpectedDownload(transferId: string): void {
+        const expectedDownload = this.expectedDownloads.get(transferId);
+        expectedDownload?.unregisterHandler();
+        this.expectedDownloads.delete(transferId);
     }
 }

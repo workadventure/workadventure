@@ -29,6 +29,8 @@ export const PROXIMITY_FILE_TRANSFER_MAX_FILES = 3;
 // Maximum allowed size for a proximity file transfer: 10 GB
 export const PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE = 10 * 1024 * 1024 * 1024;
 const PROXIMITY_FILE_TRANSFER_CHUNK_SIZE = 64 * 1024;
+const PROXIMITY_FILE_TRANSFER_ENCRYPTED_CHUNK_SIZE = 1024 * 1024;
+const PROXIMITY_FILE_TRANSFER_ENCRYPTED_CHUNK_OVERHEAD = 21;
 const PROXIMITY_FILE_TRANSFER_BUFFERED_AMOUNT_LOW_THRESHOLD = 256 * 1024;
 const PROXIMITY_FILE_TRANSFER_NEGOTIATION_TIMEOUT = 15_000;
 
@@ -164,6 +166,7 @@ type PeerSession = {
 
 type ReceivingTransfer = {
     offer: IncomingProximityFileTransferOffer;
+    expectedBytes: number;
     chunks: Uint8Array<ArrayBuffer>[];
     receivedBytes: number;
     encryptionMetadata?: ProximityFileTransferEncryptionMetadata;
@@ -537,20 +540,31 @@ export class ProximityFileTransferService {
                     if (!offer) {
                         return;
                     }
+                    const encryptionMetadata =
+                        message.encryptionAlgorithm === "XCHACHA20-POLY1305" &&
+                        message.encryptionIv !== undefined &&
+                        message.plainMimeType !== undefined
+                            ? {
+                                  algorithm: message.encryptionAlgorithm,
+                                  iv: message.encryptionIv,
+                                  mimeType: message.plainMimeType,
+                              }
+                            : undefined;
+                    const expectedBytes = this.validateIncomingTransferSize(
+                        message.transferId,
+                        offer,
+                        message.size,
+                        encryptionMetadata !== undefined
+                    );
+                    if (expectedBytes === undefined) {
+                        return;
+                    }
                     this.receivingTransfers.set(message.transferId, {
                         offer,
+                        expectedBytes,
                         chunks: [],
                         receivedBytes: 0,
-                        encryptionMetadata:
-                            message.encryptionAlgorithm === "XCHACHA20-POLY1305" &&
-                            message.encryptionIv !== undefined &&
-                            message.plainMimeType !== undefined
-                                ? {
-                                      algorithm: message.encryptionAlgorithm,
-                                      iv: message.encryptionIv,
-                                      mimeType: message.plainMimeType,
-                                  }
-                                : undefined,
+                        encryptionMetadata,
                     });
                     this.transferUpdateSubject.next({
                         transferId: message.transferId,
@@ -584,12 +598,20 @@ export class ProximityFileTransferService {
         if (!receivingTransfer) {
             return;
         }
+        const nextReceivedBytes = receivingTransfer.receivedBytes + frame.chunk.byteLength;
+        if (
+            nextReceivedBytes > receivingTransfer.expectedBytes ||
+            nextReceivedBytes > PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE
+        ) {
+            this.failReceivingTransfer(frame.transferId, "file-too-large");
+            return;
+        }
         receivingTransfer.chunks.push(frame.chunk);
-        receivingTransfer.receivedBytes += frame.chunk.byteLength;
+        receivingTransfer.receivedBytes = nextReceivedBytes;
         this.transferUpdateSubject.next({
             transferId: frame.transferId,
             state: "downloading",
-            progress: Math.min(receivingTransfer.receivedBytes / Number(receivingTransfer.offer.size), 1),
+            progress: Math.min(receivingTransfer.receivedBytes / Math.max(receivingTransfer.expectedBytes, 1), 1),
         });
     }
 
@@ -617,19 +639,19 @@ export class ProximityFileTransferService {
             return;
         }
 
+        const fileToSend = transfer.encryptedFile ?? transfer.file;
         this.sendControlMessage(dataChannel, {
             type: "proximity_file_start",
             transferId,
             fileName: transfer.file.name,
             mimeType: transfer.file.type,
-            size: transfer.file.size,
+            size: fileToSend.size,
             sha256: transfer.sha256,
             encryptionAlgorithm: transfer.encryptionMetadata?.algorithm,
             encryptionIv: transfer.encryptionMetadata?.iv,
             plainMimeType: transfer.encryptionMetadata?.mimeType,
         });
 
-        const fileToSend = transfer.encryptedFile ?? transfer.file;
         for (let offset = 0; offset < fileToSend.size; offset += PROXIMITY_FILE_TRANSFER_CHUNK_SIZE) {
             // eslint-disable-next-line no-await-in-loop
             const chunkBuffer = await fileToSend
@@ -650,6 +672,10 @@ export class ProximityFileTransferService {
     private async completeReceivingTransfer(transferId: string): Promise<void> {
         const receivingTransfer = this.receivingTransfers.get(transferId);
         if (!receivingTransfer) {
+            return;
+        }
+        if (receivingTransfer.receivedBytes !== receivingTransfer.expectedBytes) {
+            this.failReceivingTransfer(transferId, "integrity-check-failed");
             return;
         }
         const blob = await this.createVerifiedReceivingBlob(receivingTransfer);
@@ -687,6 +713,42 @@ export class ProximityFileTransferService {
             return undefined;
         }
         return decryptedBlob;
+    }
+
+    private validateIncomingTransferSize(
+        transferId: string,
+        offer: IncomingProximityFileTransferOffer,
+        announcedSize: number,
+        isEncrypted: boolean
+    ): number | undefined {
+        const offerSize = Number(offer.size);
+        const maxExpectedWireSize = isEncrypted ? getMaxEncryptedTransferWireSize(offerSize) : offerSize;
+        if (
+            !Number.isFinite(offerSize) ||
+            offerSize < 0 ||
+            offerSize > PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE ||
+            !Number.isFinite(announcedSize) ||
+            announcedSize < 0 ||
+            announcedSize > maxExpectedWireSize
+        ) {
+            this.failReceivingTransfer(transferId, "file-too-large");
+            return undefined;
+        }
+        if (!isEncrypted && announcedSize !== offerSize) {
+            this.failReceivingTransfer(transferId, "integrity-check-failed");
+            return undefined;
+        }
+        return announcedSize;
+    }
+
+    private failReceivingTransfer(transferId: string, error: string): void {
+        this.receivingTransfers.delete(transferId);
+        this.transferUpdateSubject.next({
+            transferId,
+            state: "error",
+            progress: 0,
+            error,
+        });
     }
 
     private waitForBackpressure(dataChannel: RTCDataChannel): Promise<void> {
@@ -848,4 +910,15 @@ function copyToArrayBuffer(bytes: Uint8Array): ArrayBuffer {
     const buffer = new ArrayBuffer(bytes.byteLength);
     new Uint8Array(buffer).set(bytes);
     return buffer;
+}
+
+function getMaxEncryptedTransferWireSize(plainSize: number): number {
+    if (plainSize === 0) {
+        return 0;
+    }
+    return (
+        plainSize +
+        Math.ceil(plainSize / PROXIMITY_FILE_TRANSFER_ENCRYPTED_CHUNK_SIZE) *
+            PROXIMITY_FILE_TRANSFER_ENCRYPTED_CHUNK_OVERHEAD
+    );
 }

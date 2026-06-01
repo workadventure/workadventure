@@ -29,7 +29,6 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
 import { audioPlaybackStore } from "../Stores/AudioPlaybackStore";
-import { PROXIMITY_FILE_TRANSFER_LIVEKIT_TOPIC } from "../Chat/Connection/Proximity/LiveKitFileTransferTransport";
 import type { LiveKitProximityFileStreamHandler } from "../Chat/Connection/Proximity/LiveKitFileTransferTransport";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 import { LiveKitParticipant } from "./LivekitParticipant";
@@ -620,7 +619,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
     public async sendFileToIdentities(
         file: File,
-        options: { transferId: string; destinationIdentities: string[]; topic: string }
+        options: { destinationIdentities: string[]; topic: string }
     ): Promise<void> {
         if (!this.localParticipant) {
             throw new Error("Local participant not found");
@@ -633,18 +632,20 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         });
     }
 
-    public registerProximityFileHandler(handler: LiveKitProximityFileStreamHandler): () => void {
+    public registerProximityFileHandler(topic: string, handler: LiveKitProximityFileStreamHandler): () => void {
         if (!this.room) {
             return () => undefined;
         }
 
-        this.room.registerByteStreamHandler(PROXIMITY_FILE_TRANSFER_LIVEKIT_TOPIC, (reader, participantInfo) => {
+        this.room.registerByteStreamHandler(topic, (reader, participantInfo) => {
             handler(reader, participantInfo.identity).catch((error) => {
                 console.error("Error while handling LiveKit proximity file stream", error);
                 Sentry.captureException(error);
             });
         });
-        return () => undefined;
+        return () => {
+            this.room?.unregisterByteStreamHandler(topic);
+        };
     }
 
     private getRemoteParticipantForSpaceUserId(spaceUserId: string): RemoteParticipant | undefined {
