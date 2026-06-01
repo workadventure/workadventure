@@ -51,7 +51,7 @@
         onblur = () => {},
         disabled = false,
         type = "text",
-        value = $bindable(),
+        value = $bindable<string | number | null>(),
         onclick = () => {},
         variant = undefined,
         size = undefined,
@@ -64,7 +64,7 @@
         onkeypress = () => {},
         onkeydown = () => {},
         optional = false,
-        isValid = $bindable(true),
+        isValid = $bindable<boolean>(),
         rounded = false,
         onerror = () => {},
         oninput = () => {},
@@ -77,6 +77,10 @@
         helper,
         ...rest
     }: Props = $props();
+
+    if (isValid === undefined) {
+        isValid = true;
+    }
 
     export function focusInput() {
         inputElement?.focus();

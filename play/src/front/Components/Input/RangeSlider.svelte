@@ -25,7 +25,7 @@
         label = undefined,
         placeholder = "",
         min = 0,
-        value = $bindable(min),
+        value = $bindable<number>(),
         max = 100,
         step = 0,
         onchange = () => {},
@@ -36,6 +36,12 @@
         wrapperMargins = true,
         children,
     }: Props = $props();
+
+    $effect(() => {
+        if (value === undefined) {
+            value = min;
+        }
+    });
 
     let uniqueId = (() => id || `input-${Math.random().toString(36).substring(2, 9)} `)();
 </script>

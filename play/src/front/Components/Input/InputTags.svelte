@@ -22,8 +22,8 @@
     let {
         optional = false,
         label,
-        value = $bindable(),
-        options = $bindable([]),
+        value = $bindable<InputTagOption[]>(),
+        options = $bindable<InputTagOption[]>(),
         placeholder,
         onfocus,
         onblur,
@@ -33,11 +33,15 @@
         info,
     }: Props = $props();
 
+    if (options === undefined) {
+        options = [];
+    }
+
     let filterText = $state("");
 
     function handleFilter() {
         if (value?.find((i) => i.label === filterText)) return;
-        if (options?.find((i) => i.label === filterText)) return;
+        if (options.find((i) => i.label === filterText)) return;
         if (filterText.trim().length > 0) {
             const prev = options.filter((i) => !i.created);
             options = [...prev, { value: filterText, label: filterText, created: true }];

@@ -34,11 +34,16 @@
         isOpen,
         onsave,
         onclose,
-        visibilityValue = $bindable(),
+        visibilityValue = $bindable<boolean>(),
         config,
-        livekitRoomAdminTag = $bindable(""),
+        livekitRoomAdminTag = $bindable<string>(),
         shouldDisableDisableChatButton,
     }: Props = $props();
+
+    if (livekitRoomAdminTag === undefined) {
+        livekitRoomAdminTag = "";
+    }
+
     let currentConfig = $state({
         startWithAudioMuted: false,
         startWithVideoMuted: false,

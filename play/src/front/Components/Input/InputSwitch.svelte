@@ -12,12 +12,16 @@
     let {
         id,
         label = undefined,
-        value = $bindable(false),
+        value = $bindable<boolean>(),
         onchange = () => {},
         disabled = false,
         labelPosition = "right",
         variant = "black",
     }: Props = $props();
+
+    if (value === undefined) {
+        value = false;
+    }
 
     let uniqueId = (() => id || `input-${Math.random().toString(36).substring(2, 9)} `)();
 </script>

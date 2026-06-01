@@ -5,7 +5,11 @@
         mode?: "settings" | "background";
     }
 
-    let { mode = $bindable("settings") }: Props = $props();
+    let { mode = $bindable<"settings" | "background">() }: Props = $props();
+
+    if (mode === undefined) {
+        mode = "settings";
+    }
 </script>
 
 <div class="flex flex-row gap-2 px-1">

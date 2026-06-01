@@ -12,7 +12,11 @@
         onclose?: () => void;
     }
 
-    let { mediaSettingsDisplayed = $bindable(false), onclose }: Props = $props();
+    let { mediaSettingsDisplayed = $bindable<boolean>(), onclose }: Props = $props();
+
+    if (mediaSettingsDisplayed === undefined) {
+        mediaSettingsDisplayed = false;
+    }
 
     let mode: "settings" | "background" = $state("settings");
 

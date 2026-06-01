@@ -18,11 +18,15 @@
         label = undefined,
         onchange = () => {},
         disabled = false,
-        value = $bindable(false),
+        value = $bindable<boolean>(),
         variant = "white",
         children,
         ...rest
     }: Props = $props();
+
+    if (value === undefined) {
+        value = false;
+    }
 
     let uniqueId = (() => id || `input-${Math.random().toString(36).substring(2, 9)} `)();
 </script>

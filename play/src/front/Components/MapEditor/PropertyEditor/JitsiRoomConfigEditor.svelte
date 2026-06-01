@@ -32,10 +32,15 @@
         isOpen,
         onsave,
         onclose,
-        visibilityValue = $bindable(),
+        visibilityValue = $bindable<boolean>(),
         config,
-        jitsiRoomAdminTag = $bindable(""),
+        jitsiRoomAdminTag = $bindable<string>(),
     }: Props = $props();
+
+    if (jitsiRoomAdminTag === undefined) {
+        jitsiRoomAdminTag = "";
+    }
+
     let currentConfig: JitsiRoomConfigData = $state({});
 
     onMount(() => {

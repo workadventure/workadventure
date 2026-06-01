@@ -8,6 +8,7 @@
     import type { SelectItem } from "./Room/searchChatMembersRule";
     import { searchChatMembersRule } from "./Room/searchChatMembersRule";
     import { IconUsers } from "@wa-icons";
+
     interface Props {
         value?: SelectItem[];
         placeholder?: string;
@@ -15,7 +16,11 @@
         onerror?: (error: string) => void;
     }
 
-    let { value = $bindable([]), placeholder = "", filterText = "", onerror }: Props = $props();
+    let { value = $bindable<SelectItem[]>(), placeholder = "", filterText = "", onerror }: Props = $props();
+
+    if (value === undefined) {
+        value = [];
+    }
 
     let items: SelectItem[] = $state([]);
     const chat = gameManager.chatConnection;
@@ -23,7 +28,7 @@
     const { searchWorldMembers } = searchChatMembersRule();
 
     function handleFilter(e: CustomEvent) {
-        if (value?.find((i) => i.label === filterText)) return;
+        if (value.find((i) => i.label === filterText)) return;
         if (e.detail.length === 0 && filterText.length > 0) {
             const prev = items.filter((i) => !i.created);
             items = [...prev, { value: filterText, label: filterText, created: true }];
