@@ -15,21 +15,18 @@
 
     let loading: Promise<{ default: WorkAdventureComponent }> | null = $state(null);
 
-    function load() {
-        loading = component();
-        onload?.();
-        loading
-            .then(() => {
-                onloaded?.();
-            })
-            .catch(() => {
-                onerror?.();
-            });
-    }
-
     $effect(() => {
         if (when) {
-            load();
+            const loadingPromise = component();
+            loading = loadingPromise;
+            onload?.();
+            loadingPromise
+                .then(() => {
+                    onloaded?.();
+                })
+                .catch(() => {
+                    onerror?.();
+                });
         }
     });
 </script>

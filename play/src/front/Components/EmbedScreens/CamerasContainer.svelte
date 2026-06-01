@@ -178,23 +178,26 @@
                 const countForTileSizing = pipVerticalGrid
                     ? Math.min(PIP_GRID_MAX_VIDEOS, pipSortWindowCount)
                     : oneLineCount;
-                videoWidth = Math.max(
+                const currentVideoWidth = Math.max(
                     Math.min(maxMediaBoxWidth, containerWidth / countForTileSizing),
                     minMediaBoxWidth,
                 );
+                videoWidth = currentVideoWidth;
                 videoHeight = undefined;
                 if (pipVerticalGrid) {
                     maxVisibleVideosStore.set(Math.min(PIP_GRID_MAX_VIDEOS, pipSortWindowCount));
                 } else {
-                    maxVisibleVideosStore.set(Math.ceil(containerWidth / videoWidth));
+                    maxVisibleVideosStore.set(Math.ceil(containerWidth / currentVideoWidth));
                 }
             } else {
-                videoWidth = containerWidth;
-                videoHeight = videoWidth * (9 / 16);
+                const currentVideoWidth = containerWidth;
+                const currentVideoHeight = currentVideoWidth * (9 / 16);
+                videoWidth = currentVideoWidth;
+                videoHeight = currentVideoHeight;
                 if (pipVerticalGrid) {
                     maxVisibleVideosStore.set(Math.min(PIP_GRID_MAX_VIDEOS, pipSortWindowCount));
                 } else {
-                    maxVisibleVideosStore.set(Math.ceil(containerHeight / videoHeight));
+                    maxVisibleVideosStore.set(Math.ceil(containerHeight / currentVideoHeight));
                 }
             }
         } else {

@@ -79,33 +79,35 @@
         if (videoEnabled && containerWidth && containerHeight) {
             const containerRatio = containerWidth / containerHeight;
             // In case there is no video, we put an arbitrary ratio of 16/9 to avoid division by 0.
-            videoRatio = videoStreamWidth && videoStreamHeight ? videoStreamWidth / videoStreamHeight : 16 / 9;
+            const currentVideoRatio =
+                videoStreamWidth && videoStreamHeight ? videoStreamWidth / videoStreamHeight : 16 / 9;
+            videoRatio = currentVideoRatio;
 
             //debug("videoRatio:" + videoRatio + "; containerRatio: " + containerRatio + "; containerWidth: " + containerWidth + "; containerHeight: " + containerHeight +" ; videoStreamWidth: " + videoStreamWidth + "; videoStreamHeight: " + videoStreamHeight);
 
-            if (videoRatio < 1) {
+            if (currentVideoRatio < 1) {
                 if (!cover) {
-                    videoWidth = containerHeight * videoRatio;
+                    videoWidth = containerHeight * currentVideoRatio;
                     videoHeight = containerHeight;
                     overlayWidth = videoWidth;
                     overlayHeight = videoHeight;
                 } else {
                     // In case we are on a mobile in portrait mode, we want to display a square video.
                     videoWidth = containerHeight;
-                    videoHeight = containerHeight / videoRatio;
+                    videoHeight = containerHeight / currentVideoRatio;
                     overlayWidth = containerWidth;
                     overlayHeight = containerHeight;
                     //debug("videoRatio < 1: videoWidth: " + videoWidth + "; videoHeight: " + videoHeight);
                 }
-            } else if (containerRatio > videoRatio) {
+            } else if (containerRatio > currentVideoRatio) {
                 if (!cover) {
-                    videoWidth = containerHeight * videoRatio;
+                    videoWidth = containerHeight * currentVideoRatio;
                     videoHeight = containerHeight;
                     overlayWidth = videoWidth;
                     overlayHeight = videoHeight;
                 } else {
                     videoWidth = containerWidth;
-                    videoHeight = containerWidth / videoRatio;
+                    videoHeight = containerWidth / currentVideoRatio;
                     overlayWidth = containerWidth;
                     overlayHeight = containerHeight;
                 }
@@ -113,11 +115,11 @@
             } else {
                 if (!cover) {
                     videoWidth = containerWidth;
-                    videoHeight = containerWidth / videoRatio;
+                    videoHeight = containerWidth / currentVideoRatio;
                     overlayWidth = videoWidth;
                     overlayHeight = videoHeight;
                 } else {
-                    videoWidth = containerHeight * videoRatio;
+                    videoWidth = containerHeight * currentVideoRatio;
                     videoHeight = containerHeight;
                     overlayWidth = containerWidth;
                     overlayHeight = containerHeight;
