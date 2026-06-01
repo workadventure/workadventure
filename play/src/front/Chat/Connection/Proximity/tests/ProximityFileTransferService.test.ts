@@ -2,10 +2,13 @@ import type { PrivateSpaceEvent } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { describe, expect, it, vi } from "vitest";
 import {
+    PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE,
     ProximityFileTransferService,
     type ProximityFileTransferTransport,
     validateProximityFiles,
 } from "../ProximityFileTransferService";
+import { encodeProximityFileChunkFrame, encodeProximityFileControlMessage } from "../ProximityFileTransferProtocol";
+import type { ProximityFileTransferUpdate } from "../ProximityFileTransferTransport";
 
 describe("validateProximityFiles", () => {
     it("should reject more than three files", () => {
@@ -23,6 +26,139 @@ describe("validateProximityFiles", () => {
 });
 
 describe("ProximityFileTransferService", () => {
+    it("should reject incoming chunks beyond the announced transfer size", async () => {
+        const incomingOffers = new Subject<{
+            $case: "proximityFileTransferOffer";
+            proximityFileTransferOffer: {
+                transferId: string;
+                fileName: string;
+                mimeType: string;
+                size: number;
+                messageType: string;
+                characterTextures: [];
+                name: undefined;
+            };
+            sender: string;
+        }>();
+        const service = new ProximityFileTransferService({
+            localSpaceUserId: "recipient",
+            space: {
+                emitPrivateMessage: vi.fn(),
+                observePrivateEvent: (key) => {
+                    if (key === "proximityFileTransferOffer") {
+                        return incomingOffers as never;
+                    }
+                    return new Subject() as never;
+                },
+            },
+            getIceServers: () => Promise.resolve([]),
+        });
+        const updates: ProximityFileTransferUpdate[] = [];
+        const subscription = service.transferUpdates.subscribe((update) => updates.push(update));
+        incomingOffers.next({
+            $case: "proximityFileTransferOffer",
+            proximityFileTransferOffer: {
+                transferId: "transfer-1",
+                fileName: "empty.txt",
+                mimeType: "text/plain",
+                size: 0,
+                messageType: "file",
+                characterTextures: [],
+                name: undefined,
+            },
+            sender: "sender",
+        });
+
+        await (
+            service as unknown as { handleDataChannelMessage(session: unknown, data: unknown): Promise<void> }
+        ).handleDataChannelMessage(
+            {},
+            encodeProximityFileControlMessage({
+                type: "proximity_file_start",
+                transferId: "transfer-1",
+                fileName: "empty.txt",
+                mimeType: "text/plain",
+                size: 0,
+            })
+        );
+        await (
+            service as unknown as { handleDataChannelMessage(session: unknown, data: unknown): Promise<void> }
+        ).handleDataChannelMessage({}, encodeProximityFileChunkFrame("transfer-1", new Uint8Array([1])));
+
+        expect(updates).toContainEqual({
+            transferId: "transfer-1",
+            state: "error",
+            progress: 0,
+            error: "file-too-large",
+        });
+        subscription.unsubscribe();
+    });
+
+    it("should reject incoming transfers announced above the hard file size cap", async () => {
+        const incomingOffers = new Subject<{
+            $case: "proximityFileTransferOffer";
+            proximityFileTransferOffer: {
+                transferId: string;
+                fileName: string;
+                mimeType: string;
+                size: number;
+                messageType: string;
+                characterTextures: [];
+                name: undefined;
+            };
+            sender: string;
+        }>();
+        const service = new ProximityFileTransferService({
+            localSpaceUserId: "recipient",
+            space: {
+                emitPrivateMessage: vi.fn(),
+                observePrivateEvent: (key) => {
+                    if (key === "proximityFileTransferOffer") {
+                        return incomingOffers as never;
+                    }
+                    return new Subject() as never;
+                },
+            },
+            getIceServers: () => Promise.resolve([]),
+        });
+        const updates: ProximityFileTransferUpdate[] = [];
+        const subscription = service.transferUpdates.subscribe((update) => updates.push(update));
+        incomingOffers.next({
+            $case: "proximityFileTransferOffer",
+            proximityFileTransferOffer: {
+                transferId: "transfer-1",
+                fileName: "huge.bin",
+                mimeType: "application/octet-stream",
+                size: PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE + 1,
+                messageType: "file",
+                characterTextures: [],
+                name: undefined,
+            },
+            sender: "sender",
+        });
+
+        await (
+            service as unknown as { handleDataChannelMessage(session: unknown, data: unknown): Promise<void> }
+        ).handleDataChannelMessage(
+            {},
+            encodeProximityFileControlMessage({
+                type: "proximity_file_start",
+                transferId: "transfer-1",
+                fileName: "huge.bin",
+                mimeType: "application/octet-stream",
+                size: PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE + 1,
+            })
+        );
+
+        expect(updates).toContainEqual({
+            transferId: "transfer-1",
+            state: "error",
+            progress: 0,
+            error: "file-too-large",
+        });
+        subscription.unsubscribe();
+    });
+
     it("should emit one private offer per recipient", async () => {
         const emitPrivateMessage = vi.fn();
         const service = new ProximityFileTransferService({
