@@ -33,18 +33,18 @@ test.describe("Scripting for enter / leave layer event", () => {
 
         // The subscription should automatically trigger on start because we are already in the start zone.
         await expect(page.getByText("Welcome to start initial")).toBeVisible();
-        await page.getByRole("button", { name: "Close" }).first().click();
+        await page.getByText("Welcome to start initial").click();
 
         await Map.teleportToPosition(page, 2 * 32, 8 * 32);
 
         await expect(page.getByText("Goodbye start move")).toBeVisible();
-        await page.getByRole("button", { name: "Close" }).first().click();
+        await page.getByText("Goodbye start move").click();
 
         // Let's go back to start
         await Map.teleportToPosition(page, 0.5 * 32, 4.5 * 32);
 
         await expect(page.getByText("Welcome to start move")).toBeVisible();
-        await page.getByRole("button", { name: "Close" }).first().click();
+        await page.getByText("Welcome to start move").first().click();
 
         // Let's subscribe to the "start" event again.
         // The subscribe should be fired again.

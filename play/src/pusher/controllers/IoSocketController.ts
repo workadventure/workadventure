@@ -1073,10 +1073,10 @@ export class IoSocketController {
                                 break;
                             }
                             case "videoQualityReportMessage": {
-                                debug(
+                                /*debug(
                                     "Received video quality report with %d samples",
                                     message.message.videoQualityReportMessage.samples.length
-                                );
+                                );*/
                                 videoQualityAnalyticsQueue.enqueueReport(
                                     message.message.videoQualityReportMessage,
                                     socket.getUserData()
