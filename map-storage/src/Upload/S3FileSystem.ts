@@ -12,11 +12,11 @@ import {
     NoSuchKey,
     PutObjectCommand,
 } from "@aws-sdk/client-s3";
-import type { Archiver } from "archiver";
 import type { NextFunction, Response } from "express";
 import mime from "mime";
 import type * as unzipper from "unzipper";
 import pLimit from "p-limit";
+import type ZipStream from "zip-stream";
 import { MapListService } from "../Services/MapListService";
 import { s3UploadConcurrencyLimit } from "../Services/S3Client";
 import { FileNotFoundError } from "./FileNotFoundError";
@@ -324,7 +324,7 @@ export class S3FileSystem implements FileSystemInterface {
         return;
     }
 
-    async archiveDirectory(archiver: Archiver, virtualPath: string): Promise<void> {
+    async archiveDirectory(archive: ZipStream, virtualPath: string): Promise<void> {
         if (!virtualPath.endsWith("/")) {
             virtualPath += "/";
         }
@@ -344,24 +344,25 @@ export class S3FileSystem implements FileSystemInterface {
 
             if (objects) {
                 for (const file of objects) {
+                    const key = file.Key;
                     const { Body } = await this.s3.send(
                         new GetObjectCommand({
                             Bucket: this.bucketName,
-                            Key: file.Key,
+                            Key: key,
                         })
                     );
-                    if (!file.Key || !Body) {
+                    if (!key || !Body) {
                         throw new Error("Failed to get file from S3");
                     }
-                    if (file.Key.endsWith("/")) {
+                    if (key.endsWith("/")) {
                         // a directory. Let's bypass this.
                         continue;
                     }
-                    if (file.Key.includes(MapListService.CACHE_NAME)) {
+                    if (key.includes(MapListService.CACHE_NAME)) {
                         // we do not want cache file to be downloaded
                         continue;
                     }
-                    archiver.append(Body as Readable, { name: file.Key.substring(virtualPath.length) });
+                    archive.entry(Body as Readable, { name: key.substring(virtualPath.length) });
                 }
             }
             continuationToken = listObjectsResponse.NextContinuationToken;

@@ -5,7 +5,7 @@ import type { Express, Request } from "express";
 import multer from "multer";
 import type { LimitFunction } from "p-limit";
 import pLimit from "p-limit";
-import archiver from "archiver";
+import ZipStream from "zip-stream";
 import { type File, type CentralDirectory, Open as UnzipperOpen } from "unzipper";
 import type { Operation } from "rfc6902";
 import { applyPatch } from "rfc6902";
@@ -614,19 +614,8 @@ export class UploadController {
 
                 res.attachment(archiveName);
 
-                const archive = archiver("zip", {
+                const archive = new ZipStream({
                     zlib: { level: 9 }, // Sets the compression level.
-                });
-
-                // good practice to catch warnings (ie stat failures and other non-blocking errors)
-                archive.on("warning", function (err) {
-                    if (err.code === "ENOENT") {
-                        // log warning
-                        console.warn(`[${new Date().toISOString()}] File not found: `, err);
-                    } else {
-                        console.error(`[${new Date().toISOString()}] A warning occurred while Zipping file: `, err);
-                        Sentry.captureException(`A warning occurred while Zipping file: ${JSON.stringify(err)}`);
-                    }
                 });
 
                 // good practice to catch this error explicitly
@@ -641,7 +630,7 @@ export class UploadController {
 
                 await this.fileSystem.archiveDirectory(archive, virtualDirectory);
 
-                await archive.finalize();
+                archive.finalize();
             })().catch((e) => {
                 console.error(`[${new Date().toISOString()}]`, e);
                 Sentry.captureException(e);
