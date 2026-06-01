@@ -121,6 +121,24 @@ describe("WebRTCCommunicationStrategy", () => {
         expect(webRtcStartEvents(privateEvents)).toHaveLength(0);
     });
 
+    it("should use the active user role when a watcher copy is stale", async () => {
+        const speaker = createUser("speaker", "speaker");
+        const activeListener = createUser("listener", "attendee");
+        const staleListenerWatcherCopy = createUser("listener", "none");
+        const users = [speaker, activeListener];
+        const { space, privateEvents } = createSpace(users);
+        const strategy = new WebRTCCommunicationStrategy(space, createUsersMap(users), new Map());
+
+        await strategy.addUserToNotify(staleListenerWatcherCopy);
+
+        expect(webRtcStartEvents(privateEvents)).toHaveLength(2);
+        expect(
+            webRtcStartEvents(privateEvents)
+                .map((event) => event.receiverUserId)
+                .sort()
+        ).toEqual(["listener", "speaker"]);
+    });
+
     it("should create missing WebRTC connections when an attendee becomes a speaker", async () => {
         const speaker = createUser("speaker", "attendee");
         const changingUser = createUser("changing-user", "attendee");
