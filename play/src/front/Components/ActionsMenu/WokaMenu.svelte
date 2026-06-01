@@ -69,11 +69,11 @@
     };
 
     onMount(() => {
-        gameManager.getCurrentGameScene().CurrentPlayer.on(startMovingEventName, onStartMoving);
+        gameManager.getCurrentGameScene().CurrentPlayer?.on(startMovingEventName, onStartMoving);
     });
 
     onDestroy(() => {
-        gameManager.getCurrentGameScene().CurrentPlayer.off(startMovingEventName, onStartMoving);
+        gameManager.getCurrentGameScene().CurrentPlayer?.off(startMovingEventName, onStartMoving);
         if (wokaMenuStoreUnsubscriber) {
             wokaMenuStoreUnsubscriber();
         }
