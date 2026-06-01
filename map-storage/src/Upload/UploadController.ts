@@ -5,7 +5,7 @@ import type { Express, Request } from "express";
 import multer from "multer";
 import type { LimitFunction } from "p-limit";
 import pLimit from "p-limit";
-import archiver from "archiver";
+import * as archiver from "archiver";
 import { type File, type CentralDirectory, Open as UnzipperOpen } from "unzipper";
 import type { Operation } from "rfc6902";
 import { applyPatch } from "rfc6902";
