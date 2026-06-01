@@ -29,7 +29,7 @@ class DraftMessageService {
             this.db = (event.target as IDBOpenDBRequest).result;
             // The listener never needs to be removed, because we are in a singleton that is never destroyed.
             // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
-            this.db.addEventListener("closed", () => {
+            this.db.addEventListener("close", () => {
                 this.db = null;
             });
         };
