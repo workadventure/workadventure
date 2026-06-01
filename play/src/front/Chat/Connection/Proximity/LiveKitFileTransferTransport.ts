@@ -29,8 +29,10 @@ export type LiveKitProximityFileStream = {
         size?: number;
     };
     onProgress?: (progress: number | undefined) => void;
-    readAll(): Promise<BlobPart[]>;
+    readAll(): Promise<LiveKitProximityFileStreamPart[]>;
 };
+
+type LiveKitProximityFileStreamPart = BlobPart | Uint8Array<ArrayBufferLike>;
 
 export type LiveKitProximityFileStreamHandler = (
     reader: LiveKitProximityFileStream,
@@ -223,15 +225,16 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
     }
 
     private async createVerifiedBlob(
-        chunks: BlobPart[],
+        chunks: LiveKitProximityFileStreamPart[],
         expectedDownload: ExpectedLiveKitDownload
     ): Promise<Blob | undefined> {
         const { offer, security } = expectedDownload;
+        const blobParts = chunks.map(normalizeBlobPart);
         if (!security) {
-            return new Blob(chunks, { type: offer.mimeType });
+            return new Blob(blobParts, { type: offer.mimeType });
         }
 
-        const encryptedBlob = new Blob(chunks, { type: "application/octet-stream" });
+        const encryptedBlob = new Blob(blobParts, { type: "application/octet-stream" });
         const decryptedBlob = await decryptProximityFileBlob(
             encryptedBlob,
             await security.encryptionKey,
@@ -258,4 +261,14 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
         expectedDownload?.unregisterHandler();
         this.expectedDownloads.delete(transferId);
     }
+}
+
+function normalizeBlobPart(part: LiveKitProximityFileStreamPart): BlobPart {
+    return part instanceof Uint8Array ? copyToArrayBuffer(part) : part;
+}
+
+function copyToArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+    const buffer = new ArrayBuffer(bytes.byteLength);
+    new Uint8Array(buffer).set(bytes);
+    return buffer;
 }
