@@ -2239,8 +2239,6 @@ export class GameScene extends DirtyScene {
 
                 // Get position from UUID only after the connection to the pusher is established
                 this.tryMovePlayerWithMoveToUserParameter();
-
-                gameSceneStore.set(this);
             })
             .catch((e) => {
                 Sentry.captureException(e);
@@ -2472,6 +2470,7 @@ export class GameScene extends DirtyScene {
         await Promise.all(allPromises);
 
         this.roomJoinedPromiseDeferred.resolve(room);
+        gameSceneStore.set(this);
     }
 
     private initExtensionModule() {
