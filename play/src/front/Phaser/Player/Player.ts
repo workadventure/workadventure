@@ -15,10 +15,12 @@ import { passStatusToOnline } from "../../Rules/StatusRules/statusChangerFunctio
 import { localUserStore } from "../../Connection/LocalUserStore";
 
 export const hasMovedEventName = "hasMoved";
+export const startMovingEventName = "startMoving";
 export const requestEmoteEventName = "requestEmote";
 
 export class Player extends Character {
     private readonly unsubscribeVisibilityStore: Unsubscriber;
+    private isMoving = false;
 
     constructor(
         Scene: GameScene,
@@ -90,8 +92,15 @@ export class Player extends Character {
         path: { x: number; y: number }[],
         speed?: number
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
+        if (!this.isMoving) {
+            this.isMoving = true;
+            this.emit(startMovingEventName, { direction: this._lastDirection, x: this.x, y: this.y });
+        }
+
         this.getBody().setDirectControl(true);
-        return super.setPathToFollow(path, speed);
+        return super.setPathToFollow(path, speed).finally(() => {
+            this.isMoving = false;
+        });
     }
 
     public getCurrentPathDestinationPoint(): { x: number; y: number } | undefined {
@@ -143,9 +152,16 @@ export class Player extends Character {
         // Send movement events
         const emit = () => this.emit(hasMovedEventName, { moving, direction, x: this.x, y: this.y });
         if (moving) {
+            if (!this.isMoving) {
+                this.isMoving = true;
+                this.emit(startMovingEventName, { direction, x: this.x, y: this.y });
+            }
             this.moveBy(x, y);
             emit();
         } else if (get(userMovingStore)) {
+            if (this.isMoving) {
+                this.isMoving = false;
+            }
             this.stop();
             emit();
         }
