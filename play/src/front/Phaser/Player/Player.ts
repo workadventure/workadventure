@@ -92,11 +92,15 @@ export class Player extends Character {
         path: { x: number; y: number }[],
         speed?: number
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
-        this.emit(startMovingEventName, { direction: this._lastDirection, x: this.x, y: this.y });
+        if (!this.isMoving) {
+            this.isMoving = true;
+            this.emit(startMovingEventName, { direction: this._lastDirection, x: this.x, y: this.y });
+        }
 
         this.getBody().setDirectControl(true);
-        return super.setPathToFollow(path, speed);
-    }
+        return super.setPathToFollow(path, speed).finally(() => {
+            this.isMoving = false;
+        });
 
     public getCurrentPathDestinationPoint(): { x: number; y: number } | undefined {
         if (!this.pathToFollow) {
