@@ -365,7 +365,7 @@ export class PusherRoomSocketController {
                 }
 
                 const reason = message ? Buffer.from(message).toString() : "";
-                const rawSocket = ws as RawSocket;
+                const rawSocket = ws as unknown as RawSocket;
                 const socket = this.wrappersBySocket.get(rawSocket);
                 if (!socket) {
                     return;
