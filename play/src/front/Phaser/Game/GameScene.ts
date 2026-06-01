@@ -1001,6 +1001,13 @@ export class GameScene extends DirtyScene {
                             }
                         }
 
+                        if (this.cleanupDone) {
+                            // The GameScene was closed before completing.
+                            // For instance, the websocket is closed while the map was loading.
+                            // Let's not join the room.
+                            return;
+                        }
+
                         this.joinRoom()
                             .then(() => {
                                 this.initUserPermissionsOnEntity();
