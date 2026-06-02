@@ -13,7 +13,7 @@
         /** When defined, show a row for the discussion bubble (group lock) in the list. */
         groupLockState?: boolean;
         /** Callback when the user selects the bubble row. Only used when groupLockState is defined. */
-        onSelectGroupLock?: () => void;
+        onselectgrouplock?: () => void;
     }
 
     let {
@@ -21,8 +21,8 @@
         areasWithPermission = new Set(),
         onselect,
         onclose,
-        groupLockState = undefined,
-        onSelectGroupLock = undefined,
+        groupLockState,
+        onselectgrouplock,
     }: Props = $props();
 
     function handleClose(): void {
@@ -35,7 +35,7 @@
     }
 
     function handleSelectGroupLock(): void {
-        onSelectGroupLock?.();
+        onselectgrouplock?.();
         handleClose();
     }
 
@@ -47,7 +47,7 @@
         return areasWithPermission.has(entryKey(entry));
     }
 
-    let showBubbleRow = $derived(groupLockState !== undefined && onSelectGroupLock !== undefined);
+    let showBubbleRow = $derived(groupLockState !== undefined && onselectgrouplock !== undefined);
 </script>
 
 <div

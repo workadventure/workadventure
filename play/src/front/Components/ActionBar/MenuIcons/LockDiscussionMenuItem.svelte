@@ -119,15 +119,15 @@
                     {
                         areas: lockableAreas,
                         areasWithPermission,
-                        onSelect: (entry: LockableAreaEntry) => {
+                        onselect: (entry: LockableAreaEntry) => {
                             lockAreaClick(entry);
                         },
-                        onClose: closePicker,
+                        onclose: closePicker,
                         groupLockState:
                             $currentPlayerGroupLockStateStore !== undefined
                                 ? $currentPlayerGroupLockStateStore
                                 : undefined,
-                        onSelectGroupLock:
+                        onselectgrouplock:
                             $currentPlayerGroupLockStateStore !== undefined
                                 ? () => {
                                       analyticsClient.lockDiscussion();

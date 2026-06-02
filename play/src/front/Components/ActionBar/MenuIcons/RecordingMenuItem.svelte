@@ -75,12 +75,12 @@
             RecordingSpacePicker,
             {
                 rowsStore: derived(recordingMenuState, ($state) => $state.currentRows),
-                onSelect: (row: RecordingSpaceRow) => {
+                onselect: (row: RecordingSpaceRow) => {
                     applyRecordingAction(row).catch((error) => {
                         console.error(`Failed to apply recording action`, error);
                     });
                 },
-                onClose: closeSpacePicker,
+                onclose: closeSpacePicker,
             },
             {
                 placement: "bottom",
