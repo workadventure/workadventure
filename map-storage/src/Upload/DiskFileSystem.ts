@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs-extra";
-import type { Archiver } from "archiver";
 import type { NextFunction, Response } from "express";
+import type ZipStream from "zip-stream";
 import type * as unzipper from "unzipper";
 import { MapListService } from "../Services/MapListService";
 import { FileNotFoundError } from "./FileNotFoundError";
@@ -144,10 +144,46 @@ export class DiskFileSystem implements FileSystemInterface {
         return fs.writeFile(fullPath, Buffer.from(content), { encoding: "utf-8" });
     }
 
-    archiveDirectory(archiver: Archiver, virtualPath: string): Promise<void> {
+    async archiveDirectory(archive: ZipStream, virtualPath: string): Promise<void> {
         const fullPath = this.getFullPath(virtualPath);
-        archiver.glob("**/*", { cwd: fullPath, ignore: MapListService.CACHE_NAME });
-        return Promise.resolve();
+        await this.addDirectoryToArchive(archive, fullPath, "");
+    }
+
+    private async addDirectoryToArchive(
+        archive: ZipStream,
+        directory: string,
+        archiveDirectory: string,
+    ): Promise<void> {
+        const entries = await fs.readdir(directory, { withFileTypes: true });
+        for (const entry of entries) {
+            if (entry.name === MapListService.CACHE_NAME || entry.name.startsWith(".")) {
+                continue;
+            }
+
+            const fullPath = path.join(directory, entry.name);
+            const archivePath = path.posix.join(archiveDirectory, entry.name);
+            if (entry.isDirectory()) {
+                // zip-stream writes entries sequentially, so keep the recursive walk ordered.
+                // eslint-disable-next-line no-await-in-loop
+                await this.addDirectoryToArchive(archive, fullPath, archivePath);
+                continue;
+            }
+            if (!entry.isFile()) {
+                continue;
+            }
+
+            // zip-stream writes entries sequentially, so keep archive writes ordered.
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise<void>((resolve, reject) => {
+                archive.entry(fs.createReadStream(fullPath), { name: archivePath }, (err) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    resolve();
+                });
+            });
+        }
     }
 
     async getAllFilesWithin(dir: string, startingDir: string): Promise<string[]> {
