@@ -5,8 +5,8 @@
     import { selectedChatMessageToReply } from "../../../Stores/ChatStore";
     import { ProximityChatRoom } from "../../../Connection/Proximity/ProximityChatRoom";
     import { chatInputFocusStore } from "../../../../Stores/ChatStore";
-    import { IconLoader, IconPaperclip, IconX } from "@wa-icons";
     import LL from "../../../../../i18n/i18n-svelte";
+    import { IconLoader, IconPaperclip, IconX } from "@wa-icons";
 
     let files: FileList | undefined = $state(undefined);
     let fileInputElement: HTMLInputElement;
