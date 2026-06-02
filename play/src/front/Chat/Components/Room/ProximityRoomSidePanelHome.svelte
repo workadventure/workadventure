@@ -11,7 +11,15 @@
     } from "../../Connection/ChatConnection";
     import { roomSidePanelStore, type RoomSidePanelSection } from "../../Stores/RoomSidePanelStore";
     import Avatar from "../Avatar.svelte";
-    import { IconBellOff, IconCheckList, IconLoader, IconUnMute, IconUserPlus, IconUsersGroup } from "@wa-icons";
+    import {
+        IconBellOff,
+        IconCheckList,
+        IconHelpCircle,
+        IconLoader,
+        IconUnMute,
+        IconUserPlus,
+        IconUsersGroup,
+    } from "@wa-icons";
 
     interface Props {
         room: ProximityChatSidePanelRoom;
@@ -35,7 +43,9 @@
     let openPollCount = $derived($pollItems.filter((poll) => !get(poll.state).isEnded).length);
     let openQuestionCount = $derived($questionItems.filter((question) => !get(question.state).isAnswered).length);
     let pollCardValue = $derived(`${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`);
-    let questionCardValue = $derived(`${$questionItems.length} · ${openQuestionCount} open`);
+    let questionCardValue = $derived(
+        `${$questionItems.length} · ${openQuestionCount} ${$LL.chat.question.openStatus()}`,
+    );
     let isPollCatalogueLoading = $derived(
         $pollCatalogueHydrationState.status === "loading" || $pollCatalogueHydrationState.status === "idle",
     );
@@ -123,8 +133,8 @@
                         data-testid="proximityRoomSidePanelHomeQuestionsUnreadBadge"
                     ></span>
                 {/if}
-                <IconCheckList font-size={18} />
-                <div class="mt-2 text-sm font-semibold">Questions</div>
+                <IconHelpCircle font-size={18} />
+                <div class="mt-2 text-sm font-semibold">{$LL.chat.question.title()}</div>
                 <div class="mt-1 text-xs text-white/55">{questionCardValue}</div>
             </button>
         </div>

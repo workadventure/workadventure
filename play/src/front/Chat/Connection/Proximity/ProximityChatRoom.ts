@@ -202,7 +202,7 @@ export class ProximityChatRoom implements ChatRoom {
         chatId: "0",
         uuid: "0",
         availabilityStatus: writable(AvailabilityStatus.ONLINE),
-        username: "Unknown",
+        username: get(LL).chat.question.unknownAuthor(),
         pictureStore: readable(undefined),
         roomName: undefined,
         playUri: undefined,
@@ -212,6 +212,10 @@ export class ProximityChatRoom implements ChatRoom {
 
     private isDefaultProximityRoom(): boolean {
         return this.spaceName === DEFAULT_PROXIMITY_SPACE_NAME;
+    }
+
+    private get unknownUserName(): string {
+        return this.unknownUser.username ?? get(LL).chat.question.unknownAuthor();
     }
 
     private scriptingOutputAudioStreamManager: ScriptingOutputAudioStreamManager | undefined;
@@ -244,7 +248,7 @@ export class ProximityChatRoom implements ChatRoom {
 
             notificationManager.createNotification(
                 new MessageNotification(
-                    message.sender.username ?? "unknown",
+                    message.sender.username ?? this.unknownUserName,
                     get(message.content).body,
                     this.id,
                     get(this.name),
@@ -318,7 +322,7 @@ export class ProximityChatRoom implements ChatRoom {
                 spaceMessage: {
                     message: message,
                     characterTextures: spaceUser?.characterTextures ?? [],
-                    name: chatUser.username ?? "unknown",
+                    name: chatUser.username ?? this.unknownUserName,
                 },
             });
         }
@@ -493,7 +497,7 @@ export class ProximityChatRoom implements ChatRoom {
         this.unreadMessagesCount.set(get(this.unreadMessagesCount) + newPolls.length);
         for (const poll of newPolls) {
             chatNotificationStore.addNotification(
-                poll.senderName ?? this.unknownUser.username ?? "unknown",
+                poll.senderName ?? this.unknownUserName,
                 getProximityPollNotificationMessage(poll, get(LL).chat.poll.title()),
                 this,
                 poll.id,
@@ -535,8 +539,8 @@ export class ProximityChatRoom implements ChatRoom {
         this.unreadMessagesCount.set(get(this.unreadMessagesCount) + newQuestions.length);
         for (const question of newQuestions) {
             chatNotificationStore.addNotification(
-                question.senderName ?? this.unknownUser.username ?? "unknown",
-                `Question: ${question.body}`,
+                question.senderName ?? this.unknownUserName,
+                get(LL).chat.question.notification({ question: question.body }),
                 this,
                 question.id,
                 true,
@@ -677,7 +681,7 @@ export class ProximityChatRoom implements ChatRoom {
             ...this.unknownUser,
             chatId: poll.senderId,
             uuid: poll.senderId,
-            username: poll.senderName ?? this.unknownUser.username,
+            username: poll.senderName ?? this.unknownUserName,
             spaceUserId: poll.senderId,
         };
     }
@@ -696,7 +700,7 @@ export class ProximityChatRoom implements ChatRoom {
             ...this.unknownUser,
             chatId: question.senderId,
             uuid: question.senderId,
-            username: question.senderName ?? this.unknownUser.username,
+            username: question.senderName ?? this.unknownUserName,
             spaceUserId: question.senderId,
         };
     }
@@ -797,7 +801,7 @@ export class ProximityChatRoom implements ChatRoom {
             uuidv4(),
             {
                 ...this.unknownUser,
-                username: authorName ?? this.unknownUser.username,
+                username: authorName ?? this.unknownUserName,
             },
             writable(newChatMessageContent),
             new Date(),
@@ -972,7 +976,7 @@ export class ProximityChatRoom implements ChatRoom {
             this.users = users;
             this._currentMeetingParticipantsStore.set(this.mapSpaceUsersToMeetingParticipants(users));
             if (!hasUserInProximityChat && users.size > 1) {
-                let name = "unknown";
+                let name = this.unknownUserName;
                 // Let's find the first user that is not us
                 for (const user of users.values()) {
                     if (user.spaceUserId !== this._spaceUserId) {
@@ -1021,7 +1025,7 @@ export class ProximityChatRoom implements ChatRoom {
 
                 // Show proximity notification when unread count increases
                 if (lastMessage && lastMessage.sender) {
-                    const userName = lastMessage.sender.username ?? "unknown";
+                    const userName = lastMessage.sender.username ?? this.unknownUserName;
                     const messageBody = get(lastMessage.content).body;
                     const numberOfChar = 60;
                     const messageToDisplay =
@@ -1094,7 +1098,7 @@ export class ProximityChatRoom implements ChatRoom {
             const peer = Array.from(users.values()).find((user) => user.spaceUserId !== this._spaceUserId);
 
             if (peer) {
-                statusChanger.setUserNameInteraction(peer.name ?? "unknown");
+                statusChanger.setUserNameInteraction(peer.name ?? this.unknownUserName);
                 statusChanger.applyInteractionRules();
             }
         }

@@ -89,7 +89,7 @@
                         {:else if displayedSection === "participants"}
                             {$LL.chat.roomPanel.sections.participants()}
                         {:else if displayedSection === "questions"}
-                            Questions
+                            {$LL.chat.question.title()}
                         {:else if displayedSection === "settings"}
                             {$LL.chat.roomPanel.sections.settings()}
                         {/if}
