@@ -3431,7 +3431,7 @@ ${escapedMessage}
                 PopUpTriggerActionMessage,
                 {
                     message: message.message,
-                    click: () => {
+                    onclick: () => {
                         popupStore.removePopup(message.uuid);
                         iframeListener.sendActionMessageTriggered(message.uuid);
                     },
