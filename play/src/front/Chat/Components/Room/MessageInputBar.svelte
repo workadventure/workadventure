@@ -51,6 +51,12 @@
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
     import {
+        completeFilePreview,
+        createFilePreview,
+        removeFilePreviews,
+        type MessageInputBarFilePreview,
+    } from "./MessageInputBarFilePreview";
+    import {
         IconHelpCircle,
         IconList,
         IconLoader,
@@ -60,12 +66,6 @@
         IconX,
     } from "@wa-icons";
     import { modals } from "@wa-modals";
-    import {
-        completeFilePreview,
-        createFilePreview,
-        removeFilePreviews,
-        type MessageInputBarFilePreview,
-    } from "./MessageInputBarFilePreview";
 
     interface Props {
         room: ChatConversation;
