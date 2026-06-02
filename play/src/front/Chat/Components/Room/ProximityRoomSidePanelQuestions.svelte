@@ -1,6 +1,7 @@
 <script lang="ts">
     import { get, readable } from "svelte/store";
     import type { ChatQuestionItem, ProximityChatSidePanelRoom } from "../../Connection/ChatConnection";
+    import LL from "../../../../i18n/i18n-svelte";
 
     interface Props {
         room: ProximityChatSidePanelRoom;
@@ -77,13 +78,13 @@
             }}
         >
             <label class="text-xs font-bold uppercase tracking-widest text-white/55" for="proximity-question-input">
-                Ask a question
+                {$LL.chat.question.ask()}
             </label>
             <textarea
                 id="proximity-question-input"
                 class="m-0 min-h-20 resize-none rounded-lg border border-solid border-white/10 bg-black/20 p-3 text-sm text-white placeholder:text-white/35 focus:border-white/25 focus:outline-none"
                 maxlength={maxQuestionLength}
-                placeholder="Write your question..."
+                placeholder={$LL.chat.question.placeholder()}
                 bind:value={draftQuestion}
                 disabled={!canCreateQuestion}
                 data-testid="proximityQuestionInput"
@@ -96,7 +97,7 @@
                     disabled={!canCreateQuestion || draftQuestion.trim().length === 0}
                     data-testid="proximityQuestionSubmit"
                 >
-                    Send
+                    {$LL.chat.question.send()}
                 </button>
             </div>
         </form>
@@ -109,7 +110,7 @@
             onclick={() => (activeFilter = "open")}
             data-testid="proximityQuestionsOpenFilter"
         >
-            To answer ({openQuestionCount})
+            {$LL.chat.question.toAnswer({ count: openQuestionCount })}
         </button>
         <button
             type="button"
@@ -117,25 +118,30 @@
             onclick={() => (activeFilter = "answered")}
             data-testid="proximityQuestionsAnsweredFilter"
         >
-            Answered ({answeredQuestionCount})
+            {$LL.chat.question.answeredFilter({ count: answeredQuestionCount })}
         </button>
     </div>
 
     <div class="min-h-0 flex-1 overflow-y-auto px-3 pb-4">
         {#if filteredQuestions.length === 0}
             <div class="rounded-lg border border-solid border-white/10 bg-white/[0.04] p-4 text-sm text-white/55">
-                {activeFilter === "open" ? "No question to answer yet." : "No answered question yet."}
+                {activeFilter === "open" ? $LL.chat.question.emptyOpen() : $LL.chat.question.emptyAnswered()}
             </div>
         {:else}
             <div class="flex flex-col gap-2">
                 {#each filteredQuestions as question (question.id)}
                     {@const state = get(question.state)}
-                    <article class="rounded-lg border border-solid border-white/10 bg-white/[0.04] p-3 text-white">
+                    <article
+                        class="rounded-lg border border-solid border-white/10 bg-white/[0.04] p-3 text-white"
+                        data-testid="proximityQuestionItem"
+                    >
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0 flex-1">
                                 <p class="m-0 whitespace-pre-wrap text-sm leading-5">{state.body}</p>
                                 <div class="mt-2 text-xs text-white/45">
-                                    {state.senderName ?? "Unknown"} · {new Date(state.createdAt).toLocaleTimeString()}
+                                    {state.senderName ?? $LL.chat.question.unknownAuthor()} · {new Date(
+                                        state.createdAt
+                                    ).toLocaleTimeString()}
                                 </div>
                             </div>
                             <div class="flex shrink-0 items-center gap-1.5">
@@ -143,7 +149,7 @@
                                     <span
                                         class="rounded-full bg-emerald-500/20 px-2 py-1 text-xs font-semibold text-emerald-100"
                                     >
-                                        Answered
+                                        {$LL.chat.question.answered()}
                                     </span>
                                 {/if}
 
@@ -151,7 +157,8 @@
                                     type="button"
                                     class={getUpvoteClass(state.hasUpvoted)}
                                     disabled={!state.canUpvote}
-                                    aria-label="Upvote question"
+                                    aria-label={$LL.chat.question.upvote()}
+                                    data-testid="proximityQuestionUpvoteButton"
                                     onclick={() => toggleUpvote(question)}
                                 >
                                     <span aria-hidden="true">👍</span>
@@ -165,9 +172,10 @@
                                 <button
                                     type="button"
                                     class="m-0 rounded-full border border-solid border-emerald-300/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-100 transition-colors hover:bg-emerald-500/20"
+                                    data-testid="proximityQuestionMarkAnsweredButton"
                                     onclick={() => markAnswered(question)}
                                 >
-                                    Mark answered
+                                    {$LL.chat.question.markAnswered()}
                                 </button>
                             {/if}
 
@@ -175,9 +183,10 @@
                                 <button
                                     type="button"
                                     class="m-0 rounded-full border border-solid border-red-300/25 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-100 transition-colors hover:bg-red-500/20"
+                                    data-testid="proximityQuestionDeleteButton"
                                     onclick={() => removeQuestion(question)}
                                 >
-                                    Delete
+                                    {$LL.chat.delete()}
                                 </button>
                             {/if}
                         </div>
