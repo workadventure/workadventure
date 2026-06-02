@@ -66,13 +66,13 @@
             analyticsClient.clickToZoomOut();
         }
 
-        cameraManager.smoothZoomByFactor(zoomFactor);
+        cameraManager?.smoothZoomByFactor(zoomFactor);
 
         // If the pointer is still down after the delay, the same gesture becomes continuous zoom.
         clearZoomHoldTimeout();
         zoomHoldTimeout = setTimeout(() => {
             if (activeZoomPointerId === event.pointerId) {
-                getCameraManager().startContinuousZoom(continuousZoomFactor);
+                getCameraManager()?.startContinuousZoom(continuousZoomFactor);
             }
         }, ZOOM_HOLD_DELAY);
     }
@@ -89,7 +89,7 @@
         clearZoomHoldTimeout();
         activeZoomPointerId = undefined;
         if (hadActiveZoom) {
-            getCameraManager().stopContinuousZoom();
+            getCameraManager()?.stopContinuousZoom();
         }
     }
 

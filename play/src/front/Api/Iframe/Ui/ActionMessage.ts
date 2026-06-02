@@ -23,7 +23,7 @@ export class ActionMessage {
         this.uuid = uuidv4();
         this.message = actionMessageOptions.message;
         this.type = actionMessageOptions.type ?? "message";
-        this.callback = actionMessageOptions.callback;
+        this.callback = actionMessageOptions.callback ?? (() => {});
         this.create().catch((e) => console.error(e));
     }
 

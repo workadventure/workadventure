@@ -13,6 +13,7 @@ import type { UpgradeFailedData } from "../controllers/IoSocketController";
 import { PusherWebSocket } from "./PusherWebSocket";
 import type { RawSocket } from "./PusherWebSocket";
 import { validateWebsocketQuery } from "./QueryValidator";
+import { getClientIpFromXForwardedFor } from "./ClientIp";
 
 type UpgradeContext<TQuery> = {
     query: TQuery;
@@ -215,13 +216,13 @@ export class PusherRoomSocketController {
                         );
                         return;
                     }
-
+                    const ipAddress = getClientIpFromXForwardedFor(req.getHeader("x-forwarded-for"));
                     await config.upgrade({
                         query,
                         request: {
                             method: req.getMethod(),
                             url: req.getUrl(),
-                            ipAddress: req.getHeader("x-forwarded-for"),
+                            ipAddress,
                             locale: req.getHeader("accept-language"),
                             token: websocketProtocol,
                         },

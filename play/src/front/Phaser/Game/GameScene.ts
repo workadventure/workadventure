@@ -1000,6 +1000,13 @@ export class GameScene extends DirtyScene {
                             }
                         }
 
+                        if (this.cleanupDone) {
+                            // The GameScene was closed before completing.
+                            // For instance, the websocket is closed while the map was loading.
+                            // Let's not join the room.
+                            return;
+                        }
+
                         this.joinRoom()
                             .then(() => {
                                 this.initUserPermissionsOnEntity();
@@ -2238,8 +2245,6 @@ export class GameScene extends DirtyScene {
 
                 // Get position from UUID only after the connection to the pusher is established
                 this.tryMovePlayerWithMoveToUserParameter();
-
-                gameSceneStore.set(this);
             })
             .catch((e) => {
                 Sentry.captureException(e);
@@ -2471,6 +2476,7 @@ export class GameScene extends DirtyScene {
         await Promise.all(allPromises);
 
         this.roomJoinedPromiseDeferred.resolve(room);
+        gameSceneStore.set(this);
     }
 
     private initExtensionModule() {

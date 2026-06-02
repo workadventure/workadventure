@@ -5,24 +5,21 @@
 
     interface Props {
         message: string;
-        click: () => void;
+        onclick: () => void;
         userInputManager: UserInputManager;
     }
 
-    let { message, click, userInputManager }: Props = $props();
+    let { message, onclick, userInputManager }: Props = $props();
 
     onMount(() => {
-        userInputManager.addSpaceEventListener(click);
+        userInputManager.addSpaceEventListener(onclick);
     });
 
     onDestroy(() => {
-        userInputManager.removeSpaceEventListener(click);
+        userInputManager.removeSpaceEventListener(onclick);
     });
 </script>
 
-<PopUpContainer reduceOnSmallScreen={true}>
+<PopUpContainer reduceOnSmallScreen={true} {onclick}>
     {message}
-    {#snippet buttons()}
-        <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" onclick={click}> Close </button>
-    {/snippet}
 </PopUpContainer>

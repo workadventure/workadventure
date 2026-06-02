@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { Snippet } from "svelte";
+
     interface Props {
         extraClasses?: string;
         fullContent?: boolean;
@@ -7,6 +8,7 @@
         showButtons?: boolean;
         children?: Snippet;
         buttons?: Snippet;
+        onclick?: () => void;
     }
 
     let {
@@ -16,12 +18,16 @@
         showButtons = true,
         children,
         buttons,
+        onclick,
     }: Props = $props();
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="popup-container bg-contrast/80 flex flex-col backdrop-blur-md text-white min-w-60 min-h-20 rounded-lg overflow-hidden transition-all animation responsive z-20 {extraClasses}"
     class:responsive={reduceOnSmallScreen}
+    {onclick}
 >
     <div class="flex items-center p-4 px-10 pointer-events-auto justify-center grow">
         <div class="text-center leading-6 responsive-message {fullContent ? 'w-full' : ''}">

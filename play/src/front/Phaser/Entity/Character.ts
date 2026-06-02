@@ -569,10 +569,10 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     destroy(): void {
-        this.scene.events.off(Phaser.Scenes.Events.POST_UPDATE, this.syncDisplayPositionWithPhysics);
         this.usernameDisplay?.destroy();
-        for (const sprite of this.sprites.values()) {
-            if (this.scene) {
+        if (this.scene) {
+            this.scene.events.off(Phaser.Scenes.Events.POST_UPDATE, this.syncDisplayPositionWithPhysics);
+            for (const sprite of this.sprites.values()) {
                 this.scene.sys.updateList.remove(sprite);
             }
         }

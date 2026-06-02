@@ -218,7 +218,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 break;
             }
             case "KeyR": {
-                this.gameScene.CurrentPlayer.rotate();
+                this.gameScene.CurrentPlayer?.rotate();
                 break;
             }
             case "KeyC":
@@ -304,7 +304,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public handleKeyUpEvent(event: KeyboardEvent): KeyboardEvent {
         switch (event.key) {
             case "Escape": {
-                const dismissed = this.gameScene.CurrentPlayer.dismissNewMediaDevicePrompts((deviceId) => {
+                const dismissed = this.gameScene.CurrentPlayer?.dismissNewMediaDevicePrompts((deviceId) => {
                     localUserStore.addIgnoredNewMediaDeviceId(deviceId);
                 });
                 if (dismissed) {
@@ -341,7 +341,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             activatable.activate();
             activatable.destroyText("object");
         }
-        this.gameScene.CurrentPlayer.handlePressSpacePlayerTextCallback();
+        this.gameScene.CurrentPlayer?.handlePressSpacePlayerTextCallback();
     }
 
     public addSpaceEventListener(callback: () => void): void {
