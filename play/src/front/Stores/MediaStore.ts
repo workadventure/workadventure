@@ -911,6 +911,15 @@ export const audioProcessedLocalStreamStore = derived<
         currentAudioProcessedTransformAbortController = controller;
 
         audioProcessedStreamUpdateQueue = audioProcessedStreamUpdateQueue
+            .then(async () => {
+                setIfCurrent(
+                    await noiseSuppressionController.transform(
+                        $rawLocalStreamStore,
+                        $noiseSuppressionEnabledStore,
+                        controller.signal
+                    )
+                );
+            })
             .catch((e) => {
                 const isAbort = e instanceof AbortError || (e instanceof DOMException && e.name === "AbortError");
                 if (isAbort) {
@@ -921,15 +930,6 @@ export const audioProcessedLocalStreamStore = derived<
                     type: "error",
                     error: e instanceof Error ? e : new Error("An unknown error happened"),
                 });
-            })
-            .then(async () => {
-                setIfCurrent(
-                    await noiseSuppressionController.transform(
-                        $rawLocalStreamStore,
-                        $noiseSuppressionEnabledStore,
-                        controller.signal
-                    )
-                );
             });
     },
     {
@@ -952,8 +952,6 @@ async function runLocalStreamUpdate(
     setIfCurrent: SetLocalStreamIfCurrent,
     signal: AbortSignal,
 ): Promise<void> {
-    // This can happen when the user navigates away from the page while the stream is being updated
-    if (streamValue == undefined) return;
     if (
         streamValue.type === "error" ||
         streamValue.stream === undefined ||
