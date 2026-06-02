@@ -45,14 +45,14 @@
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
-    import { IconList, IconLoader, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
-    import { modals } from "@wa-modals";
     import {
         completeFilePreview,
         createFilePreview,
         removeFilePreviews,
         type MessageInputBarFilePreview,
     } from "./MessageInputBarFilePreview";
+    import { IconList, IconLoader, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
+    import { modals } from "@wa-modals";
 
     interface Props {
         room: ChatConversation;
