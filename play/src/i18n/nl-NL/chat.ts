@@ -334,6 +334,43 @@ const chat: DeepPartial<Translation["chat"]> = {
         creationSuccessNotification: "Kamer gemaakt",
         restrictedDescription: "Alleen zichtbaar voor leden van de bovenliggende map: {folderName}",
     },
+    joinExternalRoom: {
+        menuTitle: "Deelnemen aan externe kamer",
+        title: "Deelnemen aan externe kamer",
+        address: {
+            label: "Kameradres",
+            placeholder: "#room:server.org, !room:server.org of Matrix-permalink",
+        },
+        directory: {
+            searchLabel: "Openbare directory doorzoeken",
+            searchPlaceholder: "Kamers zoeken",
+            serverLabel: "Server",
+            serverPlaceholder: "matrix.org",
+            emptySearch: "Voer een zoekterm in om openbare kamers te zoeken.",
+            noResults: "Geen openbare kamers gevonden voor deze zoekopdracht.",
+        },
+        buttons: {
+            preview: "Voorbeeld",
+            search: "Zoeken",
+            cancel: "Annuleren",
+            join: "Deelnemen",
+            askToJoin: "Toegang vragen",
+            cancelRequest: "Verzoek annuleren",
+        },
+        preview: {
+            members: "{count} leden",
+            worldReadable: "Openbaar leesbaar",
+            recentMessages: "Recente berichten",
+        },
+        reason: {
+            label: "Reden",
+            placeholder: "Optioneel bericht",
+        },
+        knocked: "Verzoek verzonden",
+        errors: {
+            forbidden: "Je hebt geen toestemming om rechtstreeks aan deze kamer deel te nemen.",
+        },
+    },
     createFolder: {
         title: "Nieuwe map maken",
         name: "Naam",

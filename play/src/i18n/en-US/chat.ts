@@ -333,6 +333,43 @@ const chat: BaseTranslation = {
         creationSuccessNotification: "Room created",
         restrictedDescription: "This room will be visible only to members of the parent folder: {folderName}",
     },
+    joinExternalRoom: {
+        menuTitle: "Join external room",
+        title: "Join external room",
+        address: {
+            label: "Room address",
+            placeholder: "#room:server.org, !room:server.org or Matrix permalink",
+        },
+        directory: {
+            searchLabel: "Search public directory",
+            searchPlaceholder: "Search rooms",
+            serverLabel: "Server",
+            serverPlaceholder: "matrix.org",
+            emptySearch: "Enter a search term to search public rooms.",
+            noResults: "No public rooms found for this search.",
+        },
+        buttons: {
+            preview: "Preview",
+            search: "Search",
+            cancel: "Cancel",
+            join: "Join",
+            askToJoin: "Ask to join",
+            cancelRequest: "Cancel request",
+        },
+        preview: {
+            members: "{count} members",
+            worldReadable: "World readable",
+            recentMessages: "Recent messages",
+        },
+        reason: {
+            label: "Reason",
+            placeholder: "Optional message",
+        },
+        knocked: "Request sent",
+        errors: {
+            forbidden: "You do not have permission to join this room directly.",
+        },
+    },
     createFolder: {
         title: "Create new folder",
         name: "Name",

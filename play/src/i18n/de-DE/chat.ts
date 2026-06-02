@@ -336,6 +336,43 @@ const chat: DeepPartial<Translation["chat"]> = {
         creationSuccessNotification: "Raum erstellt",
         restrictedDescription: "Nur für Mitglieder des übergeordneten Ordners sichtbar: {folderName}",
     },
+    joinExternalRoom: {
+        menuTitle: "Externem Raum beitreten",
+        title: "Externem Raum beitreten",
+        address: {
+            label: "Raumadresse",
+            placeholder: "#room:server.org, !room:server.org oder Matrix-Permalink",
+        },
+        directory: {
+            searchLabel: "Öffentliches Verzeichnis durchsuchen",
+            searchPlaceholder: "Räume suchen",
+            serverLabel: "Server",
+            serverPlaceholder: "matrix.org",
+            emptySearch: "Gib einen Suchbegriff ein, um öffentliche Räume zu suchen.",
+            noResults: "Für diese Suche wurden keine öffentlichen Räume gefunden.",
+        },
+        buttons: {
+            preview: "Vorschau",
+            search: "Suchen",
+            cancel: "Abbrechen",
+            join: "Beitreten",
+            askToJoin: "Beitritt anfragen",
+            cancelRequest: "Anfrage abbrechen",
+        },
+        preview: {
+            members: "{count} Mitglieder",
+            worldReadable: "Weltweit lesbar",
+            recentMessages: "Aktuelle Nachrichten",
+        },
+        reason: {
+            label: "Grund",
+            placeholder: "Optionale Nachricht",
+        },
+        knocked: "Anfrage gesendet",
+        errors: {
+            forbidden: "Sie haben keine Berechtigung, diesem Raum direkt beizutreten.",
+        },
+    },
     createFolder: {
         title: "Neuen Ordner erstellen",
         name: "Name",

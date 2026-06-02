@@ -369,6 +369,70 @@ export type ChatRoomPrivacyState = {
     restrictedRoomId?: string;
 };
 
+export type JoinExistingRoomInput = {
+    roomId?: string;
+    roomAlias?: string;
+    viaServers?: string[];
+    autoJoin?: boolean;
+    shouldPeek?: boolean;
+    eventId?: string;
+    inviteSignUrl?: string;
+    reason?: string;
+    joinRule?: "public" | "invite" | "knock" | "restricted" | "knock_restricted" | "private" | string;
+    worldReadable?: boolean;
+    name?: string;
+    topic?: string;
+    avatarUrl?: string;
+    numJoinedMembers?: number;
+    guestCanJoin?: boolean;
+    roomType?: string;
+};
+
+export type ExternalRoomErrorState = "not_found" | "forbidden" | "incompatible_version" | "network" | "error";
+
+export type ExternalRoomPreviewMessage = {
+    id?: string;
+    sender?: string;
+    body: string;
+    date?: Date;
+};
+
+export type ExternalRoomDirectoryResult = {
+    roomId: string;
+    name?: string;
+    roomAlias?: string;
+    aliases?: string[];
+    topic?: string;
+    avatarUrl?: string;
+    numJoinedMembers?: number;
+    joinRule?: string;
+    worldReadable?: boolean;
+    guestCanJoin?: boolean;
+    roomType?: string;
+    viaServers: string[];
+};
+
+export type ExternalRoomPreview = ExternalRoomDirectoryResult & {
+    eventId?: string;
+    timelinePreview?: ExternalRoomPreviewMessage[];
+    errorState?: ExternalRoomErrorState;
+};
+
+export type JoinExistingRoomResult =
+    | { mode: "joined"; room: ChatRoom; eventId?: string }
+    | {
+          mode: "ask_to_join";
+          roomId?: string;
+          roomAlias?: string;
+          viaServers: string[];
+          errorState: ExternalRoomErrorState;
+      };
+
+export type KnockExistingRoomResult = {
+    mode: "knocked";
+    roomId?: string;
+};
+
 export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration {
     id: string;
     name: Readable<string>;
@@ -451,6 +515,12 @@ export interface ChatConnectionInterface {
             name: string | undefined;
         }[]
     >;
+    parseExternalRoomAddress(address: string): JoinExistingRoomInput;
+    searchExternalPublicRooms(searchText: string, server?: string): Promise<ExternalRoomDirectoryResult[]>;
+    previewExistingRoom(input: JoinExistingRoomInput): Promise<ExternalRoomPreview>;
+    joinExistingRoom(input: JoinExistingRoomInput): Promise<JoinExistingRoomResult>;
+    knockExistingRoom(input: JoinExistingRoomInput): Promise<KnockExistingRoomResult>;
+    cancelExternalRoomRequest(roomId: string): Promise<void>;
 
     joinRoom(roomId: string): Promise<ChatRoom | undefined>;
 
