@@ -5,7 +5,7 @@ type MetadataPrefixProcessorFunction = (
     key: string,
     value: unknown,
     senderId: string,
-    space: Space
+    space: Space,
 ) => Promise<unknown>;
 export class MetadataProcessor {
     private metadataProcessors = new Map<string, MetadataProcessorFunction>();

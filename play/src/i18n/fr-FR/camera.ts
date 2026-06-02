@@ -6,7 +6,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     editMic: "Modifier le micro",
     editSpeaker: "Modifier la sortie audio",
     active: "Actif",
-    disabled: "Desactivé",
+    disabled: "Désactivé",
     notRecommended: "Non recommandé",
     enable: {
         title: "Allumez votre caméra et votre microphone",
@@ -67,17 +67,17 @@ const camera: DeepPartial<Translation["camera"]> = {
         },
     },
     webrtc: {
-        title: "Erreur de connexion avec le serveur vidéo relai",
-        titlePending: "En attente de connexion avec le serveur vidéo relai",
+        title: "Erreur de connexion avec le serveur vidéo relais",
+        titlePending: "En attente de connexion avec le serveur vidéo relais",
         error: "Impossible d'accéder au serveur TURN",
         content:
             "Impossible de se connecter au serveur vidéo relais. La connexion audio/vidéo avec d'autres utilisateurs pourrait ne pas fonctionner.",
         solutionVpn:
-            "Si vous êtes connectés avec <strong>un VPN</strong>, vous devez vous déconnecter du VPN et rafraîchir votre page pour profiter de la meilleure expérience possible.",
+            "Si vous êtes connecté avec <strong>un VPN</strong>, vous devez vous déconnecter du VPN et rafraîchir votre page pour profiter de la meilleure expérience possible.",
         solutionVpnNotAskAgain: "Compris, ne plus afficher cette page 🫡",
         solutionHotspot:
-            "Si vous êtes sur un réseau sécurisé (réseau d'entreprise...), essayez de changer de réseau. Par exemple, en créant un <strong>hotspot Wifi</strong> avec votre smartphone.",
-        solutionNetworkAdmin: "Si vous êtes <strong>administrateur réseay</strong>, consultez le ",
+            "Si vous êtes sur un réseau sécurisé (réseau d'entreprise...), essayez de changer de réseau. Par exemple, en créant un <strong>hotspot Wi-Fi</strong> avec votre smartphone.",
+        solutionNetworkAdmin: "Si vous êtes <strong>administrateur réseau</strong>, consultez le ",
         preparingYouNetworkGuide: '"guide de préparation du réseau"',
         refresh: "Rafraîchir",
         continue: "Continuer",

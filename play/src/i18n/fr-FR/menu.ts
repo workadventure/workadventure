@@ -7,10 +7,10 @@ const menu: DeepPartial<Translation["menu"]> = {
         open: {
             menu: "Ouvrir le menu",
             invite: "Afficher l'invitation",
-            register: "Enregistrez vous",
+            register: "Enregistrez-vous",
             chat: "Ouvrir le chat",
             userlist: "Liste des utilisateurs",
-            openEmoji: "Ouvrir la selection d'emoji",
+            openEmoji: "Ouvrir la sélection d'emoji",
             closeEmoji: "Fermer le menu emoji",
             mobile: "Ouvrir le menu mobile",
             calendar: "Ouvrir le calendrier",
@@ -31,13 +31,13 @@ const menu: DeepPartial<Translation["menu"]> = {
             title: "Qualité vidéo",
             low: "Basse",
             recommended: "Recommandée",
-            high: "High",
+            high: "Haute",
         },
         shareScreenBandwidth: {
             title: "Qualité du partage d'écran",
             low: "Basse",
             recommended: "Recommandée",
-            high: "High",
+            high: "Haute",
         },
         bandwidthConstrainedPreference: {
             title: "Si la bande passante réseau est limitée",
@@ -68,7 +68,7 @@ const menu: DeepPartial<Translation["menu"]> = {
                 "Utilise l'isolation de la voix du navigateur et du système d'exploitation lorsqu'elle est disponible.",
         },
         language: {
-            title: "Langage",
+            title: "Langue",
         },
         privacySettings: {
             title: "Mode absent",
@@ -96,7 +96,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         displayVideoQualityStats: "Afficher les statistiques de qualité vidéo",
     },
     invite: {
-        description: "Partager le lien de la salle!",
+        description: "Partager le lien de la salle !",
         copy: "Copier",
         copied: "Copié",
         share: "Partager",
@@ -115,7 +115,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         uploadInfo: "Télécharger un fichier",
         error: "Aucun fichier sélectionné. Vous devez télécharger un fichier avant de l'envoyer.",
         errorUpload:
-            "Erreur lors de l'envoi du fichier. Veuillez vérifier votre fichier et réessayer. Si le problème persiste, contacter l'administrateur.",
+            "Erreur lors de l'envoi du fichier. Veuillez vérifier votre fichier et réessayer. Si le problème persiste, contactez l'administrateur.",
         dragAndDrop: "Glisser-déposer un fichier ici ou cliquer pour sélectionner un fichier 🎧",
     },
     contact: {
@@ -143,7 +143,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             },
             audio: {
                 title: "Droits d'auteur des fichiers audio",
-                empty: "aré de droit d'auteur pour les fichiers audio. Cela ne signifie pas que les fichiers audio n'ont pas de licence.",
+                empty: "Le créateur de la carte n'a pas déclaré de droit d'auteur pour les fichiers audio. Cela ne signifie pas que les fichiers audio n'ont pas de licence.",
             },
         },
     },
