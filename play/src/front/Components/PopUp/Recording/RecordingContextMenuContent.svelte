@@ -10,11 +10,11 @@
     interface Props {
         currentRecord: NonUndefinedFields<Recording>;
         connection?: RoomConnection;
-        onDelete: () => void;
-        onClose: () => void;
+        ondelete: () => void;
+        onclose: () => void;
     }
 
-    let { currentRecord, connection = undefined, onDelete, onClose }: Props = $props();
+    let { currentRecord, connection = undefined, ondelete, onclose }: Props = $props();
 
     async function downloadFile(filename: string) {
         try {
@@ -56,14 +56,14 @@
     }
 
     function handleDelete() {
-        onDelete();
-        onClose();
+        ondelete();
+        onclose();
     }
 
     function handleClickOutside(event: MouseEvent) {
         const target = event.target as HTMLElement;
         if (!target.closest(".context-menu") && !target.closest(".context-menu-trigger")) {
-            onClose();
+            onclose();
         }
     }
 

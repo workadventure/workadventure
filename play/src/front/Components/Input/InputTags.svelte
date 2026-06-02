@@ -23,7 +23,7 @@
         optional = false,
         label,
         value = $bindable<InputTagOption[]>(),
-        options = $bindable<InputTagOption[]>(),
+        options = [],
         placeholder,
         onfocus,
         onblur,
@@ -33,25 +33,27 @@
         info,
     }: Props = $props();
 
-    if (options === undefined) {
-        options = [];
-    }
-
     let filterText = $state("");
+    let filteredOptions: InputTagOption[] = $state([]);
+
+    $effect(() => {
+        filteredOptions = $state.snapshot(options);
+    });
 
     function handleFilter() {
         if (value?.find((i) => i.label === filterText)) return;
-        if (options.find((i) => i.label === filterText)) return;
+        if (filteredOptions.find((i) => i.label === filterText)) return;
         if (filterText.trim().length > 0) {
-            const prev = options.filter((i) => !i.created);
-            options = [...prev, { value: filterText, label: filterText, created: true }];
+            const prev = filteredOptions.filter((i) => !i.created);
+            filteredOptions = [...prev, { value: filterText, label: filterText, created: true }];
         }
     }
 
     function _handleChange() {
-        options = options.map((i) => {
-            delete i.created;
-            return { ...i };
+        filteredOptions = filteredOptions.map((i) => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { created, ...option } = i;
+            return option;
         });
         onchange?.(value);
     }
@@ -84,7 +86,7 @@
         on:change={_handleChange}
         on:input={() => onchange?.(value)}
         on:select={() => onchange?.(value)}
-        items={filterText.trim().length === 0 ? [] : options}
+        items={filterText.trim().length === 0 ? [] : filteredOptions}
         bind:value
         multiple={true}
         placeholder={placeholder ?? "Select rights"}

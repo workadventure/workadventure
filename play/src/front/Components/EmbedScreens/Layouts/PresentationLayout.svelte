@@ -21,7 +21,6 @@
     let highlightScreen: HTMLDivElement | undefined = $state();
     let containerWidth = $state(0);
     let containerHeight = $state(0);
-    let pipOneLineMode: "vertical" | "horizontal" = $state("horizontal");
 
     const windowSize = writable({
         height: window.innerHeight,
@@ -99,15 +98,15 @@
                 : "flex: 0 0 80%; max-height: 80%; min-height: 80%;"
             : "",
     );
-    $effect(() => {
-        pipOneLineMode = pipHighlightLayoutEnabled
+    let pipOneLineMode: "vertical" | "horizontal" = $derived(
+        pipHighlightLayoutEnabled
             ? pipHighlightLandscape
                 ? "vertical"
                 : "horizontal"
             : inPictureInPicture
               ? "vertical"
-              : "horizontal";
-    });
+              : "horizontal",
+    );
 </script>
 
 {#if $proximityMeetingStore === true && !$inExternalServiceStore}
