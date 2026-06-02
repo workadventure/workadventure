@@ -59,14 +59,12 @@
     }
 
     function saveCustomEntityModifications(customEntity: EntityPrefab) {
-        mapEditorModifyCustomEntityEventStore.set({
-            ...customEntity,
-        });
+        mapEditorModifyCustomEntityEventStore.set($state.snapshot(customEntity));
         setIsEditingCustomEntity(false);
     }
 
     function onPickItem(entityPrefab: EntityPrefab) {
-        mapEditorSelectedEntityPrefabStore.set(entityPrefab);
+        mapEditorSelectedEntityPrefabStore.set($state.snapshot(entityPrefab));
     }
 
     function onPickEntityVariant(entityVariant: EntityVariant) {
@@ -78,7 +76,7 @@
     function onColorChange(color: string) {
         selectedColor = color;
         pickedEntity = pickedEntityVariant?.getEntityPrefabsPositions(color)[0];
-        mapEditorSelectedEntityPrefabStore.set(pickedEntity);
+        mapEditorSelectedEntityPrefabStore.set(pickedEntity ? $state.snapshot(pickedEntity) : undefined);
     }
 
     function onSelectedTag(tag: CategoryTag) {

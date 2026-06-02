@@ -115,7 +115,7 @@
         mapEditorModeManager.equipTool(EditorToolName.EntityEditor);
         mapEditorEntityFileDroppedStore.set(true);
         mapEditorEntityModeStore.set("ADD");
-        mapEditorSelectedEntityPrefabStore.set(entityPrefab || defaultEntityPrefab);
+        mapEditorSelectedEntityPrefabStore.set($state.snapshot(entityPrefab || defaultEntityPrefab));
         isTodoListVisibleStore.set(false);
         isCalendarVisibleStore.set(false);
 

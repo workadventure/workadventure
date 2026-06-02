@@ -71,7 +71,7 @@
                 file: fileAsUint8Array,
                 direction: CustomEntityDirection.Down,
                 name: customEditedEntity.name,
-                tags: customEditedEntity.tags,
+                tags: $state.snapshot(customEditedEntity.tags),
                 imagePath: `${generatedId}-${fileToUpload.name}`,
                 collisionGrid: customEditedEntity.collisionGrid,
                 depthOffset: customEditedEntity.depthOffset,
