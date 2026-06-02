@@ -23,7 +23,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     calendar: "Calendrier",
     todoList: "Liste de tâches",
     test: "Tester",
-    editCamMic: "Camera / micro",
+    editCamMic: "Caméra / micro",
     allSettings: "Tous les paramètres",
     installPwa: "Installer l'application web",
     globalMessage: "Envoyer un message global",
@@ -33,7 +33,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     app: "Applications",
     camera: {
         disabled: "Votre caméra est désactivée",
-        activate: "Activer votre camera",
+        activate: "Activer votre caméra",
         noDevices: "Aucune caméra trouvée",
         setBackground: "Définir le fond",
         blurEffects: "Effets de flou",
@@ -47,7 +47,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         temporaryOn: "Micro activé temporairement",
         temporaryRelease: "Relâchez Espace pour couper le micro.",
         noSoundWarning:
-            "Aucun son détecté sur votre micro. Un problème est possible; essayez de changer de micro dans les réglages.",
+            "Aucun son détecté sur votre micro. Un problème est possible ; essayez de changer de micro dans les réglages.",
         noSoundWarningPressEnter: "Aucun son détecté sur votre micro. Appuyez sur Entrée pour ouvrir les réglages.",
         advancedNoiseReduction: "Réduction avancée du bruit",
         noiseSuppressionInitializing: "Initialisation de la réduction du bruit personnalisée...",
@@ -80,7 +80,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         LISTENER: "En réunion",
     },
     subtitle: {
-        camera: "Camera",
+        camera: "Caméra",
         microphone: "Microphone",
         speaker: "Sortie audio",
     },
@@ -120,7 +120,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Votre navigateur a empêché la lecture des sons ambiants. Cliquez sur l'icône pour lancer la lecture.",
         },
         follow: {
-            title: "Demander à vous suivre",
+            title: "Demander à être suivi",
             desc: "Vous pouvez demander à un utilisateur de vous suivre, et si cette demande est acceptée, son Woka vous suivra automatiquement, établissant ainsi une connexion fluide.",
         },
         lock: {
@@ -152,7 +152,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Partager votre écran",
-            desc: "Vous voulez partager votre écran avec les autres utilisateurs ? C'est possible ! Vous pourrez montrer votre écran à tous les utilisateurs de la discussion et vous pous pouvez choisir de partager l'intégralité de votre écran ou seulement une fenêtre spécifique.",
+            desc: "Vous voulez partager votre écran avec les autres utilisateurs ? C'est possible ! Vous pourrez montrer votre écran à tous les utilisateurs de la discussion et vous pouvez choisir de partager l'intégralité de votre écran ou seulement une fenêtre spécifique.",
         },
         unfollow: {
             title: "Arrêter de suivre",
@@ -175,10 +175,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Gérez vos tâches du jour sans quitter votre espace de travail.",
         },
         pictureInPicture: {
-            title: "Picture de Picture",
+            title: "Picture in Picture",
             descDisabled:
                 "Malheureusement, cette fonctionnalité n'est pas disponible sur votre appareil ❌. Veuillez essayer d'utiliser un autre appareil ou navigateur, comme Chrome ou Edge, pour accéder à cette fonctionnalité.",
-            desc: "Vous pouvez utiliser la fonctionnalité picture in picture pour regarder une vidéo ou une présentation pendant que vous êtes dans une conversation. Cliquez simplement sur l'icône picture in picture et profitez de votre contenu.",
+            desc: "Vous pouvez utiliser la fonctionnalité picture-in-picture pour regarder une vidéo ou une présentation pendant que vous êtes dans une conversation. Cliquez simplement sur l'icône picture-in-picture et profitez de votre contenu.",
         },
         videoNotSupported: "Votre navigateur ne prend pas en charge la balise vidéo.",
     },
@@ -199,8 +199,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     issueReport: {
         menuAction: "Signaler un problème",
         formTitle: "Signaler un problème",
-        emailLabel: "Email (non requise)",
-        nameLabel: "Nom (non requise)",
+        emailLabel: "Email (non requis)",
+        nameLabel: "Nom (non requis)",
         descriptionLabel: "Description* (requise)",
         descriptionPlaceholder: "Quel est le problème ? Qu'est-ce que tu attendais ?",
         submitButtonLabel: "Signaler un problème",
