@@ -50,7 +50,7 @@
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
-    import { IconList, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
+    import { IconHelpCircle, IconList, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
     import { modals } from "@wa-modals";
 
     interface Props {
@@ -497,6 +497,12 @@
     }
 
     let quotedMessageContent = $derived($selectedChatMessageToReply?.content);
+
+    const applicationButtonClass =
+        "p-2 m-0 flex flex-col w-36 min-h-32 items-center justify-start hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50 text-center";
+    const applicationTitleClass = "text-sm p-0 m-0 w-full leading-tight whitespace-normal break-words";
+    const applicationDescriptionClass =
+        "text-xs p-0 m-0 min-h-12 w-full leading-tight whitespace-normal break-words text-gray-400";
 </script>
 
 {#if files.length > 0 && !(room instanceof ProximityChatRoom)}
@@ -546,14 +552,14 @@
         <div class="flex flex-wrap w-full justify-between items-center p-2 gap-2">
             <button
                 data-testid="fileAttachmentButton"
-                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                class={applicationButtonClass}
                 onclick={() => openFileAttachmentComponent()}
                 class:bg-secondary-800={fileAttachmentComponentOpened}
                 disabled={!fileAttachementEnabled || isProximityChatRoom}
             >
                 <IconPaperclip font-size={32} />
-                <h2 class="text-sm p-0 m-0">{$LL.chat.fileAttachment.title()}</h2>
-                <p class="text-xs p-0 m-0 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                <h2 class={applicationTitleClass}>{$LL.chat.fileAttachment.title()}</h2>
+                <p class={applicationDescriptionClass}>
                     {fileAttachementEnabled && !isProximityChatRoom
                         ? $LL.chat.fileAttachment.description()
                         : $LL.chat.fileAttachment.featureComingSoon()}
@@ -562,27 +568,27 @@
 
             <button
                 data-testid="createPollButton"
-                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                class={applicationButtonClass}
                 onclick={openPollCreationModal}
                 disabled={!pollCreation || !$canCreatePoll}
             >
                 <IconList font-size={32} />
-                <h2 class="text-sm p-0 m-0">{$LL.chat.poll.title()}</h2>
-                <p class="text-xs p-0 m-0 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                <h2 class={applicationTitleClass}>{$LL.chat.poll.title()}</h2>
+                <p class={applicationDescriptionClass}>
                     {pollCreation && $canCreatePoll ? $LL.chat.poll.create.description() : $LL.chat.disabled()}
                 </p>
             </button>
 
             <button
                 data-testid="openQuestionsPanelButton"
-                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                class={applicationButtonClass}
                 onclick={openQuestionsPanel}
                 disabled={!canOpenQuestions}
             >
-                <IconList font-size={32} />
-                <h2 class="text-sm p-0 m-0">Questions</h2>
-                <p class="text-xs p-0 m-0 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                    {canOpenQuestions ? "Open meeting questions" : $LL.chat.disabled()}
+                <IconHelpCircle font-size={32} />
+                <h2 class={applicationTitleClass}>{$LL.chat.question.title()}</h2>
+                <p class={applicationDescriptionClass}>
+                    {canOpenQuestions ? $LL.chat.question.description() : $LL.chat.disabled()}
                 </p>
             </button>
         </div>
@@ -590,14 +596,14 @@
         <div class="flex flex-wrap w-full justify-between items-center p-2 gap-2">
             <button
                 data-testid="youtubeApplicationButton"
-                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                class={applicationButtonClass}
                 onclick={() => openLinkForm("youtube")}
                 class:bg-secondary-800={applicationProperty?.name === "youtube"}
                 disabled={!applicationManager.youtubeToolActivated}
             >
                 <img draggable="false" class="w-8" src={youtubeSvg} alt={$LL.chat.a11y.applicationIcon()} />
-                <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.youtube.title()}</h2>
-                <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                <h2 class={applicationTitleClass}>{$LL.chat.form.application.youtube.title()}</h2>
+                <p class={applicationDescriptionClass}>
                     {applicationManager.youtubeToolActivated
                         ? $LL.chat.form.application.youtube.description()
                         : $LL.mapEditor.properties.youtube.disabled()}
@@ -606,14 +612,14 @@
 
             <button
                 data-testid="klaxoonApplicationButton"
-                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                class={applicationButtonClass}
                 onclick={() => openLinkForm("klaxoon")}
                 class:bg-secondary-800={applicationProperty?.name === "klaxoon"}
                 disabled={!applicationManager.klaxoonToolActivated}
             >
                 <img draggable="false" class="w-8" src={klaxoonSvg} alt={$LL.chat.a11y.applicationIcon()} />
-                <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.klaxoon.title()}</h2>
-                <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                <h2 class={applicationTitleClass}>{$LL.chat.form.application.klaxoon.title()}</h2>
+                <p class={applicationDescriptionClass}>
                     {applicationManager.klaxoonToolActivated
                         ? $LL.chat.form.application.klaxoon.description()
                         : $LL.mapEditor.properties.klaxoon.disabled()}
@@ -622,14 +628,14 @@
 
             <button
                 data-testid="googleSheetsApplicationButton"
-                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                class={applicationButtonClass}
                 onclick={() => openLinkForm("googleSheets")}
                 class:bg-secondary-800={applicationProperty?.name === "googleSheets"}
                 disabled={!applicationManager.googleSheetsToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleSheetsSvg} alt={$LL.chat.a11y.applicationIcon()} />
-                <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleSheets.title()}</h2>
-                <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                <h2 class={applicationTitleClass}>{$LL.chat.form.application.googleSheets.title()}</h2>
+                <p class={applicationDescriptionClass}>
                     {applicationManager.googleSheetsToolActivated
                         ? $LL.chat.form.application.googleSheets.description()
                         : $LL.mapEditor.properties.googleSheets.disabled()}
@@ -638,14 +644,14 @@
 
             <button
                 data-testid="googleDocsApplicationButton"
-                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                class={applicationButtonClass}
                 onclick={() => openLinkForm("googleDocs")}
                 class:bg-secondary-800={applicationProperty?.name === "googleDocs"}
                 disabled={!applicationManager.googleDocsToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleDocsSvg} alt={$LL.chat.a11y.applicationIcon()} />
-                <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleDocs.title()}</h2>
-                <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                <h2 class={applicationTitleClass}>{$LL.chat.form.application.googleDocs.title()}</h2>
+                <p class={applicationDescriptionClass}>
                     {applicationManager.googleDocsToolActivated
                         ? $LL.chat.form.application.googleDocs.description()
                         : $LL.mapEditor.properties.googleDocs.disabled()}
@@ -654,14 +660,14 @@
 
             <button
                 data-testid="googleSlidesApplicationButton"
-                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                class={applicationButtonClass}
                 onclick={() => openLinkForm("googleSlides")}
                 class:bg-secondary-800={applicationProperty?.name === "googleSlides"}
                 disabled={!applicationManager.googleSlidesToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleSlidesSvg} alt={$LL.chat.a11y.applicationIcon()} />
-                <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleSlides.title()}</h2>
-                <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                <h2 class={applicationTitleClass}>{$LL.chat.form.application.googleSlides.title()}</h2>
+                <p class={applicationDescriptionClass}>
                     {applicationManager.googleSlidesToolActivated
                         ? $LL.chat.form.application.googleSlides.description()
                         : $LL.mapEditor.properties.googleSlides.disabled()}
@@ -670,14 +676,14 @@
 
             <button
                 data-testid="googleDriveApplicationButton"
-                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                class={applicationButtonClass}
                 onclick={() => openLinkForm("googleDrive")}
                 class:bg-secondary-800={applicationProperty?.name === "googleDrive"}
                 disabled={!applicationManager.googleDriveToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleDriveSvg} alt={$LL.chat.a11y.applicationIcon()} />
-                <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.googleDrive.title()}</h2>
-                <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                <h2 class={applicationTitleClass}>{$LL.chat.form.application.googleDrive.title()}</h2>
+                <p class={applicationDescriptionClass}>
                     {applicationManager.googleDriveToolActivated
                         ? $LL.chat.form.application.googleDrive.description()
                         : $LL.mapEditor.properties.googleDrive.disabled()}
@@ -686,14 +692,14 @@
 
             <button
                 data-testid="eraserApplicationButton"
-                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                class={applicationButtonClass}
                 onclick={() => openLinkForm("eraser")}
                 class:bg-secondary-800={applicationProperty?.name === "eraser"}
                 disabled={!applicationManager.eraserToolActivated}
             >
                 <img draggable="false" class="w-8" src={eraserSvg} alt={$LL.chat.a11y.applicationIcon()} />
-                <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.eraser.title()}</h2>
-                <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                <h2 class={applicationTitleClass}>{$LL.chat.form.application.eraser.title()}</h2>
+                <p class={applicationDescriptionClass}>
                     {applicationManager.eraserToolActivated
                         ? $LL.chat.form.application.eraser.description()
                         : $LL.mapEditor.properties.eraser.disabled()}
@@ -702,14 +708,14 @@
 
             <button
                 data-testid="excalidrawApplicationButton"
-                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                class={applicationButtonClass}
                 onclick={() => openLinkForm("excalidraw")}
                 class:bg-secondary-800={applicationProperty?.name === "excalidraw"}
                 disabled={!applicationManager.excalidrawToolActivated}
             >
                 <img draggable="false" class="w-8" src={excalidrawSvg} alt={$LL.chat.a11y.applicationIcon()} />
-                <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.excalidraw.title()}</h2>
-                <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                <h2 class={applicationTitleClass}>{$LL.chat.form.application.excalidraw.title()}</h2>
+                <p class={applicationDescriptionClass}>
                     {applicationManager.excalidrawToolActivated
                         ? $LL.chat.form.application.excalidraw.description()
                         : $LL.mapEditor.properties.excalidraw.disabled()}
@@ -718,14 +724,14 @@
 
             <button
                 data-testid="cardsApplicationButton"
-                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                class={applicationButtonClass}
                 onclick={() => openLinkForm("cards")}
                 class:bg-secondary-800={applicationProperty?.name === "cards"}
                 disabled={!applicationManager.cardsToolActivated}
             >
                 <img draggable="false" class="w-8" src={cardsPng} alt={$LL.chat.a11y.applicationIcon()} />
-                <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.cards.title()}</h2>
-                <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                <h2 class={applicationTitleClass}>{$LL.chat.form.application.cards.title()}</h2>
+                <p class={applicationDescriptionClass}>
                     {applicationManager.cardsToolActivated
                         ? $LL.chat.form.application.cards.description()
                         : $LL.mapEditor.properties.cards.disabled()}
@@ -734,14 +740,14 @@
 
             <button
                 data-testid="tldrawApplicationButton"
-                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                class={applicationButtonClass}
                 onclick={() => openLinkForm("tldraw")}
                 class:bg-secondary-800={applicationProperty?.name === "tldraw"}
                 disabled={!applicationManager.tldrawToolActivated}
             >
                 <img draggable="false" class="w-8" src={tldrawJpeg} alt={$LL.chat.a11y.applicationIcon()} />
-                <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.tldraw.title()}</h2>
-                <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                <h2 class={applicationTitleClass}>{$LL.chat.form.application.tldraw.title()}</h2>
+                <p class={applicationDescriptionClass}>
                     {applicationManager.tldrawToolActivated
                         ? $LL.chat.form.application.tldraw.description()
                         : $LL.mapEditor.properties.tldraw.disabled()}
@@ -753,15 +759,13 @@
             {#each applicationManager.applications as app, index (`my-own-app-${index}`)}
                 <button
                     data-testid="{app.name}ApplicationButton"
-                    class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                    class={applicationButtonClass}
                     class:bg-secondary-800={applicationProperty?.name === app.name}
                     onclick={() => openLinkForm(app.name)}
                 >
                     <img draggable="false" class="w-8" src={app.image} alt={$LL.chat.a11y.applicationIcon()} />
-                    <h2 class="text-sm p-0 m-0">{app.name}</h2>
-                    <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                        {app.description}
-                    </p>
+                    <h2 class={applicationTitleClass}>{app.name}</h2>
+                    <p class={applicationDescriptionClass}>{app.description}</p>
                 </button>
             {/each}
         </div>
