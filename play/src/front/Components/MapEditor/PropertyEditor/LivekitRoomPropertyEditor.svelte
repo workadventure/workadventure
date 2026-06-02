@@ -36,8 +36,8 @@
             config: property.livekitRoomConfig,
             livekitRoomAdminTag: property.livekitRoomAdminTag,
             shouldDisableDisableChatButton: shouldDisableDisableChatButton,
-            onSave: (config: LivekitRoomConfigData & { livekitRoomAdminTag: string }) => {
-                property.livekitRoomConfig = structuredClone(config);
+            onsave: (config: LivekitRoomConfigData & { livekitRoomAdminTag: string }) => {
+                property.livekitRoomConfig = $state.snapshot(config);
                 property.livekitRoomAdminTag = config.livekitRoomAdminTag;
                 onchange?.();
             },

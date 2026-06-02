@@ -46,7 +46,7 @@
     onMount(() => {
         currentConfig = {};
         if (config !== undefined) {
-            currentConfig = structuredClone(config);
+            currentConfig = $state.snapshot(config);
         }
     });
 
@@ -57,7 +57,7 @@
     }
 
     function saveAndClose() {
-        onsave({ ...currentConfig, jitsiRoomAdminTag });
+        onsave({ ...$state.snapshot(currentConfig), jitsiRoomAdminTag });
         close();
     }
 

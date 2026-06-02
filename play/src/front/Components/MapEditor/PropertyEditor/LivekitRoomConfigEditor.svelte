@@ -57,7 +57,7 @@
             disableChat: false,
         };
         if (config !== undefined) {
-            currentConfig = structuredClone(config);
+            currentConfig = $state.snapshot(config);
         }
     });
 
@@ -68,7 +68,7 @@
     }
 
     function saveAndClose() {
-        onsave({ ...currentConfig, livekitRoomAdminTag });
+        onsave({ ...$state.snapshot(currentConfig), livekitRoomAdminTag });
         close();
     }
 

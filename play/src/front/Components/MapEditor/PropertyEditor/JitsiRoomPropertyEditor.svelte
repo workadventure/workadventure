@@ -51,8 +51,8 @@
             visibilityValue: jitsiConfigModalOpened,
             config: property.jitsiRoomConfig,
             jitsiRoomAdminTag: property.jitsiRoomAdminTag,
-            onSave: (config: JitsiRoomConfigData & { jitsiRoomAdminTag: string }) => {
-                property.jitsiRoomConfig = structuredClone(config);
+            onsave: (config: JitsiRoomConfigData & { jitsiRoomAdminTag: string }) => {
+                property.jitsiRoomConfig = $state.snapshot(config);
                 property.jitsiRoomAdminTag = config.jitsiRoomAdminTag;
                 onchange?.();
             },
