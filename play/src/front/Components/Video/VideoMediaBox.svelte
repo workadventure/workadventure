@@ -110,12 +110,8 @@
 
     function setFullScreen() {
         exitFullScreen();
-        removeHighlight();
-
-        setTimeout(() => {
-            highlightPeer();
-            highlightFullScreen.set(true);
-        }, 100);
+        highlightPeer();
+        highlightFullScreen.set(true);
     }
 
     function exitFullScreen() {
