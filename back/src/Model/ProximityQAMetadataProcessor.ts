@@ -49,7 +49,7 @@ export function processProximityQAMetadata(
     key: string,
     value: unknown,
     senderId: string,
-    space: SpaceWithMetadataLookup
+    space: SpaceWithMetadataLookup,
 ): Promise<unknown> {
     const sender = getSender(senderId, space);
 
@@ -99,14 +99,14 @@ function processUpvote(
     key: string,
     value: unknown,
     sender: ProximityQASpaceUser,
-    space: SpaceWithMetadataLookup
+    space: SpaceWithMetadataLookup,
 ): unknown {
     const upvote = proximityQAUpvoteMetadataSchema.parse(value);
     assertKeySuffix(
         key,
         PROXIMITY_QA_UPVOTE_PREFIX,
         `${upvote.questionId}:${upvote.voterId}`,
-        "Upvote metadata key does not match payload"
+        "Upvote metadata key does not match payload",
     );
     assertSenderIdentity(upvote.voterId, sender, "Upvote voter does not match metadata sender");
 
@@ -122,7 +122,7 @@ function processAnswer(
     key: string,
     value: unknown,
     sender: ProximityQASpaceUser,
-    space: SpaceWithMetadataLookup
+    space: SpaceWithMetadataLookup,
 ): unknown {
     const answer = proximityQAAnswerMetadataSchema.parse(value);
     assertKeySuffix(key, PROXIMITY_QA_ANSWER_PREFIX, answer.questionId, "Answer metadata key does not match payload");
@@ -136,7 +136,7 @@ function processDelete(
     key: string,
     value: unknown,
     sender: ProximityQASpaceUser,
-    space: SpaceWithMetadataLookup
+    space: SpaceWithMetadataLookup,
 ): unknown {
     const deletion = proximityQADeleteMetadataSchema.parse(value);
     assertKeySuffix(key, PROXIMITY_QA_DELETE_PREFIX, deletion.questionId, "Delete metadata key does not match payload");
@@ -160,7 +160,7 @@ function getSender(senderId: string, space: SpaceWithMetadataLookup): ProximityQ
 
 function getQuestionMetadata(questionId: string, space: SpaceWithMetadataLookup): ProximityQAQuestionMetadata {
     const question = proximityQAQuestionMetadataSchema.parse(
-        space.getMetadataValue(`${PROXIMITY_QA_QUESTION_PREFIX}${questionId}`)
+        space.getMetadataValue(`${PROXIMITY_QA_QUESTION_PREFIX}${questionId}`),
     );
     return question;
 }

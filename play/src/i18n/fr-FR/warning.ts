@@ -2,9 +2,9 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const warning: DeepPartial<Translation["warning"]> = {
-    title: "Attention!",
-    content: `Ce monde est proche de sa limite ! Vous pouvez améliorer sa capacité <a href="{upgradeLink}" target="_blank">içi</a>`,
-    limit: "Ce monde est proche de ses limites!",
+    title: "Attention !",
+    content: `Ce monde est proche de sa limite ! Vous pouvez améliorer sa capacité <a href="{upgradeLink}" target="_blank">ici</a>`,
+    limit: "Ce monde est proche de ses limites !",
     accessDenied: {
         camera: "Accès à la caméra refusé. Cliquez ici et vérifiez les autorisations de votre navigateur.",
         screenSharing: "Partage d'écran refusé. Cliquez ici et vérifiez les autorisations de votre navigateur.",
@@ -17,7 +17,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLostSubtitle: "Reconnexion",
     waitingConnectionTitle: "En attente du serveur",
     waitingConnectionSubtitle: "Connexion",
-    megaphoneNeeds: "Pour utiliser le megaphone, vous devez activer votre caméra ou votre microphone.",
+    megaphoneNeeds: "Pour utiliser le mégaphone, vous devez activer votre caméra ou votre microphone.",
     mapEditorShortCut: "Une erreur est survenue lors de l’ouverture de l’éditeur de carte.",
     mapEditorNotEnabled: "L’éditeur de carte n’est pas activé sur ce monde.",
     popupBlocked: {

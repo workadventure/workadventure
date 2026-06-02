@@ -13,7 +13,7 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             stopMegaphone: "Arrêter le live",
             goingToStream: "Vous allez diffuser",
             yourMicrophone: "votre microphone",
-            yourCamera: "votre camera",
+            yourCamera: "votre caméra",
             yourScreen: "votre écran",
             title: "Mégaphone",
             button: "Démarrer un live",
@@ -21,7 +21,7 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             toAll: "à tous les participants",
             confirm: "Confirmer",
             cancel: "Annuler",
-            notice: `Le Live ou "Mégaphone" vous permet de streamer votre caméra et votre microphone à toutes les personnes connectées dans le salon et/ou le world.
+            notice: `Le Live ou "Mégaphone" vous permet de diffuser votre caméra et votre microphone à toutes les personnes connectées dans le salon et/ou le monde.
             
             Ce message sera affiché en bas de l'écran, comme une vidéo ou une bulle de discussion.
             
@@ -32,7 +32,7 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
         textMessage: {
             title: "Message texte",
             notice: `
-            Le text message permet d'envoyer un message à toutes les personnes connectées dans le salon ou le world.
+            Le message texte permet d'envoyer un message à toutes les personnes connectées dans le salon ou le monde.
 
             Ce message sera affiché sous forme de popup en haut de la page et sera accompagné d'un son permettant d'identifier qu'une information est à lire.
 
@@ -44,7 +44,7 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
         audioMessage: {
             title: "Message audio",
             notice: `
-            L'audio message est un message de type "MP3, OGG..." envoyé à tous les utilisateurs connecté dans le salon ou dans le world.
+            Le message audio est un message de type "MP3, OGG..." envoyé à tous les utilisateurs connectés dans le salon ou dans le monde.
 
             Ce message audio sera téléchargé et lancé à toutes les personnes recevant cette notification.
 
