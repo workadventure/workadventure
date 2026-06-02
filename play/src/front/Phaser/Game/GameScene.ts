@@ -590,18 +590,6 @@ export class GameScene extends DirtyScene {
             this.doLoadTMJFile(this.mapUrlFile);
         }
 
-        // The condition is here for Webkit in headless mode (CI / automated tests). It doesn't have a proper font support.
-        //eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if (typeof (this.load as any).rexWebFont === "function") {
-            //eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (this.load as any).rexWebFont({
-                custom: {
-                    families: ["Press Start 2P"],
-                    testString: "abcdefg",
-                },
-            });
-        }
-
         //this function must stay at the end of preload function
         this.loader.addLoader();
     }
