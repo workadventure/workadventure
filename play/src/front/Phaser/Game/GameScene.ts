@@ -1081,7 +1081,7 @@ export class GameScene extends DirtyScene {
                 PopUpRoomAccessDenied,
                 {
                     message: get(LL).warning.accessDenied.room(),
-                    click: () => {
+                    onclick: () => {
                         popupStore.removePopup("roomAccessDenied");
                     },
                     userInputManager: this.userInputManager,
@@ -3591,7 +3591,7 @@ ${escapedMessage}
                     PopUpMapEditorNotEnabled,
                     {
                         message: get(LL).warning.mapEditorNotEnabled(),
-                        click: () => {
+                        onclick: () => {
                             popupStore.removePopup("mapEditorNotEnabled");
                         },
                         userInputManager: this.userInputManager,
@@ -3642,7 +3642,7 @@ ${escapedMessage}
                             PopUpMapEditorShortcut,
                             {
                                 message: get(LL).warning.mapEditorShortCut(),
-                                click: () => {
+                                onclick: () => {
                                     popupStore.removePopup("mapEditorShortCut");
                                 },
                                 userInputManager: this.userInputManager,
