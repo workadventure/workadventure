@@ -105,7 +105,7 @@
 
         properties.description = entityDescription;
         if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.updateProperty(properties);
+            $mapEditorSelectedEntityStore.updateProperty($state.snapshot(properties));
         }
     }
 
@@ -118,13 +118,13 @@
 
         properties.searchable = entitySearchable;
         if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.updateProperty(properties);
+            $mapEditorSelectedEntityStore.updateProperty($state.snapshot(properties));
         }
     }
 
     function onUpdateProperty(property: EntityDataProperty) {
         if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.updateProperty(property);
+            $mapEditorSelectedEntityStore.updateProperty($state.snapshot(property));
         }
     }
 

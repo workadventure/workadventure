@@ -480,7 +480,7 @@
 
         properties.description = areaDescription;
         if ($mapEditorSelectedAreaPreviewStore) {
-            $mapEditorSelectedAreaPreviewStore.updateProperty(properties);
+            $mapEditorSelectedAreaPreviewStore.updateProperty($state.snapshot(properties));
         }
     }
 
@@ -493,13 +493,13 @@
 
         properties.searchable = areaSearchable;
         if ($mapEditorSelectedAreaPreviewStore) {
-            $mapEditorSelectedAreaPreviewStore.updateProperty(properties);
+            $mapEditorSelectedAreaPreviewStore.updateProperty($state.snapshot(properties));
         }
     }
 
     function onUpdateProperty(property: AreaDataProperty, removeAreaEntities?: boolean) {
         if ($mapEditorSelectedAreaPreviewStore) {
-            $mapEditorSelectedAreaPreviewStore.updateProperty(property, removeAreaEntities);
+            $mapEditorSelectedAreaPreviewStore.updateProperty($state.snapshot(property), removeAreaEntities);
         }
     }
 
