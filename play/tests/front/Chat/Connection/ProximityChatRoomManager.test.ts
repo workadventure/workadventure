@@ -20,11 +20,11 @@ function createFakeRoom(spaceName: string, displayName: string, kind: ProximityC
         hasUserMessages: writable(false),
         unreadMessagesCount: writable(0),
         unreadNotificationCount: writable(0),
-        joinSpace: vi.fn(async () => {
-            return undefined;
+        joinSpace: vi.fn( () => {
+            return Promise.resolve(undefined);
         }),
-        leaveSpace: vi.fn(async () => {
-            return undefined;
+        leaveSpace: vi.fn(() => {
+            return Promise.resolve(undefined);
         }),
         setDisplayName: vi.fn((name: string) => {
             roomByName.get(spaceName)?.name.set(name);
