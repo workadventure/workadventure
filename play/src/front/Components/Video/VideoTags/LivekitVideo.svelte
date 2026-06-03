@@ -26,8 +26,8 @@
     }: Props = $props();
 
     let remoteVideoTrack: LivekitStreamable["remoteVideoTrack"] = $derived(media.remoteVideoTrack);
-    let activeMedia: LivekitStreamable | undefined = $state();
-    let releaseVideoSubscription: (() => void) | undefined = $state();
+    let activeMedia: LivekitStreamable | undefined;
+    let releaseVideoSubscription: (() => void) | undefined;
 
     $effect(() => {
         if (activeMedia !== media) {
