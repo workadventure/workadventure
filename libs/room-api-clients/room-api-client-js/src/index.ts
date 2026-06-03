@@ -16,7 +16,14 @@ export const createRoomApiClient = (
   const channel = createChannel(
     `${host}:${port}`,
     port === 443 || host.startsWith("https://")
-      ? ChannelCredentials.createSsl()
+      ? ChannelCredentials.createSsl(
+          undefined,
+          undefined,
+          undefined,
+          process.env.NODE_TLS_REJECT_UNAUTHORIZED === "0"
+            ? { rejectUnauthorized: false }
+            : undefined,
+        )
       : ChannelCredentials.createInsecure(),
   );
   const client: RoomApiClient = createClient(RoomApiDefinition, channel, {
