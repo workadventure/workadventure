@@ -5,7 +5,6 @@ import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventur
 import { SayMessageType, AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
 import { defaultWoka, Deferred } from "@workadventure/shared-utils";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { TalkIcon } from "../Components/TalkIcon";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import type { PictureStore } from "../../Stores/PictureStore";
@@ -15,7 +14,6 @@ import { Companion } from "../Companion/Companion";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
-import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 
 import { UsernameDisplay } from "../Components/UsernameDisplay";
@@ -30,7 +28,6 @@ import RenderTexture = Phaser.GameObjects.RenderTexture;
 
 const playerNameY = -18;
 const interactiveRadius = 25;
-const meetingSpeakingIconY = -49;
 
 export const CHARACTER_BODY_WIDTH = 16;
 export const CHARACTER_BODY_HEIGHT = 16;
@@ -44,8 +41,6 @@ export type PathFollowResult = { x: number; y: number; cancelled: boolean };
 export abstract class Character extends Container implements OutlineableInterface {
     private bubble: RenderTexture | null | DOMElement = null;
     private usernameDisplay: UsernameDisplay | undefined;
-    private readonly talkIcon: TalkIcon;
-    protected readonly speakerIcon: SpeakerIcon;
     private availabilityStatus: AvailabilityStatusType = AvailabilityStatus.ONLINE;
     public readonly playerName: string;
     public sprites: Map<string, Sprite>;
@@ -191,10 +186,6 @@ export abstract class Character extends Container implements OutlineableInterfac
             this.scene.markDirty();
         }, 0);
 
-        this.talkIcon = new TalkIcon(scene, 0, meetingSpeakingIconY);
-        this.speakerIcon = new SpeakerIcon(scene, 0, meetingSpeakingIconY);
-        this.add([this.talkIcon, this.speakerIcon]);
-
         if (isClickable) {
             this.setInteractive({
                 hitArea: new Phaser.Geom.Circle(8, 8, interactiveRadius),
@@ -319,16 +310,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    public toggleTalk(show = true, forceClose = false): void {
-        if (this.getAvailabilityStatus() === AvailabilityStatus.SPEAKER) {
-            //this.talkIcon.show(false, forceClose);
-            this.usernameDisplay?.setTalking(false);
-            this.speakerIcon.show(show, forceClose);
-        } else {
-            //this.talkIcon.show(show, forceClose);
-            this.usernameDisplay?.setTalking(show);
-            this.speakerIcon.show(false, forceClose);
-        }
+    public toggleTalk(show = true): void {
+        this.usernameDisplay?.setTalking(show, this.getAvailabilityStatus() === AvailabilityStatus.SPEAKER);
     }
 
     public setAvailabilityStatus(availabilityStatus: AvailabilityStatusType, instant = false): void {
