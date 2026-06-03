@@ -518,17 +518,19 @@ export class AreasPropertiesListener {
                 break;
             }
             case "speakerMegaphone": {
-                newProperty = newProperty as typeof oldProperty;
+                const speakerMegaphoneProperty = newProperty as typeof oldProperty;
                 this.handleSpeakerMegaphonePropertyOnLeave(oldProperty, area.id).catch((e) => {
                     console.error("Error while leaving space");
                     Sentry.captureException(new Error("Error while leaving space"));
                 });
-                this.handleSpeakerMegaphonePropertyOnEnter(newProperty, area.id, newAbortController.signal).catch(
-                    (e) => {
-                        console.error(e);
-                        Sentry.captureException(e);
-                    }
-                );
+                this.handleSpeakerMegaphonePropertyOnEnter(
+                    speakerMegaphoneProperty,
+                    area.id,
+                    newAbortController.signal,
+                ).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "listenerMegaphone": {
@@ -1645,7 +1647,7 @@ export class AreasPropertiesListener {
                 const uniqRoomName = getAreaProximitySpaceName(
                     speakerZoneName,
                     property.speakerZoneName,
-                    this.scene.roomUrl
+                    this.scene.roomUrl,
                 );
                 const proximityRoom = this.scene.proximityChatRoomManager.resolveTargetRoom(uniqRoomName);
                 const currentSpaceName = proximityRoom?.getCurrentSpaceName();
