@@ -50,6 +50,8 @@ import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import type { ModalEvent } from "./Events/ModalEvent";
 import type { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
+import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
+import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 import type { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent";
 import type { IframeMessagePortMap, IframeSuccessMessagePortEvent } from "./Events/MessagePortEvents";
 import { isIframeMessagePortWrapper } from "./Events/MessagePortEvents";
@@ -838,7 +840,7 @@ class IframeListener {
         );
     }
 
-    sendJoinProximityMeetingEvent(users: MessageUserJoined[]) {
+    sendJoinProximityMeetingEvent(users: MessageUserJoined[], spaceName?: string) {
         const formattedUsers: AddPlayerEvent[] = users.map((user) => {
             return {
                 playerId: user.userId,
@@ -855,11 +857,12 @@ class IframeListener {
             type: "joinProximityMeetingEvent",
             data: {
                 users: formattedUsers,
-            },
+                spaceName,
+            } as JoinProximityMeetingEvent,
         });
     }
 
-    sendParticipantJoinProximityMeetingEvent(user: MessageUserJoined) {
+    sendParticipantJoinProximityMeetingEvent(user: MessageUserJoined, spaceName?: string) {
         this.postMessage({
             type: "participantJoinProximityMeetingEvent",
             data: {
@@ -872,11 +875,12 @@ class IframeListener {
                     position: user.position,
                     variables: user.variables,
                 },
-            },
+                spaceName,
+            } as ParticipantProximityMeetingEvent,
         });
     }
 
-    sendParticipantLeaveProximityMeetingEvent(user: MessageUserJoined) {
+    sendParticipantLeaveProximityMeetingEvent(user: MessageUserJoined, spaceName?: string) {
         this.postMessage({
             type: "participantLeaveProximityMeetingEvent",
             data: {
@@ -889,14 +893,15 @@ class IframeListener {
                     position: user.position,
                     variables: user.variables,
                 },
-            },
+                spaceName,
+            } as ParticipantProximityMeetingEvent,
         });
     }
 
-    sendLeaveProximityMeetingEvent() {
+    sendLeaveProximityMeetingEvent(spaceName?: string) {
         this.postMessage({
             type: "leaveProximityMeetingEvent",
-            data: undefined,
+            data: { spaceName },
         });
     }
 

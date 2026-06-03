@@ -1453,7 +1453,7 @@ export class MatrixChatRoom
         }
         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
             this.notifyNewMessage(message);
-            if (!isAChatRoomIsVisible() && get(selectedRoomStore)?.id !== "proximity") {
+            if (!isAChatRoomIsVisible() && !get(selectedRoomStore)?.id.startsWith("proximity:")) {
                 selectedRoomStore.set(this);
                 navChat.switchToChat();
             }
