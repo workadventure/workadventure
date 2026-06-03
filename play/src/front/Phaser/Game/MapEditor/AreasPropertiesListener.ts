@@ -1565,23 +1565,9 @@ export class AreasPropertiesListener {
                 // Switch back to listener role instead of leaving
                 const space = this.scene.proximityChatRoom.getCurrentSpace();
                 if (space) {
-                    try {
-                        space.stopStreaming();
-                    } catch (error) {
-                        console.error("An error occurred while stopping streaming", error);
-                        Sentry.captureException(error);
-                    }
                     isSpeakerStore.set(false);
-                    isListenerStore.set(!this.shouldAllowTalkingInSpace(uniqRoomName));
                     listenerWaitingMediaStore.set(remainingListenerZone.waitingLink);
-
-                    // Restore listener-specific state
-                    if (remainingListenerZone.seeAttendees) {
-                        space.startListenerStreaming();
-                        listenerSharingCameraStore.set(true);
-                    } else {
-                        listenerSharingCameraStore.set(false);
-                    }
+                    this.applyListenerStreamingState(uniqRoomName, remainingListenerZone.seeAttendees);
                     return;
                 }
             }
@@ -1645,8 +1631,7 @@ export class AreasPropertiesListener {
                         allowTalking: property.allowTalking,
                         waitingLink: property.waitingLink,
                     });
-                    // Update mute state based on all active listener zones
-                    isListenerStore.set(!this.shouldAllowTalkingInSpace(uniqRoomName));
+                    this.applyListenerStreamingState(uniqRoomName, seeAttendees);
                     return;
                 }
 
@@ -1663,10 +1648,11 @@ export class AreasPropertiesListener {
                 listenerWaitingMediaStore.set(property.waitingLink);
 
                 listenerSharingCameraStore.set(seeAttendees);
-                // Use startListenerStreaming() instead of startStreaming()
-                // This enables streaming WITHOUT setting megaphoneState=true,
-                // so the listener remains invisible to other listeners
-                if (seeAttendees) {
+                if (property.allowTalking) {
+                    // Talking listeners stream as speakers so the whole audience zone can hear each other.
+                    space.startStreaming();
+                } else if (seeAttendees) {
+                    // See-attendees only: share video to the speaker without becoming audible to listeners.
                     space.startListenerStreaming();
                 }
 
@@ -1707,8 +1693,8 @@ export class AreasPropertiesListener {
                 // Check if still in another listener zone for the same space
                 const remainingListenerZone = this.findActiveListenerZoneForSpace(uniqRoomName);
                 if (remainingListenerZone) {
-                    // Still in another listener zone, update mute state based on remaining zones
-                    isListenerStore.set(!this.shouldAllowTalkingInSpace(uniqRoomName));
+                    // Still in another listener zone: recompute state from the remaining zones.
+                    this.applyListenerStreamingState(uniqRoomName, remainingListenerZone.seeAttendees);
                     return;
                 }
 
@@ -1750,6 +1736,39 @@ export class AreasPropertiesListener {
             }
         }
         return true;
+    }
+
+    /**
+     * Sets the local user's listener state in the current megaphone space. When talking is allowed,
+     * the user streams as a speaker (megaphoneState=true) so the whole zone can hear each other while
+     * keeping the listener identity; otherwise they stay a silent (optionally see-attendees) listener.
+     * Shared by every transition that lands the user in a listener role so the behaviour stays consistent.
+     */
+    private applyListenerStreamingState(spaceName: string, seeAttendees: boolean): void {
+        const space = this.scene.proximityChatRoom.getCurrentSpace();
+        if (!space) {
+            return;
+        }
+        const allowTalking = this.shouldAllowTalkingInSpace(spaceName);
+        isListenerStore.set(!allowTalking);
+        if (allowTalking) {
+            // startStreaming() is idempotent if the user was already streaming (e.g. was a speaker).
+            space.startStreaming();
+            listenerSharingCameraStore.set(seeAttendees);
+        } else {
+            try {
+                space.stopStreaming();
+            } catch (error) {
+                console.error("An error occurred while stopping streaming", error);
+                Sentry.captureException(error);
+            }
+            if (seeAttendees) {
+                space.startListenerStreaming();
+                listenerSharingCameraStore.set(true);
+            } else {
+                listenerSharingCameraStore.set(false);
+            }
+        }
     }
 
     /**
