@@ -1567,7 +1567,7 @@ export class AreasPropertiesListener {
                 if (space) {
                     isSpeakerStore.set(false);
                     listenerWaitingMediaStore.set(remainingListenerZone.waitingLink);
-                    this.applyListenerStreamingState(uniqRoomName, remainingListenerZone.seeAttendees);
+                    await this.applyListenerStreamingState(uniqRoomName, remainingListenerZone.seeAttendees);
                     return;
                 }
             }
@@ -1603,39 +1603,34 @@ export class AreasPropertiesListener {
                 const proximityRoom = this.scene.proximityChatRoom;
                 const currentSpaceName = proximityRoom.getCurrentSpaceName();
 
-                // If already in this space (as speaker or listener), just update tracking
-                if (currentSpaceName === uniqRoomName) {
-                    // Check if we're already as speaker - speaker has priority, don't change role
-                    const existingSpeakerZone = this.findActiveSpeakerZoneForSpace(uniqRoomName);
-                    if (existingSpeakerZone) {
-                        // Just track this listener zone, but don't change the role
-                        this.activeMegaphoneZones.set(property.id, {
-                            spaceName: uniqRoomName,
-                            role: "listener",
-                            propertyId: property.id,
-                            seeAttendees,
-                            chatEnabled: property.chatEnabled,
-                            allowTalking: property.allowTalking,
-                            waitingLink: property.waitingLink,
-                        });
-                        return;
-                    }
+                const zoneState: MegaphoneZoneState = {
+                    spaceName: uniqRoomName,
+                    role: "listener",
+                    propertyId: property.id,
+                    seeAttendees,
+                    chatEnabled: property.chatEnabled,
+                    allowTalking: property.allowTalking,
+                    waitingLink: property.waitingLink,
+                };
 
-                    // Already in as listener, just update tracking
-                    this.activeMegaphoneZones.set(property.id, {
-                        spaceName: uniqRoomName,
-                        role: "listener",
-                        propertyId: property.id,
-                        seeAttendees,
-                        chatEnabled: property.chatEnabled,
-                        allowTalking: property.allowTalking,
-                        waitingLink: property.waitingLink,
-                    });
-                    this.applyListenerStreamingState(uniqRoomName, seeAttendees);
+                // Already in this space: keep the current role, just refresh listener state.
+                if (currentSpaceName === uniqRoomName) {
+                    this.activeMegaphoneZones.set(property.id, zoneState);
+                    // Speaker keeps priority, don't downgrade.
+                    if (!this.findActiveSpeakerZoneForSpace(uniqRoomName)) {
+                        await this.applyListenerStreamingState(uniqRoomName, seeAttendees);
+                    }
                     return;
                 }
 
-                // Otherwise, do the full join
+                // Talking audience: chat via proximity bubbles, never join the zone-wide space.
+                if (property.allowTalking && this.shouldAllowTalkingInSpace(uniqRoomName)) {
+                    this.activeMegaphoneZones.set(property.id, zoneState);
+                    await this.applyListenerStreamingState(uniqRoomName, seeAttendees);
+                    return;
+                }
+
+                // Silent audience: join the shared megaphone space to hear the speaker.
                 proximityRoom.setDisplayName(speakerZoneName);
                 const space = await proximityRoom.joinSpace(
                     uniqRoomName,
@@ -1646,27 +1641,14 @@ export class AreasPropertiesListener {
                 );
                 currentLiveStreamingSpaceStore.set(space);
                 listenerWaitingMediaStore.set(property.waitingLink);
-
                 listenerSharingCameraStore.set(seeAttendees);
-                if (property.allowTalking) {
-                    // Talking listeners stream as speakers so the whole audience zone can hear each other.
-                    space.startStreaming();
-                } else if (seeAttendees) {
+                if (seeAttendees) {
                     // See-attendees only: share video to the speaker without becoming audible to listeners.
                     space.startListenerStreaming();
                 }
 
-                // Track this zone
-                this.activeMegaphoneZones.set(property.id, {
-                    spaceName: uniqRoomName,
-                    role: "listener",
-                    propertyId: property.id,
-                    seeAttendees,
-                    chatEnabled: property.chatEnabled,
-                    allowTalking: property.allowTalking,
-                    waitingLink: property.waitingLink,
-                });
-                isListenerStore.set(!property.allowTalking);
+                this.activeMegaphoneZones.set(property.id, zoneState);
+                isListenerStore.set(true);
             }
         }
     }
@@ -1694,13 +1676,16 @@ export class AreasPropertiesListener {
                 const remainingListenerZone = this.findActiveListenerZoneForSpace(uniqRoomName);
                 if (remainingListenerZone) {
                     // Still in another listener zone: recompute state from the remaining zones.
-                    this.applyListenerStreamingState(uniqRoomName, remainingListenerZone.seeAttendees);
+                    await this.applyListenerStreamingState(uniqRoomName, remainingListenerZone.seeAttendees);
                     return;
                 }
 
                 const proximityRoom = this.scene.proximityChatRoom;
-                proximityRoom.setDisplayName(get(LL).chat.proximity());
-                await proximityRoom.leaveSpace(uniqRoomName, true);
+                // Talking listeners never joined the space, only leave it if we're in it.
+                if (proximityRoom.getCurrentSpaceName() === uniqRoomName) {
+                    proximityRoom.setDisplayName(get(LL).chat.proximity());
+                    await proximityRoom.leaveSpace(uniqRoomName, true);
+                }
 
                 currentLiveStreamingSpaceStore.set(undefined);
                 isListenerStore.set(false);
@@ -1725,9 +1710,7 @@ export class AreasPropertiesListener {
     }
 
     /**
-     * Checks if talking should be allowed in a space by examining all active listener zones.
-     * Returns true only if all active listener zones for the space have allowTalking=true.
-     * If any zone has allowTalking=false, the user should be muted.
+     * Returns true only if every active listener zone for the space allows talking.
      */
     private shouldAllowTalkingInSpace(spaceName: string): boolean {
         for (const zone of this.activeMegaphoneZones.values()) {
@@ -1739,35 +1722,47 @@ export class AreasPropertiesListener {
     }
 
     /**
-     * Sets the local user's listener state in the current megaphone space. When talking is allowed,
-     * the user streams as a speaker (megaphoneState=true) so the whole zone can hear each other while
-     * keeping the listener identity; otherwise they stay a silent (optionally see-attendees) listener.
-     * Shared by every transition that lands the user in a listener role so the behaviour stays consistent.
+     * Applies the listener state for a space. When talking is allowed the audience uses proximity
+     * bubbles, so the user leaves the zone-wide space; otherwise they stay a silent listener in it.
      */
-    private applyListenerStreamingState(spaceName: string, seeAttendees: boolean): void {
-        const space = this.scene.proximityChatRoom.getCurrentSpace();
+    private async applyListenerStreamingState(spaceName: string, seeAttendees: boolean): Promise<void> {
+        const proximityRoom = this.scene.proximityChatRoom;
+        const allowTalking = this.shouldAllowTalkingInSpace(spaceName);
+
+        if (allowTalking) {
+            // Leave the broadcast space and revert to a regular (non-silent) proximity participant.
+            isListenerStore.set(false);
+            listenerSharingCameraStore.set(false);
+            listenerWaitingMediaStore.set(undefined);
+            currentLiveStreamingSpaceStore.set(undefined);
+            if (proximityRoom.getCurrentSpaceName() === spaceName) {
+                try {
+                    await proximityRoom.leaveSpace(spaceName, true);
+                } catch (error) {
+                    console.error("An error occurred while leaving the megaphone space", error);
+                    Sentry.captureException(error);
+                }
+                proximityRoom.setDisplayName(get(LL).chat.proximity());
+            }
+            return;
+        }
+
+        const space = proximityRoom.getCurrentSpace();
         if (!space) {
             return;
         }
-        const allowTalking = this.shouldAllowTalkingInSpace(spaceName);
-        isListenerStore.set(!allowTalking);
-        if (allowTalking) {
-            // startStreaming() is idempotent if the user was already streaming (e.g. was a speaker).
-            space.startStreaming();
-            listenerSharingCameraStore.set(seeAttendees);
+        isListenerStore.set(true);
+        try {
+            space.stopStreaming();
+        } catch (error) {
+            console.error("An error occurred while stopping streaming", error);
+            Sentry.captureException(error);
+        }
+        if (seeAttendees) {
+            space.startListenerStreaming();
+            listenerSharingCameraStore.set(true);
         } else {
-            try {
-                space.stopStreaming();
-            } catch (error) {
-                console.error("An error occurred while stopping streaming", error);
-                Sentry.captureException(error);
-            }
-            if (seeAttendees) {
-                space.startListenerStreaming();
-                listenerSharingCameraStore.set(true);
-            } else {
-                listenerSharingCameraStore.set(false);
-            }
+            listenerSharingCameraStore.set(false);
         }
     }
 
