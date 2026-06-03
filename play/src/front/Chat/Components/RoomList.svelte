@@ -41,8 +41,8 @@
         shouldShowRoomSidePanelToggle,
         shouldShowRoomTimeline,
     } from "./RoomListLayout";
-    import { IconChevronUp, IconCloudLock, IconPlus, IconRefresh } from "@wa-icons";
     import ProximityRoomRow from "./Room/ProximityRoomRow.svelte";
+    import { IconChevronUp, IconCloudLock, IconPlus, IconRefresh } from "@wa-icons";
 
     interface Props {
         sideBarWidth?: number;

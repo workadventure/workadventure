@@ -1,6 +1,5 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
-    import { IconEar, IconMapEditor, IconMicrophone, IconUsersGroup } from "@wa-icons";
     import LL from "../../../../i18n/i18n-svelte";
     import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
@@ -8,6 +7,7 @@
     import type { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import WokaFromUserId from "../../../Components/Woka/WokaFromUserId.svelte";
+    import { IconEar, IconMapEditor, IconMicrophone, IconUsersGroup } from "@wa-icons";
 
     interface Props {
         room: ProximityChatRoom;
