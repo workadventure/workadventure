@@ -21,7 +21,6 @@
 
     let { property = $bindable(), onchange, ondeleteFile }: Props = $props();
 
-    let selectedFile: File | undefined = $state(undefined);
     let files: FileList | undefined = $state(undefined);
     let dropZoneRef: HTMLDivElement | undefined = $state();
     let errorOnFile: string | undefined = $state();
@@ -36,8 +35,7 @@
         if (files) {
             const file = files.item(0);
             if (file && isASupportedFormat(file.type)) {
-                selectedFile = file;
-                handleFileChange().catch((error) => {
+                handleFileChange(file).catch((error) => {
                     console.error("Error in handleFileChange:", error);
                     Sentry.captureException(error);
                 });
@@ -48,24 +46,21 @@
         }
     });
 
-    async function handleFileChange(): Promise<void> {
-        if (!selectedFile) {
-            return;
-        }
-        if (selectedFile.size > GRPC_MAX_MESSAGE_SIZE) {
+    async function handleFileChange(file: File): Promise<void> {
+        if (file.size > GRPC_MAX_MESSAGE_SIZE) {
             errorOnFile = $LL.mapEditor.properties.openFile.uploadFile.errorOnFileSize({
                 size: GRPC_MAX_MESSAGE_SIZE / BYTES_TO_MB,
             });
             return;
         }
 
-        const fileBuffer = await selectedFile.arrayBuffer();
+        const fileBuffer = await file.arrayBuffer();
         const fileAsUint8Array = new Uint8Array(fileBuffer);
         const generatedId = uuidv4();
         fileToUpload = {
             id: generatedId,
             file: fileAsUint8Array,
-            name: selectedFile.name,
+            name: file.name,
             propertyId: property.id,
         };
 
@@ -80,13 +75,13 @@
         const uploadFileCommand = new UploadFileFrontCommand(fileToUpload);
         uploadFileCommand.emitEvent(roomConnection);
 
-        const lastDot = selectedFile.name.lastIndexOf(".");
-        const fileName = selectedFile.name.slice(0, lastDot);
-        const fileExt = selectedFile.name.slice(lastDot + 1);
+        const lastDot = file.name.lastIndexOf(".");
+        const fileName = file.name.slice(0, lastDot);
+        const fileExt = file.name.slice(lastDot + 1);
 
         const fileUrl = new URL(`private/files/${fileName}-${property.id}.${fileExt}`, mapStorageUrl).toString();
 
-        property.name = selectedFile.name;
+        property.name = file.name;
         property.link = fileUrl;
         onchange?.();
     }
@@ -165,7 +160,7 @@
                 textColor="text-white"
                 size="xs"
                 onclick={() => {
-                    selectedFile = undefined;
+                    files = undefined;
                     ondeleteFile?.();
                     onchange?.();
                 }}
