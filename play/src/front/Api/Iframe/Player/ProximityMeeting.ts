@@ -8,63 +8,38 @@ import { apiCallback } from "../registeredCallbacks";
 import type { AppendPCMDataEvent } from "../../Events/ProximityMeeting/AppendPCMDataEvent";
 import { AudioStream } from "./AudioStream";
 
-type JoinProximityMeetingDetailedEvent = {
-    users: RemotePlayer[];
-    spaceName: string | undefined;
-};
-
-type ParticipantProximityMeetingDetailedEvent = {
-    user: RemotePlayer;
-    spaceName: string | undefined;
-};
-
-type LeaveProximityMeetingDetailedEvent = {
-    spaceName?: string;
-};
-
 export class WorkadventureProximityMeetingCommands extends IframeApiContribution<WorkadventureProximityMeetingCommands> {
     private joinStream: Subject<RemotePlayer[]> | undefined;
-    private joinDetailedStream: Subject<JoinProximityMeetingDetailedEvent> | undefined;
     private participantJoinStream: Subject<RemotePlayer> | undefined;
-    private participantJoinDetailedStream: Subject<ParticipantProximityMeetingDetailedEvent> | undefined;
     private participantLeaveStream: Subject<RemotePlayer> | undefined;
-    private participantLeaveDetailedStream: Subject<ParticipantProximityMeetingDetailedEvent> | undefined;
     private followedStream: Subject<RemotePlayer> | undefined;
     private unfollowedStream: Subject<RemotePlayer> | undefined;
     private leaveStream: Subject<void> | undefined;
-    private leaveDetailedStream: Subject<LeaveProximityMeetingDetailedEvent> | undefined;
     private pcmDataStream: Subject<Float32Array> = new Subject();
 
     callbacks = [
         apiCallback({
             type: "joinProximityMeetingEvent",
             callback: (payloadData: JoinProximityMeetingEvent) => {
-                const users = payloadData.users.map((user) => new RemotePlayer(user));
-                this.joinStream?.next(users);
-                this.joinDetailedStream?.next({ users, spaceName: payloadData.spaceName });
+                this.joinStream?.next(payloadData.users.map((user) => new RemotePlayer(user)));
             },
         }),
         apiCallback({
             type: "participantJoinProximityMeetingEvent",
             callback: (payloadData: ParticipantProximityMeetingEvent) => {
-                const user = new RemotePlayer(payloadData.user);
-                this.participantJoinStream?.next(user);
-                this.participantJoinDetailedStream?.next({ user, spaceName: payloadData.spaceName });
+                this.participantJoinStream?.next(new RemotePlayer(payloadData.user));
             },
         }),
         apiCallback({
             type: "participantLeaveProximityMeetingEvent",
             callback: (payloadData: ParticipantProximityMeetingEvent) => {
-                const user = new RemotePlayer(payloadData.user);
-                this.participantLeaveStream?.next(user);
-                this.participantLeaveDetailedStream?.next({ user, spaceName: payloadData.spaceName });
+                this.participantLeaveStream?.next(new RemotePlayer(payloadData.user));
             },
         }),
         apiCallback({
             type: "leaveProximityMeetingEvent",
-            callback: (payloadData: LeaveProximityMeetingDetailedEvent) => {
+            callback: () => {
                 this.leaveStream?.next();
-                this.leaveDetailedStream?.next({ spaceName: payloadData.spaceName });
             },
         }),
         apiCallback({
@@ -100,13 +75,6 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
         return this.joinStream;
     }
 
-    onJoinDetailed(): Subject<JoinProximityMeetingDetailedEvent> {
-        if (this.joinDetailedStream === undefined) {
-            this.joinDetailedStream = new Subject<JoinProximityMeetingDetailedEvent>();
-        }
-        return this.joinDetailedStream;
-    }
-
     /**
      * Detecting when a participant joined on the current meeting.
      * {@link https://docs.workadventu.re/map-building/api-player.md#detecting-when-a-participant-entersleaves-the-current-meeting | Website documentation}
@@ -118,13 +86,6 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
             this.participantJoinStream = new Subject<RemotePlayer>();
         }
         return this.participantJoinStream;
-    }
-
-    onParticipantJoinDetailed(): Subject<ParticipantProximityMeetingDetailedEvent> {
-        if (this.participantJoinDetailedStream === undefined) {
-            this.participantJoinDetailedStream = new Subject<ParticipantProximityMeetingDetailedEvent>();
-        }
-        return this.participantJoinDetailedStream;
     }
 
     /**
@@ -140,13 +101,6 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
         return this.participantLeaveStream;
     }
 
-    onParticipantLeaveDetailed(): Subject<ParticipantProximityMeetingDetailedEvent> {
-        if (this.participantLeaveDetailedStream === undefined) {
-            this.participantLeaveDetailedStream = new Subject<ParticipantProximityMeetingDetailedEvent>();
-        }
-        return this.participantLeaveDetailedStream;
-    }
-
     /**
      * Detecting when the user leave on a meeting.
      * {@link https://docs.workadventu.re/developer/map-scripting/references/api-player/#detecting-when-the-user-entersleaves-a-meeting | Website documentation}
@@ -158,18 +112,11 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
         return this.leaveStream;
     }
 
-    onLeaveDetailed(): Subject<LeaveProximityMeetingDetailedEvent> {
-        if (this.leaveDetailedStream === undefined) {
-            this.leaveDetailedStream = new Subject<LeaveProximityMeetingDetailedEvent>();
-        }
-        return this.leaveDetailedStream;
-    }
-
     /**
      * Play a sound to all players in the current meeting.
      * {@link https://docs.workadventu.re/developer/map-scripting/references/api-player/#playing-a-sound-to-players-in-the-same-meeting | Website documentation}
      */
-    async playSound(url: string, _options?: { spaceName?: string }): Promise<void> {
+    async playSound(url: string): Promise<void> {
         await queryWorkadventure(
             {
                 type: "playSoundInBubble",
