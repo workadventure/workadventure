@@ -386,7 +386,7 @@ export const isIframeResponseEvent = z.union([
     }),
     z.object({
         type: z.literal("leaveProximityMeetingEvent"),
-        data: z.object({ spaceName: z.string().optional() }),
+        data: z.undefined(),
     }),
     z.object({
         type: z.literal("onFollowed"),
