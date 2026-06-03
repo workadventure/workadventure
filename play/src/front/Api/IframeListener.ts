@@ -840,7 +840,7 @@ class IframeListener {
         );
     }
 
-    sendJoinProximityMeetingEvent(users: MessageUserJoined[], spaceName?: string) {
+    sendJoinProximityMeetingEvent(users: MessageUserJoined[]) {
         const formattedUsers: AddPlayerEvent[] = users.map((user) => {
             return {
                 playerId: user.userId,
@@ -857,12 +857,11 @@ class IframeListener {
             type: "joinProximityMeetingEvent",
             data: {
                 users: formattedUsers,
-                spaceName,
             } as JoinProximityMeetingEvent,
         });
     }
 
-    sendParticipantJoinProximityMeetingEvent(user: MessageUserJoined, spaceName?: string) {
+    sendParticipantJoinProximityMeetingEvent(user: MessageUserJoined) {
         this.postMessage({
             type: "participantJoinProximityMeetingEvent",
             data: {
@@ -875,12 +874,11 @@ class IframeListener {
                     position: user.position,
                     variables: user.variables,
                 },
-                spaceName,
             } as ParticipantProximityMeetingEvent,
         });
     }
 
-    sendParticipantLeaveProximityMeetingEvent(user: MessageUserJoined, spaceName?: string) {
+    sendParticipantLeaveProximityMeetingEvent(user: MessageUserJoined) {
         this.postMessage({
             type: "participantLeaveProximityMeetingEvent",
             data: {
@@ -893,15 +891,14 @@ class IframeListener {
                     position: user.position,
                     variables: user.variables,
                 },
-                spaceName,
             } as ParticipantProximityMeetingEvent,
         });
     }
 
-    sendLeaveProximityMeetingEvent(spaceName?: string) {
+    sendLeaveProximityMeetingEvent() {
         this.postMessage({
             type: "leaveProximityMeetingEvent",
-            data: { spaceName },
+            data: undefined,
         });
     }
 
