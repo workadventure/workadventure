@@ -7,6 +7,7 @@
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import { navChat } from "../../../Chat/Stores/ChatStore";
     import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
+    import { ProximityChatRoom } from "../../../Chat/Connection/Proximity/ProximityChatRoom";
     import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { gameSceneStore } from "../../../Stores/GameSceneStore";
@@ -61,13 +62,16 @@
             return;
         }
         const gameScene = gameManager.getCurrentGameScene();
-        const proximityChatRoom = gameScene.proximityChatRoom;
+        const proximityChatRoom = gameScene.proximityChatRoomManager.resolveTargetRoom();
+        if (!proximityChatRoom) {
+            return;
+        }
         selectedRoomStore.set(proximityChatRoom);
         navChat.switchToChat();
         chatVisibilityStore.set(true);
         proximityChatRoom.hasUnreadMessages.set(false);
         proximityChatRoom.unreadMessagesCount.set(0);
-        chatNotificationStore.clearAll();
+        chatNotificationStore.clearRoom(proximityChatRoom.id);
         proximityChatRoom.unreadNotificationCount.set(0);
         analyticsClient.openedChat();
         closeParticipantMenu();
@@ -80,7 +84,10 @@
             return;
         }
         const gameScene = gameManager.getCurrentGameScene();
-        const proximityChatRoom = gameScene.proximityChatRoom;
+        const proximityChatRoom = gameScene.proximityChatRoomManager.resolveTargetRoom();
+        if (!proximityChatRoom) {
+            return;
+        }
         selectedRoomStore.set(proximityChatRoom);
         navChat.switchToUserList();
         chatVisibilityStore.set(true);
@@ -104,11 +111,20 @@
     const participantsList: Readable<MeetingParticipant[]> = derived(
         [participantMenuVisibleStore, gameSceneStore],
         ([visible, scene], set) => {
-            if (!visible || !scene?.proximityChatRoom) {
+            if (!visible || !scene?.proximityChatRoomManager) {
                 set([]);
                 return;
             }
-            return scene.proximityChatRoom.spaceUsersStore.subscribe((usersMap) => {
+            const selectedRoom = get(selectedRoomStore);
+            const proximityChatRoom =
+                selectedRoom instanceof ProximityChatRoom && get(selectedRoom.isJoined)
+                    ? selectedRoom
+                    : scene.proximityChatRoomManager.resolveTargetRoom();
+            if (!proximityChatRoom) {
+                set([]);
+                return;
+            }
+            return proximityChatRoom.spaceUsersStore.subscribe((usersMap) => {
                 const localUuid = localUserStore.getLocalUser()?.uuid ?? "";
                 set(Array.from(usersMap.values()).filter((u) => u.uuid !== localUuid));
             });
@@ -128,7 +144,7 @@
     })();
 
     /** True when menu is visible but game scene / proximityChatRoom is not ready yet. */
-    $: loading = $participantMenuVisibleStore && !$gameSceneStore?.proximityChatRoom;
+    $: loading = $participantMenuVisibleStore && !$gameSceneStore?.proximityChatRoomManager;
 
     $: localParticipantName = localUserStore.getName()?.trim() || $LL.camera.my.nameTag();
 </script>

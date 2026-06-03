@@ -14,8 +14,8 @@
     export let last: boolean | undefined = undefined;
     export let chatEnabledInAdmin = false;
 
-    const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
-    const unreadMessagesCount = proximityChatRoom.unreadMessagesCount;
+    const proximityChatRoomManager = gameManager.getCurrentGameScene().proximityChatRoomManager;
+    const unreadMessagesCount = proximityChatRoomManager.unreadMessagesCount;
 
     const dispatch = createEventDispatcher<{
         click: void;
@@ -28,8 +28,6 @@
         }
 
         chatVisibilityStore.set(!$chatVisibilityStore);
-        proximityChatRoom.unreadMessagesCount.set(0);
-        chatNotificationStore.clearAll();
         dispatch("click");
     }
 
@@ -61,11 +59,14 @@
         toggleChat();
         navChat.switchToChat();
         if (!chatEnabledInAdmin) {
-            selectedRoomStore.set(proximityChatRoom);
-            proximityChatRoom.hasUnreadMessages.set(false);
-            proximityChatRoom.unreadMessagesCount.set(0);
-            chatNotificationStore.clearAll();
-            proximityChatRoom.unreadNotificationCount.set(0);
+            const proximityChatRoom = proximityChatRoomManager.resolveTargetRoom();
+            if (proximityChatRoom) {
+                selectedRoomStore.set(proximityChatRoom);
+                proximityChatRoom.hasUnreadMessages.set(false);
+                proximityChatRoom.unreadMessagesCount.set(0);
+                chatNotificationStore.clearRoom(proximityChatRoom.id);
+                proximityChatRoom.unreadNotificationCount.set(0);
+            }
         }
         analyticsClient.openedChat();
     }}

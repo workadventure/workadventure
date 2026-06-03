@@ -195,13 +195,16 @@
             return;
         }
         const gameScene = gameManager.getCurrentGameScene();
-        const proximityChatRoom = gameScene.proximityChatRoom;
+        const proximityChatRoom = gameScene.proximityChatRoomManager.resolveTargetRoom();
+        if (!proximityChatRoom) {
+            return;
+        }
         selectedRoomStore.set(proximityChatRoom);
         navChat.switchToChat();
         chatVisibilityStore.set(true);
         proximityChatRoom.hasUnreadMessages.set(false);
         proximityChatRoom.unreadMessagesCount.set(0);
-        chatNotificationStore.clearAll();
+        chatNotificationStore.clearRoom(proximityChatRoom.id);
         proximityChatRoom.unreadNotificationCount.set(0);
         analyticsClient.openedChat();
     }
@@ -212,7 +215,10 @@
             return;
         }
         const gameScene = gameManager.getCurrentGameScene();
-        const proximityChatRoom = gameScene.proximityChatRoom;
+        const proximityChatRoom = gameScene.proximityChatRoomManager.resolveTargetRoom();
+        if (!proximityChatRoom) {
+            return;
+        }
         selectedRoomStore.set(proximityChatRoom);
         navChat.switchToUserList();
         chatVisibilityStore.set(true);

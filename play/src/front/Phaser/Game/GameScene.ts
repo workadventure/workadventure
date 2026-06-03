@@ -11,7 +11,7 @@ import { throttle } from "throttle-debounce";
 import { ForwardableStore, MapStore } from "@workadventure/store-utils";
 import { MathUtils } from "@workadventure/math-utils";
 import CancelablePromise from "cancelable-promise";
-import { Deferred } from "@workadventure/shared-utils";
+import { ChatMessageTypes, Deferred } from "@workadventure/shared-utils";
 import {
     AvailabilityStatus,
     availabilityStatusToJSON,
@@ -164,6 +164,11 @@ import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
+import {
+    DEFAULT_PROXIMITY_SPACE_NAME,
+    ProximityChatRoomManager,
+    type ProximityChatRoomKind,
+} from "../../Chat/Connection/Proximity/ProximityChatRoomManager";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
 import { AUDIO_CONTEXT_TOAST_UUID, audioContextManager } from "../../WebRtc/AudioContextManager";
 import { notificationManager } from "../../Notification/NotificationManager";
@@ -411,6 +416,7 @@ export class GameScene extends DirtyScene {
     private isLiveStreamingUnsubscriber: Unsubscriber | undefined;
     private shouldPublishScreenShareUnsubscriber: Unsubscriber | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
+    private _proximityChatRoomManager: ProximityChatRoomManager | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
     private _worldUserCounter: ForwardableStore<number> = new ForwardableStore(0);
     public extensionModule: ExtensionModule | undefined = undefined;
@@ -422,6 +428,7 @@ export class GameScene extends DirtyScene {
 
     public _chatConnection: ChatConnectionInterface | undefined;
     private _proximityChatRoomDeferred: Deferred<ProximityChatRoom> = new Deferred();
+    private _proximityChatRoomManagerDeferred: Deferred<ProximityChatRoomManager> = new Deferred();
     private _focusFx: DarkenOutsideAreaEffect | undefined;
     private abortController: AbortController = new AbortController();
 
@@ -1198,7 +1205,11 @@ export class GameScene extends DirtyScene {
         });
         megaphoneSpaceStore.set(undefined);
         this.proximitySpaceManager?.destroy();
-        this._proximityChatRoom?.destroy();
+        if (this._proximityChatRoomManager) {
+            this._proximityChatRoomManager.destroy();
+        } else {
+            this._proximityChatRoom?.destroy();
+        }
         this.mapEditorModeStoreUnsubscriber?.();
         this.emoteUnsubscriber?.();
         this.followUsersColorStoreUnsubscriber?.();
@@ -2412,18 +2423,38 @@ export class GameScene extends DirtyScene {
                 Sentry.captureException(e);
             });
 
-        this._proximityChatRoom = new ProximityChatRoom(
-            this.connection.getSpaceUserId(),
-            this._spaceRegistry,
-            iframeListener,
-            this.remotePlayersRepository,
-            this,
-            this.wamFile?.settings,
-            this.connection.getAllTags()
+        const connection = this.connection;
+        const spaceRegistry = this._spaceRegistry;
+        if (!spaceRegistry) {
+            throw new Error("_spaceRegistry not yet initialized");
+        }
+
+        const createProximityChatRoom = (spaceName: string, displayName: string, kind: ProximityChatRoomKind) =>
+            new ProximityChatRoom(
+                connection.getSpaceUserId(),
+                spaceRegistry,
+                iframeListener,
+                this.remotePlayersRepository,
+                this,
+                this.wamFile?.settings,
+                connection.getAllTags(),
+                undefined,
+                undefined,
+                spaceName,
+                displayName,
+                kind
+            );
+
+        this._proximityChatRoomManager = new ProximityChatRoomManager(createProximityChatRoom);
+        this._proximityChatRoom = this._proximityChatRoomManager.getOrCreateRoom(
+            DEFAULT_PROXIMITY_SPACE_NAME,
+            "Proximity Chat",
+            "default"
         );
+        this._proximityChatRoomManagerDeferred.resolve(this._proximityChatRoomManager);
 
         this._proximityChatRoomDeferred.resolve(this._proximityChatRoom);
-        this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoom);
+        this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoomManager);
 
         // Check WebRtc connection
         try {
@@ -2930,8 +2961,12 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.chatMessageStream.subscribe((chatMessage) => {
-                this.proximityChatRoomPromise()
-                    .then((room) => {
+                this.proximityChatRoomManagerPromise()
+                    .then((manager) => {
+                        const room =
+                            manager.resolveTargetRoom(
+                                chatMessage.options.scope === "bubble" ? chatMessage.options.spaceName : undefined
+                            ) ?? this.proximityChatRoom;
                         switch (chatMessage.options.scope) {
                             case "local": {
                                 room.addExternalMessage("local", chatMessage.message, chatMessage.options.author);
@@ -2956,8 +2991,9 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.startTypingProximityMessageStream.subscribe((sartWriting) => {
-                this.proximityChatRoomPromise()
-                    .then((room) => {
+                this.proximityChatRoomManagerPromise()
+                    .then((manager) => {
+                        const room = manager.resolveTargetRoom() ?? this.proximityChatRoom;
                         room.addExternalTypingUser(
                             btoa(sartWriting.author ?? "unknow"),
                             sartWriting.author ?? "unknow",
@@ -2972,8 +3008,9 @@ ${escapedMessage}
         );
         this.iframeSubscriptionList.push(
             iframeListener.stopTypingProximityMessageStream.subscribe((stopWriting) => {
-                this.proximityChatRoomPromise()
-                    .then((room) => {
+                this.proximityChatRoomManagerPromise()
+                    .then((manager) => {
+                        const room = manager.resolveTargetRoom() ?? this.proximityChatRoom;
                         room.removeExternalTypingUser(btoa(stopWriting.author ?? "unknow"));
                     })
                     .catch((error) => {
@@ -2983,12 +3020,23 @@ ${escapedMessage}
             })
         );
 
-        /*this.iframeSubscriptionList.push(
+        this.iframeSubscriptionList.push(
             iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {
-                // TODO: Implement
-                console.debug("Not implemented yet with new chat integration", status);
+                const room = this.proximityChatRoomManager.resolveTargetRoom();
+                if (!room) {
+                    return;
+                }
+                if (status === ChatMessageTypes.userWriting) {
+                    room.startTyping().catch((e) => {
+                        console.error("Error while sending typing status", e);
+                    });
+                } else if (status === ChatMessageTypes.userStopWriting) {
+                    room.stopTyping().catch((e) => {
+                        console.error("Error while sending typing status", e);
+                    });
+                }
             })
-        );*/
+        );
 
         this.iframeSubscriptionList.push(
             iframeListener.disablePlayerControlStream.subscribe((messageEventSource) => {
@@ -3558,7 +3606,9 @@ ${escapedMessage}
         iframeListener.registerAnswerer("playSoundInBubble", async (message) => {
             const soundUrl = new URL(message.url, this.mapUrlFile);
             try {
-                const proximityChatRoom = await this._proximityChatRoomDeferred.promise;
+                const proximityChatRoomManager = await this._proximityChatRoomManagerDeferred.promise;
+                const proximityChatRoom =
+                    proximityChatRoomManager.getDefaultRoom() ?? this.getDefaultProximityChatRoom();
                 await proximityChatRoom.dispatchSound(soundUrl);
             } catch (error) {
                 console.error("Error playing sound in bubble:", error);
@@ -4297,11 +4347,30 @@ ${escapedMessage}
     }
 
     private proximityChatRoomPromise(): Promise<ProximityChatRoom> {
-        if (this._proximityChatRoom) {
-            return Promise.resolve(this._proximityChatRoom);
+        if (this._proximityChatRoomManager) {
+            const activeRoom = this._proximityChatRoomManager.resolveTargetRoom();
+            if (activeRoom) {
+                return Promise.resolve(activeRoom);
+            }
         }
 
         return this._proximityChatRoomDeferred.promise;
+    }
+
+    private proximityChatRoomManagerPromise(): Promise<ProximityChatRoomManager> {
+        if (this._proximityChatRoomManager) {
+            return Promise.resolve(this._proximityChatRoomManager);
+        }
+
+        return this._proximityChatRoomManagerDeferred.promise;
+    }
+
+    private getDefaultProximityChatRoom(): ProximityChatRoom {
+        const defaultRoom = this._proximityChatRoomManager?.getDefaultRoom() ?? this._proximityChatRoom;
+        if (!defaultRoom) {
+            throw new Error("_proximityChatRoom not yet initialized");
+        }
+        return defaultRoom;
     }
 
     get applicationManager(): ApplicationManager {
@@ -4319,10 +4388,21 @@ ${escapedMessage}
     }
 
     get proximityChatRoom(): ProximityChatRoom {
+        const activeRoom = this._proximityChatRoomManager?.resolveTargetRoom();
+        if (activeRoom) {
+            return activeRoom;
+        }
         if (!this._proximityChatRoom) {
             throw new Error("_proximityChatRoom not yet initialized");
         }
         return this._proximityChatRoom;
+    }
+
+    get proximityChatRoomManager(): ProximityChatRoomManager {
+        if (!this._proximityChatRoomManager) {
+            throw new Error("_proximityChatRoomManager not yet initialized");
+        }
+        return this._proximityChatRoomManager;
     }
 
     get userProviderMerger(): Promise<UserProviderMerger> {

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const isPlaySoundInBubbleEvent = z.object({
     url: z.string(),
+    spaceName: z.string().optional(),
 });
 
 /**
