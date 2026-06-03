@@ -698,7 +698,7 @@ export class ProximityChatRoom implements ChatRoom {
                 }
             }
             if (this.isDefaultProximityRoom()) {
-                iframeListener.sendJoinProximityMeetingEvent(playersInSpace);
+                iframeListener.sendJoinProximityMeetingEvent(playersInSpace, this.spaceName);
             }
             faviconManager.pushNotificationFavicon();
             screenWakeLock
@@ -744,7 +744,7 @@ export class ProximityChatRoom implements ChatRoom {
             const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
             if (player) {
                 if (this.isDefaultProximityRoom()) {
-                    iframeListener.sendParticipantJoinProximityMeetingEvent(player);
+                    iframeListener.sendParticipantJoinProximityMeetingEvent(player, this.spaceName);
                 }
                 if (!isMeetingRoomChat) {
                     if (this.users && this.users.size <= MAX_PARTICIPANTS_FOR_SOUND_NOTIFICATIONS) {
@@ -763,7 +763,7 @@ export class ProximityChatRoom implements ChatRoom {
             const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
             if (player) {
                 if (this.isDefaultProximityRoom()) {
-                    iframeListener.sendParticipantLeaveProximityMeetingEvent(player);
+                    iframeListener.sendParticipantLeaveProximityMeetingEvent(player, this.spaceName);
                 }
                 if (!isMeetingRoomChat) {
                     if (this.users && this.users.size <= MAX_PARTICIPANTS_FOR_SOUND_NOTIFICATIONS) {
@@ -951,7 +951,7 @@ export class ProximityChatRoom implements ChatRoom {
 
         hideBubbleConfirmationModal();
         if (this.isDefaultProximityRoom()) {
-            iframeListener.sendLeaveProximityMeetingEvent();
+            iframeListener.sendLeaveProximityMeetingEvent(this.spaceName);
         }
         faviconManager.pushOriginalFavicon();
 

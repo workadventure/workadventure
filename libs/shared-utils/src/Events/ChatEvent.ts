@@ -7,6 +7,7 @@ export const isSendLocalChatMessageOptions = z.object({
 
 export const isSendBubbleChatMessageOptions = z.object({
     scope: z.literal("bubble"),
+    spaceName: z.string().optional(),
 });
 
 export const isSendChatMessageOptions = z.union([isSendLocalChatMessageOptions, isSendBubbleChatMessageOptions]);

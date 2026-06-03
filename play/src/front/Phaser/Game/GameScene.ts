@@ -2954,8 +2954,12 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.chatMessageStream.subscribe((chatMessage) => {
-                this.proximityChatRoomPromise()
-                    .then((room) => {
+                this.proximityChatRoomManagerPromise()
+                    .then((manager) => {
+                        const room =
+                            manager.resolveTargetRoom(
+                                chatMessage.options.scope === "bubble" ? chatMessage.options.spaceName : undefined
+                            ) ?? this.proximityChatRoom;
                         switch (chatMessage.options.scope) {
                             case "local": {
                                 room.addExternalMessage("local", chatMessage.message, chatMessage.options.author);
@@ -2980,8 +2984,9 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.startTypingProximityMessageStream.subscribe((sartWriting) => {
-                this.proximityChatRoomPromise()
-                    .then((room) => {
+                this.proximityChatRoomManagerPromise()
+                    .then((manager) => {
+                        const room = manager.resolveTargetRoom() ?? this.proximityChatRoom;
                         room.addExternalTypingUser(
                             btoa(sartWriting.author ?? "unknow"),
                             sartWriting.author ?? "unknow",
@@ -2996,8 +3001,9 @@ ${escapedMessage}
         );
         this.iframeSubscriptionList.push(
             iframeListener.stopTypingProximityMessageStream.subscribe((stopWriting) => {
-                this.proximityChatRoomPromise()
-                    .then((room) => {
+                this.proximityChatRoomManagerPromise()
+                    .then((manager) => {
+                        const room = manager.resolveTargetRoom() ?? this.proximityChatRoom;
                         room.removeExternalTypingUser(btoa(stopWriting.author ?? "unknow"));
                     })
                     .catch((error) => {
@@ -3009,7 +3015,10 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {
-                const room = this.getDefaultProximityChatRoom();
+                const room = this.proximityChatRoomManager.resolveTargetRoom();
+                if (!room) {
+                    return;
+                }
                 if (status === ChatMessageTypes.userWriting) {
                     room.startTyping().catch((e) => {
                         console.error("Error while sending typing status", e);
@@ -4332,10 +4341,21 @@ ${escapedMessage}
 
     private proximityChatRoomPromise(): Promise<ProximityChatRoom> {
         if (this._proximityChatRoomManager) {
-            return Promise.resolve(this.getDefaultProximityChatRoom());
+            const activeRoom = this._proximityChatRoomManager.resolveTargetRoom();
+            if (activeRoom) {
+                return Promise.resolve(activeRoom);
+            }
         }
 
         return this._proximityChatRoomDeferred.promise;
+    }
+
+    private proximityChatRoomManagerPromise(): Promise<ProximityChatRoomManager> {
+        if (this._proximityChatRoomManager) {
+            return Promise.resolve(this._proximityChatRoomManager);
+        }
+
+        return this._proximityChatRoomManagerDeferred.promise;
     }
 
     private getDefaultProximityChatRoom(): ProximityChatRoom {
