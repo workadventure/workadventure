@@ -11,7 +11,6 @@
     } from "../../Connection/ChatConnection";
     import getCloseImg from "../../images/get-close.png";
     import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
-    import { intentionallyClosedChatDuringMeetingStore } from "../../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { hideActionBarStoreBecauseOfChatBar } from "../../ChatSidebarWidthStore";
     import {
@@ -296,7 +295,7 @@
         shouldRestoreChatStateStore.set(false);
 
         if (room instanceof ProximityChatRoom) {
-            intentionallyClosedChatDuringMeetingStore.set(true);
+            room.intentionallyClosed.set(true);
         }
     }
 

@@ -31,17 +31,17 @@
     });
 
     function handleClick() {
-        chatNotificationStore.clearAll();
-
         chatVisibilityStore.set(true);
         navChat.switchToChat();
 
         if (notification.openRoomOnClick !== false) {
             const room = notification.room;
+            chatNotificationStore.clearRoom(room.id);
             room.setTimelineAsRead();
             selectedRoomStore.set(room);
             focusNotificationMessage(room, notification.messageId);
         } else {
+            chatNotificationStore.clearAll();
             // Open the chat on the main chat panel
             selectedRoomStore.set(undefined);
         }

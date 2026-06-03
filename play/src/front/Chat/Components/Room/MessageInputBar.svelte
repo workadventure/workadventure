@@ -20,10 +20,12 @@
     import { defaultNativeIntegrationAppName } from "@workadventure/shared-utils";
     import { hasChatRoomPollCreation, type ChatConversation } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
-    import { chatInputFocusStore, shouldDisableChatInProximityRoomStore } from "../../../Stores/ChatStore";
+    import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import LL from "../../../../i18n/i18n-svelte";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
+    import { DEFAULT_PROXIMITY_SPACE_NAME } from "../../Connection/Proximity/ProximityChatRoomManager";
+    import { shouldDisableMessageInput, shouldDisableSendButton } from "./MessageInputBarDisabling";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { draftMessageService } from "../../Services/DraftMessageService";
@@ -65,12 +67,20 @@
         [],
     );
     const TYPINT_TIMEOUT = 10000;
+    const inactiveProximityState = readable(false);
 
     let applicationComponentOpened = $state(false);
     let fileAttachmentComponentOpened = $state(false);
     let fileAttachementEnabled = $state(false);
     let applicationProperty: ApplicationProperty | undefined = $state(undefined);
     let isProximityChatRoom = $derived(room instanceof ProximityChatRoom);
+    let isDefaultProximityRoom = $derived(
+        room instanceof ProximityChatRoom && room.spaceName === DEFAULT_PROXIMITY_SPACE_NAME,
+    );
+    let proximityChatDisabled = $derived(
+        room instanceof ProximityChatRoom ? room.isChatDisabled : inactiveProximityState,
+    );
+    let proximityRoomJoined = $derived(room instanceof ProximityChatRoom ? room.isJoined : inactiveProximityState);
     const cannotCreatePoll = readable(false);
 
     function getPollCreationCapability(currentRoom: ChatConversation) {
@@ -79,6 +89,15 @@
 
     let pollCreation = $derived(getPollCreationCapability(room));
     let canCreatePoll = $derived(pollCreation?.canCreate ?? cannotCreatePoll);
+    let messageInputDisabled = $derived(
+        shouldDisableMessageInput({
+            disabled,
+            isProximityChatRoom,
+            isDefaultProximityRoom,
+            isProximityChatDisabled: $proximityChatDisabled,
+            isProximityRoomJoined: $proximityRoomJoined,
+        }),
+    );
     let replyMessageId: string | null = null;
     let draftId = $derived(`${room.id}-${localUserStore.getChatId() ?? "0"}`);
 
@@ -773,7 +792,7 @@
         {focusout}
         bind:message
         bind:messageInput
-        disabled={(disabled && !isProximityChatRoom) || ($shouldDisableChatInProximityRoomStore && isProximityChatRoom)}
+        disabled={messageInputDisabled}
         inputClass="message-input flex-grow !m-0 px-4 py-2.5 max-h-36 overflow-auto h-full rounded-lg wa-searchbar block text-sm text-white placeholder:text-white/50 placeholder:text-sm border border-white/10 !bg-white/5 resize-none outline-none shadow-none focus:ring-0 focus:border-white/20"
         dataText={$LL.chat.enter()}
         dataTestid="messageInput"
@@ -800,7 +819,10 @@
         <button
             data-testid="sendMessageButton"
             class="disabled:opacity-30 disabled:!cursor-none disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-md"
-            disabled={applicationPropertyInProcessing}
+            disabled={shouldDisableSendButton({
+                applicationPropertyInProcessing,
+                isMessageInputDisabled: messageInputDisabled,
+            })}
             onclick={() => sendMessage(message).catch((error) => console.error(error))}
         >
             <IconSend />
