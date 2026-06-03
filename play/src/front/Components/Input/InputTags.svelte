@@ -22,7 +22,7 @@
     let {
         optional = false,
         label,
-        value = $bindable<InputTagOption[]>(),
+        value = $bindable<InputTagOption[] | undefined>(),
         options = [],
         placeholder,
         onfocus,
@@ -34,27 +34,26 @@
     }: Props = $props();
 
     let filterText = $state("");
-    let filteredOptions: InputTagOption[] = $state([]);
 
-    $effect(() => {
-        filteredOptions = $state.snapshot(options);
+    const visibleOptions = $derived.by(() => {
+        const label = filterText.trim();
+
+        if (label.length === 0) {
+            return [];
+        }
+
+        const alreadySelected = value?.some((item) => item.label === label) ?? false;
+        const alreadyAvailable = options.some((item) => item.label === label);
+
+        if (alreadySelected || alreadyAvailable) {
+            return options;
+        }
+
+        return [...options, { value: label, label, created: true }];
     });
 
-    function handleFilter() {
-        if (value?.find((i) => i.label === filterText)) return;
-        if (filteredOptions.find((i) => i.label === filterText)) return;
-        if (filterText.trim().length > 0) {
-            const prev = filteredOptions.filter((i) => !i.created);
-            filteredOptions = [...prev, { value: filterText, label: filterText, created: true }];
-        }
-    }
-
-    function _handleChange() {
-        filteredOptions = filteredOptions.map((i) => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { created, ...option } = i;
-            return option;
-        });
+    function _handleChange(event: CustomEvent<InputTagOption[] | undefined>) {
+        value = event.detail;
         onchange?.(value);
     }
 </script>
@@ -80,13 +79,12 @@
         {/if}
     </div>
     <Select
-        on:filter={handleFilter}
         bind:filterText
         loadOptions={queryOptions}
         on:change={_handleChange}
         on:input={() => onchange?.(value)}
         on:select={() => onchange?.(value)}
-        items={filterText.trim().length === 0 ? [] : filteredOptions}
+        items={visibleOptions}
         bind:value
         multiple={true}
         placeholder={placeholder ?? "Select rights"}
@@ -120,7 +118,7 @@
         class="!bg-contrast !rounded-md !border-contrast-400 !outline-none !w-full"
     >
         <div slot="item" let:item>
-            {item.created ? $LL.notification.addNewTag({ tag: filterText }) : item.label}
+            {item.created ? $LL.notification.addNewTag({ tag: item.label }) : item.label}
         </div>
     </Select>
 </div>
