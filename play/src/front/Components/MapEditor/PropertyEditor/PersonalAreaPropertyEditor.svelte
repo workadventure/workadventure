@@ -217,7 +217,7 @@
                                 <InputRoomTags
                                     label={$LL.mapEditor.properties.personalAreaPropertyData.allowedTags()}
                                     bind:value={_tags}
-                                    handleChange={() => handleTagChange(_tags)}
+                                    onchange={() => handleTagChange(_tags)}
                                     testId="allowedTags"
                                 />
                             {/if}

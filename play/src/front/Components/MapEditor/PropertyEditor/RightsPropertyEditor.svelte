@@ -57,7 +57,7 @@
                 label={$LL.mapEditor.properties.restrictedRightsPropertyData.rightWriteTitle()}
                 options={_tag}
                 bind:value={writeTags}
-                handleChange={onChangeWriteReadTags}
+                onchange={onChangeWriteReadTags}
                 testId="writeTags"
             >
                 {#snippet info()}
@@ -72,7 +72,7 @@
                 label={$LL.mapEditor.properties.restrictedRightsPropertyData.rightReadTitle()}
                 options={_tag}
                 bind:value={readTags}
-                handleChange={onChangeWriteReadTags}
+                onchange={onChangeWriteReadTags}
                 testId="readTags"
             >
                 {#snippet info()}
