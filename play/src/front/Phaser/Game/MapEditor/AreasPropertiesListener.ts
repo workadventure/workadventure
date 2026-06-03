@@ -1623,14 +1623,14 @@ export class AreasPropertiesListener {
                     return;
                 }
 
-                // Talking audience: chat via proximity bubbles, never join the zone-wide space.
+                // Talking audience: chat via proximity bubbles, don't join the megaphone space.
                 if (property.allowTalking && this.shouldAllowTalkingInSpace(uniqRoomName)) {
                     this.activeMegaphoneZones.set(property.id, zoneState);
                     await this.applyListenerStreamingState(uniqRoomName, seeAttendees);
                     return;
                 }
 
-                // Silent audience: join the shared megaphone space to hear the speaker.
+                // Silent audience: join the megaphone space to hear the speaker.
                 proximityRoom.setDisplayName(speakerZoneName);
                 const space = await proximityRoom.joinSpace(
                     uniqRoomName,
@@ -1723,14 +1723,14 @@ export class AreasPropertiesListener {
 
     /**
      * Applies the listener state for a space. When talking is allowed the audience uses proximity
-     * bubbles, so the user leaves the zone-wide space; otherwise they stay a silent listener in it.
+     * bubbles, so the user leaves the megaphone space; otherwise they stay a silent listener in it.
      */
     private async applyListenerStreamingState(spaceName: string, seeAttendees: boolean): Promise<void> {
         const proximityRoom = this.scene.proximityChatRoom;
         const allowTalking = this.shouldAllowTalkingInSpace(spaceName);
 
         if (allowTalking) {
-            // Leave the broadcast space and revert to a regular (non-silent) proximity participant.
+            // Leave the megaphone space and revert to a regular (non-silent) proximity participant.
             isListenerStore.set(false);
             listenerSharingCameraStore.set(false);
             listenerWaitingMediaStore.set(undefined);
