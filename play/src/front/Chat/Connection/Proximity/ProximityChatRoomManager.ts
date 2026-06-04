@@ -1,6 +1,8 @@
 import { FilterType } from "@workadventure/messages";
 import type { Readable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
+import enUSMapEditor from "../../../../i18n/en-US/mapEditor";
+import LL from "../../../../i18n/i18n-svelte";
 import type { ProximityChatRoom } from "./ProximityChatRoom";
 
 export const DEFAULT_PROXIMITY_SPACE_NAME = "proximity";
@@ -12,6 +14,37 @@ export type ProximityChatRoomFactory = (
     displayName: string,
     kind: ProximityChatRoomKind
 ) => ProximityChatRoom;
+
+function getInitializedLabel(label: string, fallbackLabel: string): string {
+    return label.trim().length > 0 ? label : fallbackLabel;
+}
+
+export function getProximityAreaRoomDisplayName(displayName: string, kind: ProximityChatRoomKind): string {
+    const trimmedDisplayName = displayName.trim();
+    if (trimmedDisplayName.length > 0) {
+        return trimmedDisplayName;
+    }
+
+    switch (kind) {
+        case "meeting":
+            return getInitializedLabel(
+                get(LL).mapEditor.properties.livekitRoomProperty.label(),
+                enUSMapEditor.properties.livekitRoomProperty.label
+            );
+        case "listener":
+            return getInitializedLabel(
+                get(LL).mapEditor.properties.listenerMegaphone.label(),
+                enUSMapEditor.properties.listenerMegaphone.label
+            );
+        case "speaker":
+            return getInitializedLabel(
+                get(LL).mapEditor.properties.speakerMegaphone.label(),
+                enUSMapEditor.properties.speakerMegaphone.label
+            );
+        default:
+            return displayName;
+    }
+}
 
 /**
  * Owns the proximity chat rooms visible in the chat UI, allowing several proximity rooms to be joined in parallel.
@@ -45,14 +78,15 @@ export class ProximityChatRoomManager {
         displayName: string,
         kind: ProximityChatRoomKind = "area"
     ): ProximityChatRoom {
+        const normalizedDisplayName = getProximityAreaRoomDisplayName(displayName, kind);
         const existingRoom = this.rooms.get(spaceName);
         if (existingRoom) {
-            existingRoom.setDisplayName(displayName);
+            existingRoom.setDisplayName(normalizedDisplayName);
             existingRoom.kind.set(kind);
             return existingRoom;
         }
 
-        const room = this.createRoom(spaceName, displayName, kind);
+        const room = this.createRoom(spaceName, normalizedDisplayName, kind);
         this.rooms.set(spaceName, room);
         this.syncRoomsStore();
         return room;
