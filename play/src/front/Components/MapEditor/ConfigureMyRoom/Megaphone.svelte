@@ -22,9 +22,13 @@
     let enabled: boolean = $state(currentMegaphoneSettings?.enabled ?? false);
     const oldRights: string[] = currentMegaphoneSettings?.rights ?? [];
     const oldRecordingRights: string[] = currentMegaphoneSettings?.recording?.rights ?? [];
-    let rights: InputTagOption[] = $state([]);
+    let rights: InputTagOption[] = $state(
+        oldRights.map((right) => ({ value: right, label: right.toLocaleUpperCase(), created: undefined })),
+    );
     let recordingEnabled: boolean = $state(currentMegaphoneSettings?.recording?.enabled ?? false);
-    let recordingRights: InputTagOption[] = $state([]);
+    let recordingRights: InputTagOption[] = $state(
+        oldRecordingRights.map((right) => ({ value: right, label: right.toLocaleUpperCase(), created: undefined })),
+    );
     let title: string = $state(currentMegaphoneSettings?.title ?? "MyMegaphone");
     let scope: string = $state(currentMegaphoneSettings?.scope ?? "WORLD");
     let enableSoundNotifications: boolean = $state(currentMegaphoneSettings?.enableSoundNotifications ?? true);
@@ -116,18 +120,10 @@
     }
 
     async function getTags(): Promise<InputTagOption[]> {
-        loading = true;
-        rights = oldRights.map((right) => ({ value: right, label: right.toLocaleUpperCase(), created: undefined }));
-        recordingRights = oldRecordingRights.map((right) => ({
-            value: right,
-            label: right.toLocaleUpperCase(),
-            created: undefined,
-        }));
         const _tags = ((await gameManager.getCurrentGameScene().connection?.queryRoomTags()) ?? []).concat(
             oldRights ?? [],
             oldRecordingRights ?? [],
         );
-        loading = false;
         return _tags
             .filter((item, index) => _tags.indexOf(item) === index)
             .map((tag) => ({ value: tag, label: tag.toLocaleUpperCase(), created: undefined }));
