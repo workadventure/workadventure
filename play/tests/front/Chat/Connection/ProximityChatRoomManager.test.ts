@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { FilterType } from "@workadventure/messages";
 import {
     DEFAULT_PROXIMITY_SPACE_NAME,
+    getProximityAreaRoomDisplayName,
     ProximityChatRoomManager,
     type ProximityChatRoomKind,
 } from "../../../../src/front/Chat/Connection/Proximity/ProximityChatRoomManager";
@@ -69,6 +70,63 @@ function createManager(): ProximityChatRoomManager {
 }
 
 describe("ProximityChatRoomManager", () => {
+    it("normalizes empty proximity area display names with translated area type labels", () => {
+        expect(getProximityAreaRoomDisplayName("  Custom room  ", "meeting")).toBe("Custom room");
+        expect(getProximityAreaRoomDisplayName("", "meeting")).toBe("Meeting Room");
+        expect(getProximityAreaRoomDisplayName("   ", "speaker")).toBe("Podium");
+        expect(getProximityAreaRoomDisplayName("", "listener")).toBe("Audience");
+    });
+
+    it("uses a non-empty fallback display name when joining named area room kinds with empty names", async () => {
+        const manager = createManager();
+
+        const meetingRoom = await manager.joinSpace(
+            "meeting-space",
+            "   ",
+            [],
+            true,
+            FilterType.ALL_USERS,
+            false,
+            undefined,
+            "meeting"
+        );
+        const speakerRoom = await manager.joinSpace(
+            "speaker-space",
+            "",
+            [],
+            true,
+            FilterType.ALL_USERS,
+            false,
+            undefined,
+            "speaker"
+        );
+        const listenerRoom = await manager.joinSpace(
+            "listener-space",
+            "",
+            [],
+            true,
+            FilterType.ALL_USERS,
+            false,
+            undefined,
+            "listener"
+        );
+
+        expect(get(meetingRoom.name)).toBe("Meeting Room");
+        expect(get(speakerRoom.name)).toBe("Podium");
+        expect(get(listenerRoom.name)).toBe("Audience");
+    });
+
+    it("updates an existing room display name to the kind fallback when rejoining with an empty name", async () => {
+        const manager = createManager();
+
+        const room = await manager.joinSpace("space-a", "Named room", [], false, FilterType.ALL_USERS, false);
+        await manager.joinSpace("space-a", "   ", [], false, FilterType.ALL_USERS, false, undefined, "meeting");
+
+        expect(get(room.name)).toBe("Meeting Room");
+        const calls = roomByName.get("space-a")!.setDisplayName.mock.calls;
+        expect(calls[calls.length - 1]).toEqual(["Meeting Room"]);
+    });
+
     it("joins multiple spaces without leaving existing rooms", async () => {
         const manager = createManager();
 
