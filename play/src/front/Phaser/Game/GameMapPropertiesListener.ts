@@ -448,6 +448,10 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onEnterArea((newAreas) => {
+            for (const area of newAreas) {
+                analyticsClient.enterAreaMapEditor(area.id, area.name);
+            }
+
             if (this.gameMapFrontWrapper.areasManager === undefined) {
                 return;
             }
@@ -461,6 +465,10 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onLeaveArea((oldAreas) => {
+            for (const area of oldAreas) {
+                analyticsClient.leaveAreaMapEditor(area.id, area.name);
+            }
+
             if (
                 this.gameMapFrontWrapper.areasManager == undefined ||
                 this.gameMapFrontWrapper.areasManager.getAreaById == undefined
@@ -652,7 +660,12 @@ export class GameMapPropertiesListener {
             inOpenWebsite.set(true);
 
             // analytics event for open website
-            analyticsClient.openedWebsite(url);
+            analyticsClient.openedWebsite(url, {
+                targetUrl: url.toString(),
+                triggerProperty: "openWebsite",
+                areaId: place.id !== undefined ? String(place.id) : undefined,
+                areaName: typeof place.name === "string" ? place.name : undefined,
+            });
         };
 
         if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
@@ -722,6 +735,13 @@ export class GameMapPropertiesListener {
 
             //user in zone to open cowesite with only icone
             inOpenWebsite.set(true);
+
+            analyticsClient.openedWebsite(new URL(urlStr, this.scene.mapUrlFile), {
+                targetUrl: new URL(urlStr, this.scene.mapUrlFile).toString(),
+                triggerProperty: "openWebsite",
+                areaId: place.id !== undefined ? String(place.id) : undefined,
+                areaName: typeof place.name === "string" ? place.name : undefined,
+            });
         }
 
         if (!websiteTriggerProperty || websiteTriggerProperty === ON_ACTION_TRIGGER_ENTER) {
