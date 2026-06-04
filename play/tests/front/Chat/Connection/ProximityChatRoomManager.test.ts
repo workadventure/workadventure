@@ -25,11 +25,12 @@ type FakeProximityChatRoom = Pick<
     | "hasUserMessages"
     | "unreadMessagesCount"
     | "unreadNotificationCount"
-    | "joinSpace"
-    | "leaveSpace"
-    | "setDisplayName"
-    | "destroy"
->;
+> & {
+    joinSpace: ReturnType<typeof vi.fn>;
+    leaveSpace: ReturnType<typeof vi.fn>;
+    setDisplayName: ReturnType<typeof vi.fn>;
+    destroy: ReturnType<typeof vi.fn>;
+};
 
 function createFakeRoom(spaceName: string, displayName: string, kind: ProximityChatRoomKind): FakeProximityChatRoom {
     const name = writable(displayName);
@@ -47,7 +48,7 @@ function createFakeRoom(spaceName: string, displayName: string, kind: ProximityC
             return Promise.resolve(createFakeSpace(spaceName));
         }),
         leaveSpace: vi.fn(() => {
-            return Promise.resolve(undefined);
+            return Promise.resolve(true);
         }),
         setDisplayName: vi.fn((name: string) => {
             roomByName.get(spaceName)?.name.set(name);
@@ -95,7 +96,7 @@ describe("ProximityChatRoomManager", () => {
         );
 
         expect(secondRoom).toBe(firstRoom);
-        expect(firstRoom.joinSpace).toHaveBeenCalledTimes(2);
+        expect(roomByName.get("space-a")!.joinSpace).toHaveBeenCalledTimes(2);
     });
 
     it("drops empty rooms after leave and keeps rooms with user messages", async () => {
@@ -141,7 +142,7 @@ describe("ProximityChatRoomManager", () => {
         ]);
         expect(get(manager.roomsStore)[0]).toBe(defaultRoom);
         expect(get(defaultRoom.kind)).toBe("default");
-        expect(defaultRoom.destroy).not.toHaveBeenCalled();
+        expect(roomByName.get(DEFAULT_PROXIMITY_SPACE_NAME)!.destroy).not.toHaveBeenCalled();
         expect(manager.getDefaultRoom()).toBe(defaultRoom);
     });
 
@@ -151,10 +152,11 @@ describe("ProximityChatRoomManager", () => {
         const room = await manager.joinDefaultSpace("bubble-space-a", []);
         await manager.leaveDefaultSpace("bubble-space-a");
         const reusedRoom = await manager.joinDefaultSpace("bubble-space-b", []);
+        const defaultRoom = roomByName.get(DEFAULT_PROXIMITY_SPACE_NAME)!;
 
         expect(reusedRoom).toBe(room);
         expect(get(manager.roomsStore).map((room) => room.spaceName)).toEqual([DEFAULT_PROXIMITY_SPACE_NAME]);
-        expect(room.joinSpace).toHaveBeenNthCalledWith(
+        expect(defaultRoom.joinSpace).toHaveBeenNthCalledWith(
             1,
             "bubble-space-a",
             [],
@@ -163,7 +165,7 @@ describe("ProximityChatRoomManager", () => {
             false,
             undefined
         );
-        expect(room.joinSpace).toHaveBeenNthCalledWith(
+        expect(defaultRoom.joinSpace).toHaveBeenNthCalledWith(
             2,
             "bubble-space-b",
             [],
@@ -172,6 +174,20 @@ describe("ProximityChatRoomManager", () => {
             false,
             undefined
         );
+    });
+
+    it("keeps the default room joined when a stale bubble space leave is ignored", async () => {
+        const manager = createManager();
+
+        const room = await manager.joinDefaultSpace("bubble-space-a", []);
+        await manager.joinDefaultSpace("bubble-space-b", []);
+        vi.mocked(roomByName.get(DEFAULT_PROXIMITY_SPACE_NAME)!.leaveSpace).mockResolvedValueOnce(false);
+
+        await manager.leaveDefaultSpace("bubble-space-a");
+
+        expect(get(room.isJoined)).toBe(true);
+        expect(get(manager.activeRoomStore)).toBe(room);
+        expect(manager.resolveTargetRoom()).toBe(room);
     });
 
     it("resolves legacy targets from selected joined room then most recent joined room", async () => {
