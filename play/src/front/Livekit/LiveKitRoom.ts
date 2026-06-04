@@ -328,9 +328,11 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         );
 
         this.unsubscribers.push(
-            this.screenSharingLocalStreamStore.subscribe((stream) => {
-                this.queueScreenShareUpdate(stream);
-            })
+            deriveSwitchStore(this.screenSharingLocalStreamStore, this.space.shouldPublishScreenShareStore).subscribe(
+                (stream) => {
+                    this.queueScreenShareUpdate(stream);
+                }
+            )
         );
 
         this.unsubscribers.push(

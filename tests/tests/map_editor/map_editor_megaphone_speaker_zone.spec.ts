@@ -574,6 +574,13 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
             });
         }
 
+        // A listener may keep their local screen share active, but it must not be published to the megaphone speaker.
+        await pageListener1.getByTestId("screenShareButton").click();
+        await Menu.expectButtonState(pageListener1, "screenShareButton", "active");
+        await expect(pageSpeaker.locator("#highlighted-media").getByText("Admin2", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+
         // Verify listeners cannot see each other (only the speaker)
         // Admin2 (listener1) should NOT see Alice, Bob, and John
         await expect(
