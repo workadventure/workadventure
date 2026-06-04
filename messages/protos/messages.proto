@@ -186,6 +186,18 @@ message VideoQualityReportMessage {
   repeated VideoQualitySampleMessage samples = 1;
 }
 
+message AnalyticsEventMessage {
+  string eventName = 1;
+  string source = 2;
+  uint64 clientEventTimeMs = 3;
+  string eventId = 4;
+  google.protobuf.Value properties = 5;
+}
+
+message AnalyticsEventReportMessage {
+  repeated AnalyticsEventMessage events = 1;
+}
+
 message ReportPlayerMessage {
   string reportedUserUuid = 1;
   string reportComment = 2;
@@ -437,6 +449,7 @@ message ClientToServerMessage {
     SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 46;
     VideoQualityReportMessage videoQualityReportMessage = 50;
     UserMessageReadMessage userMessageReadMessage = 51;
+    AnalyticsEventReportMessage analyticsEventReportMessage = 52;
   }
 }
 

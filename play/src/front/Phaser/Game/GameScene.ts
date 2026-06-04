@@ -386,6 +386,9 @@ export class GameScene extends DirtyScene {
     private showVoiceIndicatorChangeMessageSent = false;
     private jitsiDominantSpeaker = false;
     private jitsiParticipantsCount = 0;
+    private readonly worldLoadStartedAt = performance.now();
+    private mapLoadSucceededAnalyticsSent = false;
+    private mapLoadFailedAnalyticsSent = false;
     private cleanupDone = false;
     private playersEventDispatcher = new IframeEventDispatcher();
     private playersMovementEventDispatcher = new IframeEventDispatcher();
@@ -454,6 +457,7 @@ export class GameScene extends DirtyScene {
             this.wamUrlFile = _room.wamUrl;
         }
         this.roomUrl = _room.key;
+        analyticsClient.mapLoadingStarted(this.mapUrlFile || this.wamUrlFile || this.roomUrl);
 
         this.entitiesCollectionsManager = new EntitiesCollectionsManager();
 
@@ -560,6 +564,7 @@ export class GameScene extends DirtyScene {
             //once preloading is over, we don't want loading errors to crash the game, so we need to disable this behavior after preloading.
             //if SpriteSheetFile (WOKA file) don't display error and give an access for user
             if (this.preloading && !(file instanceof Phaser.Loader.FileTypes.SpriteSheetFile)) {
+                analyticsClient.tileOrAssetError("asset", file?.src ?? this.originalMapUrl);
                 //remove loader in progress
                 this.handleErrorAndCleanup(
                     new Error('Cannot load "' + (file?.src ?? this.originalMapUrl) + '"'),
@@ -612,6 +617,7 @@ export class GameScene extends DirtyScene {
             return;
         }
 
+        this.trackMapLoadingFailure(errorCode);
         this.loader.removeLoader();
         errorScreenStore.setError(
             ErrorScreenMessage.fromPartial({
@@ -657,6 +663,7 @@ export class GameScene extends DirtyScene {
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this._room);
         analyticsClient.enteredRoom(this._room.id, this._room.group);
+        this.trackMapLoadingSuccess();
         contactPageStore.set(this._room.contactPage);
 
         if (touchScreenManager.supportTouchScreen) {
@@ -1035,6 +1042,30 @@ export class GameScene extends DirtyScene {
                 tweenDurationMs: 250,
             });
         }
+    }
+
+    private getWorldLoadDurationMs(): number {
+        return Math.round(performance.now() - this.worldLoadStartedAt);
+    }
+
+    private trackMapLoadingSuccess(): void {
+        if (this.mapLoadSucceededAnalyticsSent || this.mapLoadFailedAnalyticsSent) {
+            return;
+        }
+
+        this.mapLoadSucceededAnalyticsSent = true;
+        const durationMs = this.getWorldLoadDurationMs();
+        analyticsClient.mapLoadingSucceeded(durationMs);
+        analyticsClient.worldEntered(durationMs);
+    }
+
+    private trackMapLoadingFailure(reason: string): void {
+        if (this.mapLoadFailedAnalyticsSent || this.mapLoadSucceededAnalyticsSent) {
+            return;
+        }
+
+        this.mapLoadFailedAnalyticsSent = true;
+        analyticsClient.mapLoadingFailed(reason, this.getWorldLoadDurationMs());
     }
 
     public getMapUrl(): string {

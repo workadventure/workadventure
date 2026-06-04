@@ -734,7 +734,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         this.participants.delete(participant.sid);
-
         // Also remove from pending participants if present
         const id = this.getParticipantId(participant);
         this.pendingParticipants.delete(id);
