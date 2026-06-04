@@ -1,49 +1,26 @@
 import { FilterType } from "@workadventure/messages";
-import type { Readable, Writable } from "svelte/store";
+import type { Readable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
-import type { SpaceInterface } from "../../../Space/SpaceInterface";
 import type { ProximityChatRoom } from "./ProximityChatRoom";
 
 export const DEFAULT_PROXIMITY_SPACE_NAME = "proximity";
 
 export type ProximityChatRoomKind = "default" | "proximity" | "meeting" | "listener" | "speaker" | "area";
 
-export type ManagedProximityChatRoom = {
-    readonly id: string;
-    readonly spaceName: string;
-    readonly name: Writable<string>;
-    readonly kind: Writable<ProximityChatRoomKind>;
-    readonly isJoined: Writable<boolean>;
-    readonly hasUserMessages: Writable<boolean>;
-    readonly unreadMessagesCount: Writable<number>;
-    readonly unreadNotificationCount: Writable<number>;
-    readonly joinSpace: (
-        spaceName: string,
-        propertiesToSync: string[],
-        isMeetingRoomChat?: boolean,
-        filterType?: FilterType,
-        disableChat?: boolean,
-        signal?: AbortSignal
-    ) => Promise<SpaceInterface | undefined>;
-    readonly leaveSpace: (spaceName: string, isMeetingRoomChat?: boolean) => Promise<void>;
-    readonly setDisplayName: (displayName: string) => void;
-    readonly destroy: () => void;
-};
-
-export type ProximityChatRoomFactory<T extends ManagedProximityChatRoom = ProximityChatRoom> = (
+export type ProximityChatRoomFactory = (
     spaceName: string,
     displayName: string,
     kind: ProximityChatRoomKind
-) => T;
+) => ProximityChatRoom;
 
-export class ProximityChatRoomManager<T extends ManagedProximityChatRoom = ProximityChatRoom> {
-    private readonly rooms = new Map<string, T>();
-    private readonly _roomsStore = writable<T[]>([]);
-    private readonly _activeRoomStore = writable<T | undefined>(undefined);
+export class ProximityChatRoomManager {
+    private readonly rooms = new Map<string, ProximityChatRoom>();
+    private readonly _roomsStore = writable<ProximityChatRoom[]>([]);
+    private readonly _activeRoomStore = writable<ProximityChatRoom | undefined>(undefined);
     private readonly lastJoinedSpaceNames: string[] = [];
 
-    public readonly roomsStore: Readable<T[]> = this._roomsStore;
-    public readonly activeRoomStore: Readable<T | undefined> = this._activeRoomStore;
+    public readonly roomsStore: Readable<ProximityChatRoom[]> = this._roomsStore;
+    public readonly activeRoomStore: Readable<ProximityChatRoom | undefined> = this._activeRoomStore;
     public readonly unreadMessagesCount: Readable<number> = derived(this.roomsStore, (rooms, set) => {
         if (rooms.length === 0) {
             set(0);
@@ -56,9 +33,9 @@ export class ProximityChatRoomManager<T extends ManagedProximityChatRoom = Proxi
         ).subscribe(set);
     });
 
-    public constructor(private readonly createRoom: ProximityChatRoomFactory<T>) {}
+    public constructor(private readonly createRoom: ProximityChatRoomFactory) {}
 
-    public getOrCreateRoom(spaceName: string, displayName: string, kind: ProximityChatRoomKind = "area"): T {
+    public getOrCreateRoom(spaceName: string, displayName: string, kind: ProximityChatRoomKind = "area"): ProximityChatRoom {
         const existingRoom = this.rooms.get(spaceName);
         if (existingRoom) {
             existingRoom.setDisplayName(displayName);
@@ -81,7 +58,7 @@ export class ProximityChatRoomManager<T extends ManagedProximityChatRoom = Proxi
         disableChat = false,
         signal?: AbortSignal,
         kind: ProximityChatRoomKind = "area"
-    ): Promise<T> {
+    ): Promise<ProximityChatRoom> {
         const room = this.getOrCreateRoom(spaceName, displayName, kind);
         await room.joinSpace(spaceName, propertiesToSync, isMeetingRoomChat, filterType, disableChat, signal);
         room.isJoined.set(true);
@@ -91,7 +68,7 @@ export class ProximityChatRoomManager<T extends ManagedProximityChatRoom = Proxi
         return room;
     }
 
-    public async joinDefaultSpace(spaceName: string, propertiesToSync: string[], signal?: AbortSignal): Promise<T> {
+    public async joinDefaultSpace(spaceName: string, propertiesToSync: string[], signal?: AbortSignal): Promise<ProximityChatRoom> {
         const room = this.getOrCreateRoom(DEFAULT_PROXIMITY_SPACE_NAME, "Proximity Chat", "default");
         await room.joinSpace(spaceName, propertiesToSync, false, FilterType.ALL_USERS, false, signal);
         room.isJoined.set(true);
@@ -148,7 +125,7 @@ export class ProximityChatRoomManager<T extends ManagedProximityChatRoom = Proxi
         this.syncRoomsStore();
     }
 
-    public resolveTargetRoom(spaceName?: string): T | undefined {
+    public resolveTargetRoom(spaceName?: string): ProximityChatRoom | undefined {
         if (spaceName) {
             return this.rooms.get(spaceName);
         }
@@ -161,7 +138,7 @@ export class ProximityChatRoomManager<T extends ManagedProximityChatRoom = Proxi
         return this.resolveMostRecentJoinedRoom();
     }
 
-    public getRoomById(roomId: string): T | undefined {
+    public getRoomById(roomId: string): ProximityChatRoom | undefined {
         if (roomId === "proximity") {
             return this.resolveTargetRoom();
         }
@@ -173,11 +150,11 @@ export class ProximityChatRoomManager<T extends ManagedProximityChatRoom = Proxi
         return this.rooms.get(roomId.substring("proximity:".length));
     }
 
-    public getDefaultRoom(): T | undefined {
+    public getDefaultRoom(): ProximityChatRoom | undefined {
         return this.rooms.get(DEFAULT_PROXIMITY_SPACE_NAME);
     }
 
-    public selectRoom(room: T): void {
+    public selectRoom(room: ProximityChatRoom): void {
         this._activeRoomStore.set(room);
     }
 
@@ -199,7 +176,7 @@ export class ProximityChatRoomManager<T extends ManagedProximityChatRoom = Proxi
         this.lastJoinedSpaceNames.push(spaceName);
     }
 
-    private resolveMostRecentJoinedRoom(): T | undefined {
+    private resolveMostRecentJoinedRoom(): ProximityChatRoom | undefined {
         for (let i = this.lastJoinedSpaceNames.length - 1; i >= 0; i--) {
             const room = this.rooms.get(this.lastJoinedSpaceNames[i]);
             if (room && get(room.isJoined)) {
