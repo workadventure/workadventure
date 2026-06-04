@@ -13,6 +13,11 @@ export type ProximityChatRoomFactory = (
     kind: ProximityChatRoomKind
 ) => ProximityChatRoom;
 
+/**
+ * Owns the proximity chat rooms visible in the chat UI, allowing several proximity rooms to be joined in parallel.
+ * It keeps their joined/active state in sync and handles the mismatch between regular area/meeting rooms, which map
+ * one room to one space, and the default proximity room, which is a single UI entry reused across successive bubble spaces.
+ */
 export class ProximityChatRoomManager {
     private readonly rooms = new Map<string, ProximityChatRoom>();
     private readonly _roomsStore = writable<ProximityChatRoom[]>([]);
