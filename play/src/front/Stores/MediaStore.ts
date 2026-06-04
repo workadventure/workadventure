@@ -30,6 +30,7 @@ import { isLiveStreamingStore } from "./IsStreamingStore";
 import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
 
 import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
+import { resolveAudioInputDeviceFallback } from "./MediaDeviceFallback";
 
 export const inBackgroundSettingsStore = writable<boolean>(false);
 
@@ -550,6 +551,8 @@ let backgroundTransformer: BackgroundTransformer | undefined = undefined;
 let lastBackgroundConfig: BackgroundConfig | undefined = undefined;
 // AbortController for the in-flight transform; aborted when a new run is scheduled
 let currentTransformAbortController: AbortController | null = null;
+let watchedAudioTrack: MediaStreamTrack | undefined;
+let watchedAudioTrackEndedListener: (() => void) | undefined;
 
 /**
  * Update background processor configuration without recreating the transformer
@@ -630,6 +633,80 @@ function emitCurrentStreamOrError(setIfCurrent: SetRawStreamIfCurrent, error: un
         type: "error",
         error: error instanceof Error ? error : new Error("An unknown error happened"),
     });
+}
+
+function applyAudioInputDeviceFallback(devices: MediaDeviceInfo[] | undefined, deviceIdToAvoid?: string): void {
+    const fallback = resolveAudioInputDeviceFallback(devices ?? [], deviceIdToAvoid);
+
+    if (fallback.type === "select") {
+        // This is an automatic recovery path, so do not overwrite the user's saved preferred microphone.
+        requestedMicrophoneDeviceIdStore.set(fallback.deviceId);
+        microphoneAccessIssueStore.set(null);
+        return;
+    }
+
+    requestedMicrophoneDeviceIdStore.set(undefined);
+    usedMicrophoneDeviceIdStore.set(undefined);
+    requestedMicrophoneState.disableMicrophone();
+    microphoneAccessIssueStore.set("no_device");
+}
+
+function getExactDeviceIdFromConstraints(constraints: boolean | MediaTrackConstraints): string | undefined {
+    if (typeof constraints === "boolean") {
+        return undefined;
+    }
+
+    const deviceId = constraints.deviceId;
+    if (typeof deviceId === "string") {
+        return deviceId;
+    }
+    if (deviceId && isConstrainDOMStringParameters(deviceId) && typeof deviceId.exact === "string") {
+        return deviceId.exact;
+    }
+
+    return undefined;
+}
+
+function watchAudioTrackEnded(track: MediaStreamTrack | undefined): void {
+    if (watchedAudioTrack && watchedAudioTrackEndedListener) {
+        watchedAudioTrack.removeEventListener("ended", watchedAudioTrackEndedListener);
+    }
+
+    watchedAudioTrack = track;
+    watchedAudioTrackEndedListener = undefined;
+
+    if (!track) {
+        return;
+    }
+
+    watchedAudioTrackEndedListener = () => {
+        if (!get(requestedMicrophoneState)) {
+            return;
+        }
+
+        // Some browsers end the active track before the device list has fully settled.
+        // Re-enumerating here makes the microphone fallback independent from devicechange timing.
+        const endedDeviceId = track.getSettings().deviceId ?? get(usedMicrophoneDeviceIdStore);
+        const requestedDeviceId = get(requestedMicrophoneDeviceIdStore);
+        // If a different microphone is already requested, the ended track likely belongs to the previous stream.
+        if (requestedDeviceId !== undefined && endedDeviceId && requestedDeviceId !== endedDeviceId) {
+            return;
+        }
+
+        navigator.mediaDevices
+            .enumerateDevices()
+            .then((mediaDeviceInfos) => {
+                const microphones = removeDuplicateDevices(
+                    mediaDeviceInfos.filter((device) => device.kind === "audioinput")
+                );
+                applyAudioInputDeviceFallback(microphones, endedDeviceId);
+            })
+            .catch((e) => {
+                console.error("Unable to enumerate microphones after audio track ended", e);
+            });
+    };
+
+    track.addEventListener("ended", watchedAudioTrackEndedListener, { once: true });
 }
 
 async function runRawStreamUpdate(
@@ -770,8 +847,13 @@ async function runRawStreamUpdate(
                 requestedCameraState.enableWebcam();
             }
             if (currentStream.getAudioTracks().length > 0) {
-                usedMicrophoneDeviceIdStore.set(currentStream.getAudioTracks()[0]?.getSettings().deviceId);
+                const audioTrack = currentStream.getAudioTracks()[0];
+                usedMicrophoneDeviceIdStore.set(audioTrack?.getSettings().deviceId);
+                watchAudioTrackEnded(audioTrack);
                 requestedMicrophoneState.enableMicrophone();
+            } else {
+                usedMicrophoneDeviceIdStore.set(undefined);
+                watchAudioTrackEnded(undefined);
             }
             batchGetUserMediaStore.commitChanges();
             hideHelpCameraSettings();
@@ -783,8 +865,21 @@ async function runRawStreamUpdate(
                     e
                 );
                 batchGetUserMediaStore.startBatch();
-                requestedCameraDeviceIdStore.set(undefined);
-                requestedMicrophoneDeviceIdStore.set(undefined);
+                if (mustRequestNewVideo) {
+                    requestedCameraDeviceIdStore.set(undefined);
+                }
+                if (mustRequestNewAudio) {
+                    const microphoneList = get(microphoneListStore);
+                    if (microphoneList === undefined) {
+                        // Device list not loaded yet: remove the exact constraint and let getUserMedia retry default audio.
+                        requestedMicrophoneDeviceIdStore.set(undefined);
+                    } else {
+                        applyAudioInputDeviceFallback(
+                            microphoneList,
+                            getExactDeviceIdFromConstraints(constraints.audio)
+                        );
+                    }
+                }
                 batchGetUserMediaStore.commitChanges();
             } else if (mustRequestNewVideo) {
                 console.info(
@@ -1284,10 +1379,10 @@ microphoneListStore.subscribe((devices) => {
         return;
     }
 
-    // If we cannot find the device ID, let's remove it.
+    // If we cannot find the device ID, select another microphone explicitly.
     if (isConstrainDOMStringParameters(deviceId)) {
         if (!devices.find((device) => device.deviceId === deviceId.exact)) {
-            requestedMicrophoneDeviceIdStore.set(undefined);
+            applyAudioInputDeviceFallback(devices, typeof deviceId.exact === "string" ? deviceId.exact : undefined);
         }
     }
 });
