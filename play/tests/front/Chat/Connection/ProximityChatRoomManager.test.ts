@@ -4,11 +4,34 @@ import { FilterType } from "@workadventure/messages";
 import {
     DEFAULT_PROXIMITY_SPACE_NAME,
     ProximityChatRoomManager,
-    type ManagedProximityChatRoom,
     type ProximityChatRoomKind,
 } from "../../../../src/front/Chat/Connection/Proximity/ProximityChatRoomManager";
+import type { ProximityChatRoom } from "../../../../src/front/Chat/Connection/Proximity/ProximityChatRoom";
+import type { SpaceInterface } from "../../../../src/front/Space/SpaceInterface";
 
-function createFakeRoom(spaceName: string, displayName: string, kind: ProximityChatRoomKind): ManagedProximityChatRoom {
+function createFakeSpace(spaceName: string): SpaceInterface {
+    return {
+        getName: () => spaceName,
+    } as SpaceInterface;
+}
+
+type FakeProximityChatRoom = Pick<
+    ProximityChatRoom,
+    | "id"
+    | "spaceName"
+    | "name"
+    | "kind"
+    | "isJoined"
+    | "hasUserMessages"
+    | "unreadMessagesCount"
+    | "unreadNotificationCount"
+    | "joinSpace"
+    | "leaveSpace"
+    | "setDisplayName"
+    | "destroy"
+>;
+
+function createFakeRoom(spaceName: string, displayName: string, kind: ProximityChatRoomKind): FakeProximityChatRoom {
     const name = writable(displayName);
 
     return {
@@ -20,8 +43,8 @@ function createFakeRoom(spaceName: string, displayName: string, kind: ProximityC
         hasUserMessages: writable(false),
         unreadMessagesCount: writable(0),
         unreadNotificationCount: writable(0),
-        joinSpace: vi.fn( () => {
-            return Promise.resolve(undefined);
+        joinSpace: vi.fn((spaceName: string) => {
+            return Promise.resolve(createFakeSpace(spaceName));
         }),
         leaveSpace: vi.fn(() => {
             return Promise.resolve(undefined);
@@ -33,16 +56,20 @@ function createFakeRoom(spaceName: string, displayName: string, kind: ProximityC
     };
 }
 
-const roomByName = new Map<string, ManagedProximityChatRoom>();
+const roomByName = new Map<string, FakeProximityChatRoom>();
+
+function createManager(): ProximityChatRoomManager {
+    roomByName.clear();
+    return new ProximityChatRoomManager((spaceName, displayName, kind) => {
+        const room = createFakeRoom(spaceName, displayName, kind);
+        roomByName.set(spaceName, room);
+        return room as ProximityChatRoom;
+    });
+}
 
 describe("ProximityChatRoomManager", () => {
     it("joins multiple spaces without leaving existing rooms", async () => {
-        roomByName.clear();
-        const manager = new ProximityChatRoomManager((spaceName, displayName, kind) => {
-            const room = createFakeRoom(spaceName, displayName, kind);
-            roomByName.set(spaceName, room);
-            return room;
-        });
+        const manager = createManager();
 
         await manager.joinSpace("space-a", "Space A", [], false, FilterType.ALL_USERS, false);
         await manager.joinSpace("space-b", "Space B", [], false, FilterType.ALL_USERS, false);
@@ -53,12 +80,7 @@ describe("ProximityChatRoomManager", () => {
     });
 
     it("reuses a room instance when rejoining the same space", async () => {
-        roomByName.clear();
-        const manager = new ProximityChatRoomManager((spaceName, displayName, kind) => {
-            const room = createFakeRoom(spaceName, displayName, kind);
-            roomByName.set(spaceName, room);
-            return room;
-        });
+        const manager = createManager();
 
         const firstRoom = await manager.joinSpace("space-a", "Space A", [], false, FilterType.ALL_USERS, false);
         firstRoom.hasUserMessages.set(true);
@@ -77,12 +99,7 @@ describe("ProximityChatRoomManager", () => {
     });
 
     it("drops empty rooms after leave and keeps rooms with user messages", async () => {
-        roomByName.clear();
-        const manager = new ProximityChatRoomManager((spaceName, displayName, kind) => {
-            const room = createFakeRoom(spaceName, displayName, kind);
-            roomByName.set(spaceName, room);
-            return room;
-        });
+        const manager = createManager();
 
         await manager.joinSpace("empty-space", "Empty", [], false, FilterType.ALL_USERS, false);
         await manager.leaveSpace("empty-space", false);
@@ -103,12 +120,7 @@ describe("ProximityChatRoomManager", () => {
     });
 
     it("keeps the default proximity room visible and first", async () => {
-        roomByName.clear();
-        const manager = new ProximityChatRoomManager((spaceName, displayName, kind) => {
-            const room = createFakeRoom(spaceName, displayName, kind);
-            roomByName.set(spaceName, room);
-            return room;
-        });
+        const manager = createManager();
 
         const defaultRoom = await manager.joinSpace(
             DEFAULT_PROXIMITY_SPACE_NAME,
@@ -134,12 +146,7 @@ describe("ProximityChatRoomManager", () => {
     });
 
     it("routes all bubble spaces to the default proximity room row", async () => {
-        roomByName.clear();
-        const manager = new ProximityChatRoomManager((spaceName, displayName, kind) => {
-            const room = createFakeRoom(spaceName, displayName, kind);
-            roomByName.set(spaceName, room);
-            return room;
-        });
+        const manager = createManager();
 
         const room = await manager.joinDefaultSpace("bubble-space-a", []);
         await manager.leaveDefaultSpace("bubble-space-a");
@@ -168,12 +175,7 @@ describe("ProximityChatRoomManager", () => {
     });
 
     it("resolves legacy targets from selected joined room then most recent joined room", async () => {
-        roomByName.clear();
-        const manager = new ProximityChatRoomManager((spaceName, displayName, kind) => {
-            const room = createFakeRoom(spaceName, displayName, kind);
-            roomByName.set(spaceName, room);
-            return room;
-        });
+        const manager = createManager();
 
         const olderRoom = await manager.joinSpace("older", "Older", [], false, FilterType.ALL_USERS, false);
         const newerRoom = await manager.joinSpace("newer", "Newer", [], false, FilterType.ALL_USERS, false);
