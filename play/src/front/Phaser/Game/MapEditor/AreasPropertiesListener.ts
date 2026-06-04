@@ -181,9 +181,6 @@ export class AreasPropertiesListener {
 
     public onEnterAreasHandler(areasData: AreaData[], areas?: Area[]): void {
         for (const areaData of areasData) {
-            // analytics event for area
-            analyticsClient.enterAreaMapEditor(areaData.id, areaData.name);
-
             if (!areaData.properties) {
                 continue;
             }
@@ -320,9 +317,6 @@ export class AreasPropertiesListener {
 
     public onLeaveAreasHandler(areasData: AreaData[], areas?: Area[]): void {
         for (const areaData of areasData) {
-            // analytics event for area
-            analyticsClient.leaveAreaMapEditor(areaData.id, areaData.name);
-
             if (!areaData.properties) {
                 continue;
             }
@@ -368,7 +362,7 @@ export class AreasPropertiesListener {
         this.abortControllers.set(property.id, abortController);
         switch (property.type) {
             case "openWebsite": {
-                this.handleOpenWebsitePropertyOnEnter(property);
+                this.handleOpenWebsitePropertyOnEnter(property, areaData);
                 break;
             }
             case "playAudio": {
@@ -450,7 +444,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "openFile": {
-                this.handleOpenFileOnEnter(property, abortController.signal).catch((error) =>
+                this.handleOpenFileOnEnter(property, areaData, abortController.signal).catch((error) =>
                     console.error("Error opening File:", error),
                 );
                 break;
@@ -483,7 +477,7 @@ export class AreasPropertiesListener {
         switch (type) {
             case "openWebsite": {
                 this.handleOpenWebsitePropertiesOnLeave(oldProperty);
-                this.handleOpenWebsitePropertyOnEnter(newProperty);
+                this.handleOpenWebsitePropertyOnEnter(newProperty, area);
                 break;
             }
             case "playAudio": {
@@ -569,7 +563,7 @@ export class AreasPropertiesListener {
             }
             case "openFile": {
                 this.handleOpenFileOnLeave(oldProperty);
-                this.handleOpenFileOnEnter(newProperty, newAbortController.signal).catch((error) =>
+                this.handleOpenFileOnEnter(newProperty, area, newAbortController.signal).catch((error) =>
                     console.error("Error opening file:", error),
                 );
                 break;
@@ -673,7 +667,7 @@ export class AreasPropertiesListener {
         audioManagerVisibilityStore.set("visible");
     }
 
-    private handleOpenWebsitePropertyOnEnter(property: OpenWebsitePropertyData): void {
+    private handleOpenWebsitePropertyOnEnter(property: OpenWebsitePropertyData, areaData?: AreaData): void {
         if (!property.link) {
             return;
         }
@@ -759,7 +753,12 @@ export class AreasPropertiesListener {
                 {
                     message: message,
                     click: () => {
-                        this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+                        this.openCoWebsiteFunction(property, coWebsiteOpen, actionId, {
+                            targetUrl: this.toCanonicalCowebsiteTargetUrl(property.link ?? ""),
+                            triggerProperty: "openWebsite",
+                            areaId: areaData?.id,
+                            areaName: areaData?.name,
+                        });
                     },
                     userInputManager: this.scene.userInputManager,
                 },
@@ -813,9 +812,21 @@ export class AreasPropertiesListener {
 
             //user in zone to open cowesite with only icon
             inOpenWebsite.set(true);
+
+            analyticsClient.openedWebsite(new URL(url, this.scene.mapUrlFile), {
+                targetUrl: this.toCanonicalCowebsiteTargetUrl(property.link ?? ""),
+                triggerProperty: "openWebsite",
+                areaId: areaData?.id,
+                areaName: areaData?.name,
+            });
         }
         if (property.trigger == undefined || property.trigger === ON_ACTION_TRIGGER_ENTER) {
-            this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+            this.openCoWebsiteFunction(property, coWebsiteOpen, actionId, {
+                targetUrl: this.toCanonicalCowebsiteTargetUrl(property.link ?? ""),
+                triggerProperty: "openWebsite",
+                areaId: areaData?.id,
+                areaName: areaData?.name,
+            });
         }
     }
 
@@ -1410,6 +1421,12 @@ export class AreasPropertiesListener {
         property: OpenWebsitePropertyData | OpenFilePropertyData,
         coWebsiteOpen: OpenCoWebsite,
         actionId: string,
+        analyticsContext: {
+            targetUrl?: string;
+            triggerProperty?: "openLink" | "openWebsite" | "other";
+            areaId?: string;
+            areaName?: string;
+        } = {},
     ): void {
         // Check URl and get the correct one
         let urlStr = property.link ?? "";
@@ -1454,7 +1471,23 @@ export class AreasPropertiesListener {
         inOpenWebsite.set(true);
 
         // analytics event for open website
-        analyticsClient.openedWebsite(url);
+        analyticsClient.openedWebsite(url, {
+            targetUrl: analyticsContext.targetUrl ?? url.toString(),
+            triggerProperty: analyticsContext.triggerProperty ?? (property.type === "openFile" ? "openLink" : "openWebsite"),
+            areaId: analyticsContext.areaId,
+            areaName: analyticsContext.areaName,
+        });
+    }
+
+    private toCanonicalCowebsiteTargetUrl(link: string): string {
+        let normalizedLink = link;
+        try {
+            normalizedLink = scriptUtils.getWebsiteUrl(link);
+        } catch (error) {
+            console.error("Error on getWebsiteUrl: ", error);
+        }
+
+        return new URL(normalizedLink, this.scene.mapUrlFile).toString();
     }
 
     private loadCoWebsiteFunction(coWebsite: CoWebsite, actionId: string): void {
@@ -1853,6 +1886,7 @@ export class AreasPropertiesListener {
 
     private async handleOpenFileOnEnter(
         initialProperty: OpenFilePropertyData,
+        areaData: AreaData,
         abortSignal: AbortSignal,
     ): Promise<void> {
         if (!initialProperty.link) {
@@ -1931,7 +1965,12 @@ export class AreasPropertiesListener {
                 {
                     message: message,
                     click: () => {
-                        this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+                        this.openCoWebsiteFunction(property, coWebsiteOpen, actionId, {
+                            targetUrl: this.toCanonicalCowebsiteTargetUrl(initialProperty.link ?? ""),
+                            triggerProperty: "openLink",
+                            areaId: areaData.id,
+                            areaName: areaData.name,
+                        });
                     },
                     userInputManager: this.scene.userInputManager,
                 },
@@ -1968,9 +2007,21 @@ export class AreasPropertiesListener {
 
             //user in zone to open cowesite with only icon
             inOpenWebsite.set(true);
+
+            analyticsClient.openedWebsite(imageUrl, {
+                targetUrl: this.toCanonicalCowebsiteTargetUrl(initialProperty.link ?? ""),
+                triggerProperty: "openLink",
+                areaId: areaData.id,
+                areaName: areaData.name,
+            });
         }
         if (property.trigger == undefined || property.trigger === ON_ACTION_TRIGGER_ENTER) {
-            this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+            this.openCoWebsiteFunction(property, coWebsiteOpen, actionId, {
+                targetUrl: this.toCanonicalCowebsiteTargetUrl(initialProperty.link ?? ""),
+                triggerProperty: "openLink",
+                areaId: areaData.id,
+                areaName: areaData.name,
+            });
         }
     }
 

@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/svelte";
-import { get } from "svelte/store";
+import { derived, get } from "svelte/store";
 import type { ErrorApiErrorData, ErrorApiRetryData, ErrorApiUnauthorizedData } from "@workadventure/messages";
 import { isRegisterData, MeResponse, ErrorScreenMessage } from "@workadventure/messages";
 import axios, { AxiosError, isAxiosError } from "axios";
@@ -9,6 +9,12 @@ import { v4 as uuidv4 } from "uuid";
 import axiosRetry, { exponentialDelay, isNetworkOrIdempotentRequestError } from "axios-retry";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { userIsConnected, warningBannerStore } from "../Stores/MenuStore";
+import { isInRemoteConversation } from "../Stores/StreamableCollectionStore";
+import { currentPlayerGroupIdStore } from "../Stores/CurrentPlayerGroupStore";
+import { inJitsiStore } from "../Stores/MediaStore";
+import type { MeetingProvider } from "../WebRtc/ConversationAnalytics";
+import { subscribeToConversationAnalytics } from "../WebRtc/ConversationAnalytics";
+import { activeCommunicationProviderStore } from "../Stores/CommunicationProviderStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
@@ -457,6 +463,70 @@ class ConnectionManager {
                     // Set the default application integration for the room
 
                     this.bindWebsocketReconnectingToast(connection);
+                    analyticsClient.setAdminAnalyticsSender((message) => connection.emitAnalyticsEventReport(message));
+                    analyticsClient.sessionStarted(roomUrl);
+                    connection.onCleanup(() => analyticsClient.sessionEnded(roomUrl));
+                    connection.onCleanup(() => analyticsClient.setAdminAnalyticsSender(undefined));
+                    const activeMeetingProviderStore = derived(
+                        [activeCommunicationProviderStore, currentPlayerGroupIdStore, inJitsiStore],
+                        ([$activeCommunicationProviderStore, $currentPlayerGroupIdStore, $inJitsiStore]):
+                            | MeetingProvider
+                            | undefined => {
+                            if ($inJitsiStore) {
+                                return "jitsi";
+                            }
+
+                            if ($activeCommunicationProviderStore === "livekit") {
+                                return "livekit";
+                            }
+
+                            if (
+                                $activeCommunicationProviderStore === "webrtc" &&
+                                $currentPlayerGroupIdStore === undefined
+                            ) {
+                                return "webrtc";
+                            }
+
+                            return undefined;
+                        },
+                    );
+                    const analyticsConversationStore = derived(
+                        [isInRemoteConversation, currentPlayerGroupIdStore, activeMeetingProviderStore],
+                        ([$isInRemoteConversation, $currentPlayerGroupIdStore, $activeMeetingProviderStore]) =>
+                            $isInRemoteConversation ||
+                            $currentPlayerGroupIdStore !== undefined ||
+                            $activeMeetingProviderStore !== undefined,
+                    );
+                    let previousMeetingProvider = get(activeMeetingProviderStore);
+                    if (previousMeetingProvider) {
+                        analyticsClient.meetingStarted({ roomId: roomUrl, meetingProvider: previousMeetingProvider });
+                    }
+                    const unsubscribeMeetingAnalytics = activeMeetingProviderStore.subscribe((meetingProvider) => {
+                        if (meetingProvider === previousMeetingProvider) {
+                            return;
+                        }
+
+                        if (previousMeetingProvider) {
+                            analyticsClient.meetingEnded({ roomId: roomUrl, meetingProvider: previousMeetingProvider });
+                        }
+                        if (meetingProvider) {
+                            analyticsClient.meetingStarted({ roomId: roomUrl, meetingProvider });
+                        }
+
+                        previousMeetingProvider = meetingProvider;
+                    });
+                    connection.onCleanup(unsubscribeMeetingAnalytics);
+                    connection.onCleanup(
+                        subscribeToConversationAnalytics(
+                            analyticsConversationStore,
+                            (message) => connection.emitAnalyticsEventReport(message),
+                            undefined,
+                            {
+                                conversationGroupIdStore: currentPlayerGroupIdStore,
+                                meetingProviderStore: activeMeetingProviderStore,
+                            },
+                        ),
+                    );
                     this._roomConnectionStream.next(connection);
                     errorScreenStore.delete();
                     resolve(connect);

@@ -73,6 +73,7 @@ import type { ShortMapDescription } from "./ShortMapDescription";
 import { matrixProvider } from "./MatrixProvider";
 import RecordingService from "./RecordingService";
 import type { PusherWebSocket } from "./PusherWebSocket";
+import { analyticsPresenceTracker } from "./AnalyticsPresenceTracker";
 
 const debug = Debug("socket");
 
@@ -246,6 +247,7 @@ export class SocketManager implements ZoneEventListener {
             const apiClient = await apiClientRepository.getClient(socketData.roomId, GRPC_MAX_MESSAGE_SIZE);
             streamToBack = apiClient.connectToRoom();
             let backConnectionCloseReason: string | undefined;
+            let analyticsPresenceConnectedTracked = false;
 
             client.getUserData().backConnection = streamToBack;
 
@@ -263,6 +265,10 @@ export class SocketManager implements ZoneEventListener {
 
                             // If this is the first message sent, send back the viewport.
                             this.handleViewport(client, client.getUserData().viewport);
+                            if (!analyticsPresenceConnectedTracked) {
+                                analyticsPresenceTracker.trackConnected(socketData);
+                                analyticsPresenceConnectedTracked = true;
+                            }
                             break;
                         }
                         case "refreshRoomMessage": {
@@ -421,6 +427,7 @@ export class SocketManager implements ZoneEventListener {
             try {
                 if (joinRoomEventEmitted) {
                     clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                    analyticsPresenceTracker.trackDisconnected(socketData, "join_failed");
                 }
             } catch (emitErr) {
                 console.warn("Error while emitting client leave after failed join:", emitErr);
@@ -764,6 +771,7 @@ export class SocketManager implements ZoneEventListener {
                 } finally {
                     //delete Client.roomId;
                     clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                    analyticsPresenceTracker.trackDisconnected(socketData, "client_closed");
                     debug("User ", socketData.name, " left: ", socketData.userUuid);
                 }
             }
