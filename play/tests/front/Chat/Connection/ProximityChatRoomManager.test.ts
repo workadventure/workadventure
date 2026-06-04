@@ -76,8 +76,8 @@ describe("ProximityChatRoomManager", () => {
         await manager.joinSpace("space-b", "Space B", [], false, FilterType.ALL_USERS, false);
 
         expect(get(manager.roomsStore).map((room) => room.spaceName)).toEqual(["space-a", "space-b"]);
-        expect(roomByName.get("space-a")?.leaveSpace).not.toHaveBeenCalled();
-        expect(roomByName.get("space-b")?.leaveSpace).not.toHaveBeenCalled();
+        expect(roomByName.get("space-a")?.leaveSpace.mock.calls).toHaveLength(0);
+        expect(roomByName.get("space-b")?.leaveSpace.mock.calls).toHaveLength(0);
     });
 
     it("reuses a room instance when rejoining the same space", async () => {
@@ -96,7 +96,7 @@ describe("ProximityChatRoomManager", () => {
         );
 
         expect(secondRoom).toBe(firstRoom);
-        expect(roomByName.get("space-a")!.joinSpace).toHaveBeenCalledTimes(2);
+        expect(roomByName.get("space-a")!.joinSpace.mock.calls).toHaveLength(2);
     });
 
     it("drops empty rooms after leave and keeps rooms with user messages", async () => {
@@ -142,7 +142,7 @@ describe("ProximityChatRoomManager", () => {
         ]);
         expect(get(manager.roomsStore)[0]).toBe(defaultRoom);
         expect(get(defaultRoom.kind)).toBe("default");
-        expect(roomByName.get(DEFAULT_PROXIMITY_SPACE_NAME)!.destroy).not.toHaveBeenCalled();
+        expect(roomByName.get(DEFAULT_PROXIMITY_SPACE_NAME)!.destroy.mock.calls).toHaveLength(0);
         expect(manager.getDefaultRoom()).toBe(defaultRoom);
     });
 
@@ -156,24 +156,22 @@ describe("ProximityChatRoomManager", () => {
 
         expect(reusedRoom).toBe(room);
         expect(get(manager.roomsStore).map((room) => room.spaceName)).toEqual([DEFAULT_PROXIMITY_SPACE_NAME]);
-        expect(defaultRoom.joinSpace).toHaveBeenNthCalledWith(
-            1,
+        expect(defaultRoom.joinSpace.mock.calls[0]).toEqual([
             "bubble-space-a",
             [],
             false,
             FilterType.ALL_USERS,
             false,
-            undefined
-        );
-        expect(defaultRoom.joinSpace).toHaveBeenNthCalledWith(
-            2,
+            undefined,
+        ]);
+        expect(defaultRoom.joinSpace.mock.calls[1]).toEqual([
             "bubble-space-b",
             [],
             false,
             FilterType.ALL_USERS,
             false,
-            undefined
-        );
+            undefined,
+        ]);
     });
 
     it("keeps the default room joined when a stale bubble space leave is ignored", async () => {
