@@ -65,6 +65,7 @@ export type ConnectingSocketData = {
     // open handler and never shared with other transports of the same tab.
     clientLastReceivedNonce?: number;
     attendeesState: boolean;
+    analyticsEventsEnabled?: boolean;
     // The abort controllers for each queries received
     queryAbortControllers: Map<number, AbortController>;
     canRecord: boolean;

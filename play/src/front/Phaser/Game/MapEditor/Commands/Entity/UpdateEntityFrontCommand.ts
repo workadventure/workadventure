@@ -5,6 +5,7 @@ import type { Entity } from "../../../../ECS/Entity";
 import type { GameScene } from "../../../GameScene";
 import type { FrontCommandInterface } from "../FrontCommandInterface";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
+import { analyticsClient } from "../../../../../Administration/AnalyticsClient";
 
 export class UpdateEntityFrontCommand extends UpdateEntityCommand implements FrontCommandInterface {
     constructor(
@@ -42,8 +43,10 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
         const entity = this.entitiesManager.getEntities().get(this.entityId);
         if (!entity) {
             console.error("Entity not found");
+            analyticsClient.mapEditorSaveFailed("entity", "entity_not_found");
             return;
         }
+        analyticsClient.mapEditorSaveStarted("entity");
         roomConnection.emitMapEditorModifyEntity(
             this.commandId,
             this.entityId,
@@ -57,6 +60,8 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
                 height: entity.height,
             },
         );
+        analyticsClient.mapEditorEntityUpdated(this.newConfig.prefabRef?.id);
+        analyticsClient.mapEditorSaveSucceeded("entity");
     }
 
     private handleEntityUpdate(config: Partial<WAMEntityData>): void {

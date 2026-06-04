@@ -30,6 +30,7 @@ import {
     UserAlreadyAddedInSpaceError,
 } from "../models/SpaceValidationErrors";
 import { videoQualityAnalyticsQueue } from "../services/VideoQualityAnalyticsQueue";
+import { analyticsEventsQueue } from "../services/AnalyticsEventsQueue";
 import { PusherRoomSocketController } from "../services/PusherRoomSocketController";
 import { AdminWebSocketBackpressureWriter } from "../services/AdminWebSocketBackpressureWriter";
 import type { PusherWebSocket } from "../services/PusherWebSocket";
@@ -356,6 +357,7 @@ export class IoSocketController {
                         world: "",
                         chatID,
                         canRecord: false,
+                        analyticsEventsEnabled: true,
                     };
 
                     let characterTextures: WokaDetail[];
@@ -469,6 +471,7 @@ export class IoSocketController {
                         tabId: query.tabId,
                         connectionId: query.connectionId,
                         attendeesState: false,
+                        analyticsEventsEnabled: userData.analyticsEventsEnabled ?? true,
                         queryAbortControllers: new Map<number, AbortController>(),
                         canRecord: userData.canRecord ?? false,
                     };
@@ -1121,6 +1124,25 @@ export class IoSocketController {
                                     message.message.videoQualityReportMessage,
                                     socket.getUserData(),
                                 );
+                                analyticsEventsQueue.enqueueVideoQualityReport(
+                                    message.message.videoQualityReportMessage,
+                                    socket.getUserData()
+                                );
+                                break;
+                            }
+                            case "analyticsEventReportMessage": {
+                                for (const event of message.message.analyticsEventReportMessage.events) {
+                                    analyticsEventsQueue.enqueueEvent(
+                                        {
+                                            eventName: event.eventName,
+                                            source: event.source === "front" || event.source === "media" ? event.source : "front",
+                                            clientEventTimeMs: event.clientEventTimeMs,
+                                            eventId: event.eventId,
+                                            properties: event.properties ?? {},
+                                        },
+                                        socket.getUserData()
+                                    );
+                                }
                                 break;
                             }
                             default: {

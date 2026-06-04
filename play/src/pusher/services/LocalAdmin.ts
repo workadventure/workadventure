@@ -250,6 +250,7 @@ class LocalAdmin implements AdminInterface {
             world: "localWorld",
             applications,
             canRecord,
+            analyticsEventsEnabled: true,
         };
     }
 

@@ -7,6 +7,7 @@ import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { screenShareMaxResolution } from "../WebRtc/VideoPresets";
 import LL from "../../i18n/i18n-svelte";
 import { LOCAL_SCREEN_SHARING_STREAM_ID } from "../Space/Streamable";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { Streamable, WebRtcStreamable } from "../Space/Streamable";
 import { VideoBox } from "../Space/VideoBox";
 import { localEncoderStatsStore } from "../WebRtc/LocalEncoderStats";
@@ -36,6 +37,10 @@ export const requestedScreenSharingState = createRequestedScreenSharingState();
 
 let currentStream: MediaStream | undefined = undefined;
 let screenSharingRequestId = 0;
+let screenSharingAnalyticsSessionId: string | undefined;
+let screenSharingAnalyticsStartedAtMs: number | undefined;
+let screenSharingAnalyticsHasAudio = false;
+let previousScreenSharingHadStream = false;
 
 /**
  * Stops the screen sharing (both video and audio tracks)
@@ -387,3 +392,41 @@ export const screenSharingLocalVideoBox: Readable<VideoBox | undefined> = derive
 export const showDesktopCapturerSourcePicker = writable(false);
 
 export let desktopCapturerSourcePromiseResolve: ((source: DesktopCapturerSource | null) => void) | undefined;
+
+// This is a singleton so we can safely not ever unsubscribe from it.
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
+screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {
+    const stream = screenSharingLocalStream.type === "success" ? screenSharingLocalStream.stream : undefined;
+    const hasStream = !!stream;
+
+    if (hasStream && !previousScreenSharingHadStream) {
+        screenSharingAnalyticsStartedAtMs = Date.now();
+        screenSharingAnalyticsSessionId = `screenshare:${screenSharingAnalyticsStartedAtMs}:${Math.random().toString(36).slice(2)}`;
+        screenSharingAnalyticsHasAudio = (stream?.getAudioTracks().length ?? 0) > 0;
+        analyticsClient.screenSharingStarted(screenSharingAnalyticsSessionId, screenSharingAnalyticsHasAudio);
+    }
+
+    if (
+        !hasStream &&
+        previousScreenSharingHadStream &&
+        screenSharingAnalyticsStartedAtMs &&
+        screenSharingAnalyticsSessionId
+    ) {
+        analyticsClient.screenSharingEnded(
+            screenSharingAnalyticsSessionId,
+            Math.max(1, Math.round((Date.now() - screenSharingAnalyticsStartedAtMs) / 1000)),
+            screenSharingAnalyticsHasAudio,
+        );
+        screenSharingAnalyticsSessionId = undefined;
+        screenSharingAnalyticsStartedAtMs = undefined;
+        screenSharingAnalyticsHasAudio = false;
+    }
+
+    if (!hasStream) {
+        screenSharingAnalyticsSessionId = undefined;
+        screenSharingAnalyticsStartedAtMs = undefined;
+        screenSharingAnalyticsHasAudio = false;
+    }
+
+    previousScreenSharingHadStream = hasStream;
+});
