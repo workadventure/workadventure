@@ -1,6 +1,7 @@
 import type { MeetingParticipant } from "../../../Stores/MeetingInvitationStore";
+import { DEFAULT_PROXIMITY_SPACE_NAME } from "../../../Chat/Connection/Proximity/ProximityChatRoomManager";
 
-const DEFAULT_PROXIMITY_ROOM_ID = "proximity:proximity";
+const DEFAULT_PROXIMITY_ROOM_ID = `proximity:${DEFAULT_PROXIMITY_SPACE_NAME}`;
 
 export type ProximityParticipantRoomSnapshot = {
     id: string;

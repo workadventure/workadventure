@@ -914,13 +914,7 @@ export class ProximityChatRoom implements ChatRoom {
         return { roomUrl, userId };
     }
 
-    public async leaveSpace(spaceName: string, isMeetingRoomChat: boolean = false): Promise<void> {
-        this._shouldDisableChatInProximityRoomStore.set(false);
-        this.isChatDisabled.set(false);
-        this.intentionallyClosed.set(false);
-        this.unreadMessagesCount.set(0);
-        chatNotificationStore.clearRoom(this.id);
-
+    public async leaveSpace(spaceName: string, isMeetingRoomChat: boolean = false): Promise<boolean> {
         // Capture space before aborting so we still run full leave (UI + leaveSpace) even if
         // joinSpace's cleanup runs first and clears this._space.
         const space = this._space;
@@ -930,19 +924,26 @@ export class ProximityChatRoom implements ChatRoom {
 
             if (!space) {
                 // We aborted the join before it completed (no space yet), so we are done.
-                return;
+                return false;
             }
         }
         if (!space) {
             console.error("Trying to leave a space that is not joined");
-            return;
+            return false;
         }
         if (space.getName() !== spaceName) {
             console.error(
                 "Trying to leave a space different from the one joined : " + space.getName() + " !== " + spaceName
             );
-            return;
+            return false;
         }
+
+        this._shouldDisableChatInProximityRoomStore.set(false);
+        this.isChatDisabled.set(false);
+        this.intentionallyClosed.set(false);
+        this.unreadMessagesCount.set(0);
+        chatNotificationStore.clearRoom(this.id);
+
         this.spaceUsersStore.forward(readable(new Map()));
         this._space = undefined;
         this.isJoined.set(false);
@@ -1017,7 +1018,7 @@ export class ProximityChatRoom implements ChatRoom {
             console.error("Error leaving space: ", error);
             Sentry.captureException(error);
         }
-        return undefined;
+        return true;
     }
 
     private restoreChatState() {

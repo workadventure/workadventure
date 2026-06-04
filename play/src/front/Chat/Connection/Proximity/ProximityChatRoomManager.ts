@@ -35,7 +35,11 @@ export class ProximityChatRoomManager {
 
     public constructor(private readonly createRoom: ProximityChatRoomFactory) {}
 
-    public getOrCreateRoom(spaceName: string, displayName: string, kind: ProximityChatRoomKind = "area"): ProximityChatRoom {
+    public getOrCreateRoom(
+        spaceName: string,
+        displayName: string,
+        kind: ProximityChatRoomKind = "area"
+    ): ProximityChatRoom {
         const existingRoom = this.rooms.get(spaceName);
         if (existingRoom) {
             existingRoom.setDisplayName(displayName);
@@ -68,7 +72,11 @@ export class ProximityChatRoomManager {
         return room;
     }
 
-    public async joinDefaultSpace(spaceName: string, propertiesToSync: string[], signal?: AbortSignal): Promise<ProximityChatRoom> {
+    public async joinDefaultSpace(
+        spaceName: string,
+        propertiesToSync: string[],
+        signal?: AbortSignal
+    ): Promise<ProximityChatRoom> {
         const room = this.getOrCreateRoom(DEFAULT_PROXIMITY_SPACE_NAME, "Proximity Chat", "default");
         await room.joinSpace(spaceName, propertiesToSync, false, FilterType.ALL_USERS, false, signal);
         room.isJoined.set(true);
@@ -84,7 +92,10 @@ export class ProximityChatRoomManager {
             return;
         }
 
-        await room.leaveSpace(spaceName, false);
+        const didLeave = await room.leaveSpace(spaceName, false);
+        if (!didLeave) {
+            return;
+        }
         room.isJoined.set(false);
         const lastJoinedIndex = this.lastJoinedSpaceNames.indexOf(DEFAULT_PROXIMITY_SPACE_NAME);
         if (lastJoinedIndex !== -1) {
@@ -105,7 +116,10 @@ export class ProximityChatRoomManager {
             return;
         }
 
-        await room.leaveSpace(spaceName, isMeetingRoomChat);
+        const didLeave = await room.leaveSpace(spaceName, isMeetingRoomChat);
+        if (!didLeave) {
+            return;
+        }
         room.isJoined.set(false);
         const lastJoinedIndex = this.lastJoinedSpaceNames.indexOf(spaceName);
         if (lastJoinedIndex !== -1) {
