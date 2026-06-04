@@ -186,6 +186,11 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
      * Build Catmull-Rom spline, create texture from it and apply to sprite.
      */
     private drawSpline(): void {
+        if (!this.scene.renderer) {
+            // In case we don't have a renderer at all (bots, etc...), no need to render the bubble.
+            return;
+        }
+
         // Convert polar samples to Cartesian points
         const pts: Phaser.Math.Vector2[] = [];
         for (let s = 0; s < this.segments; s++) {
