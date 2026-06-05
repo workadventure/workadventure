@@ -1,7 +1,6 @@
 import { FilterType } from "@workadventure/messages";
 import type { Readable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
-import enUSMapEditor from "../../../../i18n/en-US/mapEditor";
 import LL from "../../../../i18n/i18n-svelte";
 import type { ProximityChatRoom } from "./ProximityChatRoom";
 
@@ -15,10 +14,6 @@ export type ProximityChatRoomFactory = (
     kind: ProximityChatRoomKind
 ) => ProximityChatRoom;
 
-function getInitializedLabel(label: string, fallbackLabel: string): string {
-    return label.trim().length > 0 ? label : fallbackLabel;
-}
-
 export function getProximityAreaRoomDisplayName(displayName: string, kind: ProximityChatRoomKind): string {
     const trimmedDisplayName = displayName.trim();
     if (trimmedDisplayName.length > 0) {
@@ -27,20 +22,11 @@ export function getProximityAreaRoomDisplayName(displayName: string, kind: Proxi
 
     switch (kind) {
         case "meeting":
-            return getInitializedLabel(
-                get(LL).mapEditor.properties.livekitRoomProperty.label(),
-                enUSMapEditor.properties.livekitRoomProperty.label
-            );
+            return get(LL).mapEditor.properties.livekitRoomProperty.label();
         case "listener":
-            return getInitializedLabel(
-                get(LL).mapEditor.properties.listenerMegaphone.label(),
-                enUSMapEditor.properties.listenerMegaphone.label
-            );
+            return get(LL).mapEditor.properties.listenerMegaphone.label();
         case "speaker":
-            return getInitializedLabel(
-                get(LL).mapEditor.properties.speakerMegaphone.label(),
-                enUSMapEditor.properties.speakerMegaphone.label
-            );
+            return get(LL).mapEditor.properties.speakerMegaphone.label();
         default:
             return displayName;
     }
