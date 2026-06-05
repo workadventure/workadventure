@@ -2431,6 +2431,9 @@ export class GameScene extends DirtyScene {
 
         const createProximityChatRoom = (spaceName: string, displayName: string, kind: ProximityChatRoomKind) =>
             new ProximityChatRoom(
+                spaceName,
+                displayName,
+                kind,
                 connection.getSpaceUserId(),
                 spaceRegistry,
                 iframeListener,
@@ -2438,11 +2441,7 @@ export class GameScene extends DirtyScene {
                 this,
                 this.wamFile?.settings,
                 connection.getAllTags(),
-                undefined,
-                undefined,
-                spaceName,
-                displayName,
-                kind
+                undefined
             );
 
         this._proximityChatRoomManager = new ProximityChatRoomManager(createProximityChatRoom);
