@@ -182,11 +182,6 @@ export class MatrixChatRoom
     constructor(
         private matrixRoom: Room,
         private notifyNewMessage = (message: MatrixChatMessage) => {
-            // Only notify for "live" messages (after initial sync). Avoids notifying for messages loaded on room open (plan: live vs historical).
-            if (!this.matrixRoom.client.isInitialSyncComplete()) {
-                return;
-            }
-
             const canPlaySound = localUserStore.getChatSounds();
             const isRoomIsDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
             const isNotificationIsMuted = get(this.areNotificationsMuted);
@@ -1452,7 +1447,11 @@ export class MatrixChatRoom
             }
         }
         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
-            this.notifyNewMessage(message);
+            // Only notify for "live" messages (after initial sync). Avoids notifying for messages loaded on room open (plan: live vs historical).
+            if (this.matrixRoom.client.isInitialSyncComplete()) {
+                this.notifyNewMessage(message);
+            }
+
             if (!isAChatRoomIsVisible() && !get(selectedRoomStore)?.id.startsWith("proximity:")) {
                 selectedRoomStore.set(this);
                 navChat.switchToChat();

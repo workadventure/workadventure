@@ -2441,7 +2441,7 @@ export class GameScene extends DirtyScene {
         this._proximityChatRoomManager = new ProximityChatRoomManager(createProximityChatRoom);
         this._proximityChatRoom = this._proximityChatRoomManager.getOrCreateRoom(
             DEFAULT_PROXIMITY_SPACE_NAME,
-            "Proximity Chat",
+            get(LL).chat.proximity(),
             "default",
         );
         this._proximityChatRoomManagerDeferred.resolve(this._proximityChatRoomManager);
@@ -4358,17 +4358,6 @@ ${escapedMessage}
             throw new Error("_spaceRegistry not yet initialized");
         }
         return this._spaceRegistry;
-    }
-
-    get proximityChatRoom(): ProximityChatRoom {
-        const activeRoom = this._proximityChatRoomManager?.resolveTargetRoom();
-        if (activeRoom) {
-            return activeRoom;
-        }
-        if (!this._proximityChatRoom) {
-            throw new Error("_proximityChatRoom not yet initialized");
-        }
-        return this._proximityChatRoom;
     }
 
     get proximityChatRoomManager(): ProximityChatRoomManager {
