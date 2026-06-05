@@ -2432,7 +2432,6 @@ export class GameScene extends DirtyScene {
                 this.wamFile?.settings,
                 connection.getAllTags(),
                 undefined,
-                undefined,
                 spaceName,
                 displayName,
                 kind,
