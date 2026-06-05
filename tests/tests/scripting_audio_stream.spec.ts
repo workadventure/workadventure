@@ -18,8 +18,12 @@ async function playAudioStream(page: Page, frequency: number) {
         page,
         async ({ frequency }) => {
             const sampleRate = 24000;
+            const meeting = window.meeting;
+            if (!meeting) {
+                throw new Error("No meeting joined");
+            }
 
-            const audioStream = await WA.player.proximityMeeting.startAudioStream(sampleRate);
+            const audioStream = await meeting.startAudioStream(sampleRate);
 
             // Generate a sine wave
             const amplitude = 1;
@@ -30,7 +34,9 @@ async function playAudioStream(page: Page, frequency: number) {
                 samples[i] = amplitude * Math.sin((2 * Math.PI * frequency * i) / sampleRate);
             }
 
+            // eslint-disable-next-line require-atomic-updates
             window.streamInterrupted = false;
+            // eslint-disable-next-line require-atomic-updates
             window.audioStream = audioStream;
             audioStream.appendAudioData(samples).catch((e) => {
                 window.streamInterrupted = true;
@@ -46,6 +52,10 @@ async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
         page,
         async ({ volume }) => {
             const sampleRate = 24000;
+            const meeting = window.meeting;
+            if (!meeting) {
+                throw new Error("No meeting joined");
+            }
 
             return new Promise<void>((resolve, reject) => {
                 const timeout = setTimeout(() => {
@@ -54,16 +64,14 @@ async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
                     subscription.unsubscribe();
                 }, 20000);
 
-                const subscription = WA.player.proximityMeeting
-                    .listenToAudioStream(sampleRate)
-                    .subscribe((data: Float32Array) => {
-                        // At some point, the volume of the sound should be high enough to be noticed in the sample
-                        if (data.some((sample) => Math.abs(sample) > volume)) {
-                            resolve();
-                            subscription.unsubscribe();
-                            clearTimeout(timeout);
-                        }
-                    });
+                const subscription = meeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
+                    // At some point, the volume of the sound should be high enough to be noticed in the sample
+                    if (data.some((sample) => Math.abs(sample) > volume)) {
+                        resolve();
+                        subscription.unsubscribe();
+                        clearTimeout(timeout);
+                    }
+                });
             });
         },
         { volume },
@@ -73,7 +81,8 @@ async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
 async function waitForJoinProximityChat(page: Page): Promise<void> {
     await evaluateScript(page, async () => {
         return new Promise<void>((resolve) => {
-            const joinSubscription = WA.player.proximityMeeting.onJoin().subscribe(() => {
+            const joinSubscription = WA.player.meetings.onJoin().subscribe((meeting) => {
+                window.meeting = meeting;
                 resolve();
                 joinSubscription.unsubscribe();
             });
@@ -210,15 +219,19 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
         await Menu.turnOffMicrophone(alice);
 
         // Move alice to the same position as bob
+        const aliceProximityChatPromise = waitForJoinProximityChat(alice);
+        const bobProximityChatPromise = waitForJoinProximityChat(bob);
         await Map.teleportToPosition(alice, 32, 32);
+        await aliceProximityChatPromise;
+        await bobProximityChatPromise;
 
         await expect(alice.getByTestId("screenShareButton")).toBeVisible({ timeout: 120_000 }); // Wait for the audio stream to be ready
 
         // Test play sound scripting
         await evaluateScript(bob, async () => {
-            WA.player.proximityMeeting
-                .playSound("http://maps.workadventure.localhost/tests/Audience.mp3")
-                .catch((err) => console.error(err));
+            window.meeting?.playSound("http://maps.workadventure.localhost/tests/Audience.mp3").catch((err) => {
+                console.error(err);
+            });
         });
 
         // Test listen to sound scripting

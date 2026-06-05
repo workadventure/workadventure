@@ -52,6 +52,12 @@ import type { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVaria
 import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
 import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
+import type {
+    JoinMeetingEvent,
+    MeetingIdEvent,
+    ParticipantMeetingEvent,
+    StartStreamInMeetingEvent,
+} from "./Events/ProximityMeeting/MeetingEvent";
 import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import type { ModalEvent } from "./Events/ModalEvent";
 import type { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
@@ -228,6 +234,12 @@ class IframeListener {
 
     private readonly _stopListeningToStreamInBubbleStream: Subject<void> = new Subject();
     public readonly stopListeningToStreamInBubbleStream = this._stopListeningToStreamInBubbleStream.asObservable();
+
+    private readonly _startListeningToStreamInMeetingStream: Subject<StartStreamInMeetingEvent> = new Subject();
+    public readonly startListeningToStreamInMeetingStream = this._startListeningToStreamInMeetingStream.asObservable();
+
+    private readonly _stopListeningToStreamInMeetingStream: Subject<MeetingIdEvent> = new Subject();
+    public readonly stopListeningToStreamInMeetingStream = this._stopListeningToStreamInMeetingStream.asObservable();
 
     private readonly _addButtonActionBarStream: Subject<AddButtonActionBarEvent> = new Subject();
     public readonly addButtonActionBarStream = this._addButtonActionBarStream.asObservable();
@@ -473,6 +485,10 @@ class IframeListener {
                             this._startListeningToStreamInBubbleStream.next(iframeEvent.data);
                         } else if (iframeEvent.type === "stopListeningToStreamInBubble") {
                             this._stopListeningToStreamInBubbleStream.next();
+                        } else if (iframeEvent.type === "startListeningToStreamInMeeting") {
+                            this._startListeningToStreamInMeetingStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "stopListeningToStreamInMeeting") {
+                            this._stopListeningToStreamInMeetingStream.next(iframeEvent.data);
                         } else if (iframeEvent.type === "openChat") {
                             this._openChatStream.next(iframeEvent.data);
                         } else if (iframeEvent.type === "closeChat") {
@@ -868,6 +884,30 @@ class IframeListener {
         });
     }
 
+    sendJoinMeetingEvent(meetingId: string, name: string, kind: JoinMeetingEvent["kind"], users: MessageUserJoined[]) {
+        const formattedUsers: AddPlayerEvent[] = users.map((user) => {
+            return {
+                playerId: user.userId,
+                name: user.name,
+                userUuid: user.userUuid,
+                outlineColor: user.outlineColor,
+                availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                position: user.position,
+                variables: user.variables,
+            };
+        });
+
+        this.postMessage({
+            type: "joinMeetingEvent",
+            data: {
+                meetingId,
+                name,
+                kind,
+                users: formattedUsers,
+            } as JoinMeetingEvent,
+        });
+    }
+
     sendParticipantJoinProximityMeetingEvent(user: MessageUserJoined) {
         this.postMessage({
             type: "participantJoinProximityMeetingEvent",
@@ -882,6 +922,24 @@ class IframeListener {
                     variables: user.variables,
                 },
             } as ParticipantProximityMeetingEvent,
+        });
+    }
+
+    sendParticipantJoinMeetingEvent(meetingId: string, user: MessageUserJoined) {
+        this.postMessage({
+            type: "participantJoinMeetingEvent",
+            data: {
+                meetingId,
+                user: {
+                    playerId: user.userId,
+                    name: user.name,
+                    userUuid: user.userUuid,
+                    outlineColor: user.outlineColor,
+                    availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                    position: user.position,
+                    variables: user.variables,
+                },
+            } as ParticipantMeetingEvent,
         });
     }
 
@@ -902,10 +960,37 @@ class IframeListener {
         });
     }
 
+    sendParticipantLeaveMeetingEvent(meetingId: string, user: MessageUserJoined) {
+        this.postMessage({
+            type: "participantLeaveMeetingEvent",
+            data: {
+                meetingId,
+                user: {
+                    playerId: user.userId,
+                    name: user.name,
+                    userUuid: user.userUuid,
+                    outlineColor: user.outlineColor,
+                    availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                    position: user.position,
+                    variables: user.variables,
+                },
+            } as ParticipantMeetingEvent,
+        });
+    }
+
     sendLeaveProximityMeetingEvent() {
         this.postMessage({
             type: "leaveProximityMeetingEvent",
             data: undefined,
+        });
+    }
+
+    sendLeaveMeetingEvent(meetingId: string) {
+        this.postMessage({
+            type: "leaveMeetingEvent",
+            data: {
+                meetingId,
+            },
         });
     }
 

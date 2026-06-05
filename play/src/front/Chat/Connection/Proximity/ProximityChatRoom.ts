@@ -167,8 +167,6 @@ export class ProximityChatRoom implements ChatRoom {
 
     private scriptingOutputAudioStreamManager: ScriptingOutputAudioStreamManager | undefined;
     private scriptingInputAudioStreamManager: ScriptingInputAudioStreamManager | undefined;
-    private startListeningToStreamInBubbleStreamUnsubscriber: Subscription | undefined;
-    private stopListeningToStreamInBubbleStreamUnsubscriber: Subscription | undefined;
     private screenWakeRelease: undefined | (() => Promise<void>);
 
     constructor(
@@ -209,31 +207,6 @@ export class ProximityChatRoom implements ChatRoom {
         this.name = writable(displayName);
         this.kind = writable(kind);
         this.typingMembers = writable([]);
-
-        if (this.isDefaultProximityRoom()) {
-            this.startListeningToStreamInBubbleStreamUnsubscriber =
-                iframeListener.startListeningToStreamInBubbleStream.subscribe((message) => {
-                    if (!this.scriptingInputAudioStreamManager) {
-                        console.error(
-                            "Trying to start listening to stream in bubble but no bubble has been joined yet"
-                        );
-                        return;
-                    }
-                    this.scriptingInputAudioStreamManager.startListeningToAudioStream(message.sampleRate).catch((e) => {
-                        console.error("Error while starting listening to streams", e);
-                        Sentry.captureException(e);
-                    });
-                });
-
-            this.stopListeningToStreamInBubbleStreamUnsubscriber =
-                iframeListener.stopListeningToStreamInBubbleStream.subscribe(() => {
-                    if (!this.scriptingInputAudioStreamManager) {
-                        console.error("Trying to stop listening to stream in bubble but no bubble has been joined yet");
-                        return;
-                    }
-                    this.scriptingInputAudioStreamManager.stopListeningToAudioStream();
-                });
-        }
     }
 
     sendMessage(message: string, action: ChatMessageType = "proximity", broadcast = true): void {
@@ -562,12 +535,6 @@ export class ProximityChatRoom implements ChatRoom {
         this.intentionallyClosed.set(false);
         this.isJoined.set(true);
 
-        if (this.isDefaultProximityRoom()) {
-            // TODO: we need to move that elsewhere.
-            // Set up manager of audio streams received by the scripting API (useful for bots)
-            this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this._space);
-            this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this._space);
-        }
         await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
         let hasUserInProximityChat = false;
@@ -685,14 +652,7 @@ export class ProximityChatRoom implements ChatRoom {
             }
             await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
-            const playersInSpace: MessageUserJoined[] = [];
-
-            for (const spaceUser of users.values()) {
-                const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
-                if (player) {
-                    playersInSpace.push(player);
-                }
-            }
+            const playersInSpace = this.mapSpaceUsersToRemotePlayers(users);
             if (this.isDefaultProximityRoom()) {
                 iframeListener.sendJoinProximityMeetingEvent(playersInSpace);
             }
@@ -739,6 +699,7 @@ export class ProximityChatRoom implements ChatRoom {
         this.observeUserJoinedSubscription = this._space.observeUserJoined.subscribe((spaceUser) => {
             const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
             if (player) {
+                iframeListener.sendParticipantJoinMeetingEvent(spaceName, player);
                 if (this.isDefaultProximityRoom()) {
                     iframeListener.sendParticipantJoinProximityMeetingEvent(player);
                 }
@@ -758,6 +719,7 @@ export class ProximityChatRoom implements ChatRoom {
         this.observeUserLeftSubscription = this._space.observeUserLeft.subscribe((spaceUser) => {
             const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
             if (player) {
+                iframeListener.sendParticipantLeaveMeetingEvent(spaceName, player);
                 if (this.isDefaultProximityRoom()) {
                     iframeListener.sendParticipantLeaveProximityMeetingEvent(player);
                 }
@@ -775,6 +737,9 @@ export class ProximityChatRoom implements ChatRoom {
             this.removeTypingUserbyID(spaceUser.spaceUserId);
         });
         await this.throwIfAborted(joinSignal, spaceForThisJoin);
+
+        const playersInMeeting = this.mapSpaceUsersToRemotePlayers(Array.from((this.users ?? new Map()).values()));
+        iframeListener.sendJoinMeetingEvent(spaceName, get(this.name), get(this.kind), playersInMeeting);
 
         this.joinSpaceAbortController = undefined;
         return this._space;
@@ -897,6 +862,19 @@ export class ProximityChatRoom implements ChatRoom {
         return this.remotePlayersRepository.getPlayers().get(userId);
     }
 
+    private mapSpaceUsersToRemotePlayers(spaceUsers: SpaceUserExtended[]): MessageUserJoined[] {
+        const playersInSpace: MessageUserJoined[] = [];
+
+        for (const spaceUser of spaceUsers.values()) {
+            const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
+            if (player) {
+                playersInSpace.push(player);
+            }
+        }
+
+        return playersInSpace;
+    }
+
     private extractUserIdAndRoomUrlFromSpaceId(spaceId: string): { roomUrl: string; userId: number } {
         const lastUnderscoreIndex = spaceId.lastIndexOf("_");
         if (lastUnderscoreIndex === -1) {
@@ -945,6 +923,7 @@ export class ProximityChatRoom implements ChatRoom {
         this._currentMeetingParticipantsStore.set([]);
 
         hideBubbleConfirmationModal();
+        iframeListener.sendLeaveMeetingEvent(spaceName);
         if (this.isDefaultProximityRoom()) {
             iframeListener.sendLeaveProximityMeetingEvent();
         }
@@ -1041,6 +1020,50 @@ export class ProximityChatRoom implements ChatRoom {
         return this._space.dispatchSound(url);
     }
 
+    public async startScriptingAudioStream(sampleRate: number): Promise<void> {
+        await this.getOrCreateScriptingOutputAudioStreamManager().startStream(sampleRate);
+    }
+
+    public async appendScriptingAudioData(float32Array: Float32Array): Promise<void> {
+        await this.getOrCreateScriptingOutputAudioStreamManager().appendPCMData(float32Array);
+    }
+
+    public stopScriptingAudioStream(): void {
+        this.scriptingOutputAudioStreamManager?.stopStream();
+    }
+
+    public async resetScriptingAudioBuffer(): Promise<void> {
+        await this.getOrCreateScriptingOutputAudioStreamManager().resetAudioBuffer();
+    }
+
+    public async startListeningToScriptingAudioStream(sampleRate: number, meetingId?: string): Promise<void> {
+        await this.getOrCreateScriptingInputAudioStreamManager().startListeningToAudioStream(sampleRate, meetingId);
+    }
+
+    public stopListeningToScriptingAudioStream(): void {
+        this.scriptingInputAudioStreamManager?.stopListeningToAudioStream();
+    }
+
+    private getOrCreateScriptingOutputAudioStreamManager(): ScriptingOutputAudioStreamManager {
+        if (!this._space) {
+            throw new Error("Trying to start a scripting audio stream in a space that is not joined");
+        }
+        if (!this.scriptingOutputAudioStreamManager) {
+            this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this._space);
+        }
+        return this.scriptingOutputAudioStreamManager;
+    }
+
+    private getOrCreateScriptingInputAudioStreamManager(): ScriptingInputAudioStreamManager {
+        if (!this._space) {
+            throw new Error("Trying to listen to scripting audio streams in a space that is not joined");
+        }
+        if (!this.scriptingInputAudioStreamManager) {
+            this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this._space);
+        }
+        return this.scriptingInputAudioStreamManager;
+    }
+
     /**
      * Returns the name of the currently joined space, or undefined if not in any space.
      */
@@ -1056,8 +1079,6 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     public destroy(): void {
-        this.startListeningToStreamInBubbleStreamUnsubscriber?.unsubscribe();
-        this.stopListeningToStreamInBubbleStreamUnsubscriber?.unsubscribe();
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
 

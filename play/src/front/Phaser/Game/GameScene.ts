@@ -1252,6 +1252,15 @@ export class GameScene extends DirtyScene {
         iframeListener.unregisterAnswerer("getWoka");
         iframeListener.unregisterAnswerer("goToLogin");
         iframeListener.unregisterAnswerer("playSoundInBubble");
+        iframeListener.unregisterAnswerer("playSoundInMeeting");
+        iframeListener.unregisterAnswerer("startStreamInBubble");
+        iframeListener.unregisterAnswerer("startStreamInMeeting");
+        iframeListener.unregisterAnswerer("appendPCMData");
+        iframeListener.unregisterAnswerer("appendPCMDataToMeeting");
+        iframeListener.unregisterAnswerer("resetAudioBuffer");
+        iframeListener.unregisterAnswerer("resetMeetingAudioBuffer");
+        iframeListener.unregisterAnswerer("stopStreamInBubble");
+        iframeListener.unregisterAnswerer("stopStreamInMeeting");
         this.sharedVariablesManager?.close();
         this.playerVariablesManager?.close();
         this.areaPropertyVariablesManager?.destroy();
@@ -3596,14 +3605,83 @@ ${escapedMessage}
         iframeListener.registerAnswerer("playSoundInBubble", async (message) => {
             const soundUrl = new URL(message.url, this.mapUrlFile);
             try {
-                const proximityChatRoomManager = await this._proximityChatRoomManagerDeferred.promise;
-                const proximityChatRoom =
-                    proximityChatRoomManager.getDefaultRoom() ?? this.getDefaultProximityChatRoom();
-                await proximityChatRoom.dispatchSound(soundUrl);
+                await this.getDefaultProximityChatRoom().dispatchSound(soundUrl);
             } catch (error) {
                 console.error("Error playing sound in bubble:", error);
             }
         });
+
+        iframeListener.registerAnswerer("playSoundInMeeting", async (message) => {
+            const soundUrl = new URL(message.url, this.mapUrlFile);
+            await this.getMeetingProximityChatRoom(message.meetingId).dispatchSound(soundUrl);
+        });
+
+        iframeListener.registerAnswerer("startStreamInBubble", async (message) => {
+            await this.getDefaultProximityChatRoom().startScriptingAudioStream(message.sampleRate);
+        });
+
+        iframeListener.registerAnswerer("startStreamInMeeting", async (message) => {
+            await this.getMeetingProximityChatRoom(message.meetingId).startScriptingAudioStream(message.sampleRate);
+        });
+
+        iframeListener.registerAnswerer("appendPCMData", async (message) => {
+            await this.getDefaultProximityChatRoom().appendScriptingAudioData(message.data);
+        });
+
+        iframeListener.registerAnswerer("appendPCMDataToMeeting", async (message) => {
+            await this.getMeetingProximityChatRoom(message.meetingId).appendScriptingAudioData(message.data);
+        });
+
+        iframeListener.registerAnswerer("resetAudioBuffer", async () => {
+            await this.getDefaultProximityChatRoom().resetScriptingAudioBuffer();
+        });
+
+        iframeListener.registerAnswerer("resetMeetingAudioBuffer", async (message) => {
+            await this.getMeetingProximityChatRoom(message.meetingId).resetScriptingAudioBuffer();
+        });
+
+        iframeListener.registerAnswerer("stopStreamInBubble", () => {
+            this.getDefaultProximityChatRoom().stopScriptingAudioStream();
+        });
+
+        iframeListener.registerAnswerer("stopStreamInMeeting", (message) => {
+            this.getMeetingProximityChatRoom(message.meetingId).stopScriptingAudioStream();
+        });
+
+        const startListeningToStreamInBubbleSubscription =
+            iframeListener.startListeningToStreamInBubbleStream.subscribe((message) => {
+                this.getDefaultProximityChatRoom()
+                    .startListeningToScriptingAudioStream(message.sampleRate)
+                    .catch((error) => {
+                        console.error("Error while starting listening to streams", error);
+                        Sentry.captureException(error);
+                    });
+            });
+        this.unsubscribers.push(() => startListeningToStreamInBubbleSubscription.unsubscribe());
+
+        const stopListeningToStreamInBubbleSubscription = iframeListener.stopListeningToStreamInBubbleStream.subscribe(
+            () => {
+                this.getDefaultProximityChatRoom().stopListeningToScriptingAudioStream();
+            }
+        );
+        this.unsubscribers.push(() => stopListeningToStreamInBubbleSubscription.unsubscribe());
+
+        const startListeningToStreamInMeetingSubscription =
+            iframeListener.startListeningToStreamInMeetingStream.subscribe((message) => {
+                this.getMeetingProximityChatRoom(message.meetingId)
+                    .startListeningToScriptingAudioStream(message.sampleRate, message.meetingId)
+                    .catch((error) => {
+                        console.error("Error while starting listening to meeting streams", error);
+                        Sentry.captureException(error);
+                    });
+            });
+        this.unsubscribers.push(() => startListeningToStreamInMeetingSubscription.unsubscribe());
+
+        const stopListeningToStreamInMeetingSubscription =
+            iframeListener.stopListeningToStreamInMeetingStream.subscribe((message) => {
+                this.getMeetingProximityChatRoom(message.meetingId).stopListeningToScriptingAudioStream();
+            });
+        this.unsubscribers.push(() => stopListeningToStreamInMeetingSubscription.unsubscribe());
     }
 
     private setPropertyLayer(
@@ -4350,6 +4428,14 @@ ${escapedMessage}
             throw new Error("_proximityChatRoom not yet initialized");
         }
         return defaultRoom;
+    }
+
+    private getMeetingProximityChatRoom(meetingId: string): ProximityChatRoom {
+        const room = this._proximityChatRoomManager?.getRoomByMeetingId(meetingId);
+        if (!room) {
+            throw new Error(`Proximity meeting "${meetingId}" is not joined`);
+        }
+        return room;
     }
 
     get applicationManager(): ApplicationManager {

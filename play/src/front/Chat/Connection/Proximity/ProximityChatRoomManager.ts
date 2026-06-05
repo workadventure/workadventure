@@ -189,6 +189,21 @@ export class ProximityChatRoomManager {
         return this.rooms.get(roomId.substring("proximity:".length));
     }
 
+    public getRoomByMeetingId(meetingId: string): ProximityChatRoom | undefined {
+        const room = this.rooms.get(meetingId);
+        if (room && get(room.isJoined)) {
+            return room;
+        }
+
+        for (const room of this.rooms.values()) {
+            if (get(room.isJoined) && room.getCurrentSpaceName() === meetingId) {
+                return room;
+            }
+        }
+
+        return undefined;
+    }
+
     public getDefaultRoom(): ProximityChatRoom | undefined {
         return this.rooms.get(DEFAULT_PROXIMITY_SPACE_NAME);
     }
