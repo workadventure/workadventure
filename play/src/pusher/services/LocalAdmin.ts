@@ -254,6 +254,10 @@ class LocalAdmin implements AdminInterface {
         };
     }
 
+    bulkReadNews(playUri: string, userIdentifier: string, accessToken: string | undefined): Promise<void> {
+        return Promise.resolve();
+    }
+
     fetchMapDetails(
         playUri: string,
         authToken?: string,

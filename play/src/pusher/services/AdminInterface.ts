@@ -32,6 +32,8 @@ export interface AdminInterface {
         chatID?: string
     ): Promise<FetchMemberDataByUuidResponse>;
 
+    bulkReadNews(playUri: string, userIdentifier: string, accessToken: string | undefined): Promise<void>;
+
     /**
      * @var playUri is url of the room
      * @var userId can to be undefined or email or uuid
