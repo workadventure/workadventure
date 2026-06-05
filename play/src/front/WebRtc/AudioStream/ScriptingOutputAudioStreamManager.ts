@@ -44,7 +44,7 @@ export class ScriptingOutputAudioStreamManager {
                     console.error("Error while stopping stream", e);
                 });
         } else {
-            console.error("stopStreamInBubble called while no stream is running");
+            console.error("stopStream called while no stream is running");
         }
         this.pcmStreamerResolved = false;
         this.pcmStreamerResolving = false;

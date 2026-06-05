@@ -18,6 +18,10 @@ export class Meeting {
     private participantLeaveStream: Subject<RemotePlayer> | undefined;
     private leaveStream: Subject<void> | undefined;
     private pcmDataStream: Subject<Float32Array> = new Subject();
+    private audioStreamListeners = new Map<
+        number,
+        { observable: Observable<Float32Array>; subscriptionsCount: number }
+    >();
 
     public constructor(
         public readonly id: string,
@@ -74,27 +78,65 @@ export class Meeting {
     }
 
     listenToAudioStream(sampleRate: number): Observable<Float32Array> {
-        return new Observable<Float32Array>((subscriber) => {
-            sendToWorkadventure({
-                type: "startListeningToStreamInMeeting",
-                data: {
-                    meetingId: this.id,
-                    sampleRate,
-                },
-            });
+        const existingListener = this.audioStreamListeners.get(sampleRate);
+        if (existingListener !== undefined) {
+            return existingListener.observable;
+        }
 
-            const subscription = this.pcmDataStream.subscribe(subscriber);
+        const listener = {
+            subscriptionsCount: 0,
+            observable: new Observable<Float32Array>((subscriber) => {
+                if (listener.subscriptionsCount === 0) {
+                    sendToWorkadventure({
+                        type: "startListeningToStreamInMeeting",
+                        data: {
+                            meetingId: this.id,
+                            sampleRate,
+                        },
+                    });
+                }
 
-            return () => {
-                subscription.unsubscribe();
+                listener.subscriptionsCount++;
+                const subscription = this.pcmDataStream.subscribe(subscriber);
+
+                return () => {
+                    subscription.unsubscribe();
+                    if (listener.subscriptionsCount === 0) {
+                        return;
+                    }
+
+                    listener.subscriptionsCount--;
+                    if (listener.subscriptionsCount > 0) {
+                        return;
+                    }
+
+                    sendToWorkadventure({
+                        type: "stopListeningToStreamInMeeting",
+                        data: {
+                            meetingId: this.id,
+                        },
+                    });
+                };
+            }),
+        };
+
+        this.audioStreamListeners.set(sampleRate, listener);
+        return listener.observable;
+    }
+
+    stopListeningToAudioStreams(): void {
+        for (const listener of this.audioStreamListeners.values()) {
+            if (listener.subscriptionsCount > 0) {
+                listener.subscriptionsCount = 0;
                 sendToWorkadventure({
                     type: "stopListeningToStreamInMeeting",
                     data: {
                         meetingId: this.id,
                     },
                 });
-            };
-        });
+            }
+        }
+        this.audioStreamListeners.clear();
     }
 
     updateParticipants(participants: RemotePlayer[]): void {
@@ -113,6 +155,7 @@ export class Meeting {
     }
 
     leave(): void {
+        this.stopListeningToAudioStreams();
         this.leaveStream?.next();
     }
 

@@ -3668,18 +3668,28 @@ ${escapedMessage}
 
         const startListeningToStreamInMeetingSubscription =
             iframeListener.startListeningToStreamInMeetingStream.subscribe((message) => {
-                this.getMeetingProximityChatRoom(message.meetingId)
-                    .startListeningToScriptingAudioStream(message.sampleRate, message.meetingId)
-                    .catch((error) => {
-                        console.error("Error while starting listening to meeting streams", error);
-                        Sentry.captureException(error);
-                    });
+                try {
+                    this.getMeetingProximityChatRoom(message.meetingId)
+                        .startListeningToScriptingAudioStream(message.sampleRate, message.meetingId)
+                        .catch((error) => {
+                            console.error("Error while starting listening to meeting streams", error);
+                            Sentry.captureException(error);
+                        });
+                } catch (error) {
+                    console.error("Error while starting listening to meeting streams", error);
+                    Sentry.captureException(error);
+                }
             });
         this.unsubscribers.push(() => startListeningToStreamInMeetingSubscription.unsubscribe());
 
         const stopListeningToStreamInMeetingSubscription =
             iframeListener.stopListeningToStreamInMeetingStream.subscribe((message) => {
-                this.getMeetingProximityChatRoom(message.meetingId).stopListeningToScriptingAudioStream();
+                try {
+                    this.getMeetingProximityChatRoom(message.meetingId).stopListeningToScriptingAudioStream();
+                } catch (error) {
+                    console.error("Error while stopping listening to meeting streams", error);
+                    Sentry.captureException(error);
+                }
             });
         this.unsubscribers.push(() => stopListeningToStreamInMeetingSubscription.unsubscribe());
     }
