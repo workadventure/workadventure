@@ -9,6 +9,7 @@ export type ICommunicationSpace = Pick<
     | "dispatchPrivateEvent"
     | "dispatchPublicEvent"
     | "getSpaceName"
+    | "filterType"
     | "getPropertiesToSync"
     | "publishMetadata"
     | "stopRecordingByServer"
