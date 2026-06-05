@@ -172,6 +172,9 @@ export class ProximityChatRoom implements ChatRoom {
     private screenWakeRelease: undefined | (() => Promise<void>);
 
     constructor(
+        public readonly spaceName: string,
+        displayName: string,
+        kind: ProximityChatRoomKind,
         private _spaceUserId: string,
         private spaceRegistry: SpaceRegistryInterface,
         _iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">,
@@ -200,10 +203,7 @@ export class ProximityChatRoom implements ChatRoom {
                     get(this.name),
                 ),
             );
-        },
-        public readonly spaceName: string = "proximity",
-        displayName = "Proximity Chat",
-        kind: ProximityChatRoomKind = "proximity",
+        }
     ) {
         this.id = `proximity:${spaceName}`;
         this.name = writable(displayName);
