@@ -827,11 +827,13 @@ const userMediaRetryCountStore = writable(0);
  * Triggers a new call to getUserMedia to refresh the stream.
  * Useful when a default device has been removed.
  */
-function retryGetUserMedia() {
-    oldConstraints = {
-        video: false,
-        audio: false,
-    };
+function retryGetUserMedia(retryVideo: boolean, retryAudio: boolean) {
+    if (retryVideo) {
+        oldConstraints.video = false;
+    }
+    if (retryAudio) {
+        oldConstraints.audio = false;
+    }
     userMediaRetryCountStore.update((count) => count + 1);
 }
 
@@ -1256,7 +1258,7 @@ deviceListStore.subscribe((mediaDeviceInfos) => {
             ) {
                 if (get(requestedCameraDeviceIdStore) === undefined) {
                     // If we removed the default camera device, we retry (and ask for the new default camera that the OS will pick)
-                    retryGetUserMedia();
+                    retryGetUserMedia(true, false);
                 } else {
                     // If we removed a camera specifically requested, we retry without passing a device id.
                     requestedCameraDeviceIdStore.set(undefined);
@@ -1267,7 +1269,7 @@ deviceListStore.subscribe((mediaDeviceInfos) => {
             ) {
                 if (get(requestedMicrophoneDeviceIdStore) === undefined) {
                     // If we removed the default microphone device, we retry (and ask for the new default microphone that the OS will pick)
-                    retryGetUserMedia();
+                    retryGetUserMedia(false, true);
                 } else {
                     // If we removed a microphone specifically requested, we retry without passing a device id.
                     requestedMicrophoneDeviceIdStore.set(undefined);

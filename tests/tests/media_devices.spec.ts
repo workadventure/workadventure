@@ -276,7 +276,11 @@ async function createContextWithMockedMediaDevices(
 
         function createAudioTrack(deviceId: string): MediaStreamTrack {
             if (!devices.some((device) => device.kind === "audioinput" && device.deviceId === deviceId)) {
-                throw new DOMException("Device not found", "OverconstrainedError");
+                const error = new DOMException("Device not found", "OverconstrainedError") as DOMException & {
+                    constraint?: string;
+                };
+                error.constraint = "deviceId";
+                throw error;
             }
 
             const context = new AudioContext();
@@ -289,6 +293,13 @@ async function createContextWithMockedMediaDevices(
         }
 
         function createVideoTrack(deviceId: string): MediaStreamTrack {
+            if (!devices.some((device) => device.kind === "videoinput" && device.deviceId === deviceId)) {
+                const error = new DOMException("Device not found", "OverconstrainedError") as DOMException & {
+                    constraint?: string;
+                };
+                error.constraint = "deviceId";
+                throw error;
+            }
             const canvas = document.createElement("canvas");
             canvas.width = 16;
             canvas.height = 16;
