@@ -26,7 +26,7 @@ import { iframeListener } from "../../../Api/IframeListener";
 import type { SpaceInterface, SpaceUserExtended } from "../../../Space/SpaceInterface";
 import type { MeetingParticipant } from "../../../Stores/MeetingInvitationStore";
 import type { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
-import { chatVisibilityStore, shouldDisableChatInProximityRoomStore } from "../../../Stores/ChatStore";
+import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import { isAChatRoomIsVisible, navChat, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
@@ -201,7 +201,6 @@ export class ProximityChatRoom implements ChatRoom {
                 )
             );
         },
-        private _shouldDisableChatInProximityRoomStore: Writable<boolean> = shouldDisableChatInProximityRoomStore,
         public readonly spaceName: string = "proximity",
         displayName = "Proximity Chat",
         kind: ProximityChatRoomKind = "proximity"
@@ -559,9 +558,6 @@ export class ProximityChatRoom implements ChatRoom {
         const spaceForThisJoin = this._space;
         await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
-        if (disableChat) {
-            this._shouldDisableChatInProximityRoomStore.set(true);
-        }
         this.isChatDisabled.set(disableChat);
         this.intentionallyClosed.set(false);
         this.isJoined.set(true);
@@ -938,7 +934,6 @@ export class ProximityChatRoom implements ChatRoom {
             return false;
         }
 
-        this._shouldDisableChatInProximityRoomStore.set(false);
         this.isChatDisabled.set(false);
         this.intentionallyClosed.set(false);
         this.unreadMessagesCount.set(0);
