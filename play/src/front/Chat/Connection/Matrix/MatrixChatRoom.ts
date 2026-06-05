@@ -76,6 +76,7 @@ import { chatNotificationStore } from "../../../Stores/ProximityNotificationStor
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { waitForGameSceneStore } from "../../../Stores/GameSceneStore";
+import { ProximityChatRoom } from "../Proximity/ProximityChatRoom";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatLightPoll } from "./MatrixChatLightPoll";
 import { MatrixChatPoll } from "./MatrixChatPoll";
@@ -1452,7 +1453,7 @@ export class MatrixChatRoom
                 this.notifyNewMessage(message);
             }
 
-            if (!isAChatRoomIsVisible() && !get(selectedRoomStore)?.id.startsWith("proximity:")) {
+            if (!isAChatRoomIsVisible() && !(get(selectedRoomStore) instanceof ProximityChatRoom)) {
                 selectedRoomStore.set(this);
                 navChat.switchToChat();
             }
