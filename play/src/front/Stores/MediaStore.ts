@@ -767,11 +767,9 @@ async function runRawStreamUpdate(
             batchGetUserMediaStore.startBatch();
             if (currentStream.getVideoTracks().length > 0) {
                 usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
-                requestedCameraState.enableWebcam();
             }
             if (currentStream.getAudioTracks().length > 0) {
                 usedMicrophoneDeviceIdStore.set(currentStream.getAudioTracks()[0]?.getSettings().deviceId);
-                requestedMicrophoneState.enableMicrophone();
             }
             batchGetUserMediaStore.commitChanges();
             hideHelpCameraSettings();
@@ -821,6 +819,23 @@ async function runRawStreamUpdate(
 }
 
 /**
+ * In case a device is removed, we need to retry the getUserMedia call to get another device if available.
+ */
+const userMediaRetryCountStore = writable(0);
+
+/**
+ * Triggers a new call to getUserMedia to refresh the stream.
+ * Useful when a default device has been removed.
+ */
+function retryGetUserMedia() {
+    oldConstraints = {
+        video: false,
+        audio: false,
+    };
+    userMediaRetryCountStore.update((count) => count + 1);
+}
+
+/**
  * A store containing the MediaStream object (or undefined if nothing requested, or Error if an error occurred)
  * This stream includes background transformations when enabled
  *
@@ -828,9 +843,12 @@ async function runRawStreamUpdate(
  * Parameter changes (blurAmount, etc.) are handled by a separate subscriber to avoid recreating
  * the transformer on every change (which causes WebGL context leaks).
  */
-export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore], LocalStreamStoreValue>(
-    [mediaStreamConstraintsStore],
-    ([$mediaStreamConstraintsStore], set) => {
+export const rawLocalStreamStore = derived<
+    [typeof mediaStreamConstraintsStore, typeof userMediaRetryCountStore],
+    LocalStreamStoreValue
+>(
+    [mediaStreamConstraintsStore, userMediaRetryCountStore],
+    ([$mediaStreamConstraintsStore, $userMediaRetryCountStore], set) => {
         const constraints = { ...$mediaStreamConstraintsStore };
         const myGen = ++rawStreamGeneration;
         const setIfCurrent: SetRawStreamIfCurrent = (value) => {
@@ -1066,40 +1084,6 @@ export const deviceListStore = readable<MediaDeviceInfo[] | undefined>(undefined
         navigator.mediaDevices
             .enumerateDevices()
             .then((mediaDeviceInfos) => {
-                // check if the new list has the preferred device
-                const preferredVideoInputDevice = localUserStore.getPreferredVideoInputDevice();
-                const preferredAudioInputDevice = localUserStore.getPreferredAudioInputDevice();
-                const preferredSpeakerDevice = localUserStore.getSpeakerDeviceId();
-
-                if (
-                    preferredVideoInputDevice &&
-                    mediaDeviceInfos.find((device) => device.deviceId === preferredVideoInputDevice)
-                ) {
-                    requestedCameraDeviceIdStore.set(preferredVideoInputDevice);
-                }
-                if (
-                    preferredAudioInputDevice &&
-                    mediaDeviceInfos.find((device) => device.deviceId === preferredAudioInputDevice)
-                ) {
-                    requestedMicrophoneDeviceIdStore.set(preferredAudioInputDevice);
-                }
-                if (
-                    preferredSpeakerDevice &&
-                    mediaDeviceInfos.find((device) => device.deviceId === preferredSpeakerDevice)
-                ) {
-                    speakerSelectedStore.set(preferredSpeakerDevice);
-                }
-
-                const actualsMediaDevices = get(deviceListStore);
-                // get all media that not exist in the list
-                if (actualsMediaDevices != undefined) {
-                    // set the last new media devices detected
-                    const newDevices = mediaDeviceInfos.filter(
-                        (device) => actualsMediaDevices.find((d) => d.deviceId === device.deviceId) == undefined
-                    );
-                    lastNewMediaDeviceDetectedStore.set(newDevices);
-                }
-
                 set(mediaDeviceInfos);
                 devicesNotLoaded.set(false);
             })
@@ -1227,6 +1211,74 @@ speakerListStore.subscribe((devices) => {
 
 export const speakerSelectedStore = writable<string | undefined>(localUserStore.getSpeakerDeviceId() ?? undefined);
 
+let previousMediaDevices: MediaDeviceInfo[] | undefined = undefined;
+
+// It is ok to not unsubscribe to this store because it is a singleton.
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
+deviceListStore.subscribe((mediaDeviceInfos) => {
+    if (mediaDeviceInfos === undefined) {
+        return;
+    }
+
+    // check if the new list has the preferred device
+    const preferredVideoInputDevice = localUserStore.getPreferredVideoInputDevice();
+    const preferredAudioInputDevice = localUserStore.getPreferredAudioInputDevice();
+    const preferredSpeakerDevice = localUserStore.getSpeakerDeviceId();
+
+    if (preferredVideoInputDevice && mediaDeviceInfos.find((device) => device.deviceId === preferredVideoInputDevice)) {
+        requestedCameraDeviceIdStore.set(preferredVideoInputDevice);
+    }
+    if (preferredAudioInputDevice && mediaDeviceInfos.find((device) => device.deviceId === preferredAudioInputDevice)) {
+        requestedMicrophoneDeviceIdStore.set(preferredAudioInputDevice);
+    }
+    if (preferredSpeakerDevice && mediaDeviceInfos.find((device) => device.deviceId === preferredSpeakerDevice)) {
+        speakerSelectedStore.set(preferredSpeakerDevice);
+    }
+
+    const thePreviousMediaDevices = previousMediaDevices;
+    // get all media that not exist in the list
+    if (thePreviousMediaDevices !== undefined) {
+        // set the last new media devices detected (new devices detection)
+        const newDevices = mediaDeviceInfos.filter(
+            (device) => thePreviousMediaDevices.find((d) => d.deviceId === device.deviceId) === undefined
+        );
+        lastNewMediaDeviceDetectedStore.set(newDevices);
+
+        // Detect removed devices
+        const removedDevices = thePreviousMediaDevices.filter(
+            (device) => mediaDeviceInfos.find((d) => d.deviceId === device.deviceId) === undefined
+        );
+
+        for (const removedDevice of removedDevices) {
+            if (
+                removedDevice.kind === "videoinput" &&
+                currentStream?.getVideoTracks()[0]?.getSettings().deviceId === removedDevice.deviceId
+            ) {
+                if (get(requestedCameraDeviceIdStore) === undefined) {
+                    // If we removed the default camera device, we retry (and ask for the new default camera that the OS will pick)
+                    retryGetUserMedia();
+                } else {
+                    // If we removed a camera specifically requested, we retry without passing a device id.
+                    requestedCameraDeviceIdStore.set(undefined);
+                }
+            } else if (
+                removedDevice.kind === "audioinput" &&
+                currentStream?.getAudioTracks()[0]?.getSettings().deviceId === removedDevice.deviceId
+            ) {
+                if (get(requestedMicrophoneDeviceIdStore) === undefined) {
+                    // If we removed the default microphone device, we retry (and ask for the new default microphone that the OS will pick)
+                    retryGetUserMedia();
+                } else {
+                    // If we removed a microphone specifically requested, we retry without passing a device id.
+                    requestedMicrophoneDeviceIdStore.set(undefined);
+                }
+            }
+        }
+    }
+
+    previousMediaDevices = [...mediaDeviceInfos];
+});
+
 function removeDuplicateDevices(devices: MediaDeviceInfo[]) {
     const uniqueDevices = new Map<string, MediaDeviceInfo>();
     devices.forEach((device) => {
@@ -1234,63 +1286,6 @@ function removeDuplicateDevices(devices: MediaDeviceInfo[]) {
     });
     return Array.from(uniqueDevices.values());
 }
-
-function isConstrainDOMStringParameters(param: ConstrainDOMString): param is ConstrainDOMStringParameters {
-    return (
-        typeof param === "object" &&
-        ((param as ConstrainDOMStringParameters).ideal !== undefined ||
-            (param as ConstrainDOMStringParameters).exact !== undefined)
-    );
-}
-
-// TODO: detect the new webcam and automatically switch on it.
-// It is ok to not unsubscribe to this store because it is a singleton.
-// eslint-disable-next-line svelte/no-ignored-unsubscribe
-cameraListStore.subscribe((devices) => {
-    // Store not initialized yet
-    if (devices === undefined) {
-        return;
-    }
-    // If the selected camera is unplugged, let's remove the constraint on deviceId
-    const constraints = get(videoConstraintStore);
-    const deviceId = constraints.deviceId;
-    if (!deviceId) {
-        return;
-    }
-
-    // If we cannot find the device ID, let's remove it.
-    if (isConstrainDOMStringParameters(deviceId)) {
-        if (!devices.find((device) => device.deviceId === deviceId.exact)) {
-            requestedCameraDeviceIdStore.set(undefined);
-        }
-    }
-});
-
-// It is ok to not unsubscribe to this store because it is a singleton.
-// eslint-disable-next-line svelte/no-ignored-unsubscribe
-microphoneListStore.subscribe((devices) => {
-    // Store not initialized yet
-    if (devices === undefined) {
-        return;
-    }
-
-    // If the selected camera is unplugged, let's remove the constraint on deviceId
-    const constraints = get(audioConstraintStore);
-    if (typeof constraints === "boolean") {
-        return;
-    }
-    const deviceId = constraints.deviceId;
-    if (!deviceId) {
-        return;
-    }
-
-    // If we cannot find the device ID, let's remove it.
-    if (isConstrainDOMStringParameters(deviceId)) {
-        if (!devices.find((device) => device.deviceId === deviceId.exact)) {
-            requestedMicrophoneDeviceIdStore.set(undefined);
-        }
-    }
-});
 
 // It is ok to not unsubscribe to this store because it is a singleton.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
