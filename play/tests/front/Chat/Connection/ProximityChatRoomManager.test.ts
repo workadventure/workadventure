@@ -1,6 +1,8 @@
 import { get, writable } from "svelte/store";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { FilterType } from "@workadventure/messages";
+import { loadLocaleAsync } from "../../../../src/i18n/i18n-util.async";
+import { setLocale } from "../../../../src/i18n/i18n-svelte";
 import {
     DEFAULT_PROXIMITY_SPACE_NAME,
     getProximityAreaRoomDisplayName,
@@ -65,11 +67,16 @@ function createManager(): ProximityChatRoomManager {
     return new ProximityChatRoomManager((spaceName, displayName, kind) => {
         const room = createFakeRoom(spaceName, displayName, kind);
         roomByName.set(spaceName, room);
-        return room as ProximityChatRoom;
+        return room as unknown as ProximityChatRoom;
     });
 }
 
 describe("ProximityChatRoomManager", () => {
+    beforeAll(async () => {
+        await loadLocaleAsync("en-US");
+        setLocale("en-US");
+    });
+
     it("normalizes empty proximity area display names with translated area type labels", () => {
         expect(getProximityAreaRoomDisplayName("  Custom room  ", "meeting")).toBe("Custom room");
         expect(getProximityAreaRoomDisplayName("", "meeting")).toBe("Meeting Room");
