@@ -24,3 +24,10 @@ The list of functions below is **deprecated**. You should not use those but. use
 - Method `WA.ui.registerMenuCommand` parameter `callback` is deprecated. Use [`WA.ui.registerMenuCommand(commandDescriptor: string, options: MenuOptions)`](api-ui.md#add-custom-menu).
 - Method `WA.room.onEnterZone` is deprecated. Use instead [`WA.room.onEnterLayer`](api-room.md#detecting-when-the-user-entersleaves-a-layer).
 - Method `WA.room.onLeaveZone` is deprecated. Use instead [`WA.room.onLeaveLayer`](api-room.md#detecting-when-the-user-entersleaves-a-layer).
+- Method `WA.player.proximityMeeting.onJoin` is deprecated. Use [`WA.player.meetings.onJoin`](api-player.md#detecting-when-the-user-entersleaves-a-meeting).
+- Method `WA.player.proximityMeeting.onLeave` is deprecated. Use `Meeting.onLeave` from [`WA.player.meetings.onJoin`](api-player.md#detecting-when-the-user-entersleaves-a-meeting).
+- Method `WA.player.proximityMeeting.onParticipantJoin` is deprecated. Use [`Meeting.onParticipantJoin`](api-player.md#detecting-when-a-participant-entersleaves-the-current-meeting).
+- Method `WA.player.proximityMeeting.onParticipantLeave` is deprecated. Use [`Meeting.onParticipantLeave`](api-player.md#detecting-when-a-participant-entersleaves-the-current-meeting).
+- Method `WA.player.proximityMeeting.playSound` is deprecated. Use [`Meeting.playSound`](api-player.md#playing-a-sound-to-players-in-the-same-meeting).
+- Method `WA.player.proximityMeeting.startAudioStream` is deprecated. Use [`Meeting.startAudioStream`](api-player.md#streaming-sound-to-players-in-the-same-meeting).
+- Method `WA.player.proximityMeeting.listenToAudioStream` is deprecated. Use [`Meeting.listenToAudioStream`](api-player.md#listening-to-the-microphone-of-the-players-in-the-same-meeting).

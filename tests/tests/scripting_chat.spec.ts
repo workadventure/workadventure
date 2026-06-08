@@ -75,8 +75,8 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
         //await oidcMatrixUserLogin(bob, false);
         // test to send bubble message when entering proximity meeting
         await evaluateScript(bob, async () => {
-            WA.player.proximityMeeting.onJoin().subscribe((user) => {
-                console.log("Entering proximity meeting with", user);
+            WA.player.meetings.onJoin().subscribe((meeting) => {
+                console.log("Entering proximity meeting with", meeting.participants);
                 // Let's wait a bit to be sure the "bob entered the meeting" message is sent first
                 setTimeout(() => {
                     WA.chat.sendChatMessage("Test message sent", {
