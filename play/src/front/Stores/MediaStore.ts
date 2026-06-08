@@ -52,11 +52,14 @@ import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
 import { audioPlaybackStore } from "./AudioPlaybackStore";
 import { browserNotificationStore } from "./BrowserNotificationStore";
 import {
-    canStartPushToTalk,
+    createPushToTalkAvailabilityStore,
+    effectiveMicrophoneState,
     isUnavailableForMicrophone,
+    microphoneSession,
+    requestedMicrophoneState,
     shouldEnableAudioConstraint,
-    shouldShowMicrophoneAsEnabled,
-} from "./PushToTalkStore";
+    temporaryMicrophoneState,
+} from "./MicrophoneSessionStore";
 
 export const inBackgroundSettingsStore = writable<boolean>(false);
 
@@ -94,35 +97,6 @@ function createRequestedCameraState() {
 }
 
 /**
- * A store that contains the microphone state requested by the user (on or off).
- */
-function createRequestedMicrophoneState() {
-    const { subscribe, set } = writable(localUserStore.getRequestedMicrophoneState());
-
-    return {
-        subscribe,
-        enableMicrophone: () => {
-            set(true);
-            localUserStore.setRequestedMicrophoneState(true);
-        },
-        disableMicrophone: () => {
-            set(false);
-            localUserStore.setRequestedMicrophoneState(false);
-        },
-    };
-}
-
-function createTemporaryMicrophoneState() {
-    const { subscribe, set } = writable(false);
-
-    return {
-        subscribe,
-        enableTemporaryMicrophone: () => set(true),
-        disableTemporaryMicrophone: () => set(false),
-    };
-}
-
-/**
  * A store that contains whether the EnableCameraScene is shown or not.
  */
 function createEnableCameraSceneVisibilityStore() {
@@ -136,16 +110,7 @@ function createEnableCameraSceneVisibilityStore() {
 }
 
 export const requestedCameraState = createRequestedCameraState();
-export const requestedMicrophoneState = createRequestedMicrophoneState();
-export const temporaryMicrophoneState = createTemporaryMicrophoneState();
-export const effectiveMicrophoneState = derived(
-    [requestedMicrophoneState, temporaryMicrophoneState],
-    ([$requestedMicrophoneState, $temporaryMicrophoneState]) =>
-        shouldShowMicrophoneAsEnabled({
-            requestedMicrophoneState: $requestedMicrophoneState,
-            temporaryMicrophoneState: $temporaryMicrophoneState,
-        }),
-);
+export { effectiveMicrophoneState, requestedMicrophoneState, temporaryMicrophoneState };
 export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilityStore();
 
 /**
@@ -274,16 +239,12 @@ export const inLivekitStore = writable(false);
 export const isListenerStore = writable(false);
 export const listenerWaitingMediaStore = writable<string | undefined>(undefined);
 
-export const pushToTalkAvailabilityStore = derived(
-    [requestedMicrophoneState, currentPlayerGroupIdStore, inLivekitStore, isSpeakerStore],
-    ([$requestedMicrophoneState, $currentPlayerGroupIdStore, $inLivekitStore, $isSpeakerStore]) =>
-        canStartPushToTalk({
-            requestedMicrophoneState: $requestedMicrophoneState,
-            isInConversationBubble: $currentPlayerGroupIdStore !== undefined,
-            isInLivekit: $inLivekitStore,
-            isSpeaker: $isSpeakerStore,
-        }),
-);
+export const pushToTalkAvailabilityStore = createPushToTalkAvailabilityStore({
+    requestedMicrophoneState,
+    currentPlayerGroupIdStore,
+    inLivekitStore,
+    isSpeakerStore,
+});
 /**
  * When true, the listener has consented to share their camera with the speaker (seeAttendees feature).
  * This store is set to true when the listener accepts the camera sharing popup.
@@ -897,7 +858,7 @@ async function runRawStreamUpdate(
                 requestedCameraState.disableWebcam();
                 cameraAccessIssueStore.set(classified);
                 if (mustRequestNewAudio) {
-                    requestedMicrophoneState.disableMicrophone();
+                    microphoneSession.forceMuteMicrophone();
                     microphoneAccessIssueStore.set(classified);
                 }
             } else if (!constraints.video && !constraints.audio) {
@@ -910,7 +871,7 @@ async function runRawStreamUpdate(
                 console.info("Error. Unable to get microphone and/or camera access.", newConstraints, e);
                 emitCurrentStreamOrError(setIfCurrent, e);
                 if (mustRequestNewAudio) {
-                    requestedMicrophoneState.disableMicrophone();
+                    microphoneSession.forceMuteMicrophone();
                     microphoneAccessIssueStore.set(classifyMediaAccessError(e));
                 }
             }

@@ -17,18 +17,27 @@ import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
-import { pushToTalkAvailabilityStore, temporaryMicrophoneState } from "../../Stores/MediaStore";
-import { shouldIgnorePushToTalkKeyboardEvent } from "../../Stores/PushToTalkStore";
+import { pushToTalkAvailabilityStore } from "../../Stores/MediaStore";
+import {
+    createTemporaryUnmuteReleaseController,
+    microphoneSession,
+    shouldIgnorePushToTalkKeyboardEvent,
+} from "../../Stores/MicrophoneSessionStore";
 import type { Shortcut } from "./UserInputManager";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
     private controlKeyisPressed: boolean = false;
     private pushToTalkSpaceKeyConsumed: boolean = false;
+    private readonly temporaryUnmuteReleaseController: { destroy: () => void };
     public shortcuts: Shortcut[] = [];
 
     constructor(gameScene: GameScene) {
         this.gameScene = gameScene;
+        this.temporaryUnmuteReleaseController = createTemporaryUnmuteReleaseController({
+            pushToTalkAvailabilityStore,
+            stopTemporaryUnmute: () => this.stopPushToTalk(),
+        });
 
         this.initShortcuts();
     }
@@ -303,11 +312,16 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             return false;
         }
 
-        temporaryMicrophoneState.enableTemporaryMicrophone();
+        microphoneSession.startTemporaryUnmute();
         this.pushToTalkSpaceKeyConsumed = true;
         event.preventDefault();
         event.stopPropagation();
         return true;
+    }
+
+    private stopPushToTalk(): void {
+        this.pushToTalkSpaceKeyConsumed = false;
+        microphoneSession.stopTemporaryUnmute();
     }
 
     private openSayPopup(): void {
@@ -341,8 +355,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             // SPACE
             case " ": {
                 if (this.pushToTalkSpaceKeyConsumed) {
-                    this.pushToTalkSpaceKeyConsumed = false;
-                    temporaryMicrophoneState.disableTemporaryMicrophone();
+                    this.stopPushToTalk();
                     event.preventDefault();
                     event.stopPropagation();
                     break;
@@ -383,5 +396,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public removeSpaceEventListener(callback: () => void): void {
         this.gameScene.input.keyboard?.removeListener("keyup-SPACE", callback);
         this.gameScene.getActivatablesManager().enableSelectingByDistance();
+    }
+
+    public destroy(): void {
+        this.temporaryUnmuteReleaseController.destroy();
+        this.stopPushToTalk();
     }
 }
