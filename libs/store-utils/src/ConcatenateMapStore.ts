@@ -32,7 +32,7 @@ export class ConcatenateMapStore<K, V> implements Readable<Map<K, V>> {
                     for (const [key, value] of map) {
                         if (concatenatedMap.has(key)) {
                             console.warn(
-                                `ConcatenateMapStore: key ${key as unknown as string} is already present in the map.`
+                                `ConcatenateMapStore: key ${key as unknown as string} is already present in the map.`,
                             );
                         }
                         concatenatedMap.set(key, value);
@@ -40,7 +40,7 @@ export class ConcatenateMapStore<K, V> implements Readable<Map<K, V>> {
                 }
 
                 return concatenatedMap;
-            })
+            }),
         );
     }
 

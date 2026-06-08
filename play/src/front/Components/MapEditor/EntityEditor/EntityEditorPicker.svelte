@@ -29,16 +29,16 @@
     const entitiesPrefabsVariants = entitiesCollectionsManager.getEntitiesPrefabsVariantStore();
     const MOST_USED_CATEGORY_LIMIT = 12;
 
-    let pickedEntity: EntityPrefab | undefined = undefined;
-    let pickedEntityVariant: EntityVariant | undefined = undefined;
-    let selectedColor: string;
+    let pickedEntity: EntityPrefab | undefined = $state(undefined);
+    let pickedEntityVariant: EntityVariant | undefined = $state(undefined);
+    let selectedColor = $state("");
 
-    let searchTerm = "";
+    let searchTerm = $state("");
 
     const mapEditorSelectedEntityPrefabStoreUnsubscriber = mapEditorSelectedEntityPrefabStore.subscribe(
         (prefab?: EntityPrefab) => {
             pickedEntity = prefab;
-        }
+        },
     );
 
     const entitiesPrefabsVariantStoreUnsubscriber = entitiesCollectionsManager
@@ -46,7 +46,7 @@
         .subscribe((entitiesPrefabsVariants) => {
             if (pickedEntityVariant) {
                 pickedEntityVariant = entitiesPrefabsVariants.find(
-                    (entityPrefabVariant) => pickedEntityVariant?.id === entityPrefabVariant.id
+                    (entityPrefabVariant) => pickedEntityVariant?.id === entityPrefabVariant.id,
                 );
                 pickedEntity = pickedEntityVariant?.defaultPrefab;
             }
@@ -59,14 +59,12 @@
     }
 
     function saveCustomEntityModifications(customEntity: EntityPrefab) {
-        mapEditorModifyCustomEntityEventStore.set({
-            ...customEntity,
-        });
+        mapEditorModifyCustomEntityEventStore.set($state.snapshot(customEntity));
         setIsEditingCustomEntity(false);
     }
 
     function onPickItem(entityPrefab: EntityPrefab) {
-        mapEditorSelectedEntityPrefabStore.set(entityPrefab);
+        mapEditorSelectedEntityPrefabStore.set($state.snapshot(entityPrefab));
     }
 
     function onPickEntityVariant(entityVariant: EntityVariant) {
@@ -78,7 +76,7 @@
     function onColorChange(color: string) {
         selectedColor = color;
         pickedEntity = pickedEntityVariant?.getEntityPrefabsPositions(color)[0];
-        mapEditorSelectedEntityPrefabStore.set(pickedEntity);
+        mapEditorSelectedEntityPrefabStore.set(pickedEntity ? $state.snapshot(pickedEntity) : undefined);
     }
 
     function onSelectedTag(tag: CategoryTag) {
@@ -101,13 +99,13 @@
         mapEditorSelectedEntityPrefabStore.set(undefined);
     }
 
-    let isEditingCustomEntity = false;
+    let isEditingCustomEntity = $state(false);
     function setIsEditingCustomEntity(isEditing: boolean) {
         isEditingCustomEntity = isEditing;
     }
 
     function getForEntitiesPrefabsVariantsWithCategories(
-        entitiesPrefabsVariants: EntityVariant[]
+        entitiesPrefabsVariants: EntityVariant[],
     ): { category: CategoryTag; entitiesPrefabsVariants: EntityVariant[] }[] {
         const entitiesPrefabsVariantsGroupedByTag = entitiesPrefabsVariants.reduce(
             (groupByTag: { [tag: string]: EntityVariant[] }, entityPrefabVariant) => {
@@ -118,11 +116,11 @@
                 });
                 return groupByTag;
             },
-            {}
+            {},
         );
         const customEntitiesPrefabsVariants = {
             Custom: entitiesPrefabsVariants.filter(
-                (entityPrefabVariant) => entityPrefabVariant.defaultPrefab.type === "Custom"
+                (entityPrefabVariant) => entityPrefabVariant.defaultPrefab.type === "Custom",
             ),
         };
         const mostUsedEntitiesPrefabsVariants = getMostUsedEntitiesPrefabsVariants(entitiesPrefabsVariants);
@@ -147,7 +145,7 @@
                 .map(([tag, groupedPrefabsVariants]) => ({
                     category: { kind: "tag", tag } as const,
                     entitiesPrefabsVariants: groupedPrefabsVariants,
-                }))
+                })),
         );
 
         return groupedCategories;
@@ -175,7 +173,7 @@
                 entityPrefabVariant,
                 count: entityPrefabVariant.prefabIds.reduce(
                     (count, prefabId) => count + (usageCountByPrefabId.get(prefabId) ?? 0),
-                    0
+                    0,
                 ),
             }))
             .filter(({ count }) => count > 0)
@@ -193,9 +191,9 @@
         if (category.kind === "special") {
             switch (category.tag) {
                 case "custom":
-                    return $LL.mapEditor.entityEditor.specialTags.customLabel();
+                    return get(LL).mapEditor.entityEditor.specialTags.customLabel();
                 case "most_used":
-                    return $LL.mapEditor.entityEditor.specialTags.mostUsedLabel();
+                    return get(LL).mapEditor.entityEditor.specialTags.mostUsedLabel();
             }
         }
         return category.tag;
@@ -204,7 +202,7 @@
     function getEntitiesPrefabsVariantsFilteredByTag(
         entitiesPrefabsVariants: EntityVariant[],
         tag: SelectableTag,
-        searchTerm: string
+        searchTerm: string,
     ) {
         if (tag === undefined) {
             return entitiesPrefabsVariants.filter(
@@ -213,27 +211,34 @@
                         .join(",")
                         .toLocaleLowerCase()
                         .indexOf(searchTerm.toLocaleLowerCase()) != -1 ||
-                    entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
+                    entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase()),
             );
         }
         if (tag.kind === "special" && tag.tag === "custom") {
             return entitiesPrefabsVariants.filter(
                 (entityPrefabVariant) =>
                     entityPrefabVariant.defaultPrefab.type === "Custom" &&
-                    entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
+                    entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase()),
             );
         }
         if (tag.kind === "special" && tag.tag === "most_used") {
             return getMostUsedEntitiesPrefabsVariants(entitiesPrefabsVariants).filter((entityPrefabVariant) =>
-                entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
+                entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase()),
             );
         }
         return entitiesPrefabsVariants.filter(
             (entityPrefabVariant) =>
                 entityPrefabVariant.defaultPrefab.tags.includes(tag.tag) &&
-                entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase())
+                entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm.toLowerCase()),
         );
     }
+
+    let entitiesPrefabsVariantsWithCategories = $derived(
+        getForEntitiesPrefabsVariantsWithCategories($entitiesPrefabsVariants),
+    );
+    let filteredEntityPrefabVariants = $derived(
+        getEntitiesPrefabsVariantsFilteredByTag($entitiesPrefabsVariants, $selectCategoryStore, searchTerm),
+    );
 
     onDestroy(() => {
         mapEditorSelectedEntityPrefabStoreUnsubscriber();
@@ -252,7 +257,7 @@
                     <button
                         class="p-2 rounded-full flex flex-row items-center hover:bg-white/10"
                         data-testid="clearCurrentSelection"
-                        on:click={displayTagListAndClearCurrentSelection}
+                        onclick={displayTagListAndClearCurrentSelection}
                     >
                         <IconChevronLeft />{$LL.mapEditor.entityEditor.buttons.back()}
                     </button>
@@ -276,10 +281,10 @@
     <div class="flex-1 overflow-auto">
         {#if $selectCategoryStore === undefined && searchTerm === ""}
             <ul class="list-none !p-0 min-w-full">
-                {#each getForEntitiesPrefabsVariantsWithCategories($entitiesPrefabsVariants) as { category, entitiesPrefabsVariants } (`${category.kind}-${category.tag}`)}
+                {#each entitiesPrefabsVariantsWithCategories as { category, entitiesPrefabsVariants } (`${category.kind}-${category.tag}`)}
                     <TagListItem
-                        on:onSelectedTag={(event) => {
-                            onSelectedTag(event.detail);
+                        selectedTag={(category) => {
+                            onSelectedTag(category);
                         }}
                         tag={category}
                         label={getCategoryLabel(category)}
@@ -295,13 +300,13 @@
                     {#if isEditingCustomEntity}
                         <CustomEntityEditionForm
                             customEntity={pickedEntity}
-                            on:closeForm={() => {
+                            closeForm={() => {
                                 setIsEditingCustomEntity(false);
                             }}
-                            on:removeEntity={({ detail: { entityId } }) => {
+                            removeEntity={({ entityId }) => {
                                 removeEntity(entityId);
                             }}
-                            on:applyEntityModifications={({ detail: customModifiedEntity }) =>
+                            applyEntityModifications={(customModifiedEntity) =>
                                 saveCustomEntityModifications(customModifiedEntity)}
                         />
                     {:else}
@@ -327,13 +332,13 @@
                             <button
                                 class="btn btn-secondary"
                                 data-testid="editEntity"
-                                on:click={() => setIsEditingCustomEntity(true)}
+                                onclick={() => setIsEditingCustomEntity(true)}
                                 ><IconPencil font-size={16} />{$LL.mapEditor.entityEditor.buttons.editEntity()}</button
                             >
                         {/if}
                         <div class="absolute top-1 right-1 p-1">
                             <ButtonClose
-                                on:click={clearEntitySelection}
+                                onclick={clearEntitySelection}
                                 dataTestId="clearEntitySelection"
                                 size="sm"
                                 bgColor="bg-white/30"
@@ -343,7 +348,7 @@
                         <!-- <button
                             class="self-start absolute top-1 right-1"
                             data-testid="clearEntitySelection"
-                            on:click={clearEntitySelection}><IconDeselect font-size={20} /></button
+                            onclick={clearEntitySelection}><IconDeselect font-size={20} /></button
                         > -->
                     {/if}
                 </div>
@@ -356,11 +361,7 @@
                         </span>
                     {/if}
                     <EntitiesGrid
-                        entityPrefabVariants={getEntitiesPrefabsVariantsFilteredByTag(
-                            $entitiesPrefabsVariants,
-                            $selectCategoryStore,
-                            searchTerm
-                        )}
+                        entityPrefabVariants={filteredEntityPrefabVariants}
                         onSelectEntity={onPickEntityVariant}
                         currentSelectedEntityId={pickedEntity?.id}
                     />

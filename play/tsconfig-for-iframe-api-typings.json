@@ -2,6 +2,7 @@
     "$schema": "https://json.schemastore.org/tsconfig",
     "extends": "./tsconfig.json",
     "compilerOptions": {
+        "rootDir": "./src",
         "outDir": "./packages/iframe-api-typings/",
         "declaration": true,
         "emitDeclarationOnly": true,

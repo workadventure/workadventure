@@ -16,11 +16,15 @@
     import type { RecordingMenuState, RecordingSpaceRow } from "./RecordingMenuUtils";
     import { IconAlertTriangle } from "@wa-icons";
 
-    export let recordingMenuState: Readable<RecordingMenuState>;
+    interface Props {
+        recordingMenuState: Readable<RecordingMenuState>;
+    }
+
+    let { recordingMenuState }: Props = $props();
 
     const recording = gameManager.currentStartedRoom.recording;
     let closeFloatingUi: (() => void) | undefined = undefined;
-    let triggerElement: HTMLElement | undefined = undefined;
+    let triggerElement: HTMLElement | undefined = $state(undefined);
 
     function closeSpacePicker(): void {
         closeFloatingUi?.();
@@ -51,7 +55,7 @@
             notificationPlayingStore.playNotification(
                 row.action === "start"
                     ? get(LL).recording.notification.startFailedNotification()
-                    : get(LL).recording.notification.stopFailedNotification()
+                    : get(LL).recording.notification.stopFailedNotification(),
             );
         }
     }
@@ -71,18 +75,18 @@
             RecordingSpacePicker,
             {
                 rowsStore: derived(recordingMenuState, ($state) => $state.currentRows),
-                onSelect: (row: RecordingSpaceRow) => {
+                onselect: (row: RecordingSpaceRow) => {
                     applyRecordingAction(row).catch((error) => {
                         console.error(`Failed to apply recording action`, error);
                     });
                 },
-                onClose: closeSpacePicker,
+                onclose: closeSpacePicker,
             },
             {
                 placement: "bottom",
             },
             8,
-            true
+            true,
         );
     }
 
@@ -108,7 +112,7 @@
 </script>
 
 <ActionBarButton
-    on:click={() => {
+    onclick={() => {
         requestRecording().catch((error) => {
             console.error(`Failed to request recording`, error);
         });
@@ -117,12 +121,12 @@
     tooltipTitle={$recordingMenuState.hasOwnRecording
         ? $LL.recording.actionbar.title.stop()
         : $recordingMenuState.hasPendingRequest
-        ? $LL.recording.actionbar.title.inProgress()
-        : $recordingMenuState.hasActionableStart
-        ? $LL.recording.actionbar.title.start()
-        : $recordingMenuState.hasOtherRecording
-        ? $LL.recording.actionbar.title.inProgress()
-        : $LL.recording.actionbar.title.start()}
+          ? $LL.recording.actionbar.title.inProgress()
+          : $recordingMenuState.hasActionableStart
+            ? $LL.recording.actionbar.title.start()
+            : $recordingMenuState.hasOtherRecording
+              ? $LL.recording.actionbar.title.inProgress()
+              : $LL.recording.actionbar.title.start()}
     state={$recordingMenuState.buttonState}
     dataTestId="recordingButton-{$recordingMenuState.actionMode}"
     media="./static/Videos/Record.mp4"
@@ -137,47 +141,49 @@
         />
     {/if}
 
-    <div slot="tooltip" class="text-white relative">
-        <div>
-            {#if !localUserStore.isLogged()}
-                <div class="text-xs italic opacity-80">
-                    {$LL.recording.actionbar.desc.needLogin()}
-                </div>
-            {:else if !$recordingMenuState.hasOwnRecording && recording?.buttonState === "disabled" && recording?.disabledReason}
-                <div class="text-xs italic opacity-80">
-                    {recording.disabledReason}
-                </div>
-            {:else if $recordingMenuState.hasPendingRequest}
-                <div class="text-sm text-white px-2 py-1 flex flex-row gap-2 items-center">
-                    <div class="bg-red-500 rounded-full w-4 h-4 max-w-4 max-h-4 animate-pulse" />
+    {#snippet tooltip()}
+        <div class="text-white relative">
+            <div>
+                {#if !localUserStore.isLogged()}
                     <div class="text-xs italic opacity-80">
-                        {$LL.recording.actionbar.desc.inProgress()}
+                        {$LL.recording.actionbar.desc.needLogin()}
                     </div>
-                </div>
-            {:else if $recordingMenuState.actionableRows.some((row) => row.action === "start")}
-                <div class="text-sm text-whitepx-2 py-1">
-                    <span class="mr-2 -translate-y-1">
-                        <IconAlertTriangle />
-                    </span>
-                    <span class="text-xs italic opacity-80">
-                        {$LL.recording.actionbar.desc.advert()}
-                    </span>
-                </div>
-            {:else if $recordingMenuState.hasOwnRecording}
-                <div class="text-sm text-white flex flex-row items-center gap-2 px-2 py-1">
-                    <div class="bg-red-500 rounded-full min-w-4 min-h-4 animate-pulse" />
+                {:else if !$recordingMenuState.hasOwnRecording && recording?.buttonState === "disabled" && recording?.disabledReason}
                     <div class="text-xs italic opacity-80">
-                        {$LL.recording.actionbar.desc.yourRecordInProgress()}
+                        {recording.disabledReason}
                     </div>
-                </div>
-            {:else}
-                <div class="text-sm text-white px-2 py-1 flex flex-row gap-2 items-center">
-                    <div class="bg-red-500 rounded-full w-4 h-4 max-w-4 max-h-4 animate-pulse" />
-                    <div class="text-xs italic opacity-80">
-                        {$LL.recording.actionbar.desc.inProgress()}
+                {:else if $recordingMenuState.hasPendingRequest}
+                    <div class="text-sm text-white px-2 py-1 flex flex-row gap-2 items-center">
+                        <div class="bg-red-500 rounded-full w-4 h-4 max-w-4 max-h-4 animate-pulse"></div>
+                        <div class="text-xs italic opacity-80">
+                            {$LL.recording.actionbar.desc.inProgress()}
+                        </div>
                     </div>
-                </div>
-            {/if}
+                {:else if $recordingMenuState.actionableRows.some((row) => row.action === "start")}
+                    <div class="text-sm text-whitepx-2 py-1">
+                        <span class="mr-2 -translate-y-1">
+                            <IconAlertTriangle />
+                        </span>
+                        <span class="text-xs italic opacity-80">
+                            {$LL.recording.actionbar.desc.advert()}
+                        </span>
+                    </div>
+                {:else if $recordingMenuState.hasOwnRecording}
+                    <div class="text-sm text-white flex flex-row items-center gap-2 px-2 py-1">
+                        <div class="bg-red-500 rounded-full min-w-4 min-h-4 animate-pulse"></div>
+                        <div class="text-xs italic opacity-80">
+                            {$LL.recording.actionbar.desc.yourRecordInProgress()}
+                        </div>
+                    </div>
+                {:else}
+                    <div class="text-sm text-white px-2 py-1 flex flex-row gap-2 items-center">
+                        <div class="bg-red-500 rounded-full w-4 h-4 max-w-4 max-h-4 animate-pulse"></div>
+                        <div class="text-xs italic opacity-80">
+                            {$LL.recording.actionbar.desc.inProgress()}
+                        </div>
+                    </div>
+                {/if}
+            </div>
         </div>
-    </div>
+    {/snippet}
 </ActionBarButton>

@@ -4,9 +4,13 @@
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { IconUserCircle } from "@wa-icons";
 
-    export let first: boolean | undefined = undefined;
-    export let last: boolean | undefined = undefined;
-    export let classList: string | undefined = undefined;
+    interface Props {
+        first?: boolean;
+        last?: boolean;
+        classList?: string;
+    }
+
+    let { first = undefined, last = undefined, classList = undefined }: Props = $props();
 
     function goToLogin() {
         analyticsClient.login();
@@ -18,7 +22,7 @@
     label={$LL.actionbar.login()}
     state="active"
     hideIconInActionBar={true}
-    on:click={goToLogin}
+    onclick={goToLogin}
     {first}
     {last}
     {classList}

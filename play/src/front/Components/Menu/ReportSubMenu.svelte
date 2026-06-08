@@ -9,6 +9,6 @@
 
 <div style="height: calc(100% - 40px);">
     <section class="h-full">
-        <iframe title="contact" src={getReportIssuesUrl()} class="border-0 w-full h-full" />
+        <iframe title="contact" src={getReportIssuesUrl()} class="border-0 w-full h-full"></iframe>
     </section>
 </div>

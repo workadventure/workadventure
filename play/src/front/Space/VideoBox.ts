@@ -64,7 +64,7 @@ export class VideoBox {
         public priority: number,
         displayOrder: number,
         // If true, the video box is a megaphone space
-        public readonly isMegaphoneSpace = false
+        public readonly isMegaphoneSpace = false,
     ) {
         this._streamable = writable(undefined);
         this._streamables = writable([]);
@@ -79,7 +79,7 @@ export class VideoBox {
     public static fromRemoteSpaceUser(
         spaceUser: SpaceUserExtended,
         isScreenSharing: boolean,
-        isMegaphoneSpace: boolean
+        isMegaphoneSpace: boolean,
     ): VideoBox {
         return new VideoBox(
             isScreenSharing ? "screensharing_" + spaceUser.spaceUserId : spaceUser.spaceUserId,
@@ -87,7 +87,7 @@ export class VideoBox {
             undefined,
             LAST_VIDEO_BOX_PRIORITY,
             9999,
-            isMegaphoneSpace
+            isMegaphoneSpace,
         );
     }
 
@@ -158,7 +158,7 @@ export class VideoBox {
 
     private handleActiveStreamableStatusChange(
         streamableEntry: InternalVideoBoxStreamableEntry,
-        status: PeerStatus
+        status: PeerStatus,
     ): void {
         if (this.activeStreamableEntry?.id !== streamableEntry.id) {
             return;
@@ -166,10 +166,10 @@ export class VideoBox {
 
         if (this.pendingStreamableEntry && (status === "closed" || status === "error")) {
             console.warn(
-                `Active streamable ${streamableEntry.streamable.uniqueId} ended before pending streamable became ready`
+                `Active streamable ${streamableEntry.streamable.uniqueId} ended before pending streamable became ready`,
             );
             Sentry.captureMessage(
-                `Active streamable ${streamableEntry.streamable.uniqueId} ended before pending streamable became ready`
+                `Active streamable ${streamableEntry.streamable.uniqueId} ended before pending streamable became ready`,
             );
             this.promotePendingStreamable();
             return;
@@ -180,7 +180,7 @@ export class VideoBox {
 
     private handlePendingStreamableStatusChange(
         streamableEntry: InternalVideoBoxStreamableEntry,
-        status: PeerStatus
+        status: PeerStatus,
     ): void {
         if (this.pendingStreamableEntry?.id !== streamableEntry.id) {
             return;
@@ -219,7 +219,7 @@ export class VideoBox {
 
     private setPendingStreamableEntry(
         streamableEntry: InternalVideoBoxStreamableEntry | undefined,
-        closePreviousStreamable = true
+        closePreviousStreamable = true,
     ): void {
         const previousPendingStreamableEntry = this.pendingStreamableEntry;
 
@@ -305,7 +305,7 @@ export class VideoBox {
         this.pendingStreamableStatusUnsubscriber = null;
 
         const streamables = [this.activeStreamableEntry?.streamable, this.pendingStreamableEntry?.streamable].filter(
-            (streamable): streamable is Streamable => streamable !== undefined
+            (streamable): streamable is Streamable => streamable !== undefined,
         );
 
         for (const streamable of streamables) {

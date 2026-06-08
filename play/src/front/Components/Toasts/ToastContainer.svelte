@@ -1,13 +1,26 @@
 <script lang="ts">
+    import type { Snippet } from "svelte";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { toastStore } from "../../Stores/ToastStore";
 
-    const SLOTS = $$props.$$slots;
-    export let extraClasses = "";
-    export let duration: number | undefined = undefined;
-    export let toastUuid: string | undefined = undefined;
-    export let theme: "success" | "error" | "secondary" = "success";
+    interface Props {
+        extraClasses: string;
+        duration?: number;
+        toastUuid?: string;
+        theme: "success" | "error" | "secondary";
+        children?: Snippet;
+        buttons?: Snippet;
+    }
+
+    let {
+        extraClasses = "",
+        duration = undefined,
+        toastUuid = undefined,
+        theme = "success",
+        children,
+        buttons,
+    }: Props = $props();
 
     let timeout: ReturnType<typeof setTimeout>;
 
@@ -35,7 +48,7 @@
         class:bg-danger={theme === "error"}
         class:bg-success={theme === "success"}
         class:bg-secondary={theme === "secondary"}
-    />
+    ></div>
     <div
         class="bg-contrast/50 flex flex-col backdrop-blur-md text-white min-w-60 min-h-12 rounded-lg overflow-hidden transition-all responsive z-20 {extraClasses}"
         transition:fly={{ x: 900, duration: 500 }}
@@ -49,20 +62,20 @@
                     class:error={theme === "error"}
                     class:secondary={theme === "secondary"}
                     style="animation-duration: {duration}ms;"
-                />
+                ></div>
             </div>
         {/if}
 
         <div class="flex items-center p-4 pointer-events-auto justify-center grow">
             <div class="text-center leading-6 responsive-message">
-                <slot />
+                {@render children?.()}
             </div>
         </div>
-        {#if SLOTS.buttons}
+        {#if buttons}
             <div
                 class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast/60 pointer-events-auto"
             >
-                <slot name="buttons" />
+                {@render buttons()}
             </div>
         {/if}
     </div>

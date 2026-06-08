@@ -1,18 +1,22 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
-    import { openModal } from "svelte-modals";
     import LL from "../../../../../i18n/i18n-svelte";
     import type { ChatMessageContent } from "../../../Connection/ChatConnection";
     import ChatImagePreviewModal from "../../ChatImagePreviewModal.svelte";
+    import { modals } from "@wa-modals";
 
-    export let content: Readable<ChatMessageContent>;
+    interface Props {
+        content: Readable<ChatMessageContent>;
+    }
 
-    $: previewUrl = $content.url ?? $content.thumbnailUrl;
-    $: displayUrl = $content.thumbnailUrl ?? $content.url;
-    $: canDisplayImage = displayUrl !== undefined;
+    let { content }: Props = $props();
+
+    let previewUrl = $derived($content.url ?? $content.thumbnailUrl);
+    let displayUrl = $derived($content.thumbnailUrl ?? $content.url);
+    let canDisplayImage = $derived(displayUrl !== undefined);
 
     function openImagePreview(url: string, alt: string | undefined) {
-        openModal(ChatImagePreviewModal, { url, alt });
+        modals.open(ChatImagePreviewModal, { url, alt });
     }
 </script>
 
@@ -28,7 +32,9 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="hover:bg-white/10 rounded-sm p-1"
-                on:click|stopPropagation
+                onclick={(event) => {
+                    event.stopPropagation();
+                }}
                 title={$LL.chat.imagePreview.openInNewTab()}
             >
                 <svg
@@ -52,14 +58,14 @@
         {/if}
     </div>
     {#if canDisplayImage}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
             class="block"
             role="button"
             tabindex="0"
-            on:click={() => openImagePreview(previewUrl ?? "", $content.body)}
-            on:keydown={(e) => {
+            onclick={() => openImagePreview(previewUrl ?? "", $content.body)}
+            onkeydown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     openImagePreview(previewUrl ?? "", $content.body);

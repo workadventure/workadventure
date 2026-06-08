@@ -1,5 +1,4 @@
 import { sendToWorkadventure } from "../IframeApiContribution";
-import type { ClosePopupEvent } from "../../Events/ClosePopupEvent";
 
 export class Popup {
     constructor(private id: number) {}
@@ -12,7 +11,7 @@ export class Popup {
             type: "closePopup",
             data: {
                 popupId: this.id,
-            } as ClosePopupEvent,
+            },
         });
     }
 }

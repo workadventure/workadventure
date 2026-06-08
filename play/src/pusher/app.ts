@@ -74,7 +74,7 @@ class App {
                     "sentry-trace",
                 ],
                 credentials: true,
-            })
+            }),
         );
 
         //this.app.set_error_handler(globalErrorHandler);
@@ -144,7 +144,7 @@ class App {
             express.static(path + "/assets", {
                 ...staticOptions,
                 maxAge: "1y",
-            })
+            }),
         );
 
         this.app.use(
@@ -152,7 +152,7 @@ class App {
             express.static(path + "/resources", {
                 ...staticOptions,
                 maxAge: "1d",
-            })
+            }),
         );
 
         this.app.use(
@@ -160,7 +160,7 @@ class App {
             express.static(path + "/static", {
                 ...staticOptions,
                 maxAge: "1d",
-            })
+            }),
         );
 
         this.app.use(
@@ -168,14 +168,14 @@ class App {
             express.static(path + "/collections", {
                 ...staticOptions,
                 maxAge: "1d",
-            })
+            }),
         );
 
         this.app.use(
             express.static(path, {
                 ...staticOptions,
                 maxAge: "1h",
-            })
+            }),
         );
     }
 

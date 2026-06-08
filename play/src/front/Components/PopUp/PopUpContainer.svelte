@@ -1,28 +1,42 @@
 <script lang="ts">
-    const SLOTS = $$props.$$slots;
-    export let extraClasses = "";
-    export let fullContent = false;
-    export let reduceOnSmallScreen = false;
-    /** When false, the buttons wrapper is hidden even if slot "buttons" has content. Default true. */
-    export let showButtons = true;
-    export let onclick = () => {};
+    import type { Snippet } from "svelte";
+
+    interface Props {
+        extraClasses?: string;
+        fullContent?: boolean;
+        reduceOnSmallScreen?: boolean;
+        showButtons?: boolean;
+        children?: Snippet;
+        buttons?: Snippet;
+        onclick?: () => void;
+    }
+
+    let {
+        extraClasses = "",
+        fullContent = false,
+        reduceOnSmallScreen = false,
+        showButtons = true,
+        children,
+        buttons,
+        onclick,
+    }: Props = $props();
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
     class="popup-container bg-contrast/80 flex flex-col backdrop-blur-md text-white min-w-60 min-h-20 rounded-lg overflow-hidden transition-all animation responsive z-20 {extraClasses}"
     class:responsive={reduceOnSmallScreen}
-    on:click={onclick}
+    {onclick}
 >
     <div class="flex items-center p-4 px-10 pointer-events-auto justify-center grow">
         <div class="text-center leading-6 responsive-message {fullContent ? 'w-full' : ''}">
-            <slot />
+            {@render children?.()}
         </div>
     </div>
-    {#if showButtons && SLOTS.buttons}
+    {#if showButtons && buttons}
         <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
-            <slot name="buttons" />
+            {@render buttons()}
         </div>
     {/if}
 </div>

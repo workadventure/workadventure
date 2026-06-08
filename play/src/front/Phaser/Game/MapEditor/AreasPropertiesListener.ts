@@ -107,6 +107,14 @@ interface MegaphoneZoneState {
     waitingLink: string | undefined;
 }
 
+type AreaDataPropertyUpdate = {
+    [Type in AreaDataProperty["type"]]: {
+        type: Type;
+        oldProperty: Extract<AreaDataProperty, { type: Type }>;
+        newProperty: Extract<AreaDataProperty, { type: Type }>;
+    };
+}[AreaDataProperty["type"]];
+
 export class AreasPropertiesListener {
     private scene: GameScene;
 
@@ -158,8 +166,8 @@ export class AreasPropertiesListener {
                     list.map((entry) =>
                         entry.areaId === change.areaId && entry.propertyId === change.propertyId
                             ? { ...entry, lockState: Boolean(change.value) }
-                            : entry
-                    )
+                            : entry,
+                    ),
                 );
             });
         });
@@ -184,7 +192,7 @@ export class AreasPropertiesListener {
 
             // Check if area has lockableAreaPropertyData and add to list
             const lockableProperty = areaData.properties.find(
-                (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+                (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData",
             );
             if (lockableProperty) {
                 const manager = get(areaPropertyVariablesManagerStore);
@@ -212,7 +220,7 @@ export class AreasPropertiesListener {
     public onUpdateAreasHandler(
         area: AreaData,
         oldProperties: AreaDataProperties | undefined,
-        newProperties: AreaDataProperties | undefined
+        newProperties: AreaDataProperties | undefined,
     ): void {
         const propertiesTreated = new Set<string>();
 
@@ -222,10 +230,10 @@ export class AreasPropertiesListener {
 
         // Check if area has lockableAreaPropertyData and update store if player is in this area
         const lockableProperty = newProperties.find(
-            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData",
         );
         const oldLockableProperty = oldProperties?.find(
-            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData",
         );
 
         // Compare allowedTags arrays to detect permission changes
@@ -267,7 +275,7 @@ export class AreasPropertiesListener {
             }
         } else if (!lockableProperty && oldLockableProperty) {
             currentPlayerLockableAreasStore.update((list) =>
-                list.filter((e) => !(e.areaId === area.id && e.propertyId === oldLockableProperty.id))
+                list.filter((e) => !(e.areaId === area.id && e.propertyId === oldLockableProperty.id)),
             );
         } else if (allowedTagsChanged && lockableProperty && playerInArea) {
             // Tags changed: trigger store update so UI re-evaluates canLockEntry (button disabled vs enabled)
@@ -320,11 +328,11 @@ export class AreasPropertiesListener {
 
             // Check if leaving area has lockableAreaPropertyData and remove only this area from list
             const lockableProperty = areaData.properties.find(
-                (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+                (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData",
             );
             if (lockableProperty) {
                 currentPlayerLockableAreasStore.update((list) =>
-                    list.filter((e) => !(e.areaId === areaData.id && e.propertyId === lockableProperty.id))
+                    list.filter((e) => !(e.areaId === areaData.id && e.propertyId === lockableProperty.id)),
                 );
 
                 const areasManager = this.scene.getGameMapFrontWrapper().areasManager;
@@ -367,7 +375,7 @@ export class AreasPropertiesListener {
                     areaData.y,
                     areaData.width,
                     areaData.height,
-                    property
+                    property,
                 );
                 break;
             }
@@ -437,7 +445,7 @@ export class AreasPropertiesListener {
             }
             case "openFile": {
                 this.handleOpenFileOnEnter(property, abortController.signal).catch((error) =>
-                    console.error("Error opening File:", error)
+                    console.error("Error opening File:", error),
                 );
                 break;
             }
@@ -448,10 +456,15 @@ export class AreasPropertiesListener {
         }
     }
 
-    private updatePropertyFilter(oldProperty: AreaDataProperty, newProperty: AreaDataProperty, area: AreaData) {
-        if (oldProperty.type !== newProperty.type) {
+    private updatePropertyFilter(previousProperty: AreaDataProperty, nextProperty: AreaDataProperty, area: AreaData) {
+        if (previousProperty.type !== nextProperty.type) {
             throw new Error("Cannot update a property with a different type");
         }
+        const { type, oldProperty, newProperty } = {
+            type: previousProperty.type,
+            oldProperty: previousProperty,
+            newProperty: nextProperty,
+        } as AreaDataPropertyUpdate;
 
         const oldAbortController = this.abortControllers.get(oldProperty.id);
         if (oldAbortController) {
@@ -461,29 +474,25 @@ export class AreasPropertiesListener {
         const newAbortController = new AbortController();
         this.abortControllers.set(newProperty.id, newAbortController);
 
-        switch (oldProperty.type) {
+        switch (type) {
             case "openWebsite": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleOpenWebsitePropertiesOnLeave(oldProperty);
                 this.handleOpenWebsitePropertyOnEnter(newProperty);
                 break;
             }
             case "playAudio": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handlePlayAudioPropertyOnUpdate(newProperty);
                 break;
             }
             case "focusable": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleFocusablePropertiesOnEnter(area.x, area.y, area.width, area.height, newProperty);
                 break;
             }
             case "highlight": {
-                this.handleHighlightPropertyOnEnter(area, newProperty as HighlightPropertyData);
+                this.handleHighlightPropertyOnEnter(area, newProperty);
                 break;
             }
             case "jitsiRoomProperty": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleJitsiRoomPropertyOnLeave(oldProperty);
                 this.handleJitsiRoomPropertyOnEnter(newProperty);
                 break;
@@ -491,7 +500,6 @@ export class AreasPropertiesListener {
             case "livekitRoomProperty": {
                 this.handleLivekitRoomPropertyOnLeave(oldProperty)
                     .then(() => {
-                        newProperty = newProperty as typeof oldProperty;
                         return this.handleLivekitRoomPropertyOnEnter(newProperty, newAbortController.signal);
                     })
                     .catch((e) => {
@@ -504,7 +512,6 @@ export class AreasPropertiesListener {
                 break;
             }
             case "speakerMegaphone": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleSpeakerMegaphonePropertyOnLeave(oldProperty).catch((e) => {
                     console.error("Error while leaving space");
                     Sentry.captureException(new Error("Error while leaving space"));
@@ -516,7 +523,6 @@ export class AreasPropertiesListener {
                 break;
             }
             case "listenerMegaphone": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleListenerMegaphonePropertyOnLeave(oldProperty).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
@@ -531,7 +537,6 @@ export class AreasPropertiesListener {
                 break;
             }
             case "exit": {
-                newProperty = newProperty as typeof oldProperty;
                 let url = `${newProperty.url}`;
                 if (newProperty.areaName && newProperty.areaName !== "") {
                     url = `${newProperty.url}#${newProperty.areaName}`;
@@ -540,28 +545,24 @@ export class AreasPropertiesListener {
                 break;
             }
             case "personalAreaPropertyData": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handlePersonalAreaPropertyOnLeave(oldProperty);
                 this.handlePersonalAreaPropertyOnEnter(newProperty, area);
                 break;
             }
             case "matrixRoomPropertyData": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleMatrixRoomAreaOnLeave(oldProperty);
                 this.handleMatrixRoomAreaOnEnter(newProperty);
                 break;
             }
             case "tooltipPropertyData": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleTooltipPropertyOnLeave(oldProperty);
                 this.handleTooltipPropertyOnEnter(newProperty);
                 break;
             }
             case "openFile": {
-                newProperty = newProperty as typeof oldProperty;
                 this.handleOpenFileOnLeave(oldProperty);
                 this.handleOpenFileOnEnter(newProperty, newAbortController.signal).catch((error) =>
-                    console.error("Error opening file:", error)
+                    console.error("Error opening file:", error),
                 );
                 break;
             }
@@ -692,7 +693,7 @@ export class AreasPropertiesListener {
                         },
                         userInputManager: this.scene.userInputManager,
                     },
-                    actionId
+                    actionId,
                 );
 
                 // Create callback and play text message
@@ -754,7 +755,7 @@ export class AreasPropertiesListener {
                     },
                     userInputManager: this.scene.userInputManager,
                 },
-                actionId
+                actionId,
             );
 
             // Create callback and play text message
@@ -795,7 +796,7 @@ export class AreasPropertiesListener {
                 property.policy,
                 property.width,
                 property.closable,
-                property.hideUrl
+                property.hideUrl,
             );
 
             coWebsiteOpen.coWebsite = coWebsite;
@@ -815,7 +816,7 @@ export class AreasPropertiesListener {
         y: number,
         width: number,
         height: number,
-        property: FocusablePropertyData
+        property: FocusablePropertyData,
     ): void {
         const zoomMargin = property.zoom_margin ? Math.max(0, property.zoom_margin) : undefined;
         this.scene.getCameraManager().enterFocusMode(
@@ -825,7 +826,7 @@ export class AreasPropertiesListener {
                 width,
                 height,
             },
-            zoomMargin
+            zoomMargin,
         );
     }
 
@@ -863,7 +864,7 @@ export class AreasPropertiesListener {
         // Rules, if there is a listener zone property attached with another Speaker zone, We could imagine highlight two zone, with the speakers and attendees
         // Check if there is "listenerMegaphone"
         const speakerZone = areaData.properties.find(
-            (property) => property.type === "listenerMegaphone" || property.type === "speakerMegaphone"
+            (property) => property.type === "listenerMegaphone" || property.type === "speakerMegaphone",
         );
         if (speakerZone == undefined) return;
 
@@ -891,7 +892,7 @@ export class AreasPropertiesListener {
                 .forEach((area) => {
                     if (
                         area.properties.find(
-                            (c) => c.type === "listenerMegaphone" && c.speakerZoneName == areaData.id
+                            (c) => c.type === "listenerMegaphone" && c.speakerZoneName == areaData.id,
                         ) == undefined
                     )
                         return;
@@ -957,7 +958,7 @@ export class AreasPropertiesListener {
                 jwt,
                 property.jitsiRoomConfig,
                 undefined,
-                property.jitsiRoomAdminTag ?? null
+                property.jitsiRoomAdminTag ?? null,
             );
 
             coWebsites.add(coWebsite);
@@ -996,7 +997,7 @@ export class AreasPropertiesListener {
                     },
                     userInputManager: this.scene.userInputManager,
                 },
-                "jitsi"
+                "jitsi",
             );
             //TODO: bode below is old "new design" popups before the new design. Choose i we keep it.
             // Create callback and play text message
@@ -1030,7 +1031,7 @@ export class AreasPropertiesListener {
 
     private async handleLivekitRoomPropertyOnEnter(
         property: LivekitRoomPropertyData,
-        abortSignal: AbortSignal
+        abortSignal: AbortSignal,
     ): Promise<void> {
         inLivekitStore.set(true);
 
@@ -1079,7 +1080,7 @@ export class AreasPropertiesListener {
             true,
             FilterType.ALL_USERS,
             property.livekitRoomConfig?.disableChat ?? false,
-            abortSignal
+            abortSignal,
         );
 
         analyticsClient.enteredMeetingRoom(roomName, this.scene.roomUrl);
@@ -1117,7 +1118,7 @@ export class AreasPropertiesListener {
     private handlePersonalAreaPropertyOnEnter(
         property: PersonalAreaPropertyData,
         areaData: AreaData,
-        area?: Area
+        area?: Area,
     ): void {
         if (property.ownerId !== null) {
             canRequestVisitCardsStore.set(true);
@@ -1174,7 +1175,7 @@ export class AreasPropertiesListener {
                 width: areaData.width,
                 height: areaData.height,
             },
-            { x: userPosition.x, y: userPosition.y }
+            { x: userPosition.x, y: userPosition.y },
         );
 
         return !isOwnerInsidePersonalArea;
@@ -1402,7 +1403,7 @@ export class AreasPropertiesListener {
     private openCoWebsiteFunction(
         property: OpenWebsitePropertyData | OpenFilePropertyData,
         coWebsiteOpen: OpenCoWebsite,
-        actionId: string
+        actionId: string,
     ): void {
         // Check URl and get the correct one
         let urlStr = property.link ?? "";
@@ -1426,7 +1427,7 @@ export class AreasPropertiesListener {
                       property.name ?? getImageCoWebsiteTitle(url),
                       property.width,
                       property.closable,
-                      property.hideUrl
+                      property.hideUrl,
                   )
                 : new SimpleCoWebsite(
                       url,
@@ -1434,7 +1435,7 @@ export class AreasPropertiesListener {
                       property.policy,
                       property.width,
                       property.closable,
-                      property.hideUrl
+                      property.hideUrl,
                   );
 
         coWebsiteOpen.coWebsite = coWebsite;
@@ -1477,7 +1478,7 @@ export class AreasPropertiesListener {
 
     private async handleSpeakerMegaphonePropertyOnEnter(
         property: SpeakerMegaphonePropertyData,
-        abortSignal: AbortSignal
+        abortSignal: AbortSignal,
     ): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl).trim();
@@ -1523,7 +1524,7 @@ export class AreasPropertiesListener {
                     property.seeAttendees
                         ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK
                         : FilterType.LIVE_STREAMING_USERS,
-                    !property.chatEnabled
+                    !property.chatEnabled,
                 );
 
                 space.startStreaming();
@@ -1598,12 +1599,12 @@ export class AreasPropertiesListener {
 
     private async handleListenerMegaphonePropertyOnEnter(
         property: ListenerMegaphonePropertyData,
-        abortSignal: AbortSignal
+        abortSignal: AbortSignal,
     ): Promise<void> {
         if (property.speakerZoneName !== undefined) {
             const megaphoneAreaInfo = getSpeakerMegaphoneAreaInfo(
                 this.scene.getGameMap().getWamFile()?.getGameMapAreas().getAreas(),
-                property.speakerZoneName
+                property.speakerZoneName,
             );
 
             if (!megaphoneAreaInfo) {
@@ -1657,7 +1658,7 @@ export class AreasPropertiesListener {
                     ["cameraState", "microphoneState", "screenSharingState"],
                     true,
                     seeAttendees ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK : FilterType.LIVE_STREAMING_USERS,
-                    !property.chatEnabled
+                    !property.chatEnabled,
                 );
                 currentLiveStreamingSpaceStore.set(space);
                 listenerWaitingMediaStore.set(property.waitingLink);
@@ -1689,7 +1690,7 @@ export class AreasPropertiesListener {
         if (property.speakerZoneName !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
                 this.scene.getGameMap().getWamFile()?.getGameMapAreas().getAreas(),
-                property.speakerZoneName
+                property.speakerZoneName,
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
@@ -1787,7 +1788,7 @@ export class AreasPropertiesListener {
 
     private async handleOpenFileOnEnter(
         initialProperty: OpenFilePropertyData,
-        abortSignal: AbortSignal
+        abortSignal: AbortSignal,
     ): Promise<void> {
         if (!initialProperty.link) {
             return;
@@ -1832,7 +1833,7 @@ export class AreasPropertiesListener {
                         },
                         userInputManager: this.scene.userInputManager,
                     },
-                    actionId
+                    actionId,
                 );
             } else {
                 scriptUtils.openTab(url.toString());
@@ -1869,7 +1870,7 @@ export class AreasPropertiesListener {
                     },
                     userInputManager: this.scene.userInputManager,
                 },
-                actionId
+                actionId,
             );
         } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
             let cowebsiteUrl = url.toString() ?? "";
@@ -1885,7 +1886,7 @@ export class AreasPropertiesListener {
                       property.name ?? getImageCoWebsiteTitle(imageUrl),
                       property.width,
                       property.closable,
-                      property.hideUrl
+                      property.hideUrl,
                   )
                 : new SimpleCoWebsite(
                       imageUrl,
@@ -1893,7 +1894,7 @@ export class AreasPropertiesListener {
                       property.policy,
                       property.width,
                       property.closable,
-                      property.hideUrl
+                      property.hideUrl,
                   );
 
             coWebsiteOpen.coWebsite = coWebsite;

@@ -15,7 +15,7 @@ export class SpeechBubble {
             "max-w-xs",
             "break-words",
             "say-bubble",
-            "text-black"
+            "text-black",
         );
 
         // const bubblePadding = 10;

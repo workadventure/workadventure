@@ -1,7 +1,15 @@
 <script lang="ts">
     import { LL } from "../../../../i18n/i18n-svelte";
 
-    export let mode: "settings" | "background";
+    interface Props {
+        mode?: "settings" | "background";
+    }
+
+    let { mode = $bindable<"settings" | "background">() }: Props = $props();
+
+    if (mode === undefined) {
+        mode = "settings";
+    }
 </script>
 
 <div class="flex flex-row gap-2 px-1">
@@ -11,7 +19,7 @@
                 class="btn btn-sm btn-ghost btn-light justify-center w-full rounded text-nowrap {mode === 'settings'
                     ? '!bg-white/10'
                     : ''}"
-                on:click={() => {
+                onclick={() => {
                     mode = "settings";
                 }}
             >
@@ -25,7 +33,7 @@
                 class="btn btn-sm btn-ghost btn-light justify-center w-full rounded text-nowrap {mode === 'background'
                     ? '!bg-white/10'
                     : ''}"
-                on:click={() => {
+                onclick={() => {
                     mode = "background";
                 }}
             >

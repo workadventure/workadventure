@@ -1,13 +1,17 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { onDestroy, afterUpdate } from "svelte";
+    import { onDestroy } from "svelte";
     import { soundPlayingStore } from "../../Stores/SoundPlayingStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { IconMusic, IconPause, IconPauseFilled, IconPlay, IconPlayFilled } from "@wa-icons";
 
-    export let url: string;
-    let audio: HTMLAudioElement;
-    let muted = false;
+    interface Props {
+        url: string;
+    }
+
+    let { url }: Props = $props();
+    let audio: HTMLAudioElement | undefined = $state();
+    let muted = $state(false);
     let timeOutToEnd: ReturnType<typeof setTimeout>;
 
     function soundEnded() {
@@ -24,10 +28,12 @@
 
     function unmute() {
         if (timeOutToEnd) clearTimeout(timeOutToEnd);
+        if (!audio) return;
         audio.muted = false;
         muted = false;
     }
     function mute() {
+        if (!audio) return;
         audio.muted = true;
         muted = true;
         timeOutToEnd = setTimeout(() => {
@@ -35,7 +41,10 @@
         }, 5000);
     }
 
-    afterUpdate(() => {
+    $effect(() => {
+        if (!audio) {
+            return;
+        }
         audio.play().catch((e) => console.error(e));
     });
 
@@ -50,13 +59,13 @@
 >
     <IconMusic class="top-0 bottom-0 h-8 w-8 m-2" />
     <p>{$LL.audio.message()}</p>
-    <audio bind:this={audio} src={url} on:ended={soundEnded}>
+    <audio bind:this={audio} src={url} onended={soundEnded}>
         <track kind="captions" />
     </audio>
     <!-- Button to stop the audio -->
     <button
         class="group/audio-playing absolute bg-contrast/80 hover:bg-contrast backdrop-blur hover:backdrop-blur-0 p-3 w-14 -left-16 rounded-lg top-0 bottom-0 flex justify-center items-center cursor-pointer"
-        on:click={toggleMuteUnmuteAudio}
+        onclick={toggleMuteUnmuteAudio}
     >
         {#if muted == false}
             <IconPause class="block group-hover/audio-playing:hidden h-full w-full" />

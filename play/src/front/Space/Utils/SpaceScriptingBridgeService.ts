@@ -23,7 +23,7 @@ export class SpaceScriptingBridgeService {
                 space = spaceRegistry.get(data.spaceName);
                 if (space.filterType !== this.getFilterType(data.filterType)) {
                     throw new Error(
-                        `Cannot join space ${data.spaceName} with filter type ${data.filterType}, expected ${space.filterType}`
+                        `Cannot join space ${data.spaceName} with filter type ${data.filterType}, expected ${space.filterType}`,
                     );
                 }
                 const counterObj = this.spaceJoinedCounter.get(data.spaceName);
@@ -37,7 +37,7 @@ export class SpaceScriptingBridgeService {
                     data.spaceName,
                     this.getFilterType(data.filterType),
                     data.propertiesToSync,
-                    abortController.signal
+                    abortController.signal,
                 );
                 this.spaceJoinedCounter.set(data.spaceName, {
                     counter: 1,

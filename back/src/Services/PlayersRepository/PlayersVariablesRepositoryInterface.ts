@@ -31,6 +31,6 @@ export interface PlayersVariablesRepositoryInterface {
         value: string,
         isPublic: boolean,
         expire?: number,
-        maxExpire?: number
+        maxExpire?: number,
     ): Promise<void>;
 }

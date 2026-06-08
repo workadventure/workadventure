@@ -1,23 +1,27 @@
 <script lang="ts">
     import type { MatrixClient, SecretStorage } from "matrix-js-sdk";
-    import { closeModal, onBeforeClose, openModal } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import resetKeyStorageConfirmationModal from "../../../Components/Menu/ResetKeyStorageConfirmationModal.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { MatrixSecurity } from "./MatrixSecurity";
     import { IconEdit, IconKey, IconLoader, IconRestore } from "@wa-icons";
+    import { modals, onBeforeClose } from "@wa-modals";
 
-    export let isOpen: boolean;
-    export let keyInfo: SecretStorage.SecretStorageKeyDescription;
-    export let matrixClient: MatrixClient;
-    export let onClose: (key: Uint8Array | null) => void;
-    let accessSecretStorageMethod: "passphrase" | "recoveryKey" = "passphrase";
-    let recoveryKeyInput = "";
-    let passphraseInput = "";
-    let error = false;
+    interface Props {
+        isOpen: boolean;
+        keyInfo: SecretStorage.SecretStorageKeyDescription;
+        matrixClient: MatrixClient;
+        onClose: (key: Uint8Array | null) => void;
+    }
+
+    let { isOpen, keyInfo, matrixClient, onClose }: Props = $props();
+    let accessSecretStorageMethod: "passphrase" | "recoveryKey" = $state("passphrase");
+    let recoveryKeyInput = $state("");
+    let passphraseInput = $state("");
+    let error = $state(false);
     let hasCancelAccessSecretStorage = true;
-    let isCheckingPassphrase = false;
+    let isCheckingPassphrase = $state(false);
 
     function changeAccessSecretStorageMethod() {
         if (accessSecretStorageMethod === "passphrase") {
@@ -47,7 +51,7 @@
 
             hasCancelAccessSecretStorage = false;
             onClose(key);
-            closeModal();
+            modals.close();
         } catch (e) {
             console.debug("Unable to verify key", e);
             error = true;
@@ -59,12 +63,12 @@
 
     function cancelAccessSecretStorage() {
         onClose(null);
-        closeModal();
+        modals.close();
     }
 
     function switchToRestoreConfirmationModal() {
-        closeModal();
-        openModal(resetKeyStorageConfirmationModal);
+        modals.close();
+        modals.open(resetKeyStorageConfirmationModal);
     }
 
     onBeforeClose(() => {
@@ -82,84 +86,98 @@
         chatInputFocusStore.set(false);
     }
 
-    $: confirmInputDisabled =
+    let confirmInputDisabled = $derived(
         accessSecretStorageMethod === "passphrase"
             ? passphraseInput.trim().length === 0
-            : recoveryKeyInput.trim().length === 0;
+            : recoveryKeyInput.trim().length === 0,
+    );
 
     const changeAccessSecretStorageMethodButtonClass = "self-end text-blue-500";
 </script>
 
 <Popup {isOpen}>
-    <h1 slot="title">{$LL.chat.e2ee.accessSecretStorage.title()}</h1>
-    <div slot="content" class="flex flex-col">
-        <p>{$LL.chat.e2ee.accessSecretStorage.description()}</p>
-        {#if accessSecretStorageMethod === "passphrase"}
-            <label for="passphrase"> <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.passphrase()}</label>
-            <input
-                id="passphrase"
-                type="password"
-                autocomplete="new-password"
-                data-testid="passphraseInput"
-                class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
-                placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.passphrase()}`}
-                bind:value={passphraseInput}
-                on:keydown={(key) => {
-                    if (key.key === "Enter") {
-                        checkAndSubmitRecoveryOrPassphraseIfValid().catch((error) => console.error(error));
-                    }
-                }}
-                on:focusin={focusChatInput}
-                on:focusout={unfocusChatInput}
-            />
-            <div class="flex flex-row justify-between">
-                <button class="self-start text-blue-500" on:click={switchToRestoreConfirmationModal}>
-                    <IconRestore />
-                    {$LL.menu.chat.resetKeyStorageUpButtonLabel()}
-                </button>
-                <button on:click={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}>
-                    <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.buttons.useRecoveryKey()}</button
-                >
-            </div>
-        {:else}
-            <label for="recoveryKey"> <IconKey /> {$LL.chat.e2ee.accessSecretStorage.recoveryKey()}</label>
-            <input
-                id="recoveryKey"
-                placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.recoveryKey()}`}
-                type="password"
-                autocomplete="new-password"
-                data-testid="recoveryKeyInput"
-                class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
-                bind:value={recoveryKeyInput}
-                on:focusin={focusChatInput}
-                on:focusout={unfocusChatInput}
-            />
-            <div class="flex flex-row justify-between">
-                <button class="self-start text-blue-500" on:click={switchToRestoreConfirmationModal}>
-                    <IconRestore />
-                    {$LL.menu.chat.resetKeyStorageUpButtonLabel()}
-                </button>
-                <button on:click={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}>
-                    <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.buttons.usePassphrase()}</button
-                >
-            </div>
-        {/if}
+    {#snippet title()}
+        <h1>{$LL.chat.e2ee.accessSecretStorage.title()}</h1>
+    {/snippet}
+    {#snippet content()}
+        <div class="flex flex-col">
+            <p>{$LL.chat.e2ee.accessSecretStorage.description()}</p>
+            {#if accessSecretStorageMethod === "passphrase"}
+                <label for="passphrase"> <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.passphrase()}</label>
+                <input
+                    id="passphrase"
+                    type="password"
+                    autocomplete="new-password"
+                    data-testid="passphraseInput"
+                    class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
+                    placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.passphrase()}`}
+                    bind:value={passphraseInput}
+                    onkeydown={(key) => {
+                        if (key.key === "Enter") {
+                            checkAndSubmitRecoveryOrPassphraseIfValid().catch((error) => console.error(error));
+                        }
+                    }}
+                    onfocusin={focusChatInput}
+                    onfocusout={unfocusChatInput}
+                />
+                <div class="flex flex-row justify-between">
+                    <button class="self-start text-blue-500" onclick={switchToRestoreConfirmationModal}>
+                        <IconRestore />
+                        {$LL.menu.chat.resetKeyStorageUpButtonLabel()}
+                    </button>
+                    <button
+                        onclick={changeAccessSecretStorageMethod}
+                        class={changeAccessSecretStorageMethodButtonClass}
+                    >
+                        <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.buttons.useRecoveryKey()}</button
+                    >
+                </div>
+            {:else}
+                <label for="recoveryKey">
+                    <IconKey />
+                    {$LL.chat.e2ee.accessSecretStorage.recoveryKey()}
+                </label>
+                <input
+                    id="recoveryKey"
+                    placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.recoveryKey()}`}
+                    type="password"
+                    autocomplete="new-password"
+                    data-testid="recoveryKeyInput"
+                    class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
+                    bind:value={recoveryKeyInput}
+                    onfocusin={focusChatInput}
+                    onfocusout={unfocusChatInput}
+                />
+                <div class="flex flex-row justify-between">
+                    <button class="self-start text-blue-500" onclick={switchToRestoreConfirmationModal}>
+                        <IconRestore />
+                        {$LL.menu.chat.resetKeyStorageUpButtonLabel()}
+                    </button>
+                    <button
+                        onclick={changeAccessSecretStorageMethod}
+                        class={changeAccessSecretStorageMethodButtonClass}
+                    >
+                        <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.buttons.usePassphrase()}</button
+                    >
+                </div>
+            {/if}
 
-        {#if error}
-            <p class="text-red-500">
-                {`${accessSecretStorageMethod === "passphrase" ? "Passphrase" : "RecoveryKey"}  is wrong !`}
-            </p>
-        {/if}
-    </div>
-    <svelte:fragment slot="action">
-        <button class="btn flex-1 justify-center hover:bg-white/10" on:click={cancelAccessSecretStorage}
-            >{$LL.chat.e2ee.accessSecretStorage.buttons.cancel()}</button
-        >
+            {#if error}
+                <p class="text-red-500">
+                    {`${accessSecretStorageMethod === "passphrase" ? "Passphrase" : "RecoveryKey"}  is wrong !`}
+                </p>
+            {/if}
+        </div>
+    {/snippet}
+    {#snippet action()}
+        <button class="btn flex-1 justify-center hover:bg-white/10" onclick={cancelAccessSecretStorage}>
+            {$LL.chat.e2ee.accessSecretStorage.buttons.cancel()}
+        </button>
         <button
             disabled={confirmInputDisabled || isCheckingPassphrase}
             class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
             data-testid="confirmAccessSecretStorageButton"
-            on:click={() => checkAndSubmitRecoveryOrPassphraseIfValid()}
+            onclick={() => checkAndSubmitRecoveryOrPassphraseIfValid()}
         >
             {#if isCheckingPassphrase}
                 <IconLoader font-size="1.25rem" />
@@ -167,5 +185,5 @@
                 {$LL.chat.e2ee.accessSecretStorage.buttons.confirm()}
             {/if}
         </button>
-    </svelte:fragment>
+    {/snippet}
 </Popup>

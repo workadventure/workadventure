@@ -1,6 +1,6 @@
 import type { Writable } from "svelte/store";
 import { writable } from "svelte/store";
-import type CancelablePromise from "cancelable-promise";
+import type { CancelablePromise } from "cancelable-promise";
 import { PositionMessage_Direction } from "@workadventure/messages";
 import type { PictureStore } from "../../Stores/PictureStore";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
@@ -103,7 +103,7 @@ export class Companion extends Container {
             const speed = 256;
             this.getBody().setVelocity(
                 Math.min(Math.abs(xDist * 2.5), speed) * xDir,
-                Math.min(Math.abs(yDist * 2.5), speed) * yDir
+                Math.min(Math.abs(yDist * 2.5), speed) * yDir,
             );
 
             if (Math.abs(xDist) > Math.abs(yDist)) {

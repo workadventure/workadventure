@@ -26,7 +26,7 @@ function createBrowserPermissionStateStore(name: "camera" | "microphone") {
             try {
                 permissionStatus = await navigator.permissions.query({
                     name,
-                } as PermissionDescriptor);
+                });
 
                 if (!active) {
                     return;
@@ -70,5 +70,5 @@ export const mediaPermissionDeniedStore = derived(
     {
         camera: false,
         microphone: false,
-    }
+    },
 );

@@ -24,7 +24,7 @@ export class PlayerVariables {
         private roomUrl: string,
         private worldUrl: string | undefined,
         private repository: PlayersVariablesRepositoryInterface,
-        private isLogged: boolean
+        private isLogged: boolean,
     ) {
         this.roomKey = `pr_${subject}_|@|_${roomUrl}`;
         if (worldUrl) {
@@ -71,7 +71,7 @@ export class PlayerVariables {
         value: string,
         isPublic: boolean,
         ttl: number | undefined,
-        persist: boolean
+        persist: boolean,
     ): Promise<void> {
         ttl = this.restrictTtlAccordingToLimits(ttl);
 
@@ -113,7 +113,7 @@ export class PlayerVariables {
         value: string,
         isPublic: boolean,
         ttl: number | undefined,
-        persist: boolean
+        persist: boolean,
     ): Promise<void> {
         if (this.worldKey === undefined || this.worldVariables === undefined) {
             // We are not part of a world. We shall fallback to the room.

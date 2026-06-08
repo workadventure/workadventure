@@ -1,11 +1,13 @@
 <script lang="ts">
-    import { closeModal, Modals } from "svelte-modals";
+    import { modals, Modals } from "@wa-modals";
 </script>
 
 <Modals>
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div slot="backdrop" class="backdrop" on:click={closeModal} />
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    {#snippet backdrop()}
+        <div class="backdrop" onclick={() => modals.close()}></div>
+    {/snippet}
 </Modals>
 
 <style>

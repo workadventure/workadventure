@@ -20,7 +20,11 @@ export enum SizeAlteringSquareEvent {
 export class SizeAlteringSquare extends Phaser.GameObjects.Rectangle {
     private selected: boolean;
 
-    constructor(scene: Phaser.Scene, pos: { x: number; y: number }, private cursor: string) {
+    constructor(
+        scene: Phaser.Scene,
+        pos: { x: number; y: number },
+        private cursor: string,
+    ) {
         super(scene, pos.x, pos.y, 7, 7, 0xffffff);
 
         this.selected = false;

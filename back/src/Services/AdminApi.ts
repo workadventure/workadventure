@@ -61,7 +61,7 @@ class AdminApi {
 
             console.error(
                 "Invalid answer received from the admin for the /api/map endpoint. Errors:",
-                mapDetailData.error.issues
+                mapDetailData.error.issues,
             );
             Sentry.captureException(mapDetailData.error.issues);
             console.error(roomRedirect.error.issues);
@@ -80,11 +80,11 @@ class AdminApi {
                 Sentry.captureException(
                     `An error occurred during call to /api/map endpoint. HTTP Status: ${err.status ?? "none"}. ${
                         err.message
-                    }`
+                    }`,
                 );
                 console.error(
                     `An error occurred during call to /api/map endpoint. HTTP Status: ${err.status ?? "none"}.`,
-                    err
+                    err,
                 );
             } else {
                 Sentry.captureException(`An error occurred during call to /api/map endpoint.`);

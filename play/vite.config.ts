@@ -33,13 +33,13 @@ export default defineConfig(({ mode }) => {
                     main: path.resolve(process.cwd(), "index.html"),
                     pipLayoutTest: path.resolve(process.cwd(), "pip-layout-test.html"),
                 },
-                plugins: [mediapipe_workaround()],
                 // external: ["@mediapipe/tasks-vision"],
                 //plugins: [inject({ Buffer: ["buffer/", "Buffer"] })],
             },
             assetsInclude: ["**/*.tflite", "**/*.wasm"],
         },
         plugins: [
+            mediapipe_workaround(),
             nodePolyfills({
                 include: ["events", "buffer"],
                 globals: {
@@ -68,8 +68,10 @@ export default defineConfig(({ mode }) => {
         ],
         resolve: {
             alias: {
+                phaser: fileURLToPath(new URL("./node_modules/phaser/dist/phaser.esm.js", import.meta.url)),
                 events: "events",
                 "@wa-icons": fileURLToPath(new URL("./src/front/Components/Icons.ts", import.meta.url)),
+                "@wa-modals": fileURLToPath(new URL("./src/front/Components/Modal/modalManager.ts", import.meta.url)),
             },
         },
         test: {
@@ -84,7 +86,7 @@ export default defineConfig(({ mode }) => {
         },
         optimizeDeps: {
             include: ["olm"],
-            exclude: ["svelte-modals"],
+            exclude: ["svelte-modals", "@mediapipe/selfie_segmentation"],
             esbuildOptions: {
                 define: {
                     global: "globalThis",
@@ -115,7 +117,7 @@ export default defineConfig(({ mode }) => {
                     },
                     finalize: true,
                 },
-            })
+            }),
         );
     } else {
         console.info("Sentry plugin disabled");
@@ -123,15 +125,16 @@ export default defineConfig(({ mode }) => {
     return config;
 });
 
-// use to fix the build issue with mediapipe ==> https://github.com/tensorflow/tfjs/issues/7165
+// use to fix the module export issue with mediapipe ==> https://github.com/tensorflow/tfjs/issues/7165
 // TODO: remove this when we migrate to mediapipe/tasks-vision
 function mediapipe_workaround() {
     return {
         name: "mediapipe_workaround",
         load(id: string) {
-            if (path.basename(id) === "selfie_segmentation.js") {
-                let code = fs.readFileSync(id, "utf-8");
-                code += "exports.SelfieSegmentation = SelfieSegmentation;";
+            const filePath = id.split("?")[0];
+            if (path.basename(filePath) === "selfie_segmentation.js" && fs.existsSync(filePath)) {
+                let code = fs.readFileSync(filePath, "utf-8");
+                code += "\nexport const SelfieSegmentation = globalThis.SelfieSegmentation;\n";
                 return { code };
             } else {
                 return null;

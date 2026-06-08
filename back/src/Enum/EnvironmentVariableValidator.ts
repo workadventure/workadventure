@@ -27,7 +27,7 @@ export const EnvironmentVariables = z.object({
     CPU_OVERHEAT_THRESHOLD: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 80))
         .describe(
-            "CPU usage threshold (in %) that triggers dropping intermediate movement packets to ease to CPU load. Defaults to 80"
+            "CPU usage threshold (in %) that triggers dropping intermediate movement packets to ease to CPU load. Defaults to 80",
         ),
     JITSI_URL: z
         .string()
@@ -73,20 +73,20 @@ export const EnvironmentVariables = z.object({
     STORE_VARIABLES_FOR_LOCAL_MAPS: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe(
-            "If true, store player variables even for local maps (not recommended for production). Defaults to false"
+            "If true, store player variables even for local maps (not recommended for production). Defaults to false",
         ),
     PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional().describe("The token to access the Prometheus metrics."),
     PROMETHEUS_PORT: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 0))
         .describe(
-            "The port to access the Prometheus metrics. If not set, the default port is used AND an authorization token is required."
+            "The port to access the Prometheus metrics. If not set, the default port is used AND an authorization token is required.",
         ),
     MAP_STORAGE_URL: z
         .string()
         .optional()
         .transform(emptyStringToUndefined)
         .describe(
-            'The URL to the gRPC endpoint of the map-storage server (for instance: "map-storage.example.com:50053")'
+            'The URL to the gRPC endpoint of the map-storage server (for instance: "map-storage.example.com:50053")',
         ),
     PUBLIC_MAP_STORAGE_URL: z
         .string()
@@ -114,14 +114,14 @@ Note that anonymous players don't have any TTL limit because their data is store
     ENABLE_TELEMETRY: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe(
-            "By default, WorkAdventure will send telemetry usage once a day. This data contains the version of WorkAdventure used and very rough usage (max number of users...). The statistics collected through telemetry can provide developers valuable insights into WorkAdventure versions that are actually used. No personal user data is sent. Please keep this setting to true unless your WorkAdventure installation is 'secret'."
+            "By default, WorkAdventure will send telemetry usage once a day. This data contains the version of WorkAdventure used and very rough usage (max number of users...). The statistics collected through telemetry can provide developers valuable insights into WorkAdventure versions that are actually used. No personal user data is sent. Please keep this setting to true unless your WorkAdventure installation is 'secret'.",
         ),
     SECURITY_EMAIL: z
         .string()
         .email()
         .optional()
         .describe(
-            'This email address will be notified if your WorkAdventure version contains a known security flaw. ENABLE_TELEMETRY must be set to "true" for this.'
+            'This email address will be notified if your WorkAdventure version contains a known security flaw. ENABLE_TELEMETRY must be set to "true" for this.',
         ),
     TELEMETRY_URL: z
         .string()

@@ -39,12 +39,15 @@
                 <div
                     class="absolute w-full h-full z-0 {$bannerStore.bgColor ? '' : 'bg-contrast/50'}"
                     style={`background-color:${$bannerStore.bgColor};`}
-                />
+                ></div>
                 {#if $bannerStore.closable}
                     <button
                         class="btn btn-ghost relative z-10 ml-4 !py-1"
                         style={`color: ${$bannerStore.bgColor};background:${$bannerStore.textColor};`}
-                        on:click|preventDefault={closeBanner}
+                        onclick={(event) => {
+                            event.preventDefault();
+                            closeBanner();
+                        }}
                     >
                         {$LL.actionbar.understand()}
                     </button>

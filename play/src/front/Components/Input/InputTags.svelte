@@ -1,57 +1,74 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    import type { Snippet } from "svelte";
     import Select from "svelte-select";
     import LL from "../../../i18n/i18n-svelte";
     import type { InputTagOption } from "./InputTagOption";
     import InfoButton from "./InfoButton.svelte";
-    const dispatch = createEventDispatcher<{
-        change: InputTagOption[] | undefined;
-    }>();
 
-    export let optional = false;
-    export let label: string | undefined = undefined;
-    export let value: InputTagOption[] | undefined;
-    export let options: InputTagOption[] = [];
-    export let placeholder: string | undefined = undefined;
-    export let onFocus = () => {};
-    export let onBlur = () => {};
-    export let handleChange = () => {};
-    export let testId: string | undefined = undefined;
-    export let queryOptions: undefined | ((filterText: string) => Promise<{ value: string; label: string }[]>) =
-        undefined;
-
-    let filterText = "";
-    const SLOTS = $$slots;
-
-    function handleFilter() {
-        if (value?.find((i) => i.label === filterText)) return;
-        if (options?.find((i) => i.label === filterText)) return;
-        if (filterText.trim().length > 0) {
-            const prev = options.filter((i) => !i.created);
-            options = [...prev, { value: filterText, label: filterText, created: true }];
-        }
+    interface Props {
+        optional?: boolean;
+        label?: string;
+        value?: InputTagOption[];
+        options?: InputTagOption[];
+        placeholder?: string;
+        onfocus?: () => void;
+        onblur?: () => void;
+        onchange?: (value?: InputTagOption[]) => void;
+        testId?: string;
+        queryOptions?: (filterText: string) => Promise<{ value: string; label: string }[]>;
+        info?: Snippet;
     }
 
-    function _handleChange() {
-        options = options.map((i) => {
-            delete i.created;
-            return { ...i };
-        });
-        dispatch("change", value);
+    let {
+        optional = false,
+        label,
+        value = $bindable<InputTagOption[] | undefined>(),
+        options = [],
+        placeholder,
+        onfocus,
+        onblur,
+        onchange,
+        testId,
+        queryOptions,
+        info,
+    }: Props = $props();
+
+    let filterText = $state("");
+
+    const visibleOptions = $derived.by(() => {
+        const label = filterText.trim();
+
+        if (label.length === 0) {
+            return [];
+        }
+
+        const alreadySelected = value?.some((item) => item.label === label) ?? false;
+        const alreadyAvailable = options.some((item) => item.label === label);
+
+        if (alreadySelected || alreadyAvailable) {
+            return options;
+        }
+
+        return [...options, { value: label, label, created: true }];
+    });
+
+    function _handleChange(event: CustomEvent<InputTagOption[] | undefined>) {
+        value = event.detail;
+        onchange?.(value);
     }
 </script>
 
 <div class="flex flex-col text-dark-purple">
-    <div class="input-label" class:hidden={!label && !SLOTS.info && !optional}>
+    <div class="input-label" class:hidden={!label && !info && !optional}>
         {#if label}
             <label for="selector" class="text-white relative grow">
                 {label}
             </label>
         {/if}
 
-        {#if SLOTS.info}
+        {#if info}
             <InfoButton>
-                <slot name="info" />
+                {@render info()}
             </InfoButton>
         {/if}
 
@@ -62,18 +79,17 @@
         {/if}
     </div>
     <Select
-        on:filter={handleFilter}
         bind:filterText
         loadOptions={queryOptions}
         on:change={_handleChange}
-        on:input={handleChange}
-        on:select={handleChange}
-        items={filterText.trim().length === 0 ? [] : options}
+        on:input={() => onchange?.(value)}
+        on:select={() => onchange?.(value)}
+        items={visibleOptions}
         bind:value
         multiple={true}
         placeholder={placeholder ?? "Select rights"}
-        on:focus={onFocus}
-        on:blur={onBlur}
+        on:focus={() => onfocus?.()}
+        on:blur={() => onblur?.()}
         showChevron={true}
         listAutoWidth={false}
         --clear-select-color="hsl(var(--danger-500))"
@@ -102,7 +118,7 @@
         class="!bg-contrast !rounded-md !border-contrast-400 !outline-none !w-full"
     >
         <div slot="item" let:item>
-            {item.created ? $LL.notification.addNewTag({ tag: filterText }) : item.label}
+            {item.created ? $LL.notification.addNewTag({ tag: item.label }) : item.label}
         </div>
     </Select>
 </div>

@@ -1,17 +1,20 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    import type { Snippet } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import InputTags from "./InputTags.svelte";
     import type { InputTagOption } from "./InputTagOption";
 
-    const dispatch = createEventDispatcher<{
-        change: InputTagOption[] | undefined;
-    }>();
+    interface Props {
+        value?: InputTagOption[];
+        info?: Snippet | string;
+        onchange?: (value?: InputTagOption[]) => void;
+        [key: string]: unknown;
+    }
 
-    export let value: InputTagOption[] | undefined;
+    let { value = $bindable(), info: infoContent, onchange, ...rest }: Props = $props();
 
     function _handleChange() {
-        dispatch("change", value);
+        onchange?.(value);
     }
 
     async function searchRoomTags(filterText: string): Promise<{ value: string; label: string }[]> {
@@ -43,8 +46,14 @@
 
 <div class="flex flex-col w-full">
     <div>
-        <InputTags bind:value queryOptions={searchRoomTags} on:change={_handleChange} {...$$props}>
-            <span slot="info"> <slot name="info" /> </span>
+        <InputTags bind:value queryOptions={searchRoomTags} onchange={_handleChange} {...rest}>
+            {#snippet info()}
+                {#if typeof infoContent === "function"}
+                    {@render infoContent()}
+                {:else if infoContent}
+                    <span>{infoContent}</span>
+                {/if}
+            {/snippet}
         </InputTags>
     </div>
 </div>

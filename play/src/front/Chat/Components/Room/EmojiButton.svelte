@@ -1,15 +1,15 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
     import { IconMoodSmile } from "@wa-icons";
 
-    const dispatch = createEventDispatcher<{
-        change: string;
-    }>();
+    interface Props {
+        messageRef?: HTMLDivElement;
+        onchange?: (emoji: string) => void;
+    }
 
-    export let messageRef: HTMLDivElement | undefined;
+    let { messageRef, onchange }: Props = $props();
 
     let trigger: HTMLButtonElement;
 
@@ -25,7 +25,7 @@
                 LazyEmote,
                 {
                     onEmojiClick: (event: EmojiClickEvent) => {
-                        dispatch("change", event.detail.unicode ?? "");
+                        onchange?.(event.detail.unicode ?? "");
                         closeEmojiPicker?.();
                         closeEmojiPicker = undefined;
                     },
@@ -38,7 +38,7 @@
                     placement: "top-end",
                 },
                 12,
-                true
+                true,
             );
         }
     }
@@ -48,7 +48,7 @@
     data-testid="openEmojiPickerButton"
     class="p-0 m-0 text-white/50 hover:text-white transition-all flex"
     bind:this={trigger}
-    on:click={togglePicker}
+    onclick={togglePicker}
 >
     <IconMoodSmile font-size={16} />
 </button>

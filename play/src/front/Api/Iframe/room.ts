@@ -45,14 +45,14 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
     callbacks = [
         apiCallback({
             callback: (payloadData: EnterLeaveEvent) => {
-                enterStreams.get(payloadData.name)?.next();
+                enterStreams.get(payloadData.name)?.next(payloadData);
             },
             type: "enterEvent",
         }),
         apiCallback({
             type: "leaveEvent",
             callback: (payloadData) => {
-                leaveStreams.get(payloadData.name)?.next();
+                leaveStreams.get(payloadData.name)?.next(payloadData);
             },
         }),
     ];
@@ -193,7 +193,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
     get mapURL(): string {
         if (mapURL === undefined) {
             throw new Error(
-                "mapURL is not initialized yet. You should call WA.room.mapURL within a WA.onInit callback."
+                "mapURL is not initialized yet. You should call WA.room.mapURL within a WA.onInit callback.",
             );
         }
         return mapURL;
@@ -206,7 +206,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
     get hashParameters(): Record<string, string> {
         if (hashParameters === undefined) {
             throw new Error(
-                "hashParameters is not initialized yet. You should call WA.room.hashParameters within a WA.onInit callback."
+                "hashParameters is not initialized yet. You should call WA.room.hashParameters within a WA.onInit callback.",
             );
         }
         return hashParameters;

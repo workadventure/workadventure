@@ -212,7 +212,7 @@ export function selectVideoPreset(
     displayHeight: number,
     displayWidth: number,
     isScreenShare: boolean,
-    quality: VideoQualitySetting
+    quality: VideoQualitySetting,
 ): {
     bitrate: number;
     fps: number;
@@ -223,7 +223,7 @@ export function selectVideoPreset(
             displayHeight,
             Object.values(screenSharePresets),
             screenShareMaxPreset,
-            quality
+            quality,
         );
     } else {
         return selectPreset(displayWidth, displayHeight, Object.values(videoPresets), videoMaxPreset, quality);
@@ -235,7 +235,7 @@ function selectPreset(
     height: number,
     presets: Preset[],
     maxPreset: Preset,
-    quality: VideoQualitySetting
+    quality: VideoQualitySetting,
 ): {
     bitrate: number;
     fps: number;

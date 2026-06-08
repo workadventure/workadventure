@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { v4 as uuidv4 } from "uuid";
     import type { OpenFilePropertyData } from "@workadventure/map-editor";
     import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT } from "@workadventure/map-editor";
@@ -14,30 +13,29 @@
     import { gameSceneStore } from "../../../../Stores/GameSceneStore";
     import { IconCloudUpload } from "@wa-icons";
 
-    export let property: OpenFilePropertyData;
+    interface Props {
+        property: OpenFilePropertyData;
+        onchange?: () => void;
+        ondeleteFile?: () => void;
+    }
 
-    let selectedFile: File | undefined = undefined;
-    let files: FileList | undefined = undefined;
-    let dropZoneRef: HTMLDivElement;
-    let errorOnFile: string | undefined;
+    let { property = $bindable(), onchange, ondeleteFile }: Props = $props();
+
+    let files: FileList | undefined = $state(undefined);
+    let dropZoneRef: HTMLDivElement | undefined = $state();
+    let errorOnFile: string | undefined = $state();
     let fileToUpload: UploadFileMessage | undefined = undefined;
     const BYTES_TO_MB = 1024 * 1024;
 
-    const dispatch = createEventDispatcher<{
-        change: string | null | undefined;
-        deleteFile: undefined;
-    }>();
-
     const filesUploadFormat = FILE_UPLOAD_SUPPORTED_FORMATS_FRONT.split(",").map(
-        (format) => format.trim().split("/")[1]
+        (format) => format.trim().split("/")[1],
     );
 
-    $: {
+    $effect(() => {
         if (files) {
             const file = files.item(0);
             if (file && isASupportedFormat(file.type)) {
-                selectedFile = file;
-                handleFileChange().catch((error) => {
+                handleFileChange(file).catch((error) => {
                     console.error("Error in handleFileChange:", error);
                     Sentry.captureException(error);
                 });
@@ -46,26 +44,23 @@
                 errorOnFile = $LL.mapEditor.properties.openFile.uploadFile.errorOnFileFormat();
             }
         }
-    }
+    });
 
-    async function handleFileChange(): Promise<void> {
-        if (!selectedFile) {
-            return;
-        }
-        if (selectedFile.size > GRPC_MAX_MESSAGE_SIZE) {
+    async function handleFileChange(file: File): Promise<void> {
+        if (file.size > GRPC_MAX_MESSAGE_SIZE) {
             errorOnFile = $LL.mapEditor.properties.openFile.uploadFile.errorOnFileSize({
                 size: GRPC_MAX_MESSAGE_SIZE / BYTES_TO_MB,
             });
             return;
         }
 
-        const fileBuffer = await selectedFile.arrayBuffer();
+        const fileBuffer = await file.arrayBuffer();
         const fileAsUint8Array = new Uint8Array(fileBuffer);
         const generatedId = uuidv4();
         fileToUpload = {
             id: generatedId,
             file: fileAsUint8Array,
-            name: selectedFile.name,
+            name: file.name,
             propertyId: property.id,
         };
 
@@ -80,15 +75,15 @@
         const uploadFileCommand = new UploadFileFrontCommand(fileToUpload);
         uploadFileCommand.emitEvent(roomConnection);
 
-        const lastDot = selectedFile.name.lastIndexOf(".");
-        const fileName = selectedFile.name.slice(0, lastDot);
-        const fileExt = selectedFile.name.slice(lastDot + 1);
+        const lastDot = file.name.lastIndexOf(".");
+        const fileName = file.name.slice(0, lastDot);
+        const fileExt = file.name.slice(lastDot + 1);
 
         const fileUrl = new URL(`private/files/${fileName}-${property.id}.${fileExt}`, mapStorageUrl).toString();
 
-        property.name = selectedFile.name;
+        property.name = file.name;
         property.link = fileUrl;
-        dispatch("change");
+        onchange?.();
     }
 
     function isASupportedFormat(format: string): boolean {
@@ -111,7 +106,7 @@
             }
         }
 
-        dropZoneRef.classList.remove("border-cyan-400");
+        dropZoneRef?.classList.remove("border-cyan-400");
     }
 </script>
 
@@ -119,11 +114,21 @@
     {#if !property.link}
         <p class="m-0">{$LL.mapEditor.properties.openFile.uploadFile.title()}</p>
         <p class="opacity-50">{$LL.mapEditor.properties.openFile.uploadFile.description()}</p>
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
-            on:drop|preventDefault|stopPropagation={dropHandler}
-            on:dragover|preventDefault={() => dropZoneRef.classList.add("border-cyan-400")}
-            on:dragleave|preventDefault={() => dropZoneRef.classList.remove("border-cyan-400")}
+            ondrop={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                dropHandler(event);
+            }}
+            ondragover={(event) => {
+                event.preventDefault();
+                dropZoneRef?.classList.add("border-cyan-400");
+            }}
+            ondragleave={(event) => {
+                event.preventDefault();
+                dropZoneRef?.classList.remove("border-cyan-400");
+            }}
             bind:this={dropZoneRef}
             class="hover:cursor-pointer h-32 flex flex-col border border-dashed rounded-md items-center justify-center bg-white bg-opacity-10"
         >
@@ -154,10 +159,10 @@
                 hoverColor="bg-white/20"
                 textColor="text-white"
                 size="xs"
-                on:click={() => {
-                    selectedFile = undefined;
-                    dispatch("deleteFile");
-                    dispatch("change");
+                onclick={() => {
+                    files = undefined;
+                    ondeleteFile?.();
+                    onchange?.();
                 }}
             />
         </div>

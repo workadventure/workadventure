@@ -47,7 +47,7 @@ export class PathfindingManager {
     public async findPathFromGameCoordinates(
         start: { x: number; y: number },
         end: { x: number; y: number },
-        tryFindingNearestAvailable = false
+        tryFindingNearestAvailable = false,
     ): Promise<{ x: number; y: number }[]> {
         const startTile = this.mapPixelsToTileUnits(this.clampToMap(start));
         const endTile = this.mapPixelsToTileUnits(this.clampToMap(end));
@@ -66,7 +66,7 @@ export class PathfindingManager {
                     end.x,
                     end.y,
                     this.tileDimensions.width,
-                    this.tileDimensions.height
+                    this.tileDimensions.height,
                 );
             }
         }
@@ -100,7 +100,7 @@ export class PathfindingManager {
     private async findPath(
         start: { x: number; y: number },
         end: { x: number; y: number },
-        tryFindingNearestAvailable = false
+        tryFindingNearestAvailable = false,
     ): Promise<{ path: { x: number; y: number }[]; isExactTarget: boolean }> {
         let isExactTarget = true;
         let endPoints: { x: number; y: number }[] = [end];
@@ -207,7 +207,7 @@ export class PathfindingManager {
      */
     private async getPath(
         start: { x: number; y: number },
-        end: { x: number; y: number }
+        end: { x: number; y: number },
     ): Promise<{ x: number; y: number }[]> {
         // Cancel any ongoing pathfinding operation
         this.cancelCurrentPathfinding();

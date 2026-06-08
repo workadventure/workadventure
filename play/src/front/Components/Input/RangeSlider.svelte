@@ -1,25 +1,53 @@
 <script lang="ts">
-    export let id: string | undefined = undefined;
-    export let label: string | undefined = undefined;
-    export let placeholder = "";
-    export let min = 0;
-    export let value = min;
-    export let max = 100;
-    export let step = 0;
-    export let onChange: (v: number) => void = () => {};
-    //secondary = bleu   light = noir sinon par défaut la ligne est blanche
-    export let variant: "secondary" | "light" | "" = "";
-    export let buttonShape: "square" | "" = "";
-    export let unit = "%";
-    export let valueFormatter: (v: number) => string = (v) => v.toString();
-    // Control wrapper margins - if false, no margins are applied (useful in flex contexts)
-    export let wrapperMargins = true;
+    import type { Snippet } from "svelte";
 
-    let uniqueId = id || `input-${Math.random().toString(36).substring(2, 9)} `;
+    interface Props {
+        id?: string;
+        label?: string;
+        placeholder?: string;
+        min: number;
+        value?: number;
+        max: number;
+        step?: number;
+        onchange?: (v: number) => void;
+        //secondary = bleu   light = noir sinon par défaut la ligne est blanche
+        variant?: "secondary" | "light";
+        buttonShape?: "square";
+        unit?: string;
+        valueFormatter?: (v: number) => string;
+        // Control wrapper margins - if false, no margins are applied (useful in flex contexts)
+        wrapperMargins?: boolean;
+        children?: Snippet;
+    }
+
+    let {
+        id = undefined,
+        label = undefined,
+        placeholder = "",
+        min = 0,
+        value = $bindable<number>(),
+        max = 100,
+        step = 0,
+        onchange = () => {},
+        variant = undefined,
+        buttonShape = undefined,
+        unit = "%",
+        valueFormatter = (v) => v.toString(),
+        wrapperMargins = true,
+        children,
+    }: Props = $props();
+
+    $effect(() => {
+        if (value === undefined) {
+            value = min;
+        }
+    });
+
+    let uniqueId = (() => id || `input-${Math.random().toString(36).substring(2, 9)} `)();
 </script>
 
 {#if label}
-    <label for={uniqueId} class="px-3"> {label} <slot />: {valueFormatter(value)} {unit}</label>
+    <label for={uniqueId} class="px-3"> {label} {@render children?.()}: {valueFormatter(value)} {unit}</label>
 {/if}
 
 <div class={wrapperMargins ? "mx-2.5" : "w-full"}>
@@ -52,7 +80,7 @@
                 {:else}
                     <div
                         class="input-range-dot absolute bg-secondary rounded-full h-1 w-1 aspect-square left-0 right-0 m-auto group-hover/range:bg-white"
-                    />
+                    ></div>
                 {/if}
             </div>
         </div>
@@ -65,7 +93,7 @@
             {max}
             {step}
             bind:value
-            on:input={() => onChange(value)}
+            oninput={() => onchange(value)}
         />
     </div>
 </div>

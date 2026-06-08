@@ -39,7 +39,7 @@ export const isErrorApiErrorData = extendApi(
   {
     description:
       'This is an error that can be returned by the API, its type must be equal to "error".\n If such an error is caught, an error screen will be displayed.',
-  }
+  },
 );
 
 export const isErrorApiRetryData = extendApi(
@@ -95,7 +95,7 @@ export const isErrorApiRetryData = extendApi(
     description:
       'This is an error that can be returned by the API, its type must be equal to "retry".\n' +
       "If such an error is caught, a waiting screen will be displayed.",
-  }
+  },
 );
 
 export const isErrorApiRedirectData = extendApi(
@@ -111,7 +111,7 @@ export const isErrorApiRedirectData = extendApi(
     description:
       'This is an error that can be returned by the API, its type must be equal to "redirect".\n' +
       "If such an error is caught, the user will be automatically redirected to urlToRedirect.",
-  }
+  },
 );
 
 export const isErrorApiUnauthorizedData = extendApi(
@@ -158,7 +158,7 @@ export const isErrorApiUnauthorizedData = extendApi(
     description:
       'This is an error that can be returned by the API, its type must be equal to "unauthorized".\n' +
       "If such an error is caught, an error screen will be displayed with a button to let him logout and go to login page.",
-  }
+  },
 );
 
 export const ErrorApiData = z.discriminatedUnion("type", [
@@ -171,5 +171,7 @@ export const ErrorApiData = z.discriminatedUnion("type", [
 export type ErrorApiErrorData = z.infer<typeof isErrorApiErrorData>;
 export type ErrorApiRetryData = z.infer<typeof isErrorApiRetryData>;
 export type ErrorApiRedirectData = z.infer<typeof isErrorApiRedirectData>;
-export type ErrorApiUnauthorizedData = z.infer<typeof isErrorApiUnauthorizedData>;
+export type ErrorApiUnauthorizedData = z.infer<
+  typeof isErrorApiUnauthorizedData
+>;
 export type ErrorApiData = z.infer<typeof ErrorApiData>;

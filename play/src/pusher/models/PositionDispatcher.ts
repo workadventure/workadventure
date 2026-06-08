@@ -28,7 +28,7 @@ export class PositionDispatcher {
         private zoneWidth: number,
         private zoneHeight: number,
         private socketListener: ZoneEventListener,
-        private pusherRoom: PusherRoom
+        private pusherRoom: PusherRoom,
     ) {}
 
     private getZoneDescriptorFromCoordinates(x: number, y: number): ZoneDescriptor {

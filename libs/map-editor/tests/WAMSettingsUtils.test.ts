@@ -21,8 +21,8 @@ describe("WAMSettingsUtils", () => {
                             rights: ["speaker"],
                         },
                     },
-                    ["admin"]
-                )
+                    ["admin"],
+                ),
             ).toBe(false);
             expect(
                 WAMSettingsUtils.canUseMegaphone(
@@ -32,8 +32,8 @@ describe("WAMSettingsUtils", () => {
                             rights: ["speaker"],
                         },
                     },
-                    ["speaker"]
-                )
+                    ["speaker"],
+                ),
             ).toBe(true);
         });
     });
@@ -48,8 +48,8 @@ describe("WAMSettingsUtils", () => {
                         },
                     },
                     ["admin"],
-                    true
-                )
+                    true,
+                ),
             ).toBe(false);
             expect(
                 WAMSettingsUtils.canStartRecordingMegaphone(
@@ -62,8 +62,8 @@ describe("WAMSettingsUtils", () => {
                         },
                     },
                     ["admin"],
-                    true
-                )
+                    true,
+                ),
             ).toBe(false);
         });
 
@@ -101,8 +101,8 @@ describe("WAMSettingsUtils", () => {
                         },
                     },
                     ["admin"],
-                    true
-                )
+                    true,
+                ),
             ).toBe(false);
             expect(
                 WAMSettingsUtils.canStartRecordingMegaphone(
@@ -117,8 +117,8 @@ describe("WAMSettingsUtils", () => {
                         },
                     },
                     ["admin", "speaker"],
-                    true
-                )
+                    true,
+                ),
             ).toBe(true);
         });
 
@@ -138,8 +138,8 @@ describe("WAMSettingsUtils", () => {
                         },
                     },
                     ["global-recorder"],
-                    true
-                )
+                    true,
+                ),
             ).toBe(false);
             expect(
                 WAMSettingsUtils.canStartRecordingMegaphone(
@@ -156,8 +156,8 @@ describe("WAMSettingsUtils", () => {
                         },
                     },
                     ["global-recorder", "speaker"],
-                    true
-                )
+                    true,
+                ),
             ).toBe(true);
         });
     });

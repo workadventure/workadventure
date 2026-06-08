@@ -15,7 +15,10 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
     private areaPreviews: AreaPreview[] = [];
     private active = false;
 
-    constructor(mapEditorModeManager: MapEditorModeManager, private areaEditorTool: AreaEditorTool) {
+    constructor(
+        mapEditorModeManager: MapEditorModeManager,
+        private areaEditorTool: AreaEditorTool,
+    ) {
         super(mapEditorModeManager);
 
         this.active = false;
@@ -145,7 +148,7 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
 
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
         areaPreview.on(AreaPreviewEvent.Delete, () =>
-            this.areaEditorTool.handleDeleteAreaFrontCommandExecution(areaPreview.getAreaData().id, this)
+            this.areaEditorTool.handleDeleteAreaFrontCommandExecution(areaPreview.getAreaData().id, this),
         );
     }
 
@@ -183,7 +186,7 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
 
     private pointerHoverEventHandler = (
         pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[]
+        gameObjects: Phaser.GameObjects.GameObject[],
     ) => {
         if (!this.active) {
             return;
@@ -219,7 +222,7 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
     }
 
     private getAreaEditorToolObjectsFromGameObjects(
-        gameObjects: Phaser.GameObjects.GameObject[]
+        gameObjects: Phaser.GameObjects.GameObject[],
     ): (AreaPreview | SizeAlteringSquare)[] {
         const areaPreviews = gameObjects.filter((obj) => this.isAreaPreview(obj));
         const sizeAlteringSquares = gameObjects.filter((obj) => this.isSizeAlteringSquare(obj));

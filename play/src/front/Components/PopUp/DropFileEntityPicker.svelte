@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { EntityPrefab } from "@workadventure/map-editor";
-    import { createEventDispatcher } from "svelte";
     import type { Readable } from "svelte/store";
     import LL from "../../../i18n/i18n-svelte";
     import type { EntityVariant } from "../../Phaser/Game/MapEditor/Entities/EntityVariant";
@@ -9,15 +8,16 @@
     import EntityToolImg from "../images/icon-tool-entity.svg";
     import { IconSearch } from "@wa-icons";
 
-    export let entitiesPrefabsVariants: Readable<EntityVariant[]>;
+    interface Props {
+        entitiesPrefabsVariants: Readable<EntityVariant[]>;
+        onselect?: (entity: EntityPrefab) => void;
+    }
 
-    let searchTerm = "book";
+    let { entitiesPrefabsVariants, onselect }: Props = $props();
+
+    let searchTerm = $state("book");
     let pickedEntity: EntityPrefab | undefined = undefined;
-    let currentSelectedEntityId: string | undefined = undefined;
-
-    const dispatch = createEventDispatcher<{
-        select: EntityPrefab;
-    }>();
+    let currentSelectedEntityId: string | undefined = $state(undefined);
 
     function getFilteredEntities(entities: EntityVariant[], search: string) {
         if (!search) return entities.slice(0, 9);
@@ -25,7 +25,7 @@
             .filter(
                 (entityVariant) =>
                     entityVariant.defaultPrefab.name.toLowerCase().includes(search.toLowerCase()) ||
-                    entityVariant.defaultPrefab.tags.join(",").toLowerCase().includes(search.toLowerCase())
+                    entityVariant.defaultPrefab.tags.join(",").toLowerCase().includes(search.toLowerCase()),
             )
             .slice(0, 9);
     }
@@ -33,7 +33,7 @@
     function onSelectEntity(entityVariant: EntityVariant) {
         pickedEntity = entityVariant.defaultPrefab;
         currentSelectedEntityId = entityVariant.defaultPrefab.id;
-        dispatch("select", pickedEntity);
+        onselect?.(pickedEntity);
     }
 </script>
 
@@ -44,15 +44,17 @@
     </div>
 
     <Input bind:value={searchTerm} placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}>
-        <span slot="inputAppend">
-            <IconSearch />
-        </span>
+        {#snippet inputAppend()}
+            <span>
+                <IconSearch />
+            </span>
+        {/snippet}
     </Input>
 
     <div class="grid grid-cols-[repeat(auto-fit,minmax(64px,3.6em))] gap-2 justify-center">
         {#each getFilteredEntities($entitiesPrefabsVariants, searchTerm) as entityVariant (entityVariant.id)}
             <EntityItem
-                on:selectEntity={(event) => onSelectEntity(event.detail)}
+                onselectentity={onSelectEntity}
                 {entityVariant}
                 isActive={entityVariant.defaultPrefab.id === currentSelectedEntityId}
             />

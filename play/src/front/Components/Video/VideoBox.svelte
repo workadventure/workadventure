@@ -4,16 +4,29 @@
     import { playerMovedInTheLast10Seconds } from "../../Stores/VideoLayoutStore";
     import VideoBoxOptimizer from "./VideoBoxOptimizer.svelte";
 
-    export let videoBox: VideoBox;
-    export let isOnOneLine: boolean;
-    export let oneLineMode: "vertical" | "horizontal";
-    export let videoWidth: number;
-    export let videoHeight: number | undefined;
-    export let intersectionObserver: IntersectionObserver | undefined;
-    export let forceDisplay = false;
-    export let fitContainer = false;
+    interface Props {
+        videoBox: VideoBox;
+        isOnOneLine: boolean;
+        oneLineMode: "vertical" | "horizontal";
+        videoWidth: number;
+        videoHeight?: number;
+        intersectionObserver?: IntersectionObserver;
+        forceDisplay: boolean;
+        fitContainer: boolean;
+    }
 
-    const streamable = videoBox.streamable;
+    let {
+        videoBox,
+        isOnOneLine,
+        oneLineMode,
+        videoWidth,
+        videoHeight,
+        intersectionObserver,
+        forceDisplay = false,
+        fitContainer = false,
+    }: Props = $props();
+
+    let streamable = $derived(videoBox.streamable);
 </script>
 
 {#if forceDisplay || (($highlightedEmbedScreen !== videoBox || $playerMovedInTheLast10Seconds) && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && ($streamable?.displayInPictureInPictureMode ?? false))}

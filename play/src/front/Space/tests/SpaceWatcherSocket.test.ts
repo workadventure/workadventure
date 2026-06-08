@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 globalThis.Phaser = Phaser;
 
 import { describe, vi, expect, it } from "vitest";
@@ -8,7 +8,6 @@ import { FilterType } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { writable } from "svelte/store";
 import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
-import type { RoomConnection } from "../../Connection/RoomConnection";
 import { MockRoomConnectionForSpaces } from "./MockRoomConnectionForSpaces";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
@@ -142,12 +141,12 @@ describe("SpaceRegistry", () => {
             }),
         };
 
-        const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection, new Subject());
+        const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
         const space = await spaceRegistry.joinSpace(
             "space-name",
             FilterType.ALL_USERS,
             [],
-            new AbortController().signal
+            new AbortController().signal,
         );
 
         roomConnection.updateSpaceMetadataMessageStream.next(updateSpaceMetadataMessage);

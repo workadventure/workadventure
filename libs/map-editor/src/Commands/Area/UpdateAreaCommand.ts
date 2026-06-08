@@ -12,7 +12,7 @@ export class UpdateAreaCommand extends Command {
         wamFile: WamFile,
         dataToModify: AtLeast<AreaData, "id">,
         commandId?: string,
-        oldConfig?: AtLeast<AreaData, "id">
+        oldConfig?: AtLeast<AreaData, "id">,
     ) {
         super(commandId);
         this.wamFile = wamFile;
@@ -68,7 +68,7 @@ export class UpdateAreaCommand extends Command {
                 foundKeys.push(property.type);
             } else if (singleOnly.includes(property.type)) {
                 console.warn(
-                    `MapEditorError: Area ID: ${areaId} has multiple properties of type ${property.type}. Removing to single property.`
+                    `MapEditorError: Area ID: ${areaId} has multiple properties of type ${property.type}. Removing to single property.`,
                 );
                 propertiesToRemove.push(property.id);
             }

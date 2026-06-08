@@ -183,7 +183,7 @@ class AdminApi implements AdminInterface {
                 if (!warnIssued)
                     console.warn(
                         `Could not reach Admin API server at ${ADMIN_API_URL}, will retry in ${ADMIN_API_RETRY_DELAY} ms`,
-                        ex
+                        ex,
                     );
 
                 warnIssued = true;
@@ -227,7 +227,7 @@ class AdminApi implements AdminInterface {
     async fetchMapDetails(
         playUri: string,
         authToken?: string,
-        locale?: string
+        locale?: string,
     ): Promise<MapDetailsData | RoomRedirect | ErrorApiData> {
         try {
             let userId: string | undefined = undefined;
@@ -325,7 +325,7 @@ class AdminApi implements AdminInterface {
 
             console.error(
                 "Invalid answer received from the admin for the /api/map endpoint. /api/map answer is not a map details answer because:",
-                mapDetailData.error.issues
+                mapDetailData.error.issues,
             );
             Sentry.captureException(mapDetailData.error.issues);
             console.error("/api/map answer is not a room redirect because:", roomRedirect.error.issues);
@@ -373,7 +373,7 @@ class AdminApi implements AdminInterface {
         companionTextureId?: string,
         locale?: string,
         tags?: string[],
-        chatID?: string
+        chatID?: string,
     ): Promise<FetchMemberDataByUuidResponse> {
         try {
             /**
@@ -468,7 +468,7 @@ class AdminApi implements AdminInterface {
                 Sentry.captureException(err);
                 console.error(
                     `An error occurred during call to /room/access endpoint. HTTP Status: ${err.status}.`,
-                    err
+                    err,
                 );
             } else {
                 Sentry.captureException(err);
@@ -492,7 +492,7 @@ class AdminApi implements AdminInterface {
     async fetchMemberDataByToken(
         organizationMemberToken: string,
         playUri: string | null,
-        locale?: string
+        locale?: string,
     ): Promise<AdminApiData> {
         /**
          * @openapi
@@ -562,7 +562,7 @@ class AdminApi implements AdminInterface {
         reportedUserComment: string,
         reporterUserUuid: string,
         roomUrl: string,
-        locale?: string
+        locale?: string,
     ): Promise<unknown> {
         /**
          * @openapi
@@ -609,7 +609,7 @@ class AdminApi implements AdminInterface {
             },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
-            }
+            },
         );
     }
 
@@ -617,7 +617,7 @@ class AdminApi implements AdminInterface {
         userUuid: string,
         ipAddress: string,
         roomUrl: string,
-        locale?: string
+        locale?: string,
     ): Promise<AdminBannedData> {
         /**
          * @openapi
@@ -677,7 +677,7 @@ class AdminApi implements AdminInterface {
                     encodeURIComponent(userUuid) +
                     "&roomUrl=" +
                     encodeURIComponent(roomUrl),
-                { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" } }
+                { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" } },
             )
             .then((data) => {
                 return AdminBannedData.parse(data.data);
@@ -688,7 +688,7 @@ class AdminApi implements AdminInterface {
         roomUrl: string,
         locale?: string,
         tags?: string[],
-        bypassTagFilter = false
+        bypassTagFilter = false,
     ): Promise<ShortMapDescriptionList> {
         /**
          * @openapi
@@ -767,14 +767,14 @@ class AdminApi implements AdminInterface {
         playUri: string,
         name: string,
         message: string,
-        byUserUuid: string
+        byUserUuid: string,
     ): Promise<boolean> {
         return axios.post(
             ADMIN_API_URL + "/api/ban",
             { uuidToBan, playUri, name, message, byUserUuid },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
+            },
         );
     }
 
@@ -1022,11 +1022,11 @@ class AdminApi implements AdminInterface {
             },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
+            },
         );
         if (response.status !== 204) {
             throw new Error(
-                "Error while saving name. Got unexpected status code. Expected 204, got " + response.status
+                "Error while saving name. Got unexpected status code. Expected 204, got " + response.status,
             );
         }
         return;
@@ -1087,11 +1087,11 @@ class AdminApi implements AdminInterface {
             },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
+            },
         );
         if (response.status !== 204) {
             throw new Error(
-                "Error while saving name. Got unexpected status code. Expected 204, got " + response.status
+                "Error while saving name. Got unexpected status code. Expected 204, got " + response.status,
             );
         }
         return;
@@ -1150,11 +1150,11 @@ class AdminApi implements AdminInterface {
             },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
+            },
         );
         if (response.status !== 204) {
             throw new Error(
-                "Error while saving name. Got unexpected status code. Expected 204, got " + response.status
+                "Error while saving name. Got unexpected status code. Expected 204, got " + response.status,
             );
         }
         return;
@@ -1324,7 +1324,7 @@ class AdminApi implements AdminInterface {
             },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
+            },
         );
     }
 
@@ -1368,7 +1368,7 @@ class AdminApi implements AdminInterface {
             },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
+            },
         );
         const refreshTokenResponse = isOauthRefreshToken.safeParse(response.data);
         if (refreshTokenResponse.error) {

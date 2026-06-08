@@ -34,7 +34,7 @@ export class InviteManager {
                 if (scene) {
                     scene.playMeetingInSound();
                 }
-            })
+            }),
         );
 
         // Show accepted or declined toast when the meeting invitation response is received
@@ -48,7 +48,7 @@ export class InviteManager {
                             responderName: payload.responderName,
                             toastUuid: toastId,
                         },
-                        toastId
+                        toastId,
                     );
                 }
                 if (payload.accepted) {
@@ -59,26 +59,26 @@ export class InviteManager {
                             responderName: payload.responderName,
                             toastUuid: toastId,
                         },
-                        toastId
+                        toastId,
                     );
                     // When the invitee accepts, reset the sender's antispam counter so they can send invites again
                     this.inviteRequestLog = [];
                 }
-            })
+            }),
         );
 
         // Show limit reached toast when the number of meeting invitation requests per sender is too high
         this.subscriptions.push(
             this.connection.meetingInvitationRequestTooHighStream.subscribe(() => {
                 this.showLimitReachedToast();
-            })
+            }),
         );
 
         // Clear the invitation if the user accepts or declines the invitation
         this.subscriptions.push(
             this.connection.meetingInvitationRequestClosedStream.subscribe(() => {
                 meetingInvitationRequestStore.set(null);
-            })
+            }),
         );
 
         // Clear the invitation if the user left the room
@@ -87,7 +87,7 @@ export class InviteManager {
                 if (payload.userId === get(meetingInvitationRequestStore)?.senderUserId) {
                     meetingInvitationRequestStore.set(null);
                 }
-            })
+            }),
         );
     }
 
@@ -99,7 +99,7 @@ export class InviteManager {
             request.senderUserUuid,
             request.senderPlayUri,
             AskPositionMessage_AskType.MOVE,
-            request.senderUserId
+            request.senderUserId,
         );
     }
 

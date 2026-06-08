@@ -25,7 +25,7 @@
 </script>
 
 <ActionBarButton
-    on:click={() => {
+    onclick={() => {
         analyticsClient.follow();
         followClick();
     }}

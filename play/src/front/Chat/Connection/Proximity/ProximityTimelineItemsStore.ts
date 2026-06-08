@@ -2,7 +2,7 @@ import { derived, type Readable } from "svelte/store";
 import type { ChatMessage, ChatTimelineItem } from "../ChatConnection";
 
 export function createProximityTimelineItemsStore(
-    messages: Readable<readonly ChatMessage[]>
+    messages: Readable<readonly ChatMessage[]>,
 ): Readable<readonly ChatTimelineItem[]> {
     return derived([messages], ([$messages]) => {
         return Array.from($messages, (message): ChatTimelineItem => {

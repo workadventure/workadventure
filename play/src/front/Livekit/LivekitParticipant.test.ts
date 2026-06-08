@@ -23,7 +23,7 @@ describe("LiveKitParticipant", () => {
     beforeEach(() => {
         vi.spyOn(console, "warn").mockImplementation(() => {});
         // Provide an empty capabilities object so hasCapability() does not crash
-        window.capabilities = {} as typeof window.capabilities;
+        window.capabilities = {};
     });
 
     afterEach(() => {
@@ -196,7 +196,7 @@ describe("LiveKitParticipant", () => {
         participant["handleTrackPublished"](unpublishedScriptingPublication);
         participant["handleTrackSubscribed"](
             createRemoteAudioTrack(unpublishedScriptingStream),
-            unpublishedScriptingPublication
+            unpublishedScriptingPublication,
         );
 
         participant["handleTrackUnpublished"](unpublishedScriptingPublication);
@@ -249,7 +249,7 @@ function createParticipant({ publications }: { publications: RemoteTrackPublicat
         "wss://livekit.example.com",
         streamableSubjects,
         writable(new Set<string>()),
-        new AbortController().signal
+        new AbortController().signal,
     );
 }
 

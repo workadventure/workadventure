@@ -14,7 +14,7 @@ export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCo
         areaId: string,
         commandId: string | undefined,
         private editorTool: AreaEditorTool | TrashEditorTool,
-        private gameMapFrontWrapper: GameMapFrontWrapper
+        private gameMapFrontWrapper: GameMapFrontWrapper,
     ) {
         super(wamFile, areaId, commandId);
     }
@@ -40,7 +40,7 @@ export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCo
             undefined,
             this.editorTool,
             false,
-            this.gameMapFrontWrapper
+            this.gameMapFrontWrapper,
         );
     }
 

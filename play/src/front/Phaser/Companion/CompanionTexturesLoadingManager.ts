@@ -1,4 +1,4 @@
-import type CancelablePromise from "cancelable-promise";
+import type { CancelablePromise } from "cancelable-promise";
 import type { CompanionTexture } from "@workadventure/messages";
 import { CompanionTextureCollection } from "@workadventure/messages";
 import { gameManager } from "../Game/GameManager";
@@ -14,7 +14,7 @@ export function companionListMetakey() {
 
 export function lazyLoadPlayerCompanionTexture(
     superLoaderPlugin: SuperLoaderPlugin,
-    texture: CompanionTextureDescriptionInterface
+    texture: CompanionTextureDescriptionInterface,
 ): CancelablePromise<string> {
     const promise = superLoaderPlugin.spritesheet(texture.id, texture.url, {
         frameWidth: 32,
@@ -27,7 +27,10 @@ export function lazyLoadPlayerCompanionTexture(
 }
 
 export class CompanionTexturesLoadingManager {
-    constructor(private superLoad: SuperLoaderPlugin, private loader: LoaderPlugin) {}
+    constructor(
+        private superLoad: SuperLoaderPlugin,
+        private loader: LoaderPlugin,
+    ) {}
 
     loadTextures(processListCallback: (_l: CompanionTextureCollection[]) => void) {
         this.superLoad
@@ -35,7 +38,7 @@ export class CompanionTexturesLoadingManager {
                 companionListMetakey(),
                 new URL(
                     `companion/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href),
-                    ABSOLUTE_PUSHER_URL
+                    ABSOLUTE_PUSHER_URL,
                 ).toString(),
                 undefined,
                 {
@@ -47,7 +50,7 @@ export class CompanionTexturesLoadingManager {
                 },
                 (_key, _type, data) => {
                     processListCallback(CompanionTextureCollection.array().parse(data));
-                }
+                },
             )
             .catch((e: unknown) => {
                 console.error("Could not fetch companion list from pusher", e);

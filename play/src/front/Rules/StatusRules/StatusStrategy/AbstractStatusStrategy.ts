@@ -9,7 +9,7 @@ export abstract class StatusStrategy implements StatusStrategyInterface {
         protected status: AvailabilityStatus = AvailabilityStatus.ONLINE,
         protected basicRules: Array<() => void> = [],
         protected timedRules: Array<TimedRules> = [],
-        protected interactionRules: Array<() => void> = []
+        protected interactionRules: Array<() => void> = [],
     ) {}
 
     applyBasicRules() {

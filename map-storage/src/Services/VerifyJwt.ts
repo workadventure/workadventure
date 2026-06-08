@@ -41,7 +41,7 @@ export async function verifyJWT(req: Request, res: Response, next: NextFunction)
 
         const url = new URL(
             req.url.split("?")[0].substring(1),
-            new URL(pathPrefix, req.protocol + "://" + host)
+            new URL(pathPrefix, req.protocol + "://" + host),
         ).toString();
 
         await verifyWam(parsed, url);

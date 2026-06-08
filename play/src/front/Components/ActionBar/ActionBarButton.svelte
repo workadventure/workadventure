@@ -1,65 +1,98 @@
 <script lang="ts">
-    import { createEventDispatcher, getContext } from "svelte";
+    import type { Snippet } from "svelte";
+    import { getContext } from "svelte";
     import type { Action } from "svelte/action";
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
     import { helpTextDisabledStore } from "../../Stores/MenuStore";
 
-    export let label: string | undefined = undefined;
-    export let tooltipTitle = "";
-    export let tooltipDesc = "";
-    export let disabledHelp = false;
-    export let tooltipDelay = 500;
-    export let state: "normal" | "active" | "forbidden" | "disabled" | "disabledForbidden" = "normal";
-    export let dataTestId: string | undefined = undefined;
-    export let classList = "group";
-    // Hide the icon in the action bar (displays only the label), and only displays the icon if we are in the responsive menu.
-    export let hideIconInActionBar = false;
-    // An optional action that will be added to the button element.
-    export let bgColor: string | undefined = undefined;
-    export let textColor: string | undefined = undefined;
-    export let isGradient = false;
-    export let hasImage = true;
-    export let action: Action = () => {};
-    export let media = "";
-    export let desc = "";
-    export let tooltipShortcuts: string[] = [];
-    export let boldLabel = false;
-    export let wrapperDiv: HTMLElement | undefined = undefined;
+    interface Props {
+        label?: string;
+        tooltipTitle?: string;
+        tooltipDesc?: string;
+        disabledHelp?: boolean;
+        tooltipDelay?: number;
+        state?: "normal" | "active" | "forbidden" | "disabled" | "disabledForbidden";
+        dataTestId?: string;
+        classList?: string;
+        hideIconInActionBar?: boolean;
+        bgColor?: string;
+        textColor?: string;
+        isGradient?: boolean;
+        hasImage?: boolean;
+        action?: Action;
+        onclick?: (event: MouseEvent) => void;
+        onkeydown?: (event: KeyboardEvent) => void;
+        onmouseenter?: (event: MouseEvent) => void;
+        onmouseleave?: (event: MouseEvent) => void;
+        media?: string;
+        desc?: string;
+        tooltipShortcuts?: string[];
+        boldLabel?: boolean;
+        wrapperDiv?: HTMLElement;
+        // By default, the button will have a rounded corner on the left if it is the first of a div.
+        // This behaviour can be overridden by setting the "first" prop to true or false explicitly.
+        // Used for the responsive menu items.
+        first?: boolean;
+        // By default, the button will have a rounded corner on the right if it is the last of a div.
+        // This behaviour can be overridden by setting the "last" prop to true or false explicitly.
+        // Used for the responsive menu items.
+        last?: boolean;
+        // Can be used to force the context. If not set, the context is deduced from the "inMenu" Svelte context.
+        context?: "actionBar" | "menu";
+        children?: Snippet;
+        tooltip?: Snippet;
+        end?: Snippet;
+    }
 
-    const SLOTS = $$props.$$slots;
+    let {
+        label = undefined,
+        tooltipTitle = "",
+        tooltipDesc = "",
+        disabledHelp = false,
+        tooltipDelay = 500,
+        state: buttonState = "normal",
+        dataTestId = undefined,
+        classList = "group",
+        hideIconInActionBar = false,
+        bgColor = undefined,
+        textColor = undefined,
+        isGradient = false,
+        hasImage = true,
+        action = () => {},
+        onclick = undefined,
+        onkeydown = undefined,
+        onmouseenter = undefined,
+        onmouseleave = undefined,
+        media = "",
+        desc = "",
+        tooltipShortcuts = [],
+        boldLabel = false,
+        wrapperDiv = $bindable(),
+        first = undefined,
+        last = undefined,
+        context = undefined,
+        children,
+        tooltip,
+        end,
+    }: Props = $props();
 
-    // By default, the button will have a rounded corner on the left if it is the first of a div.
-    // This behaviour can be overridden by setting the "first" prop to true or false explicitly.
-    // Used for the responsive menu items.
-    export let first: boolean | undefined = undefined;
-    // By default, the button will have a rounded corner on the right if it is the last of a div.
-    // This behaviour can be overridden by setting the "last" prop to true or false explicitly.
-    // Used for the responsive menu items.
-    export let last: boolean | undefined = undefined;
-    // Can be used to force the context. If not set, the context is deduced from the "inMenu" Svelte context.
-    export let context: "actionBar" | "menu" | undefined = undefined;
+    let isInMenu = $derived(context !== undefined ? context === "menu" : getContext("inMenu"));
 
-    $: isInMenu = context !== undefined ? context === "menu" : getContext("inMenu");
+    let helpActive = $state(false);
 
-    let helpActive = false;
-
-    const dispatch = createEventDispatcher<{
-        click: void;
-        mouseenter: void;
-        mouseleave: void;
-    }>();
-
-    function handleClick() {
-        if (state === "disabled" || state === "disabledForbidden") {
+    function handleClick(event: MouseEvent) {
+        if (buttonState === "disabled" || buttonState === "disabledForbidden") {
             return;
         }
         helpActive = false;
-        dispatch("click");
+        onclick?.(event);
     }
 
-    $: styleVars = [bgColor ? `--bg-color: ${bgColor};` : "", textColor ? `--text-color: ${textColor};` : ""]
-        .filter(Boolean)
-        .join(" ");
+    let styleVars = $derived(
+        [bgColor ? `--bg-color: ${bgColor};` : "", textColor ? `--text-color: ${textColor};` : ""]
+            .filter(Boolean)
+            .join(" "),
+    );
 </script>
 
 {#if !isInMenu}
@@ -80,11 +113,11 @@
         <button
             type="button"
             class="h-12 @sm/actions:h-10 @xl/actions:h-12 p-1 m-0 rounded relative
-                    {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
-                    {state === 'disabledForbidden' ? 'bg-danger opacity-70 cursor-not-allowed' : ''}
-                    {state === 'normal' && !isGradient ? 'hover:bg-white/10 cursor-pointer' : ''}
-                    {state === 'active' ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
-                    {state === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
+                    {buttonState === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
+                    {buttonState === 'disabledForbidden' ? 'bg-danger opacity-70 cursor-not-allowed' : ''}
+                    {buttonState === 'normal' && !isGradient ? 'hover:bg-white/10 cursor-pointer' : ''}
+                    {buttonState === 'active' ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
+                    {buttonState === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
                     {!label
                 ? 'w-12 @sm/actions:w-10 @xl/actions:w-12'
                 : 'px-4 text-base @sm/actions:text-sm @xl/actions:text-base whitespace-nowrap'}
@@ -92,24 +125,28 @@
                 {bgColor && !isGradient ? 'bg-[var(--bg-color)]' : ''}
                 {textColor ? 'text-[var(--text-color)]' : 'text-neutral-100'}
                     flex items-center justify-center outline-none focus:outline-none gap-2 select-none"
-            disabled={state === "disabled" || state === "disabledForbidden"}
-            on:click|preventDefault={() => handleClick()}
-            on:mouseenter={() => {
-                helpActive = true;
-                dispatch("mouseenter");
+            disabled={buttonState === "disabled" || buttonState === "disabledForbidden"}
+            onclick={(event) => {
+                event.preventDefault();
+                handleClick(event);
             }}
-            on:mouseleave={() => {
+            {onkeydown}
+            onmouseenter={(event) => {
+                helpActive = true;
+                onmouseenter?.(event);
+            }}
+            onmouseleave={(event) => {
                 helpActive = false;
-                dispatch("mouseleave");
+                onmouseleave?.(event);
             }}
             data-testid={dataTestId}
         >
             {#if !hideIconInActionBar}
-                <slot />
+                {@render children?.()}
             {/if}
             {#if label}<span class={boldLabel ? "font-bold" : ""}>{label}</span>{/if}
         </button>
-        {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc || SLOTS.tooltip)}
+        {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc || tooltip)}
             <HelpTooltip
                 title={tooltipTitle}
                 helpMedia={media}
@@ -117,35 +154,40 @@
                 shortcuts={tooltipShortcuts}
                 delayBeforeAppear={tooltipDelay}
             >
-                <slot name="tooltip" />
+                {@render tooltip?.()}
             </HelpTooltip>
         {/if}
     </div>
 {:else}
     <button
         class="group flex p-2 gap-2 mb-1 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-start rounded select-none
-                    {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
-                    {state === 'disabledForbidden' ? 'bg-danger opacity-70 cursor-not-allowed' : ''}
-                    {state === 'active' && !isGradient ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
-                    {state === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
+                    {buttonState === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
+                    {buttonState === 'disabledForbidden' ? 'bg-danger opacity-70 cursor-not-allowed' : ''}
+                    {buttonState === 'active' && !isGradient
+            ? 'bg-secondary hover:bg-secondary-600 cursor-pointer'
+            : ''}
+                    {buttonState === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
                     {isGradient ? 'gradient overflow-hidden' : ''}
                     {bgColor && !isGradient ? 'bg-[var(--bg-color)]' : ''}
                     {textColor ? 'text-[var(--text-color)]' : 'text-neutral-100'}
                     {isGradient ? 'relative' : ''}"
         use:action
-        on:click={() => handleClick()}
+        onclick={handleClick}
+        {onkeydown}
+        {onmouseenter}
+        {onmouseleave}
         style={styleVars}
         data-testid={dataTestId}
         bind:this={wrapperDiv}
     >
         {#if hasImage}
             <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
-                <slot />
+                {@render children?.()}
             </div>
         {/if}
         <div class="text-start h-6 leading-4 flex items-center text-nowrap">
             {label ?? tooltipTitle ?? ""}
-            <slot name="end" />
+            {@render end?.()}
         </div>
     </button>
 {/if}

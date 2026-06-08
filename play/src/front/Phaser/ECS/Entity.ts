@@ -57,7 +57,12 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     private debugActivationZoneCircle: Phaser.GameObjects.Graphics | null = null;
 
-    constructor(scene: GameScene, public readonly entityId: string, data: WAMEntityData, prefab: EntityPrefab) {
+    constructor(
+        scene: GameScene,
+        public readonly entityId: string,
+        data: WAMEntityData,
+        prefab: EntityPrefab,
+    ) {
         super(scene, data.x, data.y, prefab.imagePath);
         this.setOrigin(0);
 
@@ -101,14 +106,14 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     public get description(): string | undefined {
         const descriptionProperty = this.entityData.properties.find(
-            (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties"
+            (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties",
         );
         return descriptionProperty?.description;
     }
 
     public get searchable(): boolean | undefined {
         const descriptionProperty = this.entityData.properties.find(
-            (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties"
+            (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties",
         );
         return descriptionProperty?.searchable;
     }
@@ -379,15 +384,15 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         }
 
         const description = this.entityData.properties.find(
-            (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties"
+            (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties",
         );
         actionsMenuStore.initialize(
             this.entityId,
             this.entityData.name != undefined && this.entityData.name != ""
                 ? this.entityData.name
-                : this.prefab.name ?? "",
+                : (this.prefab.name ?? ""),
             description?.description,
-            this.prefab.imagePath
+            this.prefab.imagePath,
         );
         for (const action of defaultActionsMenu) {
             actionsMenuStore.addAction(action);
@@ -438,7 +443,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                                 {
                                     propertyName: GameMapProperties.JITSI_CONFIG,
                                     propertyValue: JSON.stringify(roomConfig),
-                                }
+                                },
                             );
                             actionsMenuStore.clear();
                         },
@@ -466,7 +471,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                                     property.allowAPI,
                                     property.policy,
                                     property.width,
-                                    property.closable
+                                    property.closable,
                                 );
                                 try {
                                     coWebsites.add(coWebsite);
@@ -519,14 +524,14 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                                           url,
                                           property.name ?? getImageCoWebsiteTitle(url),
                                           property.width,
-                                          property.closable
+                                          property.closable,
                                       )
                                     : new SimpleCoWebsite(
                                           url,
                                           false, // No need for API in file viewer
                                           property.policy,
                                           property.width,
-                                          property.closable
+                                          property.closable,
                                       );
                                 try {
                                     coWebsites.add(coWebsite);
@@ -619,7 +624,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             activationRect.x,
             activationRect.y,
             activationRect.width,
-            activationRect.height
+            activationRect.height,
         );
 
         // Draw collision rectangle (blue)
@@ -628,7 +633,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             collisionRect.x,
             collisionRect.y,
             collisionRect.width,
-            collisionRect.height
+            collisionRect.height,
         );
 
         // Draw center marker - red cross at the center of the collision rectangle
@@ -672,7 +677,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             activationRect.x,
             activationRect.y,
             activationRect.width,
-            activationRect.height
+            activationRect.height,
         );
 
         // Draw collision rectangle (blue)
@@ -681,7 +686,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             collisionRect.x,
             collisionRect.y,
             collisionRect.width,
-            collisionRect.height
+            collisionRect.height,
         );
 
         // Draw center marker - red cross at the center of the collision rectangle

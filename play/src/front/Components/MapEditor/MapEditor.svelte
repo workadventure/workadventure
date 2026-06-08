@@ -17,18 +17,19 @@
 
     let mapEditor: HTMLElement;
 
-    $: mapEditorSideBarWidth =
+    let mapEditorSideBarWidth = $derived(
         $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor
             ? $mapEditorSideBarWidthStore
-            : 0;
+            : 0,
+    );
 
     function onResize(width: number) {
         mapEditorSideBarWidthStore.set(width);
     }
 
-    $: if (mapEditor) {
+    $effect(() => {
         mapEditor.style.width = `${mapEditorSideBarWidth}px`;
-    }
+    });
 
     onMount(() => {
         const width = Math.min($windowSize.width / 2, Math.max(200, $mapEditorSideBarWidthStore));

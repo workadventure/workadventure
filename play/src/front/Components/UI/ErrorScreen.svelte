@@ -16,21 +16,21 @@
 
     let errorScreen = $errorScreenStore;
 
-    let startRoom: Room | undefined;
+    let startRoom: Room | undefined = $state();
     try {
         startRoom = gameManager?.currentStartedRoom;
     } catch {
         startRoom = undefined;
     }
 
-    let logoErrorSrc = startRoom?.loginSceneLogo ?? logoImg;
+    let logoErrorSrc = $derived(startRoom?.loginSceneLogo ?? logoImg);
 
     function click() {
         if (errorScreen?.type === "unauthorized") connectionManager.logout();
         else window.location.reload();
     }
     let details = errorScreen?.details ?? "";
-    let timeVar = errorScreen?.timeToRetry ?? 0;
+    let timeVar = $state(errorScreen?.timeToRetry ?? 0);
 
     if (errorScreen?.type === "retry") {
         let interval = setInterval(() => {
@@ -48,7 +48,7 @@
         connectionManager.logout();
     }
 
-    $: detailsStylized = (details ?? "").replace("{time}", `${timeVar / 1000}`);
+    let detailsStylized = $derived((details ?? "").replace("{time}", `${timeVar / 1000}`));
 </script>
 
 {#if $errorScreenStore}
@@ -84,26 +84,26 @@
             {#if $errorScreenStore.type !== "retry" && $errorScreenStore.type !== "reconnecting"}<p class="code">
                     Code : {$errorScreenStore.code}
                 </p>{/if}
-            <p class="details flex flex-row items-center justify-center content-center gap-2">
+            <div class="details flex flex-row items-center justify-center content-center gap-2">
                 <span>{detailsStylized}</span>
                 {#if $errorScreenStore.type === "retry"}
-                    <div class="loading" />
+                    <div class="loading"></div>
                 {:else if $errorScreenStore.type === "reconnecting"}
                     <LoaderIcon />
                 {/if}
-            </p>
+            </div>
             <div class="flex gap-2">
                 {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
                     <button
                         type="button"
                         class="btn-lg btn btn-light btn-border button flex items-center gap-2"
-                        on:click={click}
+                        onclick={click}
                     >
                         {#if $errorScreenStore.type === "retry"}<IconRefresh />{/if}
                         {$errorScreenStore.buttonTitle}
                     </button>
                     {#if $userIsConnected}
-                        <button type="button" class="btn-lg btn btn-secondary button" on:click={logout}>
+                        <button type="button" class="btn-lg btn btn-secondary button" onclick={logout}>
                             {$LL.menu.profile.logout()}
                         </button>
                     {/if}

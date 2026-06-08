@@ -390,7 +390,7 @@ class LocalUserStore {
                 .map(function (c) {
                     return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
                 })
-                .join("")
+                .join(""),
         );
 
         return JSON.parse(jsonPayload);
@@ -587,7 +587,7 @@ class LocalUserStore {
                         if (isPublicStr === undefined || value === undefined) {
                             console.error(
                                 'Invalid value stored in Redis. Expecting the value to be in the "ttl:0|1:value" format. Got: ',
-                                storedValue
+                                storedValue,
                             );
                             continue;
                         }
@@ -623,7 +623,7 @@ class LocalUserStore {
                         } catch (err) {
                             console.info(
                                 "getAllUserProperties => value cannot be parsed to JSON, undefined returned.",
-                                err
+                                err,
                             );
                             valueReturned = undefined;
                         }
@@ -643,7 +643,7 @@ class LocalUserStore {
         value: unknown,
         context: string,
         isPublic: boolean,
-        expire: number | undefined
+        expire: number | undefined,
     ): void {
         const key = userProperties + "_" + context + "__|__" + name;
 

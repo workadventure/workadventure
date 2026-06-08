@@ -24,11 +24,11 @@
 
     const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
-    let properties: EntityDataProperties = [];
-    let entityName = "";
-    let entityDescription = "";
-    let entitySearchable = false;
-    let showDescriptionField = false;
+    let properties: EntityDataProperties = $state([]);
+    let entityName = $state("");
+    let entityDescription = $state("");
+    let entitySearchable = $state(false);
+    let showDescriptionField = $state(false);
     let selectedEntity: Entity | undefined = undefined;
 
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
@@ -105,7 +105,7 @@
 
         properties.description = entityDescription;
         if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.updateProperty(properties);
+            $mapEditorSelectedEntityStore.updateProperty($state.snapshot(properties));
         }
     }
 
@@ -118,13 +118,13 @@
 
         properties.searchable = entitySearchable;
         if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.updateProperty(properties);
+            $mapEditorSelectedEntityStore.updateProperty($state.snapshot(properties));
         }
     }
 
     function onUpdateProperty(property: EntityDataProperty) {
         if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.updateProperty(property);
+            $mapEditorSelectedEntityStore.updateProperty($state.snapshot(property));
         }
     }
 
@@ -280,16 +280,22 @@
         <div class="header-container">
             <h3>{$LL.mapEditor.entityEditor.editing({ name: $mapEditorSelectedEntityStore.getPrefab().name })}</h3>
         </div>
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-        <p on:click|preventDefault={backToSelectObject} class="flex flex-row items-center text-xs m-0">
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+        <p
+            onclick={(event) => {
+                event.preventDefault();
+                backToSelectObject();
+            }}
+            class="flex flex-row items-center text-xs m-0"
+        >
             <IconArrowLeft font-size="12" class="cursor-pointer" />
             <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
         </p>
         <div class="properties-buttons flex flex-row m-2">
             <AddPropertyButtonWrapper
                 property="playAudio"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("playAudio");
                 }}
             />
@@ -297,76 +303,76 @@
         <div class="properties-buttons flex flex-row flex-wrap m-2">
             <AddPropertyButtonWrapper
                 property="openWebsite"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openFile"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openFile");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="klaxoon"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "klaxoon");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="youtube"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "youtube");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="googleDrive"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "googleDrive");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="googleDocs"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "googleDocs");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="googleSheets"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "googleSheets");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="googleSlides"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "googleSlides");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="eraser"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "eraser");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="excalidraw"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "excalidraw");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="tldraw"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "tldraw");
                 }}
             />
@@ -376,7 +382,7 @@
                 <AddPropertyButtonWrapper
                     property="openWebsite"
                     subProperty={app.name}
-                    on:click={() => {
+                    onclick={() => {
                         onAddSpecificProperty(app);
                     }}
                 />
@@ -389,7 +395,7 @@
                 type="text"
                 placeholder={$LL.mapEditor.entityEditor.objectNamePlaceholder()}
                 bind:value={entityName}
-                onChange={onUpdateName}
+                onchange={onUpdateName}
             />
         </div>
         <div class="entity-name-container">
@@ -397,11 +403,14 @@
                 <a
                     href="#addDescriptionField"
                     class="pl-0 text-blue-500 flex flex-row items-center"
-                    on:click|preventDefault|stopPropagation={toggleDescriptionField}
-                    >+ {$LL.mapEditor.entityEditor.addDescriptionField()}</a
+                    onclick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        toggleDescriptionField();
+                    }}>+ {$LL.mapEditor.entityEditor.addDescriptionField()}</a
                 >
             {:else}
-                <button class="pl-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
+                <button class="pl-0 text-blue-500 flex flex-row items-center" onclick={toggleDescriptionField}>
                     <IconChevronDown />{$LL.mapEditor.entityEditor.addDescriptionField()}</button
                 >
 
@@ -410,8 +419,8 @@
                     id="objectDescription"
                     placeHolder={$LL.mapEditor.entityEditor.objectDescriptionPlaceholder()}
                     bind:value={entityDescription}
-                    onChange={onUpdateDescription}
-                    onKeyPress={() => {}}
+                    onchange={onUpdateDescription}
+                    onkeypress={() => {}}
                 />
             {/if}
         </div>
@@ -420,7 +429,7 @@
             label={$LL.mapEditor.entityEditor.objectSearchable()}
             id="searchable"
             bind:value={entitySearchable}
-            onChange={onUpdateSearchable}
+            onchange={onUpdateSearchable}
         />
 
         <div class="properties-container p-1">
@@ -430,27 +439,27 @@
                         {#if property.type === "playAudio"}
                             <PlayAudioPropertyEditor
                                 {property}
-                                on:close={() => {
+                                onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
-                                on:change={() => onUpdateProperty(property)}
+                                onchange={() => onUpdateProperty(property)}
                             />
                         {:else if property.type === "openWebsite"}
                             <OpenWebsitePropertyEditor
                                 {property}
                                 triggerOptionActivated={false}
-                                on:close={() => {
+                                onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
-                                on:change={() => onUpdateProperty(property)}
+                                onchange={() => onUpdateProperty(property)}
                             />
                         {:else if property.type === "openFile"}
                             <OpenFilePropertyEditor
                                 {property}
-                                on:close={() => {
+                                onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
-                                on:change={() => onUpdateProperty(property)}
+                                onchange={() => onUpdateProperty(property)}
                             />
                         {/if}
                     </div>

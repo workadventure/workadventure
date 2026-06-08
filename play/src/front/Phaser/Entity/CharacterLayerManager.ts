@@ -13,7 +13,7 @@ export class CharacterLayerManager {
         const scene = gameManager.getCurrentGameScene();
         return lazyLoadPlayerCharacterTextures(
             scene.superLoad,
-            characterTextures.map((texture) => ({ id: texture.id, url: texture.url }))
+            characterTextures.map((texture) => ({ id: texture.id, url: texture.url })),
         )
             .then(async (textures) => {
                 // Wait 0 seconds to force the promise to be async and let Phaser frames update
@@ -48,11 +48,11 @@ export class CharacterLayerManager {
 
     private static async getSnapshot(
         scene: GameScene,
-        sprites: Map<string, Phaser.GameObjects.Sprite>
+        sprites: Map<string, Phaser.GameObjects.Sprite>,
     ): Promise<string> {
         return TexturesHelper.getSnapshot(
             scene,
-            ...Array.from(sprites.values()).map((sprite) => ({ sprite, frame: 1 }))
+            ...Array.from(sprites.values()).map((sprite) => ({ sprite, frame: 1 })),
         ).catch((reason) => {
             console.warn(reason);
             for (const sprite of sprites.values()) {
@@ -68,7 +68,7 @@ export class CharacterLayerManager {
     private static getSprites(
         scene: GameScene,
         textures: string[],
-        frame?: string | number
+        frame?: string | number,
     ): Map<string, Phaser.GameObjects.Sprite> {
         const sprites = new Map<string, Phaser.GameObjects.Sprite>();
         if (textures.length < 1) {

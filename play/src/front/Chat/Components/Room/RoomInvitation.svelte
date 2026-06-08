@@ -7,11 +7,15 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { IconLoader } from "@wa-icons";
 
-    export let room: ChatRoom & ChatRoomMembershipManagement;
-    const roomType = room.type;
-    let roomName = room.name;
-    let loadingInvitation = false;
-    $: peerAvatarColorStore = room.avatarFallbackColor;
+    interface Props {
+        room: ChatRoom & ChatRoomMembershipManagement;
+    }
+
+    let { room }: Props = $props();
+    let roomType = $derived(room.type);
+    let roomName = $derived(room.name);
+    let loadingInvitation = $state(false);
+    let peerAvatarColorStore = $derived(room.avatarFallbackColor);
 
     function joinRoom() {
         loadingInvitation = true;
@@ -49,7 +53,7 @@
             compact
             pictureStore={room.pictureStore}
             fallbackName={$roomName}
-            color={$roomType === "direct" ? $peerAvatarColorStore ?? defaultColor : null}
+            color={$roomType === "direct" ? ($peerAvatarColorStore ?? defaultColor) : null}
         />
     </div>
     <div class="m-0 grow text-sm font-bold">
@@ -63,14 +67,14 @@
         <div class="flex gap-1">
             <button
                 class="border border-solid border-danger text-danger hover:bg-danger-400/10 rounded text-xs py-1 px-2 m-0"
-                on:click={() => leaveRoom()}
+                onclick={() => leaveRoom()}
             >
                 {$LL.chat.decline()}
             </button>
             <button
                 class="border border-solid border-success text-success hover:bg-success-400/10 rounded text-xs py-1 px-2 m-0"
                 data-testid="acceptInvitationButton"
-                on:click={() => joinRoom()}
+                onclick={() => joinRoom()}
             >
                 {$LL.chat.accept()}
             </button>

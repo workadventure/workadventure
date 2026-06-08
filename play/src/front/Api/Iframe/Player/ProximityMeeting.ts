@@ -126,7 +126,7 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
             },
             {
                 timeout: null,
-            }
+            },
         );
     }
 

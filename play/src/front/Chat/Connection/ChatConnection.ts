@@ -2,7 +2,7 @@ import type { Readable, Writable } from "svelte/store";
 import type { AvailabilityStatus } from "@workadventure/messages";
 import type { MapStore } from "@workadventure/store-utils";
 import type { MatrixClient, StateEvents } from "matrix-js-sdk";
-import type { ComponentType, SvelteComponent } from "svelte";
+import type { WorkAdventureComponent, WorkAdventureComponentProps } from "../../../types/component";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { PictureStore } from "../../Stores/PictureStore";
 
@@ -201,7 +201,10 @@ export interface ChatMessageReaction {
     readonly users: MapStore<string, ChatUser>;
     readonly react: () => void;
     readonly reacted: Readable<boolean>;
-    readonly component: { component: ComponentType<SvelteComponent>; props: Record<string, unknown> };
+    readonly component: {
+        component: WorkAdventureComponent;
+        props: WorkAdventureComponentProps;
+    };
 }
 
 export type ChatPollKind = "open" | "closed";
@@ -337,9 +340,9 @@ export type ChatRoomPrivacyState = {
 export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration {
     id: string;
     name: Readable<string>;
-    rooms: Readable<ChatRoom[]>;
+    rooms: Readable<(ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]>;
     folders: Readable<RoomFolder[]>;
-    invitations: Readable<ChatRoom[]>;
+    invitations: Readable<(ChatRoom & ChatRoomMembershipManagement)[]>;
     suggestedRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
     joinableRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
     joinableRoomsLoading: Readable<boolean>;
@@ -401,9 +404,11 @@ export type UserUuid = string & { __userUuidBrand: never };
 export type ChatSpaceRoom = ChatRoom;
 export interface ChatConnectionInterface {
     connectionStatus: Readable<ConnectionStatus>;
-    directRooms: Readable<ChatRoom[]>;
-    rooms: Readable<(ChatRoom & ChatRoomMembershipManagement)[]>;
-    invitations: Readable<ChatRoom[]>;
+    directRooms: Readable<
+        (ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]
+    >;
+    rooms: Readable<(ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]>;
+    invitations: Readable<(ChatRoom & ChatRoomMembershipManagement)[]>;
     folders: Readable<RoomFolder[]>;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createFolder: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
@@ -463,7 +468,7 @@ export function hasChatRoomPollCreation(room: ChatConversation): room is ChatCon
 }
 
 export function hasChatRoomMembershipManagement(
-    conversation: ChatConversation | undefined
+    conversation: ChatConversation | undefined,
 ): conversation is ChatRoom & ChatRoomMembershipManagement {
     const candidate = conversation as (ChatRoom & Partial<ChatRoomMembershipManagement>) | undefined;
     return (
@@ -475,7 +480,7 @@ export function hasChatRoomMembershipManagement(
 }
 
 export function hasChatRoomModeration(
-    conversation: ChatConversation | undefined
+    conversation: ChatConversation | undefined,
 ): conversation is ChatRoom & ChatRoomModeration {
     const candidate = conversation as (ChatRoom & Partial<ChatRoomModeration>) | undefined;
     return (
@@ -486,7 +491,7 @@ export function hasChatRoomModeration(
 }
 
 export function hasChatRoomNotificationControl(
-    conversation: ChatConversation | undefined
+    conversation: ChatConversation | undefined,
 ): conversation is ChatRoom & ChatRoomNotificationControl {
     const candidate = conversation as (ChatRoom & Partial<ChatRoomNotificationControl>) | undefined;
     return (

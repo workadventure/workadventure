@@ -36,7 +36,7 @@ const observables = {
 export function getEnterLeaveObservable(
     type: "layer" | "tiledArea" | "mapEditorArea",
     action: EnterLeaveAction,
-    name: string
+    name: string,
 ): Observable<EnterLeaveEvent> {
     const streamsMap = observables[type].stream;
 
@@ -91,7 +91,7 @@ export function getEnterLeaveObservable(
         }).pipe(
             // share() makes this observable hot: the port is opened on the first subscribe
             // and reused for all subsequent subscribers. It is closed when the last subscriber unsubscribes.
-            share()
+            share(),
         );
 
         streamsMap.set(name, sharedPort);
@@ -103,7 +103,7 @@ export function getEnterLeaveObservable(
     const capturedSharedPort = sharedPort;
     const actionStream = capturedSharedPort.pipe(
         filter((event) => event.action === action),
-        map((event) => event.data)
+        map((event) => event.data),
     );
     return defer(() => {
         const status = observables[type].status.get(name);
@@ -114,7 +114,7 @@ export function getEnterLeaveObservable(
                   of({
                       reason: "initial" as const,
                   }),
-                  actionStream
+                  actionStream,
               )
             : actionStream;
     });

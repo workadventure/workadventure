@@ -1,16 +1,21 @@
 <script lang="ts">
-    import { closeModal, onBeforeClose } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import type { VerificationEmojiDialogProps } from "./MatrixSecurity";
     import { IconVerify } from "@wa-icons";
+    import { modals, onBeforeClose } from "@wa-modals";
 
-    export let isOpen: boolean;
-    export let props: VerificationEmojiDialogProps;
-    let waitingOtherDeviceResponse = false;
-    let deviceIsVerified = false;
+    interface Props {
+        isOpen: boolean;
+        props: VerificationEmojiDialogProps;
+    }
 
-    const { confirmationCallback, mismatchCallback, emojis, donePromise, isThisDeviceVerification } = props;
+    let { isOpen, props: dialogProps }: Props = $props();
+    let waitingOtherDeviceResponse = $state(false);
+    let deviceIsVerified = $state(false);
+
+    let { confirmationCallback, mismatchCallback, emojis, donePromise, isThisDeviceVerification } =
+        $derived(dialogProps);
 
     let closeTimeout: ReturnType<typeof setTimeout> | undefined;
 
@@ -21,7 +26,7 @@
             console.error("Failed to mismatch emojis validation:", error);
         }
 
-        closeModal();
+        modals.close();
     }
 
     async function confirmEmoji() {
@@ -42,7 +47,7 @@
                 })
                 .finally(() => {
                     closeTimeout = setTimeout(() => {
-                        closeModal();
+                        modals.close();
                     }, 10000);
                 });
         } catch (error) {
@@ -58,36 +63,40 @@
 </script>
 
 <Popup {isOpen}>
-    <h1 slot="title">
-        {isThisDeviceVerification
-            ? $LL.chat.verificationEmojiDialog.titleVerifyThisDevice()
-            : $LL.chat.verificationEmojiDialog.titleVerifyOtherDevice()}
-    </h1>
-    <div class="w-full h-full" slot="content">
-        {#if !deviceIsVerified}
-            <div class="w-full text-center">
-                {$LL.chat.verificationEmojiDialog.description()}
-            </div>
-            <div class="flex flex-wrap justify-center gap-12 mt-8">
-                {#each emojis as [emoji, label], index (index)}
-                    <div class="flex flex-col items-center gap-2">
-                        <div class="scale-[2.5]">{emoji}</div>
-                        <div class="text-center w-full">
-                            {Object.keys($LL.chat.emojis).includes(label)
-                                ? // @ts-ignore FIXME : try to find a method to delete ts-ignore
-                                  $LL.chat.emojis[label]()
-                                : $LL.chat.emojis.unknownLabel()}
+    {#snippet title()}
+        <h1>
+            {isThisDeviceVerification
+                ? $LL.chat.verificationEmojiDialog.titleVerifyThisDevice()
+                : $LL.chat.verificationEmojiDialog.titleVerifyOtherDevice()}
+        </h1>
+    {/snippet}
+    {#snippet content()}
+        <div class="w-full h-full">
+            {#if !deviceIsVerified}
+                <div class="w-full text-center">
+                    {$LL.chat.verificationEmojiDialog.description()}
+                </div>
+                <div class="flex flex-wrap justify-center gap-12 mt-8">
+                    {#each emojis as [emoji, label], index (index)}
+                        <div class="flex flex-col items-center gap-2">
+                            <div class="scale-[2.5]">{emoji}</div>
+                            <div class="text-center w-full">
+                                {Object.keys($LL.chat.emojis).includes(label)
+                                    ? // @ts-ignore FIXME : try to find a method to delete ts-ignore
+                                      $LL.chat.emojis[label]()
+                                    : $LL.chat.emojis.unknownLabel()}
+                            </div>
                         </div>
-                    </div>
-                {/each}
-            </div>
-        {:else}
-            <div class="w-full py-12 flex justify-center">
-                <IconVerify class="scale-[6]" stroke="2" />
-            </div>
-        {/if}
-    </div>
-    <svelte:fragment slot="action">
+                    {/each}
+                </div>
+            {:else}
+                <div class="w-full py-12 flex justify-center">
+                    <IconVerify class="scale-[6]" stroke="2" />
+                </div>
+            {/if}
+        </div>
+    {/snippet}
+    {#snippet action()}
         {#if waitingOtherDeviceResponse}
             {#await donePromise}
                 {$LL.chat.verificationEmojiDialog.waitOtherDeviceConfirmation()}
@@ -95,7 +104,7 @@
                 <button
                     data-testid="understoodButton"
                     class="btn btn-secondary flex-1 justify-center bg-secondary"
-                    on:click={closeModal}
+                    onclick={() => modals.close()}
                     >{$LL.chat.verificationEmojiDialog.understood()}
                 </button>
             {:catch}
@@ -107,15 +116,15 @@
             <button
                 class="btn btn-danger flex-1 justify-center mx-4 py-1"
                 data-testid="mismatchButton"
-                on:click={mismatchAndCloseModal}
+                onclick={mismatchAndCloseModal}
                 >{$LL.chat.verificationEmojiDialog.mismatch()}
             </button>
             <button
                 data-testid="matchButton"
                 class="btn btn-secondary flex-1 justify-center mx-4 my-2 py-1"
-                on:click={confirmEmoji}
+                onclick={confirmEmoji}
                 >{$LL.chat.verificationEmojiDialog.confirmation()}
             </button>
         {/if}
-    </svelte:fragment>
+    {/snippet}
 </Popup>

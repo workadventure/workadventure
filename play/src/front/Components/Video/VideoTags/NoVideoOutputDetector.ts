@@ -16,7 +16,7 @@ export class NoVideoOutputDetector {
         private videoElement: HTMLVideoElement,
         private onNoVideo: () => void,
         private onVideo: () => void,
-        activePiPStore: Readable<boolean> = activePictureInPictureStore
+        activePiPStore: Readable<boolean> = activePictureInPictureStore,
     ) {
         // PictureInPicture tends to make the no_video_stream_received message appear when it should not.
         // Not sure why, probably a bug due to the fact the video element is moved in the DOM.

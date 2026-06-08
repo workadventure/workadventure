@@ -22,7 +22,7 @@ export class WorkAdventureSpacesCommands extends IframeApiContribution<WorkAdven
     public async joinSpace(
         spaceName: string,
         filterType: "everyone" | "streaming",
-        propertiesToSync: string[]
+        propertiesToSync: string[],
     ): Promise<Space> {
         const port = await openMessagePort("joinSpace", { spaceName, filterType, propertiesToSync });
 

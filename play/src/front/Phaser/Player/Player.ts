@@ -1,6 +1,6 @@
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
-import type CancelablePromise from "cancelable-promise";
+import type { CancelablePromise } from "cancelable-promise";
 import { AskPositionMessage_AskType, PositionMessage_Direction } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
@@ -30,7 +30,7 @@ export class Player extends Character {
         texturesPromise: CancelablePromise<string[]>,
         direction: PositionMessage_Direction,
         moving: boolean,
-        companionTexturePromise: CancelablePromise<string> | undefined
+        companionTexturePromise: CancelablePromise<string> | undefined,
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companionTexturePromise, "me");
         //the current player model should be push away by other players to prevent conflict
@@ -90,7 +90,7 @@ export class Player extends Character {
 
     public setPathToFollow(
         path: { x: number; y: number }[],
-        speed?: number
+        speed?: number,
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
         if (!this.isMoving) {
             this.isMoving = true;
@@ -260,7 +260,7 @@ export class Player extends Character {
         this.scene.connection?.emitAskPosition(
             localUserStore.getLocalUser()?.uuid ?? "",
             this.scene.roomUrl,
-            AskPositionMessage_AskType.LOCATE
+            AskPositionMessage_AskType.LOCATE,
         );
     }
 

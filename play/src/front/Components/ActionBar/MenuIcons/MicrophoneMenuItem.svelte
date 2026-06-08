@@ -32,7 +32,7 @@
                 return "disabled";
             }
             return $requestedMicrophoneState ? "normal" : "forbidden";
-        }
+        },
     );
 
     const microphoneActionBarTooltipStore = derived(
@@ -74,7 +74,7 @@
                 };
             }
             return { title: "", desc: "", media: "" };
-        }
+        },
     );
 
     function microphoneClick(): void {
@@ -89,7 +89,7 @@
 </script>
 
 <ActionBarButton
-    on:click={microphoneClick}
+    onclick={microphoneClick}
     classList="group/btn-mic peer/mic"
     disabledHelp={$openedMenuStore !== undefined}
     state={$microphoneButtonStateStore}

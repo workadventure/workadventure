@@ -1,9 +1,19 @@
 <script lang="ts">
-    export let height = "h-6";
-    export let width = "w-6";
-    export let strokeColor = "stroke-white";
-    export let fillColor = "fill-transparent";
-    export let classList = "aspect-ratio transition-all";
+    interface Props {
+        height?: string;
+        width?: string;
+        strokeColor?: string;
+        fillColor?: string;
+        classList?: string;
+    }
+
+    let {
+        height = "h-6",
+        width = "w-6",
+        strokeColor = "stroke-white",
+        fillColor = "fill-transparent",
+        classList = "aspect-ratio transition-all",
+    }: Props = $props();
 </script>
 
 <svg

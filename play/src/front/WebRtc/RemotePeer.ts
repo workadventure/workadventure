@@ -21,10 +21,7 @@ import type { WebRtcStats } from "../Components/Video/WebRtcStats";
 import type { Streamable, StreamCategory, WebRtcStreamable } from "../Space/Streamable";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
-import type { StreamStoppedMessage } from "./P2PMessages/P2PMessage";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
-import type { BlockMessage } from "./P2PMessages/BlockMessage";
-import type { UnblockMessage } from "./P2PMessages/UnblockMessage";
 import { subscribeToVideoQualityAnalytics } from "./VideoQualityAnalytics";
 import { createWebRtcStats } from "./WebRtcStatsFactory";
 import { selectVideoPreset, type VideoQualitySetting } from "./VideoPresets";
@@ -48,7 +45,7 @@ export class RemotePeer extends Peer implements Streamable {
     // private onBlockSubscribe: Subscription;
     // private onUnBlockSubscribe: Subscription;
     private readonly _remoteStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(
-        undefined
+        undefined,
     );
     public readonly volumeStore: Readable<number[] | undefined>;
     private readonly _statusStore: Writable<PeerStatus> = writable<PeerStatus>("connecting");
@@ -231,8 +228,8 @@ export class RemotePeer extends Peer implements Streamable {
 
     private connectTimeout: ReturnType<typeof setTimeout> | undefined;
     private localStream: MediaStream | undefined;
-    private localAudioTrack: MediaStreamAudioTrack | undefined;
-    private localVideoTrack: MediaStreamVideoTrack | undefined;
+    private localAudioTrack: MediaStreamTrack | undefined;
+    private localVideoTrack: MediaStreamTrack | undefined;
 
     constructor(
         public user: UserSimplePeerInterface,
@@ -247,7 +244,7 @@ export class RemotePeer extends Peer implements Streamable {
         private _blockedUsersStore: Readable<Set<string>>,
         private onDestroy: (intentionalClose: boolean) => void,
         private _connectionId: string,
-        defaultVolume: number = get(volumeProximityDiscussionStore)
+        defaultVolume: number = get(volumeProximityDiscussionStore),
     ) {
         incrementWebRtcConnectionsCount();
         const firefoxBrowser = isFirefox();
@@ -261,7 +258,7 @@ export class RemotePeer extends Peer implements Streamable {
                 ...(firefoxBrowser && {
                     iceCandidatePoolSize: 10,
                     bundlePolicy: "max-bundle" as RTCBundlePolicy,
-                    rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
+                    rtcpMuxPolicy: "require",
                 }),
             },
             preferredCodecs: { video: ["video/VP9", "video/VP8"] },
@@ -279,8 +276,8 @@ export class RemotePeer extends Peer implements Streamable {
         this.uniqueId = isLocalPeer
             ? "localScreenSharingStream"
             : type === "video"
-            ? "video_" + _spaceUserId
-            : "screensharing_" + _spaceUserId;
+              ? "video_" + _spaceUserId
+              : "screensharing_" + _spaceUserId;
         this._name = writable(this.space.getSpaceUserBySpaceUserId(this._spaceUserId)?.name ?? "Unknown");
 
         this.volumeStore = derived<typeof this._remoteStreamStore, number[] | undefined>(
@@ -365,7 +362,7 @@ export class RemotePeer extends Peer implements Streamable {
                     $mediaStream.removeEventListener("removetrack", handleTrackRemoved);
                 };
             },
-            undefined
+            undefined,
         );
 
         this._hasVideo = derived(this._remoteStreamStore, ($remoteStream, set) => {
@@ -436,7 +433,7 @@ export class RemotePeer extends Peer implements Streamable {
 
         this.localStreamStoreSubscribe = deriveSwitchStore(
             this.localStreamStore,
-            this.space.isStreamingVideoStore
+            this.space.isStreamingVideoStore,
         ).subscribe((streamValue) => {
             if (streamValue === undefined) {
                 if (this.localStream) {
@@ -446,8 +443,8 @@ export class RemotePeer extends Peer implements Streamable {
                 return;
             }
             if (streamValue.type === "success") {
-                let newVideoTrack: MediaStreamVideoTrack | undefined;
-                let newAudioTrack: MediaStreamAudioTrack | undefined;
+                let newVideoTrack: MediaStreamTrack | undefined;
+                let newAudioTrack: MediaStreamTrack | undefined;
                 if (streamValue.stream) {
                     if (this.localStream) {
                         newVideoTrack = streamValue.stream.getVideoTracks()[0];
@@ -509,8 +506,8 @@ export class RemotePeer extends Peer implements Streamable {
             new Buffer(
                 JSON.stringify({
                     type: blocking ? "blocked" : "unblocked",
-                } as BlockMessage | UnblockMessage)
-            )
+                }),
+            ),
         );
     }
 
@@ -529,7 +526,7 @@ export class RemotePeer extends Peer implements Streamable {
                             connectionId: this._connectionId,
                         },
                     },
-                    this.user.userId
+                    this.user.userId,
                 );
             } else {
                 this.space.emitPrivateMessage(
@@ -540,7 +537,7 @@ export class RemotePeer extends Peer implements Streamable {
                             connectionId: this._connectionId,
                         },
                     },
-                    this.user.userId
+                    this.user.userId,
                 );
             }
         } catch (e) {
@@ -591,7 +588,7 @@ export class RemotePeer extends Peer implements Streamable {
                         spaceName: this.space.getName(),
                         connectionId: this._connectionId,
                     },
-                    (message) => this.space.emitVideoQualityReport(message)
+                    (message) => this.space.emitVideoQualityReport(message),
                 );
             } else if (!hasVideoTrack && this.analyticsStatsUnsubscribe) {
                 this.analyticsStatsUnsubscribe();
@@ -728,8 +725,8 @@ export class RemotePeer extends Peer implements Streamable {
             new Buffer(
                 JSON.stringify({
                     type: STREAM_STOPPED_MESSAGE_TYPE,
-                } as StreamStoppedMessage)
-            )
+                }),
+            ),
         );
     }
 
@@ -857,8 +854,8 @@ export class RemotePeer extends Peer implements Streamable {
                 Buffer.from(
                     JSON.stringify({
                         type: STREAM_STOPPED_MESSAGE_TYPE,
-                    } as StreamStoppedMessage)
-                )
+                    }),
+                ),
             );
         }
         this.closeStreamableTimeout = setTimeout(() => {
@@ -882,8 +879,8 @@ export class RemotePeer extends Peer implements Streamable {
                         width: width,
                         height: height,
                         maxBitrate: preset.bitrate,
-                    } satisfies P2PMessage)
-                )
+                    } satisfies P2PMessage),
+                ),
             );
         } catch (e) {
             console.error("Failed to send resolution message to peer", e);
@@ -934,8 +931,8 @@ export class RemotePeer extends Peer implements Streamable {
             parameters.encodings[0].scaleResolutionDownBy = scaleFactor;
             debug(
                 `Adaptive video: scaling down ${currentWidth}x${currentHeight} by ${scaleFactor.toFixed(
-                    2
-                )}x to ~${Math.round(currentWidth / scaleFactor)}x${Math.round(currentHeight / scaleFactor)}`
+                    2,
+                )}x to ~${Math.round(currentWidth / scaleFactor)}x${Math.round(currentHeight / scaleFactor)}`,
             );
         } else {
             delete parameters.encodings[0].scaleResolutionDownBy;
@@ -947,7 +944,7 @@ export class RemotePeer extends Peer implements Streamable {
             .setParameters(parameters)
             .then(() => {
                 debug(
-                    `Adaptive video: successfully applied resolution ${width}x${height} @ ${preset.bitrate}bps, ${preset.fps}fps`
+                    `Adaptive video: successfully applied resolution ${width}x${height} @ ${preset.bitrate}bps, ${preset.fps}fps`,
                 );
             })
             .catch((err) => {

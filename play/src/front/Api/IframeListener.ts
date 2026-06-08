@@ -20,15 +20,12 @@ import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connection/ConnectionManager";
 
 import { gameManager } from "../Phaser/Game/GameManager";
-import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
 import type { OpenTabEvent } from "./Events/OpenTabEvent";
-import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
 import type { ClosePopupEvent } from "./Events/ClosePopupEvent";
 import { scriptUtils } from "./ScriptUtils";
-import type { IframeErrorAnswerEvent, IframeQueryMap, IframeResponseEvent } from "./Events/IframeEvent";
+import type { IframeQueryMap, IframeResponseEvent } from "./Events/IframeEvent";
 import { isIframeEventWrapper, isIframeQueryWrapper, isLookingLikeIframeEventWrapper } from "./Events/IframeEvent";
-import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
 import type { PlaySoundEvent } from "./Events/PlaySoundEvent";
 import type { StopSoundEvent } from "./Events/StopSoundEvent";
 import type { LoadSoundEvent } from "./Events/LoadSoundEvent";
@@ -50,17 +47,11 @@ import type { SetStatusEvent } from "./Events/SetStatusEvent";
 
 import type { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
 import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
-import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
-import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import type { ModalEvent } from "./Events/ModalEvent";
 import type { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
 import type { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent";
-import type {
-    IframeErrorMessagePortEvent,
-    IframeMessagePortMap,
-    IframeSuccessMessagePortEvent,
-} from "./Events/MessagePortEvents";
+import type { IframeMessagePortMap, IframeSuccessMessagePortEvent } from "./Events/MessagePortEvents";
 import { isIframeMessagePortWrapper } from "./Events/MessagePortEvents";
 import { CheckedWorkAdventureMessagePort } from "./Iframe/CheckedWorkAdventureMessagePort";
 import type { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
@@ -68,13 +59,13 @@ import { ScriptLoadedError } from "./ScriptLoadedError";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
-    source: MessageEventSource | null
+    source: MessageEventSource | null,
 ) => IframeQueryMap[T]["answer"] | PromiseLike<IframeQueryMap[T]["answer"]>;
 
 type OpenMessagePortAnswererCallback<T extends keyof IframeMessagePortMap> = (
     data: IframeMessagePortMap[T]["data"],
     port: CheckedWorkAdventureMessagePort<T>,
-    source: MessageEventSource | null
+    source: MessageEventSource | null,
 ) => void | PromiseLike<void>;
 
 /**
@@ -301,7 +292,7 @@ class IframeListener {
                             "It seems an iFrame is trying to communicate with WorkAdventure but was not explicitly granted the permission to do so. " +
                                 "If you are looking to use the WorkAdventure Scripting API inside an iFrame, you should allow the " +
                                 'iFrame to communicate with WorkAdventure by checking the "Allow API" checkbox (if you are using the map editor) or using the "openWebsiteAllowApi" property in your map (if you are using Tiled), or passing "true" as a second' +
-                                "parameter to WA.nav.openCoWebSite() (if you are using the scripting API)."
+                                "parameter to WA.nav.openCoWebSite() (if you are using the scripting API).",
                         );
                     }
                     return;
@@ -343,8 +334,8 @@ class IframeListener {
                                     id: queryId,
                                     type: payload.type,
                                     error: errorMsg,
-                                } as IframeErrorAnswerEvent,
-                                "*"
+                                },
+                                "*",
                             );
                             return;
                         }
@@ -352,7 +343,7 @@ class IframeListener {
                         const errorHandler = (reason: unknown) => {
                             console.error(
                                 "An error occurred while responding to an iFrame open port message query.",
-                                reason
+                                reason,
                             );
                             const error = asError(reason);
                             const reasonMsg = error.message;
@@ -362,8 +353,8 @@ class IframeListener {
                                     id: queryId,
                                     messagePort: true,
                                     error: reasonMsg,
-                                } as IframeErrorMessagePortEvent,
-                                "*"
+                                },
+                                "*",
                             );
                         };
 
@@ -375,7 +366,7 @@ class IframeListener {
                                             id: queryId,
                                             messagePort: true,
                                         } satisfies IframeSuccessMessagePortEvent,
-                                        "*"
+                                        "*",
                                     );
                                 })
                                 .catch(errorHandler);
@@ -400,8 +391,8 @@ class IframeListener {
                                     id: queryId,
                                     type: query.type,
                                     error: errorMsg,
-                                } as IframeErrorAnswerEvent,
-                                "*"
+                                },
+                                "*",
                             );
                             return;
                         }
@@ -416,8 +407,8 @@ class IframeListener {
                                     id: queryId,
                                     type: query.type,
                                     error: reasonMsg,
-                                } as IframeErrorAnswerEvent,
-                                "*"
+                                },
+                                "*",
                             );
                         };
 
@@ -430,7 +421,7 @@ class IframeListener {
                                             type: query.type,
                                             data: value,
                                         },
-                                        "*"
+                                        "*",
                                     );
                                 })
                                 .catch(errorHandler);
@@ -444,7 +435,7 @@ class IframeListener {
                             console.error(
                                 `Invalid event "${lookingLikeEvent.data.type}" received from Iframe: `,
                                 lookingLikeEvent.data,
-                                iframeEventGuarded.error.issues
+                                iframeEventGuarded.error.issues,
                             );
                             return;
                         }
@@ -553,7 +544,7 @@ class IframeListener {
                                 iframeEvent.data.iframe,
                                 iframeEvent.data.key,
                                 foundSrc,
-                                iframeEvent.data.options
+                                iframeEvent.data.options,
                             );
                         } else if (iframeEvent.type == "unregisterMenu") {
                             handleMenuUnregisterEvent(iframeEvent.data.key);
@@ -595,7 +586,7 @@ class IframeListener {
                             // dispacth event on windows
                             const event = new MessageEvent(
                                 "AcitivityPickerFromWorkAdventure",
-                                message as unknown as MessageEventInit<unknown>
+                                message as unknown as MessageEventInit<unknown>,
                             );
                             window.dispatchEvent(event);
                         } else if (iframeEvent.type == "banUser") {
@@ -636,7 +627,7 @@ class IframeListener {
                     Sentry.captureException(reason);
                 });
             },
-            false
+            false,
         );
     }
 
@@ -656,7 +647,7 @@ class IframeListener {
                     console.error('Could not register "iframeCloseCallbacks". No contentWindow.');
                 }
             },
-            { once: true }
+            { once: true },
         );
     }
 
@@ -841,9 +832,9 @@ class IframeListener {
                 data: {
                     message,
                     senderId,
-                } as UserInputChatEvent,
+                },
             },
-            exceptOrigin
+            exceptOrigin,
         );
     }
 
@@ -864,7 +855,7 @@ class IframeListener {
             type: "joinProximityMeetingEvent",
             data: {
                 users: formattedUsers,
-            } as JoinProximityMeetingEvent,
+            },
         });
     }
 
@@ -881,7 +872,7 @@ class IframeListener {
                     position: user.position,
                     variables: user.variables,
                 },
-            } as ParticipantProximityMeetingEvent,
+            },
         });
     }
 
@@ -898,7 +889,7 @@ class IframeListener {
                     position: user.position,
                     variables: user.variables,
                 },
-            } as ParticipantProximityMeetingEvent,
+            },
         });
     }
 
@@ -932,7 +923,7 @@ class IframeListener {
             type: "enterEvent",
             data: {
                 name: name,
-            } as EnterLeaveEvent,
+            },
         });
     }
 
@@ -941,7 +932,7 @@ class IframeListener {
             type: "leaveEvent",
             data: {
                 name: name,
-            } as EnterLeaveEvent,
+            },
         });
     }
 
@@ -996,7 +987,7 @@ class IframeListener {
             data: {
                 popupId,
                 buttonId,
-            } as ButtonClickedEvent,
+            },
         });
     }
 
@@ -1049,7 +1040,7 @@ class IframeListener {
     public postMessage(
         message: IframeResponseEvent,
         exceptOrigin?: MessageEventSource,
-        transfer?: Transferable[]
+        transfer?: Transferable[],
     ): void {
         for (const iframe of this.iframes.keys()) {
             if (exceptOrigin === iframe.contentWindow) {
@@ -1094,7 +1085,7 @@ class IframeListener {
                     value,
                 },
             },
-            source ?? undefined
+            source ?? undefined,
         );
     }
 
@@ -1108,7 +1099,7 @@ class IframeListener {
                     value,
                 },
             },
-            source ?? undefined
+            source ?? undefined,
         );
     }
 
@@ -1147,7 +1138,7 @@ class IframeListener {
      */
     public registerOpenMessagePortAnswerer<T extends keyof IframeMessagePortMap>(
         key: T,
-        callback: OpenMessagePortAnswererCallback<T>
+        callback: OpenMessagePortAnswererCallback<T>,
     ): void {
         this.openMessagePortAnswerers[key] = callback;
     }

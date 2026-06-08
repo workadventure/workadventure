@@ -1,6 +1,6 @@
 import type { Readable, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
-import type { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
+import type { WorkAdventureComponent, WorkAdventureComponentProps } from "../../types/component";
 import type { Translation } from "../../i18n/i18n-types";
 import { connectionManager } from "../Connection/ConnectionManager";
 import { localUserStore } from "../Connection/LocalUserStore";
@@ -142,7 +142,7 @@ function createSubMenusStore() {
                     $gameSceneStore?.room.reportIssuesUrl !== undefined ||
                     (ENABLE_REPORT_ISSUES_MENU != undefined &&
                         ENABLE_REPORT_ISSUES_MENU &&
-                        REPORT_ISSUES_URL != undefined)
+                        REPORT_ISSUES_URL != undefined),
             ),
         },
         {
@@ -246,7 +246,7 @@ export function handleMenuRegistrationEvent(
     iframeUrl: string | undefined = undefined,
     key: string,
     source: string | undefined = undefined,
-    options: { allowApi: boolean; allow?: string | undefined }
+    options: { allowApi: boolean; allow?: string | undefined },
 ) {
     if (get(subMenusStore).find((item) => item.type === "scripting" && item.label === menuName)) {
         console.warn("The menu " + menuName + " already exist.");
@@ -275,7 +275,7 @@ export function handleOpenMenuEvent(key: string) {
 export function getProfileUrl() {
     return new URL(
         `profile-callback?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`,
-        ABSOLUTE_PUSHER_URL
+        ABSOLUTE_PUSHER_URL,
     ).toString();
 }
 
@@ -291,8 +291,14 @@ export interface CustomButtonActionBarDescriptor {
     isGradient?: boolean | undefined;
 }
 
+interface RightActionBarButtonProps extends WorkAdventureComponentProps {
+    first?: boolean;
+    last?: boolean;
+    classList?: string;
+}
+
 export const additionalRightButtonsMenu = derived(getAdditionalMenuItemStore("top"), ($additionalTopMenuItems) => {
-    const menuItems: RightMenuItem<CustomActionBarButton>[] = [];
+    const menuItems: RightMenuItem<RightActionBarButtonProps>[] = [];
     $additionalTopMenuItems.forEach((props, id) => {
         menuItems.push({
             id: id,
@@ -307,28 +313,28 @@ export const additionalRightButtonsMenu = derived(getAdditionalMenuItemStore("to
     return menuItems;
 });
 
-export interface RightMenuItem<T extends SvelteComponentTyped> {
+export type RightMenuItem<TProps extends WorkAdventureComponentProps = WorkAdventureComponentProps> = {
     id: string;
     fallsInBurgerMenuStore: Writable<boolean>;
-    component: ComponentType<T>;
-    props: ComponentProps<T>;
-}
+    component: WorkAdventureComponent;
+    props: TProps;
+};
 
-const mapsMenuItem: RightMenuItem<MapSubMenu> = {
+const mapsMenuItem: RightMenuItem<RightActionBarButtonProps> = {
     id: "maps",
     fallsInBurgerMenuStore: writable(false),
     component: MapSubMenu,
     props: {},
 };
 
-const participantMenuItem: RightMenuItem<ParticipantMenuItem> = {
+const participantMenuItem: RightMenuItem<RightActionBarButtonProps> = {
     id: "participant",
     fallsInBurgerMenuStore: writable(false),
     component: ParticipantMenuItem,
     props: {},
 };
 
-const loginMenuItem: RightMenuItem<LoginMenuItem> = {
+const loginMenuItem: RightMenuItem<RightActionBarButtonProps> = {
     id: "login",
     fallsInBurgerMenuStore: writable(true),
     component: LoginMenuItem,
@@ -338,7 +344,7 @@ const loginMenuItem: RightMenuItem<LoginMenuItem> = {
     },
 };
 
-const inviteMenuItem: RightMenuItem<InviteMenuItem> = {
+const inviteMenuItem: RightMenuItem<RightActionBarButtonProps> = {
     id: "invite",
     fallsInBurgerMenuStore: writable(false),
     component: InviteMenuItem,
@@ -348,10 +354,10 @@ const inviteMenuItem: RightMenuItem<InviteMenuItem> = {
     },
 };
 
-export const rightActionBarMenuItems: Readable<RightMenuItem<SvelteComponentTyped>[]> = derived(
+export const rightActionBarMenuItems: Readable<RightMenuItem<RightActionBarButtonProps>[]> = derived(
     [additionalRightButtonsMenu, userIsConnected, inviteUserActivated],
     ([$additionalButtonsMenu, $userIsConnected, $inviteUserActivated]) => {
-        const menuItems: RightMenuItem<SvelteComponentTyped>[] = [...$additionalButtonsMenu.values()];
+        const menuItems: RightMenuItem<RightActionBarButtonProps>[] = [...$additionalButtonsMenu.values()];
 
         if ($inviteUserActivated) {
             menuItems.push(inviteMenuItem);
@@ -360,21 +366,18 @@ export const rightActionBarMenuItems: Readable<RightMenuItem<SvelteComponentType
             menuItems.push(loginMenuItem);
         }
 
-        // Recreate the menu items array to ensure the order is correct and update props last and first to each component
-        const menuItems_: RightMenuItem<SvelteComponentTyped>[] = [];
-        menuItems.forEach((item, index) => {
-            menuItems_.push({
-                ...item,
-                props: { ...item.props, first: index === 0, last: index === menuItems.length - 1 },
-            });
-        });
+        menuItems.push(mapsMenuItem);
+        menuItems.push(participantMenuItem);
 
-        menuItems_.push(mapsMenuItem);
-
-        menuItems_.push(participantMenuItem);
-
-        return menuItems_;
-    }
+        return menuItems.map((item, index) => ({
+            ...item,
+            props: {
+                ...item.props,
+                first: index === 0,
+                last: index === menuItems.length - 1,
+            },
+        }));
+    },
 );
 
 // It is ok to not unsubscribe to this store because it is a singleton.
@@ -395,20 +398,20 @@ export const helpTextDisabledStore = derived(
     activeSecondaryZoneActionBarStore,
     ($activeSecondaryZoneActionBarStore) => {
         return $activeSecondaryZoneActionBarStore !== undefined;
-    }
+    },
 );
 
 export const mapEditorMenuVisibleStore = derived(
     [mapEditorActivated, mapManagerActivated, mapEditorActivatedForThematics],
     ([$mapEditorActivated, $mapManagerActivated, $mapEditorActivatedForThematics]) => {
         return ($mapEditorActivated || $mapEditorActivatedForThematics) && $mapManagerActivated;
-    }
+    },
 );
 export const globalMessageVisibleStore = derived(
     [megaphoneCanBeUsedStore, userIsAdminStore],
     ([$megaphoneCanBeUsedStore, $userIsAdminStore]) => {
         return $megaphoneCanBeUsedStore || $userIsAdminStore;
-    }
+    },
 );
 export const mapMenuVisibleStore = derived(
     [
@@ -424,7 +427,7 @@ export const mapMenuVisibleStore = derived(
             $additionalBuildMenuItems.size > 0 ||
             $personalAreaDataStore !== null
         );
-    }
+    },
 );
 
 type Menus = "appMenu" | "profileMenu" | "mapMenu" | "participantMenu";

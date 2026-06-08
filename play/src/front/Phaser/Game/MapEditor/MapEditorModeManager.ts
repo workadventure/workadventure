@@ -86,7 +86,7 @@ export class MapEditorModeManager {
     constructor(
         scene: GameScene,
         private _isInsidePersonalAreaStore = isInsidePersonalAreaStore,
-        private _personalAreaDataStore = personalAreaDataStore
+        private _personalAreaDataStore = personalAreaDataStore,
     ) {
         this.scene = scene;
 
@@ -128,7 +128,7 @@ export class MapEditorModeManager {
      *
      */
     public async executeCommand(
-        command: (Command & FrontCommandInterface) | (Command & FrontCommandInterface & UpdateWAMSettingCommand)
+        command: (Command & FrontCommandInterface) | (Command & FrontCommandInterface & UpdateWAMSettingCommand),
     ): Promise<void> {
         await this.isReverting;
         // Commands are throttled. Only one at a time.
@@ -335,10 +335,10 @@ export class MapEditorModeManager {
                 if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
                     logger(
                         "ErrorCommandMessage received",
-                        editMapCommandMessage.editMapMessage?.message.errorCommandMessage
+                        editMapCommandMessage.editMapMessage?.message.errorCommandMessage,
                     );
                     const command = this.pendingCommands.find(
-                        (command) => command.commandId === editMapCommandMessage.id
+                        (command) => command.commandId === editMapCommandMessage.id,
                     );
                     if (command) {
                         logger("removing command of pendingList : ", editMapCommandMessage.id);
@@ -392,7 +392,7 @@ export class MapEditorModeManager {
                     await command.getUndoCommand().execute();
                     // also remove from local history of commands as this is invalid
                     const index = this.localCommandsHistory.findIndex(
-                        (localCommand) => localCommand.commandId === command.commandId
+                        (localCommand) => localCommand.commandId === command.commandId,
                     );
                     if (index !== -1) {
                         this.localCommandsHistory.splice(index, 1);
@@ -457,8 +457,8 @@ export class MapEditorModeManager {
                 this.lastlyUsedTool && this.lastlyUsedTool != EditorToolName.CloseMapEditor
                     ? this.lastlyUsedTool
                     : get(mapEditorActivated) || get(mapEditorActivatedForThematics)
-                    ? EditorToolName.EntityEditor
-                    : EditorToolName.ExploreTheRoom
+                      ? EditorToolName.EntityEditor
+                      : EditorToolName.ExploreTheRoom,
             );
         });
     }
@@ -493,7 +493,7 @@ export class MapEditorModeManager {
             return;
         }
         const areaPersonalPropertyData = areaDataToClaim.properties.find(
-            (property) => property.type === "personalAreaPropertyData"
+            (property) => property.type === "personalAreaPropertyData",
         );
         if (!areaPersonalPropertyData) {
             console.error("No area property data");
@@ -524,8 +524,8 @@ export class MapEditorModeManager {
                     undefined,
                     oldAreaDataToRevok,
                     this.editorTools.AreaEditor as AreaEditorTool,
-                    this.scene.getGameMapFrontWrapper()
-                )
+                    this.scene.getGameMapFrontWrapper(),
+                ),
             ).catch((error) => console.error(error));
         }
 
@@ -549,8 +549,8 @@ export class MapEditorModeManager {
                 undefined,
                 oldAreaData,
                 this.editorTools.AreaEditor as AreaEditorTool,
-                this.scene.getGameMapFrontWrapper()
-            )
+                this.scene.getGameMapFrontWrapper(),
+            ),
         ).catch((error) => console.error(error));
         this._isInsidePersonalAreaStore.set(true);
         this._personalAreaDataStore.set(areaDataToClaim);
@@ -573,8 +573,8 @@ export class MapEditorModeManager {
                 undefined,
                 undefined,
                 this.editorTools.AreaEditor as AreaEditorTool,
-                this.scene.getGameMapFrontWrapper()
-            )
+                this.scene.getGameMapFrontWrapper(),
+            ),
         );
         this._isInsidePersonalAreaStore.set(false);
         this._personalAreaDataStore.set(null);

@@ -33,31 +33,34 @@
         IconCameraUp,
     } from "@wa-icons";
 
-    let fullscreen: boolean = localUserStore.getFullscreen();
-    let notification: boolean = localUserStore.getNotification();
-    let allowPictureInPicture: boolean = localUserStore.getAllowPictureInPicture();
-    let blockAudio: boolean = localUserStore.getBlockAudio();
-    let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
-    let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
-    let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
-    let disableAnimations: boolean = localUserStore.getDisableAnimations();
-    let valueLocale: string = $locale;
-    let valueCameraPrivacySettings = localUserStore.getCameraPrivacySettings();
-    let valueMicrophonePrivacySettings = localUserStore.getMicrophonePrivacySettings();
+    let fullscreen: boolean = $state(localUserStore.getFullscreen());
+    let notification: boolean = $state(localUserStore.getNotification());
+    let allowPictureInPicture: boolean = $state(localUserStore.getAllowPictureInPicture());
+    let blockAudio: boolean = $state(localUserStore.getBlockAudio());
+    let forceCowebsiteTrigger: boolean = $state(localUserStore.getForceCowebsiteTrigger());
+    let ignoreFollowRequests: boolean = $state(localUserStore.getIgnoreFollowRequests());
+    let decreaseAudioPlayerVolumeWhileTalking: boolean = $state(
+        localUserStore.getDecreaseAudioPlayerVolumeWhileTalking(),
+    );
+    let disableAnimations: boolean = $state(localUserStore.getDisableAnimations());
+    let valueLocale: string = $state($locale);
+    let valueCameraPrivacySettings = $state(localUserStore.getCameraPrivacySettings());
+    let valueMicrophonePrivacySettings = $state(localUserStore.getMicrophonePrivacySettings());
     const initialVideoQuality = localUserStore.getVideoQuality();
-    let valueVideoQuality = initialVideoQuality === "high" ? 3 : initialVideoQuality === "low" ? 1 : 2;
+    let valueVideoQuality = $state(initialVideoQuality === "high" ? 3 : initialVideoQuality === "low" ? 1 : 2);
     const initialScreenShareQuality = localUserStore.getScreenShareQuality();
-    let valueScreenShareQuality =
-        initialScreenShareQuality === "high" ? 3 : initialScreenShareQuality === "low" ? 1 : 2;
-    let bandwidthConstrainedPreference = localUserStore.getBandwidthConstrainedScreenSharePreference();
+    let valueScreenShareQuality = $state(
+        initialScreenShareQuality === "high" ? 3 : initialScreenShareQuality === "low" ? 1 : 2,
+    );
+    let bandwidthConstrainedPreference = $state(localUserStore.getBandwidthConstrainedScreenSharePreference());
 
-    let volumeProximityDiscussion = localUserStore.getVolumeProximityDiscussion();
+    let volumeProximityDiscussion = $state(localUserStore.getVolumeProximityDiscussion());
 
-    let previewCameraPrivacySettings = valueCameraPrivacySettings;
-    let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
+    let previewCameraPrivacySettings = $state((() => valueCameraPrivacySettings)());
+    let previewMicrophonePrivacySettings = $state((() => valueMicrophonePrivacySettings)());
 
-    let valueBubbleSound = localUserStore.getBubbleSound();
-    let videoQualityStats = localUserStore.getDisplayVideoQualityStats();
+    let valueBubbleSound = $state(localUserStore.getBubbleSound());
+    let videoQualityStats = $state(localUserStore.getDisplayVideoQualityStats());
 
     async function updateLocale() {
         await setCurrentLocale(valueLocale as Locales);
@@ -239,12 +242,14 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <IconAntennaBarsLow />
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueVideoQuality = 1)}
-                            >{$LL.menu.settings.videoBandwidth.low()}</span
+                            onclick={(event) => {
+                                event.preventDefault();
+                                valueVideoQuality = 1;
+                            }}>{$LL.menu.settings.videoBandwidth.low()}</span
                         >
                     </li>
                     <li
@@ -253,12 +258,14 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <IconAntennaBarsMid />
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueVideoQuality = 2)}
-                            >{$LL.menu.settings.videoBandwidth.recommended()}</span
+                            onclick={(event) => {
+                                event.preventDefault();
+                                valueVideoQuality = 2;
+                            }}>{$LL.menu.settings.videoBandwidth.recommended()}</span
                         >
                     </li>
                     <li
@@ -267,12 +274,14 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <IconAntennaBarsHigh />
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueVideoQuality = 3)}
-                            >{$LL.menu.settings.videoBandwidth.high()}</span
+                            onclick={(event) => {
+                                event.preventDefault();
+                                valueVideoQuality = 3;
+                            }}>{$LL.menu.settings.videoBandwidth.high()}</span
                         >
                     </li>
                 </ul>
@@ -282,7 +291,7 @@
                     max={3}
                     step={1}
                     bind:value={valueVideoQuality}
-                    onChange={updateVideoQuality}
+                    onchange={updateVideoQuality}
                 />
             </div>
         </div>
@@ -302,12 +311,14 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <IconAntennaBarsLow />
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueScreenShareQuality = 1)}
-                            >{$LL.menu.settings.shareScreenBandwidth.low()}</span
+                            onclick={(event) => {
+                                event.preventDefault();
+                                valueScreenShareQuality = 1;
+                            }}>{$LL.menu.settings.shareScreenBandwidth.low()}</span
                         >
                     </li>
                     <li
@@ -316,12 +327,14 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <IconAntennaBarsMid />
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueScreenShareQuality = 2)}
-                            >{$LL.menu.settings.shareScreenBandwidth.recommended()}</span
+                            onclick={(event) => {
+                                event.preventDefault();
+                                valueScreenShareQuality = 2;
+                            }}>{$LL.menu.settings.shareScreenBandwidth.recommended()}</span
                         >
                     </li>
                     <li
@@ -330,12 +343,14 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <IconAntennaBarsHigh />
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueScreenShareQuality = 3)}
-                            >{$LL.menu.settings.shareScreenBandwidth.high()}</span
+                            onclick={(event) => {
+                                event.preventDefault();
+                                valueScreenShareQuality = 3;
+                            }}>{$LL.menu.settings.shareScreenBandwidth.high()}</span
                         >
                     </li>
                 </ul>
@@ -344,7 +359,7 @@
                     max={3}
                     step={1}
                     bind:value={valueScreenShareQuality}
-                    onChange={updateScreenShareQuality}
+                    onchange={updateScreenShareQuality}
                     buttonShape="square"
                 />
             </div>
@@ -359,7 +374,7 @@
                 value="maintain-resolution"
                 label={$LL.menu.settings.bandwidthConstrainedPreference.maintainResolutionTitle()}
                 bind:group={bandwidthConstrainedPreference}
-                onChange={updateBandwidthConstrainedPreference}
+                onchange={updateBandwidthConstrainedPreference}
                 outerClass="flex-1"
             >
                 <em>{$LL.menu.settings.bandwidthConstrainedPreference.maintainResolutionDescription()}</em>
@@ -368,7 +383,7 @@
                 value="maintain-framerate"
                 label={$LL.menu.settings.bandwidthConstrainedPreference.maintainFramerateTitle()}
                 bind:group={bandwidthConstrainedPreference}
-                onChange={updateBandwidthConstrainedPreference}
+                onchange={updateBandwidthConstrainedPreference}
                 outerClass="flex-1"
             >
                 <em>{$LL.menu.settings.bandwidthConstrainedPreference.maintainFramerateDescription()}</em>
@@ -377,7 +392,7 @@
                 value="balanced"
                 label={$LL.menu.settings.bandwidthConstrainedPreference.balancedTitle()}
                 bind:group={bandwidthConstrainedPreference}
-                onChange={updateBandwidthConstrainedPreference}
+                onchange={updateBandwidthConstrainedPreference}
                 outerClass="flex-1"
             >
                 <em>{$LL.menu.settings.bandwidthConstrainedPreference.balancedDescription()}</em>
@@ -432,7 +447,7 @@
                     max={1}
                     step={0.1}
                     bind:value={volumeProximityDiscussion}
-                    onChange={updateVolumeProximityDiscussion}
+                    onchange={updateVolumeProximityDiscussion}
                 />
             </div>
         </div>
@@ -446,7 +461,7 @@
             <select
                 class="w-full languages-switcher bg-contrast rounded border border-solid border-white/20 mb-0"
                 bind:value={valueLocale}
-                on:change={updateLocale}
+                onchange={updateLocale}
             >
                 {#each displayableLocales as locale (locale.id)}
                     <option value={locale.id}>
@@ -473,7 +488,7 @@
             <InputSwitch
                 id="cam-toggle"
                 bind:value={valueCameraPrivacySettings}
-                onChange={changeCameraPrivacySettings}
+                onchange={changeCameraPrivacySettings}
                 label={$LL.menu.settings.privacySettings.cameraToggle()}
             />
         </div>
@@ -482,7 +497,7 @@
             <InputSwitch
                 id="mic-toggle"
                 bind:value={valueMicrophonePrivacySettings}
-                onChange={changeMicrophonePrivacySettings}
+                onchange={changeMicrophonePrivacySettings}
                 label={$LL.menu.settings.privacySettings.microphoneToggle()}
             />
         </div>
@@ -497,7 +512,7 @@
             <SoundSelect
                 id="bubble-sound"
                 bind:value={valueBubbleSound}
-                onChange={changeBubbleSound}
+                onchange={changeBubbleSound}
                 label={$LL.menu.settings.bubbleSound()}
                 options={[
                     { value: "ding", label: $LL.menu.settings.bubbleSoundOptions.ding() },
@@ -512,7 +527,7 @@
             <InputSwitch
                 id="fullscreen-toggle"
                 bind:value={fullscreen}
-                onChange={changeFullscreen}
+                onchange={changeFullscreen}
                 label={$LL.menu.settings.fullscreen()}
             />
         </div>
@@ -520,7 +535,7 @@
             <InputSwitch
                 id="notification-toggle"
                 bind:value={notification}
-                onChange={changeNotification}
+                onchange={changeNotification}
                 label={$LL.menu.settings.notifications()}
             />
         </div>
@@ -528,7 +543,7 @@
             <InputSwitch
                 id="picture-in-picture-toggle"
                 bind:value={allowPictureInPicture}
-                onChange={changePictureInPicture}
+                onchange={changePictureInPicture}
                 label={$LL.menu.settings.enablePictureInPicture()}
             />
         </div>
@@ -536,7 +551,7 @@
             <InputSwitch
                 id="cowebsiteTrigger-toggle"
                 bind:value={forceCowebsiteTrigger}
-                onChange={changeForceCowebsiteTrigger}
+                onchange={changeForceCowebsiteTrigger}
                 label={$LL.menu.settings.cowebsiteTrigger()}
             />
         </div>
@@ -545,7 +560,7 @@
             <InputSwitch
                 id="cowebsiteTrigger-toggle"
                 bind:value={ignoreFollowRequests}
-                onChange={changeIgnoreFollowRequests}
+                onchange={changeIgnoreFollowRequests}
                 label={$LL.menu.settings.ignoreFollowRequest()}
             />
         </div>
@@ -553,7 +568,7 @@
             <InputSwitch
                 id="decreaseAudioPlayerVolumeWhileTalking-toggle"
                 bind:value={decreaseAudioPlayerVolumeWhileTalking}
-                onChange={changeDecreaseAudioPlayerVolumeWhileTalking}
+                onchange={changeDecreaseAudioPlayerVolumeWhileTalking}
                 label={$LL.audio.manager.reduce()}
             />
         </div>
@@ -562,7 +577,7 @@
             <InputSwitch
                 id="changeBlockAudio"
                 bind:value={blockAudio}
-                onChange={changeBlockAudio}
+                onchange={changeBlockAudio}
                 label={$LL.menu.settings.blockAudio()}
             />
         </div>
@@ -571,7 +586,7 @@
             <InputSwitch
                 id="changeDisableAnimations"
                 bind:value={disableAnimations}
-                onChange={changeDisableAnimations}
+                onchange={changeDisableAnimations}
                 label={$LL.menu.settings.disableAnimations()}
             />
         </div>
@@ -580,7 +595,7 @@
             <InputSwitch
                 id="changeVideoQualityStats"
                 bind:value={videoQualityStats}
-                onChange={changeVideoQualityStats}
+                onchange={changeVideoQualityStats}
                 label={$LL.menu.settings.displayVideoQualityStats()}
             />
         </div>

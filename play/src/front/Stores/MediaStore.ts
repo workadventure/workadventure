@@ -234,12 +234,12 @@ export const listenerWaitingMediaStore = writable<string | undefined>(undefined)
 export const listenerSharingCameraStore = writable(false);
 
 export const requestedCameraDeviceIdStore: Writable<string | undefined> = writable(
-    localUserStore.getPreferredVideoInputDevice() ? localUserStore.getPreferredVideoInputDevice() : undefined
+    localUserStore.getPreferredVideoInputDevice() ? localUserStore.getPreferredVideoInputDevice() : undefined,
 );
 
 export const frameRateStore: Writable<number | undefined> = writable();
 export const requestedMicrophoneDeviceIdStore: Writable<string | undefined> = writable(
-    localUserStore.getPreferredAudioInputDevice() ? localUserStore.getPreferredAudioInputDevice() : undefined
+    localUserStore.getPreferredAudioInputDevice() ? localUserStore.getPreferredAudioInputDevice() : undefined,
 );
 
 export const usedCameraDeviceIdStore: Writable<string | undefined> = writable();
@@ -277,7 +277,7 @@ export const videoConstraintStore = derived(
         }
 
         return constraints;
-    }
+    },
 );
 
 /**
@@ -344,7 +344,7 @@ export const cameraEnergySavingStore = derived(
             !$inLivekitStore &&
             !$displayedMegaphoneScreenStore
         );
-    }
+    },
 );
 
 export const requestedStatusStore: Writable<RequestedStatus | null> = writable(localUserStore.getRequestedStatus());
@@ -354,7 +354,7 @@ export const inCowebsiteZone = derived(
     ([$inJitsiStore, $inBbbStore, $inOpenWebsite]) => {
         return $inJitsiStore || $inBbbStore || $inOpenWebsite;
     },
-    false
+    false,
 );
 
 export const silentStore = createSilentStore();
@@ -396,7 +396,7 @@ export const availabilityStatusStore = derived(
 
         return AvailabilityStatus.ONLINE;
     },
-    AvailabilityStatus.ONLINE
+    AvailabilityStatus.ONLINE,
 );
 
 // This is a singleton so we can safely not ever unsubscribe from it.
@@ -448,7 +448,7 @@ export const mediaStreamConstraintsStore = derived(
             $batchGetUserMediaStore,
             $inBackgroundSettingsStore,
         ],
-        set
+        set,
     ) => {
         // If a batch is in process, don't do anything.
         if ($batchGetUserMediaStore) {
@@ -524,7 +524,7 @@ export const mediaStreamConstraintsStore = derived(
     } as {
         video: false | MediaTrackConstraints;
         audio: false | MediaTrackConstraints;
-    }
+    },
 );
 
 export type LocalStreamStoreValue = StreamSuccessValue | StreamErrorValue;
@@ -635,7 +635,7 @@ function emitCurrentStreamOrError(setIfCurrent: SetRawStreamIfCurrent, error: un
 async function runRawStreamUpdate(
     constraints: { video: false | MediaTrackConstraints; audio: false | MediaTrackConstraints },
     setIfCurrent: SetRawStreamIfCurrent,
-    generation: number
+    generation: number,
 ): Promise<{ video: false | MediaTrackConstraints; audio: false | MediaTrackConstraints }> {
     if (navigator.mediaDevices === undefined) {
         if (window.location.protocol === "http:") {
@@ -778,7 +778,7 @@ async function runRawStreamUpdate(
                 console.info(
                     "Could not access the requested microphone or webcam. Falling back to default microphone and webcam",
                     newConstraints,
-                    e
+                    e,
                 );
                 batchGetUserMediaStore.startBatch();
                 requestedCameraDeviceIdStore.set(undefined);
@@ -788,7 +788,7 @@ async function runRawStreamUpdate(
                 console.info(
                     "Error. Unable to get microphone and/or camera access. Trying audio only.",
                     newConstraints,
-                    e
+                    e,
                 );
                 emitCurrentStreamOrError(setIfCurrent, e);
                 const classified = classifyMediaAccessError(e);
@@ -873,7 +873,7 @@ export const rawLocalStreamStore = derived<
                     error: e instanceof Error ? e : new Error("An unknown error happened"),
                 });
             });
-    }
+    },
 );
 
 /**
@@ -888,7 +888,7 @@ async function runLocalStreamUpdate(
     rawValue: LocalStreamStoreValue,
     backgroundProcessingEnabled: boolean,
     setIfCurrent: SetLocalStreamIfCurrent,
-    signal: AbortSignal
+    signal: AbortSignal,
 ): Promise<void> {
     // This can happen when the user navigates away from the page while the stream is being updated
     if (rawValue == undefined) return;
@@ -972,10 +972,10 @@ export const localStreamStore = derived<
                     $rawLocalStreamStore,
                     $backgroundProcessingEnabled,
                     setIfCurrent,
-                    controller.signal
-                )
+                    controller.signal,
+                ),
             );
-    }
+    },
 );
 
 /**
@@ -1007,7 +1007,7 @@ export const localStreamStoreForPublishing = derived<
             return;
         }
         set($localStreamStore);
-    }
+    },
 );
 
 /**
@@ -1054,7 +1054,7 @@ export const localVolumeStore = derived<typeof localStreamStore, number[] | unde
             soundMeter.stop();
         };
     },
-    undefined
+    undefined,
 );
 
 const talkIconVolumeThreshold = 10;
@@ -1072,7 +1072,7 @@ export const localVoiceIndicatorStore = derived<Readable<number[] | undefined>, 
         const averageVolume = volume.reduce((a, b) => a + b, 0);
         return averageVolume > talkIconVolumeThreshold;
     },
-    false
+    false,
 );
 
 /**
@@ -1141,7 +1141,7 @@ export const cameraButtonHelpContextStore = derived(
             return "no_device" as const;
         }
         return null;
-    }
+    },
 );
 
 export const microphoneListStore = derived(deviceListStore, ($deviceListStore) => {
@@ -1168,7 +1168,7 @@ export const microphoneButtonHelpContextStore = derived(
             return "no_device" as const;
         }
         return null;
-    }
+    },
 );
 
 export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
@@ -1242,13 +1242,13 @@ deviceListStore.subscribe((mediaDeviceInfos) => {
     if (thePreviousMediaDevices !== undefined) {
         // set the last new media devices detected (new devices detection)
         const newDevices = mediaDeviceInfos.filter(
-            (device) => thePreviousMediaDevices.find((d) => d.deviceId === device.deviceId) === undefined
+            (device) => thePreviousMediaDevices.find((d) => d.deviceId === device.deviceId) === undefined,
         );
         lastNewMediaDeviceDetectedStore.set(newDevices);
 
         // Detect removed devices
         const removedDevices = thePreviousMediaDevices.filter(
-            (device) => mediaDeviceInfos.find((d) => d.deviceId === device.deviceId) === undefined
+            (device) => mediaDeviceInfos.find((d) => d.deviceId === device.deviceId) === undefined,
         );
 
         for (const removedDevice of removedDevices) {

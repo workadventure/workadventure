@@ -27,6 +27,6 @@
   },
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "devDependencies": {
-    "@workadventure/iframe-api-typings": "^1.4.15"
+    "@workadventure/iframe-api-typings": "^1.30.7"
   }
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { get } from "svelte/store";
-    import CancelablePromise from "cancelable-promise";
+    import { CancelablePromise } from "cancelable-promise";
     import Debug from "debug";
     import type { JitsiCoWebsite, JitsiApi, JitsiOptions } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { defaultInterfaceConfig, mergeConfig } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -16,12 +16,16 @@
 
     const debug = Debug("jitsiCowebsite");
 
-    export let actualCowebsite: JitsiCoWebsite;
-    export let visible: boolean;
-    let domain = actualCowebsite.getJitsiDomain();
+    interface Props {
+        actualCowebsite: JitsiCoWebsite;
+        visible: boolean;
+    }
+
+    let { actualCowebsite, visible }: Props = $props();
+    let domain = $derived(actualCowebsite.getJitsiDomain());
     let jitsiContainer: HTMLDivElement;
     let playerName = gameManager.getPlayerName();
-    let jwt: string | undefined = actualCowebsite.jwt;
+    let jwt: string | undefined = $derived(actualCowebsite.jwt);
     let jitsiApi: JitsiApi;
     let screenWakeRelease: (() => Promise<void>) | undefined;
     let jitsiMeetLoadedPromise: CancelablePromise<void> | undefined;
@@ -80,7 +84,7 @@
     };
 
     function getCurrentParticipantId(
-        participants: { displayName: string; participantId: string }[]
+        participants: { displayName: string; participantId: string }[],
     ): string | undefined {
         const currentPlayerName = gameManager.getPlayerName();
         for (const participant of participants) {
@@ -191,5 +195,5 @@
 </script>
 
 <div class="relative w-full h-full" class:hidden={!visible}>
-    <div bind:this={jitsiContainer} class="absolute w-full h-full z-0" />
+    <div bind:this={jitsiContainer} class="absolute w-full h-full z-0"></div>
 </div>

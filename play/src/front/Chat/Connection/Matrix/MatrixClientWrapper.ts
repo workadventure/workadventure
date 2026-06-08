@@ -5,12 +5,12 @@ import type { ICreateClientOpts, MatrixClient, SecretStorage } from "matrix-js-s
 import { createClient, IndexedDBCryptoStore, IndexedDBStore } from "matrix-js-sdk";
 
 import type { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
-import { openModal } from "svelte-modals";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
 import type { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { matrixSecurity } from "./MatrixSecurity";
 import { customMatrixLogger } from "./CustomMatrixLogger";
+import { modals } from "@wa-modals";
 
 globalThis.Olm = Olm;
 window.Buffer = Buffer;
@@ -64,7 +64,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
     constructor(
         private baseUrl: string,
         private localUserStore: MatrixLocalUserStore,
-        private _createClient: (opts: ICreateClientOpts) => MatrixClient = createClient
+        private _createClient: (opts: ICreateClientOpts) => MatrixClient = createClient,
     ) {}
 
     public async initMatrixClient(): Promise<MatrixClient> {
@@ -183,7 +183,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
         const indexDbCryptoStore = new IndexedDBCryptoStore(
             globalThis.indexedDB,
-            `crypto-store-${this.baseUrl}-${matrixUserId}`
+            `crypto-store-${this.baseUrl}-${matrixUserId}`,
         );
 
         return { matrixStore: indexDbStore, matrixCryptoStore: indexDbCryptoStore };
@@ -191,7 +191,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
     private async retrieveMatrixConnectionDataFromLoginToken(
         matrixServerUrl: string,
-        loginToken: string
+        loginToken: string,
     ): Promise<{
         matrixUserId: string;
         accessToken: string;
@@ -210,7 +210,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 {
                     token: loginToken,
                     initial_device_display_name: "WorkAdventure",
-                }
+                },
             );
 
             this.localUserStore.setMatrixUserId(user_id);
@@ -283,14 +283,14 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
     private async openSecretStorageKeyDialog(
         keyId: string,
-        keyInfo: SecretStorage.SecretStorageKeyDescription
+        keyInfo: SecretStorage.SecretStorageKeyDescription,
     ): Promise<[string, Uint8Array] | null> {
         const key = await new Promise<Uint8Array | null>((resolve) => {
             if (!matrixSecurity.shouldDisplayModal) {
                 resolve(null);
                 return;
             }
-            openModal(AccessSecretStorageDialog, {
+            modals.open(AccessSecretStorageDialog, {
                 keyInfo,
                 matrixClient: this.client,
                 onClose: (key: Uint8Array | null) => resolve(key),

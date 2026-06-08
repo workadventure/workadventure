@@ -53,7 +53,7 @@ const spaceManager = {
                     case "updateSpaceMetadataPusherToBackMessage": {
                         socketManager.handleUpdateSpaceMetadataMessage(
                             pusher,
-                            message.message.updateSpaceMetadataPusherToBackMessage
+                            message.message.updateSpaceMetadataPusherToBackMessage,
                         );
                         break;
                     }
@@ -91,14 +91,14 @@ const spaceManager = {
                     case "addSpaceUserToNotifyMessage": {
                         socketManager.handleAddSpaceUserToNotifyMessage(
                             pusher,
-                            message.message.addSpaceUserToNotifyMessage
+                            message.message.addSpaceUserToNotifyMessage,
                         );
                         break;
                     }
                     case "deleteSpaceUserToNotifyMessage": {
                         socketManager.handleDeleteSpaceUserToNotifyMessage(
                             pusher,
-                            message.message.deleteSpaceUserToNotifyMessage
+                            message.message.deleteSpaceUserToNotifyMessage,
                         );
                         break;
                     }
@@ -116,7 +116,7 @@ const spaceManager = {
                 console.error(
                     "An error occurred while managing a message of type PusherToBackSpaceMessage:" +
                         message.message.$case,
-                    e
+                    e,
                 );
                 Sentry.captureException(e);
                 // Note: We do not close the back connection on every error to avoid excessive reconnections.
@@ -140,7 +140,7 @@ const spaceManager = {
     },
     handleLivekitWebhook: (
         call: ServerUnaryCall<HandleLivekitWebhookRequest, Empty>,
-        callback: sendUnaryData<Empty>
+        callback: sendUnaryData<Empty>,
     ): void => {
         socketManager
             .handleLivekitWebhook(call.request)

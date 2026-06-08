@@ -7,7 +7,7 @@ export class Query {
         number,
         {
             answerType: string;
-            resolve: (message: Required<SpaceAnswerMessage>["answer"]) => void;
+            resolve: (message: NonNullable<SpaceAnswerMessage["answer"]>) => void;
             reject: (e: unknown) => void;
         }
     >();
@@ -15,14 +15,14 @@ export class Query {
 
     constructor(private readonly _space: Space) {}
 
-    public async send<T extends Required<SpaceQueryMessage>["query"]>(
+    public async send<T extends NonNullable<SpaceQueryMessage["query"]>>(
         message: T,
         options?: {
             // Timeout in milliseconds. Defaults to 10000 (10 seconds)
             timeout?: number;
             signal?: AbortSignal;
-        }
-    ): Promise<Required<SpaceAnswerMessage>["answer"]> {
+        },
+    ): Promise<NonNullable<SpaceAnswerMessage["answer"]>> {
         const connection = await this._space.spaceStreamToBackPromise;
         if (!connection || connection.closed) {
             throw new Error("Connection to the back is closed");
@@ -69,14 +69,14 @@ export class Query {
 
                     // TODO: we can improve this by sending a cancellation message to the back
                 },
-                { once: true }
+                { once: true },
             );
 
             this._lastQueryId++;
         });
     }
 
-    public receiveAnswer(queryId: number, answer: Required<SpaceAnswerMessage>["answer"]) {
+    public receiveAnswer(queryId: number, answer: NonNullable<SpaceAnswerMessage["answer"]>) {
         if (answer === undefined) {
             throw new Error("Invalid message received. Answer missing.");
         }
@@ -86,7 +86,7 @@ export class Query {
             console.error(
                 "Received an answer for a query we have no record of. This might mean we received an answer after a query timeout.",
                 queryId,
-                answer
+                answer,
             );
             return;
         }

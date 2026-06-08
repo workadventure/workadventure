@@ -43,7 +43,7 @@ export class UsernameDisplay {
         private x: number,
         private y: number,
         playerName: string,
-        outlineColor: number | undefined
+        outlineColor: number | undefined,
     ) {
         this.playerName = playerName;
         this.displayScale = this.getDisplayScale(waScaleManager.zoomModifier);

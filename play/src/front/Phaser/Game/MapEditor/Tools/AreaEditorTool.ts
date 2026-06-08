@@ -3,7 +3,6 @@ import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { v4 as uuid } from "uuid";
-import { openModal } from "svelte-modals";
 import type { MapEditorAreaToolMode } from "../../../../Stores/MapEditorStore";
 import { mapEditorAreaModeStore, mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
@@ -23,6 +22,7 @@ import { SpeechDomElement } from "../../../Entity/SpeechDomElement";
 import { LL } from "../../../../../i18n/i18n-svelte";
 import { MapEditorTool } from "./MapEditorTool";
 import type { TrashEditorTool } from "./TrashEditorTool";
+import { modals } from "@wa-modals";
 
 export class AreaEditorTool extends MapEditorTool {
     private scene: GameScene;
@@ -55,12 +55,12 @@ export class AreaEditorTool extends MapEditorTool {
     private pointerMoveEventHandler!: (pointer: Phaser.Input.Pointer) => void;
     private pointerUpEventHandler!: (
         pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[]
+        gameObjects: Phaser.GameObjects.GameObject[],
     ) => void;
 
     private pointerDownEventHandler!: (
         pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[]
+        gameObjects: Phaser.GameObjects.GameObject[],
     ) => void;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
@@ -137,8 +137,8 @@ export class AreaEditorTool extends MapEditorTool {
                         commandId,
                         undefined,
                         this,
-                        this.scene.getGameMapFrontWrapper()
-                    )
+                        this.scene.getGameMapFrontWrapper(),
+                    ),
                 );
                 break;
             }
@@ -156,8 +156,8 @@ export class AreaEditorTool extends MapEditorTool {
                         commandId,
                         this,
                         false,
-                        this.scene.getGameMapFrontWrapper()
-                    )
+                        this.scene.getGameMapFrontWrapper(),
+                    ),
                 );
                 break;
             }
@@ -170,8 +170,8 @@ export class AreaEditorTool extends MapEditorTool {
                         data.id,
                         commandId,
                         this,
-                        this.scene.getGameMapFrontWrapper()
-                    )
+                        this.scene.getGameMapFrontWrapper(),
+                    ),
                 );
                 break;
             }
@@ -185,12 +185,12 @@ export class AreaEditorTool extends MapEditorTool {
             areaId,
             undefined,
             editorTool ?? this,
-            this.scene.getGameMapFrontWrapper()
+            this.scene.getGameMapFrontWrapper(),
         );
         if (isPersonalArea) {
             const entitiesInsideArea = this.getEntitiesInsideArea(areaId);
             if (entitiesInsideArea.size > 0) {
-                openModal(ActionPopupOnPersonalAreaWithEntities, {
+                modals.open(ActionPopupOnPersonalAreaWithEntities, {
                     onDeleteEntities: () => this.executeDeletePersonalAreaWithEntities(areaId, deleteAreaCommand, true),
                     onKeepEntities: () => this.executeDeletePersonalAreaWithEntities(areaId, deleteAreaCommand),
                     onCancel: () => {},
@@ -243,7 +243,7 @@ export class AreaEditorTool extends MapEditorTool {
         };
         this.pointerDownEventHandler = (
             pointer: Phaser.Input.Pointer,
-            gameObjects: Phaser.GameObjects.GameObject[]
+            gameObjects: Phaser.GameObjects.GameObject[],
         ) => {
             this.handlePointerDownEvent(pointer, gameObjects);
         };
@@ -283,7 +283,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     private pointerHoverEventHandler = (
         pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[]
+        gameObjects: Phaser.GameObjects.GameObject[],
     ) => {
         if (!this.active) {
             return;
@@ -349,7 +349,7 @@ export class AreaEditorTool extends MapEditorTool {
                 this.playTooltip(
                     get(LL).mapEditor.areaEditor.clickAgainToSelectAnotherZone(),
                     pointer.worldX,
-                    pointer.worldY
+                    pointer.worldY,
                 );
             else this.destroyTooltip();
         }
@@ -472,7 +472,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private getAreaEditorToolObjectsFromGameObjects(
-        gameObjects: Phaser.GameObjects.GameObject[]
+        gameObjects: Phaser.GameObjects.GameObject[],
     ): (AreaPreview | SizeAlteringSquare)[] {
         const areaPreviews = gameObjects.filter((obj) => this.isAreaPreview(obj));
         const sizeAlteringSquares = gameObjects.filter((obj) => this.isSizeAlteringSquare(obj));
@@ -577,8 +577,8 @@ export class AreaEditorTool extends MapEditorTool {
                     undefined,
                     this,
                     true,
-                    this.scene.getGameMapFrontWrapper()
-                )
+                    this.scene.getGameMapFrontWrapper(),
+                ),
             )
             .catch((e) => console.error(e));
     }
@@ -602,8 +602,8 @@ export class AreaEditorTool extends MapEditorTool {
                     undefined,
                     this,
                     true,
-                    this.scene.getGameMapFrontWrapper()
-                )
+                    this.scene.getGameMapFrontWrapper(),
+                ),
             )
             .catch((e) => console.error(e));
     }
@@ -626,14 +626,14 @@ export class AreaEditorTool extends MapEditorTool {
                     this.currentlySelectedPreview?.select(true);
                 }
                 this.scene.markDirty();
-            }
+            },
         );
     }
 
     private executeDeletePersonalAreaWithEntities(
         areaId: string,
         deleteAreaCommand: DeleteAreaFrontCommand,
-        removeEntities?: boolean
+        removeEntities?: boolean,
     ): void {
         if (removeEntities) {
             this.removeAreaEntities(areaId);
@@ -644,7 +644,7 @@ export class AreaEditorTool extends MapEditorTool {
     private executeUpdateAreaFrontCommand(
         newData: AtLeast<AreaData, "id">,
         oldData: AtLeast<AreaData, "id"> | undefined,
-        removeEntities?: boolean
+        removeEntities?: boolean,
     ): void {
         const wamFile = this.scene.getGameMap().getWamFile();
         if (removeEntities) {
@@ -661,8 +661,8 @@ export class AreaEditorTool extends MapEditorTool {
                     undefined,
                     oldData,
                     this,
-                    this.scene.getGameMapFrontWrapper()
-                )
+                    this.scene.getGameMapFrontWrapper(),
+                ),
             )
             .catch((error) => console.error(error));
     }
@@ -700,11 +700,11 @@ export class AreaEditorTool extends MapEditorTool {
             (
                 newData: AtLeast<AreaData, "id">,
                 oldData: AtLeast<AreaData, "id"> | undefined,
-                removeAreaEntities: boolean | undefined
+                removeAreaEntities: boolean | undefined,
             ) => {
                 this.executeUpdateAreaFrontCommand(newData, oldData, removeAreaEntities);
                 areaPreview.playText();
-            }
+            },
         );
         areaPreview.on(AreaPreviewEvent.Delete, () => {
             this.handleDeleteAreaFrontCommandExecution(areaPreview.getId());
@@ -772,7 +772,7 @@ export class AreaEditorTool extends MapEditorTool {
         if (this.toolTipAlreadyPlayed) return;
         setTimeout(() => {
             this.tooltip = new SpeechDomElement("info-tooltip", text, this.scene, x, y - 60, () =>
-                this.destroyTooltip()
+                this.destroyTooltip(),
             );
             this.scene.add.existing(this.tooltip);
             // Need to put the element at the top because

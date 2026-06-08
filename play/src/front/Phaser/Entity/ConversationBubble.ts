@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 import type { GameScene } from "../Game/GameScene";
 import { DEPTH_CONVERSATION_BUBBLE_INDEX } from "../Game/DepthIndexes";
 import { MINIMUM_DISTANCE } from "../../Enum/EnvironmentVariable";

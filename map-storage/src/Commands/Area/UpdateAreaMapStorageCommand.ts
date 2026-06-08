@@ -13,7 +13,7 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
         commandId: string | undefined,
         oldConfig: AtLeast<AreaData, "id"> | undefined,
         private hookManager: HookManager,
-        private hostname: string
+        private hostname: string,
     ) {
         super(wamFile, dataToModify, commandId, oldConfig);
     }
@@ -40,7 +40,7 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                 promises.push(
                     limit(async () => {
                         await this.hookManager.fireAreaPropertyAdd(this.newConfig, value.data, this.hostname);
-                    })
+                    }),
                 );
 
                 continue;
@@ -56,9 +56,9 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                         this.newConfig,
                         oldProperty,
                         newProperty,
-                        this.hostname
+                        this.hostname,
                     );
-                })
+                }),
             );
         }
 
@@ -72,7 +72,7 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
             promises.push(
                 limit(async () => {
                     await this.hookManager.fireAreaPropertyDelete(this.newConfig, oldProperty, this.hostname);
-                })
+                }),
             );
         }
 

@@ -13,7 +13,7 @@ export class DeleteEntityFrontCommand extends DeleteEntityCommand implements Fro
         wamFile: WamFile,
         entityId: string,
         commandId: string | undefined,
-        private entitiesManager: EntitiesManager
+        private entitiesManager: EntitiesManager,
     ) {
         super(wamFile, entityId, commandId);
     }
@@ -42,7 +42,7 @@ export class DeleteEntityFrontCommand extends DeleteEntityCommand implements Fro
             this.entityData,
             undefined,
             this.entitiesManager,
-            { width: entity.width, height: entity.height }
+            { width: entity.width, height: entity.height },
         );
     }
 

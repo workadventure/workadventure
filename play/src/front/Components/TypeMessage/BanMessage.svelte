@@ -6,11 +6,15 @@
     import { banMessageStore } from "../../Stores/TypeMessageStore/BanMessageStore";
     import { LL } from "../../../i18n/i18n-svelte";
 
-    export let message: Message;
+    interface Props {
+        message: Message;
+    }
+
+    let { message }: Props = $props();
 
     const NAME_BUTTON = "Ok";
     let nbSeconds = 10;
-    let nameButton = "";
+    let nameButton = $state("");
 
     onMount(() => {
         timeToRead();
@@ -53,7 +57,12 @@
             type="button"
             class="{nameButton === NAME_BUTTON ? 'light' : 'disabled'} h-10"
             disabled={!(nameButton === NAME_BUTTON)}
-            on:click|preventDefault={closeBanMessage}>{nameButton}</button
+            onclick={(event) => {
+                event.preventDefault();
+                closeBanMessage();
+            }}
         >
+            {nameButton}
+        </button>
     </div>
 </div>

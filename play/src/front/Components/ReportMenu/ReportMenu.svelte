@@ -10,9 +10,9 @@
     import BlockSubMenu from "./BlockSubMenu.svelte";
 
     let blockActive = true;
-    let disableReport = false;
-    let userUUID: string | undefined = get(showReportScreenStore).userUuid;
-    let userName = "No name";
+    let disableReport = $state(false);
+    let userUUID: string | undefined = $state(get(showReportScreenStore).userUuid);
+    let userName = $state("No name");
     let unsubscriber: Unsubscriber;
 
     onMount(() => {
@@ -45,7 +45,7 @@
     }
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window onkeydown={onKeyDown} />
 
 <div
     class="report-menu-main
@@ -54,7 +54,7 @@
 >
     <section>
         <div class="absolute top-2 right-2">
-            <ButtonClose on:click={close}>&times;</ButtonClose>
+            <ButtonClose onclick={close} />
         </div>
 
         <h2 class="m-4">{$LL.report.moderate.title({ userName })}</h2>

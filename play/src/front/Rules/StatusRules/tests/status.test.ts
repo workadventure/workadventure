@@ -33,7 +33,7 @@ describe("Verify Rules Transition", () => {
             const isValid: boolean = StatusRules.canChangeStatus(actualStatus).to(futureStatus);
             //Assert
             expect(isValid).toBe(result);
-        }
+        },
     );
 });
 
@@ -84,7 +84,7 @@ describe("Status Rules", () => {
             const statusStrategy: StatusChanger = new StatusChanger(
                 mockRulesVerification,
                 mockStatusStrategyFactory,
-                actualStrategy
+                actualStrategy,
             );
             expect(statusStrategy.getActualStatus()).toBe(actualStatus);
 
@@ -120,7 +120,7 @@ describe("Status Rules", () => {
             const statusStrategy: StatusChanger = new StatusChanger(
                 mockRulesVerificator,
                 mockStatusStrategyFactory,
-                actualStrategy
+                actualStrategy,
             );
             expect(statusStrategy.getActualStatus()).toBe(actualStatus);
 
@@ -184,7 +184,7 @@ describe("Status Rules", () => {
             const statusStrategy: StatusChanger = new StatusChanger(
                 mockRulesVerification,
                 mockStatusStrategyFactory,
-                mockOldBasicStatusStrategy
+                mockOldBasicStatusStrategy,
             );
 
             expect(applyAllRulesOld).toHaveBeenCalledOnce();

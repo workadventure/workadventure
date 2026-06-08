@@ -12,18 +12,18 @@
     import TextArea from "../../Input/TextArea.svelte";
     import { IconInfoCircle } from "@wa-icons";
 
-    let dynamicStrings = {
+    let dynamicStrings = $state({
         error: {
             name: false,
             confirmSave: false,
         },
-    };
-    let name = "";
-    let description = "";
+    });
+    let name = $state("");
+    let description = $state("");
     let thumbnail = "";
-    let copyright = "";
-    let tags: InputTagOption[] = [];
-    let _tag: InputTagOption[] = [
+    let copyright = $state("");
+    let tags: InputTagOption[] = $state([]);
+    let _tag: InputTagOption[] = $state([
         {
             value: "member",
             label: "member",
@@ -34,7 +34,7 @@
             label: "admin",
             created: false,
         },
-    ];
+    ]);
 
     let confirmSaving = writable<boolean>(false);
 
@@ -43,10 +43,13 @@
         description = gameManager.getCurrentGameScene()?.wamFile?.metadata?.description ?? "";
         thumbnail = gameManager.getCurrentGameScene()?.wamFile?.metadata?.thumbnail ?? "";
         copyright = gameManager.getCurrentGameScene()?.wamFile?.metadata?.copyright ?? "";
-        (gameManager.getCurrentGameScene()?.wamFile?.vendor as { tags: string[] })?.tags?.forEach((tag) => {
-            tags.push({ value: tag, label: tag, created: false });
-            _tag.push({ value: tag, label: tag, created: false });
-        });
+        const vendorTags =
+            (gameManager.getCurrentGameScene()?.wamFile?.vendor as { tags: string[] } | undefined)?.tags?.map(
+                (tag) => ({ value: tag, label: tag, created: false }),
+            ) ?? [];
+
+        tags = vendorTags;
+        _tag = [..._tag, ...vendorTags];
     });
 
     async function save(): Promise<string> {
@@ -86,7 +89,7 @@
         label={$LL.mapEditor.settings.room.inputs.name()}
         placeholder="MySpace"
         bind:value={name}
-        onKeyPress={() => (dynamicStrings.error.name = false)}
+        onkeypress={() => (dynamicStrings.error.name = false)}
         onerror={() => {
             dynamicStrings.error.name = true;
         }}
@@ -100,7 +103,7 @@
         label={$LL.mapEditor.settings.room.inputs.description()}
         placeHolder="MySpace"
         bind:value={description}
-        onKeyPress={() => {}}
+        onkeypress={() => {}}
     />
     <p class="help-text">
         <IconInfoCircle font-size="18" />
@@ -115,7 +118,7 @@
         label={$LL.mapEditor.settings.room.inputs.copyright()}
         placeHolder="MySpace"
         bind:value={copyright}
-        onKeyPress={() => {}}
+        onkeypress={() => {}}
     />
 
     <div class="flex flex-row justify-center mt-4">

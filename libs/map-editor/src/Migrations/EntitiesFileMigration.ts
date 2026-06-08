@@ -38,7 +38,7 @@ class EntitiesFileMigration {
                         //@ts-ignore
                         {
                             cause: error,
-                        }
+                        },
                     );
                 }
             }

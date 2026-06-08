@@ -1,28 +1,27 @@
 <script lang="ts">
-    import type { ComponentType } from "svelte";
-    import { createEventDispatcher } from "svelte";
     import { fade } from "svelte/transition";
+    import type { WorkAdventureComponent } from "../../../../types/component";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
 
-    export let headerText: string | undefined;
-    export let descriptionText: string | undefined;
-    export let img: string | ComponentType | undefined;
-    export let style: string | undefined;
-    export let disabled = false;
-    export let testId: string | undefined;
-    const dispatch = createEventDispatcher<{
-        change: undefined;
-        close: undefined;
-        click: undefined;
-    }>();
+    interface Props {
+        headerText?: string;
+        descriptionText?: string;
+        img?: string | WorkAdventureComponent;
+        style?: string;
+        disabled?: boolean;
+        onclick?: (event: MouseEvent) => void;
+        testId?: string;
+    }
 
-    let isHovered = false;
+    let { headerText, descriptionText, img, style, disabled = false, onclick, testId }: Props = $props();
+
+    let isHovered = $state(false);
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
         {
             placement: "bottom",
         },
-        12
+        12,
     );
 
     let hoverTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -43,16 +42,16 @@
 </script>
 
 <button
-    on:mouseenter={onMouseEnter}
-    on:mouseleave={onMouseLeave}
+    onmouseenter={onMouseEnter}
+    onmouseleave={onMouseLeave}
     class="add-property-button tooltip p-3 flex justify-center items-center
     border border-solid border-white/25 text-gray-500 rounded-lg relative flex-col m-[0.25rem_0.125rem]"
     use:floatingUiRef
     data-testid={testId}
     {style}
-    on:click={() => {
+    onclick={(event) => {
         if (disabled) return;
-        dispatch("click");
+        onclick?.(event);
     }}
     {disabled}
 >
@@ -60,7 +59,8 @@
         {#if typeof img === "string"}
             <img draggable="false" class="max-w-[75%] max-h-[75%]" src={img} alt="info icon" />
         {:else if img !== undefined}
-            <svelte:component this={img} class="text-white" font-size="20" />
+            {@const Image = img}
+            <Image class="text-white" font-size="20" />
         {/if}
     </div>
 </button>
@@ -71,7 +71,7 @@
         use:floatingUiContent
         transition:fade={{ duration: 200 }}
     >
-        <div use:arrowAction />
+        <div use:arrowAction></div>
         <p class="text-sm m-0 font-semibold">{headerText}</p>
         {descriptionText}
     </div>

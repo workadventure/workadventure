@@ -1,20 +1,20 @@
-import type { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
 import type { ComputePositionConfig } from "@floating-ui/dom";
 import { arrow, autoUpdate, computePosition, flip, limitShift, offset, shift } from "@floating-ui/dom";
 import { writable } from "svelte/store";
 import { v4 } from "uuid";
+import type { WorkAdventureComponent, WorkAdventureComponentProps } from "../../types/component";
 import type { ArrowAction, ContentAction } from "./svelte-floatingui";
 
 export const floatingUiComponents = writable(
     new Map<
         string,
         {
-            componentType: ComponentType<SvelteComponentTyped>;
-            props?: ComponentProps<SvelteComponentTyped>;
+            componentType: WorkAdventureComponent;
+            props?: WorkAdventureComponentProps;
             action: ContentAction;
             arrowAction: ArrowAction | undefined;
         }
-    >()
+    >(),
 );
 
 /**
@@ -24,15 +24,15 @@ export const floatingUiComponents = writable(
  * @param closeOnClickOutside - when true, the popup closes when the user clicks outside the reference element and the popup content
  * @param onClose - called when the popup is closed (by click outside or by calling the returned close function)
  */
-export function showFloatingUi<Component extends SvelteComponentTyped>(
+export function showFloatingUi(
     referenceNode: Element,
-    component: ComponentType<Component>,
-    props: ComponentProps<Component>,
+    component: WorkAdventureComponent,
+    props: WorkAdventureComponentProps,
     options?: Partial<ComputePositionConfig>,
     offsetMainAxis = 0,
     withArrow = true,
     closeOnClickOutside = false,
-    onClose?: () => void
+    onClose?: () => void,
 ): () => void {
     let arrowNode: HTMLElement | undefined;
     let contentNode: HTMLElement | undefined;

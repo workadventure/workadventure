@@ -3,7 +3,11 @@
     import type { ChatMessageContent } from "../../../Connection/ChatConnection";
     import LL from "../../../../../i18n/i18n-svelte";
 
-    export let content: Readable<ChatMessageContent>;
+    interface Props {
+        content: Readable<ChatMessageContent>;
+    }
+
+    let { content }: Props = $props();
 </script>
 
 {#if $content.mediaState === "loading"}
@@ -15,7 +19,7 @@
             : $LL.chat.file.attachmentDownloadError()}
     </div>
 {:else if $content.url !== undefined}
-    <audio controls src={$content.url} class="max-w-full min-w-96 block p-2" />
+    <audio controls src={$content.url} class="max-w-full min-w-96 block p-2"></audio>
 {:else}
     <div class="text-xs text-white/80 px-2 py-2">
         {$content.mediaErrorKind === "decrypt"

@@ -37,7 +37,7 @@ export interface ITransitionOrchestrator {
      */
     executeImmediateTransition(
         type: CommunicationType,
-        context: TransitionContext
+        context: TransitionContext,
     ): Promise<ICommunicationState<ICommunicationStrategy> | null>;
 
     /**
@@ -52,7 +52,7 @@ export interface ITransitionOrchestrator {
         type: CommunicationType,
         context: TransitionContext,
         onComplete: TransitionCompleteCallback,
-        onError?: TransitionErrorCallback
+        onError?: TransitionErrorCallback,
     ): StateTransitionResult<ICommunicationStrategy>;
 
     /**

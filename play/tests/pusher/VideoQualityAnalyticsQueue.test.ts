@@ -183,7 +183,7 @@ describe("VideoQualityAnalyticsQueue", () => {
         const queue = new VideoQualityAnalyticsQueue(baseConfig, post);
         queue.setEnabled(true);
 
-        queue.enqueueReport({ samples: [sample(overrides as Partial<VideoQualitySampleMessage>)] }, socketData());
+        queue.enqueueReport({ samples: [sample(overrides)] }, socketData());
         await queue.flush();
 
         expect(post).not.toHaveBeenCalled();

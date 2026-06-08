@@ -147,7 +147,7 @@ export class WamManager {
                     message.id,
                     dataToModify,
                     editMapCommandMessage.id,
-                    entity
+                    entity,
                 ).execute();
                 break;
             }
@@ -166,7 +166,7 @@ export class WamManager {
                         properties: message.properties as EntityDataProperties,
                         name: message.name,
                     },
-                    editMapCommandMessage.id
+                    editMapCommandMessage.id,
                 ).execute();
                 break;
             }

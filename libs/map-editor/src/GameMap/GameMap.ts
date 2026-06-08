@@ -108,7 +108,7 @@ export class GameMap {
     public setTiledObjectProperty(
         holder: { properties?: ITiledMapProperty[] },
         propertyName: string,
-        propertyValue: string | number | undefined | boolean
+        propertyValue: string | number | undefined | boolean,
     ): void {
         if (holder.properties === undefined) {
             holder.properties = [];
@@ -136,14 +136,14 @@ export class GameMap {
 
     public getTiledObjectProperty(
         object: { properties?: ITiledMapProperty[] },
-        propertyName: string
+        propertyName: string,
     ): Json | undefined {
         const properties: ITiledMapProperty[] | undefined = object.properties;
         if (!properties) {
             return undefined;
         }
         const obj = properties.find(
-            (property: ITiledMapProperty) => property.name.toLowerCase() === propertyName.toLowerCase()
+            (property: ITiledMapProperty) => property.name.toLowerCase() === propertyName.toLowerCase(),
         );
         if (obj === undefined) {
             return undefined;
@@ -172,7 +172,7 @@ export class GameMap {
             console.error(
                 "The layer '" +
                     layer +
-                    "' that you want to change is not a tilelayer. Tile can only be put in tilelayer."
+                    "' that you want to change is not a tilelayer. Tile can only be put in tilelayer.",
             );
             return;
         }

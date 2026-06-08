@@ -7,7 +7,7 @@
     } from "../../Stores/ScreenSharingStore";
     import type { DesktopCapturerSource } from "../../Interfaces/DesktopAppInterfaces";
 
-    let desktopCapturerSources: DesktopCapturerSource[] = [];
+    let desktopCapturerSources: DesktopCapturerSource[] = $state([]);
     let interval: ReturnType<typeof setInterval>;
 
     async function getDesktopCapturerSources() {
@@ -56,13 +56,19 @@
 </script>
 
 <div class="source-picker" transition:fly={{ y: -50, duration: 500 }}>
-    <button type="button" class="btn danger close" on:click={cancel}>&times;</button>
+    <button type="button" class="btn danger close" onclick={cancel}>&times;</button>
     <h2>Select a Screen or Window to share!</h2>
     <section class="streams">
         {#each desktopCapturerSources as source (source.id)}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
-            <div class="media-box clickable" on:click|preventDefault={() => selectDesktopCapturerSource(source)}>
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div
+                class="media-box clickable"
+                onclick={(event) => {
+                    event.preventDefault();
+                    selectDesktopCapturerSource(source);
+                }}
+            >
                 <img src={source.thumbnailURL} alt={source.name} draggable="false" />
                 <div class="container">
                     {source.name}

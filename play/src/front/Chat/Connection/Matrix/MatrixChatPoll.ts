@@ -49,7 +49,7 @@ export class MatrixChatPoll implements ChatPollItem {
             hydrateOnInit?: boolean;
             hydrationState?: ChatRoomSidePanelHydrationState;
             retryHydration?: () => Promise<void>;
-        }
+        },
     ) {
         this.id = poll.pollId;
         this.sender = this.getSender();
@@ -59,7 +59,7 @@ export class MatrixChatPoll implements ChatPollItem {
             computePollState(this.poll.pollEvent, [], {
                 currentUserId: this.room.client.getSafeUserId(),
                 isEnded: this.poll.isEnded,
-            })
+            }),
         );
         this.state = this.internalState;
         this.canVote = derived(this.internalState, ($state) => !$state.isEnded);
@@ -97,7 +97,7 @@ export class MatrixChatPoll implements ChatPollItem {
             this.room.roomId,
             this.context.kind === "thread" ? this.context.threadRootMessageId : null,
             event.type as keyof TimelineEvents,
-            event.content as TimelineEvents[keyof TimelineEvents]
+            event.content as TimelineEvents[keyof TimelineEvents],
         );
     }
 
@@ -115,7 +115,7 @@ export class MatrixChatPoll implements ChatPollItem {
             this.room.roomId,
             this.context.kind === "thread" ? this.context.threadRootMessageId : null,
             event.type as keyof TimelineEvents,
-            event.content as TimelineEvents[keyof TimelineEvents]
+            event.content as TimelineEvents[keyof TimelineEvents],
         );
     }
 

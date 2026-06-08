@@ -32,7 +32,7 @@ function isMegaphoneSpace(space: SpaceInterface): boolean {
 function getRecorderDisplayName(
     space: SpaceInterface,
     recorderSpaceUserId: string | null,
-    fallbackRecorderName: string | null
+    fallbackRecorderName: string | null,
 ): string | null {
     if (!recorderSpaceUserId) {
         return fallbackRecorderName;
@@ -76,7 +76,7 @@ export function getRecordingSpaceRows(
     allSpaces: SpaceInterface[],
     recordableSpaces: SpaceInterface[],
     recordingState: RecordingState,
-    canStartRecording: boolean
+    canStartRecording: boolean,
 ): RecordingSpaceRow[] {
     const recordableSpaceNames = new Set(recordableSpaces.map((space) => space.getName()));
 
@@ -184,7 +184,7 @@ export function getActionableRecordingRows(rows: RecordingSpaceRow[]): Recording
 export function getShouldDisplayRecordingButton(
     rows: RecordingSpaceRow[],
     recordableSpaces: SpaceInterface[],
-    roomButtonState?: RecordingButtonState
+    roomButtonState?: RecordingButtonState,
 ): boolean {
     if (roomButtonState === "hidden") {
         return rows.some((row) => row.status !== "available");
@@ -204,7 +204,7 @@ export function getShouldDisplayRecordingButton(
 export function getDirectRecordingActionRow(
     rows: RecordingSpaceRow[],
     allSpaces: SpaceInterface[],
-    recordableSpaces: SpaceInterface[]
+    recordableSpaces: SpaceInterface[],
 ): RecordingSpaceRow | undefined {
     const actionableRows = getActionableRecordingRows(rows);
     if (actionableRows.length !== 1 || rows.length !== 1) {
@@ -243,7 +243,7 @@ function computeRecordingButtonState(
     isLogged: boolean,
     actionableRows: RecordingSpaceRow[],
     hasOwnRecording: boolean,
-    hasPendingRequest: boolean
+    hasPendingRequest: boolean,
 ): "disabled" | "normal" | "active" {
     if (!isLogged) {
         return "disabled";
@@ -270,7 +270,7 @@ export function createRecordingMenuStateStore(
         canStartRecording: boolean;
         isUserLoggedIn: boolean;
         roomButtonState?: RecordingButtonState;
-    }
+    },
 ): Readable<RecordingMenuState> {
     const { canStartRecording, isUserLoggedIn, roomButtonState } = options;
 
@@ -295,7 +295,7 @@ export function createRecordingMenuStateStore(
                 isUserLoggedIn,
                 actionableRows,
                 hasOwnRecording,
-                hasPendingRequest
+                hasPendingRequest,
             ),
             currentRows,
             directRow,

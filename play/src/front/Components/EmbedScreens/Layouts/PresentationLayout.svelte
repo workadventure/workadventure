@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { afterUpdate, onMount } from "svelte";
+    import { onMount } from "svelte";
     import { writable } from "svelte/store";
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
@@ -11,13 +11,16 @@
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
     import { activePictureInPictureStore } from "../../../Stores/PeerStore";
 
-    export let inPictureInPicture: boolean;
+    interface Props {
+        inPictureInPicture: boolean;
+    }
 
-    let camContainer: HTMLDivElement;
-    let highlightScreen: HTMLDivElement;
-    let containerWidth = 0;
-    let containerHeight = 0;
-    let pipOneLineMode: "vertical" | "horizontal" = "horizontal";
+    let { inPictureInPicture }: Props = $props();
+
+    let camContainer: HTMLDivElement | undefined = $state();
+    let highlightScreen: HTMLDivElement | undefined = $state();
+    let containerWidth = $state(0);
+    let containerHeight = $state(0);
 
     const windowSize = writable({
         height: window.innerHeight,
@@ -36,7 +39,7 @@
         resizeHeight();
     };
 
-    afterUpdate(() => {
+    $effect(() => {
         modifySizeCamIfScreenShare();
     });
 
@@ -56,8 +59,11 @@
         }
     }
 
-    $: if ($highlightedEmbedScreen) modifySizeCamIfScreenShare();
-    $: if ($highlightFullScreen) modifySizeCamIfScreenShare();
+    $effect(() => {
+        if ($highlightedEmbedScreen || $highlightFullScreen) {
+            modifySizeCamIfScreenShare();
+        }
+    });
 
     function modifySizeCamIfScreenShare() {
         /*if (camContainer) {
@@ -73,29 +79,34 @@
         }*/
     }
 
-    $: oneLineMaxHeight = containerHeight * 0.2;
-    $: pipHighlightLayoutEnabled =
-        inPictureInPicture && $activePictureInPictureStore && $highlightedEmbedScreen != undefined;
-    $: pipHighlightLandscape = pipHighlightLayoutEnabled && containerWidth > containerHeight;
-    $: pipCameraContainerStyle = pipHighlightLayoutEnabled
-        ? pipHighlightLandscape
-            ? "flex: 0 0 20%; max-width: 20%; min-width: 20%;"
-            : "flex: 0 0 20%; max-height: 20%; min-height: 20%;"
-        : "";
-    $: pipHighlightContainerStyle = pipHighlightLayoutEnabled
-        ? pipHighlightLandscape
-            ? "flex: 0 0 80%; max-width: 80%; min-width: 80%;"
-            : "flex: 0 0 80%; max-height: 80%; min-height: 80%;"
-        : "";
-    $: {
-        pipOneLineMode = pipHighlightLayoutEnabled
+    let oneLineMaxHeight = $derived(containerHeight * 0.2);
+    let pipHighlightLayoutEnabled = $derived(
+        inPictureInPicture && $activePictureInPictureStore && $highlightedEmbedScreen != undefined,
+    );
+    let pipHighlightLandscape = $derived(pipHighlightLayoutEnabled && containerWidth > containerHeight);
+    let pipCameraContainerStyle = $derived(
+        pipHighlightLayoutEnabled
+            ? pipHighlightLandscape
+                ? "flex: 0 0 20%; max-width: 20%; min-width: 20%;"
+                : "flex: 0 0 20%; max-height: 20%; min-height: 20%;"
+            : "",
+    );
+    let pipHighlightContainerStyle = $derived(
+        pipHighlightLayoutEnabled
+            ? pipHighlightLandscape
+                ? "flex: 0 0 80%; max-width: 80%; min-width: 80%;"
+                : "flex: 0 0 80%; max-height: 80%; min-height: 80%;"
+            : "",
+    );
+    let pipOneLineMode: "vertical" | "horizontal" = $derived(
+        pipHighlightLayoutEnabled
             ? pipHighlightLandscape
                 ? "vertical"
                 : "horizontal"
             : inPictureInPicture
-            ? "vertical"
-            : "horizontal";
-    }
+              ? "vertical"
+              : "horizontal",
+    );
 </script>
 
 {#if $proximityMeetingStore === true && !$inExternalServiceStore}

@@ -38,7 +38,7 @@ class AudioContextManager {
             console.debug(
                 `[AudioContextManager] Created new AudioContext with ${
                     sampleRate ? `sample rate ${sampleRate}` : "default sample rate"
-                }`
+                }`,
             );
         }
 
@@ -81,7 +81,7 @@ class AudioContextManager {
                 closePromises.push(
                     context.close().catch((err) => {
                         console.error(`[AudioContextManager] Error closing AudioContext with key ${key}:`, err);
-                    })
+                    }),
                 );
             }
         });

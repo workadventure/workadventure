@@ -13,20 +13,25 @@
     const oldRights: string[] = gameManager.getCurrentGameScene().wamFile?.settings?.recording?.rights ?? [];
     const oldEnableSounds: boolean =
         gameManager.getCurrentGameScene().wamFile?.settings?.recording?.enableSounds ?? true;
-    let rights: InputTagOption[] = [];
-    let enableSounds = oldEnableSounds;
+    let rights: InputTagOption[] = $state(
+        oldRights.map((right) => ({ value: right, label: right.toLocaleUpperCase(), created: undefined })),
+    );
+    let enableSounds = $state(oldEnableSounds);
     let loading = false;
+    let tagsPromise: Promise<InputTagOption[]> | undefined;
 
     async function getTags(): Promise<InputTagOption[]> {
-        loading = true;
-        rights = oldRights.map((right) => ({ value: right, label: right.toLocaleUpperCase(), created: undefined }));
         const tags = ((await gameManager.getCurrentGameScene().connection?.queryRoomTags()) ?? []).concat(
-            oldRights ?? []
+            oldRights ?? [],
         );
-        loading = false;
         return tags
             .filter((item, index) => tags.indexOf(item) === index)
             .map((tag) => ({ value: tag, label: tag.toLocaleUpperCase(), created: undefined }));
+    }
+
+    function ensureTags(): Promise<InputTagOption[]> {
+        tagsPromise ??= getTags();
+        return tagsPromise;
     }
 
     async function save(): Promise<string> {
@@ -65,7 +70,7 @@
 </p>
 
 <div class="settings space-y-4 flex-grow flex-auto flex-shrink">
-    {#await getTags()}
+    {#await ensureTags()}
         <PureLoader size={12} color="lighter-purple" customClass="h-full" />
     {:then tags}
         <InputTags label={$LL.mapEditor.settings.recording.inputs.rights()} options={tags ?? []} bind:value={rights} />

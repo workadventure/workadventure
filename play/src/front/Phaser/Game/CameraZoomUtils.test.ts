@@ -21,7 +21,7 @@ describe("CameraZoomUtils", () => {
         const nextZoomModifier = getSmoothButtonZoomModifier(
             currentZoomModifier,
             targetZoomModifier,
-            SMOOTH_BUTTON_ZOOM_DURATION / 2
+            SMOOTH_BUTTON_ZOOM_DURATION / 2,
         );
 
         expect(nextZoomModifier).toBeGreaterThan(currentZoomModifier);
@@ -34,7 +34,7 @@ describe("CameraZoomUtils", () => {
 
     it("keeps a moderate continuous zoom speed", () => {
         expect(
-            getContinuousButtonZoomFactor(BUTTON_ZOOM_FACTOR_PER_SECOND, CONTINUOUS_BUTTON_ZOOM_STEP_DURATION)
+            getContinuousButtonZoomFactor(BUTTON_ZOOM_FACTOR_PER_SECOND, CONTINUOUS_BUTTON_ZOOM_STEP_DURATION),
         ).toBeCloseTo(1.2);
     });
 });

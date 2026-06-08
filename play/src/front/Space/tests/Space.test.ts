@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 globalThis.Phaser = Phaser;
 
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
@@ -222,8 +222,8 @@ describe("Space test", () => {
                 FilterType.ALL_USERS,
                 defaultRoomConnectionMock,
                 defaultPropertiesToSync,
-                new AbortController().signal
-            )
+                new AbortController().signal,
+            ),
         ).rejects.toThrow(SpaceNameIsEmptyError);
     });
     it("should not return a error when pass a string as spaceName", async () => {
@@ -238,7 +238,7 @@ describe("Space test", () => {
             signal,
             {
                 metadata,
-            }
+            },
         );
         expect(space.getName()).toBe(spaceName);
     });
@@ -257,7 +257,7 @@ describe("Space test", () => {
             signal,
             {
                 metadata,
-            }
+            },
         );
 
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledOnce();
@@ -268,7 +268,7 @@ describe("Space test", () => {
             defaultPropertiesToSync,
             {
                 signal: signal,
-            }
+            },
         );
     });
 
@@ -289,7 +289,7 @@ describe("Space test", () => {
             signal,
             {
                 metadata,
-            }
+            },
         );
 
         await space.destroy();
@@ -308,13 +308,13 @@ describe("Space test", () => {
             signal,
             {
                 metadata: new Map<string, unknown>(),
-            }
+            },
         );
         const addedUser = space.addUser(
             createSpaceUser({
                 spaceUserId: "alice-id",
                 name: "Alice",
-            })
+            }),
         );
 
         await expect(space.waitForSpaceUser("alice-id", 5_000)).resolves.toBe(addedUser);
@@ -329,7 +329,7 @@ describe("Space test", () => {
             signal,
             {
                 metadata: new Map<string, unknown>(),
-            }
+            },
         );
 
         const userPromise = space.waitForSpaceUser("alice-id", 5_000);
@@ -337,7 +337,7 @@ describe("Space test", () => {
             createSpaceUser({
                 spaceUserId: "alice-id",
                 name: "Alice",
-            })
+            }),
         );
 
         await expect(userPromise).resolves.toBe(addedUser);
@@ -353,7 +353,7 @@ describe("Space test", () => {
             signal,
             {
                 metadata: new Map<string, unknown>(),
-            }
+            },
         );
 
         const userPromise = expect(space.waitForSpaceUser("missing-user", 5_000)).rejects.toBeInstanceOf(TimeoutError);
@@ -371,7 +371,7 @@ describe("Space test", () => {
             signal,
             {
                 metadata: new Map<string, unknown>(),
-            }
+            },
         );
         const subjects = getStreamableSubjects(space);
         const activeStreamable = createStreamable("active-video", "alice-id");
@@ -382,7 +382,7 @@ describe("Space test", () => {
                 spaceUserId: "alice-id",
                 name: "Alice",
                 cameraState: true,
-            })
+            }),
         );
 
         subjects.videoPeerAdded.next(activeStreamable);
@@ -411,7 +411,7 @@ describe("Space test", () => {
             signal,
             {
                 metadata: new Map<string, unknown>(),
-            }
+            },
         );
         const subjects = getStreamableSubjects(space);
         const activeStreamable = createStreamable("active-video", "alice-id");
@@ -422,7 +422,7 @@ describe("Space test", () => {
                 spaceUserId: "alice-id",
                 name: "Alice",
                 cameraState: true,
-            })
+            }),
         );
 
         subjects.videoPeerAdded.next(activeStreamable);
@@ -456,7 +456,7 @@ describe("Space test", () => {
             signal,
             {
                 metadata: new Map<string, unknown>(),
-            }
+            },
         );
         const subjects = getStreamableSubjects(space);
         const activeStreamable = createStreamable("active-screen-share", "alice-id", "screenSharing");
@@ -496,13 +496,13 @@ describe("Space test", () => {
             signal,
             {
                 metadata: new Map<string, unknown>(),
-            }
+            },
         );
         space.addUser(
             createSpaceUser({
                 spaceUserId: "alice-id",
                 name: "Alice",
-            })
+            }),
         );
         const showInfoPopupSpy = vi.spyOn(recordingStore, "showInfoPopup");
         const showGenericInfoPopupSpy = vi.spyOn(recordingStore, "showGenericInfoPopup");
@@ -516,7 +516,7 @@ describe("Space test", () => {
                         recorder: "alice-id",
                     },
                 ],
-            ])
+            ]),
         );
 
         expect(showInfoPopupSpy).toHaveBeenCalledWith("Alice");
@@ -533,7 +533,7 @@ describe("Space test", () => {
             signal,
             {
                 metadata: new Map<string, unknown>(),
-            }
+            },
         );
         const showInfoPopupSpy = vi.spyOn(recordingStore, "showInfoPopup");
         const showGenericInfoPopupSpy = vi.spyOn(recordingStore, "showGenericInfoPopup");
@@ -547,7 +547,7 @@ describe("Space test", () => {
                         recorder: "alice-id",
                     },
                 ],
-            ])
+            ]),
         );
 
         await vi.advanceTimersByTimeAsync(5_000);
@@ -559,7 +559,7 @@ describe("Space test", () => {
             createSpaceUser({
                 spaceUserId: "alice-id",
                 name: "Alice",
-            })
+            }),
         );
 
         await Promise.resolve();
@@ -576,7 +576,7 @@ describe("Space test", () => {
             signal,
             {
                 metadata: new Map<string, unknown>(),
-            }
+            },
         );
 
         const showInfoPopupSpy = vi.spyOn(recordingStore, "showInfoPopup");
@@ -592,7 +592,7 @@ describe("Space test", () => {
                         status: "starting",
                     },
                 ],
-            ])
+            ]),
         );
 
         expect(showInfoPopupSpy).not.toHaveBeenCalled();
@@ -608,7 +608,7 @@ describe("Space test", () => {
             signal,
             {
                 metadata: new Map<string, unknown>(),
-            }
+            },
         );
         const playNotificationSpy = vi.spyOn(notificationPlayingStore, "playNotification");
 
@@ -639,7 +639,7 @@ describe("Space test", () => {
             signal,
             {
                 metadata: new Map<string, unknown>(),
-            }
+            },
         );
 
         await space.startRecording();
@@ -661,7 +661,7 @@ describe("Space test", () => {
             signal,
             {
                 metadata,
-            }
+            },
         );
 
         const newMetadata = new Map<string, unknown>([
@@ -688,7 +688,7 @@ describe("Space test", () => {
             signal,
             {
                 metadata,
-            }
+            },
         );
 
         const newMetadata = new Map<string, unknown>([["metadata-1", 0]]);
@@ -711,7 +711,7 @@ describe("Space test", () => {
             signal,
             {
                 metadata,
-            }
+            },
         );
 
         const newMetadata = new Map<string, unknown>([

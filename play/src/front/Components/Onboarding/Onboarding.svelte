@@ -20,7 +20,7 @@
     import CompleteStep from "./Steps/CompleteStep.svelte";
 
     let movementTimeout: ReturnType<typeof setTimeout> | null = null;
-    let onboardingHighlight: OnboardingHighlight | null = null;
+    let onboardingHighlight: OnboardingHighlight | null = $state(null);
     let onboardingUnsubscribe: Unsubscriber | undefined = undefined;
     let currentGameScene: GameScene | undefined = undefined;
 
@@ -92,15 +92,19 @@
     }
 
     // During onboarding: temporarily disable silent zone so the communication demo works
-    $: silentStore.setOnboardingOverride($onboardingStore !== null);
+    $effect(() => {
+        silentStore.setOnboardingOverride($onboardingStore !== null);
+    });
 
     // Cancel onboarding if user enters a real conversation bubble or meeting
-    $: if ($onboardingStore && ($currentPlayerGroupIdStore !== undefined || $inJitsiStore || $inLivekitStore)) {
-        onboardingStore.skip();
-    }
+    $effect(() => {
+        if ($onboardingStore && ($currentPlayerGroupIdStore !== undefined || $inJitsiStore || $inLivekitStore)) {
+            onboardingStore.skip();
+        }
+    });
 
     // Watch for step completion conditions
-    $: {
+    $effect(() => {
         // Note: lockBubble step completion is handled by click interceptor in OnboardingHighlight
         if ($onboardingStore === "screenSharing" && get(requestedScreenSharingState)) {
             setTimeout(() => onboardingStore.next(), 1000);
@@ -108,24 +112,24 @@
         if ($onboardingStore === "pictureInPicture" && get(activePictureInPictureStore)) {
             setTimeout(() => onboardingStore.next(), 1000);
         }
-    }
+    });
 </script>
 
-<OnboardingStep on:next={handleNext} on:skip={handleSkip}>
+<OnboardingStep>
     {#if $onboardingStore === "welcome"}
-        <WelcomeStep on:next={handleNext} on:skip={handleSkip} />
+        <WelcomeStep onnext={handleNext} onskip={handleSkip} />
     {:else if $onboardingStore === "movement"}
-        <MovementStep on:next={handleNext} />
+        <MovementStep onnext={handleNext} />
     {:else if $onboardingStore === "communication"}
-        <CommunicationStep on:next={handleNext} />
+        <CommunicationStep onnext={handleNext} />
     {:else if $onboardingStore === "lockBubble"}
-        <LockBubbleStep on:next={handleNext} />
+        <LockBubbleStep onnext={handleNext} />
     {:else if $onboardingStore === "screenSharing"}
-        <ScreenSharingStep on:next={handleNext} />
+        <ScreenSharingStep onnext={handleNext} />
     {:else if $onboardingStore === "pictureInPicture"}
-        <PictureInPictureStep on:next={handleNext} />
+        <PictureInPictureStep onnext={handleNext} />
     {:else if $onboardingStore === "complete"}
-        <CompleteStep on:next={handleNext} />
+        <CompleteStep onnext={handleNext} />
     {/if}
 </OnboardingStep>
 <OnboardingHighlight bind:this={onboardingHighlight} />

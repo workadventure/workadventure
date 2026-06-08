@@ -25,7 +25,10 @@ export class PusherRoom {
     private _wamSettings: WAMFileFormat["settings"] = {};
     private backConnectionClosedAbortController: AbortController = new AbortController();
 
-    constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
+    constructor(
+        public readonly roomUrl: string,
+        private socketListener: ZoneEventListener,
+    ) {
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionDispatcher(this.roomUrl, 320, 320, this.socketListener, this);
     }
@@ -235,7 +238,7 @@ export class PusherRoom {
                         "Room connection closed between pusher and back server " +
                             this.roomUrl +
                             " " +
-                            new Date().toLocaleString("en-GB")
+                            new Date().toLocaleString("en-GB"),
                     );
                 }
                 this.backConnectionClosedAbortController.abort();

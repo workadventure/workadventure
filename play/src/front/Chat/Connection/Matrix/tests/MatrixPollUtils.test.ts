@@ -14,7 +14,7 @@ describe("MatrixPollUtils", () => {
         const response = createMatrixPollResponse(
             PollResponseEvent.from([bananaAnswer.id], "$poll").serialize(),
             "@alice:server",
-            2
+            2,
         );
 
         const state = computePollState(pollStart, [response], {
@@ -36,7 +36,7 @@ describe("MatrixPollUtils", () => {
         const response = createMatrixPollResponse(
             PollResponseEvent.from([bananaAnswer.id], "$poll").serialize(),
             "@alice:server",
-            2
+            2,
         );
 
         const stateBeforeEnd = computePollState(pollStart, [response], {
@@ -62,12 +62,12 @@ describe("MatrixPollUtils", () => {
         const firstResponse = createMatrixPollResponse(
             PollResponseEvent.from([appleAnswer.id], "$poll").serialize(),
             "@alice:server",
-            2
+            2,
         );
         const secondResponse = createMatrixPollResponse(
             PollResponseEvent.from([bananaAnswer.id], "$poll").serialize(),
             "@alice:server",
-            3
+            3,
         );
 
         const state = computePollState(pollStart, [firstResponse, secondResponse], {
@@ -86,7 +86,7 @@ describe("MatrixPollUtils", () => {
         const vote = createMatrixPollResponse(
             PollResponseEvent.from([appleAnswer.id], "$poll").serialize(),
             "@alice:server",
-            2
+            2,
         );
         const unvote = createMatrixPollResponse(PollResponseEvent.from([], "$poll").serialize(), "@alice:server", 3);
 
@@ -106,7 +106,7 @@ describe("MatrixPollUtils", () => {
         const validVote = createMatrixPollResponse(
             PollResponseEvent.from([appleAnswer.id], "$poll").serialize(),
             "@alice:server",
-            2
+            2,
         );
         const invalidVote = createMatrixEvent(
             {
@@ -122,7 +122,7 @@ describe("MatrixPollUtils", () => {
                 },
             },
             "@alice:server",
-            3
+            3,
         );
 
         const state = computePollState(pollStart, [validVote, invalidVote], {
@@ -152,7 +152,7 @@ describe("MatrixPollUtils", () => {
                 },
             },
             "@alice:server",
-            2
+            2,
         );
 
         const state = computePollState(pollStart, [unstableResponse], {
@@ -170,13 +170,13 @@ describe("MatrixPollUtils", () => {
         const firstResponse = createMatrixPollResponse(
             PollResponseEvent.from([appleAnswer.id], "$poll").serialize(),
             "@alice:server",
-            2
+            2,
         );
         const redactedLaterResponse = createMatrixPollResponse(
             PollResponseEvent.from([bananaAnswer.id], "$poll").serialize(),
             "@alice:server",
             3,
-            true
+            true,
         );
 
         const state = computePollState(pollStart, [firstResponse, redactedLaterResponse], {
@@ -194,7 +194,7 @@ function createMatrixPollResponse(
     serializedEvent: IPartialEvent<object>,
     sender: string,
     ts: number,
-    redacted = false
+    redacted = false,
 ) {
     return createMatrixEvent(serializedEvent, sender, ts, redacted);
 }
@@ -207,7 +207,7 @@ function createMatrixEvent(serializedEvent: IPartialEvent<object>, sender: strin
         sender,
         user_id: sender,
         origin_server_ts: ts,
-        content: serializedEvent.content as Record<string, unknown>,
+        content: serializedEvent.content,
         unsigned: redacted
             ? {
                   redacted_because: {
@@ -221,5 +221,5 @@ function createMatrixEvent(serializedEvent: IPartialEvent<object>, sender: strin
                   },
               }
             : undefined,
-    } as never);
+    });
 }

@@ -25,7 +25,7 @@ export class StateLifecycleManager implements IStateLifecycleManager {
      */
     constructor(
         initialState: ICommunicationState<ICommunicationStrategy>,
-        private readonly finalizeDelayMs: number = 5000
+        private readonly finalizeDelayMs: number = 5000,
     ) {
         this._currentState = initialState;
     }

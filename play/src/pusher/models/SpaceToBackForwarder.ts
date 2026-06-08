@@ -41,7 +41,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
     constructor(
         private readonly _space: Space,
         private readonly eventProcessor: EventProcessor,
-        private readonly _clientEventsEmitter = clientEventsEmitter
+        private readonly _clientEventsEmitter = clientEventsEmitter,
     ) {}
     async registerUser(client: PusherWebSocket, filterType: FilterType): Promise<void> {
         const socketData = client.getUserData();
@@ -55,25 +55,25 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             throw new UserAlreadyAddedInSpaceError(
                 `User ${spaceUserId} already added in space ${this._space.name}`,
                 this._space.name,
-                spaceUserId
+                spaceUserId,
             );
         }
         if (this._space._localConnectedUserWithSpaceUser.has(client)) {
             throw new SocketAlreadyRegisteredInSpaceError(
                 `PusherWebSocket already registered in space ${this._space.name}`,
-                this._space.name
+                this._space.name,
             );
         }
         if (socketData.spaces.has(this._space.name)) {
             throw new UserAlreadyInSpaceError(
                 `User ${socketData.name} is trying to join a space they are already in.`,
                 this._space.name,
-                socketData.name
+                socketData.name,
             );
         }
 
         debug(
-            `${this._space.name} : user added ${socketData.name}. User count ${this._space._localConnectedUser.size}`
+            `${this._space.name} : user added ${socketData.name}. User count ${this._space._localConnectedUser.size}`,
         );
 
         const spaceUser: SpaceUserExtended = {
@@ -160,7 +160,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         if (!this._space._localConnectedUser.has(spaceUserId)) {
             console.error(`Trying to remove user ${spaceUserId} that does not exist in space ${this._space.name}`);
             Sentry.captureException(
-                new Error(`Trying to remove user ${spaceUserId} that does not exist in space ${this._space.name}`)
+                new Error(`Trying to remove user ${spaceUserId} that does not exist in space ${this._space.name}`),
             );
         }
 
@@ -190,7 +190,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         }
 
         debug(
-            `${this._space.name} : watcher removed ${userData.name}. Watcher count ${this._space._localConnectedUser.size}`
+            `${this._space.name} : watcher removed ${userData.name}. Watcher count ${this._space._localConnectedUser.size}`,
         );
 
         debug(`${this._space.name} : user remove sent ${spaceUserId}`);
@@ -234,7 +234,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                             console.error("Error while forwarding message to space back", error);
                             Sentry.captureException(error);
                         }
-                    }
+                    },
                 );
 
                 if (pusherToBackSpaceMessage && pusherToBackSpaceMessage.$case) {
@@ -295,7 +295,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         const processedEvent = this.eventProcessor.processPublicEvent(
             event.spaceEvent.event,
             senderSpaceUser,
-            senderSocket
+            senderSocket,
         );
 
         this.forwardMessageToSpaceBack({

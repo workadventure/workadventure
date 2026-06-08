@@ -5,7 +5,7 @@
     import WokaFromUserId from "../Woka/WokaFromUserId.svelte";
     import { IconUsersGroup } from "@wa-icons";
 
-    $: request = $meetingInvitationRequestStore;
+    let request = $derived($meetingInvitationRequestStore);
 
     function onAccept() {
         gameManager.getCurrentGameScene().inviteManager?.handleAccept({
@@ -57,14 +57,14 @@
         <button
             type="button"
             class="btn btn-light btn-ghost text-nowrap justify-center my-2 mx-1 min-w-0 !border !border-solid !border-transparent hover:!bg-white/30"
-            on:click={onAccept}
+            onclick={onAccept}
         >
             {$LL.chat.accept()}
         </button>
         <button
             type="button"
             class="btn btn-light btn-ghost text-nowrap justify-center my-2 mx-1 min-w-0 !border !border-solid !border-transparent hover:!border hover:!border-solid hover:!border-white/30 hover:!bg-transparent"
-            on:click={onDecline}
+            onclick={onDecline}
         >
             {$LL.chat.decline()}
         </button>

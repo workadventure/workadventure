@@ -23,19 +23,22 @@ function debugWebhookResponse(
     statusCode: number,
     outcome: string,
     space?: string,
-    recordingSessionId?: string
+    recordingSessionId?: string,
 ): void {
     debug(
         `LivekitWebhookController <= [${req.method}] ${
             req.originalUrl
         } - Status: ${statusCode} - Outcome: ${outcome} - Space: ${space ?? "unknown"} - Recording session: ${
             recordingSessionId ?? "unknown"
-        } - Time: ${Date.now()}`
+        } - Time: ${Date.now()}`,
     );
 }
 
 export class LivekitWebhookController extends BaseHttpController {
-    constructor(app: Application, private readonly livekitWebhookService = new LivekitWebhookService()) {
+    constructor(
+        app: Application,
+        private readonly livekitWebhookService = new LivekitWebhookService(),
+    ) {
         super(app);
     }
 
@@ -49,7 +52,7 @@ export class LivekitWebhookController extends BaseHttpController {
                 debug(
                     `LivekitWebhookController => [${req.method}] ${req.originalUrl} - IP: ${req.ip} - Body bytes: ${
                         body?.length ?? 0
-                    } - Time: ${Date.now()}`
+                    } - Time: ${Date.now()}`,
                 );
 
                 const query = validateQuery(req, res, livekitWebhookQuerySchema);
@@ -70,7 +73,7 @@ export class LivekitWebhookController extends BaseHttpController {
                         body,
                         authHeader,
                         query.space,
-                        query.recordingSessionId
+                        query.recordingSessionId,
                     );
                     // The back only returns successfully once the webhook is processed or intentionally ignored.
                     debugWebhookResponse(req, 204, "forwarded", query.space, query.recordingSessionId);
@@ -83,7 +86,7 @@ export class LivekitWebhookController extends BaseHttpController {
                             error.statusCode,
                             "webhook-error",
                             query.space,
-                            query.recordingSessionId
+                            query.recordingSessionId,
                         );
                         res.status(error.statusCode).send(error.message);
                         return;
@@ -93,7 +96,7 @@ export class LivekitWebhookController extends BaseHttpController {
                     debugWebhookResponse(req, 500, "unexpected-error", query.space, query.recordingSessionId);
                     res.status(500).send("Internal Server Error");
                 }
-            }
+            },
         );
     }
 }

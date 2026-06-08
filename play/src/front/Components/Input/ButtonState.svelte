@@ -2,28 +2,32 @@
     import { asError } from "catch-unknown";
     import { IconCircleX, IconInfoCircle } from "@wa-icons";
 
-    export let promise: () => Promise<string>;
-    export let initialText: string;
-    export let loadingText: string;
-    export let dataTestId: string | undefined = undefined;
-    let finalText: string;
+    interface Props {
+        promise: () => Promise<string>;
+        initialText: string;
+        loadingText: string;
+        dataTestId?: string;
+    }
 
-    let state = "ready";
+    let { promise, initialText, loadingText, dataTestId = undefined }: Props = $props();
+
+    let finalText = $state("");
+    let buttonState = $state("ready");
 
     function click() {
-        state = "loading";
+        buttonState = "loading";
         promise()
             .then((result) => {
-                state = "success";
+                buttonState = "success";
                 finalText = result;
             })
             .catch((result) => {
-                state = "error";
+                buttonState = "error";
                 finalText = asError(result).message;
             })
             .finally(() => {
                 setTimeout(() => {
-                    state = "ready";
+                    buttonState = "ready";
                 }, 3_500);
             });
     }
@@ -32,13 +36,13 @@
 <button
     type="button"
     data-testid={dataTestId}
-    class={`${state} button-state btn btn-secondary w-full button-state`}
-    on:click={click}
-    disabled={state !== "ready"}
+    class={`${buttonState} button-state btn btn-secondary w-full button-state`}
+    onclick={click}
+    disabled={buttonState !== "ready"}
 >
-    {#if state === "ready"}
+    {#if buttonState === "ready"}
         {initialText}
-    {:else if state === "loading"}
+    {:else if buttonState === "loading"}
         <svg
             aria-hidden="true"
             role="status"
@@ -54,7 +58,7 @@
         </svg>
         {loadingText}
     {:else}
-        {#if state === "success"}
+        {#if buttonState === "success"}
             <IconInfoCircle class="mr-3" />
         {:else}
             <IconCircleX class="mr-3" />

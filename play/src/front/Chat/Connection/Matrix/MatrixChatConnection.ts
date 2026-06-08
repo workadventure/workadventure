@@ -156,13 +156,13 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             | AvailabilityStatus.LISTENER
             | RequestedStatus
         >,
-        private matrixSecurity: MatrixSecurity = defaultMatrixSecurity
+        private matrixSecurity: MatrixSecurity = defaultMatrixSecurity,
     ) {
         this.connectionStatus = writable("CONNECTING");
         this.roomList = new AutoDestroyingMapStore<string, MatrixChatRoom>();
         this.clientPromise = clientPromise;
         this.directRooms = this.createJoinedRoomsReadable(
-            (room) => get(room.myMembership) === KnownMembership.Join && get(room.type) === "direct"
+            (room) => get(room.myMembership) === KnownMembership.Join && get(room.type) === "direct",
         );
 
         this.directRoomsUsers = derived(
@@ -188,7 +188,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                     return acc;
                 }, [] as ChatUser[]);
             },
-            []
+            [],
         );
 
         this.invitations = derived(
@@ -201,30 +201,30 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             (_memberships) => {
                 return [
                     ...Array.from(this.roomList.values()).filter(
-                        (room) => get(room.myMembership) === KnownMembership.Invite
+                        (room) => get(room.myMembership) === KnownMembership.Invite,
                     ),
                     ...Array.from(this.roomFolders.values()).filter(
-                        (folder) => get(folder.myMembership) === KnownMembership.Invite
+                        (folder) => get(folder.myMembership) === KnownMembership.Invite,
                     ),
                 ];
-            }
+            },
         );
 
         this.rooms = this.createJoinedRoomsReadable(
-            (room) => get(room.myMembership) === KnownMembership.Join && get(room.type) === "multiple"
+            (room) => get(room.myMembership) === KnownMembership.Join && get(room.type) === "multiple",
         );
 
         this.hasUnreadMessages = derived(this.rawUnreadRooms, (rawUnreadRooms) =>
-            Array.from(rawUnreadRooms.values()).some((room) => room.count > 0)
+            Array.from(rawUnreadRooms.values()).some((room) => room.count > 0),
         );
 
         this.folders = derived(
             [this.roomFolders, ...Array.from(this.roomFolders.values()).map((folder) => folder.myMembership)],
             () => {
                 return Array.from(this.roomFolders.values()).filter(
-                    (folder) => get(folder.myMembership) === KnownMembership.Join
+                    (folder) => get(folder.myMembership) === KnownMembership.Join,
                 );
-            }
+            },
         );
 
         this.usersStatus = new MapStore<string, AvailabilityStatus>();
@@ -233,14 +233,14 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.shouldRetrySendingEvents = derived(
             Array.from(this.roomList.values()).map((room) => room.shouldRetrySendingEvents),
             (shouldRetrySendingEvents) =>
-                shouldRetrySendingEvents.some((shouldRetrySendingEvent) => shouldRetrySendingEvent)
+                shouldRetrySendingEvents.some((shouldRetrySendingEvent) => shouldRetrySendingEvent),
         );
 
         this.nbUnreadInvitationsMessages = derived(this.rawUnreadRooms, (rawUnreadRooms) =>
             Array.from(rawUnreadRooms.values()).reduce(
                 (total, room) => total + (room.membership === KnownMembership.Invite ? room.count : 0),
-                0
-            )
+                0,
+            ),
         );
 
         this.nbUnreadDirectRoomsMessages = readonly(this.nbUnreadDirectRoomsMessagesStore);
@@ -254,7 +254,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                     return total;
                 }
                 return total + room.count;
-            }, 0)
+            }, 0),
         );
 
         this.handleRoom = this.onClientEventRoom.bind(this);
@@ -641,7 +641,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             /* profile fetch can fail on restricted networks */
         }
         const profileAvatarPreviewUrl = profileAvatarMxc
-            ? this.client.mxcUrlToHttp(profileAvatarMxc, 96, 96) ?? undefined
+            ? (this.client.mxcUrlToHttp(profileAvatarMxc, 96, 96) ?? undefined)
             : undefined;
         const localDisplayName = localUserStore.getDisplayNameForMatrixProfile();
         const localWoka = get(currentPlayerWokaStore);
@@ -649,7 +649,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         const profileNameNorm = profileDisplayName?.trim();
         const nameMismatch = Boolean(
             localDisplayName &&
-                (profileNameNorm === undefined || profileNameNorm === "" || localDisplayName !== profileNameNorm)
+            (profileNameNorm === undefined || profileNameNorm === "" || localDisplayName !== profileNameNorm),
         );
         const avatarMissingOnProfile = Boolean(hasCustomWoka && !profileAvatarMxc);
         const profileNeedsSync = nameMismatch || avatarMissingOnProfile;
@@ -683,7 +683,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             /* profile fetch can fail */
         }
         const profileAvatarPreviewUrl = profileAvatarMxc
-            ? this.client.mxcUrlToHttp(profileAvatarMxc, 96, 96) ?? undefined
+            ? (this.client.mxcUrlToHttp(profileAvatarMxc, 96, 96) ?? undefined)
             : undefined;
 
         return {
@@ -763,7 +763,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.client.on(ClientEvent.Room, this.handleRoom);
         this.client.on(ClientEvent.DeleteRoom, this.handleDeleteRoom);
         this.client.on(RoomEvent.MyMembership, this.handleMyMembership);
-        this.client.on(RoomStateEvent.Events as EmittedEvents, this.handleRoomStateEvent);
+        this.client.on(RoomStateEvent.Events, this.handleRoomStateEvent);
         this.client.on(RoomEvent.Name, this.handleName);
         this.client.on(ClientEvent.AccountData, this.handleAccountDataEvent);
         this.client.on(UserEvent.Presence, this.handleUserPresence);
@@ -1015,7 +1015,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                     return true;
                 }
                 return false;
-            })
+            }),
         );
 
         if (placementResults.some((didPlaceRoom) => didPlaceRoom)) {
@@ -1081,7 +1081,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 .filter((room) => {
                     return !content.global.override.some(
                         (rule: IPushRule) =>
-                            rule.rule_id === room.id && rule.actions.includes(PushRuleActionName.DontNotify)
+                            rule.rule_id === room.id && rule.actions.includes(PushRuleActionName.DontNotify),
                     );
                 })
                 .forEach((room) => {
@@ -1247,7 +1247,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         }
 
         const folderPromises = Array.from(this.roomFolders.values()).map(async (folder) =>
-            folder.id === parentRoomID ? Promise.resolve(folder) : await folder.getNode(parentRoomID)
+            folder.id === parentRoomID ? Promise.resolve(folder) : await folder.getNode(parentRoomID),
         );
 
         const folders = await Promise.all(folderPromises);
@@ -1408,7 +1408,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 if (result === "pending") {
                     this.scheduleRoomPlacementReconciliation(descendantId);
                 }
-            })
+            }),
         );
     }
 
@@ -1499,7 +1499,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             room.name,
             room.roomId,
             membership,
-            prevMembership
+            prevMembership,
         );
         const { roomId } = room;
         if (membership !== prevMembership && membership === KnownMembership.Join) {
@@ -1548,7 +1548,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                             get(LL).chat.roomInvitation.notification({ roomName }),
                             chatRoom,
                             undefined,
-                            false
+                            false,
                         );
                     }
                 })
@@ -1581,7 +1581,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         try {
             this.roomCreationInProgress.set(true);
             const result = await this.client.createRoom(
-                this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions)
+                this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions),
             );
 
             if (roomOptions.parentSpaceID && result) {
@@ -1630,7 +1630,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
         try {
             const result = await this.client?.createRoom(
-                this.mapCreateRoomOptionsToMatrixCreateFolderOptions(roomOptions)
+                this.mapCreateRoomOptionsToMatrixCreateFolderOptions(roomOptions),
             );
             await this.waitForNextSync();
 
@@ -1936,7 +1936,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 spaceRoomId,
                 EventType.SpaceChild,
                 { via: [domain], suggested },
-                childRoomId
+                childRoomId,
             );
             return;
         } catch (error) {

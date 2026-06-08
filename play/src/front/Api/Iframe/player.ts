@@ -73,7 +73,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     get name(): string {
         if (playerName === undefined) {
             throw new Error(
-                "Player name not initialized yet. You should call WA.player.name within a WA.onInit callback."
+                "Player name not initialized yet. You should call WA.player.name within a WA.onInit callback.",
             );
         }
         return playerName;
@@ -104,7 +104,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     get playerId(): number {
         if (playerId === undefined) {
             throw new Error(
-                "Player id not initialized yet. You should call WA.player.playerId within a WA.onInit callback."
+                "Player id not initialized yet. You should call WA.player.playerId within a WA.onInit callback.",
             );
         }
         return playerId;
@@ -120,7 +120,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     get uuid(): string | undefined {
         if (uuid === undefined) {
             throw new Error(
-                "Player id not initialized yet. You should call WA.player.uuid within a WA.onInit callback."
+                "Player id not initialized yet. You should call WA.player.uuid within a WA.onInit callback.",
             );
         }
         return uuid;
@@ -136,7 +136,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     get language(): string {
         if (playerLanguage === undefined) {
             throw new Error(
-                "Player language not initialized yet. You should call WA.player.language within a WA.onInit callback."
+                "Player language not initialized yet. You should call WA.player.language within a WA.onInit callback.",
             );
         }
         return playerLanguage;
@@ -205,7 +205,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
             },
             {
                 timeout: null, // Disable timeout, as moving can take a long time
-            }
+            },
         );
     }
 
@@ -231,7 +231,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     get userRoomToken(): string | undefined {
         if (userRoomToken === undefined) {
             throw new Error(
-                "User-room token not initialized yet. You should call WA.player.userRoomToken within a WA.onInit callback."
+                "User-room token not initialized yet. You should call WA.player.userRoomToken within a WA.onInit callback.",
             );
         }
         return userRoomToken;
@@ -284,7 +284,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     get isLogged(): boolean {
         if (isLogged === undefined) {
             throw new Error(
-                "IsLogged not initialized yet. You should call WA.player.isLogged within a WA.onInit callback."
+                "IsLogged not initialized yet. You should call WA.player.isLogged within a WA.onInit callback.",
             );
         }
         return isLogged;

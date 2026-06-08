@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { openModal } from "svelte-modals";
     import { get, readable } from "svelte/store";
     import { defaultColor } from "@workadventure/shared-utils";
     import LL from "../../../../i18n/i18n-svelte";
@@ -31,8 +30,13 @@
         IconUserPlus,
         IconUsersGroup,
     } from "@wa-icons";
+    import { modals } from "@wa-modals";
 
-    export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
+    interface Props {
+        room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
+    }
+
+    let { room }: Props = $props();
 
     const emptyThreads = readable<readonly ChatThreadSummary[]>([]);
     const emptyPolls = readable<readonly ChatPollItem[]>([]);
@@ -41,66 +45,74 @@
     onMount(() => {
         room.ensureThreadsHydrated?.().catch((error) => console.error("Failed to hydrate room threads", error));
         room.ensurePollCatalogueHydrated?.().catch((error) =>
-            console.error("Failed to hydrate room polls catalogue", error)
+            console.error("Failed to hydrate room polls catalogue", error),
         );
     });
 
-    $: members = room.members;
-    $: roomName = room.name;
-    $: roomType = room.type;
-    $: isEncrypted = room.isEncrypted;
-    $: canInvite = room.hasPermissionTo("invite");
-    $: areNotificationsMuted = room.areNotificationsMuted;
-    $: threads = room.threads ?? emptyThreads;
-    $: pollItems = room.pollItems ?? emptyPolls;
-    $: threadsHydrationState = room.threadsHydrationState ?? idleHydrationState;
-    $: pollCatalogueHydrationState = room.pollCatalogueHydrationState ?? idleHydrationState;
-    $: joinedMembers = $members.filter((member) => get(member.membership) === "join");
-    $: joinedMemberCountStore = room.joinedMemberCount;
-    $: participantBadgeCount = joinedMemberCountStore != null ? $joinedMemberCountStore : joinedMembers.length;
-    $: unreadThreadCount = $threads.filter((thread) => thread.hasUnreadMessages).length;
-    $: openPollCount = $pollItems.filter((poll) => !get(poll.state).isEnded).length;
-    $: avatarColorStore = room.avatarFallbackColor;
-    $: leaveRoomNotification = $LL.chat.roomMenu.leaveRoom.notification();
-    $: threadWarnings = $threadsHydrationState.warnings ?? [];
-    $: hasUnsupportedThreadHistory = threadWarnings.some((warning) => warning.reason === "server_unsupported");
-    $: threadCardValue =
+    let members = $derived(room.members);
+    let roomName = $derived(room.name);
+    let roomType = $derived(room.type);
+    let isEncrypted = $derived(room.isEncrypted);
+    let canInvite = $derived(room.hasPermissionTo("invite"));
+    let areNotificationsMuted = $derived(room.areNotificationsMuted);
+    let threads = $derived(room.threads ?? emptyThreads);
+    let pollItems = $derived(room.pollItems ?? emptyPolls);
+    let threadsHydrationState = $derived(room.threadsHydrationState ?? idleHydrationState);
+    let pollCatalogueHydrationState = $derived(room.pollCatalogueHydrationState ?? idleHydrationState);
+    let joinedMembers = $derived($members.filter((member) => get(member.membership) === "join"));
+    let joinedMemberCountStore = $derived(room.joinedMemberCount);
+    let participantBadgeCount = $derived(
+        joinedMemberCountStore != null ? $joinedMemberCountStore : joinedMembers.length,
+    );
+    let unreadThreadCount = $derived($threads.filter((thread) => thread.hasUnreadMessages).length);
+    let openPollCount = $derived($pollItems.filter((poll) => !get(poll.state).isEnded).length);
+    let avatarColorStore = $derived(room.avatarFallbackColor);
+    let leaveRoomNotification = $derived($LL.chat.roomMenu.leaveRoom.notification());
+    let threadWarnings = $derived($threadsHydrationState.warnings ?? []);
+    let hasUnsupportedThreadHistory = $derived(
+        threadWarnings.some((warning) => warning.reason === "server_unsupported"),
+    );
+    let threadCardValue = $derived(
         room.threadsHydrationState == null
             ? `${$threads.length}`
             : $threadsHydrationState.status === "loading" || $threadsHydrationState.status === "idle"
-            ? $LL.chat.loading()
-            : $threadsHydrationState.status === "error"
-            ? $LL.chat.roomPanel.status.retry()
-            : hasUnsupportedThreadHistory
-            ? "?"
-            : `${$threads.length}`;
-    $: threadCardHint =
+              ? $LL.chat.loading()
+              : $threadsHydrationState.status === "error"
+                ? $LL.chat.roomPanel.status.retry()
+                : hasUnsupportedThreadHistory
+                  ? "?"
+                  : `${$threads.length}`,
+    );
+    let threadCardHint = $derived(
         room.threadsHydrationState == null
             ? undefined
             : $threadsHydrationState.status === "error"
-            ? $LL.chat.roomPanel.threadsLoadError()
-            : hasUnsupportedThreadHistory
-            ? $LL.chat.roomPanel.status.partialHistory()
-            : undefined;
-    $: pollCardValue =
+              ? $LL.chat.roomPanel.threadsLoadError()
+              : hasUnsupportedThreadHistory
+                ? $LL.chat.roomPanel.status.partialHistory()
+                : undefined,
+    );
+    let pollCardValue = $derived(
         room.pollCatalogueHydrationState == null
             ? `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`
             : $pollCatalogueHydrationState.status === "loading" || $pollCatalogueHydrationState.status === "idle"
-            ? $LL.chat.loading()
-            : $pollCatalogueHydrationState.status === "error"
-            ? $LL.chat.roomPanel.status.retry()
-            : `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`;
-    $: pollCardHint =
+              ? $LL.chat.loading()
+              : $pollCatalogueHydrationState.status === "error"
+                ? $LL.chat.roomPanel.status.retry()
+                : `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`,
+    );
+    let pollCardHint = $derived(
         room.pollCatalogueHydrationState != null && $pollCatalogueHydrationState.status === "error"
             ? $LL.chat.roomPanel.pollsLoadError()
-            : undefined;
+            : undefined,
+    );
 
     function openSection(section: RoomSidePanelSection) {
         roomSidePanelStore.setActiveSection(section);
     }
 
     function openManageParticipantsModal() {
-        openModal(ManageParticipantsModal, { room });
+        modals.open(ManageParticipantsModal, { room });
     }
 
     function toggleMute() {
@@ -130,7 +142,7 @@
                     compact
                     pictureStore={room.pictureStore}
                     fallbackName={$roomName}
-                    color={$roomType === "direct" ? $avatarColorStore ?? defaultColor : null}
+                    color={$roomType === "direct" ? ($avatarColorStore ?? defaultColor) : null}
                 />
                 {#if $isEncrypted}
                     <EncryptionBadge />
@@ -159,7 +171,7 @@
                 type="button"
                 class="m-0 rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3 text-left text-white transition-colors hover:bg-white/[0.08]"
                 data-testid="roomSidePanelHomeParticipants"
-                on:click={() => openSection("participants")}
+                onclick={() => openSection("participants")}
             >
                 <IconUsersGroup font-size={18} />
                 <div class="mt-2 text-sm font-semibold">{$LL.chat.roomPanel.sections.participants()}</div>
@@ -170,7 +182,7 @@
                 type="button"
                 class="m-0 rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3 text-left text-white transition-colors hover:bg-white/[0.08]"
                 data-testid="roomSidePanelHomeThreads"
-                on:click={() => openSection("threads")}
+                onclick={() => openSection("threads")}
             >
                 <div class="flex items-center justify-between gap-2">
                     <IconMessageCircle2 font-size={18} />
@@ -197,7 +209,7 @@
                 type="button"
                 class="m-0 rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3 text-left text-white transition-colors hover:bg-white/[0.08]"
                 data-testid="roomSidePanelHomePolls"
-                on:click={() => openSection("polls")}
+                onclick={() => openSection("polls")}
             >
                 <IconCheckList font-size={18} />
                 <div class="mt-2 text-sm font-semibold">{$LL.chat.roomPanel.sections.polls()}</div>
@@ -217,7 +229,7 @@
                 type="button"
                 class="m-0 rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3 text-left text-white transition-colors hover:bg-white/[0.08]"
                 data-testid="roomSidePanelHomeSettings"
-                on:click={() => openSection("settings")}
+                onclick={() => openSection("settings")}
             >
                 <IconSettings font-size={18} />
                 <div class="mt-2 text-sm font-semibold">{$LL.chat.roomPanel.sections.settings()}</div>
@@ -231,7 +243,7 @@
                     type="button"
                     class="m-0 flex items-center gap-2 rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
                     data-testid="roomSidePanelHomeInvite"
-                    on:click={openManageParticipantsModal}
+                    onclick={openManageParticipantsModal}
                 >
                     <IconUserPlus font-size={17} />
                     {$LL.chat.manageRoomUsers.buttons.invite()}
@@ -242,7 +254,7 @@
                 type="button"
                 class="m-0 flex items-center gap-2 rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
                 data-testid="roomSidePanelHomeMute"
-                on:click={toggleMute}
+                onclick={toggleMute}
             >
                 {#if $areNotificationsMuted}
                     <IconUnMute font-size={17} />
@@ -257,7 +269,7 @@
                 type="button"
                 class="m-0 flex items-center gap-2 rounded-lg border border-solid border-danger-900/50 bg-danger-900/30 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-danger-900/50"
                 data-testid="roomSidePanelHomeLeave"
-                on:click={leaveRoom}
+                onclick={leaveRoom}
             >
                 <IconLogout font-size={17} />
                 {$LL.chat.roomMenu.leaveRoom.label()}

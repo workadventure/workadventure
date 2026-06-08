@@ -23,7 +23,7 @@ export interface ICommunicationState<T extends ICommunicationStrategy> {
     finalize(): void;
     handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
-        senderUserId: string
+        senderUserId: string,
     ): void;
 }
 
@@ -34,6 +34,6 @@ export interface IRecordableState<T extends IRecordableStrategy> extends ICommun
         rawBody: Buffer | Uint8Array,
         authorizationHeader: string | undefined,
         spaceName: string,
-        recordingSessionId: string
+        recordingSessionId: string,
     ): Promise<HandleRecordingWebhookRequest | "ignored">;
 }

@@ -32,7 +32,7 @@ export function createCoWebsiteStore() {
 
     const remove = (coWebsite: CoWebsite) => {
         update((currentArray) =>
-            currentArray.filter((currentCoWebsite) => currentCoWebsite.getId() !== coWebsite.getId())
+            currentArray.filter((currentCoWebsite) => currentCoWebsite.getId() !== coWebsite.getId()),
         );
     };
 
@@ -103,7 +103,7 @@ export const canvasSize = derived(
                 height: $windowSize.height,
             };
         }
-    }
+    },
 );
 
 export const coWebsitesSize = derived(
@@ -123,7 +123,7 @@ export const coWebsitesSize = derived(
                 height: $windowSize.height,
             };
         }
-    }
+    },
 );
 
 export class CoWebsiteManager {

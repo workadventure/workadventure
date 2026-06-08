@@ -12,16 +12,26 @@
     }
 
     let gameScene = gameManager.getCurrentGameScene();
-    let fileInput: HTMLInputElement;
-    let fileName: string | undefined;
-    let fileSize: string;
-    let errorFile: boolean;
-    let errorUpload: boolean;
-    let dropHover = false;
+    let fileInput: HTMLInputElement | undefined = $state();
+    let fileName: string | undefined = $state();
+    let fileSize: string = $state("");
+    let errorFile: boolean = $state(false);
+    let errorUpload: boolean = $state(false);
+    let dropHover = $state(false);
 
     const AUDIO_TYPE = AdminMessageEventTypes.audio;
 
-    export const handleSending = {
+    export type AudioGlobalMessageHandle = {
+        sendAudioMessage(broadcast: boolean): Promise<void>;
+    };
+
+    interface Props {
+        handleSending?: AudioGlobalMessageHandle;
+    }
+
+    let { handleSending = $bindable() }: Props = $props();
+
+    handleSending = {
         async sendAudioMessage(broadcast: boolean) {
             if (gameScene == undefined) {
                 return;
@@ -100,22 +110,25 @@
     }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <section
     class="section-input-send-audio centered-column cursor-pointer"
-    on:dragover|preventDefault={() => {
+    ondragover={(event) => {
+        event.preventDefault();
         dropHover = true;
     }}
-    on:dragleave|preventDefault={() => {
+    ondragleave={(event) => {
+        event.preventDefault();
         dropHover = false;
     }}
-    on:drop|preventDefault={(e) => {
-        dropAudioFile(e);
+    ondrop={(event) => {
+        event.preventDefault();
+        dropAudioFile(event);
         dropHover = false;
     }}
-    on:click={() => {
-        fileInput.click();
+    onclick={() => {
+        fileInput?.click();
     }}
 >
     <div class="flex flex-col items-center">
@@ -157,7 +170,7 @@
         type="file"
         id="input-send-audio"
         bind:this={fileInput}
-        on:change={(e) => {
+        onchange={(e) => {
             inputAudioFile(e);
         }}
     />

@@ -43,7 +43,7 @@ export class CustomEntityCollectionService {
         const { imagePath, file } = uploadEntityMessage;
         await fileSystem.writeByteArrayAsFile(this.getEntityToUploadVirtualPath(imagePath), file);
         await this.addEntityInEntityCollectionFile(
-            this.mapEntityFromUploadEntityMessageToEntityRawPrefab(uploadEntityMessage)
+            this.mapEntityFromUploadEntityMessageToEntityRawPrefab(uploadEntityMessage),
         );
         return;
     }
@@ -68,7 +68,7 @@ export class CustomEntityCollectionService {
             };
             await fileSystem.writeStringAsFile(
                 this.getEntityCollectionFileVirtualPath(),
-                JSON.stringify(customEntityCollection)
+                JSON.stringify(customEntityCollection),
             );
         } else {
             console.error(`[${new Date().toISOString()}] Unable to find the entity to modify in custom entities file`);
@@ -81,12 +81,12 @@ export class CustomEntityCollectionService {
         const customEntityCollection = EntityCollectionRaw.parse(JSON.parse(customEntityCollectionFileContent));
         const customEntityToDelete = customEntityCollection.collection.find((entity) => entity.id === id);
         customEntityCollection.collection = customEntityCollection.collection.filter(
-            (customEntity) => customEntity.id !== id
+            (customEntity) => customEntity.id !== id,
         );
         this.lock = this.lock.then(async () => {
             await fileSystem.writeStringAsFile(
                 this.getEntityCollectionFileVirtualPath(),
-                JSON.stringify(customEntityCollection)
+                JSON.stringify(customEntityCollection),
             );
             if (customEntityToDelete) {
                 await fileSystem.deleteFiles(this.getEntityToUploadVirtualPath(customEntityToDelete.imagePath));
@@ -111,7 +111,7 @@ export class CustomEntityCollectionService {
     }
 
     private mapEntityFromUploadEntityMessageToEntityRawPrefab(
-        uploadEntityMessage: UploadEntityMessage
+        uploadEntityMessage: UploadEntityMessage,
     ): EntityRawPrefab {
         return EntityRawPrefab.parse({
             ...uploadEntityMessage,
@@ -126,7 +126,7 @@ export class CustomEntityCollectionService {
         this.lock = this.lock.then(async () => {
             await fileSystem.writeStringAsFile(
                 this.getEntityCollectionFileVirtualPath(),
-                JSON.stringify(customEntityCollection)
+                JSON.stringify(customEntityCollection),
             );
         });
     }

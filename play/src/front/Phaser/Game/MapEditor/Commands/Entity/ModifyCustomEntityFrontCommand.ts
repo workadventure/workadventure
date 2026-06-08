@@ -11,7 +11,7 @@ export class ModifyCustomEntityFrontCommand extends ModifyCustomEntityCommand im
         modifyCustomEntityMessage: ModifyCustomEntityMessage,
         private entitiesCollectionManager: EntitiesCollectionsManager,
         private gameFrontWrapper: GameMapFrontWrapper,
-        private entitiesManager: EntitiesManager
+        private entitiesManager: EntitiesManager,
     ) {
         super(modifyCustomEntityMessage);
     }

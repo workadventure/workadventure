@@ -11,7 +11,10 @@ import type { RemotePlayersRepository } from "./RemotePlayersRepository";
 export class FollowManager {
     private subscriptions: Subscription[] = [];
 
-    constructor(private connection: RoomConnection, private remotePlayersRepository: RemotePlayersRepository) {
+    constructor(
+        private connection: RoomConnection,
+        private remotePlayersRepository: RemotePlayersRepository,
+    ) {
         this.subscriptions.push(
             this.connection.followRequestMessageStream.subscribe((followRequestMessage) => {
                 if (!localUserStore.getIgnoreFollowRequests()) {
@@ -24,7 +27,7 @@ export class FollowManager {
                         followUsersStore.addFollowRequest(followRequestMessage.leader);
                     }
                 }
-            })
+            }),
         );
 
         this.subscriptions.push(
@@ -46,10 +49,10 @@ export class FollowManager {
                 } else {
                     console.warn(
                         "Received followConfirmationMessage for unknown player",
-                        followConfirmationMessage.follower
+                        followConfirmationMessage.follower,
                     );
                 }
-            })
+            }),
         );
 
         this.subscriptions.push(
@@ -76,7 +79,7 @@ export class FollowManager {
                         console.warn("Received followAbortMessage for unknown player", followAbortMessage.follower);
                     }
                 }
-            })
+            }),
         );
 
         iframeListener.registerAnswerer("followMe", () => {

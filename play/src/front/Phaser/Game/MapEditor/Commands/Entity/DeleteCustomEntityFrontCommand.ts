@@ -11,7 +11,7 @@ export class DeleteCustomEntityFrontCommand extends DeleteCustomEntityCommand im
         deleteCustomEntityMessage: DeleteCustomEntityMessage,
         wamFile: WamFile | undefined,
         private entitiesManager: EntitiesManager,
-        private entitiesCollectionManager: EntitiesCollectionsManager
+        private entitiesCollectionManager: EntitiesCollectionsManager,
     ) {
         super(deleteCustomEntityMessage, wamFile);
     }

@@ -144,7 +144,7 @@ export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
         y = -50,
         public readonly callback = () => this.destroy(),
         type: "warning" | "message" = "message",
-        private readonly escapeCallback?: () => void
+        private readonly escapeCallback?: () => void,
     ) {
         const spaceMarker = get(LL).trigger.spaceKeyboard();
         const escapeMarker = get(LL).trigger.escapeKeyboard();

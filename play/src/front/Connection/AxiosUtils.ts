@@ -58,7 +58,7 @@ axiosWithRetry.interceptors.response.use(
 
         hideConnectionIssueMessage();
         return Promise.reject(asError(error));
-    }
+    },
 );
 
 export function showConnectionIssueMessage() {

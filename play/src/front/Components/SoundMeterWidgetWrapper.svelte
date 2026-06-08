@@ -2,9 +2,13 @@
     import type { Readable } from "svelte/store";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
 
-    export let volume: Readable<number[] | undefined> | undefined;
-    export let cssClass: string;
-    export let barColor = "white";
+    interface Props {
+        volume?: Readable<number[] | undefined>;
+        cssClass: string;
+        barColor: string;
+    }
+
+    let { volume, cssClass, barColor = "white" }: Props = $props();
 </script>
 
 <SoundMeterWidget {barColor} {cssClass} volume={$volume} />

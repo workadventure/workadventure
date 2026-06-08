@@ -1,13 +1,34 @@
 <script lang="ts">
-    export let id: string | undefined = undefined;
-    export let dataTestId: string | undefined = undefined;
-    export let label: string | undefined = undefined;
-    export let onChange = () => {};
-    export let disabled = false;
-    export let value = false;
-    export let variant: "white" | "" = "white";
+    import type { Snippet } from "svelte";
+    interface Props {
+        id?: string;
+        dataTestId?: string;
+        label?: string;
+        onchange?: () => void;
+        disabled?: boolean;
+        value?: boolean;
+        variant?: "white";
+        children?: Snippet;
+        [key: string]: unknown;
+    }
 
-    let uniqueId = id || `input-${Math.random().toString(36).substring(2, 9)} `;
+    let {
+        id = undefined,
+        dataTestId = undefined,
+        label = undefined,
+        onchange = () => {},
+        disabled = false,
+        value = $bindable<boolean>(),
+        variant = "white",
+        children,
+        ...rest
+    }: Props = $props();
+
+    if (value === undefined) {
+        value = false;
+    }
+
+    let uniqueId = (() => id || `input-${Math.random().toString(36).substring(2, 9)} `)();
 </script>
 
 <div class="flex items-center gap-2 p-2" data-testid={dataTestId}>
@@ -17,17 +38,18 @@
             class="sr-only peer"
             type="checkbox"
             bind:checked={value}
-            on:change={onChange}
-            {...$$restProps}
+            {onchange}
+            {...rest}
             {disabled}
         />
 
-        <div class="input-checkbox" class:input-checkbox-white={variant === "white"} />
+        <div class="input-checkbox" class:input-checkbox-white={variant === "white"}></div>
     </label>
 
     {#if label}
-        <label for={uniqueId} class="input-label input-label-inline input-label-light text-white"
-            >{label} <slot />
+        <label for={uniqueId} class="input-label input-label-inline input-label-light text-white">
+            {label}
+            {@render children?.()}
         </label>
     {/if}
 </div>

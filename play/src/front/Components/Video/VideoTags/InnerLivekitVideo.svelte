@@ -1,26 +1,33 @@
-<svelte:options immutable={true} />
-
 <script lang="ts">
-    import { createEventDispatcher, onDestroy, onMount, tick } from "svelte";
+    import { onDestroy, onMount, tick } from "svelte";
     import type { RemoteVideoTrack } from "livekit-client";
     import { get } from "svelte/store";
     import { activePictureInPictureStore } from "../../../Stores/PeerStore";
     import { NoVideoOutputDetector } from "./NoVideoOutputDetector";
 
-    export let style: string;
-    export let className: string;
-    export let videoWidth: number;
-    export let videoHeight: number;
-    export let onLoadVideoElement: (event: Event) => void;
+    interface Props {
+        style: string;
+        className: string;
+        videoWidth: number;
+        videoHeight: number;
+        onloadvideoelement?: (event: Event) => void;
+        onvideo?: () => void;
+        onnovideo?: () => void;
+        remoteVideoTrack: RemoteVideoTrack;
+    }
 
-    export let remoteVideoTrack: RemoteVideoTrack;
+    let {
+        style,
+        className,
+        videoWidth = $bindable(),
+        videoHeight = $bindable(),
+        onloadvideoelement,
+        onvideo,
+        onnovideo,
+        remoteVideoTrack,
+    }: Props = $props();
     let videoElement: HTMLVideoElement;
     let noVideoOutputDetector: NoVideoOutputDetector | undefined;
-
-    const dispatch = createEventDispatcher<{
-        video: undefined;
-        noVideo: undefined;
-    }>();
 
     function refreshTrackAttachmentAfterPictureInPictureMove() {
         remoteVideoTrack.detach(videoElement);
@@ -68,11 +75,11 @@
         noVideoOutputDetector = new NoVideoOutputDetector(
             videoElement,
             () => {
-                dispatch("noVideo");
+                onnovideo?.();
             },
             () => {
-                dispatch("video");
-            }
+                onvideo?.();
+            },
         );
 
         noVideoOutputDetector.expectVideoWithin5Seconds();
@@ -94,9 +101,9 @@
     bind:videoWidth
     bind:videoHeight
     bind:this={videoElement}
-    on:loadedmetadata={onLoadVideoElement}
+    onloadedmetadata={onloadvideoelement}
     class={className}
     autoplay
     playsinline
     muted={true}
-/>
+></video>

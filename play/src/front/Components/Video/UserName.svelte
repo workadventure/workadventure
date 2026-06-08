@@ -1,21 +1,34 @@
 <script lang="ts">
+    import type { Snippet } from "svelte";
     import Woka from "../Woka/Woka.svelte";
     import type { PictureStore } from "../../Stores/PictureStore";
-
-    export let isCameraDisabled = false;
 
     /**
      * A component that displays the Woka, the user's name and optionally a dropdown menu
      */
 
-    // The background color is blue if the player has its microphone on
-    export let isPlayingAudio = false;
+    interface Props {
+        isCameraDisabled: boolean;
+        // The background color is blue if the player has its microphone on
+        isPlayingAudio: boolean;
+        picture: PictureStore;
+        name: string;
+        position: string;
+        grayscale: boolean;
+        isBlocked: boolean;
+        children?: Snippet;
+    }
 
-    export let picture: PictureStore;
-    export let name: string;
-    export let position = "";
-    export let grayscale = false;
-    export let isBlocked = false;
+    let {
+        isCameraDisabled = false,
+        isPlayingAudio = false,
+        picture,
+        name,
+        position = "",
+        grayscale = false,
+        isBlocked = false,
+        children,
+    }: Props = $props();
 </script>
 
 {#if isCameraDisabled || isBlocked}
@@ -30,7 +43,7 @@
                 </div>
                 <div class="flex items-center">
                     <span class="select-none">{name}</span>
-                    <slot />
+                    {@render children?.()}
                 </div>
             </div>
         </div>
@@ -59,7 +72,7 @@
                 <!--{/if}-->
             </div>
 
-            <slot />
+            {@render children?.()}
         </div>
     </div>
 {/if}

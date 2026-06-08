@@ -15,7 +15,7 @@ export interface ICommunicationManager {
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void>;
     handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
-        senderUserId: string
+        senderUserId: string,
     ): void;
     destroy(): void;
 }

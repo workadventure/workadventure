@@ -118,7 +118,7 @@ export class GameManager {
                 const wokaData = await this.loadWokaData();
                 const randomIndexCollections = Math.floor(Math.random() * wokaData.woka.collections.length);
                 const randomIndexTextures = Math.floor(
-                    Math.random() * wokaData.woka.collections[randomIndexCollections].textures.length
+                    Math.random() * wokaData.woka.collections[randomIndexCollections].textures.length,
                 );
                 const defaultWokaTextureId =
                     wokaData.woka.collections[randomIndexCollections].textures[randomIndexTextures].id;
@@ -364,7 +364,7 @@ export class GameManager {
 
     public getCurrentGameScene(): GameScene {
         const gameScene = this.scenePlugin.get(
-            this.currentGameSceneName == undefined ? "default" : this.currentGameSceneName
+            this.currentGameSceneName == undefined ? "default" : this.currentGameSceneName,
         );
         if (!(gameScene instanceof GameScene)) {
             throw new GameSceneNotFoundError("Not the Game Scene");
@@ -488,7 +488,7 @@ export class GameManager {
         }
 
         const data = await response.json();
-        return data as unknown as WokaData;
+        return data;
     }
 }
 

@@ -62,7 +62,7 @@ describe("Map validator", () => {
 
     it("should detect none orthogonal maps", async () => {
         const result = await loadMap(
-            new URL("../../../../maps/tests/Validation/orientation.json", import.meta.url).pathname
+            new URL("../../../../maps/tests/Validation/orientation.json", import.meta.url).pathname,
         );
 
         expect(result.ok).toBe(false);
@@ -85,8 +85,8 @@ describe("Map validator", () => {
     it("should detect invalid entities map property type", async () => {
         const result = await loadMap(
             fileURLToPath(
-                new URL("../../../../maps/tests/Validation/invalidEntitiesPropertyType.json", import.meta.url)
-            )
+                new URL("../../../../maps/tests/Validation/invalidEntitiesPropertyType.json", import.meta.url),
+            ),
         );
 
         expect(result.ok).toBe(false);
@@ -109,7 +109,7 @@ describe("Map validator", () => {
 
     it("should detect invalid entities", async () => {
         const result = await loadMap(
-            fileURLToPath(new URL("../../../../maps/tests/Validation/invalidEntities.json", import.meta.url))
+            fileURLToPath(new URL("../../../../maps/tests/Validation/invalidEntities.json", import.meta.url)),
         );
 
         expect(result.ok).toBe(false);
@@ -131,7 +131,7 @@ describe("Map validator", () => {
 
     it("should not be infinite", async () => {
         const result = await loadMap(
-            fileURLToPath(new URL("../../../../maps/tests/Validation/Infini.json", import.meta.url))
+            fileURLToPath(new URL("../../../../maps/tests/Validation/Infini.json", import.meta.url)),
         );
 
         expect(result.ok).toBe(false);
@@ -153,7 +153,7 @@ describe("Map validator", () => {
 
     it("should warn on != 32x32 tiles", async () => {
         const result = await loadMap(
-            fileURLToPath(new URL("../../../../maps/tests/Validation/tileheight.json", import.meta.url))
+            fileURLToPath(new URL("../../../../maps/tests/Validation/tileheight.json", import.meta.url)),
         );
 
         expect(result.ok).toBe(false);
@@ -171,14 +171,14 @@ describe("Map validator", () => {
 
         expect(errors.map[0].message).toBe("The tiles on your map are not the same size as the characters.");
         expect(errors.map[0].details).toBe(
-            "Your tiles are 16x16 pixels wide, but characters in WorkAdventure are 32x32 pixels. The characters will appear larger or smaller than your tiles. We recommend using tiles of 32x32 pixels."
+            "Your tiles are 16x16 pixels wide, but characters in WorkAdventure are 32x32 pixels. The characters will appear larger or smaller than your tiles. We recommend using tiles of 32x32 pixels.",
         );
         expect(errors.map[0].type).toBe("warning");
     });
 
     it("should detect missing floorLayer", async () => {
         const result = await loadMap(
-            fileURLToPath(new URL("../../../../maps/tests/Validation/floorLayer.json", import.meta.url))
+            fileURLToPath(new URL("../../../../maps/tests/Validation/floorLayer.json", import.meta.url)),
         );
 
         expect(result.ok).toBe(false);
@@ -200,7 +200,7 @@ describe("Map validator", () => {
 
     it("should detect missing start layer", async () => {
         const result = await loadMap(
-            fileURLToPath(new URL("../../../../maps/tests/Validation/start.json", import.meta.url))
+            fileURLToPath(new URL("../../../../maps/tests/Validation/start.json", import.meta.url)),
         );
 
         expect(result.ok).toBe(false);
@@ -218,14 +218,14 @@ describe("Map validator", () => {
 
         expect(errors.layers[0].message).toBe('Could not find a layer whose name is "start".');
         expect(errors.layers[0].details).toBe(
-            'WorkAdventure uses this "start" layer as a starting position for incoming players. Without a "start" layer, players will appear in the middle of the map.'
+            'WorkAdventure uses this "start" layer as a starting position for incoming players. Without a "start" layer, players will appear in the middle of the map.',
         );
         expect(errors.layers[0].type).toBe("warning");
     });
 
     it("should detect issues in layer properties", async () => {
         const result = await loadMap(
-            fileURLToPath(new URL("../../../../maps/tests/Validation/layerProperties.json", import.meta.url))
+            fileURLToPath(new URL("../../../../maps/tests/Validation/layerProperties.json", import.meta.url)),
         );
 
         expect(result.ok).toBe(false);
@@ -252,7 +252,7 @@ describe("Map validator", () => {
         expect(errors.layers[0].type).toBe("warning");
 
         expect(errors.layers[1].message).toBe(
-            'The layer named "Audio" has a property "playAudio" that has a wrong url: testAudio'
+            'The layer named "Audio" has a property "playAudio" that has a wrong url: testAudio',
         );
         expect(errors.layers[1].type).toBe("warning");
 
@@ -260,22 +260,22 @@ describe("Map validator", () => {
         expect(errors.layers[2].type).toBe("warning");
 
         expect(errors.layers[3].message).toBe(
-            'The layer named "update" has a property named "exitInstance". That property is no longer supported. The property named that you need to use is : "exitUrl".'
+            'The layer named "update" has a property named "exitInstance". That property is no longer supported. The property named that you need to use is : "exitUrl".',
         );
         expect(errors.layers[3].type).toBe("warning");
 
         expect(errors.layers[4].message).toBe(
-            'The layer named "update" has a property named "exitSceneUrl". That property is no longer supported. The property named that you need to use is : "exitUrl".'
+            'The layer named "update" has a property named "exitSceneUrl". That property is no longer supported. The property named that you need to use is : "exitUrl".',
         );
         expect(errors.layers[4].type).toBe("warning");
 
         expect(errors.layers[5].message).toBe(
-            'The layer named "update" has a property named "playAudioLoop". That property is no longer supported. The property named that you need to use is : "audioLoop".'
+            'The layer named "update" has a property named "playAudioLoop". That property is no longer supported. The property named that you need to use is : "audioLoop".',
         );
         expect(errors.layers[5].type).toBe("warning");
 
         expect(errors.tilesets[0].message).toBe(
-            'The tileset named Dungeon has tiles that have property "collides" set to false. This property will have no effect in the room.'
+            'The tileset named Dungeon has tiles that have property "collides" set to false. This property will have no effect in the room.',
         );
         expect(errors.tilesets[0].details).toContain("The tiles concerned are");
         expect(errors.tilesets[0].type).toBe("info");
@@ -283,7 +283,7 @@ describe("Map validator", () => {
 
     it("should detect false collides", async () => {
         const result = await loadMap(
-            fileURLToPath(new URL("../../../../maps/tests/Validation/CollidesFalse.json", import.meta.url))
+            fileURLToPath(new URL("../../../../maps/tests/Validation/CollidesFalse.json", import.meta.url)),
         );
 
         expect(result.ok).toBe(false);
@@ -300,7 +300,7 @@ describe("Map validator", () => {
         }
 
         expect(errors.tilesets[0].message).toBe(
-            'The tileset named dungeon has tiles that have property "collides" set to false. This property will have no effect in the room.'
+            'The tileset named dungeon has tiles that have property "collides" set to false. This property will have no effect in the room.',
         );
         expect(errors.tilesets[0].details).toContain("The tiles concerned are");
         expect(errors.tilesets[0].type).toBe("info");
@@ -309,7 +309,7 @@ describe("Map validator", () => {
     it("should not output 'info' logs if minimum level is 'warn'", async () => {
         const result = await loadMap(
             fileURLToPath(new URL("../../../../maps/tests/Validation/CollidesFalse.json", import.meta.url)),
-            "warning"
+            "warning",
         );
 
         expect(result.ok).toBe(true);
@@ -317,7 +317,7 @@ describe("Map validator", () => {
 
     it("should detect no collides", async () => {
         const result = await loadMap(
-            fileURLToPath(new URL("../../../../maps/tests/Validation/NoCollides.json", import.meta.url))
+            fileURLToPath(new URL("../../../../maps/tests/Validation/NoCollides.json", import.meta.url)),
         );
 
         expect(result.ok).toBe(false);
@@ -339,7 +339,7 @@ describe("Map validator", () => {
 
     it("should detect no image", async () => {
         const result = await loadMap(
-            fileURLToPath(new URL("../../../../maps/tests/Validation/NoImage.json", import.meta.url))
+            fileURLToPath(new URL("../../../../maps/tests/Validation/NoImage.json", import.meta.url)),
         );
 
         expect(result.ok).toBe(false);
@@ -356,14 +356,14 @@ describe("Map validator", () => {
         }
 
         expect(errors.tilesets[0].message).toBe(
-            'Image of the tileset "Yellow Dungeon Tileset": "Yellow Dungeon Tileset.png" is not loadable.'
+            'Image of the tileset "Yellow Dungeon Tileset": "Yellow Dungeon Tileset.png" is not loadable.',
         );
         expect(errors.tilesets[0].type).toBe("error");
     });
 
     it("should detect not embedded tilesets", async () => {
         const result = await loadMap(
-            fileURLToPath(new URL("../../../../maps/tests/Validation/embarquer.json", import.meta.url))
+            fileURLToPath(new URL("../../../../maps/tests/Validation/embarquer.json", import.meta.url)),
         );
 
         expect(result.ok).toBe(false);
@@ -380,7 +380,7 @@ describe("Map validator", () => {
         }
 
         expect(errors.tilesets[0].message).toBe(
-            "Tilesets in TSX/TSJ format are not supported. You must embed the tilesets in the map directly."
+            "Tilesets in TSX/TSJ format are not supported. You must embed the tilesets in the map directly.",
         );
         expect(errors.tilesets[0].details).toBe('We detected the following tileset(s): "dungeon.tsx".');
         expect(errors.tilesets[0].type).toBe("error");
@@ -388,7 +388,7 @@ describe("Map validator", () => {
 
     it("validates a map", async () => {
         const result = await loadMap(
-            fileURLToPath(new URL("../../../../maps/tests/Validation/simplicity.json", import.meta.url))
+            fileURLToPath(new URL("../../../../maps/tests/Validation/simplicity.json", import.meta.url)),
         );
 
         expect(result.ok).toBe(true);
@@ -397,7 +397,7 @@ describe("Map validator", () => {
     it("knows if a string looks like a map", () => {
         const mapValidator = new MapValidator("info", new ZipFileFetcher("map.json", ["map.json"]));
         const file = fs.readFileSync(
-            fileURLToPath(new URL("../../../../maps/tests/Validation/simplicity.json", import.meta.url))
+            fileURLToPath(new URL("../../../../maps/tests/Validation/simplicity.json", import.meta.url)),
         );
 
         expect(mapValidator.doesStringLooksLikeMap(file.toString())).toBe(true);

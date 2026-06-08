@@ -3,38 +3,46 @@
     import type { ChatPollAnswer, ChatPollItem } from "../../Connection/ChatConnection";
     import { IconCheck, IconLoader, IconTrash } from "@wa-icons";
 
-    export let poll: ChatPollItem;
-
-    const { state, date, canVote, canEnd, canDelete } = poll;
-
-    let localSelection: string[] = [];
-    let isDirty = false;
-    let isSubmittingVote = false;
-    let isEndingPoll = false;
-    let isDeletingPoll = false;
-    let errorMessage: string | undefined;
-
-    $: if (!isDirty) {
-        localSelection = [...$state.myAnswerIds];
+    interface Props {
+        poll: ChatPollItem;
     }
 
-    $: senderDisplayName =
-        poll.sender?.username && poll.sender.username !== poll.sender.chatId ? poll.sender.username : undefined;
-    $: winningAnswers = $state.answers.filter((answer) => answer.isWinning);
-    $: sortedAnswers = [...$state.answers].sort((left, right) => {
-        if (left.isWinning !== right.isWinning) {
-            return left.isWinning ? -1 : 1;
-        }
+    let { poll }: Props = $props();
 
-        return right.votes - left.votes;
+    let { state: pollState, date, canVote, canEnd, canDelete } = $derived(poll);
+    let localSelection: string[] = $state([]);
+    let isDirty = $state(false);
+    let isSubmittingVote = $state(false);
+    let isEndingPoll = $state(false);
+    let isDeletingPoll = $state(false);
+    let errorMessage: string | undefined = $state();
+
+    $effect(() => {
+        if (!isDirty) {
+            localSelection = [...$pollState.myAnswerIds];
+        }
     });
+
+    let senderDisplayName = $derived(
+        poll.sender?.username && poll.sender.username !== poll.sender.chatId ? poll.sender.username : undefined,
+    );
+    let winningAnswers = $derived($pollState.answers.filter((answer) => answer.isWinning));
+    let sortedAnswers = $derived(
+        [...$pollState.answers].sort((left, right) => {
+            if (left.isWinning !== right.isWinning) {
+                return left.isWinning ? -1 : 1;
+            }
+
+            return right.votes - left.votes;
+        }),
+    );
 
     function getAnswerResult(answer: ChatPollAnswer) {
         return `${answer.votes} (${answer.percentage}%)`;
     }
 
     function computeNextSelection(answerId: string): string[] {
-        if ($state.maxSelections === 1) {
+        if ($pollState.maxSelections === 1) {
             return localSelection[0] === answerId ? [] : [answerId];
         }
 
@@ -42,7 +50,7 @@
             return localSelection.filter((existingAnswerId) => existingAnswerId !== answerId);
         }
 
-        if (localSelection.length >= $state.maxSelections) {
+        if (localSelection.length >= $pollState.maxSelections) {
             return [...localSelection.slice(1), answerId];
         }
 
@@ -50,14 +58,14 @@
     }
 
     async function voteFromAnswerClick(answerId: string) {
-        if ($state.isEnded || !$canVote || isSubmittingVote) {
+        if ($pollState.isEnded || !$canVote || isSubmittingVote) {
             return;
         }
 
         errorMessage = undefined;
         const nextSelection = computeNextSelection(answerId);
 
-        if (haveSameSelection(nextSelection, $state.myAnswerIds)) {
+        if (haveSameSelection(nextSelection, $pollState.myAnswerIds)) {
             return;
         }
 
@@ -67,12 +75,12 @@
 
         try {
             await poll.vote(nextSelection);
-            isDirty = false;
         } catch (error) {
             console.error("Failed to submit poll vote", error);
             errorMessage = $LL.chat.poll.submitError();
-            isDirty = false;
         } finally {
+            isDirty = false;
+            // A second vote cannot start while this guarded request is in progress.
             // eslint-disable-next-line require-atomic-updates
             isSubmittingVote = false;
         }
@@ -120,29 +128,29 @@
         <div class="min-w-0">
             <div class="flex flex-wrap items-center gap-2">
                 <span
-                    class="rounded-full border border-solid px-2 py-0.5 text-xxs font-bold uppercase {$state.isEnded
+                    class="rounded-full border border-solid px-2 py-0.5 text-xxs font-bold uppercase {$pollState.isEnded
                         ? 'border-white/10 bg-white/5 text-white/60'
                         : 'border-success-900/30 bg-success-900/20 text-white'}"
                 >
-                    {$state.isEnded ? $LL.chat.poll.kind.closed() : $LL.chat.poll.kind.open()}
+                    {$pollState.isEnded ? $LL.chat.poll.kind.closed() : $LL.chat.poll.kind.open()}
                 </span>
                 <span class="text-xs text-white/50" data-testid="pollParticipantsCount">
-                    {$LL.chat.poll.participants({ count: $state.totalVotes })}
+                    {$LL.chat.poll.participants({ count: $pollState.totalVotes })}
                 </span>
-                {#if $state.maxSelections > 1}
-                    <span class="text-xs text-white/50"
-                        >{$LL.chat.poll.multiSelect({ count: $state.maxSelections })}</span
-                    >
+                {#if $pollState.maxSelections > 1}
+                    <span class="text-xs text-white/50">
+                        {$LL.chat.poll.multiSelect({ count: $pollState.maxSelections })}
+                    </span>
                 {/if}
-                {#if $state.spoiledVotes > 0}
-                    <span class="text-xs text-white/50"
-                        >{$LL.chat.poll.spoiledVotes({ count: $state.spoiledVotes })}</span
-                    >
+                {#if $pollState.spoiledVotes > 0}
+                    <span class="text-xs text-white/50">
+                        {$LL.chat.poll.spoiledVotes({ count: $pollState.spoiledVotes })}
+                    </span>
                 {/if}
             </div>
 
             <div data-testid="pollQuestion" class="mt-2 text-sm font-semibold text-white overflow-wrap-anywhere">
-                {$state.question}
+                {$pollState.question}
             </div>
 
             {#if senderDisplayName || date}
@@ -162,9 +170,9 @@
             {/if}
         </div>
 
-        {#if !$state.isEnded && $canVote}
+        {#if !$pollState.isEnded && $canVote}
             <div class="mt-3 flex flex-col gap-1.5">
-                {#each $state.answers as answer (answer.id)}
+                {#each $pollState.answers as answer (answer.id)}
                     {@const selected = localSelection.includes(answer.id)}
                     <button
                         type="button"
@@ -174,7 +182,7 @@
                             ? 'border-white/30 bg-white/10 text-white'
                             : 'border-white/10 bg-white/[0.03] text-white/80 hover:bg-white/[0.08]'}"
                         disabled={isSubmittingVote}
-                        on:click={() => voteFromAnswerClick(answer.id)}
+                        onclick={() => voteFromAnswerClick(answer.id)}
                     >
                         <span class="flex min-w-0 items-center gap-2">
                             <span
@@ -190,13 +198,13 @@
                         </span>
                         {#if isSubmittingVote && selected}
                             <IconLoader class="shrink-0 animate-[spin_2s_linear_infinite]" font-size={13} />
-                        {:else if $state.resultsVisible}
+                        {:else if $pollState.resultsVisible}
                             <span class="shrink-0 text-white/60">{getAnswerResult(answer)}</span>
                         {/if}
                     </button>
                 {/each}
             </div>
-        {:else if $state.resultsVisible}
+        {:else if $pollState.resultsVisible}
             <div class="mt-3 flex flex-col gap-1.5">
                 {#each sortedAnswers as answer (answer.id)}
                     <div class="text-xs text-white/70">
@@ -210,28 +218,28 @@
                             <div
                                 class="h-full rounded-full {answer.isWinning ? 'bg-emerald-400/70' : 'bg-white/25'}"
                                 style:width={`${answer.percentage}%`}
-                            />
+                            ></div>
                         </div>
                     </div>
                 {/each}
             </div>
         {/if}
 
-        {#if !$state.resultsVisible && !$state.isEnded}
+        {#if !$pollState.resultsVisible && !$pollState.isEnded}
             <div class="mt-3 text-xs text-white/50">
-                {$state.kind === "open" ? $LL.chat.poll.resultsAfterVote() : $LL.chat.poll.resultsWhenClosed()}
+                {$pollState.kind === "open" ? $LL.chat.poll.resultsAfterVote() : $LL.chat.poll.resultsWhenClosed()}
             </div>
         {/if}
 
-        {#if $state.isEnded && winningAnswers.length > 0}
+        {#if $pollState.isEnded && winningAnswers.length > 0}
             <div class="mt-3 text-xs font-semibold text-white/80" data-testid="pollClosedNotice">
                 {$LL.chat.roomPanel.pollWinner({ answer: winningAnswers.map((answer) => answer.text).join(", ") })}
             </div>
         {/if}
 
-        {#if $state.isEnded && $state.closingMessage}
+        {#if $pollState.isEnded && $pollState.closingMessage}
             <div class="mt-2 rounded-lg bg-white/5 px-2.5 py-2 text-xs text-white/65">
-                {$state.closingMessage}
+                {$pollState.closingMessage}
             </div>
         {/if}
 
@@ -239,15 +247,15 @@
             <div class="mt-3 rounded-lg bg-red-500/10 px-2.5 py-2 text-xs text-red-200">{errorMessage}</div>
         {/if}
 
-        {#if !$state.isEnded || $canDelete}
+        {#if !$pollState.isEnded || $canDelete}
             <div class="mt-4 flex flex-wrap gap-2">
-                {#if !$state.isEnded && $canEnd}
+                {#if !$pollState.isEnded && $canEnd}
                     <button
                         type="button"
                         data-testid="endPollButton"
                         class="m-0 rounded-lg border border-solid border-danger-900/40 bg-danger-900/20 px-3 py-2 text-xs font-semibold text-white/85 transition-colors hover:bg-danger-900/30"
                         disabled={isEndingPoll}
-                        on:click={endPoll}
+                        onclick={endPoll}
                     >
                         {#if isEndingPoll}
                             <IconLoader class="animate-[spin_2s_linear_infinite] mr-2" font-size={16} />
@@ -261,7 +269,7 @@
                         data-testid="deletePollButton"
                         class="m-0 rounded-lg border border-solid border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white"
                         disabled={isDeletingPoll}
-                        on:click={deletePoll}
+                        onclick={deletePoll}
                     >
                         {#if isDeletingPoll}
                             <IconLoader class="animate-[spin_2s_linear_infinite] mr-2" font-size={16} />

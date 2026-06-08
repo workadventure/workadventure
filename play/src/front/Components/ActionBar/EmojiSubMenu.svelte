@@ -25,11 +25,15 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { IconPencil, IconXIcon } from "@wa-icons";
 
-    let emoteDataLoading = false;
+    let emoteDataLoading = $state(false);
 
-    export let arrowAction: ArrowAction;
+    interface Props {
+        arrowAction: ArrowAction;
+    }
 
-    let triggerElement: HTMLElement | undefined = undefined;
+    let { arrowAction }: Props = $props();
+
+    let triggerElement: HTMLElement | undefined = $state(undefined);
 
     const isSayBubbleEnabled = connectionManager.currentRoom?.isSayEnabled ?? true;
 
@@ -51,8 +55,8 @@
         }
     }
 
-    let showSayBubbleTooltip = false;
-    let showThinkBubbleTooltip = false;
+    let showSayBubbleTooltip = $state(false);
+    let showThinkBubbleTooltip = $state(false);
 
     let closeFloatingUi: (() => void) | undefined = undefined;
 
@@ -90,7 +94,7 @@
                     placement: "bottom",
                 },
                 12,
-                true
+                true,
             );
         }
     }
@@ -154,7 +158,7 @@
     });
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window onkeydown={onKeyDown} />
 <div
     class="flex justify-center m-auto w-auto z-[500]"
     transition:fly={{ y: 20, duration: 150 }}
@@ -172,7 +176,9 @@
                 {#each [...$emoteDataStore.keys()] as key, index (index)}
                     <div class="transition-all bottom-action-button divide-x">
                         <button
-                            on:click|stopPropagation|preventDefault={() => {
+                            onclick={(event) => {
+                                event.stopPropagation();
+                                event.preventDefault();
                                 clickEmoji(key);
                             }}
                             id={`button-${$emoteDataStore.get(key)?.name}`}
@@ -200,8 +206,11 @@
             >
                 <button
                     class="btn btn-sm btn-ghost btn-light flex"
-                    on:click={() => analyticsClient.editEmote()}
-                    on:click|stopPropagation|preventDefault={edit}
+                    onclick={(event) => {
+                        event.stopPropagation();
+                        event.preventDefault();
+                        edit();
+                    }}
                     bind:this={triggerElement}
                 >
                     {#if emoteDataLoading}
@@ -219,10 +228,10 @@
                             />
                         </svg>
                     {:else if !$emoteMenuStore}
-                        <IconPencil stroke={1} font-size="12" class="text-white" />
+                        <IconPencil stroke="1" font-size="12" class="text-white" />
                         <div>{$LL.actionbar.edit()}</div>
                     {:else}
-                        <IconXIcon stroke={1} font-size="16" class="text-white" />
+                        <IconXIcon stroke="1" font-size="16" class="text-white" />
                         <div>{$LL.actionbar.cancel()}</div>
                     {/if}
                 </button>
@@ -231,7 +240,11 @@
             <div class="transition-all bottom-action-button flex items-center rounded-r-lg h-full ml-2">
                 <button
                         class="btn btn-sm btn-danger"
-                        on:click|stopPropagation|preventDefault={close}
+                        onclick={(event) => {
+                            event.stopPropagation();
+                            event.preventDefault();
+                            close();
+                        }}
                 >
                     <XIcon width="w-4" height="h-4" />
                 </button>
@@ -240,15 +253,15 @@
         </div>
         <!-- Divider -->
         {#if isSayBubbleEnabled}
-            <div class="w-full h-[1px] bg-white/10" />
+            <div class="w-full h-[1px] bg-white/10"></div>
 
             <div class="px-1 py-2 flex flex-row items-center justify-between">
                 <div class="flex flex-row justify-between gap-2 items-center w-full">
                     <button
                         class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"
-                        on:mouseenter={() => (showSayBubbleTooltip = true)}
-                        on:mouseleave={() => (showSayBubbleTooltip = false)}
-                        on:click={() => {
+                        onmouseenter={() => (showSayBubbleTooltip = true)}
+                        onmouseleave={() => (showSayBubbleTooltip = false)}
+                        onclick={() => {
                             popupStore.addPopup(SayPopUp, { type: "say" }, "say");
                             analyticsClient.openSayBubble();
                         }}
@@ -269,9 +282,9 @@
                     {/if}
                     <button
                         class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"
-                        on:mouseenter={() => (showThinkBubbleTooltip = true)}
-                        on:mouseleave={() => (showThinkBubbleTooltip = false)}
-                        on:click={() => {
+                        onmouseenter={() => (showThinkBubbleTooltip = true)}
+                        onmouseleave={() => (showThinkBubbleTooltip = false)}
+                        onclick={() => {
                             popupStore.addPopup(SayPopUp, { type: "think" }, "say");
                             analyticsClient.openThinkBubble();
                         }}
@@ -294,5 +307,5 @@
             </div>
         {/if}
     </div>
-    <div use:arrowAction />
+    <div use:arrowAction></div>
 </div>

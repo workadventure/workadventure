@@ -42,13 +42,11 @@
     import Onboarding from "./Onboarding/Onboarding.svelte";
     import PwaInstallScreen from "./PwaInstall/PwaInstallScreen.svelte";
 
-    export let game: Game;
+    interface Props {
+        game: Game;
+    }
 
-    /**
-     * When changing map from an exit on the current map, the Chat and the MainLayout are not really destroyed
-     * due to an internal issue of Svelte, we use a #key directive to force the destruction of the components.
-     * https://github.com/sveltejs/svelte/issues/5268
-     */
+    let { game }: Props = $props();
 </script>
 
 <!-- Preload image loader TODO HUGO : Better way ? -->

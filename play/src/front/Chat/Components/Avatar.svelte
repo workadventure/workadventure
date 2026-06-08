@@ -5,27 +5,35 @@
     import type { PictureStore } from "../../Stores/PictureStore";
     import { isLazyPictureStore } from "../../Stores/PictureStore";
 
-    export let pictureStore: PictureStore | undefined;
-    export let fallbackName = "A";
-    export let color: string | null = null;
-    export let isChatAvatar = false;
-    /**
-     * Compact: 28×28px, `rounded-md` — same as user list rows and chat room rows (Room.svelte, User.svelte).
-     * Default: 40×40px, `rounded-sm` — message thread avatars.
-     */
-    export let compact = false;
-
-    let forceFallback = false;
-    let previousPictureUrl: string | undefined;
-
-    $: sizeClass = compact
-        ? "h-7 w-7 min-h-[1.75rem] min-w-[1.75rem] shrink-0 rounded-md overflow-hidden"
-        : "h-10 w-10 min-h-10 min-w-10 shrink-0 rounded-sm overflow-hidden";
-
-    $: if ($pictureStore !== previousPictureUrl) {
-        previousPictureUrl = $pictureStore;
-        forceFallback = false;
+    interface Props {
+        pictureStore: PictureStore | undefined;
+        fallbackName?: string;
+        color?: string | null;
+        isChatAvatar?: boolean;
+        /**
+         * Compact: 28×28px, `rounded-md` — same as user list rows and chat room rows (Room.svelte, User.svelte).
+         * Default: 40×40px, `rounded-sm` — message thread avatars.
+         */
+        compact?: boolean;
     }
+
+    let { pictureStore, fallbackName = "A", color = null, isChatAvatar = false, compact = false }: Props = $props();
+
+    let forceFallback = $state(false);
+    let previousPictureUrl: string | undefined = $state();
+
+    let sizeClass = $derived(
+        compact
+            ? "h-7 w-7 min-h-[1.75rem] min-w-[1.75rem] shrink-0 rounded-md overflow-hidden"
+            : "h-10 w-10 min-h-10 min-w-10 shrink-0 rounded-sm overflow-hidden",
+    );
+
+    $effect(() => {
+        if ($pictureStore !== previousPictureUrl) {
+            previousPictureUrl = $pictureStore;
+            forceFallback = false;
+        }
+    });
 
     function loadLazyPictureStore(node: HTMLElement, store: PictureStore | undefined) {
         let observer: IntersectionObserver | undefined;
@@ -55,7 +63,7 @@
                     nextStore.load().catch((error) => console.warn("Failed to load avatar", error));
                     cleanup();
                 },
-                { rootMargin: "200px" }
+                { rootMargin: "200px" },
             );
             observer.observe(node);
         };
@@ -79,7 +87,7 @@
         loading="lazy"
         decoding="async"
         style:background-color={`${color ? color : `${getColorByString(fallbackName)}`}`}
-        on:error={(event) => {
+        onerror={(event) => {
             console.warn(`Failed to load avatar image for ${fallbackName}`, event);
             forceFallback = true;
         }}

@@ -9,14 +9,14 @@
     } from "../Components/Video/PictureInPicture/pictureInPictureGridLayout";
 
     /** Nombre de blocs « vidéo » affichés (1…8). */
-    let videoCount = 4;
+    let videoCount = $state(4);
     /** Premier tuile : vidéo démo (flux public MDN) au lieu du numéro. */
-    let demoVideoOnFirstSlot = false;
+    let demoVideoOnFirstSlot = $state(false);
 
     const demoVideoSrc = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm";
-    let w = 400;
-    let h = 520;
-    let layout: PipGridLayout;
+    let w = $state(400);
+    let h = $state(520);
+    let layout: PipGridLayout = $derived(computePictureInPictureGridLayout(videoCount, w, h));
 
     /** Met à jour w/h quand le cadre « PiP » est redimensionné (poignée resize du navigateur). */
     function pipFrameResizeAction(node: HTMLElement) {
@@ -30,8 +30,7 @@
         return { destroy: () => ro.disconnect() };
     }
 
-    $: layout = computePictureInPictureGridLayout(videoCount, w, h);
-    $: portraitLabel = layout.portrait ? "portrait (h > w)" : "paysage (w ≥ h)";
+    let portraitLabel = $derived(layout.portrait ? "portrait (h > w)" : "paysage (w ≥ h)");
 
     function add() {
         videoCount = Math.min(PIP_GRID_MAX_VIDEOS, videoCount + 1);
@@ -64,7 +63,7 @@
             <button
                 type="button"
                 class="rounded bg-emerald-700 px-3 py-1 text-sm hover:bg-emerald-600"
-                on:click={add}
+                onclick={add}
                 disabled={videoCount >= PIP_GRID_MAX_VIDEOS}
             >
                 +1
@@ -72,10 +71,10 @@
             <button
                 type="button"
                 class="rounded bg-rose-800 px-3 py-1 text-sm hover:bg-rose-700"
-                on:click={remove}
+                onclick={remove}
                 disabled={videoCount <= 0}
             >
-                −1
+                -1
             </button>
         </div>
         <label class="flex cursor-pointer items-center gap-2 text-sm">
@@ -102,7 +101,7 @@
             <div
                 class="pip-test-grid h-full w-full gap-2 p-2"
                 style="display: grid; grid-template-columns: {pipGridTemplateColumns(
-                    layout.columnTracks
+                    layout.columnTracks,
                 )}; grid-template-rows: {pipGridTemplateRows(layout.rowTracks)};"
             >
                 {#each layout.tiles as tile, i (i)}
@@ -119,7 +118,7 @@
                                 autoplay
                                 playsinline
                                 controls
-                            />
+                            ></video>
                         {:else}
                             <div class="flex h-full w-full items-center justify-center">
                                 <span class="select-none">{i + 1}</span>

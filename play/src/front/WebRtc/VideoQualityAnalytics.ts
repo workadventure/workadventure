@@ -27,7 +27,7 @@ const sessionId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.ran
 export function subscribeToVideoQualityAnalytics(
     statsStore: Readable<WebRtcStats | undefined>,
     context: VideoQualityAnalyticsContext,
-    sendReport: (message: VideoQualityReportMessage) => void
+    sendReport: (message: VideoQualityReportMessage) => void,
 ): Unsubscriber {
     if (hasCapability(VIDEO_QUALITY_ANALYTICS_CAPABILITY) !== "v1") {
         return () => {};

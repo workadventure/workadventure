@@ -9,7 +9,7 @@ type CorePublicEvent = NonNullable<SpaceEvent["event"]>;
 type PublicProcessor = (
     event: CorePublicEvent,
     sender: SpaceUserExtended | undefined,
-    socketData: SocketData
+    socketData: SocketData,
 ) => CorePublicEvent;
 
 /**
@@ -38,7 +38,7 @@ export class EventProcessor {
     public processPublicEvent(
         event: CorePublicEvent,
         sender: SpaceUserExtended | undefined,
-        senderSocketData: SocketData
+        senderSocketData: SocketData,
     ): CorePublicEvent {
         const processor = this.publicEventProcessors.get(event.$case);
         if (processor) {

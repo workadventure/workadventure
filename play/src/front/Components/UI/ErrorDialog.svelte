@@ -50,7 +50,11 @@
                 {$LL.error.errorDialog.messageFAQ()}
                 <a
                     href="https://workadventu.re/faq"
-                    on:click|stopPropagation|preventDefault={openCwebsiteLink}
+                    onclick={(event) => {
+                        event.stopPropagation();
+                        event.preventDefault();
+                        openCwebsiteLink(event);
+                    }}
                     target="_blank"
                     rel="noopener noreferrer">FAQ</a
                 >
@@ -58,8 +62,8 @@
         {/if}
         {#if $hasClosableMessagesInErrorStore}
             <section class="footer w-full flex flex-row justify-center backdrop-blur-sm">
-                <button class="light" on:click={close}>{$LL.error.errorDialog.close()}</button>
-                <button class="light outline" on:click={refresh}>{$LL.error.errorDialog.reload()}</button>
+                <button class="light" onclick={close}>{$LL.error.errorDialog.close()}</button>
+                <button class="light outline" onclick={refresh}>{$LL.error.errorDialog.reload()}</button>
             </section>
         {/if}
     </div>

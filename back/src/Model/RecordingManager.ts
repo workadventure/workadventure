@@ -40,7 +40,7 @@ export interface IRecordingManager {
     finishRecordingByWebhook(
         recordingSessionId: string,
         egressId: string,
-        roomName: string
+        roomName: string,
     ): { processed: boolean; recorder: SpaceUser | null; unexpected: boolean; hasActiveSessions: boolean };
     hasRecordingSession(recordingSessionId: string): boolean;
     handleAddUser(user: SpaceUser): void;
@@ -57,7 +57,7 @@ export class RecordingManager implements IRecordingManager {
         private readonly _space: ICommunicationSpace,
         private readonly _transitionOrchestrator: ITransitionOrchestrator,
         private readonly _userRegistry: IUserRegistry,
-        private readonly _lifecycleManager: IStateLifecycleManager
+        private readonly _lifecycleManager: IStateLifecycleManager,
     ) {}
 
     public async startRecording(user: SpaceUser): Promise<void> {
@@ -188,7 +188,7 @@ export class RecordingManager implements IRecordingManager {
     public finishRecordingByWebhook(
         recordingSessionId: string,
         egressId: string,
-        roomName: string
+        roomName: string,
     ): { processed: boolean; recorder: SpaceUser | null; unexpected: boolean; hasActiveSessions: boolean } {
         const session = this.sessions.get(recordingSessionId);
         if (!session) {
@@ -243,7 +243,7 @@ export class RecordingManager implements IRecordingManager {
         }
 
         const fallbackSession = Array.from(this.sessions.values()).sort(
-            (left, right) => right.createdAt - left.createdAt
+            (left, right) => right.createdAt - left.createdAt,
         )[0];
         this.primarySessionId = fallbackSession?.recordingSessionId;
         return fallbackSession;
@@ -288,12 +288,12 @@ export class RecordingManager implements IRecordingManager {
             if (this.isRecordableState(currentState)) {
                 const recordingStartInfo = await currentState.handleStartRecording(
                     session.recorder,
-                    session.recordingSessionId
+                    session.recordingSessionId,
                 );
                 this.reconcileStartResult(
                     session.recordingSessionId,
                     recordingStartInfo.egressId,
-                    recordingStartInfo.roomName
+                    recordingStartInfo.roomName,
                 );
             } else {
                 await this.switchToLivekitAndRecord(session);
@@ -384,7 +384,7 @@ export class RecordingManager implements IRecordingManager {
                 users: this._userRegistry.getUsers(),
                 usersToNotify: this._userRegistry.getUsersToNotify(),
                 playUri: session.recorder.playUri,
-            }
+            },
         );
 
         if (!recordableState || !this.isRecordableState(recordableState)) {
@@ -394,7 +394,7 @@ export class RecordingManager implements IRecordingManager {
         await this._lifecycleManager.transitionTo(recordableState);
         const recordingStartInfo = await recordableState.handleStartRecording(
             session.recorder,
-            session.recordingSessionId
+            session.recordingSessionId,
         );
         this.reconcileStartResult(session.recordingSessionId, recordingStartInfo.egressId, recordingStartInfo.roomName);
     }
@@ -479,7 +479,7 @@ export class RecordingManager implements IRecordingManager {
     }
 
     private isRecordableState(
-        state: ICommunicationState<IRecordableStrategy>
+        state: ICommunicationState<IRecordableStrategy>,
     ): state is IRecordableState<IRecordableStrategy> {
         return "handleStartRecording" in state && "handleStopRecording" in state;
     }

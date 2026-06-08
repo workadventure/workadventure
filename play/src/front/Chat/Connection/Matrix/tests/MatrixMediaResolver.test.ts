@@ -80,8 +80,8 @@ describe("resolveAttachmentMediaFromEvent", () => {
                 Promise.resolve({
                     ok: true,
                     arrayBuffer: () => Promise.resolve(encryptedBuffer),
-                })
-            )
+                }),
+            ),
         );
         vi.stubGlobal("URL", {
             createObjectURL: createObjectUrlSpy,
@@ -132,8 +132,8 @@ describe("resolveAttachmentMediaFromEvent", () => {
                 Promise.resolve({
                     ok: true,
                     arrayBuffer: () => Promise.resolve(new Uint8Array([1, 2, 3]).buffer),
-                })
-            )
+                }),
+            ),
         );
         vi.stubGlobal("URL", {
             createObjectURL: vi.fn(() => "blob:unused"),

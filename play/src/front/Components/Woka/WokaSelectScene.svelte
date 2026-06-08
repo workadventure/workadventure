@@ -10,15 +10,19 @@
     import WokaImage from "./WokaImage.svelte";
     import { IconShuffle } from "@wa-icons";
 
-    export let customize: () => void;
-    export let saveAndContinue: (texturesId: string[]) => void;
+    interface Props {
+        customize: () => void;
+        saveAndContinue: (texturesId: string[]) => void;
+    }
 
-    let wokaData: WokaData | null = null;
+    let { customize, saveAndContinue }: Props = $props();
+
+    let wokaData: WokaData | null = $state(null);
     let currentWokaCollection: WokaCollection | null = null;
-    let selectedWokaTextureId: Record<string, string>;
-    let isLoading = true;
-    let error = "";
-    let assetsDirection: number = 0;
+    let selectedWokaTextureId: Record<string, string> = $state({});
+    let isLoading = $state(true);
+    let error = $state("");
+    let assetsDirection: number = $state(0);
 
     async function loadWokaData() {
         try {
@@ -51,7 +55,7 @@
             const savedTextureIds = gameManager.getCharacterTextureIds();
             // find the collection used to select the Woka
             const collectionIndex = wokaData?.["woka"]?.collections.findIndex((c: WokaCollection) =>
-                c.textures.find((t: WokaTexture) => t.id === savedTextureIds?.[0])
+                c.textures.find((t: WokaTexture) => t.id === savedTextureIds?.[0]),
             );
             if (collectionIndex === undefined || collectionIndex < 0) {
                 throw new Error("No valid Woka collection found for the saved texture ID");
@@ -60,7 +64,7 @@
                 collectionIndex,
                 savedTextureIds != null
                     ? savedTextureIds[0]
-                    : wokaData?.["woka"]?.collections?.[0]?.textures?.[0]?.id || ""
+                    : wokaData?.["woka"]?.collections?.[0]?.textures?.[0]?.id || "",
             );
 
             // Scroll to the selected collection
@@ -75,7 +79,7 @@
         } finally {
             // Find the collection used to select the Woka
             currentWokaCollection = (wokaData as WokaData)["woka"].collections.find((c: WokaCollection) =>
-                c.textures.find((t: WokaTexture) => t.id === selectedWokaTextureId["woka"])
+                c.textures.find((t: WokaTexture) => t.id === selectedWokaTextureId["woka"]),
             ) as WokaCollection;
             selectCurrentCollection(currentWokaCollection.name);
         }
@@ -141,7 +145,7 @@
         ) {
             event.preventDefault();
             const currentCollectionIndex = wokaData?.["woka"]?.collections.findIndex(
-                (c: WokaCollection) => c.name === currentWokaCollection?.name
+                (c: WokaCollection) => c.name === currentWokaCollection?.name,
             );
             if (currentCollectionIndex === undefined || currentCollectionIndex < 0) return;
 
@@ -201,12 +205,12 @@
     >
         {#if isLoading}
             <div class="flex items-center justify-center h-64">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
         {:else if error}
             <div class="text-center text-red-600 mb-4">
                 <p>{error}</p>
-                <button class="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" on:click={loadWokaData}>
+                <button class="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" onclick={loadWokaData}>
                     Retry
                 </button>
             </div>
@@ -218,15 +222,15 @@
                             selectedTextures={selectedWokaTextureId}
                             {wokaData}
                             {getTextureUrl}
-                            on:rotate={(e) => {
-                                assetsDirection = e.detail.direction;
+                            onrotate={(direction) => {
+                                assetsDirection = direction;
                             }}
                         />
 
                         <div class="mt-4 space-y-2">
                             <button
                                 class="btn btn-sm btn-light btn-border w-full px-4 py-2 bg-white/10 text-white rounded hover:bg-white/10 flex flex-row items-center justify-center gap-2"
-                                on:click={randomizeOutfit}
+                                onclick={randomizeOutfit}
                             >
                                 <IconShuffle font-size="20" class="text-white" />
                                 <span>{$LL.woka.selectWoka.randomize()}</span>
@@ -254,7 +258,7 @@
                                                 ? 'bg-white/50 border-white'
                                                 : 'bg-white/10 hover:bg-white/20 border-transparent'}"
                                             id="woka-{texture.id}"
-                                            on:click={() => selectTexture(collectionIndex, texture.id)}
+                                            onclick={() => selectTexture(collectionIndex, texture.id)}
                                         >
                                             <WokaImage
                                                 selectedTextures={{ woka: texture.id }}
@@ -275,12 +279,12 @@
                 class="w-full p-3 flex flex-row items-center gap-2 border-t-2 border-t-white/10"
                 style="border-top-style: solid;"
             >
-                <button class="w-full px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded" on:click={customize}>
+                <button class="w-full px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded" onclick={customize}>
                     {$LL.woka.selectWoka.customize()}
                 </button>
                 <button
                     class="selectCharacterSceneFormSubmit w-full px-4 py-3 bg-secondary text-white rounded hover:bg-secondary-600"
-                    on:click={() => saveAndContinue([selectedWokaTextureId["woka"]])}
+                    onclick={() => saveAndContinue([selectedWokaTextureId["woka"]])}
                 >
                     {$LL.woka.selectWoka.continue()}
                 </button>

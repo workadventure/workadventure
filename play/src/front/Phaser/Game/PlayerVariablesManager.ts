@@ -14,7 +14,7 @@ export class PlayerVariablesManager {
         private eventDispatcher: IframeEventDispatcher,
         private _variables: Map<string, unknown>,
         private roomId: string,
-        private worldId: string | undefined
+        private worldId: string | undefined,
     ) {
         iframeListener.registerAnswerer("setPlayerVariable", (event, source) => {
             this.setVariable(event, source);
@@ -96,7 +96,7 @@ export class PlayerVariablesManager {
     public setVariableFromApp(
         key: string,
         value: unknown,
-        options: { persist?: boolean; public?: boolean; scope?: "room" | "world" } = {}
+        options: { persist?: boolean; public?: boolean; scope?: "room" | "world" } = {},
     ): void {
         const event: SetPlayerVariableEvent = {
             key,

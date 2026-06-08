@@ -80,7 +80,7 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
         widthPercent?: number,
         position?: number,
         closable?: boolean,
-        lazy?: boolean
+        lazy?: boolean,
     ): Promise<CoWebsite> {
         const result: { id: string } = await queryWorkadventure({
             type: "openCoWebsite",

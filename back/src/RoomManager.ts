@@ -77,7 +77,7 @@ const roomManager = {
                     if (message.message.$case === "connectToRoomMessage") {
                         const gameRoom = await socketManager.handleConnectToRoom(
                             call,
-                            message.message.connectToRoomMessage
+                            message.message.connectToRoomMessage,
                         );
                         if (call.writable) {
                             setRoom(gameRoom);
@@ -104,7 +104,7 @@ const roomManager = {
                         }
                     } else if (message.message.$case !== "pingMessage") {
                         throw new Error(
-                            `The first message sent MUST be of type ConnectToRoomMessage and the second message joinRoomMessage. Got ${message.message.$case}`
+                            `The first message sent MUST be of type ConnectToRoomMessage and the second message joinRoomMessage. Got ${message.message.$case}`,
                         );
                     }
                 } else {
@@ -147,7 +147,7 @@ const roomManager = {
                             socketManager.handleFollowConfirmationMessage(
                                 room,
                                 user,
-                                message.message.followConfirmationMessage
+                                message.message.followConfirmationMessage,
                             );
                             break;
                         }
@@ -159,7 +159,7 @@ const roomManager = {
                             socketManager.handleLockGroupPromptMessage(
                                 room,
                                 user,
-                                message.message.lockGroupPromptMessage
+                                message.message.lockGroupPromptMessage,
                             );
                             break;
                         }
@@ -191,7 +191,7 @@ const roomManager = {
                             socketManager.handleMeetingInvitationRequestMessage(
                                 room,
                                 user,
-                                message.message.meetingInvitationRequestMessage
+                                message.message.meetingInvitationRequestMessage,
                             );
                             break;
                         }
@@ -199,7 +199,7 @@ const roomManager = {
                             socketManager.handleMeetingInvitationResponseMessage(
                                 room,
                                 user,
-                                message.message.meetingInvitationResponseMessage
+                                message.message.meetingInvitationResponseMessage,
                             );
                             break;
                         }
@@ -211,7 +211,7 @@ const roomManager = {
                             await socketManager.handleSetAreaPropertyVariableEvent(
                                 room,
                                 user,
-                                message.message.setAreaPropertyVariableMessage
+                                message.message.setAreaPropertyVariableMessage,
                             );
                             break;
                         }
@@ -223,7 +223,7 @@ const roomManager = {
             } catch (e) {
                 console.error(
                     "An error occurred while managing a message of type PusherToBackMessage:" + message.message.$case,
-                    e
+                    e,
                 );
                 Sentry.captureException(e);
                 emitError(call, e);
@@ -315,7 +315,7 @@ const roomManager = {
                     "in room",
                     room?.roomUrl,
                     "at : ",
-                    today.toLocaleString("en-GB")
+                    today.toLocaleString("en-GB"),
                 );
                 const reason =
                     "Connection lost with user. The user did not send a pong message in time. You should never see this message in the browser.";
@@ -365,7 +365,7 @@ const roomManager = {
                                 const zoneKey = `${subscribeMessage.x},${subscribeMessage.y}`;
                                 if (subscribedZones.has(zoneKey)) {
                                     console.warn(
-                                        `WARNING: Double subscription to zone (${subscribeMessage.x},${subscribeMessage.y}) in room ${roomId}. This indicates a bug in the pusher.`
+                                        `WARNING: Double subscription to zone (${subscribeMessage.x},${subscribeMessage.y}) in room ${roomId}. This indicates a bug in the pusher.`,
                                     );
                                     return;
                                 }
@@ -375,7 +375,7 @@ const roomManager = {
                                     call,
                                     roomId,
                                     subscribeMessage.x,
-                                    subscribeMessage.y
+                                    subscribeMessage.y,
                                 );
                                 break;
                             }
@@ -388,7 +388,7 @@ const roomManager = {
                                 const zoneKey = `${unsubscribeMessage.x},${unsubscribeMessage.y}`;
                                 if (!subscribedZones.has(zoneKey)) {
                                     console.warn(
-                                        `Attempting to unsubscribe from non-subscribed zone (${unsubscribeMessage.x},${unsubscribeMessage.y})`
+                                        `Attempting to unsubscribe from non-subscribed zone (${unsubscribeMessage.x},${unsubscribeMessage.y})`,
                                     );
                                     return;
                                 }
@@ -398,7 +398,7 @@ const roomManager = {
                                     call,
                                     roomId,
                                     unsubscribeMessage.x,
-                                    unsubscribeMessage.y
+                                    unsubscribeMessage.y,
                                 );
                                 break;
                             }
@@ -426,8 +426,8 @@ const roomManager = {
                     const theRoomId = roomId;
                     await Promise.all(
                         Array.from(subscribedZones.values()).map((zone) =>
-                            socketManager.removeZoneListener(call, theRoomId, zone.x, zone.y)
-                        )
+                            socketManager.removeZoneListener(call, theRoomId, zone.x, zone.y),
+                        ),
                     );
                 }
             }
@@ -547,7 +547,7 @@ const roomManager = {
     },
     sendWorldFullWarningToRoom(
         call: ServerUnaryCall<WorldFullWarningToRoomMessage, Empty>,
-        callback: sendUnaryData<Empty>
+        callback: sendUnaryData<Empty>,
     ): void {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
         socketManager.dispatchWorldFullWarning(call.request.roomId).catch((e) => {
@@ -558,7 +558,7 @@ const roomManager = {
     },
     sendRefreshRoomPrompt(
         call: ServerUnaryCall<RefreshRoomPromptMessage, Empty>,
-        callback: sendUnaryData<Empty>
+        callback: sendUnaryData<Empty>,
     ): void {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
         socketManager.dispatchRoomRefresh(call.request.roomId).catch((e) => {
@@ -625,7 +625,7 @@ const roomManager = {
     },
     handleMapStorageUploadMapDetected(
         call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
-        callback: sendUnaryData<Empty>
+        callback: sendUnaryData<Empty>,
     ): void {
         /**
          * We are calling the mapstorage connected to this back server and asking to purge the wamUrl from memory.
@@ -657,12 +657,12 @@ const roomManager = {
                         Sentry.captureException(error);
                         callback(asError(error));
                     });
-            }
+            },
         );
     },
     handleMapStorageDeleteMapDetected(
         call: ServerUnaryCall<MapStorageDeleteMessage, Empty>,
-        callback: sendUnaryData<Empty>
+        callback: sendUnaryData<Empty>,
     ): void {
         Promise.all(socketManager.getWorlds().values())
             .then((gameRooms) => {
@@ -735,7 +735,7 @@ const roomManager = {
     /** Dispatch external module event */
     dispatchExternalModuleMessage(
         call: ServerUnaryCall<ExternalModuleMessage, Empty>,
-        callback: sendUnaryData<Empty>
+        callback: sendUnaryData<Empty>,
     ): void {
         socketManager
             .handleExternalModuleMessage(call.request)

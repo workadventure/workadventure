@@ -40,7 +40,7 @@
                     event.id,
                     event.start,
                     event.end,
-                    event.resource?.onlineMeeting?.passcode
+                    event.resource?.onlineMeeting?.passcode,
                 );
                 returnValue = true;
             }
@@ -81,10 +81,10 @@
                         <span class="ml-1 px-1 py-0.5 rounded-sm bg-white text-secondary text-xxs font-bold">Beta</span>
                     </div>
 
-                    <ButtonClose on:click={closeCalendar} />
+                    <ButtonClose onclick={closeCalendar} />
                 </div>
                 {#if $userIsConnected}
-                    <div class="bg-white/20 h-[1px] w-full my-2" />
+                    <div class="bg-white/20 h-[1px] w-full my-2"></div>
                     <h4 class=" text-base font-bold text-left">
                         {$LL.externalModule.calendar.title()} ({$calendarEventsStore.size})
                     </h4>
@@ -100,7 +100,7 @@
                         {#if get(externalSvelteComponentService.getComponentsByZone("calendarButton")).size == 0}
                             <button
                                 class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
-                                on:click={goToLoginPage}
+                                onclick={goToLoginPage}
                                 >{$LL.menu.profile.login()}
                             </button>
                         {/if}
@@ -130,7 +130,7 @@
                                     {#if event.resource && event.resource.onlineMeeting?.joinUrl != undefined}
                                         <a
                                             href={event.resource.onlineMeeting.joinUrl}
-                                            on:click={(event_) => {
+                                            onclick={(event_) => {
                                                 if (openMeeting(event)) {
                                                     event_.preventDefault();
                                                     event_.stopPropagation();

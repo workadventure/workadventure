@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { silentStore } from "../../Stores/MediaStore";
 
     import {
@@ -14,16 +13,18 @@
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
     import ChatMenuItem from "./MenuIcons/ChatMenuItem.svelte";
 
-    const dispatch = createEventDispatcher<{
-        screenSharingClick: void;
-    }>();
+    interface Props {
+        screenSharingClick?: () => void;
+    }
+
+    const { screenSharingClick }: Props = $props();
 
     function toggleChat() {
         window.focus();
     }
 
     function toggleScreensharing() {
-        dispatch("screenSharingClick");
+        screenSharingClick?.();
     }
 </script>
 
@@ -32,7 +33,7 @@
         <div class="justify-items-center flex-1 w-32">
             <div class="flex relative transition-all duration-150 z-[2]">
                 <div class="mr-3">
-                    <ChatMenuItem on:click={toggleChat} last={true} />
+                    <ChatMenuItem onclick={toggleChat} last={true} />
                 </div>
                 <div>
                     <!-- ACTION WRAPPER : CAM & MIC -->
@@ -48,7 +49,7 @@
 
                         <!-- NAV : SCREENSHARING START -->
                         {#if $bottomActionBarVisibilityStore}
-                            <ScreenSharingMenuItem on:click={toggleScreensharing} />
+                            <ScreenSharingMenuItem onclick={toggleScreensharing} />
                         {/if}
                         <!-- NAV : SCREENSHARING END -->
                     </div>

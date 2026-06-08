@@ -44,7 +44,7 @@ export class UsernameMegaphoneDisplay {
                 {
                     duration: 350,
                     easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-                }
+                },
             );
         } else {
             this.animation = this.element.animate([{ opacity: 1 }, { opacity: 0 }], {

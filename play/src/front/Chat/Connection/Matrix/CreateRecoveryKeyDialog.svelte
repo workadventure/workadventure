@@ -1,20 +1,24 @@
 <script lang="ts">
-    import { closeModal, onBeforeClose } from "svelte-modals";
     import type { CryptoApi } from "matrix-js-sdk";
     import type { GeneratedSecretStorageKey } from "matrix-js-sdk/lib/crypto-api";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { IconFileDownload } from "@wa-icons";
+    import { modals, onBeforeClose } from "@wa-modals";
 
-    export let isOpen: boolean;
-    export let crypto: CryptoApi;
-    export let processCallback: (generatedSecretStorageKey: GeneratedSecretStorageKey | undefined) => void;
+    interface Props {
+        isOpen: boolean;
+        crypto: CryptoApi;
+        processCallback: (generatedSecretStorageKey: GeneratedSecretStorageKey | undefined) => void;
+    }
 
-    let passphraseInput: string | undefined;
-    let generatedSecretStorageKey: GeneratedSecretStorageKey | undefined;
-    let error = false;
-    let isPrivateKeyDownloaded = false;
+    let { isOpen, crypto, processCallback }: Props = $props();
+
+    let passphraseInput: string | undefined = $state();
+    let generatedSecretStorageKey: GeneratedSecretStorageKey | undefined = $state();
+    let error = $state(false);
+    let isPrivateKeyDownloaded = $state(false);
 
     async function generateRecoveryKey(passphrase: string | undefined) {
         if (passphrase === undefined) {
@@ -30,7 +34,7 @@
 
     function closeModalAndContinueToWorkAdventure() {
         processCallback(generatedSecretStorageKey);
-        closeModal();
+        modals.close();
     }
 
     onBeforeClose(() => {
@@ -66,47 +70,51 @@
 </script>
 
 <Popup {isOpen}>
-    <h1 slot="title">{$LL.chat.e2ee.createRecoveryKey.title()}</h1>
-    <div slot="content">
-        <p>{$LL.chat.e2ee.createRecoveryKey.description()}</p>
-        <input
-            data-testid="passphraseInput"
-            class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
-            bind:value={passphraseInput}
-            on:focusin={focusChatInput}
-            on:focusout={unfocusChatInput}
-        />
-        {#if generatedSecretStorageKey?.encodedPrivateKey}
-            <p>{$LL.chat.e2ee.createRecoveryKey.privateKeyDescription()}</p>
-            <div class="flex justify-between">
-                <p class="text-green-500 m-0 content-center">{generatedSecretStorageKey.encodedPrivateKey}</p>
-                <button data-testid="downloadRecoveryKeyButton" on:click={downloadPrivateKeyFile}>
-                    <IconFileDownload />
-                </button>
-            </div>
-        {/if}
-        {#if error}
-            <p class="text-red-500">{$LL.chat.e2ee.createRecoveryKey.error()}</p>
-        {/if}
-    </div>
-    <svelte:fragment slot="action">
-        <button class="flex-1 justify-center" on:click={() => closeModalAndContinueToWorkAdventure()}
-            >{$LL.chat.e2ee.createRecoveryKey.buttons.cancel()}
+    {#snippet title()}
+        <h1>{$LL.chat.e2ee.createRecoveryKey.title()}</h1>
+    {/snippet}
+    {#snippet content()}
+        <div>
+            <p>{$LL.chat.e2ee.createRecoveryKey.description()}</p>
+            <input
+                data-testid="passphraseInput"
+                class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
+                bind:value={passphraseInput}
+                onfocusin={focusChatInput}
+                onfocusout={unfocusChatInput}
+            />
+            {#if generatedSecretStorageKey?.encodedPrivateKey}
+                <p>{$LL.chat.e2ee.createRecoveryKey.privateKeyDescription()}</p>
+                <div class="flex justify-between">
+                    <p class="text-green-500 m-0 content-center">{generatedSecretStorageKey.encodedPrivateKey}</p>
+                    <button data-testid="downloadRecoveryKeyButton" onclick={downloadPrivateKeyFile}>
+                        <IconFileDownload />
+                    </button>
+                </div>
+            {/if}
+            {#if error}
+                <p class="text-red-500">{$LL.chat.e2ee.createRecoveryKey.error()}</p>
+            {/if}
+        </div>
+    {/snippet}
+    {#snippet action()}
+        <button class="flex-1 justify-center" onclick={() => closeModalAndContinueToWorkAdventure()}>
+            {$LL.chat.e2ee.createRecoveryKey.buttons.cancel()}
         </button>
         {#if generatedSecretStorageKey === undefined}
             <button
                 disabled={passphraseInput === undefined || passphraseInput?.trim().length === 0}
                 class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
-                on:click={() => generateRecoveryKey(passphraseInput)}
+                onclick={() => generateRecoveryKey(passphraseInput)}
                 >{$LL.chat.e2ee.createRecoveryKey.buttons.generate()}
             </button>
         {:else}
             <button
                 disabled={!isPrivateKeyDownloaded}
                 class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
-                on:click={closeModalAndContinueToWorkAdventure}
+                onclick={closeModalAndContinueToWorkAdventure}
                 >{$LL.chat.e2ee.createRecoveryKey.buttons.continue()}
             </button>
         {/if}
-    </svelte:fragment>
+    {/snippet}
 </Popup>

@@ -132,7 +132,7 @@ describe("MatrixSecurity", () => {
             matrixSecurity.updateMatrixClientStore(mockMatrixClient);
 
             await expect(matrixSecurity.initClientCryptoConfiguration()).rejects.toThrow(
-                "Guest user, no encryption key"
+                "Guest user, no encryption key",
             );
             //eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockMatrixClient.isGuest).toHaveBeenCalledOnce();
@@ -149,7 +149,7 @@ describe("MatrixSecurity", () => {
             matrixSecurity.updateMatrixClientStore(mockMatrixClient);
 
             await expect(matrixSecurity.initClientCryptoConfiguration()).rejects.toThrow(
-                "E2EE is not available for this client"
+                "E2EE is not available for this client",
             );
             //eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockMatrixClient.getCrypto).toHaveBeenCalledOnce();
@@ -269,7 +269,7 @@ describe("MatrixSecurity", () => {
             await matrixSecurity.initClientCryptoConfiguration();
 
             await matrixSecurity["initializingEncryptionPromise"]?.catch(() =>
-                expect(matrixSecurity["initializingEncryptionPromise"]).toBeUndefined()
+                expect(matrixSecurity["initializingEncryptionPromise"]).toBeUndefined(),
             );
         });
     });

@@ -78,7 +78,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             increment: incrementLivekitRoomCount,
             decrement: decrementLivekitRoomCount,
         },
-        private _localStreamStore: Readable<LocalStreamStoreValue> = localStreamStoreForPublishing
+        private _localStreamStore: Readable<LocalStreamStoreValue> = localStreamStoreForPublishing,
     ) {
         this._livekitRoomCounter.increment();
     }
@@ -146,7 +146,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.rxjsSubscriptions.push(
             this.space.observeUserJoined.subscribe((spaceUser) => {
                 this.processPendingParticipantForUser(spaceUser);
-            })
+            }),
         );
 
         // Process existing remote participants
@@ -182,7 +182,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         return get(bandwidthConstrainedPreferenceStore);
     }
 
-    private getPresetForTrack(track: MediaStreamVideoTrack, isScreenShare: boolean): { bitrate: number; fps: number } {
+    private getPresetForTrack(track: MediaStreamTrack, isScreenShare: boolean): { bitrate: number; fps: number } {
         const settings = track.getSettings();
         const width = settings.width || 1280;
         const height = settings.height || 720;
@@ -310,21 +310,21 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.unsubscribers.push(
             deriveSwitchStore(this._localStreamStore, this.space.isStreamingVideoStore).subscribe((localStream) => {
                 this.queueCameraTrackUpdate(localStream);
-            })
+            }),
         );
 
         this.unsubscribers.push(
             deriveSwitchStore(this._localStreamStore, this.space.isStreamingAudioStore).subscribe((localStream) => {
                 this.queueMicrophoneTrackUpdate(localStream);
-            })
+            }),
         );
 
         this.unsubscribers.push(
             deriveSwitchStore(this.screenSharingLocalStreamStore, this.space.shouldPublishScreenShareStore).subscribe(
                 (stream) => {
                     this.queueScreenShareUpdate(stream);
-                }
-            )
+                },
+            ),
         );
 
         this.unsubscribers.push(
@@ -335,7 +335,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     console.error("An error occurred while switching active device", err);
                     Sentry.captureException(err);
                 });
-            })
+            }),
         );
 
         this.unsubscribers.push(
@@ -347,7 +347,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     console.error("An error occurred while setting degradation preference", err);
                     Sentry.captureException(err);
                 });
-            })
+            }),
         );
     }
 
@@ -658,7 +658,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
      */
     private createLiveKitParticipant(
         participant: RemoteParticipant,
-        spaceUser: ReturnType<SpaceInterface["getSpaceUserBySpaceUserId"]>
+        spaceUser: ReturnType<SpaceInterface["getSpaceUserBySpaceUserId"]>,
     ) {
         if (!spaceUser) {
             return;
@@ -677,8 +677,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 this.serverUrl,
                 this._streamableSubjects,
                 this._blockedUsersStore,
-                this.abortSignal
-            )
+                this.abortSignal,
+            ),
         );
     }
 
@@ -740,7 +740,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 if (this.previousSpeakers.has(participant.participant.sid)) {
                     // If the participant was previously speaking but is not speaking anymore, we set it as recently spoken
                     const previousSpeakerVideoBox = this.space.allVideoStreamStore.get(
-                        participant.participant.identity
+                        participant.participant.identity,
                     );
                     if (previousSpeakerVideoBox) {
                         previousSpeakerVideoBox.lastSpeakTimestamp = Date.now();

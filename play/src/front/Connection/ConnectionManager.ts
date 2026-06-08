@@ -245,8 +245,8 @@ class ConnectionManager {
                         window.location.host +
                         roomUrl +
                         (query ? "?" + query : "") + //use urlParams because the token param must be deleted
-                        window.location.hash
-                )
+                        window.location.hash,
+                ),
             );
             urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (this.connexionType === GameConnexionTypes.room || this.connexionType === GameConnexionTypes.empty) {
@@ -433,7 +433,7 @@ class ConnectionManager {
         characterTextureIds: string[],
         companionTextureId: string | null,
         lastCommandId?: string,
-        retryAttempt = 0
+        retryAttempt = 0,
     ): Promise<OnConnectInterface> {
         return new Promise<OnConnectInterface>((resolve, reject) => {
             const connection = new RoomConnection(
@@ -441,7 +441,7 @@ class ConnectionManager {
                 roomUrl,
                 characterTextureIds,
                 companionTextureId,
-                lastCommandId
+                lastCommandId,
             );
 
             // The websocketErrorStream stream is completed in the RoomConnection. No need to unsubscribe.
@@ -467,8 +467,8 @@ class ConnectionManager {
 
                         reject(
                             new Error(
-                                "An error occurred while connecting to socket server. Retrying." + asError(err).message
-                            )
+                                "An error occurred while connecting to socket server. Retrying." + asError(err).message,
+                            ),
                         );
 
                         return;
@@ -480,7 +480,7 @@ class ConnectionManager {
                         "An error occurred while connecting to socket server. Retrying => Event: ",
                         event.reason,
                         event.code,
-                        event
+                        event,
                     );
 
                     //However, Chrome will rarely report any close code 1006 reasons to the Javascript side.
@@ -507,8 +507,8 @@ class ConnectionManager {
                             "An error occurred while connecting to socket server. Retrying. Code: " +
                                 event.code +
                                 ", Reason: " +
-                                event.reason
-                        )
+                                event.reason,
+                        ),
                     );
                 });
         }).catch((err) => {
@@ -521,7 +521,7 @@ class ConnectionManager {
                     title: get(LL).messageScreen.connecting(),
                     subtitle: get(LL).messageScreen.pleaseWait(),
                     image: gameManager?.currentStartedRoom?.loadingLogo ?? waLogo,
-                })
+                }),
             );
             const retryDelay = this.getConnectionRetryDelay(retryAttempt);
             return new Promise<OnConnectInterface>((resolve, reject) => {
@@ -534,7 +534,7 @@ class ConnectionManager {
                         name,
                         characterTextureIds,
                         companionTextureId,
-                        lastCommandId
+                        lastCommandId,
                     );
 
                     this.connectToRoomSocket(
@@ -543,7 +543,7 @@ class ConnectionManager {
                         characterTextureIds,
                         companionTextureId,
                         lastCommandId,
-                        retryAttempt + 1
+                        retryAttempt + 1,
                     )
                         .then((connection) => {
                             this._roomConnectionStream.next(connection.connection);
@@ -682,7 +682,7 @@ class ConnectionManager {
                     headers: {
                         Authorization: this.authToken,
                     },
-                }
+                },
             );
             return true;
         } else {
@@ -706,7 +706,7 @@ class ConnectionManager {
                     headers: {
                         Authorization: this.authToken,
                     },
-                }
+                },
             );
             return true;
         } else {
@@ -730,7 +730,7 @@ class ConnectionManager {
                     headers: {
                         Authorization: this.authToken,
                     },
-                }
+                },
             );
             return true;
         } else {
@@ -793,7 +793,7 @@ class ConnectionManager {
                 "EPING",
                 response.config,
                 response.request,
-                response
+                response,
             );
         });
     }

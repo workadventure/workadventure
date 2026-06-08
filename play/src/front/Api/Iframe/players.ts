@@ -34,23 +34,17 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
                 if (remotePlayer === undefined) {
                     console.warn(
                         'Received a variable message for a player that isn\'t connected. Did you forget to call "WA.players.configureTracking()"?. Ignoring.',
-                        payloadData
+                        payloadData,
                     );
                     return;
                 }
 
-                // So far, we have no way to check at runtime the type of the value, so we cast it to any
-                // In an ideal world, the map and the script would share a common schema (for instance with https://github.com/sinclairzx81/typebox)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                remotePlayer.setVariable(payloadData.key, payloadData.value as any);
+                remotePlayer.setVariable(payloadData.key, payloadData.value);
                 const stream = this.sharedPlayersVariableStream[payloadData.key];
                 if (stream) {
                     stream.next({
                         player: remotePlayer,
-                        // So far, we have no way to check at runtime the type of the value, so we cast it to any
-                        // In an ideal world, the map and the script would share a common schema (for instance with https://github.com/sinclairzx81/typebox)
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        value: payloadData.value as any,
+                        value: payloadData.value,
                     });
                 }
             },
@@ -153,7 +147,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      * If you are looking to listen for variable changes of only one player, look at `RemotePlayer.onVariableChange` instead.
      */
     public onVariableChange<K extends keyof PublicPlayerState>(
-        variableName: K
+        variableName: K,
     ): Observable<PlayerVariableChanged<PublicPlayerState[K]>> {
         let stream = this.sharedPlayersVariableStream[variableName];
         if (!stream) {
@@ -179,7 +173,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
     public get onPlayerEnters(): Observable<RemotePlayerInterface> {
         if (!this.trackingPlayers) {
             throw new Error(
-                "Cannot call WA.players.onPlayerEnters. You forgot to call WA.players.configureTracking() first."
+                "Cannot call WA.players.onPlayerEnters. You forgot to call WA.players.configureTracking() first.",
             );
         }
         return this.newRemotePlayersStream;
@@ -201,7 +195,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
     public get onPlayerLeaves(): Observable<RemotePlayerInterface> {
         if (!this.trackingPlayers) {
             throw new Error(
-                "Cannot call WA.players.onPlayerLeaves. You forgot to call WA.players.configureTracking() first."
+                "Cannot call WA.players.onPlayerLeaves. You forgot to call WA.players.configureTracking() first.",
             );
         }
         return this.removeRemotePlayersStream;
@@ -221,7 +215,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
     public get onPlayerMoves(): Observable<RemotePlayerMoved> {
         if (!this.trackingMovement) {
             throw new Error(
-                "Cannot call WA.players.onPlayerMoves(). You forgot to call WA.players.configureTracking() first."
+                "Cannot call WA.players.onPlayerMoves(). You forgot to call WA.players.configureTracking() first.",
             );
         }
         return this.playersMovedStream;

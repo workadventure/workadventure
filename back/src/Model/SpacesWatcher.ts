@@ -15,7 +15,11 @@ export class SpacesWatcher {
     private _spacesWatched: Set<string>;
     private pingInterval: NodeJS.Timeout | undefined;
     private pongTimeout: NodeJS.Timeout | undefined;
-    public constructor(public readonly id: string, private readonly socket: SpaceSocket, private timeout = 30) {
+    public constructor(
+        public readonly id: string,
+        private readonly socket: SpaceSocket,
+        private timeout = 30,
+    ) {
         this._spacesWatched = new Set<string>();
         // Send first ping and then send the second one
         this.sendPing();

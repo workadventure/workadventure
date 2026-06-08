@@ -1,15 +1,21 @@
 <script lang="ts">
+    import type { Snippet } from "svelte";
     import { onMount } from "svelte";
 
     // A Svelte component that checks the visibility of its content within a specified parent element.
     // It uses the Intersection Observer API to monitor visibility changes and calls a callback function when the inner content becomes visible or invisible.
-    // Used for menu buttons.
 
-    export let parent: HTMLElement;
-    export let onVisibilityChange: (isVisible: boolean) => void = () => {};
     let divElement: HTMLElement;
 
-    export let isVisible = true;
+    interface Props {
+        // Used for menu buttons.
+        parent: HTMLElement;
+        onVisibilityChange?: (isVisible: boolean) => void;
+        isVisible?: boolean;
+        children?: Snippet;
+    }
+
+    let { parent, onVisibilityChange = () => {}, isVisible = true, children }: Props = $props();
 
     onMount(() => {
         const observer = new IntersectionObserver(
@@ -22,7 +28,7 @@
             {
                 root: parent,
                 threshold: 1,
-            }
+            },
         );
 
         observer.observe(divElement);
@@ -34,5 +40,5 @@
 </script>
 
 <div class="group/visibilitychecker" class:visible={isVisible} class:invisible={!isVisible} bind:this={divElement}>
-    <slot />
+    {@render children?.()}
 </div>

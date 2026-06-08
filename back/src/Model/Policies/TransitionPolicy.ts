@@ -13,7 +13,7 @@ export class TransitionPolicy implements ITransitionPolicy {
     constructor(
         private readonly maxUsersForWebRTC: number,
         private readonly livekitChecker: LivekitAvailabilityChecker,
-        private readonly recordingManager: IRecordingManager
+        private readonly recordingManager: IRecordingManager,
     ) {}
 
     /**

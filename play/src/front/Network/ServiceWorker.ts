@@ -24,7 +24,7 @@ export class _ServiceWorker {
         if (NODE_ENV === "development") {
             navigator.serviceWorker
                 .register(
-                    `/service-worker-dev.js?playUri=${window.location.protocol}//${window.location.host}${window.location.pathname}`
+                    `/service-worker-dev.js?playUri=${window.location.protocol}//${window.location.host}${window.location.pathname}`,
                 )
                 .then((serviceWorker) => {
                     console.info("Service Worker registered: ", serviceWorker);
@@ -36,7 +36,7 @@ export class _ServiceWorker {
         }
         navigator.serviceWorker
             .register(
-                `/service-worker-prod.js?playUri=${window.location.protocol}//${window.location.host}${window.location.pathname}`
+                `/service-worker-prod.js?playUri=${window.location.protocol}//${window.location.host}${window.location.pathname}`,
             )
             .then((serviceWorker) => {
                 console.info("Service Worker registered: ", serviceWorker);

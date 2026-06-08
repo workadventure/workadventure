@@ -30,6 +30,8 @@ import { PusherRoomSocketController } from "../services/PusherRoomSocketControll
 import { AdminWebSocketBackpressureWriter } from "../services/AdminWebSocketBackpressureWriter";
 import type { PusherWebSocket } from "../services/PusherWebSocket";
 
+type PendingAnswerMessage = Omit<AnswerMessage, "answer"> & { answer?: AnswerMessage["answer"] };
+
 const debug = Debug("pusher:requests");
 const ADMIN_WS_BACKPRESSURE_DRAIN_TIMEOUT_MS = 10_000;
 
@@ -95,13 +97,13 @@ export class IoSocketController {
                         websocketKey,
                         websocketProtocol,
                         websocketExtensions,
-                        context
+                        context,
                     );
                 });
             },
             open: (ws) => {
                 console.info(
-                    "Admin socket connect to client on " + Buffer.from(ws.getRemoteAddressAsText()).toString()
+                    "Admin socket connect to client on " + Buffer.from(ws.getRemoteAddressAsText()).toString(),
                 );
                 ws.getUserData().disconnecting = false;
                 const writer = new AdminWebSocketBackpressureWriter(ws, {
@@ -123,7 +125,7 @@ export class IoSocketController {
             message: async (ws, arrayBuffer): Promise<void> => {
                 try {
                     const message: AdminMessageInterface = JSON.parse(
-                        new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer))
+                        new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer)),
                     );
 
                     try {
@@ -141,7 +143,7 @@ export class IoSocketController {
                                 data: {
                                     message: "Invalid message received! The connection has been closed.",
                                 },
-                            })
+                            }),
                         );
                         ws.end(1007, "Invalid message received!");
                         return;
@@ -161,7 +163,7 @@ export class IoSocketController {
                                 data: {
                                     message: "Admin socket access refused! The connection has been closed.",
                                 },
-                            })
+                            }),
                         );
                         ws.end(1008, "Access refused");
                         return;
@@ -171,12 +173,12 @@ export class IoSocketController {
 
                     if (message.event === "listen") {
                         const notAuthorizedRoom = message.roomIds.filter(
-                            (roomId) => !authorizedRoomIds.includes(roomId)
+                            (roomId) => !authorizedRoomIds.includes(roomId),
                         );
 
                         if (notAuthorizedRoom.length > 0) {
                             const errorMessage = `Admin socket refused for client on ${Buffer.from(
-                                ws.getRemoteAddressAsText()
+                                ws.getRemoteAddressAsText(),
                             ).toString()} listening of : \n${JSON.stringify(notAuthorizedRoom)}`;
                             Sentry.captureException(errorMessage);
                             console.error(errorMessage);
@@ -186,7 +188,7 @@ export class IoSocketController {
                                     data: {
                                         message: errorMessage,
                                     },
-                                })
+                                }),
                             );
                             ws.end(1008, "Access refused");
                             return;
@@ -202,7 +204,7 @@ export class IoSocketController {
                         const messageToEmit = message.message;
                         // Get roomIds of the world where we want broadcast the message
                         const roomIds = authorizedRoomIds.filter(
-                            (authorizeRoomId) => authorizeRoomId.split("/")[5] === message.world
+                            (authorizeRoomId) => authorizeRoomId.split("/")[5] === message.world,
                         );
 
                         for (const roomId of roomIds) {
@@ -219,7 +221,7 @@ export class IoSocketController {
                                         messageToEmit.userUuid,
                                         messageToEmit.message,
                                         messageToEmit.type,
-                                        roomId
+                                        roomId,
                                     )
                                     .catch((error) => {
                                         Sentry.captureException(error);
@@ -273,7 +275,7 @@ export class IoSocketController {
                 debug(
                     `FrontController => [${request.method}] ${request.url} — IP: ${
                         request.ipAddress
-                    } — Time: ${Date.now()}`
+                    } — Time: ${Date.now()}`,
                 );
 
                 // We abuse the protocol header to pass the JWT token (to avoid sending it in the query string)
@@ -316,8 +318,8 @@ export class IoSocketController {
                         query.characterTextureIds === undefined
                             ? []
                             : typeof query.characterTextureIds === "string"
-                            ? [query.characterTextureIds]
-                            : query.characterTextureIds;
+                              ? [query.characterTextureIds]
+                              : query.characterTextureIds;
 
                     const tokenData = token ? await jwtTokenManager.verifyJWTToken(token) : null;
 
@@ -365,7 +367,7 @@ export class IoSocketController {
                                 companionTextureId,
                                 locale,
                                 memberTagsFromToken,
-                                chatID
+                                chatID,
                             );
 
                             if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
@@ -413,7 +415,7 @@ export class IoSocketController {
                         memberUserRoomToken = userData.userRoomToken;
                     } catch (e) {
                         console.info(
-                            "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
+                            "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId,
                         );
                         Sentry.captureException(e);
                         console.error(e);
@@ -631,7 +633,7 @@ export class IoSocketController {
                                     message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName = `${userData.world}.${message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName}`;
                                 await socketManager.handleAddSpaceFilterMessage(
                                     socket,
-                                    noUndefined(message.message.addSpaceFilterMessage)
+                                    noUndefined(message.message.addSpaceFilterMessage),
                                 );
                                 break;
                             }
@@ -640,14 +642,14 @@ export class IoSocketController {
                                     message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName = `${userData.world}.${message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName}`;
                                 socketManager.handleRemoveSpaceFilterMessage(
                                     socket,
-                                    noUndefined(message.message.removeSpaceFilterMessage)
+                                    noUndefined(message.message.removeSpaceFilterMessage),
                                 );
                                 break;
                             }
                             case "setPlayerDetailsMessage": {
                                 await socketManager.handleSetPlayerDetails(
                                     socket,
-                                    message.message.setPlayerDetailsMessage
+                                    message.message.setPlayerDetailsMessage,
                                 );
                                 break;
                             }
@@ -658,11 +660,11 @@ export class IoSocketController {
                                     .safeParse(JSON.parse(message.message.updateSpaceMetadataMessage.metadata));
                                 if (!isMetadata.success) {
                                     Sentry.captureException(
-                                        `Invalid metadata received. ${message.message.updateSpaceMetadataMessage.metadata}`
+                                        `Invalid metadata received. ${message.message.updateSpaceMetadataMessage.metadata}`,
                                     );
                                     console.error(
                                         "Invalid metadata received.",
-                                        message.message.updateSpaceMetadataMessage.metadata
+                                        message.message.updateSpaceMetadataMessage.metadata,
                                     );
                                     return;
                                 }
@@ -672,7 +674,7 @@ export class IoSocketController {
                                 socketManager.handleUpdateSpaceMetadata(
                                     socket,
                                     message.message.updateSpaceMetadataMessage.spaceName,
-                                    isMetadata.data
+                                    isMetadata.data,
                                 );
                                 break;
                             }
@@ -681,7 +683,7 @@ export class IoSocketController {
 
                                 await socketManager.handleUpdateSpaceUser(
                                     socket,
-                                    message.message.updateSpaceUserMessage
+                                    message.message.updateSpaceUserMessage,
                                 );
                                 break;
                             }
@@ -689,53 +691,53 @@ export class IoSocketController {
                                 await socketManager.handleUpdateChatId(
                                     socket,
                                     message.message.updateChatIdMessage.email,
-                                    message.message.updateChatIdMessage.chatId
+                                    message.message.updateChatIdMessage.chatId,
                                 );
                                 break;
                             }
                             case "leaveChatRoomAreaMessage": {
                                 await socketManager.handleLeaveChatRoomArea(
                                     socket,
-                                    message.message.leaveChatRoomAreaMessage.roomID
+                                    message.message.leaveChatRoomAreaMessage.roomID,
                                 );
                                 break;
                             }
                             case "queryMessage": {
                                 try {
-                                    const answerMessage: AnswerMessage = {
+                                    const answerMessage: PendingAnswerMessage = {
                                         id: message.message.queryMessage.id,
                                     };
                                     const abortController = new AbortController();
                                     userData.queryAbortControllers.set(
                                         message.message.queryMessage.id,
-                                        abortController
+                                        abortController,
                                     );
                                     switch (message.message.queryMessage.query?.$case) {
                                         case "roomTagsQuery": {
                                             await socketManager.handleRoomTagsQuery(
                                                 socket,
-                                                message.message.queryMessage
+                                                message.message.queryMessage,
                                             );
                                             break;
                                         }
                                         case "embeddableWebsiteQuery": {
                                             await socketManager.handleEmbeddableWebsiteQuery(
                                                 socket,
-                                                message.message.queryMessage
+                                                message.message.queryMessage,
                                             );
                                             break;
                                         }
                                         case "roomsFromSameWorldQuery": {
                                             await socketManager.handleRoomsFromSameWorldQuery(
                                                 socket,
-                                                message.message.queryMessage
+                                                message.message.queryMessage,
                                             );
                                             break;
                                         }
                                         case "searchMemberQuery": {
                                             const searchMemberAnswer = await socketManager.handleSearchMemberQuery(
                                                 socket,
-                                                message.message.queryMessage.query.searchMemberQuery
+                                                message.message.queryMessage.query.searchMemberQuery,
                                             );
                                             answerMessage.answer = {
                                                 $case: "searchMemberAnswer",
@@ -747,7 +749,7 @@ export class IoSocketController {
                                         case "chatMembersQuery": {
                                             const chatMembersAnswer = await socketManager.handleChatMembersQuery(
                                                 socket,
-                                                message.message.queryMessage.query.chatMembersQuery
+                                                message.message.queryMessage.query.chatMembersQuery,
                                             );
                                             answerMessage.answer = {
                                                 $case: "chatMembersAnswer",
@@ -759,7 +761,7 @@ export class IoSocketController {
                                         case "searchTagsQuery": {
                                             const searchTagsAnswer = await socketManager.handleSearchTagsQuery(
                                                 socket,
-                                                message.message.queryMessage.query.searchTagsQuery
+                                                message.message.queryMessage.query.searchTagsQuery,
                                             );
                                             answerMessage.answer = {
                                                 $case: "searchTagsAnswer",
@@ -779,7 +781,7 @@ export class IoSocketController {
                                         }
                                         case "getMemberQuery": {
                                             const getMemberAnswer = await socketManager.handleGetMemberQuery(
-                                                message.message.queryMessage.query.getMemberQuery
+                                                message.message.queryMessage.query.getMemberQuery,
                                             );
                                             if (!getMemberAnswer) {
                                                 answerMessage.answer = {
@@ -798,9 +800,8 @@ export class IoSocketController {
                                             break;
                                         }
                                         case "getRecordingsQuery": {
-                                            const getRecordingsAnswer = await socketManager.handleGetRecordingsQuery(
-                                                socket
-                                            );
+                                            const getRecordingsAnswer =
+                                                await socketManager.handleGetRecordingsQuery(socket);
                                             answerMessage.answer = {
                                                 $case: "getRecordingsAnswer",
                                                 getRecordingsAnswer,
@@ -812,7 +813,7 @@ export class IoSocketController {
                                             const deleteRecordingAnswer =
                                                 await socketManager.handleDeleteRecordingQuery(
                                                     socket,
-                                                    message.message.queryMessage.query.deleteRecordingQuery.recordingId
+                                                    message.message.queryMessage.query.deleteRecordingQuery.recordingId,
                                                 );
                                             answerMessage.answer = {
                                                 $case: "deleteRecordingAnswer",
@@ -824,7 +825,7 @@ export class IoSocketController {
                                         case "getSignedUrlQuery": {
                                             const getSignedUrlAnswer = await socketManager.handleGetSignedUrlQuery(
                                                 socket,
-                                                message.message.queryMessage.query.getSignedUrlQuery.key
+                                                message.message.queryMessage.query.getSignedUrlQuery.key,
                                             );
 
                                             answerMessage.answer = {
@@ -839,7 +840,7 @@ export class IoSocketController {
                                             try {
                                                 await socketManager.handleEnterChatRoomAreaQuery(
                                                     socket,
-                                                    message.message.queryMessage.query.enterChatRoomAreaQuery.roomID
+                                                    message.message.queryMessage.query.enterChatRoomAreaQuery.roomID,
                                                 );
                                                 answerMessage.answer = {
                                                     $case: "enterChatRoomAreaAnswer",
@@ -863,7 +864,7 @@ export class IoSocketController {
                                                     $case: "oauthRefreshTokenAnswer",
                                                     oauthRefreshTokenAnswer:
                                                         await socketManager.handleOauthRefreshTokenQuery(
-                                                            message.message.queryMessage.query.oauthRefreshTokenQuery
+                                                            message.message.queryMessage.query.oauthRefreshTokenQuery,
                                                         ),
                                                 };
                                                 this.sendAnswerMessage(socket, answerMessage);
@@ -874,9 +875,9 @@ export class IoSocketController {
                                                         `Token refresh failed for access token: ${error.request?.data} with response => `,
                                                         error.request?.data,
                                                         error.response?.status,
-                                                        error.response?.data
+                                                        error.response?.data,
                                                     );
-                                                const answerMessage: AnswerMessage = {
+                                                const answerMessage: PendingAnswerMessage = {
                                                     id: message.message.queryMessage.id,
                                                 };
                                                 answerMessage.answer = {
@@ -936,7 +937,7 @@ export class IoSocketController {
                                                 message.message.queryMessage.query.joinSpaceQuery.propertiesToSync,
                                                 {
                                                     signal: abortController.signal,
-                                                }
+                                                },
                                             );
 
                                             answerMessage.answer = {
@@ -953,7 +954,7 @@ export class IoSocketController {
                                             message.message.queryMessage.query.leaveSpaceQuery.spaceName = `${userData.world}.${message.message.queryMessage.query.leaveSpaceQuery.spaceName}`;
                                             await socketManager.handleLeaveSpace(
                                                 socket,
-                                                message.message.queryMessage.query.leaveSpaceQuery.spaceName
+                                                message.message.queryMessage.query.leaveSpaceQuery.spaceName,
                                             );
 
                                             answerMessage.answer = {
@@ -993,7 +994,7 @@ export class IoSocketController {
                                                 roomId: userData.roomId,
                                                 world: userData.world,
                                             },
-                                            error
+                                            error,
                                         );
 
                                         // Expected join-space validation error: do not send to Sentry.
@@ -1011,11 +1012,11 @@ export class IoSocketController {
                                     }
                                     const answerMessage: AnswerMessage = {
                                         id: message.message.queryMessage.id,
-                                    };
-                                    answerMessage.answer = {
-                                        $case: "error",
-                                        error: {
-                                            message: err.message,
+                                        answer: {
+                                            $case: "error",
+                                            error: {
+                                                message: err.message,
+                                            },
                                         },
                                     };
                                     this.sendAnswerMessage(socket, answerMessage);
@@ -1025,14 +1026,14 @@ export class IoSocketController {
                             }
                             case "abortQueryMessage": {
                                 const abortController = userData.queryAbortControllers.get(
-                                    message.message.abortQueryMessage.id
+                                    message.message.abortQueryMessage.id,
                                 );
                                 if (abortController) {
                                     debug(`Aborting query with id ${message.message.abortQueryMessage.id} locally`);
                                     abortController.abort(new ClientAbortError());
                                 } else {
                                     debug(
-                                        `Forwarding abort query with id ${message.message.abortQueryMessage.id} to back`
+                                        `Forwarding abort query with id ${message.message.abortQueryMessage.id} to back`,
                                     );
                                     // If no abort controller found, it means the query has already been treated or has been forwarded to the back.
                                     // Let's forward the abort message to the back anyway, just in case.
@@ -1089,11 +1090,11 @@ export class IoSocketController {
                             case "videoQualityReportMessage": {
                                 /*debug(
                                     "Received video quality report with %d samples",
-                                    message.message.videoQualityReportMessage.samples.length
+                                    message.message.videoQualityReportMessage.samples.length,
                                 );*/
                                 videoQualityAnalyticsQueue.enqueueReport(
                                     message.message.videoQualityReportMessage,
-                                    socket.getUserData()
+                                    socket.getUserData(),
                                 );
                                 break;
                             }
@@ -1139,11 +1140,14 @@ export class IoSocketController {
         });
     }
 
-    private sendAnswerMessage(socket: PusherWebSocket, answerMessage: AnswerMessage) {
+    private sendAnswerMessage(socket: PusherWebSocket, answerMessage: PendingAnswerMessage) {
         if (socket.isDisconnecting()) {
             // Avoid leaking Map entries when we bail out before scheduling the delayed delete below.
             socket.getUserData().queryAbortControllers.delete(answerMessage.id);
             return;
+        }
+        if (answerMessage.answer === undefined) {
+            throw new Error("Invalid answer message. Answer missing.");
         }
         // We don't delete the abort controller right away because between the moment where we send the answer
         // and the moment where it is received by the client, the client could send an abort message.
@@ -1151,10 +1155,14 @@ export class IoSocketController {
         setTimeout(() => {
             socket.getUserData().queryAbortControllers.delete(answerMessage.id);
         }, 5000);
+        const completeAnswerMessage: AnswerMessage = {
+            id: answerMessage.id,
+            answer: answerMessage.answer,
+        };
         socket.send({
             message: {
                 $case: "answerMessage",
-                answerMessage,
+                answerMessage: completeAnswerMessage,
             },
         });
     }

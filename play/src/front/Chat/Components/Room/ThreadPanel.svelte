@@ -10,7 +10,11 @@
     import RoomTimeline from "./RoomTimeline.svelte";
     import { IconLoader, IconMessageCircle2 } from "@wa-icons";
 
-    export let room: ChatRoom;
+    interface Props {
+        room: ChatRoom;
+    }
+
+    let { room }: Props = $props();
 
     const emptyThreadSummaries = readable<readonly ChatThreadSummary[]>([]);
     const idleHydrationState = readable<ChatRoomSidePanelHydrationState>({ status: "idle" });
@@ -43,11 +47,13 @@
         selectedThreadStore.clear();
     }
 
-    $: threadSummaries = getThreadsStore(room);
-    $: threadHydrationState = room.threadsHydrationState ?? idleHydrationState;
-    $: threadWarnings = $threadHydrationState.warnings ?? [];
-    $: hasUnsupportedThreadHistory = threadWarnings.some((warning) => warning.reason === "server_unsupported");
-    $: degradedThreadWarning = threadWarnings.find((warning) => warning.reason === "thread_root_missing");
+    let threadSummaries = $derived(getThreadsStore(room));
+    let threadHydrationState = $derived(room.threadsHydrationState ?? idleHydrationState);
+    let threadWarnings = $derived($threadHydrationState.warnings ?? []);
+    let hasUnsupportedThreadHistory = $derived(
+        threadWarnings.some((warning) => warning.reason === "server_unsupported"),
+    );
+    let degradedThreadWarning = $derived(threadWarnings.find((warning) => warning.reason === "thread_root_missing"));
 </script>
 
 <div class="flex h-full min-h-0 flex-col bg-white/[0.02]" data-testid="threadPanel">
@@ -84,7 +90,7 @@
                         type="button"
                         class="m-0 mt-3 rounded-lg border border-solid border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white"
                         data-testid="threadPanelRetry"
-                        on:click={retryThreadsHydration}
+                        onclick={retryThreadsHydration}
                     >
                         {$LL.chat.roomPanel.status.retry()}
                     </button>
@@ -124,7 +130,7 @@
                                     ? 'font-bold ring-1 ring-success/40'
                                     : ''}"
                                 data-testid={`threadPanelItem-${summary.rootMessageId}`}
-                                on:click={() => openThread(summary.rootMessageId)}
+                                onclick={() => openThread(summary.rootMessageId)}
                             >
                                 <div class="flex min-w-0 items-center gap-2">
                                     <div class="truncate text-sm font-semibold text-white">

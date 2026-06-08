@@ -1,5 +1,5 @@
-import { Scene } from "phaser";
+import * as Phaser from "phaser";
 
-export abstract class ResizableScene extends Scene {
+export abstract class ResizableScene extends Phaser.Scene {
     public abstract onResize(): void;
 }

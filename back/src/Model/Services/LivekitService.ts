@@ -61,7 +61,10 @@ export interface RecordingStartInfo {
 }
 
 export class LivekitWebhookError extends Error {
-    constructor(message: string, public readonly kind: "bad-request" | "unauthorized") {
+    constructor(
+        message: string,
+        public readonly kind: "bad-request" | "unauthorized",
+    ) {
         super(message);
     }
 }
@@ -87,14 +90,14 @@ export class LiveKitService {
         createRoomServiceClient: (
             livekitHost: string,
             livekitApiKey: string,
-            livekitApiSecret: string
+            livekitApiSecret: string,
         ) => RoomServiceClient = defaultRoomServiceClient,
         createEgressClient: (
             livekitHost: string,
             livekitApiKey: string,
-            livekitApiSecret: string
+            livekitApiSecret: string,
         ) => EgressClient = defaultEgressClient,
-        createWebhookReceiver: CreateWebhookReceiver = (apiKey, apiSecret) => new WebhookReceiver(apiKey, apiSecret)
+        createWebhookReceiver: CreateWebhookReceiver = (apiKey, apiSecret) => new WebhookReceiver(apiKey, apiSecret),
     ) {
         if (!this.livekitHost || !this.livekitApiKey || !this.livekitApiSecret) {
             throw new Error("Livekit host, api key or secret is not set");
@@ -175,7 +178,7 @@ export class LiveKitService {
         user: SpaceUser,
         folderName: string,
         recordingSessionId: string,
-        layout = "grid"
+        layout = "grid",
     ): Promise<RecordingStartInfo> {
         try {
             const livekitRoomName = getLivekitRoomName(roomName);
@@ -279,7 +282,7 @@ export class LiveKitService {
         rawBody: Buffer | Uint8Array,
         authHeader: string | undefined,
         spaceName: string,
-        recordingSessionId: string
+        recordingSessionId: string,
     ): Promise<HandleRecordingWebhookRequest | "ignored"> {
         if (rawBody.length === 0) {
             throw new LivekitWebhookError("Missing webhook body", "bad-request");

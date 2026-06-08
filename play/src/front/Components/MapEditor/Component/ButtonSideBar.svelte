@@ -1,33 +1,33 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import type { LocalizedString } from "typesafe-i18n";
     import type { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
 
-    export let tool: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString };
+    interface Props {
+        tool: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString };
+        onclick?: () => void;
+    }
 
-    let activeTooltip = false;
+    let { tool, onclick }: Props = $props();
+
+    let activeTooltip = $state(false);
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
         {
             placement: "left",
             //strategy: 'fixed',
         },
-        16
+        16,
     );
-
-    const dispatch = createEventDispatcher<{
-        click: void;
-    }>();
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
     class="tool-button"
     use:floatingUiRef
-    on:mouseenter={() => (activeTooltip = true)}
-    on:mouseleave={() => (activeTooltip = false)}
+    onmouseenter={() => (activeTooltip = true)}
+    onmouseleave={() => (activeTooltip = false)}
 >
     <button
         class="p-3 aspect-square w-12 rounded {$mapEditorSelectedToolStore === tool.toolName
@@ -35,7 +35,10 @@
             : 'hover:bg-white/10'}"
         id={tool.toolName}
         class:active={$mapEditorSelectedToolStore === tool.toolName}
-        on:click|preventDefault={() => dispatch("click")}
+        onclick={(event) => {
+            event.preventDefault();
+            onclick?.();
+        }}
         type="button"
     >
         <img draggable="false" class="h-6 w-6" src={tool.img} alt="open tool {tool.toolName}" />
@@ -45,7 +48,7 @@
             use:floatingUiContent
             class="absolute tooltip bg-contrast/80 backdrop-blur rounded p-2 text-white text-sm text-nowrap"
         >
-            <div class="!top-[30%] !-translate-x-1/2" use:arrowAction />
+            <div class="!top-[30%] !-translate-x-1/2" use:arrowAction></div>
             {tool.tooltiptext}
         </div>
     {/if}

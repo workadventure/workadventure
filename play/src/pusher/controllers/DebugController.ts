@@ -33,7 +33,7 @@ export class DebugController extends BaseHttpController {
                         }
                     }
                     return originalValue;
-                })
+                }),
             );
             return;
         });

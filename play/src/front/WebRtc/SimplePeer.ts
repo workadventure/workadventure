@@ -64,7 +64,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         private _screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>,
         private _analyticsClient = analyticsClient,
         private _customWebRTCLogger = customWebRTCLogger,
-        private _localStreamStore = localStreamStoreForPublishing
+        private _localStreamStore = localStreamStoreForPublishing,
     ) {
         // Initialize retry manager with 30 attempts, backoff up to 15 seconds
         this.retryManager = new RetryWithBackoff({
@@ -92,7 +92,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                         isStreaming = false;
                     }
                 }
-            })
+            }),
         );
 
         this.initialise();
@@ -110,9 +110,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 this.receiveWebrtcSignal(
                     JSON.parse(webRtcSignalToClientMessage.signal) as SignalData,
                     message.sender,
-                    webRtcSignalToClientMessage.connectionId
+                    webRtcSignalToClientMessage.connectionId,
                 );
-            })
+            }),
         );
 
         //receive signal by gemer
@@ -128,12 +128,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 this.receiveWebrtcScreenSharingSignal(
                     webRtcSignalReceivedMessage,
                     message.sender,
-                    webRtcScreenSharingSignalToClientMessage.connectionId
+                    webRtcScreenSharingSignalToClientMessage.connectionId,
                 ).catch((e) => {
                     console.error(`receiveWebrtcScreenSharingSignal => ${webRtcSignalReceivedMessage.userId}`, e);
                     Sentry.captureException(e);
                 });
-            })
+            }),
         );
 
         //receive message start
@@ -143,7 +143,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
                 if (!webRtcStartMessage.connectionId) {
                     const error = new Error(
-                        `Missing connectionId in webRtcStartMessage for user ${message.sender.spaceUserId}`
+                        `Missing connectionId in webRtcStartMessage for user ${message.sender.spaceUserId}`,
                     );
                     console.error(error);
                     Sentry.captureException(error);
@@ -155,7 +155,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     initiator: webRtcStartMessage.initiator,
                 };
                 this.receiveWebrtcStart(user, message.sender, webRtcStartMessage.connectionId);
-            })
+            }),
         );
 
         //receive message start
@@ -166,14 +166,14 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 };
 
                 this.receiveWebrtcDisconnect(user);
-            })
+            }),
         );
     }
 
     private receiveWebrtcStart(
         user: UserSimplePeerInterface,
         spaceUserFromBack: SpaceUserExtended,
-        connectionId: string
+        connectionId: string,
     ): void {
         // Note: the clients array contain the list of all clients (even the ones we are already connected to in case a user joins a group)
         // So we can receive a request we already had before. (which will abort at the first line of createPeerConnection)
@@ -195,7 +195,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         user: UserSimplePeerInterface,
         spaceUser: SpaceUserExtended,
         uuid: string,
-        connectionId: string
+        connectionId: string,
     ): Promise<RemotePeer | null> {
         const peerConnection = this.videoPeers.get(user.userId);
         if (peerConnection) {
@@ -246,7 +246,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                             this.handleConnectionFailure(user.userId, user.initiator ?? false, spaceUser);
                         }
                     },
-                    connectionId
+                    connectionId,
                 );
 
                 // When a connection is established to a video stream, and if a screen sharing is taking place,
@@ -331,7 +331,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         spaceUserId: string,
         stream: MediaStream | undefined,
         isLocalPeer: boolean,
-        connectionId: string
+        connectionId: string,
     ): Promise<RemotePeer | null> {
         //const peerScreenSharingConnection = this.space.screenSharingPeerStore.get(user.userId);
         const peerScreenSharingConnection = this.screenSharePeers.get(user.userId);
@@ -376,7 +376,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     (_intentionalClose: boolean) => {
                         abortController.abort();
                     },
-                    connectionId
+                    connectionId,
                 );
 
                 resolve(peer);
@@ -621,7 +621,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 }
                 if (peer.connectionId !== connectionId) {
                     const error = new Error(
-                        `receiveWebrtcSignal => ${spaceUser.spaceUserId} connectionId mismatch: expected ${connectionId}, got ${peer.connectionId}`
+                        `receiveWebrtcSignal => ${spaceUser.spaceUserId} connectionId mismatch: expected ${connectionId}, got ${peer.connectionId}`,
                     );
                     console.error(error);
                     Sentry.captureException(error);
@@ -633,14 +633,14 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 console.error(
                     'Could not find peer whose ID is "' +
                         spaceUser.spaceUserId +
-                        '" in videoPeers. WebRTC Signal cannot be forwarded.'
+                        '" in videoPeers. WebRTC Signal cannot be forwarded.',
                 );
                 Sentry.captureException(
                     new Error(
                         'Could not find peer whose ID is "' +
                             spaceUser.spaceUserId +
-                            '" in videoPeers. WebRTC Signal cannot be forwarded.'
-                    )
+                            '" in videoPeers. WebRTC Signal cannot be forwarded.',
+                    ),
                 );
             }
         })().catch((e) => {
@@ -652,7 +652,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     private async receiveWebrtcScreenSharingSignal(
         data: WebRtcSignalReceivedMessageInterface,
         spaceUser: SpaceUserExtended,
-        connectionId: string
+        connectionId: string,
     ) {
         const streamResult = get(this._screenSharingLocalStreamStore);
         let stream: MediaStream | undefined = undefined;
@@ -672,7 +672,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 }
                 if (peer.connectionId !== connectionId) {
                     const error = new Error(
-                        `receiveWebrtcScreenSharingSignal => ${data.userId} connectionId mismatch: expected ${connectionId}, got ${peer.connectionId}`
+                        `receiveWebrtcScreenSharingSignal => ${data.userId} connectionId mismatch: expected ${connectionId}, got ${peer.connectionId}`,
                     );
                     console.error(error);
                     Sentry.captureException(error);
@@ -681,7 +681,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 peer.signal(data.signal);
             } else {
                 console.error(
-                    'Could not find peer whose ID is "' + data.userId + '" in receiveWebrtcScreenSharingSignal'
+                    'Could not find peer whose ID is "' + data.userId + '" in receiveWebrtcScreenSharingSignal',
                 );
                 this._customWebRTCLogger.info("Attempt to create new peer connection");
                 if (stream) {
@@ -741,7 +741,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     userId,
                     localScreenCapture,
                     true,
-                    videoPeer.connectionId
+                    videoPeer.connectionId,
                 );
             })
             .catch((e) => {
@@ -897,9 +897,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * @returns Information about the triggered failure, or null if no peers exist
      */
     public forceFirstPeerFailure(): { userId: string; triggered: boolean } | null {
-        const firstEntry = this.videoPeers.entries().next().value as
-            | [string, { promise: Promise<RemotePeer>; abortController: AbortController }]
-            | undefined;
+        const firstEntry = this.videoPeers.entries().next().value;
 
         if (!firstEntry) {
             console.warn("[DEBUG] No video peers found to force failure");

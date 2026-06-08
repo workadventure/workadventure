@@ -29,7 +29,7 @@ const initialState: RecordingState = {
 
 function buildState(
     recordingsBySpace: Record<string, RecordingSpaceState>,
-    requestStatesBySpace: Record<string, RecordingRequestState>
+    requestStatesBySpace: Record<string, RecordingRequestState>,
 ): RecordingState {
     const recordings = Object.values(recordingsBySpace);
 
@@ -42,10 +42,10 @@ function buildState(
 }
 
 function getFirstOtherConfirmedRecording(
-    recordingsBySpace: Record<string, RecordingSpaceState>
+    recordingsBySpace: Record<string, RecordingSpaceState>,
 ): RecordingSpaceState | undefined {
     const otherRecordings = Object.values(recordingsBySpace).filter(
-        (recording) => !recording.isCurrentUserRecorder && recording.status === "recording"
+        (recording) => !recording.isCurrentUserRecorder && recording.status === "recording",
     );
     return otherRecordings.find((recording) => recording.recorderName !== null) ?? otherRecordings[0];
 }
@@ -60,7 +60,7 @@ function createRecordingStore() {
                 buildState(state.recordingsBySpace, {
                     ...state.requestStatesBySpace,
                     [spaceName]: requestState,
-                })
+                }),
             );
         },
         clearRequestState(spaceName: string) {
@@ -80,7 +80,7 @@ function createRecordingStore() {
             status: RecordingStatus,
             isCurrentUserRecorder: boolean,
             recorderSpaceUserId: string | null,
-            recorderName: string | null
+            recorderName: string | null,
         ) {
             update((state) => {
                 const nextRecordingsBySpace = { ...state.recordingsBySpace };
@@ -123,7 +123,7 @@ function createRecordingStore() {
                             recorderName,
                         },
                     },
-                    state.requestStatesBySpace
+                    state.requestStatesBySpace,
                 );
             });
         },

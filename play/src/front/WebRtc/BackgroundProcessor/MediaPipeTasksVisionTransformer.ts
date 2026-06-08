@@ -259,7 +259,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         if (!width || !height || width === 0 || height === 0) {
             mask.close();
             console.warn(
-                `[MediaPipe Tasks Vision] Skipping frame processing: canvas dimensions are ${width}x${height}`
+                `[MediaPipe Tasks Vision] Skipping frame processing: canvas dimensions are ${width}x${height}`,
             );
             return;
         }
@@ -329,7 +329,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         this.drawingUtils.drawConfidenceMask(
             mask,
             this.blurredCanvas!, // Background: blurred video
-            this.foregroundCanvas! // Foreground: sharp person (canvas for better perf)
+            this.foregroundCanvas!, // Foreground: sharp person (canvas for better perf)
         );
     }
 
@@ -364,14 +364,14 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             this.drawingUtils.drawConfidenceMask(
                 mask,
                 backgroundSource, // Background: replacement image (as canvas) or video
-                this.foregroundCanvas! // Foreground: sharp person (canvas for better perf)
+                this.foregroundCanvas!, // Foreground: sharp person (canvas for better perf)
             );
         } else {
             // Fallback: solid black background
             this.drawingUtils.drawConfidenceMask(
                 mask,
                 [0, 0, 0, 255], // Black background
-                this.foregroundCanvas!
+                this.foregroundCanvas!,
             );
         }
     }

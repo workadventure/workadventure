@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import {
         cameraListStore,
         microphoneListStore,
@@ -28,14 +27,16 @@
     import DeviceListItem from "./DeviceListItem.svelte";
     import { IconCamera, IconMicrophoneOn, IconHeadphones } from "@wa-icons";
 
-    const dispatch = createEventDispatcher<{
-        cameraSelected: void;
-    }>();
+    interface Props {
+        oncameraselected?: () => void;
+    }
+
+    const { oncameraselected }: Props = $props();
 
     function selectCamera(deviceId: string) {
         requestedCameraDeviceIdStore.set(deviceId);
         localUserStore.setPreferredVideoInputDevice(deviceId);
-        dispatch("cameraSelected");
+        oncameraselected?.();
     }
 
     function selectMicrophone(deviceId: string) {
@@ -66,23 +67,27 @@
         }
     }
 
-    $: cameraDenied =
+    let cameraDenied = $derived(
         $cameraPermissionStateStore === "denied" ||
-        ($cameraAccessIssueStore === "permission_denied" && $cameraPermissionStateStore !== "granted");
-    $: microphoneDenied =
+            ($cameraAccessIssueStore === "permission_denied" && $cameraPermissionStateStore !== "granted"),
+    );
+    let microphoneDenied = $derived(
         $microphonePermissionStateStore === "denied" ||
-        ($microphoneAccessIssueStore === "permission_denied" && $microphonePermissionStateStore !== "granted");
+            ($microphoneAccessIssueStore === "permission_denied" && $microphonePermissionStateStore !== "granted"),
+    );
 
-    $: cameraLoaded =
+    let cameraLoaded = $derived(
         ($rawLocalStreamStore.type === "success" &&
             $rawLocalStreamStore.stream &&
             $rawLocalStreamStore.stream.getVideoTracks().length > 0) ||
-        ($requestedCameraState && $usedCameraDeviceIdStore !== undefined);
-    $: microphoneLoaded =
+            ($requestedCameraState && $usedCameraDeviceIdStore !== undefined),
+    );
+    let microphoneLoaded = $derived(
         ($rawLocalStreamStore.type === "success" &&
             $rawLocalStreamStore.stream &&
             $rawLocalStreamStore.stream.getAudioTracks().length > 0) ||
-        ($requestedMicrophoneState && $usedMicrophoneDeviceIdStore !== undefined);
+            ($requestedMicrophoneState && $usedMicrophoneDeviceIdStore !== undefined),
+    );
 </script>
 
 <div class="scrollable-content overflow-y-auto flex flex-col gap-2 flex-1 min-h-0">
@@ -95,7 +100,7 @@
                     label={camera.label}
                     isSelected={$usedCameraDeviceIdStore === camera.deviceId}
                     icon={IconCamera}
-                    onClick={() => {
+                    onclick={() => {
                         analyticsClient.selectCamera();
                         selectCamera(camera.deviceId);
                     }}
@@ -124,13 +129,13 @@
             {#if $silentStore == false}
                 <div class="group flex items-center relative z-10 py-1 px-2 overflow-hidden">
                     {#if cameraDenied}
-                        <button class="btn btn-danger btn-sm w-full justify-center" on:click={showHelpCameraSettings}>
+                        <button class="btn btn-danger btn-sm w-full justify-center" onclick={showHelpCameraSettings}>
                             {$LL.actionbar.microphone.openSettings()}
                         </button>
                     {:else}
                         <button
                             class="btn btn-danger btn-sm w-full justify-center"
-                            on:click={() => {
+                            onclick={() => {
                                 analyticsClient.camera();
                                 cameraClick();
                             }}
@@ -154,7 +159,7 @@
                     label={microphone.label}
                     isSelected={$usedMicrophoneDeviceIdStore === microphone.deviceId}
                     icon={IconMicrophoneOn}
-                    onClick={() => {
+                    onclick={() => {
                         analyticsClient.selectMicrophone();
                         selectMicrophone(microphone.deviceId);
                     }}
@@ -183,13 +188,13 @@
             {#if $silentStore == false}
                 <div class="group flex items-center relative z-10 py-1 px-2 overflow-hidden">
                     {#if microphoneDenied}
-                        <button class="btn btn-danger btn-sm w-full justify-center" on:click={showHelpCameraSettings}>
+                        <button class="btn btn-danger btn-sm w-full justify-center" onclick={showHelpCameraSettings}>
                             {$LL.actionbar.microphone.openSettings()}
                         </button>
                     {:else}
                         <button
                             class="btn btn-danger btn-sm w-full justify-center"
-                            on:click={() => {
+                            onclick={() => {
                                 analyticsClient.microphone();
                                 microphoneClick();
                             }}
@@ -213,7 +218,7 @@
                     label={speaker.label}
                     isSelected={$speakerSelectedStore === speaker.deviceId}
                     icon={IconHeadphones}
-                    onClick={() => {
+                    onclick={() => {
                         analyticsClient.selectSpeaker();
                         selectSpeaker(speaker.deviceId);
                     }}

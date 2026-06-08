@@ -27,14 +27,14 @@ export class MobileJoystick extends VirtualJoystick {
                 .image(0, 0, joystickBaseKey)
                 .setDisplaySize(
                     (baseSize / waScaleManager.zoomModifier) * window.devicePixelRatio,
-                    (baseSize / waScaleManager.zoomModifier) * window.devicePixelRatio
+                    (baseSize / waScaleManager.zoomModifier) * window.devicePixelRatio,
                 )
                 .setDepth(DEPTH_INGAME_TEXT_INDEX),
             thumb: scene.add
                 .image(0, 0, joystickThumbKey)
                 .setDisplaySize(
                     (thumbSize / waScaleManager.zoomModifier) * window.devicePixelRatio,
-                    (thumbSize / waScaleManager.zoomModifier) * window.devicePixelRatio
+                    (thumbSize / waScaleManager.zoomModifier) * window.devicePixelRatio,
                 )
                 .setDepth(DEPTH_INGAME_TEXT_INDEX),
             enable: true,
@@ -86,7 +86,7 @@ export class MobileJoystick extends VirtualJoystick {
         this.base.setDisplaySize(this.getDisplaySizeByElement(baseSize), this.getDisplaySizeByElement(baseSize));
         this.thumb.setDisplaySize(this.getDisplaySizeByElement(thumbSize), this.getDisplaySizeByElement(thumbSize));
         this.setRadius(
-            (radius / (waScaleManager.zoomModifier * waScaleManager.uiScalingFactor)) * window.devicePixelRatio
+            (radius / (waScaleManager.zoomModifier * waScaleManager.uiScalingFactor)) * window.devicePixelRatio,
         );
 
         // TODO: change it to apply the good ratio of the canvas

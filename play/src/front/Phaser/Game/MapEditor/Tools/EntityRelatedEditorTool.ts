@@ -133,7 +133,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
                                 this.entityPrefabPreview = this.scene.add.image(
                                     Math.floor(pointer.worldX),
                                     Math.floor(pointer.worldY),
-                                    entityPrefab.imagePath
+                                    entityPrefab.imagePath,
                                 );
                             }
                             this.scene.markDirty();
@@ -143,7 +143,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
                         });
                 }
                 this.scene.markDirty();
-            }
+            },
         );
 
         this.mapEditorSelectedEntityDraggedStoreUnsubscriber = mapEditorSelectedEntityDraggedStore.subscribe(
@@ -151,7 +151,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
                 if (!dragged) {
                     this.entityOldPositionPreview?.destroy();
                 }
-            }
+            },
         );
 
         this.mapEditorSelectedEntityStoreUnsubscriber = mapEditorSelectedEntityStore.subscribe((entity) => {
@@ -217,8 +217,8 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
                     this.scene.getGameMap().getWamFile()!,
                     entity.entityId,
                     undefined,
-                    this.entitiesManager
-                )
+                    this.entitiesManager,
+                ),
             )
             .catch((e) => console.error(e));
     }

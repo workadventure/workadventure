@@ -21,7 +21,7 @@ describe("shouldDisplayLocalCameraPeer", () => {
             shouldDisplayLocalCameraPeer({
                 ...defaultOptions,
                 isMobile: true,
-            })
+            }),
         ).toBe(false);
     });
 
@@ -30,7 +30,7 @@ describe("shouldDisplayLocalCameraPeer", () => {
             shouldDisplayLocalCameraPeer({
                 ...defaultOptions,
                 windowWidth: LOCAL_CAMERA_SMALL_SCREEN_WIDTH - 1,
-            })
+            }),
         ).toBe(false);
     });
 
@@ -40,7 +40,7 @@ describe("shouldDisplayLocalCameraPeer", () => {
                 ...defaultOptions,
                 requestedCameraState: false,
                 isInActiveConversation: true,
-            })
+            }),
         ).toBe(true);
     });
 
@@ -49,7 +49,7 @@ describe("shouldDisplayLocalCameraPeer", () => {
             shouldDisplayLocalCameraPeer({
                 ...defaultOptions,
                 requestedCameraState: false,
-            })
+            }),
         ).toBe(false);
     });
 });

@@ -155,7 +155,7 @@
                                 gameScene.CurrentPlayer.destroyText("audio-not-allowed");
                                 // When the user clicks on the message, we try to play the audio again
                                 tryPlay();
-                            }
+                            },
                         );
                     }
                 } else {
@@ -169,5 +169,5 @@
 </script>
 
 {#if $audioManagerFileStore !== "" && $audioManagerVolumeStore.stopped === false}
-    <audio preload="auto" class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
+    <audio preload="auto" class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer}></audio>
 {/if}

@@ -20,12 +20,12 @@
             placement: "bottom-start",
             //strategy: 'fixed',
         },
-        8
+        8,
     );
 </script>
 
 <ActionBarButton
-    on:click={() => {
+    onclick={() => {
         toggleEmojiPicker();
     }}
     classList="group/btn-emoji"

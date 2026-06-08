@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { RestrictedRightsPropertyData } from "@workadventure/map-editor";
-    import { createEventDispatcher } from "svelte";
     import InputRoomTags from "../../Input/InputRoomTags.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import type { InputTagOption } from "../../Input/InputTagOption";
@@ -8,74 +7,89 @@
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import { IconInfoCircle, IconShieldLock } from "@wa-icons";
 
-    export let restrictedRightsPropertyData: RestrictedRightsPropertyData;
+    interface Props {
+        restrictedRightsPropertyData: RestrictedRightsPropertyData;
+        onchange?: () => void;
+        onclose?: () => void;
+    }
 
-    let writeTags: InputTagOption[] | undefined = restrictedRightsPropertyData.writeTags.map((writeTag) => ({
-        value: writeTag,
-        label: writeTag,
-        created: false,
-    }));
-    let readTags: InputTagOption[] | undefined = restrictedRightsPropertyData.readTags.map((readTag) => ({
-        value: readTag,
-        label: readTag,
-        created: false,
-    }));
+    let { restrictedRightsPropertyData, onchange, onclose }: Props = $props();
+
+    let writeTags: InputTagOption[] | undefined = $state(
+        (() =>
+            restrictedRightsPropertyData.writeTags.map((writeTag) => ({
+                value: writeTag,
+                label: writeTag,
+                created: false,
+            })))(),
+    );
+    let readTags: InputTagOption[] | undefined = $state(
+        (() =>
+            restrictedRightsPropertyData.readTags.map((readTag) => ({
+                value: readTag,
+                label: readTag,
+                created: false,
+            })))(),
+    );
     let _tag: InputTagOption[] = [];
 
     function onChangeWriteReadTags() {
         restrictedRightsPropertyData.readTags = readTags ? toTags(readTags) : [];
         restrictedRightsPropertyData.writeTags = writeTags ? toTags(writeTags) : [];
-        dispatch("change");
+        onchange?.();
     }
-
-    const dispatch = createEventDispatcher<{
-        change: undefined;
-        close: undefined;
-    }>();
 </script>
 
 <PropertyEditorBase
-    on:close={() => {
-        dispatch("close");
+    onclose={() => {
+        onclose?.();
     }}
 >
-    <span slot="header" class="flex justify-center items-center">
-        <IconShieldLock class="w-6 mr-1" />
-        {$LL.mapEditor.properties.restrictedRightsPropertyData.label()}
-    </span>
-    <span slot="content">
-        <InputRoomTags
-            label={$LL.mapEditor.properties.restrictedRightsPropertyData.rightWriteTitle()}
-            options={_tag}
-            bind:value={writeTags}
-            handleChange={onChangeWriteReadTags}
-            testId="writeTags"
-        >
-            <span slot="info">
-                <IconInfoCircle font-size="15" />
-                {$LL.mapEditor.properties.restrictedRightsPropertyData.rightWriteDescription()}
-            </span>
-        </InputRoomTags>
+    {#snippet header()}
+        <span class="flex justify-center items-center">
+            <IconShieldLock class="w-6 mr-1" />
+            {$LL.mapEditor.properties.restrictedRightsPropertyData.label()}
+        </span>
+    {/snippet}
+    {#snippet content()}
+        <span>
+            <InputRoomTags
+                label={$LL.mapEditor.properties.restrictedRightsPropertyData.rightWriteTitle()}
+                options={_tag}
+                bind:value={writeTags}
+                onchange={onChangeWriteReadTags}
+                testId="writeTags"
+            >
+                {#snippet info()}
+                    <span>
+                        <IconInfoCircle font-size="15" />
+                        {$LL.mapEditor.properties.restrictedRightsPropertyData.rightWriteDescription()}
+                    </span>
+                {/snippet}
+            </InputRoomTags>
 
-        <InputRoomTags
-            label={$LL.mapEditor.properties.restrictedRightsPropertyData.rightReadTitle()}
-            options={_tag}
-            bind:value={readTags}
-            handleChange={onChangeWriteReadTags}
-            testId="readTags"
-        >
-            <span slot="info">
-                <IconInfoCircle font-size="15" />
-                {$LL.mapEditor.properties.restrictedRightsPropertyData.rightReadDescription()}
-            </span></InputRoomTags
-        >
+            <InputRoomTags
+                label={$LL.mapEditor.properties.restrictedRightsPropertyData.rightReadTitle()}
+                options={_tag}
+                bind:value={readTags}
+                onchange={onChangeWriteReadTags}
+                testId="readTags"
+            >
+                {#snippet info()}
+                    <span>
+                        <IconInfoCircle font-size="15" />
+                        {$LL.mapEditor.properties.restrictedRightsPropertyData.rightReadDescription()}
+                    </span>
+                {/snippet}
+            </InputRoomTags>
 
-        {#if writeTags !== undefined && writeTags.length > 0}
-            <div class="flex flex-wrap gap-1 py-2 px-1">
-                {#each writeTags as tag, index (`${index}-${tag.value}`)}
-                    <span class="py-1 px-2 bg-gray-400 text-black rounded-lg">{tag.label}</span>
-                {/each}
-            </div>
-        {/if}
-    </span>
+            {#if writeTags !== undefined && writeTags.length > 0}
+                <div class="flex flex-wrap gap-1 py-2 px-1">
+                    {#each writeTags as tag, index (`${index}-${tag.value}`)}
+                        <span class="py-1 px-2 bg-gray-400 text-black rounded-lg">{tag.label}</span>
+                    {/each}
+                </div>
+            {/if}
+        </span>
+    {/snippet}
 </PropertyEditorBase>

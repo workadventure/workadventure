@@ -22,7 +22,7 @@ function createErrorStore() {
             options?: {
                 closable?: boolean;
                 id?: string;
-            }
+            },
         ): void => {
             update((messages: ErrorMessage[]) => {
                 let message: string;
@@ -73,7 +73,7 @@ function createWarningMessageStore() {
             options?: {
                 closable?: boolean;
                 id?: string;
-            }
+            },
         ): void => {
             update((messages: WarningMessage[]) => {
                 let message: string;
@@ -94,7 +94,7 @@ function createWarningMessageStore() {
                             errorMessage.message === newWarningMessage.message ||
                             (errorMessage.id != undefined &&
                                 newWarningMessage.id != undefined &&
-                                errorMessage.id === newWarningMessage.id)
+                                errorMessage.id === newWarningMessage.id),
                     )
                 ) {
                     messages.push(newWarningMessage);

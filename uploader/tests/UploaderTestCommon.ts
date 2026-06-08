@@ -2,8 +2,15 @@ import {expect} from 'vitest';
 import {uploadFile} from "./utils/uploadFile";
 import {verifyResponseHeaders} from "./utils/verifyResponseHeaders";
 import {download} from "./utils/download";
-export async function uploadSingleFileTest(uploaderUrl: string) {
-    const response = await uploadFile(
+
+export interface UploadedFileResponse {
+    id: string;
+    location: string;
+    path?: string;
+}
+
+export async function uploadSingleFileTest(uploaderUrl: string): Promise<UploadedFileResponse> {
+    const response = await uploadFile<UploadedFileResponse[]>(
         `${uploaderUrl}/upload-file`,
         [{name: "upload-subject1.txt", contents: "file contents"}]
     );
@@ -18,8 +25,8 @@ export async function uploadSingleFileTest(uploaderUrl: string) {
     return data;
 }
 
-export async function uploadMultipleFilesTest(uploaderUrl: string) {
-    const response = await uploadFile(
+export async function uploadMultipleFilesTest(uploaderUrl: string): Promise<UploadedFileResponse[]> {
+    const response = await uploadFile<UploadedFileResponse[]>(
         `${uploaderUrl}/upload-file`, [
             {name: "upload-subject1.txt", contents: "first file contents"},
             {name: "upload-subject2.txt", contents: "second file contents"}

@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import type { ComponentType } from "svelte";
     // import { createPopperActions } from "svelte-popperjs";
     import type { LocalizedString } from "typesafe-i18n";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -11,18 +10,22 @@
     import { mapEditorActivated, mapEditorActivatedForThematics } from "../../Stores/MenuStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import ArrowBarRight from "../Icons/ArrowBarRight.svelte";
+    import type { WorkAdventureComponent } from "../../../types/component";
     import { IconX, IconTexture, IconLamp, IconMapSearch, IconSettings, IconTrash } from "@wa-icons";
 
-    const availableTools: { toolName: EditorToolName; iconComponent: ComponentType; tooltiptext: LocalizedString }[] =
-        [];
+    type SideBarTool = {
+        toolName: EditorToolName;
+        iconComponent: WorkAdventureComponent;
+        tooltiptext: LocalizedString;
+    };
 
     const direction = document.documentElement.getAttribute("dir") || "ltr";
 
-    availableTools.push({
+    const exploreTheRoomTool = {
         toolName: EditorToolName.ExploreTheRoom,
         iconComponent: IconMapSearch,
         tooltiptext: $LL.mapEditor.sideBar.exploreTheRoom(),
-    });
+    };
 
     const entityEditorTool = {
         toolName: EditorToolName.EntityEditor,
@@ -35,25 +38,30 @@
         tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
     };
 
-    $: if ($mapEditorActivatedForThematics && !$mapEditorActivated) {
-        availableTools.push(entityEditorTool);
-        availableTools.push(trashEditorTool);
-    }
+    let availableTools = $derived.by<SideBarTool[]>(() => {
+        const tools: SideBarTool[] = [exploreTheRoomTool];
 
-    $: if ($mapEditorActivated && !isMobile) {
-        availableTools.push({
-            toolName: EditorToolName.AreaEditor,
-            iconComponent: IconTexture,
-            tooltiptext: $LL.mapEditor.sideBar.areaEditor(),
-        });
-        availableTools.push(entityEditorTool);
-        availableTools.push({
-            toolName: EditorToolName.WAMSettingsEditor,
-            iconComponent: IconSettings,
-            tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
-        });
-        availableTools.push(trashEditorTool);
-    }
+        if ($mapEditorActivatedForThematics && !$mapEditorActivated) {
+            tools.push(entityEditorTool, trashEditorTool);
+        }
+
+        if ($mapEditorActivated && !isMobile) {
+            tools.push({
+                toolName: EditorToolName.AreaEditor,
+                iconComponent: IconTexture,
+                tooltiptext: $LL.mapEditor.sideBar.areaEditor(),
+            });
+            tools.push(entityEditorTool);
+            tools.push({
+                toolName: EditorToolName.WAMSettingsEditor,
+                iconComponent: IconSettings,
+                tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
+            });
+            tools.push(trashEditorTool);
+        }
+
+        return tools;
+    });
 
     function switchTool(newTool: EditorToolName) {
         // The map sidebar is opened when the user clicks on the explorer for the first time.
@@ -72,7 +80,7 @@
     }
 
     let sectionSideBarContainer: HTMLElement;
-    let isMobile = isMediaBreakpointUp("md");
+    let isMobile = $state(isMediaBreakpointUp("md"));
     const resizeObserver = new ResizeObserver(() => {
         isMobile = isMediaBreakpointUp("md");
     });
@@ -98,7 +106,10 @@
                 <button
                     class="p-3 hover:bg-white/10 rounded aspect-square w-12 m-0"
                     data-testid="closeMapEditorButton"
-                    on:click|preventDefault={() => switchTool(EditorToolName.CloseMapEditor)}
+                    onclick={(event) => {
+                        event.preventDefault();
+                        switchTool(EditorToolName.CloseMapEditor);
+                    }}
                 >
                     <IconX font-size="20" />
                 </button>
@@ -107,7 +118,10 @@
                 <button
                     class="p-3 hover:bg-white/10 rounded aspect-square w-12 m-0"
                     data-testid="hideMapEditorButton"
-                    on:click|preventDefault={toggleMapEditor}
+                    onclick={(event) => {
+                        event.preventDefault();
+                        toggleMapEditor();
+                    }}
                 >
                     <ArrowBarRight
                         height="h-5"
@@ -123,6 +137,7 @@
         </div>
         <div class="p-2 bg-contrast/80 rounded-2xl flex flex-col gap-2 backdrop-blur-md">
             {#each availableTools as tool (tool.toolName)}
+                {@const ToolIcon = tool.iconComponent}
                 <div class="tool-button relative">
                     <button
                         class="peer p-3 aspect-square w-12 rounded {$mapEditorSelectedToolStore === tool.toolName
@@ -130,10 +145,13 @@
                             : 'hover:bg-white/10'}"
                         id={tool.toolName}
                         class:active={$mapEditorSelectedToolStore === tool.toolName}
-                        on:click|preventDefault={() => switchTool(tool.toolName)}
+                        onclick={(event) => {
+                            event.preventDefault();
+                            switchTool(tool.toolName);
+                        }}
                         type="button"
                     >
-                        <svelte:component this={tool.iconComponent} font-size="22" />
+                        <ToolIcon font-size="22" />
                     </button>
                     <div
                         class=" bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 invisible opacity-0 transition-all peer-hover:visible peer-hover:opacity-100 rounded top-1/2 -translate-y-1/2 right-[130%]"

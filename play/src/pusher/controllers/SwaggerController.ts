@@ -70,7 +70,7 @@ export class SwaggerController extends BaseHttpController {
             debug(
                 `SwaggerController => [${request.method}] ${request.originalUrl} — IP: ${
                     request.ip
-                } — Time: ${Date.now()}`
+                } — Time: ${Date.now()}`,
             );
             fs.readFile(process.cwd() + "/../node_modules/swagger-ui-dist/index.html", "utf8", function (err, data) {
                 if (err) {
@@ -112,7 +112,7 @@ export class SwaggerController extends BaseHttpController {
             debug(
                 `SwaggerController => [${request.method}] ${request.originalUrl} — IP: ${
                     request.ip
-                } — Time: ${Date.now()}`
+                } — Time: ${Date.now()}`,
             );
             const fileParsed = path.parse(request.path);
             // Filter files

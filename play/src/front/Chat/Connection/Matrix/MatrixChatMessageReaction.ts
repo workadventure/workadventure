@@ -3,8 +3,8 @@ import { EventType, RelationType } from "matrix-js-sdk";
 import { MapStore } from "@workadventure/store-utils";
 import type { Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
-import type { ComponentType, SvelteComponent } from "svelte";
 import type { ChatMessageReaction, ChatUser } from "../ChatConnection";
+import type { WorkAdventureComponent, WorkAdventureComponentProps } from "../../../../types/component";
 import ReactionIcon from "../../Components/Room/ReactionIcon.svelte";
 import { chatUserFactoryFromRoom } from "./MatrixChatUser";
 
@@ -17,7 +17,10 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
     users: MapStore<string, ChatUserWithEventId>;
     reacted: Writable<boolean>;
 
-    constructor(private matrixRoom: Room, event: MatrixEvent) {
+    constructor(
+        private matrixRoom: Room,
+        event: MatrixEvent,
+    ) {
         const relation = event.getRelation();
         if (relation === null || relation.rel_type !== "m.annotation") {
             throw Error("Wrong matrix event object for MessageReaction");
@@ -90,7 +93,10 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
         }
     }
 
-    public get component(): { component: ComponentType<SvelteComponent>; props: Record<string, unknown> } {
+    public get component(): {
+        component: WorkAdventureComponent;
+        props: WorkAdventureComponentProps;
+    } {
         return {
             component: ReactionIcon,
             props: {

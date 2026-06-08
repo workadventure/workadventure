@@ -134,7 +134,7 @@ export class MetaTagsBuilder {
                 "for room url",
                 url,
                 ". The URL was requested by a bot so this might be normal.",
-                e
+                e,
             );
             return undefined;
         }

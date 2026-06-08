@@ -109,7 +109,7 @@ function createLiveKitRoom({
             increment: vi.fn(),
             decrement: vi.fn(),
         },
-        writable({ type: "success", stream: undefined })
+        writable({ type: "success", stream: undefined }),
     );
 }
 

@@ -14,7 +14,7 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
         commandId: string | undefined,
         oldConfig: Partial<WAMEntityData> | undefined,
         private entitiesManager: EntitiesManager,
-        private scene: GameScene
+        private scene: GameScene,
     ) {
         super(wamFile, entityId, dataToModify, commandId, oldConfig);
     }
@@ -34,7 +34,7 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
             undefined,
             this.newConfig,
             this.entitiesManager,
-            this.scene
+            this.scene,
         );
     }
 
@@ -55,7 +55,7 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
             {
                 width: entity.width,
                 height: entity.height,
-            }
+            },
         );
     }
 

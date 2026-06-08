@@ -133,7 +133,7 @@ export class GameRoom implements BrothersFinder {
         private editable: boolean,
         private _mapUrl: string,
         private _wamUrl?: string,
-        initialWam?: WAMFileFormat
+        initialWam?: WAMFileFormat,
     ) {
         // uniq id for the room is timestamp
         this.id = Date.now().toString();
@@ -152,7 +152,7 @@ export class GameRoom implements BrothersFinder {
             onEmote,
             onLockGroup,
             onPlayerDetailsUpdated,
-            onGroupUsersUpdated
+            onGroupUsersUpdated,
         );
     }
 
@@ -168,7 +168,7 @@ export class GameRoom implements BrothersFinder {
         onEmote: EmoteCallback,
         onLockGroup: LockGroupCallback,
         onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
-        onGroupUsersUpdated: GroupUsersUpdatedCallback
+        onGroupUsersUpdated: GroupUsersUpdatedCallback,
     ): Promise<GameRoom> {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
         const wamUrl = mapDetails.wamUrl;
@@ -203,7 +203,7 @@ export class GameRoom implements BrothersFinder {
             mapDetails.editable ?? false,
             mapUrl,
             wamUrl,
-            wamFile
+            wamFile,
         );
         const areaZoneTracker = new AreaZoneTracker(gameRoom);
         // Let's instantiate the class that will track the lockable areas and set the variable to false when they are empty.
@@ -237,7 +237,7 @@ export class GameRoom implements BrothersFinder {
                     roomId: this._roomUrl,
                     timeToRefresh: 30,
                 }),
-            })
+            }),
         );
     }
 
@@ -284,13 +284,13 @@ export class GameRoom implements BrothersFinder {
             const existingUser = this.usersByTabKey.get(tabKey);
             if (existingUser) {
                 console.info(
-                    `Detected reconnection from same tab for user ${joinRoomMessage.userUuid}. Killing stale connection.`
+                    `Detected reconnection from same tab for user ${joinRoomMessage.userUuid}. Killing stale connection.`,
                 );
                 // Remove the stale user from the room
                 this.leave(existingUser);
                 endUserConnectionWithReason(
                     existingUser.socket,
-                    `A new connection from the same browser tab replaced this connection for user ${joinRoomMessage.userUuid}.`
+                    `A new connection from the same browser tab replaced this connection for user ${joinRoomMessage.userUuid}.`,
                 );
             }
         }
@@ -323,7 +323,7 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.applications,
             joinRoomMessage.chatID,
             undefined,
-            tabId
+            tabId,
         );
 
         this.users.set(user.id, user);
@@ -463,7 +463,7 @@ export class GameRoom implements BrothersFinder {
                         this.groupRadius,
                         this.connectCallback,
                         this.disconnectCallback,
-                        this.positionNotifier
+                        this.positionNotifier,
                     );
                     this.groups.set(group.getId(), group);
                 }
@@ -492,7 +492,7 @@ export class GameRoom implements BrothersFinder {
                     for (const member of followingMembers) {
                         const distance = GameRoom.computeDistanceBetweenPositions(
                             member.getPosition(),
-                            previewNewGroupPosition
+                            previewNewGroupPosition,
                         );
 
                         if (distance > this.groupRadius) {
@@ -547,7 +547,7 @@ export class GameRoom implements BrothersFinder {
                         this.groupRadius,
                         this.connectCallback,
                         this.disconnectCallback,
-                        this.positionNotifier
+                        this.positionNotifier,
                     );
                     this.groups.set(newGroup.getId(), newGroup);
                 } else {
@@ -642,7 +642,7 @@ export class GameRoom implements BrothersFinder {
         const user1Position = user1.getPosition();
         const user2Position = user2.getPosition();
         return Math.sqrt(
-            Math.pow(user2Position.x - user1Position.x, 2) + Math.pow(user2Position.y - user1Position.y, 2)
+            Math.pow(user2Position.x - user1Position.x, 2) + Math.pow(user2Position.y - user1Position.y, 2),
         );
     }
 
@@ -704,7 +704,7 @@ export class GameRoom implements BrothersFinder {
                     console.error(
                         'An error occurred while setting the "' +
                             name +
-                            "\" variable. But we tried to reload the map less than 10 seconds ago, so let's fail."
+                            "\" variable. But we tried to reload the map less than 10 seconds ago, so let's fail.",
                     );
                     // Do not try to reload if we tried to reload less than 10 seconds ago.
                     throw e;
@@ -715,7 +715,7 @@ export class GameRoom implements BrothersFinder {
                 this.mapPromise = undefined;
 
                 console.error(
-                    'An error occurred while setting the "' + name + "\" variable. Let's reload the map and try again"
+                    'An error occurred while setting the "' + name + "\" variable. Let's reload the map and try again",
                 );
                 // Try to set the variable again!
                 await this.setVariable(name, value, user);
@@ -837,7 +837,7 @@ export class GameRoom implements BrothersFinder {
         areaId: string,
         propertyId: string,
         key: string,
-        value: string
+        value: string,
     ): Promise<{ success: true; changed: boolean } | { success: false; error: string }> {
         const hasPermission = await this.hasAreaPropertyPermission(userTags, areaId, propertyId);
 
@@ -885,7 +885,7 @@ export class GameRoom implements BrothersFinder {
      */
     public getAreasWithPropertyTypesContainingPosition(
         position: PointInterface,
-        propertyTypes: string[]
+        propertyTypes: string[],
     ): Promise<Array<{ areaId: string; propertyId: string; propertyType: string }>> {
         const wam = this.getWam();
         if (!wam) {
@@ -954,7 +954,7 @@ export class GameRoom implements BrothersFinder {
             mapDetails.mapUrl,
             mapDetails.wamUrl,
             INTERNAL_MAP_STORAGE_URL,
-            PUBLIC_MAP_STORAGE_PREFIX
+            PUBLIC_MAP_STORAGE_PREFIX,
         );
         if (this._mapUrl !== mapUrl) {
             this._mapUrl = mapUrl;
@@ -1071,7 +1071,7 @@ export class GameRoom implements BrothersFinder {
         console.error("Unexpected room redirect or error received while querying map details", result);
         Sentry.captureException(result.error.issues);
         Sentry.captureException(
-            `Unexpected room redirect or error received while querying map details ${JSON.stringify(result)}`
+            `Unexpected room redirect or error received while querying map details ${JSON.stringify(result)}`,
         );
         throw new Error("Unexpected room redirect received or error while querying map details");
     }
@@ -1091,7 +1091,7 @@ export class GameRoom implements BrothersFinder {
                 canLoadLocalUrl,
                 STORE_VARIABLES_FOR_LOCAL_MAPS,
                 INTERNAL_MAP_STORAGE_URL,
-                PUBLIC_MAP_STORAGE_PREFIX
+                PUBLIC_MAP_STORAGE_PREFIX,
             );
         }
 
@@ -1135,7 +1135,7 @@ export class GameRoom implements BrothersFinder {
                             for (const roomListener of this.roomListeners) {
                                 emitErrorOnRoomSocket(
                                     roomListener,
-                                    "You are loading a local map. If you use the scripting API in this map, please be aware that server-side checks and variable persistence is disabled."
+                                    "You are loading a local map. If you use the scripting API in this map, please be aware that server-side checks and variable persistence is disabled.",
                                 );
                             }
                         }, 1000);
@@ -1152,7 +1152,7 @@ export class GameRoom implements BrothersFinder {
                             for (const roomListener of this.roomListeners) {
                                 emitErrorOnRoomSocket(
                                     roomListener,
-                                    "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. If you use the scripting API in this map, please be aware that server-side checks and variable persistence is disabled."
+                                    "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. If you use the scripting API in this map, please be aware that server-side checks and variable persistence is disabled.",
                                 );
                             }
                         }, 1000);
@@ -1213,7 +1213,7 @@ export class GameRoom implements BrothersFinder {
                                     mainValue: Jitsi.slugifyJitsiRoomName(
                                         mainValue,
                                         this._roomUrl,
-                                        allProps.has(GameMapProperties.JITSI_NO_PREFIX)
+                                        allProps.has(GameMapProperties.JITSI_NO_PREFIX),
                                     ),
                                     tagValue,
                                 };
@@ -1221,7 +1221,7 @@ export class GameRoom implements BrothersFinder {
                             return undefined;
                         },
                         this._roomUrl,
-                        wam
+                        wam,
                     );
                 })
                 .catch((e) => {
@@ -1232,7 +1232,7 @@ export class GameRoom implements BrothersFinder {
                         for (const roomListener of this.roomListeners) {
                             emitErrorOnRoomSocket(
                                 roomListener,
-                                "You are loading a local map. The 'jitsiRoomAdminTag' property cannot be read from local maps."
+                                "You are loading a local map. The 'jitsiRoomAdminTag' property cannot be read from local maps.",
                             );
                         }
                     } else {
@@ -1243,12 +1243,12 @@ export class GameRoom implements BrothersFinder {
                         for (const roomListener of this.roomListeners) {
                             emitErrorOnRoomSocket(
                                 roomListener,
-                                "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. The 'jitsiRoomAdminTag' property cannot be read from local maps."
+                                "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. The 'jitsiRoomAdminTag' property cannot be read from local maps.",
                             );
                         }
                     }
                     throw new MapLoadingError(
-                        e instanceof Error ? e.message : typeof e === "string" ? e : "unknown_error"
+                        e instanceof Error ? e.message : typeof e === "string" ? e : "unknown_error",
                     );
                 });
         }
@@ -1296,7 +1296,7 @@ export class GameRoom implements BrothersFinder {
                                 };
                             }
                             return undefined;
-                        }
+                        },
                     );
                 })
                 .catch((e) => {
@@ -1307,7 +1307,7 @@ export class GameRoom implements BrothersFinder {
                         for (const roomListener of this.roomListeners) {
                             emitErrorOnRoomSocket(
                                 roomListener,
-                                "You are loading a local map. The 'bbbMeetingAdminTag' property cannot be read from local maps."
+                                "You are loading a local map. The 'bbbMeetingAdminTag' property cannot be read from local maps.",
                             );
                         }
                     } else {
@@ -1318,12 +1318,12 @@ export class GameRoom implements BrothersFinder {
                         for (const roomListener of this.roomListeners) {
                             emitErrorOnRoomSocket(
                                 roomListener,
-                                "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. The 'bbbMeetingAdminTag' property cannot be read from local maps."
+                                "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. The 'bbbMeetingAdminTag' property cannot be read from local maps.",
                             );
                         }
                     }
                     throw new MapLoadingError(
-                        e instanceof Error ? e.message : typeof e === "string" ? e : "unknown_error"
+                        e instanceof Error ? e.message : typeof e === "string" ? e : "unknown_error",
                     );
                 });
         }
@@ -1407,7 +1407,7 @@ export class GameRoom implements BrothersFinder {
     }
 
     private static commandInvalidatesJitsiModeratorTagFinder(
-        editMapMessageCase: NonNullable<NonNullable<EditMapCommandMessage["editMapMessage"]>["message"]>["$case"]
+        editMapMessageCase: NonNullable<NonNullable<EditMapCommandMessage["editMapMessage"]>["message"]>["$case"],
     ): boolean {
         return (
             editMapMessageCase === "modifyAreaMessage" ||
@@ -1490,7 +1490,7 @@ export class GameRoom implements BrothersFinder {
                                 .catch((localError: unknown) => {
                                     reject(asError(localError));
                                 });
-                        }
+                        },
                     );
 
                     const onTimeout = () => {
@@ -1498,7 +1498,7 @@ export class GameRoom implements BrothersFinder {
                     };
                     timeoutSignal.addEventListener("abort", onTimeout, { once: true });
                 }),
-                timeoutSignal
+                timeoutSignal,
             ).catch((err) => {
                 const error = asError(err);
                 Sentry.captureException(error);
@@ -1577,7 +1577,7 @@ export class GameRoom implements BrothersFinder {
                 .filter(
                     (request) =>
                         request.at > new Date(Date.now() - MEETING_INVITATION_REQUEST_WINDOW_MS) &&
-                        request.receiverUserUuid === receiverUserUuid
+                        request.receiverUserUuid === receiverUserUuid,
                 )
                 .reduce((acc, _) => (acc += 1), 0);
             let isTooHigh = nbRequests > MEETING_INVITATION_MAX_REQUESTS_PER_USER;

@@ -21,7 +21,7 @@ const store = writable<PwaInstallUiState>(initial);
 function syncFromWindow(): void {
     store.update((state) => ({
         ...state,
-        deferredPrompt: typeof window !== "undefined" ? window.__workadventureDeferredPwaPrompt ?? null : null,
+        deferredPrompt: typeof window !== "undefined" ? (window.__workadventureDeferredPwaPrompt ?? null) : null,
         isIos: detectIos(),
     }));
 }

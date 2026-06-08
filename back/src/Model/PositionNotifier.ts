@@ -55,7 +55,7 @@ export class PositionNotifier {
         private onEmote: EmoteCallback,
         private onLockGroup: LockGroupCallback,
         private onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
-        private onGroupUsersUpdated: GroupUsersUpdatedCallback
+        private onGroupUsersUpdated: GroupUsersUpdatedCallback,
     ) {}
 
     private getZoneDescriptorFromCoordinates(x: number, y: number): ZoneDescriptor {
@@ -120,7 +120,7 @@ export class PositionNotifier {
                 this.onPlayerDetailsUpdated,
                 this.onGroupUsersUpdated,
                 i,
-                j
+                j,
             );
             this.zones[j][i] = zone;
         }

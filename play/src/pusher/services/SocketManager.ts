@@ -132,7 +132,7 @@ export class SocketManager implements ZoneEventListener {
                                         ipAddress: userJoinedRoomMessage.ipAddress,
                                         roomId: roomId,
                                     },
-                                })
+                                }),
                             );
                         }
                         break;
@@ -146,7 +146,7 @@ export class SocketManager implements ZoneEventListener {
                                     data: {
                                         uuid: userLeftRoomMessage.uuid,
                                     },
-                                })
+                                }),
                             );
                         }
                         break;
@@ -162,7 +162,7 @@ export class SocketManager implements ZoneEventListener {
                                     data: {
                                         message: errorMessage.message,
                                     },
-                                })
+                                }),
                             );
                         }
                         break;
@@ -181,7 +181,7 @@ export class SocketManager implements ZoneEventListener {
                                 apiClient.getChannel().getTarget() +
                                 "' for room '" +
                                 roomId +
-                                "'"
+                                "'",
                         );
                         this.closeAdminWebsocketConnection(client, 1011, "Admin Connection lost to back server");
                     }
@@ -198,7 +198,7 @@ export class SocketManager implements ZoneEventListener {
                             "' for room '" +
                             roomId +
                             "':",
-                        err
+                        err,
                     );
                     if (!socketData.disconnecting) {
                         this.closeAdminWebsocketConnection(client, 1011, "Error while connecting to back server");
@@ -218,8 +218,8 @@ export class SocketManager implements ZoneEventListener {
 
         console.info(
             `Admin socket handle room ${roomId} connections for a client on ${Buffer.from(
-                client.getRemoteAddressAsText()
-            ).toString()}`
+                client.getRemoteAddressAsText(),
+            ).toString()}`,
         );
 
         adminRoomStream.write(message);
@@ -292,7 +292,7 @@ export class SocketManager implements ZoneEventListener {
                                     socketData.roomId
                                 }' and user '${socketData.userUuid}'/'${
                                     socketData.name
-                                }'. Reason: ${connectionCloseReason}`
+                                }'. Reason: ${connectionCloseReason}`,
                             );
                             this.closeWebsocketConnection(client, 1011, `Back lost: ${connectionCloseReason}`);
                         }
@@ -311,7 +311,7 @@ export class SocketManager implements ZoneEventListener {
                                 socketData.roomId +
                                 "'at :" +
                                 date.toLocaleString("en-GB"),
-                            err
+                            err,
                         );
                         if (!client.isDisconnecting()) {
                             this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
@@ -435,7 +435,7 @@ export class SocketManager implements ZoneEventListener {
     public handleUpdateSpaceMetadata(
         client: PusherWebSocket,
         spaceName: string,
-        metadata: { [key: string]: unknown }
+        metadata: { [key: string]: unknown },
     ): void {
         try {
             const space = this.spaces.get(spaceName);
@@ -458,7 +458,7 @@ export class SocketManager implements ZoneEventListener {
         localSpaceName: string,
         filterType: FilterType,
         propertiesToSync: string[],
-        options: { signal: AbortSignal }
+        options: { signal: AbortSignal },
     ): Promise<void> {
         const socketData = client.getUserData();
 
@@ -478,7 +478,7 @@ export class SocketManager implements ZoneEventListener {
                 onSpaceEmpty,
                 this._spaceConnection,
                 client.getUserData().world,
-                propertiesToSync
+                propertiesToSync,
             );
 
             this.spaces.set(spaceName, space);
@@ -527,7 +527,7 @@ export class SocketManager implements ZoneEventListener {
             if (space == undefined) {
                 console.error("Space is undefined while unregistering user from space after abort");
                 Sentry.captureException(
-                    new Error("Space is undefined while unregistering user from space after abort")
+                    new Error("Space is undefined while unregistering user from space after abort"),
                 );
                 return;
             }
@@ -666,7 +666,7 @@ export class SocketManager implements ZoneEventListener {
     // Useless now, will be useful again if we allow editing details in game
     async handleSetPlayerDetails(
         client: PusherWebSocket,
-        playerDetailsMessage: SetPlayerDetailsMessage
+        playerDetailsMessage: SetPlayerDetailsMessage,
     ): Promise<void> {
         const socketData = client.getUserData();
         const pusherToBackMessage: PusherToBackMessage["message"] = {
@@ -682,19 +682,19 @@ export class SocketManager implements ZoneEventListener {
                 await this.checkClientIsPartOfSpace(client, spaceName);
                 const changedFields = space.applyAndGetUpdatedFieldsForUserFromSetPlayerDetails(
                     client,
-                    playerDetailsMessage
+                    playerDetailsMessage,
                 );
                 if (changedFields) {
                     return space.forwarder.updateUser(changedFields.partialSpaceUser, changedFields.changedFields);
                 }
             } else {
                 console.error(
-                    `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
+                    `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`,
                 );
                 Sentry.captureException(
                     new Error(
-                        `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
-                    )
+                        `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`,
+                    ),
                 );
             }
         });
@@ -710,7 +710,7 @@ export class SocketManager implements ZoneEventListener {
                 reportPlayerMessage.reportComment,
                 socketData.userUuid,
                 socketData.roomId,
-                "en"
+                "en",
             );
         } catch (e) {
             Sentry.captureException(`An error occurred on "handleReportMessage" ${e}`);
@@ -728,13 +728,13 @@ export class SocketManager implements ZoneEventListener {
                 socketData.roomId,
                 banPlayerMessage.banUserName,
                 `User banned by admin ${socketData.userUuid}`,
-                socketData.userUuid
+                socketData.userUuid,
             );
             await this.emitBan(
                 banPlayerMessage.banUserUuid,
                 "You have been banned by an admin",
                 "ban",
-                socketData.roomId
+                socketData.roomId,
             );
         } catch (e) {
             Sentry.captureException(`An error occurred on "handleBanPlayerMessage" ${e}`);
@@ -795,12 +795,12 @@ export class SocketManager implements ZoneEventListener {
                 }
             } else {
                 console.error(
-                    `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
+                    `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`,
                 );
                 Sentry.captureException(
                     new Error(
-                        `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
-                    )
+                        `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`,
+                    ),
                 );
                 return { space: null, spaceName, success: false };
             }
@@ -836,7 +836,7 @@ export class SocketManager implements ZoneEventListener {
                 () => {
                     this.rooms.delete(roomUrl);
                 },
-                { once: true }
+                { once: true },
             );
             await room.init();
             this.rooms.set(roomUrl, room);
@@ -1041,7 +1041,7 @@ export class SocketManager implements ZoneEventListener {
 
     public async emitPlayGlobalMessage(
         client: PusherWebSocket,
-        playGlobalMessageEvent: PlayGlobalMessage
+        playGlobalMessageEvent: PlayGlobalMessage,
     ): Promise<void> {
         const socketData = client.getUserData();
         if (!socketData.tags.includes("admin")) {
@@ -1090,7 +1090,7 @@ export class SocketManager implements ZoneEventListener {
         const socketData = client.getUserData();
         if (!socketData.canEdit) {
             Sentry.captureException(
-                new Error(`Security exception, the client tried to update the map: ${JSON.stringify(socketData)}`)
+                new Error(`Security exception, the client tried to update the map: ${JSON.stringify(socketData)}`),
             );
             // Emit error message
             client.emitInBatch({
@@ -1119,16 +1119,16 @@ export class SocketManager implements ZoneEventListener {
                 `Client ${client.getUserData().userUuid} - ${
                     client.getUserData().name
                 } is trying to do an operation on space ${spaceName} whose he is not part of. Client is part of those spaces: ${Array.from(
-                    socketData.spaces
+                    socketData.spaces,
                 ).join(", ")}`,
-                spaceName
+                spaceName,
             );
         }
     }
 
     async handleAddSpaceFilterMessage(
         client: PusherWebSocket,
-        addSpaceFilterMessage: NonUndefinedFields<AddSpaceFilterMessage>
+        addSpaceFilterMessage: NonUndefinedFields<AddSpaceFilterMessage>,
     ) {
         const newFilter = addSpaceFilterMessage.spaceFilterMessage;
 
@@ -1140,14 +1140,14 @@ export class SocketManager implements ZoneEventListener {
         } else {
             console.error(`Add space filter called on a space (${newFilter.spaceName}) that does not exist`);
             Sentry.captureException(
-                new Error(`Add space filter called on a space (${newFilter.spaceName}) that does not exist`)
+                new Error(`Add space filter called on a space (${newFilter.spaceName}) that does not exist`),
             );
         }
     }
 
     handleRemoveSpaceFilterMessage(
         client: PusherWebSocket,
-        removeSpaceFilterMessage: NonUndefinedFields<RemoveSpaceFilterMessage>
+        removeSpaceFilterMessage: NonUndefinedFields<RemoveSpaceFilterMessage>,
     ) {
         const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
         // We don't check that the client is part of the space here, because we could stop watching a space after leaving it.
@@ -1173,7 +1173,7 @@ export class SocketManager implements ZoneEventListener {
         const space = this.spaces.get(message.spaceName);
         if (!space) {
             throw new Error(
-                `Could not find space ${message.spaceName} when updating value(s) ${message.updateMask.join(", ")}`
+                `Could not find space ${message.spaceName} when updating value(s) ${message.updateMask.join(", ")}`,
             );
         }
 
@@ -1214,7 +1214,7 @@ export class SocketManager implements ZoneEventListener {
             roomDescriptions = await adminService.getUrlRoomsFromSameWorld(
                 client.getUserData().roomId,
                 undefined,
-                client.getUserData().tags
+                client.getUserData().tags,
             );
             client.send({
                 message: {
@@ -1363,7 +1363,7 @@ export class SocketManager implements ZoneEventListener {
 
     async handleSearchMemberQuery(
         client: PusherWebSocket,
-        searchMemberQuery: SearchMemberQuery
+        searchMemberQuery: SearchMemberQuery,
     ): Promise<SearchMemberAnswer> {
         const { roomId } = client.getUserData();
         const members = await adminService.searchMembers(roomId, searchMemberQuery.searchText);
@@ -1408,7 +1408,7 @@ export class SocketManager implements ZoneEventListener {
         } catch (e) {
             console.warn(
                 `No member found for uuid ${getMemberQuery.uuid}. Probably the user doesn’t exist in the administration console`,
-                e
+                e,
             );
             return undefined; // Ensure a value is returned in the catch block
         }
@@ -1416,7 +1416,7 @@ export class SocketManager implements ZoneEventListener {
 
     async handleChatMembersQuery(
         client: PusherWebSocket,
-        chatMemberQuery: ChatMembersQuery
+        chatMemberQuery: ChatMembersQuery,
     ): Promise<ChatMembersAnswer> {
         const { roomId } = client.getUserData();
         const { total, members } = await adminService.getWorldChatMembers(roomId, chatMemberQuery.searchText);
@@ -1451,7 +1451,7 @@ export class SocketManager implements ZoneEventListener {
     async handleStartRecording(
         client: PusherWebSocket,
         spaceName: string,
-        options: { signal: AbortSignal }
+        options: { signal: AbortSignal },
     ): Promise<void> {
         const { socketData, space } = await this.getValidatedRecordingSpace(client, spaceName);
         const answer = await space.query.send(
@@ -1465,7 +1465,7 @@ export class SocketManager implements ZoneEventListener {
             {
                 signal: options.signal,
                 timeout: SocketManager.RECORDING_QUERY_TIMEOUT_MS,
-            }
+            },
         );
 
         if (answer.$case !== "startSpaceRecordingAnswer") {
@@ -1476,7 +1476,7 @@ export class SocketManager implements ZoneEventListener {
     async handleStopRecording(
         client: PusherWebSocket,
         spaceName: string,
-        options: { signal: AbortSignal }
+        options: { signal: AbortSignal },
     ): Promise<void> {
         const { socketData, space } = await this.getValidatedRecordingSpace(client, spaceName);
         const answer = await space.query.send(
@@ -1490,7 +1490,7 @@ export class SocketManager implements ZoneEventListener {
             {
                 signal: options.signal,
                 timeout: SocketManager.RECORDING_QUERY_TIMEOUT_MS,
-            }
+            },
         );
 
         if (answer.$case !== "stopSpaceRecordingAnswer") {
@@ -1514,7 +1514,7 @@ export class SocketManager implements ZoneEventListener {
 
     private async getValidatedRecordingSpace(
         client: PusherWebSocket,
-        spaceName: string
+        spaceName: string,
     ): Promise<{ socketData: SocketData; space: SpaceInterface }> {
         await this.checkClientIsPartOfSpace(client, spaceName);
 
@@ -1538,12 +1538,12 @@ export class SocketManager implements ZoneEventListener {
     }
 
     async handleOauthRefreshTokenQuery(
-        oauthRefreshTokenQuery: OauthRefreshTokenQuery
+        oauthRefreshTokenQuery: OauthRefreshTokenQuery,
     ): Promise<OauthRefreshTokenAnswer> {
         const { token, message } = await adminService.refreshOauthToken(
             oauthRefreshTokenQuery.tokenToRefresh,
             oauthRefreshTokenQuery.provider,
-            oauthRefreshTokenQuery.userIdentifier
+            oauthRefreshTokenQuery.userIdentifier,
         );
         return { message, token };
     }
@@ -1555,7 +1555,7 @@ export class SocketManager implements ZoneEventListener {
         const space = this.spaces.get(publicEvent.spaceName);
         if (!space) {
             throw new Error(
-                `Trying to send a public event to a space that does not exist: "${publicEvent.spaceName}".`
+                `Trying to send a public event to a space that does not exist: "${publicEvent.spaceName}".`,
             );
         }
         if (!socketData.userId) {
@@ -1571,7 +1571,7 @@ export class SocketManager implements ZoneEventListener {
         const space = this.spaces.get(privateEvent.spaceName);
         if (!space) {
             throw new Error(
-                `Trying to send a private event to a space that does not exist: "${privateEvent.spaceName}"`
+                `Trying to send a private event to a space that does not exist: "${privateEvent.spaceName}"`,
             );
         }
         if (!socketData.userId) {
@@ -1608,7 +1608,9 @@ export class SocketManager implements ZoneEventListener {
         try {
             if (chatID) {
                 await Promise.all(
-                    currentChatRoomArea.map((chatRoomAreaID) => matrixProvider.kickUserFromRoom(chatID, chatRoomAreaID))
+                    currentChatRoomArea.map((chatRoomAreaID) =>
+                        matrixProvider.kickUserFromRoom(chatID, chatRoomAreaID),
+                    ),
                 );
             }
         } catch (error) {
@@ -1621,7 +1623,7 @@ export class SocketManager implements ZoneEventListener {
     async handleLeaveChatRoomArea(socket: PusherWebSocket, chatRoomAreaToLeave: string) {
         const socketData = socket.getUserData();
         socketData.currentChatRoomArea = socketData.currentChatRoomArea.filter(
-            (ChatRoomArea) => ChatRoomArea !== chatRoomAreaToLeave
+            (ChatRoomArea) => ChatRoomArea !== chatRoomAreaToLeave,
         );
 
         const chatID = socketData.chatID;

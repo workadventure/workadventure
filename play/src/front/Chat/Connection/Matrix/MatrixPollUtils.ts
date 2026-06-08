@@ -40,13 +40,13 @@ export function computePollState(
         isEnded: boolean;
         endEvent?: MatrixEvent;
         undecryptableRelationsCount?: number;
-    }
+    },
 ): ComputedPollState {
     const pollKind = getChatPollKind(pollStartEvent);
     const selectionsByUser = collectLatestSelections(responseEvents, pollStartEvent);
     const mySelection = options.currentUserId ? selectionsByUser.get(options.currentUserId) : undefined;
     const activeSelections = Array.from(selectionsByUser.values()).filter(
-        (selection) => !selection.spoiled && selection.answerIds.length > 0
+        (selection) => !selection.spoiled && selection.answerIds.length > 0,
     );
     const spoiledVotes = Array.from(selectionsByUser.values()).filter((selection) => selection.spoiled).length;
     const totalVotes = activeSelections.length;
@@ -89,7 +89,7 @@ export function computePollState(
 
 function collectLatestSelections(
     responseEvents: MatrixEvent[],
-    pollStartEvent: PollStartEvent
+    pollStartEvent: PollStartEvent,
 ): Map<string, PollSelection> {
     const selectionsByUser = new Map<string, PollSelection>();
     const sortedResponses = [...responseEvents]

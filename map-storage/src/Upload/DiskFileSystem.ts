@@ -62,7 +62,7 @@ export class DiskFileSystem implements FileSystemInterface {
         const fullPath = this.getFullPath(virtualPath);
         const newFullPath = this.getFullPath(newVirtualPath);
 
-        await fs.copy(fullPath, newFullPath, { recursive: true, errorOnExist: true });
+        await fs.copy(fullPath, newFullPath, { errorOnExist: true });
     }
 
     async writeFile(zipEntry: unzipper.File, targetFilePath: string): Promise<void> {
@@ -152,7 +152,7 @@ export class DiskFileSystem implements FileSystemInterface {
     private async addDirectoryToArchive(
         archive: ZipStream,
         directory: string,
-        archiveDirectory: string
+        archiveDirectory: string,
     ): Promise<void> {
         const entries = await fs.readdir(directory, { withFileTypes: true });
         for (const entry of entries) {

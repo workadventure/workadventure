@@ -1,9 +1,4 @@
-//import Phaser from "phaser";
-
 declare module "phaser3-rex-plugins/plugins/virtualjoystick.js" {
-    /*const content: any; // eslint-disable-line
-    export default content;*/
-    import type { Scene } from "phaser";
     import GameObject = Phaser.GameObjects.GameObject;
 
     type CursorKey = {
@@ -20,7 +15,7 @@ declare module "phaser3-rex-plugins/plugins/virtualjoystick.js" {
     }
 
     class VirtualJoystick extends GameObject {
-        constructor(scene: Scene, config: unknown);
+        constructor(scene: Phaser.Scene, config: unknown);
         enable: boolean;
         base: GameObjects.Image;
         thumb: GameObjects.Image;
@@ -35,18 +30,22 @@ declare module "phaser3-rex-plugins/plugins/virtualjoystick.js" {
 
     export default VirtualJoystick;
 }
+
 declare module "phaser3-rex-plugins/plugins/gestures-plugin.js" {
     const content: any; // eslint-disable-line
     export default content;
 }
+
 declare module "phaser3-rex-plugins/plugins/webfontloader-plugin.js" {
     const content: any; // eslint-disable-line
     export default content;
 }
+
 declare module "phaser3-rex-plugins/plugins/awaitloader-plugin.js" {
     const content: any; // eslint-disable-line
     export default content;
 }
+
 declare module "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js" {
     import GameObject = Phaser.GameObjects.GameObject;
 
@@ -58,6 +57,7 @@ declare module "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js" {
 
     export default OutlinePipelinePlugin;
 }
+
 declare module "phaser3-rex-plugins/plugins/gestures.js" {
     export const Pinch: any; // eslint-disable-line
 }

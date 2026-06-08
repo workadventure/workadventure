@@ -35,7 +35,7 @@ export class EntityVariant {
 
     public get prefabIds(): string[] {
         return [...this.variants.values()].flatMap((entityPrefabsPositions) =>
-            [...entityPrefabsPositions.values()].map((prefab) => prefab.id)
+            [...entityPrefabsPositions.values()].map((prefab) => prefab.id),
         );
     }
 

@@ -1,25 +1,45 @@
 <script lang="ts">
+    import type { Snippet } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import InfoButton from "./InfoButton.svelte";
 
-    export let id: string | undefined = undefined;
-    export let label: string;
-    export let placeHolder = "";
-    export let onChange = () => {};
-    export let disabled = false;
-    export let value: string | null | undefined;
-    export let onFocus = () => {};
-    export let onBlur = () => {};
-    export let onKeyPress: () => void;
-    export let onClick = () => {};
-    export let optional = false;
-    export let variant: "light" | "" = "";
-    export let size: "xs" | "sm" | "lg" | "" = "";
-    export let height = "h-[85px]";
+    interface Props {
+        id?: string;
+        label: string;
+        placeHolder?: string;
+        onchange?: () => void;
+        disabled?: boolean;
+        value?: string | null;
+        onfocus?: () => void;
+        onblur?: () => void;
+        onkeypress?: () => void;
+        onclick?: () => void;
+        optional?: boolean;
+        variant?: "light";
+        size?: "xs" | "sm" | "lg";
+        height?: string;
+        info?: Snippet;
+    }
 
-    const SLOTS = $$slots;
+    let {
+        id = undefined,
+        label,
+        placeHolder = "",
+        onchange = () => {},
+        disabled = false,
+        value = $bindable(),
+        onfocus = () => {},
+        onblur = () => {},
+        onkeypress,
+        onclick = () => {},
+        optional = false,
+        variant = undefined,
+        size = undefined,
+        height = "h-[85px]",
+        info,
+    }: Props = $props();
 
-    let uniqueId = id || `input-${Math.random().toString(36).substring(2, 9)} `;
+    let uniqueId = (() => id || `input-${Math.random().toString(36).substring(2, 9)} `)();
 
     function autoResize(event: Event) {
         const textarea = event.target as HTMLTextAreaElement;
@@ -29,14 +49,14 @@
 </script>
 
 <div class="flex flex-col">
-    <div class="input-label" class:hidden={!label && !SLOTS.info && !optional}>
+    <div class="input-label" class:hidden={!label && !info && !optional}>
         {#if label}
             <label for={uniqueId} class="relative grow">{label}</label>
         {/if}
 
-        {#if SLOTS.info}
+        {#if info}
             <InfoButton>
-                <slot name="info" />
+                {@render info()}
             </InfoButton>
         {/if}
 
@@ -57,13 +77,13 @@
             class:input-text-lg={size === "lg"}
             bind:value
             placeholder={placeHolder}
-            on:keypress={onKeyPress}
-            on:focus={onFocus}
-            on:blur={onBlur}
-            on:change={onChange}
-            on:click={onClick}
-            on:input={autoResize}
+            {onkeypress}
+            {onfocus}
+            {onblur}
+            {onchange}
+            {onclick}
+            oninput={autoResize}
             {disabled}
-        />
+        ></textarea>
     </div>
 </div>

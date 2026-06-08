@@ -57,7 +57,7 @@ export class UsernameStatusDisplay {
             {
                 duration: 300,
                 easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-            }
+            },
         );
 
         this.redrawTimeout = window.setTimeout(() => {
@@ -87,7 +87,7 @@ export class UsernameStatusDisplay {
         const colors = getColorOfStatus(this.availabilityStatusValue);
         this.element.style.backgroundColor = colorNumberToHex(colors.filling);
         this.element.style.border = `calc(${STATUS_DOT_BORDER_WIDTH}px * var(--username-dom-scale, 1)) solid ${colorNumberToHex(
-            colors.outline
+            colors.outline,
         )}`;
     }
 

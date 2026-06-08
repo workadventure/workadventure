@@ -13,7 +13,7 @@ export class UpdateEntityCommand extends Command {
         protected entityId: string,
         dataToModify: Partial<WAMEntityData>,
         commandId?: string,
-        oldConfig?: Partial<WAMEntityData>
+        oldConfig?: Partial<WAMEntityData>,
     ) {
         super(commandId);
         this.wamFile = wamFile;

@@ -17,7 +17,7 @@
 </script>
 
 <ActionBarButton
-    on:click={() => {
+    onclick={() => {
         analyticsClient.layoutPresentChange();
         switchLayoutMode();
     }}

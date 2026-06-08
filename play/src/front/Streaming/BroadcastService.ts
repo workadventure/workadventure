@@ -31,7 +31,7 @@ export class BroadcastService {
         private spaceRegistry: SpaceRegistryInterface,
         private wamSettings: WAMSettings | undefined,
         private tags: string[],
-        private abortSignal: AbortSignal
+        private abortSignal: AbortSignal,
     ) {
         // Listen for changes in WAM settings to update the recording capability in existing spaces
         this.megaphoneSpaceSettingsStoreUnsubscribe = megaphoneSpaceSettingsStore.subscribe((newSpaceSettings) => {
@@ -70,7 +70,7 @@ export class BroadcastService {
                     this.abortSignal,
                     audienceVideoFeedbackActivated,
                     new Map([["isMegaphoneSpace", true]]),
-                    newSpaceSettings.canRecord
+                    newSpaceSettings.canRecord,
                 )
                     .then((space) => {
                         megaphoneSpaceStore.set(space);
@@ -100,7 +100,7 @@ export class BroadcastService {
         abortSignal: AbortSignal,
         audienceVideoFeedbackActivated = false,
         metadata: Map<string, unknown> = new Map(),
-        canRecord = WAMSettingsUtils.canStartRecordingMegaphone(this.wamSettings, this.tags, localUserStore.isLogged())
+        canRecord = WAMSettingsUtils.canStartRecordingMegaphone(this.wamSettings, this.tags, localUserStore.isLogged()),
     ): Promise<SpaceInterface> {
         const spaceNameSlugify = slugify(spaceName);
 
@@ -139,7 +139,7 @@ export class BroadcastService {
                         }
                     }
                 }
-            })
+            }),
         );
 
         this.unsubscribes.push(
@@ -152,7 +152,7 @@ export class BroadcastService {
                         space.stopListenerStreaming();
                     }
                 }
-            })
+            }),
         );
 
         this.broadcastSpaces.push(space);

@@ -7,7 +7,11 @@ export class DeleteEntityCommand extends Command {
 
     protected wamFile: WamFile;
 
-    constructor(wamFile: WamFile, protected entityId: string, commandId?: string) {
+    constructor(
+        wamFile: WamFile,
+        protected entityId: string,
+        commandId?: string,
+    ) {
         super(commandId);
         this.wamFile = wamFile;
     }

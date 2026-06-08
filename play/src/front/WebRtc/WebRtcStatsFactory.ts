@@ -28,7 +28,7 @@ export function createWebRtcStats(remotePeer: RemotePeer): Readable<WebRtcStats 
             isStopped: () => remotePeer.destroyed,
             onError: (e) => console.error("getStats error for peer ", remotePeer.spaceUserId, e),
             intervalMs: WEBRTC_STATS_DISPLAY_INTERVAL_MS,
-        }
+        },
     );
 }
 
@@ -52,7 +52,7 @@ export function createLivekitWebRtcStats(track: RemoteTrack | undefined): Readab
             includeRelayDetails: false,
             onError: (e) => console.error("getRTCStatsReport error for livekit track", e),
             intervalMs: WEBRTC_STATS_DISPLAY_INTERVAL_MS,
-        }
+        },
     );
 }
 
@@ -67,7 +67,7 @@ type StatsFactoryOptions = {
 
 function createWebRtcStatsFromReport(
     getReport: () => Promise<RTCStatsReport | undefined>,
-    options: StatsFactoryOptions
+    options: StatsFactoryOptions,
 ): Readable<WebRtcStats | undefined> {
     return readable<WebRtcStats | undefined>(undefined, (set) => {
         let bytesReceivedPrev = 0;
@@ -97,7 +97,7 @@ function createWebRtcStatsFromReport(
                             framesDecodedPrev,
                             timestampPrev,
                         },
-                        options
+                        options,
                     );
                     if (timestamp) {
                         bytesReceivedPrev = bytesReceived;
@@ -157,7 +157,7 @@ function buildWebRtcStatsFromReport(
     stats: RTCStatsReport,
     videoTrackId: string | undefined,
     prev: StatsPrev,
-    options: StatsFactoryOptions
+    options: StatsFactoryOptions,
 ): {
     receiverStats: WebRtcStats | undefined;
     bytesReceived: number;

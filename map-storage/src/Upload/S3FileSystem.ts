@@ -25,7 +25,10 @@ import type { FileSystemInterface } from "./FileSystemInterface";
 /* eslint-disable no-await-in-loop */
 
 export class S3FileSystem implements FileSystemInterface {
-    public constructor(private s3: S3, private bucketName: string) {}
+    public constructor(
+        private s3: S3,
+        private bucketName: string,
+    ) {}
 
     async deleteFiles(path: string): Promise<void> {
         if (!path.endsWith("/")) {
@@ -61,7 +64,7 @@ export class S3FileSystem implements FileSystemInterface {
                     new DeleteObjectsCommand({
                         Bucket: this.bucketName,
                         Delete: { Objects: objects.map((o) => ({ Key: o.Key })) },
-                    })
+                    }),
                 );
             }
             continuationToken = listObjectsResponse.NextContinuationToken;
@@ -117,7 +120,7 @@ export class S3FileSystem implements FileSystemInterface {
                             Delete: {
                                 Objects: filteredObjects.map((o) => ({ Key: o.Key })),
                             },
-                        })
+                        }),
                     );
                 }
             }
@@ -147,7 +150,7 @@ export class S3FileSystem implements FileSystemInterface {
                     Bucket: this.bucketName,
                     Prefix: virtualPath,
                     ContinuationToken: continuationToken,
-                })
+                }),
             );
 
             // Get the list of objects from the result
@@ -171,14 +174,14 @@ export class S3FileSystem implements FileSystemInterface {
                                 Bucket: this.bucketName,
                                 CopySource: `${this.bucketName}/${objectKey}`,
                                 Key: targetObjectKey,
-                            })
+                            }),
                         );
                         if (deletePrevious) {
                             await this.s3.send(
                                 new DeleteObjectCommand({
                                     Bucket: this.bucketName,
                                     Key: objectKey,
-                                })
+                                }),
                             );
                         }
                     });
@@ -204,7 +207,7 @@ export class S3FileSystem implements FileSystemInterface {
                     //Body: zipEntry.stream(),
                     ContentType: mime.getType(targetFilePath) ?? undefined,
                     //ContentLength: zipEntry.uncompressedSize,
-                })
+                }),
             );
         });
         return;
@@ -304,8 +307,8 @@ export class S3FileSystem implements FileSystemInterface {
                     Key: virtualPath,
                     Body: content,
                     ContentType: mime.getType(virtualPath) ?? undefined,
-                })
-            )
+                }),
+            ),
         );
         return;
     }
@@ -318,8 +321,8 @@ export class S3FileSystem implements FileSystemInterface {
                     Key: virtualPath,
                     Body: Buffer.from(content),
                     ContentType: mime.getType(virtualPath) ?? undefined,
-                })
-            )
+                }),
+            ),
         );
         return;
     }
@@ -349,7 +352,7 @@ export class S3FileSystem implements FileSystemInterface {
                         new GetObjectCommand({
                             Bucket: this.bucketName,
                             Key: key,
-                        })
+                        }),
                     );
                     if (!key || !Body) {
                         throw new Error("Failed to get file from S3");

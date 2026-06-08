@@ -36,7 +36,10 @@ export type OrganizedErrors = z.infer<typeof OrganizedErrors>;
 export class MapValidator {
     private logLevel: number;
 
-    constructor(level: ErrorType, private fileFetcher: FileFetcherInterface) {
+    constructor(
+        level: ErrorType,
+        private fileFetcher: FileFetcherInterface,
+    ) {
         this.logLevel = this.toLogNumber(level);
     }
 

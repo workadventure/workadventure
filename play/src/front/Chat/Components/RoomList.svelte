@@ -45,7 +45,11 @@
     } from "./RoomListLayout";
     import { IconChevronUp, IconCloudLock, IconPlus, IconRefresh } from "@wa-icons";
 
-    export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
+    interface Props {
+        sideBarWidth?: number;
+    }
+
+    let { sideBarWidth = INITIAL_SIDEBAR_WIDTH }: Props = $props();
 
     const gameScene = gameManager.getCurrentGameScene();
     /** Same condition as opening the user list from the chat header. */
@@ -66,9 +70,9 @@
     let proximityHasUnreadMessages = proximityChatRoom.hasUnreadMessages;
     const proximityUnreadCount = proximityChatRoom.unreadMessagesCount;
 
-    let displayDirectRooms = false;
-    let displayRooms = false;
-    let displayRoomInvitations = false;
+    let displayDirectRooms = $state(false);
+    let displayRooms = $state(false);
+    let displayRoomInvitations = $state(false);
 
     //let proximityChatRoomHasUserInProximityChatSubscribtion: Unsubscriber | undefined;
     //let _hasUserInProximityChat = false;
@@ -90,11 +94,11 @@
     });
 
     const directRoomsUnsubscriber = directRooms.subscribe((directRooms) =>
-        openDirectRoomsIfCollapsedBeforeNewRoom(directRooms)
+        openDirectRoomsIfCollapsedBeforeNewRoom(directRooms),
     );
     const roomsUnsubscriber = rooms.subscribe((rooms) => openRoomsIfCollapsedBeforeNewRoom(rooms));
     const roomInvitationsUnsubscriber = roomInvitations.subscribe((roomInvitations) =>
-        openRoomInvitationsIfCollapsedBeforeNewRoom(roomInvitations)
+        openRoomInvitationsIfCollapsedBeforeNewRoom(roomInvitations),
     );
 
     onDestroy(() => {
@@ -166,51 +170,72 @@
         return conversation?.conversationKind === "thread";
     }
 
-    $: filteredDirectRoom = $directRooms
-        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
-    $: filteredRooms = $rooms
-        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
-    $: filteredRoomInvitations = $roomInvitations
-        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
+    let filteredDirectRoom = $derived(
+        $directRooms
+            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+    );
+    let filteredRooms = $derived(
+        $rooms
+            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+    );
+    let filteredRoomInvitations = $derived(
+        $roomInvitations
+            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+    );
 
-    $: displayTwoColumnLayout = canDisplayRoomListAndTimeline({
-        minimumTwoColumnWidth: CHAT_TWO_COLUMN_LAYOUT_LIMIT,
-        sideBarWidth,
-    });
-    $: displayThreeColumnLayout = sideBarWidth >= THREAD_PANEL_LAYOUT_LIMIT;
-    $: selectedRoomWithSidePanel =
+    let displayTwoColumnLayout = $derived(
+        canDisplayRoomListAndTimeline({
+            minimumTwoColumnWidth: CHAT_TWO_COLUMN_LAYOUT_LIMIT,
+            sideBarWidth,
+        }),
+    );
+    let displayThreeColumnLayout = $derived(sideBarWidth >= THREAD_PANEL_LAYOUT_LIMIT);
+    let selectedRoomWithSidePanel = $derived(
         hasChatRoomMembershipManagement($selectedRoomStore) &&
-        hasChatRoomModeration($selectedRoomStore) &&
-        hasChatRoomNotificationControl($selectedRoomStore)
+            hasChatRoomModeration($selectedRoomStore) &&
+            hasChatRoomNotificationControl($selectedRoomStore)
             ? $selectedRoomStore
-            : undefined;
-    $: hasSelectedRoomWithSidePanel = selectedRoomWithSidePanel !== undefined;
-    $: showRoomSidePanelToggle = shouldShowRoomSidePanelToggle(hasSelectedRoomWithSidePanel);
-    $: roomSidePanelPlacement = getRoomSidePanelPlacement({
-        canDisplayThirdColumn: displayThreeColumnLayout,
-        hasCompatibleRoom: hasSelectedRoomWithSidePanel,
-        isOpen: $roomSidePanelStore.isOpen,
+            : undefined,
+    );
+    let hasSelectedRoomWithSidePanel = $derived(selectedRoomWithSidePanel !== undefined);
+    let showRoomSidePanelToggle = $derived(shouldShowRoomSidePanelToggle(hasSelectedRoomWithSidePanel));
+    let roomSidePanelPlacement = $derived(
+        getRoomSidePanelPlacement({
+            canDisplayThirdColumn: displayThreeColumnLayout,
+            hasCompatibleRoom: hasSelectedRoomWithSidePanel,
+            isOpen: $roomSidePanelStore.isOpen,
+        }),
+    );
+    let showRoomSidePanelInThirdColumn = $derived(roomSidePanelPlacement === "third-column");
+    let showRoomSidePanelInTimelineColumn = $derived(roomSidePanelPlacement === "timeline-column");
+    $effect(() => {
+        isThreadPanelEnabledStore.set(hasSelectedRoomWithSidePanel);
     });
-    $: showRoomSidePanelInThirdColumn = roomSidePanelPlacement === "third-column";
-    $: showRoomSidePanelInTimelineColumn = roomSidePanelPlacement === "timeline-column";
-    $: isThreadPanelEnabledStore.set(hasSelectedRoomWithSidePanel);
-    $: if (displayThreeColumnLayout && isThreadConversation($selectedRoomStore)) {
+    $effect(() => {
+        if (!displayThreeColumnLayout || !isThreadConversation($selectedRoomStore)) {
+            return;
+        }
         const selectedThread = $selectedRoomStore;
         selectedRoomStore.set(selectedThread.parentRoom);
         selectedThreadStore.set(selectedThread);
-    }
-    $: if (!hasSelectedRoomWithSidePanel && $selectedThreadStore) {
+    });
+    $effect(() => {
+        if (hasSelectedRoomWithSidePanel || !$selectedThreadStore) {
+            return;
+        }
         selectedRoomStore.set($selectedThreadStore);
         selectedThreadStore.clear();
-    }
-    $: roomListGridClass = showRoomSidePanelInThirdColumn
-        ? "grid-cols-[335px_minmax(0,1fr)_360px]"
-        : displayTwoColumnLayout && $navChat.key === "chat"
-        ? "grid-cols-[auto_minmax(0,1fr)]"
-        : "grid-cols-[1fr]";
+    });
+    let roomListGridClass = $derived(
+        showRoomSidePanelInThirdColumn
+            ? "grid-cols-[335px_minmax(0,1fr)_360px]"
+            : displayTwoColumnLayout && $navChat.key === "chat"
+              ? "grid-cols-[auto_minmax(0,1fr)]"
+              : "grid-cols-[1fr]",
+    );
 </script>
 
 <div class="overflow-auto h-full grid grid-rows-[1fr_auto] {roomListGridClass}">
@@ -239,15 +264,15 @@
                     <RequireConnection />
                 {:else if $loginTokenErrorStore}
                     <RequireConnection>
-                        <span slot="emoji">
+                        {#snippet emoji()}
                             <IconRefresh font-size="50" />
-                        </span>
-                        <span slot="title">
+                        {/snippet}
+                        {#snippet title()}
                             {$LL.chat.loginTokenError()}
-                        </span>
-                        <span slot="button-label">
+                        {/snippet}
+                        {#snippet buttonLabel()}
                             {$LL.chat.reconnect()}
-                        </span>
+                        {/snippet}
                     </RequireConnection>
                 {/if}
 
@@ -259,7 +284,7 @@
                     >
                         <button
                             class="flex items-center space-x-2 grow m-0 p-0"
-                            on:click={toggleDisplayProximityChat}
+                            onclick={toggleDisplayProximityChat}
                             data-testid="toggleDisplayProximityChat"
                         >
                             <div class="relative">
@@ -288,8 +313,8 @@
                                 <div class="relative flex h-7 w-7 items-center justify-center">
                                     <span
                                         class="absolute top-1 start-2 block h-4 w-4 rounded-full bg-white animate-ping"
-                                    />
-                                    <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white" />
+                                    ></span>
+                                    <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white"></span>
                                     <div
                                         class="flex aspect-square h-5 w-5 items-center justify-center rounded-full bg-success text-sm font-bold leading-none text-contrast z-10"
                                         aria-label={$LL.chat.a11y.unreadCount({ count: $proximityUnreadCount })}
@@ -316,23 +341,25 @@
                     {#if filteredRoomInvitations.length > 0}
                         <button
                             class="group relative m-0 px-3 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
-                            on:click={toggleDisplayRoomInvitations}
+                            onclick={toggleDisplayRoomInvitations}
                         >
                             <div class="text-white text-sm font-bold tracking-widest uppercase grow text-start">
                                 {$LL.chat.invitations()}
                             </div>
-                            <button
+                            <div
                                 class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
                             >
                                 <IconChevronUp
                                     class={`transform transition ${!displayRoomInvitations ? "" : "rotate-180"}`}
                                 />
-                            </button>
+                            </div>
                         </button>
                         {#if displayRoomInvitations}
                             <div class="flex flex-col overflow-auto ps-3 pr-4 pb-3">
-                                <ShowMore items={filteredRoomInvitations} maxNumber={8} idKey="id" let:item={room}>
-                                    <RoomInvitation {room} />
+                                <ShowMore items={filteredRoomInvitations} maxNumber={8} idKey="id">
+                                    {#snippet children({ item: room })}
+                                        <RoomInvitation {room} />
+                                    {/snippet}
                                 </ShowMore>
                             </div>
                         {/if}
@@ -344,7 +371,7 @@
                         <button
                             type="button"
                             class="flex items-center min-w-0 flex-1 text-start m-0 p-0 h-full bg-transparent border-0 cursor-pointer text-inherit rounded-none appearance-none"
-                            on:click={toggleDisplayDirectRooms}
+                            onclick={toggleDisplayDirectRooms}
                         >
                             <div class="text-white text-sm font-bold tracking-widest uppercase truncate">
                                 {$LL.chat.people()}
@@ -357,7 +384,10 @@
                                 class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white shrink-0 m-0"
                                 aria-label={$LL.chat.users()}
                                 title={$LL.chat.users()}
-                                on:click|stopPropagation={() => navChat.switchToUserList()}
+                                onclick={(event) => {
+                                    event.stopPropagation();
+                                    navChat.switchToUserList();
+                                }}
                             >
                                 <IconPlus />
                             </button>
@@ -366,7 +396,10 @@
                             type="button"
                             class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white shrink-0 m-0"
                             aria-expanded={displayDirectRooms}
-                            on:click|stopPropagation={toggleDisplayDirectRooms}
+                            onclick={(event) => {
+                                event.stopPropagation();
+                                toggleDisplayDirectRooms();
+                            }}
                         >
                             <IconChevronUp class={`transform transition ${!displayDirectRooms ? "" : "rotate-180"}`} />
                         </button>
@@ -374,19 +407,21 @@
 
                     {#if displayDirectRooms}
                         <div class="flex flex-col px-2 pb-2">
-                            <ShowMore items={filteredDirectRoom} maxNumber={8} idKey="id" let:item={room}>
-                                <Room {room} />
+                            <ShowMore items={filteredDirectRoom} maxNumber={8} idKey="id">
+                                {#snippet children({ item: room })}
+                                    <Room {room} />
+                                {/snippet}
                             </ShowMore>
                         </div>
                     {/if}
 
                     <div class="flex items-center space-x-2 grow m-0 p-0">
                         <!-- TODO : use div instead of button to avoid focus issues try to find a better solution -->
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
                         <div
                             class="group relative px-3 m-0 mb-2 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
-                            on:click={toggleDisplayRooms}
+                            onclick={toggleDisplayRooms}
                             data-testid="roomAccordeon"
                         >
                             <div class="flex items-center space-x-2 grow m-0 p-0">
@@ -404,8 +439,10 @@
                     </div>
                     {#if displayRooms}
                         <div class="px-2 pb-2">
-                            <ShowMore items={filteredRooms} maxNumber={8} idKey="id" let:item={room}>
-                                <Room {room} />
+                            <ShowMore items={filteredRooms} maxNumber={8} idKey="id">
+                                {#snippet children({ item: room })}
+                                    <Room {room} />
+                                {/snippet}
                             </ShowMore>
                         </div>
                     {/if}
@@ -451,7 +488,12 @@
             <div class="w-full">
                 <button
                     data-testid="restoreEncryptionButton"
-                    on:click|stopPropagation={initChatConnectionEncryption}
+                    onclick={(event) => {
+                        event.stopPropagation();
+                        initChatConnectionEncryption().catch((error) => {
+                            console.error("Failed to initialize chat encryption", error);
+                        });
+                    }}
                     class="text-white flex gap-2 justify-center w-full bg-neutral hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
                 >
                     <IconCloudLock font-size="20" />

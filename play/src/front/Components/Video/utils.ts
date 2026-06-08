@@ -115,7 +115,7 @@ export async function checkCoturnServer() {
                     handleTurnServerSuccess(
                         getBrowserName(),
                         "ICE gathering complete without relay candidate - assuming TURN is working",
-                        "no-relay-but-assumed-working"
+                        "no-relay-but-assumed-working",
                     );
                 } else {
                     helpWebRtcSettingsVisibleStore.set("error");
@@ -169,7 +169,7 @@ export async function checkCoturnServer() {
                 case 701: // STUN host lookup error
                     debug(
                         "ICE candidate error: STUN host lookup failed for %s (IPv6 DNS issue, usually harmless)",
-                        event.url || "unknown"
+                        event.url || "unknown",
                     );
                     break;
                 case 300: // STUN allocation failure
@@ -178,7 +178,7 @@ export async function checkCoturnServer() {
                 case 400: // TURN allocation failure
                     debug("ICE candidate error: TURN allocation failure for %s", event.url || "unknown");
                     console.warn(
-                        "TURN server allocation failed - this may affect connectivity for users behind restrictive firewalls"
+                        "TURN server allocation failed - this may affect connectivity for users behind restrictive firewalls",
                     );
                     break;
                 default:
@@ -186,7 +186,7 @@ export async function checkCoturnServer() {
                         "ICE candidate error: Code %d for %s - %s",
                         event.errorCode,
                         event.url || "unknown",
-                        event.errorText || "no details"
+                        event.errorText || "no details",
                     );
                     break;
             }
@@ -231,7 +231,7 @@ export async function checkCoturnServer() {
                 handleTurnServerSuccess(
                     getBrowserName(),
                     "TURN test timeout - assuming TURN is working",
-                    "timeout-assumed-working"
+                    "timeout-assumed-working",
                 );
             } else {
                 // For other browsers, show pending state

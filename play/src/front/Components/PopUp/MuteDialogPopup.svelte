@@ -5,12 +5,16 @@
     import Woka from "../Woka/Woka.svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
 
-    export let sender: SpaceUserExtended | undefined;
-    export let message: string;
-    export let acceptRequest: () => void;
-    export let refuseRequest: () => void;
+    interface Props {
+        sender: SpaceUserExtended | undefined;
+        message: string;
+        acceptRequest: () => void;
+        refuseRequest: () => void;
+    }
 
-    const pictureStore = sender ? sender.pictureStore : readable<string | undefined>(undefined);
+    let { sender, message, acceptRequest, refuseRequest }: Props = $props();
+
+    let pictureStore = $derived(sender ? sender.pictureStore : readable<string | undefined>(undefined));
 </script>
 
 <PopUpContainer reduceOnSmallScreen={true}>
@@ -27,16 +31,23 @@
             </div>
         </div>
     </div>
-    <svelte:fragment slot="buttons">
+    {#snippet buttons()}
         <button
             type="button"
             class="btn btn-outline w-1/2 max-w-80 justify-center responsive-message refuse-request"
-            on:click|preventDefault={() => refuseRequest()}>{$LL.follow.interactMenu.no()}</button
+            onclick={(event) => {
+                event.preventDefault();
+                refuseRequest();
+            }}
         >
+            {$LL.follow.interactMenu.no()}
+        </button>
         <button
             type="button"
             class="btn btn-secondary w-1/2 max-w-80 justify-center responsive-message accept-request"
-            on:click={() => acceptRequest()}>{$LL.follow.interactMenu.yes()}</button
+            onclick={acceptRequest}
         >
-    </svelte:fragment>
+            {$LL.follow.interactMenu.yes()}
+        </button>
+    {/snippet}
 </PopUpContainer>

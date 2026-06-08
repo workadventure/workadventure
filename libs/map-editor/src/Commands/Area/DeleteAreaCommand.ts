@@ -7,7 +7,11 @@ export class DeleteAreaCommand extends Command {
 
     protected wamFile: WamFile;
 
-    constructor(wamFile: WamFile, protected areaId: string, commandId?: string) {
+    constructor(
+        wamFile: WamFile,
+        protected areaId: string,
+        commandId?: string,
+    ) {
         super(commandId);
         this.wamFile = wamFile;
     }

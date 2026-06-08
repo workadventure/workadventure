@@ -56,5 +56,5 @@ export const noMicrophoneSoundWarningVisibleStore = derived(
             }
         }
     },
-    false
+    false,
 );

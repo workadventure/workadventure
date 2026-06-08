@@ -33,9 +33,19 @@
     const gameScene = gameManager.getCurrentGameScene();
     const MESSAGE_TYPE = AdminMessageEventTypes.admin;
     let quill: Quill;
-    let QUILL_EDITOR: HTMLDivElement;
+    let QUILL_EDITOR: HTMLDivElement | undefined = $state();
 
-    export const handleSending = {
+    export type TextGlobalMessageHandle = {
+        sendTextMessage(broadcastToWorld: boolean): void;
+    };
+
+    interface Props {
+        handleSending?: TextGlobalMessageHandle;
+    }
+
+    let { handleSending = $bindable() }: Props = $props();
+
+    handleSending = {
         sendTextMessage(broadcastToWorld: boolean) {
             if (gameScene == undefined) {
                 return;
@@ -55,6 +65,9 @@
 
     //Quill
     onMount(() => {
+        if (!QUILL_EDITOR) {
+            return;
+        }
         quill = new Quill(QUILL_EDITOR, {
             placeholder: $LL.menu.globalMessage.enter(),
             theme: "snow",
@@ -71,7 +84,7 @@
 </script>
 
 <section class="section-input-send-text test">
-    <div class="input-send-text" role="textbox" bind:this={QUILL_EDITOR} />
+    <div class="input-send-text" role="textbox" bind:this={QUILL_EDITOR}></div>
 </section>
 
 <style lang="scss">

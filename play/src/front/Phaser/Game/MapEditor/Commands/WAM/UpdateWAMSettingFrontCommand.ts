@@ -17,7 +17,7 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
         updateWAMSettingsMessage: UpdateWAMSettingsMessage,
         private userTags: string[],
         private roomUrl: string,
-        id?: string
+        id?: string,
     ) {
         super(wam, updateWAMSettingsMessage, id);
     }
@@ -36,7 +36,7 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
                     },
                 },
                 this.userTags,
-                this.roomUrl
+                this.roomUrl,
             );
         }
         if (this.updateWAMSettingsMessage.message?.$case === "updateRecordingSettingMessage") {
@@ -52,7 +52,7 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
                     },
                 },
                 this.userTags,
-                this.roomUrl
+                this.roomUrl,
             );
         }
 
@@ -71,7 +71,7 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
             const megaphoneSpaceName = WAMSettingsUtils.getMegaphoneUrl(
                 this.wam.settings,
                 new URL(this.roomUrl).host,
-                this.roomUrl
+                this.roomUrl,
             );
             if (!megaphoneSpaceName || !megaphoneSettings) {
                 megaphoneSpaceSettingsStore.set(undefined);
@@ -82,7 +82,7 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
                     canRecord: WAMSettingsUtils.canStartRecordingMegaphone(
                         this.wam.settings,
                         this.userTags,
-                        localUserStore.isLogged()
+                        localUserStore.isLogged(),
                     ),
                 });
             }

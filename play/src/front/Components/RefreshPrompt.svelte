@@ -3,7 +3,7 @@
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
     import { LL } from "../../i18n/i18n-svelte";
 
-    let timeToRefreshSeconds = $refreshPromptStore?.timeToRefresh ?? 30;
+    let timeToRefreshSeconds = $state($refreshPromptStore?.timeToRefresh ?? 30);
 
     onMount(() => {
         setInterval(() => {
@@ -22,7 +22,10 @@
         <button
             type="button"
             class="light m-auto cursor-pointer px-3"
-            on:click|preventDefault={() => window.location.reload()}
+            onclick={(event) => {
+                event.preventDefault();
+                window.location.reload();
+            }}
             >{`${$LL.refreshPrompt.refresh()} (${timeToRefreshSeconds})`}
         </button>
     </div>

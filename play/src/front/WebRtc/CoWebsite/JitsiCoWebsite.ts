@@ -136,7 +136,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         public readonly jitsiConfig: JitsiRoomConfigData | undefined,
         public readonly jitsiInterfaceConfig: object | undefined,
         public readonly jitsiRoomAdminTag: string | null,
-        hideUrl?: boolean
+        hideUrl?: boolean,
     ) {
         super(url, false, undefined, widthPercent, closable, hideUrl);
     }

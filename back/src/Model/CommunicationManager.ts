@@ -34,7 +34,7 @@ export interface InitialStateFactory {
     createInitialState(
         space: ICommunicationSpace,
         users: ReadonlyMap<string, SpaceUser>,
-        usersToNotify: ReadonlyMap<string, SpaceUser>
+        usersToNotify: ReadonlyMap<string, SpaceUser>,
     ): ICommunicationState<ICommunicationStrategy>;
 }
 
@@ -46,11 +46,11 @@ export class DefaultInitialStateFactory implements InitialStateFactory {
     createInitialState(
         space: ICommunicationSpace,
         users: ReadonlyMap<string, SpaceUser>,
-        usersToNotify: ReadonlyMap<string, SpaceUser>
+        usersToNotify: ReadonlyMap<string, SpaceUser>,
     ): ICommunicationState<ICommunicationStrategy> {
         const propertiesToSync = space.getPropertiesToSync();
         const hasMediaProperties = propertiesToSync.some((prop) =>
-            ["cameraState", "microphoneState", "screenSharingState"].includes(prop)
+            ["cameraState", "microphoneState", "screenSharingState"].includes(prop),
         );
 
         return hasMediaProperties ? new WebRTCState(space, users, usersToNotify) : new VoidState();
@@ -117,7 +117,7 @@ export class CommunicationManager implements ICommunicationManager {
             const initialState = stateFactory.createInitialState(
                 this.space,
                 this.userRegistry.getUsers(),
-                this.userRegistry.getUsersToNotify()
+                this.userRegistry.getUsersToNotify(),
             );
             this.lifecycleManager = new StateLifecycleManager(initialState);
             initialState.init().catch((e) => {
@@ -229,7 +229,7 @@ export class CommunicationManager implements ICommunicationManager {
      */
     private async executeImmediateTransitionWithValidation(
         type: CommunicationType,
-        context: TransitionContext
+        context: TransitionContext,
     ): Promise<void> {
         const nextState = await this.orchestrator.executeImmediateTransition(type, context);
 
@@ -279,7 +279,7 @@ export class CommunicationManager implements ICommunicationManager {
             },
             (error) => {
                 console.error("Error during scheduled transition:", error);
-            }
+            },
         );
     }
 
@@ -301,7 +301,7 @@ export class CommunicationManager implements ICommunicationManager {
 
     public handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
-        senderUserId: string
+        senderUserId: string,
     ) {
         this.lifecycleManager
             .getCurrentState()
@@ -330,7 +330,7 @@ export class CommunicationManager implements ICommunicationManager {
         if (!this._recordingManager.hasRecordingSession(request.recordingSessionId)) {
             // Retrying cannot recreate a local recording session that is already gone, so acknowledge as ignored.
             console.warn(
-                `Received LiveKit webhook for missing recording session ${request.recordingSessionId}. Ignoring.`
+                `Received LiveKit webhook for missing recording session ${request.recordingSessionId}. Ignoring.`,
             );
             return;
         }
@@ -344,7 +344,7 @@ export class CommunicationManager implements ICommunicationManager {
             request.rawBody,
             request.authorizationHeader || undefined,
             request.spaceName,
-            request.recordingSessionId
+            request.recordingSessionId,
         );
         if (normalizedRequest === "ignored") {
             return;
@@ -359,7 +359,7 @@ export class CommunicationManager implements ICommunicationManager {
                 this._recordingManager.confirmRecordingStartedByWebhook(
                     request.recordingSessionId,
                     request.egressId,
-                    request.roomName
+                    request.roomName,
                 );
                 return;
             }
@@ -367,7 +367,7 @@ export class CommunicationManager implements ICommunicationManager {
                 const result = this._recordingManager.finishRecordingByWebhook(
                     request.recordingSessionId,
                     request.egressId,
-                    request.roomName
+                    request.roomName,
                 );
                 if (!result.processed || !result.recorder) {
                     return;
@@ -409,7 +409,7 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     private isRecordableState(
-        state: ICommunicationState<ICommunicationStrategy>
+        state: ICommunicationState<ICommunicationStrategy>,
     ): state is IRecordableState<IRecordableStrategy> {
         return "handleStartRecording" in state && "handleStopRecording" in state && "handleLivekitWebhook" in state;
     }

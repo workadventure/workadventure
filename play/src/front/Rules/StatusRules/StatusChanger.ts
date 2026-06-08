@@ -12,7 +12,7 @@ export class StatusChanger {
     constructor(
         private _rulesVerification: StatusRulesVerificationInterface,
         private _StatusStrategyFactory: StatusStrategyFactoryInterface,
-        private _statusStrategy: StatusStrategyInterface = new BasicStatusStrategy()
+        private _statusStrategy: StatusStrategyInterface = new BasicStatusStrategy(),
     ) {
         this._statusStrategy.applyAllRules();
     }

@@ -30,7 +30,7 @@ describe("WAM Setting", () => {
                     updateMegaphoneSettingMessage: { settings: dataToModify },
                 },
             },
-            "test-uuid"
+            "test-uuid",
         );
         await command.execute();
         expect(wamFile?.settings?.megaphone).toEqual(dataToModify);
@@ -50,7 +50,7 @@ describe("WAM Setting", () => {
                     updateRecordingSettingMessage: { settings: recordingData },
                 },
             },
-            "test-recording-uuid"
+            "test-recording-uuid",
         );
         await command.execute();
         expect(wamFile?.settings?.recording).toEqual(recordingData);

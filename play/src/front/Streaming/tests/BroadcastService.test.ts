@@ -47,7 +47,7 @@ describe("BroadcastService", () => {
             FilterType.LIVE_STREAMING_USERS,
             ["screenSharingState", "cameraState", "microphoneState", "megaphoneState"],
             expect.any(AbortSignal),
-            expect.any(Object)
+            expect.any(Object),
         );
     });
 
@@ -82,7 +82,7 @@ describe("BroadcastService", () => {
             FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK,
             ["screenSharingState", "cameraState", "microphoneState", "megaphoneState", "attendeesState"],
             expect.any(AbortSignal),
-            expect.any(Object)
+            expect.any(Object),
         );
     });
 });

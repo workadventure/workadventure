@@ -15,7 +15,7 @@
 export function stableNSort<T extends { uniqueId: string; priority: number }>(
     items: Map<string, T>,
     n: number,
-    currentOrder: string[]
+    currentOrder: string[],
 ): {
     items: T[];
     orderChanged: boolean;

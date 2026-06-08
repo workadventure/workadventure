@@ -47,7 +47,11 @@ export class UploadController {
      */
     private uploadLimiter: Map<string, LimitFunction>;
 
-    constructor(private app: Express, private fileSystem: FileSystemInterface, private mapListService: MapListService) {
+    constructor(
+        private app: Express,
+        private fileSystem: FileSystemInterface,
+        private mapListService: MapListService,
+    ) {
         this.uploadLimiter = new Map<string, LimitFunction>();
         this.index();
         this.postUpload();
@@ -103,7 +107,7 @@ export class UploadController {
                     // Read the contents of the ZIP archive
                     const zipDirectory = await UnzipperOpen.file(zipFile.path);
                     const zipEntries = zipDirectory.files.filter(
-                        (zipEntry) => zipEntry.type !== "Directory" && this.filterFile(zipEntry.path)
+                        (zipEntry) => zipEntry.type !== "Directory" && this.filterFile(zipEntry.path),
                     );
 
                     let totalSize = 0;
@@ -115,7 +119,7 @@ export class UploadController {
 
                     if (totalSize > MAX_UNCOMPRESSED_SIZE) {
                         res.status(413).send(
-                            `File too large. Unzipped files should be less than ${MAX_UNCOMPRESSED_SIZE} bytes.`
+                            `File too large. Unzipped files should be less than ${MAX_UNCOMPRESSED_SIZE} bytes.`,
                         );
                         return;
                     }
@@ -304,7 +308,7 @@ export class UploadController {
                     await limiter(async () => {
                         if (file && file.size > MAX_UNCOMPRESSED_SIZE) {
                             res.status(413).send(
-                                `File too large. Files should be less than ${MAX_UNCOMPRESSED_SIZE} bytes.`
+                                `File too large. Files should be less than ${MAX_UNCOMPRESSED_SIZE} bytes.`,
                             );
                             return;
                         }
@@ -322,7 +326,7 @@ export class UploadController {
                                 content = JSON.stringify(req.body);
                             } else {
                                 throw new Error(
-                                    "Unsupported mime-type. Allowed types are application/json and multipart/form-data."
+                                    "Unsupported mime-type. Allowed types are application/json and multipart/form-data.",
                                 );
                             }
                         }
@@ -399,7 +403,7 @@ export class UploadController {
                     Sentry.captureException(e);
                     next(e);
                 });
-            }
+            },
         );
     }
 
@@ -432,7 +436,7 @@ export class UploadController {
                     let errors: Partial<OrganizedErrors> = {};
 
                     const content = WAMFileFormat.parse(
-                        wamFileMigration.migrate(JSON.parse(await this.fileSystem.readFileAsString(virtualPath)))
+                        wamFileMigration.migrate(JSON.parse(await this.fileSystem.readFileAsString(virtualPath))),
                     );
 
                     // Let's make things easy: if "vendor" or "metadata" is not defined, let's add an empty object.
@@ -449,7 +453,7 @@ export class UploadController {
                         console.error(
                             `[${new Date().toISOString()}] Failed to apply patch on WAM file:`,
                             patchErrors,
-                            typeof patchErrors
+                            typeof patchErrors,
                         );
                         res.status(400).json({
                             patch: patchErrors,
@@ -507,7 +511,7 @@ export class UploadController {
             const tmjContent = JSON.parse(tmjString) as ITiledMap;
             await this.fileSystem.writeStringAsFile(
                 wamPath,
-                JSON.stringify(await this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`, tmjContent), null, 4)
+                JSON.stringify(await this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`, tmjContent), null, 4),
             );
         }
     }
@@ -674,7 +678,7 @@ export class UploadController {
                         } catch (error) {
                             console.error(
                                 `[${new Date().toISOString()}] Failed to execute all request on resourceUrl`,
-                                error
+                                error,
                             );
                         }
                     }

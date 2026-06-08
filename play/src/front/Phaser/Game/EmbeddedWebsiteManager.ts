@@ -65,9 +65,9 @@ export class EmbeddedWebsiteManager {
                     createEmbeddedWebsiteEvent.allowApi ?? false,
                     createEmbeddedWebsiteEvent.allow ?? "",
                     createEmbeddedWebsiteEvent.origin ?? "map",
-                    createEmbeddedWebsiteEvent.scale ?? 1
+                    createEmbeddedWebsiteEvent.scale ?? 1,
                 );
-            }
+            },
         );
 
         this.subscription = iframeListener.modifyEmbeddedWebsiteStream.subscribe(
@@ -75,7 +75,7 @@ export class EmbeddedWebsiteManager {
                 const website = this.embeddedWebsites.get(embeddedWebsiteEvent.name);
                 if (!website) {
                     throw new Error(
-                        'Could not find website with the name "' + embeddedWebsiteEvent.name + '" in your map'
+                        'Could not find website with the name "' + embeddedWebsiteEvent.name + '" in your map',
                     );
                 }
 
@@ -130,7 +130,7 @@ export class EmbeddedWebsiteManager {
                     website.iframe.style.width = website.position.width / embeddedWebsiteEvent.scale + "px";
                     website.iframe.style.height = website.position.height / embeddedWebsiteEvent.scale + "px";
                 }
-            }
+            },
         );
     }
 
@@ -145,7 +145,7 @@ export class EmbeddedWebsiteManager {
         allowApi: boolean,
         allow: string,
         origin: "map" | "player" | undefined,
-        scale: number | undefined
+        scale: number | undefined,
     ): void {
         if (this.embeddedWebsites.has(name)) {
             throw new Error('An embedded website with the name "' + name + '" already exists in your map');
@@ -178,7 +178,7 @@ height,*/
 
     private doCreateEmbeddedWebsite(
         embeddedWebsiteEvent: CreateEmbeddedWebsiteEvent,
-        visible: boolean
+        visible: boolean,
     ): EmbeddedWebsite {
         const absoluteUrl = new URL(embeddedWebsiteEvent.url, this.gameScene.mapUrlFile).toString();
 
@@ -205,7 +205,7 @@ height,*/
             this.gameScene,
             embeddedWebsiteEvent.position.x,
             embeddedWebsiteEvent.position.y,
-            iframe
+            iframe,
         );
         domElement.setOrigin(0, 0);
         if (embeddedWebsiteEvent.scale) {

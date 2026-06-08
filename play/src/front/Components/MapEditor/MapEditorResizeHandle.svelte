@@ -1,10 +1,14 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
 
-    export let minWidth: number;
-    export let maxWidth: number;
-    export let currentWidth: number;
-    export let onResize: (width: number) => void;
+    interface Props {
+        minWidth: number;
+        maxWidth: number;
+        currentWidth: number;
+        onResize: (width: number) => void;
+    }
+
+    let { minWidth, maxWidth, currentWidth, onResize }: Props = $props();
 
     let dragHandle: HTMLElement;
 
@@ -62,7 +66,7 @@
 <div
     bind:this={dragHandle}
     class="relative drag-handle my-auto mr-3 w-1 h-20 outline outline-4 outline-contrast bg-white cursor-col-resize transition-colors rounded-lg select-none"
-/>
+></div>
 
 <style>
     .drag-handle {

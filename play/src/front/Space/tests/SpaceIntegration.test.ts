@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 globalThis.Phaser = Phaser;
 
 import type {
@@ -53,7 +53,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
             | { $case: "kickOffUser"; kickOffUser: KickOffUserPrivateMessage }
             | undefined
         >,
-        receiverUserId: string
+        receiverUserId: string,
     ): void {
         throw new Error("Method not implemented.");
     }
@@ -65,7 +65,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
             | { $case: "muteAudioForEverybody"; muteAudioForEverybody: MuteAudioForEverybodyPublicMessage }
             | { $case: "muteVideoForEverybody"; muteVideoForEverybody: MuteVideoForEverybodyPublicMessage }
             | undefined
-        >
+        >,
     ): void {
         throw new Error("Method not implemented.");
     }
@@ -256,7 +256,7 @@ describe("", () => {
             spaceName,
             FilterType.ALL_USERS,
             ["availabilityStatus", "chatID"],
-            new AbortController().signal
+            new AbortController().signal,
         );
 
         expect(roomConnection.emitJoinSpace).toHaveBeenCalledOnce();
@@ -286,7 +286,7 @@ describe("", () => {
             spaceName,
             FilterType.ALL_USERS,
             ["availabilityStatus", "chatID"],
-            new AbortController().signal
+            new AbortController().signal,
         );
 
         const userFromMessage = {
@@ -342,7 +342,7 @@ describe("", () => {
             spaceName,
             FilterType.ALL_USERS,
             ["availabilityStatus", "chatID"],
-            new AbortController().signal
+            new AbortController().signal,
         );
 
         const userFromMessage = {
@@ -393,7 +393,7 @@ describe("", () => {
             spaceName,
             FilterType.ALL_USERS,
             ["availabilityStatus", "chatID"],
-            new AbortController().signal
+            new AbortController().signal,
         );
 
         const userFromMessage = {
@@ -465,7 +465,7 @@ describe("", () => {
             spaceName,
             FilterType.ALL_USERS,
             ["availabilityStatus", "chatID"],
-            new AbortController().signal
+            new AbortController().signal,
         );
 
         const subscriber = vi.fn();
@@ -512,7 +512,7 @@ describe("", () => {
             spaceName,
             FilterType.ALL_USERS,
             ["availabilityStatus", "chatID"],
-            new AbortController().signal
+            new AbortController().signal,
         );
 
         const subscriber = vi.fn();

@@ -42,7 +42,7 @@ export class AdminWebSocketBackpressureWriter {
 
     public constructor(
         private readonly socket: AdminWebSocketTarget,
-        private readonly options: AdminWebSocketBackpressureWriterOptions
+        private readonly options: AdminWebSocketBackpressureWriterOptions,
     ) {}
 
     public send(payload: string, writeOptions: BackpressureWriteOptions = {}): SendStatus {
@@ -99,7 +99,7 @@ export class AdminWebSocketBackpressureWriter {
     private enqueue(message: QueuedPayload): void {
         if (message.priority === "volatile" && message.coalesceKey) {
             const existingIndex = this.queue.findIndex(
-                (queued) => queued.priority === "volatile" && queued.coalesceKey === message.coalesceKey
+                (queued) => queued.priority === "volatile" && queued.coalesceKey === message.coalesceKey,
             );
 
             if (existingIndex !== -1) {

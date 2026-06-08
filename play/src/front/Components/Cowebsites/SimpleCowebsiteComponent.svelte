@@ -3,10 +3,14 @@
     import { iframeListener } from "../../Api/IframeListener";
     import type { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 
-    export let actualCowebsite: SimpleCoWebsite;
-    export let visible: boolean;
     let iframeSimpleCowebsite: HTMLIFrameElement;
-    export let allowApi: boolean;
+    interface Props {
+        actualCowebsite: SimpleCoWebsite;
+        visible: boolean;
+        allowApi: boolean;
+    }
+
+    let { actualCowebsite, visible, allowApi }: Props = $props();
 
     onMount(() => {
         if (allowApi) {
@@ -30,6 +34,6 @@
             allow={actualCowebsite.getAllowPolicy()}
             title="Cowebsite"
             class="bg-white w-full h-full"
-        />
+        ></iframe>
     </div>
 </div>

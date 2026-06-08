@@ -1,43 +1,51 @@
 <script lang="ts">
-    import { closeModal } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { matrixSecurity } from "./MatrixSecurity";
+    import { modals } from "@wa-modals";
 
-    export let isOpen: boolean;
+    interface Props {
+        isOpen: boolean;
+    }
+
+    let { isOpen }: Props = $props();
 
     function startVerificationWithPassphrase() {
         matrixSecurity.initClientCryptoConfiguration().catch((error) => {
             console.error("Failed to startVerificationWithPassphrase : ", error);
         });
-        closeModal();
+        modals.close();
     }
 
     function startVerificationWithOtherDevice() {
         matrixSecurity.verifyOwnDevice().catch((error) => {
             console.error("Failed to verify own device : ", error);
         });
-        closeModal();
+        modals.close();
     }
 </script>
 
 <Popup {isOpen}>
-    <h1 slot="title">{$LL.chat.chooseDeviceVerificationMethodModal.title()}</h1>
-    <div slot="content" class="w-full flex justify-center">
-        {$LL.chat.chooseDeviceVerificationMethodModal.description()}
-    </div>
-    <svelte:fragment slot="action">
+    {#snippet title()}
+        <h1>{$LL.chat.chooseDeviceVerificationMethodModal.title()}</h1>
+    {/snippet}
+    {#snippet content()}
+        <div class="w-full flex justify-center">
+            {$LL.chat.chooseDeviceVerificationMethodModal.description()}
+        </div>
+    {/snippet}
+    {#snippet action()}
         <button
             data-testid="VerifyWithAnotherDeviceButton"
             class="btn btn-secondary bg-secondary flex-1 justify-center"
-            on:click={startVerificationWithOtherDevice}
+            onclick={startVerificationWithOtherDevice}
             >{$LL.chat.chooseDeviceVerificationMethodModal.withOtherDevice()}
         </button>
         <button
             data-testid="VerifyWithPassphraseButton"
             class="btn btn-secondary bg-secondary flex-1 justify-center"
-            on:click={startVerificationWithPassphrase}
+            onclick={startVerificationWithPassphrase}
             >{$LL.chat.chooseDeviceVerificationMethodModal.withPassphrase()}
         </button>
-    </svelte:fragment>
+    {/snippet}
 </Popup>

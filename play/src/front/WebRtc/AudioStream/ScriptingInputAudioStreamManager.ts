@@ -62,7 +62,7 @@ export class ScriptingInputAudioStreamManager {
                     type: "appendPCMData",
                     data: { data: data as Float32Array<ArrayBuffer> },
                 },
-                undefined /*, [data.buffer]*/
+                undefined /*, [data.buffer]*/,
             );
             // Note: if we try to transfer the buffer, we get the following error:
             //      ArrayBuffer already detached.

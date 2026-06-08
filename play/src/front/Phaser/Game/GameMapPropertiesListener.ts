@@ -54,7 +54,10 @@ export class GameMapPropertiesListener {
 
     private actionTriggerCallback = new Map<string, () => void>();
 
-    constructor(private scene: GameScene, private gameMapFrontWrapper: GameMapFrontWrapper) {
+    constructor(
+        private scene: GameScene,
+        private gameMapFrontWrapper: GameMapFrontWrapper,
+    ) {
         this.areasPropertiesListener = new AreasPropertiesListener(scene);
     }
 
@@ -97,7 +100,7 @@ export class GameMapPropertiesListener {
                             },
                             userInputManager: this.scene.userInputManager,
                         },
-                        "openTab"
+                        "openTab",
                     );
                     // TODO: this is the old new way of doing popups
                     // Create callback and play text message
@@ -157,7 +160,7 @@ export class GameMapPropertiesListener {
                 const roomName = Jitsi.slugifyJitsiRoomName(
                     newValue.toString(),
                     this.scene.roomUrl,
-                    allProps.has(GameMapProperties.JITSI_NO_PREFIX)
+                    allProps.has(GameMapProperties.JITSI_NO_PREFIX),
                 );
                 const isJitsiUrl = z.string().optional().safeParse(allProps.get(GameMapProperties.JITSI_URL));
                 let jitsiUrl = isJitsiUrl.success ? isJitsiUrl.data : undefined;
@@ -200,12 +203,12 @@ export class GameMapPropertiesListener {
 
                 const jitsiConfig = this.safeParseJSONstring(
                     isJitsiConfig.success ? isJitsiConfig.data : undefined,
-                    GameMapProperties.JITSI_CONFIG
+                    GameMapProperties.JITSI_CONFIG,
                 );
 
                 const jitsiInterfaceConfig = this.safeParseJSONstring(
                     isJitsiInterfaceConfig.success ? isJitsiInterfaceConfig.data : undefined,
-                    GameMapProperties.JITSI_INTERFACE_CONFIG
+                    GameMapProperties.JITSI_INTERFACE_CONFIG,
                 );
 
                 const isJitsiClosable = z
@@ -227,7 +230,7 @@ export class GameMapPropertiesListener {
                     jwt,
                     jitsiConfig,
                     jitsiInterfaceConfig,
-                    jitsiRoomAdminTag
+                    jitsiRoomAdminTag,
                 );
 
                 coWebsites.add(coWebsite);
@@ -273,7 +276,7 @@ export class GameMapPropertiesListener {
                         },
                         userInputManager: this.scene.userInputManager,
                     },
-                    "jitsi"
+                    "jitsi",
                 );
                 // TODO: this is the old new way of doing popups
                 // Create callback and play text message
@@ -351,8 +354,8 @@ export class GameMapPropertiesListener {
                         Room.getRoomPathFromExitSceneUrl(
                             newValue as string,
                             window.location.toString(),
-                            this.scene.mapUrlFile
-                        )
+                            this.scene.mapUrlFile,
+                        ),
                     )
                     .catch((e) => console.error(e));
             } else {
@@ -477,13 +480,13 @@ export class GameMapPropertiesListener {
 
         this.gameMapFrontWrapper.onEnterDynamicArea((newAreas) => {
             this.onEnterPlaceHandler(
-                newAreas.map((area) => this.gameMapFrontWrapper.mapDynamicAreaToTiledObject(area))
+                newAreas.map((area) => this.gameMapFrontWrapper.mapDynamicAreaToTiledObject(area)),
             );
         });
 
         this.gameMapFrontWrapper.onLeaveDynamicArea((oldAreas) => {
             this.onLeavePlaceHandler(
-                oldAreas.map((area) => this.gameMapFrontWrapper.mapDynamicAreaToTiledObject(area))
+                oldAreas.map((area) => this.gameMapFrontWrapper.mapDynamicAreaToTiledObject(area)),
             );
         });
     }
@@ -532,7 +535,7 @@ export class GameMapPropertiesListener {
     private onUpdateAreasHandler(
         area: AreaData,
         oldProperties: AreaDataProperties | undefined,
-        newProperties: AreaDataProperties | undefined
+        newProperties: AreaDataProperties | undefined,
     ): void {
         this.areasPropertiesListener.onUpdateAreasHandler(area, oldProperties, newProperties);
     }
@@ -636,7 +639,7 @@ export class GameMapPropertiesListener {
                 websitePolicyProperty,
                 websiteWidthProperty,
                 websiteClosableProperty,
-                websiteHideUrlProperty
+                websiteHideUrlProperty,
             );
 
             coWebsiteOpen.coWebsite = coWebsite;
@@ -670,7 +673,7 @@ export class GameMapPropertiesListener {
                     },
                     userInputManager: this.scene.userInputManager,
                 },
-                actionId
+                actionId,
             );
             // TODO: this is the old new way of doing popups
             // Create callback and play text message
@@ -710,7 +713,7 @@ export class GameMapPropertiesListener {
                 allowApiProperty,
                 websitePolicyProperty,
                 websiteWidthProperty,
-                websiteClosableProperty
+                websiteClosableProperty,
             );
 
             coWebsiteOpen.coWebsite = coWebsite;
@@ -736,7 +739,7 @@ export class GameMapPropertiesListener {
             // TODO remove this log after testing
             console.info(
                 "handleSpeakerMegaphonePropertiesOnEnter => joinSpace => speakerZone.value : ",
-                speakerZone.value
+                speakerZone.value,
             );
             const space = await this.scene.broadcastService.joinSpace(speakerZone.value, abortSignal);
             currentLiveStreamingSpaceStore.set(space);
@@ -760,24 +763,24 @@ export class GameMapPropertiesListener {
 
     private async handleListenerMegaphonePropertiesOnEnter(
         place: ITiledPlace,
-        abortSignal: AbortSignal
+        abortSignal: AbortSignal,
     ): Promise<void> {
         if (!place.properties) {
             return;
         }
         const listenerZone = place.properties.find(
-            (property) => property.name === GameMapProperties.LISTENER_MEGAPHONE
+            (property) => property.name === GameMapProperties.LISTENER_MEGAPHONE,
         );
         if (listenerZone && listenerZone.type === "string" && listenerZone.value !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
                 gameManager.getCurrentGameScene().getGameMap().getWamFile()?.getGameMapAreas().getAreas(),
-                listenerZone.value
+                listenerZone.value,
             );
             if (speakerZoneName) {
                 // TODO remove this log after testing
                 console.info(
                     "handleListenerMegaphonePropertiesOnEnter => joinSpace => speakerZoneName : ",
-                    speakerZoneName
+                    speakerZoneName,
                 );
                 const space = await this.scene.broadcastService.joinSpace(speakerZoneName, abortSignal);
                 currentLiveStreamingSpaceStore.set(space);
@@ -790,12 +793,12 @@ export class GameMapPropertiesListener {
             return;
         }
         const listenerZone = place.properties.find(
-            (property) => property.name === GameMapProperties.LISTENER_MEGAPHONE
+            (property) => property.name === GameMapProperties.LISTENER_MEGAPHONE,
         );
         if (listenerZone && listenerZone.type === "string" && listenerZone.value !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
                 gameManager.getCurrentGameScene().getGameMap().getWamFile()?.getGameMapAreas().getAreas(),
-                listenerZone.value
+                listenerZone.value,
             );
             if (speakerZoneName) {
                 currentLiveStreamingSpaceStore.set(undefined);
@@ -817,7 +820,7 @@ export class GameMapPropertiesListener {
         const focusable = place.properties.find((property) => property.name === GameMapProperties.FOCUSABLE);
         if (focusable && focusable.value === true) {
             const zoomMargin = place.properties.find((property) =>
-                [GameMapProperties.ZOOM_MARGIN, "zoom_margin"].includes(property.name)
+                [GameMapProperties.ZOOM_MARGIN, "zoom_margin"].includes(property.name),
             );
             this.scene.getCameraManager().enterFocusMode(
                 {
@@ -826,7 +829,7 @@ export class GameMapPropertiesListener {
                     width: place.width,
                     height: place.height,
                 },
-                zoomMargin ? Math.max(0, Number(zoomMargin.value)) : undefined
+                zoomMargin ? Math.max(0, Number(zoomMargin.value)) : undefined,
             );
         }
     }

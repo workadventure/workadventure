@@ -1,6 +1,5 @@
 import net from 'node:net';
 
-// @ts-ignore
 export default async function isPortReachable(port: number, {host, timeout = 1000}: {host:string, timeout?:number} = {}) {
 
 	const testConnection = (resolve:(value: unknown)=>void, reject:(value: unknown)=>void) => {

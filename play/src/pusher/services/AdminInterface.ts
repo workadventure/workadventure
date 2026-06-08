@@ -29,7 +29,7 @@ export interface AdminInterface {
         companionTextureId?: string,
         locale?: string,
         tags?: string[],
-        chatID?: string
+        chatID?: string,
     ): Promise<FetchMemberDataByUuidResponse>;
 
     /**
@@ -40,7 +40,7 @@ export interface AdminInterface {
     fetchMapDetails(
         playUri: string,
         authToken?: string,
-        locale?: string
+        locale?: string,
     ): Promise<MapDetailsData | RoomRedirect | ErrorApiData>;
 
     /**
@@ -52,7 +52,7 @@ export interface AdminInterface {
     fetchMemberDataByToken(
         organizationMemberToken: string,
         playUri: string | null,
-        locale?: string
+        locale?: string,
     ): Promise<AdminApiData>;
 
     /**
@@ -73,7 +73,7 @@ export interface AdminInterface {
         reportedUserComment: string,
         reporterUserUuid: string,
         roomUrl: string,
-        locale?: string
+        locale?: string,
     ): Promise<unknown>;
 
     /**
@@ -96,7 +96,7 @@ export interface AdminInterface {
         roomUrl: string,
         locale?: string,
         tags?: string[],
-        bypassTagFilter?: boolean
+        bypassTagFilter?: boolean,
     ): Promise<ShortMapDescriptionList>;
 
     /**
@@ -116,7 +116,7 @@ export interface AdminInterface {
         playUri: string,
         name: string,
         message: string,
-        byUserUuid: string
+        byUserUuid: string,
     ): Promise<boolean>;
 
     getTagsList(roomUrl: string): Promise<string[]>;

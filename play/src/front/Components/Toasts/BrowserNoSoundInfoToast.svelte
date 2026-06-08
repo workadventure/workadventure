@@ -9,7 +9,11 @@
     import { isNotSuspendedAudioContextStore } from "../../Stores/AudioContextStore";
     import ToastContainer from "./ToastContainer.svelte";
 
-    export let toastUuid: string;
+    interface Props {
+        toastUuid: string;
+    }
+
+    let { toastUuid }: Props = $props();
 
     let isNotSuspendedAudioContextStoreSubscription: Unsubscriber | undefined;
     let intervalId: ReturnType<typeof setInterval> | undefined;
@@ -65,14 +69,18 @@
             {$LL.statusModal.soundBlockedBackInAMoment()}
         </p>
     </div>
-    <svelte:fragment slot="buttons">
+    {#snippet buttons()}
         <button
             type="button"
             class="btn btn-secondary btn-sm flex-1"
             data-testid="do-not-disturb-activate"
-            on:click|stopPropagation|preventDefault={closeToast}
+            onclick={(event) => {
+                event.stopPropagation();
+                event.preventDefault();
+                closeToast();
+            }}
         >
             {$LL.statusModal.turnSoundOn()}
         </button>
-    </svelte:fragment>
+    {/snippet}
 </ToastContainer>

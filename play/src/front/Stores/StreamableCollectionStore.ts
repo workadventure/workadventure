@@ -160,13 +160,13 @@ export const isInRemoteConversation = derived(
         }
 
         return false;
-    }
+    },
 );
 
 const isInActiveConversationStore = derived(
     [isInRemoteConversation, currentPlayerGroupIdStore, inLivekitStore],
     ([$isInRemoteConversation, $currentPlayerGroupIdStore, $inLivekitStore]) =>
-        $isInRemoteConversation || $currentPlayerGroupIdStore !== undefined || $inLivekitStore
+        $isInRemoteConversation || $currentPlayerGroupIdStore !== undefined || $inLivekitStore,
 );
 
 /**
@@ -206,7 +206,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 $isListenerStore,
                 $listenerSharingCameraStore,
                 $availabilityStatusStore,
-            ] /*, set*/
+            ] /*, set*/,
         ) => {
             const peers = new Map<string, VideoBox>();
 
@@ -256,7 +256,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             }
 
             return peers;
-        }
+        },
     );
 }
 

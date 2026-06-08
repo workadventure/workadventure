@@ -63,7 +63,7 @@ const mapStorageServer: MapStorageServer = {
     },
     handleClearAfterUpload(
         call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
-        callback: sendUnaryData<Empty>
+        callback: sendUnaryData<Empty>,
     ): void {
         const wamUrl = call.request.wamUrl;
         const url = new URL(wamUrl);
@@ -73,7 +73,7 @@ const mapStorageServer: MapStorageServer = {
     },
     handleUpdateMapToNewestMessage(
         call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, Empty>,
-        callback: sendUnaryData<EditMapCommandsArrayMessage>
+        callback: sendUnaryData<EditMapCommandsArrayMessage>,
     ): void {
         try {
             const mapUrl = new URL(call.request.mapKey);
@@ -103,7 +103,7 @@ const mapStorageServer: MapStorageServer = {
 
     handleEditMapCommandWithKeyMessage(
         call: ServerUnaryCall<EditMapCommandWithKeyMessage, Empty>,
-        callback: sendUnaryData<EditMapCommandMessage>
+        callback: sendUnaryData<EditMapCommandMessage>,
     ): void {
         (async () => {
             const editMapCommandMessage = call.request.editMapCommandMessage;
@@ -137,7 +137,7 @@ const mapStorageServer: MapStorageServer = {
                 if (!userCanEdit && !COMMANDS_ACCESSIBLE_WITHOUT_CAN_EDIT.has(editMapMessage.$case)) {
                     // A user tried to bypass security!
                     throw new Error(
-                        `User ${userUUID} is not allowed to edit the map but tried to execute command: ${editMapMessage.$case} on map ${mapUrl}`
+                        `User ${userUUID} is not allowed to edit the map but tried to execute command: ${editMapMessage.$case} on map ${mapUrl}`,
                     );
                 }
 
@@ -150,7 +150,7 @@ const mapStorageServer: MapStorageServer = {
                             // (e.g., personal area data) or a WAM section accessible to all users.
                             if (!isModifyAreaMessageOnlyClaim(message, userUUID, existingArea)) {
                                 throw new Error(
-                                    `User ${userUUID} is not allowed to edit the map and this modification is not a valid claim or revoke on map ${mapUrl}`
+                                    `User ${userUUID} is not allowed to edit the map and this modification is not a valid claim or revoke on map ${mapUrl}`,
                                 );
                             }
                         }
@@ -172,8 +172,8 @@ const mapStorageServer: MapStorageServer = {
                                     commandId,
                                     area,
                                     hookManager,
-                                    mapUrl.hostname
-                                )
+                                    mapUrl.hostname,
+                                ),
                             );
 
                             const newAreaData = wamFile.getGameMapAreas().getArea(message.id);
@@ -183,26 +183,32 @@ const mapStorageServer: MapStorageServer = {
                                     AreaDataProperties.safeParse(editMapMessage.modifyAreaMessage.properties).data ||
                                     [];
 
-                                const oldServerData = oldPropertiesParsed.reduce((acc, currProperty) => {
-                                    if (currProperty.serverData) {
-                                        acc.push({
-                                            id: currProperty.id,
-                                            serverData: currProperty.serverData,
-                                        });
-                                    }
+                                const oldServerData = oldPropertiesParsed.reduce(
+                                    (acc, currProperty) => {
+                                        if (currProperty.serverData) {
+                                            acc.push({
+                                                id: currProperty.id,
+                                                serverData: currProperty.serverData,
+                                            });
+                                        }
 
-                                    return acc;
-                                }, [] as { id: string; serverData: unknown }[]);
+                                        return acc;
+                                    },
+                                    [] as { id: string; serverData: unknown }[],
+                                );
 
-                                const newServerData = newAreaData.properties.reduce((acc, currProperty) => {
-                                    if (currProperty.serverData) {
-                                        acc.push({
-                                            id: currProperty.id,
-                                            serverData: currProperty.serverData,
-                                        });
-                                    }
-                                    return acc;
-                                }, [] as { id: string; serverData: unknown }[]);
+                                const newServerData = newAreaData.properties.reduce(
+                                    (acc, currProperty) => {
+                                        if (currProperty.serverData) {
+                                            acc.push({
+                                                id: currProperty.id,
+                                                serverData: currProperty.serverData,
+                                            });
+                                        }
+                                        return acc;
+                                    },
+                                    [] as { id: string; serverData: unknown }[],
+                                );
 
                                 editMapMessage.modifyAreaMessage = {
                                     ...newAreaData,
@@ -223,7 +229,7 @@ const mapStorageServer: MapStorageServer = {
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
-                            new CreateAreaCommand(wamFile, areaObjectConfig, commandId)
+                            new CreateAreaCommand(wamFile, areaObjectConfig, commandId),
                         );
                         break;
                     }
@@ -237,8 +243,8 @@ const mapStorageServer: MapStorageServer = {
                                 message.id,
                                 commandId,
                                 mapUrl.hostname,
-                                hookManager
-                            )
+                                hookManager,
+                            ),
                         );
                         break;
                     }
@@ -258,7 +264,7 @@ const mapStorageServer: MapStorageServer = {
                             if (
                                 entityCommandPermissions &&
                                 !entityCommandPermissions.canEdit(
-                                    getEntityCenterCoordinates({ x, y }, { width, height })
+                                    getEntityCenterCoordinates({ x, y }, { width, height }),
                                 )
                             ) {
                                 Sentry.captureException("User is not allowed to modify the entity on map");
@@ -274,8 +280,8 @@ const mapStorageServer: MapStorageServer = {
                                     commandId,
                                     entity,
                                     hookManager,
-                                    mapUrl.hostname
-                                )
+                                    mapUrl.hostname,
+                                ),
                             );
                         } else {
                             console.info(`[${new Date().toISOString()}] Could not find entity with id: ${message.id}`);
@@ -308,8 +314,8 @@ const mapStorageServer: MapStorageServer = {
                                     properties: message.properties as EntityDataProperties,
                                     name: message.name,
                                 },
-                                commandId
-                            )
+                                commandId,
+                            ),
                         );
                         break;
                     }
@@ -323,29 +329,33 @@ const mapStorageServer: MapStorageServer = {
                                 message.id,
                                 commandId,
                                 mapUrl.hostname,
-                                hookManager
-                            )
+                                hookManager,
+                            ),
                         );
                         break;
                     }
                     case "uploadEntityMessage": {
                         const uploadEntityMessage = editMapMessage.uploadEntityMessage;
                         await entitiesManager.executeCommand(
-                            new UploadEntityMapStorageCommand(uploadEntityMessage, mapUrl.hostname)
+                            new UploadEntityMapStorageCommand(uploadEntityMessage, mapUrl.hostname),
                         );
                         break;
                     }
                     case "modifyCustomEntityMessage": {
                         const modifyCustomEntityMessage = editMapMessage.modifyCustomEntityMessage;
                         await entitiesManager.executeCommand(
-                            new ModifyCustomEntityMapStorageCommand(modifyCustomEntityMessage, mapUrl.hostname)
+                            new ModifyCustomEntityMapStorageCommand(modifyCustomEntityMessage, mapUrl.hostname),
                         );
                         break;
                     }
                     case "deleteCustomEntityMessage": {
                         const deleteCustomEntityMessage = editMapMessage.deleteCustomEntityMessage;
                         await entitiesManager.executeCommand(
-                            new DeleteCustomEntityMapStorageCommand(deleteCustomEntityMessage, wamFile, mapUrl.hostname)
+                            new DeleteCustomEntityMapStorageCommand(
+                                deleteCustomEntityMessage,
+                                wamFile,
+                                mapUrl.hostname,
+                            ),
                         );
                         break;
                     }
@@ -355,7 +365,7 @@ const mapStorageServer: MapStorageServer = {
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
-                            new UpdateWAMSettingCommand(wam, message, commandId)
+                            new UpdateWAMSettingCommand(wam, message, commandId),
                         );
                         break;
                     }
@@ -369,14 +379,14 @@ const mapStorageServer: MapStorageServer = {
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
-                            new UpdateWAMMetadataCommand(wam, message, commandId)
+                            new UpdateWAMMetadataCommand(wam, message, commandId),
                         );
                         break;
                     }
                     case "uploadFileMessage": {
                         const uploadFileMessage = editMapMessage.uploadFileMessage;
                         await entitiesManager.executeCommand(
-                            new UploadFileMapStorageCommand(uploadFileMessage, mapUrl.hostname)
+                            new UploadFileMapStorageCommand(uploadFileMessage, mapUrl.hostname),
                         );
                         editMapMessage.uploadFileMessage.file = new Uint8Array(0);
                         break;

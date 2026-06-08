@@ -127,7 +127,7 @@ function createThreadReplyEvent(options?: { isFallback?: boolean; replyTargetId?
                 },
             },
         },
-    } as never);
+    });
 
     vi.spyOn(event, "threadRootId", "get").mockReturnValue("$root");
     vi.spyOn(event, "replyEventId", "get").mockReturnValue(options?.replyTargetId ?? "$root");

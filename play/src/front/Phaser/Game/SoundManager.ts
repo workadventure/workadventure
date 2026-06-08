@@ -1,6 +1,6 @@
-import LoaderPlugin = Phaser.Loader.LoaderPlugin;
-import BaseSoundManager = Phaser.Sound.BaseSoundManager;
-import BaseSound = Phaser.Sound.BaseSound;
+type LoaderPlugin = Phaser.Loader.LoaderPlugin;
+type BaseSoundManager = Phaser.Sound.BaseSoundManager;
+type BaseSound = Phaser.Sound.BaseSound;
 
 class SoundManager {
     private soundPromises: Map<string, Promise<BaseSound>> = new Map<string, Promise<Phaser.Sound.BaseSound>>();
@@ -29,7 +29,7 @@ class SoundManager {
         loadPlugin: LoaderPlugin,
         soundManager: BaseSoundManager,
         soundUrl: string,
-        config: Phaser.Types.Sound.SoundConfig | undefined
+        config: Phaser.Types.Sound.SoundConfig | undefined,
     ): Promise<void> {
         const sound = await this.loadSound(loadPlugin, soundManager, soundUrl);
         if (config === undefined) sound.play();

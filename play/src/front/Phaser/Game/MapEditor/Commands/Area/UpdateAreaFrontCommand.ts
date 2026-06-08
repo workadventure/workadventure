@@ -12,7 +12,7 @@ export class UpdateAreaFrontCommand extends UpdateAreaCommand implements FrontCo
         commandId: string | undefined,
         oldConfig: AtLeast<AreaData, "id"> | undefined,
         private areaEditorTool: AreaEditorTool,
-        private gameMapFrontWrapper: GameMapFrontWrapper
+        private gameMapFrontWrapper: GameMapFrontWrapper,
     ) {
         super(wamFile, dataToModify, commandId, oldConfig);
     }
@@ -33,7 +33,7 @@ export class UpdateAreaFrontCommand extends UpdateAreaCommand implements FrontCo
             undefined,
             this.newConfig,
             this.areaEditorTool,
-            this.gameMapFrontWrapper
+            this.gameMapFrontWrapper,
         );
     }
 

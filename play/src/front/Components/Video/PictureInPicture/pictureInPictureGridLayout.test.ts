@@ -61,7 +61,7 @@ describe("pictureInPictureGridLayout", () => {
                     columnEnd: 3,
                     rowStart: 2,
                     rowEnd: 4,
-                })
+                }),
             ).toBe("grid-column: 1 / 3; grid-row: 2 / 4;");
         });
     });

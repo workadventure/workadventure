@@ -40,7 +40,7 @@ export class WebHookService {
                         ...headers,
                     },
                     timeout: 10000,
-                }
+                },
             )
             .then((r) => {
                 console.debug(`[${new Date().toISOString()}] Webhook called successfully: ${r.status} ${r.statusText}`);
@@ -50,7 +50,7 @@ export class WebHookService {
                 Sentry.captureException(
                     `Error while calling webhook: ${JSON.stringify(e)}. Domain: ${domain}, mapPath: ${
                         mapPath ?? "no map path"
-                    }, action: ${action}`
+                    }, action: ${action}`,
                 );
             });
     }

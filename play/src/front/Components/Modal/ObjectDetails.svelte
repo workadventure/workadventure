@@ -28,7 +28,7 @@
     let iconProperties = writable<Map<string, AddPropertyButtonType>>(new Map());
     let oldEntity: Entity | AreaPreview | undefined;
     let mapExplorationObjectSelectedStoreSubscription: Unsubscriber;
-    let description: string | undefined;
+    let description: string | undefined = $state();
 
     onMount(() => {
         if ($mapExplorationObjectSelectedStore instanceof Entity) {
@@ -146,7 +146,7 @@
                         y: $mapExplorationObjectSelectedStore.y,
                     },
                     true,
-                    WOKA_SPEED * 2.5
+                    WOKA_SPEED * 2.5,
                 )
                 .catch((error) => {
                     console.warn("Error while moving to the entity or area", error);
@@ -165,25 +165,28 @@
         }
     }
 
-    $: actionButtonText =
+    let actionButtonText = $derived(
         $mapExplorationObjectSelectedStore instanceof Entity ||
-        $mapExplorationObjectSelectedStore instanceof AreaPreview
+            $mapExplorationObjectSelectedStore instanceof AreaPreview
             ? $mapExplorationObjectSelectedStore.actionButtonLabel
-            : "";
+            : "",
+    );
 
-    $: objectDisplayName = (() => {
-        if ($mapExplorationObjectSelectedStore instanceof Entity) {
-            const name = $mapExplorationObjectSelectedStore.getEntityData().name;
-            if (name != undefined && name != "") return name;
-            return $mapExplorationObjectSelectedStore.getPrefab().name;
-        }
-        if ($mapExplorationObjectSelectedStore instanceof AreaPreview) {
-            const name = $mapExplorationObjectSelectedStore.getAreaData().name;
-            if (name != undefined && name != "") return name;
-            return $mapExplorationObjectSelectedStore.nameFromProperties;
-        }
-        return "";
-    })();
+    let objectDisplayName = $derived(
+        (() => {
+            if ($mapExplorationObjectSelectedStore instanceof Entity) {
+                const name = $mapExplorationObjectSelectedStore.getEntityData().name;
+                if (name != undefined && name != "") return name;
+                return $mapExplorationObjectSelectedStore.getPrefab().name;
+            }
+            if ($mapExplorationObjectSelectedStore instanceof AreaPreview) {
+                const name = $mapExplorationObjectSelectedStore.getAreaData().name;
+                if (name != undefined && name != "") return name;
+                return $mapExplorationObjectSelectedStore.nameFromProperties;
+            }
+            return "";
+        })(),
+    );
 </script>
 
 <div class="absolute bottom-0 w-full h-fit flex flex-row justify-center">
@@ -212,10 +215,10 @@
             </div>
             <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
                 <div class="flex flex-row justify-center w-full gap-2">
-                    <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}
+                    <button class="btn btn-outline w-full hover:bg-contrast-600/50" onclick={close}
                         >{$LL.mapEditor.explorer.details.close()}
                     </button>
-                    <button class="btn btn-secondary w-full whitespace-nowrap" on:click={goTo}>
+                    <button class="btn btn-secondary w-full whitespace-nowrap" onclick={goTo}>
                         {actionButtonText}
                     </button>
                 </div>
@@ -236,10 +239,10 @@
             </div>
             <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
                 <div class="flex flex-row justify-center w-full gap-2">
-                    <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}>
+                    <button class="btn btn-outline w-full hover:bg-contrast-600/50" onclick={close}>
                         {$LL.mapEditor.explorer.details.close()}
                     </button>
-                    <button class="btn btn-secondary w-full whitespace-nowrap" on:click={goTo}>
+                    <button class="btn btn-secondary w-full whitespace-nowrap" onclick={goTo}>
                         {actionButtonText}
                     </button>
                 </div>

@@ -19,7 +19,11 @@ export class LocateManager {
     private locatePositionClearProgressTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
     private wokaMenuStoreUnsubscriber?: () => void;
 
-    constructor(private scene: GameScene, private cameraManager: CameraManager, private connection: RoomConnection) {
+    constructor(
+        private scene: GameScene,
+        private cameraManager: CameraManager,
+        private connection: RoomConnection,
+    ) {
         this.subscribeToLocatePositionMessages();
         this.subscribeToWokaMenuStore();
         wokaMenuProgressStore.set(undefined);
@@ -113,7 +117,7 @@ export class LocateManager {
             const progressPercent = Math.min((progressStep / 10) * 100, 90);
             const messageIndex = Math.min(
                 Math.floor((progressStep / 10) * progressMessages.length),
-                progressMessages.length - 1
+                progressMessages.length - 1,
             );
 
             wokaMenuProgressStore.set({

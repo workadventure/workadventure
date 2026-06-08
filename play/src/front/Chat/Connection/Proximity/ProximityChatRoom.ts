@@ -72,7 +72,7 @@ export class ProximityChatMessage implements ChatMessage {
         public content: Readable<ChatMessageContent>,
         public date: Date,
         public isMyMessage: boolean,
-        public type: ChatMessageType
+        public type: ChatMessageType,
     ) {}
 
     remove(): void {
@@ -193,11 +193,11 @@ export class ProximityChatRoom implements ChatRoom {
                     message.sender.username ?? "unknown",
                     get(message.content).body,
                     this.id,
-                    get(this.name)
-                )
+                    get(this.name),
+                ),
             );
         },
-        private _shouldDisableChatInProximityRoomStore: Writable<boolean> = shouldDisableChatInProximityRoomStore
+        private _shouldDisableChatInProximityRoomStore: Writable<boolean> = shouldDisableChatInProximityRoomStore,
     ) {
         this.typingMembers = writable([]);
 
@@ -256,7 +256,7 @@ export class ProximityChatRoom implements ChatRoom {
             writable(newChatMessageContent),
             new Date(),
             true,
-            action
+            action,
         );
 
         // Add message to the list
@@ -314,7 +314,7 @@ export class ProximityChatRoom implements ChatRoom {
         message: string,
         senderUserId: string,
         characterTextures: CharacterTextureMessage[],
-        name: string
+        name: string,
     ): void {
         // Ignore messages from the current user
         if (senderUserId === this._spaceUserId) {
@@ -357,7 +357,7 @@ export class ProximityChatRoom implements ChatRoom {
             writable(newChatMessageContent),
             new Date(),
             false,
-            "proximity"
+            "proximity",
         );
 
         // Add message to the list
@@ -407,7 +407,7 @@ export class ProximityChatRoom implements ChatRoom {
             writable(newChatMessageContent),
             new Date(),
             false,
-            "proximity"
+            "proximity",
         );
 
         // Add message to the list
@@ -450,7 +450,7 @@ export class ProximityChatRoom implements ChatRoom {
     private addTypingUser(
         senderUserId: string,
         characterTextures: CharacterTextureMessage[],
-        name: string | undefined
+        name: string | undefined,
     ): void {
         this.typingMembers.update((typingMembers) => {
             if (typingMembers.find((user) => user.id === senderUserId) == undefined) {
@@ -516,7 +516,7 @@ export class ProximityChatRoom implements ChatRoom {
         isMeetingRoomChat: boolean = false,
         filterType: FilterType = FilterType.ALL_USERS,
         disableChat: boolean = false,
-        signal?: AbortSignal
+        signal?: AbortSignal,
     ): Promise<SpaceInterface> {
         if (this.joinSpaceAbortController) {
             this.joinSpaceAbortController.abort(new AbortError("A space is already being joined"));
@@ -605,7 +605,7 @@ export class ProximityChatRoom implements ChatRoom {
                 event.spaceMessage.message,
                 event.sender,
                 event.spaceMessage.characterTextures ?? [],
-                event.spaceMessage.name ?? ""
+                event.spaceMessage.name ?? "",
             );
 
             // Get the last message to use for notification
@@ -839,7 +839,7 @@ export class ProximityChatRoom implements ChatRoom {
         throw new AbortError(
             typeof joinSignal.reason === "object" && joinSignal.reason instanceof Error
                 ? joinSignal.reason.message
-                : "Join space aborted"
+                : "Join space aborted",
         );
     }
 
@@ -871,7 +871,7 @@ export class ProximityChatRoom implements ChatRoom {
                     subscription.unsubscribe();
                     reject(asError(eventToAbortReason(event)));
                 },
-                { once: true }
+                { once: true },
             );
         });
     }
@@ -920,7 +920,7 @@ export class ProximityChatRoom implements ChatRoom {
         }
         if (space.getName() !== spaceName) {
             console.error(
-                "Trying to leave a space different from the one joined : " + space.getName() + " !== " + spaceName
+                "Trying to leave a space different from the one joined : " + space.getName() + " !== " + spaceName,
             );
             return;
         }

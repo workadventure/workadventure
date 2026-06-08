@@ -59,7 +59,7 @@ function displayMuteDialog(event: PrivateEvents["muteAudio"] | PrivateEvents["mu
                 cleanup();
             },
         },
-        popupName
+        popupName,
     );
 }
 

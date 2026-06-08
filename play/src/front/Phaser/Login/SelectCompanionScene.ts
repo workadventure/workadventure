@@ -142,7 +142,7 @@ export class SelectCompanionScene extends ResizableScene {
 
     private createCurrentCompanion(): void {
         this.companionCurrentCollection = this.companionTextures.getCompanionCollectionTextures(
-            this.getSelectedCollectionName()
+            this.getSelectedCollectionName(),
         );
 
         this.companionCurrentCollection.forEach((companionResource, index) => {

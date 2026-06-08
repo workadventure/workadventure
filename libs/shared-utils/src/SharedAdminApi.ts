@@ -59,7 +59,7 @@ export class SharedAdminApi {
                 if (!warnIssued)
                     console.warn(
                         `Could not reach Admin API server at ${this.admin_api_url}, will retry in ${this.admin_api_retry_delay} ms`,
-                        ex
+                        ex,
                     );
 
                 warnIssued = true;

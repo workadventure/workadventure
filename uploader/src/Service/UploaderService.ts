@@ -1,8 +1,8 @@
 import {v4} from "uuid";
-import {Location, StorageProvider} from "./StorageProvider";
+import type { StorageProvider} from "./StorageProvider";
 import {storageProviderService, tempProviderService} from "./StorageProviderService";
-import {TempStorageProvider} from "./TempStorageProvider";
-import {TargetDevice} from "./TargetDevice";
+import type {TempStorageProvider} from "./TempStorageProvider";
+import type {TargetDevice} from "./TargetDevice";
 
 class UploaderService{
     constructor(private storageProvider: StorageProvider, private tempStorageProvider: TempStorageProvider){

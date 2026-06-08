@@ -1,19 +1,12 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from "svelte";
+    import { onMount } from "svelte";
     import type { JitsiRoomConfigData } from "@workadventure/map-editor";
-    import { closeModal } from "svelte-modals";
     import { LL } from "../../../../i18n/i18n-svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import Input from "../../Input/Input.svelte";
     import PopUpContainer from "../../PopUp/PopUpContainer.svelte";
     import ButtonClose from "../../Input/ButtonClose.svelte";
-    export let isOpen: boolean;
-    export let onSave: (config: JitsiRoomConfigData & { jitsiRoomAdminTag: string }) => void;
-
-    const dispatch = createEventDispatcher<{
-        change: undefined;
-        close: undefined;
-    }>();
+    import { modals } from "@wa-modals";
 
     let defaultConfig: JitsiRoomConfigData = {
         startWithAudioMuted: false,
@@ -23,29 +16,48 @@
     type JitsiRoomConfigDataKeys = "startWithAudioMuted" | "startWithVideoMuted";
 
     const defaultConfigKeys: JitsiRoomConfigDataKeys[] = Object.keys(defaultConfig).map(
-        (key) => key as JitsiRoomConfigDataKeys
+        (key) => key as JitsiRoomConfigDataKeys,
     );
 
-    export let visibilityValue: boolean;
-    export let config: JitsiRoomConfigData;
-    export let jitsiRoomAdminTag = "";
-    let currentConfig: JitsiRoomConfigData = {};
+    interface Props {
+        isOpen: boolean;
+        onsave: (config: JitsiRoomConfigData & { jitsiRoomAdminTag: string }) => void;
+        onclose?: () => void;
+        visibilityValue: boolean;
+        config: JitsiRoomConfigData;
+        jitsiRoomAdminTag: string;
+    }
+
+    let {
+        isOpen,
+        onsave,
+        onclose,
+        visibilityValue = $bindable<boolean>(),
+        config,
+        jitsiRoomAdminTag = $bindable<string>(),
+    }: Props = $props();
+
+    if (jitsiRoomAdminTag === undefined) {
+        jitsiRoomAdminTag = "";
+    }
+
+    let currentConfig: JitsiRoomConfigData = $state({});
 
     onMount(() => {
         currentConfig = {};
         if (config !== undefined) {
-            currentConfig = structuredClone(config);
+            currentConfig = $state.snapshot(config);
         }
     });
 
     function close() {
         visibilityValue = false;
-        closeModal();
-        dispatch("close");
+        modals.close();
+        onclose?.();
     }
 
     function saveAndClose() {
-        onSave({ ...currentConfig, jitsiRoomAdminTag });
+        onsave({ ...$state.snapshot(currentConfig), jitsiRoomAdminTag });
         close();
     }
 
@@ -56,7 +68,7 @@
     }
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window onkeydown={onKeyDown} />
 {#if isOpen}
     <div class="absolute flex items-center justify-center w-full h-full">
         <div
@@ -64,10 +76,10 @@
         >
             <PopUpContainer fullContent={true}>
                 <div class="flex items-center justify-between">
-                    <span class="font-bold text-xl pl-4"
-                        >{$LL.mapEditor.properties.jitsiRoomProperty.moreOptionsLabel()}
+                    <span class="font-bold text-xl pl-4">
+                        {$LL.mapEditor.properties.jitsiRoomProperty.moreOptionsLabel()}
                     </span>
-                    <ButtonClose on:click={close} />
+                    <ButtonClose onclick={close} />
                 </div>
                 <div class="config-element-container mt-5">
                     {#each defaultConfigKeys as configKey (configKey)}
@@ -93,14 +105,16 @@
                     </div>
                 </div>
 
-                <div slot="buttons" class="w-full flex justify-between gap-2 p-2">
-                    <button class=" btn btn-light btn-border w-full h-12" on:click={closeModal}>
-                        {$LL.mapEditor.properties.jitsiRoomProperty.jitsiRoomConfig.cancel()}
-                    </button>
-                    <button class=" btn btn-secondary w-full h-12" on:click={saveAndClose}>
-                        {$LL.mapEditor.properties.jitsiRoomProperty.jitsiRoomConfig.validate()}
-                    </button>
-                </div>
+                {#snippet buttons()}
+                    <div class="w-full flex justify-between gap-2 p-2">
+                        <button class=" btn btn-light btn-border w-full h-12" onclick={() => modals.close()}>
+                            {$LL.mapEditor.properties.jitsiRoomProperty.jitsiRoomConfig.cancel()}
+                        </button>
+                        <button class=" btn btn-secondary w-full h-12" onclick={saveAndClose}>
+                            {$LL.mapEditor.properties.jitsiRoomProperty.jitsiRoomConfig.validate()}
+                        </button>
+                    </div>
+                {/snippet}
             </PopUpContainer>
         </div>
     </div>

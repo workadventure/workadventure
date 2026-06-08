@@ -6,7 +6,7 @@
     import { popupStore } from "../../../../Stores/PopupStore";
     import ConfirmationModal from "./ConfirmationModal.svelte";
 
-    let loading = false;
+    let loading = $state(false);
 
     const confirmationModalProps: ConfirmationModalPropsInterface = {
         handleAccept: () => {
@@ -49,7 +49,7 @@
             <div
                 style="border-top-color:transparent"
                 class="w-16 h-16 border-2 border-white border-solid rounded-full animate-spin mb-5"
-            />
+            ></div>
         </div>
     {/if}
 </ConfirmationModal>

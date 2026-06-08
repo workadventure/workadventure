@@ -5,12 +5,15 @@
     import { textMessageStore } from "../../Stores/TypeMessageStore/TextMessageStore";
     import ButtonClose from "../Input/ButtonClose.svelte";
 
-    /* eslint-disable svelte/no-at-html-tags */
+    interface Props {
+        /* eslint-disable svelte/no-at-html-tags */
+        message: Message;
+    }
 
-    export let message: Message;
+    let { message }: Props = $props();
 
-    const content = JSON.parse(message.text);
-    const converter = new QuillDeltaToHtmlConverter(content.ops, { inlineStyles: true });
+    let content = $derived(JSON.parse(message.text));
+    let converter = $derived(new QuillDeltaToHtmlConverter(content.ops, { inlineStyles: true }));
 
     function closeTextMessage() {
         textMessageStore.clearMessageById(message.id);
@@ -23,7 +26,7 @@
     }
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window onkeydown={onKeyDown} />
 
 <div
     class="main-text-message bg-contrast/85 rounded backdrop-blur-md flex gap-3 w-3/5 py-3 pl-5 pr-2 max-h-64 shadow-xl pointer-events-auto animate-bounce-in z-[800]"
@@ -33,7 +36,7 @@
     <div class="content-text-message flex text-white max-h-60 w-full overflow-auto mr-6">
         {@html converter.convert()}
     </div>
-    <ButtonClose on:click={closeTextMessage} />
+    <ButtonClose onclick={closeTextMessage} />
 </div>
 
 <style>

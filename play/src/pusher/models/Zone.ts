@@ -47,7 +47,7 @@ export class UserDescriptor {
         private companionTexture?: CompanionTextureMessage,
         private outlineColor?: number,
         private chatID?: string,
-        private sayMessage?: SayMessage
+        private sayMessage?: SayMessage,
     ) {
         if (!Number.isInteger(this.userId)) {
             throw new Error("UserDescriptor.userId is not an integer: " + this.userId);
@@ -71,7 +71,7 @@ export class UserDescriptor {
             message.companionTexture,
             message.hasOutline ? message.outlineColor : undefined,
             message.chatID,
-            message.sayMessage
+            message.sayMessage,
         );
     }
 
@@ -146,7 +146,7 @@ export class GroupDescriptor {
         private groupSize: number | undefined,
         private position: PointMessage,
         private locked: boolean | undefined,
-        private _userIds: number[]
+        private _userIds: number[],
     ) {}
 
     public static createFromGroupUpdateZoneMessage(message: GroupUpdateZoneMessage): GroupDescriptor {
@@ -195,7 +195,11 @@ export class Zone {
     private groups: Map<number, GroupDescriptor> = new Map<number, GroupDescriptor>();
     private listeners: Set<PusherWebSocket> = new Set<PusherWebSocket>();
 
-    constructor(private socketListener: ZoneEventListener, public readonly x: number, public readonly y: number) {}
+    constructor(
+        private socketListener: ZoneEventListener,
+        public readonly x: number,
+        public readonly y: number,
+    ) {}
 
     // Public handler methods called by PositionDispatcher when messages are received from back
 
@@ -278,7 +282,7 @@ export class Zone {
         if (details === undefined) {
             console.error('Unexpected details message without details received for user "' + userId + '"');
             Sentry.captureException(
-                new Error('Unexpected details message without details received for user "' + userId + '"')
+                new Error('Unexpected details message without details received for user "' + userId + '"'),
             );
             return;
         }
