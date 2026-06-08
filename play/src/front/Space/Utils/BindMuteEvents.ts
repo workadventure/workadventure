@@ -3,7 +3,8 @@ import * as Sentry from "@sentry/svelte";
 import type { Subscription } from "rxjs";
 import type { PrivateEvents, SpaceInterface } from "../SpaceInterface";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
-import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { isSpeakerStore, requestedCameraState } from "../../Stores/MediaStore";
+import { microphoneSession } from "../../Stores/MicrophoneSessionStore";
 import LL from "../../../i18n/i18n-svelte";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
@@ -49,7 +50,7 @@ function displayMuteDialog(event: PrivateEvents["muteAudio"] | PrivateEvents["mu
             sender: senderUser,
             acceptRequest: () => {
                 if (event.$case === "muteAudio") {
-                    requestedMicrophoneState.disableMicrophone();
+                    microphoneSession.forceMuteMicrophone();
                 } else {
                     requestedCameraState.disableWebcam();
                 }
@@ -72,7 +73,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
     space.observePrivateEvent("muteAudio").subscribe((event) => {
         if (event.muteAudio.force) {
             notificationPlayingStore.playNotification(get(LL).notification.microphoneMuted(), "microphone-off.png");
-            requestedMicrophoneState.disableMicrophone();
+            microphoneSession.forceMuteMicrophone();
         } else {
             notificationPlayingStore.playNotification(get(LL).notification.askToMuteMicrophone(), "microphone-off.png");
             displayMuteDialog({ ...event, sender: event.sender.spaceUserId }, space);
@@ -111,7 +112,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
     // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
     space.observePublicEvent("muteAudioForEverybody").subscribe((event) => {
         notificationPlayingStore.playNotification(get(LL).notification.askToMuteMicrophone(), "microphone-off.png");
-        requestedMicrophoneState.disableMicrophone();
+        microphoneSession.forceMuteMicrophone();
     });
 
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.

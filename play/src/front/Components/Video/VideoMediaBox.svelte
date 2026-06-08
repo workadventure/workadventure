@@ -3,7 +3,6 @@
     import { getContext, onDestroy, onMount } from "svelte";
     import * as Sentry from "@sentry/svelte";
     import type { Subscription } from "rxjs";
-    import { IconArrowsMinimize, IconArrowsMaximize, IconMicrophoneOff } from "@wa-icons";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { VideoBox } from "../../Space/VideoBox";
@@ -14,9 +13,9 @@
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
     import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
-    import { requestedCameraState, requestedMicrophoneState, temporaryMicrophoneState } from "../../Stores/MediaStore";
+    import { requestedCameraState } from "../../Stores/MediaStore";
+    import { effectiveMicrophoneState } from "../../Stores/MicrophoneSessionStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
-    import { shouldShowMicrophoneAsEnabled } from "../../Stores/PushToTalkStore";
     import { blackListManager } from "../../WebRtc/BlackListManager";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { blocker } from "../../Utils/screenBlocker";
@@ -25,6 +24,7 @@
     import UpDownChevron from "./UpDownChevron.svelte";
     import CenteredVideo from "./CenteredVideo.svelte";
     import WebRtcStats from "./WebRtcStatsBox.svelte";
+    import { IconArrowsMinimize, IconArrowsMaximize, IconMicrophoneOff } from "@wa-icons";
 
     interface Props {
         fullScreen?: boolean;
@@ -160,13 +160,9 @@
     // We also need to check if they are actually streaming (camera, mic, or screen)
     let isLocalUserStreamingMegaphone = $derived(
         isLocalUser &&
-        $requestedMegaphoneStore &&
-        ($requestedCameraState ||
-            shouldShowMicrophoneAsEnabled({
-                requestedMicrophoneState: $requestedMicrophoneState,
-                temporaryMicrophoneState: $temporaryMicrophoneState,
-            }) ||
-            $requestedScreenSharingState));
+            $requestedMegaphoneStore &&
+            ($requestedCameraState || $effectiveMicrophoneState || $requestedScreenSharingState),
+    );
 
     let blackListSubject: Subscription | undefined;
     let unBlackListSubject: Subscription | undefined;

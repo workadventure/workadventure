@@ -8,14 +8,17 @@
         availabilityStatusStore,
         microphoneButtonHelpContextStore,
         microphoneListStore,
-        requestedMicrophoneState,
         silentStore,
-        temporaryMicrophoneState,
     } from "../../../Stores/MediaStore";
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { getNavigatorType, isAndroid, NavigatorType } from "../../../WebRtc/DeviceUtils";
-    import { shouldShowMicrophoneAsEnabled } from "../../../Stores/PushToTalkStore";
+    import {
+        effectiveMicrophoneState,
+        microphoneSession,
+        requestedMicrophoneState,
+        temporaryMicrophoneState,
+    } from "../../../Stores/MicrophoneSessionStore";
 
     import MicOnIcon from "../../Icons/MicOnIcon.svelte";
     import MicOffIcon from "../../Icons/MicOffIcon.svelte";
@@ -100,16 +103,16 @@
         analyticsClient.microphone();
         if ($silentStore) return;
         if ($temporaryMicrophoneState) {
-            temporaryMicrophoneState.disableTemporaryMicrophone();
+            microphoneSession.stopTemporaryUnmute();
             if ($requestedMicrophoneState === false) {
-                requestedMicrophoneState.enableMicrophone();
+                microphoneSession.enablePersistentMicrophone();
             }
             return;
         }
         if ($requestedMicrophoneState === true) {
-            requestedMicrophoneState.disableMicrophone();
+            microphoneSession.disablePersistentMicrophone();
         } else {
-            requestedMicrophoneState.enableMicrophone();
+            microphoneSession.enablePersistentMicrophone();
         }
     }
 </script>
@@ -124,7 +127,7 @@
     desc={$microphoneActionBarTooltipStore.desc}
     media={$microphoneActionBarTooltipStore.media}
 >
-    {#if shouldShowMicrophoneAsEnabled( { requestedMicrophoneState: $requestedMicrophoneState, temporaryMicrophoneState: $temporaryMicrophoneState } ) && !$silentStore && $microphoneListStore && $microphoneListStore.length > 0}
+    {#if $effectiveMicrophoneState && !$silentStore && $microphoneListStore && $microphoneListStore.length > 0}
         <MicOnIcon />
     {:else}
         <MicOffIcon />
