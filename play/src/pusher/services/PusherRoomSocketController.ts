@@ -33,6 +33,7 @@ type UpgradeHandler<TQuery> = (context: UpgradeContext<TQuery>) => void | Promis
 type OpenHandler = (socket: PusherWebSocket) => void | Promise<void>;
 // The rejected open handler should return the unique error message that will be sent over the websocket before closing it.
 type RejectedOpenHandler = (socketData: UpgradeFailedData) => ServerToClientMessage | Promise<ServerToClientMessage>;
+type ReconnectHandler = (socket: PusherWebSocket) => void | Promise<void>;
 type MessageHandler = (socket: PusherWebSocket, message: ClientToServerMessage) => void | Promise<void>;
 type CloseHandler = (socket: PusherWebSocket, code: number, reason: string) => void | Promise<void>;
 
@@ -50,6 +51,7 @@ type RoomWsConfig<TQuery extends RoomWsQuery> = {
     upgrade: UpgradeHandler<TQuery>;
     open: OpenHandler;
     rejectedOpen: RejectedOpenHandler;
+    reconnect: ReconnectHandler;
     message: MessageHandler;
     close: CloseHandler;
 };
@@ -80,7 +82,7 @@ export class PusherRoomSocketController {
         res: HttpResponse,
         req: HttpRequest,
         context: us_socket_context_t,
-        details: string
+        details: string,
     ): void {
         const websocketKey = req.getHeader("sec-websocket-key");
         const websocketProtocol = req.getHeader("sec-websocket-protocol");
@@ -104,7 +106,7 @@ export class PusherRoomSocketController {
                 websocketKey,
                 websocketProtocol,
                 websocketExtensions,
-                context
+                context,
             );
         });
     }
@@ -124,7 +126,7 @@ export class PusherRoomSocketController {
     private canReplaceTransportWithoutUpgrade<TQuery extends RoomWsQuery>(
         query: TQuery,
         websocketProtocol: string,
-        tabContext: WebSocketContext | undefined
+        tabContext: WebSocketContext | undefined,
     ): tabContext is WebSocketContext & { socket: PusherWebSocket } {
         if (!tabContext?.socket || tabContext.socket.isDisconnecting()) {
             return false;
@@ -149,7 +151,7 @@ export class PusherRoomSocketController {
         websocketKey: string,
         websocketProtocol: string,
         websocketExtensions: string,
-        context: us_socket_context_t
+        context: us_socket_context_t,
     ) {
         if (aborted) {
             // If the response points to nowhere, don't attempt an upgrade
@@ -196,7 +198,7 @@ export class PusherRoomSocketController {
 
                     const clientLastReceivedNonce = this.parseReconnectNonce(
                         urlSearchParams.get("lastReceivedNonce") ?? undefined,
-                        "lastReceivedNonce"
+                        "lastReceivedNonce",
                     );
                     const tabContext = this.contextByTabKey.get(query.tabId);
 
@@ -212,7 +214,7 @@ export class PusherRoomSocketController {
                             websocketKey,
                             websocketProtocol,
                             websocketExtensions,
-                            context
+                            context,
                         );
                         return;
                     }
@@ -239,7 +241,7 @@ export class PusherRoomSocketController {
                                 websocketKey,
                                 websocketProtocol,
                                 websocketExtensions,
-                                context
+                                context,
                             );
                         },
                         reject: (data) => {
@@ -250,7 +252,7 @@ export class PusherRoomSocketController {
                                 websocketKey,
                                 websocketProtocol,
                                 websocketExtensions,
-                                context
+                                context,
                             );
                         },
                     });
@@ -271,7 +273,7 @@ export class PusherRoomSocketController {
                                 nonce: 1,
                                 message: errorMessage,
                             }).finish(),
-                            true
+                            true,
                         );
                         ws.end(1000, "Error message sent");
                         return;
@@ -295,6 +297,8 @@ export class PusherRoomSocketController {
                             if (replaced) {
                                 this.clearContextCleanup(tabId);
                                 this.wrappersBySocket.set(rawSocket, context.socket);
+
+                                await config.reconnect(context.socket);
                             }
                         } finally {
                             context.clientLastReceivedNonce = undefined;
