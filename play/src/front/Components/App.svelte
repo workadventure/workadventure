@@ -261,7 +261,7 @@
     >
         <div
             id="game"
-            class="relative flex-1 overflow-hidden {$fullScreenCowebsite ? 'hidden' : ''}"
+            class="relative {$fullScreenCowebsite ? 'hidden' : ''}"
             class:game-scene-loaded={$gameSceneIsLoadedStore}
             bind:this={gameDiv}
         >

@@ -469,9 +469,6 @@ export class GameScene extends DirtyScene {
         //initialize frame event of scripting API
         this.listenToIframeEvents();
 
-        this.load.image("iconTalk", "/resources/icons/icon_talking.png");
-        this.load.image("iconSpeaker", "/resources/icons/icon_speaking.png");
-
         this.load.image("iconFocus", "/resources/icons/icon_focus.png");
         this.load.image("iconLink", "/resources/icons/icon_link.png");
         this.load.image("iconListenerMegaphone", "/resources/icons/icon_listener.png");
@@ -2579,7 +2576,7 @@ export class GameScene extends DirtyScene {
             this.connection.emitPlayerStatusChange(availabilityStatus);
             this.CurrentPlayer.setAvailabilityStatus(availabilityStatus);
             if (availabilityStatus === AvailabilityStatus.SILENT) {
-                this.CurrentPlayer.toggleTalk(false, true);
+                this.CurrentPlayer.toggleTalk(false);
             }
         });
 
@@ -4352,7 +4349,7 @@ ${escapedMessage}
     }
 
     private disableVoiceIndicator(): void {
-        this.CurrentPlayer.toggleTalk(false, true);
+        this.CurrentPlayer.toggleTalk(false);
         if (!this.connection?.closed) {
             this.connection?.emitPlayerShowVoiceIndicator(false);
         }

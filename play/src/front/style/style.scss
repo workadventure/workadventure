@@ -864,8 +864,27 @@ div.emoji-picker {
 
     // By default, we hide the name and only start showing it when the full GameScene is shown
     display: none;
+
+    &.talking {
+        animation: sonar_talking 0.5s ease-out infinite;
+    }
+    &.speaker {
+        animation: sonar_speaker 0.5s ease-out infinite;
+    }
 }
 
 .game-scene-loaded .username-display {
-    display: flex;
+  display: flex;
+}
+
+@keyframes sonar_talking {
+    0%   { box-shadow: 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,255,255, 0.4), 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,255,255, 0.2); }
+    70%  { box-shadow: 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,255,255, 0.4), 0 0 0 calc(var(--username-dom-scale, 1) * 14px)  rgba(255,255,255, 0); }
+    100% { box-shadow: 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,255,255, 0.4), 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,255,255, 0); }
+}
+
+@keyframes sonar_speaker {
+    0%   { box-shadow: 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,240,180, 0.4), 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,240,180, 0.2); }
+    70%  { box-shadow: 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,240,180, 0.4), 0 0 0 calc(var(--username-dom-scale, 1) * 14px)  rgba(255,240,180, 0); }
+    100% { box-shadow: 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,240,180, 0.4), 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,240,180, 0); }
 }

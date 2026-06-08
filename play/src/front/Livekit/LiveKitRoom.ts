@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { FilterType } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import type { LocalParticipant, Participant, RemoteParticipant, TrackPublishOptions } from "livekit-client";
 import {
@@ -290,13 +289,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             throw new Error("Local participant not found");
         }
 
-        if (
-            this.space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK &&
-            !this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId)?.megaphoneState
-        ) {
-            return;
-        }
-
         if (!this.localMicrophoneTrack) {
             this.localMicrophoneTrack = new LocalAudioTrack(audioTrack);
 
@@ -328,9 +320,11 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         );
 
         this.unsubscribers.push(
-            this.screenSharingLocalStreamStore.subscribe((stream) => {
-                this.queueScreenShareUpdate(stream);
-            }),
+            deriveSwitchStore(this.screenSharingLocalStreamStore, this.space.shouldPublishScreenShareStore).subscribe(
+                (stream) => {
+                    this.queueScreenShareUpdate(stream);
+                },
+            ),
         );
 
         this.unsubscribers.push(
