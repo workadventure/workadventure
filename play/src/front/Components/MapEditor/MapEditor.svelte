@@ -7,6 +7,7 @@
 
     import { windowSize } from "../../Stores/CoWebsiteStore";
 
+    import { gameManager } from "../../Phaser/Game/GameManager";
     import AreaEditor from "./AreaEditor/AreaEditor.svelte";
     import EntityEditor from "./EntityEditor/EntityEditor.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
@@ -25,6 +26,7 @@
 
     function onResize(width: number) {
         mapEditorSideBarWidthStore.set(width);
+        gameManager.getCurrentGameScene().reposition();
     }
 
     $effect(() => {
@@ -42,7 +44,7 @@
 {/if}
 <div
     id="map-editor-container"
-    class="z-[500] flex flex-row items-start justify-end gap-4 absolute h-full max-w-full md:max-w-[calc(100%-18px)] top-0 end-0 pointer-events-none"
+    class="z-[500] flex flex-row items-start justify-end gap-4 absolute h-full max-w-full md:max-w-[calc(100%-18px)] top-0 end-0 pointer-events-none blocker"
 >
     <div
         in:fly={{ x: 100, duration: 250, delay: 300 }}
