@@ -219,7 +219,7 @@
                 <InputSwitch
                     id="noise-suppression-toggle"
                     value={$noiseSuppressionEnabledStore}
-                    onChange={toggleNoiseSuppressionEnabled}
+                    onchange={toggleNoiseSuppressionEnabled}
                 />
             </div>
         </div>
