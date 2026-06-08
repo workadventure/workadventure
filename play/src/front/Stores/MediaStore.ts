@@ -50,7 +50,12 @@ import { NoiseSuppressionController } from "./NoiseSuppressionController";
 import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
 import { audioPlaybackStore } from "./AudioPlaybackStore";
 import { browserNotificationStore } from "./BrowserNotificationStore";
-import { canStartPushToTalk, isUnavailableForMicrophone, shouldEnableAudioConstraint } from "./PushToTalkStore";
+import {
+    canStartPushToTalk,
+    isUnavailableForMicrophone,
+    shouldEnableAudioConstraint,
+    shouldShowMicrophoneAsEnabled,
+} from "./PushToTalkStore";
 
 export const inBackgroundSettingsStore = writable<boolean>(false);
 
@@ -132,6 +137,14 @@ function createEnableCameraSceneVisibilityStore() {
 export const requestedCameraState = createRequestedCameraState();
 export const requestedMicrophoneState = createRequestedMicrophoneState();
 export const temporaryMicrophoneState = createTemporaryMicrophoneState();
+export const effectiveMicrophoneState = derived(
+    [requestedMicrophoneState, temporaryMicrophoneState],
+    ([$requestedMicrophoneState, $temporaryMicrophoneState]) =>
+        shouldShowMicrophoneAsEnabled({
+            requestedMicrophoneState: $requestedMicrophoneState,
+            temporaryMicrophoneState: $temporaryMicrophoneState,
+        }),
+);
 export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilityStore();
 
 /**
@@ -261,13 +274,14 @@ export const isListenerStore = writable(false);
 export const listenerWaitingMediaStore = writable<string | undefined>(undefined);
 
 export const pushToTalkAvailabilityStore = derived(
-    [requestedMicrophoneState, currentPlayerGroupIdStore, inLivekitStore],
-    ([$requestedMicrophoneState, $currentPlayerGroupIdStore, $inLivekitStore]) =>
+    [requestedMicrophoneState, currentPlayerGroupIdStore, inLivekitStore, isSpeakerStore],
+    ([$requestedMicrophoneState, $currentPlayerGroupIdStore, $inLivekitStore, $isSpeakerStore]) =>
         canStartPushToTalk({
             requestedMicrophoneState: $requestedMicrophoneState,
             isInConversationBubble: $currentPlayerGroupIdStore !== undefined,
             isInLivekit: $inLivekitStore,
-        })
+            isSpeaker: $isSpeakerStore,
+        }),
 );
 /**
  * When true, the listener has consented to share their camera with the speaker (seeAttendees feature).
