@@ -7,6 +7,7 @@ import {
 import { BehaviorSubject } from "rxjs";
 import { NoncedMessageStore } from "../../common/NoncedMessageStore";
 import { CLIENT_DISCONNECTION_RETENTION_MS } from "../Enum/EnvironmentVariable";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 
 type WebSocketFactory = (url: string, protocols?: string[]) => WebSocket;
 
@@ -220,6 +221,7 @@ export class WorkAdventureWebSocket {
             }
 
             this.socket = this.createSocket();
+            analyticsClient.socketReconnected();
         }, this.getReconnectDelayMs());
     }
 
