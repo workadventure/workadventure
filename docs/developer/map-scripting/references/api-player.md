@@ -520,29 +520,45 @@ WA.player.setStatus("BACK_IN_A_MOMENT");
 ## Detecting when the user enters/leaves a meeting
 
 ```ts
-WA.player.proximityMeeting.onJoin(): Subscription<RemotePlayerInterface[]>
-WA.player.proximityMeeting.onLeave(): Subscription<RemotePlayerInterface[]>
+WA.player.meetings.onJoin(): Subscription<Meeting>
+
+interface Meeting {
+  id: string;
+  name: string;
+  kind: "default" | "proximity" | "meeting" | "listener" | "speaker" | "area";
+  participants: RemotePlayerInterface[];
+  onParticipantJoin(): Subscription<RemotePlayerInterface>;
+  onParticipantLeave(): Subscription<RemotePlayerInterface>;
+  onLeave(): Subscription<void>;
+  playSound(url: string): Promise<void>;
+  startAudioStream(sampleRate: number): Promise<AudioStream>;
+  listenToAudioStream(sampleRate: number): Observable<Float32Array>;
+}
 ```
 
-The event is triggered when the user enters or leaves a proximity meeting.
+The event is triggered when the user enters a proximity meeting. A proximity meeting can be a bubble, a meeting room,
+or another proximity-backed area. The returned `Meeting` object is scoped to that specific meeting.
 
 Example:
 
 ```ts
-WA.player.proximityMeeting.onJoin().subscribe(async (players: RemotePlayerInterface[]) => {
+WA.player.meetings.onJoin().subscribe(async (meeting: Meeting) => {
     WA.chat.sendChatMessage("You joined a proximity chat", "System");
-});
 
-WA.player.proximityMeeting.onLeave().subscribe(async () => {
-    WA.chat.sendChatMessage("You left the proximity chat", "System");
+    meeting.onLeave().subscribe(async () => {
+        WA.chat.sendChatMessage("You left the proximity chat", "System");
+    });
 });
 ```
+
+`WA.player.proximityMeeting.onJoin()` and `WA.player.proximityMeeting.onLeave()` are deprecated single-meeting methods.
+They only target the default proximity bubble. Use `WA.player.meetings.onJoin()` for new scripts.
 
 ## Detecting when a participant enters/leaves the current meeting
 
 ```ts
-WA.player.proximityMeeting.onParticipantJoin(): Subscription<RemotePlayerInterface>
-WA.player.proximityMeeting.onParticipantLeave(): Subscription<RemotePlayerInterface>
+Meeting.onParticipantJoin(): Subscription<RemotePlayerInterface>
+Meeting.onParticipantLeave(): Subscription<RemotePlayerInterface>
 ```
 
 The event is triggered when a user enters or leaves a proximity meeting.
@@ -550,14 +566,19 @@ The event is triggered when a user enters or leaves a proximity meeting.
 Example:
 
 ```ts
-WA.player.proximityMeeting.onParticipantJoin().subscribe(async (player: RemotePlayerInterface) => {
-    WA.chat.sendChatMessage("A participant joined the proximity chat", { scope: 'local', author: 'System' });
-});
+WA.player.meetings.onJoin().subscribe((meeting: Meeting) => {
+    meeting.onParticipantJoin().subscribe(async (player: RemotePlayerInterface) => {
+        WA.chat.sendChatMessage("A participant joined the proximity chat", { scope: 'local', author: 'System' });
+    });
 
-WA.player.proximityMeeting.onParticipantLeave().subscribe(async (player: RemotePlayerInterface) => {
-    WA.chat.sendChatMessage("A participant left the proximity chat", { scope: 'local', author: 'System' });
+    meeting.onParticipantLeave().subscribe(async (player: RemotePlayerInterface) => {
+        WA.chat.sendChatMessage("A participant left the proximity chat", { scope: 'local', author: 'System' });
+    });
 });
 ```
+
+`WA.player.proximityMeeting.onParticipantJoin()` and `WA.player.proximityMeeting.onParticipantLeave()` are deprecated
+single-meeting methods. They only target the default proximity bubble.
 
 ## Playing a sound to players in the same meeting
 
@@ -566,7 +587,7 @@ This feature is experimental. The signature of the function might change in the 
 :::
 
 ```ts
-WA.player.proximityMeeting.playSound(url: string): Promise<void>
+Meeting.playSound(url: string): Promise<void>
 ```
 
 The `playSound` function plays a sound to all the players in the same bubble.
@@ -575,10 +596,14 @@ The sound will appear to come from the microphone of the player who called the f
 Example:
 
 ```ts
-await WA.player.proximityMeeting.playSound("https://example.com/my_sound.mp3");
+WA.player.meetings.onJoin().subscribe(async (meeting: Meeting) => {
+    await meeting.playSound("https://example.com/my_sound.mp3");
+});
 ```
 
 The method returns a promise that resolves when the sound has been played.
+
+`WA.player.proximityMeeting.playSound()` is deprecated and only targets the default proximity bubble.
 
 ## Streaming sound to players in the same meeting
 
@@ -590,7 +615,7 @@ You can send a stream of audio to all the players in the same bubble. A typical 
 voice chat in WorkAdventure. The sound can be generated on a server and streamed to the players in the bubble.
 
 ```ts
-WA.player.proximityMeeting.startAudioStream(sampleRate: number): Promise<AudioStream>;
+Meeting.startAudioStream(sampleRate: number): Promise<AudioStream>;
 
 interface AudioStream {
   appendAudioData(data: Float32Array): Promise<void>;
@@ -637,7 +662,7 @@ Then it stops the stream and waits for 5 seconds before closing the stream.
 ```ts
 const sampleRate = 24000;
 
-const audioStream = await WA.player.proximityMeeting.startAudioStream(sampleRate);
+const audioStream = await meeting.startAudioStream(sampleRate);
 
 // Generate a sine wave
     
@@ -665,6 +690,8 @@ await new Promise((resolve) => setTimeout(resolve, 5000));
 await audioStream.close();
 ```
 
+`WA.player.proximityMeeting.startAudioStream()` is deprecated and only targets the default proximity bubble.
+
 ## Listening to the microphone of the players in the same meeting
 
 :::warning
@@ -672,7 +699,7 @@ This feature is experimental. The signature of the function might change in the 
 :::
 
 ```ts
-WA.player.proximityMeeting.listenToAudioStream(sampleRate: number): Observable<Float32Array>
+Meeting.listenToAudioStream(sampleRate: number): Observable<Float32Array>
 ```
 
 The `listenToAudioStream` function listens to the microphone of all the players in the same bubble. The `sampleRate` parameter
@@ -690,7 +717,7 @@ Example:
 ```ts
 const sampleRate = 24000;
 
-const subscription = WA.player.proximityMeeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
+const subscription = meeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
     // Process the audio data
     console.log(data);
 });
@@ -698,6 +725,8 @@ const subscription = WA.player.proximityMeeting.listenToAudioStream(sampleRate).
 // When you are done listening to the audio stream, you can unsubscribe from the observable.
 subscription.unsubscribe();
 ```
+
+`WA.player.proximityMeeting.listenToAudioStream()` is deprecated and only targets the default proximity bubble.
 
 ## Asking users to follow you
 
