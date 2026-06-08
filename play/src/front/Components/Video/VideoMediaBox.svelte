@@ -3,6 +3,7 @@
     import { getContext, onDestroy, onMount } from "svelte";
     import * as Sentry from "@sentry/svelte";
     import type { Subscription } from "rxjs";
+    import { IconArrowsMinimize, IconArrowsMaximize, IconMicrophoneOff } from "@wa-icons";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { VideoBox } from "../../Space/VideoBox";
@@ -24,7 +25,6 @@
     import UpDownChevron from "./UpDownChevron.svelte";
     import CenteredVideo from "./CenteredVideo.svelte";
     import WebRtcStats from "./WebRtcStatsBox.svelte";
-    import { IconArrowsMinimize, IconArrowsMaximize, IconMicrophoneOff } from "@wa-icons";
 
     interface Props {
         fullScreen?: boolean;
@@ -166,7 +166,7 @@
                 requestedMicrophoneState: $requestedMicrophoneState,
                 temporaryMicrophoneState: $temporaryMicrophoneState,
             }) ||
-            $requestedScreenSharingState);
+            $requestedScreenSharingState));
 
     let blackListSubject: Subscription | undefined;
     let unBlackListSubject: Subscription | undefined;

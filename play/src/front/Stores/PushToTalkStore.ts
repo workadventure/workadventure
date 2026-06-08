@@ -4,12 +4,14 @@ export function canStartPushToTalk({
     requestedMicrophoneState,
     isInConversationBubble,
     isInLivekit,
+    isSpeaker,
 }: {
     requestedMicrophoneState: boolean;
     isInConversationBubble: boolean;
     isInLivekit: boolean;
+    isSpeaker: boolean;
 }): boolean {
-    return !requestedMicrophoneState && (isInConversationBubble || isInLivekit);
+    return !requestedMicrophoneState && (isInConversationBubble || isInLivekit || isSpeaker);
 }
 
 export function isUnavailableForMicrophone(availabilityStatus: AvailabilityStatus): boolean {
@@ -57,6 +59,27 @@ export function shouldShowMicrophoneAsEnabled({
     temporaryMicrophoneState: boolean;
 }): boolean {
     return requestedMicrophoneState || temporaryMicrophoneState;
+}
+
+export function shouldKeepMegaphoneStreaming({
+    requestedCameraState,
+    requestedMicrophoneState,
+    temporaryMicrophoneState,
+    requestedScreenSharingState,
+}: {
+    requestedCameraState: boolean;
+    requestedMicrophoneState: boolean;
+    temporaryMicrophoneState: boolean;
+    requestedScreenSharingState: boolean;
+}): boolean {
+    return (
+        requestedCameraState ||
+        shouldShowMicrophoneAsEnabled({
+            requestedMicrophoneState,
+            temporaryMicrophoneState,
+        }) ||
+        requestedScreenSharingState
+    );
 }
 
 export function shouldIgnorePushToTalkKeyboardEvent(target: EventTarget | null): boolean {

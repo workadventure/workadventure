@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { AvailabilityStatus } from "@workadventure/messages";
 import {
     canStartPushToTalk,
+    shouldKeepMegaphoneStreaming,
     shouldEnableAudioConstraint,
     shouldIgnorePushToTalkKeyboardEvent,
     shouldShowMicrophoneAsEnabled,
@@ -14,7 +15,8 @@ describe("PushToTalkStore", () => {
                 requestedMicrophoneState: false,
                 isInConversationBubble: true,
                 isInLivekit: false,
-            })
+                isSpeaker: false,
+            }),
         ).toBe(true);
 
         expect(
@@ -22,7 +24,8 @@ describe("PushToTalkStore", () => {
                 requestedMicrophoneState: false,
                 isInConversationBubble: false,
                 isInLivekit: true,
-            })
+                isSpeaker: false,
+            }),
         ).toBe(true);
 
         expect(
@@ -30,7 +33,17 @@ describe("PushToTalkStore", () => {
                 requestedMicrophoneState: false,
                 isInConversationBubble: false,
                 isInLivekit: false,
-            })
+                isSpeaker: true,
+            }),
+        ).toBe(true);
+
+        expect(
+            canStartPushToTalk({
+                requestedMicrophoneState: false,
+                isInConversationBubble: false,
+                isInLivekit: false,
+                isSpeaker: false,
+            }),
         ).toBe(false);
 
         expect(
@@ -38,7 +51,8 @@ describe("PushToTalkStore", () => {
                 requestedMicrophoneState: true,
                 isInConversationBubble: true,
                 isInLivekit: false,
-            })
+                isSpeaker: true,
+            }),
         ).toBe(false);
     });
 
@@ -52,7 +66,7 @@ describe("PushToTalkStore", () => {
                 shouldDisableMicrophoneForPrivacy: false,
                 isEnergySaving: false,
                 availabilityStatus: AvailabilityStatus.ONLINE,
-            })
+            }),
         ).toBe(true);
 
         expect(
@@ -64,7 +78,7 @@ describe("PushToTalkStore", () => {
                 shouldDisableMicrophoneForPrivacy: false,
                 isEnergySaving: false,
                 availabilityStatus: AvailabilityStatus.BUSY,
-            })
+            }),
         ).toBe(false);
 
         expect(
@@ -76,7 +90,7 @@ describe("PushToTalkStore", () => {
                 shouldDisableMicrophoneForPrivacy: true,
                 isEnergySaving: false,
                 availabilityStatus: AvailabilityStatus.ONLINE,
-            })
+            }),
         ).toBe(false);
     });
 
@@ -99,14 +113,34 @@ describe("PushToTalkStore", () => {
             shouldShowMicrophoneAsEnabled({
                 requestedMicrophoneState: false,
                 temporaryMicrophoneState: true,
-            })
+            }),
         ).toBe(true);
 
         expect(
             shouldShowMicrophoneAsEnabled({
                 requestedMicrophoneState: false,
                 temporaryMicrophoneState: false,
-            })
+            }),
+        ).toBe(false);
+    });
+
+    it("keeps megaphone streaming while push-to-talk temporarily enables the microphone", () => {
+        expect(
+            shouldKeepMegaphoneStreaming({
+                requestedCameraState: false,
+                requestedMicrophoneState: false,
+                temporaryMicrophoneState: true,
+                requestedScreenSharingState: false,
+            }),
+        ).toBe(true);
+
+        expect(
+            shouldKeepMegaphoneStreaming({
+                requestedCameraState: false,
+                requestedMicrophoneState: false,
+                temporaryMicrophoneState: false,
+                requestedScreenSharingState: false,
+            }),
         ).toBe(false);
     });
 });
