@@ -8,6 +8,7 @@ import app from "./pusher/app";
 import {
     PUSHER_HTTP_PORT,
     ADMIN_API_URL,
+    ROOM_API_BIND_HOST,
     ROOM_API_PORT,
     ROOM_API_SECRET_KEY,
     SENTRY_DSN,
@@ -72,7 +73,7 @@ if (!ADMIN_API_URL && !ROOM_API_SECRET_KEY) {
 
     RoomAPI.addService(RoomApiService, RoomApiServer);
 
-    RoomAPI.bindAsync(`0.0.0.0:${ROOM_API_PORT}`, ServerCredentials.createInsecure(), (err, port) => {
+    RoomAPI.bindAsync(`${ROOM_API_BIND_HOST}:${ROOM_API_PORT}`, ServerCredentials.createInsecure(), (err, port) => {
         if (err) {
             throw err;
         }
