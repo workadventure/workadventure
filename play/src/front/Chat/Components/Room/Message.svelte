@@ -134,7 +134,7 @@
 >
     <div
         style={replyDepth === 0 ? "max-width: calc( 100% - 50px );" : "padding-left: 0"}
-        class="flex gap-2 justify-start overflow-visible relative {replyDepth === 0
+        class="flex min-w-0 gap-2 justify-start overflow-visible relative {replyDepth === 0
             ? 'max-w-[calc(100% - 100px)]'
             : ''} {!$isDeleted ? 'group-hover/message:pb-4' : ''} {isMyMessage
             ? 'justify-end grid-container-inverted pr-4'
@@ -151,7 +151,7 @@
             </div>
         {/if}
 
-        <div class="flex flex-col justify-end max-w-full {replyDepth === 0 && !showHeader ? 'ml-12' : ''}">
+        <div class="flex min-w-0 flex-col justify-end max-w-full {replyDepth === 0 && !showHeader ? 'ml-12' : ''}">
             {#if replyDepth <= 0 && showHeader}
                 <div
                     class="w-full h-fit text-xs px-2 flex justify-between items-end gap-2 overflow-x-hidden"
@@ -174,7 +174,7 @@
                 </div>
             {/if}
             <div
-                class="message rounded-md
+                class="message max-w-full rounded-md
                     {$isDeleted && !isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {!isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0

@@ -83,4 +83,26 @@
 </div>
 
 <style>
+    .message-bubble {
+        max-width: 100%;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .message-bubble :global(pre) {
+        max-width: 100%;
+        overflow-x: auto;
+        white-space: pre;
+    }
+
+    .message-bubble :global(code) {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .message-bubble :global(pre code) {
+        overflow-wrap: normal;
+        word-break: normal;
+    }
 </style>
