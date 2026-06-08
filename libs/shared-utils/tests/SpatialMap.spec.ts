@@ -7,7 +7,10 @@ class TestMovable {
     private readonly movedSubject = new Subject<PositionInterface>();
     public readonly moved$ = this.movedSubject.asObservable();
 
-    public constructor(private x: number, private y: number) {}
+    public constructor(
+        private x: number,
+        private y: number,
+    ) {}
 
     public getPosition(): PositionInterface {
         return { x: this.x, y: this.y };

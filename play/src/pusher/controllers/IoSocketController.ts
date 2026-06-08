@@ -587,10 +587,10 @@ export class IoSocketController {
 
                 if (!worlds.has(userData.roomId)) {
                     Sentry.captureException(
-                        `World ${userData.roomId} not found for socket ${userData.userUuid} (${userData.name}) while reconnecting, closing the connection`
+                        `World ${userData.roomId} not found for socket ${userData.userUuid} (${userData.name}) while reconnecting, closing the connection`,
                     );
                     console.error(
-                        `World ${userData.roomId} not found for socket ${userData.userUuid} (${userData.name}) while reconnecting, closing the connection`
+                        `World ${userData.roomId} not found for socket ${userData.userUuid} (${userData.name}) while reconnecting, closing the connection`,
                     );
                     socket.end(1008, "Room no longer exists");
                 }

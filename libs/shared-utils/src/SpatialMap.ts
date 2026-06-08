@@ -14,7 +14,7 @@ type SpatialMapEntry<T> = {
  * Values are stored by key like a regular Map, and are also indexed in fixed-size grid cells. The spatial index is
  * updated automatically by subscribing to each value's moved$ observable.
  */
-export class SpatialMap<K, V extends Movable> {
+export class SpatialMap<K, V extends Movable> implements ReadonlyMap<K, V> {
     public readonly [Symbol.toStringTag] = "SpatialMap";
 
     private readonly cells = new Map<string, Map<K, SpatialMapEntry<V>>>();
@@ -46,13 +46,13 @@ export class SpatialMap<K, V extends Movable> {
         return true;
     }
 
-    public entries(): IterableIterator<[K, V]> {
+    public entries(): MapIterator<[K, V]> {
         return this.iterateEntries();
     }
 
     public forEach(callbackfn: (value: V, key: K, map: ReadonlyMap<K, V>) => void, thisArg?: unknown): void {
         for (const [key, value] of this.entries()) {
-            callbackfn.call(thisArg, value, key, this as unknown as ReadonlyMap<K, V>);
+            callbackfn.call(thisArg, value, key, this);
         }
     }
 
@@ -64,7 +64,7 @@ export class SpatialMap<K, V extends Movable> {
         return this.items.has(key);
     }
 
-    public keys(): IterableIterator<K> {
+    public keys(): MapIterator<K> {
         return this.items.keys();
     }
 
@@ -119,11 +119,11 @@ export class SpatialMap<K, V extends Movable> {
         return this;
     }
 
-    public values(): IterableIterator<V> {
+    public values(): MapIterator<V> {
         return this.iterateValues();
     }
 
-    public [Symbol.iterator](): IterableIterator<[K, V]> {
+    public [Symbol.iterator](): MapIterator<[K, V]> {
         return this.entries();
     }
 
@@ -149,13 +149,13 @@ export class SpatialMap<K, V extends Movable> {
         return this.getCellKey(this.getCellCoordinate(x), this.getCellCoordinate(y));
     }
 
-    private *iterateEntries(): IterableIterator<[K, V]> {
+    private *iterateEntries(): MapIterator<[K, V]> {
         for (const [key, entry] of this.items) {
             yield [key, entry.value];
         }
     }
 
-    private *iterateValues(): IterableIterator<V> {
+    private *iterateValues(): MapIterator<V> {
         for (const entry of this.items.values()) {
             yield entry.value;
         }
