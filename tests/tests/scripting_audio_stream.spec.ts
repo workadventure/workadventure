@@ -147,7 +147,9 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
             publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"),
         );
         await Menu.turnOffMicrophone(alice2);
+        const alice2ProximityChatPromise = waitForJoinProximityChat(alice2);
         await Map.teleportToPosition(alice2, 32, 32);
+        await alice2ProximityChatPromise;
         await using eve = await getPage(
             browser,
             "Eve",
