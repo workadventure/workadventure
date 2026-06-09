@@ -284,7 +284,7 @@ export const videoConstraintStore = derived(
 );
 
 /**
- * A store that contains video constraints.
+ * A store that contains audio constraints.
  */
 export const audioConstraintStore = derived(
     [requestedMicrophoneDeviceIdStore, customNoiseSuppressionActiveStore],
@@ -1409,8 +1409,8 @@ export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);
  * Subscribe to background config changes to update the transformer
  * This avoids recreating the entire stream when only parameters change
  */
+// It is ok to not unsubscribe to this store because this module is a singleton.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
-backgroundConfigStore.subscribe(($config) => {
     // Skip if no transformer exists yet
     if (!backgroundTransformer || !lastBackgroundConfig) {
         return;
