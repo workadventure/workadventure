@@ -1,6 +1,6 @@
 <script lang="ts">
     import { EventType } from "matrix-js-sdk";
-    import { get, readable } from "svelte/store";
+    import { readable } from "svelte/store";
     import LL from "../../../../i18n/i18n-svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import type {
@@ -13,7 +13,11 @@
         ChatRoomSettingsManagement,
         historyVisibility,
     } from "../../Connection/ChatConnection";
-    import { ChatPermissionLevel, historyVisibilityOptions } from "../../Connection/ChatConnection";
+    import {
+        ChatPermissionLevel,
+        ChatRoomSettingsError,
+        historyVisibilityOptions,
+    } from "../../Connection/ChatConnection";
 
     interface Props {
         room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomSettingsManagement;
@@ -22,23 +26,20 @@
     let { room }: Props = $props();
 
     const emptyPrivacyState = readable<ChatRoomPrivacyState>({});
-    const permissionRows: { key: keyof ChatRoomPermissionsState; label: () => string }[] = [
-        { key: "sendMessages", label: () => get(LL).chat.roomPanel.settings.permissions.sendMessages() },
-        { key: "sendReactions", label: () => get(LL).chat.roomPanel.settings.permissions.sendReactions() },
-        { key: "redactOwnMessages", label: () => get(LL).chat.roomPanel.settings.permissions.redactOwnMessages() },
-        { key: "redactOtherMessages", label: () => get(LL).chat.roomPanel.settings.permissions.redactOtherMessages() },
-        { key: "kickUsers", label: () => get(LL).chat.roomPanel.settings.permissions.kickUsers() },
-        { key: "banUsers", label: () => get(LL).chat.roomPanel.settings.permissions.banUsers() },
-        { key: "inviteUsers", label: () => get(LL).chat.roomPanel.settings.permissions.inviteUsers() },
-        { key: "changeSettings", label: () => get(LL).chat.roomPanel.settings.permissions.changeSettings() },
-        { key: "changeRoomName", label: () => get(LL).chat.roomPanel.settings.permissions.changeRoomName() },
-        { key: "changeRoomTopic", label: () => get(LL).chat.roomPanel.settings.permissions.changeRoomTopic() },
-        {
-            key: "changeHistoryVisibility",
-            label: () => get(LL).chat.roomPanel.settings.permissions.changeHistoryVisibility(),
-        },
-        { key: "changeAccess", label: () => get(LL).chat.roomPanel.settings.permissions.changeAccess() },
-        { key: "changePermissions", label: () => get(LL).chat.roomPanel.settings.permissions.changePermissions() },
+    const permissionRows: { key: keyof ChatRoomPermissionsState }[] = [
+        { key: "sendMessages" },
+        { key: "sendReactions" },
+        { key: "redactOwnMessages" },
+        { key: "redactOtherMessages" },
+        { key: "kickUsers" },
+        { key: "banUsers" },
+        { key: "inviteUsers" },
+        { key: "changeSettings" },
+        { key: "changeRoomName" },
+        { key: "changeRoomTopic" },
+        { key: "changeHistoryVisibility" },
+        { key: "changeAccess" },
+        { key: "changePermissions" },
     ];
 
     let roomType = $derived(room.type);
@@ -104,32 +105,6 @@
         editablePermissions = { ...$roomPermissions };
     });
 
-    function getHistoryTranslation(historyVisibilityOption: historyVisibility) {
-        switch (historyVisibilityOption) {
-            case "world_readable":
-                return get(LL).chat.createRoom.historyVisibility.world_readable();
-            case "invited":
-                return get(LL).chat.createRoom.historyVisibility.invited();
-            case "joined":
-                return get(LL).chat.createRoom.historyVisibility.joined();
-        }
-    }
-
-    function getJoinRuleLabel(joinRule: string | undefined) {
-        switch (joinRule) {
-            case "public":
-                return get(LL).chat.roomPanel.settings.joinRules.public();
-            case "invite":
-                return get(LL).chat.roomPanel.settings.joinRules.invite();
-            case "restricted":
-                return get(LL).chat.roomPanel.settings.joinRules.restricted();
-            case "knock":
-                return get(LL).chat.roomPanel.settings.joinRules.knock();
-            default:
-                return joinRule ?? get(LL).chat.roomPanel.settings.unknown();
-        }
-    }
-
     function markSettingsDirty() {
         settingsDirty = true;
         saveError = undefined;
@@ -147,6 +122,18 @@
         if (clearPermissions) {
             permissionsDirty = false;
         }
+    }
+
+    function getSaveErrorMessage(error: unknown) {
+        if (error instanceof ChatRoomSettingsError) {
+            switch (error.code) {
+                case "roomNameEmpty":
+                    return $LL.chat.roomPanel.settings.errors.roomNameEmpty();
+                case "restrictedAccessNeedsParentSpace":
+                    return $LL.chat.roomPanel.settings.errors.restrictedAccessNeedsParentSpace();
+            }
+        }
+        return $LL.chat.roomPanel.settings.saveError();
     }
 
     async function saveSettings() {
@@ -178,7 +165,7 @@
             notificationPlayingStore.playNotification($LL.chat.roomPanel.settings.saveSuccess());
         } catch (error) {
             console.error("Failed to save Matrix room settings", error);
-            saveError = error instanceof Error ? error.message : get(LL).chat.roomPanel.settings.saveError();
+            saveError = getSaveErrorMessage(error);
         } finally {
             settingsSaving = false;
         }
@@ -267,11 +254,11 @@
                         disabled={!$canEditHistory || settingsSaving}
                         onchange={markSettingsDirty}
                     >
-                        {#each historyVisibilityOptions as historyVisibilityOption (historyVisibilityOption)}
-                            <option value={historyVisibilityOption}
-                                >{getHistoryTranslation(historyVisibilityOption)}</option
-                            >
-                        {/each}
+                        <option value="joined">{$LL.chat.createRoom.historyVisibility.joined()}</option>
+                        <option value="invited">{$LL.chat.createRoom.historyVisibility.invited()}</option>
+                        <option value="world_readable">
+                            {$LL.chat.createRoom.historyVisibility.world_readable()}
+                        </option>
                     </select>
                 </div>
 
@@ -291,7 +278,35 @@
                     <div class="mt-3 flex flex-col gap-2">
                         {#each permissionRows as permissionRow (permissionRow.key)}
                             <label class="flex items-center justify-between gap-3 text-white/80">
-                                <span class="min-w-0 flex-1">{permissionRow.label()}</span>
+                                <span class="min-w-0 flex-1">
+                                    {#if permissionRow.key === "sendMessages"}
+                                        {$LL.chat.roomPanel.settings.permissions.sendMessages()}
+                                    {:else if permissionRow.key === "sendReactions"}
+                                        {$LL.chat.roomPanel.settings.permissions.sendReactions()}
+                                    {:else if permissionRow.key === "redactOwnMessages"}
+                                        {$LL.chat.roomPanel.settings.permissions.redactOwnMessages()}
+                                    {:else if permissionRow.key === "redactOtherMessages"}
+                                        {$LL.chat.roomPanel.settings.permissions.redactOtherMessages()}
+                                    {:else if permissionRow.key === "kickUsers"}
+                                        {$LL.chat.roomPanel.settings.permissions.kickUsers()}
+                                    {:else if permissionRow.key === "banUsers"}
+                                        {$LL.chat.roomPanel.settings.permissions.banUsers()}
+                                    {:else if permissionRow.key === "inviteUsers"}
+                                        {$LL.chat.roomPanel.settings.permissions.inviteUsers()}
+                                    {:else if permissionRow.key === "changeSettings"}
+                                        {$LL.chat.roomPanel.settings.permissions.changeSettings()}
+                                    {:else if permissionRow.key === "changeRoomName"}
+                                        {$LL.chat.roomPanel.settings.permissions.changeRoomName()}
+                                    {:else if permissionRow.key === "changeRoomTopic"}
+                                        {$LL.chat.roomPanel.settings.permissions.changeRoomTopic()}
+                                    {:else if permissionRow.key === "changeHistoryVisibility"}
+                                        {$LL.chat.roomPanel.settings.permissions.changeHistoryVisibility()}
+                                    {:else if permissionRow.key === "changeAccess"}
+                                        {$LL.chat.roomPanel.settings.permissions.changeAccess()}
+                                    {:else if permissionRow.key === "changePermissions"}
+                                        {$LL.chat.roomPanel.settings.permissions.changePermissions()}
+                                    {/if}
+                                </span>
                                 <select
                                     class="w-36 rounded border border-solid border-white/10 bg-black/20 px-2 py-1.5 text-sm text-white disabled:opacity-60"
                                     data-testid={`roomPermission-${permissionRow.key}`}
@@ -318,7 +333,19 @@
                     <div class="text-xs font-semibold uppercase text-white/45">
                         {$LL.chat.roomPanel.settings.joinRule()}
                     </div>
-                    <div class="mt-1 text-white">{getJoinRuleLabel($privacyState.joinRule)}</div>
+                    <div class="mt-1 text-white">
+                        {#if $privacyState.joinRule === "public"}
+                            {$LL.chat.roomPanel.settings.joinRules.public()}
+                        {:else if $privacyState.joinRule === "invite"}
+                            {$LL.chat.roomPanel.settings.joinRules.invite()}
+                        {:else if $privacyState.joinRule === "restricted"}
+                            {$LL.chat.roomPanel.settings.joinRules.restricted()}
+                        {:else if $privacyState.joinRule === "knock"}
+                            {$LL.chat.roomPanel.settings.joinRules.knock()}
+                        {:else}
+                            {$privacyState.joinRule ?? $LL.chat.roomPanel.settings.unknown()}
+                        {/if}
+                    </div>
                 </div>
 
                 <div class="rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3">
