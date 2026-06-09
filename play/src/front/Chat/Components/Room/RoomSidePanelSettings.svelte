@@ -96,7 +96,7 @@
         editableTopic = $roomTopic;
         editableAccess = $privacyState.joinRule === "restricted" ? "restricted" : "invite";
         editableHistoryVisibility = historyVisibilityOptions.includes(
-            $privacyState.historyVisibility as historyVisibility
+            $privacyState.historyVisibility as historyVisibility,
         )
             ? ($privacyState.historyVisibility as historyVisibility)
             : "joined";

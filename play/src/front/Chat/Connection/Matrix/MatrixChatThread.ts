@@ -372,7 +372,7 @@ export class MatrixChatThread implements ChatThread {
 
         message.reactions.set(
             reactionKey,
-            new MatrixChatMessageReaction(this.parentRoom.getMatrixRoom(), event, this.canSendReactions)
+            new MatrixChatMessageReaction(this.parentRoom.getMatrixRoom(), event, this.canSendReactions),
         );
     }
 

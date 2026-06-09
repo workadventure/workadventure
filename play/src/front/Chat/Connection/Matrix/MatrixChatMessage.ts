@@ -47,7 +47,7 @@ export class MatrixChatMessage implements ChatMessage {
         private room: Room,
         isQuotedMessage?: boolean,
         canReactStore?: Readable<boolean>,
-        canSendMessagesStore?: Readable<boolean>
+        canSendMessagesStore?: Readable<boolean>,
     ) {
         this.id = event.getId() ?? uuidv4();
         this.type = this.mapMatrixMessageTypeToChatMessage();
@@ -67,7 +67,7 @@ export class MatrixChatMessage implements ChatMessage {
                 this.room
                     .getLiveTimeline()
                     .getState(Direction.Backward)
-                    ?.maySendEvent(EventType.Reaction, room.client.getSafeUserId()) ?? false
+                    ?.maySendEvent(EventType.Reaction, room.client.getSafeUserId()) ?? false,
             );
         this.canEdit = derived(
             canSendMessagesStore ??
@@ -75,9 +75,9 @@ export class MatrixChatMessage implements ChatMessage {
                     this.room
                         .getLiveTimeline()
                         .getState(Direction.Backward)
-                        ?.maySendEvent(EventType.RoomMessage, room.client.getSafeUserId()) ?? false
+                        ?.maySendEvent(EventType.RoomMessage, room.client.getSafeUserId()) ?? false,
                 ),
-            (canSendMessages) => this.isMyMessage && this.type === "text" && canSendMessages
+            (canSendMessages) => this.isMyMessage && this.type === "text" && canSendMessages,
         );
 
         event.on(MatrixEventEvent.Decrypted, this.decryptedListener);

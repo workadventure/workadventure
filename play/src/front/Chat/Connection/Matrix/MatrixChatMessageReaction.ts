@@ -18,7 +18,11 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
     reacted: Writable<boolean>;
     canReact: Readable<boolean>;
 
-    constructor(private matrixRoom: Room, event: MatrixEvent, canReactStore?: Readable<boolean>) {
+    constructor(
+        private matrixRoom: Room,
+        event: MatrixEvent,
+        canReactStore?: Readable<boolean>,
+    ) {
         const relation = event.getRelation();
         if (relation === null || relation.rel_type !== "m.annotation") {
             throw Error("Wrong matrix event object for MessageReaction");
@@ -40,7 +44,7 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
                 this.matrixRoom
                     .getLiveTimeline()
                     .getState(Direction.Backward)
-                    ?.maySendEvent(EventType.Reaction, this.matrixRoom.client.getSafeUserId()) ?? false
+                    ?.maySendEvent(EventType.Reaction, this.matrixRoom.client.getSafeUserId()) ?? false,
             );
         this.addUser(event.getSender(), event.getId());
     }

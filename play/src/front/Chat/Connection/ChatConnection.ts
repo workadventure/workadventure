@@ -538,7 +538,7 @@ export function hasChatRoomNotificationControl(
 }
 
 export function hasChatRoomSettingsManagement(
-    conversation: ChatConversation | undefined
+    conversation: ChatConversation | undefined,
 ): conversation is ChatRoom & ChatRoomSettingsManagement {
     const candidate = conversation as (ChatRoom & Partial<ChatRoomSettingsManagement>) | undefined;
     return (
