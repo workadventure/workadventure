@@ -433,6 +433,10 @@ const chat: BaseTranslation = {
             saving: "Saving...",
             saveSuccess: "Settings saved",
             saveError: "Unable to save settings",
+            errors: {
+                roomNameEmpty: "Room name cannot be empty",
+                restrictedAccessNeedsParentSpace: "Restricted access requires a linked folder or space.",
+            },
             joinRules: {
                 public: "Public",
                 invite: "Invite only",

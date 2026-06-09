@@ -88,6 +88,14 @@ export type ChatRoomSettingsUpdate = {
     historyVisibility?: historyVisibility;
     restrictedRoomId?: string;
 };
+export type ChatRoomSettingsErrorCode = "roomNameEmpty" | "restrictedAccessNeedsParentSpace";
+
+export class ChatRoomSettingsError extends Error {
+    constructor(readonly code: ChatRoomSettingsErrorCode) {
+        super(code);
+        this.name = "ChatRoomSettingsError";
+    }
+}
 
 export interface ChatRoomMember {
     id: string;

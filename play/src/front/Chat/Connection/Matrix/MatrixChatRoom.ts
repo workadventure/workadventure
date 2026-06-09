@@ -70,7 +70,7 @@ import type {
     ChatThreadSummary,
     memberTypingInformation,
 } from "../ChatConnection";
-import { ChatPermissionLevel } from "../ChatConnection";
+import { ChatPermissionLevel, ChatRoomSettingsError } from "../ChatConnection";
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, botsChatIds } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { gameManager, GameSceneNotFoundError } from "../../../Phaser/Game/GameManager";
@@ -2166,7 +2166,7 @@ export class MatrixChatRoom
         if (settings.name !== undefined) {
             const name = settings.name.trim();
             if (name.length === 0) {
-                throw new Error("Room name cannot be empty");
+                throw new ChatRoomSettingsError("roomNameEmpty");
             }
             updates.push(this.matrixRoom.client.setRoomName(this.id, name));
         }
@@ -2180,7 +2180,7 @@ export class MatrixChatRoom
         if (settings.access !== undefined) {
             if (settings.access === "restricted") {
                 if (!settings.restrictedRoomId) {
-                    throw new Error("Restricted room access requires a parent space room id");
+                    throw new ChatRoomSettingsError("restrictedAccessNeedsParentSpace");
                 }
                 updates.push(
                     this.matrixRoom.client.sendStateEvent(this.id, EventType.RoomJoinRules, {
