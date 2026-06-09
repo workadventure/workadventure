@@ -502,7 +502,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect(page2.locator("#message").getByText("Hello from Admin1 again")).toBeVisible({ timeout: 20_000 });
     });
 
-    test("Megaphone auditorium mode with 5 participants", async ({ browser, request }) => {
+    // FIXME: this test fails on Firefox because of screen share starting issues.
+    test("Megaphone auditorium mode with 5 participants @nofirefox", async ({ browser, request }) => {
         await resetWamMaps(request);
 
         // Create 5 browser pages with different users (using available test users)
