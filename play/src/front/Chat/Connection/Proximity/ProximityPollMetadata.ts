@@ -115,12 +115,12 @@ export function computeProximityPollState(
     poll: ProximityPollDefinitionMetadata,
     votes: ProximityPollVoteMetadata[],
     end: ProximityPollEndMetadata | undefined,
-    currentVoterId: string
+    currentVoterId: string,
 ): ChatPollState {
     const selectionsByUser = collectLatestSelections(poll, votes);
     const mySelection = selectionsByUser.get(currentVoterId);
     const activeSelections = Array.from(selectionsByUser.values()).filter(
-        (selection) => !selection.spoiled && selection.answerIds.length > 0
+        (selection) => !selection.spoiled && selection.answerIds.length > 0,
     );
     const spoiledVotes = Array.from(selectionsByUser.values()).filter((selection) => selection.spoiled).length;
     const totalVotes = activeSelections.length;
@@ -161,7 +161,7 @@ export function computeProximityPollState(
 
 export function isProximityPollDeleted(
     poll: ProximityPollDefinitionMetadata,
-    deletions: ProximityPollDeleteMetadata[]
+    deletions: ProximityPollDeleteMetadata[],
 ): boolean {
     return deletions.some((deletion) => deletion.pollId === poll.id && deletion.senderId === poll.senderId);
 }
@@ -182,7 +182,7 @@ function pushValidPollMetadata<T>(value: unknown, schema: z.ZodType<T>, target: 
 
 function collectLatestSelections(
     poll: ProximityPollDefinitionMetadata,
-    votes: ProximityPollVoteMetadata[]
+    votes: ProximityPollVoteMetadata[],
 ): Map<string, PollSelection> {
     const validAnswerIds = new Set(poll.answers.map((answer) => answer.id));
     const selectionsByUser = new Map<string, PollSelection>();
@@ -201,7 +201,7 @@ function collectLatestSelections(
 function parseVoteSelection(
     vote: ProximityPollVoteMetadata,
     validAnswerIds: Set<string>,
-    maxSelections: number
+    maxSelections: number,
 ): PollSelection {
     const hasInvalidAnswer = vote.answerIds.some((answerId) => !validAnswerIds.has(answerId));
     const hasTooManyAnswers = vote.answerIds.length > maxSelections;
