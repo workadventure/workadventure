@@ -162,6 +162,7 @@ export class ProximityChatRoom implements ChatRoom {
     private spaceIsTypingSubscription: Subscription | undefined;
     private spaceMetadataSubscription: Subscription | undefined;
     private roomSidePanelUnsubscriber: Unsubscriber;
+    private selectedRoomUnsubscriber: Unsubscriber;
     private readonly proximityPolls = new Map<string, ProximityChatPoll>();
     private readonly proximityQuestions = new Map<string, ProximityChatQuestion>();
     private observeUserJoinedSubscription: Subscription | undefined;
@@ -277,11 +278,12 @@ export class ProximityChatRoom implements ChatRoom {
             create: (options) => this.createQuestion(options),
         };
 
-        this.roomSidePanelUnsubscriber = roomSidePanelStore.subscribe((state) => {
-            if (state.isOpen && state.activeSection === "questions" && get(selectedRoomStore) === this) {
-                this.markQuestionsAsRead();
-            }
-        });
+        this.roomSidePanelUnsubscriber = roomSidePanelStore.subscribe(() =>
+            this.markQuestionsAsReadIfQuestionsSectionOpen(),
+        );
+        this.selectedRoomUnsubscriber = selectedRoomStore.subscribe(() =>
+            this.markQuestionsAsReadIfQuestionsSectionOpen(),
+        );
     }
 
     sendMessage(message: string, action: ChatMessageType = "proximity", broadcast = true): void {
@@ -761,6 +763,12 @@ export class ProximityChatRoom implements ChatRoom {
         }
 
         this.unreadQuestionIdsStore.set(new Set());
+    }
+
+    private markQuestionsAsReadIfQuestionsSectionOpen(): void {
+        if (this.isQuestionsSectionOpen()) {
+            this.markQuestionsAsRead();
+        }
     }
 
     private isQuestionsSectionOpen(): boolean {
@@ -1522,6 +1530,7 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceIsTypingSubscription?.unsubscribe();
         this.spaceMetadataSubscription?.unsubscribe();
         this.roomSidePanelUnsubscriber();
+        this.selectedRoomUnsubscriber();
 
         this.scriptingOutputAudioStreamManager?.close();
         this.scriptingInputAudioStreamManager?.close();
