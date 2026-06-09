@@ -33,14 +33,13 @@
 
 -->
 <script lang="ts">
-    import { onDestroy, onMount, setContext } from "svelte";
+    import { onMount, setContext } from "svelte";
     import { myCameraPeerStore } from "../../Stores/StreamableCollectionStore";
     import type { VideoBox as VideoBoxModel } from "../../Space/VideoBox";
     import VideoBox from "../Video/VideoBox.svelte";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
-    import { gameManager } from "../../Phaser/Game/GameManager";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { MAX_DISPLAYED_VIDEOS } from "../../Enum/EnvironmentVariable";
@@ -95,8 +94,6 @@
     /** Webcam locale dans `streamableCollectionStore` (`myCameraPeerStore`). */
     const LOCAL_CAMERA_VIDEO_BOX_UNIQUE_ID = "-1";
 
-    const gameScene = gameManager.getCurrentGameScene();
-
     function excludeLocalCamera(videoBoxes: VideoBoxModel[]): VideoBoxModel[] {
         return videoBoxes.filter((box) => box.uniqueId !== LOCAL_CAMERA_VIDEO_BOX_UNIQUE_ID);
     }
@@ -147,10 +144,6 @@
                 intersectionObserver.disconnect();
             }
         };
-    });
-
-    onDestroy(() => {
-        gameScene.reposition();
     });
 
     let maxMediaBoxWidth = $derived((oneLineMaxHeight * 16) / 9);
@@ -205,7 +198,6 @@
             videoWidth = layout.videoWidth;
             videoHeight = layout.videoHeight;
         }
-        gameScene.reposition();
     });
 
     function calculateOptimalLayout(containerWidth: number, containerHeight: number) {

@@ -1,8 +1,7 @@
 <script lang="ts">
     //import { fly } from "svelte/transition";
-    import { onMount, onDestroy, setContext } from "svelte";
+    import { setContext } from "svelte";
     import type { VideoBox } from "../../Space/VideoBox";
-    import { gameManager } from "../../Phaser/Game/GameManager";
     import VideoMediaBox from "./VideoMediaBox.svelte";
 
     interface Props {
@@ -20,16 +19,6 @@
         inHighlightFullscreenParticipantList = false,
     }: Props = $props();
     setContext("inHighlightFullscreenParticipantList", (() => inHighlightFullscreenParticipantList)());
-
-    const gameScene = gameManager.getCurrentGameScene();
-
-    onMount(() => {
-        gameScene.reposition();
-    });
-
-    onDestroy(() => {
-        gameScene.reposition();
-    });
 </script>
 
 <!-- Bug with transition : transition:fly={{ y: 50, duration: 150 }} -->

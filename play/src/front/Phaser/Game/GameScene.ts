@@ -1302,6 +1302,10 @@ export class GameScene extends DirtyScene {
         this.dirty = false;
         this.currentTick = time;
 
+        if (biggestAvailableAreaStore.consumePendingRecompute()) {
+            this.updateCameraOffsetFromBiggestAvailableArea();
+        }
+
         const currentPlayerPreviousPosition = this.hasJoinedRoom
             ? { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y }
             : undefined;
@@ -1678,13 +1682,17 @@ export class GameScene extends DirtyScene {
         return this.throttledSendViewportToServer_;
     }
 
+    private updateCameraOffsetFromBiggestAvailableArea(instant = false): void {
+        biggestAvailableAreaStore.recompute();
+        if (this.cameraManager != undefined) {
+            this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
+        }
+    }
+
     public reposition(instant = false): void {
         // Recompute camera offset if needed
         this.time.delayedCall(0, () => {
-            biggestAvailableAreaStore.recompute();
-            if (this.cameraManager != undefined) {
-                this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
-            }
+            this.updateCameraOffsetFromBiggestAvailableArea(instant);
         });
     }
 

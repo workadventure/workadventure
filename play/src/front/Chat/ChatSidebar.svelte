@@ -1,20 +1,14 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH, INITIAL_SIDEBAR_WIDTH_MOBILE } from "../Stores/ChatStore";
-    import { gameManager } from "../Phaser/Game/GameManager";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+    import { blocker } from "../Utils/screenBlocker";
     import { selectedRoomStore } from "./Stores/SelectRoomStore";
     import Chat from "./Components/Chat.svelte";
     import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore";
     import { IconX } from "@wa-icons";
 
     let container: HTMLElement | undefined = $state();
-
-    const gameScene = gameManager.getCurrentGameScene();
-
-    function reposition() {
-        gameScene.reposition();
-    }
 
     function closeChat() {
         chatVisibilityStore.set(false);
@@ -44,7 +38,6 @@
         document.onmouseup = () => {
             document.onmousemove = null;
             chatSidebarWidthStore.set(sideBarWidth);
-            reposition();
         };
     };
     const handleTouchStart = (e: TouchEvent) => {
@@ -67,7 +60,6 @@
             document.removeEventListener("touchmove", onTouchMove);
             document.removeEventListener("touchend", onTouchEnd);
             chatSidebarWidthStore.set(sideBarWidth);
-            reposition();
         }
 
         document.addEventListener("touchmove", onTouchMove);
@@ -83,7 +75,6 @@
             sideBarWidth = fullWidth;
         }
         chatSidebarWidthStore.set(sideBarWidth);
-        reposition();
     };
 
     $effect(() => {
@@ -113,10 +104,9 @@
         id="chat"
         data-testid="chat"
         transition:fly={{ duration: 200, x: isRTL ? sideBarWidth : -sideBarWidth }}
-        onintroend={reposition}
-        onoutroend={reposition}
         style="width: {sideBarWidth}px; max-width: {sideBarWidth}px;"
-        class=" chatWindow !min-w-[150px] max-sm:!min-w-[150px] bg-contrast/50 backdrop-blur-md p-0 screen-blocker"
+        {@attach blocker}
+        class=" chatWindow !min-w-[150px] max-sm:!min-w-[150px] bg-contrast/50 backdrop-blur-md p-0"
     >
         {#if $hideActionBarStoreBecauseOfChatBar && isInSpecificDiscussion}
             <div class="close-window absolute end-2 top-3 rounded-sm p-1 bg-contrast/80 z-50">
