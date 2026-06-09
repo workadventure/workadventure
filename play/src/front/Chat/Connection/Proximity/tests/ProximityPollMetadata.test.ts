@@ -106,7 +106,7 @@ describe("ProximityPollMetadata", () => {
             poll,
             [{ pollId: "poll-1", voterId: "alice-uuid", answerIds: ["banana"], updatedAt: 11 }],
             undefined,
-            "alice-uuid"
+            "alice-uuid",
         );
 
         expect(beforeVote.resultsVisible).toBe(false);
@@ -135,7 +135,7 @@ describe("ProximityPollMetadata", () => {
                 { pollId: "poll-1", voterId: "alice-uuid", answerIds: ["banana"], updatedAt: 12 },
             ],
             undefined,
-            "alice-uuid"
+            "alice-uuid",
         );
 
         expect(state.totalVotes).toBe(1);
@@ -170,7 +170,7 @@ describe("ProximityPollMetadata", () => {
                 closingMessage: "Poll closed",
                 closedAt: 12,
             },
-            "alice-uuid"
+            "alice-uuid",
         );
 
         expect(beforeEnd.resultsVisible).toBe(false);

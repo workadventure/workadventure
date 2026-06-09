@@ -6,7 +6,7 @@ type NotificationTargetRoom = Pick<ChatRoom, "id">;
 export function focusNotificationTarget(
     room: NotificationTargetRoom,
     messageId: string | undefined,
-    sidePanelSection: RoomSidePanelSection | undefined
+    sidePanelSection: RoomSidePanelSection | undefined,
 ): void {
     if (sidePanelSection) {
         roomSidePanelStore.setActiveSection(sidePanelSection);

@@ -3,10 +3,10 @@ import { parseProximityQAMetadata } from "./ProximityQAMetadata";
 export function getUnreadRemoteQuestionIds(
     previousMetadata: Map<string, unknown>,
     nextMetadata: Map<string, unknown>,
-    currentVoterId: string
+    currentVoterId: string,
 ): string[] {
     const previousQuestionIds = new Set(
-        parseProximityQAMetadata(previousMetadata).questions.map((question) => question.id)
+        parseProximityQAMetadata(previousMetadata).questions.map((question) => question.id),
     );
 
     return parseProximityQAMetadata(nextMetadata)

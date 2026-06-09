@@ -20,10 +20,10 @@ describe("ProximityPollNotification", () => {
 
     it("should format the notification message with the poll question", () => {
         expect(getProximityPollNotificationMessage(createPoll("poll-1", "Best fruit?", "bob-uuid"))).toBe(
-            "Poll: Best fruit?"
+            "Poll: Best fruit?",
         );
         expect(getProximityPollNotificationMessage(createPoll("poll-1", "Best fruit?", "bob-uuid"), "Sondage")).toBe(
-            "Sondage: Best fruit?"
+            "Sondage: Best fruit?",
         );
     });
 });

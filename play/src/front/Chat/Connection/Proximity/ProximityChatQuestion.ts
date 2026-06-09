@@ -99,7 +99,7 @@ export class ProximityChatQuestion implements ChatQuestionItem {
                         updatedAt: Date.now(),
                     },
                 ],
-            ])
+            ]),
         );
         return Promise.resolve();
     }
@@ -107,7 +107,7 @@ export class ProximityChatQuestion implements ChatQuestionItem {
     remove(): Promise<void> {
         if (!get(this.canDelete)) {
             return Promise.reject(
-                new ProximityQuestionPermissionError("Only question authors or moderators can delete this question")
+                new ProximityQuestionPermissionError("Only question authors or moderators can delete this question"),
             );
         }
 
@@ -121,7 +121,7 @@ export class ProximityChatQuestion implements ChatQuestionItem {
                         deletedAt: Date.now(),
                     },
                 ],
-            ])
+            ]),
         );
         return Promise.resolve();
     }
@@ -129,7 +129,7 @@ export class ProximityChatQuestion implements ChatQuestionItem {
     markAnswered(): Promise<void> {
         if (!get(this.canMarkAnswered)) {
             return Promise.reject(
-                new ProximityQuestionPermissionError("Only moderators can mark a question as answered")
+                new ProximityQuestionPermissionError("Only moderators can mark a question as answered"),
             );
         }
 
@@ -143,7 +143,7 @@ export class ProximityChatQuestion implements ChatQuestionItem {
                         answeredAt: Date.now(),
                     },
                 ],
-            ])
+            ]),
         );
         return Promise.resolve();
     }
@@ -152,7 +152,7 @@ export class ProximityChatQuestion implements ChatQuestionItem {
         upvotes: ProximityQAUpvoteMetadata[],
         answer: ProximityQAAnswerMetadata | undefined,
         canMarkAnswered: boolean,
-        canDeleteAny: boolean
+        canDeleteAny: boolean,
     ): ChatQuestionState {
         return computeProximityQAState(
             this.definition,
@@ -160,7 +160,7 @@ export class ProximityChatQuestion implements ChatQuestionItem {
             answer,
             this.currentVoterId,
             canMarkAnswered,
-            canDeleteAny
+            canDeleteAny,
         );
     }
 }

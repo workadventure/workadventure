@@ -115,7 +115,7 @@ export function computeProximityQAState(
     answer: ProximityQAAnswerMetadata | undefined,
     currentVoterId: string,
     canMarkAnswered: boolean,
-    canDeleteAny = canMarkAnswered
+    canDeleteAny = canMarkAnswered,
 ): ProximityQAState {
     const latestUpvotesByUser = collectLatestUpvotes(question, upvotes);
     const activeUpvotes = Array.from(latestUpvotesByUser.values()).filter((upvote) => upvote.upvoted);
@@ -140,14 +140,14 @@ export function computeProximityQAState(
 
 export function isProximityQAQuestionDeleted(
     question: ProximityQAQuestionMetadata,
-    deletions: ProximityQADeleteMetadata[]
+    deletions: ProximityQADeleteMetadata[],
 ): boolean {
     return deletions.some((deletion) => deletion.questionId === question.id);
 }
 
 function collectLatestUpvotes(
     question: ProximityQAQuestionMetadata,
-    upvotes: ProximityQAUpvoteMetadata[]
+    upvotes: ProximityQAUpvoteMetadata[],
 ): Map<string, ProximityQAUpvoteMetadata> {
     const latestUpvotesByUser = new Map<string, ProximityQAUpvoteMetadata>();
 

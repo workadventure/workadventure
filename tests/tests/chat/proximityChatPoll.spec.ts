@@ -21,8 +21,14 @@ async function joinSameProximityChat(adminPage: Page, memberPage: Page) {
 
 async function openProximityRoom(page: Page) {
     await ChatUtils.openChat(page);
+
+    const roomName = page.getByTestId("roomName");
+    if ((await roomName.count()) > 0 && (await roomName.textContent())?.trim() === "Proximity Chat") {
+        return;
+    }
+
     await page.getByTestId("toggleDisplayProximityChat").click();
-    await expect(page.getByTestId("roomName")).toHaveText("Proximity Chat", { timeout: 60_000 });
+    await expect(roomName).toHaveText("Proximity Chat", { timeout: 60_000 });
 }
 
 async function createPoll(
