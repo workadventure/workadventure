@@ -574,12 +574,44 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
             });
         }
 
-        // A listener may keep their local screen share active, but it must not be published to the megaphone speaker.
-        await pageListener1.getByTestId("screenShareButton").click();
-        await Menu.expectButtonState(pageListener1, "screenShareButton", "active");
+        // A megaphone listener alone cannot publish screen share in the megaphone space.
+        await expect(pageListener1.getByTestId("screenShareButton")).toBeVisible();
+        await expect(pageListener1.getByTestId("screenShareButton")).toBeDisabled();
         await expect(pageSpeaker.locator("#highlighted-media").getByText("Admin2", { exact: true })).toBeHidden({
             timeout: 20_000,
         });
+
+        // If the listener also joins a proximity bubble, their screen share is only published in that bubble.
+        await Map.teleportToPosition(pageListener2, 8 * 32, 2 * 32);
+        await expect(pageListener1.locator("#cameras-container").getByText("Alice", { exact: true })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(pageListener2.locator("#cameras-container").getByText("Admin2", { exact: true })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        await pageListener1.getByTestId("screenShareButton").click();
+        await Menu.expectButtonState(pageListener1, "screenShareButton", "active");
+        await expect(pageListener2.locator("#highlighted-media").getByText("Admin2", { exact: true })).toBeVisible({
+            timeout: 20_000,
+        });
+        await expect(pageSpeaker.locator("#highlighted-media").getByText("Admin2", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+        await expect(pageListener3.locator("#highlighted-media").getByText("Admin2", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+        await expect(pageListener4.locator("#highlighted-media").getByText("Admin2", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+
+        await pageListener1.getByTestId("screenShareButton").click();
+        await Menu.expectButtonState(pageListener1, "screenShareButton", "normal");
+        await expect(pageListener2.locator("#highlighted-media").getByText("Admin2", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+
+        await Map.teleportToPosition(pageListener2, 2 * 32, 8 * 32);
 
         // Verify listeners cannot see each other (only the speaker)
         // Admin2 (listener1) should NOT see Alice, Bob, and John
