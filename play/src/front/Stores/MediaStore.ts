@@ -1411,6 +1411,7 @@ export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);
  */
 // It is ok to not unsubscribe to this store because this module is a singleton.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
+backgroundConfigStore.subscribe(($config) => {
     // Skip if no transformer exists yet
     if (!backgroundTransformer || !lastBackgroundConfig) {
         return;
