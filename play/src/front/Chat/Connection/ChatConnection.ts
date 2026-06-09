@@ -559,7 +559,7 @@ export function hasChatRoomNotificationControl(
 }
 
 export function hasProximityChatSidePanel(
-    conversation: Partial<ChatConversation> | undefined
+    conversation: Partial<ChatConversation> | undefined,
 ): conversation is ProximityChatSidePanelRoom {
     const candidate = conversation as (ChatRoom & Partial<ProximityChatSidePanelRoom>) | undefined;
     return (

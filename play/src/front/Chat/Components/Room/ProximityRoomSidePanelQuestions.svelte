@@ -140,7 +140,7 @@
                                 <p class="m-0 whitespace-pre-wrap text-sm leading-5">{state.body}</p>
                                 <div class="mt-2 text-xs text-white/45">
                                     {state.senderName ?? $LL.chat.question.unknownAuthor()} · {new Date(
-                                        state.createdAt
+                                        state.createdAt,
                                     ).toLocaleTimeString()}
                                 </div>
                             </div>

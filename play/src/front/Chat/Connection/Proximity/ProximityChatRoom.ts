@@ -734,11 +734,7 @@ export class ProximityChatRoom implements ChatRoom {
     private computeCanModerateQuestions(users: Map<string, SpaceUserExtended>): boolean {
         const user = this.getCurrentSpaceUser(users);
 
-        return (
-            this.isCurrentUserAdmin(user) ||
-            user?.megaphoneState === true ||
-            WAMSettingsUtils.canUseMegaphone(this.wamSettings, this.tags)
-        );
+        return this.isCurrentUserAdmin(user) || user?.megaphoneState === true;
     }
 
     private computeCanDeleteAnyQuestion(users: Map<string, SpaceUserExtended>): boolean {

@@ -16,7 +16,7 @@
 
     $: participantsStore = room.currentMeetingParticipantsStore;
     $: participants = [...$participantsStore].sort((participantA, participantB) =>
-        getParticipantName(participantA).localeCompare(getParticipantName(participantB))
+        getParticipantName(participantA).localeCompare(getParticipantName(participantB)),
     );
 
     function openParticipantWokaMenu(participant: ProximityChatSidePanelParticipant): void {

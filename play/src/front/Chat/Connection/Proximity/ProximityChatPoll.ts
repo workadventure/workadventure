@@ -104,7 +104,7 @@ export class ProximityChatPoll implements ChatPollItem {
                         updatedAt: Date.now(),
                     },
                 ],
-            ])
+            ]),
         );
         return Promise.resolve();
     }
@@ -129,7 +129,7 @@ export class ProximityChatPoll implements ChatPollItem {
                         closedAt: Date.now(),
                     },
                 ],
-            ])
+            ]),
         );
         return Promise.resolve();
     }
@@ -150,7 +150,7 @@ export class ProximityChatPoll implements ChatPollItem {
                         deletedAt: Date.now(),
                     },
                 ],
-            ])
+            ]),
         );
         return Promise.resolve();
     }

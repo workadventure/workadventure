@@ -19,7 +19,7 @@ export type ProximityParticipantWokaMenuScene = {
 
 export function openProximityParticipantWokaMenu(
     participant: ProximityChatSidePanelParticipant,
-    scene: ProximityParticipantWokaMenuScene
+    scene: ProximityParticipantWokaMenuScene,
 ): boolean {
     if (!participant.uuid) {
         return false;
