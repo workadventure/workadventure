@@ -17,9 +17,11 @@ import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
-import { pushToTalkAvailabilityStore } from "../../Stores/MediaStore";
+import { availabilityStatusStore, pushToTalkAvailabilityStore } from "../../Stores/MediaStore";
+import { inExternalServiceStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
 import {
     createTemporaryUnmuteReleaseController,
+    isUnavailableForMicrophone,
     microphoneSession,
     shouldIgnorePushToTalkKeyboardEvent,
 } from "../../Stores/MicrophoneSessionStore";
@@ -308,7 +310,14 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     private tryStartPushToTalk(event: KeyboardEvent): boolean {
-        if (event.repeat || shouldIgnorePushToTalkKeyboardEvent(event.target) || !get(pushToTalkAvailabilityStore)) {
+        if (
+            event.repeat ||
+            shouldIgnorePushToTalkKeyboardEvent(event.target) ||
+            !get(pushToTalkAvailabilityStore) ||
+            !get(myMicrophoneStore) ||
+            get(inExternalServiceStore) ||
+            isUnavailableForMicrophone(get(availabilityStatusStore))
+        ) {
             return false;
         }
 
