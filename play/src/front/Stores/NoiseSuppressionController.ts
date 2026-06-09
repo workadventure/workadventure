@@ -13,7 +13,7 @@ export class NoiseSuppressionController {
     public async transform(
         rawValue: LocalStreamStoreValue,
         noiseSuppressionEnabled: boolean,
-        signal?: AbortSignal
+        signal?: AbortSignal,
     ): Promise<LocalStreamStoreValue> {
         this.throwIfAborted(signal);
 
@@ -51,13 +51,13 @@ export class NoiseSuppressionController {
             noiseSuppressionStateStore.set({ status: "initializing" });
         }
 
-        if (!this.transformer) {
-            this.transformer = new NoiseSuppressionTransformer({
-                onStatusChange: this.updateState.bind(this),
-            });
-        }
-
         try {
+            if (!this.transformer) {
+                this.transformer = new NoiseSuppressionTransformer({
+                    onStatusChange: this.updateState.bind(this),
+                });
+            }
+
             this.throwIfAborted(signal);
             return {
                 type: "success",
