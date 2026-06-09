@@ -150,8 +150,14 @@
     }
 
     async function saveSettings() {
-        const shouldSaveSettings = settingsDirty;
+        const canSaveSettings = $canEditName || $canEditTopic || $canEditAccess || $canEditHistory;
+        const shouldSaveSettings = settingsDirty && canSaveSettings;
         const shouldSavePermissions = permissionsDirty && $canEditPermissions;
+
+        if (!shouldSaveSettings && !shouldSavePermissions) {
+            saveError = $LL.chat.roomPanel.settings.saveError();
+            return;
+        }
 
         try {
             saveError = undefined;
