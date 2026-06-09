@@ -28,7 +28,7 @@ function createNoiseSuppressionEnabledStore() {
 }
 
 export const noiseSuppressionStateStore = writable<NoiseSuppressionState>(
-    localUserStore.getNoiseSuppressionEnabled() ? { status: "initializing" } : { status: "disabled" }
+    localUserStore.getNoiseSuppressionEnabled() ? { status: "initializing" } : { status: "disabled" },
 );
 
 export const noiseSuppressionEnabledStore = createNoiseSuppressionEnabledStore();
@@ -41,5 +41,5 @@ export const customNoiseSuppressionActiveStore = derived(
             $noiseSuppressionStateStore.status !== "error" &&
             $noiseSuppressionStateStore.status !== "unsupported"
         );
-    }
+    },
 );

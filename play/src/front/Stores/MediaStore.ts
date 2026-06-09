@@ -311,7 +311,7 @@ export const audioConstraintStore = derived(
             constraints.sampleRate = { ideal: 16000 };
         }
         return constraints;
-    }
+    },
 );
 
 /**
@@ -879,7 +879,7 @@ export const rawLocalStreamStore = derived<
     {
         type: "success",
         stream: undefined,
-    }
+    },
 );
 
 /**
@@ -905,7 +905,7 @@ export const audioProcessedLocalStreamStore = derived<
         };
 
         currentAudioProcessedTransformAbortController?.abort(
-            new AbortError("Noise suppression transform cancelled: new stream update")
+            new AbortError("Noise suppression transform cancelled: new stream update"),
         );
         const controller = new AbortController();
         currentAudioProcessedTransformAbortController = controller;
@@ -916,8 +916,8 @@ export const audioProcessedLocalStreamStore = derived<
                     await noiseSuppressionController.transform(
                         $rawLocalStreamStore,
                         $noiseSuppressionEnabledStore,
-                        controller.signal
-                    )
+                        controller.signal,
+                    ),
                 );
             })
             .catch((e) => {

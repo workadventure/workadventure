@@ -143,7 +143,7 @@ export class NoiseSuppressionTransformer {
             workletHandle,
             (message: NoiseSuppressionAudioWorkletOutboundMessage) => {
                 this.handleWorkletMessage(message);
-            }
+            },
         );
         this.workletHandle = workletHandle;
 
