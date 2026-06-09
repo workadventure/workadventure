@@ -48,7 +48,7 @@ export type ProximityFileChunkFrame = {
 };
 
 function toArrayBufferBackedUint8Array(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
-    const copy = new Uint8Array(bytes.byteLength) as Uint8Array<ArrayBuffer>;
+    const copy = new Uint8Array(bytes.byteLength);
     copy.set(bytes);
     return copy;
 }
@@ -59,9 +59,7 @@ export function encodeProximityFileChunkFrame(transferId: string, chunk: Uint8Ar
         throw new Error("Transfer id is too long");
     }
 
-    const frame = new Uint8Array(
-        HEADER_LENGTH + encodedTransferId.length + chunk.byteLength,
-    ) as Uint8Array<ArrayBuffer>;
+    const frame = new Uint8Array(HEADER_LENGTH + encodedTransferId.length + chunk.byteLength);
     frame.set(CHUNK_FRAME_MAGIC, 0);
     const view = new DataView(frame.buffer);
     view.setUint16(CHUNK_FRAME_MAGIC.length, encodedTransferId.length, false);
