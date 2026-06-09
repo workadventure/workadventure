@@ -36,6 +36,7 @@
     onMount(() => {
         const width = Math.min($windowSize.width / 2, Math.max(200, $mapEditorSideBarWidthStore));
         mapEditor.style.width = `${width}px`;
+        gameManager.getCurrentGameScene().reposition();
     });
 </script>
 
@@ -44,7 +45,7 @@
 {/if}
 <div
     id="map-editor-container"
-    class="z-[500] flex flex-row items-start justify-end gap-4 absolute h-full max-w-full md:max-w-[calc(100%-18px)] top-0 end-0 pointer-events-none blocker"
+    class="z-[500] flex flex-row items-start justify-end gap-4 absolute h-full max-w-full md:max-w-[calc(100%-18px)] top-0 end-0 pointer-events-none"
 >
     <div
         in:fly={{ x: 100, duration: 250, delay: 300 }}
