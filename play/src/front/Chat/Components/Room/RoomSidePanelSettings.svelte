@@ -22,11 +22,6 @@
     let { room }: Props = $props();
 
     const emptyPrivacyState = readable<ChatRoomPrivacyState>({});
-    const permissionOptions = [
-        { value: ChatPermissionLevel.USER, label: get(LL).chat.manageRoomUsers.roles.USER() },
-        { value: ChatPermissionLevel.MODERATOR, label: get(LL).chat.manageRoomUsers.roles.MODERATOR() },
-        { value: ChatPermissionLevel.ADMIN, label: get(LL).chat.manageRoomUsers.roles.ADMIN() },
-    ];
     const permissionRows: { key: keyof ChatRoomPermissionsState; label: () => string }[] = [
         { key: "sendMessages", label: () => get(LL).chat.roomPanel.settings.permissions.sendMessages() },
         { key: "sendReactions", label: () => get(LL).chat.roomPanel.settings.permissions.sendReactions() },
@@ -298,9 +293,15 @@
                                     disabled={!$canEditPermissions || settingsSaving}
                                     onchange={markPermissionsDirty}
                                 >
-                                    {#each permissionOptions as permissionOption (permissionOption.value)}
-                                        <option value={permissionOption.value}>{permissionOption.label}</option>
-                                    {/each}
+                                    <option value={ChatPermissionLevel.USER}>
+                                        {$LL.chat.manageRoomUsers.roles.USER()}
+                                    </option>
+                                    <option value={ChatPermissionLevel.MODERATOR}>
+                                        {$LL.chat.manageRoomUsers.roles.MODERATOR()}
+                                    </option>
+                                    <option value={ChatPermissionLevel.ADMIN}>
+                                        {$LL.chat.manageRoomUsers.roles.ADMIN()}
+                                    </option>
                                 </select>
                             </label>
                         {/each}
