@@ -987,7 +987,7 @@ export class MatrixChatRoom
             this.matrixRoom,
             isQuotedMessage,
             this.canSendReactions,
-            this.canSendMessages
+            this.canSendMessages,
         );
         this.attachThreadMetadataToMessage(message);
         return message;
@@ -1556,7 +1556,7 @@ export class MatrixChatRoom
                 }
                 existingMessageWithReactions.reactions.set(
                     reactionKey,
-                    new MatrixChatMessageReaction(this.matrixRoom, event, this.canSendReactions)
+                    new MatrixChatMessageReaction(this.matrixRoom, event, this.canSendReactions),
                 );
                 return;
             }
@@ -2225,7 +2225,7 @@ export class MatrixChatRoom
 
         if (settings.topic !== undefined) {
             updates.push(
-                this.matrixRoom.client.sendStateEvent(this.id, EventType.RoomTopic, { topic: settings.topic })
+                this.matrixRoom.client.sendStateEvent(this.id, EventType.RoomTopic, { topic: settings.topic }),
             );
         }
 
@@ -2243,13 +2243,13 @@ export class MatrixChatRoom
                                 room_id: settings.restrictedRoomId,
                             },
                         ],
-                    })
+                    }),
                 );
             } else {
                 updates.push(
                     this.matrixRoom.client.sendStateEvent(this.id, EventType.RoomJoinRules, {
                         join_rule: JoinRule.Invite,
-                    })
+                    }),
                 );
             }
         }
@@ -2258,7 +2258,7 @@ export class MatrixChatRoom
             updates.push(
                 this.matrixRoom.client.sendStateEvent(this.id, EventType.RoomHistoryVisibility, {
                     history_visibility: settings.historyVisibility as HistoryVisibility,
-                })
+                }),
             );
         }
 

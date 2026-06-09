@@ -34,7 +34,7 @@ export function getRoomPermissionsState(powerLevels: RoomPowerLevelsEventContent
         changeRoomName: getChatPermissionLevelForPowerLevel(events[EventType.RoomName] ?? stateDefault),
         changeRoomTopic: getChatPermissionLevelForPowerLevel(events[EventType.RoomTopic] ?? stateDefault),
         changeHistoryVisibility: getChatPermissionLevelForPowerLevel(
-            events[EventType.RoomHistoryVisibility] ?? stateDefault
+            events[EventType.RoomHistoryVisibility] ?? stateDefault,
         ),
         changeAccess: getChatPermissionLevelForPowerLevel(events[EventType.RoomJoinRules] ?? stateDefault),
         changePermissions: getChatPermissionLevelForPowerLevel(events[EventType.RoomPowerLevels] ?? stateDefault),
@@ -43,7 +43,7 @@ export function getRoomPermissionsState(powerLevels: RoomPowerLevelsEventContent
 
 export function buildRoomPowerLevelsContent(
     currentPowerLevels: RoomPowerLevelsEventContent,
-    permissions: ChatRoomPermissionsState
+    permissions: ChatRoomPermissionsState,
 ): RoomPowerLevelsEventContent {
     return {
         ...currentPowerLevels,
