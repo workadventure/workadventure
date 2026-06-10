@@ -111,11 +111,6 @@ vi.mock("../../Connection/ConnectionManager", () => {
     };
 });
 
-vi.mock(
-    "../../Enum/EnvironmentVariable.ts",
-    () => import("../../../../tests/front/mocks/frontEnvironmentVariableMock"),
-);
-
 const defaultRoomConnectionMock: RoomConnectionForSpacesInterface = new MockRoomConnectionForSpaces();
 
 describe("SpaceProviderInterface implementation", () => {
