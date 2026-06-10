@@ -103,6 +103,17 @@ export interface SimplePeerConnectionInterface {
      * This method is for development/testing purposes only.
      */
     forceFirstPeerFailure(): { userId: string; triggered: boolean } | null;
+
+    /**
+     * [DEBUG] Unilaterally destroys the first video peer to test retry mechanism.
+     * This method is for development/testing purposes only.
+     */
+    forceFirstPeerUnilateralDestroy(): Promise<{
+        userId: string;
+        triggered: boolean;
+        initiator: boolean;
+        connectionId: string;
+    } | null>;
 }
 
 export interface PeerFactoryInterface {

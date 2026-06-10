@@ -154,6 +154,11 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     userId: message.sender.spaceUserId,
                     initiator: webRtcStartMessage.initiator,
                 };
+                console.info("[WebRTC] start message received by front", {
+                    userId: user.userId,
+                    initiator: user.initiator,
+                    connectionId: webRtcStartMessage.connectionId,
+                });
                 this.receiveWebrtcStart(user, message.sender, webRtcStartMessage.connectionId);
             }),
         );
@@ -230,6 +235,11 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     return;
                 }
 
+                console.info("[WebRTC] connection starting on front", {
+                    userId: user.userId,
+                    initiator: user.initiator ?? false,
+                    connectionId,
+                });
                 const peer = new RemotePeer(
                     user,
                     user.initiator ? user.initiator : false,
@@ -241,9 +251,15 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     spaceUser.spaceUserId,
                     this._blockedUsersStore,
                     (intentionalClose: boolean) => {
+                        console.info("[WebRTC] video peer destroyed", {
+                            userId: user.userId,
+                            initiator: user.initiator ?? false,
+                            connectionId,
+                            intentionalClose,
+                        });
                         abortController.abort();
                         if (!intentionalClose) {
-                            this.handleConnectionFailure(user.userId, user.initiator ?? false, spaceUser);
+                            this.handleConnectionFailure(user.userId, connectionId);
                         }
                     },
                     connectionId,
@@ -486,7 +502,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * - Delay increases up to 15 seconds
      * - Callback triggered after 30th failed attempt
      */
-    private handleConnectionFailure(userId: string, isInitiator: boolean, spaceUser: SpaceUserExtended): void {
+    private handleConnectionFailure(userId: string, connectionId: string): void {
         // Cancel any pending delayed attempt reset - we want to keep the history
         this.cancelDelayedAttemptReset(userId);
         // Don't handle failures if shutdown has been called
@@ -505,7 +521,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             // Double-check user is still in space before retrying
             const spaceUserForRetry = this._space.getSpaceUserBySpaceUserId(userId);
             if (spaceUserForRetry) {
-                this.attemptRetry(userId, isInitiator);
+                this.attemptRetry(userId, connectionId);
             } else {
                 this.retryManager.cancel(userId);
             }
@@ -516,13 +532,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * Attempts to retry a connection by sending a meetingConnectionRestartMessage to the backend
      * The backend will respond with a new webRtcStartMessage containing a new connectionId
      */
-    private attemptRetry(userId: string, isInitiator: boolean): void {
+    private attemptRetry(userId: string, connectionId?: string): void {
         if (this.abortController.signal.aborted) {
-            return;
-        }
-
-        // Only the initiator should send the restart message to avoid duplicate messages
-        if (!isInitiator) {
             return;
         }
 
@@ -535,6 +546,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 $case: "meetingConnectionRestartMessage",
                 meetingConnectionRestartMessage: {
                     userId: userId,
+                    connectionId,
                 },
             },
         });
@@ -918,5 +930,47 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             });
 
         return { userId, triggered: true };
+    }
+
+    /**
+     * [DEBUG] Unilaterally destroys the first video peer without going through the intentional close path.
+     * This method is for development/testing purposes only.
+     * @returns Information about the triggered failure, or null if no peers exist
+     */
+    public async forceFirstPeerUnilateralDestroy(): Promise<{
+        userId: string;
+        triggered: boolean;
+        initiator: boolean;
+        connectionId: string;
+    } | null> {
+        const firstEntry = this.videoPeers.entries().next().value;
+
+        if (!firstEntry) {
+            console.warn("[DEBUG] No video peers found to force unilateral destroy");
+            return null;
+        }
+
+        const [userId, peerObj] = firstEntry;
+        const peer = await peerObj.promise;
+        const initiator = peer.user.initiator ?? false;
+        const connectionId = peer.connectionId;
+
+        if (peer.destroyed) {
+            console.warn("[DEBUG] Cannot force unilateral WebRTC peer destroy because peer is already destroyed", {
+                userId,
+                initiator,
+                connectionId,
+            });
+            return { userId, triggered: false, initiator, connectionId };
+        }
+
+        console.info("[DEBUG] Unilaterally destroying WebRTC peer to trigger retry", {
+            userId,
+            initiator,
+            connectionId,
+        });
+        peer.destroy();
+
+        return { userId, triggered: true, initiator, connectionId };
     }
 }

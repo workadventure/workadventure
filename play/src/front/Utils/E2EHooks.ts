@@ -199,6 +199,59 @@ function testWebRtcRetry(): { spaceName: string; userId: string; triggered: bool
 }
 
 /**
+ * [DEBUG] Unilaterally destroys a WebRTC peer to test the retry mechanism.
+ * This simulates an unexpected local peer destruction without asking the remote peer to close.
+ * @returns Information about the triggered failure, or null if no peers found
+ */
+async function testWebRtcUnilateralDestroyRetry(): Promise<{
+    spaceName: string;
+    userId: string;
+    triggered: boolean;
+    initiator: boolean;
+    connectionId: string;
+} | null> {
+    try {
+        const spaceRegistry = gameManager.getCurrentGameScene().spaceRegistry;
+        const spaces = spaceRegistry.getAll();
+
+        const triggerForSpace = async (
+            spaceIndex: number,
+        ): Promise<{
+            spaceName: string;
+            userId: string;
+            triggered: boolean;
+            initiator: boolean;
+            connectionId: string;
+        } | null> => {
+            const space = spaces[spaceIndex];
+            if (!space) {
+                console.warn("[DEBUG] No active video peers found in any space to test unilateral destroy retry");
+                return null;
+            }
+
+            const simplePeer = space.simplePeer;
+            if (simplePeer) {
+                const result = await simplePeer.forceFirstPeerUnilateralDestroy();
+                if (result) {
+                    console.info("[DEBUG] WebRTC unilateral destroy retry test triggered", {
+                        spaceName: space.getName(),
+                        ...result,
+                    });
+                    return { spaceName: space.getName(), ...result };
+                }
+            }
+
+            return triggerForSpace(spaceIndex + 1);
+        };
+
+        return await triggerForSpace(0);
+    } catch (error) {
+        console.error("[DEBUG] Error while triggering WebRTC unilateral destroy retry test:", error);
+        return null;
+    }
+}
+
+/**
  * [DEBUG] Forces a server disconnected event to test the reconnection flow (connection issue toast, wait for pusher, reload scene).
  * Emits on the current RoomConnection's serverDisconnected subject so the same handlers as a real disconnect run.
  * @returns { triggered: true } if the event was emitted, or null if not in a game scene or no connection
@@ -293,6 +346,10 @@ export const e2eHooks = {
      * [DEBUG] Forces a WebRTC peer failure to test the retry mechanism.
      */
     testWebRtcRetry,
+    /**
+     * [DEBUG] Unilaterally destroys a WebRTC peer to test the retry mechanism.
+     */
+    testWebRtcUnilateralDestroyRetry,
     /**
      * [DEBUG] Forces a LiveKit WebSocket close to test the reconnection mechanism.
      */
