@@ -2,7 +2,13 @@ import { derived, writable } from "svelte/store";
 
 import { localUserStore } from "../Connection/LocalUserStore";
 
-export type NoiseSuppressionStatus = "disabled" | "initializing" | "ready" | "error" | "unsupported";
+export type NoiseSuppressionStatus =
+    | "disabled"
+    | "pendingInitialization"
+    | "initializing"
+    | "ready"
+    | "error"
+    | "unsupported";
 
 export interface NoiseSuppressionState {
     status: NoiseSuppressionStatus;
@@ -21,14 +27,14 @@ function createNoiseSuppressionEnabledStore() {
             if (!value) {
                 noiseSuppressionStateStore.set({ status: "disabled" });
             } else {
-                noiseSuppressionStateStore.set({ status: "initializing" });
+                noiseSuppressionStateStore.set({ status: "pendingInitialization" });
             }
         },
     };
 }
 
 export const noiseSuppressionStateStore = writable<NoiseSuppressionState>(
-    localUserStore.getNoiseSuppressionEnabled() ? { status: "initializing" } : { status: "disabled" },
+    localUserStore.getNoiseSuppressionEnabled() ? { status: "pendingInitialization" } : { status: "disabled" },
 );
 
 export const noiseSuppressionEnabledStore = createNoiseSuppressionEnabledStore();
