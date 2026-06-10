@@ -3,6 +3,7 @@
     import debug from "debug";
     import { onMount } from "svelte";
     import { videoStreamElementsStore } from "../../Stores/PeerStore";
+    import { blocker } from "../../Utils/screenBlocker";
 
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
 
@@ -100,7 +101,7 @@
         ? 'hidden'
         : ''}"
 >
-    <div class="gap-1 @md/actions:gap-2 @xl/actions:gap-4 p-1 @md/actions:p-2 @xl/actions:p-4 screen-blocker">
+    <div {@attach blocker} class="gap-1 @md/actions:gap-2 @xl/actions:gap-4 p-1 @md/actions:p-2 @xl/actions:p-4">
         <div class="w-full flex justify-between items-center" bind:offsetWidth={actionBarWidth}>
             <!-- Left bar -->
             <div class="flex-1 flex">

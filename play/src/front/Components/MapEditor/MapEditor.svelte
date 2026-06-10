@@ -7,7 +7,7 @@
 
     import { windowSize } from "../../Stores/CoWebsiteStore";
 
-    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { blocker } from "../../Utils/screenBlocker";
     import AreaEditor from "./AreaEditor/AreaEditor.svelte";
     import EntityEditor from "./EntityEditor/EntityEditor.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
@@ -26,7 +26,6 @@
 
     function onResize(width: number) {
         mapEditorSideBarWidthStore.set(width);
-        gameManager.getCurrentGameScene().reposition();
     }
 
     $effect(() => {
@@ -36,7 +35,6 @@
     onMount(() => {
         const width = Math.min($windowSize.width / 2, Math.max(200, $mapEditorSideBarWidthStore));
         mapEditor.style.width = `${width}px`;
-        gameManager.getCurrentGameScene().reposition();
     });
 </script>
 
@@ -58,7 +56,8 @@
     <div
         id="map-editor-right"
         bind:this={mapEditor}
-        class={`map-editor screen-blocker relative h-dvh max-w-full md:max-w-[calc(100%-64px)] pointer-events-auto ${$mapEditorSelectedToolStore}`}
+        {@attach blocker}
+        class={`map-editor relative h-dvh max-w-full md:max-w-[calc(100%-64px)] pointer-events-auto ${$mapEditorSelectedToolStore}`}
     >
         {#if $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor}
             <div class="absolute h-dvh -start-0.5 top-0 flex flex-col z-[2000]">

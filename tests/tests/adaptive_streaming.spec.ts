@@ -58,6 +58,8 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
 
             expect(page.getByRole("cell", { name: "640x360" })).toBeVisible({ timeout: 60_000 }),
 
+            expect(page.getByRole("cell", { name: "887x499" })).toBeVisible({ timeout: 60_000 }),
+
             expect(page.getByRole("cell", { name: "888x500" })).toBeVisible({ timeout: 60_000 }),
             // In Real usage
 

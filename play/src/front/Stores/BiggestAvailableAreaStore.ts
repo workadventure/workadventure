@@ -131,13 +131,62 @@ export function getBoxArea(box: Box, xVertices: number[], yVertices: number[]): 
 }
 
 /**
- * A store that contains the list of (video) peers we are connected to.
+ * A store that contains the biggest screen area not covered by registered UI blockers.
  */
-function createBiggestAvailableAreaStore() {
+function areBoxesEqual(first: Box | undefined, second: Box | undefined): boolean {
+    if (first === undefined || second === undefined) {
+        return first === second;
+    }
+
+    return (
+        first.xStart === second.xStart &&
+        first.yStart === second.yStart &&
+        first.xEnd === second.xEnd &&
+        first.yEnd === second.yEnd
+    );
+}
+
+function isBoxEmpty(box: Box): boolean {
+    return box.xEnd <= box.xStart || box.yEnd <= box.yStart;
+}
+
+export function createBiggestAvailableAreaStore() {
     const { subscribe, set } = writable<Box>({ xStart: 0, yStart: 0, xEnd: 1, yEnd: 1 });
+    const blockingElements = new Map<HTMLElement, Box | undefined>();
+    let recomputeRequested = false;
 
     return {
         subscribe,
+        registerBlocker: (element: HTMLElement) => {
+            blockingElements.set(element, undefined);
+            recomputeRequested = true;
+
+            return () => {
+                if (blockingElements.delete(element)) {
+                    recomputeRequested = true;
+                }
+            };
+        },
+        updateBlockerBox: (element: HTMLElement, box: Box | undefined) => {
+            if (!blockingElements.has(element)) {
+                return;
+            }
+
+            if (areBoxesEqual(blockingElements.get(element), box)) {
+                return;
+            }
+
+            blockingElements.set(element, box);
+            recomputeRequested = true;
+        },
+        requestRecompute: () => {
+            recomputeRequested = true;
+        },
+        consumePendingRecompute: () => {
+            const shouldRecompute = recomputeRequested;
+            recomputeRequested = false;
+            return shouldRecompute;
+        },
         recompute: () => {
             const gameContainer = HtmlUtils.querySelectorOrFail<HTMLDivElement>("#game");
 
@@ -146,17 +195,9 @@ function createBiggestAvailableAreaStore() {
                 height: gameContainer.offsetHeight,
             };
 
-            const blockingElements = Array.from(document.getElementsByClassName("screen-blocker"));
-
-            const blockingBoxes = blockingElements.map((element) => {
-                const bounds = element.getBoundingClientRect();
-                return {
-                    xStart: bounds.x,
-                    yStart: bounds.y,
-                    xEnd: bounds.right,
-                    yEnd: bounds.bottom,
-                };
-            });
+            const blockingBoxes = Array.from(blockingElements.entries())
+                .filter(([element, box]) => element.isConnected && box !== undefined && !isBoxEmpty(box))
+                .map(([, box]) => box as Box);
 
             set(findBiggestAvailableArea(gameSize, blockingBoxes));
         },
