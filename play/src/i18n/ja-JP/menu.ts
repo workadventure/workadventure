@@ -50,6 +50,18 @@ const menu: DeepPartial<Translation["menu"]> = {
             balancedTitle: "フレームレートと解像度のバランスを保つ",
             balancedDescription: "フレームレートと解像度のバランスを保つようにします。",
         },
+        microphone: {
+            title: "マイク設定",
+            autoGainControl: "自動ゲイン制御",
+            echoCancellation: "エコーキャンセル",
+            noiseSuppression: "ノイズ抑制",
+            workAdventureNoiseSuppression: "WorkAdventure ノイズ抑制",
+            workAdventureNoiseSuppressionDescription: "WorkAdventure のノイズ抑制でマイク音声を処理します。",
+            browserNoiseSuppression: "ブラウザーのノイズ抑制",
+            browserNoiseSuppressionDescription: "ブラウザー内蔵のノイズ抑制を使用します。",
+            voiceIsolation: "声の分離",
+            voiceIsolationDescription: "利用できる場合、ブラウザーと OS の声の分離を使用します。",
+        },
         language: {
             title: "言語",
         },

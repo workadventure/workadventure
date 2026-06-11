@@ -50,6 +50,19 @@ const menu: DeepPartial<Translation["menu"]> = {
             balancedTitle: "Frame rate a rozrěšenje w balansu wóstajiś",
             balancedDescription: "Wopytaj se balansu mjazy frame rate a rozrěšenim wobchowaś.",
         },
+        microphone: {
+            title: "Mikrofonowe nastajenja",
+            autoGainControl: "Awtomatiske wózmócnjenje",
+            echoCancellation: "Wótzašćitowanje echa",
+            noiseSuppression: "Wótpóranje šuma",
+            workAdventureNoiseSuppression: "Wótpóranje šuma WorkAdventure",
+            workAdventureNoiseSuppressionDescription: "Pśeźěłajśo swój mikrofon z wótpóranim šuma WorkAdventure.",
+            browserNoiseSuppression: "Wótpóranje šuma wobglědowaka",
+            browserNoiseSuppressionDescription: "Wužywajśo zatwarjone wótpóranje šuma swójogo wobglědowaka.",
+            voiceIsolation: "Izolacija głosa",
+            voiceIsolationDescription:
+                "Wužywajśo izolaciju głosa wobglědowaka a źěłowego systema, jolic jo k dispoziciji.",
+        },
         language: {
             title: "Rěc",
         },

@@ -50,6 +50,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noiseSuppressionInitializing: "사용자 지정 소음 억제를 초기화하는 중...",
         noiseSuppressionUnsupported: "이 브라우저에서는 사용자 지정 소음 억제를 실행할 수 없습니다.",
         noiseSuppressionError: "사용자 지정 소음 억제에 실패했습니다. 브라우저 기본 소음 억제로 돌아갑니다.",
+        noiseSuppressionOn: "켜짐",
+        noiseSuppressionOff: "꺼짐",
         openSettings: "설정 열기",
         ignore: "무시",
     },

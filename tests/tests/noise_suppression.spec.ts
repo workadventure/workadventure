@@ -28,6 +28,7 @@ test.describe("Noise suppression @nomobile @nowebkit", () => {
 
         await page.evaluate(() => {
             localStorage.setItem("noiseSuppressionEnabled", "false");
+            localStorage.setItem("noiseSuppressionProvider", "workadventure");
             localStorage.setItem("tutorialDone", "true");
         });
         await page.reload();
@@ -44,15 +45,20 @@ test.describe("Noise suppression @nomobile @nowebkit", () => {
 
         await Menu.openMediaSettings(page);
 
+        await page.getByTestId("noise-suppression-panel").click({ force: true });
+        await expect(page.getByTestId("microphone-settings-section")).toBeVisible();
+
         const toggleInput = page.locator("#noise-suppression-toggle");
         await expect(toggleInput).not.toBeChecked();
 
-        // Onboarding can reappear after the panel opens; force keeps this test focused on noise suppression.
-        // eslint-disable-next-line playwright/no-force-option
-        await page.getByTestId("noise-suppression-toggle").click({ force: true });
+        await toggleInput.evaluate((input: HTMLInputElement) => input.click());
         await expect(toggleInput).toBeChecked();
 
-        const noiseSuppressionPanel = page.getByTestId("noise-suppression-panel");
+        await page
+            .locator("#noise-suppression-provider-workadventure")
+            .evaluate((input: HTMLInputElement) => input.click());
+
+        const noiseSuppressionPanel = page.getByTestId("microphone-settings-section");
         await expect(noiseSuppressionPanel.getByTestId("noise-suppression-loading")).toBeHidden({ timeout: 30_000 });
         await expect(noiseSuppressionPanel.getByTestId("noise-suppression-error")).toBeHidden();
     });

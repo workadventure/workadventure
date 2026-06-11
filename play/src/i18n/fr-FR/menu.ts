@@ -50,6 +50,20 @@ const menu: DeepPartial<Translation["menu"]> = {
             balancedTitle: "Équilibrer fluidité et résolution",
             balancedDescription: "Essayer de garder un équilibre entre fluidité et résolution.",
         },
+        microphone: {
+            title: "Réglages du microphone",
+            autoGainControl: "Contrôle automatique du gain",
+            echoCancellation: "Annulation de l'écho",
+            noiseSuppression: "Réduction du bruit",
+            workAdventureNoiseSuppression: "Réduction du bruit WorkAdventure",
+            workAdventureNoiseSuppressionDescription:
+                "Traite votre microphone avec la réduction du bruit de WorkAdventure.",
+            browserNoiseSuppression: "Réduction du bruit du navigateur",
+            browserNoiseSuppressionDescription: "Utilise la réduction du bruit intégrée à votre navigateur.",
+            voiceIsolation: "Isolation de la voix",
+            voiceIsolationDescription:
+                "Utilise l'isolation de la voix du navigateur et du système d'exploitation lorsqu'elle est disponible.",
+        },
         language: {
             title: "Langage",
         },
