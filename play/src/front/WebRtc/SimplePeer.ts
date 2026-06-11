@@ -154,11 +154,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     userId: message.sender.spaceUserId,
                     initiator: webRtcStartMessage.initiator,
                 };
-                console.info("[WebRTC] start message received by front", {
-                    userId: user.userId,
-                    initiator: user.initiator,
-                    connectionId: webRtcStartMessage.connectionId,
-                });
                 this.receiveWebrtcStart(user, message.sender, webRtcStartMessage.connectionId);
             }),
         );
@@ -964,11 +959,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             return { userId, triggered: false, initiator, connectionId };
         }
 
-        console.info("[DEBUG] Unilaterally destroying WebRTC peer to trigger retry", {
-            userId,
-            initiator,
-            connectionId,
-        });
         peer.destroy();
 
         return { userId, triggered: true, initiator, connectionId };
