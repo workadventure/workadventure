@@ -54,9 +54,12 @@ const menu: BaseTranslation = {
             autoGainControl: "Controle automático de ganho",
             echoCancellation: "Cancelamento de eco",
             noiseSuppression: "Supressão de ruído",
+            noNoiseSuppression: "Sem supressão de ruído",
+            noNoiseSuppressionDescription: "Envia o áudio do microfone sem supressão de ruído adicional.",
             workAdventureNoiseSuppression: "Supressão de ruído do WorkAdventure",
             workAdventureNoiseSuppressionDescription:
                 "Processa seu microfone com a supressão de ruído do WorkAdventure.",
+            recommended: "Recomendado",
             browserNoiseSuppression: "Supressão de ruído do navegador",
             browserNoiseSuppressionDescription: "Usa a supressão de ruído integrada ao navegador.",
             voiceIsolation: "Isolamento de voz",
