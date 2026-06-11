@@ -748,6 +748,19 @@ async function runRawStreamUpdate(
             newConstraints.audio = false;
         }
 
+        if (currentStream) {
+            if (mustRequestNewVideo) {
+                currentStream.getVideoTracks().forEach((track) => {
+                    track.stop();
+                });
+            }
+            if (mustRequestNewAudio) {
+                currentStream.getAudioTracks().forEach((track) => {
+                    track.stop();
+                });
+            }
+        }
+
         try {
             const stream = await navigator.mediaDevices.getUserMedia(newConstraints);
             if (generation !== rawStreamGeneration) {
@@ -756,39 +769,19 @@ async function runRawStreamUpdate(
                 stream.getTracks().forEach((track) => track.stop());
                 return nextConstraints;
             }
-            if (currentStream) {
-                const oldStream = currentStream;
-                if (oldStream.getVideoTracks().length > 0) {
-                    if (stream.getVideoTracks().length > 0) {
-                        console.error("[MediaStore] New stream already has a video track, cannot reuse old one");
-                        oldStream.getVideoTracks().forEach((t) => t.stop());
-                    } else {
-                        const oldVideoTracks = currentStream.getVideoTracks();
-                        oldVideoTracks.forEach((t) => {
-                            if (t.readyState !== "ended") {
-                                stream.addTrack(t);
-                            }
-                            currentStream?.removeTrack(t);
-                        });
-                    }
-                }
-                if (oldStream.getAudioTracks().length > 0) {
-                    if (stream.getAudioTracks().length > 0) {
-                        console.error("[MediaStore] New stream already has an audio track, cannot reuse old one");
-                        oldStream.getAudioTracks().forEach((t) => t.stop());
-                    } else {
-                        const oldAudioTracks = currentStream.getAudioTracks();
-                        oldAudioTracks.forEach((t) => {
-                            if (t.readyState !== "ended") {
-                                stream.addTrack(t);
-                            }
-                            currentStream?.removeTrack(t);
-                        });
-                    }
-                }
-            }
-
-            currentStream = stream;
+            const oldStream = currentStream;
+            currentStream =
+                oldStream === undefined
+                    ? stream
+                    : new MediaStream([
+                          ...(!mustRequestNewVideo
+                              ? oldStream.getVideoTracks().filter((track) => track.readyState !== "ended")
+                              : []),
+                          ...(!mustRequestNewAudio
+                              ? oldStream.getAudioTracks().filter((track) => track.readyState !== "ended")
+                              : []),
+                          ...stream.getTracks(),
+                      ]);
             setIfCurrent({
                 type: "success",
                 stream: currentStream,
