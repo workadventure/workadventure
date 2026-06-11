@@ -299,12 +299,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                     meetingConnectionRestartMessage.connectionId,
                 )
             ) {
-                console.debug(
-                    "Ignoring stale meetingConnectionRestartMessage",
-                    senderUserId,
-                    receiverId,
-                    meetingConnectionRestartMessage.connectionId,
-                );
                 return;
             }
 
