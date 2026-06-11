@@ -294,7 +294,8 @@ export const audioConstraintStore = derived(
             //TODO: make these values configurable in the game settings menu and store them in localstorage
             autoGainControl: true,
             echoCancellation: true,
-            noiseSuppression: !$customNoiseSuppressionActiveStore,
+            noiseSuppression: false,
+            voiceIsolation: false,
         } as boolean | MediaTrackConstraints;
 
         if (typeof constraints === "boolean") {
