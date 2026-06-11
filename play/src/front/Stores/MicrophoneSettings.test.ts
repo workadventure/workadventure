@@ -93,7 +93,7 @@ describe("buildMicrophoneAudioConstraints", () => {
                 effectiveNoiseSuppressionProvider: "voiceIsolation",
             }),
         ).toMatchObject({
-            noiseSuppression: false,
+            noiseSuppression: true,
             voiceIsolation: true,
         });
     });

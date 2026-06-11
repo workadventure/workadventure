@@ -51,6 +51,7 @@ export function buildMicrophoneAudioConstraints({
         noiseSuppressionEnabled &&
         browserNoiseSuppressionSupported &&
         (effectiveNoiseSuppressionProvider === "browser" ||
+            effectiveNoiseSuppressionProvider === "voiceIsolation" ||
             (effectiveNoiseSuppressionProvider === "workadventure" && workAdventureNoiseSuppressionFailed));
 
     const constraints: MediaTrackConstraints = {
