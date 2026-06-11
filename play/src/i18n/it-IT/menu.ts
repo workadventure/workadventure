@@ -55,9 +55,12 @@ const menu: DeepPartial<Translation["menu"]> = {
             autoGainControl: "Controllo automatico del guadagno",
             echoCancellation: "Cancellazione dell'eco",
             noiseSuppression: "Soppressione del rumore",
+            noNoiseSuppression: "Nessuna soppressione del rumore",
+            noNoiseSuppressionDescription: "Invia l'audio del microfono senza soppressione del rumore aggiuntiva.",
             workAdventureNoiseSuppression: "Soppressione del rumore WorkAdventure",
             workAdventureNoiseSuppressionDescription:
                 "Elabora il microfono con la soppressione del rumore di WorkAdventure.",
+            recommended: "Consigliato",
             browserNoiseSuppression: "Soppressione del rumore del browser",
             browserNoiseSuppressionDescription: "Usa la soppressione del rumore integrata nel browser.",
             voiceIsolation: "Isolamento della voce",

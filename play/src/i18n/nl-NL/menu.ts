@@ -55,9 +55,12 @@ const menu: DeepPartial<Translation["menu"]> = {
             autoGainControl: "Automatische versterkingsregeling",
             echoCancellation: "Echo-onderdrukking",
             noiseSuppression: "Ruisonderdrukking",
+            noNoiseSuppression: "Geen ruisonderdrukking",
+            noNoiseSuppressionDescription: "Verstuur je microfoonaudio zonder extra ruisonderdrukking.",
             workAdventureNoiseSuppression: "WorkAdventure-ruisonderdrukking",
             workAdventureNoiseSuppressionDescription:
                 "Verwerk je microfoon met de ruisonderdrukking van WorkAdventure.",
+            recommended: "Aanbevolen",
             browserNoiseSuppression: "Browserruisonderdrukking",
             browserNoiseSuppressionDescription: "Gebruik de ingebouwde ruisonderdrukking van je browser.",
             voiceIsolation: "Stemisolatie",

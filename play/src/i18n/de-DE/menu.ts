@@ -56,9 +56,12 @@ const menu: DeepPartial<Translation["menu"]> = {
             autoGainControl: "Automatische Verstärkungsregelung",
             echoCancellation: "Echounterdrückung",
             noiseSuppression: "Geräuschunterdrückung",
+            noNoiseSuppression: "Keine Geräuschunterdrückung",
+            noNoiseSuppressionDescription: "Sende dein Mikrofonaudio ohne zusätzliche Geräuschunterdrückung.",
             workAdventureNoiseSuppression: "WorkAdventure-Geräuschunterdrückung",
             workAdventureNoiseSuppressionDescription:
                 "Verarbeite dein Mikrofon mit der Geräuschunterdrückung von WorkAdventure.",
+            recommended: "Empfohlen",
             browserNoiseSuppression: "Browser-Geräuschunterdrückung",
             browserNoiseSuppressionDescription: "Nutze die integrierte Geräuschunterdrückung deines Browsers.",
             voiceIsolation: "Stimmisolation",

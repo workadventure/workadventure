@@ -48,15 +48,12 @@ test.describe("Noise suppression @nomobile @nowebkit", () => {
         await page.getByTestId("noise-suppression-panel").click({ force: true });
         await expect(page.getByTestId("microphone-settings-section")).toBeVisible();
 
-        const toggleInput = page.locator("#noise-suppression-toggle");
-        await expect(toggleInput).not.toBeChecked();
-
-        await toggleInput.evaluate((input: HTMLInputElement) => input.click());
-        await expect(toggleInput).toBeChecked();
+        await expect(page.locator("#noise-suppression-provider-none")).toBeChecked();
 
         await page
             .locator("#noise-suppression-provider-workadventure")
             .evaluate((input: HTMLInputElement) => input.click());
+        await expect(page.locator("#noise-suppression-provider-workadventure")).toBeChecked();
 
         const noiseSuppressionPanel = page.getByTestId("microphone-settings-section");
         await expect(noiseSuppressionPanel.getByTestId("noise-suppression-loading")).toBeHidden({ timeout: 30_000 });

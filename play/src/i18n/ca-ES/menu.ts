@@ -55,9 +55,12 @@ const menu: DeepPartial<Translation["menu"]> = {
             autoGainControl: "Control automàtic del guany",
             echoCancellation: "Cancel·lació d'eco",
             noiseSuppression: "Supressió de soroll",
+            noNoiseSuppression: "Sense supressió de soroll",
+            noNoiseSuppressionDescription: "Envia l'àudio del micròfon sense supressió de soroll addicional.",
             workAdventureNoiseSuppression: "Supressió de soroll de WorkAdventure",
             workAdventureNoiseSuppressionDescription:
                 "Processa el micròfon amb la supressió de soroll de WorkAdventure.",
+            recommended: "Recomanat",
             browserNoiseSuppression: "Supressió de soroll del navegador",
             browserNoiseSuppressionDescription: "Utilitza la supressió de soroll integrada al navegador.",
             voiceIsolation: "Aïllament de veu",
