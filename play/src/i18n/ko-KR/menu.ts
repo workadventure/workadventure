@@ -50,6 +50,18 @@ const menu: DeepPartial<Translation["menu"]> = {
             balancedTitle: "프레임레이트와 해상도 균형 유지",
             balancedDescription: "프레임레이트와 해상도의 균형을 유지하려고 합니다.",
         },
+        microphone: {
+            title: "마이크 설정",
+            autoGainControl: "자동 게인 제어",
+            echoCancellation: "에코 제거",
+            noiseSuppression: "소음 억제",
+            workAdventureNoiseSuppression: "WorkAdventure 소음 억제",
+            workAdventureNoiseSuppressionDescription: "WorkAdventure의 소음 억제로 마이크를 처리합니다.",
+            browserNoiseSuppression: "브라우저 소음 억제",
+            browserNoiseSuppressionDescription: "브라우저에 내장된 소음 억제를 사용합니다.",
+            voiceIsolation: "음성 분리",
+            voiceIsolationDescription: "사용 가능한 경우 브라우저와 운영 체제의 음성 분리를 사용합니다.",
+        },
         language: {
             title: "언어",
         },

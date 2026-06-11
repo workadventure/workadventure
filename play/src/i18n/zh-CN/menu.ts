@@ -48,6 +48,18 @@ const menu: DeepPartial<Translation["menu"]> = {
             balancedTitle: "平衡帧率与分辨率",
             balancedDescription: "尽量在帧率和分辨率之间保持平衡。",
         },
+        microphone: {
+            title: "麦克风设置",
+            autoGainControl: "自动增益控制",
+            echoCancellation: "回声消除",
+            noiseSuppression: "噪声抑制",
+            workAdventureNoiseSuppression: "WorkAdventure 噪声抑制",
+            workAdventureNoiseSuppressionDescription: "使用 WorkAdventure 的噪声抑制处理你的麦克风。",
+            browserNoiseSuppression: "浏览器噪声抑制",
+            browserNoiseSuppressionDescription: "使用浏览器内置的噪声抑制。",
+            voiceIsolation: "语音隔离",
+            voiceIsolationDescription: "可用时使用浏览器和操作系统的语音隔离。",
+        },
         language: {
             title: "语言",
         },

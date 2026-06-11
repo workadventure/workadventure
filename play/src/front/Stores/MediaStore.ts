@@ -30,9 +30,19 @@ import { isLiveStreamingStore } from "./IsStreamingStore";
 import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
 
 import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
-import { customNoiseSuppressionActiveStore, noiseSuppressionEnabledStore } from "./NoiseSuppressionStore";
+import {
+    browserNoiseSuppressionSupportedStore,
+    customNoiseSuppressionActiveStore,
+    effectiveNoiseSuppressionProviderStore,
+    microphoneAutoGainControlStore,
+    microphoneEchoCancellationStore,
+    noiseSuppressionEnabledStore,
+    noiseSuppressionStateStore,
+    voiceIsolationSupportedStore,
+} from "./NoiseSuppressionStore";
 import type { LocalStreamStoreValue } from "./LocalStreamTypes";
 import { NoiseSuppressionController } from "./NoiseSuppressionController";
+import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
 
 export const inBackgroundSettingsStore = writable<boolean>(false);
 
@@ -287,29 +297,44 @@ export const videoConstraintStore = derived(
  * A store that contains audio constraints.
  */
 export const audioConstraintStore = derived(
-    [requestedMicrophoneDeviceIdStore, customNoiseSuppressionActiveStore],
-    ([$microphoneDeviceIdStore, $customNoiseSuppressionActiveStore]) => {
+    [
+        requestedMicrophoneDeviceIdStore,
+        microphoneAutoGainControlStore,
+        microphoneEchoCancellationStore,
+        noiseSuppressionEnabledStore,
+        effectiveNoiseSuppressionProviderStore,
+        browserNoiseSuppressionSupportedStore,
+        customNoiseSuppressionActiveStore,
+        noiseSuppressionStateStore,
+    ],
+    ([
+        $microphoneDeviceIdStore,
+        $microphoneAutoGainControlStore,
+        $microphoneEchoCancellationStore,
+        $noiseSuppressionEnabledStore,
+        $effectiveNoiseSuppressionProviderStore,
+        $browserNoiseSuppressionSupportedStore,
+        $customNoiseSuppressionActiveStore,
+        $noiseSuppressionStateStore,
+    ]) => {
         const supportedConstraints = navigator.mediaDevices?.getSupportedConstraints();
-        let constraints = {
-            //TODO: make these values configurable in the game settings menu and store them in localstorage
-            autoGainControl: true,
-            echoCancellation: true,
-            noiseSuppression: false,
-            voiceIsolation: false,
-        } as boolean | MediaTrackConstraints;
+        let constraints: boolean | MediaTrackConstraints = buildMicrophoneAudioConstraints({
+            microphoneDeviceId: $microphoneDeviceIdStore,
+            autoGainControl: $microphoneAutoGainControlStore,
+            echoCancellation: $microphoneEchoCancellationStore,
+            noiseSuppressionEnabled: $noiseSuppressionEnabledStore,
+            effectiveNoiseSuppressionProvider: $effectiveNoiseSuppressionProviderStore,
+            browserNoiseSuppressionSupported: $browserNoiseSuppressionSupportedStore,
+            workAdventureNoiseSuppressionFailed:
+                $noiseSuppressionStateStore.status === "error" || $noiseSuppressionStateStore.status === "unsupported",
+            customNoiseSuppressionActive: $customNoiseSuppressionActiveStore,
+            voiceIsolationAdvertised: supportedConstraints?.voiceIsolation === true,
+            deviceIdSupported: supportedConstraints?.deviceId === true,
+            sampleRateSupported: supportedConstraints?.sampleRate === true,
+        });
 
         if (typeof constraints === "boolean") {
             constraints = {};
-        }
-        if (
-            $microphoneDeviceIdStore !== undefined &&
-            navigator.mediaDevices &&
-            supportedConstraints?.deviceId === true
-        ) {
-            constraints.deviceId = { exact: $microphoneDeviceIdStore };
-        }
-        if ($customNoiseSuppressionActiveStore && supportedConstraints?.sampleRate === true) {
-            constraints.sampleRate = { ideal: 16000 };
         }
         return constraints;
     },
@@ -773,7 +798,14 @@ async function runRawStreamUpdate(
                 usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
             }
             if (currentStream.getAudioTracks().length > 0) {
-                usedMicrophoneDeviceIdStore.set(currentStream.getAudioTracks()[0]?.getSettings().deviceId);
+                const audioTrackSettings = currentStream.getAudioTracks()[0]?.getSettings();
+                usedMicrophoneDeviceIdStore.set(audioTrackSettings?.deviceId);
+                voiceIsolationSupportedStore.setSupported(
+                    navigator.mediaDevices?.getSupportedConstraints().voiceIsolation === true &&
+                        audioTrackSettings?.voiceIsolation !== undefined,
+                );
+            } else {
+                voiceIsolationSupportedStore.setSupported(false);
             }
             batchGetUserMediaStore.commitChanges();
             hideHelpCameraSettings();
@@ -893,11 +925,11 @@ let audioProcessedStreamUpdateQueue: Promise<void> = Promise.resolve();
 type SetAudioProcessedStreamIfCurrent = (value: LocalStreamStoreValue) => void;
 
 export const audioProcessedLocalStreamStore = derived<
-    [typeof rawLocalStreamStore, typeof noiseSuppressionEnabledStore],
+    [typeof rawLocalStreamStore, typeof customNoiseSuppressionActiveStore],
     LocalStreamStoreValue
 >(
-    [rawLocalStreamStore, noiseSuppressionEnabledStore],
-    ([$rawLocalStreamStore, $noiseSuppressionEnabledStore], set) => {
+    [rawLocalStreamStore, customNoiseSuppressionActiveStore],
+    ([$rawLocalStreamStore, $customNoiseSuppressionActiveStore], set) => {
         const myGen = ++audioProcessedStreamGeneration;
         const setIfCurrent: SetAudioProcessedStreamIfCurrent = (value) => {
             if (myGen === audioProcessedStreamGeneration) {
@@ -916,7 +948,7 @@ export const audioProcessedLocalStreamStore = derived<
                 setIfCurrent(
                     await noiseSuppressionController.transform(
                         $rawLocalStreamStore,
-                        $noiseSuppressionEnabledStore,
+                        $customNoiseSuppressionActiveStore,
                         controller.signal,
                     ),
                 );

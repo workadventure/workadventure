@@ -49,6 +49,18 @@ const menu: BaseTranslation = {
             balancedTitle: "Keep framerate and resolution balanced",
             balancedDescription: "Try to keep a balance between framerate and resolution.",
         },
+        microphone: {
+            title: "Microphone settings",
+            autoGainControl: "Automatic gain control",
+            echoCancellation: "Echo cancellation",
+            noiseSuppression: "Noise suppression",
+            workAdventureNoiseSuppression: "WorkAdventure noise suppression",
+            workAdventureNoiseSuppressionDescription: "Process your microphone with WorkAdventure's noise suppression.",
+            browserNoiseSuppression: "Browser noise suppression",
+            browserNoiseSuppressionDescription: "Use your browser's built-in noise suppression.",
+            voiceIsolation: "Voice isolation",
+            voiceIsolationDescription: "Use your browser and operating system voice isolation when available.",
+        },
         language: {
             title: "Language",
         },

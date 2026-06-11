@@ -50,6 +50,18 @@ const menu: DeepPartial<Translation["menu"]> = {
             balancedTitle: "موازنة معدل الإطارات والدقة",
             balancedDescription: "حاول الحفاظ على توازن بين معدل الإطارات والدقة.",
         },
+        microphone: {
+            title: "إعدادات الميكروفون",
+            autoGainControl: "التحكم التلقائي في مستوى الصوت",
+            echoCancellation: "إلغاء الصدى",
+            noiseSuppression: "تقليل الضوضاء",
+            workAdventureNoiseSuppression: "تقليل الضوضاء من WorkAdventure",
+            workAdventureNoiseSuppressionDescription: "معالجة صوت الميكروفون باستخدام تقليل الضوضاء في WorkAdventure.",
+            browserNoiseSuppression: "تقليل الضوضاء في المتصفح",
+            browserNoiseSuppressionDescription: "استخدام تقليل الضوضاء المدمج في المتصفح.",
+            voiceIsolation: "عزل الصوت",
+            voiceIsolationDescription: "استخدام عزل الصوت في المتصفح ونظام التشغيل عند توفره.",
+        },
         language: {
             title: "اللغة", // Language
         },

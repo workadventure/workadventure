@@ -64,10 +64,14 @@ const bandwidthConstrainedScreenSharePreferenceKey = "bandwidthConstrainedScreen
 const legacyVideoBandwidthKey = "videoBandwidth";
 const legacyScreenShareBandwidthKey = "screenShareBandwidth";
 const noiseSuppressionEnabledKey = "noiseSuppressionEnabled";
+const noiseSuppressionProviderKey = "noiseSuppressionProvider";
+const microphoneAutoGainControlKey = "microphoneAutoGainControl";
+const microphoneEchoCancellationKey = "microphoneEchoCancellation";
 const INITIAL_MAP_EDITOR_SIDEBAR_WIDTH = 448;
 
 export type VideoQualitySetting = "low" | "recommended" | "high";
 export type BandwidthConstrainedPreference = "maintain-framerate" | "maintain-resolution" | "balanced";
+export type NoiseSuppressionProvider = "workadventure" | "browser" | "voiceIsolation";
 
 const JwtAuthToken = z
     .object({
@@ -812,6 +816,34 @@ class LocalUserStore {
 
     getNoiseSuppressionEnabled(): boolean {
         return localStorage.getItem(noiseSuppressionEnabledKey) === "true";
+    }
+
+    setNoiseSuppressionProvider(value: NoiseSuppressionProvider) {
+        localStorage.setItem(noiseSuppressionProviderKey, value);
+    }
+
+    getNoiseSuppressionProvider(): NoiseSuppressionProvider {
+        const value = localStorage.getItem(noiseSuppressionProviderKey);
+        if (value === "browser" || value === "voiceIsolation" || value === "workadventure") {
+            return value;
+        }
+        return "workadventure";
+    }
+
+    setMicrophoneAutoGainControl(value: boolean) {
+        localStorage.setItem(microphoneAutoGainControlKey, value.toString());
+    }
+
+    getMicrophoneAutoGainControl(): boolean {
+        return localStorage.getItem(microphoneAutoGainControlKey) !== "false";
+    }
+
+    setMicrophoneEchoCancellation(value: boolean) {
+        localStorage.setItem(microphoneEchoCancellationKey, value.toString());
+    }
+
+    getMicrophoneEchoCancellation(): boolean {
+        return localStorage.getItem(microphoneEchoCancellationKey) !== "false";
     }
 
     getRequestedStatus(): RequestedStatus | null {

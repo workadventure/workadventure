@@ -21,9 +21,9 @@
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { noiseSuppressionEnabledStore, noiseSuppressionStateStore } from "../../../Stores/NoiseSuppressionStore";
+    import { handleOpenMenuEvent, settingsSubMenuTargetStore, SubMenusInterface } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { showHelpCameraSettings } from "../../../Stores/HelpSettingsStore";
-    import InputSwitch from "../../Input/InputSwitch.svelte";
     import SectionDivider from "./SectionDivider.svelte";
     import SectionTitle from "./SectionTitle.svelte";
     import DeviceListItem from "./DeviceListItem.svelte";
@@ -31,9 +31,10 @@
 
     interface Props {
         oncameraselected?: () => void;
+        onsettingsopened?: () => void;
     }
 
-    const { oncameraselected }: Props = $props();
+    const { oncameraselected, onsettingsopened }: Props = $props();
 
     function selectCamera(deviceId: string) {
         requestedCameraDeviceIdStore.set(deviceId);
@@ -69,8 +70,10 @@
         }
     }
 
-    function toggleNoiseSuppressionEnabled(): void {
-        noiseSuppressionEnabledStore.setEnabled(!$noiseSuppressionEnabledStore);
+    function openMicrophoneSettings(): void {
+        settingsSubMenuTargetStore.set("microphone");
+        handleOpenMenuEvent(SubMenusInterface.settings);
+        onsettingsopened?.();
     }
 
     let isNoiseSuppressionErrorState = $derived(
@@ -163,9 +166,10 @@
     <!-- Microphone Section -->
     <div class="flex flex-col gap-1">
         <SectionTitle title={$LL.actionbar.subtitle.microphone()} />
-        <div
+        <button
+            type="button"
             data-testid="noise-suppression-panel"
-            class="rounded px-3 py-2"
+            class="rounded px-3 py-2 text-left w-full"
             class:bg-white={!isNoiseSuppressionErrorState}
             class:bg-opacity-5={!isNoiseSuppressionErrorState}
             class:bg-pop-red={isNoiseSuppressionErrorState}
@@ -173,6 +177,7 @@
             class:ring-1={isNoiseSuppressionErrorState}
             class:ring-pop-red={isNoiseSuppressionErrorState}
             class:ring-opacity-60={isNoiseSuppressionErrorState}
+            onclick={openMicrophoneSettings}
         >
             <div class="flex items-start justify-between gap-4">
                 <div class="flex items-start gap-2 min-w-0">
@@ -216,13 +221,18 @@
                     </div>
                 </div>
 
-                <InputSwitch
-                    id="noise-suppression-toggle"
-                    value={$noiseSuppressionEnabledStore}
-                    onchange={toggleNoiseSuppressionEnabled}
-                />
+                <div
+                    data-testid="noise-suppression-status"
+                    class="rounded-full px-2 py-0.5 text-xs font-semibold bg-white text-white"
+                    class:bg-opacity-20={$noiseSuppressionEnabledStore}
+                    class:bg-opacity-10={!$noiseSuppressionEnabledStore}
+                >
+                    {$noiseSuppressionEnabledStore
+                        ? $LL.actionbar.microphone.noiseSuppressionOn()
+                        : $LL.actionbar.microphone.noiseSuppressionOff()}
+                </div>
             </div>
-        </div>
+        </button>
         {#if $silentStore == false && microphoneLoaded && $microphoneListStore && $microphoneListStore.length > 0}
             {#each $microphoneListStore as microphone, index (index)}
                 <DeviceListItem

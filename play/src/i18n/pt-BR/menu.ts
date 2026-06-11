@@ -49,6 +49,20 @@ const menu: BaseTranslation = {
             balancedTitle: "Equilibrar taxa de quadros e resolução",
             balancedDescription: "Tente manter um equilíbrio entre taxa de quadros e resolução.",
         },
+        microphone: {
+            title: "Configurações do microfone",
+            autoGainControl: "Controle automático de ganho",
+            echoCancellation: "Cancelamento de eco",
+            noiseSuppression: "Supressão de ruído",
+            workAdventureNoiseSuppression: "Supressão de ruído do WorkAdventure",
+            workAdventureNoiseSuppressionDescription:
+                "Processa seu microfone com a supressão de ruído do WorkAdventure.",
+            browserNoiseSuppression: "Supressão de ruído do navegador",
+            browserNoiseSuppressionDescription: "Usa a supressão de ruído integrada ao navegador.",
+            voiceIsolation: "Isolamento de voz",
+            voiceIsolationDescription:
+                "Usa o isolamento de voz do navegador e do sistema operacional quando disponível.",
+        },
         language: {
             title: "Linguagem",
         },
