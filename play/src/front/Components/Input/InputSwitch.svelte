@@ -35,7 +35,7 @@
         value = false;
     }
 
-    let uniqueId = (() => id || `input-${Math.random().toString(36).substring(2, 9)} `)();
+    let uniqueId = (() => id || `input-${Math.random().toString(36).substring(2, 9)}`)();
     let hasLabel = $derived(label !== undefined || children !== undefined);
 </script>
 
