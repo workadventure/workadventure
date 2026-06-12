@@ -1,12 +1,10 @@
 @charset "UTF-8";
 
-// Style baseline
-@import "@workadventure/tailwind/style/index.scss";
-
 // Style from external libs
 @import "highlight.js/scss/dark";
 
 // Internal styles
+@import "tailwind.scss";
 @import "breakpoints.scss";
 @import "cowebsite.scss";
 @import "style.scss";
@@ -17,4 +15,3 @@
 @import "loader.scss";
 @import "input.scss";
 @import "warning-toast.scss";
-@import "wa-theme/action-menu-bar.scss";

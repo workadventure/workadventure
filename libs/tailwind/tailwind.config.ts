@@ -1,8 +1,112 @@
 import type { Config } from "tailwindcss";
 import containerQueries from "@tailwindcss/container-queries";
 import forms from "@tailwindcss/forms";
-import designSystem from "@workadventure/design-system";
-import plugin from "tailwindcss/plugin";
+
+const colors = {
+  neutral: {
+    100: "210 25% 98%",
+    200: "220 10% 94%",
+    300: "223 11% 88%",
+    400: "228 14% 86%",
+    500: "223 9% 71%",
+    600: "222 9% 61%",
+    DEFAULT: "225 8% 54%",
+    800: "223 9% 46%",
+    900: "222 9% 38%",
+    1000: "223 9% 31%",
+    1100: "228 8% 23%",
+    1200: "223 9% 15%",
+    1300: "220 8% 8%",
+  },
+  contrast: {
+    100: "216 41% 88%",
+    200: "216 41% 76%",
+    300: "216 51% 65%",
+    400: "216 41% 40%",
+    500: "216 41% 36%",
+    600: "216 41% 28%",
+    DEFAULT: "216 41% 18%",
+    800: "216 41% 18%",
+    900: "216 63% 12%",
+    1000: "217 67% 8%",
+    1100: "214 88% 6%",
+  },
+  primary: {
+    100: "266 97% 57%",
+    200: "266 97% 57%",
+    300: "266 97% 57%",
+    400: "266 97% 57%",
+    500: "266 97% 57%",
+    600: "266 97% 57%",
+    DEFAULT: "266 97% 57%",
+    800: "266 97% 57%",
+    900: "266 97% 57%",
+    1000: "266 97% 57%",
+    1100: "266 97% 57%",
+    1200: "266 97% 57%",
+    1300: "266 97% 57%",
+  },
+  secondary: {
+    100: "229 73% 97%",
+    200: "232 76% 90%",
+    300: "232 61% 83%",
+    400: "232 54% 73%",
+    500: "232 66% 67%",
+    600: "233 88% 67%",
+    DEFAULT: "233 91% 61%",
+    800: "233 76% 54%",
+    900: "233 74% 47%",
+    1000: "233 85% 40%",
+    1100: "234 89% 36%",
+  },
+  danger: {
+    100: "0 48% 95%",
+    200: "0 47% 90%",
+    300: "15 65% 88%",
+    400: "11 100% 85%",
+    500: "11 82% 74%",
+    600: "11 92% 69%",
+    DEFAULT: "11 78% 62%",
+    800: "0 73% 63%",
+    900: "0 55% 56%",
+    1000: "0 44% 49%",
+    1100: "0 44% 42%",
+    1200: "0 44% 35%",
+  },
+  success: {
+    100: "129 100% 93%",
+    200: "129 85% 90%",
+    300: "129 84% 80%",
+    400: "129 71% 75%",
+    500: "129 69% 69%",
+    600: "129 69% 65%",
+    DEFAULT: "129 75% 66%",
+    800: "129 66% 59%",
+    900: "129 62% 55%",
+    1000: "129 48% 50%",
+    1100: "129 41% 46%",
+    1200: "130 49% 37%",
+  },
+  warning: {
+    100: "47 100% 96%",
+    200: "47 90% 92%",
+    300: "47 94% 87%",
+    400: "47 90% 81%",
+    500: "47 87% 73%",
+    600: "47 75% 66%",
+    DEFAULT: "47 78% 61%",
+    800: "30 64% 53%",
+    900: "30 58% 47%",
+    1000: "29 58% 41%",
+    1100: "29 58% 35%",
+    1200: "30 58% 29%",
+  },
+} as const;
+
+const colorScale = (name: keyof typeof colors) =>
+  Object.fromEntries(
+    Object.entries(colors[name]).map(([step, value]) => [step, `hsl(${value} / <alpha-value>)`])
+  );
 
 const tailwindConfig = {
   content: ["./src/**/*.{html,js,svelte,ts}"],
@@ -21,8 +125,13 @@ const tailwindConfig = {
     },
     extend: {
       colors: {
-        // OLD DEPRECATED COLORS
-        //UI colors
+        neutral: colorScale("neutral"),
+        contrast: colorScale("contrast"),
+        primary: colorScale("primary"),
+        secondary: colorScale("secondary"),
+        danger: colorScale("danger"),
+        success: colorScale("success"),
+        warning: colorScale("warning"),
         "dark-purple": "#1B1B29",
         "medium-purple": "#38384A",
         "light-purple": "#4D4B67",
@@ -37,10 +146,55 @@ const tailwindConfig = {
         "pop-red": "#FF475a",
         grey: "#f6f6f6",
         dark: "#0F1F2D",
-
-        // END OLD DEPRECATED COLORS
       },
-      zIndex: {},
+      fontFamily: {
+        main: ['"Roboto Condensed"', "Arial"],
+        title: ['"Bebas Neue"', "Arial"],
+        content: ["Roboto", "Arial"],
+        oswald: ["Oswald", "Arial"],
+      },
+      fontSize: {
+        xxs: ["11px", { lineHeight: "1rem" }],
+        xs: ["13px", { lineHeight: "1.25rem" }],
+        sm: ["14px", { lineHeight: "1.5rem" }],
+        base: ["16px", { lineHeight: "1.75rem" }],
+        lg: ["18px", { lineHeight: "1.75rem" }],
+        xl: ["24px", { lineHeight: "1.75rem" }],
+        "2xl": ["28px", { lineHeight: "1.75rem" }],
+        "3xl": ["34px", { lineHeight: "1.75rem" }],
+        "4xl": ["42px", { lineHeight: "1.75rem" }],
+      },
+      spacing: {
+        13: "3.25rem",
+      },
+      borderRadius: {
+        DEFAULT: "8px",
+        none: "0",
+        sm: "4px",
+        md: "12px",
+        lg: "16px",
+        xl: "32px",
+        full: "9999px",
+      },
+      borderWidth: {
+        DEFAULT: "1px",
+      },
+      blur: {
+        DEFAULT: "8px",
+        none: "0",
+        sm: "4px",
+        lg: "12px",
+      },
+      boxShadow: {
+        xs: "0px 0px 2px rgba(24, 24, 28, 0.06), 0px 1px 2px rgba(24, 24, 28, 0.12)",
+        sm: "0px 2px 50px 3px rgba(24, 24, 28, 0.02), 0px 15px 24px -14px rgba(24, 24, 28, 0.12)",
+        DEFAULT: "0px 8px 50px 5px rgba(24, 24, 28, 0.03), 0px 32px 40px -30px rgba(24, 24, 28, 0.12)",
+        lg: "0px 8px 50px 8px rgba(24, 24, 28, 0.06), 0px 32px 40px -20px rgba(24, 24, 28, 0.12)",
+        darkXs: "00px 0px 2px rgba(24, 24, 28, 0.5), 0px 1px 2px #18181c",
+        darkSm: "0px 2px 50px 3px rgba(24, 24, 28, 0.25), 0px 15px 24px -14px rgba(24, 24, 28, 0.5)",
+        dark: "0px 8px 50px 5px rgba(24, 24, 28, 0.25), 0px 32px 40px -30px rgba(24, 24, 28, 0.75)",
+        darkLg: "0px 8px 50px 8px rgba(24, 24, 28, 0.5), 0px 32px 40px -20px #18181c",
+      },
       minHeight: {
         10: "2.5rem",
       },
@@ -74,14 +228,10 @@ const tailwindConfig = {
   plugins: [
     containerQueries,
     forms,
-    designSystem,
-    plugin(({ addVariant }) => {
-      // Mobile screens are typically small AND have a touch screen (coarse pointer)
-      // See https://github.com/tailwindlabs/tailwindcss/discussions/2397
-      // Note: if this is modified, don't forget to update the corresponding media query in the BreakpointUtils.ts file
+    ({ addVariant }: { addVariant: (name: string, value: string) => void }) => {
       addVariant("mobile", "@media (((max-height: 960px) and (max-width: 480px)) or ((max-height: 480px) and (max-width: 960px))) and (pointer: coarse)");
       addVariant("picture-in-picture", "@media (display-mode: picture-in-picture)");
-    }),
+    },
   ],
 } as Config;
 

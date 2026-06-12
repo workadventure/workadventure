@@ -2,29 +2,35 @@
   "name": "@workadventure/tailwind",
   "version": "1.0.0",
   "description": "Tailwind Theme for WorkAdventure",
-  "main": "src/index.cjs",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "type": "module",
+  "style": "./style/index.css",
+  "exports": {
+    ".": "./style/index.css",
+    "./style.css": "./style/index.css",
+    "./style/index.css": "./style/index.css",
+    "./tailwind-config": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
   },
   "author": "WorkAdventure",
   "license": "ISC",
-  "devDependencies": {
-    "autoprefixer": "^10.5.0"
-  },
+  "sideEffects": [
+    "*.css",
+    "style/*.css"
+  ],
   "dependencies": {
     "@fontsource/press-start-2p": "^5.2.7",
     "@fontsource/roboto": "^5.2.10",
     "@fontsource/roboto-condensed": "^5.2.8",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/forms": "^0.5.11",
-    "@workadventure/design-system": "^2.0.4",
-    "jiti": "^1.21.7",
-    "postcss": "^8.5.15",
-    "tailwindcss": "^3.4.17"
+    "@workadventure/design-system": "^3.0.0",
+    "tailwindcss": "^4.3.0"
   },
   "files": [
-    "src",
-    "style",
+    "src/index.ts",
+    "style/index.css",
     "tailwind.config.ts"
   ]
 }

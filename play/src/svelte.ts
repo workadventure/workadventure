@@ -1,4 +1,5 @@
 import "./front/Phaser/phaserGlobal";
+import "@workadventure/tailwind/style.css";
 import "./front/style/index.scss";
 
 import { mount } from "svelte";

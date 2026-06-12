@@ -1,0 +1,157 @@
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "@workadventure/design-system/style.css";
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@plugin "@tailwindcss/forms";
+
+@theme {
+  --container-xxs: 320px;
+  --container-xs: 448px;
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1536px;
+
+  --color-dark-purple: #1b1b29;
+  --color-medium-purple: #38384a;
+  --color-light-purple: #4d4b67;
+  --color-lighter-purple: #928ebb;
+  --color-light-purple-alt: #7d7b9e;
+  --color-dark-blue: #1b1b29;
+  --color-light-blue: #56eaff;
+  --color-brand-blue: #14304c;
+  --color-pop-blue: #365dff;
+  --color-pop-green: #04f17a;
+  --color-pop-yellow: #f9e81e;
+  --color-pop-red: #ff475a;
+  --color-grey: #f6f6f6;
+  --color-dark: #0f1f2d;
+
+  --animate-shake: shake 0.6s ease-in-out infinite;
+  --animate-pulse-bg: pulse-bg 3s ease-in-out infinite;
+
+  @keyframes shake {
+    0% {
+      transform: rotate(0deg);
+    }
+    10% {
+      transform: rotate(14deg);
+    }
+    20% {
+      transform: rotate(-8deg);
+    }
+    30% {
+      transform: rotate(14deg);
+    }
+    40% {
+      transform: rotate(-4deg);
+    }
+    50% {
+      transform: rotate(10deg);
+    }
+    60% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(0deg);
+    }
+  }
+
+  @keyframes pulse-bg {
+    0% {
+      background-color: var(--tw-gradient-from);
+    }
+    50% {
+      background-color: var(--tw-gradient-to);
+    }
+    100% {
+      background-color: var(--tw-gradient-from);
+    }
+  }
+}
+
+@custom-variant mobile {
+  @media (((max-height: 960px) and (max-width: 480px)) or ((max-height: 480px) and (max-width: 960px))) and (pointer: coarse) {
+    @slot;
+  }
+}
+
+@custom-variant picture-in-picture {
+  @media (display-mode: picture-in-picture) {
+    @slot;
+  }
+}
+
+@utility scale-01 {
+  scale: 0.1;
+}
+
+@utility scale-140 {
+  scale: 1.4;
+}
+
+/* RESET HUA */
+
+button {
+  @apply border-none outline-none bg-transparent;
+}
+
+/********** Range Input Styles **********/
+/*Range Reset*/
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Removes default focus */
+input[type="range"]:focus {
+  outline: none;
+}
+
+/***** Chrome, Safari, Opera and Edge Chromium styles *****/
+/* slider track */
+input[type="range"]::-webkit-slider-runnable-track {
+  @apply bg-white/20 rounded-xl h-4;
+}
+
+/* slider thumb */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Override default look */
+  appearance: none;
+
+  @apply bg-white outline-none rounded h-6 w-10 -mt-1;
+}
+
+input[type="range"]:focus::-webkit-slider-thumb {
+  @apply border-2 border-solid border-white bg-secondary;
+}
+
+/******** Firefox styles ********/
+/* slider track */
+input[type="range"]::-moz-range-track {
+  background-color: #053a5f;
+  border-radius: 0.5rem;
+  height: 0.5rem;
+}
+
+/* slider thumb */
+input[type="range"]::-moz-range-thumb {
+  border: none; /*Removes extra border that FF applies*/
+  border-radius: 0; /*Removes default border-radius that FF applies*/
+
+  /*custom styles*/
+  background-color: #5cd5eb;
+  height: 2rem;
+  width: 1rem;
+}
+
+input[type="range"]:focus::-moz-range-thumb {
+  border: 1px solid #053a5f;
+  outline: 3px solid #053a5f;
+  outline-offset: 0.125rem;
+}

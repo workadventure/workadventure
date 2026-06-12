@@ -18,10 +18,6 @@
   transform: translateX(0);
 }
 
-//@import "fonts";
-//@import "tailwind";
-@import '@workadventure/tailwind/style/index.scss';
-
 @include bpchat.media-breakpoint-up(sm) {
     .chatWindow {
         width: 100% !important;
