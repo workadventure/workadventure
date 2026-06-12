@@ -99,10 +99,6 @@
         pointer-events: auto;
         color: whitesmoke;
 
-        button.close-window {
-            inset-inline-end: 0.5rem;
-        }
-
         &.WAMSettingsEditor {
             width: 80% !important;
             inset-inline-start: 10%;

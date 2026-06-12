@@ -81,13 +81,6 @@
 </ToastContainer>
 
 <style>
-    .recording-completed-modal {
-        min-width: 360px;
-        max-width: 420px;
-        border: 1px solid rgba(34, 197, 94, 0.3);
-        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.15);
-    }
-
     .recording-content {
         position: relative;
         width: 100%;
@@ -200,11 +193,6 @@
     }
 
     @media (max-width: 768px) {
-        .recording-completed-modal {
-            min-width: 300px;
-            max-width: 90vw;
-        }
-
         .recording-title {
             font-size: 15px;
         }

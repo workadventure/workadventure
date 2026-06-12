@@ -241,7 +241,7 @@
     style="padding-inline-start : {marginLeft}px; padding-inline-end: {marginRight}px "
 >
     {#if $modalVisibilityStore}
-        <div class="bg-black/60 w-full h-full fixed start-0 end-0" />
+        <div class="bg-black/60 w-full h-full fixed start-0 end-0"></div>
     {/if}
 
     {#if $highlightedEmbedScreen && $highlightFullScreen}

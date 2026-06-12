@@ -620,11 +620,6 @@
         display: none !important;
     }
 
-    /* Scroll indicators: show users they can scroll to see more cameras */
-    .scroll-indicators-wrapper {
-        position: relative;
-    }
-
     .scroll-indicator {
         z-index: 50;
         display: flex;

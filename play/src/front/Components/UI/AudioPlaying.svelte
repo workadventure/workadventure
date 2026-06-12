@@ -89,10 +89,6 @@
         display: inline-flex;
         z-index: 750;
 
-        img {
-            padding: 10px;
-        }
-
         p {
             color: white;
             margin-left: 10px;

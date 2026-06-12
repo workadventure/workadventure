@@ -99,12 +99,4 @@
     button:hover {
         background-color: rgb(77 75 103);
     }
-    .value-switch {
-        display: flex;
-        width: 100%;
-        margin-bottom: 0.5em;
-        margin-top: 0.5em;
-        align-items: center;
-        height: 2.5em;
-    }
 </style>

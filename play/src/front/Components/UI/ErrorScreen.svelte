@@ -132,11 +132,6 @@
             opacity: 0.6;
             user-select: text;
         }
-        p.details {
-            font-size: 12px;
-            max-width: 80%;
-            margin: 0 auto 35px auto;
-        }
         .loading {
             display: inline-block;
             min-width: 20px;
@@ -160,10 +155,6 @@
         .button {
             cursor: pointer;
             font-size: 14px;
-            .reload {
-                margin-top: -4px;
-                width: 22px;
-            }
         }
     }
 
