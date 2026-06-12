@@ -30,13 +30,10 @@ vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
     };
 });
 
-vi.mock("../../../../Enum/EnvironmentVariable.ts", async (importOriginal) => {
-    const actual = await importOriginal();
-    return Object.assign({}, actual, {
-        MATRIX_ADMIN_USER: "admin",
-        MATRIX_DOMAIN: "domain",
-    });
-});
+vi.mock(
+    "../../../../Enum/EnvironmentVariable.ts",
+    () => import("../../../../../../tests/front/mocks/frontEnvironmentVariableMock"),
+);
 
 vi.mock("../../../Stores/ChatStore.ts", () => {
     return {
