@@ -52,8 +52,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             "Dieser Browser kann die benutzerdefinierte Geräuschunterdrückung nicht ausführen.",
         noiseSuppressionError:
             "Benutzerdefinierte Geräuschunterdrückung fehlgeschlagen. Es wird auf die native Geräuschunterdrückung des Browsers zurückgegriffen.",
-        noiseSuppressionOn: "Ein",
-        noiseSuppressionOff: "Aus",
         openSettings: "Einstellungen öffnen",
         ignore: "Ignorieren",
     },

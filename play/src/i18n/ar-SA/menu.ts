@@ -53,10 +53,10 @@ const menu: DeepPartial<Translation["menu"]> = {
         microphone: {
             title: "إعدادات الميكروفون",
             autoGainControl: "التحكم التلقائي في مستوى الصوت",
+            autoGainControlDescription: "ضبط مستوى صوت الميكروفون تلقائيًا.",
             echoCancellation: "إلغاء الصدى",
-            noiseSuppression: "تقليل الضوضاء",
-            noNoiseSuppression: "بدون تقليل الضوضاء",
-            noNoiseSuppressionDescription: "إرسال صوت الميكروفون بدون تقليل ضوضاء إضافي.",
+            enableNoiseSuppression: "تفعيل تقليل الضوضاء",
+            noiseSuppressionMode: "وضع تقليل الضوضاء:",
             workAdventureNoiseSuppression: "تقليل الضوضاء من WorkAdventure",
             workAdventureNoiseSuppressionDescription: "معالجة صوت الميكروفون باستخدام تقليل الضوضاء في WorkAdventure.",
             recommended: "موصى به",

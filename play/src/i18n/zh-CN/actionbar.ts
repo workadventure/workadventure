@@ -48,8 +48,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noiseSuppressionInitializing: "正在初始化自定义噪声抑制...",
         noiseSuppressionUnsupported: "此浏览器无法运行自定义噪声抑制。",
         noiseSuppressionError: "自定义噪声抑制失败。正在回退到浏览器原生噪声抑制。",
-        noiseSuppressionOn: "开启",
-        noiseSuppressionOff: "关闭",
         openSettings: "打开设置",
         ignore: "忽略",
     },

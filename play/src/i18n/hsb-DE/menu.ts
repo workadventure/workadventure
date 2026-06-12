@@ -53,10 +53,10 @@ const menu: DeepPartial<Translation["menu"]> = {
         microphone: {
             title: "Mikrofonowe nastajenja",
             autoGainControl: "Awtomatiske zesylnjenje",
+            autoGainControlDescription: "Awtomatisce přiměrja sylnosć wašeho mikrofona.",
             echoCancellation: "Wotstronjenje echa",
-            noiseSuppression: "Potłóčowanje šuma",
-            noNoiseSuppression: "Bjez potłóčowanja šuma",
-            noNoiseSuppressionDescription: "Sćelće swój mikrofonowy awdio bjez přidatneho potłóčowanja šuma.",
+            enableNoiseSuppression: "Potłóčowanje šuma zmóžnić",
+            noiseSuppressionMode: "Modus potłóčowanja šuma:",
             workAdventureNoiseSuppression: "Potłóčowanje šuma WorkAdventure",
             workAdventureNoiseSuppressionDescription: "Předźěłajće swój mikrofon z potłóčowanjom šuma WorkAdventure.",
             recommended: "Doporučene",

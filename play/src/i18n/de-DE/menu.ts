@@ -54,10 +54,10 @@ const menu: DeepPartial<Translation["menu"]> = {
         microphone: {
             title: "Mikrofoneinstellungen",
             autoGainControl: "Automatische Verstärkungsregelung",
+            autoGainControlDescription: "Passt die Lautstärke deines Mikrofons automatisch an.",
             echoCancellation: "Echounterdrückung",
-            noiseSuppression: "Geräuschunterdrückung",
-            noNoiseSuppression: "Keine Geräuschunterdrückung",
-            noNoiseSuppressionDescription: "Sende dein Mikrofonaudio ohne zusätzliche Geräuschunterdrückung.",
+            enableNoiseSuppression: "Geräuschunterdrückung aktivieren",
+            noiseSuppressionMode: "Modus der Geräuschunterdrückung:",
             workAdventureNoiseSuppression: "WorkAdventure-Geräuschunterdrückung",
             workAdventureNoiseSuppressionDescription:
                 "Verarbeite dein Mikrofon mit der Geräuschunterdrückung von WorkAdventure.",

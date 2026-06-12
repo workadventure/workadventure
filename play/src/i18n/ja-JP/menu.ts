@@ -53,10 +53,10 @@ const menu: DeepPartial<Translation["menu"]> = {
         microphone: {
             title: "マイク設定",
             autoGainControl: "自動ゲイン制御",
+            autoGainControlDescription: "マイクの音量を自動的に調整します。",
             echoCancellation: "エコーキャンセル",
-            noiseSuppression: "ノイズ抑制",
-            noNoiseSuppression: "ノイズ抑制なし",
-            noNoiseSuppressionDescription: "追加のノイズ抑制なしでマイク音声を送信します。",
+            enableNoiseSuppression: "ノイズ抑制を有効にする",
+            noiseSuppressionMode: "ノイズ抑制モード:",
             workAdventureNoiseSuppression: "WorkAdventure ノイズ抑制",
             workAdventureNoiseSuppressionDescription: "WorkAdventure のノイズ抑制でマイク音声を処理します。",
             recommended: "推奨",

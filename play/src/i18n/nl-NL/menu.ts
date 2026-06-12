@@ -53,10 +53,10 @@ const menu: DeepPartial<Translation["menu"]> = {
         microphone: {
             title: "Microfooninstellingen",
             autoGainControl: "Automatische versterkingsregeling",
+            autoGainControlDescription: "Past automatisch het volume van je microfoon aan.",
             echoCancellation: "Echo-onderdrukking",
-            noiseSuppression: "Ruisonderdrukking",
-            noNoiseSuppression: "Geen ruisonderdrukking",
-            noNoiseSuppressionDescription: "Verstuur je microfoonaudio zonder extra ruisonderdrukking.",
+            enableNoiseSuppression: "Ruisonderdrukking inschakelen",
+            noiseSuppressionMode: "Ruisonderdrukkingsmodus:",
             workAdventureNoiseSuppression: "WorkAdventure-ruisonderdrukking",
             workAdventureNoiseSuppressionDescription:
                 "Verwerk je microfoon met de ruisonderdrukking van WorkAdventure.",

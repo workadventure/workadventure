@@ -50,8 +50,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noiseSuppressionUnsupported: "Tutón wobhladowak njemóže swójske potłóčowanje šuma wuwjesć.",
         noiseSuppressionError:
             "Swójske potłóčowanje šuma njeje so poradźiło. Wužije so natiwne potłóčowanje šuma wobhladowaka.",
-        noiseSuppressionOn: "Zapinjene",
-        noiseSuppressionOff: "Wupinjene",
         openSettings: "Nastajenja wočinić",
         ignore: "Ignorować",
     },

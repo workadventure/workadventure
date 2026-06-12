@@ -53,11 +53,10 @@ const menu: DeepPartial<Translation["menu"]> = {
         microphone: {
             title: "Réglages du microphone",
             autoGainControl: "Contrôle automatique du gain",
+            autoGainControlDescription: "Ajuste automatiquement le volume de votre microphone.",
             echoCancellation: "Annulation de l'écho",
-            noiseSuppression: "Réduction du bruit",
-            noNoiseSuppression: "Aucune réduction du bruit",
-            noNoiseSuppressionDescription:
-                "Envoyer l'audio de votre microphone sans réduction du bruit supplémentaire.",
+            enableNoiseSuppression: "Activer la réduction du bruit",
+            noiseSuppressionMode: "Mode de réduction du bruit :",
             workAdventureNoiseSuppression: "Réduction du bruit WorkAdventure",
             workAdventureNoiseSuppressionDescription:
                 "Traite votre microphone avec la réduction du bruit de WorkAdventure.",
