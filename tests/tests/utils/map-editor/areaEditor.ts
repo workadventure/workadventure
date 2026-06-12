@@ -93,7 +93,7 @@ class AreaEditor {
     }
 
     async setAreaSearcheable(page: Page, value: boolean) {
-        await page.locator("label").filter({ hasText: "Searchable in the exploration" }).locator("div").click();
+        await page.getByTestId("searchable").click();
 
         /*    await page
       .locator(".map-editor .sidebar input#searchable")
