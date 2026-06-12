@@ -64,11 +64,10 @@ vi.mock("../../Stores/ScreenSharingStore", () => {
     };
 });
 
-vi.mock("../../Enum/EnvironmentVariable.ts", () => {
-    return {
-        PUSHER_URL: "http://localhost",
-    };
-});
+vi.mock(
+    "../../Enum/EnvironmentVariable.ts",
+    () => import("../../../../tests/front/mocks/frontEnvironmentVariableMock"),
+);
 
 vi.mock("../../Stores/MegaphoneStore", () => {
     return {
@@ -112,34 +111,10 @@ vi.mock("../../Connection/ConnectionManager", () => {
     };
 });
 
-vi.mock("../../Enum/EnvironmentVariable.ts", () => {
-    return {
-        MATRIX_ADMIN_USER: "admin",
-        MATRIX_DOMAIN: "domain",
-        STUN_SERVER: "stun:test.com:19302",
-        TURN_SERVER: "turn:test.com:19302",
-        TURN_USER: "user",
-        TURN_PASSWORD: "password",
-        POSTHOG_API_KEY: "test-api-key",
-        POSTHOG_URL: "https://test.com",
-        MAX_USERNAME_LENGTH: 10,
-        PUSHER_URL: "http://localhost",
-        FALLBACK_LOCALE: "en-US",
-        ENABLE_CHAT: true,
-        KLAXOON_ENABLED: false,
-        KLAXOON_CLIENT_ID: "",
-        YOUTUBE_ENABLED: false,
-        GOOGLE_DRIVE_ENABLED: false,
-        GOOGLE_DOCS_ENABLED: false,
-        GOOGLE_SHEETS_ENABLED: false,
-        GOOGLE_SLIDES_ENABLED: false,
-        ERASER_ENABLED: false,
-        EXCALIDRAW_ENABLED: false,
-        EXCALIDRAW_DOMAINS: [],
-        CARDS_ENABLED: false,
-        TLDRAW_ENABLED: false,
-    };
-});
+vi.mock(
+    "../../Enum/EnvironmentVariable.ts",
+    () => import("../../../../tests/front/mocks/frontEnvironmentVariableMock"),
+);
 
 const defaultRoomConnectionMock: RoomConnectionForSpacesInterface = new MockRoomConnectionForSpaces();
 

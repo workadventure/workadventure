@@ -50,6 +50,22 @@ const menu: DeepPartial<Translation["menu"]> = {
             balancedTitle: "Płynnosć a wubraženosć w balansu wostajić",
             balancedDescription: "Sprochuj, balansu mjez płynnosću a wubraženosću wostajić.",
         },
+        microphone: {
+            title: "Mikrofonowe nastajenja",
+            autoGainControl: "Awtomatiske zesylnjenje",
+            autoGainControlDescription: "Awtomatisce přiměrja sylnosć wašeho mikrofona.",
+            echoCancellation: "Wotstronjenje echa",
+            enableNoiseSuppression: "Potłóčowanje šuma zmóžnić",
+            noiseSuppressionMode: "Modus potłóčowanja šuma:",
+            workAdventureNoiseSuppression: "Potłóčowanje šuma WorkAdventure",
+            workAdventureNoiseSuppressionDescription: "Předźěłajće swój mikrofon z potłóčowanjom šuma WorkAdventure.",
+            recommended: "Doporučene",
+            browserNoiseSuppression: "Potłóčowanje šuma wobhladowaka",
+            browserNoiseSuppressionDescription: "Wužiwajće zatwarjene potłóčowanje šuma swojeho wobhladowaka.",
+            voiceIsolation: "Izolacija hłosa",
+            voiceIsolationDescription:
+                "Wužiwajće izolaciju hłosa wobhladowaka a dźěłoweho systema, jeli je k dispoziciji.",
+        },
         language: {
             title: "rěč",
         },

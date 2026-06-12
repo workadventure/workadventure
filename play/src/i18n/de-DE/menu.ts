@@ -51,6 +51,23 @@ const menu: DeepPartial<Translation["menu"]> = {
             balancedTitle: "Bildrate und Auflösung ausbalancieren",
             balancedDescription: "Versuche, ein Gleichgewicht zwischen Bildrate und Auflösung zu halten.",
         },
+        microphone: {
+            title: "Mikrofoneinstellungen",
+            autoGainControl: "Automatische Verstärkungsregelung",
+            autoGainControlDescription: "Passt die Lautstärke deines Mikrofons automatisch an.",
+            echoCancellation: "Echounterdrückung",
+            enableNoiseSuppression: "Geräuschunterdrückung aktivieren",
+            noiseSuppressionMode: "Modus der Geräuschunterdrückung:",
+            workAdventureNoiseSuppression: "WorkAdventure-Geräuschunterdrückung",
+            workAdventureNoiseSuppressionDescription:
+                "Verarbeite dein Mikrofon mit der Geräuschunterdrückung von WorkAdventure.",
+            recommended: "Empfohlen",
+            browserNoiseSuppression: "Browser-Geräuschunterdrückung",
+            browserNoiseSuppressionDescription: "Nutze die integrierte Geräuschunterdrückung deines Browsers.",
+            voiceIsolation: "Stimmisolation",
+            voiceIsolationDescription:
+                "Nutze die Stimmisolation von Browser und Betriebssystem, wenn sie verfügbar ist.",
+        },
         language: {
             title: "Sprache",
         },

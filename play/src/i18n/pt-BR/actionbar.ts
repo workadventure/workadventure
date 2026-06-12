@@ -49,6 +49,11 @@ const actionbar: BaseTranslation = {
         noSoundWarning:
             "Nenhum som detectado do seu microfone. Pode haver um problema; tente trocar o microfone nas configurações.",
         noSoundWarningPressEnter: "Nenhum som detectado do seu microfone. Pressione Enter para abrir as configurações.",
+        noiseSuppressionBeta: "Supressão de ruído (beta)",
+        noiseSuppressionInitializing: "Inicializando a supressão de ruído personalizada...",
+        noiseSuppressionUnsupported: "Este navegador não pode executar a supressão de ruído personalizada.",
+        noiseSuppressionError:
+            "A supressão de ruído personalizada falhou. Voltando para a supressão de ruído nativa do navegador.",
         openSettings: "Abrir configurações",
         ignore: "Ignorar",
     },

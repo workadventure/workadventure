@@ -50,6 +50,23 @@ const menu: DeepPartial<Translation["menu"]> = {
             balancedTitle: "Bilanciare frame rate e risoluzione",
             balancedDescription: "Cerca di mantenere un equilibrio tra frame rate e risoluzione.",
         },
+        microphone: {
+            title: "Impostazioni microfono",
+            autoGainControl: "Controllo automatico del guadagno",
+            autoGainControlDescription: "Regola automaticamente il volume del microfono.",
+            echoCancellation: "Cancellazione dell'eco",
+            enableNoiseSuppression: "Attiva soppressione del rumore",
+            noiseSuppressionMode: "Modalità di soppressione del rumore:",
+            workAdventureNoiseSuppression: "Soppressione del rumore WorkAdventure",
+            workAdventureNoiseSuppressionDescription:
+                "Elabora il microfono con la soppressione del rumore di WorkAdventure.",
+            recommended: "Consigliato",
+            browserNoiseSuppression: "Soppressione del rumore del browser",
+            browserNoiseSuppressionDescription: "Usa la soppressione del rumore integrata nel browser.",
+            voiceIsolation: "Isolamento della voce",
+            voiceIsolationDescription:
+                "Usa l'isolamento della voce del browser e del sistema operativo quando disponibile.",
+        },
         language: {
             title: "Lingua",
         },

@@ -29,6 +29,7 @@ import { personalAreaDataStore } from "./PersonalDeskStore";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
+export const settingsSubMenuTargetStore = writable<"microphone" | undefined>(undefined);
 export const userIsConnected = writable(false);
 export const mediaSettingsOpenStore = writable(false);
 
