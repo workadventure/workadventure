@@ -100,6 +100,7 @@
     $effect(() => {
         if ($onboardingStore && ($currentPlayerGroupIdStore !== undefined || $inJitsiStore || $inLivekitStore)) {
             onboardingStore.skip();
+            silentStore.setOnboardingOverride(false);
         }
     });
 
