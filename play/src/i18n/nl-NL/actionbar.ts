@@ -46,6 +46,15 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             "Geen geluid gedetecteerd van je microfoon. Er kan een probleem zijn; probeer je microfoon te wijzigen in de instellingen.",
         noSoundWarningPressEnter:
             "Geen geluid gedetecteerd van je microfoon. Druk op Enter om de instellingen te openen.",
+        loudEnvironmentWarning:
+            "Je microfoon vangt veel geluid op. Je kunt ruisonderdrukking inschakelen of je microfoon uitzetten.",
+        enableNoiseSuppression: "Ruisonderdrukking inschakelen",
+        turnOffMicrophone: "Microfoon uitzetten",
+        noiseSuppressionBeta: "Ruisonderdrukking (bèta)",
+        noiseSuppressionInitializing: "Aangepaste ruisonderdrukking initialiseren...",
+        noiseSuppressionUnsupported: "Deze browser kan aangepaste ruisonderdrukking niet uitvoeren.",
+        noiseSuppressionError:
+            "Aangepaste ruisonderdrukking is mislukt. Er wordt teruggevallen op de ingebouwde ruisonderdrukking van de browser.",
         openSettings: "Instellingen openen",
         ignore: "Negeren",
     },

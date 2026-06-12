@@ -119,6 +119,7 @@ import {
     speakerSelectedStore,
 } from "../../Stores/MediaStore";
 import NoMicrophoneSoundToast from "../../Components/Toasts/NoMicrophoneSoundToast.svelte";
+import LoudEnvironmentToast from "../../Components/Toasts/LoudEnvironmentToast.svelte";
 import BrowserNoSoundInfoToast from "../../Components/Toasts/BrowserNoSoundInfoToast.svelte";
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { toastStore } from "../../Stores/ToastStore";
@@ -166,6 +167,7 @@ import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChat
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
 import { AUDIO_CONTEXT_TOAST_UUID, audioContextManager } from "../../WebRtc/AudioContextManager";
 import { notificationManager } from "../../Notification/NotificationManager";
+import { loudEnvironmentWarningVisibleStore } from "../../Stores/LoudEnvironmentWarningVisibleStore";
 import { noMicrophoneSoundWarningVisibleStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
 import type { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
@@ -2707,6 +2709,17 @@ export class GameScene extends DirtyScene {
                     toastStore.addToast(NoMicrophoneSoundToast, {}, NO_MICROPHONE_SOUND_TOAST_ID);
                 } else {
                     toastStore.removeToast(NO_MICROPHONE_SOUND_TOAST_ID);
+                }
+            }),
+        );
+
+        const LOUD_ENVIRONMENT_TOAST_ID = "loud-environment-toast";
+        this.unsubscribers.push(
+            loudEnvironmentWarningVisibleStore.subscribe((show) => {
+                if (show) {
+                    toastStore.addToast(LoudEnvironmentToast, {}, LOUD_ENVIRONMENT_TOAST_ID);
+                } else {
+                    toastStore.removeToast(LOUD_ENVIRONMENT_TOAST_ID);
                 }
             }),
         );

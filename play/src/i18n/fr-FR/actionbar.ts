@@ -47,6 +47,15 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "Aucun son détecté sur votre micro. Un problème est possible; essayez de changer de micro dans les réglages.",
         noSoundWarningPressEnter: "Aucun son détecté sur votre micro. Appuyez sur Entrée pour ouvrir les réglages.",
+        loudEnvironmentWarning:
+            "Votre micro capte beaucoup de son. Vous pouvez activer la réduction du bruit ou couper votre micro.",
+        enableNoiseSuppression: "Activer la réduction du bruit",
+        turnOffMicrophone: "Couper le micro",
+        noiseSuppressionBeta: "Réduction du bruit (bêta)",
+        noiseSuppressionInitializing: "Initialisation de la réduction du bruit personnalisée...",
+        noiseSuppressionUnsupported: "Ce navigateur ne peut pas exécuter la réduction du bruit personnalisée.",
+        noiseSuppressionError:
+            "La réduction du bruit personnalisée a échoué. Retour à la réduction du bruit native du navigateur.",
         openSettings: "Ouvrir les réglages",
         ignore: "Ignorer",
     },

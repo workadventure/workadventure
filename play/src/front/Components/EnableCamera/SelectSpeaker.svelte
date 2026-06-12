@@ -1,6 +1,7 @@
 <script lang="ts">
     import { LL } from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
+    import Chip from "../UI/Chip.svelte";
     import { IconCheck, IconUnMute } from "@wa-icons";
 
     let editMode = $state(false);
@@ -67,13 +68,9 @@
                                 {StringUtils.normalizeDeviceName(speaker.label)}
                             </div>
                             {#if selectedDevice === speaker.deviceId}
-                                <span class="chip chip-sm chip-neutral inline rounded-sm">
-                                    <span class="chip-label">{$LL.camera.active()}</span>
-                                </span>
+                                <Chip>{$LL.camera.active()}</Chip>
                             {:else}
-                                <span class="chip chip-sm chip-neutral inline rounded-sm">
-                                    <span class="chip-label">{$LL.camera.notRecommended()}</span>
-                                </span>
+                                <Chip>{$LL.camera.notRecommended()}</Chip>
                             {/if}
                         </div>
                     </div>
