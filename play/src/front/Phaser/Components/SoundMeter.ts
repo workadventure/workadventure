@@ -7,6 +7,7 @@ export class SoundMeter {
     private clip: number;
     private analyser: AnalyserNode | undefined;
     private dataArray: Uint8Array<ArrayBuffer> | undefined;
+    private timeDomainDataArray: Float32Array<ArrayBuffer> | undefined;
     private context: AudioContext | undefined;
     private source: MediaStreamAudioSourceNode | undefined;
     private readonly NB_OF_BAR = 7;
@@ -41,6 +42,21 @@ export class SoundMeter {
         return this.getFrequenciesByBar();
     }
 
+    public getRmsVolume(): number {
+        if (this.context === undefined || this.timeDomainDataArray === undefined || this.analyser === undefined) {
+            return 0;
+        }
+
+        this.analyser.getFloatTimeDomainData(this.timeDomainDataArray);
+
+        let sum = 0;
+        for (let i = 0; i < this.timeDomainDataArray.length; i++) {
+            sum += this.timeDomainDataArray[i] * this.timeDomainDataArray[i];
+        }
+
+        return Math.sqrt(sum / this.timeDomainDataArray.length);
+    }
+
     public getFrequenciesByBar() {
         const spectrum: number[] = [0, 0, 0, 0, 0, 0, 0];
 
@@ -66,6 +82,7 @@ export class SoundMeter {
         this.context = undefined;
         this.analyser = undefined;
         this.dataArray = undefined;
+        this.timeDomainDataArray = undefined;
         this.source = undefined;
         this.stream = undefined;
     }
@@ -77,6 +94,7 @@ export class SoundMeter {
         this.analyser.fftSize = 256;
         const bufferLength = this.analyser.frequencyBinCount;
         this.dataArray = new Uint8Array(bufferLength);
+        this.timeDomainDataArray = new Float32Array(bufferLength);
     }
 
     private connectToSource(stream: MediaStream, context: AudioContext): void {

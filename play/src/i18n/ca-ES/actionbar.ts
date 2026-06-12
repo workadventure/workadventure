@@ -45,6 +45,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "No s'ha detectat cap so del micròfon. Pot haver-hi un problema; prova de canviar el micròfon a la configuració.",
         noSoundWarningPressEnter: "No s'ha detectat cap so del micròfon. Prem Enter per obrir la configuració.",
+        loudEnvironmentWarning:
+            "El teu micròfon capta molt de so. Pots activar la reducció de soroll o apagar el micròfon.",
+        enableNoiseSuppression: "Activa la reducció de soroll",
+        turnOffMicrophone: "Apaga el micròfon",
         noiseSuppressionBeta: "Supressió de soroll (beta)",
         noiseSuppressionInitializing: "S'està inicialitzant la supressió de soroll personalitzada...",
         noiseSuppressionUnsupported: "Aquest navegador no pot executar la supressió de soroll personalitzada.",

@@ -45,6 +45,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "Žedyn zwuk z wašogo mikrofona namakany. Móžo problem byś; wopytajśo mikrofon w nastajenjach změniś.",
         noSoundWarningPressEnter: "Žedyn zwuk z wašogo mikrofona namakany. Tłóčće Enter, aby nastajenja wócyniś.",
+        loudEnvironmentWarning:
+            "Waš mikrofon wjele zwuka zapśimujo. Móžośo pódušenje šumjenja aktiwěrowaś abo mikrofon wušaltowaś.",
+        enableNoiseSuppression: "Pódušenje šumjenja aktiwěrowaś",
+        turnOffMicrophone: "Mikrofon wušaltowaś",
         noiseSuppressionBeta: "Wótpóranje šuma (beta)",
         noiseSuppressionInitializing: "Swójske wótpóranje šuma se inicializěrujo...",
         noiseSuppressionUnsupported: "Toś ten wobglědowak njamóžo swójske wótpóranje šuma wuwjasć.",

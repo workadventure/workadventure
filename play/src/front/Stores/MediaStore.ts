@@ -41,6 +41,7 @@ import {
     voiceIsolationSupportedStore,
 } from "./NoiseSuppressionStore";
 import type { LocalStreamStoreValue } from "./LocalStreamTypes";
+import { LOUD_ENVIRONMENT_SAMPLE_INTERVAL_MS } from "./LoudEnvironmentDetection";
 import { NoiseSuppressionController } from "./NoiseSuppressionController";
 import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
 
@@ -1141,6 +1142,42 @@ export const localVolumeStore = derived<typeof localStreamStore, number[] | unde
                 }
             }
         }, 100);
+
+        return () => {
+            clearInterval(timeout);
+            soundMeter.stop();
+        };
+    },
+    undefined,
+);
+
+export const localMicrophoneRmsStore = derived<typeof localStreamStore, number | undefined>(
+    localStreamStore,
+    ($localStreamStoreValue, set) => {
+        if ($localStreamStoreValue.type === "error") {
+            set(undefined);
+            return;
+        }
+        const mediaStream = $localStreamStoreValue.stream;
+
+        if (mediaStream === undefined || mediaStream.getAudioTracks().length <= 0) {
+            set(undefined);
+            return;
+        }
+
+        const soundMeter = new SoundMeter(mediaStream);
+        let error = false;
+
+        const timeout = setInterval(() => {
+            try {
+                set(soundMeter.getRmsVolume());
+            } catch (err) {
+                if (!error) {
+                    console.error(err);
+                    error = true;
+                }
+            }
+        }, LOUD_ENVIRONMENT_SAMPLE_INTERVAL_MS);
 
         return () => {
             clearInterval(timeout);

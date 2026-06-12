@@ -45,6 +45,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "マイクから音が検出されません。問題がある可能性があります — 設定でマイクを変更してみてください。",
         noSoundWarningPressEnter: "マイクから音が検出されません。Enterキーを押して設定を開いてください。",
+        loudEnvironmentWarning: "マイクが多くの音を拾っています。ノイズ抑制を有効にするか、マイクをオフにできます。",
+        enableNoiseSuppression: "ノイズ抑制を有効にする",
+        turnOffMicrophone: "マイクをオフにする",
         noiseSuppressionBeta: "ノイズ抑制（ベータ）",
         noiseSuppressionInitializing: "カスタムノイズ抑制を初期化しています...",
         noiseSuppressionUnsupported: "このブラウザではカスタムノイズ抑制を実行できません。",

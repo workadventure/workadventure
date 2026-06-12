@@ -46,6 +46,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "마이크에서 소리가 감지되지 않습니다. 문제가 있을 수 있습니다 — 설정에서 마이크를 변경해 보세요.",
         noSoundWarningPressEnter: "마이크에서 소리가 감지되지 않습니다. Enter를 눌러 설정을 엽니다.",
+        loudEnvironmentWarning:
+            "마이크가 많은 소리를 감지하고 있습니다. 소음 억제를 활성화하거나 마이크를 끌 수 있습니다.",
+        enableNoiseSuppression: "소음 억제 활성화",
+        turnOffMicrophone: "마이크 끄기",
         noiseSuppressionBeta: "소음 억제(베타)",
         noiseSuppressionInitializing: "사용자 지정 소음 억제를 초기화하는 중...",
         noiseSuppressionUnsupported: "이 브라우저에서는 사용자 지정 소음 억제를 실행할 수 없습니다.",
