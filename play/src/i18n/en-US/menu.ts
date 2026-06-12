@@ -52,10 +52,10 @@ const menu: BaseTranslation = {
         microphone: {
             title: "Microphone settings",
             autoGainControl: "Automatic gain control",
+            autoGainControlDescription: "Automatically adjust your microphone volume.",
             echoCancellation: "Echo cancellation",
-            noiseSuppression: "Noise suppression",
-            noNoiseSuppression: "No noise suppression",
-            noNoiseSuppressionDescription: "Send your microphone audio without extra noise suppression.",
+            enableNoiseSuppression: "Enable noise suppression",
+            noiseSuppressionMode: "Noise suppression mode:",
             workAdventureNoiseSuppression: "WorkAdventure noise suppression",
             workAdventureNoiseSuppressionDescription: "Process your microphone with WorkAdventure's noise suppression.",
             recommended: "Recommended",

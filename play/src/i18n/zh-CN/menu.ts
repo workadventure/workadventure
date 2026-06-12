@@ -51,10 +51,10 @@ const menu: DeepPartial<Translation["menu"]> = {
         microphone: {
             title: "麦克风设置",
             autoGainControl: "自动增益控制",
+            autoGainControlDescription: "自动调整你的麦克风音量。",
             echoCancellation: "回声消除",
-            noiseSuppression: "噪声抑制",
-            noNoiseSuppression: "不使用噪声抑制",
-            noNoiseSuppressionDescription: "发送麦克风音频，不进行额外的噪声抑制。",
+            enableNoiseSuppression: "启用噪声抑制",
+            noiseSuppressionMode: "噪声抑制模式：",
             workAdventureNoiseSuppression: "WorkAdventure 噪声抑制",
             workAdventureNoiseSuppressionDescription: "使用 WorkAdventure 的噪声抑制处理你的麦克风。",
             recommended: "推荐",

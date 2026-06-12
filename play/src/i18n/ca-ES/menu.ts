@@ -53,10 +53,10 @@ const menu: DeepPartial<Translation["menu"]> = {
         microphone: {
             title: "Configuració del micròfon",
             autoGainControl: "Control automàtic del guany",
+            autoGainControlDescription: "Ajusta automàticament el volum del micròfon.",
             echoCancellation: "Cancel·lació d'eco",
-            noiseSuppression: "Supressió de soroll",
-            noNoiseSuppression: "Sense supressió de soroll",
-            noNoiseSuppressionDescription: "Envia l'àudio del micròfon sense supressió de soroll addicional.",
+            enableNoiseSuppression: "Activa la supressió de soroll",
+            noiseSuppressionMode: "Mode de supressió de soroll:",
             workAdventureNoiseSuppression: "Supressió de soroll de WorkAdventure",
             workAdventureNoiseSuppressionDescription:
                 "Processa el micròfon amb la supressió de soroll de WorkAdventure.",

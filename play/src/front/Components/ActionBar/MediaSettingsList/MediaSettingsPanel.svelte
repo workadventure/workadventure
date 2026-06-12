@@ -24,10 +24,11 @@
     import { handleOpenMenuEvent, settingsSubMenuTargetStore, SubMenusInterface } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { showHelpCameraSettings } from "../../../Stores/HelpSettingsStore";
+    import InputSwitch from "../../Input/InputSwitch.svelte";
     import SectionDivider from "./SectionDivider.svelte";
     import SectionTitle from "./SectionTitle.svelte";
     import DeviceListItem from "./DeviceListItem.svelte";
-    import { IconAlertTriangle, IconCamera, IconHeadphones, IconLoader, IconMicrophoneOn } from "@wa-icons";
+    import { IconCamera, IconHeadphones, IconMicrophoneOn, IconSettings } from "@wa-icons";
 
     interface Props {
         oncameraselected?: () => void;
@@ -76,6 +77,10 @@
         onsettingsopened?.();
     }
 
+    function toggleNoiseSuppression(): void {
+        noiseSuppressionEnabledStore.setEnabled(!$noiseSuppressionEnabledStore);
+    }
+
     let isNoiseSuppressionErrorState = $derived(
         $noiseSuppressionStateStore.status === "error" || $noiseSuppressionStateStore.status === "unsupported",
     );
@@ -106,13 +111,17 @@
 <div class="scrollable-content overflow-y-auto flex flex-col gap-2 flex-1 min-h-0">
     <!-- Camera Section -->
     <div class="flex flex-col gap-1">
-        <SectionTitle title={$LL.actionbar.subtitle.camera()} />
+        <SectionTitle>
+            <div class="flex items-center gap-1">
+                <IconCamera font-size="14" />
+                {$LL.actionbar.subtitle.camera()}
+            </div>
+        </SectionTitle>
         {#if $silentStore == false && cameraLoaded && $cameraListStore && $cameraListStore.length > 0}
             {#each $cameraListStore as camera, index (index)}
                 <DeviceListItem
                     label={camera.label}
                     isSelected={$usedCameraDeviceIdStore === camera.deviceId}
-                    icon={IconCamera}
                     onclick={() => {
                         analyticsClient.selectCamera();
                         selectCamera(camera.deviceId);
@@ -165,86 +174,62 @@
 
     <!-- Microphone Section -->
     <div class="flex flex-col gap-1">
-        <SectionTitle title={$LL.actionbar.subtitle.microphone()} />
-        <button
-            type="button"
-            data-testid="noise-suppression-panel"
-            class="rounded px-3 py-2 text-left w-full"
-            class:bg-white={!isNoiseSuppressionErrorState}
-            class:bg-opacity-5={!isNoiseSuppressionErrorState}
-            class:bg-pop-red={isNoiseSuppressionErrorState}
-            class:bg-opacity-10={isNoiseSuppressionErrorState}
-            class:ring-1={isNoiseSuppressionErrorState}
-            class:ring-pop-red={isNoiseSuppressionErrorState}
-            class:ring-opacity-60={isNoiseSuppressionErrorState}
-            onclick={openMicrophoneSettings}
-        >
-            <div class="flex items-start justify-between gap-4">
-                <div class="flex items-start gap-2 min-w-0">
-                    {#if $noiseSuppressionEnabledStore && $noiseSuppressionStateStore.status === "initializing"}
-                        <div data-testid="noise-suppression-loading" class="pt-0.5 text-white/70">
-                            <IconLoader font-size="18" class="animate-spin" />
-                        </div>
-                    {:else if isNoiseSuppressionErrorState}
-                        <div class="pt-0.5 text-pop-red">
-                            <IconAlertTriangle font-size="18" />
-                        </div>
-                    {:else}
-                        <div class="pt-0.5 text-white/70">
-                            <IconMicrophoneOn font-size="18" />
-                        </div>
-                    {/if}
-
-                    <div class="min-w-0">
-                        <div
-                            class="text-sm font-medium"
-                            class:text-white={!isNoiseSuppressionErrorState}
-                            class:text-pop-red={isNoiseSuppressionErrorState}
-                        >
-                            {$LL.actionbar.microphone.noiseSuppressionBeta()}
-                        </div>
-                        {#if $noiseSuppressionStateStore.status === "initializing"}
-                            <div class="text-xs text-white/50">
-                                {$LL.actionbar.microphone.noiseSuppressionInitializing()}
-                            </div>
-                        {:else if $noiseSuppressionStateStore.status === "unsupported"}
-                            <div data-testid="noise-suppression-error" class="text-xs text-pop-red">
-                                {$noiseSuppressionStateStore.message ??
-                                    $LL.actionbar.microphone.noiseSuppressionUnsupported()}
-                            </div>
-                        {:else if $noiseSuppressionStateStore.status === "error"}
-                            <div data-testid="noise-suppression-error" class="text-xs text-pop-red">
-                                {$noiseSuppressionStateStore.message ??
-                                    $LL.actionbar.microphone.noiseSuppressionError()}
-                            </div>
-                        {/if}
-                    </div>
-                </div>
-
-                <div
-                    data-testid="noise-suppression-status"
-                    class="rounded-full px-2 py-0.5 text-xs font-semibold bg-white text-white"
-                    class:bg-opacity-20={$noiseSuppressionEnabledStore}
-                    class:bg-opacity-10={!$noiseSuppressionEnabledStore}
-                >
-                    {$noiseSuppressionEnabledStore
-                        ? $LL.actionbar.microphone.noiseSuppressionOn()
-                        : $LL.actionbar.microphone.noiseSuppressionOff()}
-                </div>
+        <SectionTitle>
+            <div class="flex items-center gap-1">
+                <IconMicrophoneOn font-size="14" />
+                {$LL.actionbar.subtitle.microphone()}
             </div>
-        </button>
+            {#snippet actions()}
+                <button
+                    type="button"
+                    data-testid="microphone-settings-button"
+                    class="flex h-7 w-7 items-center justify-center rounded text-white/50 hover:bg-white/10 hover:text-white"
+                    aria-label={$LL.actionbar.microphone.openSettings()}
+                    title={$LL.actionbar.microphone.openSettings()}
+                    onclick={openMicrophoneSettings}
+                >
+                    <IconSettings font-size="14" />
+                </button>
+            {/snippet}
+        </SectionTitle>
         {#if $silentStore == false && microphoneLoaded && $microphoneListStore && $microphoneListStore.length > 0}
             {#each $microphoneListStore as microphone, index (index)}
                 <DeviceListItem
                     label={microphone.label}
                     isSelected={$usedMicrophoneDeviceIdStore === microphone.deviceId}
-                    icon={IconMicrophoneOn}
                     onclick={() => {
                         analyticsClient.selectMicrophone();
                         selectMicrophone(microphone.deviceId);
                     }}
                 />
             {/each}
+            <div class="group flex flex-col relative z-10 py-1 px-2 overflow-hidden">
+                <InputSwitch
+                    id="noise-suppression-toggle"
+                    value={$noiseSuppressionEnabledStore}
+                    onchange={toggleNoiseSuppression}
+                    margin=""
+                    spacing=""
+                    alignLabel="center"
+                >
+                    <span class:text-pop-red={isNoiseSuppressionErrorState}>
+                        {$LL.actionbar.microphone.noiseSuppressionBeta()}
+                    </span>
+                </InputSwitch>
+                {#if $noiseSuppressionStateStore.status === "initializing"}
+                    <div class="ms-14 px-3 text-sm text-white/50">
+                        {$LL.actionbar.microphone.noiseSuppressionInitializing()}
+                    </div>
+                {:else if $noiseSuppressionStateStore.status === "unsupported"}
+                    <div data-testid="noise-suppression-error" class="ms-14 px-3 text-sm text-pop-red">
+                        {$noiseSuppressionStateStore.message ?? $LL.actionbar.microphone.noiseSuppressionUnsupported()}
+                    </div>
+                {:else if $noiseSuppressionStateStore.status === "error"}
+                    <div data-testid="noise-suppression-error" class="ms-14 px-3 text-sm text-pop-red">
+                        {$noiseSuppressionStateStore.message ?? $LL.actionbar.microphone.noiseSuppressionError()}
+                    </div>
+                {/if}
+            </div>
         {:else}
             <div class="group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
                 <div class="text-sm italic text-center">
@@ -291,13 +276,17 @@
 
     <!-- Speaker Section -->
     <div class="flex flex-col gap-1">
-        <SectionTitle title={$LL.actionbar.subtitle.speaker()} />
+        <SectionTitle>
+            <div class="flex items-center gap-1">
+                <IconHeadphones font-size="14" />
+                {$LL.actionbar.subtitle.speaker()}
+            </div>
+        </SectionTitle>
         {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
             {#each $speakerListStore as speaker, index (index)}
                 <DeviceListItem
                     label={speaker.label}
                     isSelected={$speakerSelectedStore === speaker.deviceId}
-                    icon={IconHeadphones}
                     onclick={() => {
                         analyticsClient.selectSpeaker();
                         selectSpeaker(speaker.deviceId);

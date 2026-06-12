@@ -748,6 +748,9 @@ async function runRawStreamUpdate(
             newConstraints.audio = false;
         }
 
+        // Note: we need to stop the tracks BEFORE calling getUserMedia and not after because of a Chromium issue:
+        // If some settings are modified (like autoGainControl), they can be ignored if a track already exists
+        // for the same microphone, but with different settings.
         if (currentStream) {
             if (mustRequestNewVideo) {
                 currentStream.getVideoTracks().forEach((track) => {

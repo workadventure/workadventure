@@ -45,10 +45,11 @@ test.describe("Noise suppression @nomobile @nowebkit", () => {
 
         await Menu.openMediaSettings(page);
 
-        await page.getByTestId("noise-suppression-panel").click({ force: true });
+        await page.getByTestId("microphone-settings-button").click({ force: true });
         await expect(page.getByTestId("microphone-settings-section")).toBeVisible();
 
-        await expect(page.locator("#noise-suppression-provider-none")).toBeChecked();
+        await page.locator("#noise-suppression-settings-toggle").evaluate((input: HTMLInputElement) => input.click());
+        await expect(page.locator("#noise-suppression-settings-toggle")).toBeChecked();
 
         await page
             .locator("#noise-suppression-provider-workadventure")
