@@ -90,7 +90,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .map-editor {
         top: 0;
         inset-inline-end: 0;

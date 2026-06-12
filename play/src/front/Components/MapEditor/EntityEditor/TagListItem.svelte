@@ -54,7 +54,7 @@
     </li>
 {/if}
 
-<style lang="scss">
+<style>
     .entities-tag-list-item-grid {
         display: grid;
         column-gap: 6px;

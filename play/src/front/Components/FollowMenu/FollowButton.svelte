@@ -14,7 +14,7 @@
     <img draggable="false" src={followImg} alt="" />
 </div>
 
-<style lang="scss">
+<style>
     .btn-follow {
         cursor: pointer;
         display: flex;

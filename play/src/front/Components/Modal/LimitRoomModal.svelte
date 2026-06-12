@@ -33,7 +33,7 @@
     </section>
 </div>
 
-<style lang="scss">
+<style>
     .limit-map {
         pointer-events: auto;
         max-height: 80vh;

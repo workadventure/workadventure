@@ -41,7 +41,7 @@
     {/if}
 </div>
 
-<style lang="scss">
+<style>
     .animation {
         animation-duration: 0.5s;
         animation-name: slidein;

@@ -61,7 +61,7 @@
     ></iframe>
 </div>
 
-<style lang="scss">
+<style>
     .layer {
         height: 100%;
         width: 100%;

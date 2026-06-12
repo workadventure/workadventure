@@ -7,11 +7,7 @@
   "exports": {
     ".": "./style/index.css",
     "./style.css": "./style/index.css",
-    "./style/index.css": "./style/index.css",
-    "./tailwind-config": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
-    }
+    "./style/index.css": "./style/index.css"
   },
   "author": "WorkAdventure",
   "license": "ISC",
@@ -20,17 +16,11 @@
     "style/*.css"
   ],
   "dependencies": {
-    "@fontsource/press-start-2p": "^5.2.7",
-    "@fontsource/roboto": "^5.2.10",
-    "@fontsource/roboto-condensed": "^5.2.8",
-    "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/forms": "^0.5.11",
     "@workadventure/design-system": "^3.0.0",
     "tailwindcss": "^4.3.0"
   },
   "files": [
-    "src/index.ts",
-    "style/index.css",
-    "tailwind.config.ts"
+    "style/index.css"
   ]
 }

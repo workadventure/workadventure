@@ -9,5 +9,5 @@
     <img draggable="false" src={DrowAreaGif} class="w-full" alt={$LL.mapEditor.areaEditorInstructions.description()} />
 </div>
 
-<style lang="scss">
+<style>
 </style>

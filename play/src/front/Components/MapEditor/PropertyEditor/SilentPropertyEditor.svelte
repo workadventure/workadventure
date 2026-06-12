@@ -23,5 +23,5 @@
     {/snippet}
 </PropertyEditorBase>
 
-<style lang="scss">
+<style>
 </style>

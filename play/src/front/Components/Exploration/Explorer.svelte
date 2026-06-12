@@ -537,7 +537,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .mapexplorer {
         scrollbar-width: 20px;
         scrollbar-color: rgb(0 0 0 / 0.8) rgb(0 0 0 / 0.2);

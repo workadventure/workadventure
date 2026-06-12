@@ -31,7 +31,7 @@
     {/each}
 </div>
 
-<style lang="scss">
+<style>
     .horizontal-sound-meter div {
         flex-grow: 1;
     }

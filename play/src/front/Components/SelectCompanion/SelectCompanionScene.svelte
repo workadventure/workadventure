@@ -135,7 +135,7 @@
 <!--    </section>-->
 
 <!--</form>-->
-<style lang="scss">
+<style>
     button {
         pointer-events: auto;
     }

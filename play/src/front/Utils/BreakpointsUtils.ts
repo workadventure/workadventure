@@ -5,7 +5,7 @@ type InternalBreakpoint = {
 };
 
 function generateBreakpointsMap(): Map<string, InternalBreakpoint> {
-    // If is changed don't forget to also change it on SASS.
+    // If this changes, also update the matching CSS breakpoints.
     const breakpoints: { [key: string]: number } = {
         xs: 0,
         sm: 576,

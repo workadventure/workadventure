@@ -15,7 +15,7 @@
     x
 </button>
 
-<style lang="scss">
+<style>
     .close-button {
         position: absolute;
         padding: 3px;

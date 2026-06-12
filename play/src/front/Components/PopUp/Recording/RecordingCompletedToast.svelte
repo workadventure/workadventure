@@ -80,7 +80,7 @@
     {/snippet}
 </ToastContainer>
 
-<style lang="scss">
+<style>
     .recording-completed-modal {
         min-width: 360px;
         max-width: 420px;

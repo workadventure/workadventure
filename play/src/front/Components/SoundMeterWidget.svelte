@@ -1,5 +1,5 @@
 <script lang="ts">
-    //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
+    //STYLE: Classes factorizing tailwind's ones are defined in video-ui.css
 
     let display = true;
     interface Props {

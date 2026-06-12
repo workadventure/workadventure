@@ -132,10 +132,8 @@
     </section>
 {/if}
 
-<style lang="scss">
-    @use "../style/breakpoints.scss" as *;
-
-    @include media-breakpoint-up(sm) {
+<style>
+    @media only screen and (max-width: 767px) {
         .chatWindow {
             width: 100% !important;
         }

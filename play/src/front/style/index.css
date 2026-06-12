@@ -1,0 +1,23 @@
+@charset "UTF-8";
+
+/* Style baseline */
+@import "@workadventure/tailwind/style.css";
+
+/* Style from external libs */
+@import "highlight.js/styles/dark.css";
+
+/* Internal styles */
+@import "tailwind.css";
+@import "cowebsite.css";
+@import "style.css";
+@import "chat.css";
+@import "font.css";
+@import "audio-range.css";
+@import "map-editor.css";
+@import "loader.css";
+@import "input.css";
+@import "warning-toast.css";
+
+@source "../../**/*.{html,js,svelte,ts}";
+@source "../../../index.html";
+@source "../../../pip-layout-test.html";

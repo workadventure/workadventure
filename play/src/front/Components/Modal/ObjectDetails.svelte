@@ -251,7 +251,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .object-menu {
         height: max-content !important;
         z-index: 2000;

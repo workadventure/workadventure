@@ -154,7 +154,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .calendar {
         position: absolute !important;
         top: 0;

@@ -21,7 +21,7 @@
     }}
 />
 
-<style lang="scss">
+<style>
     img {
         display: inline-block;
         pointer-events: auto;

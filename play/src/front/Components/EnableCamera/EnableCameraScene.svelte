@@ -308,7 +308,7 @@
 <div class="absolute start-0 top-0 w-dvw h-dvh bg-cover z-10" style="background-image: url('{bgMap}');"></div>
 <div class="absolute start-0 top-0 w-dvw h-dvh bg-contrast/80 z-20" style="background-color: '{bgColor}';"></div>
 
-<style lang="scss">
+<style>
     .enableCameraScene {
         h2 {
             margin: 1px;

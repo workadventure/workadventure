@@ -113,7 +113,7 @@
     </main>
 {/if}
 
-<style lang="scss">
+<style>
     main.errorScreen {
         min-width: 300px;
         z-index: 700;
@@ -157,19 +157,6 @@
             left: 0;
             top: -19px;
         }
-
-        @keyframes ellipsis {
-            to {
-                width: 1.25em;
-            }
-        }
-
-        @-webkit-keyframes ellipsis {
-            to {
-                width: 1.25em;
-            }
-        }
-
         .button {
             cursor: pointer;
             font-size: 14px;
@@ -189,6 +176,18 @@
             .icon {
                 height: 60px;
             }
+        }
+    }
+
+    @keyframes ellipsis {
+        to {
+            width: 1.25em;
+        }
+    }
+
+    @-webkit-keyframes ellipsis {
+        to {
+            width: 1.25em;
         }
     }
 </style>

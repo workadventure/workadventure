@@ -49,18 +49,16 @@
     <p>{notification.text}</p>
 </div>
 
-<style lang="scss">
+<style>
     /*audio html when audio message playing*/
     .notification-playing {
         top: 40px;
         transition: all 0.1s ease-out;
-        //background-color: black;
         display: inline-flex;
         align-items: center;
         z-index: 750;
 
         img {
-            //border-radius: 50%;
             padding: 5px;
         }
 

@@ -49,25 +49,6 @@
     @apply flex media-box-camera-on-size;
 }
 
-/* MOZAIC MODE */
-// .mozaic-full-width {
-//     @apply mozaic-full-size;
-
-//     .nametag-webcam-container,
-//     .woka-webcam-container,
-//     .voice-meter-webcam-container,
-//     .report-ban-container {
-//         @apply mozaic-full-size bottom-0;
-//     }
-
-//     .video-container {
-//         @apply mozaic-full-size;
-//         &.video-off{
-//             @apply md:h-[4vh];
-//         }
-//     }
-// }
-
 .mozaic-duo,
 .mozaic-quarter {
     @apply mozaic-duo-size;
@@ -97,11 +78,7 @@
 
 
 
-/*
-///////////////////
-// Loading.svelte //
-////////////////////
-*/
+/* Loading.svelte */
 #loading {
     @apply h-fit flex bg-warning relative rounded py-2 my-2;
     transition: all 0.2s ease;
@@ -116,11 +93,7 @@
 
 
 
-/*
-////////////////////
-// UserTag.svelte //
-////////////////////
-*/
+/* UserTag.svelte */
 #tag {
     @apply flex rounded-sm items-center w-full p-2 h-fit;
     &.minimal {
@@ -139,11 +112,7 @@
 
 
 
-/*
-//////////////////////////
-// JitsiMediaBox.svelte //
-//////////////////////////
-*/
+/* JitsiMediaBox.svelte */
 .jitsi-video{
     @apply flex w-full border-warning border-2 border-solid relative rounded;
     transition: all 0.2s ease;

@@ -164,7 +164,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .totolist {
         position: absolute !important;
         top: 0;

@@ -1,8 +1,4 @@
-/*
-////////////////////////
-// ButtonState.svelte //
-////////////////////////
-*/
+/* ButtonState.svelte */
 button.button-state {
   transition: all 0.2s ease-in-out;
   @apply mx-auto;
@@ -37,11 +33,7 @@ button.button-state {
   }
 }
 
-/*
-//////////////////////
-// InputTags.svelte //
-//////////////////////
-*/
+/* InputTags.svelte */
 .input-tags {
   @apply mb-2;
   label {
@@ -59,24 +51,20 @@ button.button-state {
   }
 }
 
-:global(.svelte-select) {
+.svelte-select {
   border-radius: 8px !important;
   padding-left: 0.75rem !important;
   border-color: rgb(146, 142, 187) !important;
   transition: all ease-in-out 150ms !important;
 }
-:global(.svelte-select.focused) {
+.svelte-select.focused {
   @apply outline outline-lighter-purple;
 }
-:global(.svelte-select .value-container) {
+.svelte-select .value-container {
   padding: 0 5px !important;
 }
 
-/*
-//////////////////////
-// InputText.svelte //
-//////////////////////
-*/
+/* InputText.svelte */
 .input-text {
   @apply mb-2;
   label {

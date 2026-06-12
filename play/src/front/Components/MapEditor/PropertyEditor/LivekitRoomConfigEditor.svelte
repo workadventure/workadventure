@@ -136,7 +136,7 @@
     </div>
 {/if}
 
-<style lang="scss">
+<style>
     .config-element-container {
         overflow-y: auto;
         overflow-x: hidden;

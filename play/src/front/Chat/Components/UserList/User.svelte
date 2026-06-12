@@ -241,7 +241,7 @@
         </div>
     </div>
 
-    <style lang="scss">
+    <style>
         .status {
             background-color: var(--color);
         }

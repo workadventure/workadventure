@@ -1,5 +1,4 @@
-import "@workadventure/tailwind/style.css";
-import "../style/index.scss";
+import "../style/index.css";
 import { mount } from "svelte";
 import PictureInPictureLayoutTest from "./PictureInPictureLayoutTest.svelte";
 

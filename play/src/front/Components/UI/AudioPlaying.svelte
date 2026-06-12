@@ -77,7 +77,7 @@
     </button>
 </div>
 
-<style lang="scss">
+<style>
     /*audio html when audio message playing*/
     .audio-playing {
         position: absolute;
@@ -90,7 +90,6 @@
         z-index: 750;
 
         img {
-            //border-radius: 50%;
             padding: 10px;
         }
 

@@ -127,7 +127,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .menu-container {
         &.mobile {
             width: 100% !important;

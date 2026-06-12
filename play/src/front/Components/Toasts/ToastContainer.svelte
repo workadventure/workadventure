@@ -81,7 +81,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .progress-bar-container {
         position: absolute;
         top: 0;

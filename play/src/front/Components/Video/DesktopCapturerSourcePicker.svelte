@@ -78,7 +78,7 @@
     </section>
 </div>
 
-<style lang="scss">
+<style>
     .source-picker {
         position: absolute;
         pointer-events: auto;

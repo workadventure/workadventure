@@ -76,24 +76,26 @@
         }
     }
 
-    &-loader {
+    #cowebsite-loader {
         width: 20%;
         display: none;
 
         #smoke {
-            @for $i from 1 through 3 {
-                #trail-#{$i} {
-                    @for $y from 1 through 3 {
-                        #trail-#{$i}-state-#{$y} {
-                            visibility: hidden;
-                        }
-                    }
-                }
+            #trail-1-state-1,
+            #trail-1-state-2,
+            #trail-1-state-3,
+            #trail-2-state-1,
+            #trail-2-state-2,
+            #trail-2-state-3,
+            #trail-3-state-1,
+            #trail-3-state-2,
+            #trail-3-state-3 {
+                visibility: hidden;
             }
         }
     }
 
-    &-slot-main {
+    #cowebsite-slot-main {
         z-index: 70 !important;
         background-color: rgba(10, 9, 9, 0);
         display: flex;
@@ -101,7 +103,7 @@
         align-items: center;
     }
 
-    &-buffer {
+    #cowebsite-buffer {
         iframe {
             z-index: 201 !important;
             pointer-events: none !important;

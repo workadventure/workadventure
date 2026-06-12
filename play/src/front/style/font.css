@@ -4,7 +4,7 @@
 @import "@fontsource/press-start-2p";
 @import "@fontsource-variable/oswald";
 
-// Custom font Comic Jens for Speech / Think bubbles
+/* Custom font Comic Jens for Speech / Think bubbles */
 @font-face {
     font-family: "Comic Jens";
     src: url("./fonts/comic-jens/ComicJensFreePro-Regular.ttf") format("truetype");
@@ -13,7 +13,7 @@
     font-display: swap;
 }
 
-// Special fallback font for Korean characters (see https://github.com/workadventure/workadventure/issues/5626)
+/* Special fallback font for Korean characters (see https://github.com/workadventure/workadventure/issues/5626) */
 @font-face {
     font-family: "Pretendard Korean";
     src: url("./fonts/pretendard/Pretendard-Regular.otf") format("opentype");

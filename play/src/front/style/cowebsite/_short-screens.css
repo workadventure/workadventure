@@ -29,7 +29,7 @@
       visibility: visible;
     }
 
-    &-loader {
+    #cowebsite-loader {
       height: 20%;
     }
 

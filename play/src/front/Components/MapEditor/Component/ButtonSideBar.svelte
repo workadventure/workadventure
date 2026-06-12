@@ -54,7 +54,7 @@
     {/if}
 </div>
 
-<style lang="scss">
+<style>
     .tooltip {
         opacity: 0;
         transition: opacity 0.3s ease-in-out;

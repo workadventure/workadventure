@@ -31,7 +31,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .refresh {
         pointer-events: auto;
         color: white;

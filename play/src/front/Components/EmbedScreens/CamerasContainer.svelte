@@ -615,7 +615,7 @@
 </div>
 
 <!-- && !$megaphoneEnabledStore TODO HUGO -->
-<style lang="scss">
+<style>
     .hidden {
         display: none !important;
     }
