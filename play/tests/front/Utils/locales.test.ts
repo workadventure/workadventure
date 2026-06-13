@@ -53,6 +53,7 @@ describe("Locale Detection", () => {
                         "nl-NL",
                         "pt-BR",
                         "zh-CN",
+                        "zh-TW",
                     ].includes(locale),
                 locales: [
                     "ar-SA",
@@ -68,6 +69,7 @@ describe("Locale Detection", () => {
                     "nl-NL",
                     "pt-BR",
                     "zh-CN",
+                    "zh-TW",
                 ],
                 loadedLocales: {},
                 loadedFormatters: {},
@@ -101,6 +103,7 @@ describe("Locale Detection", () => {
                 "nl-NL",
                 "pt-BR",
                 "zh-CN",
+                "zh-TW",
             ];
             const isLocale = (locale: string) => supportedLocales.includes(locale);
 
@@ -149,6 +152,7 @@ describe("Locale Detection", () => {
                 "nl-NL",
                 "pt-BR",
                 "zh-CN",
+                "zh-TW",
             ];
             const isLocale = (locale: string) => supportedLocales.includes(locale);
 
@@ -172,6 +176,55 @@ describe("Locale Detection", () => {
 
             // Should get fr-FR (exact), de-DE (generic), en-US (generic)
             expect(detectedLocales).toEqual(["fr-FR", "de-DE", "en-US"]);
+        });
+
+        it("should detect Traditional Chinese exactly and map generic zh to zh-CN", () => {
+            Object.defineProperty(window, "navigator", {
+                value: {
+                    language: "zh-TW",
+                    languages: ["zh-TW", "zh"],
+                },
+                configurable: true,
+            });
+
+            const supportedLocales = [
+                "ar-SA",
+                "ca-ES",
+                "de-DE",
+                "dsb-DE",
+                "en-US",
+                "es-ES",
+                "fr-FR",
+                "hsb-DE",
+                "it-IT",
+                "ja-JP",
+                "nl-NL",
+                "pt-BR",
+                "zh-CN",
+                "zh-TW",
+            ];
+            const isLocale = (locale: string) => supportedLocales.includes(locale);
+
+            const navigatorLanguages = window.navigator.languages || [window.navigator.language];
+            const detectedLocales: string[] = [];
+
+            for (const lang of navigatorLanguages) {
+                // First try exact match
+                if (isLocale(lang)) {
+                    detectedLocales.push(lang);
+                    continue;
+                }
+
+                // Then try to find the first available variant for this language
+                const genericLang = lang.split("-")[0];
+                const availableVariant = supportedLocales.find((locale) => locale.startsWith(genericLang + "-"));
+                if (availableVariant) {
+                    detectedLocales.push(availableVariant);
+                }
+            }
+
+            // zh-TW resolves via exact match; generic "zh" falls back to the first zh-* variant (zh-CN)
+            expect(detectedLocales).toEqual(["zh-TW", "zh-CN"]);
         });
     });
 
@@ -215,6 +268,7 @@ describe("Locale Detection", () => {
                         "nl-NL",
                         "pt-BR",
                         "zh-CN",
+                        "zh-TW",
                     ].includes(locale),
                 locales: [
                     "ar-SA",
@@ -230,6 +284,7 @@ describe("Locale Detection", () => {
                     "nl-NL",
                     "pt-BR",
                     "zh-CN",
+                    "zh-TW",
                 ],
             }));
 
