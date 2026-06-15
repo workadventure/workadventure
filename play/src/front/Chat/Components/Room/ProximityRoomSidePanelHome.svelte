@@ -11,6 +11,7 @@
     } from "../../Connection/ChatConnection";
     import { roomSidePanelStore, type RoomSidePanelSection } from "../../Stores/RoomSidePanelStore";
     import Avatar from "../Avatar.svelte";
+    import { createQuestionStateRowsStore } from "./QuestionStateRowsStore";
     import {
         IconBellOff,
         IconCheckList,
@@ -36,16 +37,16 @@
     let participants = $derived(room.currentMeetingParticipantsStore);
     let pollItems = $derived(room.pollItems ?? emptyPollItems);
     let questionItems = $derived(room.qaItems ?? emptyQuestionItems);
+    let questionRowsStore = $derived(createQuestionStateRowsStore(questionItems));
+    let questionRows = $derived($questionRowsStore);
     let unreadQuestionCount = $derived(room.unreadQuestionCount ?? emptyUnreadQuestionCount);
     let pollCatalogueHydrationState = $derived(room.pollCatalogueHydrationState ?? readyHydrationState);
     let areNotificationsMuted = $derived(room.areNotificationsMuted);
     let avatarColorStore = $derived(room.avatarFallbackColor);
     let openPollCount = $derived($pollItems.filter((poll) => !get(poll.state).isEnded).length);
-    let openQuestionCount = $derived($questionItems.filter((question) => !get(question.state).isAnswered).length);
+    let openQuestionCount = $derived(questionRows.filter(({ state }) => !state.isAnswered).length);
     let pollCardValue = $derived(`${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`);
-    let questionCardValue = $derived(
-        `${$questionItems.length} · ${openQuestionCount} ${$LL.chat.question.openStatus()}`,
-    );
+    let questionCardValue = $derived(`${questionRows.length} · ${openQuestionCount} ${$LL.chat.question.openStatus()}`);
     let isPollCatalogueLoading = $derived(
         $pollCatalogueHydrationState.status === "loading" || $pollCatalogueHydrationState.status === "idle",
     );

@@ -464,12 +464,11 @@ export class ProximityChatRoom implements ChatRoom {
             return Promise.resolve();
         }
 
-        const currentVoterId = this.getCurrentVoterId(this.users ?? new Map());
         const questionId = uuidv4();
         const definition: ProximityQAQuestionMetadata = {
             id: questionId,
             body,
-            senderId: currentVoterId,
+            senderId: this._spaceUserId,
             senderName: this.getCurrentUserName(),
             createdAt: Date.now(),
         };
@@ -602,7 +601,7 @@ export class ProximityChatRoom implements ChatRoom {
     ): readonly ChatQuestionItem[] {
         const parsedMetadata = parseProximityQAMetadata(metadata);
         const activeQuestionIds = new Set<string>();
-        const currentVoterId = this.getCurrentVoterId(users);
+        const currentVoterId = this._spaceUserId;
 
         const questionItems = parsedMetadata.questions
             .filter((question) => !isProximityQAQuestionDeleted(question, parsedMetadata.deletions))
@@ -693,7 +692,7 @@ export class ProximityChatRoom implements ChatRoom {
         users: Map<string, SpaceUserExtended>,
     ): AnyKindOfUser | undefined {
         for (const user of users.values()) {
-            if (this.getUserVoterId(user) === question.senderId) {
+            if (this.isUserIdentity(user, question.senderId)) {
                 return mapExtendedSpaceUserToChatUser(user);
             }
         }
@@ -729,6 +728,10 @@ export class ProximityChatRoom implements ChatRoom {
 
     private getUserVoterId(user: SpaceUserExtended): string {
         return user.uuid || user.spaceUserId;
+    }
+
+    private isUserIdentity(user: SpaceUserExtended, identity: string): boolean {
+        return identity === user.spaceUserId || identity === user.uuid;
     }
 
     private computeCanModerateQuestions(users: Map<string, SpaceUserExtended>): boolean {
