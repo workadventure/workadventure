@@ -82,10 +82,10 @@ describe("LiveKitFileTransferTransport", () => {
             emitPrivateMessage.mock.calls.map(([message, receiver]) => [
                 (message as NonNullable<PrivateSpaceEvent["event"]>).$case,
                 JSON.parse(
-                    (message as { proximityFileTransferSignal: { signal: string } }).proximityFileTransferSignal.signal
+                    (message as { proximityFileTransferSignal: { signal: string } }).proximityFileTransferSignal.signal,
                 ).type,
                 receiver,
-            ])
+            ]),
         ).toEqual([["proximityFileTransferSignal", "livekit_file_request", "sender"]]);
     });
 
@@ -129,7 +129,7 @@ describe("LiveKitFileTransferTransport", () => {
                 },
                 readAll: () => Promise.resolve(["hello"]),
             },
-            "identity-sender"
+            "identity-sender",
         );
 
         expect(updates).toEqual([
@@ -228,7 +228,7 @@ describe("LiveKitFileTransferTransport", () => {
                 },
                 readAll: () => Promise.resolve(["hello"]),
             },
-            "identity-sender"
+            "identity-sender",
         );
 
         expect(updates).toEqual([
@@ -266,7 +266,7 @@ describe("LiveKitFileTransferTransport", () => {
                 encryptionAlgorithm: encrypted.metadata.algorithm,
                 encryptionKeyId: "transfer-1",
             },
-            { encryptionKey: Promise.resolve(key), encryptionMetadata: Promise.resolve(encrypted.metadata) }
+            { encryptionKey: Promise.resolve(key), encryptionMetadata: Promise.resolve(encrypted.metadata) },
         );
 
         await streamHandler?.(
@@ -278,7 +278,7 @@ describe("LiveKitFileTransferTransport", () => {
                 },
                 readAll: () => Promise.resolve([encrypted.blob]),
             },
-            "identity-sender"
+            "identity-sender",
         );
 
         expect(updates).toEqual([
@@ -313,7 +313,7 @@ describe("LiveKitFileTransferTransport", () => {
                 encryptionAlgorithm: encrypted.metadata.algorithm,
                 encryptionKeyId: "transfer-1",
             },
-            { encryptionKey: Promise.resolve(key), encryptionMetadata: Promise.resolve(encrypted.metadata) }
+            { encryptionKey: Promise.resolve(key), encryptionMetadata: Promise.resolve(encrypted.metadata) },
         );
 
         await streamHandler?.(
@@ -325,7 +325,7 @@ describe("LiveKitFileTransferTransport", () => {
                 },
                 readAll: () => Promise.resolve([encrypted.blob]),
             },
-            "identity-sender"
+            "identity-sender",
         );
 
         expect(updates).toContainEqual({
@@ -340,7 +340,7 @@ describe("LiveKitFileTransferTransport", () => {
 });
 
 function createReceivingTransport(
-    onRegister: (handler: LiveKitProximityFileStreamHandler) => void
+    onRegister: (handler: LiveKitProximityFileStreamHandler) => void,
 ): LiveKitFileTransferTransport {
     return new LiveKitFileTransferTransport({
         localSpaceUserId: "recipient",

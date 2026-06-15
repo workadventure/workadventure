@@ -56,15 +56,7 @@
         removeFilePreviews,
         type MessageInputBarFilePreview,
     } from "./MessageInputBarFilePreview";
-    import {
-        IconHelpCircle,
-        IconList,
-        IconLoader,
-        IconMoodSmile,
-        IconPaperclip,
-        IconSend,
-        IconX,
-    } from "@wa-icons";
+    import { IconHelpCircle, IconList, IconLoader, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
     import { modals } from "@wa-modals";
 
     interface Props {

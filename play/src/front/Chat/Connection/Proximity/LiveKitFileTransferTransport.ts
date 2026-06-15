@@ -36,7 +36,7 @@ type LiveKitProximityFileStreamPart = BlobPart | Uint8Array<ArrayBufferLike>;
 
 export type LiveKitProximityFileStreamHandler = (
     reader: LiveKitProximityFileStream,
-    participantIdentity: string
+    participantIdentity: string,
 ) => Promise<void>;
 
 type LiveKitFileTransferSpace = {
@@ -82,12 +82,12 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
 
     requestDownload(
         offer: IncomingProximityFileTransferOffer,
-        security?: ProximityFileTransferDownloadSecurity
+        security?: ProximityFileTransferDownloadSecurity,
     ): Promise<void> {
         this.clearExpectedDownload(offer.transferId);
         const unregisterHandler = this.options.liveKitRoom.registerProximityFileHandler(
             getProximityFileTransferLiveKitTopic(offer.transferId),
-            (reader, participantIdentity) => this.handleIncomingStream(offer.transferId, reader, participantIdentity)
+            (reader, participantIdentity) => this.handleIncomingStream(offer.transferId, reader, participantIdentity),
         );
         this.expectedDownloads.set(offer.transferId, { offer, security, unregisterHandler });
         this.options.space.emitPrivateMessage(
@@ -99,7 +99,7 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
                     signal: JSON.stringify({ type: "livekit_file_request" }),
                 },
             },
-            offer.senderSpaceUserId
+            offer.senderSpaceUserId,
         );
         return Promise.resolve();
     }
@@ -113,7 +113,7 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
 
     handleSignal(
         senderSpaceUserId: string,
-        signalMessage: { transferId: string; connectionId: string; signal: string }
+        signalMessage: { transferId: string; connectionId: string; signal: string },
     ): Promise<void> {
         const signal = JSON.parse(signalMessage.signal) as { type?: string };
         if (signal.type !== "livekit_file_request") {
@@ -185,7 +185,7 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
     private async handleIncomingStream(
         transferId: string,
         reader: LiveKitProximityFileStream,
-        participantIdentity: string
+        participantIdentity: string,
     ): Promise<void> {
         const expectedDownload = this.expectedDownloads.get(transferId);
         if (!expectedDownload) {
@@ -193,7 +193,7 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
         }
 
         const senderIdentity = this.options.liveKitRoom.getIdentityForSpaceUserId(
-            expectedDownload.offer.senderSpaceUserId
+            expectedDownload.offer.senderSpaceUserId,
         );
         if (
             senderIdentity !== participantIdentity ||
@@ -226,7 +226,7 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
 
     private async createVerifiedBlob(
         chunks: LiveKitProximityFileStreamPart[],
-        expectedDownload: ExpectedLiveKitDownload
+        expectedDownload: ExpectedLiveKitDownload,
     ): Promise<Blob | undefined> {
         const { offer, security } = expectedDownload;
         const blobParts = chunks.map(normalizeBlobPart);
@@ -238,7 +238,7 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
         const decryptedBlob = await decryptProximityFileBlob(
             encryptedBlob,
             await security.encryptionKey,
-            await security.encryptionMetadata
+            await security.encryptionMetadata,
         );
         if (
             decryptedBlob.size !== Number(offer.size) ||

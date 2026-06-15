@@ -79,7 +79,7 @@ describe("ProximityFileTransferService", () => {
                 fileName: "empty.txt",
                 mimeType: "text/plain",
                 size: 0,
-            })
+            }),
         );
         await (
             service as unknown as { handleDataChannelMessage(session: unknown, data: unknown): Promise<void> }
@@ -147,7 +147,7 @@ describe("ProximityFileTransferService", () => {
                 fileName: "huge.bin",
                 mimeType: "application/octet-stream",
                 size: PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE + 1,
-            })
+            }),
         );
 
         expect(updates).toContainEqual({
@@ -172,14 +172,14 @@ describe("ProximityFileTransferService", () => {
 
         await service.createOutgoingOffers(
             [new File(["hello"], "hello.txt", { type: "text/plain" })],
-            [{ spaceUserId: "recipient-1" }, { spaceUserId: "recipient-2" }]
+            [{ spaceUserId: "recipient-1" }, { spaceUserId: "recipient-2" }],
         );
 
         expect(
             emitPrivateMessage.mock.calls.map(([message, receiver]) => [
                 (message as NonNullable<PrivateSpaceEvent["event"]>).$case,
                 receiver,
-            ])
+            ]),
         ).toEqual([
             ["proximityFileTransferOffer", "recipient-1"],
             ["proximityFileTransferOffer", "recipient-2"],
@@ -223,7 +223,7 @@ describe("ProximityFileTransferService", () => {
 
         await service.createOutgoingOffers(
             [new File(["hello"], "hello.txt", { type: "text/plain" })],
-            [{ spaceUserId: "recipient-1" }]
+            [{ spaceUserId: "recipient-1" }],
         );
 
         expect(emitPrivateMessage).toHaveBeenCalledWith(
@@ -234,7 +234,7 @@ describe("ProximityFileTransferService", () => {
                     encryptionKeyId: expect.any(String),
                 }),
             }),
-            "recipient-1"
+            "recipient-1",
         );
     });
 
@@ -331,7 +331,7 @@ describe("ProximityFileTransferService", () => {
 
         expect(requestDownload).toHaveBeenCalledWith(
             expect.objectContaining({ transferId: "transfer-1", senderSpaceUserId: "sender" }),
-            undefined
+            undefined,
         );
     });
 

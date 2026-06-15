@@ -21,7 +21,7 @@ export function createFilePreview(file: { id: string; file: File }): MessageInpu
 export function completeFilePreview(
     previews: MessageInputBarFilePreview[],
     id: string,
-    url: FileReader["result"] | undefined
+    url: FileReader["result"] | undefined,
 ): MessageInputBarFilePreview[] {
     let previewFound = false;
     const updatedPreviews = previews.map((preview) => {
@@ -42,7 +42,7 @@ export function completeFilePreview(
 
 export function removeFilePreviews(
     previews: MessageInputBarFilePreview[],
-    idsToRemove: readonly string[]
+    idsToRemove: readonly string[],
 ): MessageInputBarFilePreview[] {
     return previews.filter((preview) => !idsToRemove.includes(preview.id));
 }
