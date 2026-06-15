@@ -40,7 +40,7 @@ export async function importProximityFileEncryptionKey(rawKey: string): Promise<
 
 export async function encryptProximityFileBlob(
     blob: Blob,
-    key: ProximityFileTransferEncryptionKey
+    key: ProximityFileTransferEncryptionKey,
 ): Promise<EncryptedProximityFileBlob> {
     await sodium.ready;
     const { state, header } = sodium.crypto_secretstream_xchacha20poly1305_init_push(key);
@@ -58,13 +58,13 @@ export async function encryptProximityFileBlob(
 export async function decryptProximityFileBlob(
     blob: Blob,
     key: ProximityFileTransferEncryptionKey,
-    metadata: ProximityFileTransferEncryptionMetadata
+    metadata: ProximityFileTransferEncryptionMetadata,
 ): Promise<Blob> {
     await sodium.ready;
     try {
         const state = sodium.crypto_secretstream_xchacha20poly1305_init_pull(
             sodium.from_base64(metadata.iv, sodium.base64_variants.ORIGINAL),
-            key
+            key,
         );
         return new Blob(decryptFramedChunks(new Uint8Array(await readBlobAsArrayBuffer(blob)), state, 0), {
             type: metadata.mimeType,
@@ -84,7 +84,7 @@ async function hashBlobChunks(blob: Blob, hasher: ReturnType<typeof sha256.creat
     }
 
     const chunkBuffer = await readBlobAsArrayBuffer(
-        blob.slice(offset, offset + PROXIMITY_FILE_TRANSFER_HASH_CHUNK_SIZE)
+        blob.slice(offset, offset + PROXIMITY_FILE_TRANSFER_HASH_CHUNK_SIZE),
     );
     hasher.update(new Uint8Array(chunkBuffer));
     await hashBlobChunks(blob, hasher, offset + PROXIMITY_FILE_TRANSFER_HASH_CHUNK_SIZE);
@@ -105,7 +105,7 @@ async function encryptBlobChunks(blob: Blob, state: StateAddress, offset: number
         state,
         new Uint8Array(chunkBuffer),
         null,
-        tag
+        tag,
     );
     return [frameEncryptedChunk(encryptedChunk), ...(await encryptBlobChunks(blob, state, nextOffset))];
 }
