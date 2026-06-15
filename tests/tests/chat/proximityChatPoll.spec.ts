@@ -187,11 +187,20 @@ test.describe("Proximity chat polls and questions @oidc @nomobile @nowebkit", ()
     });
 
     test("should synchronize proximity questions, upvotes and answered state", async ({ browser }) => {
-        // Given Member1 and Admin1 are in the same proximity chat.
+        // Given Member1, Alice and Admin1 are in the same proximity chat.
         await using adminPage = await getPage(browser, "Admin1", Map.url("empty"));
         await using memberPage = await getPage(browser, "Member1", Map.url("empty"));
+        await using voterPage = await getPage(browser, "Alice", Map.url("empty"));
         await joinSameProximityChat(adminPage, memberPage);
+        await Map.teleportToPosition(voterPage, 160, 160);
+        await expect(adminPage.locator("#cameras-container").getByText("Alice", { exact: true }).first()).toBeVisible({
+            timeout: 60_000,
+        });
+        await expect(voterPage.locator("#cameras-container").getByText("Member1", { exact: true }).first()).toBeVisible({
+            timeout: 60_000,
+        });
         await openProximityRoom(memberPage);
+        await openProximityRoom(voterPage);
         await openProximityRoom(adminPage);
 
         // When Member1 asks a question from the composer shortcut.
@@ -201,12 +210,19 @@ test.describe("Proximity chat polls and questions @oidc @nomobile @nowebkit", ()
         await memberPage.getByTestId("proximityQuestionSubmit").click();
         await expect(questionItem(memberPage, question)).toBeVisible();
 
-        // Then Admin1 can upvote it and mark it as answered.
+        // Then Alice can upvote it, and Admin1 can also upvote it and mark it as answered.
+        await openProximityQuestionsPanel(voterPage);
+        await expect(questionItem(voterPage, question)).toBeVisible({ timeout: 60_000 });
+        await questionItem(voterPage, question).getByTestId("proximityQuestionUpvoteButton").click();
+        await expectQuestionUpvoteCount(voterPage, question, 1);
+        await expectQuestionUpvoteCount(memberPage, question, 1);
+
         await openProximityQuestionsPanel(adminPage);
         await expect(questionItem(adminPage, question)).toBeVisible({ timeout: 60_000 });
         await questionItem(adminPage, question).getByTestId("proximityQuestionUpvoteButton").click();
-        await expectQuestionUpvoteCount(adminPage, question, 1);
-        await expectQuestionUpvoteCount(memberPage, question, 1);
+        await expectQuestionUpvoteCount(adminPage, question, 2);
+        await expectQuestionUpvoteCount(voterPage, question, 2);
+        await expectQuestionUpvoteCount(memberPage, question, 2);
 
         await questionItem(adminPage, question).getByTestId("proximityQuestionMarkAnsweredButton").click();
         await expect(questionItem(adminPage, question)).toBeHidden();

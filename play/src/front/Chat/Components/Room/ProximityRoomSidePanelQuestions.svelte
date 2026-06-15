@@ -1,7 +1,8 @@
 <script lang="ts">
-    import { get, readable } from "svelte/store";
+    import { readable } from "svelte/store";
     import type { ChatQuestionItem, ProximityChatSidePanelRoom } from "../../Connection/ChatConnection";
     import LL from "../../../../i18n/i18n-svelte";
+    import { createQuestionStateRowsStore } from "./QuestionStateRowsStore";
 
     interface Props {
         room: ProximityChatSidePanelRoom;
@@ -19,11 +20,13 @@
     let canCreateQuestionStore = $derived(questionCreation?.canCreate ?? cannotCreateQuestion);
     let canCreateQuestion = $derived($canCreateQuestionStore);
     let maxQuestionLength = $derived(questionCreation?.maxLength ?? 500);
-    let filteredQuestions = $derived(
-        $questionItems.filter((question) => get(question.state).isAnswered === (activeFilter === "answered")),
+    let questionRowsStore = $derived(createQuestionStateRowsStore(questionItems));
+    let questionRows = $derived($questionRowsStore);
+    let filteredQuestionRows = $derived(
+        questionRows.filter(({ state }) => state.isAnswered === (activeFilter === "answered")),
     );
-    let openQuestionCount = $derived($questionItems.filter((question) => !get(question.state).isAnswered).length);
-    let answeredQuestionCount = $derived($questionItems.length - openQuestionCount);
+    let openQuestionCount = $derived(questionRows.filter(({ state }) => !state.isAnswered).length);
+    let answeredQuestionCount = $derived(questionRows.length - openQuestionCount);
 
     function createQuestion(): void {
         const body = draftQuestion.trim();
@@ -123,14 +126,13 @@
     </div>
 
     <div class="min-h-0 flex-1 overflow-y-auto px-3 pb-4">
-        {#if filteredQuestions.length === 0}
+        {#if filteredQuestionRows.length === 0}
             <div class="rounded-lg border border-solid border-white/10 bg-white/[0.04] p-4 text-sm text-white/55">
                 {activeFilter === "open" ? $LL.chat.question.emptyOpen() : $LL.chat.question.emptyAnswered()}
             </div>
         {:else}
             <div class="flex flex-col gap-2">
-                {#each filteredQuestions as question (question.id)}
-                    {@const state = get(question.state)}
+                {#each filteredQuestionRows as { question, state } (question.id)}
                     <article
                         class="rounded-lg border border-solid border-white/10 bg-white/[0.04] p-3 text-white"
                         data-testid="proximityQuestionItem"
