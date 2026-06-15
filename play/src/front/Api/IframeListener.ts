@@ -47,12 +47,9 @@ import type { SetStatusEvent } from "./Events/SetStatusEvent";
 
 import type { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
 import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
-import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
-import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 import type {
     JoinMeetingEvent,
     MeetingIdEvent,
-    ParticipantMeetingEvent,
     StartStreamInMeetingEvent,
 } from "./Events/ProximityMeeting/MeetingEvent";
 import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
@@ -873,7 +870,7 @@ class IframeListener {
             type: "joinProximityMeetingEvent",
             data: {
                 users: formattedUsers,
-            } as JoinProximityMeetingEvent,
+            },
         });
     }
 
@@ -897,7 +894,7 @@ class IframeListener {
                 name,
                 kind,
                 users: formattedUsers,
-            } as JoinMeetingEvent,
+            },
         });
     }
 
@@ -914,7 +911,7 @@ class IframeListener {
                     position: user.position,
                     variables: user.variables,
                 },
-            } as ParticipantProximityMeetingEvent,
+            },
         });
     }
 
@@ -932,7 +929,7 @@ class IframeListener {
                     position: user.position,
                     variables: user.variables,
                 },
-            } as ParticipantMeetingEvent,
+            },
         });
     }
 
@@ -949,7 +946,7 @@ class IframeListener {
                     position: user.position,
                     variables: user.variables,
                 },
-            } as ParticipantProximityMeetingEvent,
+            },
         });
     }
 
@@ -967,7 +964,7 @@ class IframeListener {
                     position: user.position,
                     variables: user.variables,
                 },
-            } as ParticipantMeetingEvent,
+            },
         });
     }
 

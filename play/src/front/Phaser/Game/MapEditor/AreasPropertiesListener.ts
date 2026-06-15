@@ -518,19 +518,16 @@ export class AreasPropertiesListener {
                 break;
             }
             case "speakerMegaphone": {
-                const speakerMegaphoneProperty = newProperty as typeof oldProperty;
                 this.handleSpeakerMegaphonePropertyOnLeave(oldProperty, area.id).catch((e) => {
                     console.error("Error while leaving space");
                     Sentry.captureException(new Error("Error while leaving space"));
                 });
-                this.handleSpeakerMegaphonePropertyOnEnter(
-                    speakerMegaphoneProperty,
-                    area.id,
-                    newAbortController.signal,
-                ).catch((e) => {
-                    console.error(e);
-                    Sentry.captureException(e);
-                });
+                this.handleSpeakerMegaphonePropertyOnEnter(newProperty, area.id, newAbortController.signal).catch(
+                    (e) => {
+                        console.error(e);
+                        Sentry.captureException(e);
+                    },
+                );
                 break;
             }
             case "listenerMegaphone": {
