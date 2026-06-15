@@ -619,7 +619,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
     public async sendFileToIdentities(
         file: File,
-        options: { destinationIdentities: string[]; topic: string }
+        options: { destinationIdentities: string[]; topic: string },
     ): Promise<void> {
         if (!this.localParticipant) {
             throw new Error("Local participant not found");
