@@ -47,7 +47,7 @@ function createRoom() {
         },
         undefined,
         [],
-        vi.fn()
+        vi.fn(),
     );
 }
 

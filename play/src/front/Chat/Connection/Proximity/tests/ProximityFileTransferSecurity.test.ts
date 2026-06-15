@@ -38,7 +38,7 @@ describe("Proximity file transfer security", () => {
         bytes[bytes.length - 1] ^= 1;
 
         await expect(decryptProximityFileBlob(new Blob([bytes]), key, encrypted.metadata)).rejects.toThrow(
-            "Unable to decrypt proximity file transfer"
+            "Unable to decrypt proximity file transfer",
         );
     });
 });

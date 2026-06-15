@@ -39,12 +39,12 @@ export interface ProximityFileTransferTransport {
     canTransferTo(spaceUserId: string): boolean;
     requestDownload(
         offer: IncomingProximityFileTransferOffer,
-        security?: ProximityFileTransferDownloadSecurity
+        security?: ProximityFileTransferDownloadSecurity,
     ): Promise<void>;
     sendFile(file: File, transferId: string, recipients: readonly string[]): void;
     handleSignal?(
         senderSpaceUserId: string,
-        signalMessage: { transferId: string; connectionId: string; signal: string }
+        signalMessage: { transferId: string; connectionId: string; signal: string },
     ): Promise<void>;
     destroy(): void;
 }
