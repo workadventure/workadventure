@@ -81,9 +81,6 @@
     // If there is no constraintStore, we are in a screen sharing (so video is enabled)
 
     let videoEnabled = $derived($hasVideoStore);
-    $effect(() => {
-        console.log("Video enabled modified: ", videoEnabled);
-    });
 
     let isMegaphoneSpace = $derived(videoBox.isMegaphoneSpace ?? false);
 
