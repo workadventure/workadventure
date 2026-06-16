@@ -58,7 +58,7 @@ export class RemotePeer extends Peer implements Streamable {
     private readonly showVoiceIndicatorStore: ForwardableStore<boolean> = new ForwardableStore(false);
     public readonly flipX = false;
     public readonly muteAudio: Writable<boolean> = writable(false);
-    private readonly _hasAudio: Readable<boolean>;
+    private readonly _canEmitAudio: Readable<boolean>;
     public readonly displayMode: "fit" | "cover";
     public readonly usePresentationMode: boolean;
     public readonly displayInPictureInPictureMode = true;
@@ -268,7 +268,7 @@ export class RemotePeer extends Peer implements Streamable {
         super(peerConfig);
 
         this.volume = writable(defaultVolume);
-        this._hasAudio = writable<boolean>(true);
+        this._canEmitAudio = writable<boolean>(true);
         this.videoType = type;
         this.displayMode = type === "video" ? "cover" : "fit";
         this.usePresentationMode = !(type === "video");
@@ -828,8 +828,8 @@ export class RemotePeer extends Peer implements Streamable {
         return this._hasVideo;
     }
 
-    get hasAudio(): Readable<boolean> {
-        return this._hasAudio;
+    get canEmitAudio(): Readable<boolean> {
+        return this._canEmitAudio;
     }
 
     get hasReceivedAudio(): Readable<boolean> {

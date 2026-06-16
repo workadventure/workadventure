@@ -41,7 +41,7 @@ export class LiveKitParticipant {
     );
 
     private _nameStore: Writable<string>;
-    private _hasAudio = writable<boolean>(true);
+    private _canEmitAudio = writable<boolean>(true);
     private _hasVideo = writable<boolean>(false);
     private _isMuted = writable<boolean>(true);
     private _hasScreenShareVideo = writable<boolean>(false);
@@ -347,7 +347,7 @@ export class LiveKitParticipant {
             }
             publication.setSubscribed(true);
             this._scriptingAudioPublication = publication;
-            this._hasAudio.set(true);
+            this._canEmitAudio.set(true);
         } else if (publication.source === Track.Source.Microphone) {
             if (this._microphonePublication && this._microphonePublication !== publication) {
                 console.warn(
@@ -360,7 +360,7 @@ export class LiveKitParticipant {
             }
             publication.setSubscribed(true);
             this._microphonePublication = publication;
-            this._hasAudio.set(true);
+            this._canEmitAudio.set(true);
             this._isMuted.set(publication.isMuted);
         }
     }
@@ -536,7 +536,7 @@ export class LiveKitParticipant {
     private getVideoStream(): Streamable {
         return {
             uniqueId: this.participant.identity,
-            hasAudio: this._hasAudio,
+            canEmitAudio: this._canEmitAudio,
             hasReceivedAudio: this._hasReceivedMicrophoneAudio,
             hasVideo: derived(
                 [this._spaceUser.reactiveUser.cameraState, this._hasVideo],
@@ -581,7 +581,7 @@ export class LiveKitParticipant {
     private getScreenShareStream(): Streamable {
         return {
             uniqueId: this.participant.sid,
-            hasAudio: this._hasScreenShareAudio,
+            canEmitAudio: this._hasScreenShareAudio,
             hasReceivedAudio: this._hasReceivedScreenShareAudio,
             hasVideo: this._hasScreenShareVideo,
             isMuted: this._isScreenShareAudioMuted,
