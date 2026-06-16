@@ -43,10 +43,10 @@ export class LiveKitParticipant {
     private _nameStore: Writable<string>;
     private _canEmitAudio = writable<boolean>(true);
     private _hasVideo = writable<boolean>(false);
-    private _isMuted = writable<boolean>(true);
+    private _hasAudio = writable<boolean>(false);
     private _hasScreenShareVideo = writable<boolean>(false);
+    private _canEmitScreenShareAudio = writable<boolean>(false);
     private _hasScreenShareAudio = writable<boolean>(false);
-    private _isScreenShareAudioMuted = writable<boolean>(true);
     private _spaceUser: SpaceUserExtended;
     private _videoRemoteTrack: Writable<RemoteVideoTrack | undefined> = writable<RemoteVideoTrack | undefined>(
         undefined,
@@ -126,17 +126,17 @@ export class LiveKitParticipant {
         // Microphone audio is tracked separately from scripting audio so scripting audio cannot hide a missing mic track.
         this._microphoneAudioTrackPresent = createMediaStreamTrackPresenceStore(this._microphoneStreamStore, "audio");
         this._hasReceivedMicrophoneAudio = derived(
-            [this._microphoneAudioTrackPresent, this._isMuted],
-            ([$microphoneAudioTrackPresent, $isMuted]) => $microphoneAudioTrackPresent && !$isMuted,
+            [this._microphoneAudioTrackPresent, this._hasAudio],
+            ([$microphoneAudioTrackPresent, $hasAudio]) => $microphoneAudioTrackPresent && $hasAudio,
         );
         this._screenShareAudioTrackPresent = createMediaStreamTrackPresenceStore(
             this._audioScreenShareStreamStore,
             "audio",
         );
         this._hasReceivedScreenShareAudio = derived(
-            [this._screenShareAudioTrackPresent, this._isScreenShareAudioMuted],
-            ([$screenShareAudioTrackPresent, $isScreenShareAudioMuted]) =>
-                $screenShareAudioTrackPresent && !$isScreenShareAudioMuted,
+            [this._screenShareAudioTrackPresent, this._hasScreenShareAudio],
+            ([$screenShareAudioTrackPresent, $hasScreenShareAudio]) =>
+                $screenShareAudioTrackPresent && $hasScreenShareAudio,
         );
 
         for (const publication of this.participant.getTrackPublications()) {
@@ -332,8 +332,8 @@ export class LiveKitParticipant {
             }
             publication.setSubscribed(true);
             this._screenShareAudioPublication = publication;
-            this._hasScreenShareAudio.set(true);
-            this._isScreenShareAudioMuted.set(publication.isMuted);
+            this._canEmitScreenShareAudio.set(true);
+            this._hasScreenShareAudio.set(!publication.isMuted);
             this.refreshLivekitScreenShareStreamStore();
         } else if (this.isScriptingAudioPublication(publication)) {
             if (this._scriptingAudioPublication && this._scriptingAudioPublication !== publication) {
@@ -361,7 +361,7 @@ export class LiveKitParticipant {
             publication.setSubscribed(true);
             this._microphonePublication = publication;
             this._canEmitAudio.set(true);
-            this._isMuted.set(publication.isMuted);
+            this._hasAudio.set(!publication.isMuted);
         }
     }
 
@@ -421,8 +421,8 @@ export class LiveKitParticipant {
                 this._screenShareAudioPublication = undefined;
             }
             this._audioScreenShareStreamStore.set(undefined);
+            this._canEmitScreenShareAudio.set(false);
             this._hasScreenShareAudio.set(false);
-            this._isScreenShareAudioMuted.set(true);
             this.refreshLivekitScreenShareStreamStore();
         } else if (this.isScriptingAudioPublication(publication)) {
             publication.setSubscribed(false);
@@ -439,7 +439,7 @@ export class LiveKitParticipant {
                 this._microphoneStreamStore.set(undefined);
                 this.refreshLivekitAudioStreamStore();
             }
-            this._isMuted.set(true);
+            this._hasAudio.set(false);
         }
     }
 
@@ -470,27 +470,27 @@ export class LiveKitParticipant {
 
     private handleTrackMuted(publication: TrackPublication) {
         if (publication.source === Track.Source.Microphone) {
-            this._isMuted.set(true);
+            this._hasAudio.set(false);
         } else if (publication.source === Track.Source.Camera) {
             this._hasVideo.set(false);
         } else if (publication.source === Track.Source.ScreenShare) {
             this._hasScreenShareVideo.set(false);
             this.refreshLivekitScreenShareStreamStore();
         } else if (publication.source === Track.Source.ScreenShareAudio) {
-            this._isScreenShareAudioMuted.set(true);
+            this._hasScreenShareAudio.set(false);
         }
     }
 
     private handleTrackUnmuted(publication: TrackPublication) {
         if (publication.source === Track.Source.Microphone) {
-            this._isMuted.set(false);
+            this._hasAudio.set(true);
         } else if (publication.source === Track.Source.Camera) {
             this._hasVideo.set(true);
         } else if (publication.source === Track.Source.ScreenShare) {
             this._hasScreenShareVideo.set(true);
             this.refreshLivekitScreenShareStreamStore();
         } else if (publication.source === Track.Source.ScreenShareAudio) {
-            this._isScreenShareAudioMuted.set(false);
+            this._hasScreenShareAudio.set(true);
         }
     }
 
@@ -516,7 +516,7 @@ export class LiveKitParticipant {
     }
 
     private refreshLivekitScreenShareStreamStore() {
-        const shouldHaveScreenShareStream = get(this._hasScreenShareVideo) || get(this._hasScreenShareAudio);
+        const shouldHaveScreenShareStream = get(this._hasScreenShareVideo) || get(this._canEmitScreenShareAudio);
 
         if (!shouldHaveScreenShareStream) {
             if (this._actualScreenShare) {
@@ -544,10 +544,10 @@ export class LiveKitParticipant {
                     return $spaceCameraState && $livekitHasVideo;
                 },
             ),
-            isMuted: derived(
-                [this._spaceUser.reactiveUser.microphoneState, this._isMuted],
-                ([$spaceMicrophoneState, $livekitIsMuted]) => {
-                    return !$spaceMicrophoneState || $livekitIsMuted;
+            hasAudio: derived(
+                [this._spaceUser.reactiveUser.microphoneState, this._hasAudio],
+                ([$spaceMicrophoneState, $livekitHasAudio]) => {
+                    return $spaceMicrophoneState && $livekitHasAudio;
                 },
             ),
             statusStore: writable("connected"),
@@ -581,10 +581,10 @@ export class LiveKitParticipant {
     private getScreenShareStream(): Streamable {
         return {
             uniqueId: this.participant.sid,
-            canEmitAudio: this._hasScreenShareAudio,
+            canEmitAudio: this._canEmitScreenShareAudio,
             hasReceivedAudio: this._hasReceivedScreenShareAudio,
             hasVideo: this._hasScreenShareVideo,
-            isMuted: this._isScreenShareAudioMuted,
+            hasAudio: this._hasScreenShareAudio,
             statusStore: writable("connected"),
             spaceUserId: this._spaceUser.spaceUserId,
             name: this._nameStore,

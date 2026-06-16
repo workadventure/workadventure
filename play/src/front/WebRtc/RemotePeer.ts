@@ -53,7 +53,7 @@ export class RemotePeer extends Peer implements Streamable {
     private closing = false; //this is used to prevent destroy() from being called twice
     private readonly localStreamStoreSubscribe: Unsubscriber;
     private readonly _hasVideo: Readable<boolean>;
-    private readonly _isMuted: Readable<boolean>;
+    private readonly _hasAudio: Readable<boolean>;
     private readonly _hasReceivedAudio: Readable<boolean>;
     private readonly showVoiceIndicatorStore: ForwardableStore<boolean> = new ForwardableStore(false);
     public readonly flipX = false;
@@ -390,12 +390,12 @@ export class RemotePeer extends Peer implements Streamable {
         // Receiver-side diagnostic signal used to spot "space says microphone is enabled, but no audio track arrived".
         this._hasReceivedAudio = createMediaStreamTrackPresenceStore(this._remoteStreamStore, "audio");
 
-        this._isMuted = derived(this._remoteStreamStore, ($remoteStream, set) => {
+        this._hasAudio = derived(this._remoteStreamStore, ($remoteStream, set) => {
             if (!$remoteStream) {
-                set(true);
+                set(false);
                 return;
             }
-            const update = () => set($remoteStream.getAudioTracks().every((track) => track.enabled === false));
+            const update = () => set($remoteStream.getAudioTracks().some((track) => track.enabled !== false));
             update();
             const onAdd = (e: MediaStreamTrackEvent) => {
                 if (e.track.kind === "audio") update();
@@ -836,8 +836,8 @@ export class RemotePeer extends Peer implements Streamable {
         return this._hasReceivedAudio;
     }
 
-    get isMuted(): Readable<boolean> {
-        return this._isMuted;
+    get hasAudio(): Readable<boolean> {
+        return this._hasAudio;
     }
 
     get name(): Readable<string> {

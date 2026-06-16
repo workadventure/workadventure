@@ -151,7 +151,7 @@ describe("LiveKitParticipant", () => {
             microphoneStream.getAudioTracks()[0],
             scriptingStream.getAudioTracks()[0],
         ]);
-        expect(get(participant.getStreamable().isMuted)).toBe(false);
+        expect(get(participant.getStreamable().hasAudio)).toBe(true);
     });
 
     it("should mark microphone audio as received only after the microphone track is subscribed", () => {
@@ -164,7 +164,7 @@ describe("LiveKitParticipant", () => {
 
         participant["handleTrackPublished"](microphonePublication);
 
-        expect(get(streamable.isMuted)).toBe(false);
+        expect(get(streamable.hasAudio)).toBe(true);
         expect(get(streamable.hasReceivedAudio)).toBe(false);
 
         const microphoneTrack = createRemoteAudioTrack(microphoneStream);
@@ -174,7 +174,7 @@ describe("LiveKitParticipant", () => {
 
         participant["handleTrackMuted"](microphonePublication);
 
-        expect(get(streamable.isMuted)).toBe(true);
+        expect(get(streamable.hasAudio)).toBe(false);
         expect(get(streamable.hasReceivedAudio)).toBe(false);
 
         participant["handleTrackUnmuted"](microphonePublication);
@@ -223,7 +223,7 @@ describe("LiveKitParticipant", () => {
             microphoneStream.getAudioTracks()[0],
             secondScriptingStream.getAudioTracks()[0],
         ]);
-        expect(get(participant.getStreamable().isMuted)).toBe(false);
+        expect(get(participant.getStreamable().hasAudio)).toBe(true);
     });
 
     it("should keep microphone audio when scripting audio is unpublished or unsubscribed", () => {
@@ -247,7 +247,7 @@ describe("LiveKitParticipant", () => {
         participant["handleTrackUnpublished"](unpublishedScriptingPublication);
 
         expect(get(media.streamStore)).toBe(microphoneStream);
-        expect(get(participant.getStreamable().isMuted)).toBe(false);
+        expect(get(participant.getStreamable().hasAudio)).toBe(true);
 
         participant["handleTrackPublished"](unsubscribedScriptingPublication);
         const unsubscribedTrack = createRemoteAudioTrack(unsubscribedScriptingStream);
@@ -256,7 +256,7 @@ describe("LiveKitParticipant", () => {
         participant["handleTrackUnsubscribed"](unsubscribedTrack, unsubscribedScriptingPublication);
 
         expect(get(media.streamStore)).toBe(microphoneStream);
-        expect(get(participant.getStreamable().isMuted)).toBe(false);
+        expect(get(participant.getStreamable().hasAudio)).toBe(true);
     });
 });
 
