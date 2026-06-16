@@ -81,6 +81,9 @@
     // If there is no constraintStore, we are in a screen sharing (so video is enabled)
 
     let videoEnabled = $derived($hasVideoStore);
+    $effect(() => {
+        console.log("Video enabled modified: ", videoEnabled);
+    });
 
     let isMegaphoneSpace = $derived(videoBox.isMegaphoneSpace ?? false);
 
@@ -96,6 +99,8 @@
             $microphoneStateStore === true &&
             $hasReceivedAudioStore === false,
     );
+    // Like hasAudioStateMismatch, but with a 3 seconds delay.
+    let showAudioStateMismatch = $state(false);
     let loggedAudioMismatchKey: string | undefined = undefined;
 
     $effect(() => {
@@ -148,9 +153,13 @@
             );
 
             loggedAudioMismatchKey = audioMismatchKey;
+            showAudioStateMismatch = true;
         }, 3000);
 
-        return () => clearTimeout(timeout);
+        return () => {
+            clearTimeout(timeout);
+            showAudioStateMismatch = false;
+        };
     });
 
     // Check if the local user is streaming with megaphone
@@ -423,7 +432,7 @@
                                         <IconMicrophoneOff
                                             aria-label={$LL.video.user_is_muted({ name: name ?? "unknown" })}
                                             data-testid={$LL.video.user_is_muted({ name: name ?? "unknown" })}
-                                            class="{hasAudioStateMismatch
+                                            class="{showAudioStateMismatch
                                                 ? 'text-red-500 '
                                                 : ''}[filter:drop-shadow(0_0_3px_rgb(0,0,0))_drop-shadow(0_0_6px_rgb(0,0,0))_drop-shadow(0_0_9px_rgb(0,0,0))]"
                                         />
