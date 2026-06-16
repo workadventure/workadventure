@@ -48,6 +48,10 @@ export interface Streamable {
      * True when this streamable currently has a video stream that should be displayed.
      */
     readonly hasVideo: Readable<boolean>;
+    /**
+     * True when this streamable is able to emit audio (capability / UI affordance).
+     * Use this to decide whether audio controls (e.g. the microphone icon) should be displayed.
+     */
     readonly canEmitAudio: Readable<boolean>;
     /**
      * True when this streamable currently has audio, symmetrically to hasVideo.
