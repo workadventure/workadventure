@@ -45,10 +45,10 @@ export interface Streamable {
     readonly media: LivekitStreamable | WebRtcStreamable | ScriptingVideoStreamable | ComponentStreamable;
     readonly volumeStore: Readable<number[] | undefined> | undefined;
     readonly hasVideo: Readable<boolean>;
-    readonly hasAudio: Readable<boolean>;
+    readonly canEmitAudio: Readable<boolean>;
     /**
      * Receiver-side diagnostic signal: true only when this client actually has a usable incoming audio track.
-     * Keep it separate from hasAudio/isMuted so we can detect mismatches between the space state and the stream received.
+     * Keep it separate from canEmitAudio/isMuted so we can detect mismatches between the space state and the stream received.
      */
     readonly hasReceivedAudio: Readable<boolean>;
     readonly isMuted: Readable<boolean>;

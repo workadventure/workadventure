@@ -70,8 +70,8 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) 
                 stream.getVideoTracks().length > 0
             );
         }),
-        // hasAudio = true because the webcam has a microphone attached and could potentially play sound
-        hasAudio: writable(true),
+        // canEmitAudio = true because the webcam has a microphone attached and could potentially play sound
+        canEmitAudio: writable(true),
         hasReceivedAudio: requestedMicrophoneState,
         isMuted: derived(requestedMicrophoneState, (micState) => !micState),
         statusStore: writable("connected" as const),
@@ -105,7 +105,7 @@ const listenerBoxStreamable: Streamable = {
     },
     volumeStore: undefined,
     hasVideo: writable(true),
-    hasAudio: writable(false),
+    canEmitAudio: writable(false),
     hasReceivedAudio: writable(false),
     isMuted: writable(true),
     statusStore: writable("connected" as const),
