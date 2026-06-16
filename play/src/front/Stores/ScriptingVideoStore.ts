@@ -19,7 +19,7 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         hasVideo: writable(true),
         canEmitAudio: writable(false),
         hasReceivedAudio: writable(false),
-        isMuted: writable(false),
+        hasAudio: writable(true),
         statusStore: writable("connected"),
         name: writable(config.name ?? ""),
         showVoiceIndicator: writable(false),

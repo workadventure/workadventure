@@ -58,8 +58,8 @@
 
     let hasVideoStore = $derived(streamable?.hasVideo);
     let canEmitAudioStore = $derived(streamable?.canEmitAudio);
+    let hasAudioStore = $derived(streamable?.hasAudio);
     let hasReceivedAudioStore = $derived(streamable?.hasReceivedAudio);
-    let isMutedStore = $derived(streamable?.isMuted);
     let volumeMeterStore = $derived(streamable?.volumeStore);
     let showVoiceIndicatorStore = $derived(streamable?.showVoiceIndicator);
     let isBlockedStore = $derived(streamable?.media?.isBlocked);
@@ -125,8 +125,8 @@
                 spaceUserId: extendedSpaceUser?.spaceUserId,
                 status: effectiveStatus,
                 canEmitAudio: $canEmitAudioStore,
+                hasAudio: $hasAudioStore,
                 hasReceivedAudio: $hasReceivedAudioStore,
-                isMuted: $isMutedStore,
                 microphoneState: $microphoneStateStore,
                 audioTrackCount: audioTracks.length,
                 audioTracks,
@@ -419,7 +419,7 @@
                                     class:text-white={$activePictureInPictureStore}
                                     class:opacity-20={$activePictureInPictureStore}
                                 >
-                                    {#if !$isMutedStore && !audioStateMismatch}
+                                    {#if $hasAudioStore && !audioStateMismatch}
                                         <SoundMeterWidget
                                             volume={volumeMeter}
                                             cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
