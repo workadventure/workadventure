@@ -21,6 +21,7 @@ import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 import { subscribeToVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
 import type { Streamable } from "../Space/Streamable";
+import { createMediaStreamTrackPresenceStore } from "../Space/MediaStreamTrackPresenceStore";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 
 // Maximize/minimize can briefly mount 2 video components for the same participant.
@@ -31,6 +32,7 @@ export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
     private _connectionQualityStore: Writable<ConnectionQuality>;
     private _audioStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
+    private _microphoneStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
     private _actualVideo: Streamable | undefined;
     private _actualScreenShare: Streamable | undefined;
 
@@ -62,6 +64,10 @@ export class LiveKitParticipant {
     private _screenShareUnsubscribeTimeout: ReturnType<typeof setTimeout> | undefined;
     private readonly videoWebrtcStats: Readable<WebRtcStats | undefined>;
     private readonly screenShareWebrtcStats: Readable<WebRtcStats | undefined>;
+    private readonly _microphoneAudioTrackPresent: Readable<boolean>;
+    private readonly _hasReceivedMicrophoneAudio: Readable<boolean>;
+    private readonly _screenShareAudioTrackPresent: Readable<boolean>;
+    private readonly _hasReceivedScreenShareAudio: Readable<boolean>;
     private readonly analyticsStatsUnsubscribers: Unsubscriber[] = [];
 
     private _cameraPublication: RemoteTrackPublication | undefined;
@@ -116,6 +122,22 @@ export class LiveKitParticipant {
         this._nameStore = writable(this.participant.name);
         this.videoWebrtcStats = this.getWebrtcStats("video");
         this.screenShareWebrtcStats = this.getWebrtcStats("screenShare");
+        // Receiver-side diagnostic signals used to detect space state vs received stream mismatches.
+        // Microphone audio is tracked separately from scripting audio so scripting audio cannot hide a missing mic track.
+        this._microphoneAudioTrackPresent = createMediaStreamTrackPresenceStore(this._microphoneStreamStore, "audio");
+        this._hasReceivedMicrophoneAudio = derived(
+            [this._microphoneAudioTrackPresent, this._isMuted],
+            ([$microphoneAudioTrackPresent, $isMuted]) => $microphoneAudioTrackPresent && !$isMuted,
+        );
+        this._screenShareAudioTrackPresent = createMediaStreamTrackPresenceStore(
+            this._audioScreenShareStreamStore,
+            "audio",
+        );
+        this._hasReceivedScreenShareAudio = derived(
+            [this._screenShareAudioTrackPresent, this._isScreenShareAudioMuted],
+            ([$screenShareAudioTrackPresent, $isScreenShareAudioMuted]) =>
+                $screenShareAudioTrackPresent && !$isScreenShareAudioMuted,
+        );
 
         for (const publication of this.participant.getTrackPublications()) {
             if (publication.isLocal) {
@@ -372,6 +394,7 @@ export class LiveKitParticipant {
             this.refreshLivekitAudioStreamStore();
         } else if (publication.source === Track.Source.Microphone) {
             this._microphoneStream = track.mediaStream;
+            this._microphoneStreamStore.set(track.mediaStream);
             this.refreshLivekitAudioStreamStore();
         }
     }
@@ -413,6 +436,7 @@ export class LiveKitParticipant {
             if (this._microphonePublication === publication) {
                 this._microphonePublication = undefined;
                 this._microphoneStream = undefined;
+                this._microphoneStreamStore.set(undefined);
                 this.refreshLivekitAudioStreamStore();
             }
             this._isMuted.set(true);
@@ -438,6 +462,7 @@ export class LiveKitParticipant {
         } else if (publication.source === Track.Source.Microphone) {
             if (this._microphonePublication === publication) {
                 this._microphoneStream = undefined;
+                this._microphoneStreamStore.set(undefined);
                 this.refreshLivekitAudioStreamStore();
             }
         }
@@ -512,6 +537,7 @@ export class LiveKitParticipant {
         return {
             uniqueId: this.participant.identity,
             hasAudio: this._hasAudio,
+            hasReceivedAudio: this._hasReceivedMicrophoneAudio,
             hasVideo: derived(
                 [this._spaceUser.reactiveUser.cameraState, this._hasVideo],
                 ([$spaceCameraState, $livekitHasVideo]) => {
@@ -556,6 +582,7 @@ export class LiveKitParticipant {
         return {
             uniqueId: this.participant.sid,
             hasAudio: this._hasScreenShareAudio,
+            hasReceivedAudio: this._hasReceivedScreenShareAudio,
             hasVideo: this._hasScreenShareVideo,
             isMuted: this._isScreenShareAudioMuted,
             statusStore: writable("connected"),

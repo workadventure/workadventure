@@ -145,6 +145,7 @@ function createStreamable(uniqueId: string, spaceUserId: string, videoType: Stre
         volumeStore: undefined,
         hasVideo: writable(true),
         hasAudio: writable(true),
+        hasReceivedAudio: writable(true),
         isMuted: writable(false),
         statusStore: writable<PeerStatus>("connected"),
         name: writable(uniqueId),

@@ -19,6 +19,7 @@ import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrainedPreferenceStore";
 import type { WebRtcStats } from "../Components/Video/WebRtcStats";
 import type { Streamable, StreamCategory, WebRtcStreamable } from "../Space/Streamable";
+import { createMediaStreamTrackPresenceStore } from "../Space/MediaStreamTrackPresenceStore";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
@@ -53,6 +54,7 @@ export class RemotePeer extends Peer implements Streamable {
     private readonly localStreamStoreSubscribe: Unsubscriber;
     private readonly _hasVideo: Readable<boolean>;
     private readonly _isMuted: Readable<boolean>;
+    private readonly _hasReceivedAudio: Readable<boolean>;
     private readonly showVoiceIndicatorStore: ForwardableStore<boolean> = new ForwardableStore(false);
     public readonly flipX = false;
     public readonly muteAudio: Writable<boolean> = writable(false);
@@ -385,6 +387,9 @@ export class RemotePeer extends Peer implements Streamable {
                 $remoteStream.removeEventListener("removetrack", onRemove);
             };
         });
+
+        // Receiver-side diagnostic signal used to spot "space says microphone is enabled, but no audio track arrived".
+        this._hasReceivedAudio = createMediaStreamTrackPresenceStore(this._remoteStreamStore, "audio");
 
         this._isMuted = derived(this._remoteStreamStore, ($remoteStream, set) => {
             if (!$remoteStream) {
@@ -802,6 +807,10 @@ export class RemotePeer extends Peer implements Streamable {
 
     get hasAudio(): Readable<boolean> {
         return this._hasAudio;
+    }
+
+    get hasReceivedAudio(): Readable<boolean> {
+        return this._hasReceivedAudio;
     }
 
     get isMuted(): Readable<boolean> {
