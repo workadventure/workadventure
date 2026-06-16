@@ -365,7 +365,7 @@ export class RemotePeer extends Peer implements Streamable {
             undefined,
         );
 
-        this._hasVideo = derived(this._remoteStreamStore, ($remoteStream, set) => {
+        /*this._hasVideo = derived(this._remoteStreamStore, ($remoteStream, set) => {
             if (!$remoteStream) {
                 set(false);
                 return;
@@ -384,7 +384,8 @@ export class RemotePeer extends Peer implements Streamable {
                 $remoteStream.removeEventListener("addtrack", onAdd);
                 $remoteStream.removeEventListener("removetrack", onRemove);
             };
-        });
+        });*/
+        this._hasVideo = createMediaStreamTrackPresenceStore(this._remoteStreamStore, "video");
 
         // Receiver-side diagnostic signal used to spot "space says microphone is enabled, but no audio track arrived".
         this._hasReceivedAudio = createMediaStreamTrackPresenceStore(this._remoteStreamStore, "audio");
