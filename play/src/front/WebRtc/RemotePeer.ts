@@ -440,7 +440,7 @@ export class RemotePeer extends Peer implements Streamable {
             this.space.isStreamingVideoStore,
         ).subscribe((streamValue) => {
             try {
-                if (streamValue === undefined) {
+                if (streamValue === undefined || streamValue.type !== "success" || !streamValue.stream) {
                     if (this.localStream) {
                         this.removeStream(this.localStream);
                     }
@@ -454,54 +454,64 @@ export class RemotePeer extends Peer implements Streamable {
                     this.localStream = new MediaStream();
                     this.addStream(this.localStream);
                 }
-                if (streamValue.type === "success") {
-                    let newVideoTrack: MediaStreamTrack | undefined;
-                    let newAudioTrack: MediaStreamTrack | undefined;
-                    let oldVideoTrack: MediaStreamTrack | undefined;
-                    let oldAudioTrack: MediaStreamTrack | undefined;
-                    if (streamValue.stream) {
-                        newVideoTrack = RemotePeer.getFirstAndOnly(streamValue.stream.getVideoTracks());
-                        oldVideoTrack = RemotePeer.getFirstAndOnly(this.localStream.getVideoTracks());
+                let newVideoTrack: MediaStreamTrack | undefined;
+                let newAudioTrack: MediaStreamTrack | undefined;
+                let oldVideoTrack: MediaStreamTrack | undefined;
+                let oldAudioTrack: MediaStreamTrack | undefined;
+                if (streamValue.stream) {
+                    newVideoTrack = RemotePeer.getFirstAndOnly(streamValue.stream.getVideoTracks());
+                    oldVideoTrack = RemotePeer.getFirstAndOnly(this.localStream.getVideoTracks());
 
-                        if (newVideoTrack && oldVideoTrack && newVideoTrack.id !== oldVideoTrack.id) {
-                            debug("Replacing video track in P2P connection");
-                            this.localStream.addTrack(newVideoTrack);
+                    if (newVideoTrack && oldVideoTrack && newVideoTrack.id !== oldVideoTrack.id) {
+                        debug("Replacing video track in P2P connection");
+                        this.localStream.addTrack(newVideoTrack);
+                        try {
                             this.replaceTrack(oldVideoTrack, newVideoTrack, this.localStream);
+                        } finally {
                             this.localStream.removeTrack(oldVideoTrack);
-                        } else if (newVideoTrack && !oldVideoTrack) {
-                            debug("Adding video track in P2P connection");
-                            this.localStream.addTrack(newVideoTrack);
-                            this.addTrack(newVideoTrack, this.localStream);
-                        } else if (oldVideoTrack && !newVideoTrack) {
-                            debug("Removing video track in P2P connection");
+                        }
+                    } else if (newVideoTrack && !oldVideoTrack) {
+                        debug("Adding video track in P2P connection");
+                        this.localStream.addTrack(newVideoTrack);
+                        this.addTrack(newVideoTrack, this.localStream);
+                    } else if (oldVideoTrack && !newVideoTrack) {
+                        debug("Removing video track in P2P connection");
+                        try {
                             this.removeTrack(oldVideoTrack, this.localStream);
+                        } finally {
                             this.localStream.removeTrack(oldVideoTrack);
                         }
+                    }
 
-                        newAudioTrack = RemotePeer.getFirstAndOnly(streamValue.stream.getAudioTracks());
-                        oldAudioTrack = RemotePeer.getFirstAndOnly(this.localStream.getAudioTracks());
+                    newAudioTrack = RemotePeer.getFirstAndOnly(streamValue.stream.getAudioTracks());
+                    oldAudioTrack = RemotePeer.getFirstAndOnly(this.localStream.getAudioTracks());
 
-                        if (newAudioTrack && oldAudioTrack && newAudioTrack.id !== oldAudioTrack.id) {
-                            debug("Replacing audio track in P2P connection");
-                            this.localStream.addTrack(newAudioTrack);
+                    if (newAudioTrack && oldAudioTrack && newAudioTrack.id !== oldAudioTrack.id) {
+                        debug("Replacing audio track in P2P connection");
+                        this.localStream.addTrack(newAudioTrack);
+                        try {
                             this.replaceTrack(oldAudioTrack, newAudioTrack, this.localStream);
+                        } finally {
                             this.localStream.removeTrack(oldAudioTrack);
-                        } else if (newAudioTrack && !oldAudioTrack) {
-                            debug("Adding audio track in P2P connection");
-                            this.localStream.addTrack(newAudioTrack);
-                            this.addTrack(newAudioTrack, this.localStream);
-                        } else if (oldAudioTrack && !newAudioTrack) {
-                            debug("Removing audio track in P2P connection");
+                        }
+                    } else if (newAudioTrack && !oldAudioTrack) {
+                        debug("Adding audio track in P2P connection");
+                        this.localStream.addTrack(newAudioTrack);
+                        this.addTrack(newAudioTrack, this.localStream);
+                    } else if (oldAudioTrack && !newAudioTrack) {
+                        debug("Removing audio track in P2P connection");
+                        try {
                             this.removeTrack(oldAudioTrack, this.localStream);
+                        } finally {
                             this.localStream.removeTrack(oldAudioTrack);
                         }
+                    }
 
-                        if (!newAudioTrack && !newVideoTrack) {
-                            debug("No tracks left, removing stream in P2P connection");
-                            // No tracks left, remove the stream
-                            this.removeStream(this.localStream);
-                            this.localStream = undefined;
-                        }
+                    if (!newAudioTrack && !newVideoTrack) {
+                        debug("No tracks left, removing stream in P2P connection");
+                        // No tracks left, remove the stream
+                        this.removeStream(this.localStream);
+                        this.localStream = undefined;
                     }
                 }
             } catch (e: unknown) {
