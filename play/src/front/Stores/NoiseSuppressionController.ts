@@ -4,37 +4,32 @@ import {
     type NoiseSuppressionStatusMessage,
     NoiseSuppressionTransformer,
 } from "../WebRtc/NoiseSuppression/NoiseSuppressionTransformer";
-import type { LocalStreamStoreValue } from "./LocalStreamTypes";
 import { noiseSuppressionStateStore } from "./NoiseSuppressionStore";
 
 export class NoiseSuppressionController {
     private transformer: NoiseSuppressionTransformer | undefined;
 
     public async transform(
-        rawValue: LocalStreamStoreValue,
+        audioTrack: MediaStreamTrack | undefined,
         noiseSuppressionEnabled: boolean,
         signal?: AbortSignal,
-    ): Promise<LocalStreamStoreValue> {
+    ): Promise<MediaStreamTrack | undefined> {
         this.throwIfAborted(signal);
 
         if (!noiseSuppressionEnabled) {
             this.stop();
-            return rawValue;
+            return audioTrack;
         }
 
-        if (
-            rawValue.type === "error" ||
-            rawValue.stream === undefined ||
-            rawValue.stream.getAudioTracks().length === 0
-        ) {
+        if (audioTrack === undefined) {
             this.stop();
-            return rawValue;
+            return undefined;
         }
 
         const currentNoiseSuppressionState = get(noiseSuppressionStateStore);
         if (currentNoiseSuppressionState.status === "error" || currentNoiseSuppressionState.status === "unsupported") {
             await this.destroy();
-            return rawValue;
+            return audioTrack;
         }
 
         const support = NoiseSuppressionTransformer.getSupport();
@@ -44,7 +39,7 @@ export class NoiseSuppressionController {
                 status: "unsupported",
                 message: support.message ?? "This browser cannot run custom noise suppression.",
             });
-            return rawValue;
+            return audioTrack;
         }
 
         if (currentNoiseSuppressionState.status !== "initializing" && currentNoiseSuppressionState.status !== "ready") {
@@ -59,10 +54,7 @@ export class NoiseSuppressionController {
             }
 
             this.throwIfAborted(signal);
-            return {
-                type: "success",
-                stream: await this.transformer.transform(rawValue.stream, signal),
-            };
+            return await this.transformer.transform(audioTrack, signal);
         } catch (error) {
             if (this.isAbortError(error)) {
                 throw error;
@@ -72,7 +64,7 @@ export class NoiseSuppressionController {
                 status: "error",
                 message: error instanceof Error ? error.message : "Custom noise suppression failed to initialize.",
             });
-            return rawValue;
+            return audioTrack;
         }
     }
 

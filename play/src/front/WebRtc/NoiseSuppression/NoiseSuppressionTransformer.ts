@@ -29,8 +29,8 @@ export class NoiseSuppressionTransformer {
     private workletHandle: NoiseSuppressionAudioWorkletHandle | undefined;
     private stopObservingWorkletMessages: (() => void) | undefined;
     private destinationNode: MediaStreamAudioDestinationNode | undefined;
-    private outputStream: MediaStream | undefined;
-    private inputStream: MediaStream | undefined;
+    private outputTrack: MediaStreamTrack | undefined;
+    private inputTrack: MediaStreamTrack | undefined;
 
     constructor(options?: NoiseSuppressionTransformerOptions) {
         this.audioContext = new AudioContext({ sampleRate: NOISE_SUPPRESSION_SAMPLE_RATE });
@@ -55,11 +55,11 @@ export class NoiseSuppressionTransformer {
         return { supported: true };
     }
 
-    public async transform(inputStream: MediaStream, signal?: AbortSignal): Promise<MediaStream> {
+    public async transform(inputTrack: MediaStreamTrack, signal?: AbortSignal): Promise<MediaStreamTrack> {
         this.throwIfAborted(signal);
 
-        if (this.inputStream === inputStream && this.outputStream) {
-            return this.outputStream;
+        if (this.inputTrack === inputTrack && this.outputTrack) {
+            return this.outputTrack;
         }
 
         this.stop();
@@ -76,19 +76,22 @@ export class NoiseSuppressionTransformer {
             throw new Error("Noise suppression worklet node failed to initialize.");
         }
 
+        const inputStream = new MediaStream([inputTrack]);
         this.sourceNode = this.audioContext.createMediaStreamSource(inputStream);
         this.destinationNode = this.audioContext.createMediaStreamDestination();
 
         this.sourceNode.connect(this.workletHandle.node);
         this.workletHandle.node.connect(this.destinationNode);
 
-        this.outputStream = new MediaStream([
-            ...inputStream.getVideoTracks(),
-            ...this.destinationNode.stream.getAudioTracks(),
-        ]);
-        this.inputStream = inputStream;
+        const outputTrack = this.destinationNode.stream.getAudioTracks()[0];
+        if (!outputTrack) {
+            throw new Error("Noise suppression worklet did not produce an audio track.");
+        }
 
-        return this.outputStream;
+        this.outputTrack = outputTrack;
+        this.inputTrack = inputTrack;
+
+        return outputTrack;
     }
 
     public stop(): void {
@@ -122,12 +125,12 @@ export class NoiseSuppressionTransformer {
             }
         }
 
-        this.outputStream?.getAudioTracks().forEach((track) => track.stop());
+        this.outputTrack?.stop();
 
         this.sourceNode = undefined;
         this.destinationNode = undefined;
-        this.outputStream = undefined;
-        this.inputStream = undefined;
+        this.outputTrack = undefined;
+        this.inputTrack = undefined;
     }
 
     private async ensureWorkletHandleCreated(): Promise<void> {

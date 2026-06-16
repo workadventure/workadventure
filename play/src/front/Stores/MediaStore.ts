@@ -40,7 +40,12 @@ import {
     noiseSuppressionStateStore,
     voiceIsolationSupportedStore,
 } from "./NoiseSuppressionStore";
-import type { LocalStreamStoreValue } from "./LocalStreamTypes";
+import {
+    composeLocalStreamValue,
+    getLocalTrackFromStreamValue,
+    type LocalStreamStoreValue,
+    type LocalTrackStoreValue,
+} from "./LocalStreamTypes";
 import { NoiseSuppressionController } from "./NoiseSuppressionController";
 import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
 
@@ -911,23 +916,33 @@ export const rawLocalStreamStore = derived<
     },
 );
 
+export const rawLocalAudioTrackStore = derived<typeof rawLocalStreamStore, LocalTrackStoreValue>(
+    rawLocalStreamStore,
+    ($rawLocalStreamStore) => getLocalTrackFromStreamValue($rawLocalStreamStore, "audio"),
+);
+
+export const rawLocalVideoTrackStore = derived<typeof rawLocalStreamStore, LocalTrackStoreValue>(
+    rawLocalStreamStore,
+    ($rawLocalStreamStore) => getLocalTrackFromStreamValue($rawLocalStreamStore, "video"),
+);
+
 /**
- * A store containing the MediaStream after optional noise suppression has been applied.
+ * A store containing the audio track after optional noise suppression has been applied.
  * Updates are serialized so that the last enqueued update wins.
  */
 let audioProcessedStreamGeneration = 0;
 let audioProcessedStreamUpdateQueue: Promise<void> = Promise.resolve();
 
-type SetAudioProcessedStreamIfCurrent = (value: LocalStreamStoreValue) => void;
+type SetAudioProcessedTrackIfCurrent = (value: LocalTrackStoreValue) => void;
 
-export const audioProcessedLocalStreamStore = derived<
-    [typeof rawLocalStreamStore, typeof customNoiseSuppressionActiveStore],
-    LocalStreamStoreValue
+export const audioProcessedLocalAudioTrackStore = derived<
+    [typeof rawLocalAudioTrackStore, typeof customNoiseSuppressionActiveStore],
+    LocalTrackStoreValue
 >(
-    [rawLocalStreamStore, customNoiseSuppressionActiveStore],
-    ([$rawLocalStreamStore, $customNoiseSuppressionActiveStore], set) => {
+    [rawLocalAudioTrackStore, customNoiseSuppressionActiveStore],
+    ([$rawLocalAudioTrackStore, $customNoiseSuppressionActiveStore], set) => {
         const myGen = ++audioProcessedStreamGeneration;
-        const setIfCurrent: SetAudioProcessedStreamIfCurrent = (value) => {
+        const setIfCurrent: SetAudioProcessedTrackIfCurrent = (value) => {
             if (myGen === audioProcessedStreamGeneration) {
                 set(value);
             }
@@ -941,13 +956,20 @@ export const audioProcessedLocalStreamStore = derived<
 
         audioProcessedStreamUpdateQueue = audioProcessedStreamUpdateQueue
             .then(async () => {
-                setIfCurrent(
-                    await noiseSuppressionController.transform(
-                        $rawLocalStreamStore,
+                if ($rawLocalAudioTrackStore.type === "error") {
+                    noiseSuppressionController.stop();
+                    setIfCurrent($rawLocalAudioTrackStore);
+                    return;
+                }
+
+                setIfCurrent({
+                    type: "success",
+                    track: await noiseSuppressionController.transform(
+                        $rawLocalAudioTrackStore.track,
                         $customNoiseSuppressionActiveStore,
                         controller.signal,
                     ),
-                );
+                });
             })
             .catch((e) => {
                 const isAbort = e instanceof AbortError || (e instanceof DOMException && e.name === "AbortError");
@@ -963,34 +985,37 @@ export const audioProcessedLocalStreamStore = derived<
     },
     {
         type: "success",
-        stream: undefined,
+        track: undefined,
     },
 );
 
 /**
- * Serializes local stream (background-transformed) updates so that the last enqueued update wins.
+ * Serializes local video track (background-transformed) updates so that the last enqueued update wins.
  */
 let localStreamGeneration = 0;
 let localStreamUpdateQueue: Promise<void> = Promise.resolve();
 
-type SetLocalStreamIfCurrent = (value: LocalStreamStoreValue) => void;
+type SetLocalVideoTrackIfCurrent = (value: LocalTrackStoreValue) => void;
 
-async function runLocalStreamUpdate(
-    streamValue: LocalStreamStoreValue,
+async function runLocalVideoTrackUpdate(
+    videoTrackValue: LocalTrackStoreValue,
     backgroundProcessingEnabled: boolean,
-    setIfCurrent: SetLocalStreamIfCurrent,
+    setIfCurrent: SetLocalVideoTrackIfCurrent,
     signal: AbortSignal,
 ): Promise<void> {
-    if (
-        streamValue.type === "error" ||
-        streamValue.stream === undefined ||
-        streamValue.stream.getVideoTracks().length === 0 ||
-        !backgroundProcessingEnabled
-    ) {
+    if (videoTrackValue.type === "error") {
         if (backgroundTransformer) {
             backgroundTransformer.stop();
         }
-        setIfCurrent(streamValue);
+        setIfCurrent(videoTrackValue);
+        return;
+    }
+
+    if (videoTrackValue.track === undefined || !backgroundProcessingEnabled) {
+        if (backgroundTransformer) {
+            backgroundTransformer.stop();
+        }
+        setIfCurrent(videoTrackValue);
         return;
     }
 
@@ -999,17 +1024,17 @@ async function runLocalStreamUpdate(
         backgroundTransformer = createBackgroundTransformer(currentConfig);
     }
 
-    if (!streamValue.stream || !backgroundTransformer) {
-        setIfCurrent(streamValue);
+    if (!backgroundTransformer) {
+        setIfCurrent(videoTrackValue);
         return;
     }
 
     try {
-        const finalStream = await backgroundTransformer.transform(streamValue.stream, signal);
+        const finalStream = await backgroundTransformer.transform(new MediaStream([videoTrackValue.track]), signal);
         lastBackgroundConfig = { ...get(backgroundConfigStore) };
         setIfCurrent({
             type: "success",
-            stream: finalStream,
+            track: finalStream.getVideoTracks()[0],
         });
     } catch (error) {
         const isAbort = error instanceof AbortError || (error instanceof DOMException && error.name === "AbortError");
@@ -1027,14 +1052,14 @@ async function runLocalStreamUpdate(
     }
 }
 
-export const localStreamStore = derived<
-    [typeof audioProcessedLocalStreamStore, typeof backgroundProcessingEnabledStore],
-    LocalStreamStoreValue
+export const backgroundProcessedLocalVideoTrackStore = derived<
+    [typeof rawLocalVideoTrackStore, typeof backgroundProcessingEnabledStore],
+    LocalTrackStoreValue
 >(
-    [audioProcessedLocalStreamStore, backgroundProcessingEnabledStore],
-    ([$audioProcessedLocalStreamStore, $backgroundProcessingEnabled], set) => {
+    [rawLocalVideoTrackStore, backgroundProcessingEnabledStore],
+    ([$rawLocalVideoTrackStore, $backgroundProcessingEnabled], set) => {
         const myGen = ++localStreamGeneration;
-        const setIfCurrent: SetLocalStreamIfCurrent = (value) => {
+        const setIfCurrent: SetLocalVideoTrackIfCurrent = (value) => {
             if (myGen === localStreamGeneration) {
                 set(value);
             }
@@ -1057,8 +1082,8 @@ export const localStreamStore = derived<
                 });
             })
             .then(() =>
-                runLocalStreamUpdate(
-                    $audioProcessedLocalStreamStore,
+                runLocalVideoTrackUpdate(
+                    $rawLocalVideoTrackStore,
                     $backgroundProcessingEnabled,
                     setIfCurrent,
                     controller.signal,
@@ -1067,8 +1092,25 @@ export const localStreamStore = derived<
     },
     {
         type: "success",
-        stream: undefined,
+        track: undefined,
     },
+);
+
+export const localStreamStore = derived<
+    [
+        typeof audioProcessedLocalAudioTrackStore,
+        typeof backgroundProcessedLocalVideoTrackStore,
+        typeof rawLocalStreamStore,
+    ],
+    LocalStreamStoreValue
+>(
+    [audioProcessedLocalAudioTrackStore, backgroundProcessedLocalVideoTrackStore, rawLocalStreamStore],
+    ([$audioProcessedLocalAudioTrackStore, $backgroundProcessedLocalVideoTrackStore, $rawLocalStreamStore]) =>
+        composeLocalStreamValue(
+            $audioProcessedLocalAudioTrackStore,
+            $backgroundProcessedLocalVideoTrackStore,
+            $rawLocalStreamStore.type === "success" && $rawLocalStreamStore.stream !== undefined,
+        ),
 );
 
 /**
