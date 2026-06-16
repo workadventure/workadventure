@@ -230,8 +230,6 @@ export class RemotePeer extends Peer implements Streamable {
 
     private connectTimeout: ReturnType<typeof setTimeout> | undefined;
     private localStream: MediaStream | undefined;
-    private localAudioTrack: MediaStreamTrack | undefined;
-    private localVideoTrack: MediaStreamTrack | undefined;
 
     constructor(
         public user: UserSimplePeerInterface,
@@ -440,42 +438,61 @@ export class RemotePeer extends Peer implements Streamable {
             this.localStreamStore,
             this.space.isStreamingVideoStore,
         ).subscribe((streamValue) => {
-            if (streamValue === undefined) {
-                if (this.localStream) {
-                    this.removeStream(this.localStream);
-                }
-                this.localStream = undefined;
-                return;
-            }
-            if (streamValue.type === "success") {
-                let newVideoTrack: MediaStreamTrack | undefined;
-                let newAudioTrack: MediaStreamTrack | undefined;
-                if (streamValue.stream) {
+            try {
+                if (streamValue === undefined) {
                     if (this.localStream) {
-                        newVideoTrack = streamValue.stream.getVideoTracks()[0];
+                        this.removeStream(this.localStream);
+                    }
+                    this.localStream = undefined;
+                    return;
+                }
+                if (!this.localStream) {
+                    // Because simple-peer wants us to add / remove tracks on one given stream and given the fact
+                    // the localStreamStore serves new streams all the time, we are reconstructing our own
+                    // stable MediaStream inside the RemotePeer where we add / remove tracks on the fly.
+                    this.localStream = new MediaStream();
+                    this.addStream(this.localStream);
+                }
+                if (streamValue.type === "success") {
+                    let newVideoTrack: MediaStreamTrack | undefined;
+                    let newAudioTrack: MediaStreamTrack | undefined;
+                    let oldVideoTrack: MediaStreamTrack | undefined;
+                    let oldAudioTrack: MediaStreamTrack | undefined;
+                    if (streamValue.stream) {
+                        newVideoTrack = RemotePeer.getFirstAndOnly(streamValue.stream.getVideoTracks());
+                        oldVideoTrack = RemotePeer.getFirstAndOnly(this.localStream.getVideoTracks());
 
-                        if (newVideoTrack && this.localVideoTrack && newVideoTrack.id !== this.localVideoTrack.id) {
+                        if (newVideoTrack && oldVideoTrack && newVideoTrack.id !== oldVideoTrack.id) {
                             debug("Replacing video track in P2P connection");
-                            this.replaceTrack(this.localVideoTrack, newVideoTrack, this.localStream);
-                        } else if (newVideoTrack && !this.localVideoTrack) {
+                            this.localStream.addTrack(newVideoTrack);
+                            this.replaceTrack(oldVideoTrack, newVideoTrack, this.localStream);
+                            this.localStream.removeTrack(oldVideoTrack);
+                        } else if (newVideoTrack && !oldVideoTrack) {
                             debug("Adding video track in P2P connection");
+                            this.localStream.addTrack(newVideoTrack);
                             this.addTrack(newVideoTrack, this.localStream);
-                        } else if (this.localVideoTrack && !newVideoTrack) {
+                        } else if (oldVideoTrack && !newVideoTrack) {
                             debug("Removing video track in P2P connection");
-                            this.removeTrack(this.localVideoTrack, this.localStream);
+                            this.removeTrack(oldVideoTrack, this.localStream);
+                            this.localStream.removeTrack(oldVideoTrack);
                         }
 
-                        newAudioTrack = streamValue.stream.getAudioTracks()[0];
+                        newAudioTrack = RemotePeer.getFirstAndOnly(streamValue.stream.getAudioTracks());
+                        oldAudioTrack = RemotePeer.getFirstAndOnly(this.localStream.getAudioTracks());
 
-                        if (newAudioTrack && this.localAudioTrack && newAudioTrack.id !== this.localAudioTrack.id) {
+                        if (newAudioTrack && oldAudioTrack && newAudioTrack.id !== oldAudioTrack.id) {
                             debug("Replacing audio track in P2P connection");
-                            this.replaceTrack(this.localAudioTrack, newAudioTrack, this.localStream);
-                        } else if (newAudioTrack && !this.localAudioTrack) {
+                            this.localStream.addTrack(newAudioTrack);
+                            this.replaceTrack(oldAudioTrack, newAudioTrack, this.localStream);
+                            this.localStream.removeTrack(oldAudioTrack);
+                        } else if (newAudioTrack && !oldAudioTrack) {
                             debug("Adding audio track in P2P connection");
+                            this.localStream.addTrack(newAudioTrack);
                             this.addTrack(newAudioTrack, this.localStream);
-                        } else if (this.localAudioTrack && !newAudioTrack) {
+                        } else if (oldAudioTrack && !newAudioTrack) {
                             debug("Removing audio track in P2P connection");
-                            this.removeTrack(this.localAudioTrack, this.localStream);
+                            this.removeTrack(oldAudioTrack, this.localStream);
+                            this.localStream.removeTrack(oldAudioTrack);
                         }
 
                         if (!newAudioTrack && !newVideoTrack) {
@@ -484,16 +501,11 @@ export class RemotePeer extends Peer implements Streamable {
                             this.removeStream(this.localStream);
                             this.localStream = undefined;
                         }
-                    } else {
-                        debug("Adding stream in P2P connection");
-                        this.addStream(streamValue.stream);
-                        this.localStream = streamValue.stream;
-                        newAudioTrack = streamValue.stream.getAudioTracks()[0];
-                        newVideoTrack = streamValue.stream.getVideoTracks()[0];
                     }
-                    this.localAudioTrack = newAudioTrack;
-                    this.localVideoTrack = newVideoTrack;
                 }
+            } catch (e: unknown) {
+                console.error(e);
+                Sentry.captureException(e);
             }
         });
 
@@ -967,5 +979,17 @@ export class RemotePeer extends Peer implements Streamable {
 
     private getPresetForDimensions(width: number, height: number): { bitrate: number; fps: number } {
         return selectVideoPreset(height, width, this.type === "screenSharing", this.getLocalQualitySetting());
+    }
+
+    /**
+     * Returns the item [0] from the array passed in parameter.
+     * If the array is empty, returns undefined.
+     * If the array contains more than one item, throw an Error.
+     */
+    private static getFirstAndOnly<T>(array: T[]): T | undefined {
+        if (array.length > 1) {
+            throw new Error("Expected array to contain at most one item, but it contained multiple items.");
+        }
+        return array[0];
     }
 }
