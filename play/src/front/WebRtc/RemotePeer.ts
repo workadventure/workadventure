@@ -54,7 +54,6 @@ export class RemotePeer extends Peer implements Streamable {
     private readonly localStreamStoreSubscribe: Unsubscriber;
     private readonly _hasVideo: Readable<boolean>;
     private readonly _hasAudio: Readable<boolean>;
-    private readonly _hasReceivedAudio: Readable<boolean>;
     private readonly showVoiceIndicatorStore: ForwardableStore<boolean> = new ForwardableStore(false);
     public readonly flipX = false;
     public readonly muteAudio: Writable<boolean> = writable(false);
@@ -268,6 +267,8 @@ export class RemotePeer extends Peer implements Streamable {
         super(peerConfig);
 
         this.volume = writable(defaultVolume);
+        // TODO: this negates the usefulness of canEmitAudio.
+        // In theory, canEmitAudio should return false for screenshares with no audio track or for scripting videos with no audio
         this._canEmitAudio = writable<boolean>(true);
         this.videoType = type;
         this.displayMode = type === "video" ? "cover" : "fit";
@@ -386,9 +387,6 @@ export class RemotePeer extends Peer implements Streamable {
             };
         });*/
         this._hasVideo = createMediaStreamTrackPresenceStore(this._remoteStreamStore, "video");
-
-        // Receiver-side diagnostic signal used to spot "space says microphone is enabled, but no audio track arrived".
-        this._hasReceivedAudio = createMediaStreamTrackPresenceStore(this._remoteStreamStore, "audio");
 
         this._hasAudio = derived(this._remoteStreamStore, ($remoteStream, set) => {
             if (!$remoteStream) {
@@ -830,10 +828,6 @@ export class RemotePeer extends Peer implements Streamable {
 
     get canEmitAudio(): Readable<boolean> {
         return this._canEmitAudio;
-    }
-
-    get hasReceivedAudio(): Readable<boolean> {
-        return this._hasReceivedAudio;
     }
 
     get hasAudio(): Readable<boolean> {

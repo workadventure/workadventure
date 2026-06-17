@@ -46,23 +46,20 @@ export interface Streamable {
     readonly volumeStore: Readable<number[] | undefined> | undefined;
     /**
      * True when this streamable currently has a video stream that should be displayed.
+     * Note: this value is tied to the real transport (WebRTC, Livekit, ...), not to the spaceUser cameraState
      */
     readonly hasVideo: Readable<boolean>;
+    /**
+     * True when this streamable currently has audio, symmetrically to hasVideo.
+     * This is the current audio state; use canEmitAudio to know whether audio controls should be displayed.
+     * Note: this value is tied to the real transport (WebRTC, Livekit, ...), not to the spaceUser microphoneState
+     */
+    readonly hasAudio: Readable<boolean>;
     /**
      * True when this streamable is able to emit audio (capability / UI affordance).
      * Use this to decide whether audio controls (e.g. the microphone icon) should be displayed.
      */
     readonly canEmitAudio: Readable<boolean>;
-    /**
-     * True when this streamable currently has audio, symmetrically to hasVideo.
-     * This is the current audio state; use canEmitAudio to know whether audio controls should be displayed.
-     */
-    readonly hasAudio: Readable<boolean>;
-    /**
-     * Receiver-side diagnostic signal: true only when this client actually has a usable incoming audio track.
-     * Keep it separate from canEmitAudio/hasAudio so we can detect mismatches between the space state and the stream received.
-     */
-    readonly hasReceivedAudio: Readable<boolean>;
     readonly statusStore: Readable<PeerStatus>;
     readonly name: Readable<string>;
     readonly showVoiceIndicator: Readable<boolean>;

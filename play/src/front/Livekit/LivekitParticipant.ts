@@ -537,19 +537,8 @@ export class LiveKitParticipant {
         return {
             uniqueId: this.participant.identity,
             canEmitAudio: this._canEmitAudio,
-            hasReceivedAudio: this._hasReceivedMicrophoneAudio,
-            hasVideo: derived(
-                [this._spaceUser.reactiveUser.cameraState, this._hasVideo],
-                ([$spaceCameraState, $livekitHasVideo]) => {
-                    return $spaceCameraState && $livekitHasVideo;
-                },
-            ),
-            hasAudio: derived(
-                [this._spaceUser.reactiveUser.microphoneState, this._hasAudio],
-                ([$spaceMicrophoneState, $livekitHasAudio]) => {
-                    return $spaceMicrophoneState && $livekitHasAudio;
-                },
-            ),
+            hasVideo: this._hasVideo,
+            hasAudio: this._hasAudio,
             statusStore: writable("connected"),
             spaceUserId: this._spaceUser.spaceUserId,
             name: this._nameStore,
@@ -582,7 +571,6 @@ export class LiveKitParticipant {
         return {
             uniqueId: this.participant.sid,
             canEmitAudio: this._canEmitScreenShareAudio,
-            hasReceivedAudio: this._hasReceivedScreenShareAudio,
             hasVideo: this._hasScreenShareVideo,
             hasAudio: this._hasScreenShareAudio,
             statusStore: writable("connected"),
