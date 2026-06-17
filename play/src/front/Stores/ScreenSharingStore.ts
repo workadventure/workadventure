@@ -13,6 +13,7 @@ import type {} from "../Api/Desktop";
 import { screenShareStreamElementsStore } from "./PeerStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
+import { selectScreenSharingCaptureMethod } from "./ScreenSharingCapturePolicy";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -147,11 +148,12 @@ export const screenSharingConstraintsStore = derived(
 );
 
 export function isScreenSharingSupported(): boolean {
-    if (window.WAD?.getDesktopCapturerSources) {
-        return true;
-    }
-
-    return !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+    return (
+        selectScreenSharingCaptureMethod({
+            hasDesktopCapturer: Boolean(window.WAD?.getDesktopCapturerSources),
+            hasDisplayMedia: Boolean(navigator.mediaDevices?.getDisplayMedia),
+        }) !== "unsupported"
+    );
 }
 
 async function getDesktopCapturerSources() {
@@ -194,12 +196,15 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
             return;
         }
 
-        let currentStreamPromise: Promise<MediaStream>;
-        // Prefer getDisplayMedia over getDesktopCapturerSources to support audio capture
-        // According to MDN: audio is optional, default is false
-        // Audio is only available for certain display surfaces (mainly browser tabs)
-        // See: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia
-        if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+        let currentStreamPromise: Promise<MediaStream | undefined>;
+        const captureMethod = selectScreenSharingCaptureMethod({
+            hasDesktopCapturer: Boolean(window.WAD?.getDesktopCapturerSources),
+            hasDisplayMedia: Boolean(navigator.mediaDevices?.getDisplayMedia),
+        });
+
+        if (captureMethod === "desktop") {
+            currentStreamPromise = getDesktopCapturerSources();
+        } else if (captureMethod === "display-media") {
             // Build constraints according to MDN specification
             // video can be boolean or MediaTrackConstraints, default is true
             // audio can be boolean or MediaTrackConstraints, default is false
@@ -211,8 +216,6 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 audio: !!constraints.audio,
             };
             currentStreamPromise = navigator.mediaDevices.getDisplayMedia(displayMediaConstraints);
-        } else if (window.WAD?.getDesktopCapturerSources) {
-            currentStreamPromise = getDesktopCapturerSources();
         } else {
             stopScreenSharing();
             set({
@@ -226,6 +229,17 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
             try {
                 stopScreenSharing();
                 const stream = await currentStreamPromise;
+
+                if (!stream) {
+                    if (currentRequestId === screenSharingRequestId) {
+                        requestedScreenSharingState.disableScreenSharing();
+                        set({
+                            type: "success",
+                            stream: undefined,
+                        });
+                    }
+                    return;
+                }
 
                 // Ignore stale async completions from older requests.
                 if (currentRequestId !== screenSharingRequestId) {

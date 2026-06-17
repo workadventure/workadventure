@@ -4,7 +4,8 @@ import { showAboutWindow } from "electron-util";
 
 import * as autoUpdater from "./auto-updater";
 import * as log from "./log";
-import { getAppView, getWindow } from "./window";
+import settings from "./settings";
+import { getWindow, loadDesktopTarget } from "./window";
 
 let tray: Tray | undefined;
 
@@ -47,10 +48,9 @@ export function createTray() {
             },
         },
         {
-            label: "Open DevTools",
+            label: "Open Portal",
             click() {
-                getWindow()?.webContents.openDevTools({ mode: "detach" });
-                getAppView()?.webContents.openDevTools({ mode: "detach" });
+                void loadDesktopTarget(settings.get("portal_url"));
             },
         },
         {

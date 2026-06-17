@@ -2,7 +2,6 @@
     import type { Snippet } from "svelte";
     import { onDestroy, onMount, tick } from "svelte";
     import { on } from "svelte/events";
-    import { z } from "zod";
     import Debug from "debug";
     import { isInRemoteConversation, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import {
@@ -10,10 +9,14 @@
         askPictureInPictureActivatingStore,
         pictureInPictureSupportedStore,
     } from "../../Stores/PeerStore";
-    import { visibilityStore } from "../../Stores/VisibilityStore";
+    import { userAwayFromAppStore } from "../../Stores/DesktopVisibilityStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {} from "./PictureInPicture/PictureInPictureWindow";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import {
+        hasPictureInPictureContent,
+        isDocumentPictureInPictureSupported,
+    } from "./PictureInPicture/PictureInPictureAvailabilityPolicy";
 
     interface Props {
         children?: Snippet<[{ inPictureInPicture: boolean }]>;
@@ -56,25 +59,8 @@
         "touchstart",
     ];
 
-    const DocumentPictureInPictureSchema = z.object({
-        requestWindow: z
-            .function()
-            .args(
-                z.object({
-                    preferInitialWindowPlacement: z.boolean(),
-                    height: z.string(),
-                    width: z.string(),
-                }),
-            )
-            .returns(z.promise(z.instanceof(Window))),
-    });
-
-    const WindowExtSchema = z
-        .object({
-            documentPictureInPicture: DocumentPictureInPictureSchema,
-        })
-        .passthrough();
-
+    // Keep PiP in the current Play renderer instead of opening a second web window.
+    // A second renderer would create another websocket/WebRTC session, duplicating presence, audio/video state, and room side effects.
     function copySteelSheet(pipWindow: Window) {
         [...document.styleSheets].forEach((styleSheet) => {
             try {
@@ -124,6 +110,7 @@
         pipWindow = undefined;
         pipRequested = false;
         activePictureInPictureStore.set(false);
+        askPictureInPictureActivatingStore.set(false);
         debug("Exiting Picture in Picture mode");
     }
 
@@ -136,9 +123,9 @@
     function requestPictureInPicture() {
         debug("Request Picture in Picture mode");
 
-        // We activate the picture in picture mode only if we are in a remote conversation
-        if (!$isInRemoteConversation) {
-            debug("Request Picture in Picture mode but not in a remote conversation");
+        if (!hasPictureInPictureContent($isInRemoteConversation, $streamableCollectionStore.size)) {
+            debug("Request Picture in Picture mode but no video content is available");
+            askPictureInPictureActivatingStore.set(false);
             return;
         }
 
@@ -150,12 +137,10 @@
             return;
         }
 
-        // request permission to use the picture in picture mode
-        // see the documentation for more details: https://developer.mozilla.org/en-US/docs/Glossary/Transient_activation
-        const windowExtResult = WindowExtSchema.safeParse(window);
-        if (!windowExtResult.success) {
+        if (!isDocumentPictureInPictureSupported(window)) {
             debug("Picture in Picture is not supported");
             pictureInPictureSupportedStore.set(false);
+            askPictureInPictureActivatingStore.set(false);
             return;
         }
 
@@ -169,8 +154,8 @@
             // 227: the height of a video
             // 80: the height of the action bar
             // 78: the height of the video feedback of the current user
-            height: `${pipHeightOption}`,
-            width: "400",
+            height: pipHeightOption,
+            width: 400,
         };
 
         pipRequested = true;
@@ -206,6 +191,7 @@
             .catch((error: Error) => {
                 debug("Picture-in-Picture is not supported", error);
                 destroyPictureInPictureComponent();
+                askPictureInPictureActivatingStore.set(false);
                 // Maybe we could propose a popup to the user to activate the Picture in Picture mode
             });
     }
@@ -219,7 +205,7 @@
             debug("PictureInPicture enterpictureinpicture handler is not supported", e);
         }
 
-        if (WindowExtSchema.safeParse(window).success === false) {
+        if (!isDocumentPictureInPictureSupported(window)) {
             debug("PictureInPicture is not supported by the browser");
             pictureInPictureSupportedStore.set(false);
         }
@@ -232,11 +218,9 @@
             }
         });
 
-        const unsubscribe = visibilityStore.subscribe((visible) => {
-            if (visible) {
+        const unsubscribe = userAwayFromAppStore.subscribe((userAwayFromApp) => {
+            if (!userAwayFromApp) {
                 destroyPictureInPictureComponent();
-            } else {
-                requestPictureInPicture();
             }
         });
 

@@ -238,6 +238,7 @@
     min-width: 335px;
     width: 335px;
     pointer-events: auto;
+    height: 100vh;
     height: 100dvh;
     z-index: 2000;
     .close-window {

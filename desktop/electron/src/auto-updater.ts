@@ -1,10 +1,11 @@
-import { app, dialog } from "electron";
+import { app, dialog, type MessageBoxOptions } from "electron";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 import * as isDev from "electron-is-dev";
 import * as util from "util";
 
 import { createAndShowNotification } from "./notification";
+import { createDesktopConfig } from "./desktop-url-policy";
 
 const sleep = util.promisify(setTimeout);
 
@@ -40,12 +41,16 @@ export async function manualRequestUpdateCheck() {
 
 async function init() {
     autoUpdater.logger = log;
+    autoUpdater.setFeedURL({
+        provider: "generic",
+        url: createDesktopConfig().updateFeedUrl,
+    });
 
     autoUpdater.on(
         "update-downloaded",
         ({ releaseNotes, releaseName }: { releaseNotes: string; releaseName: string }) => {
             void (async () => {
-                const dialogOpts = {
+                const dialogOpts: MessageBoxOptions = {
                     type: "question",
                     buttons: ["Install and Restart", "Install Later"],
                     defaultId: 0,
@@ -91,7 +96,9 @@ async function init() {
     await checkForUpdates();
 
     // run update check every hour again
-    setInterval(() => checkForUpdates, 1000 * 60 * 1);
+    setInterval(() => {
+        void checkForUpdates();
+    }, 1000 * 60 * 60);
 }
 
 export default {

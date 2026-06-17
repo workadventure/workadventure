@@ -3,8 +3,6 @@ appId: re.workadventu.desktop
 files:
     - "dist/**/*"
     - "assets/**/*"
-    - from: "../local-app/dist/"
-      to: "local-app/dist"
 
 directories:
     output: ./build
@@ -12,20 +10,21 @@ directories:
 dmg:
     icon: false
 
-linux:
-    category: "TODO;TODO"
-    packageCategory: "TODO;TODO"
-    icon: "assets/icons/logo.icns"
-    target:
-        - AppImage
-    artifactName: "${productName}-${version}-${arch}.${ext}"
-
 win:
     icon: "assets/icons/logo.ico"
     artifactName: "${productName}-${version}-setup.${ext}"
+    target:
+        - nsis
+
+mac:
+    category: public.app-category.business
+    hardenedRuntime: true
+    gatekeeperAssess: false
+    entitlements: assets/entitlements.mac.plist
+    entitlementsInherit: assets/entitlements.mac.plist
+    target:
+        - dmg
 
 publish:
-    provider: github
-    owner: thecodingmachine
-    repo: workadventure
-    releaseType: release
+    provider: generic
+    url: https://desktop-updates.workadventu.re/stable

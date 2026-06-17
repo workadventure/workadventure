@@ -9,7 +9,8 @@
     import { highlightFullScreen } from "../../../Stores/ActionsCamStore";
     import { isOnOneLine, playerMovedInTheLast10Seconds } from "../../../Stores/VideoLayoutStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
-    import { activePictureInPictureStore } from "../../../Stores/PeerStore";
+    import { activePictureInPictureStore, screenShareStreamElementsStore } from "../../../Stores/PeerStore";
+    import { selectPictureInPictureHighlight } from "../../Video/PictureInPicture/PictureInPictureHighlightPolicy";
 
     interface Props {
         inPictureInPicture: boolean;
@@ -80,8 +81,16 @@
     }
 
     let oneLineMaxHeight = $derived(containerHeight * 0.2);
+    let pictureInPictureHighlightedScreen = $derived(
+        selectPictureInPictureHighlight(
+            inPictureInPicture,
+            $activePictureInPictureStore,
+            $screenShareStreamElementsStore,
+            $highlightedEmbedScreen,
+        ),
+    );
     let pipHighlightLayoutEnabled = $derived(
-        inPictureInPicture && $activePictureInPictureStore && $highlightedEmbedScreen != undefined,
+        inPictureInPicture && $activePictureInPictureStore && pictureInPictureHighlightedScreen != undefined,
     );
     let pipHighlightLandscape = $derived(pipHighlightLayoutEnabled && containerWidth > containerHeight);
     let pipCameraContainerStyle = $derived(
@@ -114,7 +123,9 @@
         class="presentation-layout flex pointer-events-none h-full w-full absolute mobile:mt-3"
         class:flex-col={!pipHighlightLayoutEnabled || !pipHighlightLandscape}
         class:flex-row-reverse={pipHighlightLayoutEnabled && pipHighlightLandscape}
-        style={inPictureInPicture && $highlightedEmbedScreen != undefined ? "height: calc(100vh - 80px);" : ""}
+        style={inPictureInPicture && pictureInPictureHighlightedScreen != undefined
+            ? "height: calc(100vh - 80px);"
+            : ""}
         bind:clientWidth={containerWidth}
         bind:clientHeight={containerHeight}
     >
@@ -124,7 +135,9 @@
                 class:max-height-quarter={$isOnOneLine && !inPictureInPicture}
                 class:h-full={!$isOnOneLine || (inPictureInPicture && !pipHighlightLayoutEnabled)}
                 class:overflow-y-auto={inPictureInPicture}
-                class:flex-1={inPictureInPicture && $highlightedEmbedScreen != undefined && !pipHighlightLayoutEnabled}
+                class:flex-1={inPictureInPicture &&
+                    pictureInPictureHighlightedScreen != undefined &&
+                    !pipHighlightLayoutEnabled}
                 style={pipCameraContainerStyle}
                 bind:this={camContainer}
             >
@@ -132,21 +145,21 @@
             </div>
         {/if}
 
-        {#if $streamableCollectionStore.size > 0 && $highlightedEmbedScreen && !$playerMovedInTheLast10Seconds}
+        {#if $streamableCollectionStore.size > 0 && pictureInPictureHighlightedScreen && !$playerMovedInTheLast10Seconds}
             <div
                 id="highlighted-media"
                 class="md:mb-0"
-                class:flex-1={!inPictureInPicture || $highlightedEmbedScreen == undefined}
+                class:flex-1={!inPictureInPicture || pictureInPictureHighlightedScreen == undefined}
                 class:flex-[4]={inPictureInPicture &&
-                    $highlightedEmbedScreen != undefined &&
+                    pictureInPictureHighlightedScreen != undefined &&
                     !pipHighlightLayoutEnabled}
-                class:mb-8={!inPictureInPicture || $highlightedEmbedScreen == undefined}
-                class:mb-0={inPictureInPicture && $highlightedEmbedScreen != undefined}
+                class:mb-8={!inPictureInPicture || pictureInPictureHighlightedScreen == undefined}
+                class:mb-0={inPictureInPicture && pictureInPictureHighlightedScreen != undefined}
                 style={pipHighlightContainerStyle}
                 bind:this={highlightScreen}
             >
-                {#key $highlightedEmbedScreen.uniqueId}
-                    <MediaBox videoBox={$highlightedEmbedScreen} />
+                {#key pictureInPictureHighlightedScreen.uniqueId}
+                    <MediaBox videoBox={pictureInPictureHighlightedScreen} />
                 {/key}
             </div>
         {/if}
@@ -154,13 +167,13 @@
         {#if $activePictureInPictureStore}
             <div
                 class="flex-none"
-                class:fixed={inPictureInPicture && $highlightedEmbedScreen != undefined}
-                class:bottom-0={inPictureInPicture && $highlightedEmbedScreen != undefined}
-                class:left-0={inPictureInPicture && $highlightedEmbedScreen != undefined}
-                class:right-0={inPictureInPicture && $highlightedEmbedScreen != undefined}
-                class:w-full={inPictureInPicture && $highlightedEmbedScreen != undefined}
-                class:transition-all={inPictureInPicture && $highlightedEmbedScreen != undefined}
-                class:pointer-events-none={inPictureInPicture && $highlightedEmbedScreen != undefined}
+                class:fixed={inPictureInPicture && pictureInPictureHighlightedScreen != undefined}
+                class:bottom-0={inPictureInPicture && pictureInPictureHighlightedScreen != undefined}
+                class:left-0={inPictureInPicture && pictureInPictureHighlightedScreen != undefined}
+                class:right-0={inPictureInPicture && pictureInPictureHighlightedScreen != undefined}
+                class:w-full={inPictureInPicture && pictureInPictureHighlightedScreen != undefined}
+                class:transition-all={inPictureInPicture && pictureInPictureHighlightedScreen != undefined}
+                class:pointer-events-none={inPictureInPicture && pictureInPictureHighlightedScreen != undefined}
                 style="z-index: 20;"
             >
                 <PictureInPictureActionBar />
