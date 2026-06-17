@@ -400,19 +400,19 @@ export class LiveKitParticipant {
             publication.setSubscribed(false);
             if (this._screenShareAudioPublication === publication) {
                 this._screenShareAudioPublication = undefined;
+                this._audioScreenShareStreamStore.set(undefined);
+                this._canEmitScreenShareAudio.set(false);
+                this._hasScreenShareAudio.set(false);
+                this.refreshLivekitScreenShareStreamStore();
             }
-            this._audioScreenShareStreamStore.set(undefined);
-            this._canEmitScreenShareAudio.set(false);
-            this._hasScreenShareAudio.set(false);
-            this.refreshLivekitScreenShareStreamStore();
         } else if (this.isScriptingAudioPublication(publication)) {
             publication.setSubscribed(false);
             if (this._scriptingAudioPublication === publication) {
                 this._scriptingAudioPublication = undefined;
                 this._scriptingAudioStream = undefined;
                 this.refreshLivekitAudioStreamStore();
+                this._hasScriptingAudio.set(false);
             }
-            this._hasScriptingAudio.set(false);
         } else if (publication.source === Track.Source.Microphone) {
             publication.setSubscribed(false);
             if (this._microphonePublication === publication) {
@@ -420,8 +420,8 @@ export class LiveKitParticipant {
                 this._microphoneStream = undefined;
                 this._microphoneStreamStore.set(undefined);
                 this.refreshLivekitAudioStreamStore();
+                this._hasMicrophoneAudio.set(false);
             }
-            this._hasMicrophoneAudio.set(false);
         }
     }
 
@@ -435,47 +435,59 @@ export class LiveKitParticipant {
                 this._screenShareRemoteTrack.set(undefined);
             }
         } else if (publication.source === Track.Source.ScreenShareAudio) {
-            this._audioScreenShareStreamStore.set(undefined);
+            if (this._screenShareAudioPublication === publication) {
+                this._audioScreenShareStreamStore.set(undefined);
+                this._hasScreenShareAudio.set(false);
+                this.refreshLivekitScreenShareStreamStore();
+            }
         } else if (this.isScriptingAudioPublication(publication)) {
             if (this._scriptingAudioPublication === publication) {
                 this._scriptingAudioStream = undefined;
                 this.refreshLivekitAudioStreamStore();
+                this._hasScriptingAudio.set(false);
             }
         } else if (publication.source === Track.Source.Microphone) {
             if (this._microphonePublication === publication) {
                 this._microphoneStream = undefined;
                 this._microphoneStreamStore.set(undefined);
                 this.refreshLivekitAudioStreamStore();
+                this._hasMicrophoneAudio.set(false);
             }
         }
     }
 
     private handleTrackMuted(publication: TrackPublication) {
-        if (this.isScriptingAudioPublication(publication)) {
+        if (this.isScriptingAudioPublication(publication) && this._scriptingAudioPublication === publication) {
             this._hasScriptingAudio.set(false);
-        } else if (publication.source === Track.Source.Microphone) {
+        } else if (publication.source === Track.Source.Microphone && this._microphonePublication === publication) {
             this._hasMicrophoneAudio.set(false);
         } else if (publication.source === Track.Source.Camera) {
             this._hasVideo.set(false);
         } else if (publication.source === Track.Source.ScreenShare) {
             this._hasScreenShareVideo.set(false);
             this.refreshLivekitScreenShareStreamStore();
-        } else if (publication.source === Track.Source.ScreenShareAudio) {
+        } else if (
+            publication.source === Track.Source.ScreenShareAudio &&
+            this._screenShareAudioPublication === publication
+        ) {
             this._hasScreenShareAudio.set(false);
         }
     }
 
     private handleTrackUnmuted(publication: TrackPublication) {
-        if (this.isScriptingAudioPublication(publication)) {
+        if (this.isScriptingAudioPublication(publication) && this._scriptingAudioPublication === publication) {
             this._hasScriptingAudio.set(true);
-        } else if (publication.source === Track.Source.Microphone) {
+        } else if (publication.source === Track.Source.Microphone && this._microphonePublication === publication) {
             this._hasMicrophoneAudio.set(true);
         } else if (publication.source === Track.Source.Camera) {
             this._hasVideo.set(true);
         } else if (publication.source === Track.Source.ScreenShare) {
             this._hasScreenShareVideo.set(true);
             this.refreshLivekitScreenShareStreamStore();
-        } else if (publication.source === Track.Source.ScreenShareAudio) {
+        } else if (
+            publication.source === Track.Source.ScreenShareAudio &&
+            this._screenShareAudioPublication === publication
+        ) {
             this._hasScreenShareAudio.set(true);
         }
     }
