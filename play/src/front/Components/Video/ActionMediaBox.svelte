@@ -109,7 +109,7 @@
 </script>
 
 <div
-    class="flex flex-col p-1 w-48 bg-contrast/80 backdrop-blur-md bg-opacity-10 rounded-md max-h-max z-50 cursor-pointer select-none"
+    class="flex flex-col p-1 w-48 bg-contrast/80 backdrop-blur-md rounded-md max-h-max z-50 cursor-pointer select-none"
     class:mt-[0.2rem]={!videoEnabled}
     onclick={(event) => {
         event.preventDefault();
@@ -135,6 +135,7 @@
                     event.stopPropagation();
                     volumeStore.set(1);
                 }}
+                class="p-0 m-0"
             >
                 <IconMute class="w-4 h-4 text-white flex-shrink-0" />
             </button>
@@ -145,6 +146,7 @@
                     event.stopPropagation();
                     volumeStore.set(0);
                 }}
+                class="p-0 m-0"
             >
                 <IconUnMute class="w-4 h-4 text-white flex-shrink-0" />
             </button>

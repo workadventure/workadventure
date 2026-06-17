@@ -17,7 +17,7 @@
   ],
   "dependencies": {
     "@tailwindcss/forms": "^0.5.11",
-    "@workadventure/design-system": "^3.0.0",
+    "@workadventure/design-system": "^3.0.1",
     "tailwindcss": "^4.3.0"
   },
   "files": [

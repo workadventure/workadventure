@@ -25,7 +25,7 @@
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <li
-        class="min-w-full group transition-all bg-white bg-opacity-10 rounded mt-2 hover:bg-opacity-100 hover:text-dark hover:!cursor-pointer"
+        class="min-w-full group transition-all bg-white/10 rounded mt-2 hover:bg-white hover:text-dark hover:!cursor-pointer"
         onclick={() => selectedTag(tag)}
     >
         <div class="entities-tag-list-item-grid p-2">

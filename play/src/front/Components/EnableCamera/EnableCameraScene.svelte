@@ -199,7 +199,7 @@
 >
     <section class="flex min-h-dvh">
         <div
-            class="text-white justify-center items-center overflow-hidden w-[100vw] container flex flex-col min-h-dvh pb-36 pt-8 lg:pt-0 relative"
+            class="text-white justify-center items-center overflow-hidden w-[100vw] container flex flex-col min-h-dvh pb-42 md:pb-36 pt-8 lg:pt-0 relative"
         >
             <section class="mb-4 text-center">
                 <h2 class="h4">{$LL.camera.enable.title()}</h2>
@@ -209,7 +209,7 @@
             </section>
 
             <div
-                class="flex md:flex-wrap flex-col lg:space-x-4 w-full items-center justify-center lg:flex-row lg:items-stretch lg:px-4 lg:pb-4"
+                class="flex md:flex-wrap flex-col gap-4 w-full items-center justify-center lg:flex-row lg:items-stretch lg:px-4 lg:pb-4"
             >
                 <!-- MICROPHONE -->
 
@@ -305,8 +305,8 @@
         </div>
     </section>
 </form>
-<div class="absolute start-0 top-0 w-dvw h-dvh bg-cover z-10" style="background-image: url('{bgMap}');"></div>
-<div class="absolute start-0 top-0 w-dvw h-dvh bg-contrast/80 z-20" style="background-color: '{bgColor}';"></div>
+<div class="fixed start-0 top-0 w-dvw h-dvh bg-cover z-10" style="background-image: url('{bgMap}');"></div>
+<div class="fixed start-0 top-0 w-dvw h-dvh bg-contrast/80 z-20" style="background-color: '{bgColor}';"></div>
 
 <style>
     .enableCameraScene {
