@@ -59,7 +59,6 @@
     let hasVideoStore = $derived(streamable?.hasVideo);
     let canEmitAudioStore = $derived(streamable?.canEmitAudio);
     let hasAudioStore = $derived(streamable?.hasAudio);
-    let hasReceivedAudioStore = $derived(streamable?.hasReceivedAudio);
     let volumeMeterStore = $derived(streamable?.volumeStore);
     let showVoiceIndicatorStore = $derived(streamable?.showVoiceIndicator);
     let isBlockedStore = $derived(streamable?.media?.isBlocked);
@@ -94,7 +93,7 @@
             $canEmitAudioStore === true &&
             $isBlockedStore !== true &&
             $microphoneStateStore === true &&
-            $hasReceivedAudioStore === false,
+            $hasAudioStore === false,
     );
     // Like audioStateMismatch, but with a 3 seconds delay.
     let showAudioStateMismatch = $state(false);
@@ -126,7 +125,6 @@
                 status: effectiveStatus,
                 canEmitAudio: $canEmitAudioStore,
                 hasAudio: $hasAudioStore,
-                hasReceivedAudio: $hasReceivedAudioStore,
                 microphoneState: $microphoneStateStore,
                 audioTrackCount: audioTracks.length,
                 audioTracks,
