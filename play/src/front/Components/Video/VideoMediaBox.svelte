@@ -57,7 +57,6 @@
     let showUserSubMenu = $state(false);
 
     let hasVideoStore = $derived(streamable?.hasVideo);
-    let canEmitAudioStore = $derived(streamable?.canEmitAudio);
     let hasAudioStore = $derived(streamable?.hasAudio);
     let volumeMeterStore = $derived(streamable?.volumeStore);
     let showVoiceIndicatorStore = $derived(streamable?.showVoiceIndicator);
@@ -90,7 +89,6 @@
         effectiveStatus === "connected" &&
             streamable?.videoType === "video" &&
             !isLocalUser &&
-            $canEmitAudioStore === true &&
             $isBlockedStore !== true &&
             $microphoneStateStore === true &&
             $hasAudioStore === false,
@@ -123,7 +121,6 @@
                 videoType: streamable?.videoType,
                 spaceUserId: extendedSpaceUser?.spaceUserId,
                 status: effectiveStatus,
-                canEmitAudio: $canEmitAudioStore,
                 hasAudio: $hasAudioStore,
                 microphoneState: $microphoneStateStore,
                 audioTrackCount: audioTracks.length,
@@ -409,7 +406,7 @@
                                 {/if}
                             </UserName>
 
-                            {#if effectiveStatus === "connected" && $canEmitAudioStore && !$isBlockedStore}
+                            {#if effectiveStatus === "connected" && !$isBlockedStore}
                                 <div
                                     class="z-[251] absolute p-2 right-1 white"
                                     class:top-1={videoEnabled}

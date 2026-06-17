@@ -180,7 +180,7 @@ const roomManager = {
                             break;
                         }
                         case "pingMessage": {
-                            // Do nothing
+                            // Do nothing (we are already removing the "pong timeout" when any message is received)
                             break;
                         }
                         case "askPositionMessage": {

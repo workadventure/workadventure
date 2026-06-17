@@ -14,10 +14,10 @@
     let muteAudioStore = $derived($streamable?.muteAudio);
     let muteAudio = $derived($muteAudioStore ?? false);
 
-    let canEmitAudio = $derived($streamable?.canEmitAudio ?? writable(false));
+    let hasAudio = $derived($streamable?.hasAudio ?? writable(false));
 </script>
 
-{#if $streamable && ($streamable?.media.type === "webrtc" || $streamable?.media.type === "livekit") && !muteAudio && $canEmitAudio}
+{#if $streamable && ($streamable?.media.type === "webrtc" || $streamable?.media.type === "livekit") && !muteAudio && $hasAudio}
     <AudioStream
         streamStore={$streamable.media.streamStore}
         volume={$streamable.volume}
