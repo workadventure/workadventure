@@ -205,6 +205,28 @@ describe("LiveKitParticipant", () => {
         expect(get(participant.getStreamable().hasAudio)).toBe(true);
     });
 
+    it("should ignore stale scripting audio events after scripting audio restarts", () => {
+        const participant = createParticipant({ publications: [] });
+        const media = participant.getStreamable().media as LivekitStreamable;
+        const firstScriptingPublication = createScriptingAudioPublication();
+        const secondScriptingPublication = createScriptingAudioPublication();
+        const firstScriptingStream = createAudioMediaStream("scripting-1");
+        const secondScriptingStream = createAudioMediaStream("scripting-2");
+        const firstScriptingTrack = createRemoteAudioTrack(firstScriptingStream);
+
+        participant["handleTrackPublished"](firstScriptingPublication);
+        participant["handleTrackSubscribed"](firstScriptingTrack, firstScriptingPublication);
+        participant["handleTrackPublished"](secondScriptingPublication);
+        participant["handleTrackSubscribed"](createRemoteAudioTrack(secondScriptingStream), secondScriptingPublication);
+
+        participant["handleTrackMuted"](firstScriptingPublication);
+        participant["handleTrackUnsubscribed"](firstScriptingTrack, firstScriptingPublication);
+        participant["handleTrackUnpublished"](firstScriptingPublication);
+
+        expect(get(media.streamStore)).toBe(secondScriptingStream);
+        expect(get(participant.getStreamable().hasAudio)).toBe(true);
+    });
+
     it("should keep microphone audio when scripting audio is unpublished or unsubscribed", () => {
         const participant = createParticipant({ publications: [] });
         const media = participant.getStreamable().media as LivekitStreamable;
