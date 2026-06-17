@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Snippet } from "svelte";
     import { onDestroy, onMount, tick } from "svelte";
+    import { on } from "svelte/events";
     import { z } from "zod";
     import Debug from "debug";
     import { isInRemoteConversation, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
@@ -27,6 +28,33 @@
     let pipWindow: Window | undefined;
     let mapImage: string | undefined = $state(undefined);
     let pipRequested = false;
+    let stopPictureInPictureEventDelegation: Array<() => void> = [];
+
+    const delegatedPictureInPictureEvents = [
+        "beforeinput",
+        "click",
+        "change",
+        "contextmenu",
+        "dblclick",
+        "focusin",
+        "focusout",
+        "input",
+        "keydown",
+        "keyup",
+        "mousedown",
+        "mousemove",
+        "mouseout",
+        "mouseover",
+        "mouseup",
+        "pointerdown",
+        "pointermove",
+        "pointerout",
+        "pointerover",
+        "pointerup",
+        "touchend",
+        "touchmove",
+        "touchstart",
+    ];
 
     const DocumentPictureInPictureSchema = z.object({
         requestWindow: z
@@ -67,7 +95,24 @@
         });
     }
 
+    function attachPictureInPictureEventDelegation(pipWindow: Window) {
+        detachPictureInPictureEventDelegation();
+
+        // Svelte 5 delegates DOM handlers to the mount document. The PiP DOM is reparented into a
+        // separate document, so a no-op svelte/events listener is enough to run Svelte's delegation there.
+        stopPictureInPictureEventDelegation = delegatedPictureInPictureEvents.map((eventName) =>
+            on(pipWindow.document, eventName, () => {}),
+        );
+    }
+
+    function detachPictureInPictureEventDelegation() {
+        stopPictureInPictureEventDelegation.forEach((stopEventDelegation) => stopEventDelegation());
+        stopPictureInPictureEventDelegation = [];
+    }
+
     function destroyPictureInPictureComponent() {
+        detachPictureInPictureEventDelegation();
+
         if (!parentDivElement) {
             return;
         }
@@ -151,6 +196,7 @@
                 // documentPictureInPicture 'enter' / LiveKit may run isElementInPiP immediately;
                 // if <video> nodes are not under pipWin.document yet, contains(el) is false.
                 pipWindow.document.body.append(divElement);
+                attachPictureInPictureEventDelegation(pipWindow);
 
                 activePictureInPictureStore.set(true);
                 await tick();
