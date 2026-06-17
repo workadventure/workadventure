@@ -24,7 +24,7 @@
         class={`absolute bottom-0 right-0 p-2 text-[0.6rem] @[20rem]/videomediabox:text-[0.75rem] rounded-br-md rounded-tl-md select-text ${statsColorClass}`}
     >
         <table class="m-0 p-0 border-hidden">
-            <tbody>
+            <tbody class="m-0 p-0 border-hidden">
                 <tr>
                     <td>Jitter:</td><td>{Math.round(webRtcStats.jitter * 1000)} ms</td>
                 </tr>
@@ -51,3 +51,9 @@
         </table>
     </div>
 {/if}
+
+<style>
+    td {
+        padding: 0;
+    }
+</style>
