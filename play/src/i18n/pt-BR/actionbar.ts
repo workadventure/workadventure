@@ -95,7 +95,7 @@ const actionbar: BaseTranslation = {
         images: "Imagens",
         videos: "Vídeos",
         notSupportedByBrowser:
-            "Os efeitos de fundo não são suportados pelo seu navegador. Use o Chrome ou o Edge para este recurso.",
+            "Os efeitos de fundo não são suportados pelo seu navegador. Use o Chrome, Firefox, Edge ou Safari no desktop para este recurso.",
     },
     help: {
         chat: {

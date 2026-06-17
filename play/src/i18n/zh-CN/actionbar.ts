@@ -88,8 +88,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurHigh: "高度模糊",
         images: "图片",
         videos: "视频",
-        notSupportedByBrowser:
-            "您的浏览器不支持背景效果。请使用 Chrome 或 Edge 以使用此功能。",
+        notSupportedByBrowser: "您的浏览器不支持背景效果。请使用 Chrome、Firefox、Edge 或桌面版 Safari 以使用此功能。",
     },
     help: {
         chat: {

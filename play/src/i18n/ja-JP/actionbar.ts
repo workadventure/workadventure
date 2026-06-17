@@ -90,7 +90,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         images: "画像",
         videos: "動画",
         notSupportedByBrowser:
-            "お使いのブラウザは背景エフェクトに対応していません。この機能を利用するにはChromeまたはEdgeをご使用ください。",
+            "お使いのブラウザは背景エフェクトに対応していません。Chrome、Firefox、Edge、またはデスクトップ版Safariをご使用ください。",
     },
     help: {
         chat: {

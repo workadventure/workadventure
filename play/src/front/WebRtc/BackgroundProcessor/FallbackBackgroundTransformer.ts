@@ -3,7 +3,7 @@ import type { BackgroundConfig, BackgroundTransformer } from "./createBackground
 
 /**
  * Fallback transformer that doesn't transform anything
- * Used when MediaStreamTrackProcessor is not available or fails
+ * Used when HTMLCanvasElement.captureStream() is not available or the transformer fails
  */
 export class FallbackBackgroundTransformer implements BackgroundTransformer {
     private outputTrack: MediaStreamTrack | null = null;

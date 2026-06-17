@@ -90,7 +90,7 @@ const actionbar: BaseTranslation = {
         images: "Images",
         videos: "Videos",
         notSupportedByBrowser:
-            "Background effects are not supported by your browser. Please use Chrome or Edge for this feature.",
+            "Background effects are not supported by your browser. Please use Chrome, Firefox, Edge, or desktop Safari for this feature.",
     },
     help: {
         chat: {

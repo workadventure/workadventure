@@ -93,7 +93,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         images: "Images",
         videos: "Vidéos",
         notSupportedByBrowser:
-            "Les effets d'arrière-plan ne sont pas pris en charge par votre navigateur. Veuillez utiliser Chrome ou Edge pour cette fonctionnalité.",
+            "Les effets d'arrière-plan ne sont pas pris en charge par votre navigateur. Veuillez utiliser Chrome, Firefox, Edge ou Safari sur ordinateur pour cette fonctionnalité.",
     },
     help: {
         chat: {

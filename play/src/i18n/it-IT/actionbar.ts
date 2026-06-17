@@ -91,7 +91,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         images: "Immagini",
         videos: "Video",
         notSupportedByBrowser:
-            "Gli effetti di sfondo non sono supportati dal tuo browser. Usa Chrome o Edge per questa funzione.",
+            "Gli effetti di sfondo non sono supportati dal tuo browser. Usa Chrome, Firefox, Edge o Safari su desktop per questa funzione.",
     },
     help: {
         chat: {

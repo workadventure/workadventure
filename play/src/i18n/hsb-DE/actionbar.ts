@@ -91,7 +91,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         images: "Wobrazki",
         videos: "Wideja",
         notSupportedByBrowser:
-            "Pozadne efekty njejsu wot wašeho wobhladowaka podpěrowane. Wužiwajće Chrome abo Edge za tutu funkciju.",
+            "Pozadne efekty njejsu wot wašeho wobhladowaka podpěrowane. Wužiwajće Chrome, Firefox, Edge abo desktopoweho Safari za tutu funkciju.",
     },
     help: {
         chat: {

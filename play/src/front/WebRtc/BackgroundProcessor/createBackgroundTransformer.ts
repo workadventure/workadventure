@@ -22,11 +22,13 @@ export interface BackgroundTransformer {
 }
 
 /**
- * Returns true if the browser supports background effects (via Insertable Streams API).
- * Firefox and some other browsers do not support MediaStreamTrackProcessor/Generator.
+ * Returns true if the browser supports background effects.
+ * Both transformers use HTMLCanvasElement.captureStream() to produce the output stream,
+ * so that is the actual capability that needs to be present.
+ * For example, iOS Safari does not support captureStream() and cannot use background effects.
  */
 export function isBackgroundEffectsSupported(): boolean {
-    return typeof MediaStreamTrackProcessor !== "undefined" && typeof MediaStreamTrackGenerator !== "undefined";
+    return typeof HTMLCanvasElement !== "undefined" && typeof HTMLCanvasElement.prototype.captureStream === "function";
 }
 
 /**

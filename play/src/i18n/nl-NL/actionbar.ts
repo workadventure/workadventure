@@ -92,7 +92,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         images: "Afbeeldingen",
         videos: "Video's",
         notSupportedByBrowser:
-            "Achtergrondeffecten worden niet ondersteund door uw browser. Gebruik Chrome of Edge voor deze functie.",
+            "Achtergrondeffecten worden niet ondersteund door uw browser. Gebruik Chrome, Firefox, Edge of desktop Safari voor deze functie.",
     },
     help: {
         chat: {

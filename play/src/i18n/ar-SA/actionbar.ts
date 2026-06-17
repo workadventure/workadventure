@@ -89,7 +89,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         images: "الصور",
         videos: "الفيديوهات",
         notSupportedByBrowser:
-            "تأثيرات الخلفية غير مدعومة في متصفحك. يُرجى استخدام Chrome أو Edge للحصول على هذه الميزة.",
+            "تأثيرات الخلفية غير مدعومة في متصفحك. يُرجى استخدام Chrome أو Firefox أو Edge أو Safari على سطح المكتب للحصول على هذه الميزة.",
     },
     help: {
         chat: {
