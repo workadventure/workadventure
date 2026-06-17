@@ -64,9 +64,7 @@ export class LiveKitParticipant {
     private readonly videoWebrtcStats: Readable<WebRtcStats | undefined>;
     private readonly screenShareWebrtcStats: Readable<WebRtcStats | undefined>;
     private readonly _microphoneAudioTrackPresent: Readable<boolean>;
-    private readonly _hasReceivedMicrophoneAudio: Readable<boolean>;
     private readonly _screenShareAudioTrackPresent: Readable<boolean>;
-    private readonly _hasReceivedScreenShareAudio: Readable<boolean>;
     private readonly analyticsStatsUnsubscribers: Unsubscriber[] = [];
 
     private _cameraPublication: RemoteTrackPublication | undefined;
@@ -124,18 +122,9 @@ export class LiveKitParticipant {
         // Receiver-side diagnostic signals used to detect space state vs received stream mismatches.
         // Microphone audio is tracked separately from scripting audio so scripting audio cannot hide a missing mic track.
         this._microphoneAudioTrackPresent = createMediaStreamTrackPresenceStore(this._microphoneStreamStore, "audio");
-        this._hasReceivedMicrophoneAudio = derived(
-            [this._microphoneAudioTrackPresent, this._hasAudio],
-            ([$microphoneAudioTrackPresent, $hasAudio]) => $microphoneAudioTrackPresent && $hasAudio,
-        );
         this._screenShareAudioTrackPresent = createMediaStreamTrackPresenceStore(
             this._audioScreenShareStreamStore,
             "audio",
-        );
-        this._hasReceivedScreenShareAudio = derived(
-            [this._screenShareAudioTrackPresent, this._hasScreenShareAudio],
-            ([$screenShareAudioTrackPresent, $hasScreenShareAudio]) =>
-                $screenShareAudioTrackPresent && $hasScreenShareAudio,
         );
 
         for (const publication of this.participant.getTrackPublications()) {
