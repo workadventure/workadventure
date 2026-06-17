@@ -97,15 +97,16 @@
 
 {#if !isInMenu}
     <div
-        class="relative bg-contrast/80 backdrop-blur py-2 ps-1 pe-1 pointer-events-auto {classList} group-[.invisible]/visibilitychecker:px-2"
-        class:first-of-type:rounded-s-lg={first === undefined}
-        class:first-of-type:ps-2={first === undefined}
-        class:last-of-type:rounded-e-lg={last === undefined}
-        class:last-of-type:pe-2={last === undefined}
-        class:rounded-s-lg={first === true}
-        class:ps-2={first === true}
-        class:rounded-e-lg={last === true}
-        class:pe-2={last === true}
+        class={[
+            "relative bg-contrast/80 backdrop-blur py-2 ps-1 pe-1 pointer-events-auto group-[.invisible]/visibilitychecker:px-2",
+            classList,
+            {
+                "first-of-type:rounded-s-lg first-of-type:ps-2": first === undefined,
+                "last-of-type:rounded-e-lg last-of-type:pe-2": last === undefined,
+                "rounded-s-lg ps-2": first === true,
+                "rounded-e-lg pe-2": last === true,
+            },
+        ]}
         use:action
         style={styleVars}
         bind:this={wrapperDiv}

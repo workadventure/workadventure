@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { SvelteMap } from "svelte/reactivity";
     import type { ExitPropertyData } from "@workadventure/map-editor";
     import { WAMFileFormat } from "@workadventure/map-editor";
     import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
@@ -39,7 +40,7 @@
         const response = await gameManager.getCurrentGameScene().connection?.queryRoomsFromSameWorld();
 
         if (response) {
-            const nextMapsUrl = new Map(mapsUrl);
+            const nextMapsUrl = new SvelteMap(mapsUrl);
             for (const room of response) {
                 //const url = new URL(room.url);
                 nextMapsUrl.set(room.roomUrl, {

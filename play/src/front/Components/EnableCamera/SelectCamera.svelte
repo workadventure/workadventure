@@ -2,6 +2,7 @@
     import type { Snippet } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
+    import Chip from "../UI/Chip.svelte";
     import { IconCheck, IconVideoOff } from "@wa-icons";
 
     let editMode = $state(false);
@@ -73,13 +74,9 @@
                             {$LL.camera.disable()}
                         </div>
                         {#if !selectedDevice}
-                            <span class="chip chip-sm chip-neutral inline rounded-sm">
-                                <span class="chip-label">{$LL.camera.active()}</span>
-                            </span>
+                            <Chip>{$LL.camera.active()}</Chip>
                         {:else}
-                            <span class="chip chip-sm chip-neutral inline rounded-sm">
-                                <span class="chip-label">{$LL.camera.notRecommended()}</span>
-                            </span>
+                            <Chip>{$LL.camera.notRecommended()}</Chip>
                         {/if}
                     </div>
                 </div>
@@ -122,13 +119,9 @@
                                 {StringUtils.normalizeDeviceName(device.label)}
                             </div>
                             {#if device.deviceId === selectedDevice}
-                                <span class="chip chip-sm chip-neutral inline rounded-sm">
-                                    <span class="chip-label">{$LL.camera.active()}</span>
-                                </span>
+                                <Chip>{$LL.camera.active()}</Chip>
                             {:else}
-                                <span class="chip chip-sm chip-neutral inline rounded-sm">
-                                    <span class="chip-label">{$LL.camera.disabled()}</span>
-                                </span>
+                                <Chip>{$LL.camera.disabled()}</Chip>
                             {/if}
                         </div>
                     </div>

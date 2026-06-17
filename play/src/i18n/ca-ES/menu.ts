@@ -50,6 +50,23 @@ const menu: DeepPartial<Translation["menu"]> = {
             balancedTitle: "Equilibrar fluïdesa i resolució",
             balancedDescription: "Intenta mantenir un equilibri entre fluïdesa i resolució.",
         },
+        microphone: {
+            title: "Configuració del micròfon",
+            autoGainControl: "Control automàtic del guany",
+            autoGainControlDescription: "Ajusta automàticament el volum del micròfon.",
+            echoCancellation: "Cancel·lació d'eco",
+            enableNoiseSuppression: "Activa la supressió de soroll",
+            noiseSuppressionMode: "Mode de supressió de soroll:",
+            workAdventureNoiseSuppression: "Supressió de soroll de WorkAdventure",
+            workAdventureNoiseSuppressionDescription:
+                "Processa el micròfon amb la supressió de soroll de WorkAdventure.",
+            recommended: "Recomanat",
+            browserNoiseSuppression: "Supressió de soroll del navegador",
+            browserNoiseSuppressionDescription: "Utilitza la supressió de soroll integrada al navegador.",
+            voiceIsolation: "Aïllament de veu",
+            voiceIsolationDescription:
+                "Utilitza l'aïllament de veu del navegador i del sistema operatiu quan estigui disponible.",
+        },
         language: {
             title: "Idioma",
         },

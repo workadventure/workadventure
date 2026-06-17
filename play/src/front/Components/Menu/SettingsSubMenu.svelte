@@ -1,5 +1,7 @@
 <script lang="ts">
+    import { tick } from "svelte";
     import { fly } from "svelte/transition";
+    import type { NoiseSuppressionProvider } from "../../Connection/LocalUserStore";
     import {
         audioManagerFileStore,
         audioManagerVisibilityStore,
@@ -17,11 +19,23 @@
     import { screenShareQualityStore } from "../../Stores/ScreenSharingStore";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import { bandwidthConstrainedPreferenceStore } from "../../Stores/BandwidthConstrainedPreferenceStore";
+    import { settingsSubMenuTargetStore } from "../../Stores/MenuStore";
+    import {
+        browserNoiseSuppressionSupportedStore,
+        effectiveNoiseSuppressionProviderStore,
+        microphoneAutoGainControlStore,
+        microphoneEchoCancellationStore,
+        noiseSuppressionEnabledStore,
+        noiseSuppressionProviderStore,
+        noiseSuppressionStateStore,
+        voiceIsolationSupportedStore,
+    } from "../../Stores/NoiseSuppressionStore";
     import InputSwitch from "../Input/InputSwitch.svelte";
     import RangeSlider from "../Input/RangeSlider.svelte";
     import SoundSelect from "../Input/SoundSelect.svelte";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
     import InputRadioBox from "../Input/InputRadioBox.svelte";
+    import Chip from "../UI/Chip.svelte";
     import {
         IconAntennaBarsLow,
         IconAntennaBarsMid,
@@ -31,6 +45,7 @@
         IconDoorExit,
         IconScreenShare,
         IconCameraUp,
+        IconMicrophoneOn,
     } from "@wa-icons";
 
     let fullscreen: boolean = $state(localUserStore.getFullscreen());
@@ -53,6 +68,8 @@
         initialScreenShareQuality === "high" ? 3 : initialScreenShareQuality === "low" ? 1 : 2,
     );
     let bandwidthConstrainedPreference = $state(localUserStore.getBandwidthConstrainedScreenSharePreference());
+    let selectedNoiseSuppressionProvider: NoiseSuppressionProvider = $derived($effectiveNoiseSuppressionProviderStore);
+    let microphoneSettingsSection: HTMLElement | undefined = $state();
 
     let volumeProximityDiscussion = $state(localUserStore.getVolumeProximityDiscussion());
 
@@ -104,6 +121,38 @@
 
     function updateBandwidthConstrainedPreference() {
         bandwidthConstrainedPreferenceStore.setPreference(bandwidthConstrainedPreference);
+    }
+
+    $effect(() => {
+        selectedNoiseSuppressionProvider = $effectiveNoiseSuppressionProviderStore;
+    });
+
+    $effect(() => {
+        if ($settingsSubMenuTargetStore !== "microphone") {
+            return;
+        }
+        tick()
+            .then(() => {
+                microphoneSettingsSection?.scrollIntoView({ block: "start" });
+                settingsSubMenuTargetStore.set(undefined);
+            })
+            .catch((e) => console.error("Failed to scroll to microphone settings", e));
+    });
+
+    function toggleMicrophoneAutoGainControl() {
+        microphoneAutoGainControlStore.setEnabled(!$microphoneAutoGainControlStore);
+    }
+
+    function toggleMicrophoneEchoCancellation() {
+        microphoneEchoCancellationStore.setEnabled(!$microphoneEchoCancellationStore);
+    }
+
+    function toggleNoiseSuppression() {
+        noiseSuppressionEnabledStore.setEnabled(!$noiseSuppressionEnabledStore);
+    }
+
+    function updateNoiseSuppressionProvider() {
+        noiseSuppressionProviderStore.setProvider(selectedNoiseSuppressionProvider);
     }
 
     function changeFullscreen() {
@@ -369,7 +418,7 @@
                 {$LL.menu.settings.bandwidthConstrainedPreference.title()}
             </div>
         </div>
-        <div class="mt-2 p-2 flex gap-4 justify-center items-stretch">
+        <div class="mt-2 p-2 grid grid-cols-1 @lg/main-layout:grid-cols-3 gap-4 justify-center items-stretch">
             <InputRadioBox
                 value="maintain-resolution"
                 label={$LL.menu.settings.bandwidthConstrainedPreference.maintainResolutionTitle()}
@@ -398,7 +447,113 @@
                 <em>{$LL.menu.settings.bandwidthConstrainedPreference.balancedDescription()}</em>
             </InputRadioBox>
         </div>
+    </section>
+    <section
+        class="flex flex-col p-0 first:pt-0 pt-8 m-0"
+        bind:this={microphoneSettingsSection}
+        data-testid="microphone-settings-section"
+    >
+        <div class="bg-contrast font-bold text-lg p-4 flex items-center">
+            <div class="me-4 opacity-50"><IconMicrophoneOn /></div>
+            {$LL.menu.settings.microphone.title()}
+        </div>
 
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="noise-suppression-settings-toggle"
+                value={$noiseSuppressionEnabledStore}
+                onchange={toggleNoiseSuppression}
+                label={$LL.menu.settings.microphone.enableNoiseSuppression()}
+            />
+        </div>
+
+        {#if $noiseSuppressionEnabledStore}
+            <div class="input-label text-center mt-4">{$LL.menu.settings.microphone.noiseSuppressionMode()}</div>
+            <div class="mt-2 p-2 grid grid-cols-1 @lg/main-layout:grid-cols-3 gap-4 justify-center items-stretch">
+                <InputRadioBox
+                    id="noise-suppression-provider-workadventure"
+                    value="workadventure"
+                    label={$LL.menu.settings.microphone.workAdventureNoiseSuppression()}
+                    bind:group={selectedNoiseSuppressionProvider}
+                    onchange={updateNoiseSuppressionProvider}
+                >
+                    <Chip class="mb-1">{$LL.menu.settings.microphone.recommended()}</Chip>
+                    <em>{$LL.menu.settings.microphone.workAdventureNoiseSuppressionDescription()}</em>
+                    {#if selectedNoiseSuppressionProvider === "workadventure" && $noiseSuppressionStateStore.status === "initializing"}
+                        <div data-testid="noise-suppression-loading" class="text-xs text-white/50 mt-1">
+                            {$LL.actionbar.microphone.noiseSuppressionInitializing()}
+                        </div>
+                    {:else if selectedNoiseSuppressionProvider === "workadventure" && $noiseSuppressionStateStore.status === "unsupported"}
+                        <div data-testid="noise-suppression-error" class="text-xs text-pop-red mt-1">
+                            {$noiseSuppressionStateStore.message ??
+                                $LL.actionbar.microphone.noiseSuppressionUnsupported()}
+                        </div>
+                    {:else if selectedNoiseSuppressionProvider === "workadventure" && $noiseSuppressionStateStore.status === "error"}
+                        <div data-testid="noise-suppression-error" class="text-xs text-pop-red mt-1">
+                            {$noiseSuppressionStateStore.message ?? $LL.actionbar.microphone.noiseSuppressionError()}
+                        </div>
+                    {/if}
+                </InputRadioBox>
+
+                {#if $browserNoiseSuppressionSupportedStore}
+                    <InputRadioBox
+                        id="noise-suppression-provider-browser"
+                        value="browser"
+                        label={$LL.menu.settings.microphone.browserNoiseSuppression()}
+                        bind:group={selectedNoiseSuppressionProvider}
+                        onchange={updateNoiseSuppressionProvider}
+                    >
+                        <em>{$LL.menu.settings.microphone.browserNoiseSuppressionDescription()}</em>
+                    </InputRadioBox>
+                {/if}
+
+                {#if $voiceIsolationSupportedStore}
+                    <InputRadioBox
+                        id="noise-suppression-provider-voice-isolation"
+                        value="voiceIsolation"
+                        label={$LL.menu.settings.microphone.voiceIsolation()}
+                        bind:group={selectedNoiseSuppressionProvider}
+                        onchange={updateNoiseSuppressionProvider}
+                    >
+                        <em>{$LL.menu.settings.microphone.voiceIsolationDescription()}</em>
+                    </InputRadioBox>
+                {/if}
+            </div>
+        {/if}
+
+        <div class="flex flex-col cursor-pointer relative m-4 gap-2">
+            <InputSwitch
+                id="microphone-auto-gain-control-toggle"
+                value={$microphoneAutoGainControlStore}
+                onchange={toggleMicrophoneAutoGainControl}
+            >
+                <span class="flex flex-wrap items-center gap-2">
+                    <span
+                        >{$LL.menu.settings.microphone.autoGainControl()}
+                        <Chip size="xs" class="ml-2">{$LL.menu.settings.microphone.recommended()}</Chip></span
+                    >
+                </span>
+
+                {#snippet description()}
+                    <span>{$LL.menu.settings.microphone.autoGainControlDescription()}</span>
+                {/snippet}
+            </InputSwitch>
+        </div>
+
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="microphone-echo-cancellation-toggle"
+                value={$microphoneEchoCancellationStore}
+                onchange={toggleMicrophoneEchoCancellation}
+            >
+                <span
+                    >{$LL.menu.settings.microphone.echoCancellation()}
+                    <Chip size="xs" class="ml-2">{$LL.menu.settings.microphone.recommended()}</Chip></span
+                >
+            </InputSwitch>
+        </div>
+    </section>
+    <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
             <div class="me-4 opacity-50"><IconAdjustements /></div>
 

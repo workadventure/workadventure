@@ -29,6 +29,7 @@ import { personalAreaDataStore } from "./PersonalDeskStore";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
+export const settingsSubMenuTargetStore = writable<"microphone" | undefined>(undefined);
 export const userIsConnected = writable(false);
 export const mediaSettingsOpenStore = writable(false);
 
@@ -366,10 +367,7 @@ export const rightActionBarMenuItems: Readable<RightMenuItem<RightActionBarButto
             menuItems.push(loginMenuItem);
         }
 
-        menuItems.push(mapsMenuItem);
-        menuItems.push(participantMenuItem);
-
-        return menuItems.map((item, index) => ({
+        const itemsWithPosition = menuItems.map((item, index) => ({
             ...item,
             props: {
                 ...item.props,
@@ -377,6 +375,8 @@ export const rightActionBarMenuItems: Readable<RightMenuItem<RightActionBarButto
                 last: index === menuItems.length - 1,
             },
         }));
+
+        return [...itemsWithPosition, mapsMenuItem, participantMenuItem];
     },
 );
 

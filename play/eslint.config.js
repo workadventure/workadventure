@@ -22,10 +22,6 @@ export default [
                 $state: "readonly",
             },
         },
-        rules: {
-            "svelte/prefer-svelte-reactivity": "off",
-            "svelte/prefer-writable-derived": "off",
-        },
     },
     {
         rules: {

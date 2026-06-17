@@ -18,6 +18,7 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         spaceUserId: undefined,
         hasVideo: writable(true),
         hasAudio: writable(false),
+        hasReceivedAudio: writable(false),
         isMuted: writable(false),
         statusStore: writable("connected"),
         name: writable(config.name ?? ""),

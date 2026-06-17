@@ -1,6 +1,7 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.css
     import { getContext, onDestroy, onMount } from "svelte";
+    import * as Sentry from "@sentry/svelte";
     import type { Subscription } from "rxjs";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -47,6 +48,7 @@
 
     let extendedSpaceUser = $derived(videoBox.spaceUser);
     let megaphoneState = $derived(extendedSpaceUser?.reactiveUser.megaphoneState);
+    let microphoneStateStore = $derived(extendedSpaceUser?.reactiveUser.microphoneState);
 
     let pictureStore = $derived(extendedSpaceUser?.pictureStore);
 
@@ -56,10 +58,16 @@
 
     let hasVideoStore = $derived(streamable?.hasVideo);
     let hasAudioStore = $derived(streamable?.hasAudio);
+    let hasReceivedAudioStore = $derived(streamable?.hasReceivedAudio);
     let isMutedStore = $derived(streamable?.isMuted);
     let volumeMeterStore = $derived(streamable?.volumeStore);
     let showVoiceIndicatorStore = $derived(streamable?.showVoiceIndicator);
     let isBlockedStore = $derived(streamable?.media?.isBlocked);
+    let mediaStreamStore = $derived(
+        streamable?.media.type === "webrtc" || streamable?.media.type === "livekit"
+            ? streamable.media.streamStore
+            : undefined,
+    );
     let volumeStore = $derived(streamable?.volume);
     let volumeMeter = $derived($volumeMeterStore);
     let webRtcStatsStore = $derived($displayVideoQualityStore ? streamable?.webrtcStats : undefined);
@@ -78,6 +86,78 @@
 
     // Check if this is the local user's video box
     let isLocalUser = $derived(videoBox.uniqueId === "-1" || extendedSpaceUser?.spaceUserId === "local");
+    // Debugging aid for the rare case where the space says the remote microphone is enabled but this receiver has no audio.
+    let hasAudioStateMismatch = $derived(
+        effectiveStatus === "connected" &&
+            streamable?.videoType === "video" &&
+            !isLocalUser &&
+            $hasAudioStore === true &&
+            $isBlockedStore !== true &&
+            $microphoneStateStore === true &&
+            $hasReceivedAudioStore === false,
+    );
+    // Like hasAudioStateMismatch, but with a 3 seconds delay.
+    let showAudioStateMismatch = $state(false);
+    let loggedAudioMismatchKey: string | undefined = undefined;
+
+    $effect(() => {
+        if (!hasAudioStateMismatch) {
+            return;
+        }
+
+        const audioMismatchKey = `${streamable?.uniqueId ?? "unknown"}:${extendedSpaceUser?.spaceUserId ?? "unknown"}:${streamable?.media.type ?? "unknown"}`;
+        if (loggedAudioMismatchKey === audioMismatchKey) {
+            return;
+        }
+
+        const timeout = setTimeout(() => {
+            const audioTracks =
+                $mediaStreamStore?.getAudioTracks().map((track) => ({
+                    id: track.id,
+                    enabled: track.enabled,
+                    muted: track.muted,
+                    readyState: track.readyState,
+                })) ?? [];
+            const details = {
+                streamableUniqueId: streamable?.uniqueId,
+                streamableType: streamable?.media.type,
+                videoType: streamable?.videoType,
+                spaceUserId: extendedSpaceUser?.spaceUserId,
+                status: effectiveStatus,
+                hasAudio: $hasAudioStore,
+                hasReceivedAudio: $hasReceivedAudioStore,
+                isMuted: $isMutedStore,
+                microphoneState: $microphoneStateStore,
+                audioTrackCount: audioTracks.length,
+                audioTracks,
+            };
+
+            console.warn(
+                "Audio state mismatch: remote microphone is enabled in the space but no receiver audio track is present",
+                details,
+            );
+            Sentry.captureMessage(
+                "Audio state mismatch: remote microphone is enabled in the space but no receiver audio track is present",
+                {
+                    level: "warning",
+                    tags: {
+                        component: "VideoMediaBox",
+                        streamableType: streamable?.media.type ?? "unknown",
+                        videoType: streamable?.videoType ?? "unknown",
+                    },
+                    extra: details,
+                },
+            );
+
+            loggedAudioMismatchKey = audioMismatchKey;
+            showAudioStateMismatch = true;
+        }, 3000);
+
+        return () => {
+            clearTimeout(timeout);
+            showAudioStateMismatch = false;
+        };
+    });
 
     // Check if the local user is streaming with megaphone
     // requestedMegaphoneStore is true when user has requested megaphone
@@ -339,7 +419,7 @@
                                     class:text-white={$activePictureInPictureStore}
                                     class:opacity-20={$activePictureInPictureStore}
                                 >
-                                    {#if !$isMutedStore}
+                                    {#if !$isMutedStore && !hasAudioStateMismatch}
                                         <SoundMeterWidget
                                             volume={volumeMeter}
                                             cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
@@ -349,7 +429,9 @@
                                         <IconMicrophoneOff
                                             aria-label={$LL.video.user_is_muted({ name: name ?? "unknown" })}
                                             data-testid={$LL.video.user_is_muted({ name: name ?? "unknown" })}
-                                            class="[filter:drop-shadow(0_0_3px_rgb(0,0,0))_drop-shadow(0_0_6px_rgb(0,0,0))_drop-shadow(0_0_9px_rgb(0,0,0))]"
+                                            class="{showAudioStateMismatch
+                                                ? 'text-red-500 '
+                                                : ''}[filter:drop-shadow(0_0_3px_rgb(0,0,0))_drop-shadow(0_0_6px_rgb(0,0,0))_drop-shadow(0_0_9px_rgb(0,0,0))]"
                                         />
                                     {/if}
                                 </div>

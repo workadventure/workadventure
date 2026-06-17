@@ -17,6 +17,7 @@ import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/status
 import { megaphoneSpaceSettingsStore, megaphoneSpaceStore } from "../Stores/MegaphoneStore";
 import type { MegaphoneSpaceSettings } from "../Stores/MegaphoneStore";
 import { resolveUrlPlaceholders } from "../Utils/UrlPlaceholderResolver";
+import { getMegaphoneSpaceFields } from "./MegaphoneSpaceFields";
 
 const broadcastServiceLogger = debug("BroadcastService");
 const DEFAULT_MEGAPHONE_NOTIFICATION_SOUND_URL = "/resources/objects/megaphone/megaphone1.mp3";
@@ -108,14 +109,16 @@ export class BroadcastService {
             ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK
             : FilterType.LIVE_STREAMING_USERS;
 
-        const watchFields = audienceVideoFeedbackActivated
-            ? ["screenSharingState", "cameraState", "microphoneState", "megaphoneState", "attendeesState"]
-            : ["screenSharingState", "cameraState", "microphoneState", "megaphoneState"];
-
-        const space = await this.spaceRegistry.joinSpace(spaceNameSlugify, filterType, watchFields, abortSignal, {
-            canRecord,
-            metadata,
-        });
+        const space = await this.spaceRegistry.joinSpace(
+            spaceNameSlugify,
+            filterType,
+            getMegaphoneSpaceFields(audienceVideoFeedbackActivated),
+            abortSignal,
+            {
+                canRecord,
+                metadata,
+            },
+        );
 
         // Check for existing speakers when joining the space
         // This handles the case where a listener joins after speakers are already present

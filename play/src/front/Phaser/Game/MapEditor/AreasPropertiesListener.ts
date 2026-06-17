@@ -83,6 +83,7 @@ import { extensionModuleStore } from "../../../Stores/GameSceneStore";
 import type { ChatRoom } from "../../../Chat/Connection/ChatConnection";
 import { userIsConnected } from "../../../Stores/MenuStore";
 import { popupStore } from "../../../Stores/PopupStore";
+import { getMegaphoneSpaceFields } from "../../../Streaming/MegaphoneSpaceFields";
 import PopupCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte";
 import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
@@ -1519,7 +1520,7 @@ export class AreasPropertiesListener {
                 proximityRoom.setDisplayName(property.name);
                 const space = await proximityRoom.joinSpace(
                     uniqRoomName,
-                    ["cameraState", "microphoneState", "screenSharingState"],
+                    getMegaphoneSpaceFields(property.seeAttendees),
                     true,
                     property.seeAttendees
                         ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK
@@ -1655,7 +1656,7 @@ export class AreasPropertiesListener {
                 proximityRoom.setDisplayName(speakerZoneName);
                 const space = await proximityRoom.joinSpace(
                     uniqRoomName,
-                    ["cameraState", "microphoneState", "screenSharingState"],
+                    getMegaphoneSpaceFields(seeAttendees),
                     true,
                     seeAttendees ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK : FilterType.LIVE_STREAMING_USERS,
                     !property.chatEnabled,

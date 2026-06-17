@@ -50,6 +50,22 @@ const menu: DeepPartial<Translation["menu"]> = {
             balancedTitle: "Framerate en resolutie in balans houden",
             balancedDescription: "Probeer een balans te bewaren tussen framerate en resolutie.",
         },
+        microphone: {
+            title: "Microfooninstellingen",
+            autoGainControl: "Automatische versterkingsregeling",
+            autoGainControlDescription: "Past automatisch het volume van je microfoon aan.",
+            echoCancellation: "Echo-onderdrukking",
+            enableNoiseSuppression: "Ruisonderdrukking inschakelen",
+            noiseSuppressionMode: "Ruisonderdrukkingsmodus:",
+            workAdventureNoiseSuppression: "WorkAdventure-ruisonderdrukking",
+            workAdventureNoiseSuppressionDescription:
+                "Verwerk je microfoon met de ruisonderdrukking van WorkAdventure.",
+            recommended: "Aanbevolen",
+            browserNoiseSuppression: "Browserruisonderdrukking",
+            browserNoiseSuppressionDescription: "Gebruik de ingebouwde ruisonderdrukking van je browser.",
+            voiceIsolation: "Stemisolatie",
+            voiceIsolationDescription: "Gebruik stemisolatie van je browser en besturingssysteem wanneer beschikbaar.",
+        },
         language: {
             title: "Taal",
         },

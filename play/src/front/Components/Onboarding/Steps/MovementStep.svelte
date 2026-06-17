@@ -64,6 +64,7 @@
 
         const keyLabel = getKeyLabel(event.code);
         if (keyLabel) {
+            // eslint-disable-next-line svelte/prefer-svelte-reactivity
             pressedKeysStore.update((keys) => new Set(keys).add(event.code));
         }
     }
@@ -72,6 +73,7 @@
         const keyLabel = getKeyLabel(event.code);
         if (keyLabel) {
             pressedKeysStore.update((keys) => {
+                // eslint-disable-next-line svelte/prefer-svelte-reactivity
                 const next = new Set(keys);
                 next.delete(event.code);
                 return next;

@@ -72,6 +72,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) 
         }),
         // hasAudio = true because the webcam has a microphone attached and could potentially play sound
         hasAudio: writable(true),
+        hasReceivedAudio: requestedMicrophoneState,
         isMuted: derived(requestedMicrophoneState, (micState) => !micState),
         statusStore: writable("connected" as const),
         name: writable($LL.camera.my.nameTag()),
@@ -105,6 +106,7 @@ const listenerBoxStreamable: Streamable = {
     volumeStore: undefined,
     hasVideo: writable(true),
     hasAudio: writable(false),
+    hasReceivedAudio: writable(false),
     isMuted: writable(true),
     statusStore: writable("connected" as const),
     name: writable("Listener"),

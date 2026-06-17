@@ -87,7 +87,8 @@
     function initPropertyComponents() {
         cleanPropertyComponents();
         // Create the properties buttons for the selected object
-        let newIconProperties = new Map<string, AddPropertyButtonType>();
+        // eslint-disable-next-line svelte/prefer-svelte-reactivity
+        const newIconProperties = new Map<string, AddPropertyButtonType>();
         if ($mapExplorationObjectSelectedStore instanceof Entity) {
             for (const value of $mapExplorationObjectSelectedStore.getProperties()) {
                 newIconProperties.set(value.id, createPropertyData(value));
