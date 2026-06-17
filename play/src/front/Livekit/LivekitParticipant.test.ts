@@ -154,6 +154,30 @@ describe("LiveKitParticipant", () => {
         expect(get(participant.getStreamable().hasAudio)).toBe(true);
     });
 
+    it("should expose scripting-only audio as streamable audio", () => {
+        const participant = createParticipant({ publications: [] });
+        const media = participant.getStreamable().media as LivekitStreamable;
+        const scriptingPublication = createScriptingAudioPublication();
+        const scriptingStream = createAudioMediaStream("scripting");
+
+        participant["handleTrackPublished"](scriptingPublication);
+        participant["handleTrackSubscribed"](createRemoteAudioTrack(scriptingStream), scriptingPublication);
+
+        expect(scriptingPublication.setSubscribed).toHaveBeenCalledWith(true);
+        expect(get(media.streamStore)).toBe(scriptingStream);
+        expect(get(participant.getStreamable().hasAudio)).toBe(true);
+
+        participant["handleTrackMuted"](scriptingPublication);
+        expect(get(participant.getStreamable().hasAudio)).toBe(false);
+
+        participant["handleTrackUnmuted"](scriptingPublication);
+        expect(get(participant.getStreamable().hasAudio)).toBe(true);
+
+        participant["handleTrackUnpublished"](scriptingPublication);
+        expect(get(media.streamStore)).toBeUndefined();
+        expect(get(participant.getStreamable().hasAudio)).toBe(false);
+    });
+
     it("should restart scripting audio without dropping microphone audio", () => {
         const participant = createParticipant({ publications: [] });
         const media = participant.getStreamable().media as LivekitStreamable;

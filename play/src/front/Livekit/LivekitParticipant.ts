@@ -21,7 +21,6 @@ import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 import { subscribeToVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
 import type { Streamable } from "../Space/Streamable";
-import { createMediaStreamTrackPresenceStore } from "../Space/MediaStreamTrackPresenceStore";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 
 // Maximize/minimize can briefly mount 2 video components for the same participant.
@@ -42,7 +41,12 @@ export class LiveKitParticipant {
 
     private _nameStore: Writable<string>;
     private _hasVideo = writable<boolean>(false);
-    private _hasAudio = writable<boolean>(false);
+    private _hasMicrophoneAudio = writable<boolean>(false);
+    private _hasScriptingAudio = writable<boolean>(false);
+    private _hasAudio: Readable<boolean> = derived(
+        [this._hasMicrophoneAudio, this._hasScriptingAudio],
+        ([$hasMicrophoneAudio, $hasScriptingAudio]) => $hasMicrophoneAudio || $hasScriptingAudio,
+    );
     private _hasScreenShareVideo = writable<boolean>(false);
     private _canEmitScreenShareAudio = writable<boolean>(false);
     private _hasScreenShareAudio = writable<boolean>(false);
@@ -63,8 +67,6 @@ export class LiveKitParticipant {
     private _screenShareUnsubscribeTimeout: ReturnType<typeof setTimeout> | undefined;
     private readonly videoWebrtcStats: Readable<WebRtcStats | undefined>;
     private readonly screenShareWebrtcStats: Readable<WebRtcStats | undefined>;
-    private readonly _microphoneAudioTrackPresent: Readable<boolean>;
-    private readonly _screenShareAudioTrackPresent: Readable<boolean>;
     private readonly analyticsStatsUnsubscribers: Unsubscriber[] = [];
 
     private _cameraPublication: RemoteTrackPublication | undefined;
@@ -119,14 +121,6 @@ export class LiveKitParticipant {
         this._nameStore = writable(this.participant.name);
         this.videoWebrtcStats = this.getWebrtcStats("video");
         this.screenShareWebrtcStats = this.getWebrtcStats("screenShare");
-        // Receiver-side diagnostic signals used to detect space state vs received stream mismatches.
-        // Microphone audio is tracked separately from scripting audio so scripting audio cannot hide a missing mic track.
-        this._microphoneAudioTrackPresent = createMediaStreamTrackPresenceStore(this._microphoneStreamStore, "audio");
-        this._screenShareAudioTrackPresent = createMediaStreamTrackPresenceStore(
-            this._audioScreenShareStreamStore,
-            "audio",
-        );
-
         for (const publication of this.participant.getTrackPublications()) {
             if (publication.isLocal) {
                 continue;
@@ -335,6 +329,7 @@ export class LiveKitParticipant {
             }
             publication.setSubscribed(true);
             this._scriptingAudioPublication = publication;
+            this._hasScriptingAudio.set(!publication.isMuted);
         } else if (publication.source === Track.Source.Microphone) {
             if (this._microphonePublication && this._microphonePublication !== publication) {
                 console.warn(
@@ -347,7 +342,7 @@ export class LiveKitParticipant {
             }
             publication.setSubscribed(true);
             this._microphonePublication = publication;
-            this._hasAudio.set(!publication.isMuted);
+            this._hasMicrophoneAudio.set(!publication.isMuted);
         }
     }
 
@@ -417,6 +412,7 @@ export class LiveKitParticipant {
                 this._scriptingAudioStream = undefined;
                 this.refreshLivekitAudioStreamStore();
             }
+            this._hasScriptingAudio.set(false);
         } else if (publication.source === Track.Source.Microphone) {
             publication.setSubscribed(false);
             if (this._microphonePublication === publication) {
@@ -425,7 +421,7 @@ export class LiveKitParticipant {
                 this._microphoneStreamStore.set(undefined);
                 this.refreshLivekitAudioStreamStore();
             }
-            this._hasAudio.set(false);
+            this._hasMicrophoneAudio.set(false);
         }
     }
 
@@ -455,8 +451,10 @@ export class LiveKitParticipant {
     }
 
     private handleTrackMuted(publication: TrackPublication) {
-        if (publication.source === Track.Source.Microphone) {
-            this._hasAudio.set(false);
+        if (this.isScriptingAudioPublication(publication)) {
+            this._hasScriptingAudio.set(false);
+        } else if (publication.source === Track.Source.Microphone) {
+            this._hasMicrophoneAudio.set(false);
         } else if (publication.source === Track.Source.Camera) {
             this._hasVideo.set(false);
         } else if (publication.source === Track.Source.ScreenShare) {
@@ -468,8 +466,10 @@ export class LiveKitParticipant {
     }
 
     private handleTrackUnmuted(publication: TrackPublication) {
-        if (publication.source === Track.Source.Microphone) {
-            this._hasAudio.set(true);
+        if (this.isScriptingAudioPublication(publication)) {
+            this._hasScriptingAudio.set(true);
+        } else if (publication.source === Track.Source.Microphone) {
+            this._hasMicrophoneAudio.set(true);
         } else if (publication.source === Track.Source.Camera) {
             this._hasVideo.set(true);
         } else if (publication.source === Track.Source.ScreenShare) {
