@@ -367,17 +367,22 @@ export const rightActionBarMenuItems: Readable<RightMenuItem<RightActionBarButto
             menuItems.push(loginMenuItem);
         }
 
-        menuItems.push(mapsMenuItem);
-        menuItems.push(participantMenuItem);
+        const menuItems_: RightMenuItem<RightActionBarButtonProps>[] = [];
+        menuItems.forEach((item, index) => {
+            menuItems_.push({
+                ...item,
+                props: {
+                    ...item.props,
+                    first: index === 0,
+                    last: index === menuItems.length - 1,
+                },
+            });
+        });
 
-        return menuItems.map((item, index) => ({
-            ...item,
-            props: {
-                ...item.props,
-                first: index === 0,
-                last: index === menuItems.length - 1,
-            },
-        }));
+        menuItems_.push(mapsMenuItem);
+        menuItems_.push(participantMenuItem);
+
+        return menuItems_;
     },
 );
 
