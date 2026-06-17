@@ -583,15 +583,16 @@ export class IoSocketController {
             },
             reconnect: (socket) => {
                 const userData = socket.getUserData();
-                const worlds = socketManager.getWorlds();
+                const rooms = socketManager.getRooms();
 
-                if (!worlds.has(userData.roomId)) {
+                if (!rooms.has(userData.roomId)) {
                     Sentry.captureException(
-                        `World ${userData.roomId} not found for socket ${userData.userUuid} (${userData.name}) while reconnecting, closing the connection`,
+                        `Room ${userData.roomId} not found for socket ${userData.userUuid} (${userData.name}) while reconnecting, closing the connection`,
                     );
                     console.error(
-                        `World ${userData.roomId} not found for socket ${userData.userUuid} (${userData.name}) while reconnecting, closing the connection`,
+                        `Room ${userData.roomId} not found for socket ${userData.userUuid} (${userData.name}) while reconnecting, closing the connection`,
                     );
+                    socketManager.cleanupSocket(socket);
                     socket.end(1008, "Room no longer exists");
                 }
             },

@@ -844,7 +844,7 @@ export class SocketManager implements ZoneEventListener {
         return room;
     }
 
-    public getWorlds(): Map<string, PusherRoom> {
+    public getRooms(): Map<string, PusherRoom> {
         return this.rooms;
     }
 
