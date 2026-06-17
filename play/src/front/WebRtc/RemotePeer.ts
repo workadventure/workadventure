@@ -362,48 +362,9 @@ export class RemotePeer extends Peer implements Streamable {
             undefined,
         );
 
-        /*this._hasVideo = derived(this._remoteStreamStore, ($remoteStream, set) => {
-            if (!$remoteStream) {
-                set(false);
-                return;
-            }
-            const update = () => set($remoteStream.getVideoTracks().length > 0);
-            update();
-            const onAdd = (e: MediaStreamTrackEvent) => {
-                if (e.track.kind === "video") update();
-            };
-            const onRemove = (e: MediaStreamTrackEvent) => {
-                if (e.track.kind === "video") update();
-            };
-            $remoteStream.addEventListener("addtrack", onAdd);
-            $remoteStream.addEventListener("removetrack", onRemove);
-            return () => {
-                $remoteStream.removeEventListener("addtrack", onAdd);
-                $remoteStream.removeEventListener("removetrack", onRemove);
-            };
-        });*/
         this._hasVideo = createMediaStreamTrackPresenceStore(this._remoteStreamStore, "video");
 
-        this._hasAudio = derived(this._remoteStreamStore, ($remoteStream, set) => {
-            if (!$remoteStream) {
-                set(false);
-                return;
-            }
-            const update = () => set($remoteStream.getAudioTracks().some((track) => track.enabled !== false));
-            update();
-            const onAdd = (e: MediaStreamTrackEvent) => {
-                if (e.track.kind === "audio") update();
-            };
-            const onRemove = (e: MediaStreamTrackEvent) => {
-                if (e.track.kind === "audio") update();
-            };
-            $remoteStream.addEventListener("addtrack", onAdd);
-            $remoteStream.addEventListener("removetrack", onRemove);
-            return () => {
-                $remoteStream.removeEventListener("addtrack", onAdd);
-                $remoteStream.removeEventListener("removetrack", onRemove);
-            };
-        });
+        this._hasAudio = createMediaStreamTrackPresenceStore(this._remoteStreamStore, "audio");
 
         this._isBlocked = derived(this._blockedUsersStore, ($blockedUsersStore) => {
             return $blockedUsersStore.has(this._spaceUserId);
