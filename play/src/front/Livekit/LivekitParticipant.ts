@@ -3,7 +3,6 @@ import type {
     RemoteTrack,
     RemoteTrackPublication,
     TrackPublication,
-    ConnectionQuality,
     RemoteVideoTrack,
 } from "livekit-client";
 import * as Sentry from "@sentry/svelte";
@@ -29,9 +28,7 @@ const VIDEO_UNSUBSCRIBE_DELAY_MS = 75;
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
-    private _connectionQualityStore: Writable<ConnectionQuality>;
     private _audioStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
-    private _microphoneStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
     private _actualVideo: Streamable | undefined;
     private _actualScreenShare: Streamable | undefined;
 
@@ -57,7 +54,6 @@ export class LiveKitParticipant {
     private _screenShareRemoteTrack: Writable<RemoteVideoTrack | undefined> = writable<RemoteVideoTrack | undefined>(
         undefined,
     );
-    private _isActiveSpeaker = writable<boolean>(false);
     private _muteAudioStore: Writable<boolean> = writable<boolean>(false);
     private _cameraVideoSubscriptions = new Set<symbol>();
     private _screenShareVideoSubscriptions = new Set<symbol>();
@@ -83,12 +79,11 @@ export class LiveKitParticipant {
     private boundHandleTrackUnsubscribed: (track: RemoteTrack, publication: RemoteTrackPublication) => void;
     private boundHandleTrackMuted: (publication: TrackPublication) => void;
     private boundHandleTrackUnmuted: (publication: TrackPublication) => void;
-    private boundHandleConnectionQualityChanged: (quality: ConnectionQuality) => void;
     private boundHandleIsSpeakingChanged: (isSpeaking: boolean) => void;
 
     constructor(
         public participant: RemoteParticipant,
-        private spaceUser: SpaceUserExtended,
+        spaceUser: SpaceUserExtended,
         private space: SpaceInterface,
         private livekitServerUrl: string,
         private _streamableSubjects: StreamableSubjects,
@@ -103,7 +98,6 @@ export class LiveKitParticipant {
         this.boundHandleTrackUnsubscribed = this.handleTrackUnsubscribed.bind(this);
         this.boundHandleTrackMuted = this.handleTrackMuted.bind(this);
         this.boundHandleTrackUnmuted = this.handleTrackUnmuted.bind(this);
-        this.boundHandleConnectionQualityChanged = this.handleConnectionQualityChanged.bind(this);
         this.boundHandleIsSpeakingChanged = this.handleIsSpeakingChanged.bind(this);
 
         this.participant.on(ParticipantEvent.TrackPublished, this.boundHandleTrackPublished);
@@ -112,12 +106,10 @@ export class LiveKitParticipant {
         this.participant.on(ParticipantEvent.TrackUnsubscribed, this.boundHandleTrackUnsubscribed);
         this.participant.on(ParticipantEvent.TrackMuted, this.boundHandleTrackMuted);
         this.participant.on(ParticipantEvent.TrackUnmuted, this.boundHandleTrackUnmuted);
-        this.participant.on(ParticipantEvent.ConnectionQualityChanged, this.boundHandleConnectionQualityChanged);
         this.participant.on(ParticipantEvent.IsSpeakingChanged, this.boundHandleIsSpeakingChanged);
 
-        this._spaceUser = this.spaceUser;
+        this._spaceUser = spaceUser;
         this._isSpeakingStore = writable(this.participant.isSpeaking);
-        this._connectionQualityStore = writable(this.participant.connectionQuality);
         this._nameStore = writable(this.participant.name);
         this.videoWebrtcStats = this.getWebrtcStats("video");
         this.screenShareWebrtcStats = this.getWebrtcStats("screenShare");
@@ -375,7 +367,6 @@ export class LiveKitParticipant {
             this.refreshLivekitAudioStreamStore();
         } else if (publication.source === Track.Source.Microphone) {
             this._microphoneStream = track.mediaStream;
-            this._microphoneStreamStore.set(track.mediaStream);
             this.refreshLivekitAudioStreamStore();
         }
     }
@@ -418,7 +409,6 @@ export class LiveKitParticipant {
             if (this._microphonePublication === publication) {
                 this._microphonePublication = undefined;
                 this._microphoneStream = undefined;
-                this._microphoneStreamStore.set(undefined);
                 this.refreshLivekitAudioStreamStore();
                 this._hasMicrophoneAudio.set(false);
             }
@@ -449,7 +439,6 @@ export class LiveKitParticipant {
         } else if (publication.source === Track.Source.Microphone) {
             if (this._microphonePublication === publication) {
                 this._microphoneStream = undefined;
-                this._microphoneStreamStore.set(undefined);
                 this.refreshLivekitAudioStreamStore();
                 this._hasMicrophoneAudio.set(false);
             }
@@ -490,10 +479,6 @@ export class LiveKitParticipant {
         ) {
             this._hasScreenShareAudio.set(true);
         }
-    }
-
-    private handleConnectionQualityChanged(quality: ConnectionQuality) {
-        this._connectionQualityStore.set(quality);
     }
 
     private handleIsSpeakingChanged(isSpeaking: boolean) {
@@ -632,10 +617,6 @@ export class LiveKitParticipant {
         );
     }
 
-    public setActiveSpeaker(isActiveSpeaker: boolean) {
-        this._isActiveSpeaker.set(isActiveSpeaker);
-    }
-
     public getStreamable(): Streamable {
         return this.getVideoStream();
     }
@@ -677,7 +658,6 @@ export class LiveKitParticipant {
         this.participant.off(ParticipantEvent.TrackUnsubscribed, this.boundHandleTrackUnsubscribed);
         this.participant.off(ParticipantEvent.TrackMuted, this.boundHandleTrackMuted);
         this.participant.off(ParticipantEvent.TrackUnmuted, this.boundHandleTrackUnmuted);
-        this.participant.off(ParticipantEvent.ConnectionQualityChanged, this.boundHandleConnectionQualityChanged);
         this.participant.off(ParticipantEvent.IsSpeakingChanged, this.boundHandleIsSpeakingChanged);
     }
 }

@@ -732,11 +732,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         //TODO: review implementation - iterating over all participants each time
         this.participants.forEach((participant) => {
-            if (speakersSet.has(participant.participant.sid)) {
-                participant.setActiveSpeaker(true);
-            } else {
-                participant.setActiveSpeaker(false);
-
+            if (!speakersSet.has(participant.participant.sid)) {
                 if (this.previousSpeakers.has(participant.participant.sid)) {
                     // If the participant was previously speaking but is not speaking anymore, we set it as recently spoken
                     const previousSpeakerVideoBox = this.space.allVideoStreamStore.get(
