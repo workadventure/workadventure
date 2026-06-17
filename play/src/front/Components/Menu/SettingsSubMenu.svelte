@@ -68,7 +68,7 @@
         initialScreenShareQuality === "high" ? 3 : initialScreenShareQuality === "low" ? 1 : 2,
     );
     let bandwidthConstrainedPreference = $state(localUserStore.getBandwidthConstrainedScreenSharePreference());
-    let selectedNoiseSuppressionProvider: NoiseSuppressionProvider = $state($effectiveNoiseSuppressionProviderStore);
+    let selectedNoiseSuppressionProvider: NoiseSuppressionProvider = $derived($effectiveNoiseSuppressionProviderStore);
     let microphoneSettingsSection: HTMLElement | undefined = $state();
 
     let volumeProximityDiscussion = $state(localUserStore.getVolumeProximityDiscussion());

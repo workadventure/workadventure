@@ -149,12 +149,8 @@
 
     let tabsContainer: HTMLElement | undefined = $state();
     let tabsContainerWidth = $state(0);
-    let tabsOverflowing = $state(false);
+    let tabsOverflowing = $derived(tabsContainerWidth >= 0 && $coWebsites.length >= 0 && areTabsOverflowing());
     let tabsScrollX = $state(0);
-
-    $effect(() => {
-        tabsOverflowing = tabsContainerWidth >= 0 && $coWebsites.length >= 0 && areTabsOverflowing();
-    });
 
     function areTabsOverflowing(): boolean {
         if (!tabsContainer) {

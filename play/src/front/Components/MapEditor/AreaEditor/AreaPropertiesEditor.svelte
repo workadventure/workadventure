@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
+    import { SvelteMap } from "svelte/reactivity";
     import type {
         AreaDataProperties,
         AreaDataPropertiesKeys,
@@ -92,8 +93,8 @@
         }
     });
 
-    function getSpeakerMegaphoneAreasName(): Map<string, string> {
-        const areasName = new Map<string, string>();
+    function getSpeakerMegaphoneAreasName(): SvelteMap<string, string> {
+        const areasName = new SvelteMap<string, string>();
         const wamFile = gameManager.getCurrentGameScene().getGameMap().getWamFile();
         if (!wamFile) {
             return areasName;
