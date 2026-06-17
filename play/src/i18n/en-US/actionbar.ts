@@ -89,6 +89,8 @@ const actionbar: BaseTranslation = {
         blurHigh: "High blur",
         images: "Images",
         videos: "Videos",
+        notSupportedByBrowser:
+            "Background effects are not supported by your browser. Please use Chrome or Edge for this feature.",
     },
     help: {
         chat: {

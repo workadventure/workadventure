@@ -92,6 +92,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurHigh: "Flou fort",
         images: "Images",
         videos: "Vidéos",
+        notSupportedByBrowser:
+            "Les effets d'arrière-plan ne sont pas pris en charge par votre navigateur. Veuillez utiliser Chrome ou Edge pour cette fonctionnalité.",
     },
     help: {
         chat: {

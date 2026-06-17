@@ -22,6 +22,14 @@ export interface BackgroundTransformer {
 }
 
 /**
+ * Returns true if the browser supports background effects (via Insertable Streams API).
+ * Firefox and some other browsers do not support MediaStreamTrackProcessor/Generator.
+ */
+export function isBackgroundEffectsSupported(): boolean {
+    return typeof MediaStreamTrackProcessor !== "undefined" && typeof MediaStreamTrackGenerator !== "undefined";
+}
+
+/**
  * Create a MediaPipe-based background transformer with fallback support
  * Supports both the new Tasks Vision API (GPU-accelerated) and legacy Selfie Segmentation (CPU)
  * Selected via BACKGROUND_TRANSFORMER_ENGINE environment variable
@@ -31,7 +39,7 @@ export interface BackgroundTransformer {
  */
 export function createBackgroundTransformer(config: BackgroundConfig): BackgroundTransformer {
     // Check browser support for MediaStream APIs
-    if (typeof MediaStreamTrackProcessor === "undefined" || typeof MediaStreamTrackGenerator === "undefined") {
+    if (!isBackgroundEffectsSupported()) {
         return new FallbackBackgroundTransformer();
     }
 

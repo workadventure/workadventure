@@ -90,6 +90,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurHigh: "강한 블러",
         images: "이미지",
         videos: "비디오",
+        notSupportedByBrowser:
+            "브라우저에서 배경 효과를 지원하지 않습니다. 이 기능을 사용하려면 Chrome 또는 Edge를 사용하세요.",
     },
     help: {
         chat: {

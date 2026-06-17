@@ -90,6 +90,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurHigh: "Wysoka njewjasnosć",
         images: "Wobrazki",
         videos: "Wideja",
+        notSupportedByBrowser:
+            "Slědne efekty njejsu wót wašogo wobglědowaka podpěrane. Wužywajśo Chrome abo Edge za toś tu funkciju.",
     },
     help: {
         chat: {

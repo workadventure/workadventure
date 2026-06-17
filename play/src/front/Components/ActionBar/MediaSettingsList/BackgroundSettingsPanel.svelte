@@ -3,6 +3,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { backgroundConfigStore, backgroundPresets } from "../../../Stores/BackgroundTransformStore";
     import type { BackgroundMode } from "../../../WebRtc/BackgroundProcessor/createBackgroundTransformer";
+    import { isBackgroundEffectsSupported } from "../../../WebRtc/BackgroundProcessor/createBackgroundTransformer";
     import { srcObject } from "../../Video/utils";
     import SectionDivider from "./SectionDivider.svelte";
     import SectionTitle from "./SectionTitle.svelte";
@@ -15,6 +16,8 @@
         { labelKey: "blurMiddle" as const, amount: 25, blurTailwind: "blur-[6px]" },
         { labelKey: "blurHigh" as const, amount: 50, blurTailwind: "blur-[12px]" },
     ];
+
+    const backgroundEffectsSupported = isBackgroundEffectsSupported();
 
     function setBackgroundMode(newMode: BackgroundMode) {
         backgroundConfigStore.setMode(newMode);
@@ -55,6 +58,12 @@
 
 <SectionDivider />
 <div class="scrollable-content overflow-y-auto flex flex-col gap-2 flex-1 min-h-0">
+    {#if !backgroundEffectsSupported}
+        <!-- Browser does not support background effects (e.g. Firefox) -->
+        <div data-testid="background-effects-unsupported" class="px-3 py-2 text-sm text-pop-red">
+            {$LL.actionbar.background.notSupportedByBrowser()}
+        </div>
+    {:else}
     <!-- No Effect Button -->
     <button class="relative z-10 flex flex-col gap-1 group text-left" onclick={() => setBackgroundMode("none")}>
         <div
@@ -136,4 +145,5 @@
             {/each}
         </div>
     </div>
+    {/if}
 </div>

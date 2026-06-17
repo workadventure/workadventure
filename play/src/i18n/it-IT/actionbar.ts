@@ -90,6 +90,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurHigh: "Sfocatura alta",
         images: "Immagini",
         videos: "Video",
+        notSupportedByBrowser:
+            "Gli effetti di sfondo non sono supportati dal tuo browser. Usa Chrome o Edge per questa funzione.",
     },
     help: {
         chat: {

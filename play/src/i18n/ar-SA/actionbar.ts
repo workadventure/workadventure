@@ -88,6 +88,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurHigh: "ضبابية عالية",
         images: "الصور",
         videos: "الفيديوهات",
+        notSupportedByBrowser:
+            "تأثيرات الخلفية غير مدعومة في متصفحك. يُرجى استخدام Chrome أو Edge للحصول على هذه الميزة.",
     },
     help: {
         chat: {

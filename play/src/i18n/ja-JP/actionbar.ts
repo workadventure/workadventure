@@ -89,6 +89,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurHigh: "強いぼかし",
         images: "画像",
         videos: "動画",
+        notSupportedByBrowser:
+            "お使いのブラウザは背景エフェクトに対応していません。この機能を利用するにはChromeまたはEdgeをご使用ください。",
     },
     help: {
         chat: {

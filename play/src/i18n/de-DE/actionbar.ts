@@ -92,6 +92,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurHigh: "Starke Unschärfe",
         images: "Bilder",
         videos: "Videos",
+        notSupportedByBrowser:
+            "Hintergrundeffekte werden von Ihrem Browser nicht unterstützt. Bitte verwenden Sie Chrome oder Edge für diese Funktion.",
     },
     help: {
         chat: {

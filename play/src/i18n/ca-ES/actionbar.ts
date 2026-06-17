@@ -90,6 +90,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurHigh: "Desenfocament alt",
         images: "Imatges",
         videos: "Vídeos",
+        notSupportedByBrowser:
+            "Els efectes de fons no estan suportats pel vostre navegador. Utilitzeu Chrome o Edge per a aquesta funció.",
     },
     help: {
         chat: {
