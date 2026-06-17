@@ -160,6 +160,7 @@
         }
 
         const recordingDate = new Date(dateMatch[1]);
+        // eslint-disable-next-line svelte/prefer-svelte-reactivity
         const expirationDate = new Date(recordingDate);
         expirationDate.setMonth(expirationDate.getMonth() + 3);
 
@@ -170,17 +171,14 @@
         return daysRemaining;
     }
 
-    /** Return expiration date (recording + 3 months) or null */
-    function getExpirationDate(filename: string): Date | null {
+    function formatExpirationDate(filename: string): string {
         const dateMatch = filename.match(/recording-(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
-        if (!dateMatch) return null;
+        if (!dateMatch) return "";
+
+        // eslint-disable-next-line svelte/prefer-svelte-reactivity
         const d = new Date(dateMatch[1]);
         d.setMonth(d.getMonth() + 3);
-        return d;
-    }
 
-    function formatExpirationDate(filename: string): string {
-        const d = getExpirationDate(filename);
         if (!d) return "";
         return d.toLocaleDateString(undefined, {
             day: "numeric",

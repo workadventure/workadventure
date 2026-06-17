@@ -119,6 +119,7 @@
 
     function dayLabel(d: Date): string {
         const today = new Date();
+        // eslint-disable-next-line svelte/prefer-svelte-reactivity
         const yesterday = new Date();
         yesterday.setDate(today.getDate() - 1);
 

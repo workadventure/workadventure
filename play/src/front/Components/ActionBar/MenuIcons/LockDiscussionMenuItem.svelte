@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { LockableAreaPropertyData } from "@workadventure/map-editor";
     import { onDestroy } from "svelte";
+    import { SvelteSet } from "svelte/reactivity";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import LockIcon from "../../Icons/LockIcon.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
@@ -64,7 +65,7 @@
 
     let areasWithPermission = $derived(
         (() => {
-            const set = new Set<string>();
+            const set = new SvelteSet<string>();
             for (const entry of lockableAreas) {
                 if (canLockEntry(entry)) {
                     set.add(entryKey(entry));
@@ -168,15 +169,11 @@
     );
 
     type ButtonState = "active" | "normal" | "disabled" | "disabledForbidden" | "forbidden";
-    let buttonState: ButtonState = $state("normal");
-
-    $effect(() => {
-        buttonState = (() => {
-            if (showAreaLock && !canLockSomething) {
-                return lockState ? "disabledForbidden" : "disabled";
-            }
-            return lockState ? "forbidden" : "normal";
-        })();
+    let buttonState: ButtonState = $derived.by(() => {
+        if (showAreaLock && !canLockSomething) {
+            return lockState ? "disabledForbidden" : "disabled";
+        }
+        return lockState ? "forbidden" : "normal";
     });
 
     onDestroy(() => {

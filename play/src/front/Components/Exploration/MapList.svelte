@@ -1,6 +1,7 @@
 <script lang="ts">
     import { writable } from "svelte/store";
     import { onMount } from "svelte";
+    import { SvelteMap } from "svelte/reactivity";
     import defaultMapImg from "../images/default-map.png";
     import { roomListVisibilityStore } from "../../Stores/ModalStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -20,7 +21,7 @@
 
     let search = $state("");
     const currentRoomUrl = gameManager.getCurrentGameScene().room.href;
-    const roomList = new Map<string, RoomData>();
+    const roomList = new SvelteMap<string, RoomData>();
     const roomListFiltered = writable<Map<string, RoomData>>(new Map<string, RoomData>());
     const isFetching = writable<boolean>(false);
     const isMoving = writable<boolean>(false);
