@@ -284,10 +284,6 @@ const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, func
     const localMediaStreamStore = writable<MediaStream | undefined>(undefined);
     const mutedLocalMediaStreamStore = muteMediaStreamStore(localMediaStreamStore);
 
-    const canEmitAudio = derived(
-        localMediaStreamStore,
-        ($localMediaStreamStore) => ($localMediaStreamStore?.getAudioTracks().length ?? 0) > 0,
-    );
     const hasAudio = derived(
         localMediaStreamStore,
         ($localMediaStreamStore) => ($localMediaStreamStore?.getAudioTracks().length ?? 0) > 0,
@@ -304,7 +300,6 @@ const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, func
             },
         } satisfies WebRtcStreamable,
         spaceUserId: undefined,
-        canEmitAudio: canEmitAudio,
         hasVideo: writable(true),
         hasAudio,
         name: writable(""),

@@ -57,7 +57,6 @@ export class RemotePeer extends Peer implements Streamable {
     private readonly showVoiceIndicatorStore: ForwardableStore<boolean> = new ForwardableStore(false);
     public readonly flipX = false;
     public readonly muteAudio: Writable<boolean> = writable(false);
-    private readonly _canEmitAudio: Readable<boolean>;
     public readonly displayMode: "fit" | "cover";
     public readonly usePresentationMode: boolean;
     public readonly displayInPictureInPictureMode = true;
@@ -267,9 +266,6 @@ export class RemotePeer extends Peer implements Streamable {
         super(peerConfig);
 
         this.volume = writable(defaultVolume);
-        // TODO: this negates the usefulness of canEmitAudio.
-        // In theory, canEmitAudio should return false for screenshares with no audio track or for scripting videos with no audio
-        this._canEmitAudio = writable<boolean>(true);
         this.videoType = type;
         this.displayMode = type === "video" ? "cover" : "fit";
         this.usePresentationMode = !(type === "video");
@@ -824,10 +820,6 @@ export class RemotePeer extends Peer implements Streamable {
 
     get hasVideo(): Readable<boolean> {
         return this._hasVideo;
-    }
-
-    get canEmitAudio(): Readable<boolean> {
-        return this._canEmitAudio;
     }
 
     get hasAudio(): Readable<boolean> {

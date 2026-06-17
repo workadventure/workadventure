@@ -41,7 +41,6 @@ export class LiveKitParticipant {
     );
 
     private _nameStore: Writable<string>;
-    private _canEmitAudio = writable<boolean>(true);
     private _hasVideo = writable<boolean>(false);
     private _hasAudio = writable<boolean>(false);
     private _hasScreenShareVideo = writable<boolean>(false);
@@ -347,7 +346,6 @@ export class LiveKitParticipant {
             }
             publication.setSubscribed(true);
             this._scriptingAudioPublication = publication;
-            this._canEmitAudio.set(true);
         } else if (publication.source === Track.Source.Microphone) {
             if (this._microphonePublication && this._microphonePublication !== publication) {
                 console.warn(
@@ -360,7 +358,6 @@ export class LiveKitParticipant {
             }
             publication.setSubscribed(true);
             this._microphonePublication = publication;
-            this._canEmitAudio.set(true);
             this._hasAudio.set(!publication.isMuted);
         }
     }
@@ -536,7 +533,6 @@ export class LiveKitParticipant {
     private getVideoStream(): Streamable {
         return {
             uniqueId: this.participant.identity,
-            canEmitAudio: this._canEmitAudio,
             hasVideo: this._hasVideo,
             hasAudio: this._hasAudio,
             statusStore: writable("connected"),
@@ -570,7 +566,6 @@ export class LiveKitParticipant {
     private getScreenShareStream(): Streamable {
         return {
             uniqueId: this.participant.sid,
-            canEmitAudio: this._canEmitScreenShareAudio,
             hasVideo: this._hasScreenShareVideo,
             hasAudio: this._hasScreenShareAudio,
             statusStore: writable("connected"),
