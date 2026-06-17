@@ -143,7 +143,7 @@ function createSubMenusStore() {
                     $gameSceneStore?.room.reportIssuesUrl !== undefined ||
                     (ENABLE_REPORT_ISSUES_MENU != undefined &&
                         ENABLE_REPORT_ISSUES_MENU &&
-                        REPORT_ISSUES_URL != undefined)
+                        REPORT_ISSUES_URL != undefined),
             ),
         },
         {
@@ -247,7 +247,7 @@ export function handleMenuRegistrationEvent(
     iframeUrl: string | undefined = undefined,
     key: string,
     source: string | undefined = undefined,
-    options: { allowApi: boolean; allow?: string | undefined }
+    options: { allowApi: boolean; allow?: string | undefined },
 ) {
     if (get(subMenusStore).find((item) => item.type === "scripting" && item.label === menuName)) {
         console.warn("The menu " + menuName + " already exist.");
@@ -276,7 +276,7 @@ export function handleOpenMenuEvent(key: string) {
 export function getProfileUrl() {
     return new URL(
         `profile-callback?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`,
-        ABSOLUTE_PUSHER_URL
+        ABSOLUTE_PUSHER_URL,
     ).toString();
 }
 
@@ -377,7 +377,7 @@ export const rightActionBarMenuItems: Readable<RightMenuItem<RightActionBarButto
         }));
 
         return [...itemsWithPosition, mapsMenuItem, participantMenuItem];
-    }
+    },
 );
 
 // It is ok to not unsubscribe to this store because it is a singleton.
@@ -398,20 +398,20 @@ export const helpTextDisabledStore = derived(
     activeSecondaryZoneActionBarStore,
     ($activeSecondaryZoneActionBarStore) => {
         return $activeSecondaryZoneActionBarStore !== undefined;
-    }
+    },
 );
 
 export const mapEditorMenuVisibleStore = derived(
     [mapEditorActivated, mapManagerActivated, mapEditorActivatedForThematics],
     ([$mapEditorActivated, $mapManagerActivated, $mapEditorActivatedForThematics]) => {
         return ($mapEditorActivated || $mapEditorActivatedForThematics) && $mapManagerActivated;
-    }
+    },
 );
 export const globalMessageVisibleStore = derived(
     [megaphoneCanBeUsedStore, userIsAdminStore],
     ([$megaphoneCanBeUsedStore, $userIsAdminStore]) => {
         return $megaphoneCanBeUsedStore || $userIsAdminStore;
-    }
+    },
 );
 export const mapMenuVisibleStore = derived(
     [
@@ -427,7 +427,7 @@ export const mapMenuVisibleStore = derived(
             $additionalBuildMenuItems.size > 0 ||
             $personalAreaDataStore !== null
         );
-    }
+    },
 );
 
 type Menus = "appMenu" | "profileMenu" | "mapMenu" | "participantMenu";
