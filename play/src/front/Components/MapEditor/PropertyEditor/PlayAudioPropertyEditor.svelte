@@ -15,7 +15,7 @@
         onaudiolink?: (property: PlayAudioPropertyData) => void;
     }
 
-    let { property, isArea = false, onchange, onclose, onaudiolink }: Props = $props();
+    let { property = $bindable(), isArea = false, onchange, onclose, onaudiolink }: Props = $props();
     let optionAdvancedActivated = $state(false);
 
     let HTMLAudioPlayer: HTMLAudioElement;

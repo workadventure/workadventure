@@ -28,7 +28,7 @@
     }
 
     let {
-        property,
+        property = $bindable(),
         isArea = false,
         triggerOptionActivated = true,
         triggerOnActionChoosen = property.trigger === ON_ACTION_TRIGGER_BUTTON,
@@ -162,7 +162,7 @@
             {/if}
 
             <FileUpload
-                {property}
+                bind:property
                 onchange={() => {
                     onchange?.(property.link);
                 }}
