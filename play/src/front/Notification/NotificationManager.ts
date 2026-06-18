@@ -68,9 +68,9 @@ class NotificationManager {
     private async handleMessageNotification(chatRoomId: string) {
         chatVisibilityStore.set(true);
         let room: ChatRoom | undefined;
-        if (chatRoomId === "proximity") {
+        if (chatRoomId.startsWith("proximity:")) {
             this.proximityMeetingStore.set(true);
-            room = gameManager.getCurrentGameScene().proximityChatRoom;
+            room = gameManager.getCurrentGameScene().proximityChatRoomManager.getRoomById(chatRoomId);
         } else {
             const chatConnection = await gameManager.getChatConnection();
             room = chatConnection.getRoomByID(chatRoomId);

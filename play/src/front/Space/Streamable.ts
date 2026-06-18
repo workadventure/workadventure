@@ -44,14 +44,16 @@ export interface Streamable {
     readonly uniqueId: string;
     readonly media: LivekitStreamable | WebRtcStreamable | ScriptingVideoStreamable | ComponentStreamable;
     readonly volumeStore: Readable<number[] | undefined> | undefined;
-    readonly hasVideo: Readable<boolean>;
-    readonly hasAudio: Readable<boolean>;
     /**
-     * Receiver-side diagnostic signal: true only when this client actually has a usable incoming audio track.
-     * Keep it separate from hasAudio/isMuted so we can detect mismatches between the space state and the stream received.
+     * True when this streamable currently has a video stream that should be displayed.
+     * Note: this value is tied to the real transport (WebRTC, Livekit, ...), not to the spaceUser cameraState
      */
-    readonly hasReceivedAudio: Readable<boolean>;
-    readonly isMuted: Readable<boolean>;
+    readonly hasVideo: Readable<boolean>;
+    /**
+     * True when this streamable currently has audio, symmetrically to hasVideo.
+     * Note: this value is tied to the real transport (WebRTC, Livekit, ...), not to the spaceUser microphoneState
+     */
+    readonly hasAudio: Readable<boolean>;
     readonly statusStore: Readable<PeerStatus>;
     readonly name: Readable<string>;
     readonly showVoiceIndicator: Readable<boolean>;

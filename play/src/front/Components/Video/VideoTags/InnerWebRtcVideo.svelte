@@ -68,10 +68,12 @@
                 lastHeight = height;
                 setDimensions(width, height);
             } else {
-                console.warn("WebRtcVideo: Invalid video element dimensions", {
+                // On startup, there is a small moment where width and height of the video element are 0
+                // (because the container is collapsed)
+                /*console.warn("WebRtcVideo: Invalid video element dimensions", {
                     width,
                     height,
-                });
+                });*/
             }
         };
 

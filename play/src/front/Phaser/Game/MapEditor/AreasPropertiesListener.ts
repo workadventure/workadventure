@@ -116,6 +116,11 @@ type AreaDataPropertyUpdate = {
     };
 }[AreaDataProperty["type"]];
 
+export function getAreaProximitySpaceName(rawName: string, fallbackId: string): string {
+    const roomID = rawName.trim().length === 0 ? fallbackId : rawName;
+    return Jitsi.slugifyJitsiRoomName(roomID, "", true).trim();
+}
+
 export class AreasPropertiesListener {
     private scene: GameScene;
 
@@ -296,7 +301,7 @@ export class AreasPropertiesListener {
                 }
 
                 if (newProperty === undefined) {
-                    this.removePropertyFilter(oldProperty);
+                    this.removePropertyFilter(oldProperty, undefined, area);
                 } else {
                     this.updatePropertyFilter(oldProperty, newProperty, area);
                 }
@@ -403,7 +408,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "speakerMegaphone": {
-                this.handleSpeakerMegaphonePropertyOnEnter(property, abortController.signal).catch((e) => {
+                this.handleSpeakerMegaphonePropertyOnEnter(property, areaData.id, abortController.signal).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
                 });
@@ -513,14 +518,16 @@ export class AreasPropertiesListener {
                 break;
             }
             case "speakerMegaphone": {
-                this.handleSpeakerMegaphonePropertyOnLeave(oldProperty).catch((e) => {
+                this.handleSpeakerMegaphonePropertyOnLeave(oldProperty, area.id).catch((e) => {
                     console.error("Error while leaving space");
                     Sentry.captureException(new Error("Error while leaving space"));
                 });
-                this.handleSpeakerMegaphonePropertyOnEnter(newProperty, newAbortController.signal).catch((e) => {
-                    console.error(e);
-                    Sentry.captureException(e);
-                });
+                this.handleSpeakerMegaphonePropertyOnEnter(newProperty, area.id, newAbortController.signal).catch(
+                    (e) => {
+                        console.error(e);
+                        Sentry.captureException(e);
+                    },
+                );
                 break;
             }
             case "listenerMegaphone": {
@@ -614,7 +621,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "speakerMegaphone": {
-                this.handleSpeakerMegaphonePropertyOnLeave(property).catch((e) => {
+                this.handleSpeakerMegaphonePropertyOnLeave(property, areaData?.id).catch((e) => {
                     console.error("Error while leaving space");
                     Sentry.captureException(new Error("Error while leaving space"));
                 });
@@ -1073,15 +1080,15 @@ export class AreasPropertiesListener {
             });
         }
 
-        const proximityRoom = this.scene.proximityChatRoom;
-        proximityRoom.setDisplayName(get(LL).mapEditor.properties.livekitRoomProperty.label());
-        await proximityRoom.joinSpace(
+        await this.scene.proximityChatRoomManager.joinSpace(
             roomName,
+            property.roomName,
             ["cameraState", "microphoneState", "screenSharingState"],
             true,
             FilterType.ALL_USERS,
             property.livekitRoomConfig?.disableChat ?? false,
             abortSignal,
+            "meeting",
         );
 
         analyticsClient.enteredMeetingRoom(roomName, this.scene.roomUrl);
@@ -1322,12 +1329,10 @@ export class AreasPropertiesListener {
     }
 
     private async handleLivekitRoomPropertyOnLeave(property: LivekitRoomPropertyData): Promise<void> {
-        const proximityRoom = this.scene.proximityChatRoom;
         const roomID = property.roomName.trim().length === 0 ? property.id : property.roomName;
         const roomName = Jitsi.slugifyJitsiRoomName(roomID, this.scene.roomUrl, false);
 
-        proximityRoom.setDisplayName(get(LL).chat.proximity());
-        await proximityRoom.leaveSpace(roomName, true);
+        await this.scene.proximityChatRoomManager.leaveSpace(roomName, true);
 
         this._requestedMicrophoneStateSubscription?.();
         this._requestedCameraStateSubscription?.();
@@ -1479,12 +1484,13 @@ export class AreasPropertiesListener {
 
     private async handleSpeakerMegaphonePropertyOnEnter(
         property: SpeakerMegaphonePropertyData,
+        areaId: string,
         abortSignal: AbortSignal,
     ): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
-            const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl).trim();
-            const proximityRoom = this.scene.proximityChatRoom;
-            const currentSpaceName = proximityRoom.getCurrentSpaceName();
+            const uniqRoomName = getAreaProximitySpaceName(property.name, areaId);
+            const proximityRoom = this.scene.proximityChatRoomManager.resolveTargetRoom(uniqRoomName);
+            const currentSpaceName = proximityRoom?.getCurrentSpaceName();
             const wasListener = get(isListenerStore);
 
             // Update stores first so the bubble closes and UI reflects "in a meeting" before stream logic.
@@ -1493,7 +1499,8 @@ export class AreasPropertiesListener {
 
             try {
                 // If already in this space (as listener), just switch to speaker role.
-                if (currentSpaceName === uniqRoomName) {
+                if (currentSpaceName === uniqRoomName && proximityRoom) {
+                    proximityRoom.kind.set("speaker");
                     const space = proximityRoom.getCurrentSpace();
                     if (space) {
                         space.startStreaming();
@@ -1512,21 +1519,28 @@ export class AreasPropertiesListener {
                             allowTalking: false,
                             waitingLink: undefined,
                         });
+                        this.refreshMegaphoneGlobalStores(uniqRoomName);
                         return;
                     }
                 }
 
                 // Otherwise, do the full join (stores already set above).
-                proximityRoom.setDisplayName(property.name);
-                const space = await proximityRoom.joinSpace(
+                const joinedRoom = await this.scene.proximityChatRoomManager.joinSpace(
                     uniqRoomName,
+                    property.name,
                     getMegaphoneSpaceFields(property.seeAttendees),
                     true,
                     property.seeAttendees
                         ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK
                         : FilterType.LIVE_STREAMING_USERS,
                     !property.chatEnabled,
+                    undefined,
+                    "speaker",
                 );
+                const space = joinedRoom.getCurrentSpace();
+                if (!space) {
+                    throw new Error(`Failed to join megaphone speaker space "${uniqRoomName}"`);
+                }
 
                 space.startStreaming();
                 currentLiveStreamingSpaceStore.set(space);
@@ -1542,9 +1556,11 @@ export class AreasPropertiesListener {
                     allowTalking: false,
                     waitingLink: undefined,
                 });
+                this.refreshMegaphoneGlobalStores(uniqRoomName);
             } catch (e) {
                 isSpeakerStore.set(false);
                 isListenerStore.set(wasListener);
+                this.refreshMegaphoneGlobalStores(uniqRoomName);
                 if (e instanceof AbortError) {
                     return;
                 }
@@ -1553,26 +1569,36 @@ export class AreasPropertiesListener {
         }
     }
 
-    private async handleSpeakerMegaphonePropertyOnLeave(property: SpeakerMegaphonePropertyData): Promise<void> {
+    private async handleSpeakerMegaphonePropertyOnLeave(
+        property: SpeakerMegaphonePropertyData,
+        areaId?: string,
+    ): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
-            const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl, false);
+            const uniqRoomName = getAreaProximitySpaceName(property.name, areaId ?? property.id);
 
             // Remove from tracking
             this.activeMegaphoneZones.delete(property.id);
+            const room = this.scene.proximityChatRoomManager.resolveTargetRoom(uniqRoomName);
+            const space = room?.getCurrentSpace();
+
+            if (space) {
+                try {
+                    space.stopStreaming();
+                } catch (error) {
+                    console.error("An error occurred while stopping streaming", error);
+                    Sentry.captureException(error);
+                }
+            }
+
+            this.refreshMegaphoneGlobalStores(uniqRoomName);
 
             // Check if still in a listener zone for the same space
             const remainingListenerZone = this.findActiveListenerZoneForSpace(uniqRoomName);
 
             if (remainingListenerZone) {
                 // Switch back to listener role instead of leaving
-                const space = this.scene.proximityChatRoom.getCurrentSpace();
+                room?.kind.set("listener");
                 if (space) {
-                    try {
-                        space.stopStreaming();
-                    } catch (error) {
-                        console.error("An error occurred while stopping streaming", error);
-                        Sentry.captureException(error);
-                    }
                     isSpeakerStore.set(false);
                     isListenerStore.set(!this.shouldAllowTalkingInSpace(uniqRoomName));
                     listenerWaitingMediaStore.set(remainingListenerZone.waitingLink);
@@ -1584,6 +1610,7 @@ export class AreasPropertiesListener {
                     } else {
                         listenerSharingCameraStore.set(false);
                     }
+                    this.refreshMegaphoneGlobalStores(uniqRoomName);
                     return;
                 }
             }
@@ -1592,9 +1619,7 @@ export class AreasPropertiesListener {
             isSpeakerStore.set(false);
             currentLiveStreamingSpaceStore.set(undefined);
 
-            const proximityRoom = this.scene.proximityChatRoom;
-            proximityRoom.setDisplayName(get(LL).chat.proximity());
-            await proximityRoom.leaveSpace(uniqRoomName, true);
+            await this.scene.proximityChatRoomManager.leaveSpace(uniqRoomName, true);
         }
     }
 
@@ -1614,10 +1639,10 @@ export class AreasPropertiesListener {
 
             const { name: speakerZoneName, seeAttendees } = megaphoneAreaInfo;
 
-            if (speakerZoneName) {
-                const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName.trim(), this.scene.roomUrl).trim();
-                const proximityRoom = this.scene.proximityChatRoom;
-                const currentSpaceName = proximityRoom.getCurrentSpaceName();
+            {
+                const uniqRoomName = getAreaProximitySpaceName(speakerZoneName, property.speakerZoneName);
+                const proximityRoom = this.scene.proximityChatRoomManager.resolveTargetRoom(uniqRoomName);
+                const currentSpaceName = proximityRoom?.getCurrentSpaceName();
 
                 // If already in this space (as speaker or listener), just update tracking
                 if (currentSpaceName === uniqRoomName) {
@@ -1634,6 +1659,7 @@ export class AreasPropertiesListener {
                             allowTalking: property.allowTalking,
                             waitingLink: property.waitingLink,
                         });
+                        this.refreshMegaphoneGlobalStores(uniqRoomName);
                         return;
                     }
 
@@ -1647,20 +1673,28 @@ export class AreasPropertiesListener {
                         allowTalking: property.allowTalking,
                         waitingLink: property.waitingLink,
                     });
+                    proximityRoom?.kind.set("listener");
                     // Update mute state based on all active listener zones
                     isListenerStore.set(!this.shouldAllowTalkingInSpace(uniqRoomName));
+                    this.refreshMegaphoneGlobalStores(uniqRoomName);
                     return;
                 }
 
                 // Otherwise, do the full join
-                proximityRoom.setDisplayName(speakerZoneName);
-                const space = await proximityRoom.joinSpace(
+                const joinedRoom = await this.scene.proximityChatRoomManager.joinSpace(
                     uniqRoomName,
+                    speakerZoneName,
                     getMegaphoneSpaceFields(seeAttendees),
                     true,
                     seeAttendees ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK : FilterType.LIVE_STREAMING_USERS,
                     !property.chatEnabled,
+                    undefined,
+                    "listener",
                 );
+                const space = joinedRoom.getCurrentSpace();
+                if (!space) {
+                    throw new Error(`Failed to join megaphone listener space "${uniqRoomName}"`);
+                }
                 currentLiveStreamingSpaceStore.set(space);
                 listenerWaitingMediaStore.set(property.waitingLink);
 
@@ -1683,6 +1717,7 @@ export class AreasPropertiesListener {
                     waitingLink: property.waitingLink,
                 });
                 isListenerStore.set(!property.allowTalking);
+                this.refreshMegaphoneGlobalStores(uniqRoomName);
             }
         }
     }
@@ -1693,11 +1728,12 @@ export class AreasPropertiesListener {
                 this.scene.getGameMap().getWamFile()?.getGameMapAreas().getAreas(),
                 property.speakerZoneName,
             );
-            if (speakerZoneName) {
-                const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
+            if (speakerZoneName !== undefined) {
+                const uniqRoomName = getAreaProximitySpaceName(speakerZoneName, property.speakerZoneName);
 
                 // Remove from tracking
                 this.activeMegaphoneZones.delete(property.id);
+                this.refreshMegaphoneGlobalStores(uniqRoomName);
 
                 // Check if still in a speaker zone for the same space
                 const remainingSpeakerZone = this.findActiveSpeakerZoneForSpace(uniqRoomName);
@@ -1711,20 +1747,48 @@ export class AreasPropertiesListener {
                 if (remainingListenerZone) {
                     // Still in another listener zone, update mute state based on remaining zones
                     isListenerStore.set(!this.shouldAllowTalkingInSpace(uniqRoomName));
+                    this.refreshMegaphoneGlobalStores(uniqRoomName);
                     return;
                 }
 
-                const proximityRoom = this.scene.proximityChatRoom;
-                proximityRoom.setDisplayName(get(LL).chat.proximity());
-                await proximityRoom.leaveSpace(uniqRoomName, true);
+                await this.scene.proximityChatRoomManager.leaveSpace(uniqRoomName, true);
 
                 currentLiveStreamingSpaceStore.set(undefined);
                 isListenerStore.set(false);
                 listenerWaitingMediaStore.set(undefined);
                 // Reset seeAttendees camera sharing state
                 listenerSharingCameraStore.set(false);
+                this.refreshMegaphoneGlobalStores(uniqRoomName);
             }
         }
+    }
+
+    private refreshMegaphoneGlobalStores(preferredSpaceName?: string): void {
+        const zones = Array.from(this.activeMegaphoneZones.values());
+        const speakerZone = zones.find((zone) => zone.role === "speaker");
+        const listenerZone =
+            (preferredSpaceName
+                ? zones.find((zone) => zone.spaceName === preferredSpaceName && zone.role === "listener")
+                : undefined) ?? zones.find((zone) => zone.role === "listener");
+
+        isSpeakerStore.set(speakerZone !== undefined);
+        isListenerStore.set(
+            speakerZone === undefined && zones.some((zone) => zone.role === "listener" && !zone.allowTalking),
+        );
+
+        const activeZone = speakerZone ?? listenerZone;
+        if (!activeZone) {
+            currentLiveStreamingSpaceStore.set(undefined);
+            listenerWaitingMediaStore.set(undefined);
+            listenerSharingCameraStore.set(false);
+            return;
+        }
+
+        currentLiveStreamingSpaceStore.set(
+            this.scene.proximityChatRoomManager.resolveTargetRoom(activeZone.spaceName)?.getCurrentSpace(),
+        );
+        listenerWaitingMediaStore.set(listenerZone?.waitingLink);
+        listenerSharingCameraStore.set(listenerZone?.seeAttendees ?? false);
     }
 
     /**

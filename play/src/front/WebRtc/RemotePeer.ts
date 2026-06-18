@@ -53,12 +53,10 @@ export class RemotePeer extends Peer implements Streamable {
     private closing = false; //this is used to prevent destroy() from being called twice
     private readonly localStreamStoreSubscribe: Unsubscriber;
     private readonly _hasVideo: Readable<boolean>;
-    private readonly _isMuted: Readable<boolean>;
-    private readonly _hasReceivedAudio: Readable<boolean>;
+    private readonly _hasAudio: Readable<boolean>;
     private readonly showVoiceIndicatorStore: ForwardableStore<boolean> = new ForwardableStore(false);
     public readonly flipX = false;
     public readonly muteAudio: Writable<boolean> = writable(false);
-    private readonly _hasAudio: Readable<boolean>;
     public readonly displayMode: "fit" | "cover";
     public readonly usePresentationMode: boolean;
     public readonly displayInPictureInPictureMode = true;
@@ -268,7 +266,6 @@ export class RemotePeer extends Peer implements Streamable {
         super(peerConfig);
 
         this.volume = writable(defaultVolume);
-        this._hasAudio = writable<boolean>(true);
         this.videoType = type;
         this.displayMode = type === "video" ? "cover" : "fit";
         this.usePresentationMode = !(type === "video");
@@ -365,51 +362,9 @@ export class RemotePeer extends Peer implements Streamable {
             undefined,
         );
 
-        /*this._hasVideo = derived(this._remoteStreamStore, ($remoteStream, set) => {
-            if (!$remoteStream) {
-                set(false);
-                return;
-            }
-            const update = () => set($remoteStream.getVideoTracks().length > 0);
-            update();
-            const onAdd = (e: MediaStreamTrackEvent) => {
-                if (e.track.kind === "video") update();
-            };
-            const onRemove = (e: MediaStreamTrackEvent) => {
-                if (e.track.kind === "video") update();
-            };
-            $remoteStream.addEventListener("addtrack", onAdd);
-            $remoteStream.addEventListener("removetrack", onRemove);
-            return () => {
-                $remoteStream.removeEventListener("addtrack", onAdd);
-                $remoteStream.removeEventListener("removetrack", onRemove);
-            };
-        });*/
         this._hasVideo = createMediaStreamTrackPresenceStore(this._remoteStreamStore, "video");
 
-        // Receiver-side diagnostic signal used to spot "space says microphone is enabled, but no audio track arrived".
-        this._hasReceivedAudio = createMediaStreamTrackPresenceStore(this._remoteStreamStore, "audio");
-
-        this._isMuted = derived(this._remoteStreamStore, ($remoteStream, set) => {
-            if (!$remoteStream) {
-                set(true);
-                return;
-            }
-            const update = () => set($remoteStream.getAudioTracks().every((track) => track.enabled === false));
-            update();
-            const onAdd = (e: MediaStreamTrackEvent) => {
-                if (e.track.kind === "audio") update();
-            };
-            const onRemove = (e: MediaStreamTrackEvent) => {
-                if (e.track.kind === "audio") update();
-            };
-            $remoteStream.addEventListener("addtrack", onAdd);
-            $remoteStream.addEventListener("removetrack", onRemove);
-            return () => {
-                $remoteStream.removeEventListener("addtrack", onAdd);
-                $remoteStream.removeEventListener("removetrack", onRemove);
-            };
-        });
+        this._hasAudio = createMediaStreamTrackPresenceStore(this._remoteStreamStore, "audio");
 
         this._isBlocked = derived(this._blockedUsersStore, ($blockedUsersStore) => {
             return $blockedUsersStore.has(this._spaceUserId);
@@ -830,14 +785,6 @@ export class RemotePeer extends Peer implements Streamable {
 
     get hasAudio(): Readable<boolean> {
         return this._hasAudio;
-    }
-
-    get hasReceivedAudio(): Readable<boolean> {
-        return this._hasReceivedAudio;
-    }
-
-    get isMuted(): Readable<boolean> {
-        return this._isMuted;
     }
 
     get name(): Readable<string> {

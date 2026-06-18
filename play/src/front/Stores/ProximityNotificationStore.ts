@@ -45,6 +45,11 @@ function createChatNotificationStore() {
         clearAll: (): void => {
             update(() => []);
         },
+        clearRoom: (roomId: string): void => {
+            update((notifications: ProximityNotification[]) => {
+                return notifications.filter((notification) => notification.room.id !== roomId);
+            });
+        },
     };
 }
 

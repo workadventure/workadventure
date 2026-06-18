@@ -874,20 +874,20 @@
         />
 
         <div class="properties-container flex flex-col gap-8 p-1">
-            {#each properties as property (property.id)}
+            {#each properties as property, i (property.id)}
                 {#if property.type !== "areaDescriptionProperties"}
                     <div class="property-box border border-solid border-white/20 bg-white/5 rounded p-2">
-                        {#if property.type === "focusable"}
+                        {#if properties[i].type === "focusable"}
                             <FocusablePropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
                                 onchange={() => onUpdateProperty(property)}
                             />
-                        {:else if property.type === "highlight"}
+                        {:else if properties[i].type === "highlight"}
                             <HighlightPropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
@@ -899,9 +899,9 @@
                                     onDeleteProperty(property.id);
                                 }}
                             />
-                        {:else if property.type === "jitsiRoomProperty"}
+                        {:else if properties[i].type === "jitsiRoomProperty"}
                             <JitsiRoomPropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 isArea={true}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
@@ -917,34 +917,34 @@
                                 }}
                                 onaudiolink={onUpdateAudioProperty}
                             />
-                        {:else if property.type === "openWebsite"}
+                        {:else if properties[i].type === "openWebsite"}
                             <OpenWebsitePropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 isArea={true}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
                                 onchange={() => onUpdateProperty(property)}
                             />
-                        {:else if property.type === "speakerMegaphone"}
+                        {:else if properties[i].type === "speakerMegaphone"}
                             <SpeakerMegaphonePropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
                                 onchange={() => onUpdateProperty(property)}
                             />
-                        {:else if property.type === "listenerMegaphone"}
+                        {:else if properties[i].type === "listenerMegaphone"}
                             <ListenerMegaphonePropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
                                 onchange={() => onUpdateProperty(property)}
                             />
-                        {:else if property.type === "start"}
+                        {:else if properties[i].type === "start"}
                             <StartPropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 startAreaName={areaName}
                                 updateStartAreaNameCallback={(name) => {
                                     // Wait for the name to be updated in the DOM
@@ -959,38 +959,38 @@
                                 }}
                                 onchange={() => onUpdateProperty(property)}
                             />
-                        {:else if property.type === "exit"}
+                        {:else if properties[i].type === "exit"}
                             <ExitPropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
                                 onchange={() => onUpdateProperty(property)}
                             />
-                        {:else if property.type === "restrictedRightsPropertyData"}
+                        {:else if properties[i].type === "restrictedRightsPropertyData"}
                             <RightsPropertyEditor
-                                restrictedRightsPropertyData={property}
+                                bind:property={properties[i]}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
                                 onchange={() => onUpdateProperty(property)}
                             />
-                        {:else if property.type === "personalAreaPropertyData"}
+                        {:else if properties[i].type === "personalAreaPropertyData"}
                             <PersonalAreaPropertyEditor
-                                personalAreaPropertyData={property}
+                                bind:property={properties[i]}
                                 onclose={(removeAreaEntities) => {
                                     onDeleteProperty(property.id, removeAreaEntities);
                                 }}
                                 onchange={(removeAreaEntities) => onUpdateProperty(property, removeAreaEntities)}
                             />
-                        {:else if property.type === "extensionModule" && extensionModulesAreaMapEditor.length > 0}
+                        {:else if properties[i].type === "extensionModule" && extensionModulesAreaMapEditor.length > 0}
                             {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
-                                {#if extensionModuleAreaMapEditor[property.subtype] != undefined}
+                                {#if extensionModuleAreaMapEditor[properties[i].subtype] != undefined}
                                     {@const AreaPropertyEditor =
-                                        extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
+                                        extensionModuleAreaMapEditor[properties[i].subtype].AreaPropertyEditor}
                                     <AreaPropertyEditor
                                         {extensionModuleAreaMapEditor}
-                                        {property}
+                                        bind:property={properties[i]}
                                         onclose={() => {
                                             onDeleteProperty(property.id);
                                         }}
@@ -998,34 +998,34 @@
                                     />
                                 {/if}
                             {/each}
-                        {:else if property.type === "matrixRoomPropertyData"}
+                        {:else if properties[i].type === "matrixRoomPropertyData"}
                             <MatrixRoomPropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
                                 onchange={() => onUpdateProperty(property)}
                             />
-                        {:else if property.type === "tooltipPropertyData"}
+                        {:else if properties[i].type === "tooltipPropertyData"}
                             <TooltipPropertyButton
-                                {property}
+                                bind:property={properties[i]}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
                                 onchange={() => onUpdateProperty(property)}
                             />
-                        {:else if property.type === "openFile"}
+                        {:else if properties[i].type === "openFile"}
                             <OpenFilePropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 isArea={true}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
                                 onchange={() => onUpdateProperty(property)}
                             />
-                        {:else if property.type === "livekitRoomProperty"}
+                        {:else if properties[i].type === "livekitRoomProperty"}
                             <LivekitRoomPropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 {hasHighlightProperty}
                                 shouldDisableDisableChatButton={hasMatrixRoom}
                                 onclose={() => {
@@ -1034,17 +1034,17 @@
                                 onchange={() => onUpdateProperty(property)}
                                 onhighlightareaonenter={() => onAddProperty("highlight")}
                             />
-                        {:else if property.type === "lockableAreaPropertyData"}
+                        {:else if properties[i].type === "lockableAreaPropertyData"}
                             <LockableAreaPropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
                                 onchange={() => onUpdateProperty(property)}
                             />
-                        {:else if property.type === "maxUsersInAreaPropertyData"}
+                        {:else if properties[i].type === "maxUsersInAreaPropertyData"}
                             <MaxUsersInAreaPropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}

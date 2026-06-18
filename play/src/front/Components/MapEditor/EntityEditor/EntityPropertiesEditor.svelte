@@ -433,33 +433,33 @@
         />
 
         <div class="properties-container flex flex-col gap-8 p-1">
-            {#each properties as property (property.id)}
+            {#each properties as property, i (property.id)}
                 {#if property.type !== "entityDescriptionProperties"}
                     <div class="property-box border border-solid border-white/20 bg-white/5 rounded p-2">
-                        {#if property.type === "playAudio"}
+                        {#if properties[i].type === "playAudio"}
                             <PlayAudioPropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
-                                onchange={() => onUpdateProperty(property)}
+                                onchange={() => onUpdateProperty(properties[i])}
                             />
-                        {:else if property.type === "openWebsite"}
+                        {:else if properties[i].type === "openWebsite"}
                             <OpenWebsitePropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 triggerOptionActivated={false}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
-                                onchange={() => onUpdateProperty(property)}
+                                onchange={() => onUpdateProperty(properties[i])}
                             />
-                        {:else if property.type === "openFile"}
+                        {:else if properties[i].type === "openFile"}
                             <OpenFilePropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
-                                onchange={() => onUpdateProperty(property)}
+                                onchange={() => onUpdateProperty(properties[i])}
                             />
                         {/if}
                     </div>

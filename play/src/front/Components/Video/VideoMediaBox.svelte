@@ -58,8 +58,6 @@
 
     let hasVideoStore = $derived(streamable?.hasVideo);
     let hasAudioStore = $derived(streamable?.hasAudio);
-    let hasReceivedAudioStore = $derived(streamable?.hasReceivedAudio);
-    let isMutedStore = $derived(streamable?.isMuted);
     let volumeMeterStore = $derived(streamable?.volumeStore);
     let showVoiceIndicatorStore = $derived(streamable?.showVoiceIndicator);
     let isBlockedStore = $derived(streamable?.media?.isBlocked);
@@ -87,21 +85,20 @@
     // Check if this is the local user's video box
     let isLocalUser = $derived(videoBox.uniqueId === "-1" || extendedSpaceUser?.spaceUserId === "local");
     // Debugging aid for the rare case where the space says the remote microphone is enabled but this receiver has no audio.
-    let hasAudioStateMismatch = $derived(
+    let audioStateMismatch = $derived(
         effectiveStatus === "connected" &&
             streamable?.videoType === "video" &&
             !isLocalUser &&
-            $hasAudioStore === true &&
             $isBlockedStore !== true &&
             $microphoneStateStore === true &&
-            $hasReceivedAudioStore === false,
+            $hasAudioStore === false,
     );
-    // Like hasAudioStateMismatch, but with a 3 seconds delay.
+    // Like audioStateMismatch, but with a 3 seconds delay.
     let showAudioStateMismatch = $state(false);
     let loggedAudioMismatchKey: string | undefined = undefined;
 
     $effect(() => {
-        if (!hasAudioStateMismatch) {
+        if (!audioStateMismatch) {
             return;
         }
 
@@ -125,8 +122,6 @@
                 spaceUserId: extendedSpaceUser?.spaceUserId,
                 status: effectiveStatus,
                 hasAudio: $hasAudioStore,
-                hasReceivedAudio: $hasReceivedAudioStore,
-                isMuted: $isMutedStore,
                 microphoneState: $microphoneStateStore,
                 audioTrackCount: audioTracks.length,
                 audioTracks,
@@ -411,7 +406,7 @@
                                 {/if}
                             </UserName>
 
-                            {#if effectiveStatus === "connected" && $hasAudioStore && !$isBlockedStore}
+                            {#if effectiveStatus === "connected" && !$isBlockedStore}
                                 <div
                                     class="z-[251] absolute p-2 right-1 white"
                                     class:top-1={videoEnabled}
@@ -419,7 +414,7 @@
                                     class:text-white={$activePictureInPictureStore}
                                     class:opacity-20={$activePictureInPictureStore}
                                 >
-                                    {#if !$isMutedStore && !hasAudioStateMismatch}
+                                    {#if $hasAudioStore && !audioStateMismatch}
                                         <SoundMeterWidget
                                             volume={volumeMeter}
                                             cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
