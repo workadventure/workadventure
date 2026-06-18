@@ -279,7 +279,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             label: "Info Bulle",
             description: "Afficher une info bulle lors de l'interaction avec l'objet ℹ️",
             contentPlaceholder: "Contenu de l'info bulle 📝",
-            duration: "Duration (en secondes) ⏱️",
+            duration: "Durée (en secondes) ⏱️",
             infinityDuration: "Infini ⏱️",
             actionButtonLabel: "Voir l'info bulle",
         },
