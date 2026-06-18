@@ -3026,7 +3026,7 @@ ${escapedMessage}
                         console.error("Error while sending typing status", e);
                     });
                 }
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
@@ -3654,7 +3654,7 @@ ${escapedMessage}
         const stopListeningToStreamInBubbleSubscription = iframeListener.stopListeningToStreamInBubbleStream.subscribe(
             () => {
                 this.getDefaultProximityChatRoom().stopListeningToScriptingAudioStream();
-            }
+            },
         );
         this.unsubscribers.push(() => stopListeningToStreamInBubbleSubscription.unsubscribe());
 

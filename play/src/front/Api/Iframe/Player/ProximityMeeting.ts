@@ -27,7 +27,7 @@ export class Meeting {
         public readonly id: string,
         public readonly name: string,
         public readonly kind: MeetingKind,
-        public participants: RemotePlayer[]
+        public participants: RemotePlayer[],
     ) {}
 
     onParticipantJoin(): Subject<RemotePlayer> {
@@ -62,7 +62,7 @@ export class Meeting {
             },
             {
                 timeout: null,
-            }
+            },
         );
     }
 
