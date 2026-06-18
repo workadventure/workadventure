@@ -201,7 +201,7 @@ export class ProximityChatRoom implements ChatRoom {
                     get(this.name),
                 ),
             );
-        }
+        },
     ) {
         this.id = `proximity:${spaceName}`;
         this.name = writable(displayName);

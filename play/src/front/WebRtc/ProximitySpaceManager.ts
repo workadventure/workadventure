@@ -11,7 +11,10 @@ export class ProximitySpaceManager {
     private joinSpaceRequestMessageSubscription: Subscription;
     private leaveSpaceRequestMessageSubscription: Subscription;
 
-    public constructor(roomConnection: RoomConnection, private proximityChatRoomManager: ProximityChatRoomManager) {
+    public constructor(
+        roomConnection: RoomConnection,
+        private proximityChatRoomManager: ProximityChatRoomManager,
+    ) {
         this.joinSpaceRequestMessageSubscription = roomConnection.joinSpaceRequestMessage.subscribe(
             ({ spaceName, propertiesToSync }) => {
                 this.proximityChatRoomManager.joinDefaultSpace(spaceName, propertiesToSync).catch((e) => {

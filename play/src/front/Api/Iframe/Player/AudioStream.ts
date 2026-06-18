@@ -21,7 +21,7 @@ export class AudioStream {
                 {
                     transfer: [float32Array.buffer],
                     timeout: null,
-                }
+                },
             );
         }
 

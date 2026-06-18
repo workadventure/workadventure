@@ -11,7 +11,7 @@ export type ProximityChatRoomKind = "default" | "proximity" | "meeting" | "liste
 export type ProximityChatRoomFactory = (
     spaceName: string,
     displayName: string,
-    kind: ProximityChatRoomKind
+    kind: ProximityChatRoomKind,
 ) => ProximityChatRoom;
 
 export function getProximityAreaRoomDisplayName(displayName: string, kind: ProximityChatRoomKind): string {
@@ -53,7 +53,7 @@ export class ProximityChatRoomManager {
 
         return derived(
             rooms.map((room) => room.unreadMessagesCount),
-            (counts) => counts.reduce((total, count) => total + count, 0)
+            (counts) => counts.reduce((total, count) => total + count, 0),
         ).subscribe(set);
     });
 
@@ -62,7 +62,7 @@ export class ProximityChatRoomManager {
     public getOrCreateRoom(
         spaceName: string,
         displayName: string,
-        kind: ProximityChatRoomKind = "area"
+        kind: ProximityChatRoomKind = "area",
     ): ProximityChatRoom {
         const normalizedDisplayName = getProximityAreaRoomDisplayName(displayName, kind);
         const existingRoom = this.rooms.get(spaceName);
@@ -86,7 +86,7 @@ export class ProximityChatRoomManager {
         filterType: FilterType = FilterType.ALL_USERS,
         disableChat = false,
         signal?: AbortSignal,
-        kind: ProximityChatRoomKind = "area"
+        kind: ProximityChatRoomKind = "area",
     ): Promise<ProximityChatRoom> {
         const room = this.getOrCreateRoom(spaceName, displayName, kind);
         await room.joinSpace(spaceName, propertiesToSync, isMeetingRoomChat, filterType, disableChat, signal);
@@ -100,7 +100,7 @@ export class ProximityChatRoomManager {
     public async joinDefaultSpace(
         spaceName: string,
         propertiesToSync: string[],
-        signal?: AbortSignal
+        signal?: AbortSignal,
     ): Promise<ProximityChatRoom> {
         const room = this.getOrCreateRoom(DEFAULT_PROXIMITY_SPACE_NAME, "Proximity Chat", "default");
         await room.joinSpace(spaceName, propertiesToSync, false, FilterType.ALL_USERS, false, signal);
@@ -250,7 +250,7 @@ export class ProximityChatRoomManager {
                     return 1;
                 }
                 return 0;
-            })
+            }),
         );
     }
 }

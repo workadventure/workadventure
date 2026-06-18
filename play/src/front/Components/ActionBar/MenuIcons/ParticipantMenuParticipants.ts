@@ -23,7 +23,7 @@ export type ProximityParticipantView = {
 
 export function buildProximityParticipantView(
     rooms: ProximityParticipantRoomSnapshot[],
-    localUuid: string
+    localUuid: string,
 ): ProximityParticipantView {
     const participantGroups: ProximityParticipantGroup[] = [];
     const uniqueParticipantsByKey = new Map<string, MeetingParticipant>();
