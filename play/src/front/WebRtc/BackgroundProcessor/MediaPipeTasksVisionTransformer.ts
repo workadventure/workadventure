@@ -2,6 +2,7 @@ import type { MPMask } from "@mediapipe/tasks-vision";
 import { ImageSegmenter, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
+import { CanvasBlurRenderer } from "./CanvasBlurRenderer";
 import type { BackgroundConfig, BackgroundTransformer } from "./createBackgroundTransformer";
 
 /**
@@ -47,6 +48,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     // Canvas for foreground video (updated each frame, but HTMLCanvasElement is faster than HTMLVideoElement)
     private foregroundCanvas: HTMLCanvasElement | null = null;
     private foregroundCtx: CanvasRenderingContext2D | null = null;
+    private blurRenderer = new CanvasBlurRenderer();
 
     constructor(private config: BackgroundConfig) {
         // Create WebGL canvas for MediaPipe (shared with ImageSegmenter and DrawingUtils)
@@ -314,10 +316,14 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             this.foregroundCanvas!.height = height;
         }
 
-        // Draw blurred background onto the blurred canvas (using CSS filter)
-        this.blurredCtx!.filter = `blur(${this.config.blurAmount || 15}px)`;
-        this.blurredCtx!.drawImage(this.inputVideo, 0, 0, width, height);
-        this.blurredCtx!.filter = "none";
+        // Draw blurred background onto the blurred canvas.
+        this.blurRenderer.drawBlurredImage(
+            this.blurredCtx!,
+            this.inputVideo,
+            width,
+            height,
+            this.config.blurAmount || 15,
+        );
 
         // Draw current video frame to foreground canvas (HTMLCanvasElement is faster than HTMLVideoElement)
         this.foregroundCtx!.drawImage(this.inputVideo, 0, 0, width, height);
@@ -466,6 +472,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             frameCount: this.frameCount,
             elapsed: Math.round(elapsed),
             closed: this.closed,
+            blurBackend: this.config.mode === "blur" ? this.blurRenderer.getLastBackend() : "none",
         };
     }
 
@@ -533,6 +540,8 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         // Clean up foreground canvas
         this.foregroundCanvas = null;
         this.foregroundCtx = null;
+
+        this.blurRenderer.close();
     }
 
     public async transform(inputStream: MediaStream, signal?: AbortSignal): Promise<MediaStream> {

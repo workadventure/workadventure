@@ -2,6 +2,7 @@ import type { SelfieSegmentationResults } from "@mediapipe/selfie_segmentation";
 import { SelfieSegmentation } from "@mediapipe/selfie_segmentation";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
+import { CanvasBlurRenderer } from "./CanvasBlurRenderer";
 import type { BackgroundTransformer } from "./createBackgroundTransformer";
 
 /**
@@ -29,6 +30,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     // Reusable temporary canvas to avoid WebGL context leaks
     private tempCanvas: HTMLCanvasElement | null = null;
     private tempCtx: CanvasRenderingContext2D | null = null;
+    private blurRenderer = new CanvasBlurRenderer();
 
     constructor(
         private config: {
@@ -145,9 +147,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         }
 
         // Step 1: Draw the entire image with blur as background
-        this.ctx.filter = `blur(${this.config.blurAmount || 15}px)`;
-        this.ctx.drawImage(results.image, 0, 0, width, height);
-        this.ctx.filter = "none";
+        this.blurRenderer.drawBlurredImage(this.ctx, results.image, width, height, this.config.blurAmount || 15);
 
         // Step 2: Use reusable temporary canvas for the person (sharp)
         if (!this.tempCanvas || !this.tempCtx) {
@@ -261,6 +261,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
             frameCount: this.frameCount,
             elapsed: Math.round(elapsed),
             closed: this.closed,
+            blurBackend: this.config.mode === "blur" ? this.blurRenderer.getLastBackend() : "none",
         };
     }
     public stop(): void {
@@ -307,6 +308,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         // Clean up temporary canvas
         this.tempCanvas = null;
         this.tempCtx = null;
+        this.blurRenderer.close();
     }
 
     public async transform(inputStream: MediaStream, signal?: AbortSignal): Promise<MediaStream> {
