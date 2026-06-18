@@ -30,11 +30,6 @@ export interface BackgroundTransformer {
  * @returns A MediaPipe transformer instance or fallback
  */
 export function createBackgroundTransformer(config: BackgroundConfig): BackgroundTransformer {
-    // Check browser support for MediaStream APIs
-    if (typeof MediaStreamTrackProcessor === "undefined" || typeof MediaStreamTrackGenerator === "undefined") {
-        return new FallbackBackgroundTransformer();
-    }
-
     const engine = BACKGROUND_TRANSFORMER_ENGINE || "tasks-vision";
     console.info(`[BackgroundProcessor] Using transformer engine: ${engine}`);
 
