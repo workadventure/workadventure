@@ -873,10 +873,10 @@
             onchange={onUpdateAreaSearchable}
         />
 
-        <div class="properties-container p-1">
+        <div class="properties-container flex flex-col gap-8 p-1">
             {#each properties as property (property.id)}
                 {#if property.type !== "areaDescriptionProperties"}
-                    <div class="property-box border border-solid border-white/20 bg-white/5 rounded p-2 my-8">
+                    <div class="property-box border border-solid border-white/20 bg-white/5 rounded p-2">
                         {#if property.type === "focusable"}
                             <FocusablePropertyEditor
                                 {property}

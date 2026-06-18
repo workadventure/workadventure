@@ -406,8 +406,12 @@
                             onmouseenter={() => highlightEntity(entity)}
                             onmouseleave={() => unhighlightEntity(entity)}
                             onclick={() => handlerToSelectEntity(entity)}
-                            class="item p-2 rounded flex flex-row justify-start gap-2 items-center cursor-pointer hover:bg-white/10 transition-all"
-                            class:active={$mapExplorationObjectSelectedStore === entity}
+                            class={[
+                                "item p-2 rounded flex flex-row justify-start gap-2 items-center cursor-pointer hover:bg-white/10 transition-all",
+                                {
+                                    "bg-white/10": $mapExplorationObjectSelectedStore === entity,
+                                },
+                            ]}
                         >
                             <img
                                 draggable="false"
@@ -491,8 +495,12 @@
                                 onmouseenter={() => highlightArea(area)}
                                 onmouseleave={() => unhighlightArea(area)}
                                 onclick={() => handlerToSelectArea(area)}
-                                class="item p-2 rounded flex flex-row justify-start gap-2 items-center cursor-pointer hover:bg-white/10 transition-all"
-                                class:active={$mapExplorationObjectSelectedStore === area}
+                                class={[
+                                    "item p-2 rounded flex flex-row justify-start gap-2 items-center cursor-pointer hover:bg-white/10 transition-all",
+                                    {
+                                        "bg-white/10": $mapExplorationObjectSelectedStore === area,
+                                    },
+                                ]}
                                 title={area.getAreaData().name || "No name"}
                             >
                                 <img
@@ -536,29 +544,3 @@
         </div>
     </div>
 </div>
-
-<style>
-    .mapexplorer {
-        scrollbar-width: 20px;
-        scrollbar-color: rgb(0 0 0 / 0.8) rgb(0 0 0 / 0.2);
-    }
-    .mapexplorer::-webkit-scrollbar {
-        width: 20px;
-    }
-    .mapexplorer::-webkit-scrollbar-track {
-        background-color: transparent;
-    }
-    .mapexplorer::-webkit-scrollbar-thumb {
-        background-color: rgb(0 0 0 / 0.5);
-        border-radius: 20px;
-        border: 6px solid transparent;
-        background-clip: content-box;
-        cursor: grab;
-    }
-    .mapexplorer::-webkit-scrollbar-thumb:hover {
-        background-color: rgb(0 0 0 / 1);
-    }
-    .item.active {
-        background-color: rgba(255, 255, 255, 0.2);
-    }
-</style>

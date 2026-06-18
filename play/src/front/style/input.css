@@ -18,6 +18,7 @@ button.button-state {
 
 .input-select {
   @apply mb-2;
+
   label {
     @apply font-medium mb-1.5;
   }
@@ -33,9 +34,14 @@ button.button-state {
   }
 }
 
+.input-select:last-child {
+  @apply mb-0;
+}
+
 /* InputTags.svelte */
 .input-tags {
   @apply mb-2;
+
   label {
     @apply font-medium mb-1.5;
   }
@@ -49,6 +55,10 @@ button.button-state {
   .svelte-select .svelte-select-list, .value-container .multi-item :is(.multi-item-clear, .multi-item-text), .svelte-select .indicators svg {
     @apply text-brand-blue;
   }
+}
+
+.input-tags:last-child {
+  @apply mb-0;
 }
 
 .svelte-select {
@@ -67,6 +77,7 @@ button.button-state {
 /* InputText.svelte */
 .input-text {
   @apply mb-2;
+
   label {
     @apply font-medium mb-1.5;
   }
@@ -81,4 +92,8 @@ button.button-state {
   span {
     @apply text-xs text-pop-red;
   }
+}
+
+.input-text:last-child {
+  @apply mb-0;
 }

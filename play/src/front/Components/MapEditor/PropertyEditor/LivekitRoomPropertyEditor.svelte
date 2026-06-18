@@ -70,7 +70,7 @@
                 />
             </div>
             <button
-                class=" w-full mt-4 btn bg-transparent rounded-md hover:!bg-white/10 transition-all border !border-white py-2"
+                class="w-full mt-4 btn bg-transparent rounded-md hover:!bg-white/10 transition-all border !border-white py-2"
                 onclick={OpenPopup}
                 data-testid="livekitRoomMoreOptionsButton"
             >
@@ -94,7 +94,6 @@
     button {
         flex: 1 1 0px;
         border: 1px solid grey;
-        margin-bottom: 0.5em;
     }
     button:hover {
         background-color: rgb(77 75 103);
