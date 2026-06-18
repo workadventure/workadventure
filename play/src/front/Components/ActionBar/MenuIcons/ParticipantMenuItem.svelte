@@ -2,6 +2,7 @@
     import { clickOutside } from "svelte-outside";
     import { getContext, setContext } from "svelte";
     import { derived, get, type Readable, type Unsubscriber } from "svelte/store";
+    import { SvelteMap } from "svelte/reactivity";
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import { navChat } from "../../../Chat/Stores/ChatStore";
@@ -127,7 +128,7 @@
                 return;
             }
 
-            const roomStates = new Map<string, ProximityParticipantRoomSnapshot>();
+            const roomStates = new SvelteMap<string, ProximityParticipantRoomSnapshot>();
             let roomUnsubscribers: Unsubscriber[] = [];
 
             const clearRoomSubscriptions = () => {
