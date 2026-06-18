@@ -297,6 +297,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     nothingToDisplay: "Ničo za pokazanje",
     showMore: "Pokazać {number} wjace",
     showLess: "Pokazać mjenje",
+    showFullMessage: "Show more",
+    showLessMessage: "Show less",
     addRoomToFolderError: "Njemóžno, rum k zarědej přidać",
     createRoom: {
         title: "Nowy rum napořeć",
@@ -622,6 +624,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     whoops: "Ups! Zmylka je nastała",
     failedToOpenRoom: "Njemóžno, rum wočinić: {roomId}",
     failedToSendAttachments: "Njemóžno, přiwěški pósłać. Prošu wopytajće hišće raz.",
+    failedToSendMessage: "Failed to send message. Please try again.",
+    partiallyFailedToSendMessage: "Part of the message was sent. The unsent text was kept in the input.",
     refreshChatError: "Njemóžno, chat aktualizować",
     discord: {
         chatBand: {

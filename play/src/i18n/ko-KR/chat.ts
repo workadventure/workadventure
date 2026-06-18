@@ -298,6 +298,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     nothingToDisplay: "표시할 내용이 없습니다",
     showMore: "메시지 {number}개 더 보기",
     showLess: "적게 보기",
+    showFullMessage: "Show more",
+    showLessMessage: "Show less",
     addRoomToFolderError: "방을 폴더에 추가할 수 없습니다",
     createRoom: {
         title: "새 방 만들기",
@@ -622,6 +624,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     whoops: "앗! 문제가 발생했습니다",
     failedToOpenRoom: "방 열기 실패: {roomId}",
     failedToSendAttachments: "첨부파일을 보낼 수 없습니다. 다시 시도해 주세요.",
+    failedToSendMessage: "Failed to send message. Please try again.",
+    partiallyFailedToSendMessage: "Part of the message was sent. The unsent text was kept in the input.",
     refreshChatError: "채팅 새로고침 실패",
     discord: {
         chatBand: {

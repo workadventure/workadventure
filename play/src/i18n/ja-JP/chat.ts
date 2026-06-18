@@ -297,6 +297,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     nothingToDisplay: "表示するものはありません",
     showMore: "{number} 件をさらに表示",
     showLess: "表示を減らす",
+    showFullMessage: "Show more",
+    showLessMessage: "Show less",
     addRoomToFolderError: "フォルダーにルームを追加できません",
     createRoom: {
         title: "新しいルームの作成",
@@ -622,6 +624,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     whoops: "おっと！エラーが発生しました",
     failedToOpenRoom: "ルームを開けませんでした: {roomId}",
     failedToSendAttachments: "添付ファイルを送信できませんでした。もう一度お試しください。",
+    failedToSendMessage: "Failed to send message. Please try again.",
+    partiallyFailedToSendMessage: "Part of the message was sent. The unsent text was kept in the input.",
     refreshChatError: "チャットを更新できませんでした",
     discord: {
         chatBand: {

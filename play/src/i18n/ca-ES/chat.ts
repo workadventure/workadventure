@@ -296,6 +296,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     nothingToDisplay: "Res a mostrar",
     showMore: "Mostrar {number} més",
     showLess: "Mostrar menys",
+    showFullMessage: "Show more",
+    showLessMessage: "Show less",
     addRoomToFolderError: "Impossible afegir la sala a la carpeta",
     createRoom: {
         title: "Crear una nova sala",
@@ -621,6 +623,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     whoops: "Vaja! S'ha produït un error",
     failedToOpenRoom: "No s'ha pogut obrir la sala: {roomId}",
     failedToSendAttachments: "No s'han pogut enviar els fitxers adjunts. Torna-ho a provar.",
+    failedToSendMessage: "Failed to send message. Please try again.",
+    partiallyFailedToSendMessage: "Part of the message was sent. The unsent text was kept in the input.",
     refreshChatError: "No s'ha pogut actualitzar el xat",
     discord: {
         chatBand: {

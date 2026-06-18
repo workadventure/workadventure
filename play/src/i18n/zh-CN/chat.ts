@@ -294,6 +294,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     nothingToDisplay: "无内容显示",
     showMore: "显示更多 {number} 条",
     showLess: "显示更少",
+    showFullMessage: "Show more",
+    showLessMessage: "Show less",
     addRoomToFolderError: "无法将房间添加到文件夹",
     createRoom: {
         title: "创建新房间",
@@ -617,6 +619,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     whoops: "哎呀！出错了",
     failedToOpenRoom: "打开房间失败: {roomId}",
     failedToSendAttachments: "发送附件失败。请重试。",
+    failedToSendMessage: "Failed to send message. Please try again.",
+    partiallyFailedToSendMessage: "Part of the message was sent. The unsent text was kept in the input.",
     refreshChatError: "刷新聊天失败",
     discord: {
         chatBand: {

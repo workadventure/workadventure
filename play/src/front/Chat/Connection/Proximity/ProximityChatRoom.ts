@@ -21,6 +21,7 @@ import type {
     ChatMessageReaction,
     ChatMessageType,
     ChatRoom,
+    ChatSendMessageResult,
 } from "../ChatConnection";
 import LL, { locale } from "../../../../i18n/i18n-svelte";
 import { iframeListener } from "../../../Api/IframeListener";
@@ -236,7 +237,11 @@ export class ProximityChatRoom implements ChatRoom {
             });
     }
 
-    sendMessage(message: string, action: ChatMessageType = "proximity", broadcast = true): void {
+    sendMessage(
+        message: string,
+        action: ChatMessageType = "proximity",
+        broadcast = true
+    ): Promise<ChatSendMessageResult> {
         // Create content message
         const newChatMessageContent = {
             body: message,
@@ -284,6 +289,12 @@ export class ProximityChatRoom implements ChatRoom {
                 console.error("Error while sending message to WorkAdventure scripting API", e);
             }
         }
+
+        return Promise.resolve({ status: "sent" });
+    }
+
+    private addLocalTimelineMessage(message: string, action: ChatMessageType): void {
+        this.sendMessage(message, action, false).catch((error) => console.error(error));
     }
 
     private addEnteringChatWithUsers(users: SpaceUserExtended[]) {
@@ -295,15 +306,15 @@ export class ProximityChatRoom implements ChatRoom {
             // For old browsers
             userNames = users.map((user) => user.name).join(", ");
         }
-        this.sendMessage(get(LL).chat.timeLine.newDiscussion({ userNames }), "incoming", false);
+        this.addLocalTimelineMessage(get(LL).chat.timeLine.newDiscussion({ userNames }), "incoming");
     }
 
     private addIncomingUser(spaceUser: SpaceUserExtended): void {
-        this.sendMessage(get(LL).chat.timeLine.incoming({ userName: spaceUser.name }), "incoming", false);
+        this.addLocalTimelineMessage(get(LL).chat.timeLine.incoming({ userName: spaceUser.name }), "incoming");
     }
 
     private addOutcomingUser(spaceUser: SpaceUserExtended): void {
-        this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: spaceUser.name }), "outcoming", false);
+        this.addLocalTimelineMessage(get(LL).chat.timeLine.outcoming({ userName: spaceUser.name }), "outcoming");
         this.removeTypingUserbyID(spaceUser.spaceUserId.toString());
     }
 
@@ -708,7 +719,7 @@ export class ProximityChatRoom implements ChatRoom {
             this.addEnteringChatWithUsers(users);
             this.soundManager.playBubbleInSound();
         } else {
-            this.sendMessage(get(LL).chat.timeLine.youJoinedMeetingRoom(), "incoming", false);
+            this.addLocalTimelineMessage(get(LL).chat.timeLine.youJoinedMeetingRoom(), "incoming");
             this.soundManager.playMeetingInSound();
         }
         await this.throwIfAborted(joinSignal, spaceForThisJoin);
@@ -946,9 +957,9 @@ export class ProximityChatRoom implements ChatRoom {
         if (this.users) {
             if (this.users.size > 2) {
                 if (isMeetingRoomChat) {
-                    this.sendMessage(get(LL).chat.timeLine.youleftMeetingRoom(), "outcoming", false);
+                    this.addLocalTimelineMessage(get(LL).chat.timeLine.youleftMeetingRoom(), "outcoming");
                 } else {
-                    this.sendMessage(get(LL).chat.timeLine.youLeft(), "outcoming", false);
+                    this.addLocalTimelineMessage(get(LL).chat.timeLine.youLeft(), "outcoming");
                 }
             } else {
                 for (const user of this.users.values()) {
@@ -956,9 +967,12 @@ export class ProximityChatRoom implements ChatRoom {
                         continue;
                     }
                     if (isMeetingRoomChat) {
-                        this.sendMessage(get(LL).chat.timeLine.youleftMeetingRoom(), "outcoming", false);
+                        this.addLocalTimelineMessage(get(LL).chat.timeLine.youleftMeetingRoom(), "outcoming");
                     } else {
-                        this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: user.name }), "outcoming", false);
+                        this.addLocalTimelineMessage(
+                            get(LL).chat.timeLine.outcoming({ userName: user.name }),
+                            "outcoming"
+                        );
                     }
                 }
             }
