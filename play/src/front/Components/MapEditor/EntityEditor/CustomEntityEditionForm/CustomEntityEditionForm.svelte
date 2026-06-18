@@ -34,7 +34,7 @@
     } = $state((() => customEntity)());
     let inputTagOptions: InputTagOption[] | undefined = $state(tags.map((tag) => ({ value: tag, label: tag })));
 
-    let collisionGrid = $state(customEntityCollisionGrid ?? []);
+    let collisionGrid = $state(customEntityCollisionGrid ? customEntityCollisionGrid.map((row) => [...row]) : []);
     let floatingObject = $state((() => (isUploadForm ? false : customEntityCollisionGrid === undefined))());
     let depthOffset: number = $state(depthOffsetCustomEntity ? depthOffsetCustomEntity * -1 : 0);
     let entityImageRef: HTMLImageElement | undefined = $state();

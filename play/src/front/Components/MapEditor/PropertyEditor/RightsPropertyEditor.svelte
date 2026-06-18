@@ -8,16 +8,16 @@
     import { IconInfoCircle, IconShieldLock } from "@wa-icons";
 
     interface Props {
-        restrictedRightsPropertyData: RestrictedRightsPropertyData;
+        property: RestrictedRightsPropertyData;
         onchange?: () => void;
         onclose?: () => void;
     }
 
-    let { restrictedRightsPropertyData, onchange, onclose }: Props = $props();
+    let { property = $bindable(), onchange, onclose }: Props = $props();
 
     let writeTags: InputTagOption[] | undefined = $state(
         (() =>
-            restrictedRightsPropertyData.writeTags.map((writeTag) => ({
+            property.writeTags.map((writeTag) => ({
                 value: writeTag,
                 label: writeTag,
                 created: false,
@@ -25,7 +25,7 @@
     );
     let readTags: InputTagOption[] | undefined = $state(
         (() =>
-            restrictedRightsPropertyData.readTags.map((readTag) => ({
+            property.readTags.map((readTag) => ({
                 value: readTag,
                 label: readTag,
                 created: false,
@@ -34,8 +34,8 @@
     let _tag: InputTagOption[] = [];
 
     function onChangeWriteReadTags() {
-        restrictedRightsPropertyData.readTags = readTags ? toTags(readTags) : [];
-        restrictedRightsPropertyData.writeTags = writeTags ? toTags(writeTags) : [];
+        property.readTags = readTags ? toTags(readTags) : [];
+        property.writeTags = writeTags ? toTags(writeTags) : [];
         onchange?.();
     }
 </script>

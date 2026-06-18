@@ -17,16 +17,16 @@
     import { modals } from "@wa-modals";
 
     interface Props {
-        personalAreaPropertyData: PersonalAreaPropertyData;
+        property: PersonalAreaPropertyData;
         onchange?: (removeAreaEntities?: boolean) => void;
         onclose?: (removeAreaEntities?: boolean) => void;
     }
 
-    let { personalAreaPropertyData = $bindable(), onchange, onclose }: Props = $props();
+    let { property = $bindable(), onchange, onclose }: Props = $props();
 
     let _tags: InputTagOption[] | undefined = $state(
-        personalAreaPropertyData.allowedTags
-            ? personalAreaPropertyData.allowedTags.map((allowedTag) => ({
+        property.allowedTags
+            ? property.allowedTags.map((allowedTag) => ({
                   value: allowedTag,
                   created: false,
                   label: allowedTag,
@@ -34,15 +34,15 @@
             : undefined,
     );
 
-    let personalAreaOwner: string | null = $state(personalAreaPropertyData.ownerId);
+    let personalAreaOwner: string | null = $state(property.ownerId);
 
     const entitiesManager = gameManager.getCurrentGameScene().getGameMapFrontWrapper().getEntitiesManager();
 
     onMount(async () => {
-        if (personalAreaPropertyData.ownerId) {
+        if (property.ownerId) {
             const connection = gameManager.getCurrentGameScene().connection;
             if (connection) {
-                const member = await connection.queryMember(personalAreaPropertyData.ownerId);
+                const member = await connection.queryMember(property.ownerId);
                 personalAreaOwner = member.name
                     ? `${member.name} ${member.email ? `(${member.email})` : ""}`
                     : member.email
@@ -53,16 +53,16 @@
     });
 
     function setOwnerId(selectedOwner: { value: string; label: string }) {
-        personalAreaPropertyData.ownerId = selectedOwner.value;
+        property.ownerId = selectedOwner.value;
         personalAreaOwner = selectedOwner.label;
         onchange?.();
     }
 
     function handleTagChange(tags: InputTagOption[] | undefined) {
         if (tags) {
-            personalAreaPropertyData.allowedTags = toTags(tags);
+            property.allowedTags = toTags(tags);
         } else {
-            personalAreaPropertyData.allowedTags = [];
+            property.allowedTags = [];
         }
         onchange?.();
     }
@@ -89,7 +89,7 @@
     }
 
     function resetAreaOwner() {
-        personalAreaPropertyData.ownerId = null;
+        property.ownerId = null;
         personalAreaOwner = null;
     }
 
@@ -141,7 +141,7 @@
     {/snippet}
     {#snippet content()}
         <span>
-            {#if personalAreaPropertyData !== undefined}
+            {#if property !== undefined}
                 <div class="overflow-y-auto overflow-x-hidden flex flex-col gap-2">
                     <p class="help-text">
                         <IconInfoCircle font-size="18" />
@@ -181,7 +181,7 @@
                                 id="accessClaimMode"
                                 dataTestId="accessClaimMode"
                                 label={$LL.mapEditor.properties.personalAreaPropertyData.accessClaimMode()}
-                                bind:value={personalAreaPropertyData.accessClaimMode}
+                                bind:value={property.accessClaimMode}
                                 onchange={onClaimModeChange}
                             >
                                 {#each PersonalAreaAccessClaimMode.options as claimMode (claimMode)}
@@ -196,7 +196,7 @@
                                         <p class="help-text">
                                             <IconInfoCircle font-size="18" />
                                             {$LL.mapEditor.properties.personalAreaPropertyData[
-                                                `${personalAreaPropertyData.accessClaimMode}AccessDescription`
+                                                `${property.accessClaimMode}AccessDescription`
                                             ]()}
                                         </p>
                                     </div>
@@ -204,12 +204,12 @@
                             </Select>
                         </div>
                         <div>
-                            {#if personalAreaPropertyData.accessClaimMode === PersonalAreaAccessClaimMode.enum.static}
+                            {#if property.accessClaimMode === PersonalAreaAccessClaimMode.enum.static}
                                 <label for="allowedUserInput" class="input-label">
                                     {$LL.mapEditor.properties.personalAreaPropertyData.allowedUser()}
                                 </label>
                                 <MemberAutocomplete
-                                    value={personalAreaPropertyData.ownerId}
+                                    value={property.ownerId}
                                     placeholder={$LL.mapEditor.properties.personalAreaPropertyData.allowedUser()}
                                     select={(selectedUserId) => setOwnerId(selectedUserId)}
                                 />
