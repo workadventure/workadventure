@@ -2,21 +2,23 @@ import type { MPMask } from "@mediapipe/tasks-vision";
 import { ImageSegmenter, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
-import { CanvasBlurRenderer } from "./CanvasBlurRenderer";
+import { CanvasBlurRenderer, type BlurBackend } from "./CanvasBlurRenderer";
+import { TasksVisionBlurCompositor } from "./TasksVisionBlurCompositor";
 import type { BackgroundConfig, BackgroundTransformer } from "./createBackgroundTransformer";
 
 /**
  * MediaPipe Tasks Vision-based background transformer for video streams
- * Uses the modern @mediapipe/tasks-vision API with ImageSegmenter and DrawingUtils
+ * Uses the modern @mediapipe/tasks-vision API with ImageSegmenter
  * All compositing is done in WebGL for optimal performance
  */
 export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
-    // WebGL canvas shared between ImageSegmenter and DrawingUtils
+    // WebGL canvas shared between ImageSegmenter, DrawingUtils and the blur compositor.
     private glCanvas: HTMLCanvasElement;
     private gl: WebGL2RenderingContext | null = null;
     private drawingUtils: DrawingUtils | null = null;
+    private blurCompositor: TasksVisionBlurCompositor | null = null;
 
-    // Output canvas for stream capture (we copy from glCanvas to this)
+    // Output canvas for stream capture (we copy from glCanvas to this).
     private outputCanvas: HTMLCanvasElement;
     private outputCtx: CanvasRenderingContext2D;
 
@@ -37,18 +39,17 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     // Track the last timestamp to guarantee strict monotonic increase
     private lastTimestampMicroseconds = 0;
 
-    // Canvas for blurred background (used as texture source for DrawingUtils)
-    private blurredCanvas: HTMLCanvasElement | null = null;
-    private blurredCtx: CanvasRenderingContext2D | null = null;
-
     // Canvas for background image (pre-rendered to avoid GPU re-upload each frame)
     private backgroundCanvas: HTMLCanvasElement | null = null;
     private backgroundCanvasCtx: CanvasRenderingContext2D | null = null;
 
-    // Canvas for foreground video (updated each frame, but HTMLCanvasElement is faster than HTMLVideoElement)
+    // Fallback canvases used only when the dedicated blur compositor is unavailable.
+    private fallbackBlurredCanvas: HTMLCanvasElement | null = null;
+    private fallbackBlurredCtx: CanvasRenderingContext2D | null = null;
     private foregroundCanvas: HTMLCanvasElement | null = null;
     private foregroundCtx: CanvasRenderingContext2D | null = null;
     private blurRenderer = new CanvasBlurRenderer();
+    private blurBackend: BlurBackend = "none";
 
     constructor(private config: BackgroundConfig) {
         // Create WebGL canvas for MediaPipe (shared with ImageSegmenter and DrawingUtils)
@@ -74,9 +75,6 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         try {
             await this.initializeMediaPipe();
             await this.loadBackgroundResources();
-            // Initialize canvases for optimized rendering
-            this.initializeBlurredCanvas();
-            this.initializeForegroundCanvas();
         } catch (error) {
             console.error("[MediaPipe Tasks Vision] Initialization failed:", error);
             throw error;
@@ -135,11 +133,12 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
 
         // Create DrawingUtils with the same WebGL context
         this.drawingUtils = new DrawingUtils(this.gl);
+        this.blurCompositor = new TasksVisionBlurCompositor(this.gl);
     }
 
-    private initializeBlurredCanvas(): void {
-        this.blurredCanvas = document.createElement("canvas");
-        this.blurredCtx = this.blurredCanvas.getContext("2d")!;
+    private initializeFallbackBlurredCanvas(): void {
+        this.fallbackBlurredCanvas = document.createElement("canvas");
+        this.fallbackBlurredCtx = this.fallbackBlurredCanvas.getContext("2d")!;
     }
 
     private initializeForegroundCanvas(): void {
@@ -293,32 +292,39 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         const { width, height } = this.outputCanvas;
 
         // Skip processing if canvas has invalid dimensions
-        if (!width || !height || width === 0 || height === 0 || !this.drawingUtils) {
+        if (!width || !height || width === 0 || height === 0) {
             return;
         }
 
-        // For blur mode, we create a blurred version of the input on a 2D canvas
-        // then use DrawingUtils to composite: blurred background + sharp person
-        if (!this.blurredCanvas || !this.blurredCtx) {
-            this.initializeBlurredCanvas();
+        if (this.blurCompositor?.draw(this.inputVideo, mask, width, height, this.config.blurAmount || 15)) {
+            this.blurBackend = "webgl-blur";
+            return;
+        }
+
+        if (!this.drawingUtils) {
+            this.blurBackend = "none";
+            return;
+        }
+
+        if (!this.fallbackBlurredCanvas || !this.fallbackBlurredCtx) {
+            this.initializeFallbackBlurredCanvas();
         }
         if (!this.foregroundCanvas || !this.foregroundCtx) {
             this.initializeForegroundCanvas();
         }
 
         // Ensure canvas dimensions match
-        if (this.blurredCanvas!.width !== width || this.blurredCanvas!.height !== height) {
-            this.blurredCanvas!.width = width;
-            this.blurredCanvas!.height = height;
+        if (this.fallbackBlurredCanvas!.width !== width || this.fallbackBlurredCanvas!.height !== height) {
+            this.fallbackBlurredCanvas!.width = width;
+            this.fallbackBlurredCanvas!.height = height;
         }
         if (this.foregroundCanvas!.width !== width || this.foregroundCanvas!.height !== height) {
             this.foregroundCanvas!.width = width;
             this.foregroundCanvas!.height = height;
         }
 
-        // Draw blurred background onto the blurred canvas.
-        this.blurRenderer.drawBlurredImage(
-            this.blurredCtx!,
+        this.blurBackend = this.blurRenderer.drawBlurredImage(
+            this.fallbackBlurredCtx!,
             this.inputVideo,
             width,
             height,
@@ -331,11 +337,10 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         // Use DrawingUtils to composite:
         // - defaultTexture (low confidence = background) = blurred canvas
         // - overlayTexture (high confidence = person) = foreground canvas
-        // Using HTMLCanvasElement instead of HTMLVideoElement avoids GPU texture re-upload
         this.drawingUtils.drawConfidenceMask(
             mask,
-            this.blurredCanvas!, // Background: blurred video
-            this.foregroundCanvas!, // Foreground: sharp person (canvas for better perf)
+            this.fallbackBlurredCanvas!, // Background: blurred video
+            this.foregroundCanvas!, // Foreground: sharp person
         );
     }
 
@@ -419,36 +424,6 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         return null;
     }
 
-    private drawBackground(): void {
-        const { width, height } = this.outputCanvas;
-
-        switch (this.config.mode) {
-            case "image":
-                if (this.backgroundImage) {
-                    // Scale image to fit canvas while maintaining aspect ratio
-                    const scale = Math.max(width / this.backgroundImage.width, height / this.backgroundImage.height);
-                    const scaledWidth = this.backgroundImage.width * scale;
-                    const scaledHeight = this.backgroundImage.height * scale;
-                    const x = (width - scaledWidth) / 2;
-                    const y = (height - scaledHeight) / 2;
-
-                    this.outputCtx.drawImage(this.backgroundImage, x, y, scaledWidth, scaledHeight);
-                }
-                break;
-
-            case "video":
-                if (this.backgroundVideo) {
-                    this.outputCtx.drawImage(this.backgroundVideo, 0, 0, width, height);
-                }
-                break;
-
-            default:
-                // Solid color fallback
-                this.outputCtx.fillStyle = "#000000";
-                this.outputCtx.fillRect(0, 0, width, height);
-        }
-    }
-
     public async waitForInitialization(): Promise<void> {
         await this.initPromise;
     }
@@ -472,7 +447,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             frameCount: this.frameCount,
             elapsed: Math.round(elapsed),
             closed: this.closed,
-            blurBackend: this.config.mode === "blur" ? this.blurRenderer.getLastBackend() : "none",
+            blurBackend: this.config.mode === "blur" ? this.blurBackend : "none",
         };
     }
 
@@ -498,6 +473,9 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             this.outputStream.getVideoTracks().forEach((track) => track.stop());
             this.outputStream = null;
         }
+
+        this.blurCompositor?.close();
+        this.blurCompositor = null;
 
         // Close DrawingUtils (frees WebGL resources)
         if (this.drawingUtils) {
@@ -529,9 +507,9 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         }
         this.backgroundImage = null;
 
-        // Clean up blurred canvas
-        this.blurredCanvas = null;
-        this.blurredCtx = null;
+        // Clean up fallback canvases
+        this.fallbackBlurredCanvas = null;
+        this.fallbackBlurredCtx = null;
 
         // Clean up background canvas
         this.backgroundCanvas = null;
