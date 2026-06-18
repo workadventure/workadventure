@@ -102,7 +102,7 @@ export class ProximityChatRoomManager {
         propertiesToSync: string[],
         signal?: AbortSignal,
     ): Promise<ProximityChatRoom> {
-        const room = this.getOrCreateRoom(DEFAULT_PROXIMITY_SPACE_NAME, "Proximity Chat", "default");
+        const room = this.getOrCreateRoom(DEFAULT_PROXIMITY_SPACE_NAME, get(LL).chat.proximity(), "default");
         await room.joinSpace(spaceName, propertiesToSync, false, FilterType.ALL_USERS, false, signal);
         room.isJoined.set(true);
         this.markAsLastJoined(DEFAULT_PROXIMITY_SPACE_NAME);
