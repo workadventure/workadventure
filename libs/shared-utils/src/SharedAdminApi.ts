@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { Capabilities } from "@workadventure/messages";
 import { isCapabilities } from "@workadventure/messages";
-import axios, { type AxiosResponse, isAxiosError } from "axios";
+import axios, { type AxiosResponse } from "axios";
 import { Deferred } from "./Deferred";
 
 export const AdminBannedData = z.object({
@@ -41,20 +41,6 @@ export class SharedAdminApi {
                 console.info(`Capabilities query successful. Found capabilities: ${JSON.stringify(this.capabilities)}`);
                 resolve(0);
             } catch (ex) {
-                // ignore errors when querying capabilities
-                if (isAxiosError(ex) && ex.response?.status === 404) {
-                    // 404 probably means an older api version
-
-                    this.capabilities = {
-                        "api/woka/list": "v1",
-                    };
-                    this.capabilitiesDeferred.resolve(this.capabilities);
-
-                    resolve(0);
-                    console.warn(`Admin API server does not implement capabilities, default to basic capabilities`);
-                    return;
-                }
-
                 // if we get here, it might be due to connectivity issues
                 if (!warnIssued)
                     console.warn(
