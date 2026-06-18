@@ -146,6 +146,18 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
             return;
         }
 
+        const compositeBackend = this.blurRenderer.drawBlurredImageWithMask(
+            this.ctx,
+            results.image,
+            results.segmentationMask,
+            width,
+            height,
+            this.config.blurAmount || 15,
+        );
+        if (compositeBackend !== "none") {
+            return;
+        }
+
         // Step 1: Draw the entire image with blur as background
         this.blurRenderer.drawBlurredImage(this.ctx, results.image, width, height, this.config.blurAmount || 15);
 

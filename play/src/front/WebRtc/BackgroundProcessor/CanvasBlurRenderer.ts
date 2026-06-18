@@ -1,7 +1,7 @@
 export type BlurBackend = "webgl-blur" | "cpu-blur" | "none";
 
 const CPU_BLUR_MAX_SIDE = 224;
-const CPU_BLUR_ITERATIONS = 2;
+export const BLUR_ITERATIONS = 2;
 const WEBGL_MIN_BLUR_MAX_SIDE = 112;
 const WEBGL_BLUR_MAX_RADIUS = 18;
 
@@ -19,7 +19,7 @@ export function getCpuBlurSize(width: number, height: number): { width: number; 
     return getBlurRenderSize(width, height, CPU_BLUR_MAX_SIDE);
 }
 
-function getWebGlBlurSize(
+export function getWebGlBlurSize(
     width: number,
     height: number,
     blurAmount: number,
@@ -55,7 +55,7 @@ export function getCpuBlurRadius(blurAmount: number, scale: number): number {
     return Math.max(1, Math.min(18, Math.round(blurAmount * scale * 0.75)));
 }
 
-function getWebGlBlurRadius(blurAmount: number, scale: number): number {
+export function getWebGlBlurRadius(blurAmount: number, scale: number): number {
     if (blurAmount <= 0 || scale <= 0) {
         return 0;
     }
@@ -68,7 +68,7 @@ export function boxBlurImageData(
     width: number,
     height: number,
     radius: number,
-    iterations = CPU_BLUR_ITERATIONS,
+    iterations = BLUR_ITERATIONS,
 ): void {
     if (width <= 0 || height <= 0 || radius <= 0 || iterations <= 0) {
         return;
@@ -201,7 +201,7 @@ function logWebGlFailure(error: unknown): void {
     console.warn("[BackgroundProcessor] WebGL blur renderer failed; using CPU fallback.", error);
 }
 
-const BLUR_VERTEX_SHADER = `
+export const BLUR_VERTEX_SHADER = `
 attribute vec2 a_position;
 attribute vec2 a_texCoord;
 
@@ -213,7 +213,7 @@ void main() {
 }
 `;
 
-const BLUR_FRAGMENT_SHADER = `
+export const BLUR_FRAGMENT_SHADER = `
 precision mediump float;
 
 uniform sampler2D u_texture;
@@ -241,13 +241,34 @@ void main() {
 }
 `;
 
+export const COMPOSITE_FRAGMENT_SHADER = `
+precision mediump float;
+
+uniform sampler2D u_sharpTexture;
+uniform sampler2D u_blurredTexture;
+uniform sampler2D u_maskTexture;
+
+varying vec2 v_texCoord;
+
+void main() {
+    float confidence = texture2D(u_maskTexture, v_texCoord).r;
+    float foregroundAlpha = smoothstep(0.45, 0.65, confidence);
+    vec4 blurredBackground = texture2D(u_blurredTexture, v_texCoord);
+    vec4 sharpForeground = texture2D(u_sharpTexture, v_texCoord);
+
+    gl_FragColor = mix(blurredBackground, sharpForeground, foregroundAlpha);
+}
+`;
+
 class WebGlBlurRenderer {
     private canvas = document.createElement("canvas");
     private gl: WebGLRenderingContext | null = null;
     private program: WebGLProgram | null = null;
+    private compositeProgram: WebGLProgram | null = null;
     private positionBuffer: WebGLBuffer | null = null;
     private texCoordBuffer: WebGLBuffer | null = null;
     private sourceTexture: WebGLTexture | null = null;
+    private maskTexture: WebGLTexture | null = null;
     private firstPassTexture: WebGLTexture | null = null;
     private secondPassTexture: WebGLTexture | null = null;
     private firstPassFramebuffer: WebGLFramebuffer | null = null;
@@ -259,6 +280,11 @@ class WebGlBlurRenderer {
     private textureLocation: WebGLUniformLocation | null = null;
     private texelOffsetLocation: WebGLUniformLocation | null = null;
     private radiusLocation: WebGLUniformLocation | null = null;
+    private compositePositionLocation = -1;
+    private compositeTexCoordLocation = -1;
+    private sharpTextureLocation: WebGLUniformLocation | null = null;
+    private blurredTextureLocation: WebGLUniformLocation | null = null;
+    private maskTextureLocation: WebGLUniformLocation | null = null;
     private contextLost = false;
 
     private readonly handleContextLost = (event: Event): void => {
@@ -308,26 +334,64 @@ class WebGlBlurRenderer {
         this.ensureBuffers(gl);
         this.ensureTextures(gl, blurSize.width, blurSize.height);
 
-        const radius = getWebGlBlurRadius(blurAmount, blurSize.scale);
+        try {
+            const blurredTexture = this.renderBlurredTexture(gl, source, blurSize, blurAmount);
+            this.drawPass(gl, blurredTexture, null, 0, 0, 0);
+            gl.flush();
+        } catch (error) {
+            if (gl.isContextLost()) {
+                this.contextLost = true;
+                return null;
+            }
+            throw error;
+        }
+
+        return this.canvas;
+    }
+
+    public drawComposite(
+        source: CanvasImageSource,
+        segmentationMask: CanvasImageSource,
+        width: number,
+        height: number,
+        blurAmount: number,
+    ): HTMLCanvasElement | null {
+        if (this.contextLost) {
+            return null;
+        }
+
+        const blurSize = getWebGlBlurSize(width, height, blurAmount);
+        if (!blurSize.width || !blurSize.height) {
+            return null;
+        }
+
+        const gl = this.getContext();
+        if (gl.isContextLost()) {
+            this.contextLost = true;
+            return null;
+        }
+
+        if (this.canvas.width !== width || this.canvas.height !== height) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+        }
+
+        this.ensureProgram(gl);
+        this.ensureCompositeProgram(gl);
+        this.ensureBuffers(gl);
+        this.ensureTextures(gl, blurSize.width, blurSize.height);
+        this.ensureMaskTexture(gl);
 
         try {
-            gl.viewport(0, 0, blurSize.width, blurSize.height);
-            gl.disable(gl.DEPTH_TEST);
-            gl.disable(gl.BLEND);
-            gl.clearColor(0, 0, 0, 1);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, this.sourceTexture);
-            this.configureTexture(gl);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source as TexImageSource);
+            const blurredTexture = this.renderBlurredTexture(gl, source, blurSize, blurAmount);
 
-            let sourceTexture = this.sourceTexture!;
-            for (let iteration = 0; iteration < CPU_BLUR_ITERATIONS; iteration++) {
-                this.drawPass(gl, sourceTexture, this.firstPassFramebuffer, 1 / blurSize.width, 0, radius);
-                this.drawPass(gl, this.firstPassTexture!, this.secondPassFramebuffer, 0, 1 / blurSize.height, radius);
-                sourceTexture = this.secondPassTexture!;
-            }
-            this.drawPass(gl, sourceTexture, null, 0, 0, 0);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+            gl.activeTexture(gl.TEXTURE0 + 2);
+            gl.bindTexture(gl.TEXTURE_2D, this.maskTexture);
+            this.configureTexture(gl);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, segmentationMask as TexImageSource);
+
+            this.drawCompositePass(gl, this.sourceTexture!, blurredTexture, this.maskTexture!, width, height);
             gl.flush();
         } catch (error) {
             if (gl.isContextLost()) {
@@ -417,6 +481,52 @@ class WebGlBlurRenderer {
         }
     }
 
+    private ensureCompositeProgram(gl: WebGLRenderingContext): void {
+        if (this.compositeProgram) {
+            return;
+        }
+
+        const vertexShader = this.createShader(gl, gl.VERTEX_SHADER, BLUR_VERTEX_SHADER);
+        const fragmentShader = this.createShader(gl, gl.FRAGMENT_SHADER, COMPOSITE_FRAGMENT_SHADER);
+        const program = gl.createProgram();
+
+        if (!program) {
+            throw new Error("Unable to create WebGL blur composite program");
+        }
+
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            const message = gl.getProgramInfoLog(program) ?? "Unknown WebGL composite program link error";
+            gl.deleteProgram(program);
+            gl.deleteShader(vertexShader);
+            gl.deleteShader(fragmentShader);
+            throw new Error(message);
+        }
+
+        gl.deleteShader(vertexShader);
+        gl.deleteShader(fragmentShader);
+
+        this.compositeProgram = program;
+        this.compositePositionLocation = gl.getAttribLocation(program, "a_position");
+        this.compositeTexCoordLocation = gl.getAttribLocation(program, "a_texCoord");
+        this.sharpTextureLocation = gl.getUniformLocation(program, "u_sharpTexture");
+        this.blurredTextureLocation = gl.getUniformLocation(program, "u_blurredTexture");
+        this.maskTextureLocation = gl.getUniformLocation(program, "u_maskTexture");
+
+        if (
+            this.compositePositionLocation < 0 ||
+            this.compositeTexCoordLocation < 0 ||
+            !this.sharpTextureLocation ||
+            !this.blurredTextureLocation ||
+            !this.maskTextureLocation
+        ) {
+            throw new Error("Unable to resolve WebGL blur composite shader locations");
+        }
+    }
+
     private createShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader {
         const shader = gl.createShader(type);
         if (!shader) {
@@ -484,6 +594,12 @@ class WebGlBlurRenderer {
         this.framebufferHeight = height;
     }
 
+    private ensureMaskTexture(gl: WebGLRenderingContext): void {
+        if (!this.maskTexture) {
+            this.maskTexture = this.createTexture(gl);
+        }
+    }
+
     private createTexture(gl: WebGLRenderingContext): WebGLTexture {
         const texture = gl.createTexture();
         if (!texture) {
@@ -528,6 +644,34 @@ class WebGlBlurRenderer {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     }
 
+    private renderBlurredTexture(
+        gl: WebGLRenderingContext,
+        source: CanvasImageSource,
+        blurSize: { width: number; height: number; scale: number },
+        blurAmount: number,
+    ): WebGLTexture {
+        const radius = getWebGlBlurRadius(blurAmount, blurSize.scale);
+
+        gl.viewport(0, 0, blurSize.width, blurSize.height);
+        gl.disable(gl.DEPTH_TEST);
+        gl.disable(gl.BLEND);
+        gl.clearColor(0, 0, 0, 1);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.sourceTexture);
+        this.configureTexture(gl);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source as TexImageSource);
+
+        let sourceTexture = this.sourceTexture!;
+        for (let iteration = 0; iteration < BLUR_ITERATIONS; iteration++) {
+            this.drawPass(gl, sourceTexture, this.firstPassFramebuffer, 1 / blurSize.width, 0, radius);
+            this.drawPass(gl, this.firstPassTexture!, this.secondPassFramebuffer, 0, 1 / blurSize.height, radius);
+            sourceTexture = this.secondPassTexture!;
+        }
+
+        return sourceTexture;
+    }
+
     private drawPass(
         gl: WebGLRenderingContext,
         texture: WebGLTexture,
@@ -556,24 +700,69 @@ class WebGlBlurRenderer {
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
+    private drawCompositePass(
+        gl: WebGLRenderingContext,
+        sharpTexture: WebGLTexture,
+        blurredTexture: WebGLTexture,
+        maskTexture: WebGLTexture,
+        width: number,
+        height: number,
+    ): void {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, width, height);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.useProgram(this.compositeProgram);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+        gl.enableVertexAttribArray(this.compositePositionLocation);
+        gl.vertexAttribPointer(this.compositePositionLocation, 2, gl.FLOAT, false, 0, 0);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer);
+        gl.enableVertexAttribArray(this.compositeTexCoordLocation);
+        gl.vertexAttribPointer(this.compositeTexCoordLocation, 2, gl.FLOAT, false, 0, 0);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, sharpTexture);
+        gl.uniform1i(this.sharpTextureLocation, 0);
+
+        gl.activeTexture(gl.TEXTURE0 + 1);
+        gl.bindTexture(gl.TEXTURE_2D, blurredTexture);
+        gl.uniform1i(this.blurredTextureLocation, 1);
+
+        gl.activeTexture(gl.TEXTURE0 + 2);
+        gl.bindTexture(gl.TEXTURE_2D, maskTexture);
+        gl.uniform1i(this.maskTextureLocation, 2);
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+
     private releaseResources(): void {
         const gl = this.gl;
         if (!gl || gl.isContextLost()) {
             this.program = null;
+            this.compositeProgram = null;
             this.positionBuffer = null;
             this.texCoordBuffer = null;
             this.sourceTexture = null;
+            this.maskTexture = null;
             this.firstPassTexture = null;
             this.secondPassTexture = null;
             this.firstPassFramebuffer = null;
             this.secondPassFramebuffer = null;
             this.radiusLocation = null;
+            this.sharpTextureLocation = null;
+            this.blurredTextureLocation = null;
+            this.maskTextureLocation = null;
             return;
         }
 
         if (this.program) {
             gl.deleteProgram(this.program);
             this.program = null;
+        }
+        if (this.compositeProgram) {
+            gl.deleteProgram(this.compositeProgram);
+            this.compositeProgram = null;
         }
         if (this.positionBuffer) {
             gl.deleteBuffer(this.positionBuffer);
@@ -586,6 +775,10 @@ class WebGlBlurRenderer {
         if (this.sourceTexture) {
             gl.deleteTexture(this.sourceTexture);
             this.sourceTexture = null;
+        }
+        if (this.maskTexture) {
+            gl.deleteTexture(this.maskTexture);
+            this.maskTexture = null;
         }
 
         this.releaseFramebufferResources(gl);
@@ -659,6 +852,33 @@ export class CanvasBlurRenderer {
         return this.lastBackend;
     }
 
+    public drawBlurredImageWithMask(
+        destinationContext: CanvasRenderingContext2D,
+        source: CanvasImageSource,
+        segmentationMask: CanvasImageSource,
+        width: number,
+        height: number,
+        blurAmount = 15,
+    ): BlurBackend {
+        if (!width || !height || width <= 0 || height <= 0) {
+            this.lastBackend = "none";
+            return this.lastBackend;
+        }
+
+        if (!this.webGlUnavailable) {
+            const webGlCanvas = this.drawWithWebGlComposite(source, segmentationMask, width, height, blurAmount);
+            if (webGlCanvas) {
+                this.drawScaledCanvas(destinationContext, webGlCanvas, width, height, width, height);
+                this.lastBackend = "webgl-blur";
+                logSelectedBackend(this.lastBackend);
+                return this.lastBackend;
+            }
+        }
+
+        this.lastBackend = "none";
+        return this.lastBackend;
+    }
+
     public close(): void {
         this.webGlRenderer?.close();
         this.webGlRenderer = null;
@@ -677,6 +897,25 @@ export class CanvasBlurRenderer {
         try {
             this.webGlRenderer = this.webGlRenderer ?? new WebGlBlurRenderer();
             return this.webGlRenderer.draw(source, width, height, blurAmount);
+        } catch (error) {
+            logWebGlFailure(error);
+            this.webGlRenderer?.close();
+            this.webGlRenderer = null;
+            this.webGlUnavailable = true;
+            return null;
+        }
+    }
+
+    private drawWithWebGlComposite(
+        source: CanvasImageSource,
+        segmentationMask: CanvasImageSource,
+        width: number,
+        height: number,
+        blurAmount: number,
+    ): HTMLCanvasElement | null {
+        try {
+            this.webGlRenderer = this.webGlRenderer ?? new WebGlBlurRenderer();
+            return this.webGlRenderer.drawComposite(source, segmentationMask, width, height, blurAmount);
         } catch (error) {
             logWebGlFailure(error);
             this.webGlRenderer?.close();
