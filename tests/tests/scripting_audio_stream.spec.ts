@@ -231,7 +231,7 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
 
         // Test play sound scripting
         await evaluateScript(bob, async () => {
-            window.meeting?.playSound("http://maps.workadventure.localhost/tests/Audience.mp3").catch((err) => {
+            window.meeting.playSound("http://maps.workadventure.localhost/tests/Audience.mp3").catch((err) => {
                 console.error(err);
             });
         });

@@ -54,7 +54,12 @@
     class:bg-opacity-10={$selectedRoomStore?.id === room.id}
     class:rounded={$selectedRoomStore?.id === room.id}
     onclick={selectRoom}
-    onkeyup={selectRoom}
+    onkeydown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            selectRoom();
+        }
+    }}
     role="button"
     tabindex="0"
     data-testid={$roomName}
