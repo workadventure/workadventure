@@ -51,7 +51,10 @@
         disabled: boolean;
     }
 
-    let { room, disabled = false }: Props = $props();
+    let { room: roomProp, disabled = false }: Props = $props();
+
+    // Room is keyed in the parent component, so it will be re-created when the room changes.
+    const room = (() => roomProp)();
 
     let message = $state("");
     let messageInput: HTMLDivElement | undefined = $state();
