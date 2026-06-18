@@ -515,7 +515,7 @@
                 {:else if $timelineItems.length === 0}
                     {#if room instanceof ProximityChatRoom}
                         <li class="text-center px-3 max-w-md">
-                            <img draggable="false" src={getCloseImg} alt={$LL.chat.getCloserTitle()} />
+                            <img class="mx-auto" draggable="false" src={getCloseImg} alt={$LL.chat.getCloserTitle()} />
                             <div class="text-lg font-bold text-center">{$LL.chat.getCloserTitle()}</div>
                             <div class="text-sm opacity-50 text-center">
                                 {$LL.chat.getCloserDesc()}

@@ -661,9 +661,14 @@ div.emoji-picker {
 
     /* Keyboard hint keycaps (SpeechDomElement) */
     .speech-key {
+        display: inline-block;
         user-select: none;
         margin: 0 3px;
         vertical-align: middle;
+    }
+
+    .speech-key:first-child {
+        margin-left: 0;
     }
 
     .speech-key--space {

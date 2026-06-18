@@ -467,7 +467,7 @@
     {:else if $selectedRoomStore === undefined && displayTwoColumnLayout}
         <div class="flex flex-col flex-1 ps-4 items-center pt-8">
             <div class="text-center px-3 max-w-md">
-                <img src={getCloseImg} alt={$LL.chat.getCloserTitle()} draggable="false" />
+                <img class="mx-auto" src={getCloseImg} alt={$LL.chat.getCloserTitle()} draggable="false" />
                 <div class="text-lg font-bold text-center">{$LL.chat.noRoomOpen()}</div>
                 <div class="text-sm opacity-50 text-center">
                     {$LL.chat.noRoomOpenDescription()}
