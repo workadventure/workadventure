@@ -103,6 +103,10 @@
     @apply my-3.25;
   }
 
+  video {
+    max-width: none;
+  }
+
   /********** Range Input Styles **********/
   /*Range Reset*/
   input[type="range"] {
