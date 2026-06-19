@@ -15,6 +15,7 @@ import Megaphone from "./utils/map-editor/megaphone";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
 import AreaLivekit from "./utils/AreaLivekit";
+import { dismissNoMicrophoneSoundToastWhenShown } from "./utils/noMicrophoneSoundToast";
 
 test.setTimeout(240_000);
 
@@ -62,9 +63,7 @@ test.describe("Meeting actions test @nomobile @nofirefox @nowebkit", () => {
         await expect(page.locator("#cameras-container").getByText("Mallory")).toBeVisible({ timeout: 30_000 });
 
         // Required because the "No sound" popup can clutter the view and prevent us clicking the "All settings" close button.
-        await page.addLocatorHandler(page.getByTestId("no-microphone-sound-ignore"), async () => {
-            await page.getByTestId("no-microphone-sound-ignore").click();
-        });
+        await dismissNoMicrophoneSoundToastWhenShown(page);
 
         // Let's enable the video quality display and test it works
         await Menu.openMenu(page);
