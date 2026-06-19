@@ -2,9 +2,37 @@ import type { MPMask } from "@mediapipe/tasks-vision";
 import { ImageSegmenter, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
+import { isIOS, isSafari } from "../DeviceUtils";
 import { CanvasBlurRenderer, type BlurBackend } from "./CanvasBlurRenderer";
 import { TasksVisionBlurCompositor } from "./TasksVisionBlurCompositor";
 import type { BackgroundConfig, BackgroundTransformer } from "./createBackgroundTransformer";
+
+type CaptureBackend = "webgl-capture" | "2d-copy-capture";
+
+const loggedCaptureBackends = new Set<CaptureBackend>();
+let loggedWebGlCaptureFailure = false;
+
+function logCaptureBackend(backend: CaptureBackend): void {
+    if (loggedCaptureBackends.has(backend)) {
+        return;
+    }
+
+    loggedCaptureBackends.add(backend);
+    console.info(
+        backend === "webgl-capture"
+            ? "[MediaPipe Tasks Vision] Using WebGL canvas capture backend."
+            : "[MediaPipe Tasks Vision] Using 2D copy canvas capture backend.",
+    );
+}
+
+function logWebGlCaptureFailure(error: unknown): void {
+    if (loggedWebGlCaptureFailure) {
+        return;
+    }
+
+    loggedWebGlCaptureFailure = true;
+    console.warn("[MediaPipe Tasks Vision] WebGL canvas capture failed; falling back to 2D copy capture.", error);
+}
 
 /**
  * MediaPipe Tasks Vision-based background transformer for video streams
@@ -18,7 +46,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private drawingUtils: DrawingUtils | null = null;
     private blurCompositor: TasksVisionBlurCompositor | null = null;
 
-    // Output canvas for stream capture (we copy from glCanvas to this).
+    // Output canvas used when direct WebGL capture is unavailable or disabled.
     private outputCanvas: HTMLCanvasElement;
     private outputCtx: CanvasRenderingContext2D;
 
@@ -50,6 +78,8 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private foregroundCtx: CanvasRenderingContext2D | null = null;
     private blurRenderer = new CanvasBlurRenderer();
     private blurBackend: BlurBackend = "none";
+    private captureBackend: CaptureBackend = "2d-copy-capture";
+    private directWebGlCaptureUnavailable = false;
 
     constructor(private config: BackgroundConfig) {
         // Create WebGL canvas for MediaPipe (shared with ImageSegmenter and DrawingUtils)
@@ -133,7 +163,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
 
         // Create DrawingUtils with the same WebGL context
         this.drawingUtils = new DrawingUtils(this.gl);
-        this.blurCompositor = new TasksVisionBlurCompositor(this.gl);
+        this.blurCompositor = new TasksVisionBlurCompositor(this.gl, this.glCanvas);
     }
 
     private initializeFallbackBlurredCanvas(): void {
@@ -277,8 +307,9 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         // Clean up mask resources
         mask.close();
 
-        // Copy from WebGL canvas to output canvas for stream capture
-        this.outputCtx.drawImage(this.glCanvas, 0, 0, width, height);
+        if (this.captureBackend === "2d-copy-capture") {
+            this.outputCtx.drawImage(this.glCanvas, 0, 0, width, height);
+        }
 
         // Ensure WebGL operations are flushed for captureStream
         if (this.gl) {
@@ -448,6 +479,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             elapsed: Math.round(elapsed),
             closed: this.closed,
             blurBackend: this.config.mode === "blur" ? this.blurBackend : "none",
+            captureBackend: this.captureBackend,
         };
     }
 
@@ -580,8 +612,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             }
         }
 
-        // Create output stream from the 2D output canvas
-        this.outputStream = this.outputCanvas.captureStream(this.frameRate);
+        this.outputStream = this.createOutputStream();
 
         // Copy audio tracks from the original stream
         for (const audioTrack of inputStream.getAudioTracks()) {
@@ -603,5 +634,40 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         this.processFrame();
 
         return this.outputStream;
+    }
+
+    private createOutputStream(): MediaStream {
+        if (this.canAttemptWebGlCapture()) {
+            try {
+                const stream = this.glCanvas.captureStream(this.frameRate);
+                if (stream.getVideoTracks().length > 0) {
+                    this.captureBackend = "webgl-capture";
+                    logCaptureBackend(this.captureBackend);
+                    return stream;
+                }
+
+                this.directWebGlCaptureUnavailable = true;
+                logWebGlCaptureFailure(new Error("WebGL canvas capture returned no video track"));
+            } catch (error) {
+                this.directWebGlCaptureUnavailable = true;
+                logWebGlCaptureFailure(error);
+            }
+        }
+
+        this.captureBackend = "2d-copy-capture";
+        logCaptureBackend(this.captureBackend);
+        return this.outputCanvas.captureStream(this.frameRate);
+    }
+
+    private canAttemptWebGlCapture(): boolean {
+        if (this.directWebGlCaptureUnavailable || typeof this.glCanvas.captureStream !== "function") {
+            return false;
+        }
+
+        try {
+            return !isSafari() && !isIOS();
+        } catch {
+            return false;
+        }
     }
 }

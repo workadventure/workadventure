@@ -27,6 +27,8 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     private startTime = performance.now();
     private initPromise: Promise<void>;
     private frameRate = 33;
+    private lastVideoFrameTime = 0;
+    private videoFrameCallbackId: number | null = null;
     // Reusable temporary canvas to avoid WebGL context leaks
     private tempCanvas: HTMLCanvasElement | null = null;
     private tempCtx: CanvasRenderingContext2D | null = null;
@@ -282,6 +284,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
             clearTimeout(this.timeoutId);
             this.timeoutId = null;
         }
+        this.stopVideoFrameTracking();
     }
 
     public close(): void {
@@ -292,6 +295,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
             clearTimeout(this.timeoutId);
             this.timeoutId = null;
         }
+        this.stopVideoFrameTracking();
 
         // Stop output stream
         if (this.outputStream) {
@@ -337,6 +341,8 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         }
 
         // Setup input video
+        this.stopVideoFrameTracking();
+        this.lastVideoFrameTime = 0;
         this.inputVideo.srcObject = inputStream;
 
         // Wait for video metadata to be loaded
@@ -354,6 +360,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
         const playPromise = this.inputVideo.play();
         await raceAbort(playPromise, signal);
+        this.startVideoFrameTracking();
         if (signal?.aborted) {
             throw signal.reason ?? new AbortError("Transform aborted while starting video playback");
         }
@@ -413,7 +420,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
                 return;
             }
 
-            if (this.inputVideo.readyState >= 2 && this.selfieSegmentation) {
+            if (this.hasUsableVideoFrame() && this.selfieSegmentation) {
                 // HAVE_CURRENT_DATA
                 this.selfieSegmentation
                     .send({ image: this.inputVideo })
@@ -441,5 +448,54 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         };
 
         processFrame();
+    }
+
+    private hasUsableVideoFrame(): boolean {
+        if (this.inputVideo.readyState < 2) {
+            return false;
+        }
+
+        const stream = this.inputVideo.srcObject instanceof MediaStream ? this.inputVideo.srcObject : null;
+        const hasLiveVideoTrack =
+            stream?.getVideoTracks().some((track) => track.readyState === "live" && track.enabled && !track.muted) ??
+            false;
+
+        if (!hasLiveVideoTrack) {
+            return false;
+        }
+
+        if ("requestVideoFrameCallback" in this.inputVideo) {
+            return this.lastVideoFrameTime > 0;
+        }
+
+        return true;
+    }
+
+    private startVideoFrameTracking(): void {
+        if (!("requestVideoFrameCallback" in this.inputVideo) || this.videoFrameCallbackId !== null) {
+            return;
+        }
+
+        const onVideoFrame = () => {
+            if (this.closed || !("requestVideoFrameCallback" in this.inputVideo)) {
+                this.videoFrameCallbackId = null;
+                return;
+            }
+
+            this.lastVideoFrameTime = performance.now();
+            this.videoFrameCallbackId = this.inputVideo.requestVideoFrameCallback(onVideoFrame);
+        };
+
+        this.videoFrameCallbackId = this.inputVideo.requestVideoFrameCallback(onVideoFrame);
+    }
+
+    private stopVideoFrameTracking(): void {
+        if (this.videoFrameCallbackId === null || !("cancelVideoFrameCallback" in this.inputVideo)) {
+            this.videoFrameCallbackId = null;
+            return;
+        }
+
+        this.inputVideo.cancelVideoFrameCallback(this.videoFrameCallbackId);
+        this.videoFrameCallbackId = null;
     }
 }

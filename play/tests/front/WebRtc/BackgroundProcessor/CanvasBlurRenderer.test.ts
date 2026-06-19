@@ -4,6 +4,9 @@ import {
     CanvasBlurRenderer,
     getCpuBlurRadius,
     getCpuBlurSize,
+    getDualKawaseBlurOffset,
+    getWebGlBlurRadius,
+    getWebGlBlurSize,
     resetCanvasBlurRendererForTests,
 } from "../../../../src/front/WebRtc/BackgroundProcessor/CanvasBlurRenderer";
 
@@ -30,8 +33,8 @@ describe("CanvasBlurRenderer", () => {
 
         expect(backend).toBe("webgl-blur");
         expect(renderer.getLastBackend()).toBe("webgl-blur");
-        expect(webGlCanvas.width).toBe(174);
-        expect(webGlCanvas.height).toBe(98);
+        expect(webGlCanvas.width).toBe(349);
+        expect(webGlCanvas.height).toBe(196);
         expect(webGlContext.texImage2D).toHaveBeenCalledWith(
             webGlContext.context.TEXTURE_2D,
             0,
@@ -42,8 +45,43 @@ describe("CanvasBlurRenderer", () => {
         );
         expect(webGlContext.pixelStorei).toHaveBeenCalledWith(webGlContext.context.UNPACK_FLIP_Y_WEBGL, false);
         expect(webGlContext.pixelStorei).not.toHaveBeenCalledWith(webGlContext.context.UNPACK_FLIP_Y_WEBGL, true);
-        expect(webGlContext.drawArrays).toHaveBeenCalledTimes(5);
-        expect(destinationContext.drawImage).toHaveBeenCalledWith(webGlCanvas, 0, 0, 174, 98, 0, 0, 640, 360);
+        expect(webGlContext.drawArrays).toHaveBeenCalledTimes(7);
+        expect(destinationContext.drawImage).toHaveBeenCalledWith(webGlCanvas, 0, 0, 349, 196, 0, 0, 640, 360);
+    });
+
+    it("uses the shared WebGL composite path when a mask is provided", () => {
+        const renderer = new CanvasBlurRenderer();
+        const destinationContext = createDestinationContext();
+        const webGlContext = createWebGlContext();
+        const webGlCanvas = createCanvas(webGlContext.context);
+        const source = createSource();
+        const mask = createSource();
+        mockCanvasCreation(webGlCanvas);
+
+        const backend = renderer.drawBlurredImageWithMask(destinationContext.context, source, mask, 640, 360, 25);
+
+        expect(backend).toBe("webgl-blur");
+        expect(renderer.getLastBackend()).toBe("webgl-blur");
+        expect(webGlCanvas.width).toBe(640);
+        expect(webGlCanvas.height).toBe(360);
+        expect(webGlContext.texImage2D).toHaveBeenCalledWith(
+            webGlContext.context.TEXTURE_2D,
+            0,
+            webGlContext.context.RGBA,
+            webGlContext.context.RGBA,
+            webGlContext.context.UNSIGNED_BYTE,
+            source,
+        );
+        expect(webGlContext.texImage2D).toHaveBeenCalledWith(
+            webGlContext.context.TEXTURE_2D,
+            0,
+            webGlContext.context.RGBA,
+            webGlContext.context.RGBA,
+            webGlContext.context.UNSIGNED_BYTE,
+            mask,
+        );
+        expect(webGlContext.drawArrays).toHaveBeenCalledTimes(7);
+        expect(destinationContext.drawImage).toHaveBeenCalledWith(webGlCanvas, 0, 0, 640, 360, 0, 0, 640, 360);
     });
 
     it("falls back to CPU blur when WebGL is unavailable", () => {
@@ -70,6 +108,25 @@ describe("CanvasBlurRenderer", () => {
 
         expect(getCpuBlurRadius(10, blurSize.scale)).toBeLessThan(getCpuBlurRadius(25, blurSize.scale));
         expect(getCpuBlurRadius(25, blurSize.scale)).toBeLessThan(getCpuBlurRadius(50, blurSize.scale));
+    });
+
+    it("maps the existing blur levels to increasing WebGL blur radii", () => {
+        const lowBlurSize = getWebGlBlurSize(1280, 720, 10);
+        const mediumBlurSize = getWebGlBlurSize(1280, 720, 25);
+        const highBlurSize = getWebGlBlurSize(1280, 720, 50);
+
+        expect(getWebGlBlurRadius(10, lowBlurSize.scale)).toBeLessThan(getWebGlBlurRadius(25, mediumBlurSize.scale));
+        expect(getWebGlBlurRadius(25, mediumBlurSize.scale)).toBeLessThan(getWebGlBlurRadius(50, highBlurSize.scale));
+    });
+
+    it("maps the existing blur levels to increasing Dual Kawase pass counts", () => {
+        expect(getWebGlDrawPassCount(10)).toBeLessThan(getWebGlDrawPassCount(25));
+        expect(getWebGlDrawPassCount(25)).toBeLessThan(getWebGlDrawPassCount(50));
+    });
+
+    it("maps the existing blur levels to increasing Dual Kawase offsets", () => {
+        expect(getDualKawaseBlurOffset(10)).toBeLessThan(getDualKawaseBlurOffset(25));
+        expect(getDualKawaseBlurOffset(25)).toBeLessThan(getDualKawaseBlurOffset(50));
     });
 
     it("spreads a sharp pixel with the CPU blur implementation", () => {
@@ -247,4 +304,16 @@ function createDestinationContext() {
 
 function createSource(): CanvasImageSource {
     return { height: 360, width: 640 } as unknown as CanvasImageSource;
+}
+
+function getWebGlDrawPassCount(blurAmount: number): number {
+    const renderer = new CanvasBlurRenderer();
+    const destinationContext = createDestinationContext();
+    const webGlContext = createWebGlContext();
+    const webGlCanvas = createCanvas(webGlContext.context);
+    mockCanvasCreation(webGlCanvas);
+
+    renderer.drawBlurredImage(destinationContext.context, createSource(), 640, 360, blurAmount);
+
+    return webGlContext.drawArrays.mock.calls.length;
 }
