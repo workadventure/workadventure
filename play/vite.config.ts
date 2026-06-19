@@ -87,8 +87,12 @@ export default defineConfig(({ mode }) => {
             },
         },
         optimizeDeps: {
-            include: ["olm"],
-            exclude: ["svelte-modals", "@mediapipe/selfie_segmentation"],
+            include: ["olm", "@ricky0123/vad-web"],
+            exclude: [
+                "svelte-modals",
+                "@mediapipe/selfie_segmentation",
+                "@workadventure/noise-suppression/background-noise",
+            ],
             esbuildOptions: {
                 define: {
                     global: "globalThis",

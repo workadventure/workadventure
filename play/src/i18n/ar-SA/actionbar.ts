@@ -45,6 +45,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning: "لم يتم اكتشاف أي صوت من الميكروفون. قد تكون هناك مشكلة — جرب تغيير الميكروفون في الإعدادات.",
         noSoundWarningPressEnter: "لم يتم اكتشاف أي صوت من الميكروفون. اضغط على Enter لفتح الإعدادات.",
         noiseSuppressionBeta: "تقليل الضوضاء (تجريبي)",
+        loudEnvironmentWarning: "تم اكتشاف ضوضاء خلفية مستمرة في الميكروفون.",
+        enableNoiseSuppression: "تفعيل تقليل الضوضاء",
         noiseSuppressionInitializing: "جارٍ تهيئة تقليل الضوضاء المخصص...",
         noiseSuppressionUnsupported: "لا يمكن لهذا المتصفح تشغيل تقليل الضوضاء المخصص.",
         noiseSuppressionError: "فشل تقليل الضوضاء المخصص. يتم الرجوع إلى تقليل الضوضاء الأصلي في المتصفح.",
