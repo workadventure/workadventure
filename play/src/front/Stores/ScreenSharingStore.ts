@@ -1,5 +1,6 @@
 import type { Readable } from "svelte/store";
 import { get, derived, readable, writable } from "svelte/store";
+import { asError } from "catch-unknown";
 import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import { localUserStore } from "../Connection/LocalUserStore";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
@@ -261,13 +262,17 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 }
                 currentStream = undefined;
                 requestedScreenSharingState.disableScreenSharing();
-                console.info("Error. Unable to share screen.", e);
+                const error = asError(e);
+                console.info(`Error. Unable to share screen. ${error.message}`, e);
                 set({
                     type: "error",
-                    error: e instanceof Error ? e : new Error("An unknown error happened"),
+                    error: error,
                 });
             }
-        })().catch((e) => console.error(e));
+        })().catch((e) => {
+            const error = asError(e);
+            console.error(`Error when starting screenshare: ${error.message}`, e);
+        });
     },
 );
 
