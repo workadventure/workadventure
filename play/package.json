@@ -154,7 +154,7 @@
     "jose": "^6.2.3",
     "limiter": "^3.0.0",
     "live-directory": "moufmouf/live-directory#hot_reload_param",
-    "livekit-client": "^2.19.0",
+    "livekit-client": "^2.19.2",
     "livekit-server-sdk": "^2.15.3",
     "marked": "^18.0.4",
     "marked-highlight": "^2.2.4",
