@@ -40,6 +40,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         activate: "เปิดไมโครโฟนของคุณ",
         noSoundWarning: "ไม่พบเสียงจากไมโครโฟนของคุณ อาจมีปัญหา ลองเปลี่ยนไมโครโฟนในการตั้งค่า",
         advancedNoiseReduction: "การลดเสียงรบกวนขั้นสูง",
+        loudEnvironmentWarning: "ตรวจพบเสียงรบกวนพื้นหลังต่อเนื่องจากไมโครโฟนของคุณ",
+        enableNoiseSuppression: "เปิดการลดเสียงรบกวน",
         noiseSuppressionInitializing: "กำลังเริ่มต้นระบบตัดเสียงรบกวนแบบกำหนดเอง...",
         noiseSuppressionUnsupported: "เบราว์เซอร์นี้ไม่สามารถใช้ระบบตัดเสียงรบกวนแบบกำหนดเองได้",
         noiseSuppressionError: "ระบบตัดเสียงรบกวนแบบกำหนดเองล้มเหลว กำลังกลับไปใช้ระบบตัดเสียงรบกวนของเบราว์เซอร์",

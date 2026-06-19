@@ -42,6 +42,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "Aucun son détecté sur votre micro. Un problème est possible ; essayez de changer de micro dans les réglages.",
         advancedNoiseReduction: "Réduction avancée du bruit",
+        loudEnvironmentWarning: "Un bruit de fond continu a été détecté sur votre micro.",
+        enableNoiseSuppression: "Activer la réduction du bruit",
         noiseSuppressionInitializing: "Initialisation de la réduction du bruit personnalisée...",
         noiseSuppressionUnsupported: "Ce navigateur ne peut pas exécuter la réduction du bruit personnalisée.",
         noiseSuppressionError:
