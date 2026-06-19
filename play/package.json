@@ -142,7 +142,7 @@
     "cross-env": "^10.1.0",
     "debug": "^4.4.3",
     "deepmerge-ts": "^7.1.5",
-    "dompurify": "^3.4.9",
+    "dompurify": "^3.4.11",
     "easystarjs": "^0.4.4",
     "emoji-picker-element": "^1.29.1",
     "express": "^5.2.1",
