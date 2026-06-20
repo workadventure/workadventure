@@ -1,6 +1,6 @@
 import type { IncomingMessage } from "http";
 import path from "path";
-import type { Readable } from "stream";
+import { pipeline, type Readable } from "stream";
 import type { ListObjectsV2CommandInput, ListObjectsV2CommandOutput, S3 } from "@aws-sdk/client-s3";
 import {
     CopyObjectCommand,
@@ -269,7 +269,11 @@ export class S3FileSystem implements FileSystemInterface {
                 // Typescript doc is wrong in AWS: see: https://github.com/aws/aws-sdk-js-v3/issues/1877#issuecomment-755387549
                 //eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 //@ts-ignore
-                (result.Body as IncomingMessage).pipe(res);
+                pipeline(result.Body as IncomingMessage, res, (error) => {
+                    if (error && !res.destroyed) {
+                        next(error);
+                    }
+                });
             })
             .catch((err) => {
                 if (err instanceof Error && err.constructor.name === "NoSuchKey") {
@@ -348,22 +352,22 @@ export class S3FileSystem implements FileSystemInterface {
             if (objects) {
                 for (const file of objects) {
                     const key = file.Key;
+
+                    if (!key) {
+                        throw new Error("Failed to get file from S3");
+                    }
+                    if (key.endsWith("/") || key.includes(MapListService.CACHE_NAME)) {
+                        continue;
+                    }
+
                     const { Body } = await this.s3.send(
                         new GetObjectCommand({
                             Bucket: this.bucketName,
                             Key: key,
                         }),
                     );
-                    if (!key || !Body) {
+                    if (!Body) {
                         throw new Error("Failed to get file from S3");
-                    }
-                    if (key.endsWith("/")) {
-                        // a directory. Let's bypass this.
-                        continue;
-                    }
-                    if (key.includes(MapListService.CACHE_NAME)) {
-                        // we do not want cache file to be downloaded
-                        continue;
                     }
 
                     await new Promise<void>((resolve, reject) => {
