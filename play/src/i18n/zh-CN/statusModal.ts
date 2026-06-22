@@ -9,6 +9,7 @@ const statusModal: DeepPartial<Translation["statusModal"]> = {
     allowNotification: "允许通知？",
     allowNotificationExplanation: "当有人想与您交谈时，接收桌面通知。",
     soundBlockedBackInAMoment: "您的浏览器当前正在阻止声音播放，因此您处于“稍后回来”模式。",
+    livekitAudioPlaybackBlocked: "您的浏览器阻止了音频播放。请开启声音以收听对话。",
     turnSoundOn: "开启声音",
 };
 

@@ -10,6 +10,8 @@ const statusModal: DeepPartial<Translation["statusModal"]> = {
     allowNotificationExplanation: "Rep una notificació d'escriptori quan algú vulgui parlar amb tu.",
     soundBlockedBackInAMoment:
         "El teu navegador està bloquejant el so ara mateix, per això ets en mode Torna en un moment.",
+    livekitAudioPlaybackBlocked:
+        "El navegador ha bloquejat la reproducció d'àudio. Activa el so per sentir la conversa.",
     turnSoundOn: "Activar el so",
 };
 

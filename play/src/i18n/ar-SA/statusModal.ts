@@ -9,6 +9,7 @@ const statusModal: DeepPartial<Translation["statusModal"]> = {
     allowNotification: "هل تريد السماح بالإشعارات؟", // Do you want to allow notifications?
     allowNotificationExplanation: "احصل على إشعار سطح المكتب عندما يريد شخص ما التحدث إليك.",
     soundBlockedBackInAMoment: "متصفحك يمنع الصوت حاليا، لذلك أنت في وضع سأعود بعد قليل.",
+    livekitAudioPlaybackBlocked: "منع متصفحك تشغيل الصوت. شغّل الصوت لسماع المحادثة.",
     turnSoundOn: "تشغيل الصوت",
 };
 

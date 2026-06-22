@@ -9,6 +9,7 @@ const statusModal: BaseTranslation = {
     allowNotificationExplanation: "Receba uma notificação na área de trabalho quando alguém quiser falar com você.",
     soundBlockedBackInAMoment:
         "Seu navegador está bloqueando o som por enquanto, então você está no modo Volto em instantes.",
+    livekitAudioPlaybackBlocked: "Seu navegador bloqueou a reprodução de áudio. Ative o som para ouvir a conversa.",
     turnSoundOn: "Ativar som",
 };
 

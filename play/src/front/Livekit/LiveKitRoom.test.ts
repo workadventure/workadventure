@@ -8,6 +8,14 @@ import type { Streamable } from "../Space/Streamable";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { LiveKitRoom } from "./LiveKitRoom";
 
+const toastStoreMock = vi.hoisted(() => ({
+    addToast: vi.fn(),
+    removeToast: vi.fn(),
+}));
+
+vi.mock("../Stores/ToastStore", () => ({ toastStore: toastStoreMock }));
+vi.mock("../Components/Toasts/LiveKitAudioPlaybackToast.svelte", () => ({ default: {} }));
+
 vi.mock("../Stores/ScreenSharingStore", async () => {
     const { writable } = await import("svelte/store");
     const requestedScreenSharingState = writable(false);
@@ -57,6 +65,30 @@ vi.mock("../Stores/StreamableCollectionStore", async () => {
 vi.mock("../Space/SpacePeerManager/SpacePeerManager", () => ({}));
 
 describe("LiveKitRoom", () => {
+    it("shows a toast that restarts audio when LiveKit reports blocked playback", async () => {
+        const liveKitRoom = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        const startAudio = vi.fn().mockResolvedValue(undefined);
+        const sdkRoom = {
+            canPlaybackAudio: false,
+            startAudio,
+        };
+        liveKitRoom["room"] = sdkRoom as never;
+
+        liveKitRoom["handleAudioPlaybackStatusChanged"]();
+
+        expect(toastStoreMock.addToast).toHaveBeenCalledOnce();
+        const props = toastStoreMock.addToast.mock.calls[0][1] as { startAudio: () => Promise<void> };
+        await props.startAudio();
+        expect(startAudio).toHaveBeenCalledOnce();
+
+        sdkRoom.canPlaybackAudio = true;
+        liveKitRoom["handleAudioPlaybackStatusChanged"]();
+        expect(toastStoreMock.removeToast).toHaveBeenCalledWith("livekit-audio-playback-blocked");
+    });
+
     it("should not forward screen share updates when the space forbids screen share publication", () => {
         const shouldPublishScreenShareStore = writable(false);
         const screenShareStream = createScreenShareStream();

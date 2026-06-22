@@ -10,6 +10,8 @@ const statusModal: DeepPartial<Translation["statusModal"]> = {
     allowNotificationExplanation: "Recibe una notificación de escritorio cuando alguien quiera hablar contigo.",
     soundBlockedBackInAMoment:
         "Tu navegador está bloqueando el sonido por ahora, por eso estás en modo Vuelve en un momento.",
+    livekitAudioPlaybackBlocked:
+        "Tu navegador ha bloqueado la reproducción de audio. Activa el sonido para escuchar la conversación.",
     turnSoundOn: "Activar sonido",
 };
 

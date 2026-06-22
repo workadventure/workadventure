@@ -9,6 +9,7 @@ const statusModal: DeepPartial<Translation["statusModal"]> = {
     goBackToOnlineStatusLabel: "オンラインに戻りますか？",
     allowNotification: "通知を許可しますか？",
     soundBlockedBackInAMoment: "現在ブラウザで音声がブロックされているため、「すぐ戻ります」モードになっています。",
+    livekitAudioPlaybackBlocked: "ブラウザが音声の再生をブロックしました。会話を聞くには音声を有効にしてください。",
     turnSoundOn: "音声を有効にする",
 };
 
