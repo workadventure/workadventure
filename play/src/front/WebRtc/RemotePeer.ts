@@ -408,6 +408,14 @@ export class RemotePeer extends Peer implements Streamable {
                     // stable MediaStream inside the RemotePeer where we add / remove tracks on the fly.
                     this.localStream = new MediaStream();
                     this.addStream(this.localStream);
+                    console.log("[WebRTC] stream sent successfully", {
+                        userId: this.user.userId,
+                        spaceUserId: this._spaceUserId,
+                        type: this.type,
+                        connectionId: this._connectionId,
+                        audioTracks: streamValue.stream.getAudioTracks().length,
+                        videoTracks: streamValue.stream.getVideoTracks().length,
+                    });
                 }
                 let newVideoTrack: MediaStreamTrack | undefined;
                 let newAudioTrack: MediaStreamTrack | undefined;
@@ -532,6 +540,14 @@ export class RemotePeer extends Peer implements Streamable {
      */
     private stream(stream: MediaStream) {
         debug("Receiving stream from peer", this._spaceUserId);
+        console.log("[WebRTC] stream received successfully", {
+            userId: this.user.userId,
+            spaceUserId: this._spaceUserId,
+            type: this.type,
+            connectionId: this._connectionId,
+            audioTracks: stream.getAudioTracks().length,
+            videoTracks: stream.getVideoTracks().length,
+        });
         this._remoteStreamStore.set(stream);
         try {
             this.remoteStream = stream;
