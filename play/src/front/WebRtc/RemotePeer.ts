@@ -25,6 +25,7 @@ import { isFirefox } from "./DeviceUtils";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
 import { subscribeToVideoQualityAnalytics } from "./VideoQualityAnalytics";
 import { createWebRtcStats } from "./WebRtcStatsFactory";
+import { describeAudioTrack, getInboundAudioRtpDiagnostics } from "./AudioDiagnostics";
 import { selectVideoPreset, type VideoQualitySetting } from "./VideoPresets";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
@@ -696,6 +697,17 @@ export class RemotePeer extends Peer implements Streamable {
 
     get connectionId(): string {
         return this._connectionId;
+    }
+
+    public async getAudioDiagnosticSnapshot(): Promise<Record<string, unknown>> {
+        const peerConnection = this._pc as RTCPeerConnection | undefined;
+        return {
+            connectionState: peerConnection?.connectionState,
+            iceConnectionState: peerConnection?.iceConnectionState,
+            signalingState: peerConnection?.signalingState,
+            remoteAudioTracks: this.remoteStream?.getAudioTracks().map(describeAudioTrack) ?? [],
+            inboundAudioRtp: peerConnection ? getInboundAudioRtpDiagnostics(await peerConnection.getStats()) : [],
+        };
     }
 
     public stopStreamToRemoteUser() {

@@ -2253,6 +2253,8 @@ export class GameScene extends DirtyScene {
                         timeoutId = setTimeout(() => {
                             requestedStatusStore.set(AvailabilityStatus.BACK_IN_A_MOMENT);
                         }, 2000);
+                    } else {
+                        audioContextManager.disposeVerificationContext();
                     }
                 }
 

@@ -77,4 +77,6 @@ export interface Streamable {
     readonly volume: Writable<number>;
     readonly videoType: StreamCategory;
     readonly webrtcStats: Readable<WebRtcStats | undefined> | undefined;
+    /** Diagnostic-only snapshot used when receiver audio state disagrees with the space state. */
+    readonly getAudioDiagnosticSnapshot?: () => Promise<Record<string, unknown>>;
 }

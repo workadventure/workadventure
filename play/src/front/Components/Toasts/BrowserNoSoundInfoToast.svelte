@@ -59,6 +59,7 @@
         return () => {
             if (intervalId !== undefined) clearInterval(intervalId);
             isNotSuspendedAudioContextStoreSubscription?.();
+            audioContextManager.disposeVerificationContext();
         };
     });
 </script>

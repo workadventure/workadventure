@@ -3,6 +3,11 @@
     import { getContext, onDestroy, onMount } from "svelte";
     import * as Sentry from "@sentry/svelte";
     import type { Subscription } from "rxjs";
+    import {
+        describeAudioTrack,
+        getAudioContextDiagnostics,
+        getAudioPlaybackDiagnostics,
+    } from "../../WebRtc/AudioDiagnostics";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { VideoBox } from "../../Space/VideoBox";
@@ -108,14 +113,9 @@
         }
 
         const timeout = setTimeout(() => {
-            const audioTracks =
-                $mediaStreamStore?.getAudioTracks().map((track) => ({
-                    id: track.id,
-                    enabled: track.enabled,
-                    muted: track.muted,
-                    readyState: track.readyState,
-                })) ?? [];
-            const details = {
+            const mediaStream = $mediaStreamStore;
+            const audioTracks = mediaStream?.getAudioTracks().map(describeAudioTrack) ?? [];
+            const baseDetails = {
                 streamableUniqueId: streamable?.uniqueId,
                 streamableType: streamable?.media.type,
                 videoType: streamable?.videoType,
@@ -125,27 +125,37 @@
                 microphoneState: $microphoneStateStore,
                 audioTrackCount: audioTracks.length,
                 audioTracks,
+                audioContexts: getAudioContextDiagnostics(),
+                playbackElements: getAudioPlaybackDiagnostics(mediaStream),
             };
-
-            console.warn(
-                "Audio state mismatch: remote microphone is enabled in the space but no receiver audio track is present",
-                details,
-            );
-            Sentry.captureMessage(
-                "Audio state mismatch: remote microphone is enabled in the space but no receiver audio track is present",
-                {
-                    level: "warning",
-                    tags: {
-                        component: "VideoMediaBox",
-                        streamableType: streamable?.media.type ?? "unknown",
-                        videoType: streamable?.videoType ?? "unknown",
-                    },
-                    extra: details,
-                },
-            );
 
             loggedAudioMismatchKey = audioMismatchKey;
             showAudioStateMismatch = true;
+
+            Promise.resolve(streamable?.getAudioDiagnosticSnapshot?.())
+                .catch((error: unknown) => ({ diagnosticSnapshotError: String(error) }))
+                .then((transport) => {
+                    const details = { ...baseDetails, transport };
+                    console.warn(
+                        "Audio state mismatch: remote microphone is enabled in the space but no receiver audio track is present",
+                        details,
+                    );
+                    Sentry.captureMessage(
+                        "Audio state mismatch: remote microphone is enabled in the space but no receiver audio track is present",
+                        {
+                            level: "warning",
+                            tags: {
+                                component: "VideoMediaBox",
+                                streamableType: streamable?.media.type ?? "unknown",
+                                videoType: streamable?.videoType ?? "unknown",
+                            },
+                            extra: details,
+                        },
+                    );
+                })
+                .catch((error: unknown) => {
+                    console.error("Unexpected audio mismatch diagnostic error", error);
+                });
         }, 3000);
 
         return () => {

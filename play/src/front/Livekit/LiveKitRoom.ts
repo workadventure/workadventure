@@ -64,6 +64,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private readonly boundHandleParticipantDisconnected = this.handleParticipantDisconnected.bind(this);
     private readonly boundHandleActiveSpeakersChanged = this.handleActiveSpeakersChanged.bind(this);
     private readonly boundHandleDisconnected = this.handleDisconnected.bind(this);
+    private readonly boundHandleAudioPlaybackStatusChanged = this.handleAudioPlaybackStatusChanged.bind(this);
+    private audioPlaybackWasConfirmed = false;
 
     constructor(
         private serverUrl: string,
@@ -525,6 +527,41 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room.on(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
         this.room.on(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
         this.room.on(RoomEvent.Disconnected, this.boundHandleDisconnected);
+        this.room.on(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
+    }
+
+    private handleAudioPlaybackStatusChanged(canPlaybackAudio: boolean): void {
+        const details = {
+            canPlaybackAudio,
+            previousPlaybackConfirmed: this.audioPlaybackWasConfirmed,
+            connectionState: this.room?.state,
+            visibilityState: document.visibilityState,
+            documentHasFocus: document.hasFocus(),
+            localMicrophoneTrack: this.localMicrophoneTrack
+                ? {
+                      id: this.localMicrophoneTrack.mediaStreamTrack.id,
+                      enabled: this.localMicrophoneTrack.mediaStreamTrack.enabled,
+                      muted: this.localMicrophoneTrack.mediaStreamTrack.muted,
+                      readyState: this.localMicrophoneTrack.mediaStreamTrack.readyState,
+                      isMuted: this.localMicrophoneTrack.isMuted,
+                      isUpstreamPaused: this.localMicrophoneTrack.isUpstreamPaused,
+                  }
+                : undefined,
+        };
+
+        console.info("[LiveKitAudioDiagnostics] Audio playback status changed", details);
+        if (!canPlaybackAudio && this.audioPlaybackWasConfirmed) {
+            Sentry.captureMessage("LiveKit audio playback became unavailable", {
+                level: "warning",
+                tags: {
+                    component: "LiveKitAudioDiagnostics",
+                },
+                extra: details,
+            });
+        }
+        if (canPlaybackAudio) {
+            this.audioPlaybackWasConfirmed = true;
+        }
     }
 
     private getDisconnectReasonLabel(reason?: DisconnectReason): string {
@@ -799,6 +836,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.room?.off(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
             this.room?.off(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
             this.room?.off(RoomEvent.Disconnected, this.boundHandleDisconnected);
+            this.room?.off(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
             this.leaveRoom();
         } finally {
             this._livekitRoomCounter.decrement();

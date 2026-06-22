@@ -19,6 +19,7 @@ import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 
 import { subscribeToVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
+import { describeAudioTrack, getInboundAudioRtpDiagnostics } from "../WebRtc/AudioDiagnostics";
 import type { Streamable } from "../Space/Streamable";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 
@@ -546,6 +547,28 @@ export class LiveKitParticipant {
             canCloseStreamable: () => false,
             videoType: "video",
             webrtcStats: this.videoWebrtcStats,
+            getAudioDiagnosticSnapshot: () => this.getAudioDiagnosticSnapshot(),
+        };
+    }
+
+    private async getAudioDiagnosticSnapshot(): Promise<Record<string, unknown>> {
+        const publication = this._microphonePublication;
+        const track = publication?.track;
+        const statsReport = await track?.getRTCStatsReport();
+        return {
+            participantSid: this.participant.sid,
+            participantIdentity: this.participant.identity,
+            publication: publication
+                ? {
+                      sid: publication.trackSid,
+                      isMuted: publication.isMuted,
+                      isSubscribed: publication.isSubscribed,
+                      subscriptionStatus: publication.subscriptionStatus,
+                  }
+                : undefined,
+            microphoneAudioTracks: this._microphoneStream?.getAudioTracks().map(describeAudioTrack) ?? [],
+            scriptingAudioTracks: this._scriptingAudioStream?.getAudioTracks().map(describeAudioTrack) ?? [],
+            inboundAudioRtp: statsReport ? getInboundAudioRtpDiagnostics(statsReport) : [],
         };
     }
 

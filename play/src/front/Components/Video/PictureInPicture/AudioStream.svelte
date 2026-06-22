@@ -3,6 +3,12 @@
     import Debug from "debug";
     import * as Sentry from "@sentry/svelte";
     import type { Readable } from "svelte/store";
+    import {
+        describeAudioTrack,
+        getAudioContextDiagnostics,
+        getAudioPlaybackDiagnostics,
+        registerAudioPlaybackElement,
+    } from "../../../WebRtc/AudioDiagnostics";
 
     interface Props {
         streamStore: Readable<MediaStream | undefined>;
@@ -85,11 +91,58 @@
     let destroyed = false;
 
     let stream = $derived($streamStore ? $streamStore : undefined);
+    let lastReportedPlaybackFailureStream: MediaStream | undefined;
+
+    async function verifyAudioPlayback(element: HTMLAudioElement, mediaStream: MediaStream): Promise<void> {
+        try {
+            await element.play();
+        } catch (error) {
+            if (error instanceof DOMException && error.name === "AbortError") return;
+
+            const expectedAutoplayBlock =
+                error instanceof DOMException &&
+                error.name === "NotAllowedError" &&
+                navigator.userActivation?.hasBeenActive !== true;
+            const details = {
+                error: error instanceof Error ? { name: error.name, message: error.message } : String(error),
+                expectedAutoplayBlock,
+                audioTracks: mediaStream.getAudioTracks().map(describeAudioTrack),
+                audioContexts: getAudioContextDiagnostics(),
+                playbackElements: getAudioPlaybackDiagnostics(mediaStream),
+                visibilityState: document.visibilityState,
+                documentHasFocus: document.hasFocus(),
+            };
+            if (expectedAutoplayBlock) {
+                debug("Expected autoplay block", details);
+            } else {
+                console.warn("[AudioPlaybackDiagnostics] Audio element failed to play", details);
+            }
+
+            if (!expectedAutoplayBlock && lastReportedPlaybackFailureStream !== mediaStream) {
+                lastReportedPlaybackFailureStream = mediaStream;
+                Sentry.captureMessage("Remote audio element failed to play", {
+                    level: "warning",
+                    tags: {
+                        component: "AudioPlaybackDiagnostics",
+                    },
+                    extra: details,
+                });
+            }
+        }
+    }
+
+    $effect(() => {
+        if (!audioElement || !stream) return;
+        return registerAudioPlaybackElement(stream, audioElement);
+    });
 
     $effect(() => {
         if (audioElement && stream) {
             if (audioElement.srcObject !== stream) {
                 audioElement.srcObject = stream;
+                verifyAudioPlayback(audioElement, stream).catch((error: unknown) => {
+                    console.error("Unexpected audio playback diagnostic error", error);
+                });
             }
         }
     });

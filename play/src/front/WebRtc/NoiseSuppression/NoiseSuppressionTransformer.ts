@@ -5,6 +5,7 @@ import {
     type NoiseSuppressionAudioWorkletHandle,
     type NoiseSuppressionAudioWorkletOutboundMessage,
 } from "@workadventure/noise-suppression/audio-worklet";
+import { describeAudioTrack, registerAudioContextForDiagnostics } from "../AudioDiagnostics";
 
 export interface NoiseSuppressionStatusMessage {
     status: "initializing" | "ready" | "error";
@@ -31,9 +32,19 @@ export class NoiseSuppressionTransformer {
     private destinationNode: MediaStreamAudioDestinationNode | undefined;
     private outputTrack: MediaStreamTrack | undefined;
     private inputTrack: MediaStreamTrack | undefined;
+    private readonly unregisterAudioContextDiagnostics: () => void;
 
     constructor(options?: NoiseSuppressionTransformerOptions) {
         this.audioContext = new AudioContext({ sampleRate: NOISE_SUPPRESSION_SAMPLE_RATE });
+        this.unregisterAudioContextDiagnostics = registerAudioContextForDiagnostics(
+            this.audioContext,
+            "noise-suppression",
+            () => ({
+                inputTrack: this.inputTrack ? describeAudioTrack(this.inputTrack) : undefined,
+                outputTrack: this.outputTrack ? describeAudioTrack(this.outputTrack) : undefined,
+                processorStatus: this.lastProcessorStatus,
+            }),
+        );
         this.onStatusChange = options?.onStatusChange;
     }
 
@@ -174,6 +185,7 @@ export class NoiseSuppressionTransformer {
 
     public async closeAndDestroy(): Promise<void> {
         this.stop();
+        this.unregisterAudioContextDiagnostics();
         this.stopObservingWorkletMessages?.();
         this.stopObservingWorkletMessages = undefined;
         if (this.workletHandle) {

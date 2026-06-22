@@ -1,6 +1,5 @@
 import { isNotSuspendedAudioContextStore } from "../Stores/AudioContextStore";
-import { requestedStatusStore } from "../Stores/MediaStore";
-import { toastStore } from "../Stores/ToastStore";
+import { registerAudioContextForDiagnostics } from "./AudioDiagnostics";
 
 export const AUDIO_CONTEXT_TOAST_UUID = "browser-no-sound-info-toast";
 /**
@@ -11,8 +10,11 @@ export const AUDIO_CONTEXT_TOAST_UUID = "browser-no-sound-info-toast";
  * 1. Creating multiple AudioContexts can be resource-intensive
  * 2. Some browsers require a user gesture to start an AudioContext
  */
-class AudioContextManager {
+export class AudioContextManager {
     private audioContexts: Map<number, AudioContext> = new Map();
+    private audioContextDiagnosticsUnsubscribers: Map<number, () => void> = new Map();
+    private verificationContext: AudioContext | undefined;
+    private verificationContextDiagnosticsUnsubscriber: (() => void) | undefined;
     private isShuttingDown = false;
 
     /**
@@ -35,6 +37,10 @@ class AudioContextManager {
             const options = sampleRate ? { sampleRate } : undefined;
             context = new AudioContext(options);
             this.audioContexts.set(key, context);
+            this.audioContextDiagnosticsUnsubscribers.set(
+                key,
+                registerAudioContextForDiagnostics(context, sampleRate ? `shared-${sampleRate}hz` : "shared-default"),
+            );
             console.debug(
                 `[AudioContextManager] Created new AudioContext with ${
                     sampleRate ? `sample rate ${sampleRate}` : "default sample rate"
@@ -57,6 +63,8 @@ class AudioContextManager {
         if (context && context.state !== "closed") {
             // Remove from map before closing to prevent concurrent access
             this.audioContexts.delete(key);
+            this.audioContextDiagnosticsUnsubscribers.get(key)?.();
+            this.audioContextDiagnosticsUnsubscribers.delete(key);
             try {
                 await context.close();
                 console.debug(`[AudioContextManager] Closed AudioContext with key ${key}`);
@@ -64,6 +72,13 @@ class AudioContextManager {
                 console.error(`[AudioContextManager] Error closing AudioContext with key ${key}:`, err);
                 // Re-add to map if close failed
                 this.audioContexts.set(key, context);
+                this.audioContextDiagnosticsUnsubscribers.set(
+                    key,
+                    registerAudioContextForDiagnostics(
+                        context,
+                        sampleRate ? `shared-${sampleRate}hz` : "shared-default",
+                    ),
+                );
             }
         }
     }
@@ -74,6 +89,7 @@ class AudioContextManager {
      */
     public async closeAllContexts(): Promise<void> {
         this.isShuttingDown = true;
+        this.disposeVerificationContext();
         const closePromises: Promise<void>[] = [];
 
         this.audioContexts.forEach((context, key) => {
@@ -88,6 +104,8 @@ class AudioContextManager {
 
         await Promise.all(closePromises);
         // Clear the map after all contexts are closed
+        this.audioContextDiagnosticsUnsubscribers.forEach((unsubscribe) => unsubscribe());
+        this.audioContextDiagnosticsUnsubscribers.clear();
         this.audioContexts.clear();
         console.debug("[AudioContextManager] All AudioContexts closed");
     }
@@ -100,27 +118,47 @@ class AudioContextManager {
         return this.audioContexts.size;
     }
 
-    // Create a new context and verify that the context is not suspended.
-    // This context will not saved and just used to verify that the context is not suspended for the current page.
+    // Create a context and verify that the browser allows it to run.
     public verifyContextIsNotSuspended(): boolean {
         // Chrome documentation : https://developer.chrome.com/blog/autoplay
         // API : https://developer.mozilla.org/fr/docs/Web/API/AudioContext
-        // We need to create a new AudioContext and verify that the context is not suspended.
-        const context = new AudioContext();
-        context.onstatechange = () => {
-            const isNotSuspended = context.state !== "suspended";
-            isNotSuspendedAudioContextStore.set(isNotSuspended);
-            if (!isNotSuspended) {
-                // Set the user status to ONLINE
-                requestedStatusStore.set(null); //⚠️ Define to null is like set to ONLINE
-                // Remove the toast
-                toastStore.removeToast(AUDIO_CONTEXT_TOAST_UUID);
-            }
-            context.close().catch(console.error);
-        };
-        const isNotSuspended = context.state !== "suspended";
-        isNotSuspendedAudioContextStore.set(isNotSuspended);
-        return isNotSuspended;
+        let context = this.verificationContext;
+        if (!context || context.state === "closed") {
+            const newContext = new AudioContext();
+            this.verificationContext = newContext;
+            this.verificationContextDiagnosticsUnsubscriber = registerAudioContextForDiagnostics(
+                newContext,
+                "autoplay-verification",
+            );
+            newContext.onstatechange = () => this.updateVerificationContextState(newContext);
+            context = newContext;
+        }
+
+        return this.updateVerificationContextState(context);
+    }
+
+    public disposeVerificationContext(): void {
+        const context = this.verificationContext;
+        if (!context) return;
+
+        this.verificationContext = undefined;
+        this.verificationContextDiagnosticsUnsubscriber?.();
+        this.verificationContextDiagnosticsUnsubscriber = undefined;
+        context.onstatechange = null;
+        if (context.state !== "closed") {
+            context.close().catch((error: unknown) => {
+                console.error("[AudioContextManager] Error closing verification AudioContext:", error);
+            });
+        }
+    }
+
+    private updateVerificationContextState(context: AudioContext): boolean {
+        const isRunning = context.state === "running";
+        isNotSuspendedAudioContextStore.set(isRunning);
+        if (isRunning) {
+            this.disposeVerificationContext();
+        }
+        return isRunning;
     }
 }
 
