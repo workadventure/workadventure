@@ -9,6 +9,8 @@ const statusModal: DeepPartial<Translation["statusModal"]> = {
     allowNotification: "Powěźeśe dowóliś?",
     allowNotificationExplanation: "Dostańśo powěźeńku na desktopje, gaž něchten z wami powědaś co.",
     soundBlockedBackInAMoment: 'Waš wobglědowak tuchylu zuk blokěrujo, togodla sćo we modusu "Wrośo se za moment".',
+    livekitAudioPlaybackBlocked:
+        "Waš wobglědowak jo wótgrawanje awdia zablokěrował. Zmóžniśo zuk, aby rozgrono słyšali.",
     turnSoundOn: "Zuk zmóžniś",
 };
 

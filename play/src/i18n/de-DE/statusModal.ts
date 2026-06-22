@@ -10,6 +10,8 @@ const statusModal: DeepPartial<Translation["statusModal"]> = {
     allowNotification: "Möchtest du Benachrichtigungen erlauben?",
     soundBlockedBackInAMoment:
         'Ihr Browser blockiert den Ton im Moment, deshalb sind Sie im Modus "Komme gleich zurück".',
+    livekitAudioPlaybackBlocked:
+        "Ihr Browser hat die Audiowiedergabe blockiert. Aktivieren Sie den Ton, um das Gespräch zu hören.",
     turnSoundOn: "Ton aktivieren",
 };
 
