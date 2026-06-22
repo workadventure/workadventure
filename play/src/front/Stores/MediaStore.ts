@@ -1156,6 +1156,45 @@ function isOverConstrainedError(e: unknown): e is OverconstrainedErrorInterface 
     return e instanceof Error && e.name === "OverconstrainedError";
 }
 
+function createVolumeStore(mediaStream: MediaStream | undefined, set: (value: number[] | undefined) => void) {
+    if (mediaStream === undefined || mediaStream.getAudioTracks().length <= 0) {
+        set(undefined);
+        return;
+    }
+
+    const soundMeter = new SoundMeter(mediaStream);
+    let error = false;
+
+    const timeout = setInterval(() => {
+        try {
+            set(soundMeter.getVolume());
+        } catch (err) {
+            if (!error) {
+                console.error(err);
+                error = true;
+            }
+        }
+    }, 100);
+
+    return () => {
+        clearInterval(timeout);
+        soundMeter.stop();
+    };
+}
+
+export const rawLocalVolumeStore = derived<typeof rawLocalAudioTrackStore, number[] | undefined>(
+    rawLocalAudioTrackStore,
+    ($rawLocalAudioTrackStore, set) => {
+        if ($rawLocalAudioTrackStore.type === "error" || $rawLocalAudioTrackStore.track === undefined) {
+            set(undefined);
+            return;
+        }
+
+        return createVolumeStore(new MediaStream([$rawLocalAudioTrackStore.track]), set);
+    },
+    undefined,
+);
+
 export const localVolumeStore = derived<typeof localStreamStore, number[] | undefined>(
     localStreamStore,
     ($localStreamStoreValue, set) => {
@@ -1165,29 +1204,7 @@ export const localVolumeStore = derived<typeof localStreamStore, number[] | unde
         }
         const mediaStream = $localStreamStoreValue.stream;
 
-        if (mediaStream === undefined || mediaStream.getAudioTracks().length <= 0) {
-            set(undefined);
-            return;
-        }
-
-        const soundMeter = new SoundMeter(mediaStream);
-        let error = false;
-
-        const timeout = setInterval(() => {
-            try {
-                set(soundMeter.getVolume());
-            } catch (err) {
-                if (!error) {
-                    console.error(err);
-                    error = true;
-                }
-            }
-        }, 100);
-
-        return () => {
-            clearInterval(timeout);
-            soundMeter.stop();
-        };
+        return createVolumeStore(mediaStream, set);
     },
     undefined,
 );
