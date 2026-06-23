@@ -70,6 +70,13 @@
                 "</a>",
         );
     }
+    if (legals?.analyticsNoticeUrl) {
+        legalStrings.push(
+            '<a href="' +
+                encodeURI(legals.analyticsNoticeUrl) +
+                '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">analytics notice</a>',
+        );
+    }
 
     let legalString: string | undefined = $state();
     if (legalStrings.length > 0) {

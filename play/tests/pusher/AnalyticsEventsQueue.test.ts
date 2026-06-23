@@ -115,6 +115,70 @@ describe("AnalyticsEventsQueue", () => {
         });
     });
 
+    it("does not queue events from disabled analytics metric categories", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue(baseConfig, post);
+        queue.setEnabled(true);
+
+        queue.enqueueEvent(
+            {
+                eventName: "chat.message_sent",
+                source: "front",
+                clientEventTimeMs: Date.parse("2026-04-24T12:00:05.000Z"),
+                eventId: "event-id",
+                properties: {},
+            },
+            socketData({
+                analyticsMetricsPolicy: analyticsMetricsPolicy({
+                    collaboration_activity: false,
+                }),
+            }),
+        );
+        await queue.flush();
+
+        expect(post).not.toHaveBeenCalled();
+        expect(queue.getStats()).toMatchObject({
+            droppedByWorldSettings: 1,
+            eventsSent: 0,
+            queueSize: 0,
+        });
+    });
+
+    it("anonymizes event identifiers when user-level activity metrics are disabled", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));
+        queue.setEnabled(true);
+
+        queue.enqueueEvent(
+            {
+                eventName: "user.connected",
+                source: "pusher",
+                clientEventTimeMs: Date.parse("2026-04-24T12:00:05.000Z"),
+                eventId: "event-id",
+                properties: {
+                    connectionId: "connection-id",
+                },
+            },
+            socketData({
+                analyticsMetricsPolicy: analyticsMetricsPolicy({
+                    user_level_activity: false,
+                }),
+            }),
+        );
+        await queue.flush();
+
+        const batch = post.mock.calls[0][1] as AnalyticsEventsBatch;
+        expect(batch.events[0]).toMatchObject({
+            eventName: "user.connected",
+            userId: null,
+            tabId: null,
+            clientIp: null,
+            properties: {},
+        });
+        expect(batch.events[0].userUuid).toMatch(/^anonymous:/);
+        expect(batch.events[0].spaceUserId).toMatch(/^anonymous:/);
+    });
+
     it("drops the oldest events when the queue is full", async () => {
         const post = vi.fn().mockResolvedValue(undefined);
         const queue = new AnalyticsEventsQueue({ ...baseConfig, maxQueueSize: 2 }, post);
@@ -251,8 +315,24 @@ function socketData(overrides: Partial<SocketData> & { analyticsEventsEnabled?: 
         spaces: new Set(["world.space"]),
         tabId: "tab-id",
         analyticsEventsEnabled: true,
+        analyticsMetricsPolicy: analyticsMetricsPolicy(),
         ...overrides,
     } as SocketData;
+}
+
+function analyticsMetricsPolicy(categories: Partial<Record<string, boolean>> = {}) {
+    return {
+        schemaVersion: 1,
+        legalTemplateVersion: "2026-06-23.v1",
+        categories: {
+            presence_sessions: true,
+            collaboration_activity: true,
+            workspace_actions: true,
+            quality_diagnostics: true,
+            user_level_activity: true,
+            ...categories,
+        },
+    };
 }
 
 function videoQualitySample(overrides: Partial<VideoQualitySampleMessage> = {}): VideoQualitySampleMessage {
