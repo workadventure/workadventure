@@ -5,6 +5,7 @@ import { ADMIN_SOCKETS_TOKEN, SECRET_KEY } from "../enums/EnvironmentVariable";
 export const AuthTokenData = z.object({
     identifier: z.string(), //will be a email if logged in or an uuid if anonymous
     accessToken: z.string().optional(),
+    refreshToken: z.string().optional(),
     username: z.string().optional(),
     locale: z.string().optional(),
     tags: z
@@ -62,12 +63,13 @@ export class JWTTokenManager {
     public async createAuthToken(
         identifier: string,
         accessToken?: string,
+        refreshToken?: string,
         username?: string,
         locale?: string,
         tags?: string[],
         matrixUserId?: string,
     ): Promise<string> {
-        return new SignJWT({ identifier, accessToken, username, locale, tags, matrixUserId })
+        return new SignJWT({ identifier, accessToken, refreshToken, username, locale, tags, matrixUserId })
             .setExpirationTime("30d")
             .setProtectedHeader({ alg: "HS256" })
             .sign(secret);
