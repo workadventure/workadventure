@@ -55,6 +55,18 @@ export const AdminLoginMessage = z.object({
 
 export type AdminLoginMessage = z.infer<typeof AdminLoginMessage>;
 
+const isAnalyticsMetricsPolicy = z.object({
+    schemaVersion: z.number(),
+    legalTemplateVersion: z.string(),
+    categories: z.object({
+        presence_sessions: z.boolean().optional(),
+        collaboration_activity: z.boolean().optional(),
+        workspace_actions: z.boolean().optional(),
+        quality_diagnostics: z.boolean().optional(),
+        user_level_activity: z.boolean().optional(),
+    }),
+});
+
 export const isFetchMemberDataByUuidSuccessResponse = z.object({
     status: extendApi(z.literal("ok"), {
         description: "MUST be 'ok' if the system successfully authenticated the user.",
@@ -127,6 +139,9 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
     }),
     analyticsEventsEnabled: extendApi(z.boolean().optional(), {
         description: "True if admin analytics events can be sent for this world.",
+    }),
+    analyticsMetricsPolicy: extendApi(isAnalyticsMetricsPolicy.optional(), {
+        description: "Versioned category policy controlling which admin analytics metrics can be sent for this world.",
     }),
 });
 

@@ -1,4 +1,5 @@
 import axios, { isAxiosError } from "axios";
+import { createHash } from "crypto";
 import {
     VideoQualityRelayProtocol,
     VideoQualityStreamCategory,
@@ -6,7 +7,7 @@ import {
     type VideoQualityReportMessage,
     type VideoQualitySampleMessage,
 } from "@workadventure/messages";
-import type { SocketData } from "../models/Websocket/SocketData";
+import type { AnalyticsMetricCategory, SocketData } from "../models/Websocket/SocketData";
 import {
     ADMIN_API_TOKEN,
     ADMIN_API_URL,
@@ -139,10 +140,20 @@ export class AnalyticsEventsQueue {
             return;
         }
 
-        const normalizedEvent = this.normalizeEvent(event, socketData, this.now().toISOString());
+        const category = analyticsMetricCategoryForEvent(event.eventName);
+        if (socketData.analyticsMetricsPolicy?.categories?.[category] === false) {
+            this.droppedByWorldSettings += 1;
+            return;
+        }
+
+        let normalizedEvent = this.normalizeEvent(event, socketData, this.now().toISOString());
         if (!normalizedEvent) {
             this.droppedInvalid += 1;
             return;
+        }
+
+        if (socketData.analyticsMetricsPolicy?.categories?.user_level_activity === false) {
+            normalizedEvent = anonymizeEvent(normalizedEvent);
         }
 
         if (this.queue.length >= this.config.maxQueueSize) {
@@ -403,6 +414,59 @@ export class AnalyticsEventsQueue {
 
 function isRequiredString(value: string | undefined): value is string {
     return value !== undefined && value.length > 0;
+}
+
+function analyticsMetricCategoryForEvent(eventName: string): AnalyticsMetricCategory {
+    if (eventName === "user.connected" || eventName === "user.disconnected" || eventName.startsWith("session.")) {
+        return "presence_sessions";
+    }
+
+    if (
+        eventName.startsWith("conversation.") ||
+        eventName.startsWith("bubble.") ||
+        eventName.startsWith("meeting.") ||
+        eventName.startsWith("chat.") ||
+        eventName.startsWith("megaphone.")
+    ) {
+        return "collaboration_activity";
+    }
+
+    if (
+        eventName === "media.permission_denied" ||
+        eventName === "media.device_error" ||
+        eventName === "media.quality_issue" ||
+        eventName.startsWith("media.") ||
+        eventName.startsWith("map_loading.") ||
+        eventName.startsWith("asset.") ||
+        eventName.startsWith("websocket.") ||
+        eventName.startsWith("front.") ||
+        eventName.startsWith("performance.")
+    ) {
+        return "quality_diagnostics";
+    }
+
+    return "workspace_actions";
+}
+
+function anonymizeEvent(event: AnalyticsEvent): AnalyticsEvent {
+    const properties = { ...event.properties };
+    delete properties.connectionId;
+    delete properties.sessionId;
+    delete properties.tabId;
+
+    return {
+        ...event,
+        userUuid: anonymousIdentifier(event.world, event.userUuid),
+        userId: null,
+        spaceUserId: anonymousIdentifier(event.world, event.spaceUserId),
+        clientIp: null,
+        tabId: null,
+        properties,
+    };
+}
+
+function anonymousIdentifier(world: string, identifier: string): string {
+    return `anonymous:${createHash("sha256").update(`${world}|${identifier}|2026-06-23.v1`).digest("hex")}`;
 }
 
 function toStreamCategory(streamCategory: VideoQualityStreamCategory): "video" | "screenSharing" | undefined {
