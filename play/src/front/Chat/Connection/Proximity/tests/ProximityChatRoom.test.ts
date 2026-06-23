@@ -3,7 +3,7 @@ import { Subject } from "rxjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadLocale } from "../../../../../i18n/i18n-util.sync";
 import { setLocale } from "../../../../../i18n/i18n-svelte";
-import { chatVisibilityStore, intentionallyClosedChatDuringMeetingStore } from "../../../../Stores/ChatStore";
+import { chatVisibilityStore } from "../../../../Stores/ChatStore";
 import { chatNotificationStore } from "../../../../Stores/ProximityNotificationStore";
 import { selectedRoomStore } from "../../../Stores/SelectRoomStore";
 import type { IncomingProximityFileTransferOffer, ProximityFileTransferUpdate } from "../ProximityFileTransferService";
@@ -29,6 +29,9 @@ vi.mock("../../../Phaser/Game/GameScene", () => ({}));
 
 function createRoom() {
     return new ProximityChatRoom(
+        "recipient",
+        "Recipient",
+        "default",
         "recipient",
         {
             leaveSpace: vi.fn().mockResolvedValue(undefined),
@@ -70,7 +73,6 @@ describe("ProximityChatRoom file transfers", () => {
         setLocale("en-US");
         selectedRoomStore.set(undefined);
         chatVisibilityStore.set(false);
-        intentionallyClosedChatDuringMeetingStore.set(false);
         chatNotificationStore.clearAll();
     });
 
