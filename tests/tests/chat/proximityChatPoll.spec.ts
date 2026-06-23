@@ -196,9 +196,11 @@ test.describe("Proximity chat polls and questions @oidc @nomobile @nowebkit", ()
         await expect(adminPage.locator("#cameras-container").getByText("Alice", { exact: true }).first()).toBeVisible({
             timeout: 60_000,
         });
-        await expect(voterPage.locator("#cameras-container").getByText("Member1", { exact: true }).first()).toBeVisible({
-            timeout: 60_000,
-        });
+        await expect(voterPage.locator("#cameras-container").getByText("Member1", { exact: true }).first()).toBeVisible(
+            {
+                timeout: 60_000,
+            },
+        );
         await openProximityRoom(memberPage);
         await openProximityRoom(voterPage);
         await openProximityRoom(adminPage);
