@@ -25,7 +25,7 @@ import LL from "../../i18n/i18n-svelte";
 import waLogo from "../Components/images/logo.svg";
 import WebsocketReconnectingToast from "../Components/Toasts/WebsocketReconnectingToast.svelte";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import { toastStore } from "../Stores/ToastStore";
+import { toastStore } from "../Stores/ToastStoreSingleton";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";

@@ -115,13 +115,12 @@ import {
     requestedCameraState,
     requestedMicrophoneDeviceIdStore,
     requestedMicrophoneState,
-    requestedStatusStore,
     speakerSelectedStore,
 } from "../../Stores/MediaStore";
 import NoMicrophoneSoundToast from "../../Components/Toasts/NoMicrophoneSoundToast.svelte";
-import BrowserNoSoundInfoToast from "../../Components/Toasts/BrowserNoSoundInfoToast.svelte";
 import { LL, locale } from "../../../i18n/i18n-svelte";
-import { toastStore } from "../../Stores/ToastStore";
+import { toastStore } from "../../Stores/ToastStoreSingleton";
+import { audioInterruptedStore } from "../../Stores/AudioInterruptedStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
@@ -169,8 +168,7 @@ import {
     type ProximityChatRoomKind,
 } from "../../Chat/Connection/Proximity/ProximityChatRoomManager";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
-import { AUDIO_CONTEXT_TOAST_UUID, audioContextManager } from "../../WebRtc/AudioContextManager";
-import { notificationManager } from "../../Notification/NotificationManager";
+import { audioContextManager } from "../../WebRtc/AudioContextManager";
 import { noMicrophoneSoundWarningVisibleStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
 import type { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
@@ -203,7 +201,7 @@ import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenO
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
 import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVariablesStore";
 import { ApplicationManager } from "../../Chat/Applications/ApplicationManager";
-import { isNotSuspendedAudioContextStore } from "../../Stores/AudioContextStore";
+import { audioPlaybackStore } from "../../Stores/AudioPlaybackStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingService";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
@@ -413,6 +411,7 @@ export class GameScene extends DirtyScene {
     private allUserSpace: SpaceInterface | undefined;
     private isLiveStreamingUnsubscriber: Unsubscriber | undefined;
     private shouldPublishScreenShareUnsubscriber: Unsubscriber | undefined;
+    private unregisterAudioContextPlaybackRetry: Unsubscriber | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _proximityChatRoomManager: ProximityChatRoomManager | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
@@ -1161,6 +1160,10 @@ export class GameScene extends DirtyScene {
     }
 
     public cleanupClosingScene(): void {
+        this.abortController?.abort();
+        this.unregisterAudioContextPlaybackRetry?.();
+        this.unregisterAudioContextPlaybackRetry = undefined;
+
         // make sure we restart own medias
         mediaManager.disableMyCamera();
         mediaManager.disableMyMicrophone();
@@ -2221,38 +2224,38 @@ export class GameScene extends DirtyScene {
 
                 this.emoteManager = new EmoteManager(this, this.connection);
 
-                // Check the audio context of the current page
-                if (!audioContextManager.verifyContextIsNotSuspended()) {
-                    // Check if there has notification permission
-                    const hasNotification = notificationManager.hasNotification();
+                const context = audioContextManager.getContext();
 
-                    // Test if the user is in a PWA
-                    const isPWAInstalled = (navigator as Navigator & { standalone?: boolean }).standalone ?? false;
+                const onStateChange = () => {
+                    const state = context.state;
+                    console.warn("AUDIO CONTEXT STATUS", state);
 
-                    // If the user has not allowed play sound, no notification permission and is not in a PWA, we need to show a message to the user to allow the page to play audio.
-                    if (!hasNotification && !isPWAInstalled) {
-                        console.warn("Audio context is suspended. Please allow the page to play audio.");
-                        // Show a toast to the user to allow the page to play audio.
-                        toastStore.addToast(BrowserNoSoundInfoToast, {}, AUDIO_CONTEXT_TOAST_UUID);
-                        let timeoutId: ReturnType<typeof setTimeout> | undefined = undefined;
-                        let isNotSuspendedAudioContextStoreSubscription: Unsubscriber | undefined = undefined;
-                        // Verify that the audio context is not suspended before the timeout expires
-                        isNotSuspendedAudioContextStoreSubscription = isNotSuspendedAudioContextStore.subscribe(
-                            (isNotSuspended) => {
-                                if (!isNotSuspended) return;
-                                if (timeoutId) clearTimeout(timeoutId);
-                                isNotSuspendedAudioContextStoreSubscription?.();
-                            },
-                        );
-
-                        // Update the user status. This is a specific status to indicate that the user has not allow to receive audio.
-                        // Set the proximity meeting to false and have the DENY_PROXIMITY_MEETING status.
-                        // Use timeout to not set the status directly when the user spawn
-                        timeoutId = setTimeout(() => {
-                            requestedStatusStore.set(AvailabilityStatus.BACK_IN_A_MOMENT);
-                        }, 2000);
+                    if (state === "suspended") {
+                        audioInterruptedStore.setInterrupted(false);
+                        this.unregisterAudioContextPlaybackRetry = audioPlaybackStore.register(() => {
+                            context.resume().catch((e) => console.error(e));
+                        });
+                    } else if (state === "running") {
+                        this.unregisterAudioContextPlaybackRetry?.();
+                        this.unregisterAudioContextPlaybackRetry = undefined;
+                        audioInterruptedStore.setInterrupted(false);
+                        // Calling resume in case we are coming from interrupted (for iOS Safari)
+                        context.resume().catch((e) => console.error(e));
+                    } else if (state === "interrupted") {
+                        this.unregisterAudioContextPlaybackRetry?.();
+                        this.unregisterAudioContextPlaybackRetry = undefined;
+                        audioInterruptedStore.setInterrupted(true);
+                    } else if (state === "closed") {
+                        audioInterruptedStore.setInterrupted(false);
+                        console.log("AudioContext is closing");
                     }
-                }
+                };
+                // No need to unregister, we have a signal
+                // eslint-disable-next-line listeners/no-missing-remove-event-listener
+                context.addEventListener("statechange", onStateChange, {
+                    signal: this.abortController.signal,
+                });
+                onStateChange();
 
                 // Get position from UUID only after the connection to the pusher is established
                 this.tryMovePlayerWithMoveToUserParameter();

@@ -7,9 +7,8 @@ const statusModal: BaseTranslation = {
     goBackToOnlineStatusLabel: "Você quer voltar a ficar online?",
     allowNotification: "Permitir notificações?",
     allowNotificationExplanation: "Receba uma notificação na área de trabalho quando alguém quiser falar com você.",
-    soundBlockedBackInAMoment:
-        "Seu navegador está bloqueando o som por enquanto, então você está no modo Volto em instantes.",
-    livekitAudioPlaybackBlocked: "Seu navegador bloqueou a reprodução de áudio. Ative o som para ouvir a conversa.",
+    audioPlaybackBlocked: "Seu navegador bloqueou a reprodução de áudio.",
+    audioPlaybackInterrupted: "A reprodução de áudio foi interrompida pelo seu navegador ou sistema operacional.",
     turnSoundOn: "Ativar som",
 };
 

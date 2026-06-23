@@ -8,9 +8,8 @@ const statusModal: DeepPartial<Translation["statusModal"]> = {
     goBackToOnlineStatusLabel: "Cośo se wróśiś online?",
     allowNotification: "Powěźeśe dowóliś?",
     allowNotificationExplanation: "Dostańśo powěźeńku na desktopje, gaž něchten z wami powědaś co.",
-    soundBlockedBackInAMoment: 'Waš wobglědowak tuchylu zuk blokěrujo, togodla sćo we modusu "Wrośo se za moment".',
-    livekitAudioPlaybackBlocked:
-        "Waš wobglědowak jo wótgrawanje awdia zablokěrował. Zmóžniśo zuk, aby rozgrono słyšali.",
+    audioPlaybackBlocked: "Waš wobglědowak jo wótgrawanje awdia zablokěrował.",
+    audioPlaybackInterrupted: "Wótgrawanje awdia jo se pśez waš wobglědowak abo źěłowy system pśetergnuło.",
     turnSoundOn: "Zuk zmóžniś",
 };
 

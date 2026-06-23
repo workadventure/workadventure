@@ -28,15 +28,10 @@ import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPres
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
-import LiveKitAudioPlaybackToast from "../Components/Toasts/LiveKitAudioPlaybackToast.svelte";
-import { toastStore } from "../Stores/ToastStore";
+import { audioPlaybackStore } from "../Stores/AudioPlaybackStore";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
-
-export const LIVEKIT_AUDIO_PLAYBACK_TOAST_ID = "livekit-audio-playback-blocked";
-
-const roomsWithBlockedAudio = new Set<Room>();
 
 const ParticipantMetadataSchema = z.object({
     userId: z.string(),
@@ -64,6 +59,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private mediaTrackUpdateQueue: Promise<void> = Promise.resolve();
     private unsubscribers: Unsubscriber[] = [];
     private rxjsSubscriptions: Subscription[] = [];
+    private unregisterAudioPlaybackRetry: Unsubscriber | undefined;
 
     // Bound event handlers to avoid memory leaks
     private readonly boundHandleParticipantConnected = this.handleParticipantConnected.bind(this);
@@ -542,26 +538,12 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         if (this.room.canPlaybackAudio) {
-            roomsWithBlockedAudio.delete(this.room);
-        } else {
-            roomsWithBlockedAudio.add(this.room);
-        }
-
-        if (roomsWithBlockedAudio.size === 0) {
-            toastStore.removeToast(LIVEKIT_AUDIO_PLAYBACK_TOAST_ID);
+            this.unregisterAudioPlaybackRetry?.();
+            this.unregisterAudioPlaybackRetry = undefined;
             return;
         }
 
-        toastStore.addToast(
-            LiveKitAudioPlaybackToast,
-            {
-                startAudio: () =>
-                    Promise.all(Array.from(roomsWithBlockedAudio, (blockedRoom) => blockedRoom.startAudio())).then(
-                        () => undefined,
-                    ),
-            },
-            LIVEKIT_AUDIO_PLAYBACK_TOAST_ID,
-        );
+        this.unregisterAudioPlaybackRetry ??= audioPlaybackStore.register(() => this.room?.startAudio());
     }
 
     private getDisconnectReasonLabel(reason?: DisconnectReason): string {
@@ -837,12 +819,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.room?.off(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
             this.room?.off(RoomEvent.Disconnected, this.boundHandleDisconnected);
             this.room?.off(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
-            if (this.room) {
-                roomsWithBlockedAudio.delete(this.room);
-                if (roomsWithBlockedAudio.size === 0) {
-                    toastStore.removeToast(LIVEKIT_AUDIO_PLAYBACK_TOAST_ID);
-                }
-            }
+            this.unregisterAudioPlaybackRetry?.();
+            this.unregisterAudioPlaybackRetry = undefined;
             this.leaveRoom();
         } finally {
             this._livekitRoomCounter.decrement();
