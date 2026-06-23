@@ -63,7 +63,7 @@
     "body-parser": "^2.2.2",
     "busboy": "1.6.0",
     "catch-unknown": "^2.0.0",
-    "concurrently": "^9.2.1",
+    "concurrently": "^10.0.3",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "fs-extra": "^11.3.5",
