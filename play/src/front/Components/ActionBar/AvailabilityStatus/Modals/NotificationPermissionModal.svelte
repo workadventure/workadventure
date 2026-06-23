@@ -4,6 +4,7 @@
     import { helpNotificationSettingsVisibleStore } from "../../../../Stores/HelpSettingsStore";
     import { localUserStore } from "../../../../Connection/LocalUserStore";
     import { popupStore } from "../../../../Stores/PopupStore";
+    import { browserNotificationStore } from "../../../../Stores/BrowserNotificationStore";
     import ConfirmationModal from "./ConfirmationModal.svelte";
 
     let loading = $state(false);
@@ -15,9 +16,11 @@
                 .then((response) => {
                     if (response === "granted") {
                         localUserStore.setNotification(true);
+                        browserNotificationStore.refresh();
                         helpNotificationSettingsVisibleStore.set(false);
                     } else {
                         console.error("Notification permission status: ", response);
+                        browserNotificationStore.refresh();
                         helpNotificationSettingsVisibleStore.set(true);
                     }
                 })
@@ -25,6 +28,7 @@
                     console.error(e);
                 })
                 .finally(() => {
+                    browserNotificationStore.refresh();
                     popupStore.removePopup("notification_permission_modal");
                     loading = false;
                 });

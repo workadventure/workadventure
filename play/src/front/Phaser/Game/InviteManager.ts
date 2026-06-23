@@ -4,7 +4,7 @@ import { AskPositionMessage_AskType } from "@workadventure/messages";
 import { get } from "svelte/store";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
-import { toastStore } from "../../Stores/ToastStore";
+import { toastStore } from "../../Stores/ToastStoreSingleton";
 import { gameManager } from "../../Phaser/Game/GameManager";
 // Svelte component used for declined toast (runtime import for toastStore.addToast)
 import MeetingInvitationDeclinedToast from "../../Components/MeetingInvitation/MeetingInvitationDeclinedToast.svelte";

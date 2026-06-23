@@ -8,10 +8,9 @@ const statusModal: DeepPartial<Translation["statusModal"]> = {
     goBackToOnlineStatusLabel: "Veux-tu revenir en ligne ?",
     allowNotification: "Autoriser les notifications ?",
     allowNotificationExplanation: "Recevoir une notification de bureau lorsque quelqu'un souhaite me parler.",
-    soundBlockedBackInAMoment:
-        'Votre navigateur bloque le son pour le moment, vous êtes donc en mode "Revient dans un moment".',
-    livekitAudioPlaybackBlocked:
-        "Votre navigateur a bloqué la lecture audio. Activez le son pour entendre la conversation.",
+    audioPlaybackBlocked: "Votre navigateur a bloqué la lecture audio.",
+    audioPlaybackInterrupted:
+        "La lecture audio a été interrompue par votre navigateur ou votre système d'exploitation.",
     turnSoundOn: "Activer le son",
 };
 

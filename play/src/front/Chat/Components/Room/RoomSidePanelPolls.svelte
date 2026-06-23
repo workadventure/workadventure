@@ -5,7 +5,7 @@
     import type { ChatPollItem, ChatRoom, ChatRoomSidePanelHydrationState } from "../../Connection/ChatConnection";
     import { selectedThreadStore } from "../../Stores/SelectedThreadStore";
     import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
-    import { toastStore } from "../../../Stores/ToastStore";
+    import { toastStore } from "../../../Stores/ToastStoreSingleton";
     import TextToast from "../../../Components/Toasts/TextToast.svelte";
     import RoomSidePanelPollItem from "./RoomSidePanelPollItem.svelte";
     import { IconLoader } from "@wa-icons";

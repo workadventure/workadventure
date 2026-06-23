@@ -5,7 +5,7 @@
     import type { ChatRoom, ChatRoomSidePanelHydrationState, ChatThreadSummary } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { selectedThreadStore } from "../../Stores/SelectedThreadStore";
-    import { toastStore } from "../../../Stores/ToastStore";
+    import { toastStore } from "../../../Stores/ToastStoreSingleton";
     import TextToast from "../../../Components/Toasts/TextToast.svelte";
     import RoomTimeline from "./RoomTimeline.svelte";
     import { IconLoader, IconMessageCircle2 } from "@wa-icons";
