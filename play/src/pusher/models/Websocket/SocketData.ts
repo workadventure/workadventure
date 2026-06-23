@@ -22,6 +22,19 @@ export interface BackSpaceConnection extends BackSpaceConnection_ {
 
 export type SpaceName = string;
 
+export type AnalyticsMetricCategory =
+    | "presence_sessions"
+    | "collaboration_activity"
+    | "workspace_actions"
+    | "quality_diagnostics"
+    | "user_level_activity";
+
+export type AnalyticsMetricsPolicy = {
+    schemaVersion: number;
+    legalTemplateVersion: string;
+    categories: Partial<Record<AnalyticsMetricCategory, boolean>>;
+};
+
 /**
  * The data attached to a socket in "connecting" state (i.e. when the websocket connection is established but the
  * JoinRoomFrontMessage was not received yet)
@@ -60,6 +73,7 @@ export type ConnectingSocketData = {
     tabId: string;
     attendeesState: boolean;
     analyticsEventsEnabled?: boolean;
+    analyticsMetricsPolicy?: AnalyticsMetricsPolicy;
     // The abort controllers for each queries received
     queryAbortControllers: Map<number, AbortController>;
     canRecord: boolean;
