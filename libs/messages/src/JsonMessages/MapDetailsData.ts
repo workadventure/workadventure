@@ -106,6 +106,10 @@ const isLegalsData = z.object({
     description:
       "The link to the 'cookie policy' page (link displayed on the 'enter your name' scene)",
   }),
+  analyticsNoticeUrl: extendApi(z.string().nullable().optional(), {
+    description:
+      "The link to the analytics metrics notice page for this world.",
+  }),
 });
 
 const RecordingButtonState = z.enum(["hidden", "enabled", "disabled"]);
