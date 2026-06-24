@@ -435,6 +435,7 @@ class ConnectionManager {
         lastCommandId?: string,
         retryAttempt = 0,
     ): Promise<OnConnectInterface> {
+        Sentry.setTag("roomId", roomUrl);
         return new Promise<OnConnectInterface>((resolve, reject) => {
             const connection = new RoomConnection(
                 this.authToken,
