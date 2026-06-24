@@ -78,6 +78,35 @@ test.describe("Areas @nomobile", () => {
         await Menu.expectButtonState(page, "music-button", "disabled");
     });
 
+    test("reuses the audio element when leaving and entering an audio area", async ({ browser }) => {
+        await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/audio.json", "areas"));
+        const audioPlayer = page.locator(".audio-manager-audioplayer");
+
+        await expect(audioPlayer).toHaveCount(1);
+        await expect(audioPlayer).not.toHaveAttribute("src", /.+/);
+
+        await evaluateScript(page, async () => {
+            await WA.onInit();
+            await WA.player.teleport(240, 144);
+            return;
+        });
+        await expect(audioPlayer).toHaveAttribute("src", /.+/);
+
+        await evaluateScript(page, async () => {
+            await WA.player.teleport(176, 144);
+            return;
+        });
+        await expect(audioPlayer).not.toHaveAttribute("src", /.+/);
+        await expect(audioPlayer).toHaveCount(1);
+
+        await evaluateScript(page, async () => {
+            await WA.player.teleport(240, 144);
+            return;
+        });
+        await expect(audioPlayer).toHaveAttribute("src", /.+/);
+        await expect(audioPlayer).toHaveCount(1);
+    });
+
     test("display warning on fail to load audio", async ({ browser }) => {
         // Open audio test map
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/audio.json", "areas"));
