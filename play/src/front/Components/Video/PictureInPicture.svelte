@@ -251,6 +251,12 @@
             console.warn("PictureInPicture => Could not get mapImage from the current game scene", e);
         }
 
+        const onFocus = () => {
+            destroyPictureInPictureComponent();
+        };
+
+        window.addEventListener("focus", onFocus);
+
         return () => {
             askPictureInPictureActivatingSubscriber();
             unsubscribe();
@@ -261,6 +267,7 @@
             } catch (e: unknown) {
                 debug("PictureInPicture enterpictureinpicture handler is not supported", e);
             }
+            window.removeEventListener("focus", onFocus);
         };
     });
 
