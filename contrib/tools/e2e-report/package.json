@@ -1,0 +1,17 @@
+{
+  "name": "@workadventure/e2e-report",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Download and open Playwright reports from the current branch's GitHub Actions run",
+  "scripts": {
+    "start": "tsx src/cli.ts",
+    "test": "tsx --test src/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "tsx": "^4.22.3",
+    "typescript": "^5.9.3"
+  }
+}
