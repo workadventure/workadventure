@@ -322,7 +322,7 @@ play:
         name: "wa_ws_affinity"
         httpOnly: true
         secure: true
-        sameSite: "lax"
+        sameSite: "None"
 
 
 # #########################################################
