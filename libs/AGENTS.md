@@ -10,3 +10,6 @@ cd libs/map-editor && npm test -- tests/MapValidator.test.ts
 ## Related guides
 - `docs/agent/testing-vitest.md`
 - `docs/agent/typescript-style.md`
+- `../docs/agent/testing-vitest.md`
+- `../docs/agent/typescript-style.md`
+- `../docs/agent/svelte.md`

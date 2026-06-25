@@ -1,19 +1,6 @@
 # Svelte Components
 
-```svelte
-<script lang="ts">
-    import { onDestroy } from "svelte";
-    import { errorScreenStore } from "../../Stores/ErrorScreenStore";
-    import LL from "../../../i18n/i18n-svelte";
+The frontend uses Svelte 5 runes.
 
-    $: detailsStylized = (details ?? "").replace("{time}", `${timeVar}`);
-</script>
-
-{#if $errorScreenStore}
-    <main><!-- content --></main>
-{/if}
-
-<style lang="scss">
-    /* styles */
-</style>
-```
+- Create AbortController at component init if needed, call abort() in onDestroy.
+- Avoid styles as much as possible; prefer Tailwind classes
