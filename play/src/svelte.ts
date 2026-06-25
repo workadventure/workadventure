@@ -1,4 +1,3 @@
-import "./front/Phaser/phaserGlobal";
 import "./front/style/index.css";
 
 import { mount } from "svelte";

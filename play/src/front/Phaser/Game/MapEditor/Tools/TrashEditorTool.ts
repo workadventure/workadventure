@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import type { AreaData } from "@workadventure/map-editor";
 import type { EditMapCommandMessage } from "@workadventure/messages";
 import { get } from "svelte/store";
@@ -10,8 +11,12 @@ import type { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 import type { AreaEditorTool } from "./AreaEditorTool";
 
+import Key = Phaser.Input.Keyboard.Key;
+import Pointer = Phaser.Input.Pointer;
+import GameObject = Phaser.GameObjects.GameObject;
+
 export class TrashEditorTool extends EntityRelatedEditorTool {
-    protected ctrlKey?: Phaser.Input.Keyboard.Key;
+    protected ctrlKey?: Key;
     private areaPreviews: AreaPreview[] = [];
     private active = false;
 
@@ -161,7 +166,7 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         return false;
     }
 
-    private pointerUpEventHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+    private pointerUpEventHandler = (pointer: Pointer, gameObjects: GameObject[]) => {
         if (!this.active) {
             return;
         }
@@ -184,10 +189,7 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         }
     };
 
-    private pointerHoverEventHandler = (
-        pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[],
-    ) => {
+    private pointerHoverEventHandler = (pointer: Pointer, gameObjects: GameObject[]) => {
         if (!this.active) {
             return;
         }
@@ -200,7 +202,7 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         }
     };
 
-    private pointerOutEventHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+    private pointerOutEventHandler = (pointer: Pointer, gameObjects: GameObject[]) => {
         if (!this.active) {
             return;
         }
@@ -213,17 +215,15 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         }
     };
 
-    private isAreaPreview(obj: Phaser.GameObjects.GameObject): obj is AreaPreview {
+    private isAreaPreview(obj: GameObject): obj is AreaPreview {
         return obj instanceof AreaPreview;
     }
 
-    private isSizeAlteringSquare(obj: Phaser.GameObjects.GameObject): obj is SizeAlteringSquare {
+    private isSizeAlteringSquare(obj: GameObject): obj is SizeAlteringSquare {
         return obj instanceof SizeAlteringSquare;
     }
 
-    private getAreaEditorToolObjectsFromGameObjects(
-        gameObjects: Phaser.GameObjects.GameObject[],
-    ): (AreaPreview | SizeAlteringSquare)[] {
+    private getAreaEditorToolObjectsFromGameObjects(gameObjects: GameObject[]): (AreaPreview | SizeAlteringSquare)[] {
         const areaPreviews = gameObjects.filter((obj) => this.isAreaPreview(obj));
         const sizeAlteringSquares = gameObjects.filter((obj) => this.isSizeAlteringSquare(obj));
         return [...areaPreviews, ...sizeAlteringSquares];

@@ -1,5 +1,7 @@
+import * as Phaser from "phaser";
 import { TextField } from "../Components/TextField";
 import { gameManager } from "../Game/GameManager";
+
 import Image = Phaser.GameObjects.Image;
 import Sprite = Phaser.GameObjects.Sprite;
 import Text = Phaser.GameObjects.Text;

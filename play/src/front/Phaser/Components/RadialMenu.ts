@@ -1,5 +1,7 @@
+import * as Phaser from "phaser";
 import { DEPTH_UI_INDEX } from "../Game/DepthIndexes";
 import { waScaleManager } from "../Services/WaScaleManager";
+
 import Sprite = Phaser.GameObjects.Sprite;
 
 export interface RadialMenuItem {

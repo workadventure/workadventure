@@ -1,6 +1,7 @@
-import { CancelablePromise } from "cancelable-promise";
 import * as Phaser from "phaser";
+import { CancelablePromise } from "cancelable-promise";
 import Debug from "debug";
+
 import Texture = Phaser.Textures.Texture;
 
 const debug = Debug("SuperLoad");

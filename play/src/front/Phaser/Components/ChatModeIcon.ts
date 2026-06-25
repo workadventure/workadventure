@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 
 export class ChatModeIcon extends Phaser.GameObjects.Sprite {

@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { Easing } from "../../types";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -17,7 +18,11 @@ import {
     getSmoothButtonZoomModifier,
 } from "./CameraZoomUtils";
 import type { GameScene } from "./GameScene";
+
 import Clamp = Phaser.Math.Clamp;
+import EventEmitter = Phaser.Events.EventEmitter;
+import Camera = Phaser.Cameras.Scene2D.Camera;
+import Tween = Phaser.Tweens.Tween;
 
 export enum CameraManagerEvent {
     CameraUpdate = "CameraUpdate",
@@ -57,8 +62,8 @@ type ZoomAnimation = {
  * The CameraManager handles the transitions / animations between the different camera modes.
  * It also handles the smooth zoom in and out of the camera.
  */
-export class CameraManager extends Phaser.Events.EventEmitter {
-    private camera: Phaser.Cameras.Scene2D.Camera;
+export class CameraManager extends EventEmitter {
+    private camera: Camera;
     private waScaleManager: WaScaleManager;
 
     private cameraAnimation: CameraAnimation | undefined;
@@ -85,7 +90,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private explorerFocusOn: { x: number; y: number } = { x: 0, y: 0 };
 
     // The tween for the camera offset
-    private cameraOffsetCurrentTween?: Phaser.Tweens.Tween;
+    private cameraOffsetCurrentTween?: Tween;
 
     // The box we should center the camera on (expressed in screen pixels, not game pixels).
     private cameraOffsetBox: Box | undefined;
@@ -156,7 +161,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         super.destroy();
     }
 
-    public getCamera(): Phaser.Cameras.Scene2D.Camera {
+    public getCamera(): Camera {
         return this.camera;
     }
 
@@ -194,7 +199,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             to: 1,
             duration,
             ease: Easing.SineEaseOut,
-            onUpdate: (tween: Phaser.Tweens.Tween) => {
+            onUpdate: (tween: Tween) => {
                 const progress = tween.getValue() ?? 0;
                 const shiftX = (target.x - origin.x) * progress;
                 const shiftY = (target.y - origin.y) * progress;
@@ -519,7 +524,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.cameraOffsetCurrentTween = undefined;
     }
 
-    private stopTween(tween: Phaser.Tweens.Tween | undefined): void {
+    private stopTween(tween: Tween | undefined): void {
         if (!tween) {
             return;
         }
@@ -612,7 +617,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             to: targetZoomModifier,
             duration,
             ease: easeAlgo,
-            onUpdate: (tween: Phaser.Tweens.Tween) => {
+            onUpdate: (tween: Tween) => {
                 const value = tween.getValue();
                 if (value === null) {
                     return;

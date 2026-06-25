@@ -1,9 +1,12 @@
+import * as Phaser from "phaser";
 import type { CharacterTextureMessage } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { gameManager } from "../Game/GameManager";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
+
+import Sprite = Phaser.GameObjects.Sprite;
 
 /**
  * Class that let you generate a base64 image from a CharacterLayer[]
@@ -46,10 +49,7 @@ export class CharacterLayerManager {
             });
     }
 
-    private static async getSnapshot(
-        scene: GameScene,
-        sprites: Map<string, Phaser.GameObjects.Sprite>,
-    ): Promise<string> {
+    private static async getSnapshot(scene: GameScene, sprites: Map<string, Sprite>): Promise<string> {
         return TexturesHelper.getSnapshot(
             scene,
             ...Array.from(sprites.values()).map((sprite) => ({ sprite, frame: 1 })),
@@ -65,12 +65,8 @@ export class CharacterLayerManager {
         });
     }
 
-    private static getSprites(
-        scene: GameScene,
-        textures: string[],
-        frame?: string | number,
-    ): Map<string, Phaser.GameObjects.Sprite> {
-        const sprites = new Map<string, Phaser.GameObjects.Sprite>();
+    private static getSprites(scene: GameScene, textures: string[], frame?: string | number): Map<string, Sprite> {
+        const sprites = new Map<string, Sprite>();
         if (textures.length < 1) {
             throw new CharacterTextureError("no texture given");
         }
@@ -79,7 +75,7 @@ export class CharacterLayerManager {
             if (scene && !scene.textures.exists(texture)) {
                 throw new CharacterTextureError("texture not found");
             }
-            const sprite = new Phaser.GameObjects.Sprite(scene, 0, 0, texture, frame);
+            const sprite = new Sprite(scene, 0, 0, texture, frame);
 
             sprites.set(texture, sprite);
         }
