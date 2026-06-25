@@ -89,7 +89,6 @@
 
 <style lang="scss">
     @use "../../style/breakpoints.scss" as *;
-    @import "quill/dist/quill.snow.css";
 
     section.section-input-send-text {
         --height-toolbar: 20%;
