@@ -88,8 +88,6 @@
 </section>
 
 <style>
-    @import "quill/dist/quill.snow.css";
-
     section.section-input-send-text {
         --height-toolbar: 20%;
         height: 100%;

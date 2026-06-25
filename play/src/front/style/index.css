@@ -5,6 +5,7 @@
 
 /* Style from external libs */
 @import "highlight.js/styles/dark.css";
+@import "quill/dist/quill.snow.css";
 
 /* Internal styles */
 @import "cowebsite.css";
