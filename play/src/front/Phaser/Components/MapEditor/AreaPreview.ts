@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import { deepmergeIntoCustom, type DeepMergeLeafURI } from "deepmerge-ts";
 import type {
     AreaData,
@@ -6,13 +7,19 @@ import type {
     AreaDescriptionPropertyData,
     AtLeast,
 } from "@workadventure/map-editor";
-import * as Phaser from "phaser";
 import { get } from "svelte/store";
 import { DEPTH_MAP_EDITOR_AREAS_INDEX } from "../../Game/DepthIndexes";
 import { GameScene } from "../../Game/GameScene";
 import { SpeechDomElement } from "../../Entity/SpeechDomElement";
 import LL from "../../../../i18n/i18n-svelte";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
+
+import Rectangle = Phaser.GameObjects.Rectangle;
+import Key = Phaser.Input.Keyboard.Key;
+import Image = Phaser.GameObjects.Image;
+import Color = Phaser.Display.Color;
+import Pointer = Phaser.Input.Pointer;
+import GameObject = Phaser.GameObjects.GameObject;
 
 export enum AreaPreviewEvent {
     Clicked = "AreaPreview:Clicked",
@@ -32,7 +39,7 @@ const mergeInto = deepmergeIntoCustom<unknown, { DeepMergeArraysURI: DeepMergeLe
     mergeArrays: false,
 });
 
-export class AreaPreview extends Phaser.GameObjects.Rectangle {
+export class AreaPreview extends Rectangle {
     private squares: SizeAlteringSquare[];
 
     private areaData: AreaData;
@@ -42,9 +49,9 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
     private oldPosition: { x: number; y: number };
 
-    private shiftKey?: Phaser.Input.Keyboard.Key;
-    private ctrlKey?: Phaser.Input.Keyboard.Key;
-    private propertiesIcon: Phaser.GameObjects.Image[] = [];
+    private shiftKey?: Key;
+    private ctrlKey?: Key;
+    private propertiesIcon: Image[] = [];
 
     private speechDomElement: SpeechDomElement | null = null;
 
@@ -52,8 +59,8 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         scene: Phaser.Scene,
         areaData: AreaData,
         private overrideDepth = false,
-        shiftKey?: Phaser.Input.Keyboard.Key,
-        ctrlKey?: Phaser.Input.Keyboard.Key,
+        shiftKey?: Key,
+        ctrlKey?: Key,
     ) {
         super(
             scene,
@@ -220,13 +227,13 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     public changeColor(color: string | number | Phaser.Types.Display.InputColorObject) {
-        this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, DEFAULT_AREA_PREVIEW_ALPHA);
+        this.setFillStyle(Color.ValueToColor(color).color, DEFAULT_AREA_PREVIEW_ALPHA);
         this.updateSquaresPositions();
     }
 
     public resetColor() {
         if (this.areaData != undefined) {
-            this.propertiesIcon.forEach((icon: Phaser.GameObjects.Image) => icon.destroy());
+            this.propertiesIcon.forEach((icon: Image) => icon.destroy());
             let counter = 0;
             if (this.areaData.properties.length > 0) {
                 let color = "FFFFFF";
@@ -235,7 +242,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     if (iconProperties.name !== "") {
                         color = iconProperties.color;
                     }
-                    const icon = new Phaser.GameObjects.Image(
+                    const icon = new Image(
                         this.scene,
                         (this.getTopLeft().x ?? 0) + 10 + counter * 15,
                         (this.getTopLeft().y ?? 0) + 10,
@@ -246,23 +253,23 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     icon.setVisible(true);
                     counter++;
                 }
-                this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, DEFAULT_AREA_PREVIEW_ALPHA);
+                this.setFillStyle(Color.ValueToColor(color).color, DEFAULT_AREA_PREVIEW_ALPHA);
             } else {
-                this.setFillStyle(Phaser.Display.Color.ValueToColor(DEFAULT_COLOR).color, DEFAULT_AREA_PREVIEW_ALPHA);
+                this.setFillStyle(Color.ValueToColor(DEFAULT_COLOR).color, DEFAULT_AREA_PREVIEW_ALPHA);
             }
         }
         this.updateSquaresPositions();
     }
 
     private showPropertiesIcon(value: boolean) {
-        this.propertiesIcon.forEach((icon: Phaser.GameObjects.Image) => icon.setVisible(value));
+        this.propertiesIcon.forEach((icon: Image) => icon.setVisible(value));
     }
 
     private drawAreaPreviewFromAreaData(areaData: AreaData | AtLeast<AreaData, "id">): void {
         if (areaData.properties !== undefined) {
             this.areaData.properties = areaData.properties;
 
-            this.propertiesIcon.forEach((icon: Phaser.GameObjects.Image) => icon.destroy());
+            this.propertiesIcon.forEach((icon: Image) => icon.destroy());
             let color = "FFFFFF";
             let counter = 0;
             for (const property of this.areaData.properties) {
@@ -270,7 +277,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 if (iconProperties.name !== "") {
                     color = iconProperties.color;
                 }
-                const icon = new Phaser.GameObjects.Image(
+                const icon = new Image(
                     this.scene,
                     (this.getTopLeft().x ?? 0) + 10 + counter * 15,
                     (this.getTopLeft().y ?? 0) + 10,
@@ -283,7 +290,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 //this.propertiesIcon.push(icon);
                 counter++;
             }
-            this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, DEFAULT_AREA_PREVIEW_ALPHA);
+            this.setFillStyle(Color.ValueToColor(color).color, DEFAULT_AREA_PREVIEW_ALPHA);
         }
         this.x = Math.floor(this.areaData.x + this.areaData.width * 0.5);
         this.y = Math.floor(this.areaData.y + this.areaData.height * 0.5);
@@ -300,29 +307,23 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     private bindEventHandlers(): void {
-        this.on(
-            Phaser.Input.Events.POINTER_DOWN,
-            (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
-                if ((pointer.event.target as Element)?.localName !== "canvas") {
-                    return;
-                }
-                this.emit(AreaPreviewEvent.Clicked);
-            },
-        );
-        this.on(
-            Phaser.Input.Events.POINTER_UP,
-            (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
-                if ((pointer.event.target as Element)?.localName !== "canvas") {
-                    return;
-                }
-                this.emit(AreaPreviewEvent.Released);
-            },
-        );
+        this.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Pointer, gameObjects: GameObject[]) => {
+            if ((pointer.event.target as Element)?.localName !== "canvas") {
+                return;
+            }
+            this.emit(AreaPreviewEvent.Clicked);
+        });
+        this.on(Phaser.Input.Events.POINTER_UP, (pointer: Pointer, gameObjects: GameObject[]) => {
+            if ((pointer.event.target as Element)?.localName !== "canvas") {
+                return;
+            }
+            this.emit(AreaPreviewEvent.Released);
+        });
         this.on(Phaser.Input.Events.DRAG_START, () => {
             this.oldPosition = this.getPosition();
             this.emit(AreaPreviewEvent.DragStart);
         });
-        this.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+        this.on(Phaser.Input.Events.DRAG, (pointer: Pointer, dragX: number, dragY: number) => {
             if (pointer.isDown && this.selected && !this.squareSelected) {
                 if (this.shiftKey?.isDown) {
                     const topLeftX = Math.floor((dragX - this.displayWidth * 0.5) / 32) * 32;
@@ -342,7 +343,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 }
             }
         });
-        this.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
+        this.on(Phaser.Input.Events.POINTER_UP, (pointer: Pointer) => {
             if (this.selected && this.moved) {
                 this.moved = false;
                 if (this.ctrlKey?.isDown) {
@@ -374,7 +375,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 this.squareSelected = true;
             });
 
-            square.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            square.on(Phaser.Input.Events.DRAG, (pointer: Pointer, dragX: number, dragY: number) => {
                 const oldX = square.x;
                 const oldY = square.y;
 

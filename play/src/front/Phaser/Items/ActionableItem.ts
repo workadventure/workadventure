@@ -2,11 +2,11 @@
  * An actionable item represents an in-game object that can be activated using the space-bar.
  * It has coordinates and an "activation radius"
  */
-import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
+import * as Phaser from "phaser";
 import type { GameScene } from "../Game/GameScene";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
-import { gameManager } from "../Game/GameManager";
 import { PHASER_COLOR_DESIGN_SYSTEM_SECONDARY } from "../../Utils/DesignSystemPhaserColors";
+
 import Sprite = Phaser.GameObjects.Sprite;
 
 type EventCallback = (state: unknown, parameters: unknown) => void;
@@ -25,12 +25,12 @@ export class ActionableItem implements ActivatableInterface {
     ) {
         this.activationRadiusSquared = activationRadius * activationRadius;
 
-        gameManager
-            .getCurrentGameScene()
-            .getOutlineManager()
-            .add(this.sprite, () => {
-                return { thickness: 2, outlineColor: PHASER_COLOR_DESIGN_SYSTEM_SECONDARY };
-            });
+        this.eventHandler.getOutlineManager().add(this.sprite, () => {
+            return {
+                thickness: 2,
+                color: this.isSelectable ? PHASER_COLOR_DESIGN_SYSTEM_SECONDARY : undefined,
+            };
+        });
     }
 
     public getId(): number {
@@ -63,10 +63,7 @@ export class ActionableItem implements ActivatableInterface {
         }
         this.isSelectable = true;
 
-        this.getOutlinePlugin()?.add(this.sprite, {
-            thickness: 2,
-            outlineColor: PHASER_COLOR_DESIGN_SYSTEM_SECONDARY,
-        });
+        this.eventHandler.getOutlineManager().update(this.sprite);
     }
 
     /**
@@ -77,11 +74,7 @@ export class ActionableItem implements ActivatableInterface {
             return;
         }
         this.isSelectable = false;
-        this.getOutlinePlugin()?.remove(this.sprite);
-    }
-
-    private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
-        return this.sprite.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
+        this.eventHandler.getOutlineManager().update(this.sprite);
     }
 
     public isActivatable(): boolean {

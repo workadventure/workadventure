@@ -1,4 +1,8 @@
+import * as Phaser from "phaser";
 import { gameManager } from "../Phaser/Game/GameManager";
+
+import Camera = Phaser.Cameras.Scene2D.Camera;
+import TransformMatrix = Phaser.GameObjects.Components.TransformMatrix;
 
 let webRtcConnectionsCount = 0;
 let livekitConnectionsCount = 0;
@@ -19,8 +23,8 @@ interface CameraEffectWithIsRunning {
     isRunning?: boolean;
 }
 
-interface CameraWithTransform extends Phaser.Cameras.Scene2D.Camera {
-    matrix: Phaser.GameObjects.Components.TransformMatrix;
+interface CameraWithTransform extends Camera {
+    matrix: TransformMatrix;
 }
 
 const DEFAULT_COORDINATE_STABILITY_TIMEOUT_MS = 10_000;
@@ -45,7 +49,7 @@ function isEffectRunning(effect: CameraEffectWithIsRunning | undefined): boolean
     return effect?.isRunning === true;
 }
 
-function hasRunningCameraEffect(camera: Phaser.Cameras.Scene2D.Camera): boolean {
+function hasRunningCameraEffect(camera: Camera): boolean {
     return (
         isEffectRunning(camera.fadeEffect) ||
         isEffectRunning(camera.flashEffect) ||

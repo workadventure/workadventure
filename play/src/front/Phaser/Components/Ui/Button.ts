@@ -1,3 +1,9 @@
+import * as Phaser from "phaser";
+
+import Container = Phaser.GameObjects.Container;
+import Graphics = Phaser.GameObjects.Graphics;
+import Text = Phaser.GameObjects.Text;
+
 export interface ButtonConfig {
     width: number;
     height: number;
@@ -13,9 +19,9 @@ export interface ButtonAppearanceConfig {
     borderColor: number;
 }
 
-export class Button extends Phaser.GameObjects.Container {
-    private background: Phaser.GameObjects.Graphics;
-    private text: Phaser.GameObjects.Text;
+export class Button extends Container {
+    private background: Graphics;
+    private text: Text;
 
     private config: ButtonConfig;
 

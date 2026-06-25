@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+import * as Phaser from "phaser";
 import { SKIP_RENDER_OPTIMIZATIONS } from "../../Enum/EnvironmentVariable";
 import { ResizableScene } from "../Login/ResizableScene";
-
-const Events = Phaser.Core.Events;
 
 /**
  * A specialization of the main Phaser Game scene.
@@ -34,15 +33,19 @@ export class Game extends Phaser.Game {
             return this.runDestroy();
         }
 
+        if (this.isPaused) {
+            return;
+        }
+
         const eventEmitter = this.events;
 
         //  Global Managers like Input and Sound update in the prestep
 
-        eventEmitter.emit(Events.PRE_STEP, time, delta);
+        eventEmitter.emit(Phaser.Core.Events.PRE_STEP, time, delta);
 
         //  This is mostly meant for user-land code and plugins
 
-        eventEmitter.emit(Events.STEP, time, delta);
+        eventEmitter.emit(Phaser.Core.Events.STEP, time, delta);
 
         //  Update the Scene Manager and all active Scenes
 
@@ -50,7 +53,7 @@ export class Game extends Phaser.Game {
 
         //  Our final event before rendering starts
 
-        eventEmitter.emit(Events.POST_STEP, time, delta);
+        eventEmitter.emit(Phaser.Core.Events.POST_STEP, time, delta);
 
         // This "if" is the changed introduced by the new "Game" class to avoid rendering unnecessarily.
         if (SKIP_RENDER_OPTIMIZATIONS || this.isDirty()) {
@@ -60,7 +63,7 @@ export class Game extends Phaser.Game {
 
             renderer.preRender();
 
-            eventEmitter.emit(Events.PRE_RENDER, renderer, time, delta);
+            eventEmitter.emit(Phaser.Core.Events.PRE_RENDER, renderer, time, delta);
 
             //  The main render loop. Iterates all Scenes and all Cameras in those scenes, rendering to the renderer instance.
 
@@ -72,7 +75,7 @@ export class Game extends Phaser.Game {
 
             //  The final event before the step repeats. Your last chance to do anything to the canvas before it all starts again.
 
-            eventEmitter.emit(Events.POST_RENDER, renderer, time, delta);
+            eventEmitter.emit(Phaser.Core.Events.POST_RENDER, renderer, time, delta);
         } else {
             // @ts-ignore
             this.scene.isProcessing = false;

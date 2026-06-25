@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";

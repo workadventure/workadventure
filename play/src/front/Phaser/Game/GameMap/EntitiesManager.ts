@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import type { EntityData, WAMEntityData } from "@workadventure/map-editor";
 import { AreaDataProperties, EntityDataProperties, EntityDimensions, EntityPrefabRef } from "@workadventure/map-editor";
 import type { Observable } from "rxjs";
@@ -20,6 +21,10 @@ import { TexturesHelper } from "../../Helpers/TexturesHelper";
 import type { GameScene } from "../GameScene";
 import { EditorToolName } from "../MapEditor/MapEditorModeManager";
 import type { GameMapFrontWrapper } from "./GameMapFrontWrapper";
+
+import EventEmitter = Phaser.Events.EventEmitter;
+import Key = Phaser.Input.Keyboard.Key;
+import Pointer = Phaser.Input.Pointer;
 
 export const CopyEntityEventData = z.object({
     position: z.object({
@@ -52,12 +57,12 @@ export enum EntitiesManagerEvent {
     CopyEntity = "EntitiesManagerEvent:CopyEntity",
 }
 
-export class EntitiesManager extends Phaser.Events.EventEmitter {
+export class EntitiesManager extends EventEmitter {
     private scene: GameScene;
     private gameMapFrontWrapper: GameMapFrontWrapper;
 
-    private shiftKey?: Phaser.Input.Keyboard.Key;
-    private ctrlKey?: Phaser.Input.Keyboard.Key;
+    private shiftKey?: Key;
+    private ctrlKey?: Key;
 
     private entities: Map<string, Entity>;
     private activatableEntities: Entity[];
@@ -287,7 +292,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entity.on(EntityEvent.Updated, (data: EntityData) => {
             this.emit(EntitiesManagerEvent.UpdateEntity, data);
         });
-        entity.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+        entity.on(Phaser.Input.Events.DRAG, (pointer: Pointer, dragX: number, dragY: number) => {
             if (!entity.canEdit) {
                 return;
             }
@@ -312,7 +317,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 this.changeEntityTint(entity);
             }
         });
-        entity.on(Phaser.Input.Events.DRAG_END, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+        entity.on(Phaser.Input.Events.DRAG_END, (pointer: Pointer, dragX: number, dragY: number) => {
             if (
                 get(mapEditorModeStore) &&
                 this.isEntityEditorToolActive() &&
@@ -349,7 +354,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 this.scene.markDirty();
             }
         });
-        entity.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
+        entity.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Pointer) => {
             if (pointer.downElement?.tagName !== "CANVAS") {
                 return;
             }
@@ -382,7 +387,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 mapEditorSelectedEntityStore.set(entity);
             }
         });
-        entity.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
+        entity.on(Phaser.Input.Events.POINTER_OVER, (pointer: Pointer) => {
             this.pointerOverEntitySubject.next(entity);
             if (get(mapEditorModeStore)) {
                 if (!entity.canEdit) {

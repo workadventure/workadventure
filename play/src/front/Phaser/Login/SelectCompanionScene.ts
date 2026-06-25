@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import type { CompanionTextureCollection } from "@workadventure/messages";
 import { Loader } from "../Components/Loader";
 import { gameManager } from "../Game/GameManager";
@@ -15,14 +16,16 @@ import { collectionsSizeStore, selectedCollection } from "../../Stores/SelectCha
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { ResizableScene } from "./ResizableScene";
 
+import Sprite = Phaser.Physics.Arcade.Sprite;
+
 // Event listeners are valid for the lifetime of the Phaser scene and will be garbage collected when the object is destroyed
 /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
 
 export const SelectCompanionSceneName = "SelectCompanionScene";
 
 export class SelectCompanionScene extends ResizableScene {
-    private selectedCompanion!: Phaser.Physics.Arcade.Sprite | null;
-    private companions: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
+    private selectedCompanion!: Sprite | null;
+    private companions: Array<Sprite> = new Array<Sprite>();
     private companionModels!: CompanionTextureDescriptionInterface[];
     private companionCurrentCollection!: CompanionTextureDescriptionInterface[];
     private currentCompanionId!: string | null;
@@ -289,7 +292,7 @@ export class SelectCompanionScene extends ResizableScene {
         return [this.game.renderer.width / 2, this.game.renderer.height / 3];
     }
 
-    private setUpCompanion(companion: Phaser.Physics.Arcade.Sprite, numero: number) {
+    private setUpCompanion(companion: Sprite, numero: number) {
         const { companionX, companionY, companionScale, companionOpactity, companionVisible } =
             this.defineSetupCompanion(numero);
         companion.setBounce(0.2);

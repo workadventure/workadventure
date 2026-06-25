@@ -1,6 +1,9 @@
+import * as Phaser from "phaser";
 import { get } from "svelte/store";
 import { marked } from "marked";
 import LL from "../../../i18n/i18n-svelte";
+
+import DOMElement = Phaser.GameObjects.DOMElement;
 
 let speechKeyShadowFilterUid = 0;
 
@@ -130,7 +133,7 @@ function bubbleOuterStyle(type: "warning" | "message"): string {
     return base.join(";");
 }
 
-export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
+export class SpeechDomElement extends DOMElement {
     private timeoutDestroyText: NodeJS.Timeout | null = null;
     private readonly span: HTMLSpanElement | null = null;
     /** Same reference passed to add/removeEventListener on the escape badge (ESLint listeners rules). */

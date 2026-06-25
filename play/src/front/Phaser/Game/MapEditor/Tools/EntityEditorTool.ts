@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import type { AreaData, EntityData, WAMEntityData } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/svelte";
 import type { EditMapCommandMessage } from "@workadventure/messages";
@@ -28,6 +29,10 @@ import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { mapEditorActivated } from "../../../../Stores/MenuStore";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
+import Key = Phaser.Input.Keyboard.Key;
+import Pointer = Phaser.Input.Pointer;
+import GameObject = Phaser.GameObjects.GameObject;
+
 const ENTITY_EDITOR_AREA_PREVIEW_DEPTH = -1;
 
 export class EntityEditorTool extends EntityRelatedEditorTool {
@@ -38,16 +43,10 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
      */
     protected areaPreviews: AreaPreview[] = [];
 
-    protected ctrlKey?: Phaser.Input.Keyboard.Key;
-    protected shiftKey?: Phaser.Input.Keyboard.Key;
-    protected pointerMoveEventHandler!: (
-        pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[],
-    ) => void;
-    protected pointerDownEventHandler!: (
-        pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[],
-    ) => void;
+    protected ctrlKey?: Key;
+    protected shiftKey?: Key;
+    protected pointerMoveEventHandler!: (pointer: Pointer, gameObjects: GameObject[]) => void;
+    protected pointerDownEventHandler!: (pointer: Pointer, gameObjects: GameObject[]) => void;
 
     protected mapEditorEntityUploadStoreUnsubscriber: Unsubscriber | undefined;
     protected mapEditorModifyCustomEntityEventStoreUnsubscriber: Unsubscriber | undefined;
@@ -223,11 +222,11 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
     }
 
     protected bindEventHandlers() {
-        this.pointerMoveEventHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) =>
+        this.pointerMoveEventHandler = (pointer: Pointer, gameObjects: GameObject[]) =>
             this.handlePointerMoveEvent(pointer, gameObjects);
         this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
 
-        this.pointerDownEventHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) =>
+        this.pointerDownEventHandler = (pointer: Pointer, gameObjects: GameObject[]) =>
             this.handlePointerDownEvent(pointer, gameObjects);
         this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
 
@@ -308,10 +307,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         );
     }
 
-    protected handlePointerMoveEvent(
-        pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[],
-    ): void {
+    protected handlePointerMoveEvent(pointer: Pointer, gameObjects: GameObject[]): void {
         // TODO: add shadow when moving into the area
         // .setDropShadow(4, 4, 0x000000);
         if (!this.entityPrefabPreview || !this.entityPrefab) {
@@ -351,10 +347,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         this.scene.markDirty();
     }
 
-    protected handlePointerDownEvent(
-        pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[],
-    ): void {
+    protected handlePointerDownEvent(pointer: Pointer, gameObjects: GameObject[]): void {
         const clickedAreaPreview = this.isAreaPreviewClicked(pointer, gameObjects);
 
         if (get(mapEditorEntityModeStore) === "EDIT" && gameObjects.length === 0 && !clickedAreaPreview) {
@@ -487,7 +480,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         });
     }
 
-    private isAreaPreviewClicked(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): boolean {
+    private isAreaPreviewClicked(pointer: Pointer, gameObjects: GameObject[]): boolean {
         if (gameObjects.some((obj) => obj instanceof AreaPreview)) {
             return true;
         }
