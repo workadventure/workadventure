@@ -1,50 +1,119 @@
-import { describe, expect, it, vi } from "vitest";
-import type { Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
-import type { MicrophoneSignalSample } from "./MicrophoneSignalDetectorStore";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./MediaStore", () => ({
-    usedMicrophoneDeviceIdStore: writable<string | undefined>(undefined),
-}));
+type TestStores = Awaited<ReturnType<typeof setupTestStores>>;
 
-vi.mock("./MicrophoneSignalDetectorStore", () => ({
-    microphoneSignalDetectedStore: writable<{ detected: boolean } | undefined>(undefined),
-    microphoneSignalDetectionEligibleStore: writable(false),
-}));
+async function setupTestStores() {
+    vi.resetModules();
 
-vi.mock("./MicrophoneValidatedForDeviceIdStore", () => ({
-    microphoneValidatedForDeviceIdStore: writable<string | undefined>(undefined),
-}));
+    const rawLocalVolumeStore = writable<number[] | undefined>(undefined);
+    const localVolumeStore = writable<number[] | undefined>(undefined);
+    const silentStore = writable(false);
+    const usedMicrophoneDeviceIdStore = writable<string | undefined>("microphone-1");
+    const myMicrophoneStore = writable(true);
+    const isLiveStreamingAudioStore = writable(true);
+    const microphoneValidatedForDeviceIdStore = writable<string | undefined>(undefined);
 
-import { usedMicrophoneDeviceIdStore } from "./MediaStore";
-import { microphoneSignalDetectedStore, microphoneSignalDetectionEligibleStore } from "./MicrophoneSignalDetectorStore";
-import { microphoneValidatedForDeviceIdStore } from "./MicrophoneValidatedForDeviceIdStore";
-import { noMicrophoneSoundWarningVisibleStore } from "./NoMicrophoneSoundWarningVisibleStore";
+    vi.doMock("./MediaStore", () => ({
+        rawLocalVolumeStore,
+        localVolumeStore,
+        silentStore,
+        usedMicrophoneDeviceIdStore,
+    }));
+    vi.doMock("./MyMediaStore", () => ({
+        myMicrophoneStore,
+    }));
+    vi.doMock("./IsStreamingStore", () => ({
+        isLiveStreamingAudioStore,
+    }));
+    vi.doMock("./MicrophoneValidatedForDeviceIdStore", () => ({
+        microphoneValidatedForDeviceIdStore,
+    }));
 
-describe("NoMicrophoneSoundWarningVisibleStore", () => {
-    it("counts consecutive identical detector samples", () => {
-        const signalStore = microphoneSignalDetectedStore as unknown as Writable<MicrophoneSignalSample | undefined>;
-        const eligibilityStore = microphoneSignalDetectionEligibleStore as unknown as Writable<boolean>;
+    const { noMicrophoneSoundWarningVisibleStore } = await import("./NoMicrophoneSoundWarningVisibleStore");
+
+    return {
+        isLiveStreamingAudioStore,
+        localVolumeStore,
+        microphoneValidatedForDeviceIdStore,
+        myMicrophoneStore,
+        noMicrophoneSoundWarningVisibleStore,
+        rawLocalVolumeStore,
+        silentStore,
+        usedMicrophoneDeviceIdStore,
+    };
+}
+
+function publishSamples(store: TestStores["rawLocalVolumeStore"], volume: number[] | undefined, count: number): void {
+    for (let i = 0; i < count; i += 1) {
+        store.set(volume);
+    }
+}
+
+describe("noMicrophoneSoundWarningVisibleStore", () => {
+    beforeEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("shows the warning after 50 zero samples from an unvalidated microphone", async () => {
+        const { noMicrophoneSoundWarningVisibleStore, rawLocalVolumeStore } = await setupTestStores();
         const unsubscribe = noMicrophoneSoundWarningVisibleStore.subscribe(() => undefined);
-        usedMicrophoneDeviceIdStore.set("microphone-1");
-        eligibilityStore.set(true);
 
-        for (let sample = 0; sample < 49; sample += 1) {
-            signalStore.set({ detected: false });
-        }
+        publishSamples(rawLocalVolumeStore, [0, 0, 0, 0, 0, 0, 0], 49);
         expect(get(noMicrophoneSoundWarningVisibleStore)).toBe(false);
 
-        signalStore.set({ detected: false });
+        rawLocalVolumeStore.set([0, 0, 0, 0, 0, 0, 0]);
+
         expect(get(noMicrophoneSoundWarningVisibleStore)).toBe(true);
+        unsubscribe();
+    });
+
+    it("validates the current microphone after 10 non-zero raw samples", async () => {
+        const { microphoneValidatedForDeviceIdStore, noMicrophoneSoundWarningVisibleStore, rawLocalVolumeStore } =
+            await setupTestStores();
+        const unsubscribe = noMicrophoneSoundWarningVisibleStore.subscribe(() => undefined);
+
+        publishSamples(rawLocalVolumeStore, [0, 0, 0, 1, 0, 0, 0], 9);
+        expect(get(microphoneValidatedForDeviceIdStore)).toBeUndefined();
+
+        rawLocalVolumeStore.set([0, 0, 0, 1, 0, 0, 0]);
+
+        expect(get(microphoneValidatedForDeviceIdStore)).toBe("microphone-1");
+        unsubscribe();
+    });
+
+    it("does not show the warning for a validated microphone", async () => {
+        const { microphoneValidatedForDeviceIdStore, noMicrophoneSoundWarningVisibleStore, rawLocalVolumeStore } =
+            await setupTestStores();
+        microphoneValidatedForDeviceIdStore.set("microphone-1");
+        const unsubscribe = noMicrophoneSoundWarningVisibleStore.subscribe(() => undefined);
+
+        publishSamples(rawLocalVolumeStore, [0, 0, 0, 0, 0, 0, 0], 50);
+
+        expect(get(noMicrophoneSoundWarningVisibleStore)).toBe(false);
+        unsubscribe();
+    });
+
+    it("uses raw volume for the warning instead of processed local volume", async () => {
+        const {
+            localVolumeStore,
+            microphoneValidatedForDeviceIdStore,
+            noMicrophoneSoundWarningVisibleStore,
+            rawLocalVolumeStore,
+            usedMicrophoneDeviceIdStore,
+        } = await setupTestStores();
+        const unsubscribe = noMicrophoneSoundWarningVisibleStore.subscribe(() => undefined);
+
+        localVolumeStore.set([0, 0, 0, 0, 0, 0, 0]);
+        publishSamples(rawLocalVolumeStore, [0, 0, 0, 1, 0, 0, 0], 10);
+
+        expect(get(microphoneValidatedForDeviceIdStore)).toBe("microphone-1");
+        expect(get(noMicrophoneSoundWarningVisibleStore)).toBe(false);
 
         usedMicrophoneDeviceIdStore.set("microphone-2");
-        expect(get(noMicrophoneSoundWarningVisibleStore)).toBe(false);
+        publishSamples(rawLocalVolumeStore, [0, 0, 0, 0, 0, 0, 0], 50);
 
-        for (let sample = 0; sample < 10; sample += 1) {
-            signalStore.set({ detected: true });
-        }
-        expect(get(microphoneValidatedForDeviceIdStore)).toBe("microphone-2");
-
+        expect(get(noMicrophoneSoundWarningVisibleStore)).toBe(true);
         unsubscribe();
     });
 });

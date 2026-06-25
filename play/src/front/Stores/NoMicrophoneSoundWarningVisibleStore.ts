@@ -1,26 +1,44 @@
 import { derived } from "svelte/store";
-import { usedMicrophoneDeviceIdStore } from "./MediaStore";
-import { microphoneSignalDetectedStore, microphoneSignalDetectionEligibleStore } from "./MicrophoneSignalDetectorStore";
+import { myMicrophoneStore } from "./MyMediaStore";
+import { isLiveStreamingAudioStore } from "./IsStreamingStore";
+import { rawLocalVolumeStore, silentStore, usedMicrophoneDeviceIdStore } from "./MediaStore";
 import { microphoneValidatedForDeviceIdStore } from "./MicrophoneValidatedForDeviceIdStore";
 
-const ZERO_SAMPLES_FOR_NO_SOUND_WARNING = 50; // 5 seconds at 100ms
+const ZERO_SAMPLES_FOR_NO_SOUND_WARNING = 50; // 5 seconds at 100ms (rawLocalVolumeStore updates every 100ms)
 const MIN_SOUND_SAMPLES_BEFORE_VALIDATION = 10; // 1 second of sustained sound on current device before we validate (avoids validating a new mic with residual sound from the previous one)
+
+function isVolumeZero(volume: number[] | undefined): boolean {
+    return volume !== undefined && volume.length > 0 && volume.every((v) => v === 0);
+}
+
+function hasSound(volume: number[] | undefined): boolean {
+    return volume !== undefined && volume.length > 0 && !isVolumeZero(volume);
+}
 
 let noSoundWarningZeroCount = 0;
 let soundValidationSampleCount = 0;
 let lastDeviceIdForSoundValidation: string | undefined;
 
 export const noMicrophoneSoundWarningVisibleStore = derived(
-    [microphoneSignalDetectedStore, microphoneSignalDetectionEligibleStore, usedMicrophoneDeviceIdStore],
-    ([signalSample, eligible, usedDeviceId], set) => {
-        if (usedDeviceId !== lastDeviceIdForSoundValidation) {
-            lastDeviceIdForSoundValidation = usedDeviceId;
-            soundValidationSampleCount = 0;
-            noSoundWarningZeroCount = 0;
-            set(false);
-        }
+    [
+        rawLocalVolumeStore,
+        myMicrophoneStore,
+        isLiveStreamingAudioStore,
+        silentStore,
+        usedMicrophoneDeviceIdStore,
+        microphoneValidatedForDeviceIdStore,
+    ],
+    ([volume, myMic, isLiveStreamingAudioStore, silent, usedDeviceId, validatedDeviceId], set) => {
+        const isStreamingContext = isLiveStreamingAudioStore;
+        const shouldDetect = myMic && isStreamingContext && !silent;
+        const isCurrentDeviceValidated =
+            validatedDeviceId !== undefined && usedDeviceId !== undefined && usedDeviceId === validatedDeviceId;
 
-        if (eligible && usedDeviceId !== undefined && signalSample?.detected === true) {
+        if (shouldDetect && usedDeviceId !== undefined && hasSound(volume)) {
+            if (lastDeviceIdForSoundValidation !== usedDeviceId) {
+                lastDeviceIdForSoundValidation = usedDeviceId;
+                soundValidationSampleCount = 0;
+            }
             soundValidationSampleCount += 1;
             if (soundValidationSampleCount >= MIN_SOUND_SAMPLES_BEFORE_VALIDATION) {
                 microphoneValidatedForDeviceIdStore.set(usedDeviceId);
@@ -29,7 +47,7 @@ export const noMicrophoneSoundWarningVisibleStore = derived(
             soundValidationSampleCount = 0;
         }
 
-        if (eligible && signalSample?.detected === false) {
+        if (shouldDetect && !isCurrentDeviceValidated && isVolumeZero(volume)) {
             noSoundWarningZeroCount += 1;
             if (noSoundWarningZeroCount >= ZERO_SAMPLES_FOR_NO_SOUND_WARNING) {
                 set(true);
@@ -37,7 +55,7 @@ export const noMicrophoneSoundWarningVisibleStore = derived(
             }
         } else {
             noSoundWarningZeroCount = 0;
-            if (!eligible || signalSample?.detected === true) {
+            if (!shouldDetect || !isVolumeZero(volume) || isCurrentDeviceValidated) {
                 set(false);
             }
         }
