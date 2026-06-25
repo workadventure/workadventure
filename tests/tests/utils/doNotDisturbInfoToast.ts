@@ -6,11 +6,13 @@ import type { Page } from "@playwright/test";
  * No-op if the toast is not shown before the microphone is in visible state.
  */
 export async function dismissNoBrowserSoundInfoToast(page: Page, timeoutMs: number = 5_000): Promise<void> {
-    await page.addLocatorHandler(page.getByTestId("audio-playback-retry"), async () => {
+    await page.addLocatorHandler(page.getByTestId("audio-playback-retry"), async (retryButton) => {
         try {
-            await page.getByTestId("audio-playback-retry").click();
+            // The toast can start disappearing as the AudioContext resumes, so do not wait for stable actionability.
+            // eslint-disable-next-line playwright/no-force-option
+            await retryButton.click({ force: true, timeout: timeoutMs });
         } catch (e) {
-            if (e instanceof Error && e.message.includes("Target page, context or browser has been closed")) {
+            if (page.isClosed() || (await retryButton.isHidden().catch(() => true))) {
                 return;
             }
             throw e;
