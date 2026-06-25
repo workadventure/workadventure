@@ -46,6 +46,8 @@ const actionbar: BaseTranslation = {
             "No sound detected from your microphone. There may be a problem; try changing your microphone in settings.",
         noSoundWarningPressEnter: "No sound detected from your microphone. Press Enter to open settings.",
         noiseSuppressionBeta: "Noise suppression (beta)",
+        loudEnvironmentWarning: "Sustained background noise was detected on your microphone.",
+        enableNoiseSuppression: "Enable noise suppression",
         noiseSuppressionInitializing: "Initializing custom noise suppression...",
         noiseSuppressionUnsupported: "This browser cannot run custom noise suppression.",
         noiseSuppressionError: "Custom noise suppression failed. Falling back to browser native noise suppression.",

@@ -47,6 +47,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarningPressEnter:
             "Kein Ton von Ihrem Mikrofon erkannt. Drücken Sie Enter, um die Einstellungen zu öffnen.",
         noiseSuppressionBeta: "Geräuschunterdrückung (Beta)",
+        loudEnvironmentWarning: "An Ihrem Mikrofon wurden anhaltende Hintergrundgeräusche erkannt.",
+        enableNoiseSuppression: "Geräuschunterdrückung aktivieren",
         noiseSuppressionInitializing: "Benutzerdefinierte Geräuschunterdrückung wird initialisiert...",
         noiseSuppressionUnsupported:
             "Dieser Browser kann die benutzerdefinierte Geräuschunterdrückung nicht ausführen.",

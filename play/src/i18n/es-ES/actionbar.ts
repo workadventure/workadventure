@@ -46,6 +46,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             "No se detecta sonido de tu micrófono. Puede haber un problema; prueba a cambiar de micrófono en la configuración.",
         noSoundWarningPressEnter: "No se detecta sonido de tu micrófono. Pulsa Enter para abrir la configuración.",
         noiseSuppressionBeta: "Supresión de ruido (beta)",
+        loudEnvironmentWarning: "Se ha detectado ruido de fondo continuo en tu micrófono.",
+        enableNoiseSuppression: "Activar la supresión de ruido",
         noiseSuppressionInitializing: "Inicializando la supresión de ruido personalizada...",
         noiseSuppressionUnsupported: "Este navegador no puede ejecutar la supresión de ruido personalizada.",
         noiseSuppressionError:

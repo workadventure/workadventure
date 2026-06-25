@@ -45,6 +45,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning: "未检测到麦克风声音。可能存在问题 — 请尝试在设置中更换麦克风。",
         noSoundWarningPressEnter: "未检测到麦克风声音。按 Enter 打开设置。",
         noiseSuppressionBeta: "噪声抑制（测试版）",
+        loudEnvironmentWarning: "检测到麦克风中存在持续的背景噪声。",
+        enableNoiseSuppression: "启用噪声抑制",
         noiseSuppressionInitializing: "正在初始化自定义噪声抑制...",
         noiseSuppressionUnsupported: "此浏览器无法运行自定义噪声抑制。",
         noiseSuppressionError: "自定义噪声抑制失败。正在回退到浏览器原生噪声抑制。",
