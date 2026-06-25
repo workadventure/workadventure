@@ -38,8 +38,8 @@ test.describe("Picture In Picture", () => {
 
     test("not available", async ({ page, browser, browserName }) => {
         test.skip(
-            isMobile(page) || browserName === "chromium",
-            "Skip on mobile and no WebKit or Firefox due to limitations",
+            isMobile(page) || browserName === "chromium" || browserName === "firefox",
+            "document PiP is only available in Chrome and Firefox",
         );
 
         await using alicePage = await getPage(
