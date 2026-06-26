@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
+import { FrontToPusherWebSocketMessage } from "@workadventure/messages";
 
 vi.mock("../../src/pusher/enums/EnvironmentVariable", () => import("./mocks/pusherEnvironmentVariableMock"));
 vi.mock("@workadventure/messages", () => ({
@@ -20,6 +21,7 @@ import { PusherWebSocket, type RawSocket } from "../../src/pusher/services/Pushe
 
 type RegisteredHandlers = {
     open: (socket: unknown) => void | Promise<void>;
+    message: (socket: unknown, message: ArrayBuffer) => void | Promise<void>;
     close: (socket: unknown, code?: number, message?: ArrayBuffer) => void | Promise<void>;
     drain: (socket: unknown) => void | Promise<void>;
 };
@@ -139,6 +141,67 @@ describe("PusherRoomSocketController reconnect retention", () => {
 
         expect(open).toHaveBeenCalledTimes(2);
         expect(getContextMap(controller).get("tab-1")?.socket).toBeDefined();
+    });
+
+    it("creates a fresh logical connection when the retained socket was already closed by pusher", async () => {
+        vi.useFakeTimers();
+
+        const open = vi.fn();
+        const controller = createController((handlers) => {
+            registeredHandlers = handlers;
+        }, open);
+
+        const initialSocket = createSocket({ tabId: "tab-1" });
+        await registeredHandlers?.open(initialSocket);
+
+        const initialContext = getContextMap(controller).get("tab-1");
+        const initialWrapper = initialContext?.socket as PusherWebSocket;
+        initialWrapper.startDisconnecting();
+        initialContext!.clientLastReceivedNonce = 1;
+
+        const reconnectSocket = createSocket({ tabId: "tab-1" });
+        await registeredHandlers?.open(reconnectSocket);
+
+        expect(open).toHaveBeenCalledTimes(2);
+        expect(getEndMock(reconnectSocket)).not.toHaveBeenCalledWith(
+            1008,
+            "Cannot replace socket: previous connection not retained",
+        );
+        expect(getContextMap(controller).get("tab-1")?.socket).not.toBe(initialWrapper);
+    });
+
+    it("creates a fresh logical connection when the retained room state disappeared", async () => {
+        vi.useFakeTimers();
+
+        const open = vi.fn();
+        const canReplaceTransport = vi.fn().mockReturnValue(false);
+        const controller = createController(
+            (handlers) => {
+                registeredHandlers = handlers;
+            },
+            open,
+            vi.fn(),
+            vi.fn(),
+            canReplaceTransport,
+        );
+
+        const initialSocket = createSocket({ tabId: "tab-1" });
+        await registeredHandlers?.open(initialSocket);
+
+        const initialContext = getContextMap(controller).get("tab-1");
+        const initialWrapper = initialContext?.socket as PusherWebSocket;
+        initialContext!.clientLastReceivedNonce = 1;
+
+        const reconnectSocket = createSocket({ tabId: "tab-1" });
+        await registeredHandlers?.open(reconnectSocket);
+
+        expect(canReplaceTransport).toHaveBeenCalledWith(initialWrapper);
+        expect(open).toHaveBeenCalledTimes(2);
+        expect(getEndMock(reconnectSocket)).not.toHaveBeenCalledWith(
+            1008,
+            "Cannot replace socket: previous connection not retained",
+        );
+        expect(getContextMap(controller).get("tab-1")?.socket).not.toBe(initialWrapper);
     });
 
     it("runs logical cleanup when no replacement arrives before retention expires", async () => {
@@ -261,6 +324,34 @@ describe("PusherRoomSocketController reconnect retention", () => {
 
         expect(getSendMock(socket)).toHaveBeenCalledTimes(3);
     });
+
+    it("drops incoming messages after logical cleanup started", async () => {
+        const message = vi.fn();
+        const controller = createController(
+            (handlers) => {
+                registeredHandlers = handlers;
+            },
+            vi.fn(),
+            vi.fn(),
+            message,
+        );
+
+        const socket = createSocket({ tabId: "tab-1" });
+        await registeredHandlers?.open(socket);
+
+        const wrapper = getContextMap(controller).get("tab-1")?.socket as PusherWebSocket | undefined;
+        wrapper?.startDisconnecting();
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        vi.mocked(FrontToPusherWebSocketMessage.decode).mockReturnValue({
+            nonce: 1,
+            message: { message: undefined },
+        });
+
+        await registeredHandlers?.message(socket, new ArrayBuffer(0));
+
+        expect(message).not.toHaveBeenCalled();
+        expect(getEndMock(socket)).toHaveBeenCalledWith(1008, "Connection already closed");
+    });
 });
 
 describe("PusherWebSocket backpressure", () => {
@@ -281,6 +372,29 @@ describe("PusherWebSocket backpressure", () => {
         wrapper.handleDrain();
 
         expect(getSendMock(socket)).toHaveBeenCalledTimes(3);
+    });
+
+    it("does not send or store outgoing messages once logical cleanup started", () => {
+        const socket = createSocket();
+        const wrapper = createPusherWebSocket(socket);
+
+        wrapper.startDisconnecting();
+
+        expect(wrapper.send({ message: undefined })).toBe(0);
+        expect(getSendMock(socket)).not.toHaveBeenCalled();
+    });
+
+    it("does not flush queued outgoing messages once logical cleanup started", () => {
+        const socket = createSocket();
+        getSendMock(socket).mockReturnValueOnce(0).mockReturnValue(1);
+        const wrapper = createPusherWebSocket(socket);
+
+        wrapper.send({ message: undefined });
+        wrapper.send({ message: undefined });
+        wrapper.startDisconnecting();
+        wrapper.handleDrain();
+
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(1);
     });
 
     it("keeps the drain tracker at the last accepted nonce when drain hits backpressure again", () => {
@@ -305,6 +419,8 @@ function createController(
     registerHandlers: (handlers: RegisteredHandlers) => void,
     openHandler: (socket: unknown) => void | Promise<void> = vi.fn(),
     closeHandler: (socket: unknown) => void | Promise<void> = vi.fn(),
+    messageHandler: (socket: unknown, message: unknown) => void | Promise<void> = vi.fn(),
+    canReplaceTransport: ((socket: PusherWebSocket) => boolean) | undefined = undefined,
 ) {
     const app = {
         ws: vi.fn((_path: string, handlers: unknown) => {
@@ -319,7 +435,8 @@ function createController(
         open: openHandler,
         rejectedOpen: vi.fn(),
         reconnect: vi.fn(),
-        message: vi.fn(),
+        canReplaceTransport,
+        message: messageHandler,
         close: closeHandler,
     });
 

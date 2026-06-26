@@ -3,26 +3,30 @@ import { mock } from "vitest-mock-extended";
 
 vi.mock("../../src/pusher/enums/EnvironmentVariable", () => import("./mocks/pusherEnvironmentVariableMock"));
 
-import { SocketManager } from "../../src/pusher/services/SocketManager";
+import {
+    getBackConnectionCloseReason,
+    getBackConnectionSetupErrorReason,
+    SocketManager,
+} from "../../src/pusher/services/SocketManager";
 import type { Query } from "../../src/pusher/models/SpaceQuery";
 import type { SpaceInterface } from "../../src/pusher/models/Space";
 import type { PusherWebSocket } from "../../src/pusher/services/PusherWebSocket";
 
-describe("SocketManager recording queries", () => {
-    const createClient = (overrides: Partial<ReturnType<PusherWebSocket["getUserData"]>> = {}): PusherWebSocket => {
-        const socketData = {
-            canRecord: true,
-            spaceUserId: "space-user-1",
-            spaces: new Set<string>(["world.space-name"]),
-            joinSpacesPromise: new Map<string, Promise<void>>(),
-            ...overrides,
-        };
-
-        return mock<PusherWebSocket>({
-            getUserData: vi.fn().mockReturnValue(socketData),
-        });
+const createClient = (overrides: Partial<ReturnType<PusherWebSocket["getUserData"]>> = {}): PusherWebSocket => {
+    const socketData = {
+        canRecord: true,
+        spaceUserId: "space-user-1",
+        spaces: new Set<string>(["world.space-name"]),
+        joinSpacesPromise: new Map<string, Promise<void>>(),
+        ...overrides,
     };
 
+    return mock<PusherWebSocket>({
+        getUserData: vi.fn().mockReturnValue(socketData),
+    });
+};
+
+describe("SocketManager recording queries", () => {
     it("rejects start recording when the user cannot record", async () => {
         const manager = new SocketManager();
         const client = createClient({ canRecord: false });
@@ -97,6 +101,31 @@ describe("SocketManager recording queries", () => {
                 signal,
                 timeout: 60_000,
             }
+        );
+    });
+});
+
+describe("SocketManager back connection close reasons", () => {
+    it("uses an explicit diagnostic when the back stream ends without an application close reason", () => {
+        expect(getBackConnectionCloseReason()).toBe(
+            "Back connection ended without an application close reason (gRPC end event).",
+        );
+    });
+
+    it("keeps gRPC error details when the stream errors before ending", () => {
+        const grpcError = Object.assign(new Error("upstream reset"), {
+            code: 14,
+            details: "No connection established",
+        });
+
+        expect(getBackConnectionCloseReason(undefined, grpcError)).toBe(
+            "Back connection ended after gRPC error: code=14 details=No connection established message=upstream reset",
+        );
+    });
+
+    it("keeps setup error details when closing after connect or join failure", () => {
+        expect(getBackConnectionSetupErrorReason(new Error("admin API timeout"))).toBe(
+            "Error while connecting to back server: admin API timeout",
         );
     });
 });
