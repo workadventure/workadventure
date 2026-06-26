@@ -15,15 +15,8 @@ type WebGlBlurPipelineOptions = {
 };
 
 type WebGlStateSnapshot = {
-    framebuffer: WebGLFramebuffer | null;
-    arrayBuffer: WebGLBuffer | null;
-    currentProgram: WebGLProgram | null;
-    viewport: Int32Array;
-    activeTexture: number;
-    textureBindings: { unit: number; texture: WebGLTexture | null }[];
     blendEnabled: boolean;
     depthTestEnabled: boolean;
-    unpackFlipY: boolean;
 };
 
 type KawaseFramebuffer = {
@@ -460,28 +453,15 @@ export class WebGlBlurPipeline {
 
     private captureState(): WebGlStateSnapshot {
         const gl = this.gl;
-        const activeTexture = gl.getParameter(gl.ACTIVE_TEXTURE) as number;
-        const textureUnits = [gl.TEXTURE0, gl.TEXTURE0 + 1, gl.TEXTURE0 + 2];
-        const textureBindings = textureUnits.map((unit) => {
-            gl.activeTexture(unit);
-            return {
-                unit,
-                texture: gl.getParameter(gl.TEXTURE_BINDING_2D) as WebGLTexture | null,
-            };
-        });
 
-        gl.activeTexture(activeTexture);
-
+        // Only the BLEND/DEPTH_TEST enable bits are read back: gl.isEnabled is a
+        // cheap client-side query, whereas the binding getters (FRAMEBUFFER_BINDING,
+        // CURRENT_PROGRAM, TEXTURE_BINDING_2D, VIEWPORT, ...) force a driver
+        // round-trip every frame. Those bindings are reset to neutral defaults in
+        // restoreCapturedState() instead of being captured and replayed.
         return {
-            framebuffer: gl.getParameter(gl.FRAMEBUFFER_BINDING) as WebGLFramebuffer | null,
-            arrayBuffer: gl.getParameter(gl.ARRAY_BUFFER_BINDING) as WebGLBuffer | null,
-            currentProgram: gl.getParameter(gl.CURRENT_PROGRAM) as WebGLProgram | null,
-            viewport: gl.getParameter(gl.VIEWPORT) as Int32Array,
-            activeTexture,
-            textureBindings,
             blendEnabled: gl.isEnabled(gl.BLEND),
             depthTestEnabled: gl.isEnabled(gl.DEPTH_TEST),
-            unpackFlipY: gl.getParameter(gl.UNPACK_FLIP_Y_WEBGL) as boolean,
         };
     }
 
@@ -493,18 +473,23 @@ export class WebGlBlurPipeline {
             return;
         }
 
-        for (const binding of snapshot.textureBindings) {
-            gl.activeTexture(binding.unit);
-            gl.bindTexture(gl.TEXTURE_2D, binding.texture);
+        // Reset the state this pipeline mutates back to a clean baseline rather than
+        // reading the previous values back each frame. MediaPipe (the only other
+        // consumer of this shared context) re-specifies its own program, buffers,
+        // textures and viewport before every draw, so neutral defaults are enough.
+        for (let unit = 0; unit < 3; unit++) {
+            gl.activeTexture(gl.TEXTURE0 + unit);
+            gl.bindTexture(gl.TEXTURE_2D, null);
         }
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        gl.useProgram(null);
+        gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
-        gl.activeTexture(snapshot.activeTexture);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, snapshot.framebuffer);
-        gl.bindBuffer(gl.ARRAY_BUFFER, snapshot.arrayBuffer);
-        gl.useProgram(snapshot.currentProgram);
-        gl.viewport(snapshot.viewport[0], snapshot.viewport[1], snapshot.viewport[2], snapshot.viewport[3]);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, snapshot.unpackFlipY);
-
+        // BLEND/DEPTH_TEST are restored to their captured values since MediaPipe may
+        // rely on its own enable state persisting across our draw.
         if (snapshot.blendEnabled) {
             gl.enable(gl.BLEND);
         } else {
