@@ -745,7 +745,8 @@ export class WebGlBlurPipeline {
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
         gl.activeTexture(gl.TEXTURE0 + textureUnit);
         gl.bindTexture(gl.TEXTURE_2D, texture);
-        this.configureTexture();
+        // Texture parameters are already set once in createTexture() and persist on
+        // the texture object, so there is no need to re-apply them on every upload.
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source as TexImageSource);
     }
 
