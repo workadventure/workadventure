@@ -195,6 +195,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "Zeg-popup openen",
         openThinkPopup: "Denk-popup openen",
         walkMyDesk: "Naar mijn bureau lopen",
+        cycleStatus: "Beschikbaarheidsstatus wisselen",
     },
 };
 

@@ -17,7 +17,23 @@ import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
+import { cycleRequestedStatus } from "../../Rules/StatusRules/statusChangerFunctions";
 import type { Shortcut } from "./UserInputManager";
+
+const isTypingTarget = (target: EventTarget | null): boolean => {
+    if (!(target instanceof HTMLElement)) {
+        return false;
+    }
+
+    return (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        target.getAttribute("role") === "textbox" ||
+        target.getAttribute("contenteditable") === "true" ||
+        target.isContentEditable
+    );
+};
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -93,6 +109,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             {
                 key: "F",
                 description: get(LL).menu.shortcuts.follow(),
+            },
+            // Shift + Y
+            {
+                key: "Y",
+                description: get(LL).menu.shortcuts.cycleStatus(),
+                shiftKey: true,
             },
         ];
     }
@@ -231,11 +253,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 // Handle Cmd (Mac) / Ctrl (Windows & Linux) + D for "walk my desk"
                 if (event.metaKey || event.ctrlKey) {
                     // Prevent the shortcut from being triggered when typing in input fields
-                    if (
-                        event.target instanceof HTMLInputElement ||
-                        event.target instanceof HTMLTextAreaElement ||
-                        event.target instanceof HTMLSelectElement
-                    ) {
+                    if (isTypingTarget(event.target)) {
                         return event;
                     }
                     event.preventDefault();
@@ -265,6 +283,18 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
             case "KeyF": {
                 this.handleKeyF();
+                break;
+            }
+            case "KeyY": {
+                if (!event.shiftKey) break;
+                if (event.ctrlKey || event.metaKey || event.altKey) break;
+                // Don't trigger while the user is typing in a form field.
+                if (isTypingTarget(event.target)) {
+                    return event;
+                }
+                if (cycleRequestedStatus()) {
+                    event.preventDefault();
+                }
                 break;
             }
             default: {

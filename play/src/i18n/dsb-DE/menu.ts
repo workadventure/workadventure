@@ -194,6 +194,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: 'Popup „groniś" wótcyniś',
         openThinkPopup: 'Popup „mysliś" wótcyniś',
         walkMyDesk: "K mójomu blidkoju hyś",
+        cycleStatus: "Status pśipšawjeń pśešaltowaś",
     },
 };
 

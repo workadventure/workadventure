@@ -193,6 +193,7 @@ const menu: BaseTranslation = {
         openSayPopup: "Open Say Popup",
         openThinkPopup: "Open Think Popup",
         walkMyDesk: "Walk to My Desk",
+        cycleStatus: "Cycle Availability Status",
     },
 };
 
