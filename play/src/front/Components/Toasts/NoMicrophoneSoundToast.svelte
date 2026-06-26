@@ -4,7 +4,7 @@
     import { mediaSettingsOpenStore } from "../../Stores/MenuStore";
     import { usedMicrophoneDeviceIdStore } from "../../Stores/MediaStore";
     import { microphoneValidatedForDeviceIdStore } from "../../Stores/MicrophoneValidatedForDeviceIdStore";
-    import { toastStore } from "../../Stores/ToastStore";
+    import { toastStore } from "../../Stores/ToastStoreSingleton";
     import ToastContainer from "./ToastContainer.svelte";
 
     interface Props {

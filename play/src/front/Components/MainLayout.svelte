@@ -35,7 +35,7 @@
     import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import { inputFormFocusStore } from "../Stores/UserInputStore";
     import { showRecordingList } from "../Stores/RecordingStore";
-    import { toastStore } from "../Stores/ToastStore";
+    import { toastStore } from "../Stores/ToastStoreSingleton";
     import { meetingInvitationRequestStore } from "../Stores/MeetingInvitationStore";
     import { gameManager } from "../Phaser/Game/GameManager";
     import { navChat } from "../Chat/Stores/ChatStore";

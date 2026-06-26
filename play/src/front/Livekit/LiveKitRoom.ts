@@ -28,6 +28,7 @@ import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPres
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
+import { audioPlaybackStore } from "../Stores/AudioPlaybackStore";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
@@ -58,12 +59,14 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private mediaTrackUpdateQueue: Promise<void> = Promise.resolve();
     private unsubscribers: Unsubscriber[] = [];
     private rxjsSubscriptions: Subscription[] = [];
+    private unregisterAudioPlaybackRetry: Unsubscriber | undefined;
 
     // Bound event handlers to avoid memory leaks
     private readonly boundHandleParticipantConnected = this.handleParticipantConnected.bind(this);
     private readonly boundHandleParticipantDisconnected = this.handleParticipantDisconnected.bind(this);
     private readonly boundHandleActiveSpeakersChanged = this.handleActiveSpeakersChanged.bind(this);
     private readonly boundHandleDisconnected = this.handleDisconnected.bind(this);
+    private readonly boundHandleAudioPlaybackStatusChanged = this.handleAudioPlaybackStatusChanged.bind(this);
 
     constructor(
         private serverUrl: string,
@@ -135,6 +138,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         await room.connect(this.serverUrl, this.token, {
             autoSubscribe: false,
         });
+        this.handleAudioPlaybackStatusChanged();
         if (this.abortSignal.aborted) {
             await room.disconnect();
             return;
@@ -525,6 +529,21 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room.on(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
         this.room.on(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
         this.room.on(RoomEvent.Disconnected, this.boundHandleDisconnected);
+        this.room.on(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
+    }
+
+    private handleAudioPlaybackStatusChanged() {
+        if (!this.room) {
+            return;
+        }
+
+        if (this.room.canPlaybackAudio) {
+            this.unregisterAudioPlaybackRetry?.();
+            this.unregisterAudioPlaybackRetry = undefined;
+            return;
+        }
+
+        this.unregisterAudioPlaybackRetry ??= audioPlaybackStore.register(() => this.room?.startAudio());
     }
 
     private getDisconnectReasonLabel(reason?: DisconnectReason): string {
@@ -799,6 +818,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.room?.off(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
             this.room?.off(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
             this.room?.off(RoomEvent.Disconnected, this.boundHandleDisconnected);
+            this.room?.off(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
+            this.unregisterAudioPlaybackRetry?.();
+            this.unregisterAudioPlaybackRetry = undefined;
             this.leaveRoom();
         } finally {
             this._livekitRoomCounter.decrement();

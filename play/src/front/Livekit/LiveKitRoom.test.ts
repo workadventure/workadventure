@@ -1,12 +1,30 @@
 import { Subject } from "rxjs";
 import { writable } from "svelte/store";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Readable } from "svelte/store";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
 import type { SpaceInterface } from "../Space/SpaceInterface";
 import type { Streamable } from "../Space/Streamable";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { LiveKitRoom } from "./LiveKitRoom";
+
+const audioPlaybackStoreMock = vi.hoisted(() => {
+    const subscribers = new Set<(value: ReadonlySet<unknown>) => void>();
+    const value = new Set<unknown>();
+
+    return {
+        register: vi.fn(),
+        subscribe: vi.fn((subscriber: (value: ReadonlySet<unknown>) => void) => {
+            subscribers.add(subscriber);
+            subscriber(value);
+            return () => {
+                subscribers.delete(subscriber);
+            };
+        }),
+    };
+});
+
+vi.mock("../Stores/AudioPlaybackStore", () => ({ audioPlaybackStore: audioPlaybackStoreMock }));
 
 vi.mock("../Stores/ScreenSharingStore", async () => {
     const { writable } = await import("svelte/store");
@@ -57,6 +75,57 @@ vi.mock("../Stores/StreamableCollectionStore", async () => {
 vi.mock("../Space/SpacePeerManager/SpacePeerManager", () => ({}));
 
 describe("LiveKitRoom", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it("registers one retry that restarts blocked LiveKit audio", async () => {
+        const unregister = vi.fn();
+        audioPlaybackStoreMock.register.mockReturnValue(unregister);
+        const liveKitRoom = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        const startAudio = vi.fn().mockResolvedValue(undefined);
+        const sdkRoom = {
+            canPlaybackAudio: false,
+            startAudio,
+        };
+        liveKitRoom["room"] = sdkRoom as never;
+
+        liveKitRoom["handleAudioPlaybackStatusChanged"]();
+        liveKitRoom["handleAudioPlaybackStatusChanged"]();
+
+        expect(audioPlaybackStoreMock.register).toHaveBeenCalledOnce();
+        const retry = audioPlaybackStoreMock.register.mock.calls[0][0] as () => Promise<void>;
+        await retry();
+        expect(startAudio).toHaveBeenCalledOnce();
+
+        sdkRoom.canPlaybackAudio = true;
+        liveKitRoom["handleAudioPlaybackStatusChanged"]();
+        expect(unregister).toHaveBeenCalledOnce();
+    });
+
+    it("unregisters blocked audio playback when destroyed", () => {
+        const unregister = vi.fn();
+        audioPlaybackStoreMock.register.mockReturnValue(unregister);
+        const liveKitRoom = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        liveKitRoom["room"] = {
+            canPlaybackAudio: false,
+            startAudio: vi.fn(),
+            off: vi.fn(),
+            disconnect: vi.fn().mockResolvedValue(undefined),
+        } as never;
+        liveKitRoom["handleAudioPlaybackStatusChanged"]();
+
+        liveKitRoom.destroy();
+
+        expect(unregister).toHaveBeenCalledOnce();
+    });
+
     it("should not forward screen share updates when the space forbids screen share publication", () => {
         const shouldPublishScreenShareStore = writable(false);
         const screenShareStream = createScreenShareStream();

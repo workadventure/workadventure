@@ -16,6 +16,7 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { videoQualityStore } from "../../Stores/MediaStore";
+    import { browserNotificationStore } from "../../Stores/BrowserNotificationStore";
     import { screenShareQualityStore } from "../../Stores/ScreenSharingStore";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import { bandwidthConstrainedPreferenceStore } from "../../Stores/BandwidthConstrainedPreferenceStore";
@@ -176,6 +177,7 @@
 
         if (Notification.permission === "granted") {
             localUserStore.setNotification(notification);
+            browserNotificationStore.refresh();
         } else {
             Notification.requestPermission()
                 .then((response) => {
@@ -185,6 +187,7 @@
                         localUserStore.setNotification(false);
                         notification = false;
                     }
+                    browserNotificationStore.refresh();
                 })
                 .catch((e) => console.error(e));
         }

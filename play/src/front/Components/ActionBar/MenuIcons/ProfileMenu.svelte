@@ -1,178 +1,67 @@
 <script lang="ts">
-    import * as Sentry from "@sentry/svelte";
-    import { clickOutside } from "svelte-outside";
-    import { AvailabilityStatus } from "@workadventure/messages";
-    import { setContext } from "svelte";
-    import type { Readable } from "svelte/store";
-    import { derived, get } from "svelte/store";
-    import {
-        availabilityStatusStore,
-        enableCameraSceneVisibilityStore,
-        inBbbStore,
-        inJitsiStore,
-        inLivekitStore,
-    } from "../../../Stores/MediaStore";
-    import { isInRemoteConversation } from "../../../Stores/StreamableCollectionStore";
-
+    import { onDestroy } from "svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { analyticsClient } from "../../../Administration/AnalyticsClient";
-    import type { RightMenuItem } from "../../../Stores/MenuStore";
-    import {
-        SubMenusInterface,
-        userIsConnected,
-        openedMenuStore,
-        showMenuItem,
-        rightActionBarMenuItems,
-    } from "../../../Stores/MenuStore";
-    import { LL } from "../../../../i18n/i18n-svelte";
-    import { ENABLE_OPENID, SENTRY_DSN_FRONT } from "../../../Enum/EnvironmentVariable";
-    import Woka from "../../Woka/WokaFromUserId.svelte";
-    import Companion from "../../Companion/Companion.svelte";
+    import { availabilityStatusStore, inBbbStore, inJitsiStore, inLivekitStore } from "../../../Stores/MediaStore";
+    import { openedMenuStore } from "../../../Stores/MenuStore";
+    import { isInRemoteConversation } from "../../../Stores/StreamableCollectionStore";
+    import { getColorHexOfStatus, getStatusLabel } from "../../../Utils/AvailabilityStatus";
+    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import ChevronDownIcon from "../../Icons/ChevronDownIcon.svelte";
-    import ProfilIcon from "../../Icons/ProfilIcon.svelte";
-    import CamSettingsIcon from "../../Icons/CamSettingsIcon.svelte";
-    import SettingsIcon from "../../Icons/SettingsIcon.svelte";
-    import XIcon from "../../Icons/XIcon.svelte";
     import MenuBurgerIcon from "../../Icons/MenuBurgerIcon.svelte";
-    import { connectionManager } from "../../../Connection/ConnectionManager";
-    import { getColorHexOfStatus, getStatusInformation, getStatusLabel } from "../../../Utils/AvailabilityStatus";
-    import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
-    import AvailabilityStatusList from "../AvailabilityStatus/AvailabilityStatusList.svelte";
-    import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
-    import { loginSceneVisibleStore } from "../../../Stores/LoginSceneStore";
-    import { LoginScene, LoginSceneName } from "../../../Phaser/Login/LoginScene";
-    import { selectCharacterSceneVisibleStore } from "../../../Stores/SelectCharacterStore";
-    import { SelectCharacterScene, SelectCharacterSceneName } from "../../../Phaser/Login/SelectCharacterScene";
-    import { selectCompanionSceneVisibleStore } from "../../../Stores/SelectCompanionStore";
-    import { SelectCompanionScene, SelectCompanionSceneName } from "../../../Phaser/Login/SelectCompanionScene";
-    import { EnableCameraScene, EnableCameraSceneName } from "../../../Phaser/Login/EnableCameraScene";
-    import { PwaInstallScene, PwaInstallSceneName } from "../../../Phaser/Login/PwaInstallScene";
-    import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
-    import ActionBarButton from "../ActionBarButton.svelte";
-    import { IconHelpCircle, IconBug, IconLogout, IconFileDownload } from "../../Icons";
-    import { onboardingStore } from "../../../Stores/OnboardingStore";
-    import { pwaInstallProfileMenuEligibleStore } from "../../../Stores/PwaInstallStore";
-    import ContextualMenuItems from "./ContextualMenuItems.svelte";
-    import HeaderMenuItem from "./HeaderMenuItem.svelte";
-    import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
+    import XIcon from "../../Icons/XIcon.svelte";
+    import Woka from "../../Woka/WokaFromUserId.svelte";
+    import ProfileMenuContent from "./ProfileMenuContent.svelte";
 
-    // The ActionBarButton component is displayed differently in the profile menu.
-    // We use the context to decide how to render it.
-    setContext("profileMenu", true);
-    setContext("inMenu", true);
+    const PROFILE_MENU_Z_INDEX = 1100;
 
     let userName = gameManager.getPlayerName() || "";
+    let forceBurgerMode = $derived($inJitsiStore || $inBbbStore || $inLivekitStore || $isInRemoteConversation);
+    let triggerElement: HTMLDivElement | undefined = $state();
+    let contextualMenuItemsMarker: HTMLSpanElement | undefined = $state();
+    let closeFloatingUi: (() => void) | undefined;
 
-    const statusToShow: Array<RequestedStatus | AvailabilityStatus.ONLINE> = [
-        AvailabilityStatus.ONLINE,
-        AvailabilityStatus.BUSY,
-        AvailabilityStatus.BACK_IN_A_MOMENT,
-        AvailabilityStatus.DO_NOT_DISTURB,
-    ];
-
-    function showWokaNameMenuItem() {
-        return connectionManager.currentRoom?.opidWokaNamePolicy !== "force_opid";
+    function closeProfileMenu(): void {
+        const close = closeFloatingUi;
+        closeFloatingUi = undefined;
+        close?.();
     }
 
-    function openEditNameScene() {
-        loginSceneVisibleStore.set(true);
-        gameManager.leaveGame(LoginSceneName, new LoginScene());
-    }
+    function openProfileMenu(): void {
+        if (triggerElement === undefined || closeFloatingUi !== undefined) {
+            return;
+        }
 
-    function openEditSkinScene() {
-        selectCharacterSceneVisibleStore.set(true);
-        gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
-    }
-
-    function openEditCompanionScene() {
-        selectCompanionSceneVisibleStore.set(true);
-        gameManager.leaveGame(SelectCompanionSceneName, new SelectCompanionScene());
-    }
-
-    function openEnableCameraScene() {
-        enableCameraSceneVisibilityStore.showEnableCameraScene();
-        gameManager.leaveGame(EnableCameraSceneName, new EnableCameraScene());
-        analyticsClient.editCamera();
-    }
-
-    async function openFeedbackScene() {
-        // Get the instance returned by `feedbackIntegration()`
-        const feedbackIntegrationInstance = Sentry.feedbackIntegration({
-            colorScheme: "system",
-            showBranding: false,
-            enableScreenshot: true,
-            formTitle: $LL.actionbar.issueReport.formTitle(),
-            emailLabel: $LL.actionbar.issueReport.emailLabel(),
-            nameLabel: $LL.actionbar.issueReport.nameLabel(),
-            messageLabel: $LL.actionbar.issueReport.descriptionLabel(),
-            messagePlaceholder: $LL.actionbar.issueReport.descriptionPlaceholder(),
-            submitButtonLabel: $LL.actionbar.issueReport.submitButtonLabel(),
-            cancelButtonLabel: $LL.actionbar.issueReport.cancelButtonLabel(),
-            confirmButtonLabel: $LL.actionbar.issueReport.confirmButtonLabel(),
-            addScreenshotButtonLabel: $LL.actionbar.issueReport.addScreenshotButtonLabel(),
-            removeScreenshotButtonLabel: $LL.actionbar.issueReport.removeScreenshotButtonLabel(),
-            successMessageText: $LL.actionbar.issueReport.successMessageText(),
-            removeHighlightText: $LL.actionbar.issueReport.removeHighlightText(),
-            highlightToolText: $LL.actionbar.issueReport.highlightToolText(),
-            hideToolText: $LL.actionbar.issueReport.hideToolText(),
-            isRequiredLabel: "",
-            onFormOpen: () => {
-                // Disable the user inputs
-                gameManager.getCurrentGameScene().userInputManager.disableControls("store");
-                gameManager.getCurrentGameScene().userInputManager.disableRightClick();
-                // Close the menu
+        closeFloatingUi = showFloatingUi(
+            triggerElement,
+            ProfileMenuContent,
+            {
+                showContextualMenuItems:
+                    contextualMenuItemsMarker !== undefined &&
+                    getComputedStyle(contextualMenuItemsMarker).display !== "none",
+            },
+            {
+                placement: "bottom-end",
+            },
+            8,
+            true,
+            true,
+            () => {
+                closeFloatingUi = undefined;
                 openedMenuStore.close("profileMenu");
             },
-            onFormClose: () => {
-                gameManager.getCurrentGameScene().userInputManager.restoreControls("store");
-                gameManager.getCurrentGameScene().userInputManager.restoreRightClick();
-                // Remove the actor buttom from the DOM
-                form?.close();
-            },
-            onSubmitSuccess: () => {
-                gameManager.getCurrentGameScene().userInputManager.restoreControls("store");
-                gameManager.getCurrentGameScene().userInputManager.restoreRightClick();
-                // Remove the actor buttom from the DOM
-                form?.close();
-            },
-        });
-        const form = await feedbackIntegrationInstance?.createForm();
-        form?.appendToDom();
-        form?.open();
+            PROFILE_MENU_Z_INDEX,
+        );
     }
 
-    const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
-        {
-            placement: "bottom-end",
-        },
-        8,
-    );
+    $effect(() => {
+        if ($openedMenuStore === "profileMenu") {
+            openProfileMenu();
+        } else {
+            closeProfileMenu();
+        }
+    });
 
-    let forceBurgerMode = $derived($inJitsiStore || $inBbbStore || $inLivekitStore || $isInRemoteConversation);
-
-    let rightActionBarMenuItemsInBurgerMenu: Readable<RightMenuItem[]> = derived(
-        rightActionBarMenuItems,
-        ($rightActionBarMenuItems, set) => {
-            const theDerived = derived(
-                $rightActionBarMenuItems.map((item) => item.fallsInBurgerMenuStore),
-                (items) => {
-                    //set(items);
-                    // Each time we enter here, a fallsInBurgerMenuStore has been updated OR a rightActionBarMenuItems has been updated
-                    return items;
-                },
-            );
-            const ghostSubscriptionUnsubscribe = theDerived.subscribe(() => {
-                set(get(rightActionBarMenuItems).filter((item) => get(item.fallsInBurgerMenuStore)));
-            });
-            return () => ghostSubscriptionUnsubscribe();
-        },
-    );
-
-    function openPwaInstallPrompt(): void {
-        analyticsClient.pwaInstallFromProfileMenuClick();
-        openedMenuStore.close("profileMenu");
-        gameManager.leaveGame(PwaInstallSceneName, new PwaInstallScene());
-    }
+    onDestroy(closeProfileMenu);
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -181,19 +70,21 @@
     <div
         class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2 cursor-pointer"
         class:profile-menu-force-burger={forceBurgerMode}
-        use:floatingUiRef
+        bind:this={triggerElement}
         onclick={(event) => {
             event.preventDefault();
             openedMenuStore.toggle("profileMenu");
         }}
     >
+        <span
+            class="absolute size-0 pointer-events-none @sm/actions:hidden"
+            aria-hidden="true"
+            bind:this={contextualMenuItemsMarker}
+        ></span>
         <div
             class="profile-menu-burger-icon h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 items-center justify-center flex @md/actions:hidden"
         >
             {#if $openedMenuStore !== "profileMenu"}
-                <!-- pointer-events-none is important for clickOutside to work. Otherwise, the
-                     SVG is the target of the click, is removed from the DOM on click and considered to be
-                     outside the main div -->
                 <MenuBurgerIcon classList="pointer-events-none" />
             {:else}
                 <XIcon classList="pointer-events-none" />
@@ -234,151 +125,6 @@
             </div>
         </div>
     </div>
-    {#if $openedMenuStore === "profileMenu"}
-        <!-- before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 -->
-        <div
-            class="absolute top-0 left-0 bg-contrast/80 backdrop-blur rounded-md p-1 w-56 text-white select-none"
-            data-testid="profile-menu"
-            use:floatingUiContent
-            use:clickOutside={() => {
-                openedMenuStore.close("profileMenu");
-            }}
-        >
-            <div use:arrowAction></div>
-            <div class="p-0 m-0 list-none overflow-y-auto max-h-[calc(100vh-96px)]">
-                <ExternalComponents zone="menuTop" />
-                <AvailabilityStatusList statusInformation={getStatusInformation(statusToShow)} />
-                <HeaderMenuItem label={$LL.menu.sub.profile()} />
-                {#if showWokaNameMenuItem()}
-                    <ActionBarButton
-                        label={$LL.actionbar.profil()}
-                        onclick={() => {
-                            openEditNameScene();
-                            analyticsClient.editName();
-                        }}
-                    >
-                        <ProfilIcon />
-                    </ActionBarButton>
-                {/if}
-                <ActionBarButton
-                    label={$LL.actionbar.woka()}
-                    onclick={() => {
-                        openEditSkinScene();
-                        analyticsClient.editWoka();
-                    }}
-                >
-                    <Woka userId={-1} placeholderSrc="" customWidth="26px" />
-                </ActionBarButton>
-                <ActionBarButton
-                    label={$LL.actionbar.companion()}
-                    onclick={() => {
-                        openEditCompanionScene();
-                        analyticsClient.editCompanion();
-                    }}
-                >
-                    <Companion
-                        userId={-1}
-                        placeholderSrc="../static/images/default-companion.png"
-                        width="26px"
-                        height="26px"
-                    />
-                </ActionBarButton>
-                <!--                                <button-->
-                <!--                                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"-->
-                <!--                                >-->
-                <!--                                    <div-->
-                <!--                                        class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"-->
-                <!--                                    >-->
-                <!--                                        <AchievementIcon />-->
-                <!--                                    </div>-->
-                <!--                                    <div class="text-left flex items-center">{$LL.actionbar.quest()}</div>-->
-                <!--                                </button>-->
-                <HeaderMenuItem label={$LL.menu.sub.settings()} />
-                <ActionBarButton label={$LL.actionbar.editCamMic()} onclick={openEnableCameraScene}>
-                    <CamSettingsIcon />
-                </ActionBarButton>
-
-                {#if SENTRY_DSN_FRONT != undefined && connectionManager.currentRoom?.isIssueReportEnabled}
-                    <ActionBarButton label={$LL.actionbar.issueReport.menuAction()} onclick={openFeedbackScene}>
-                        <IconBug font-size="22" />
-                    </ActionBarButton>
-                {/if}
-
-                <ActionBarButton
-                    label={$LL.actionbar.allSettings()}
-                    onclick={() => {
-                        showMenuItem(SubMenusInterface.settings);
-                        analyticsClient.openedMenu();
-                        openedMenuStore.close("profileMenu");
-                    }}
-                >
-                    <SettingsIcon />
-                </ActionBarButton>
-
-                <div class="@sm/actions:hidden items-center">
-                    <ContextualMenuItems />
-                </div>
-
-                <AdditionalMenuItems menu="profileMenu" />
-
-                {#each $rightActionBarMenuItemsInBurgerMenu ?? [] as button (button.id)}
-                    {@const ButtonComponent = button.component}
-                    <ButtonComponent {...button.props} />
-                {/each}
-
-                {#if $pwaInstallProfileMenuEligibleStore === true}
-                    <button
-                        data-testid="profile-menu-install-web-app"
-                        disabled={$pwaInstallProfileMenuEligibleStore !== true}
-                        onclick={openPwaInstallPrompt}
-                        class="group flex p-2 gap-2 items-center font-bold text-sm w-full pointer-events-auto text-start rounded transition-all {$pwaInstallProfileMenuEligibleStore ===
-                        true
-                            ? 'hover:bg-white/10 cursor-pointer'
-                            : 'opacity-50 cursor-not-allowed'}"
-                    >
-                        <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
-                            <IconFileDownload height="20" width="20" class="text-white" />
-                        </div>
-                        <div class="text-start leading-4 text-white flex items-center">
-                            {$LL.actionbar.installPwa()}
-                        </div>
-                    </button>
-                {/if}
-
-                <button
-                    onclick={() => {
-                        onboardingStore.restart();
-                        openedMenuStore.close("profileMenu");
-                    }}
-                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
-                >
-                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
-                        <IconHelpCircle height="20" width="20" class="text-white" />
-                    </div>
-                    <div class="text-start leading-4 text-white flex items-center">
-                        {$LL.menu.profile.helpAndTips()}
-                    </div>
-                </button>
-
-                {#if ENABLE_OPENID && $userIsConnected}
-                    <button
-                        onclick={() => {
-                            analyticsClient.logout();
-                            connectionManager.logout();
-                        }}
-                        class="group flex p-2 gap-2 items-center hover:bg-danger-600 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
-                    >
-                        <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
-                            <IconLogout height="20" width="20" class="text-danger-800 group-hover:text-white" />
-                        </div>
-                        <div class="text-start leading-4 text-danger-800 group-hover:text-white flex items-center">
-                            {$LL.menu.profile.logout()}
-                        </div>
-                    </button>
-                {/if}
-            </div>
-        </div>
-    {/if}
 </div>
 
 <style>

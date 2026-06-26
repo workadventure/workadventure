@@ -48,6 +48,8 @@ import {
 } from "./LocalStreamTypes";
 import { NoiseSuppressionController } from "./NoiseSuppressionController";
 import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
+import { audioPlaybackStore } from "./AudioPlaybackStore";
+import { browserNotificationStore } from "./BrowserNotificationStore";
 
 export const inBackgroundSettingsStore = writable<boolean>(false);
 
@@ -411,6 +413,8 @@ export const availabilityStatusStore = derived(
         requestedStatusStore,
         inLivekitStore,
         isListenerStore,
+        audioPlaybackStore,
+        browserNotificationStore,
     ],
     ([
         $inJitsiStore,
@@ -422,9 +426,12 @@ export const availabilityStatusStore = derived(
         $requestedStatusStore,
         $inLivekitStore,
         $isListenerStore,
+        $audioPlaybackStore,
+        $browserNotificationStore,
     ]) => {
         // Important: Statuses that should not switch to BUSY
         // must be checked BEFORE privacyShutdownStore to prevent switching to BUSY when privacy is enabled.
+        if ($audioPlaybackStore.size > 0 && !$browserNotificationStore) return AvailabilityStatus.BACK_IN_A_MOMENT;
         if ($inJitsiStore) return AvailabilityStatus.JITSI;
         if ($inBbbStore) return AvailabilityStatus.BBB;
         if (!$proximityMeetingStore) return AvailabilityStatus.DENY_PROXIMITY_MEETING;

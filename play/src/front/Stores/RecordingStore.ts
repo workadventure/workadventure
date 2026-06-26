@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
 import RecordingCompletedModal from "../Components/PopUp/Recording/RecordingCompletedToast.svelte";
 import RecordingStartedToast from "../Components/PopUp/Recording/RecordingStartedToast.svelte";
-import { toastStore } from "./ToastStore";
+import { toastStore } from "./ToastStoreSingleton";
 
 export type RecordingRequestState = "starting" | "stopping";
 export type RecordingStatus = "idle" | "starting" | "recording" | "stopping";
