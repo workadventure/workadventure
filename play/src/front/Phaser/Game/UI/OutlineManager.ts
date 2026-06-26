@@ -9,6 +9,7 @@ type Outline = { thickness: number; color?: number };
 type OutlineEntry = {
     getOutline: () => Outline;
     controller?: OutlineController;
+    currentOutline?: Outline;
 };
 
 type FilterableGameObject = GameObject & {
@@ -71,17 +72,26 @@ export class OutlineManager {
             return;
         }
 
-        this.removeOutline(gameObject, entry);
-
         const outline = entry.getOutline();
-        if (outline.color === undefined) {
+        const nextOutline = outline.color === undefined ? undefined : outline;
+        if (
+            entry.currentOutline?.thickness === nextOutline?.thickness &&
+            entry.currentOutline?.color === nextOutline?.color
+        ) {
+            return;
+        }
+
+        this.removeOutline(gameObject, entry);
+        entry.currentOutline = nextOutline;
+
+        if (nextOutline === undefined) {
             this.scene.markDirty();
             return;
         }
 
         entry.controller = this.getOutlinePlugin()?.add(gameObject, {
-            thickness: outline.thickness,
-            outlineColor: outline.color,
+            thickness: nextOutline.thickness,
+            outlineColor: nextOutline.color,
         });
         this.scene.markDirty();
     }
