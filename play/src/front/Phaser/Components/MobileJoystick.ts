@@ -103,7 +103,7 @@ export class MobileJoystick extends VirtualJoystick {
             this.getDisplaySizeByElement(thumbSize),
             this.getDisplaySizeByElement(thumbSize),
         );
-        this.setRadius(
+        this.setDisplayRadius(
             (radius / (waScaleManager.zoomModifier * waScaleManager.uiScalingFactor)) * window.devicePixelRatio,
         );
 
@@ -114,7 +114,7 @@ export class MobileJoystick extends VirtualJoystick {
         this.y = height * 0.8;
     }
 
-    private setRadius(radius: number): void {
+    private setDisplayRadius(radius: number): void {
         this.joystickBase.setDisplaySize(radius * 2, radius * 2);
         this.joystickThumb.setDisplaySize(radius, radius);
     }
