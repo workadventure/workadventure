@@ -1,3 +1,4 @@
+import { logOnce, resetLogOnceForTests } from "./logOnce";
 import { BLUR_ITERATIONS, WebGlBlurPipeline } from "./WebGlBlurPipeline";
 
 export {
@@ -14,14 +15,8 @@ export type BlurBackend = "webgl-blur" | "cpu-blur" | "none";
 
 const CPU_BLUR_MAX_SIDE = 224;
 
-const loggedBackends = new Set<BlurBackend>();
-let loggedWebGlFailure = false;
-let loggedCpuFailure = false;
-
 export function resetCanvasBlurRendererForTests(): void {
-    loggedBackends.clear();
-    loggedWebGlFailure = false;
-    loggedCpuFailure = false;
+    resetLogOnceForTests();
 }
 
 export function getCpuBlurSize(width: number, height: number): { width: number; height: number; scale: number } {
@@ -169,27 +164,23 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 function logSelectedBackend(backend: BlurBackend): void {
-    if (backend === "none" || loggedBackends.has(backend)) {
+    if (backend === "none") {
         return;
     }
 
-    loggedBackends.add(backend);
-
-    if (backend === "webgl-blur") {
-        console.info("[BackgroundProcessor] Using WebGL background blur renderer.");
-        return;
-    }
-
-    console.warn("[BackgroundProcessor] Using CPU background blur fallback.");
+    logOnce(`canvas-blur:backend:${backend}`, () => {
+        if (backend === "webgl-blur") {
+            console.info("[BackgroundProcessor] Using WebGL background blur renderer.");
+        } else {
+            console.warn("[BackgroundProcessor] Using CPU background blur fallback.");
+        }
+    });
 }
 
 function logWebGlFailure(error: unknown): void {
-    if (loggedWebGlFailure) {
-        return;
-    }
-
-    loggedWebGlFailure = true;
-    console.warn("[BackgroundProcessor] WebGL blur renderer failed; using CPU fallback.", error);
+    logOnce("canvas-blur:webgl-failure", () =>
+        console.warn("[BackgroundProcessor] WebGL blur renderer failed; using CPU fallback.", error),
+    );
 }
 
 export class CanvasBlurRenderer {
@@ -375,10 +366,9 @@ export class CanvasBlurRenderer {
 
             return "cpu-blur";
         } catch (error) {
-            if (!loggedCpuFailure) {
-                loggedCpuFailure = true;
-                console.warn("[BackgroundProcessor] CPU blur renderer failed; drawing the unblurred frame.", error);
-            }
+            logOnce("canvas-blur:cpu-failure", () =>
+                console.warn("[BackgroundProcessor] CPU blur renderer failed; drawing the unblurred frame.", error),
+            );
             destinationContext.drawImage(source, 0, 0, width, height);
             return "none";
         }
