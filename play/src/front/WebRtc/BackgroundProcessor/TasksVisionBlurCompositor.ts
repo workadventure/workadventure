@@ -1,25 +1,17 @@
 import type { MPMask } from "@mediapipe/tasks-vision";
+import { logOnce } from "./logOnce";
 import { WebGlBlurPipeline } from "./WebGlBlurPipeline";
 
-let loggedSelectedBackend = false;
-let loggedFailure = false;
-
 function logSelectedBackend(): void {
-    if (loggedSelectedBackend) {
-        return;
-    }
-
-    loggedSelectedBackend = true;
-    console.info("[BackgroundProcessor] Using WebGL background blur compositor.");
+    logOnce("tasks-vision-compositor:selected", () =>
+        console.info("[BackgroundProcessor] Using WebGL background blur compositor."),
+    );
 }
 
 function logFailure(error: unknown): void {
-    if (loggedFailure) {
-        return;
-    }
-
-    loggedFailure = true;
-    console.warn("[BackgroundProcessor] WebGL background blur compositor failed; using fallback.", error);
+    logOnce("tasks-vision-compositor:failure", () =>
+        console.warn("[BackgroundProcessor] WebGL background blur compositor failed; using fallback.", error),
+    );
 }
 
 export class TasksVisionBlurCompositor {

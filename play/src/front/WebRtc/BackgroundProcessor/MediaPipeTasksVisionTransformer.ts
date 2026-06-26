@@ -4,34 +4,26 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { isFirefox, isIOS } from "../DeviceUtils";
 import { CanvasBlurRenderer, type BlurBackend } from "./CanvasBlurRenderer";
+import { logOnce } from "./logOnce";
 import { TasksVisionBlurCompositor } from "./TasksVisionBlurCompositor";
 import type { BackgroundConfig, BackgroundTransformer } from "./createBackgroundTransformer";
 
 type CaptureBackend = "webgl-capture" | "2d-copy-capture";
 
-const loggedCaptureBackends = new Set<CaptureBackend>();
-let loggedWebGlCaptureFailure = false;
-
 function logCaptureBackend(backend: CaptureBackend): void {
-    if (loggedCaptureBackends.has(backend)) {
-        return;
-    }
-
-    loggedCaptureBackends.add(backend);
-    console.info(
-        backend === "webgl-capture"
-            ? "[MediaPipe Tasks Vision] Using WebGL canvas capture backend."
-            : "[MediaPipe Tasks Vision] Using 2D copy canvas capture backend.",
+    logOnce(`tasks-vision-capture:${backend}`, () =>
+        console.info(
+            backend === "webgl-capture"
+                ? "[MediaPipe Tasks Vision] Using WebGL canvas capture backend."
+                : "[MediaPipe Tasks Vision] Using 2D copy canvas capture backend.",
+        ),
     );
 }
 
 function logWebGlCaptureFailure(error: unknown): void {
-    if (loggedWebGlCaptureFailure) {
-        return;
-    }
-
-    loggedWebGlCaptureFailure = true;
-    console.warn("[MediaPipe Tasks Vision] WebGL canvas capture failed; falling back to 2D copy capture.", error);
+    logOnce("tasks-vision-capture:webgl-failure", () =>
+        console.warn("[MediaPipe Tasks Vision] WebGL canvas capture failed; falling back to 2D copy capture.", error),
+    );
 }
 
 /**
