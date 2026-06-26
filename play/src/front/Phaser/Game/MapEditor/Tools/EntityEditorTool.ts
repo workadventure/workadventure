@@ -314,20 +314,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             return;
         }
 
-        if (this.entityPrefab.collisionGrid || this.shiftKey?.isDown) {
-            const offset = this.getEntityPrefabAlignWithGridOffset();
-            this.entityPrefabPreview.setPosition(
-                Math.floor(pointer.worldX / 32) * 32 + offset.x,
-                Math.floor(pointer.worldY / 32) * 32 + offset.y,
-            );
-        } else {
-            this.entityPrefabPreview.setPosition(Math.floor(pointer.worldX), Math.floor(pointer.worldY));
-        }
-        this.entityPrefabPreview.setDepth(
-            this.entityPrefabPreview.y +
-                this.entityPrefabPreview.displayHeight * 0.5 +
-                (this.entityPrefab.depthOffset ?? 0),
-        );
+        this.updateEntityPrefabPreviewPosition(pointer);
         this.changePreviewTint();
     }
 
@@ -367,6 +354,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             }
             return;
         }
+
+        this.updateEntityPrefabPreviewPosition(pointer);
 
         if (!this.canEntityBePlaced()) {
             return;
@@ -504,6 +493,28 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             this.entityPrefab.collisionGrid,
             undefined,
             this.shiftKey?.isDown,
+        );
+    }
+
+    private updateEntityPrefabPreviewPosition(pointer: Pointer): void {
+        if (!this.entityPrefabPreview || !this.entityPrefab) {
+            return;
+        }
+
+        if (this.entityPrefab.collisionGrid || this.shiftKey?.isDown) {
+            const offset = this.getEntityPrefabAlignWithGridOffset();
+            this.entityPrefabPreview.setPosition(
+                Math.floor(pointer.worldX / 32) * 32 + offset.x,
+                Math.floor(pointer.worldY / 32) * 32 + offset.y,
+            );
+        } else {
+            this.entityPrefabPreview.setPosition(Math.floor(pointer.worldX), Math.floor(pointer.worldY));
+        }
+
+        this.entityPrefabPreview.setDepth(
+            this.entityPrefabPreview.y +
+                this.entityPrefabPreview.displayHeight * 0.5 +
+                (this.entityPrefab.depthOffset ?? 0),
         );
     }
 
