@@ -283,6 +283,14 @@ jobs:
       - name: Install Playwright
         run: npx playwright install --with-deps ${{ matrix.browser }}
         working-directory: tests
+      - name: Set up virtual audio output for Firefox
+        if: ${{ contains(matrix.project, 'firefox') }}
+        run: |
+          sudo apt-get install --yes pulseaudio pulseaudio-utils
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=ci_null_sink
+          pactl set-default-sink ci_null_sink
+          pactl info
       - name: 'Setup .env file'
         run: cp .env.template .env
       - uses: rlespinasse/github-slug-action@4.2.3

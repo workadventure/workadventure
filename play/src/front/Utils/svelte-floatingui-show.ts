@@ -13,6 +13,7 @@ export const floatingUiComponents = writable(
             props?: WorkAdventureComponentProps;
             action: ContentAction;
             arrowAction: ArrowAction | undefined;
+            zIndex: number;
         }
     >(),
 );
@@ -23,6 +24,7 @@ export const floatingUiComponents = writable(
  * As a result, you don't have to worry about the popup being clipped by the parent element because of "overflow: hidden".
  * @param closeOnClickOutside - when true, the popup closes when the user clicks outside the reference element and the popup content
  * @param onClose - called when the popup is closed (by click outside or by calling the returned close function)
+ * @param zIndex - overrides the default global floating layer when the popup must stay below higher-priority overlays
  */
 export function showFloatingUi(
     referenceNode: Element,
@@ -33,6 +35,7 @@ export function showFloatingUi(
     withArrow = true,
     closeOnClickOutside = false,
     onClose?: () => void,
+    zIndex = 3000,
 ): () => void {
     let arrowNode: HTMLElement | undefined;
     let contentNode: HTMLElement | undefined;
@@ -92,6 +95,7 @@ export function showFloatingUi(
             props,
             action: contentAction,
             arrowAction: withArrow ? arrowAction : undefined,
+            zIndex,
         });
         return components;
     });

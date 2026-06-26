@@ -8,7 +8,7 @@ import Menu from "../utils/menu";
 import { map_storage_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
-import { dismissDoNotDisturbInfoToast } from "../utils/doNotDisturbInfoToast";
+import { dismissNoBrowserSoundInfoToast } from "../utils/doNotDisturbInfoToast";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -145,7 +145,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         await Menu.waitForMapLoad(page);
 
         // If do not disturb info toast is shown, dismiss it
-        await dismissDoNotDisturbInfoToast(page);
+        await dismissNoBrowserSoundInfoToast(page);
 
         // Create area on the map for the test
         await Menu.openMapEditor(page);
