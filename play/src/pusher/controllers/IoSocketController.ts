@@ -596,6 +596,10 @@ export class IoSocketController {
                     socket.end(1008, "Room no longer exists");
                 }
             },
+            canReplaceTransport: (socket) => {
+                const userData = socket.getUserData();
+                return socketManager.getRooms().has(userData.roomId);
+            },
             message: (socket, message): void => {
                 Sentry.withIsolationScope(() => {
                     const userData = socket.getUserData();
@@ -1136,7 +1140,7 @@ export class IoSocketController {
                 });
             },
             close: (socket) => {
-                socketManager.cleanupSocket(socket);
+                socketManager.cleanupSocket(socket, { preventReconnect: true });
             },
         });
     }

@@ -87,10 +87,11 @@ const roomManager = {
                         }
                     } else if (message.message.$case === "joinRoomMessage") {
                         if (room === null) {
-                            console.error("joinRoomMessage received before connectToRoomMessage");
-                            Sentry.captureMessage("joinRoomMessage received before connectToRoomMessage");
-                            emitError(call, new Error("joinRoomMessage received before connectToRoomMessage"));
-                            call.end();
+                            const reason = "joinRoomMessage received before connectToRoomMessage";
+                            console.error(reason);
+                            Sentry.captureMessage(reason);
+                            emitError(call, new Error(reason));
+                            closeConnection(reason);
                             return;
                         }
                         const myUser = await socketManager.handleJoinRoom(call, room, message.message.joinRoomMessage);

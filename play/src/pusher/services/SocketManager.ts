@@ -79,9 +79,109 @@ const debug = Debug("socket");
 export type AdminSocket = WebSocket<AdminSocketData>;
 export type SocketUpgradeFailed = WebSocket<UpgradeFailedData>;
 
+export function getBackConnectionCloseReason(
+    applicationCloseReason?: string,
+    backConnectionError?: unknown,
+): string {
+    if (applicationCloseReason !== undefined && applicationCloseReason !== "") {
+        return applicationCloseReason;
+    }
+
+    if (backConnectionError !== undefined) {
+        return `Back connection ended after gRPC error: ${formatGrpcErrorReason(backConnectionError)}`;
+    }
+
+    return "Back connection ended without an application close reason (gRPC end event).";
+}
+
+export function getBackConnectionSetupErrorReason(error: unknown): string {
+    return `Error while connecting to back server: ${formatErrorMessage(error)}`;
+}
+
+function formatGrpcErrorReason(error: unknown): string {
+    const parts: string[] = [];
+    const grpcError = error as {
+        code?: unknown;
+        details?: unknown;
+        message?: unknown;
+    };
+
+    if (grpcError.code !== undefined) {
+        parts.push(`code=${formatLogValue(grpcError.code)}`);
+    }
+    if (grpcError.details !== undefined && grpcError.details !== "") {
+        parts.push(`details=${formatLogValue(grpcError.details)}`);
+    }
+    if (grpcError.message !== undefined && grpcError.message !== "") {
+        parts.push(`message=${formatLogValue(grpcError.message)}`);
+    }
+
+    return parts.length > 0 ? parts.join(" ") : String(error);
+}
+
+function formatErrorMessage(error: unknown): string {
+    if (error instanceof Error && error.message !== "") {
+        return error.message;
+    }
+
+    return String(error);
+}
+
+function formatLogValue(value: unknown): string {
+    if (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean" ||
+        typeof value === "bigint"
+    ) {
+        return String(value);
+    }
+
+    if (value instanceof Error) {
+        return value.message;
+    }
+
+    try {
+        return JSON.stringify(value) ?? String(value);
+    } catch {
+        return Object.prototype.toString.call(value);
+    }
+}
+
+type CleanupSocketOptions = {
+    force?: boolean;
+    preventReconnect?: boolean;
+};
+
 export class SocketManager implements ZoneEventListener {
     private static readonly RECORDING_QUERY_TIMEOUT_MS = 60_000;
+    /*
+     * --- Reconnection race guards (defensive) ---
+     *
+     * Root cause: a browser tab's connection lifecycle is NOT serialized. On reconnect the old and new
+     * connections for the same (userUuid, tabId) overlap, and two independent back gRPC streams — the
+     * per-user `connectToRoom` stream (handleConnectToRoom) and the per-room `listenRoom` stream owned by
+     * PusherRoom — have uncoordinated lifecycles. Because `getOrCreateRoom` is async (it awaits room.init()),
+     * this leaves check-then-act (TOCTOU) windows on the `rooms` / `creatingRooms` maps where a concurrent
+     * teardown can delete or replace a room while another connection is still creating or joining it.
+     *
+     * Instead of one structural fix, three narrow guards make the known race variants survivable:
+     *   (a) deleteRoomIfEmpty identity guard   — a stale room instance must not evict the live one from `rooms`.
+     *   (b) creatingRooms in-flight cache       — concurrent creations share one instance (no duplicates).
+     *   (c) recoverMissingRoom (handleViewport) — a live socket that lost its room recreates it in place.
+     *
+     * These are band-aids: the race still fires, we only catch it. The proper fix is a monotonic
+     * per-(uuid, tabId) epoch/generation token so stale async callbacks and late back messages (e.g. a
+     * roomJoinedMessage that arrives after teardown) are ignored by construction — which would make guards
+     * (a) and (c) unnecessary.
+     * It is tracked as a follow-up. Do NOT extend this pattern with yet another guard; reach for the epoch
+     * token instead.
+     */
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
+    // Guard (b), see the reconnection race guards note above: in-flight room creations keyed by roomUrl, so
+    // concurrent getOrCreateRoom calls reuse a single PusherRoom instead of racing to create competing
+    // instances during the async init().
+    private creatingRooms: Map<string, Promise<PusherRoom>> = new Map<string, Promise<PusherRoom>>();
     private spaces: Map<string, SpaceInterface> = new Map<string, SpaceInterface>();
 
     constructor(private _spaceConnection = new SpaceConnection()) {
@@ -246,6 +346,7 @@ export class SocketManager implements ZoneEventListener {
             const apiClient = await apiClientRepository.getClient(socketData.roomId, GRPC_MAX_MESSAGE_SIZE);
             streamToBack = apiClient.connectToRoom();
             let backConnectionCloseReason: string | undefined;
+            let backConnectionError: unknown;
 
             client.getUserData().backConnection = streamToBack;
 
@@ -285,8 +386,10 @@ export class SocketManager implements ZoneEventListener {
                     try {
                         // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                         if (!client.isDisconnecting()) {
-                            const connectionCloseReason =
-                                backConnectionCloseReason ?? "No close reason received from back server.";
+                            const connectionCloseReason = getBackConnectionCloseReason(
+                                backConnectionCloseReason,
+                                backConnectionError,
+                            );
                             console.warn(
                                 `Connection lost to back server '${apiClient.getChannel().getTarget()}' for room '${
                                     socketData.roomId
@@ -303,18 +406,22 @@ export class SocketManager implements ZoneEventListener {
                 })
                 .on("error", (err: Error) => {
                     try {
+                        backConnectionError = err;
                         const date = new Date();
+                        const connectionCloseReason = getBackConnectionCloseReason(backConnectionCloseReason, err);
                         console.error(
                             "Error in connection to back server '" +
                                 apiClient.getChannel().getTarget() +
                                 "' for room '" +
                                 socketData.roomId +
-                                "'at :" +
-                                date.toLocaleString("en-GB"),
+                                "' at " +
+                                date.toLocaleString("en-GB") +
+                                ". Reason: " +
+                                connectionCloseReason,
                             err,
                         );
                         if (!client.isDisconnecting()) {
-                            this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
+                            this.closeWebsocketConnection(client, 1011, `Back lost: ${connectionCloseReason}`);
                         }
                     } catch (e: unknown) {
                         console.error("Error while handling error event in connection to back", e);
@@ -348,7 +455,7 @@ export class SocketManager implements ZoneEventListener {
             }
 
             // Let's close the websocket connection with an error code
-            this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
+            this.closeWebsocketConnection(client, 1011, getBackConnectionSetupErrorReason(e));
         }
     }
 
@@ -428,7 +535,7 @@ export class SocketManager implements ZoneEventListener {
             }
 
             // Let's close the websocket connection with an error code
-            this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
+            this.closeWebsocketConnection(client, 1011, getBackConnectionSetupErrorReason(e));
         }
     }
 
@@ -544,17 +651,20 @@ export class SocketManager implements ZoneEventListener {
     }
 
     private closeWebsocketConnection(client: PusherWebSocket, code: number, reason: string): void {
-        this.cleanupSocket(client);
         client.end(code, reason);
+        this.cleanupSocket(client, { force: true });
     }
 
-    public cleanupSocket(client: PusherWebSocket): void {
-        if (client.isDisconnecting()) {
+    public cleanupSocket(client: PusherWebSocket, options: CleanupSocketOptions = {}): void {
+        if (client.isDisconnecting() && !options.force) {
             // Cleanup already called
             return;
         }
 
         const socketData = client.getUserData();
+        if (options.preventReconnect) {
+            client.startDisconnecting();
+        }
 
         try {
             this.leaveRoom(client);
@@ -586,11 +696,26 @@ export class SocketManager implements ZoneEventListener {
     handleViewport(client: PusherWebSocket, viewport: ViewportMessage): void {
         const socketData = client.getUserData();
         try {
+            if (client.isDisconnecting()) {
+                return;
+            }
+
             socketData.viewport = viewport;
 
             const room = this.rooms.get(socketData.roomId);
             if (!room) {
-                console.error("In SET_VIEWPORT, could not find world with id '", socketData.roomId, "'");
+                // Guard (c), see the reconnection race guards note on the `rooms` field. We reach here when a
+                // concurrent teardown deleted this room AFTER this still-live socket joined it (e.g. a late
+                // back roomJoinedMessage triggers a viewport once the room is already gone). Without recovery
+                // the socket would drop every viewport forever and emit the Sentry error below. As long as the
+                // socket still has a back connection we recreate and rejoin the room in place; the back room is
+                // still alive while another user is in it, so the recreated room simply re-subscribes.
+                if (socketData.backConnection) {
+                    this.recoverMissingRoom(client);
+                    return;
+                }
+
+                console.error(" In SET_VIEWPORT, could not find world with id '", socketData.roomId, "'");
                 Sentry.captureException("In SET_VIEWPORT, could not find world with id ' " + socketData.roomId);
                 return;
             }
@@ -601,8 +726,37 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
+    /**
+     * Guard (c) of the reconnection race guards (see the note on the `rooms` field).
+     *
+     * Recreate and rejoin a room for a still-connected socket whose local PusherRoom went missing (evicted by
+     * a concurrent teardown during a reconnection). Fire-and-forget: the current viewport is re-applied once
+     * the room is back, and subsequent viewports find the room normally. Concurrent recoveries for the same
+     * room are safe because getOrCreateRoom coalesces them (guard b) and join()/setViewport() are idempotent.
+     * The isDisconnecting() re-check after the await avoids touching a socket cleaned up in the meantime.
+     */
+    private recoverMissingRoom(client: PusherWebSocket): void {
+        const socketData = client.getUserData();
+        this.getOrCreateRoom(socketData.roomId)
+            .then((room) => {
+                if (client.isDisconnecting()) {
+                    return;
+                }
+                room.join(client);
+                room.setViewport(client, socketData.viewport);
+            })
+            .catch((e) => {
+                Sentry.captureException(`Failed to recreate missing room for live socket: ${e}`);
+                console.error("Failed to recreate missing room for live socket", e);
+            });
+    }
+
     handleUserMovesMessage(client: PusherWebSocket, userMovesMessage: UserMovesMessage): void {
         const socketData = client.getUserData();
+        if (client.isDisconnecting()) {
+            return;
+        }
+
         if (!socketData.backConnection) {
             Sentry.captureException("Client has no back connection");
             throw new Error("Client has no back connection");
@@ -812,11 +966,23 @@ export class SocketManager implements ZoneEventListener {
     }
 
     private deleteRoomIfEmpty(room: PusherRoom): void {
-        if (room.isEmpty()) {
-            room.close();
-            this.rooms.delete(room.roomUrl);
-            debug("Room %s is empty. Deleting.", room.roomUrl);
+        if (!room.isEmpty()) {
+            return;
         }
+
+        // Always close this (empty) instance to release its back `listenRoom` stream.
+        room.close();
+
+        // Guard (a), see the reconnection race guards note on the `rooms` field. Only evict the map entry when
+        // it still points to *this* instance. During a reconnection race a freshly created room for the same
+        // URL can already have replaced this (now stale) instance in the map; deleting by URL unconditionally
+        // would orphan that live room and leave its sockets roomless (the original "missing room" bug).
+        const mapped = this.rooms.get(room.roomUrl);
+        if (mapped === room) {
+            this.rooms.delete(room.roomUrl);
+        }
+
+        debug("Room %s is empty. Deleting.", room.roomUrl);
     }
 
     public deleteRoomIfEmptyFromId(roomUrl: string): void {
@@ -828,20 +994,46 @@ export class SocketManager implements ZoneEventListener {
 
     async getOrCreateRoom(roomUrl: string): Promise<PusherRoom> {
         //check and create new world for a room
-        let room = this.rooms.get(roomUrl);
-        if (room === undefined) {
-            room = new PusherRoom(roomUrl, this);
-            room.backConnectionClosedSignal.addEventListener(
+        const room = this.rooms.get(roomUrl);
+        if (room !== undefined) {
+            return room;
+        }
+
+        // Guard (b), see the reconnection race guards note on the `rooms` field. Coalesce concurrent
+        // creations: while one call is awaiting init(), any other call for the same roomUrl reuses the same
+        // promise instead of creating a competing instance that would later race on the `rooms` map.
+        const pendingCreation = this.creatingRooms.get(roomUrl);
+        if (pendingCreation) {
+            return pendingCreation;
+        }
+
+        const creation = (async (): Promise<PusherRoom> => {
+            const createdRoom = new PusherRoom(roomUrl, this);
+            createdRoom.backConnectionClosedSignal.addEventListener(
                 "abort",
                 () => {
-                    this.rooms.delete(roomUrl);
+                    // Guard (a) again (see deleteRoomIfEmpty and the reconnection race guards note): when this
+                    // room's back connection drops, only evict the map entry if it still points to this
+                    // instance — a later reconnection may already have created and registered a fresh room for
+                    // the same URL, which we must not orphan.
+                    const evictedFromMap = this.rooms.get(roomUrl) === createdRoom;
+                    if (evictedFromMap) {
+                        this.rooms.delete(roomUrl);
+                    }
                 },
                 { once: true },
             );
-            await room.init();
-            this.rooms.set(roomUrl, room);
+            await createdRoom.init();
+            this.rooms.set(roomUrl, createdRoom);
+            return createdRoom;
+        })();
+
+        this.creatingRooms.set(roomUrl, creation);
+        try {
+            return await creation;
+        } finally {
+            this.creatingRooms.delete(roomUrl);
         }
-        return room;
     }
 
     public getRooms(): Map<string, PusherRoom> {
