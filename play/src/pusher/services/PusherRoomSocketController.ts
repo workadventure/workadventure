@@ -34,6 +34,7 @@ type OpenHandler = (socket: PusherWebSocket) => void | Promise<void>;
 // The rejected open handler should return the unique error message that will be sent over the websocket before closing it.
 type RejectedOpenHandler = (socketData: UpgradeFailedData) => ServerToClientMessage | Promise<ServerToClientMessage>;
 type ReconnectHandler = (socket: PusherWebSocket) => void | Promise<void>;
+type CanReplaceTransportHandler = (socket: PusherWebSocket) => boolean;
 type MessageHandler = (socket: PusherWebSocket, message: ClientToServerMessage) => void | Promise<void>;
 type CloseHandler = (socket: PusherWebSocket, code: number, reason: string) => void | Promise<void>;
 
@@ -52,6 +53,7 @@ type RoomWsConfig<TQuery extends RoomWsQuery> = {
     open: OpenHandler;
     rejectedOpen: RejectedOpenHandler;
     reconnect: ReconnectHandler;
+    canReplaceTransport?: CanReplaceTransportHandler;
     message: MessageHandler;
     close: CloseHandler;
 };
@@ -127,8 +129,17 @@ export class PusherRoomSocketController {
         query: TQuery,
         websocketProtocol: string,
         tabContext: WebSocketContext | undefined,
+        canReplaceTransport: CanReplaceTransportHandler | undefined,
     ): tabContext is WebSocketContext & { socket: PusherWebSocket } {
-        if (!tabContext?.socket || tabContext.socket.isDisconnecting()) {
+        if (!tabContext?.socket) {
+            return false;
+        }
+
+        if (tabContext.socket.isDisconnecting()) {
+            return false;
+        }
+
+        if (canReplaceTransport && !canReplaceTransport(tabContext.socket)) {
             return false;
         }
 
@@ -204,7 +215,12 @@ export class PusherRoomSocketController {
 
                     if (
                         clientLastReceivedNonce !== undefined &&
-                        this.canReplaceTransportWithoutUpgrade(query, websocketProtocol, tabContext)
+                        this.canReplaceTransportWithoutUpgrade(
+                            query,
+                            websocketProtocol,
+                            tabContext,
+                            config.canReplaceTransport,
+                        )
                     ) {
                         tabContext.clientLastReceivedNonce = clientLastReceivedNonce;
                         this.upgradeSocket(
@@ -282,15 +298,20 @@ export class PusherRoomSocketController {
                     const rawSocket = ws as unknown as RawSocket;
 
                     const tabId = socketData.tabId;
-                    const context = this.contextByTabKey.get(tabId);
-                    const clientLastReceivedNonce = context?.clientLastReceivedNonce;
+                    let context = this.contextByTabKey.get(tabId);
+                    let clientLastReceivedNonce = context?.clientLastReceivedNonce;
 
-                    if (context?.socket && clientLastReceivedNonce !== undefined && !context.socket.isDisconnecting()) {
-                        console.info("[PusherRoomSocketController] attempting transport replacement", {
-                            tabId,
-                            userUuid: socketData.userUuid,
-                            clientLastReceivedNonce,
-                        });
+                    if (context?.socket?.isDisconnecting()) {
+                        this.clearContextCleanup(tabId);
+                        this.contextByTabKey.delete(tabId);
+                        context = undefined;
+                        clientLastReceivedNonce = undefined;
+                    } else if (context?.socket && config.canReplaceTransport?.(context.socket) === false) {
+                        this.clearContextCleanup(tabId);
+                        this.contextByTabKey.delete(tabId);
+                        context = undefined;
+                        clientLastReceivedNonce = undefined;
+                    } else if (context?.socket && clientLastReceivedNonce !== undefined) {
                         try {
                             const replaced = context.socket.replaceSocket(rawSocket, clientLastReceivedNonce);
 
@@ -334,6 +355,10 @@ export class PusherRoomSocketController {
 
                 const rawSocket = ws as unknown as RawSocket;
                 const socket = this.getOrCreateWrapper(rawSocket);
+                if (socket.isDisconnecting()) {
+                    ws.end(1008, "Connection already closed");
+                    return;
+                }
 
                 let message;
                 try {
