@@ -2,7 +2,7 @@ import type { MPMask } from "@mediapipe/tasks-vision";
 import { ImageSegmenter, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
-import { isIOS, isSafari } from "../DeviceUtils";
+import { isFirefox, isIOS } from "../DeviceUtils";
 import { CanvasBlurRenderer, type BlurBackend } from "./CanvasBlurRenderer";
 import { TasksVisionBlurCompositor } from "./TasksVisionBlurCompositor";
 import type { BackgroundConfig, BackgroundTransformer } from "./createBackgroundTransformer";
@@ -32,6 +32,23 @@ function logWebGlCaptureFailure(error: unknown): void {
 
     loggedWebGlCaptureFailure = true;
     console.warn("[MediaPipe Tasks Vision] WebGL canvas capture failed; falling back to 2D copy capture.", error);
+}
+
+/**
+ * captureStream() from a WebGL canvas produces frozen frames on WebKit (Safari and
+ * every iOS browser), so the direct WebGL capture path is restricted to engines
+ * known to capture WebGL canvases correctly. Engines we cannot positively identify
+ * fall back to the always-working 2D-copy path rather than risking a frozen feed.
+ */
+function supportsWebGlCanvasCapture(): boolean {
+    if (isIOS()) {
+        return false;
+    }
+
+    // Chromium-based engines report "Chrome" in their UA (Safari does not); iOS
+    // Chrome/Firefox use "CriOS"/"FxiOS" and are already excluded by isIOS().
+    const isChromium = navigator.userAgent.includes("Chrome");
+    return isChromium || isFirefox();
 }
 
 /**
@@ -664,10 +681,6 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             return false;
         }
 
-        try {
-            return !isSafari() && !isIOS();
-        } catch {
-            return false;
-        }
+        return supportsWebGlCanvasCapture();
     }
 }
