@@ -3,6 +3,7 @@
     import { onDestroy, onMount } from "svelte";
     import * as Sentry from "@sentry/svelte";
     import * as Phaser from "phaser";
+    import "phaser4-rex-plugins/plugins/awaitloader.js";
     import AwaitLoaderPlugin from "phaser4-rex-plugins/plugins/awaitloader-plugin.js";
     import OutlineFilterPlugin from "phaser4-rex-plugins/plugins/outlinefilter-plugin.js";
     import type { Unsubscriber } from "svelte/store";
