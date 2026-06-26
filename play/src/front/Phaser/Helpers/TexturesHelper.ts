@@ -26,6 +26,7 @@ export class TexturesHelper {
                 }
                 rt.draw(sprite, sprite.displayWidth * 0.5, sprite.displayHeight * 0.5);
             }
+            rt.render();
             return new Promise<string>((resolve, reject) => {
                 try {
                     rt.snapshot(
