@@ -5,6 +5,12 @@ import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { CanvasBlurRenderer } from "./CanvasBlurRenderer";
 import type { BackgroundTransformer } from "./createBackgroundTransformer";
 
+// requestVideoFrameCallback is preferred to confirm a real frame has been
+// presented, but it can stay silent (e.g. in a backgrounded tab where frame
+// callbacks are suspended). After this delay we fall back to the readyState
+// signal so frame processing is never gated on rVFC indefinitely.
+const VIDEO_FRAME_CALLBACK_GRACE_MS = 500;
+
 /**
  * MediaPipe-based background transformer for video streams
  * Uses a simpler approach with setTimeout for reliable frame processing
@@ -28,6 +34,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     private initPromise: Promise<void>;
     private frameRate = 33;
     private lastVideoFrameTime = 0;
+    private videoFrameTrackingStartTime = 0;
     private videoFrameCallbackId: number | null = null;
     // Reusable temporary canvas to avoid WebGL context leaks
     private tempCanvas: HTMLCanvasElement | null = null;
@@ -343,6 +350,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         // Setup input video
         this.stopVideoFrameTracking();
         this.lastVideoFrameTime = 0;
+        this.videoFrameTrackingStartTime = 0;
         this.inputVideo.srcObject = inputStream;
 
         // Wait for video metadata to be loaded
@@ -465,7 +473,17 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         }
 
         if ("requestVideoFrameCallback" in this.inputVideo) {
-            return this.lastVideoFrameTime > 0;
+            if (this.lastVideoFrameTime > 0) {
+                return true;
+            }
+
+            // requestVideoFrameCallback has not delivered a frame yet. Wait for it
+            // briefly, then fall back to readyState so a silent rVFC (e.g. in a
+            // backgrounded tab) never freezes the output stream.
+            return (
+                this.videoFrameTrackingStartTime > 0 &&
+                performance.now() - this.videoFrameTrackingStartTime >= VIDEO_FRAME_CALLBACK_GRACE_MS
+            );
         }
 
         return true;
@@ -475,6 +493,8 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         if (!("requestVideoFrameCallback" in this.inputVideo) || this.videoFrameCallbackId !== null) {
             return;
         }
+
+        this.videoFrameTrackingStartTime = performance.now();
 
         const onVideoFrame = () => {
             if (this.closed || !("requestVideoFrameCallback" in this.inputVideo)) {
