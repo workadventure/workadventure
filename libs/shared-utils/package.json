@@ -23,7 +23,7 @@
     "@grpc/grpc-js": "^1.14.4",
     "@workadventure/map-editor": "1.0.0",
     "@workadventure/tiled-map-type-guard": "^2.1.2",
-    "axios": "^1.16.1",
+    "axios": "^1.17.0",
     "catch-unknown": "^2.0.0",
     "debug": "^4.4.3",
     "rxjs": "^7.8.2",
