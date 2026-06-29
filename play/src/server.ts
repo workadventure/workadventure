@@ -16,6 +16,8 @@ import {
     SENTRY_TRACES_SAMPLE_RATE,
     SENTRY_ENVIRONMENT,
     PUSHER_WS_PORT,
+    ANALYTICS_DRAIN_TIMEOUT_MS,
+    VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS,
 } from "./pusher/enums/EnvironmentVariable";
 import RoomApiServer from "./room-api/RoomApiServer";
 import { analyticsEventsQueue } from "./pusher/services/AnalyticsEventsQueue";
@@ -77,8 +79,10 @@ const shutdown = (signal: NodeJS.Signals): void => {
     shuttingDown = true;
     console.info(`Received ${signal}, draining analytics queues before exit…`);
     Promise.allSettled([
-        analyticsEventsQueue.drain().finally(() => analyticsEventsQueue.stop()),
-        videoQualityAnalyticsQueue.drain().finally(() => videoQualityAnalyticsQueue.stop()),
+        analyticsEventsQueue.drain(ANALYTICS_DRAIN_TIMEOUT_MS).finally(() => analyticsEventsQueue.stop()),
+        videoQualityAnalyticsQueue
+            .drain(VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS)
+            .finally(() => videoQualityAnalyticsQueue.stop()),
     ])
         .catch((error) => {
             console.error("Error while draining analytics queues during shutdown", error);
