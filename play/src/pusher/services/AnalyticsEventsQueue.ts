@@ -1,5 +1,5 @@
-import axios, { isAxiosError } from "axios";
 import { createHash } from "crypto";
+import axios, { isAxiosError } from "axios";
 import {
     VideoQualityRelayProtocol,
     VideoQualityStreamCategory,
@@ -127,6 +127,32 @@ export class AnalyticsEventsQueue {
     public stop(): void {
         if (this.timer) {
             clearInterval(this.timer);
+        }
+    }
+
+    /**
+     * Drains the queue by flushing batches sequentially until it is empty or the deadline elapses.
+     * Used by the graceful-shutdown hook so events queued at SIGTERM time still reach the admin.
+     * Sequential awaits are intentional: flush() must complete before the next batch is sent.
+     */
+    public async drain(timeoutMs = 10_000): Promise<void> {
+        if (!this.canSend()) {
+            return;
+        }
+
+        const deadline = Date.now() + timeoutMs;
+        while (this.queue.length > 0 && Date.now() < deadline) {
+            const lengthBefore = this.queue.length;
+            // eslint-disable-next-line no-await-in-loop
+            await this.flush();
+            // flush() splices maxBatchSize events; loop again until queue is empty.
+            // If nothing was sent (e.g. another flush is in flight), wait briefly and retry.
+            if (this.queue.length === lengthBefore) {
+                // eslint-disable-next-line no-await-in-loop
+                await new Promise<void>((resolve) => {
+                    setTimeout(resolve, 50);
+                });
+            }
         }
     }
 
