@@ -88,4 +88,71 @@ describe("MatrixRoomPowerLevels", () => {
             },
         });
     });
+
+    it("preserves custom power levels when the mapped role is unchanged", () => {
+        const currentPowerLevels: RoomPowerLevelsEventContent = {
+            events_default: 10,
+            state_default: 30,
+            invite: 0,
+            kick: 40,
+            ban: 75,
+            redact: 60,
+            events: {
+                [EventType.RoomName]: 35,
+                [EventType.RoomPowerLevels]: 90,
+            },
+        };
+
+        // Round-trip the room's own state back through the builder: nothing changed, so every
+        // custom numeric level must survive instead of being coerced to 0/50/100.
+        const unchangedPermissions = getRoomPermissionsState(currentPowerLevels);
+
+        expect(buildRoomPowerLevelsContent(currentPowerLevels, unchangedPermissions)).toEqual({
+            events_default: 10,
+            state_default: 30,
+            invite: 0,
+            kick: 40,
+            ban: 75,
+            redact: 60,
+            events: {
+                [EventType.RoomMessage]: 10,
+                [EventType.Reaction]: 10,
+                [EventType.RoomRedaction]: 10,
+                [EventType.RoomName]: 35,
+                [EventType.RoomTopic]: 30,
+                [EventType.RoomHistoryVisibility]: 30,
+                [EventType.RoomJoinRules]: 30,
+                [EventType.RoomPowerLevels]: 90,
+            },
+        });
+    });
+
+    it("writes the canonical level only for the role that actually changed", () => {
+        const currentPowerLevels: RoomPowerLevelsEventContent = {
+            events_default: 10,
+            state_default: 30,
+            invite: 0,
+            kick: 40,
+            ban: 75,
+            redact: 60,
+            events: {
+                [EventType.RoomName]: 35,
+                [EventType.RoomPowerLevels]: 90,
+            },
+        };
+        const permissions = {
+            ...getRoomPermissionsState(currentPowerLevels),
+            banUsers: ChatPermissionLevel.MODERATOR,
+        };
+
+        const result = buildRoomPowerLevelsContent(currentPowerLevels, permissions);
+
+        // Only `ban` is rewritten to its canonical level; the other custom levels are untouched.
+        expect(result.ban).toBe(50);
+        expect(result.kick).toBe(40);
+        expect(result.redact).toBe(60);
+        expect(result.state_default).toBe(30);
+        expect(result.events?.[EventType.RoomName]).toBe(35);
+        expect(result.events?.[EventType.RoomPowerLevels]).toBe(90);
+    });
 });

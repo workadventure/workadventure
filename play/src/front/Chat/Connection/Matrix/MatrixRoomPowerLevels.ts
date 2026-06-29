@@ -41,28 +41,66 @@ export function getRoomPermissionsState(powerLevels: RoomPowerLevelsEventContent
     };
 }
 
+/**
+ * The settings UI only exposes the three coarse roles (USER / MODERATOR / ADMIN), but a room may
+ * use arbitrary numeric power levels (e.g. a `ban` requirement of 75). Naively writing back the
+ * canonical level for the selected role would silently coerce every custom level (75 -> 100) as
+ * soon as the moderator touches an unrelated permission. To avoid that, we only rewrite a level
+ * when the role it maps to actually changed; otherwise we keep the original numeric value.
+ */
+function resolvePowerLevel(currentLevel: number, desiredRole: ChatPermissionLevel): number {
+    if (getChatPermissionLevelForPowerLevel(currentLevel) === desiredRole) {
+        return currentLevel;
+    }
+    return MatrixChatRoomMember.getPowerLevel(desiredRole);
+}
+
 export function buildRoomPowerLevelsContent(
     currentPowerLevels: RoomPowerLevelsEventContent,
     permissions: ChatRoomPermissionsState,
 ): RoomPowerLevelsEventContent {
+    const currentEvents = currentPowerLevels.events ?? {};
+    const eventsDefault = currentPowerLevels.events_default ?? DEFAULT_EVENT_POWER_LEVEL;
+    const stateDefault = currentPowerLevels.state_default ?? DEFAULT_STATE_POWER_LEVEL;
+
+    // Fallback chains mirror getRoomPermissionsState so the role we compare against is exactly the
+    // one the UI displayed for the current room state.
+    const resolveEvent = (eventType: EventType, fallback: number, desiredRole: ChatPermissionLevel): number =>
+        resolvePowerLevel(currentEvents[eventType] ?? fallback, desiredRole);
+
     return {
         ...currentPowerLevels,
-        events_default: currentPowerLevels.events_default ?? DEFAULT_EVENT_POWER_LEVEL,
-        state_default: MatrixChatRoomMember.getPowerLevel(permissions.changeSettings),
-        invite: MatrixChatRoomMember.getPowerLevel(permissions.inviteUsers),
-        kick: MatrixChatRoomMember.getPowerLevel(permissions.kickUsers),
-        ban: MatrixChatRoomMember.getPowerLevel(permissions.banUsers),
-        redact: MatrixChatRoomMember.getPowerLevel(permissions.redactOtherMessages),
+        events_default: eventsDefault,
+        state_default: resolvePowerLevel(stateDefault, permissions.changeSettings),
+        invite: resolvePowerLevel(currentPowerLevels.invite ?? DEFAULT_MODERATION_POWER_LEVEL, permissions.inviteUsers),
+        kick: resolvePowerLevel(currentPowerLevels.kick ?? DEFAULT_MODERATION_POWER_LEVEL, permissions.kickUsers),
+        ban: resolvePowerLevel(currentPowerLevels.ban ?? DEFAULT_MODERATION_POWER_LEVEL, permissions.banUsers),
+        redact: resolvePowerLevel(
+            currentPowerLevels.redact ?? DEFAULT_MODERATION_POWER_LEVEL,
+            permissions.redactOtherMessages,
+        ),
         events: {
-            ...currentPowerLevels.events,
-            [EventType.RoomMessage]: MatrixChatRoomMember.getPowerLevel(permissions.sendMessages),
-            [EventType.Reaction]: MatrixChatRoomMember.getPowerLevel(permissions.sendReactions),
-            [EventType.RoomRedaction]: MatrixChatRoomMember.getPowerLevel(permissions.redactOwnMessages),
-            [EventType.RoomName]: MatrixChatRoomMember.getPowerLevel(permissions.changeRoomName),
-            [EventType.RoomTopic]: MatrixChatRoomMember.getPowerLevel(permissions.changeRoomTopic),
-            [EventType.RoomHistoryVisibility]: MatrixChatRoomMember.getPowerLevel(permissions.changeHistoryVisibility),
-            [EventType.RoomJoinRules]: MatrixChatRoomMember.getPowerLevel(permissions.changeAccess),
-            [EventType.RoomPowerLevels]: MatrixChatRoomMember.getPowerLevel(permissions.changePermissions),
+            ...currentEvents,
+            [EventType.RoomMessage]: resolveEvent(EventType.RoomMessage, eventsDefault, permissions.sendMessages),
+            [EventType.Reaction]: resolveEvent(EventType.Reaction, eventsDefault, permissions.sendReactions),
+            [EventType.RoomRedaction]: resolveEvent(
+                EventType.RoomRedaction,
+                eventsDefault,
+                permissions.redactOwnMessages,
+            ),
+            [EventType.RoomName]: resolveEvent(EventType.RoomName, stateDefault, permissions.changeRoomName),
+            [EventType.RoomTopic]: resolveEvent(EventType.RoomTopic, stateDefault, permissions.changeRoomTopic),
+            [EventType.RoomHistoryVisibility]: resolveEvent(
+                EventType.RoomHistoryVisibility,
+                stateDefault,
+                permissions.changeHistoryVisibility,
+            ),
+            [EventType.RoomJoinRules]: resolveEvent(EventType.RoomJoinRules, stateDefault, permissions.changeAccess),
+            [EventType.RoomPowerLevels]: resolveEvent(
+                EventType.RoomPowerLevels,
+                stateDefault,
+                permissions.changePermissions,
+            ),
         },
     };
 }
