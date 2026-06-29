@@ -140,7 +140,7 @@
                 dropZoneRef?.classList.remove("border-cyan-400");
             }}
             bind:this={dropZoneRef}
-            class="hover:cursor-pointer h-32 flex flex-col border border-dashed rounded-md items-center justify-center bg-white bg-opacity-10"
+            class="hover:cursor-pointer h-32 flex flex-col border border-dashed rounded-md items-center justify-center bg-white/10"
         >
             <input
                 id="upload"

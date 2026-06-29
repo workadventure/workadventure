@@ -34,7 +34,7 @@
     </button>
 </form>
 
-<style lang="scss">
+<style>
     form {
         display: flex;
         padding-left: 4px;
@@ -44,8 +44,6 @@
             flex: auto;
             background-color: #254560;
             color: white;
-            //border-bottom-left-radius: 4px;
-            //border-top-left-radius: 4px;
             border-bottom-right-radius: 0;
             border-top-right-radius: 0;
             padding-top: 2px;
@@ -55,7 +53,7 @@
             font-size: 16px;
             font-family: Lato;
             padding-left: 6px;
-            min-width: 0; //Needed so that the input doesn't overflow the container in firefox
+            min-width: 0; /*Needed so that the input doesn't overflow the container in firefox */
             outline: none;
         }
 

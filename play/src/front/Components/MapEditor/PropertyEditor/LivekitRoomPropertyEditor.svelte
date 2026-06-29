@@ -70,7 +70,7 @@
                 />
             </div>
             <button
-                class=" w-full mt-4 btn bg-transparent rounded-md hover:!bg-white/10 transition-all border !border-white py-2"
+                class="w-full mt-4 btn bg-transparent rounded-md hover:!bg-white/10 transition-all border !border-white py-2"
                 onclick={OpenPopup}
                 data-testid="livekitRoomMoreOptionsButton"
             >
@@ -90,21 +90,12 @@
     {/snippet}
 </PropertyEditorBase>
 
-<style lang="scss">
+<style>
     button {
         flex: 1 1 0px;
         border: 1px solid grey;
-        margin-bottom: 0.5em;
     }
     button:hover {
         background-color: rgb(77 75 103);
-    }
-    .value-switch {
-        display: flex;
-        width: 100%;
-        margin-bottom: 0.5em;
-        margin-top: 0.5em;
-        align-items: center;
-        height: 2.5em;
     }
 </style>

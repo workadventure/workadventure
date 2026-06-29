@@ -53,7 +53,7 @@
 </script>
 
 <div
-    class="wa-chat-item text-md flex gap-2 flex-row items-center hover:bg-white hover:bg-opacity-10 hover:rounded hover:!cursor-pointer px-2 py-2"
+    class="wa-chat-item text-md flex gap-2 flex-row items-center hover:bg-white/10 hover:rounded hover:!cursor-pointer px-2 py-2"
 >
     <div class="relative shrink-0">
         <Avatar compact pictureStore={readable(undefined)} fallbackName={room.name} />

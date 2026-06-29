@@ -247,7 +247,7 @@
     style="padding-inline-start : {marginLeft}px; padding-inline-end: {marginRight}px "
 >
     {#if $modalVisibilityStore}
-        <div class="bg-black/60 w-full h-full fixed start-0 end-0" />
+        <div class="bg-black/60 w-full h-full fixed start-0 end-0"></div>
     {/if}
 
     {#if $highlightedEmbedScreen && $highlightFullScreen}
@@ -470,9 +470,7 @@
     </div>
 </div>
 
-<style lang="scss">
-    @use "../style/breakpoints.scss" as *;
-
+<style>
     .popups {
         z-index: 1000;
         .popupwrapper {
@@ -494,14 +492,29 @@
                 /* Hide popups after 4 popups */
                 display: none;
             }
-            // For each popups but not first
-            @for $i from 1 through 4 {
-                &:nth-child(#{$i + 1}) {
-                    top: -$i * 16px;
-                    filter: blur($i + 0px);
-                    opacity: 1 - ($i * 0.1);
-                    transform: scale(1 - ($i * 0.05));
-                }
+            &:nth-child(2) {
+                top: -16px;
+                filter: blur(1px);
+                opacity: 0.9;
+                transform: scale(0.95);
+            }
+            &:nth-child(3) {
+                top: -32px;
+                filter: blur(2px);
+                opacity: 0.8;
+                transform: scale(0.9);
+            }
+            &:nth-child(4) {
+                top: -48px;
+                filter: blur(3px);
+                opacity: 0.7;
+                transform: scale(0.85);
+            }
+            &:nth-child(5) {
+                top: -64px;
+                filter: blur(4px);
+                opacity: 0.6;
+                transform: scale(0.8);
             }
         }
     }

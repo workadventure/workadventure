@@ -615,14 +615,9 @@
 </div>
 
 <!-- && !$megaphoneEnabledStore TODO HUGO -->
-<style lang="scss">
+<style>
     .hidden {
         display: none !important;
-    }
-
-    /* Scroll indicators: show users they can scroll to see more cameras */
-    .scroll-indicators-wrapper {
-        position: relative;
     }
 
     .scroll-indicator {

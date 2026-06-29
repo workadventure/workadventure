@@ -87,9 +87,7 @@
     <div class="input-send-text" role="textbox" bind:this={QUILL_EDITOR}></div>
 </section>
 
-<style lang="scss">
-    @use "../../style/breakpoints.scss" as *;
-
+<style>
     section.section-input-send-text {
         --height-toolbar: 20%;
         height: 100%;
@@ -153,7 +151,7 @@
         }
     }
 
-    @include media-breakpoint-up(md) {
+    @media only screen and (max-width: 991px) {
         section.section-input-send-text {
             --height-toolbar: 30%;
 

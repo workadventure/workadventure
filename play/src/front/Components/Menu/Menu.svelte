@@ -233,7 +233,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .menu-nav-sidebar nav::-webkit-scrollbar {
         display: none;
     }

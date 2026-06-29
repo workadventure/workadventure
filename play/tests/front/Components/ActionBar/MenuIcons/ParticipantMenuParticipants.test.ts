@@ -35,7 +35,7 @@ describe("buildProximityParticipantView", () => {
                     participants: [bob, local],
                 },
             ],
-            "alice"
+            "alice",
         );
 
         expect(view.participantGroups).toEqual([
@@ -79,7 +79,7 @@ describe("buildProximityParticipantView", () => {
                     participants: [participant("Dave", "dave")],
                 },
             ],
-            "alice"
+            "alice",
         );
 
         expect(view.participantGroups.map((group) => group.name)).toEqual(["Proximity Chat", "Listener"]);
@@ -105,7 +105,7 @@ describe("buildProximityParticipantView", () => {
                     participants: [bobInListener],
                 },
             ],
-            "alice"
+            "alice",
         );
 
         expect(view.participantGroups.map((group) => group.participants)).toEqual([[bobInBubble], [bobInListener]]);

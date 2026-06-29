@@ -840,7 +840,7 @@
     {/snippet}
 </PropertyEditorBase>
 
-<style lang="scss">
+<style>
     .advanced-option {
         display: none;
 

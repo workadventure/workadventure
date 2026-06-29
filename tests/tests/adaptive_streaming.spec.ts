@@ -4,6 +4,7 @@ import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
 import Menu from "./utils/menu";
+import { dismissNoMicrophoneSoundToastWhenShown } from "./utils/noMicrophoneSoundToast";
 
 test.setTimeout(240_000);
 
@@ -25,6 +26,7 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
             "Alice",
             publicTestMapUrl("tests/E2E/empty.json", "adaptive_streaming"),
         );
+        await dismissNoMicrophoneSoundToastWhenShown(page);
         await page.evaluate(() => localStorage.setItem("debug", "*"));
         // Move user Alice to the meeting area
         await Map.teleportToPosition(page, 160, 160);
@@ -61,6 +63,8 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
             expect(page.getByRole("cell", { name: "887x499" })).toBeVisible({ timeout: 60_000 }),
 
             expect(page.getByRole("cell", { name: "888x500" })).toBeVisible({ timeout: 60_000 }),
+
+            expect(page.getByRole("cell", { name: "889x500" })).toBeVisible({ timeout: 60_000 }),
             // In Real usage
 
             expect(page.getByRole("cell", { name: "1280x720" })).toBeVisible({ timeout: 60_000 }),

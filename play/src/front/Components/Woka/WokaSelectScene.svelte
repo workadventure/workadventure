@@ -229,7 +229,7 @@
 
                         <div class="mt-4 space-y-2">
                             <button
-                                class="btn btn-sm btn-light btn-border w-full px-4 py-2 bg-white/10 text-white rounded hover:bg-white/10 flex flex-row items-center justify-center gap-2"
+                                class="btn btn-sm btn-light btn-border w-full px-4 py-2 text-white rounded hover:bg-white/10 flex flex-row items-center justify-center gap-2"
                                 onclick={randomizeOutfit}
                             >
                                 <IconShuffle font-size="20" class="text-white" />

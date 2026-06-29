@@ -113,7 +113,7 @@
     </main>
 {/if}
 
-<style lang="scss">
+<style>
     main.errorScreen {
         min-width: 300px;
         z-index: 700;
@@ -131,11 +131,6 @@
             font-size: 12px;
             opacity: 0.6;
             user-select: text;
-        }
-        p.details {
-            font-size: 12px;
-            max-width: 80%;
-            margin: 0 auto 35px auto;
         }
         .loading {
             display: inline-block;
@@ -157,26 +152,9 @@
             left: 0;
             top: -19px;
         }
-
-        @keyframes ellipsis {
-            to {
-                width: 1.25em;
-            }
-        }
-
-        @-webkit-keyframes ellipsis {
-            to {
-                width: 1.25em;
-            }
-        }
-
         .button {
             cursor: pointer;
             font-size: 14px;
-            .reload {
-                margin-top: -4px;
-                width: 22px;
-            }
         }
     }
 
@@ -189,6 +167,18 @@
             .icon {
                 height: 60px;
             }
+        }
+    }
+
+    @keyframes ellipsis {
+        to {
+            width: 1.25em;
+        }
+    }
+
+    @-webkit-keyframes ellipsis {
+        to {
+            width: 1.25em;
         }
     }
 </style>

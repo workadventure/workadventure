@@ -210,7 +210,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .slider::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;

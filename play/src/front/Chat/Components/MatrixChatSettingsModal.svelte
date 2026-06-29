@@ -228,10 +228,10 @@
                 <p class="text-xs text-white/55">{$LL.chat.matrixSettings.clearSuggestedRoomsHint()}</p>
                 <button
                     type="button"
-                    class="flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 {successFlash ===
+                    class="btn transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 {successFlash ===
                     'clearSuggested'
-                        ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.22)] matrix-settings-btn-success'
-                        : 'border-white/15 bg-white/[0.06] text-white hover:bg-white/10'}"
+                        ? 'btn-success matrix-settings-btn-success'
+                        : 'btn-light btn-border'}"
                     disabled={syncing}
                     onclick={handleClearSuggested}
                 >
@@ -252,10 +252,10 @@
                 {/if}
                 <button
                     type="button"
-                    class="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 {successFlash ===
+                    class="btn font-semibold transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 {successFlash ===
                     'syncAccount'
-                        ? 'border-2 border-emerald-400/55 bg-emerald-600/90 text-white shadow-[0_0_20px_rgba(16,185,129,0.35)] matrix-settings-btn-success'
-                        : 'bg-secondary text-contrast hover:opacity-90'}"
+                        ? 'btn-success matrix-settings-btn-success'
+                        : 'btn-secondary'}"
                     disabled={syncing}
                     onclick={syncAccountData}
                 >

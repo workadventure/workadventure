@@ -25,7 +25,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .circle {
         background-color: var(--color);
     }

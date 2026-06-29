@@ -176,7 +176,7 @@
     />
 </section>
 
-<style lang="scss">
+<style>
     p.err {
         color: red;
     }

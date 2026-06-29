@@ -95,12 +95,14 @@
     /* eslint-disable svelte/no-at-html-tags */
 </script>
 
-<section class="self-center absolute z-30 top-0 text-center w-full block">
+<section class="self-center absolute z-30 top-0 text-center w-full">
     <img
         draggable="false"
         src={logo}
         alt="logo"
-        class="main-logo mt-8 {gameManager.currentStartedRoom.loginSceneLogo ? 'max-h-[200px] object-cover' : ''}"
+        class="main-logo inline mt-8 {gameManager.currentStartedRoom.loginSceneLogo
+            ? 'max-h-[200px] object-cover'
+            : ''}"
         style="width: 333px;"
     />
 </section>

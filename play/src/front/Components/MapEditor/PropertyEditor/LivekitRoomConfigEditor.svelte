@@ -136,7 +136,7 @@
     </div>
 {/if}
 
-<style lang="scss">
+<style>
     .config-element-container {
         overflow-y: auto;
         overflow-x: hidden;
@@ -145,13 +145,6 @@
             flex-direction: row;
             height: 2.5em;
 
-            .config-element-label {
-                padding-left: 1em;
-                vertical-align: middle;
-                margin-top: auto;
-                margin-bottom: auto;
-                flex-grow: 1;
-            }
             input[type="text"] {
                 margin-top: 0.25em;
                 margin-bottom: 0.25em;
@@ -161,15 +154,6 @@
 
             button {
                 padding: 0;
-                .delete-button {
-                    border-radius: 0.75em;
-                    background-color: black;
-                    margin: 0em;
-                    padding: 0em;
-                    height: 1.5em;
-                    width: 1.5em;
-                    line-height: 1.5em;
-                }
             }
         }
     }

@@ -1,5 +1,5 @@
 <script lang="ts">
-    //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
+    //STYLE: Classes factorizing tailwind's ones are defined in video-ui.css
     import { getContext, onDestroy, onMount } from "svelte";
     import * as Sentry from "@sentry/svelte";
     import type { Subscription } from "rxjs";
@@ -520,8 +520,8 @@
         height: 100%;
         aspect-ratio: 1 / 1;
         border-radius: 50%;
-        border: 6px solid theme("colors.light-blue");
-        border-color: theme("colors.light-blue") transparent theme("colors.light-blue") transparent;
+        border: 6px solid var(--color-light-blue);
+        border-color: var(--color-light-blue) transparent var(--color-light-blue) transparent;
         animation: connecting-spinner 1.2s linear infinite;
     }
 

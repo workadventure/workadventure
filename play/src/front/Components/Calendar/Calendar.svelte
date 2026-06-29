@@ -154,7 +154,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .calendar {
         position: absolute !important;
         top: 0;
@@ -164,10 +164,6 @@
 
         pointer-events: auto;
         color: whitesmoke;
-
-        button.close-window {
-            right: 0.5rem;
-        }
 
         .sidebar {
             position: relative !important;

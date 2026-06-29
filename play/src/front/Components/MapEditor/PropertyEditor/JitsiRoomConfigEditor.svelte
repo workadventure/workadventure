@@ -120,7 +120,7 @@
     </div>
 {/if}
 
-<style lang="scss">
+<style>
     .config-element-container {
         overflow-y: auto;
         overflow-x: hidden;
@@ -129,13 +129,6 @@
             flex-direction: row;
             height: 2.5em;
 
-            .config-element-label {
-                padding-left: 1em;
-                vertical-align: middle;
-                margin-top: auto;
-                margin-bottom: auto;
-                flex-grow: 1;
-            }
             input[type="text"] {
                 margin-top: 0.25em;
                 margin-bottom: 0.25em;
@@ -145,98 +138,7 @@
 
             button {
                 padding: 0;
-                .delete-button {
-                    border-radius: 0.75em;
-                    background-color: black;
-                    margin: 0em;
-                    padding: 0em;
-                    height: 1.5em;
-                    width: 1.5em;
-                    line-height: 1.5em;
-                }
             }
         }
     }
-
-    // .action-buttons {
-    //     position: absolute;
-    //     bottom: 1em;
-    //     left: 0;
-    //     right: 0;
-    //     align-content: center;
-    //     display: flex;
-    //     flex-direction: row;
-    //     justify-content: center;
-    //     button {
-    //         border-radius: 0.25em;
-    //         border: solid 1px grey;
-    //     }
-    //     button:hover {
-    //         background-color: rgb(77 75 103);
-    //     }
-    // }
-    // .input-switch {
-    //     position: relative;
-    //     top: 0px;
-    //     right: 0px;
-    //     bottom: 0px;
-    //     left: 0px;
-    //     display: inline-block;
-    //     height: 1rem;
-    //     width: 2rem;
-    //     -webkit-appearance: none;
-    //     -moz-appearance: none;
-    //     appearance: none;
-    //     border-radius: 9999px;
-    //     border-width: 1px;
-    //     border-style: solid;
-    //     --border-opacity: 1;
-    //     border-color: rgb(77 75 103 / var(--border-opacity));
-    //     --bg-opacity: 1;
-    //     background-color: rgb(15 31 45 / var(--bg-opacity));
-    //     background-image: none;
-    //     padding: 0px;
-    //     --text-opacity: 1;
-    //     color: rgb(242 253 255 / var(--text-opacity));
-    //     outline: 2px solid transparent;
-    //     outline-offset: 2px;
-    //     cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
-    // }
-
-    // .input-switch::before {
-    //     position: absolute;
-    //     left: -3px;
-    //     top: -3px;
-    //     height: 1.25rem;
-    //     width: 1.25rem;
-    //     border-radius: 9999px;
-    //     --bg-opacity: 1;
-    //     background-color: rgb(146 142 187 / var(--bg-opacity));
-    //     transition-property: all;
-    //     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    //     transition-duration: 150ms;
-    //     --content: "";
-    //     content: var(--content);
-    // }
-
-    // .input-switch:checked {
-    //     --border-opacity: 1;
-    //     border-color: rgb(146 142 187 / var(--border-opacity));
-    // }
-
-    // .input-switch:checked::before {
-    //     left: 13px;
-    //     top: -3px;
-    //     --bg-opacity: 1;
-    //     background-color: rgb(65 86 246 / var(--bg-opacity));
-    //     content: var(--content);
-    //     /*--shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
-    //     --shadow-colored: 0 0 7px 0 var(--shadow-color);
-    //     box-shadow: var(--ring-offset-shadow, 0 0 #0000), var(--ring-shadow, 0 0 #0000), var(--shadow);*/
-    // }
-
-    // .input-switch:disabled {
-    //     cursor: not-allowed;
-    //     opacity: 0.4;
-    // }
 </style>

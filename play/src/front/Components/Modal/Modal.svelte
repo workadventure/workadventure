@@ -70,7 +70,7 @@
 >
     <div class="w-full h-full bg-contrast/80 backdrop-blur rounded" transition:blur={{ amount: 10, duration: 250 }}>
         <div
-            class={`flex justify-center items-center content-center bg-contrast/80 backdrop-blur p-2 space-x-0 @lg/main-layout:space-x-2 rounded-lg absolute z-50 hover:opacity-100 opacity-25 transition-opacity duration-300
+            class={`flex justify-center items-center content-center bg-contrast/80 backdrop-blur p-2 space-y-0 @lg/main-layout:space-y-2 rounded-lg absolute z-50 hover:opacity-100 opacity-25 transition-opacity duration-300
                 ${
                     isFullScreened || isMobile
                         ? "top-4 right-4"
@@ -127,7 +127,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .menu-container {
         &.mobile {
             width: 100% !important;

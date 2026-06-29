@@ -43,14 +43,7 @@
     </div>
 </ToastContainer>
 
-<style lang="scss">
-    .recording-modal {
-        min-width: 320px;
-        max-width: 400px;
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.2);
-    }
-
+<style>
     .recording-content {
         position: relative;
         width: 100%;
@@ -112,11 +105,6 @@
     }
 
     @media (max-width: 768px) {
-        .recording-modal {
-            min-width: 280px;
-            max-width: 90vw;
-        }
-
         .recording-title {
             font-size: 14px;
         }

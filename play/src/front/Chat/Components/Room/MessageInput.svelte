@@ -132,7 +132,7 @@
     ></div>
 {/if}
 
-<style lang="scss">
+<style>
     .message-input::before {
         content: attr(data-text);
         color: rgba(211, 211, 211, 0.5);

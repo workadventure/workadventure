@@ -13,7 +13,7 @@ describe("shouldDisableMessageInput", () => {
                 isProximityChatDisabled: false,
                 isProximityRoomJoined: false,
                 disabled: false,
-            })
+            }),
         ).toBe(true);
 
         expect(
@@ -23,7 +23,7 @@ describe("shouldDisableMessageInput", () => {
                 isProximityChatDisabled: false,
                 isProximityRoomJoined: true,
                 disabled: false,
-            })
+            }),
         ).toBe(false);
     });
 
@@ -35,7 +35,7 @@ describe("shouldDisableMessageInput", () => {
                 isProximityChatDisabled: false,
                 isProximityRoomJoined: false,
                 disabled: false,
-            })
+            }),
         ).toBe(false);
     });
 
@@ -44,7 +44,7 @@ describe("shouldDisableMessageInput", () => {
             shouldDisableSendButton({
                 isMessageInputDisabled: true,
                 applicationPropertyInProcessing: false,
-            })
+            }),
         ).toBe(true);
     });
 });

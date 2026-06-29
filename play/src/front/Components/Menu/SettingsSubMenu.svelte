@@ -760,5 +760,5 @@
     </section>
 </div>
 
-<style lang="scss">
+<style>
 </style>

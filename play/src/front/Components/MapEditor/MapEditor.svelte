@@ -90,7 +90,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .map-editor {
         top: 0;
         inset-inline-end: 0;
@@ -98,10 +98,6 @@
         z-index: 1999;
         pointer-events: auto;
         color: whitesmoke;
-
-        button.close-window {
-            inset-inline-end: 0.5rem;
-        }
 
         &.WAMSettingsEditor {
             width: 80% !important;

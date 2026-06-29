@@ -661,9 +661,14 @@ div.emoji-picker {
 
     /* Keyboard hint keycaps (SpeechDomElement) */
     .speech-key {
+        display: inline-block;
         user-select: none;
         margin: 0 3px;
         vertical-align: middle;
+    }
+
+    .speech-key:first-child {
+        margin-left: 0;
     }
 
     .speech-key--space {
@@ -822,7 +827,7 @@ div.emoji-picker {
 }
 
 .scrollable-content {
-    // Force scrollbar to always be visible (not overlay) on macOS/WebKit
+    /* Force scrollbar to always be visible (not overlay) on macOS/WebKit */
     &::-webkit-scrollbar {
         -webkit-appearance: none;
         width: 4px;
@@ -840,7 +845,7 @@ div.emoji-picker {
         background-color: #56eaff;
     }
 
-    // Firefox
+    /* Firefox */
     scrollbar-width: thin;
     scrollbar-color: #928ebb rgba(255, 255, 255, 0.1);
 }
@@ -862,7 +867,7 @@ div.emoji-picker {
 
     user-select: none;
 
-    // By default, we hide the name and only start showing it when the full GameScene is shown
+    /* By default, we hide the name and only start showing it when the full GameScene is shown */
     display: none;
 
     &.talking {

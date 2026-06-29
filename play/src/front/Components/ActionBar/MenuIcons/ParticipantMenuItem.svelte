@@ -470,7 +470,7 @@
     {/if}
 {/if}
 
-<style lang="scss">
+<style>
     @keyframes participant-avatar-float {
         0%,
         100% {

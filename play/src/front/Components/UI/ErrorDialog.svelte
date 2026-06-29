@@ -69,7 +69,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     div.error-div {
         pointer-events: auto;
         margin-top: 15%;

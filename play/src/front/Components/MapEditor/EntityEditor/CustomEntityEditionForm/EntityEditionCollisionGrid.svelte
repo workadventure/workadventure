@@ -15,9 +15,12 @@
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
                 style={`grid-area: ${rowIndex + 1} / ${columnIndex + 1}`}
-                class={`cursor-pointer border-solid border border-gray-400 rounded-sm ${
-                    collisionGrid[rowIndex][columnIndex] === 1 ? "bg-red-600" : ""
-                } bg-opacity-30`}
+                class={[
+                    "cursor-pointer border-solid border border-gray-400 rounded-sm",
+                    {
+                        "bg-red-600/30": collisionGrid[rowIndex][columnIndex] === 1,
+                    },
+                ]}
                 onclick={() => updateCollisionGrid(rowIndex, columnIndex)}
             ></div>
         {/each}

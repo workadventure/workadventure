@@ -116,7 +116,7 @@
         <div
             class="wa-chat-item {isAdmin
                 ? 'admin'
-                : 'user'} group/chatItem relative mb-[1px] text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer"
+                : 'user'} group/chatItem relative mb-[1px] text-md flex gap-2 flex-row items-center transition-all hover:bg-white/10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer"
         >
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -241,7 +241,7 @@
         </div>
     </div>
 
-    <style lang="scss">
+    <style>
         .status {
             background-color: var(--color);
         }

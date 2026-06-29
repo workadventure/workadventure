@@ -143,7 +143,7 @@
 </script>
 
 <div
-    class="wa-chat-item group/chatItem relative mb-[1px] flex flex-col gap-3 px-2 py-2 text-md transition-all hover:bg-white hover:bg-opacity-10 hover:rounded sm:flex-row sm:items-center sm:gap-4"
+    class="wa-chat-item group/chatItem relative mb-[1px] flex flex-col gap-3 px-2 py-2 text-md transition-all hover:bg-white/10 hover:rounded sm:flex-row sm:items-center sm:gap-4"
     data-testid={`${id}-participant`}
 >
     <div class="flex min-w-0 flex-1 items-center gap-3">

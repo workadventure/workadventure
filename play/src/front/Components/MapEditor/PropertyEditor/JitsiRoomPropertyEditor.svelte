@@ -193,7 +193,7 @@
     {/snippet}
 </PropertyEditorBase>
 
-<style lang="scss">
+<style>
     button {
         flex: 1 1 0px;
         border: 1px solid grey;

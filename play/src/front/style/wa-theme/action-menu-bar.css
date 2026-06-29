@@ -15,7 +15,7 @@
             }
 
             .border-top-light {
-                border-top: 4px solid theme("colors.light-blue");
+                border-top: 4px solid var(--color-light-blue);
                 @apply pt-0;
             }
 
@@ -73,12 +73,12 @@
 
                     &.dark {
                         @apply text-white;
-                        &:hover {
+                        &:not(:disabled):not(.disabled):hover {
                             @apply bg-light-purple;
                         }
                     }
 
-                    &:hover {
+                    &:not(:disabled):not(.disabled):hover {
                         filter: brightness(1.25);
                     }
 

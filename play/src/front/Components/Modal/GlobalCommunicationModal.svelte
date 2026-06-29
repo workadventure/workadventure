@@ -538,7 +538,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     video {
         transition: all 0.2s ease-in-out;
         &:hover {

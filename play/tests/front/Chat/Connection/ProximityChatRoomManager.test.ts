@@ -95,7 +95,7 @@ describe("ProximityChatRoomManager", () => {
             FilterType.ALL_USERS,
             false,
             undefined,
-            "meeting"
+            "meeting",
         );
         const speakerRoom = await manager.joinSpace(
             "speaker-space",
@@ -105,7 +105,7 @@ describe("ProximityChatRoomManager", () => {
             FilterType.ALL_USERS,
             false,
             undefined,
-            "speaker"
+            "speaker",
         );
         const listenerRoom = await manager.joinSpace(
             "listener-space",
@@ -115,7 +115,7 @@ describe("ProximityChatRoomManager", () => {
             FilterType.ALL_USERS,
             false,
             undefined,
-            "listener"
+            "listener",
         );
 
         expect(get(meetingRoom.name)).toBe("Meeting Room");
@@ -157,7 +157,7 @@ describe("ProximityChatRoomManager", () => {
             [],
             false,
             FilterType.ALL_USERS,
-            false
+            false,
         );
 
         expect(secondRoom).toBe(firstRoom);
@@ -177,7 +177,7 @@ describe("ProximityChatRoomManager", () => {
             [],
             false,
             FilterType.ALL_USERS,
-            false
+            false,
         );
         roomWithMessages.hasUserMessages.set(true);
         await manager.leaveSpace("message-space", false);
@@ -196,7 +196,7 @@ describe("ProximityChatRoomManager", () => {
             FilterType.ALL_USERS,
             false,
             undefined,
-            "default"
+            "default",
         );
         await manager.joinSpace("listener-space", "Listener", [], false, FilterType.ALL_USERS, false);
         await manager.leaveSpace(DEFAULT_PROXIMITY_SPACE_NAME, false);

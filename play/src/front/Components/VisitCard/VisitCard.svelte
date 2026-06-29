@@ -106,7 +106,7 @@
 
 <svelte:window onmessage={handleIframeMessage} />
 
-<style lang="scss">
+<style>
     .visitCard {
         pointer-events: all;
         z-index: 750;

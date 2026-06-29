@@ -1,5 +1,3 @@
-@use "../style/breakpoints.scss" as bpchat;
-
 #chat-aside{
   left: 0;
   top: 0;
@@ -18,11 +16,7 @@
   transform: translateX(0);
 }
 
-//@import "fonts";
-//@import "tailwind";
-@import '@workadventure/tailwind/style/index.scss';
-
-@include bpchat.media-breakpoint-up(sm) {
+@media only screen and (max-width: 767px) {
     .chatWindow {
         width: 100% !important;
     }
@@ -218,7 +212,7 @@
     @apply translate-x-full;
 }
 .chatWindow nav .background.hidden{
-    //@apply hidden;
+    /*@apply hidden; */
     display: none;
 }
 .chatWindow nav ul{
