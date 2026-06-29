@@ -30,6 +30,10 @@ export const PROXIMITY_FILE_TRANSFER_MAX_FILES = 3;
 // blob, so this cap protects recipients from out-of-memory crashes triggered by
 // an oversized (or malicious) transfer.
 export const PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE = 100 * 1024 * 1024;
+// Upper bound on undownloaded offers a single peer may have pending at once. Offers are
+// remote-controlled (each surfaces a chat message + notification), so this throttles a peer
+// from flooding the recipient with offers and growing the incomingTransfers map unbounded.
+export const PROXIMITY_FILE_TRANSFER_MAX_INCOMING_OFFERS_PER_PEER = 20;
 const PROXIMITY_FILE_TRANSFER_CHUNK_SIZE = 64 * 1024;
 const PROXIMITY_FILE_TRANSFER_ENCRYPTED_CHUNK_SIZE = 1024 * 1024;
 const PROXIMITY_FILE_TRANSFER_ENCRYPTED_CHUNK_OVERHEAD = 21;
@@ -50,7 +54,7 @@ export function validateProximityFiles(files: File[]): ProximityFileValidationRe
     return { ok: true };
 }
 
-export const ENABLE_PROXIMITY_FILE_TRANSFER_SECURITY = false;
+export const ENABLE_PROXIMITY_FILE_TRANSFER_SECURITY = true;
 
 export function isProximityFileTransferSecurityEnabled(): boolean {
     return ENABLE_PROXIMITY_FILE_TRANSFER_SECURITY;
@@ -205,9 +209,27 @@ export class ProximityFileTransferService {
                     ...event.proximityFileTransferOffer,
                     senderSpaceUserId,
                 };
+                // Throttle a peer that floods us with offers. Re-offering a known transferId just
+                // refreshes it (the count is per distinct transferId), so legitimate retries are fine.
+                if (
+                    !this.incomingTransfers.has(offer.transferId) &&
+                    this.countIncomingOffersFromSender(senderSpaceUserId) >=
+                        PROXIMITY_FILE_TRANSFER_MAX_INCOMING_OFFERS_PER_PEER
+                ) {
+                    return;
+                }
                 this.incomingTransfers.set(offer.transferId, offer);
                 this.transferUpdateSubject.next({ transferId: offer.transferId, state: "pending", progress: 0 });
                 this.incomingOfferSubject.next(offer);
+            }),
+        );
+        // Free the per-peer offer slot once a download finishes, so completing transfers does not
+        // count against the cap (works for both the WebRTC and LiveKit transports).
+        this.subscriptions.add(
+            this.transferUpdateSubject.subscribe((update) => {
+                if (update.state === "ready") {
+                    this.incomingTransfers.delete(update.transferId);
+                }
             }),
         );
         this.subscriptions.add(
@@ -822,6 +844,16 @@ export class ProximityFileTransferService {
 
     private canExchangeWith(spaceUserId: string): boolean {
         return this.options.canExchangeWith?.(spaceUserId) ?? true;
+    }
+
+    private countIncomingOffersFromSender(senderSpaceUserId: string): number {
+        let count = 0;
+        for (const offer of this.incomingTransfers.values()) {
+            if (offer.senderSpaceUserId === senderSpaceUserId) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private isSecurityEnabled(): boolean {
