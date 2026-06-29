@@ -783,7 +783,8 @@ export class GameScene extends DirtyScene {
             this.gameMapFrontWrapper,
             this.mapFile,
             this.initPosition,
-            urlManager.getStartPositionNameFromUrl(),
+            // On reconnect, ignore any URL hash and restore the previous position (initPosition).
+            this.isReconnecting ? undefined : urlManager.getStartPositionNameFromUrl(),
         );
 
         //create input to move
@@ -2014,7 +2015,8 @@ export class GameScene extends DirtyScene {
                 }
 
                 const startPosition = this.startPositionCalculator.computeStartPosition(
-                    urlManager.getStartPositionNameFromUrl(),
+                    // On reconnect, ignore any URL hash and restore the previous position (initPosition).
+                    this.isReconnecting ? undefined : urlManager.getStartPositionNameFromUrl(),
                 );
 
                 this.createCurrentPlayer(startPosition);
