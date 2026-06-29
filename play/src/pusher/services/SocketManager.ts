@@ -79,10 +79,7 @@ const debug = Debug("socket");
 export type AdminSocket = WebSocket<AdminSocketData>;
 export type SocketUpgradeFailed = WebSocket<UpgradeFailedData>;
 
-export function getBackConnectionCloseReason(
-    applicationCloseReason?: string,
-    backConnectionError?: unknown,
-): string {
+export function getBackConnectionCloseReason(applicationCloseReason?: string, backConnectionError?: unknown): string {
     if (applicationCloseReason !== undefined && applicationCloseReason !== "") {
         return applicationCloseReason;
     }
