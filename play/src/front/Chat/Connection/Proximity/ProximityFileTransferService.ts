@@ -25,9 +25,11 @@ import {
 } from "./ProximityFileTransferSecurity";
 
 export const PROXIMITY_FILE_TRANSFER_MAX_FILES = 3;
-//TODO : Change max file size to 100MB
-// Maximum allowed size for a proximity file transfer: 10 GB
-export const PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE = 10 * 1024 * 1024 * 1024;
+// Maximum allowed size for a proximity file transfer: 100 MB.
+// The receiving side buffers the whole transfer in memory before assembling the
+// blob, so this cap protects recipients from out-of-memory crashes triggered by
+// an oversized (or malicious) transfer.
+export const PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE = 100 * 1024 * 1024;
 const PROXIMITY_FILE_TRANSFER_CHUNK_SIZE = 64 * 1024;
 const PROXIMITY_FILE_TRANSFER_ENCRYPTED_CHUNK_SIZE = 1024 * 1024;
 const PROXIMITY_FILE_TRANSFER_ENCRYPTED_CHUNK_OVERHEAD = 21;
@@ -473,6 +475,10 @@ export class ProximityFileTransferService {
         let session = this.peerSessions.get(senderSpaceUserId);
 
         if (signal.type === "description" && signal.description.type === "offer") {
+            // A new negotiation supersedes any existing session for this peer. Close the
+            // previous one first so we don't leak its RTCPeerConnection and negotiation timer
+            // (a remote peer could otherwise force unbounded allocations by replaying offers).
+            this.closePeerSession(senderSpaceUserId);
             session = await this.createPeerSession(senderSpaceUserId, signalMessage.connectionId);
             this.peerSessions.set(senderSpaceUserId, session);
             await session.peerConnection.setRemoteDescription(signal.description);
@@ -912,7 +918,7 @@ function copyToArrayBuffer(bytes: Uint8Array): ArrayBuffer {
     return buffer;
 }
 
-function getMaxEncryptedTransferWireSize(plainSize: number): number {
+export function getMaxEncryptedTransferWireSize(plainSize: number): number {
     if (plainSize === 0) {
         return 0;
     }
