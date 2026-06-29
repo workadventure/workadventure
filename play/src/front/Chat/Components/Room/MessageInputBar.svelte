@@ -752,7 +752,6 @@
 {/if}
 {#if fileAttachmentComponentOpened}
     <MessageFileInput
-        {room}
         filesSelected={(files) => {
             handleFiles(files);
             closeFileAttachmentComponent();
