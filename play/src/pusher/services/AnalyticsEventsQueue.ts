@@ -20,6 +20,15 @@ import {
 const SCHEMA_VERSION = 1;
 const RETRY_JITTER_MIN_MS = 50;
 const RETRY_JITTER_MAX_MS = 250;
+const MAX_FLUSH_ATTEMPTS = 4;
+const RETRY_BASE_DELAY_MS = 250;
+const RETRY_MAX_DELAY_MS = 5_000;
+/**
+ * Hard cap on a single event's serialized properties size. The admin API will
+ * reject events whose properties exceed its own bound; capping client-side
+ * avoids round-tripping multi-MB junk through the queue.
+ */
+const MAX_EVENT_PROPERTIES_BYTES = 8 * 1024;
 
 export type AnalyticsEventSource = "front" | "pusher" | "media";
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
@@ -273,6 +282,19 @@ export class AnalyticsEventsQueue {
             return undefined;
         }
 
+        // Defense-in-depth: front-side controllers are expected to enforce the
+        // source whitelist, but reject anything else here so a misbehaving
+        // client cannot impersonate a backend source by editing its payload.
+        if (event.source !== "front" && event.source !== "pusher" && event.source !== "media") {
+            console.warn("Analytics event dropped", {
+                reason: "invalid source",
+                eventName: event.eventName,
+                eventId: event.eventId,
+                source: event.source,
+            });
+            return undefined;
+        }
+
         const clientEventDate = new Date(event.clientEventTimeMs);
         if (isNaN(clientEventDate.getTime())) {
             console.warn("Analytics event dropped", {
@@ -280,6 +302,31 @@ export class AnalyticsEventsQueue {
                 eventName: event.eventName,
                 eventId: event.eventId,
                 clientEventTimeMs: event.clientEventTimeMs,
+            });
+            return undefined;
+        }
+
+        // Bound the per-event properties payload. The admin API will reject
+        // oversized events with 422; capping here keeps the in-memory queue
+        // from being filled with multi-MB junk.
+        try {
+            const serializedPropertiesLength = JSON.stringify(event.properties ?? {}).length;
+            if (serializedPropertiesLength > MAX_EVENT_PROPERTIES_BYTES) {
+                console.warn("Analytics event dropped", {
+                    reason: "properties exceed max bytes",
+                    eventName: event.eventName,
+                    eventId: event.eventId,
+                    bytes: serializedPropertiesLength,
+                    maxBytes: MAX_EVENT_PROPERTIES_BYTES,
+                });
+                return undefined;
+            }
+        } catch (error) {
+            console.warn("Analytics event dropped", {
+                reason: "properties not serializable",
+                eventName: event.eventName,
+                eventId: event.eventId,
+                error: error instanceof Error ? error.message : String(error),
             });
             return undefined;
         }
@@ -350,25 +397,46 @@ export class AnalyticsEventsQueue {
             return 0;
         }
 
-        try {
-            await this.postBatch(batch);
-            return batch.events.length;
-        } catch (error) {
-            if (this.shouldSplitInvalidBatch(error, batch)) {
-                return await this.sendEventsIndividually(batch);
+        let lastError: unknown;
+        for (let attempt = 0; attempt < MAX_FLUSH_ATTEMPTS; attempt++) {
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                await this.postBatch(batch);
+                return batch.events.length;
+            } catch (error) {
+                lastError = error;
+                if (this.shouldSplitInvalidBatch(error, batch)) {
+                    // eslint-disable-next-line no-await-in-loop
+                    return await this.sendEventsIndividually(batch);
+                }
+                // Don't retry on non-transient errors (4xx that isn't 422 already handled above).
+                if (this.isNonRetryableError(error)) {
+                    throw error;
+                }
+                if (attempt < MAX_FLUSH_ATTEMPTS - 1) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await sleep(this.retryDelayMs(attempt));
+                }
             }
-            await sleep(this.retryDelayMs());
         }
 
-        try {
-            await this.postBatch(batch);
-            return batch.events.length;
-        } catch (error) {
-            if (this.shouldSplitInvalidBatch(error, batch)) {
-                return await this.sendEventsIndividually(batch);
-            }
-            throw error;
+        throw lastError;
+    }
+
+    private isNonRetryableError(error: unknown): boolean {
+        if (!isAxiosError(error)) {
+            return false;
         }
+        const status = error.response?.status;
+        // Retry 5xx + network failures. Treat 408/429 as retryable too.
+        // 422 is handled via shouldSplitInvalidBatch above.
+        if (status === undefined) {
+            return false;
+        }
+        if (status === 408 || status === 429) {
+            return false;
+        }
+        return status >= 400 && status < 500;
     }
 
     private async postBatch(batch: AnalyticsEventsBatch): Promise<void> {
@@ -419,8 +487,14 @@ export class AnalyticsEventsQueue {
         return isAxiosError(error) && error.response?.status === 422;
     }
 
-    private retryDelayMs(): number {
-        return RETRY_JITTER_MIN_MS + Math.floor(this.random() * (RETRY_JITTER_MAX_MS - RETRY_JITTER_MIN_MS + 1));
+    private retryDelayMs(attempt = 0): number {
+        // Exponential backoff with full-jitter, capped at RETRY_MAX_DELAY_MS.
+        // attempt is 0-based. attempt=0 ⇒ ~RETRY_BASE_DELAY_MS,
+        // attempt=1 ⇒ up to 2x, attempt=2 ⇒ up to 4x, …
+        const exponential = Math.min(RETRY_BASE_DELAY_MS * 2 ** attempt, RETRY_MAX_DELAY_MS);
+        const jitter =
+            RETRY_JITTER_MIN_MS + Math.floor(this.random() * (RETRY_JITTER_MAX_MS - RETRY_JITTER_MIN_MS + 1));
+        return exponential + jitter;
     }
 
     private logFlushError(error: unknown): void {
