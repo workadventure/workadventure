@@ -13,6 +13,7 @@ type ConversationAnalyticsOptions = {
     meetingStore?: Readable<boolean>;
     meetingProvider?: MeetingProvider;
     meetingProviderStore?: Readable<MeetingProvider | undefined>;
+    participantCountStore?: Readable<number | undefined>;
 };
 
 type ConversationType = "spontaneous_bubble" | "meeting" | "remote";
@@ -21,7 +22,7 @@ export function subscribeToConversationAnalytics(
     inConversationStore: Readable<boolean>,
     sendReport: (message: AnalyticsEventReportMessage) => void,
     sendIntervalMs = CONVERSATION_ANALYTICS_SEND_INTERVAL_MS,
-    options: ConversationAnalyticsOptions = {}
+    options: ConversationAnalyticsOptions = {},
 ): Unsubscriber {
     if (hasCapability(ANALYTICS_EVENTS_CAPABILITY) !== "v1") {
         return () => {};
@@ -33,11 +34,12 @@ export function subscribeToConversationAnalytics(
     let conversationGroupId: number | string | undefined;
     let conversationId: string | undefined;
     let conversationType: ConversationType = "remote";
+    let participantCount: number | undefined;
     const sendConversationEvent = (
         eventName: "conversation.started" | "conversation.ended" | "meeting.provider_changed",
         currentConversationId: string,
         currentConversationType: ConversationType,
-        extraProperties: Record<string, string | number | boolean | null | undefined> = {}
+        extraProperties: Record<string, string | number | boolean | null | undefined> = {},
     ): void => {
         const now = Date.now();
         const currentMeetingProvider = meetingProviderFromConversationType(currentConversationType, meetingProvider);
@@ -62,7 +64,7 @@ export function subscribeToConversationAnalytics(
         });
     };
     const startConversation = (
-        nextConversationType = conversationTypeFromState(inMeeting, conversationGroupId)
+        nextConversationType = conversationTypeFromState(inMeeting, conversationGroupId),
     ): void => {
         conversationType = nextConversationType;
         conversationId = conversationIdFromState(conversationType, conversationGroupId) ?? uuidv4();
@@ -108,6 +110,9 @@ export function subscribeToConversationAnalytics(
     const unsubscribeMeeting = options.meetingStore?.subscribe((value) => {
         inMeeting = value;
         transitionConversationType(conversationTypeFromState(value, conversationGroupId));
+    });
+    const unsubscribeParticipantCount = options.participantCountStore?.subscribe((value) => {
+        participantCount = typeof value === "number" && value >= 0 ? value : undefined;
     });
     const unsubscribeMeetingProvider = options.meetingProviderStore?.subscribe((value) => {
         const previousMeetingProvider = meetingProvider;
@@ -156,14 +161,16 @@ export function subscribeToConversationAnalytics(
                     eventName: "conversation.heartbeat",
                     source: "front",
                     clientEventTimeMs: now,
-                    eventId: `conversation-heartbeat:${currentConversationId}:${now}`,
+                    // uuid suffix so two heartbeats sharing a millisecond don't collide
+                    // (the backend dedupes by eventId).
+                    eventId: `conversation-heartbeat:${currentConversationId}:${uuidv4()}`,
                     properties: {
                         schemaVersion: 1,
                         conversationId: currentConversationId,
                         meetingSessionId: currentConversationType === "meeting" ? currentConversationId : undefined,
                         conversationType: currentConversationType,
                         meetingProvider: currentMeetingProvider,
-                        participantCount: 2,
+                        participantCount,
                         sampleDurationSeconds: Math.round(sendIntervalMs / 1000),
                     },
                 },
@@ -178,6 +185,7 @@ export function subscribeToConversationAnalytics(
         unsubscribeGroupId?.();
         unsubscribeMeeting?.();
         unsubscribeMeetingProvider?.();
+        unsubscribeParticipantCount?.();
     };
 }
 
@@ -195,7 +203,7 @@ function conversationTypeFromState(inMeeting: boolean, groupId: number | string 
 
 function meetingProviderFromConversationType(
     conversationType: ConversationType,
-    meetingProvider?: MeetingProvider
+    meetingProvider?: MeetingProvider,
 ): MeetingProvider | undefined {
     if (conversationType === "meeting") {
         return meetingProvider ?? "livekit";
@@ -210,7 +218,7 @@ function meetingProviderFromConversationType(
 
 function conversationIdFromState(
     conversationType: ConversationType,
-    groupId: number | string | undefined
+    groupId: number | string | undefined,
 ): string | undefined {
     if (conversationType !== "spontaneous_bubble") {
         return undefined;
