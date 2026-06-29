@@ -1,9 +1,7 @@
 <script lang="ts">
     import { get } from "svelte/store";
     import { onDestroy, onMount, tick } from "svelte";
-    import type { ChatConversation } from "../../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../../Stores/ChatStore";
-    import { ProximityChatRoom } from "../../../Connection/Proximity/ProximityChatRoom";
     import { chatInputFocusStore } from "../../../../Stores/ChatStore";
     import LL from "../../../../../i18n/i18n-svelte";
     import { IconLoader, IconPaperclip, IconX } from "@wa-icons";
@@ -14,13 +12,11 @@
     let pickerOpeningTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
     interface Props {
-        room: ChatConversation;
         filesSelected?: (files: FileList) => void;
         fileUploaded?: () => void;
     }
 
-    let { room, filesSelected = () => {}, fileUploaded = () => {} }: Props = $props();
-    let isProximityChatRoom = $derived(room instanceof ProximityChatRoom);
+    let { filesSelected = () => {}, fileUploaded = () => {} }: Props = $props();
 
     $effect(() => {
         if (files && files.length > 0) {
@@ -89,7 +85,6 @@
     <input
         id="upload"
         class="hidden"
-        disabled={isProximityChatRoom}
         type="file"
         multiple
         bind:files
@@ -109,10 +104,7 @@
         {#if pickerOpening}
             <IconLoader class="animate-spin" font-size={18} />
         {:else}
-            <IconPaperclip
-                class="hover:!cursor-pointer {room instanceof ProximityChatRoom ? 'opacity-30 !cursor-none' : ''}"
-                font-size={18}
-            />
+            <IconPaperclip class="hover:!cursor-pointer" font-size={18} />
         {/if}
     </button>
     <button
