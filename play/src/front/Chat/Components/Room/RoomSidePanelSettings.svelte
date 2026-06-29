@@ -398,7 +398,9 @@
                 type="button"
                 class="btn btn-secondary m-0 w-full justify-center disabled:opacity-50"
                 data-testid="roomSettingsSaveButton"
-                disabled={settingsSaving || (!settingsDirty && !permissionsDirty) || editableName.trim().length === 0}
+                disabled={settingsSaving ||
+                    (!settingsDirty && !permissionsDirty) ||
+                    ($canEditName && editableName.trim().length === 0)}
                 onclick={saveSettings}
             >
                 {settingsSaving ? $LL.chat.roomPanel.settings.saving() : $LL.chat.roomPanel.settings.save()}
