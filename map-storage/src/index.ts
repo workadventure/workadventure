@@ -146,6 +146,24 @@ if (fs.existsSync("dist-ui")) {
     });
 }
 
+// Error-handling middlewares. They must be registered last, after all routes.
+
+// Capture route errors in Sentry, then delegate to the next error handler.
+Sentry.setupExpressErrorHandler(app);
+
+// Force error responses to be non-cacheable, then delegate to Express's default error handler
+// (which logs the stack and sends the 500).
+// Routes like `proxyFiles` set an aggressive `Cache-Control` header (e.g.
+// "public, max-age=31536000, immutable") *before* the file is fetched. If the fetch then fails
+// (e.g. a transient S3 outage) the request ends up here as a 500. Without overriding the header,
+// the browser/CDN would cache that 500 for up to a year and keep serving it even after S3 recovers.
+app.use((err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (!res.headersSent) {
+        res.setHeader("Cache-Control", "no-store");
+    }
+    next(err);
+});
+
 app.listen(3000, () => {
     console.info(`[${new Date().toISOString()}] Application is running on port 3000`);
 });
