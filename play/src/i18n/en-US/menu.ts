@@ -179,6 +179,7 @@ const menu: BaseTranslation = {
         moveRight: "Move Right",
         speedUp: "Run",
         interact: "Interact",
+        pushToTalk: "Hold to temporarily unmute in a meeting",
         follow: "Follow",
         openChat: "Open Chat",
         openUserList: "Open User List",

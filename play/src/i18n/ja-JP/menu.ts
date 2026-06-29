@@ -180,6 +180,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         moveRight: "右に移動",
         speedUp: "走る",
         interact: "相互作用",
+        pushToTalk: "会議中に一時的にミュート解除するには長押し",
         follow: "フォロー",
         openChat: "チャットを開く",
         openUserList: "ユーザーリストを開く",

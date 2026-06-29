@@ -182,6 +182,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         moveRight: "Sposta a destra",
         speedUp: "Corri",
         interact: "Interagisci",
+        pushToTalk: "Tieni premuto per attivare temporaneamente il microfono in riunione",
         follow: "Segui",
         openChat: "Apri chat",
         openUserList: "Apri lista utenti",
