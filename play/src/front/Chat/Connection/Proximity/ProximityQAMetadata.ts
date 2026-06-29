@@ -115,7 +115,7 @@ export function computeProximityQAState(
     answer: ProximityQAAnswerMetadata | undefined,
     currentVoterId: string,
     canMarkAnswered: boolean,
-    canDeleteAny = canMarkAnswered,
+    canDeleteAny: boolean,
 ): ProximityQAState {
     const latestUpvotesByUser = collectLatestUpvotes(question, upvotes);
     const activeUpvotes = Array.from(latestUpvotesByUser.values()).filter((upvote) => upvote.upvoted);

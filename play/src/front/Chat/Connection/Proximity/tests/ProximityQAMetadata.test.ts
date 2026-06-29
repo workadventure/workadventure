@@ -44,7 +44,7 @@ describe("ProximityQAMetadata", () => {
         ]);
         const parsed = parseProximityQAMetadata(metadata);
 
-        const state = computeProximityQAState(question, parsed.upvotes, undefined, "bob-uuid", true);
+        const state = computeProximityQAState(question, parsed.upvotes, undefined, "bob-uuid", true, true);
 
         expect(state.upvoteCount).toBe(1);
         expect(state.hasUpvoted).toBe(false);
@@ -71,7 +71,7 @@ describe("ProximityQAMetadata", () => {
 
         const openQuestions = parsed.questions
             .filter((question) => !parsed.deletions.some((deletion) => deletion.questionId === question.id))
-            .map((question) => computeProximityQAState(question, parsed.upvotes, undefined, "alice-uuid", false))
+            .map((question) => computeProximityQAState(question, parsed.upvotes, undefined, "alice-uuid", false, false))
             .sort((left, right) => right.upvoteCount - left.upvoteCount || left.createdAt - right.createdAt);
 
         expect(openQuestions.map((question) => question.id)).toEqual(["question-2", "question-1"]);

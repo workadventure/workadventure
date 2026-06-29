@@ -6,30 +6,37 @@ const PROXIMITY_QA_UPVOTE_PREFIX = "proximityQaUpvote:";
 const PROXIMITY_QA_ANSWER_PREFIX = "proximityQaAnswer:";
 const PROXIMITY_QA_DELETE_PREFIX = "proximityQaDelete:";
 
+// Upper bounds enforced server-side. They mirror the limit exposed by the
+// frontend (ProximityChatRoom.questionCreation.maxLength) so a malicious client
+// cannot bloat the broadcast space metadata with oversized payloads.
+const PROXIMITY_QA_ID_MAX_LENGTH = 100;
+const PROXIMITY_QA_BODY_MAX_LENGTH = 500;
+const PROXIMITY_QA_SENDER_NAME_MAX_LENGTH = 256;
+
 const proximityQAQuestionMetadataSchema = z.object({
-    id: z.string().min(1),
-    body: z.string().min(1),
-    senderId: z.string().min(1),
-    senderName: z.string().optional(),
+    id: z.string().min(1).max(PROXIMITY_QA_ID_MAX_LENGTH),
+    body: z.string().min(1).max(PROXIMITY_QA_BODY_MAX_LENGTH),
+    senderId: z.string().min(1).max(PROXIMITY_QA_ID_MAX_LENGTH),
+    senderName: z.string().max(PROXIMITY_QA_SENDER_NAME_MAX_LENGTH).optional(),
     createdAt: z.number().int(),
 });
 
 const proximityQAUpvoteMetadataSchema = z.object({
-    questionId: z.string().min(1),
-    voterId: z.string().min(1),
+    questionId: z.string().min(1).max(PROXIMITY_QA_ID_MAX_LENGTH),
+    voterId: z.string().min(1).max(PROXIMITY_QA_ID_MAX_LENGTH),
     upvoted: z.boolean(),
     updatedAt: z.number().int(),
 });
 
 const proximityQAAnswerMetadataSchema = z.object({
-    questionId: z.string().min(1),
-    moderatorId: z.string().min(1),
+    questionId: z.string().min(1).max(PROXIMITY_QA_ID_MAX_LENGTH),
+    moderatorId: z.string().min(1).max(PROXIMITY_QA_ID_MAX_LENGTH),
     answeredAt: z.number().int(),
 });
 
 const proximityQADeleteMetadataSchema = z.object({
-    questionId: z.string().min(1),
-    senderId: z.string().min(1),
+    questionId: z.string().min(1).max(PROXIMITY_QA_ID_MAX_LENGTH),
+    senderId: z.string().min(1).max(PROXIMITY_QA_ID_MAX_LENGTH),
     deletedAt: z.number().int(),
 });
 

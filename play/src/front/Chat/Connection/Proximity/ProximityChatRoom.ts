@@ -468,7 +468,9 @@ export class ProximityChatRoom implements ChatRoom {
         const definition: ProximityQAQuestionMetadata = {
             id: questionId,
             body,
-            senderId: this._spaceUserId,
+            // Use the stable voter id (uuid when available) like polls do, so the
+            // author keeps delete/upvote rights and attribution across reconnects.
+            senderId: this.getCurrentVoterId(this.users ?? new Map()),
             senderName: this.getCurrentUserName(),
             createdAt: Date.now(),
         };
@@ -601,7 +603,7 @@ export class ProximityChatRoom implements ChatRoom {
     ): readonly ChatQuestionItem[] {
         const parsedMetadata = parseProximityQAMetadata(metadata);
         const activeQuestionIds = new Set<string>();
-        const currentVoterId = this._spaceUserId;
+        const currentVoterId = this.getCurrentVoterId(users);
 
         const questionItems = parsedMetadata.questions
             .filter((question) => !isProximityQAQuestionDeleted(question, parsedMetadata.deletions))

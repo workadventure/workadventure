@@ -6,39 +6,49 @@ const PROXIMITY_POLL_VOTE_PREFIX = "proximityPollVote:";
 const PROXIMITY_POLL_END_PREFIX = "proximityPollEnd:";
 const PROXIMITY_POLL_DELETE_PREFIX = "proximityPollDelete:";
 
+// Upper bounds enforced server-side. They mirror the limits exposed by the
+// frontend (ProximityChatRoom.pollCreation.limits) so a malicious client cannot
+// bloat the broadcast space metadata with oversized payloads.
+const PROXIMITY_POLL_ID_MAX_LENGTH = 100;
+const PROXIMITY_POLL_QUESTION_MAX_LENGTH = 340;
+const PROXIMITY_POLL_ANSWER_TEXT_MAX_LENGTH = 240;
+const PROXIMITY_POLL_MAX_ANSWERS = 20;
+const PROXIMITY_POLL_SENDER_NAME_MAX_LENGTH = 256;
+const PROXIMITY_POLL_CLOSING_MESSAGE_MAX_LENGTH = 500;
+
 const proximityPollAnswerMetadataSchema = z.object({
-    id: z.string().min(1),
-    text: z.string().min(1),
+    id: z.string().min(1).max(PROXIMITY_POLL_ID_MAX_LENGTH),
+    text: z.string().min(1).max(PROXIMITY_POLL_ANSWER_TEXT_MAX_LENGTH),
 });
 
 const proximityPollDefinitionMetadataSchema = z.object({
-    id: z.string().min(1),
-    question: z.string().min(1),
+    id: z.string().min(1).max(PROXIMITY_POLL_ID_MAX_LENGTH),
+    question: z.string().min(1).max(PROXIMITY_POLL_QUESTION_MAX_LENGTH),
     kind: z.enum(["open", "closed"]),
-    answers: z.array(proximityPollAnswerMetadataSchema).min(2),
-    maxSelections: z.number().int().min(1),
-    senderId: z.string().min(1),
-    senderName: z.string().optional(),
+    answers: z.array(proximityPollAnswerMetadataSchema).min(2).max(PROXIMITY_POLL_MAX_ANSWERS),
+    maxSelections: z.number().int().min(1).max(PROXIMITY_POLL_MAX_ANSWERS),
+    senderId: z.string().min(1).max(PROXIMITY_POLL_ID_MAX_LENGTH),
+    senderName: z.string().max(PROXIMITY_POLL_SENDER_NAME_MAX_LENGTH).optional(),
     createdAt: z.number().int(),
 });
 
 const proximityPollVoteMetadataSchema = z.object({
-    pollId: z.string().min(1),
-    voterId: z.string().min(1),
-    answerIds: z.array(z.string().min(1)),
+    pollId: z.string().min(1).max(PROXIMITY_POLL_ID_MAX_LENGTH),
+    voterId: z.string().min(1).max(PROXIMITY_POLL_ID_MAX_LENGTH),
+    answerIds: z.array(z.string().min(1).max(PROXIMITY_POLL_ID_MAX_LENGTH)).max(PROXIMITY_POLL_MAX_ANSWERS),
     updatedAt: z.number().int(),
 });
 
 const proximityPollEndMetadataSchema = z.object({
-    pollId: z.string().min(1),
-    senderId: z.string().min(1),
-    closingMessage: z.string().optional(),
+    pollId: z.string().min(1).max(PROXIMITY_POLL_ID_MAX_LENGTH),
+    senderId: z.string().min(1).max(PROXIMITY_POLL_ID_MAX_LENGTH),
+    closingMessage: z.string().max(PROXIMITY_POLL_CLOSING_MESSAGE_MAX_LENGTH).optional(),
     closedAt: z.number().int(),
 });
 
 const proximityPollDeleteMetadataSchema = z.object({
-    pollId: z.string().min(1),
-    senderId: z.string().min(1),
+    pollId: z.string().min(1).max(PROXIMITY_POLL_ID_MAX_LENGTH),
+    senderId: z.string().min(1).max(PROXIMITY_POLL_ID_MAX_LENGTH),
     deletedAt: z.number().int(),
 });
 
@@ -111,8 +121,24 @@ function processVote(
         "Poll vote metadata key does not match payload",
     );
     assertSenderIdentity(vote.voterId, sender, "Poll vote voter does not match metadata sender");
-    getPollMetadata(vote.pollId, space);
+
+    const poll = getPollMetadata(vote.pollId, space);
+    assertVoteWithinPoll(vote, poll);
     return vote;
+}
+
+function assertVoteWithinPoll(
+    vote: z.infer<typeof proximityPollVoteMetadataSchema>,
+    poll: ProximityPollDefinitionMetadata,
+): void {
+    if (vote.answerIds.length > poll.maxSelections) {
+        throw new Error("Poll vote selects more answers than the poll allows");
+    }
+
+    const validAnswerIds = new Set(poll.answers.map((answer) => answer.id));
+    if (vote.answerIds.some((answerId) => !validAnswerIds.has(answerId))) {
+        throw new Error("Poll vote references answers that do not belong to the poll");
+    }
 }
 
 function processEnd(

@@ -829,6 +829,9 @@ async function runRawStreamUpdate(
                         audioTrackSettings?.voiceIsolation !== undefined,
                 );
                 if (constraints.audioRequestSource === "persistent") {
+                    // The audio track was requested by the persistent (user-toggled) microphone state,
+                    // not by a transient push-to-talk unmute. Re-affirm and persist that state once the
+                    // stream is actually acquired so a temporary unmute never leaks into the saved setting.
                     requestedMicrophoneState.enableMicrophone();
                 }
             } else {
