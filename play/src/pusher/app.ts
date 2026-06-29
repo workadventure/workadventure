@@ -203,7 +203,7 @@ class App {
             const genericAnalyticsEnabled = capabilities[ANALYTICS_EVENTS_CAPABILITY] === "v1";
             analyticsEventsQueue.setEnabled(genericAnalyticsEnabled);
             videoQualityAnalyticsQueue.setEnabled(
-                !genericAnalyticsEnabled && capabilities[VIDEO_QUALITY_ANALYTICS_CAPABILITY] === "v1"
+                !genericAnalyticsEnabled && capabilities[VIDEO_QUALITY_ANALYTICS_CAPABILITY] === "v1",
             );
         } catch (error) {
             console.error("Failed to initialize: problem getting AdminAPI capabilities", error);

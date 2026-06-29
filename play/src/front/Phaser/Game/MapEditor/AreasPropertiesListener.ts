@@ -1473,7 +1473,8 @@ export class AreasPropertiesListener {
         // analytics event for open website
         analyticsClient.openedWebsite(url, {
             targetUrl: analyticsContext.targetUrl ?? url.toString(),
-            triggerProperty: analyticsContext.triggerProperty ?? (property.type === "openFile" ? "openLink" : "openWebsite"),
+            triggerProperty:
+                analyticsContext.triggerProperty ?? (property.type === "openFile" ? "openLink" : "openWebsite"),
             areaId: analyticsContext.areaId,
             areaName: analyticsContext.areaName,
         });
