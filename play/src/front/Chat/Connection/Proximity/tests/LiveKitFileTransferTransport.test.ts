@@ -152,7 +152,7 @@ describe("LiveKitFileTransferTransport", () => {
             transferId: "transfer-1",
             fileName: "hello.txt",
             mimeType: "text/plain",
-            size: 10,
+            size: 5,
             messageType: "file",
             characterTextures: [],
             name: undefined,
@@ -166,7 +166,7 @@ describe("LiveKitFileTransferTransport", () => {
             info: {
                 name: "hello.txt",
                 mimeType: "text/plain",
-                size: 10,
+                size: 5,
             },
             readAll() {
                 stream.onProgress?.(0.4);
@@ -285,6 +285,45 @@ describe("LiveKitFileTransferTransport", () => {
             { transferId: "transfer-1", state: "downloading", progress: 0 },
             expect.objectContaining({ transferId: "transfer-1", state: "ready", progress: 1 }),
         ]);
+        subscription.unsubscribe();
+        vi.unstubAllGlobals();
+    });
+
+    it("should reject a LiveKit stream that delivers more bytes than the offer announced", async () => {
+        vi.stubGlobal("URL", { createObjectURL: vi.fn().mockReturnValue("blob:transfer-1") });
+        let streamHandler: LiveKitProximityFileStreamHandler | undefined;
+        const transport = createReceivingTransport((handler) => {
+            streamHandler = handler;
+        });
+        const updates: ProximityFileTransferUpdate[] = [];
+        const subscription = transport.transferUpdates.subscribe((update) => updates.push(update));
+        await transport.requestDownload({
+            transferId: "transfer-1",
+            fileName: "hello.txt",
+            mimeType: "text/plain",
+            size: 5,
+            messageType: "file",
+            characterTextures: [],
+            name: undefined,
+            senderSpaceUserId: "sender",
+        });
+
+        // The stream lies about its size (advertises 5 but streams 11 bytes); it must be rejected
+        // before/without surfacing a usable blob so an oversized payload cannot exhaust memory.
+        await streamHandler?.(
+            {
+                info: {
+                    name: "hello.txt",
+                    mimeType: "text/plain",
+                    size: 5,
+                },
+                readAll: () => Promise.resolve(["hello world"]),
+            },
+            "identity-sender",
+        );
+
+        expect(updates).not.toContainEqual(expect.objectContaining({ transferId: "transfer-1", state: "ready" }));
+        expect(updates).toContainEqual(expect.objectContaining({ transferId: "transfer-1", state: "error" }));
         subscription.unsubscribe();
         vi.unstubAllGlobals();
     });
