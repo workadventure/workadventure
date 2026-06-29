@@ -7,6 +7,7 @@ import type {
     ProximityFileTransferTransport,
 } from "./ProximityFileTransferTransport";
 import { decryptProximityFileBlob, hashProximityFileBlob } from "./ProximityFileTransferSecurity";
+import { getMaxEncryptedTransferWireSize, PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE } from "./ProximityFileTransferService";
 
 const PROXIMITY_FILE_TRANSFER_LIVEKIT_TOPIC_PREFIX = "wa:proximity-file-transfer:";
 const DEFAULT_BATCH_DELAY_MS = 1_000;
@@ -203,6 +204,17 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
             return;
         }
 
+        const maxWireSize = getMaxAcceptableWireSize(expectedDownload);
+        if (maxWireSize === undefined) {
+            this.failExpectedDownload(transferId, "file-too-large");
+            return;
+        }
+        // Reject early when the stream advertises an oversized payload, before buffering anything.
+        if (reader.info.size !== undefined && (!Number.isFinite(reader.info.size) || reader.info.size > maxWireSize)) {
+            this.failExpectedDownload(transferId, "file-too-large");
+            return;
+        }
+
         this.transferUpdateSubject.next({ transferId, state: "downloading", progress: 0 });
         reader.onProgress = (progress) => {
             if (progress === undefined || !Number.isFinite(progress)) {
@@ -230,11 +242,24 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
     ): Promise<Blob | undefined> {
         const { offer, security } = expectedDownload;
         const blobParts = chunks.map(normalizeBlobPart);
+
+        // The advertised size cannot be trusted, so enforce the bound on the bytes actually
+        // received before assembling/decrypting them.
+        const maxWireSize = getMaxAcceptableWireSize(expectedDownload);
         if (!security) {
-            return new Blob(blobParts, { type: offer.mimeType });
+            const blob = new Blob(blobParts, { type: offer.mimeType });
+            if (maxWireSize === undefined || blob.size !== Number(offer.size)) {
+                this.failExpectedDownload(offer.transferId, "integrity-check-failed");
+                return undefined;
+            }
+            return blob;
         }
 
         const encryptedBlob = new Blob(blobParts, { type: "application/octet-stream" });
+        if (maxWireSize === undefined || encryptedBlob.size > maxWireSize) {
+            this.failExpectedDownload(offer.transferId, "file-too-large");
+            return undefined;
+        }
         const decryptedBlob = await decryptProximityFileBlob(
             encryptedBlob,
             await security.encryptionKey,
@@ -244,16 +269,20 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
             decryptedBlob.size !== Number(offer.size) ||
             (await hashProximityFileBlob(decryptedBlob)) !== offer.sha256
         ) {
-            this.clearExpectedDownload(offer.transferId);
-            this.transferUpdateSubject.next({
-                transferId: offer.transferId,
-                state: "error",
-                progress: 0,
-                error: "integrity-check-failed",
-            });
+            this.failExpectedDownload(offer.transferId, "integrity-check-failed");
             return undefined;
         }
         return decryptedBlob;
+    }
+
+    private failExpectedDownload(transferId: string, error: string): void {
+        this.clearExpectedDownload(transferId);
+        this.transferUpdateSubject.next({
+            transferId,
+            state: "error",
+            progress: 0,
+            error,
+        });
     }
 
     private clearExpectedDownload(transferId: string): void {
@@ -261,6 +290,19 @@ export class LiveKitFileTransferTransport implements ProximityFileTransferTransp
         expectedDownload?.unregisterHandler();
         this.expectedDownloads.delete(transferId);
     }
+}
+
+/**
+ * Maximum number of bytes we are willing to buffer for a transfer, or `undefined` when the
+ * offer itself advertises an invalid/oversized plaintext size. Encrypted transfers travel with
+ * a per-chunk overhead, so their wire size is larger than the announced plaintext size.
+ */
+function getMaxAcceptableWireSize(expectedDownload: ExpectedLiveKitDownload): number | undefined {
+    const plainSize = Number(expectedDownload.offer.size);
+    if (!Number.isFinite(plainSize) || plainSize < 0 || plainSize > PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE) {
+        return undefined;
+    }
+    return expectedDownload.security ? getMaxEncryptedTransferWireSize(plainSize) : plainSize;
 }
 
 function normalizeBlobPart(part: LiveKitProximityFileStreamPart): BlobPart {
