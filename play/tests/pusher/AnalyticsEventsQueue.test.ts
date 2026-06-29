@@ -234,7 +234,10 @@ describe("AnalyticsEventsQueue", () => {
         });
     });
 
-    it("keeps the batch failure when an individual retry fails outside validation", async () => {
+    it("accounts partial success when a non-validation error aborts the individual retry mid-loop", async () => {
+        // After a 422 the queue retries events one-by-one. If event #1 succeeds and
+        // event #2 fails with 5xx, only event #2 must be counted against
+        // droppedAfterSendFailure — the success of event #1 must NOT be discarded.
         const validationError = {
             isAxiosError: true,
             message: "Request failed with status code 422",
@@ -249,6 +252,8 @@ describe("AnalyticsEventsQueue", () => {
             .fn()
             .mockRejectedValueOnce(validationError)
             .mockResolvedValueOnce(undefined)
+            .mockRejectedValueOnce(serverError)
+            .mockRejectedValueOnce(serverError)
             .mockRejectedValueOnce(serverError);
         const queue = new AnalyticsEventsQueue(baseConfig, post);
         queue.setEnabled(true);
@@ -258,9 +263,55 @@ describe("AnalyticsEventsQueue", () => {
         await queue.flush();
 
         expect(queue.getStats()).toMatchObject({
-            droppedAfterSendFailure: 2,
-            eventsSent: 0,
+            droppedAfterSendFailure: 1,
+            eventsSent: 1,
+            batchesSent: 1,
             flushErrors: 1,
+            droppedInvalid: 0,
+        });
+    });
+
+    it("drain() flushes pending events when called while a flush is in flight", async () => {
+        // drain() is the SIGTERM hook. If setInterval-driven flush() is still
+        // resolving when shutdown starts, drain() must wait until that flush
+        // finishes and then drive any remaining batches to the admin before
+        // the process exits, instead of returning immediately and dropping them.
+        let resolveInFlight: () => void = () => undefined;
+        const inFlight = new Promise<void>((resolve) => {
+            resolveInFlight = resolve;
+        });
+        const post = vi
+            .fn()
+            .mockImplementationOnce(async () => {
+                await inFlight;
+            })
+            .mockResolvedValue(undefined);
+
+        const queue = new AnalyticsEventsQueue({ ...baseConfig, maxBatchSize: 1 }, post);
+        queue.setEnabled(true);
+
+        queue.enqueueEvent(event("event-1", "user.connected"), socketData());
+        queue.enqueueEvent(event("event-2", "user.disconnected"), socketData());
+
+        // Kick off the first flush — it will hang on `inFlight` because the mock
+        // is awaiting the gate. drain() is called while that flush is still in-flight.
+        const ongoingFlush = queue.flush();
+        const draining = queue.drain(5_000);
+
+        // Let drain() spin a few times noticing isFlushing === true and the
+        // queue length unchanged, then release the in-flight flush.
+        await new Promise<void>((resolve) => {
+            setTimeout(resolve, 80);
+        });
+        resolveInFlight();
+        await ongoingFlush;
+        await draining;
+
+        expect(post).toHaveBeenCalledTimes(2);
+        expect(queue.getStats()).toMatchObject({
+            batchesSent: 2,
+            eventsSent: 2,
+            droppedAfterSendFailure: 0,
         });
     });
 

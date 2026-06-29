@@ -453,30 +453,45 @@ export class AnalyticsEventsQueue {
         });
     }
 
+    /**
+     * Per-event retry path after a 422 split. Never throws: partial success and
+     * per-event failure are accounted to the per-class counters so the caller
+     * cannot double-count `droppedAfterSendFailure` for events that already
+     * succeeded individually. A non-validation error aborts the loop and the
+     * remaining unsent events are recorded against `droppedAfterSendFailure`.
+     */
     private async sendEventsIndividually(batch: AnalyticsEventsBatch): Promise<number> {
-        return batch.events.reduce<Promise<number>>(async (sentEventsPromise, event) => {
-            const sentEvents = await sentEventsPromise;
-
+        let sentEvents = 0;
+        for (let i = 0; i < batch.events.length; i++) {
+            const event = batch.events[i];
             try {
+                // eslint-disable-next-line no-await-in-loop
                 await this.postBatch({
                     ...batch,
                     events: [event],
                 });
-                return sentEvents + 1;
+                sentEvents += 1;
             } catch (error) {
-                if (!this.isValidationError(error)) {
-                    throw error;
+                if (this.isValidationError(error)) {
+                    this.droppedInvalid += 1;
+                    console.warn("Analytics event dropped after admin validation failed", {
+                        eventName: event.eventName,
+                        eventId: event.eventId,
+                        response: isAxiosError(error) ? error.response?.data : undefined,
+                    });
+                    continue;
                 }
 
-                this.droppedInvalid += 1;
-                console.warn("Analytics event dropped after admin validation failed", {
-                    eventName: event.eventName,
-                    eventId: event.eventId,
-                    response: isAxiosError(error) ? error.response?.data : undefined,
-                });
+                // Non-validation error mid-loop: stop and count only the events we did
+                // not send (current one + everything after) as send-failure drops.
+                const remaining = batch.events.length - i;
+                this.droppedAfterSendFailure += remaining;
+                this.flushErrors += 1;
+                this.logFlushError(error);
                 return sentEvents;
             }
-        }, Promise.resolve(0));
+        }
+        return sentEvents;
     }
 
     private shouldSplitInvalidBatch(error: unknown, batch: AnalyticsEventsBatch): boolean {
