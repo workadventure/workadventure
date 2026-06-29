@@ -12,7 +12,7 @@ export class AnalyticsPresenceTracker {
 
     public constructor(
         private readonly queue: AnalyticsEventQueue = analyticsEventsQueue,
-        private readonly nowMs: () => number = Date.now
+        private readonly nowMs: () => number = Date.now,
     ) {}
 
     public trackConnected(socketData: SocketData): void {
@@ -35,7 +35,7 @@ export class AnalyticsPresenceTracker {
                     connectedAt: new Date(connectedAtMs).toISOString(),
                 },
             },
-            socketData
+            socketData,
         );
     }
 
@@ -63,7 +63,7 @@ export class AnalyticsPresenceTracker {
                     durationSeconds: Math.max(0, Math.round((disconnectedAtMs - connectedAtMs) / 1000)),
                 },
             },
-            socketData
+            socketData,
         );
     }
 
