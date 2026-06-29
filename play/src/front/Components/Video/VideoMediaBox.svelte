@@ -13,7 +13,8 @@
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
     import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
-    import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+    import { requestedCameraState } from "../../Stores/MediaStore";
+    import { effectiveMicrophoneState } from "../../Stores/MicrophoneSessionStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import { blackListManager } from "../../WebRtc/BlackListManager";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
@@ -160,7 +161,7 @@
     let isLocalUserStreamingMegaphone = $derived(
         isLocalUser &&
             $requestedMegaphoneStore &&
-            ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState),
+            ($requestedCameraState || $effectiveMicrophoneState || $requestedScreenSharingState),
     );
 
     let blackListSubject: Subscription | undefined;

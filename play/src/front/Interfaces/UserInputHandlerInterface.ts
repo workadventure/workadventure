@@ -20,4 +20,5 @@ export interface UserInputHandlerInterface {
 
     addSpaceEventListener: (callback: () => void) => void;
     removeSpaceEventListener: (callback: () => void) => void;
+    destroy?: () => void;
 }
