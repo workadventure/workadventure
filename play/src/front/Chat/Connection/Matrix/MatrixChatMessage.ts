@@ -63,11 +63,11 @@ export class MatrixChatMessage implements ChatMessage {
         let senderPowerLevel = 0;
 
         if (myRoomMember) {
-            myPowerLevel = myRoomMember.powerLevelNorm;
+            myPowerLevel = myRoomMember.powerLevel;
         }
 
         if (senderRoomMember) {
-            senderPowerLevel = senderRoomMember.powerLevelNorm;
+            senderPowerLevel = senderRoomMember.powerLevel;
         }
 
         const hasSufficientPowerLevel =

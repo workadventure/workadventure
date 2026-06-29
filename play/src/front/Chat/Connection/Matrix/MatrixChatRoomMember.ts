@@ -38,7 +38,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
         this.id = roomMember.userId;
         this.name = writable(this.roomMember.name);
         this.membership = writable(this.roomMember.membership);
-        this.permissionLevel = writable(MatrixChatRoomMember.getPermissionLevel(this.roomMember.powerLevelNorm));
+        this.permissionLevel = writable(MatrixChatRoomMember.getPermissionLevel(this.roomMember.powerLevel));
         this.pictureStore = matrixAvatarProfile.createLazyAvatarStore(this.id, () =>
             matrixAvatarProfile.resolveAvatarUrl(
                 this.id,
@@ -155,7 +155,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
         this.refreshAvatarFromRoomMember();
     }
     private onRoomMemberPowerLevel(ev: MatrixEvent, member: RoomMember) {
-        this.permissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevelNorm));
+        this.permissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevel));
     }
     private onRoomMemberTyping(ev: MatrixEvent, member: RoomMember) {
         const memberInformation: memberTypingInformation | null = member.typing

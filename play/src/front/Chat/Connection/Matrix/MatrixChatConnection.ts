@@ -14,7 +14,6 @@ import type {
 } from "matrix-js-sdk";
 import {
     ClientEvent,
-    CryptoEvent,
     EventTimeline,
     EventType,
     MatrixError,
@@ -33,7 +32,7 @@ import { defaultWoka } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
-import { canAcceptVerificationRequest } from "matrix-js-sdk/lib/crypto-api";
+import { canAcceptVerificationRequest, CryptoEvent } from "matrix-js-sdk/lib/crypto-api";
 import { asError } from "catch-unknown";
 
 import Debug from "debug";
@@ -1950,9 +1949,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         if (!this.client) {
             throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
         }
-        const directMap: Record<string, string[]> = this.client.getAccountData("m.direct")?.getContent() || {};
+        const directMap: Record<string, string[]> = this.client.getAccountData(EventType.Direct)?.getContent() || {};
         directMap[userId] = [...(directMap[userId] || []), roomId];
-        await this.client.setAccountData("m.direct", directMap);
+        await this.client.setAccountData(EventType.Direct, directMap);
     }
 
     async isUserExist(address: string): Promise<boolean> {

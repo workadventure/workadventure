@@ -420,7 +420,7 @@ export class MatrixChatRoom
 
         this.areNotificationsMuted.set(
             this.matrixRoom.client
-                .getAccountData("m.push_rules")
+                .getAccountData(EventType.PushRules)
                 ?.getContent()
                 .global.override.some((rule: IPushRule) => {
                     if (rule.actions.includes(PushRuleActionName.DontNotify) && rule.rule_id === this.id) {
@@ -2102,7 +2102,7 @@ export class MatrixChatRoom
     private setCurrentUserRoomMember(member: RoomMember | undefined): void {
         if (this.currentUserRoomMember === member) {
             if (member) {
-                this.currentUserPermissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevelNorm));
+                this.currentUserPermissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevel));
             }
             return;
         }
@@ -2115,12 +2115,12 @@ export class MatrixChatRoom
             return;
         }
 
-        this.currentUserPermissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevelNorm));
+        this.currentUserPermissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevel));
         member.on(RoomMemberEvent.PowerLevel, this.handleCurrentUserRoomMemberPowerLevel);
     }
 
     private onCurrentUserRoomMemberPowerLevel(_event: MatrixEvent, member: RoomMember): void {
-        this.currentUserPermissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevelNorm));
+        this.currentUserPermissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevel));
     }
 
     public async changePermissionLevelFor(member: ChatRoomMember, permissionLevel: ChatPermissionLevel): Promise<void> {
