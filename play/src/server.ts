@@ -18,6 +18,8 @@ import {
     PUSHER_WS_PORT,
 } from "./pusher/enums/EnvironmentVariable";
 import RoomApiServer from "./room-api/RoomApiServer";
+import { analyticsEventsQueue } from "./pusher/services/AnalyticsEventsQueue";
+import { videoQualityAnalyticsQueue } from "./pusher/services/VideoQualityAnalyticsQueue";
 
 // In production, the current working directory is "dist".
 if (fs.existsSync("dist") && !fs.existsSync("src")) {
@@ -64,6 +66,29 @@ if (SENTRY_DSN != undefined) {
     console.error(e);
     Sentry.captureException(e);
 });
+
+// Graceful shutdown: drain analytics queues before exit so events buffered at
+// SIGTERM time still reach the admin instead of being silently dropped.
+let shuttingDown = false;
+const shutdown = (signal: NodeJS.Signals): void => {
+    if (shuttingDown) {
+        return;
+    }
+    shuttingDown = true;
+    console.info(`Received ${signal}, draining analytics queues before exit…`);
+    Promise.allSettled([
+        analyticsEventsQueue.drain().finally(() => analyticsEventsQueue.stop()),
+        videoQualityAnalyticsQueue.drain().finally(() => videoQualityAnalyticsQueue.stop()),
+    ])
+        .catch((error) => {
+            console.error("Error while draining analytics queues during shutdown", error);
+        })
+        .finally(() => {
+            process.exit(0);
+        });
+};
+process.once("SIGTERM", shutdown);
+process.once("SIGINT", shutdown);
 
 // Room API
 if (!ADMIN_API_URL && !ROOM_API_SECRET_KEY) {

@@ -135,6 +135,30 @@ export class VideoQualityAnalyticsQueue {
         }
     }
 
+    /**
+     * Drains the queue by flushing batches sequentially until it is empty or the deadline elapses.
+     * Used by the graceful-shutdown hook so events queued at SIGTERM time still reach the admin.
+     * Sequential awaits are intentional: flush() must complete before the next batch is sent.
+     */
+    public async drain(timeoutMs = 10_000): Promise<void> {
+        if (!this.canSend()) {
+            return;
+        }
+
+        const deadline = Date.now() + timeoutMs;
+        while (this.queue.length > 0 && Date.now() < deadline) {
+            const lengthBefore = this.queue.length;
+            // eslint-disable-next-line no-await-in-loop
+            await this.flush();
+            if (this.queue.length === lengthBefore) {
+                // eslint-disable-next-line no-await-in-loop
+                await new Promise<void>((resolve) => {
+                    setTimeout(resolve, 50);
+                });
+            }
+        }
+    }
+
     public enqueueReport(report: VideoQualityReportMessage, socketData: SocketData): void {
         if (!this.canSend()) {
             return;
