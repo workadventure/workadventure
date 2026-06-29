@@ -66,6 +66,8 @@ Environment variables for the Play service (frontend and pusher).
 | `VIDEO_ANALYTICS_TIMEOUT_MS` | No | HTTP timeout in milliseconds for video quality analytics ingestion calls. Defaults to 2000 |
 | `VIDEO_ANALYTICS_MAX_QUEUE_SIZE` | No | Maximum number of video quality samples queued in pusher memory. Defaults to 10000 |
 | `VIDEO_ANALYTICS_MAX_BATCH_SIZE` | No | Maximum number of video quality samples sent in one admin batch. Defaults to 1000 |
+| `ANALYTICS_DRAIN_TIMEOUT_MS` | No | Maximum time in milliseconds spent draining the generic analytics queue on SIGTERM / SIGINT before the process exits. Make sure your orchestrator's grace period (e.g. Kubernetes terminationGracePeriodSeconds) is at least this long. Defaults to 30000 |
+| `VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS` | No | Maximum time in milliseconds spent draining the legacy video-quality analytics queue on SIGTERM / SIGINT before the process exits. Defaults to 30000 |
 | `START_ROOM_URL` | No | Default room URL where users start when accessing the platform |
 | `DEBUG_MODE` | No | Enable debug mode with additional console logging. Defaults to false |
 | `UPLOADER_URL` | Yes | URL of the file uploader service |
