@@ -1126,7 +1126,7 @@ export class IoSocketController {
                                 );
                                 analyticsEventsQueue.enqueueVideoQualityReport(
                                     message.message.videoQualityReportMessage,
-                                    socket.getUserData()
+                                    socket.getUserData(),
                                 );
                                 break;
                             }
@@ -1135,12 +1135,15 @@ export class IoSocketController {
                                     analyticsEventsQueue.enqueueEvent(
                                         {
                                             eventName: event.eventName,
-                                            source: event.source === "front" || event.source === "media" ? event.source : "front",
+                                            source:
+                                                event.source === "front" || event.source === "media"
+                                                    ? event.source
+                                                    : "front",
                                             clientEventTimeMs: event.clientEventTimeMs,
                                             eventId: event.eventId,
                                             properties: event.properties ?? {},
                                         },
-                                        socket.getUserData()
+                                        socket.getUserData(),
                                     );
                                 }
                                 break;
