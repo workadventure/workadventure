@@ -3,6 +3,7 @@ import { Subject } from "rxjs";
 import { describe, expect, it, vi } from "vitest";
 import {
     PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE,
+    PROXIMITY_FILE_TRANSFER_MAX_INCOMING_OFFERS_PER_PEER,
     ProximityFileTransferService,
     type ProximityFileTransferTransport,
     validateProximityFiles,
@@ -381,5 +382,58 @@ describe("ProximityFileTransferService", () => {
                 signal: JSON.stringify({ type: "livekit_file_request" }),
             });
         });
+    });
+
+    it("should throttle a peer that floods offers but not penalise other peers", () => {
+        const incomingOffers = new Subject<{
+            $case: "proximityFileTransferOffer";
+            proximityFileTransferOffer: {
+                transferId: string;
+                fileName: string;
+                mimeType: string;
+                size: number;
+                messageType: string;
+                characterTextures: [];
+                name: undefined;
+            };
+            sender: string;
+        }>();
+        const service = new ProximityFileTransferService({
+            localSpaceUserId: "recipient",
+            space: {
+                emitPrivateMessage: vi.fn(),
+                observePrivateEvent: (key) =>
+                    (key === "proximityFileTransferOffer" ? incomingOffers : new Subject()) as never,
+            },
+            getIceServers: () => Promise.resolve([]),
+        });
+        const surfaced: string[] = [];
+        const subscription = service.incomingOffers.subscribe((offer) => surfaced.push(offer.transferId));
+        const emitOffer = (transferId: string, sender: string) =>
+            incomingOffers.next({
+                $case: "proximityFileTransferOffer",
+                proximityFileTransferOffer: {
+                    transferId,
+                    fileName: "f.txt",
+                    mimeType: "text/plain",
+                    size: 1,
+                    messageType: "file",
+                    characterTextures: [],
+                    name: undefined,
+                },
+                sender,
+            });
+
+        for (let i = 0; i < PROXIMITY_FILE_TRANSFER_MAX_INCOMING_OFFERS_PER_PEER + 5; i++) {
+            emitOffer(`spammer-${i}`, "spammer");
+        }
+        // A different peer is unaffected by the spammer reaching its cap.
+        emitOffer("other-1", "other");
+
+        expect(surfaced.filter((id) => id.startsWith("spammer-"))).toHaveLength(
+            PROXIMITY_FILE_TRANSFER_MAX_INCOMING_OFFERS_PER_PEER,
+        );
+        expect(surfaced).toContain("other-1");
+        subscription.unsubscribe();
     });
 });
