@@ -187,20 +187,21 @@ describe("AnalyticsClient admin analytics sink", () => {
             "api/analytics/events-batch": "v1",
         };
 
-        analyticsClient.openedWebsite(new URL("https://example.com/secured/file.pdf?token=secret"), {
-            targetUrl: "https://example.com/files/file.pdf",
+        analyticsClient.openedWebsite(new URL("https://example.com/secured/file.pdf?token=secret#frag"), {
+            targetUrl: "https://example.com/files/file.pdf?sas=otherSecret",
             triggerProperty: "openLink",
             areaId: "docs-zone",
             areaName: "Docs zone",
         });
 
+        // Query string + hash must be stripped to avoid leaking auth tokens to analytics.
         expect(sendAdmin).toHaveBeenCalledWith({
             events: [
                 expect.objectContaining({
                     eventName: "cowebsite.opened",
                     source: "front",
                     properties: {
-                        url: "https://example.com/secured/file.pdf?token=secret",
+                        url: "https://example.com/secured/file.pdf",
                         targetUrl: "https://example.com/files/file.pdf",
                         mediaKind: "pdf",
                         triggerProperty: "openLink",
