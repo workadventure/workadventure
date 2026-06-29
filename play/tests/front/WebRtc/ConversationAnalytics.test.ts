@@ -42,12 +42,42 @@ describe("subscribeToConversationAnalytics", () => {
                     properties: expect.objectContaining({
                         conversationId: expect.any(String),
                         conversationType: "remote",
-                        participantCount: 2,
+                        participantCount: undefined,
                         sampleDurationSeconds: 5,
                     }),
                 }),
             ],
         });
+    });
+
+    it("uses unique heartbeat eventIds across ticks sharing a millisecond", async () => {
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+        const sendReport = vi.fn();
+        const inConversation = writable(true);
+
+        subscribeToConversationAnalytics(inConversation, sendReport);
+        await vi.advanceTimersByTimeAsync(15_000);
+
+        const heartbeats = sentEvents(sendReport).filter((event) => event.eventName === "conversation.heartbeat");
+        const eventIds = heartbeats.map((event) => event.eventId);
+        expect(new Set(eventIds).size).toBe(eventIds.length);
+    });
+
+    it("reports the participant count provided by the participantCountStore option", async () => {
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+        const sendReport = vi.fn();
+        const inConversation = writable(true);
+        const participantCountStore = writable<number | undefined>(3);
+
+        subscribeToConversationAnalytics(inConversation, sendReport, undefined, { participantCountStore });
+        await vi.advanceTimersByTimeAsync(5_000);
+
+        const heartbeat = sentEvents(sendReport).find((event) => event.eventName === "conversation.heartbeat");
+        expect(heartbeat?.properties.participantCount).toBe(3);
     });
 
     it("keeps the same conversation id while the conversation stays active", async () => {
