@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SocketData } from "../../src/pusher/models/Websocket/SocketData";
 import type { AnalyticsEventInput, AnalyticsEventsQueue } from "../../src/pusher/services/AnalyticsEventsQueue";
 import {
@@ -37,7 +37,15 @@ describe("processAnalyticsReportMessage", () => {
     let warnSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
+        // vi.spyOn returns the existing spy if console.warn is already wrapped,
+        // and its call history persists across tests. Restoring after each test
+        // makes sure the next beforeEach starts from a pristine console.warn
+        // (and therefore a fresh call count on the new spy).
         warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+        warnSpy.mockRestore();
     });
 
     it("forwards a normal-sized batch of front and media events to the queue", () => {
