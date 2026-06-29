@@ -1117,14 +1117,36 @@ export class IoSocketController {
                                 break;
                             }
                             case "analyticsEventReportMessage": {
-                                for (const event of message.message.analyticsEventReportMessage.events) {
+                                const reportEvents = message.message.analyticsEventReportMessage.events;
+                                // Hard cap on per-message event count: protects the queue from a
+                                // misbehaving (or hostile) client flooding analyticsEventReportMessage
+                                // with thousands of events in a single batch.
+                                const MAX_EVENTS_PER_REPORT_MESSAGE = 100;
+                                if (reportEvents.length > MAX_EVENTS_PER_REPORT_MESSAGE) {
+                                    console.warn("Analytics report message exceeds max events per message — dropping", {
+                                        received: reportEvents.length,
+                                        max: MAX_EVENTS_PER_REPORT_MESSAGE,
+                                        reporterUserUuid: socket.getUserData().userUuid,
+                                        roomId: socket.getUserData().roomId,
+                                    });
+                                    break;
+                                }
+                                for (const event of reportEvents) {
+                                    // Strict source whitelist: only "front" and "media" may originate
+                                    // from a client. "pusher" is reserved for backend-generated events.
+                                    if (event.source !== "front" && event.source !== "media") {
+                                        console.warn("Analytics event dropped: invalid client source", {
+                                            eventName: event.eventName,
+                                            eventId: event.eventId,
+                                            source: event.source,
+                                            reporterUserUuid: socket.getUserData().userUuid,
+                                        });
+                                        continue;
+                                    }
                                     analyticsEventsQueue.enqueueEvent(
                                         {
                                             eventName: event.eventName,
-                                            source:
-                                                event.source === "front" || event.source === "media"
-                                                    ? event.source
-                                                    : "front",
+                                            source: event.source,
                                             clientEventTimeMs: event.clientEventTimeMs,
                                             eventId: event.eventId,
                                             properties: event.properties ?? {},
