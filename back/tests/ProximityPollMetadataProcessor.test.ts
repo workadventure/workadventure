@@ -61,6 +61,38 @@ describe("ProximityPollMetadataProcessor", () => {
             ),
         ).rejects.toThrow("Only poll creators can delete a poll");
     });
+
+    it("should reject votes that select more answers than the poll allows", async () => {
+        const space = createSpace({
+            sender: { spaceUserId: "space-user-1", uuid: "alice-uuid", tags: [], megaphoneState: false },
+            metadata: new Map([["proximityPoll:poll-1", createPollDefinition()]]),
+        });
+
+        await expect(
+            processProximityPollMetadata(
+                "proximityPollVote:poll-1:alice-uuid",
+                { pollId: "poll-1", voterId: "alice-uuid", answerIds: ["answer-1", "answer-2"], updatedAt: 11 },
+                "space-user-1",
+                space,
+            ),
+        ).rejects.toThrow("Poll vote selects more answers than the poll allows");
+    });
+
+    it("should reject votes that reference answers outside the poll", async () => {
+        const space = createSpace({
+            sender: { spaceUserId: "space-user-1", uuid: "alice-uuid", tags: [], megaphoneState: false },
+            metadata: new Map([["proximityPoll:poll-1", createPollDefinition()]]),
+        });
+
+        await expect(
+            processProximityPollMetadata(
+                "proximityPollVote:poll-1:alice-uuid",
+                { pollId: "poll-1", voterId: "alice-uuid", answerIds: ["unknown-answer"], updatedAt: 11 },
+                "space-user-1",
+                space,
+            ),
+        ).rejects.toThrow("Poll vote references answers that do not belong to the poll");
+    });
 });
 
 function createPollDefinition() {
