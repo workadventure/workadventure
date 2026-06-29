@@ -816,7 +816,12 @@ describe("MatrixChatConnection", () => {
             expect(matrixChatConnection["addDMRoomInAccountData"]).toHaveBeenCalledOnce();
         });
 
-        it("Room not present after synchronization", async () => {
+        it("should fall back to the room returned by joinRoom when it is not yet in the client store", async () => {
+            // Newer matrix-js-sdk sync timing can leave a freshly-joined room momentarily absent
+            // from the client store (getRoom returns null) even though client.joinRoom() already
+            // resolved with the Room. joinRoom must use that returned room instead of failing.
+            const roomID = "room-id";
+            const mockGetDMInviter = vi.fn().mockReturnValue(undefined);
             const expected = {
                 room_id: "1",
             };
@@ -837,7 +842,7 @@ describe("MatrixChatConnection", () => {
                 startClient: mockStartClient,
                 createRoom: vi.fn().mockResolvedValue(expected),
                 getRoom: vi.fn().mockReturnValue(null),
-                joinRoom: vi.fn().mockResolvedValue(""),
+                joinRoom: vi.fn().mockResolvedValue({ roomId: roomID, getDMInviter: mockGetDMInviter }),
             } as unknown as MatrixClient;
 
             const clientPromise = Promise.resolve(mockMatrixClient);
@@ -850,13 +855,13 @@ describe("MatrixChatConnection", () => {
 
             await clientPromise;
 
-            const roomID = "room-id";
-
             matrixChatConnection["addDMRoomInAccountData"] = vi.fn();
 
-            await expect(matrixChatConnection.joinRoom(roomID)).rejects.toThrow(
-                "Room not present after synchronization",
-            );
+            await expect(matrixChatConnection.joinRoom(roomID)).resolves.toBeDefined();
+            //eslint-disable-next-line @typescript-eslint/unbound-method
+            expect(mockMatrixClient.joinRoom).toHaveBeenCalledOnce();
+            // getDMInviter is read from the fallback room returned by joinRoom.
+            expect(mockGetDMInviter).toHaveBeenCalledOnce();
         });
     });
     describe("addDMRoomInAccountData", () => {
