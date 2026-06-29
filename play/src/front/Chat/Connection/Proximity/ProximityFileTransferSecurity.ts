@@ -19,7 +19,7 @@ export type EncryptedProximityFileBlob = {
 
 export async function hashProximityFileBlob(blob: Blob): Promise<string> {
     const hasher = sha256.create();
-    await hashBlobChunks(blob, hasher, 0);
+    await hashBlobChunks(blob, hasher);
     return bytesToHex(hasher.digest());
 }
 
@@ -44,7 +44,7 @@ export async function encryptProximityFileBlob(
 ): Promise<EncryptedProximityFileBlob> {
     await sodium.ready;
     const { state, header } = sodium.crypto_secretstream_xchacha20poly1305_init_push(key);
-    const encryptedChunks = await encryptBlobChunks(blob, state, 0);
+    const encryptedChunks = await encryptBlobChunks(blob, state);
     return {
         blob: new Blob(encryptedChunks, { type: "application/octet-stream" }),
         metadata: {
@@ -66,7 +66,7 @@ export async function decryptProximityFileBlob(
             sodium.from_base64(metadata.iv, sodium.base64_variants.ORIGINAL),
             key,
         );
-        return new Blob(decryptFramedChunks(new Uint8Array(await readBlobAsArrayBuffer(blob)), state, 0), {
+        return new Blob(decryptFramedChunks(new Uint8Array(await readBlobAsArrayBuffer(blob)), state), {
             type: metadata.mimeType,
         });
     } catch {
@@ -78,51 +78,57 @@ function bytesToHex(bytes: Uint8Array): string {
     return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-async function hashBlobChunks(blob: Blob, hasher: ReturnType<typeof sha256.create>, offset: number): Promise<void> {
-    if (offset >= blob.size) {
-        return;
+// Iterative (not recursive) so multi-GB blobs — thousands of chunks — cannot overflow the call stack.
+async function hashBlobChunks(blob: Blob, hasher: ReturnType<typeof sha256.create>): Promise<void> {
+    for (let offset = 0; offset < blob.size; offset += PROXIMITY_FILE_TRANSFER_HASH_CHUNK_SIZE) {
+        // eslint-disable-next-line no-await-in-loop -- chunks must be hashed sequentially to stream the digest
+        const chunkBuffer = await readBlobAsArrayBuffer(
+            blob.slice(offset, offset + PROXIMITY_FILE_TRANSFER_HASH_CHUNK_SIZE),
+        );
+        hasher.update(new Uint8Array(chunkBuffer));
     }
-
-    const chunkBuffer = await readBlobAsArrayBuffer(
-        blob.slice(offset, offset + PROXIMITY_FILE_TRANSFER_HASH_CHUNK_SIZE),
-    );
-    hasher.update(new Uint8Array(chunkBuffer));
-    await hashBlobChunks(blob, hasher, offset + PROXIMITY_FILE_TRANSFER_HASH_CHUNK_SIZE);
 }
 
-async function encryptBlobChunks(blob: Blob, state: StateAddress, offset: number): Promise<ArrayBuffer[]> {
-    if (offset >= blob.size) {
-        return [];
+async function encryptBlobChunks(blob: Blob, state: StateAddress): Promise<ArrayBuffer[]> {
+    const frames: ArrayBuffer[] = [];
+    for (let offset = 0; offset < blob.size; offset += PROXIMITY_FILE_TRANSFER_ENCRYPTION_CHUNK_SIZE) {
+        const nextOffset = offset + PROXIMITY_FILE_TRANSFER_ENCRYPTION_CHUNK_SIZE;
+        const tag =
+            nextOffset >= blob.size
+                ? sodium.crypto_secretstream_xchacha20poly1305_TAG_FINAL
+                : sodium.crypto_secretstream_xchacha20poly1305_TAG_MESSAGE;
+        // eslint-disable-next-line no-await-in-loop -- secretstream chunks must be pushed in order
+        const chunkBuffer = await readBlobAsArrayBuffer(blob.slice(offset, nextOffset));
+        const encryptedChunk = sodium.crypto_secretstream_xchacha20poly1305_push(
+            state,
+            new Uint8Array(chunkBuffer),
+            null,
+            tag,
+        );
+        frames.push(frameEncryptedChunk(encryptedChunk));
     }
-
-    const nextOffset = offset + PROXIMITY_FILE_TRANSFER_ENCRYPTION_CHUNK_SIZE;
-    const tag =
-        nextOffset >= blob.size
-            ? sodium.crypto_secretstream_xchacha20poly1305_TAG_FINAL
-            : sodium.crypto_secretstream_xchacha20poly1305_TAG_MESSAGE;
-    const chunkBuffer = await readBlobAsArrayBuffer(blob.slice(offset, nextOffset));
-    const encryptedChunk = sodium.crypto_secretstream_xchacha20poly1305_push(
-        state,
-        new Uint8Array(chunkBuffer),
-        null,
-        tag,
-    );
-    return [frameEncryptedChunk(encryptedChunk), ...(await encryptBlobChunks(blob, state, nextOffset))];
+    return frames;
 }
 
-function decryptFramedChunks(bytes: Uint8Array, state: StateAddress, offset: number): ArrayBuffer[] {
-    if (offset >= bytes.byteLength) {
-        return [];
+function decryptFramedChunks(bytes: Uint8Array, state: StateAddress): ArrayBuffer[] {
+    const messages: ArrayBuffer[] = [];
+    let offset = 0;
+    while (offset < bytes.byteLength) {
+        const chunkLength = readFrameLength(bytes, offset);
+        const chunkStart = offset + 4;
+        const chunkEnd = chunkStart + chunkLength;
+        const pulled = sodium.crypto_secretstream_xchacha20poly1305_pull(
+            state,
+            bytes.slice(chunkStart, chunkEnd),
+            null,
+        );
+        if (!pulled) {
+            throw new Error("Unable to decrypt proximity file transfer");
+        }
+        messages.push(copyToArrayBuffer(pulled.message));
+        offset = chunkEnd;
     }
-
-    const chunkLength = readFrameLength(bytes, offset);
-    const chunkStart = offset + 4;
-    const chunkEnd = chunkStart + chunkLength;
-    const pulled = sodium.crypto_secretstream_xchacha20poly1305_pull(state, bytes.slice(chunkStart, chunkEnd), null);
-    if (!pulled) {
-        throw new Error("Unable to decrypt proximity file transfer");
-    }
-    return [copyToArrayBuffer(pulled.message), ...decryptFramedChunks(bytes, state, chunkEnd)];
+    return messages;
 }
 
 function frameEncryptedChunk(bytes: Uint8Array): ArrayBuffer {
