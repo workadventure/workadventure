@@ -625,7 +625,7 @@ export class UploadController {
                 // good practice to catch this error explicitly
                 archive.on("error", function (err) {
                     console.error(`[${new Date().toISOString()}] An error occurred while Zipping file: `, err);
-                    Sentry.captureException(`An error occurred while Zipping file: ${JSON.stringify(err)}`);
+                    Sentry.captureException(err);
                     res.status(500).send("An error occurred");
                 });
 
