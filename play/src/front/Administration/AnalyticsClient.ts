@@ -846,16 +846,18 @@ class AnalyticsClient {
         url: URL,
         context: CowebsiteOpenedAnalyticsContext,
     ): AdminAnalyticsProperties {
-        const targetUrl = context.targetUrl ?? url.toString();
+        const rawTargetUrl = context.targetUrl ?? url.toString();
         const fileExtension = this.normalizeFileExtension(
-            context.fileExtension ?? this.getFileExtensionFromUrl(targetUrl),
+            context.fileExtension ?? this.getFileExtensionFromUrl(rawTargetUrl),
         );
-        const fileName = context.fileName ?? this.getFileNameFromUrl(targetUrl);
-        const mediaKind = context.mediaKind ?? this.inferCowebsiteMediaKind(targetUrl, fileExtension);
+        const fileName = context.fileName ?? this.getFileNameFromUrl(rawTargetUrl);
+        const mediaKind = context.mediaKind ?? this.inferCowebsiteMediaKind(rawTargetUrl, fileExtension);
 
         return {
-            url: url.toString(),
-            targetUrl,
+            // Strip query string and hash: they routinely carry auth tokens
+            // (access_token, sas, signed URLs, …) that must not leak to analytics.
+            url: this.stripUrlSensitiveParts(url),
+            targetUrl: this.stripUrlSensitiveParts(rawTargetUrl),
             mediaKind,
             triggerProperty: context.triggerProperty ?? "other",
             fileName,
@@ -864,6 +866,15 @@ class AnalyticsClient {
             areaName: context.areaName,
             schemaVersion: context.schemaVersion ?? 1,
         };
+    }
+
+    private stripUrlSensitiveParts(input: string | URL): string {
+        try {
+            const parsed = input instanceof URL ? input : new URL(input, window.location.origin);
+            return parsed.origin + parsed.pathname;
+        } catch {
+            return typeof input === "string" ? input.split("?")[0].split("#")[0] : input.toString();
+        }
     }
 
     private getFileNameFromUrl(targetUrl: string): string | null {
