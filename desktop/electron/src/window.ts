@@ -1,6 +1,7 @@
 import { BrowserWindow, app, net, shell, session } from "electron";
 import ElectronLog from "electron-log";
 import http from "http";
+import crypto from "crypto";
 import windowStateKeeper from "electron-window-state";
 import path from "path";
 import settings from "./settings";
@@ -18,16 +19,86 @@ import {
     isDesktopLogoutUrl,
     isRoomUrl,
     resolveInitialTarget,
+    stripSensitiveQueryParams,
     type DesktopAuthCallback,
     type DesktopConfig,
 } from "./desktop-url-policy";
 import { shouldMaximizeBeforeLoad } from "./window-state-policy";
+import { closePipWindow, isPipWindowOpen } from "./pip-window";
+
+const DESKTOP_CALLBACK_FLOW_TTL_MS = 5 * 60 * 1000;
+const DESKTOP_CALLBACK_SECRET_BYTES = 32;
+const DESKTOP_CALLBACK_STATE_BYTES = 16;
+
+type DesktopCallbackFlow = {
+    state: string;
+    secret: string;
+    expiresAt: number;
+    kind: "auth" | "logout";
+};
 
 let mainWindow: BrowserWindow | undefined;
 let pendingDeepLinkUrl: string | undefined;
 let desktopAuthCallbackServer: http.Server | undefined;
 let desktopCallbackServerOrigin: string | undefined;
 let desktopAuthWindow: BrowserWindow | undefined;
+const desktopCallbackFlows = new Map<string, DesktopCallbackFlow>();
+
+function randomToken(bytes: number) {
+    return crypto.randomBytes(bytes).toString("hex");
+}
+
+function purgeExpiredDesktopCallbackFlows(now = Date.now()) {
+    for (const [secret, flow] of desktopCallbackFlows) {
+        if (flow.expiresAt <= now) {
+            desktopCallbackFlows.delete(secret);
+        }
+    }
+}
+
+function consumeDesktopCallbackFlow(secret: string, state: string | null): DesktopCallbackFlow | undefined {
+    purgeExpiredDesktopCallbackFlows();
+    if (!secret || !state) {
+        return undefined;
+    }
+    const flow = desktopCallbackFlows.get(secret);
+    if (!flow) {
+        return undefined;
+    }
+    desktopCallbackFlows.delete(secret);
+    if (flow.expiresAt <= Date.now()) {
+        return undefined;
+    }
+    try {
+        const a = Buffer.from(flow.state, "utf8");
+        const b = Buffer.from(state, "utf8");
+        if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+            return undefined;
+        }
+    } catch {
+        return undefined;
+    }
+    return flow;
+}
+
+function registerDesktopCallbackFlow(kind: "auth" | "logout"): DesktopCallbackFlow {
+    purgeExpiredDesktopCallbackFlows();
+    const flow: DesktopCallbackFlow = {
+        state: randomToken(DESKTOP_CALLBACK_STATE_BYTES),
+        secret: randomToken(DESKTOP_CALLBACK_SECRET_BYTES),
+        expiresAt: Date.now() + DESKTOP_CALLBACK_FLOW_TTL_MS,
+        kind,
+    };
+    desktopCallbackFlows.set(flow.secret, flow);
+    return flow;
+}
+
+function buildLoopbackCallbackUrl(origin: string, flow: DesktopCallbackFlow): string {
+    const path = flow.kind === "auth" ? "/auth/callback" : "/logout/callback";
+    const url = new URL(`${path}/${flow.secret}`, origin);
+    url.searchParams.set("state", flow.state);
+    return url.toString();
+}
 
 export function getWindow() {
     return mainWindow;
@@ -98,8 +169,17 @@ function shouldOpenExternally(url: string, config: DesktopConfig) {
 }
 
 async function openExternal(url: string) {
-    const protocol = new URL(url).protocol;
-    if (!["http:", "https:", "mailto:", "workadventure:"].includes(protocol)) {
+    let protocol: string;
+    try {
+        protocol = new URL(url).protocol;
+    } catch {
+        return;
+    }
+    // Intentionally exclude "workadventure:" — only OS-level handlers (app.on('open-url') /
+    // second-instance argv) should be able to drive the desktop auth callback. Allowing the
+    // renderer to re-enter via shell.openExternal would let any in-app page (incl. XSS) trigger
+    // openDesktopAuthCallback without an OS confirmation dialog.
+    if (!["http:", "https:", "mailto:"].includes(protocol)) {
         return;
     }
 
@@ -167,7 +247,8 @@ async function showDesktopBrowserFlowPendingScreen(title: string, message: strin
 
 async function openDesktopLogin(url: string) {
     const callbackOrigin = await ensureDesktopCallbackServer();
-    const desktopLoginUrl = createDesktopLoginUrl(url, `${callbackOrigin}/auth/callback`);
+    const flow = registerDesktopCallbackFlow("auth");
+    const desktopLoginUrl = createDesktopLoginUrl(url, buildLoopbackCallbackUrl(callbackOrigin, flow));
     await openDesktopAuthWindow(desktopLoginUrl);
     if (!hasDesktopAuthWindow()) {
         return;
@@ -182,7 +263,8 @@ async function openDesktopLogin(url: string) {
 
 async function openDesktopLogout(url: string) {
     const callbackOrigin = await ensureDesktopCallbackServer();
-    const desktopLogoutUrl = createDesktopLogoutUrl(url, `${callbackOrigin}/logout/callback`);
+    const flow = registerDesktopCallbackFlow("logout");
+    const desktopLogoutUrl = createDesktopLogoutUrl(url, buildLoopbackCallbackUrl(callbackOrigin, flow));
     await openDesktopAuthWindow(desktopLogoutUrl);
     if (!hasDesktopAuthWindow()) {
         return;
@@ -257,34 +339,104 @@ function closeDesktopAuthWindow() {
     desktopAuthWindow = undefined;
 }
 
+function isLoopbackHostHeader(host: string | undefined, port: number) {
+    if (!host) {
+        return false;
+    }
+    const expected = new Set([`127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`]);
+    return expected.has(host.toLowerCase());
+}
+
+function maybeStopDesktopCallbackServer() {
+    if (desktopCallbackFlows.size > 0) {
+        return;
+    }
+    if (!desktopAuthCallbackServer) {
+        return;
+    }
+    const server = desktopAuthCallbackServer;
+    const previousOrigin = desktopCallbackServerOrigin;
+    desktopAuthCallbackServer = undefined;
+    desktopCallbackServerOrigin = undefined;
+    server.close((err) => {
+        if (err) {
+            ElectronLog.debug(`Desktop callback server close error.`, err);
+        } else if (previousOrigin) {
+            ElectronLog.info(`Desktop callback server stopped (${previousOrigin}).`);
+        }
+    });
+}
+
 function ensureDesktopCallbackServer(): Promise<string> {
-    if (desktopCallbackServerOrigin) {
+    if (desktopCallbackServerOrigin && desktopAuthCallbackServer) {
         return Promise.resolve(desktopCallbackServerOrigin);
     }
 
-    desktopAuthCallbackServer = http.createServer((request, response) => {
+    const server = http.createServer((request, response) => {
+        const address = server.address();
+        const port = address && typeof address !== "string" ? address.port : 0;
+
+        if (request.method !== "GET" && request.method !== "HEAD") {
+            response.writeHead(405, { "Content-Type": "text/plain; charset=utf-8", Allow: "GET, HEAD" });
+            response.end("Method Not Allowed");
+            return;
+        }
+
+        if (!isLoopbackHostHeader(request.headers.host, port)) {
+            ElectronLog.warn(
+                `Rejected desktop callback request with unexpected Host header "${request.headers.host ?? "<missing>"}".`,
+            );
+            response.writeHead(421, { "Content-Type": "text/plain; charset=utf-8" });
+            response.end("Misdirected Request");
+            return;
+        }
+
+        const origin = request.headers.origin;
+        if (origin && origin !== "null") {
+            ElectronLog.warn(`Rejected desktop callback request with Origin "${origin}".`);
+            response.writeHead(403, { "Content-Type": "text/plain; charset=utf-8" });
+            response.end("Forbidden");
+            return;
+        }
+
         const requestUrl = new URL(request.url || "/", "http://127.0.0.1");
-        if (requestUrl.pathname !== "/auth/callback" && requestUrl.pathname !== "/logout/callback") {
+        const segments = requestUrl.pathname.split("/").filter(Boolean);
+        if (segments.length !== 3 || segments[0] !== "auth" && segments[0] !== "logout" || segments[1] !== "callback") {
             response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
             response.end("Not found");
             return;
         }
 
-        if (requestUrl.pathname === "/logout/callback") {
+        const kind = segments[0] === "auth" ? "auth" : "logout";
+        const secret = segments[2];
+        const state = requestUrl.searchParams.get("state");
+        const flow = consumeDesktopCallbackFlow(secret, state);
+        if (!flow || flow.kind !== kind) {
+            ElectronLog.warn(`Rejected desktop callback with invalid state for ${kind} flow.`);
+            response.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
+            response.end("Invalid or expired callback state");
+            return;
+        }
+
+        if (kind === "logout") {
             const targetUrl = requestUrl.searchParams.get("url");
             response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
             response.end(createDesktopCallbackPage("Déconnexion terminée. Vous pouvez revenir dans WorkAdventure."));
 
             closeDesktopAuthWindow();
-            void loadDesktopTarget(targetUrl || getDesktopConfig().portalUrl);
+            const config = getDesktopConfig();
+            const safeTarget = targetUrl && isAllowedNavigationUrl(targetUrl, config) ? targetUrl : config.portalUrl;
+            void loadDesktopTarget(safeTarget);
+            maybeStopDesktopCallbackServer();
             return;
         }
 
-        const origin = requestUrl.searchParams.get("origin");
+        const callbackOrigin = requestUrl.searchParams.get("origin");
         const code = requestUrl.searchParams.get("code");
-        if (!origin || !code) {
+        if (!callbackOrigin || !code) {
             response.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
             response.end("Missing desktop auth callback parameters");
+            maybeStopDesktopCallbackServer();
             return;
         }
 
@@ -292,18 +444,21 @@ function ensureDesktopCallbackServer(): Promise<string> {
         response.end(createDesktopCallbackPage("Connexion terminée. Vous pouvez revenir dans WorkAdventure."));
 
         closeDesktopAuthWindow();
-        void openDesktopAuthCallback({ origin, code });
+        void openDesktopAuthCallback({ origin: callbackOrigin, code }).finally(maybeStopDesktopCallbackServer);
     });
+    desktopAuthCallbackServer = server;
 
     return new Promise((resolve, reject) => {
-        if (!desktopAuthCallbackServer) {
-            reject(new Error("Desktop auth callback server was not created"));
-            return;
-        }
-
-        desktopAuthCallbackServer.on("error", reject);
-        desktopAuthCallbackServer.listen(0, "127.0.0.1", () => {
-            const address = desktopAuthCallbackServer?.address();
+        server.on("error", (err) => {
+            ElectronLog.error("Desktop callback server error.", err);
+            if (desktopAuthCallbackServer === server) {
+                desktopAuthCallbackServer = undefined;
+                desktopCallbackServerOrigin = undefined;
+            }
+            reject(err);
+        });
+        server.listen(0, "127.0.0.1", () => {
+            const address = server.address();
             if (!address || typeof address === "string") {
                 reject(new Error("Desktop auth callback server did not expose a TCP address"));
                 return;
@@ -317,9 +472,13 @@ function ensureDesktopCallbackServer(): Promise<string> {
 }
 
 function rememberRoomUrl(url: string) {
-    if (isRoomUrl(url)) {
-        settings.set("last_room_url", url);
+    if (!isRoomUrl(url)) {
+        return;
     }
+    // Strip tokens/codes BEFORE persisting. Otherwise the JWT lives in plaintext electron-settings
+    // and is replayed on every cold start.
+    const sanitized = stripSensitiveQueryParams(url) || url;
+    settings.set("last_room_url", sanitized);
 }
 
 function configureSession(config: DesktopConfig) {
@@ -378,6 +537,10 @@ function configureNavigationSecurity(window: BrowserWindow, config: DesktopConfi
 
     window.webContents.on("did-fail-load", (event, errorCode, errorDescription, validatedURL) => {
         const portalUrl = getDesktopConfig().portalUrl;
+        const safeUrl = stripSensitiveQueryParams(validatedURL) || validatedURL || "";
+        if (errorCode !== -3) {
+            ElectronLog.warn(`did-fail-load (${errorCode}: ${errorDescription}) for "${safeUrl}".`);
+        }
         if (validatedURL && validatedURL !== portalUrl) {
             void loadDesktopTarget(portalUrl);
         }
@@ -433,6 +596,7 @@ export async function createWindow(initialUrl?: string) {
 
     mainWindow.on("closed", () => {
         mainWindow = undefined;
+        closePipWindow();
     });
 
     mainWindow.on("resize", () => refreshRendererViewport("resize"));
@@ -441,12 +605,25 @@ export async function createWindow(initialUrl?: string) {
     mainWindow.on("restore", () => refreshRendererViewport("restore"));
     mainWindow.on("enter-full-screen", () => refreshRendererViewport("enter-full-screen"));
     mainWindow.on("leave-full-screen", () => refreshRendererViewport("leave-full-screen"));
-    mainWindow.on("focus", emitDesktopWindowStateChange);
+    mainWindow.on("focus", () => {
+        emitDesktopWindowStateChange();
+        // Defensive close in main process: the renderer also closes PiP via store reactivity,
+        // but main fires this event before the renderer has a chance to react, which avoids a
+        // brief flash of PiP+main on rapid alt-tab.
+        if (isPipWindowOpen()) {
+            closePipWindow();
+        }
+    });
     mainWindow.on("blur", emitDesktopWindowStateChange);
     mainWindow.on("show", emitDesktopWindowStateChange);
     mainWindow.on("hide", emitDesktopWindowStateChange);
     mainWindow.on("minimize", emitDesktopWindowStateChange);
-    mainWindow.on("restore", emitDesktopWindowStateChange);
+    mainWindow.on("restore", () => {
+        emitDesktopWindowStateChange();
+        if (isPipWindowOpen()) {
+            closePipWindow();
+        }
+    });
 
     // mainWindow.on('close', async (event) => {
     //   if (!app.confirmedExitPrompt) {

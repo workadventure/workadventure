@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; media-src 'self' blob:;" />
+    <title>WorkAdventure</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            /* Pulled from @workadventure/design-system to match the in-app ActionBar pill style. */
+            --bg: #0b1220;
+            --bg-tile: #000;
+            --fg: #f8fafc;
+            --fg-muted: #94a3b8;
+            --contrast: #1B2A41;       /* ActionBar pill bg (used with /80 = ~80% opacity) */
+            --secondary: #4156F6;      /* "active" state — e.g. screen sharing ON */
+            --secondary-hover: #5566ff;
+            --danger: #E96D51;         /* "forbidden" state — mic/cam OFF, close PiP */
+            --danger-hover: #ef7e63;
+            --chip: rgba(15, 23, 42, 0.78);
+        }
+        html, body {
+            margin: 0;
+            height: 100%;
+            background: var(--bg);
+            color: var(--fg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body { display: flex; flex-direction: column; }
+
+        #drag-handle {
+            -webkit-app-region: drag;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            background: rgba(0, 0, 0, 0.55);
+            font-size: 11px;
+            color: var(--fg-muted);
+            flex-shrink: 0;
+        }
+        #drag-handle .label {
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #recording-dot {
+            display: none;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--danger);
+            box-shadow: 0 0 0 0 rgba(233, 109, 81, 0.55);
+            animation: pulse 1.6s ease-in-out infinite;
+        }
+        #recording-dot.visible { display: inline-block; }
+        @keyframes pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(233, 109, 81, 0.55); }
+            70%  { box-shadow: 0 0 0 6px rgba(233, 109, 81, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(233, 109, 81, 0); }
+        }
+        #close-window {
+            -webkit-app-region: no-drag;
+            cursor: pointer;
+            padding: 3px 9px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 0;
+            color: inherit;
+            font-size: 11px;
+            line-height: 1;
+        }
+        #close-window:hover { background: rgba(255, 255, 255, 0.16); }
+
+        #stage {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        #videos {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-auto-rows: 1fr;
+            gap: 3px;
+            padding: 3px;
+            min-height: 0;
+        }
+        /*
+         * Tile structure mirrors the web PiP MediaBox: one persistent container per participant
+         * (= per VideoBox in streamableCollectionStore), with two stacked layers — a <video>
+         * element and an avatar placeholder — and we just toggle visibility based on whether a
+         * MediaStreamTrack is currently bound. The DOM is NEVER torn down because of a track
+         * change; only when the participant leaves the meeting.
+         */
+        .tile {
+            position: relative;
+            background: var(--tile-bg, #1B2A41);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .tile .video-layer,
+        .tile .avatar-layer {
+            position: absolute;
+            inset: 0;
+        }
+        .tile .video-layer {
+            display: none;
+        }
+        .tile.has-video .video-layer { display: block; }
+        .tile.has-video .avatar-layer { display: none; }
+        .tile .video-layer video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            background: #000;
+        }
+        /* Self tile mirrors the camera like every video conf app. */
+        .tile.is-self .video-layer video { transform: scaleX(-1); }
+        .tile.is-self { box-shadow: inset 0 0 0 2px rgba(65, 86, 246, 0.55); }
+        .tile .avatar-layer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tile .avatar {
+            width: 56%;
+            max-width: 84px;
+            aspect-ratio: 1 / 1;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-weight: 600;
+            font-size: 22px;
+            letter-spacing: 0.5px;
+            background: rgba(255, 255, 255, 0.18);
+            text-transform: uppercase;
+            user-select: none;
+        }
+        .tile .mic-off-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 22px;
+            height: 22px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: var(--danger);
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+        .tile.is-muted .mic-off-badge { display: inline-flex; }
+        .tile .mic-off-badge svg {
+            width: 14px;
+            height: 14px;
+            stroke: #fff;
+            fill: transparent;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .tile .name-chip {
+            position: absolute;
+            bottom: 6px;
+            left: 6px;
+            background: var(--chip);
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            line-height: 1.4;
+            max-width: calc(100% - 12px);
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        #empty {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            color: var(--fg-muted);
+            font-size: 12px;
+            padding: 16px;
+            text-align: center;
+            pointer-events: none;
+        }
+        #empty.hidden { display: none; }
+
+        /* Toolbar — ports the in-app ActionBar look (pill bg-contrast/80, individual button states). */
+        #toolbar {
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 8px;
+            -webkit-app-region: no-drag;
+        }
+        .toolbar-pill {
+            display: inline-flex;
+            background: rgba(27, 42, 65, 0.8); /* contrast/80 */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 10px;
+            padding: 4px;
+            gap: 2px;
+        }
+        .toolbar-btn {
+            -webkit-app-region: no-drag;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--fg);
+            padding: 0;
+            transition: background-color 80ms ease;
+        }
+        .toolbar-btn:hover { background: rgba(255, 255, 255, 0.10); }
+        .toolbar-btn.is-forbidden { background: var(--danger); }
+        .toolbar-btn.is-forbidden:hover { background: var(--danger-hover); }
+        .toolbar-btn.is-active { background: var(--secondary); }
+        .toolbar-btn.is-active:hover { background: var(--secondary-hover); }
+        .toolbar-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+        .toolbar-btn[disabled]:hover { background: transparent; }
+
+        .toolbar-btn svg {
+            width: 22px;
+            height: 22px;
+            stroke: currentColor;
+            fill: transparent;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .icon-only-on, .icon-only-off { display: none; }
+        .toolbar-btn[data-state="on"] .icon-only-on { display: inline; }
+        .toolbar-btn[data-state="off"] .icon-only-off { display: inline; }
+
+        /* Source picker overlay — full-window modal so the user never refocuses the main app. */
+        #source-picker {
+            position: absolute;
+            inset: 0;
+            background: rgba(11, 18, 32, 0.94);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 10;
+            display: none;
+            flex-direction: column;
+        }
+        #source-picker.visible { display: flex; }
+        #source-picker .sp-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            -webkit-app-region: drag;
+        }
+        #source-picker .sp-title { font-size: 12px; font-weight: 600; letter-spacing: 0.3px; }
+        #source-picker .sp-tabs {
+            display: flex;
+            gap: 4px;
+            -webkit-app-region: no-drag;
+        }
+        #source-picker .sp-tab {
+            background: rgba(255, 255, 255, 0.06);
+            border: 0;
+            color: var(--fg);
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+        #source-picker .sp-tab.active { background: var(--secondary); }
+        #source-picker .sp-tab:hover:not(.active) { background: rgba(255, 255, 255, 0.12); }
+        #source-picker .sp-close {
+            -webkit-app-region: no-drag;
+            background: rgba(255, 255, 255, 0.06);
+            border: 0;
+            color: var(--fg);
+            font-size: 14px;
+            padding: 3px 9px;
+            border-radius: 4px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        #source-picker .sp-close:hover { background: rgba(255, 255, 255, 0.16); }
+        #source-picker .sp-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            align-content: start;
+        }
+        #source-picker .sp-body.empty,
+        #source-picker .sp-body.loading {
+            display: grid;
+            place-items: center;
+            grid-template-columns: 1fr;
+            color: var(--fg-muted);
+            font-size: 12px;
+        }
+        #source-picker .sp-tile {
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: background-color 80ms ease, border-color 80ms ease;
+        }
+        #source-picker .sp-tile:hover {
+            background: rgba(65, 86, 246, 0.18);
+            border-color: rgba(65, 86, 246, 0.55);
+        }
+        #source-picker .sp-tile img {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            background: #000;
+            display: block;
+        }
+        #source-picker .sp-tile .sp-tile-name {
+            font-size: 11px;
+            padding: 4px 6px;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--fg);
+        }
+    </style>
+</head>
+<body>
+    <div id="drag-handle">
+        <span class="label">
+            <span id="recording-dot" aria-hidden="true"></span>
+            WorkAdventure · Picture-in-Picture
+        </span>
+        <button id="close-window" type="button" aria-label="Close picture-in-picture">×</button>
+    </div>
+    <div id="stage">
+        <div id="videos"></div>
+        <div id="empty">Waiting for the call view…</div>
+        <div id="source-picker" role="dialog" aria-modal="true" aria-label="Pick a screen to share">
+            <div class="sp-header">
+                <span class="sp-title">Share a screen or window</span>
+                <div class="sp-tabs">
+                    <button class="sp-tab active" type="button" data-kind="screen">Screens</button>
+                    <button class="sp-tab" type="button" data-kind="window">Windows</button>
+                </div>
+                <button class="sp-close" id="sp-cancel" type="button" aria-label="Cancel">×</button>
+            </div>
+            <div class="sp-body loading" id="sp-body">Loading sources…</div>
+        </div>
+    </div>
+    <div id="toolbar">
+        <div class="toolbar-pill">
+            <button class="toolbar-btn" id="btn-mic" type="button" data-state="on" title="Toggle microphone" aria-label="Toggle microphone">
+                <!-- Mic ON (matches Components/Icons/MicOnIcon.svelte) -->
+                <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M9 2m0 3a3 3 0 0 1 3 -3h0a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3h0a3 3 0 0 1 -3 -3z"/>
+                    <path d="M5 10a7 7 0 0 0 14 0"/>
+                    <path d="M8 21l8 0"/>
+                    <path d="M12 17l0 4"/>
+                </svg>
+                <!-- Mic OFF (matches Components/Icons/MicOffIcon.svelte) -->
+                <svg class="icon-only-off" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M3 3l18 18"/>
+                    <path d="M9 5a3 3 0 0 1 6 0v5a3 3 0 0 1 -.13 .874m-2 2a3 3 0 0 1 -3.87 -2.872v-1"/>
+                    <path d="M5 10a7 7 0 0 0 10.846 5.85m2 -2a6.967 6.967 0 0 0 1.152 -3.85"/>
+                    <path d="M8 21l8 0"/>
+                    <path d="M12 17l0 4"/>
+                </svg>
+            </button>
+            <button class="toolbar-btn" id="btn-cam" type="button" data-state="on" title="Toggle camera" aria-label="Toggle camera">
+                <!-- Cam ON -->
+                <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4z"/>
+                    <path d="M3 6m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z"/>
+                </svg>
+                <!-- Cam OFF -->
+                <svg class="icon-only-off" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M3 3l18 18"/>
+                    <path d="M15 11v-1l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -.675 .946"/>
+                    <path d="M10 6h3a2 2 0 0 1 2 2v3m0 4v1a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-8a2 2 0 0 1 2 -2h1"/>
+                </svg>
+            </button>
+            <button class="toolbar-btn" id="btn-share" type="button" data-state="on" title="Toggle screen sharing" aria-label="Toggle screen sharing">
+                <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M21 12v3a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10a1 1 0 0 1 1 -1h9"/>
+                    <path d="M7 20l10 0"/>
+                    <path d="M9 16l0 4"/>
+                    <path d="M15 16l0 4"/>
+                    <path d="M17 4h4v4"/>
+                    <path d="M16 9l5 -5"/>
+                </svg>
+                <svg class="icon-only-off" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M21 12v3a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10a1 1 0 0 1 1 -1h9"/>
+                    <path d="M7 20l10 0"/>
+                    <path d="M9 16l0 4"/>
+                    <path d="M15 16l0 4"/>
+                    <path d="M17 4h4v4"/>
+                    <path d="M16 9l5 -5"/>
+                </svg>
+            </button>
+            <button class="toolbar-btn" id="btn-back" type="button" data-state="on" title="Back to WorkAdventure" aria-label="Back to WorkAdventure">
+                <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M5 12l14 0"/>
+                    <path d="M5 12l4 4"/>
+                    <path d="M5 12l4 -4"/>
+                </svg>
+            </button>
+            <button class="toolbar-btn is-forbidden" id="btn-close" type="button" data-state="on" title="Close PiP" aria-label="Close picture-in-picture">
+                <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M18 6l-12 12"/>
+                    <path d="M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <script src="./renderer.js"></script>
+</body>
+</html>

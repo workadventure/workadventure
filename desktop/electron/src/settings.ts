@@ -14,7 +14,10 @@ let settings: SettingsData;
 
 const defaultSettings: SettingsData = {
     log_level: "info",
-    auto_launch_enabled: true,
+    // Auto-launch is OPT-IN: silently adding WorkAdventure to OS startup is non-compliant with
+    // macOS Sonoma+ background-item guidelines and Windows install best practices. Users explicitly
+    // opt in via the preferences UI.
+    auto_launch_enabled: false,
     portal_url: process.env.WA_DESKTOP_PORTAL_URL || "http://admin.workadventure.localhost/",
     shortcuts: {
         mute_toggle: "",

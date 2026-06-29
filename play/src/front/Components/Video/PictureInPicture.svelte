@@ -3,7 +3,13 @@
     import { onDestroy, onMount, tick } from "svelte";
     import { on } from "svelte/events";
     import Debug from "debug";
-    import { isInRemoteConversation, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+    import { derived, get } from "svelte/store";
+    import {
+        isInActiveConversationStore,
+        isInRemoteConversation,
+        myCameraPeerStore,
+        streamableCollectionStore,
+    } from "../../Stores/StreamableCollectionStore";
     import {
         activePictureInPictureStore,
         askPictureInPictureActivatingStore,
@@ -13,10 +19,22 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {} from "./PictureInPicture/PictureInPictureWindow";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+    import {
+        isScreenSharingSupported,
+        requestedScreenSharingState,
+        startScreenShareWithSource,
+    } from "../../Stores/ScreenSharingStore";
+    import { recordingStore } from "../../Stores/RecordingStore";
     import {
         hasPictureInPictureContent,
         isDocumentPictureInPictureSupported,
     } from "./PictureInPicture/PictureInPictureAvailabilityPolicy";
+    import {
+        NativePictureInPictureClient,
+        isNativePictureInPictureAvailable,
+        shouldOpenNativePictureInPicture,
+    } from "./PictureInPicture/NativePictureInPictureClient";
 
     interface Props {
         children?: Snippet<[{ inPictureInPicture: boolean }]>;
@@ -25,6 +43,10 @@
     let { children }: Props = $props();
 
     const debug = Debug("app:PictureInPicture");
+
+    const useNativeDesktopPip = isNativePictureInPictureAvailable();
+    let nativeClient: NativePictureInPictureClient | undefined;
+    let userManuallyOpenedNativePip = false;
 
     let divElement: HTMLDivElement;
     let parentDivElement: HTMLDivElement;
@@ -116,6 +138,11 @@
 
     const unsubscribeIsInRemoteConversation = isInRemoteConversation.subscribe((isTalking) => {
         if (!isTalking) {
+            if (useNativeDesktopPip && nativeClient?.isActive()) {
+                nativeClient.stop();
+                activePictureInPictureStore.set(false);
+                userManuallyOpenedNativePip = false;
+            }
             destroyPictureInPictureComponent();
         }
     });
@@ -125,6 +152,14 @@
 
         if (!hasPictureInPictureContent($isInRemoteConversation, $streamableCollectionStore.size)) {
             debug("Request Picture in Picture mode but no video content is available");
+            askPictureInPictureActivatingStore.set(false);
+            return;
+        }
+
+        if (useNativeDesktopPip) {
+            // Native path: do not open a DocumentPictureInPicture window — the Electron utility
+            // window covers this case (and avoids the user-gesture limitation).
+            userManuallyOpenedNativePip = true;
             askPictureInPictureActivatingStore.set(false);
             return;
         }
@@ -205,7 +240,60 @@
             debug("PictureInPicture enterpictureinpicture handler is not supported", e);
         }
 
-        if (!isDocumentPictureInPictureSupported(window)) {
+        if (useNativeDesktopPip) {
+            // The desktop shell always supports PiP via the utility BrowserWindow path; do not
+            // signal "unsupported" even if DocumentPictureInPicture is missing in this Chromium.
+            pictureInPictureSupportedStore.set(true);
+            const screenShareSupported = isScreenSharingSupported();
+            const deviceState = derived(
+                [requestedMicrophoneState, requestedCameraState, requestedScreenSharingState, recordingStore],
+                ([$mic, $cam, $share, $recording]) => ({
+                    micEnabled: Boolean($mic),
+                    cameraEnabled: Boolean($cam),
+                    screenSharing: Boolean($share),
+                    canScreenShare: screenShareSupported,
+                    recording: Boolean($recording?.isRecording),
+                }),
+            );
+            nativeClient = new NativePictureInPictureClient({
+                streamables: streamableCollectionStore,
+                selfBox: myCameraPeerStore,
+                deviceState,
+                commandHandlers: {
+                    toggleMic: () => {
+                        if (get(requestedMicrophoneState)) {
+                            requestedMicrophoneState.disableMicrophone();
+                        } else {
+                            requestedMicrophoneState.enableMicrophone();
+                        }
+                    },
+                    toggleCamera: () => {
+                        if (get(requestedCameraState)) {
+                            requestedCameraState.disableWebcam();
+                        } else {
+                            requestedCameraState.enableWebcam();
+                        }
+                    },
+                    toggleScreenshare: () => {
+                        if (get(requestedScreenSharingState)) {
+                            requestedScreenSharingState.disableScreenSharing();
+                        } else {
+                            requestedScreenSharingState.enableScreenSharing();
+                        }
+                    },
+                    pickScreenSource: (source) => {
+                        // Source was chosen in the PiP utility window. Start the share with this
+                        // source directly, bypassing the in-app picker UI so the user never has
+                        // to switch focus back to the main window.
+                        startScreenShareWithSource({
+                            id: source.id,
+                            name: source.name,
+                            thumbnailURL: "",
+                        });
+                    },
+                },
+            });
+        } else if (!isDocumentPictureInPictureSupported(window)) {
             debug("PictureInPicture is not supported by the browser");
             pictureInPictureSupportedStore.set(false);
         }
@@ -213,14 +301,41 @@
         const askPictureInPictureActivatingSubscriber = askPictureInPictureActivatingStore.subscribe((active) => {
             if (active) {
                 requestPictureInPicture();
-            } else {
+            } else if (!useNativeDesktopPip) {
                 destroyPictureInPictureComponent();
+            } else {
+                userManuallyOpenedNativePip = false;
+                evaluateNativePipState();
             }
         });
 
         const unsubscribe = userAwayFromAppStore.subscribe((userAwayFromApp) => {
+            if (useNativeDesktopPip) {
+                evaluateNativePipState();
+                return;
+            }
             if (!userAwayFromApp) {
                 destroyPictureInPictureComponent();
+            }
+        });
+
+        const unsubscribeStreamables = streamableCollectionStore.subscribe(() => {
+            if (useNativeDesktopPip) {
+                evaluateNativePipState();
+            }
+        });
+
+        const unsubscribeRemote = isInRemoteConversation.subscribe(() => {
+            if (useNativeDesktopPip) {
+                evaluateNativePipState();
+            }
+        });
+
+        // Re-evaluate the moment a proximity bubble forms (someone walked into our meeting), even
+        // before any media stream actually lands. Lets PiP pop up as soon as a participant joins.
+        const unsubscribeActiveConv = isInActiveConversationStore.subscribe(() => {
+            if (useNativeDesktopPip) {
+                evaluateNativePipState();
             }
         });
 
@@ -244,6 +359,9 @@
         return () => {
             askPictureInPictureActivatingSubscriber();
             unsubscribe();
+            unsubscribeStreamables();
+            unsubscribeRemote();
+            unsubscribeActiveConv();
             try {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 //@ts-ignore
@@ -252,12 +370,47 @@
                 debug("PictureInPicture enterpictureinpicture handler is not supported", e);
             }
             window.removeEventListener("focus", onFocus);
+            if (nativeClient) {
+                nativeClient.stop();
+                nativeClient = undefined;
+            }
         };
     });
+
+    function evaluateNativePipState() {
+        if (!useNativeDesktopPip || !nativeClient) return;
+        const shouldOpen = shouldOpenNativePictureInPicture({
+            nativeAvailable: true,
+            allowedByUser: localUserStore.getAllowPictureInPicture(),
+            inActiveConversation: $isInActiveConversationStore,
+            userAwayFromApp: $userAwayFromAppStore,
+            userManuallyOpened: userManuallyOpenedNativePip,
+        });
+
+        if (shouldOpen && !nativeClient.isActive()) {
+            void nativeClient
+                .start(() => {
+                    userManuallyOpenedNativePip = false;
+                    activePictureInPictureStore.set(false);
+                })
+                .then((started) => {
+                    if (started) {
+                        activePictureInPictureStore.set(true);
+                    }
+                });
+        } else if (!shouldOpen && nativeClient.isActive()) {
+            nativeClient.stop();
+            activePictureInPictureStore.set(false);
+        }
+    }
 
     onDestroy(() => {
         destroyPictureInPictureComponent();
         unsubscribeIsInRemoteConversation();
+        if (nativeClient) {
+            nativeClient.stop();
+            nativeClient = undefined;
+        }
     });
 </script>
 

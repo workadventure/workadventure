@@ -1,7 +1,13 @@
 "use strict";
 
 const DEFAULT_PORTAL_URL = "http://admin.workadventure.localhost/";
-const DEFAULT_ALLOWED_HOST_SUFFIXES = [".workadventu.re", ".workadventure.fr", ".workadventure.localhost"];
+const DEFAULT_ALLOWED_HOST_SUFFIXES_PROD = [".workadventu.re", ".workadventure.fr"];
+const DEFAULT_ALLOWED_HOST_SUFFIXES_DEV = [
+    ".workadventu.re",
+    ".workadventure.fr",
+    ".workadventure.localhost",
+];
+const SENSITIVE_QUERY_PARAMS = ["token", "code", "code_verifier", "id_token", "access_token", "refresh_token"];
 const BROKEN_PERSISTED_URLS = new Set([
     "http://play.workadventure.localhost/~/maps/areas.wam",
     "https://play.workadventure.localhost/~/maps/areas.wam",
@@ -21,6 +27,22 @@ function parseList(value) {
         .split(",")
         .map((entry) => entry.trim())
         .filter(Boolean);
+}
+
+function normalizeHostSuffix(value) {
+    const trimmed = String(value || "").trim().toLowerCase();
+    if (!trimmed) {
+        return "";
+    }
+    return trimmed.startsWith(".") ? trimmed : "." + trimmed;
+}
+
+function isDevEnvironment() {
+    return process.env.NODE_ENV === "development";
+}
+
+function getDefaultAllowedHostSuffixes() {
+    return isDevEnvironment() ? DEFAULT_ALLOWED_HOST_SUFFIXES_DEV : DEFAULT_ALLOWED_HOST_SUFFIXES_PROD;
 }
 
 function normalizeHttpUrl(value, fallback) {
@@ -59,8 +81,12 @@ function createDesktopConfig(env = process.env) {
         }
     }
 
-    const configuredSuffixes = parseList(env.allowedHostSuffixes || env.WA_DESKTOP_ALLOWED_HOST_SUFFIXES);
-    const allowedHostSuffixes = configuredSuffixes.length > 0 ? configuredSuffixes : DEFAULT_ALLOWED_HOST_SUFFIXES;
+    const configuredSuffixes = parseList(env.allowedHostSuffixes || env.WA_DESKTOP_ALLOWED_HOST_SUFFIXES)
+        .map(normalizeHostSuffix)
+        .filter(Boolean);
+    const allowedHostSuffixes = (configuredSuffixes.length > 0 ? configuredSuffixes : getDefaultAllowedHostSuffixes())
+        .map(normalizeHostSuffix)
+        .filter(Boolean);
 
     return {
         portalUrl,
@@ -84,6 +110,22 @@ function parseHttpUrl(value) {
     }
 }
 
+function requireHttpsInProd(url) {
+    if (!url) {
+        return false;
+    }
+    if (url.protocol === "https:") {
+        return true;
+    }
+    if (url.protocol !== "http:") {
+        return false;
+    }
+    if (isDevEnvironment()) {
+        return true;
+    }
+    return isLocalhost(url.hostname);
+}
+
 function isBrokenPersistedUrl(value) {
     const url = parseHttpUrl(value);
     return Boolean(url && BROKEN_PERSISTED_URLS.has(url.toString().replace(/\/$/, "")));
@@ -103,7 +145,13 @@ function normalizePersistedLastRoomUrl(value) {
     }
 
     const url = parseHttpUrl(value);
-    return url?.toString();
+    if (!url) {
+        return undefined;
+    }
+    for (const param of SENSITIVE_QUERY_PARAMS) {
+        url.searchParams.delete(param);
+    }
+    return url.toString();
 }
 
 function isLocalhost(hostname) {
@@ -116,15 +164,27 @@ function isAllowedNavigationUrl(value, config) {
         return false;
     }
 
+    if (!requireHttpsInProd(url)) {
+        return false;
+    }
+
     if (config.allowedOrigins.includes(url.origin)) {
         return true;
     }
 
-    if (process.env.NODE_ENV === "development" && isLocalhost(url.hostname)) {
+    if (isDevEnvironment() && isLocalhost(url.hostname)) {
         return true;
     }
 
-    return config.allowedHostSuffixes.some((suffix) => url.hostname.endsWith(suffix));
+    const hostname = url.hostname.toLowerCase();
+    return config.allowedHostSuffixes.some((suffix) => {
+        const normalized = normalizeHostSuffix(suffix);
+        if (!normalized) {
+            return false;
+        }
+        const bare = normalized.slice(1);
+        return hostname === bare || hostname.endsWith(normalized);
+    });
 }
 
 function isDesktopLoginUrl(value) {
@@ -192,6 +252,36 @@ function extractDesktopAuthCallback(value) {
     }
 
     return { origin, code };
+}
+
+function stripSensitiveQueryParams(value) {
+    if (!value || typeof value !== "string") {
+        return value;
+    }
+    const url = parseHttpUrl(value);
+    if (!url) {
+        return value;
+    }
+    let changed = false;
+    for (const param of SENSITIVE_QUERY_PARAMS) {
+        if (url.searchParams.has(param)) {
+            url.searchParams.delete(param);
+            changed = true;
+        }
+    }
+    return changed ? url.toString() : value;
+}
+
+function redactSensitiveString(value) {
+    if (typeof value !== "string" || value.length === 0) {
+        return value;
+    }
+    let result = value;
+    for (const param of SENSITIVE_QUERY_PARAMS) {
+        const re = new RegExp("([?&]" + param + "=)[^&\\s\"']+", "gi");
+        result = result.replace(re, "$1REDACTED");
+    }
+    return result;
 }
 
 function createRoomUrlWithAuthToken(targetUrl, token) {
@@ -266,4 +356,7 @@ module.exports = {
     normalizePersistedLastRoomUrl,
     normalizePersistedPortalUrl,
     resolveInitialTarget,
+    stripSensitiveQueryParams,
+    redactSensitiveString,
+    SENSITIVE_QUERY_PARAMS,
 };

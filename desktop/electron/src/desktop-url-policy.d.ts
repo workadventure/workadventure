@@ -30,3 +30,6 @@ export function resolveInitialTarget(
         lastRoomUrl?: string;
     }
 ): string;
+export function stripSensitiveQueryParams(value: string | undefined): string | undefined;
+export function redactSensitiveString(value: string | undefined): string | undefined;
+export const SENSITIVE_QUERY_PARAMS: readonly string[];

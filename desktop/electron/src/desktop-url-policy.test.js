@@ -13,8 +13,28 @@ const {
     isRoomUrl,
     normalizePersistedLastRoomUrl,
     normalizePersistedPortalUrl,
+    redactSensitiveString,
     resolveInitialTarget,
+    stripSensitiveQueryParams,
 } = require("./desktop-url-policy");
+
+function withNodeEnv(value, fn) {
+    const previous = process.env.NODE_ENV;
+    if (value === undefined) {
+        delete process.env.NODE_ENV;
+    } else {
+        process.env.NODE_ENV = value;
+    }
+    try {
+        fn();
+    } finally {
+        if (previous === undefined) {
+            delete process.env.NODE_ENV;
+        } else {
+            process.env.NODE_ENV = previous;
+        }
+    }
+}
 
 test("allows the configured portal origin and WorkAdventure host suffixes only", () => {
     const config = createDesktopConfig({
@@ -55,11 +75,66 @@ test("resolves launch target from deep link, then last room, then portal", () =>
     assert.equal(resolveInitialTarget(config, {}), "https://play.workadventu.re/");
 });
 
-test("uses the local admin world picker as the default portal", () => {
-    const config = createDesktopConfig({});
+test("uses the local admin world picker as the default portal (prod defaults exclude .workadventure.localhost)", () => {
+    withNodeEnv("production", () => {
+        const config = createDesktopConfig({});
 
-    assert.equal(config.portalUrl, "http://admin.workadventure.localhost/");
-    assert.deepEqual(config.allowedHostSuffixes, [".workadventu.re", ".workadventure.fr", ".workadventure.localhost"]);
+        assert.equal(config.portalUrl, "http://admin.workadventure.localhost/");
+        // .workadventure.localhost is intentionally dropped in prod: an attacker on the same
+        // LAN can poison DNS for *.workadventure.localhost and serve a fake /desktop-auth/exchange.
+        assert.deepEqual(config.allowedHostSuffixes, [".workadventu.re", ".workadventure.fr"]);
+    });
+});
+
+test("keeps .workadventure.localhost in dev defaults for local development", () => {
+    withNodeEnv("development", () => {
+        const config = createDesktopConfig({});
+        assert.deepEqual(
+            config.allowedHostSuffixes,
+            [".workadventu.re", ".workadventure.fr", ".workadventure.localhost"],
+        );
+    });
+});
+
+test("normalises configured allow-list entries to dot-prefixed form", () => {
+    const config = createDesktopConfig({
+        allowedHostSuffixes: ["workadventu.re", "  WORKADVENTURE.fr  "],
+    });
+    assert.deepEqual(config.allowedHostSuffixes, [".workadventu.re", ".workadventure.fr"]);
+});
+
+test("rejects sibling hostnames sharing the suffix string without dot boundary", () => {
+    const config = createDesktopConfig({
+        portalUrl: "https://play.workadventu.re",
+        allowedHostSuffixes: ["workadventu.re"],
+    });
+    assert.equal(isAllowedNavigationUrl("https://play.workadventu.re/@/team/world/room", config), true);
+    assert.equal(isAllowedNavigationUrl("https://workadventu.re/", config), true);
+    // The classic endsWith-without-dot bug: evilworkadventu.re should NOT match workadventu.re.
+    assert.equal(isAllowedNavigationUrl("https://evilworkadventu.re/", config), false);
+    assert.equal(isAllowedNavigationUrl("https://attacker.evilworkadventu.re/", config), false);
+});
+
+test("blocks http:// outside development for non-loopback hosts", () => {
+    withNodeEnv("production", () => {
+        const config = createDesktopConfig({
+            portalUrl: "https://play.workadventu.re",
+            allowedHostSuffixes: ["workadventu.re"],
+        });
+        assert.equal(isAllowedNavigationUrl("http://play.workadventu.re/@/team/world/room", config), false);
+        assert.equal(isAllowedNavigationUrl("https://play.workadventu.re/@/team/world/room", config), true);
+        // Loopback over http stays allowed because the loopback OAuth callback server is local.
+        assert.equal(isAllowedNavigationUrl("http://127.0.0.1:12345/", { ...config, allowedOrigins: ["http://127.0.0.1:12345"] }), true);
+    });
+});
+
+test("allows http:// in development for any allow-listed host", () => {
+    withNodeEnv("development", () => {
+        const config = createDesktopConfig({
+            portalUrl: "http://admin.workadventure.localhost/",
+        });
+        assert.equal(isAllowedNavigationUrl("http://play.workadventure.localhost/_/global/maps", config), true);
+    });
 });
 
 test("migrates the previous broken local hosted map URL from persisted settings to the admin portal", () => {
@@ -154,4 +229,39 @@ test("adds exchanged desktop auth token to target room URL", () => {
         createRoomUrlWithAuthToken("https://play.workadventu.re/@/team/world/room?foo=bar#spawn", "token value"),
         "https://play.workadventu.re/@/team/world/room?foo=bar&token=token+value#spawn"
     );
+});
+
+test("strips sensitive query params before persisting a URL", () => {
+    assert.equal(
+        stripSensitiveQueryParams(
+            "https://play.workadventu.re/@/team/world/room?token=secret&foo=bar&code=abc",
+        ),
+        "https://play.workadventu.re/@/team/world/room?foo=bar",
+    );
+    assert.equal(stripSensitiveQueryParams(undefined), undefined);
+    assert.equal(stripSensitiveQueryParams("not-a-url"), "not-a-url");
+});
+
+test("normalizePersistedLastRoomUrl drops sensitive query params", () => {
+    assert.equal(
+        normalizePersistedLastRoomUrl(
+            "https://play.workadventu.re/@/team/world/room?token=secret&foo=bar",
+        ),
+        "https://play.workadventu.re/@/team/world/room?foo=bar",
+    );
+});
+
+test("redacts sensitive query params in arbitrary strings (for logs)", () => {
+    assert.equal(
+        redactSensitiveString(
+            "Failed to load https://play.workadventu.re/@/team/world/room?token=secret&foo=bar",
+        ),
+        "Failed to load https://play.workadventu.re/@/team/world/room?token=REDACTED&foo=bar",
+    );
+    assert.equal(
+        redactSensitiveString("multiple ?code=abc&token=xyz&refresh_token=def"),
+        "multiple ?code=REDACTED&token=REDACTED&refresh_token=REDACTED",
+    );
+    assert.equal(redactSensitiveString(""), "");
+    assert.equal(redactSensitiveString(undefined), undefined);
 });

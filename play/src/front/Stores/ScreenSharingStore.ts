@@ -157,10 +157,20 @@ export function isScreenSharingSupported(): boolean {
 }
 
 async function getDesktopCapturerSources() {
-    showDesktopCapturerSourcePicker.set(true);
-    const source = await new Promise<DesktopCapturerSource | null>((resolve) => {
-        desktopCapturerSourcePromiseResolve = resolve;
-    });
+    let source: DesktopCapturerSource | null;
+    const preselected = get(pipPreselectedScreenSource);
+    if (preselected) {
+        // The source was already chosen from the desktop PiP utility window — skip the in-app
+        // picker UI entirely. Without this, clicking "share" in PiP would still open the picker
+        // in the main window and force the user to switch focus back to it.
+        pipPreselectedScreenSource.set(undefined);
+        source = preselected;
+    } else {
+        showDesktopCapturerSourcePicker.set(true);
+        source = await new Promise<DesktopCapturerSource | null>((resolve) => {
+            desktopCapturerSourcePromiseResolve = resolve;
+        });
+    }
     if (source === null) {
         return;
     }
@@ -175,6 +185,28 @@ async function getDesktopCapturerSources() {
             },
         },
     });
+}
+
+/**
+ * When set, the next call to `getDesktopCapturerSources()` skips the in-app picker and uses this
+ * source directly. The PiP utility window populates it via `startScreenShareWithSource()` so the
+ * user can pick a screen WITHOUT having to refocus the main window.
+ */
+export const pipPreselectedScreenSource = writable<DesktopCapturerSource | undefined>(undefined);
+
+/**
+ * Programmatically start screen sharing with a specific desktopCapturer source. Used by the
+ * desktop PiP utility window to bypass the in-app source picker. Stops any in-flight share first
+ * so a fresh stream is published with the new source.
+ */
+export function startScreenShareWithSource(source: DesktopCapturerSource): void {
+    pipPreselectedScreenSource.set(source);
+    if (get(requestedScreenSharingState)) {
+        // Re-trigger by toggling off then on so the constraints store recomputes with the new
+        // preselected source.
+        requestedScreenSharingState.disableScreenSharing();
+    }
+    requestedScreenSharingState.enableScreenSharing();
 }
 
 /**

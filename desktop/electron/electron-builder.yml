@@ -21,9 +21,33 @@ mac:
     hardenedRuntime: true
     gatekeeperAssess: false
     entitlements: assets/entitlements.mac.plist
-    entitlementsInherit: assets/entitlements.mac.plist
+    entitlementsInherit: assets/entitlements.mac.inherit.plist
+    extendInfo:
+        NSCameraUsageDescription: "WorkAdventure uses your camera to enable video calls inside virtual worlds."
+        NSMicrophoneUsageDescription: "WorkAdventure uses your microphone to enable voice calls inside virtual worlds."
+        # macOS screen recording prompt copy. The system also requires the user to grant Screen Recording
+        # in System Settings > Privacy & Security on first use.
+        NSScreenCaptureDescription: "WorkAdventure uses screen capture for screen sharing in virtual worlds."
+    # zip is REQUIRED for electron-updater on macOS (delta + diff updates).
     target:
-        - dmg
+        - target: dmg
+          arch:
+              - x64
+              - arm64
+        - target: zip
+          arch:
+              - x64
+              - arm64
+
+linux:
+    category: Network;InstantMessaging
+    target:
+        - AppImage
+        - deb
+    protocols:
+        - name: WorkAdventure
+          schemes:
+              - workadventure
 
 publish:
     provider: generic
