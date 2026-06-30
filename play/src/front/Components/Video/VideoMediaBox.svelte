@@ -19,6 +19,7 @@
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { blocker } from "../../Utils/screenBlocker";
     import ActionMediaBox from "./ActionMediaBox.svelte";
+    import RaisedHandBadge from "./RaisedHandBadge.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
     import CenteredVideo from "./CenteredVideo.svelte";
@@ -295,6 +296,7 @@
     {@attach blocker}
     class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox z-20 select-none"
 >
+    <RaisedHandBadge {videoBox} />
     <div
         class={"w-full transition-all bg-center bg-no-repeat " +
             (fullScreen || effectiveStatus !== "connected"
