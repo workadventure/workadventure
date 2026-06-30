@@ -1,9 +1,13 @@
-import type { PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
+import type { FilterType, PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
 import type { SpaceUserExtended } from "./Space";
 import type { SocketData } from "./Websocket/SocketData";
 
 type CorePrivateEvent = NonNullable<PrivateSpaceEvent["event"]>;
-type PrivateProcessor = (event: CorePrivateEvent, sender: SpaceUserExtended | undefined) => CorePrivateEvent;
+type PrivateProcessor = (
+    event: CorePrivateEvent,
+    sender: SpaceUserExtended | undefined,
+    filterType?: FilterType,
+) => CorePrivateEvent;
 
 type CorePublicEvent = NonNullable<SpaceEvent["event"]>;
 type PublicProcessor = (
@@ -23,10 +27,14 @@ export class EventProcessor {
         this.privateEventProcessors.set(eventCase, processor);
     }
 
-    public processPrivateEvent(event: CorePrivateEvent, sender: SpaceUserExtended | undefined): CorePrivateEvent {
+    public processPrivateEvent(
+        event: CorePrivateEvent,
+        sender: SpaceUserExtended | undefined,
+        filterType?: FilterType,
+    ): CorePrivateEvent {
         const processor = this.privateEventProcessors.get(event.$case);
         if (processor) {
-            return processor(event, sender);
+            return processor(event, sender, filterType);
         }
         return event;
     }
