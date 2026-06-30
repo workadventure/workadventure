@@ -216,7 +216,7 @@ import { DynamicAreaManager } from "./DynamicAreaManager";
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
 import { DirtyScene } from "./DirtyScene";
-import { StartPositionCalculator } from "./StartPositionCalculator";
+import { computeStartPosition } from "./StartPositionCalculator";
 import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import { ActivatablesManager } from "./ActivatablesManager";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
@@ -358,7 +358,6 @@ export class GameScene extends DirtyScene {
     private pathfindingManager!: PathfindingManager;
     private activatablesManager!: ActivatablesManager;
     private preloading = true;
-    private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
     private areaPropertyVariablesManager!: AreaPropertyVariablesManager;
     private playerVariablesManager!: PlayerVariablesManager;
@@ -779,13 +778,6 @@ export class GameScene extends DirtyScene {
         // TODO: Dynamic areas should be exclusively managed on the front side
         this.areaManager = new DynamicAreaManager(this.gameMapFrontWrapper);
 
-        this.startPositionCalculator = new StartPositionCalculator(
-            this.gameMapFrontWrapper,
-            this.mapFile,
-            this.initPosition,
-            urlManager.getStartPositionNameFromUrl(),
-        );
-
         //create input to move
         this.userInputManager = new UserInputManager(this, new GameSceneUserInputHandler(this));
         mediaManager.setUserInputManager(this.userInputManager);
@@ -1112,7 +1104,10 @@ export class GameScene extends DirtyScene {
             forceRefreshChatStore.forceRefresh();
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
-            const startPosition = this.startPositionCalculator.computeStartPosition(
+            const startPosition = computeStartPosition(
+                this.gameMapFrontWrapper,
+                this.mapFile,
+                undefined,
                 urlManager.getStartPositionNameFromUrl(),
             );
             this.CurrentPlayer.setPosition(startPosition.x, startPosition.y);
@@ -1730,7 +1725,7 @@ export class GameScene extends DirtyScene {
                   }
                 : undefined,
             reconnecting: reconnecting,
-        });
+        } satisfies GameSceneInitInterface);
 
         // Register the new scene as current when not autostarting (so GameManager can start it) or when
         // reconnecting (so getCurrentGameScene() returns the new scene during teardown and store subscriptions work).
@@ -2013,7 +2008,10 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
-                const startPosition = this.startPositionCalculator.computeStartPosition(
+                const startPosition = computeStartPosition(
+                    this.gameMapFrontWrapper,
+                    this.mapFile,
+                    this.initPosition,
                     urlManager.getStartPositionNameFromUrl(),
                 );
 
@@ -3326,7 +3324,7 @@ ${escapedMessage}
                 playerId: this.connection?.getUserId(),
                 mapUrl: this.mapUrlFile,
                 hashParameters: urlManager.getHashParameters(),
-                startLayerName: this.startPositionCalculator.getStartPositionName() ?? undefined,
+                startLayerName: urlManager.getStartPositionNameFromUrl(),
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: this.playerName,
                 language: get(locale),
@@ -4472,7 +4470,7 @@ ${escapedMessage}
     }
 
     getStartPositionNames(): string[] {
-        return this.startPositionCalculator.getStartPositionNames();
+        return this.gameMapFrontWrapper.getStartPositionNames();
     }
 
     get sayManager(): SayManager {

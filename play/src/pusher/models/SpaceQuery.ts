@@ -7,6 +7,7 @@ export class Query {
         number,
         {
             answerType: string;
+            createdAt: number;
             resolve: (message: NonNullable<SpaceAnswerMessage["answer"]>) => void;
             reject: (e: unknown) => void;
         }
@@ -48,6 +49,7 @@ export class Query {
 
             this._queries.set(this._lastQueryId, {
                 answerType,
+                createdAt: Date.now(),
                 resolve,
                 reject,
             });
@@ -103,7 +105,12 @@ export class Query {
 
     public destroy() {
         for (const query of this._queries.values()) {
-            query.reject(new Error("Query cancelled because the space is being destroyed"));
+            const durationMs = Date.now() - query.createdAt;
+            query.reject(
+                new Error(
+                    `Query "${query.answerType}" cancelled because the space is being destroyed (pending for ${durationMs}ms)`,
+                ),
+            );
         }
     }
 }
