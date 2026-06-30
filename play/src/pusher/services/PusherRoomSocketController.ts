@@ -388,8 +388,13 @@ export class PusherRoomSocketController {
                         this.contextByTabKey.delete(tabId);
                     }
                 };
+                // Terminal teardown: no reconnect retry will replace this transport from here on.
+                const closePermanently = () => {
+                    socket.markPermanentlyDisconnected();
+                    return Promise.resolve(config.close(socket, code, reason));
+                };
                 if (code === 1000 || code === 1001) {
-                    Promise.resolve(config.close(socket, code, reason)).then(forgetContext, (e) => {
+                    closePermanently().then(forgetContext, (e) => {
                         console.error(e);
                         forgetContext();
                     });
@@ -402,7 +407,7 @@ export class PusherRoomSocketController {
                         this.contextCleanupTimeoutsByTabKey.delete(tabId);
 
                         if (this.contextByTabKey.get(tabId)?.socket === socket) {
-                            Promise.resolve(config.close(socket, code, reason)).then(forgetContext, (e) => {
+                            closePermanently().then(forgetContext, (e) => {
                                 console.error(e);
                                 forgetContext();
                             });
@@ -413,7 +418,7 @@ export class PusherRoomSocketController {
                     return;
                 }
 
-                Promise.resolve(config.close(socket, code, reason)).catch((e) => {
+                closePermanently().catch((e) => {
                     console.error(e);
                 });
             },
