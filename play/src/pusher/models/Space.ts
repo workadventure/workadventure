@@ -366,9 +366,21 @@ export class Space implements SpaceForSpaceConnectionInterface {
             throw new Error(`spaceUser not found for message spaceUserId ${messageSpaceUserId}`);
         }
 
+        const changedFields = [...updateSpaceUserMessage.updateMask];
+        const partialSpaceUser = updateSpaceUserMessage.user;
+
+        // Server-stamp the raise-hand timestamp so the "who raised first" ordering is consistent across all
+        // participants (it does not depend on each client's local clock). The client only signals raised/lowered.
+        if (changedFields.includes("handRaised")) {
+            partialSpaceUser.handRaisedAt = partialSpaceUser.handRaised ? Date.now() : 0;
+            if (!changedFields.includes("handRaisedAt")) {
+                changedFields.push("handRaisedAt");
+            }
+        }
+
         return {
-            changedFields: updateSpaceUserMessage.updateMask,
-            partialSpaceUser: updateSpaceUserMessage.user,
+            changedFields,
+            partialSpaceUser,
         };
     }
 
