@@ -1618,6 +1618,49 @@ export class GameMapFrontWrapper {
         return this.gameMap.getLayersByKey(this.key);
     }
 
+    public getStartPositionNames(): string[] {
+        const names: string[] = [];
+        for (const obj of this.getFlatLayers()) {
+            if (obj.name === "start") {
+                names.push(obj.name);
+                continue;
+            }
+            if (this.isStartObject(obj)) {
+                names.push(obj.name);
+            }
+        }
+
+        for (const dynamicArea of this.dynamicAreas.values()) {
+            if (dynamicArea.name === "start") {
+                names.push(dynamicArea.name);
+                continue;
+            }
+            const properties = dynamicArea.properties;
+            if (properties && properties[GameMapProperties.START] === true) {
+                names.push(dynamicArea.name);
+            }
+        }
+
+        const areas = this.getAreas();
+
+        if (areas) {
+            for (const area of Array.from(areas.values())) {
+                if (area.name === "start" || area.properties.find((property) => property.type === "start")) {
+                    names.push(area.name);
+                }
+            }
+        }
+        return names;
+    }
+
+    public isStartObject(obj: ITiledMapLayer | ITiledMapObject): boolean {
+        if (this.getTiledObjectProperty(obj, GameMapProperties.START) == true) {
+            return true;
+        }
+        // legacy reasons
+        return this.getTiledObjectProperty(obj, GameMapProperties.START_LAYER) == true;
+    }
+
     public close() {
         this.entitiesManager.close();
         this.areasManager?.destroy();
