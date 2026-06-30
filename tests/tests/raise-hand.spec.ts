@@ -8,8 +8,8 @@ import { isMobile } from "./utils/isMobile";
 // can see every other one. The raise-hand state travels through the space metadata queue, so this also
 // covers that pipeline end to end (badge ordering + give-the-floor).
 //
-// The megaphone/webinar case (a speaker without seeAttendees seeing the queue) is covered separately once
-// the speaker-side "raised hands" panel exists; without it there is no UI to assert in that configuration.
+// The megaphone/webinar case (a speaker without seeAttendees seeing the queue and giving the floor through
+// the host panel) is covered in raise-hand-megaphone.spec.ts.
 test.describe("Raise hand @nomobile @nowebkit", () => {
     test.beforeEach(({ browserName, page }) => {
         // WebKit has camera issues in CI and the feature is not exercised on mobile.
