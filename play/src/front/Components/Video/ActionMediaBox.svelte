@@ -5,6 +5,7 @@
     import NoVideoSvg from "../images/no-video.svg";
     import { LL } from "../../../i18n/i18n-svelte";
     import { requestVisitCardsStore, userIsAdminStore } from "../../Stores/GameStore";
+    import { raisedHandsOrderStore } from "../../Stores/RaisedHandsStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import type { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
@@ -27,7 +28,9 @@
     let isMicrophoneEnabled = $derived(spaceUser.reactiveUser.microphoneState);
     let isVideoEnabled = $derived(spaceUser.reactiveUser.cameraState);
     let canAskToMuteAudioOrTurnOffVideo = $derived(spaceUser.space.canAskToMuteAudioOrTurnOffVideo);
-    let isHandRaised = $derived(spaceUser.reactiveUser.handRaised);
+    // Raise-hand state comes from the space metadata queue (not SpaceUser), so it is known even for a
+    // listener whose SpaceUser the local user does not receive.
+    let isHandRaised = $derived($raisedHandsOrderStore.has(spaceUser.spaceUserId));
     let hasFloor = $derived(spaceUser.reactiveUser.megaphoneState);
 
     let moreActionOpened = $state(false);
@@ -206,7 +209,7 @@
     {/if}
 
     <!-- Give the floor (to a user who raised their hand) -->
-    {#if ($userIsAdminStore || $canAskToMuteAudioOrTurnOffVideo) && !isScreenSharing && $isHandRaised && !$hasFloor}
+    {#if ($userIsAdminStore || $canAskToMuteAudioOrTurnOffVideo) && !isScreenSharing && isHandRaised && !$hasFloor}
         <button
             class="action-button give-floor-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             data-testid="give-floor-user"

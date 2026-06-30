@@ -35,6 +35,7 @@ import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import type {
     PrivateEventsObservables,
     PublicEventsObservables,
+    RaisedHand,
     SpaceInterface,
     SpaceUserUpdate,
     UpdateSpaceUserEvent,
@@ -42,6 +43,12 @@ import type {
     SpaceUserExtended,
 } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
+
+const raisedHandsSchema = z.array(z.object({ spaceUserId: z.string(), name: z.string(), at: z.number() }));
+function parseRaisedHands(value: unknown): RaisedHand[] {
+    const result = raisedHandsSchema.safeParse(value);
+    return result.success ? result.data : [];
+}
 import type { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 import type { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
 import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
@@ -65,6 +72,7 @@ export class Space implements SpaceInterface {
     public allScreenShareStreamStore: MapStore<string, VideoBox> = new MapStore<string, VideoBox>();
     public readonly videoStreamStore: Readable<Map<string, VideoBox>>;
     public readonly screenShareStreamStore: Readable<Map<string, VideoBox>>;
+    public readonly raisedHandsStore: Readable<RaisedHand[]>;
     // private readonly blockedUsersVideoBox: Map<string, VideoBox> = new Map<string, VideoBox>();
     // private readonly blockedUsersScreenShareVideoBox: Map<string, VideoBox> = new Map<string, VideoBox>();
     private readonly _blockedUsersStore: Writable<Set<string>> = writable(new Set<string>());
@@ -222,6 +230,16 @@ export class Space implements SpaceInterface {
                 return newScreenShareStreamStore;
             },
         );
+
+        // The raised-hands queue lives in the space metadata (broadcast to all members, unlike SpaceUser),
+        // so it reaches every participant including a megaphone speaker without seeAttendees.
+        this.raisedHandsStore = readable<RaisedHand[]>([], (set) => {
+            set(parseRaisedHands(this.getMetadata().get("raisedHands")));
+            const subscription = this.observeMetadataProperty("raisedHands").subscribe((value) => {
+                set(parseRaisedHands(value));
+            });
+            return () => subscription.unsubscribe();
+        });
 
         this.onBlockSubscribe = this._blackListManager.onBlockStream.subscribe((userUuid) => {
             const spaceUser = this.getSpaceUserByUuid(userUuid);
