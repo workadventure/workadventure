@@ -1406,6 +1406,12 @@ export const ANALYTICS_EVENTS = {
   "meeting.camera_layout_resized": signal(
     "The user resized the camera layout.",
   ),
+  "meeting.floor.given": signal(
+    "A moderator gave the floor to a participant who had raised their hand.",
+  ),
+  "meeting.floor.revoked": signal(
+    "A moderator took the floor back from a participant.",
+  ),
   "meeting.hand.toggled": event({
     properties: z.object({
       raised: z

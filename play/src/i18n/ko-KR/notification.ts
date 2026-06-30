@@ -9,6 +9,9 @@ const notification: DeepPartial<Translation["notification"]> = {
     askToMuteCamera: "카메라를 음소거할까요?",
     microphoneMuted: "운영자가 마이크를 음소거했습니다",
     cameraMuted: "운영자가 카메라를 음소거했습니다",
+    givenTheFloor: "말할 차례입니다",
+    givenTheFloorEnableMicrophone: "말할 차례입니다 — 마이크를 켜세요",
+    floorRevoked: "더 이상 발언권이 없습니다",
     announcement: "공지사항",
     open: "열기",
     help: {
