@@ -180,6 +180,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         videoNotSupported: "متصفحك لا يدعم وسم الفيديو.",
     },
+    raisedHands: {
+        title: "الأيدي المرفوعة",
+        empty: "لا أحد رفع يده",
+        help: "اطّلع على من رفع يده، بالترتيب، وأعطه الكلمة.",
+    },
     listStatusTitle: {
         enable: "تغيير حالتك",
     },

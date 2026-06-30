@@ -182,6 +182,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         videoNotSupported: "브라우저에서 비디오 태그를 지원하지 않습니다.",
     },
+    raisedHands: {
+        title: "손 든 사람",
+        empty: "손을 든 사람이 없습니다",
+        help: "누가 순서대로 손을 들었는지 확인하고 발언권을 주세요.",
+    },
     listStatusTitle: {
         enable: "상태 변경",
     },

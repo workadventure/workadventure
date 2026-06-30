@@ -182,6 +182,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         videoNotSupported: "El teu navegador no admet l'etiqueta de vídeo.",
     },
+    raisedHands: {
+        title: "Mans aixecades",
+        empty: "Ningú no ha aixecat la mà",
+        help: "Mira qui ha aixecat la mà, per ordre, i dóna-li la paraula.",
+    },
     listStatusTitle: {
         enable: "Canviar el teu estat",
     },
