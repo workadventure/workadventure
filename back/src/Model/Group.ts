@@ -188,7 +188,10 @@ export class Group implements Movable, CustomJsonReplacerInterface {
 
         // Broadcast on the right event
         this.disconnectCallback(user, this);
-        this.positionNotifier.emitGroupUsersUpdatedEvent(this);
+        // No need to send a "user left group" ping since the group is already destroyed
+        if (!this.wasDestroyed) {
+            this.positionNotifier.emitGroupUsersUpdatedEvent(this);
+        }
     }
 
     lock(lock = true): void {
@@ -204,10 +207,11 @@ export class Group implements Movable, CustomJsonReplacerInterface {
             this.positionNotifier.leave(this);
         }
 
+        this.wasDestroyed = true;
+
         for (const user of this.users) {
             this.leave(user);
         }
-        this.wasDestroyed = true;
     }
 
     get getSize() {
