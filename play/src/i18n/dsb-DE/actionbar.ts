@@ -182,6 +182,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         videoNotSupported: "Waš browser njepódpěra wideo-tag.",
     },
+    raisedHands: {
+        title: "Zwignjone ruce",
+        empty: "Nichtko njejo ruku zwignuł",
+        help: "Glědaj, chto jo ruku zwignuł po rěźe, a daj jomu słowo.",
+    },
     listStatusTitle: {
         enable: "Waš status změniś",
     },

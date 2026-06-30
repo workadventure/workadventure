@@ -186,6 +186,11 @@ const actionbar: BaseTranslation = {
         },
         videoNotSupported: "Seu navegador não suporta a tag de vídeo.",
     },
+    raisedHands: {
+        title: "Mãos levantadas",
+        empty: "Ninguém levantou a mão",
+        help: "Veja quem levantou a mão, em ordem, e dê a palavra a essa pessoa.",
+    },
     listStatusTitle: {
         enable: "Alterar seu status",
     },
