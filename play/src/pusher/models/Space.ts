@@ -33,7 +33,6 @@ const CLIENT_UPDATABLE_SPACE_USER_FIELDS: ReadonlySet<string> = new Set<keyof Sp
     "megaphoneState",
     "attendeesState",
     "cpuLimited",
-    "handRaised",
 ]);
 
 /**
@@ -375,18 +374,10 @@ export class Space implements SpaceForSpaceConnectionInterface {
         if (changedFields.length === 0) {
             return null;
         }
-        const partialSpaceUser = updateSpaceUserMessage.user;
-
-        // Server-stamp the raise-hand timestamp so the "who raised first" ordering is consistent across all
-        // participants (it does not depend on each client's local clock). The client only signals raised/lowered.
-        if (changedFields.includes("handRaised")) {
-            partialSpaceUser.handRaisedAt = partialSpaceUser.handRaised ? Date.now() : 0;
-            changedFields.push("handRaisedAt");
-        }
 
         return {
             changedFields,
-            partialSpaceUser: { ...partialSpaceUser, spaceUserId: spaceUser.spaceUserId },
+            partialSpaceUser: { ...updateSpaceUserMessage.user, spaceUserId: spaceUser.spaceUserId },
         };
     }
 
