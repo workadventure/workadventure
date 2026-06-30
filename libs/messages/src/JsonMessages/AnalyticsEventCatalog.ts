@@ -1528,6 +1528,15 @@ export const ANALYTICS_EVENTS = {
     properties: meetingActionProperties,
     description: "The user resized the camera layout.",
   }),
+  "meeting.floor.given": event({
+    properties: meetingActionProperties,
+    description:
+      "A moderator gave the floor to a participant who had raised their hand.",
+  }),
+  "meeting.floor.revoked": event({
+    properties: meetingActionProperties,
+    description: "A moderator took the floor back from a participant.",
+  }),
   "meeting.hand.toggled": event({
     properties: meetingActionProperties.extend({
       raised: z
