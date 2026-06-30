@@ -173,12 +173,12 @@ describe("MatrixSecurity", () => {
                 isCrossSigningReady: vi.fn().mockReturnValue(false),
                 bootstrapCrossSigning: vi.fn().mockResolvedValue({}),
                 bootstrapSecretStorage: vi.fn().mockResolvedValue({}),
+                getKeyBackupInfo: vi.fn().mockResolvedValue("keyBackUpInfo"),
             };
 
             const mockMatrixClient = {
                 isGuest: vi.fn().mockReturnValue(false),
                 getCrypto: () => mockCrypto,
-                getKeyBackupVersion: vi.fn().mockResolvedValue("keyBackUpInfo"),
             } as unknown as MatrixClient;
 
             const matrixSecurity = new MatrixSecurity(undefined);
@@ -200,12 +200,12 @@ describe("MatrixSecurity", () => {
                 isCrossSigningReady: vi.fn().mockReturnValue(true),
                 bootstrapCrossSigning: vi.fn().mockResolvedValue({}),
                 bootstrapSecretStorage: vi.fn().mockResolvedValue({}),
+                getKeyBackupInfo: vi.fn().mockResolvedValue(null),
             };
 
             const mockMatrixClient = {
                 isGuest: vi.fn().mockReturnValue(false),
                 getCrypto: () => mockCrypto,
-                getKeyBackupVersion: vi.fn().mockResolvedValue(null),
             } as unknown as MatrixClient;
 
             const matrixSecurity = new MatrixSecurity(undefined);
@@ -227,12 +227,12 @@ describe("MatrixSecurity", () => {
                 isCrossSigningReady: vi.fn().mockReturnValue(true),
                 bootstrapCrossSigning: vi.fn().mockResolvedValue({}),
                 bootstrapSecretStorage: vi.fn().mockResolvedValue({}),
+                getKeyBackupInfo: vi.fn().mockResolvedValue("keyBackUpInfo"),
             };
 
             const mockMatrixClient = {
                 isGuest: vi.fn().mockReturnValue(false),
                 getCrypto: () => mockCrypto,
-                getKeyBackupVersion: vi.fn().mockResolvedValue("keyBackUpInfo"),
             } as unknown as MatrixClient;
 
             const matrixSecurity = new MatrixSecurity(undefined);
@@ -253,12 +253,12 @@ describe("MatrixSecurity", () => {
             const mockCrypto = {
                 isCrossSigningReady: vi.fn().mockReturnValue(false),
                 bootstrapCrossSigning: vi.fn().mockRejectedValue(""),
+                getKeyBackupInfo: vi.fn().mockResolvedValue("keyBackUpInfo"),
             };
 
             const mockMatrixClient = {
                 isGuest: vi.fn().mockReturnValue(false),
                 getCrypto: () => mockCrypto,
-                getKeyBackupVersion: vi.fn().mockResolvedValue("keyBackUpInfo"),
             } as unknown as MatrixClient;
 
             const matrixSecurity = new MatrixSecurity(undefined);

@@ -205,7 +205,6 @@ function createMatrixEvent(serializedEvent: IPartialEvent<object>, sender: strin
         type: serializedEvent.type,
         room_id: "!room:server",
         sender,
-        user_id: sender,
         origin_server_ts: ts,
         content: serializedEvent.content,
         unsigned: redacted

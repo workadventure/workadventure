@@ -5,12 +5,15 @@ import type {
     KeyBackupInfo,
     VerificationRequest,
 } from "matrix-js-sdk/lib/crypto-api";
-import { VerificationRequestEvent, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
-import { deriveKey } from "matrix-js-sdk/lib/crypto/key_passphrase";
-import { decodeRecoveryKey } from "matrix-js-sdk/lib/crypto/recoverykey";
+import {
+    VerificationRequestEvent,
+    VerifierEvent,
+    VerificationPhase,
+    deriveRecoveryKeyFromPassphrase,
+    decodeRecoveryKey,
+} from "matrix-js-sdk/lib/crypto-api";
 import { writable } from "svelte/store";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
-import { Phase } from "matrix-js-sdk/lib/crypto/verification/request/VerificationRequest";
 import { Deferred } from "@workadventure/shared-utils";
 import { asError } from "catch-unknown";
 import { alreadyAskForInitCryptoConfiguration } from "../../Stores/AlreadyAskForInitCryptoConfigurationStore";
@@ -60,7 +63,7 @@ export class MatrixSecurity {
         this.shouldDisplayModal = true;
         this.initializingEncryptionPromise = new Promise<void>((resolve, initializingEncryptionReject) => {
             (async () => {
-                const keyBackupInfo = await client.getKeyBackupVersion();
+                const keyBackupInfo = await crypto.getKeyBackupInfo();
                 const isCrossSigningReady = await crypto.isCrossSigningReady();
 
                 if (!isCrossSigningReady || keyBackupInfo === null) {
@@ -108,7 +111,6 @@ export class MatrixSecurity {
                             return Promise.resolve(generatedKey);
                         },
                         setupNewKeyBackup: keyBackupInfo === null,
-                        keyBackupInfo: keyBackupInfo ?? undefined,
                     });
 
                     this.isEncryptionRequiredAndNotSet.set(false);
@@ -148,8 +150,8 @@ export class MatrixSecurity {
                 return;
             }
 
-            client
-                .getKeyBackupVersion()
+            crypto
+                .getKeyBackupInfo()
                 .then((keyBackupInfo) => {
                     if (keyBackupInfo !== null && keyBackupInfo !== undefined) {
                         this.restoreBackupMessages(keyBackupInfo).catch((error) => {
@@ -171,10 +173,14 @@ export class MatrixSecurity {
 
     static makeInputToKey(
         keyInfo: SecretStorage.SecretStorageKeyDescription,
-    ): (keyParams: KeyParams) => Promise<Uint8Array> {
-        return ({ passphrase, recoveryKey }): Promise<Uint8Array> => {
+    ): (keyParams: KeyParams) => Promise<Uint8Array<ArrayBuffer>> {
+        return ({ passphrase, recoveryKey }): Promise<Uint8Array<ArrayBuffer>> => {
             if (passphrase) {
-                return deriveKey(passphrase, keyInfo.passphrase.salt, keyInfo.passphrase.iterations);
+                return deriveRecoveryKeyFromPassphrase(
+                    passphrase,
+                    keyInfo.passphrase.salt,
+                    keyInfo.passphrase.iterations,
+                );
             } else if (recoveryKey) {
                 return Promise.resolve(decodeRecoveryKey(recoveryKey));
             }
@@ -202,10 +208,13 @@ export class MatrixSecurity {
 
     private async restoreWithCachedKey(keyBackupInfo: KeyBackupInfo) {
         try {
-            if (!this.matrixClientStore) {
-                return Promise.reject(new Error("matrixClientStore is null"));
+            const crypto = this.matrixClientStore?.getCrypto();
+            if (!crypto) {
+                return Promise.reject(new Error("crypto api is not available"));
             }
-            await this.matrixClientStore.restoreKeyBackupWithCache(undefined, undefined, keyBackupInfo);
+            // The decryption key must already be cached in the crypto store (e.g. set when the
+            // backup was created). restoreKeyBackup() downloads and imports the backup using it.
+            await crypto.restoreKeyBackup();
             return true;
         } catch (error) {
             console.error("Unable to restoreKeyBackupWithCache : ", error);
@@ -215,10 +224,13 @@ export class MatrixSecurity {
 
     private async restoreWithSecretStorage(keyBackupInfo: KeyBackupInfo) {
         try {
-            if (!this.matrixClientStore) {
-                return Promise.reject(new Error("matrixClientStore is null"));
+            const crypto = this.matrixClientStore?.getCrypto();
+            if (!crypto) {
+                return Promise.reject(new Error("crypto api is not available"));
             }
-            await this.matrixClientStore.restoreKeyBackupWithSecretStorage(keyBackupInfo);
+            // Load the backup decryption key from 4S into the crypto store, then restore.
+            await crypto.loadSessionBackupPrivateKeyFromSecretStorage();
+            await crypto.restoreKeyBackup();
             return true;
         } catch (error) {
             console.error("Unable to restoreWithSecretStorage : ", error);
@@ -257,7 +269,7 @@ export class MatrixSecurity {
                 setupNewSecretStorage: true,
             });
 
-            const keyBackupInfo = await this.matrixClientStore?.getKeyBackupVersion();
+            const keyBackupInfo = await crypto.getKeyBackupInfo();
 
             if (keyBackupInfo !== null && keyBackupInfo !== undefined) {
                 await this.restoreBackupMessages(keyBackupInfo);
@@ -289,7 +301,7 @@ export class MatrixSecurity {
             const doneVerificationDeferred = new Deferred<void>();
 
             verificationRequest.on(VerificationRequestEvent.Change, () => {
-                if (verificationRequest.phase === Phase.Started) {
+                if (verificationRequest.phase === VerificationPhase.Started) {
                     const verifier = verificationRequest.verifier;
 
                     if (!verifier) throw new Error("Verifier is undefined");
@@ -329,13 +341,13 @@ export class MatrixSecurity {
                     }
                 }
 
-                if (verificationRequest.phase === Phase.Done) {
+                if (verificationRequest.phase === VerificationPhase.Done) {
                     doneVerificationDeferred.resolve();
                     this.isVerifyingDevice = false;
                     this.isEncryptionRequiredAndNotSet.set(false);
                 }
 
-                if (verificationRequest.phase === Phase.Cancelled) {
+                if (verificationRequest.phase === VerificationPhase.Cancelled) {
                     doneVerificationDeferred.reject(new Error("verification request cancelled"));
                     this.isVerifyingDevice = false;
                 }

@@ -14,7 +14,6 @@ import type {
 } from "matrix-js-sdk";
 import {
     ClientEvent,
-    CryptoEvent,
     EventTimeline,
     EventType,
     MatrixError,
@@ -33,7 +32,7 @@ import { defaultWoka } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
-import { canAcceptVerificationRequest } from "matrix-js-sdk/lib/crypto-api";
+import { canAcceptVerificationRequest, CryptoEvent } from "matrix-js-sdk/lib/crypto-api";
 import { asError } from "catch-unknown";
 
 import Debug from "debug";
@@ -1882,17 +1881,18 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
             this.client
                 .joinRoom(roomId)
-                .then(async (_) => {
-                    //Wait Sync Event before use/update roomList otherwise room not exist in the client
-                    await this.waitForNextSync();
+                .then(async (joinedRoom) => {
+                    // client.joinRoom() resolves with the joined Room, already registered in the
+                    // client store, so we can use it directly. We previously blocked on the next
+                    // sync event here, but with newer matrix-js-sdk sync timing that event can be a
+                    // full long-poll cycle away, delaying (or, when getRoom() was still empty,
+                    // failing) the room opening. Read it back from the store and fall back to the
+                    // room returned by joinRoom.
+                    const roomAfterSync = this.client?.getRoom(roomId) ?? joinedRoom;
 
                     if (!this.client) {
                         rej(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
                         return;
-                    }
-                    const roomAfterSync = this.client.getRoom(roomId);
-                    if (!roomAfterSync) {
-                        return Promise.reject(new Error("Room not present after synchronization"));
                     }
                     const dmInviterId = roomAfterSync.getDMInviter();
                     if (dmInviterId) {
@@ -1950,9 +1950,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         if (!this.client) {
             throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
         }
-        const directMap: Record<string, string[]> = this.client.getAccountData("m.direct")?.getContent() || {};
+        const directMap: Record<string, string[]> = this.client.getAccountData(EventType.Direct)?.getContent() || {};
         directMap[userId] = [...(directMap[userId] || []), roomId];
-        await this.client.setAccountData("m.direct", directMap);
+        await this.client.setAccountData(EventType.Direct, directMap);
     }
 
     async isUserExist(address: string): Promise<boolean> {

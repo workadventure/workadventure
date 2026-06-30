@@ -1,8 +1,7 @@
 <script lang="ts">
     import type { ShowSasCallbacks, Verifier } from "matrix-js-sdk/lib/crypto-api";
-    import { VerificationRequestEvent, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
+    import { VerificationRequestEvent, VerifierEvent, VerificationPhase } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationMethod } from "matrix-js-sdk/lib/types";
-    import { Phase } from "matrix-js-sdk/lib/crypto/verification/request/VerificationRequest";
     import { Deferred } from "@workadventure/shared-utils";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
@@ -72,12 +71,12 @@
         });
     };
     const handleChangeVerificationRequestEvent = () => {
-        if (request.phase === Phase.Done) {
+        if (request.phase === VerificationPhase.Done) {
             doneDeferred.resolve();
             verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
             request.off(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
         }
-        if (request.phase === Phase.Cancelled) {
+        if (request.phase === VerificationPhase.Cancelled) {
             errorLabel = "request was cancelled ...";
             doneDeferred.reject();
             verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);

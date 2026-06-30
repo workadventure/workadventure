@@ -89,7 +89,6 @@ export default defineConfig(({ mode }) => {
             },
         },
         optimizeDeps: {
-            include: ["olm"],
             exclude: ["svelte-modals", "@mediapipe/selfie_segmentation"],
             esbuildOptions: {
                 define: {

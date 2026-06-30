@@ -1,5 +1,4 @@
 import { Buffer } from "buffer";
-import Olm from "@matrix-org/olm";
 
 import type { ICreateClientOpts, MatrixClient, SecretStorage } from "matrix-js-sdk";
 import { createClient, IndexedDBCryptoStore, IndexedDBStore } from "matrix-js-sdk";
@@ -12,12 +11,11 @@ import { matrixSecurity } from "./MatrixSecurity";
 import { customMatrixLogger } from "./CustomMatrixLogger";
 import { modals } from "@wa-modals";
 
-globalThis.Olm = Olm;
 window.Buffer = Buffer;
 
 export interface MatrixClientWrapperInterface {
     initMatrixClient(): Promise<MatrixClient>;
-    cacheSecretStorageKey(keyId: string, key: Uint8Array): void;
+    cacheSecretStorageKey(keyId: string, key: Uint8Array<ArrayBuffer>): void;
 }
 
 export interface MatrixLocalUserStore {
@@ -57,8 +55,8 @@ export class InvalidLoginTokenError extends Error {
 
 export class MatrixClientWrapper implements MatrixClientWrapperInterface {
     private client!: MatrixClient;
-    private secretStorageKeys: Record<string, Uint8Array> = {};
-    private secretStorageKeyRequestPromise: Promise<[string, Uint8Array] | null> | undefined;
+    private secretStorageKeys: Record<string, Uint8Array<ArrayBuffer>> = {};
+    private secretStorageKeyRequestPromise: Promise<[string, Uint8Array<ArrayBuffer>] | null> | undefined;
     private clientClosed = false;
 
     constructor(
@@ -245,7 +243,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         keys,
     }: {
         keys: Record<string, SecretStorageKeyDescriptionAesV1>;
-    }): Promise<[string, Uint8Array] | null> {
+    }): Promise<[string, Uint8Array<ArrayBuffer>] | null> {
         let keyId = await this.client.secretStorage.getDefaultKeyId();
         let keyInfo!: SecretStorage.SecretStorageKeyDescription;
         if (keyId) {
@@ -284,8 +282,8 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
     private async openSecretStorageKeyDialog(
         keyId: string,
         keyInfo: SecretStorage.SecretStorageKeyDescription,
-    ): Promise<[string, Uint8Array] | null> {
-        const key = await new Promise<Uint8Array | null>((resolve) => {
+    ): Promise<[string, Uint8Array<ArrayBuffer>] | null> {
+        const key = await new Promise<Uint8Array<ArrayBuffer> | null>((resolve) => {
             if (!matrixSecurity.shouldDisplayModal) {
                 resolve(null);
                 return;
@@ -293,7 +291,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             modals.open(AccessSecretStorageDialog, {
                 keyInfo,
                 matrixClient: this.client,
-                onClose: (key: Uint8Array | null) => resolve(key),
+                onClose: (key: Uint8Array<ArrayBuffer> | null) => resolve(key),
             });
         });
 
@@ -305,7 +303,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         return [keyId, key];
     }
 
-    public cacheSecretStorageKey(keyId: string, key: Uint8Array) {
+    public cacheSecretStorageKey(keyId: string, key: Uint8Array<ArrayBuffer>) {
         this.secretStorageKeys[keyId] = key;
     }
 

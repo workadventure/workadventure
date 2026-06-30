@@ -12,7 +12,7 @@
         isOpen: boolean;
         keyInfo: SecretStorage.SecretStorageKeyDescription;
         matrixClient: MatrixClient;
-        onClose: (key: Uint8Array | null) => void;
+        onClose: (key: Uint8Array<ArrayBuffer> | null) => void;
     }
 
     let { isOpen, keyInfo, matrixClient, onClose }: Props = $props();

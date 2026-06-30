@@ -39,7 +39,7 @@ import {
     M_POLL_START,
 } from "matrix-js-sdk/lib/@types/polls";
 import { PollStartEvent } from "matrix-js-sdk/lib/extensible_events_v1/PollStartEvent";
-import type { Poll } from "matrix-js-sdk/lib/models/poll";
+import { type Poll, PollEvent } from "matrix-js-sdk/lib/models/poll";
 import { Thread, ThreadEvent } from "matrix-js-sdk/lib/models/thread";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import Debug from "debug";
@@ -144,6 +144,7 @@ export class MatrixChatRoom
     shouldRetrySendingEvents = derived(this.notSentEvents, (notSentEvents) => notSentEvents.size > 0);
 
     private handleRoomTimeline = this.onRoomTimeline.bind(this);
+    private handleNewPoll = this.onNewPoll.bind(this);
     private handleRoomName = this.onRoomName.bind(this);
     private handleRoomRedaction = this.onRoomRedaction.bind(this);
     private handleStateEvent = this.onRoomStateEvent.bind(this);
@@ -420,7 +421,7 @@ export class MatrixChatRoom
 
         this.areNotificationsMuted.set(
             this.matrixRoom.client
-                .getAccountData("m.push_rules")
+                .getAccountData(EventType.PushRules)
                 ?.getContent()
                 .global.override.some((rule: IPushRule) => {
                     if (rule.actions.includes(PushRuleActionName.DontNotify) && rule.rule_id === this.id) {
@@ -1015,6 +1016,7 @@ export class MatrixChatRoom
 
     private startHandlingChatRoomShellEvents() {
         this.matrixRoom.on(RoomEvent.Timeline, this.handleRoomTimeline);
+        this.matrixRoom.on(PollEvent.New, this.handleNewPoll);
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
         this.matrixRoom.on(RoomStateEvent.Events, this.handleStateEvent);
@@ -1381,13 +1383,28 @@ export class MatrixChatRoom
                 if (event.getType() === "m.reaction") {
                     this.handleNewMessageReaction(event, this.messages);
                 }
-                if (this.isPollRelatedEvent(event)) {
-                    await this.processPollEvents([event]);
-                    await this.syncTimelinePollItemsFromEvents([event]);
-                    await this.syncSidePanelPollItemsFromEvents([event]);
-                }
+                // Poll events are NOT processed here: matrix-js-sdk auto-processes them during sync
+                // (creating/updating the authoritative Poll in room.polls), and we mirror that via the
+                // PollEvent.New subscription + MatrixChatPoll's own response/end listeners. Re-processing
+                // them here used to create a duplicate Poll that overwrote room.polls and orphaned the
+                // rendered MatrixChatPoll's subscriptions, so incoming polls/votes were lost for joiners.
             })().catch((error) => console.error(error));
         }
+    }
+
+    /**
+     * Mirror a poll created by matrix-js-sdk into the UI stores. The SDK emits {@link PollEvent.New}
+     * on the room whenever it processes an `m.poll.start` event during sync, independently of the
+     * RoomEvent.Timeline path. This is the authoritative source for incoming polls — in particular
+     * for a user who joined the room before the poll was created, whose poll-start event is not
+     * delivered as a fresh live timeline event and would otherwise never be mirrored.
+     */
+    private onNewPoll(poll: Poll): void {
+        const rootEvent = poll.rootEvent;
+        (async () => {
+            await this.syncTimelinePollItemsFromEvents([rootEvent]);
+            await this.syncSidePanelPollItemsFromEvents([rootEvent]);
+        })().catch((error) => console.error("Failed to handle new poll", error));
     }
 
     private onRoomUpdateUnreadNotificationCount(
@@ -2004,6 +2021,7 @@ export class MatrixChatRoom
         this.currentUserRoomMember = undefined;
         this.matrixRoom.currentState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
         this.matrixRoom.off(RoomEvent.Timeline, this.handleRoomTimeline);
+        this.matrixRoom.off(PollEvent.New, this.handleNewPoll);
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.off(RoomEvent.Redaction, this.handleRoomRedaction);
         this.matrixRoom.off(RoomStateEvent.Events, this.handleStateEvent);
@@ -2102,7 +2120,7 @@ export class MatrixChatRoom
     private setCurrentUserRoomMember(member: RoomMember | undefined): void {
         if (this.currentUserRoomMember === member) {
             if (member) {
-                this.currentUserPermissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevelNorm));
+                this.currentUserPermissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevel));
             }
             return;
         }
@@ -2115,12 +2133,12 @@ export class MatrixChatRoom
             return;
         }
 
-        this.currentUserPermissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevelNorm));
+        this.currentUserPermissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevel));
         member.on(RoomMemberEvent.PowerLevel, this.handleCurrentUserRoomMemberPowerLevel);
     }
 
     private onCurrentUserRoomMemberPowerLevel(_event: MatrixEvent, member: RoomMember): void {
-        this.currentUserPermissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevelNorm));
+        this.currentUserPermissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevel));
     }
 
     public async changePermissionLevelFor(member: ChatRoomMember, permissionLevel: ChatPermissionLevel): Promise<void> {
