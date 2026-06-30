@@ -503,15 +503,14 @@ export class SpacePeerManager {
             }),
         );
 
-        // Raise-hand state is synchronized as a SpaceUser property (like camera/microphone), so it reaches
-        // every meeting participant and is replayed to late joiners. It drives both the video tile badge and
-        // the indicator above the woka on the map.
+        // Raise-hand state is synchronized through the space METADATA (key "raisedHands"), not via SpaceUser,
+        // so it reaches every meeting participant — including a megaphone speaker without seeAttendees, who
+        // does not receive the listeners' SpaceUser. The client only sends its own intent; the server keeps
+        // the authoritative, ordered queue (see Space.applyRaisedHand on the back). It is replayed to late
+        // joiners and drives the video tile badge, the woka indicator and the speaker's queue.
         this.unsubscribes.push(
             requestedHandRaiseState.subscribe((state) => {
-                this.space.emitUpdateUser({
-                    handRaised: state.raised,
-                    handRaisedAt: state.raisedAt,
-                });
+                this.space.emitUpdateSpaceMetadata(new Map([["raisedHands", { raised: state.raised }]]));
             }),
         );
     }

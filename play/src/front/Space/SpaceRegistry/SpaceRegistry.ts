@@ -5,7 +5,7 @@ import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
 import type { Readable } from "svelte/store";
 import { derived } from "svelte/store";
-import type { SpaceInterface } from "../SpaceInterface";
+import type { RaisedHand, SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import type { VideoBox } from "../VideoBox";
 import { Space } from "../Space";
@@ -120,6 +120,17 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
         const stores = Array.from($spaces.values(), (space) => space.isStreamingVideoStore);
         return derived(stores, (list) => list.some(Boolean)).subscribe(set);
+    });
+
+    // Aggregated raised-hands queue across all spaces (in practice only the meeting space has a non-empty one).
+    public readonly raisedHandsStore: Readable<RaisedHand[]> = derived(this.spaces, ($spaces, set) => {
+        if ($spaces.size === 0) {
+            set([]);
+            return () => {};
+        }
+
+        const stores = Array.from($spaces.values(), (space) => space.raisedHandsStore);
+        return derived(stores, (lists) => lists.flat()).subscribe(set);
     });
 
     public readonly isLiveStreamingAudioStore: Readable<boolean> = derived(this.spaces, ($spaces, set) => {
