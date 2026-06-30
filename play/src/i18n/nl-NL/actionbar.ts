@@ -105,6 +105,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Een emoji weergeven",
             desc: "Druk uit hoe je je voelt met slechts één klik met emoji-reacties. Gewoon tikken en gaan!",
         },
+        raiseHand: {
+            title: "Hand opsteken",
+            desc: "Geef aan dat je iets wilt zeggen. Je opgestoken hand wordt op de kaart en op je video getoond, zodat iedereen weet wie er aan de beurt is.",
+        },
         audioManager: {
             title: "Volume van omgevingsgeluiden",
             desc: "Configureer het audiovolume door hier te klikken.",

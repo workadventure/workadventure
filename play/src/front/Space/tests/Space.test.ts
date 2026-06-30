@@ -130,6 +130,8 @@ function createSpaceUser(overrides: Partial<SpaceUser> & Pick<SpaceUser, "spaceU
         chatID: overrides.chatID,
         showVoiceIndicator: overrides.showVoiceIndicator ?? false,
         attendeesState: overrides.attendeesState ?? false,
+        handRaised: overrides.handRaised ?? false,
+        handRaisedAt: overrides.handRaisedAt ?? 0,
     };
 }
 

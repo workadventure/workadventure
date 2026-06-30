@@ -106,6 +106,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Réagir avec un emoji",
             desc: "Exprimez ce que vous ressentez en un clic grâce aux réactions emoji. Un simple tap, et c’est parti !",
         },
+        raiseHand: {
+            title: "Lever la main",
+            desc: "Signalez que vous souhaitez prendre la parole. Votre main levée s’affiche sur la carte et sur votre vidéo, pour que chacun sache à qui c’est le tour.",
+        },
         audioManager: {
             title: "Volume des sons ambiants",
             desc: "Réglez le volume des sons d'ambiance de la carte (musique, bruitages).",

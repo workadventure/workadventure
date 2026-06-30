@@ -117,6 +117,10 @@ class AnalyticsClient {
         this.posthog?.capture("wa_microphone");
     }
 
+    raiseHand(raised: boolean): void {
+        this.posthog?.capture("wa_raise_hand", { raised });
+    }
+
     retryConnectionWebRtc(): void {
         this.posthog?.capture("wa_retry_connection_webrtc");
     }
