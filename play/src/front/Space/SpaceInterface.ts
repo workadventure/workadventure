@@ -14,6 +14,16 @@ import type { Readable } from "svelte/store";
 import type { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import type { VideoBox } from "./VideoBox";
 
+/**
+ * An entry of the "raised hands" queue, stored in the space metadata (key "raisedHands"), ordered by `at`.
+ * Carries the name because a megaphone speaker without seeAttendees has no SpaceUser for the listeners.
+ */
+export interface RaisedHand {
+    spaceUserId: string;
+    name: string;
+    at: number;
+}
+
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
 export type PublicEventsObservables = {
@@ -69,6 +79,8 @@ export interface SpaceInterface {
     watchInitSpaceUsersMessage(): Observable<InitSpaceUsersMessage>;
     videoStreamStore: Readable<Map<string, VideoBox>>;
     screenShareStreamStore: Readable<Map<string, VideoBox>>;
+    /** Ordered queue of users who raised their hand in this space, derived from the space metadata. */
+    readonly raisedHandsStore: Readable<RaisedHand[]>;
 
     allVideoStreamStore: MapStore<string, VideoBox>;
     allScreenShareStreamStore: MapStore<string, VideoBox>;

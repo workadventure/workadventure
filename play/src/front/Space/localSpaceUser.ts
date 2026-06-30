@@ -1,9 +1,8 @@
-import { derived, get, readable, writable } from "svelte/store";
+import { get, readable, writable } from "svelte/store";
 import type { PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { availabilityStatusStore } from "../Stores/MediaStore";
-import { requestedHandRaiseState } from "../Stores/RaiseHandStore";
 import LL from "../../i18n/i18n-svelte";
 import type { SpaceUserExtended } from "./SpaceInterface";
 
@@ -29,8 +28,6 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
         characterTextures: [],
         attendeesState: false,
         cpuLimited: false,
-        handRaised: get(requestedHandRaiseState).raised,
-        handRaisedAt: get(requestedHandRaiseState).raisedAt,
         pictureStore: readable<string | undefined>(undefined, (set) => {
             const unsubscribe = gameManager
                 .getCurrentGameScene()
@@ -71,8 +68,6 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
             jitsiParticipantId: writable(undefined),
             uuid: writable(localUserStore.getLocalUser()?.uuid ?? ""),
             chatID: writable(localUserStore.getChatId() ?? undefined),
-            handRaised: derived(requestedHandRaiseState, (state) => state.raised),
-            handRaisedAt: derived(requestedHandRaiseState, (state) => state.raisedAt),
         },
     };
 };
