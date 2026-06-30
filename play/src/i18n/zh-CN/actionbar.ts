@@ -180,6 +180,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         videoNotSupported: "您的浏览器不支持视频标签。",
     },
+    raisedHands: {
+        title: "举手",
+        empty: "没有人举手",
+        help: "按顺序查看谁举了手，并把发言权交给他。",
+    },
     listStatusTitle: {
         enable: "更改您的状态",
     },
