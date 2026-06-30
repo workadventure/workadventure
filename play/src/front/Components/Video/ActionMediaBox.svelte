@@ -209,6 +209,7 @@
     {#if ($userIsAdminStore || $canAskToMuteAudioOrTurnOffVideo) && !isScreenSharing && $isHandRaised && !$hasFloor}
         <button
             class="action-button give-floor-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
+            data-testid="give-floor-user"
             onclick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -224,6 +225,7 @@
     {#if ($userIsAdminStore || $canAskToMuteAudioOrTurnOffVideo) && !isScreenSharing && $hasFloor}
         <button
             class="action-button revoke-floor-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
+            data-testid="revoke-floor-user"
             onclick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
