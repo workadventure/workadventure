@@ -104,6 +104,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "이모티콘 표시",
             desc: "이모티콘 반응을 사용해 한 번의 클릭으로 감정을 표현해 보세요. 탭 한 번이면 충분합니다!",
         },
+        raiseHand: {
+            title: "손 들기",
+            desc: "발언하고 싶다는 것을 알립니다. 든 손은 지도와 내 영상에 표시되어 누구 차례인지 모두가 알 수 있습니다.",
+        },
         audioManager: {
             title: "주변 소리 볼륨",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
