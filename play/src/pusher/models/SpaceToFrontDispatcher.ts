@@ -523,7 +523,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                     sender: extendedSender,
                     receiverUserId: message.receiverUserId,
                     spaceEvent: {
-                        event: this.eventProcessor.processPrivateEvent(spaceEvent.event, extendedSender),
+                        event: this.eventProcessor.processPrivateEvent(
+                            spaceEvent.event,
+                            extendedSender,
+                            this._space.filterType,
+                        ),
                     },
                     // The name of the space in the browser is the local name (i.e. the name without the "world" prefix)
                     spaceName: this._space.localName,
