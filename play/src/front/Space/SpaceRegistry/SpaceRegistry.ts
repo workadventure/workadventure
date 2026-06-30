@@ -49,6 +49,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private spaces: MapStore<string, Space> = new MapStore<string, Space>();
     public readonly spacesEligibleForRecording: Readable<Space[]>;
     private leavingSpacesPromises: Map<string, Promise<void>> = new Map<string, Promise<void>>();
+    private joiningSpacesPromises: Map<string, Promise<Space>> = new Map<string, Promise<Space>>();
     private initSpaceUsersMessageStreamSubscription: Subscription;
     private addSpaceUserMessageStreamSubscription: Subscription;
     private updateSpaceUserMessageStreamSubscription: Subscription;
@@ -285,17 +286,40 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             await leavingPromise;
         }
 
+        // A join for the same space might already be in flight. Because Space.create() awaits a
+        // server round-trip (emitJoinSpace), a naive "exist() check then create" straddles an await:
+        // two rapid join attempts (e.g. quickly re-entering a meeting room) can both pass the
+        // existence check, then the first registers the space and the second throws
+        // SpaceAlreadyExistError (or silently overwrites it, leaking the first Space and leaving
+        // remote users visible). We coalesce concurrent joins on the same name by reusing the
+        // in-flight creation promise.
+        const joiningPromise = this.joiningSpacesPromises.get(spaceName);
+        if (joiningPromise) {
+            return await joiningPromise;
+        }
+
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
-        const newSpace = await Space.create(
-            spaceName,
-            filterType,
-            this.roomConnection,
-            propertiesToSync,
-            signal,
-            options,
-        );
-        this.spaces.set(newSpace.getName(), newSpace);
-        return newSpace;
+
+        // Reserve the space name synchronously (before the first await) so concurrent joins coalesce.
+        const creationPromise = (async () => {
+            const newSpace = await Space.create(
+                spaceName,
+                filterType,
+                this.roomConnection,
+                propertiesToSync,
+                signal,
+                options,
+            );
+            this.spaces.set(newSpace.getName(), newSpace);
+            return newSpace;
+        })();
+        this.joiningSpacesPromises.set(spaceName, creationPromise);
+
+        try {
+            return await creationPromise;
+        } finally {
+            this.joiningSpacesPromises.delete(spaceName);
+        }
     }
     exist(spaceName: string): boolean {
         return this.spaces.has(spaceName);
@@ -341,6 +365,11 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.proximityPublicMessageEventSubscription.unsubscribe();
         this.proximityPrivateMessageEventSubscription.unsubscribe();
         this.spaceDestroyedMessageSubscription.unsubscribe();
+
+        // Wait for any in-flight join to settle so it does not register a space after we have
+        // iterated this.spaces below (which would leak it). allSettled because a join may reject.
+        await Promise.allSettled(Array.from(this.joiningSpacesPromises.values()));
+        this.joiningSpacesPromises.clear();
 
         await Promise.all(Array.from(this.leavingSpacesPromises.values()));
         this.leavingSpacesPromises.clear();
