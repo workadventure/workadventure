@@ -2228,7 +2228,6 @@ export class GameScene extends DirtyScene {
 
                 const onStateChange = () => {
                     const state = context.state;
-                    console.warn("AUDIO CONTEXT STATUS", state);
 
                     if (state === "suspended") {
                         audioInterruptedStore.setInterrupted(false);
