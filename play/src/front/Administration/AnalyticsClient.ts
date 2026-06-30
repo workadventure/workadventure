@@ -377,6 +377,14 @@ class AnalyticsClient {
         this.posthog?.capture("wa_kickoff_meeting_action");
     }
 
+    giveFloorMeetingAction(): void {
+        this.posthog?.capture("wa_give_floor_meeting_action");
+    }
+
+    revokeFloorMeetingAction(): void {
+        this.posthog?.capture("wa_revoke_floor_meeting_action");
+    }
+
     sendPrivateMessageMeetingAction(): void {
         this.posthog?.capture("wa_send_private_message_meeting_action");
     }
