@@ -1,5 +1,7 @@
 <script lang="ts">
-    import { silentStore } from "../../Stores/MediaStore";
+    import { isSpeakerStore, silentStore } from "../../Stores/MediaStore";
+    import { userIsAdminStore } from "../../Stores/GameStore";
+    import { raisedHandsStore } from "../../Stores/PeerStore";
 
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
@@ -19,6 +21,7 @@
     import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
     import RaiseHandMenuItem from "./MenuIcons/RaiseHandMenuItem.svelte";
+    import RaisedHandsMenuItem from "./MenuIcons/RaisedHandsMenuItem.svelte";
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
     import ChatMenuItem from "./MenuIcons/ChatMenuItem.svelte";
     import UserListMenuItem from "./MenuIcons/UserListMenuItem.svelte";
@@ -133,6 +136,12 @@
                                     <RaiseHandMenuItem />
                                 {/if}
                                 <!-- NAV : RAISE HAND END -->
+
+                                <!-- NAV : RAISED HANDS PANEL START -->
+                                {#if ($userIsAdminStore || $isSpeakerStore) && $raisedHandsStore.length > 0}
+                                    <RaisedHandsMenuItem />
+                                {/if}
+                                <!-- NAV : RAISED HANDS PANEL END -->
                             </div>
                         </div>
                     </div>
