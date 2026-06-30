@@ -1733,8 +1733,10 @@ message SpaceUser{
   google.protobuf.StringValue chatID = 17; // used
   bool showVoiceIndicator = 18;
   bool attendeesState = 19;
-  bool handRaised = 20; // used - true when the user raised their hand in a meeting
-  int64 handRaisedAt = 21; // used - epoch ms (server-stamped) when the hand was raised, 0 when lowered. Drives the "who was first" ordering.
+  // Raise-hand state is NOT stored per-user here: it lives in the space metadata key "raisedHands"
+  // (broadcast to all members, incl. a megaphone speaker without seeAttendees). Field numbers 20 and 21
+  // are reserved to avoid reuse.
+  reserved 20, 21;
 }
 
 /*message PartialSpaceUser{

@@ -221,6 +221,16 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
             usersList.delete(spaceUserId);
 
+            // Remove the leaving user from the raised-hands queue (metadata) if present, so it does not keep
+            // a ghost entry, and broadcast the updated queue to everyone.
+            const raisedHandsQueue = this.metadata.get("raisedHands");
+            if (
+                Array.isArray(raisedHandsQueue) &&
+                (raisedHandsQueue as { spaceUserId?: unknown }[]).some((entry) => entry?.spaceUserId === spaceUserId)
+            ) {
+                this.publishMetadata({ raisedHands: this.applyRaisedHand(spaceUserId, false) });
+            }
+
             if (this.isPublishing(user)) {
                 this._nbPublishers--;
             }
@@ -703,6 +713,35 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         return Array.from(this.users.values())
             .flatMap((users: Map<string, SpaceUser>) => Array.from(users.values()))
             .find((user: SpaceUser) => user.spaceUserId === spaceUserId);
+    }
+
+    /**
+     * Adds or removes a user from the "raised hands" queue stored in the space metadata, server-authoritatively.
+     *
+     * This is the single source of truth for who raised their hand: the queue is stored in metadata (which is
+     * broadcast to ALL members regardless of role, unlike SpaceUser) so that a megaphone speaker without the
+     * seeAttendees option still receives it. This method is synchronous so that read-modify-write is atomic
+     * (the back is single-threaded), avoiding lost updates when several listeners raise their hand at once.
+     * The timestamp and name are stamped server-side, and the identity is the trusted senderId.
+     */
+    public applyRaisedHand(senderId: string, raised: boolean): { spaceUserId: string; name: string; at: number }[] {
+        const current = this.metadata.get("raisedHands");
+        const queue = Array.isArray(current)
+            ? (current as { spaceUserId: string; name: string; at: number }[]).filter(
+                  (entry) => entry != undefined && typeof entry.spaceUserId === "string",
+              )
+            : [];
+        const existingIndex = queue.findIndex((entry) => entry.spaceUserId === senderId);
+        if (raised) {
+            if (existingIndex === -1) {
+                queue.push({ spaceUserId: senderId, name: this.getUser(senderId)?.name ?? "", at: Date.now() });
+                queue.sort((a, b) => a.at - b.at);
+            }
+        } else if (existingIndex !== -1) {
+            queue.splice(existingIndex, 1);
+        }
+        this.metadata.set("raisedHands", queue);
+        return queue;
     }
 
     public getSpaceName(): string {
