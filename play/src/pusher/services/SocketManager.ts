@@ -756,8 +756,10 @@ export class SocketManager implements ZoneEventListener {
                         room.leave(socket);
                         this.deleteRoomIfEmpty(room);
                     } else {
-                        console.error("Could not find the GameRoom the user is leaving!");
-                        Sentry.captureException("Could not find the GameRoom the user is leaving!");
+                        // The room was already removed from the map. Indeed, there is a race condition
+                        // between the closing if the last user connection to the back and the closing of the room
+                        // connection to the back.
+                        debug("Could not find the GameRoom the user is leaving: %s", socketData.roomId);
                     }
                     //user leave previous room
                     //Client.leave(Client.roomId);
