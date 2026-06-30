@@ -182,6 +182,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         videoNotSupported: "Waš wobhladowak wideo-tag njepodpěruje.",
     },
+    raisedHands: {
+        title: "Zběhnjene ruce",
+        empty: "Nichtó njeje ruku zběhnył",
+        help: "Hladaj, štó je ruku zběhnył po rjedźe, a daj jemu słowo.",
+    },
     listStatusTitle: {
         enable: "Waš status změnić",
     },
