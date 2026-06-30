@@ -104,6 +104,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Emoji pokazać",
             desc: "Wurazće, kak so čuće, z jenož jednym klikom z emoji-reakcijemi. Jenož tknjenje a hić!",
         },
+        raiseHand: {
+            title: "Ruku zběhnyć",
+            desc: "Signalizuj, zo chceš rěčeć. Twoja zběhnjena ruka so na karće a na twojim widejje pokazuje, zo by kóždy wědźał, štó je na rjedźe.",
+        },
         audioManager: {
             title: "Hłošnosć wokolnych zwukow",
             desc: "Konfigurujće awdijowu hłošnosć, kliknje tu.",

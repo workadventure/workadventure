@@ -11,6 +11,7 @@ import { cpuLimitedStore } from "../../WebRtc/CpuLimitationDetector";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
 import { effectiveCameraStateStore, effectiveMicrophoneStateStore } from "../../Stores/MediaStore";
+import { requestedHandRaiseState } from "../../Stores/RaiseHandStore";
 import { recordingStore } from "../../Stores/RecordingStore";
 import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
@@ -542,6 +543,18 @@ export class SpacePeerManager {
                         screenSharingState: false,
                     });
                 }
+            }),
+        );
+
+        // Raise-hand state is synchronized as a SpaceUser property (like camera/microphone), so it reaches
+        // every meeting participant and is replayed to late joiners. It drives both the video tile badge and
+        // the indicator above the woka on the map.
+        this.unsubscribes.push(
+            requestedHandRaiseState.subscribe((state) => {
+                this.space.emitUpdateUser({
+                    handRaised: state.raised,
+                    handRaisedAt: state.raisedAt,
+                });
             }),
         );
     }

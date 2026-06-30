@@ -286,6 +286,8 @@ describe("", () => {
             showVoiceIndicator: false,
             attendeesState: false,
             cpuLimited: false,
+            handRaised: false,
+            handRaisedAt: 0,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -343,6 +345,8 @@ describe("", () => {
             showVoiceIndicator: false,
             attendeesState: false,
             cpuLimited: false,
+            handRaised: false,
+            handRaisedAt: 0,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -395,6 +399,8 @@ describe("", () => {
             showVoiceIndicator: false,
             attendeesState: false,
             cpuLimited: false,
+            handRaised: false,
+            handRaisedAt: 0,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {

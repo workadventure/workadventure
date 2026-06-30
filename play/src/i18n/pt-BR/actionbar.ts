@@ -108,6 +108,10 @@ const actionbar: BaseTranslation = {
             title: "Exibir um emoji",
             desc: "Expresse como você se sente com apenas um clique usando reações emoji. Apenas toque e vá!",
         },
+        raiseHand: {
+            title: "Levantar a mão",
+            desc: "Sinalize que você quer falar. Sua mão levantada aparece no mapa e no seu vídeo, para que todos saibam de quem é a vez.",
+        },
         audioManager: {
             title: "Volume dos sons ambiente",
             desc: "Controle o volume dos sons ambiente para uma experiência personalizada e confortável.",

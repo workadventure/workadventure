@@ -103,6 +103,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "絵文字を表示",
             desc: "絵文字のリアクションを使用して、ワンクリックで気持ちを表現できます。タップするだけです！",
         },
+        raiseHand: {
+            title: "手を挙げる",
+            desc: "発言したいことを知らせます。挙げた手はマップとあなたのビデオに表示され、次が誰の番かみんなにわかります。",
+        },
         audioManager: {
             title: "環境音の音量",
             desc: "ここをクリックしてオーディオ音量を設定します。",

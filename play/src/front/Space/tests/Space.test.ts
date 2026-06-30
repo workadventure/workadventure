@@ -132,6 +132,8 @@ function createSpaceUser(overrides: Partial<SpaceUser> & Pick<SpaceUser, "spaceU
         showVoiceIndicator: overrides.showVoiceIndicator ?? false,
         attendeesState: overrides.attendeesState ?? false,
         cpuLimited: overrides.cpuLimited ?? false,
+        handRaised: overrides.handRaised ?? false,
+        handRaisedAt: overrides.handRaisedAt ?? 0,
     };
 }
 

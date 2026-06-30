@@ -1406,6 +1406,14 @@ export const ANALYTICS_EVENTS = {
   "meeting.camera_layout_resized": signal(
     "The user resized the camera layout.",
   ),
+  "meeting.hand.toggled": event({
+    properties: z.object({
+      raised: z
+        .boolean()
+        .describe("True when the hand was raised, false when lowered."),
+    }),
+    description: "The user raised or lowered their hand in a meeting.",
+  }),
   "meeting.microphone.muted": signal(
     "The user muted their microphone in a meeting.",
   ),
