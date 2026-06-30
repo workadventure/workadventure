@@ -45,6 +45,10 @@ export class PusherWebSocket {
     }
 
     public send(message: ServerToClientMessage): ReturnType<RawSocket["send"]> {
+        if (this.isDisconnecting()) {
+            return 0;
+        }
+
         const nonce = this.nextOutgoingNonce;
         const payloadWithNonce = PusherToFrontWebSocketMessage.encode({
             nonce,
@@ -61,6 +65,10 @@ export class PusherWebSocket {
     }
 
     public handleDrain(): void {
+        if (this.isDisconnecting()) {
+            return;
+        }
+
         if (!this.transportAvailable) {
             return;
         }
@@ -164,6 +172,11 @@ export class PusherWebSocket {
 
     public replaceSocket(newSocket: RawSocket, clientLastReceivedNonce: number): boolean {
         const socketData = this.socket.getUserData();
+        if (this.isDisconnecting()) {
+            newSocket.end(1008, "Cannot replace socket: logical connection is closed");
+            return false;
+        }
+
         console.info(
             `Replacing WebSocket transport for user ${socketData.userUuid} on tab ${socketData.tabId} (lastReceivedNonce=${clientLastReceivedNonce})`,
         );
