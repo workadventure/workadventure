@@ -89,7 +89,7 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore } from "../../Stores/EmoteStore";
 import { requestedHandRaiseState } from "../../Stores/RaiseHandStore";
-import { raisedHandUuidsStore } from "../../Stores/RaisedHandsStore";
+import { raisedHandPlayerIdsStore } from "../../Stores/RaisedHandsStore";
 import { isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
 import {
     jitsiParticipantsCountStore,
@@ -330,8 +330,8 @@ export class GameScene extends DirtyScene {
     private rxJsSubscriptions: Array<Subscription> = [];
     private emoteUnsubscriber!: Unsubscriber;
     private raiseHandUnsubscriber: Unsubscriber | undefined;
-    // UUIDs of remote players whose raised hand is currently shown above their woka (to diff on store updates).
-    private previousRaisedHandUuids = new Set<string>();
+    // Player ids of remote players whose raised hand is currently shown above their woka (to diff on store updates).
+    private previousRaisedHandPlayerIds = new Set<number>();
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscriber!: Unsubscriber;
     private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
@@ -1610,15 +1610,12 @@ export class GameScene extends DirtyScene {
 
     /**
      * Shows/hides the raised-hand indicator above a remote player's woka, resolving the woka from the
-     * SpaceUser uuid. The raise-hand state lives on the SpaceUser (see SpacePeerManager), so this also
-     * covers participants who joined the meeting after the hand was raised.
+     * numeric player id (derived from the SpaceUser's spaceUserId). The raise-hand state lives on the
+     * SpaceUser (see SpacePeerManager), so this also covers participants who joined the meeting after the
+     * hand was raised.
      */
-    private setRemotePlayerRaisedHand(uuid: string, raised: boolean): void {
-        const playerData = this.remotePlayersRepository.getPlayerByUuid(uuid);
-        if (!playerData) {
-            return;
-        }
-        this.MapPlayersByKey.get(playerData.userId)?.setRaisedHand(raised);
+    private setRemotePlayerRaisedHand(playerId: number, raised: boolean): void {
+        this.MapPlayersByKey.get(playerId)?.setRaisedHand(raised);
     }
 
     /**
@@ -2662,20 +2659,20 @@ export class GameScene extends DirtyScene {
         });
 
         // Drive the raised-hand indicator above REMOTE players' wokas from the (space-persisted) SpaceUser state.
-        // The store is keyed by uuid; we resolve the matching woka via the remote players repository.
+        // The store is keyed by numeric player id (derived from each participant's spaceUserId).
         this.unsubscribers.push(
-            raisedHandUuidsStore.subscribe((raisedUuids) => {
-                for (const uuid of raisedUuids) {
-                    if (!this.previousRaisedHandUuids.has(uuid)) {
-                        this.setRemotePlayerRaisedHand(uuid, true);
+            raisedHandPlayerIdsStore.subscribe((raisedPlayerIds) => {
+                for (const playerId of raisedPlayerIds) {
+                    if (!this.previousRaisedHandPlayerIds.has(playerId)) {
+                        this.setRemotePlayerRaisedHand(playerId, true);
                     }
                 }
-                for (const uuid of this.previousRaisedHandUuids) {
-                    if (!raisedUuids.has(uuid)) {
-                        this.setRemotePlayerRaisedHand(uuid, false);
+                for (const playerId of this.previousRaisedHandPlayerIds) {
+                    if (!raisedPlayerIds.has(playerId)) {
+                        this.setRemotePlayerRaisedHand(playerId, false);
                     }
                 }
-                this.previousRaisedHandUuids = new Set(raisedUuids);
+                this.previousRaisedHandPlayerIds = new Set(raisedPlayerIds);
             }),
         );
 
@@ -4227,7 +4224,7 @@ ${escapedMessage}
         }
         // If this player already had their hand raised before their woka was created (e.g. we just joined the
         // meeting, or the SpaceUser arrived before the woka), reflect it immediately.
-        if (get(raisedHandUuidsStore).has(player.userUuid)) {
+        if (get(raisedHandPlayerIdsStore).has(player.userId)) {
             player.setRaisedHand(true);
         }
         this.MapPlayersByKey.set(player.userId, player);
