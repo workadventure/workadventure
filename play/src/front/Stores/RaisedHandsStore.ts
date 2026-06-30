@@ -1,4 +1,4 @@
-import { type Readable, type Unsubscriber, get, readable } from "svelte/store";
+import { type Readable, type Unsubscriber, readable } from "svelte/store";
 import type { VideoBox } from "../Space/VideoBox";
 import { streamableCollectionStore } from "./StreamableCollectionStore";
 
@@ -73,23 +73,40 @@ function createRaisedHandsOrderStore(): Readable<Map<string, number>> {
 export const raisedHandsOrderStore = createRaisedHandsOrderStore();
 
 /**
- * Set of user UUIDs (meeting participants) whose hand is currently raised.
- * Used to drive the raised-hand indicator above the woka on the map: the woka is keyed by uuid via
- * RemotePlayersRepository.getPlayerByUuid(), so the map indicator comes from the same (space-persisted)
- * SpaceUser state as the video tiles — including for participants who joined after the hand was raised.
+ * Extracts the numeric player (zone) id encoded in a spaceUserId of the form `${roomUrl}_${userId}`.
+ * Returns undefined for the local user ("local") or any id that does not match the expected format.
+ * (Same encoding as ProximityChatRoom.extractUserIdAndRoomUrlFromSpaceId.)
  */
-function createRaisedHandUuidsStore(): Readable<Set<string>> {
-    return readable(new Set<string>(), (set) => {
+function getPlayerIdFromSpaceUserId(spaceUserId: string): number | undefined {
+    const lastUnderscoreIndex = spaceUserId.lastIndexOf("_");
+    if (lastUnderscoreIndex === -1) {
+        return undefined;
+    }
+    const playerId = parseInt(spaceUserId.substring(lastUnderscoreIndex + 1), 10);
+    return isNaN(playerId) ? undefined : playerId;
+}
+
+/**
+ * Set of numeric player ids (one per meeting participant whose hand is raised), derived from each
+ * participant's spaceUserId. Drives the raised-hand indicator above the woka on the map.
+ *
+ * We key by the spaceUserId-derived player id rather than by uuid: a uuid is shared by all connections of
+ * the same user (e.g. multiple tabs), whereas each connection has its own spaceUserId — and its own woka.
+ * Keying by spaceUserId therefore points at the correct woka and stays consistent with the video tiles
+ * (which are keyed by spaceUserId via VideoBox.uniqueId).
+ */
+function createRaisedHandPlayerIdsStore(): Readable<Set<number>> {
+    return readable(new Set<number>(), (set) => {
         let innerUnsubscribers: Unsubscriber[] = [];
-        // uuid -> raised. A uuid may be backed by several boxes (camera + screen share); last write wins,
-        // which is fine because handRaised is a per-user value shared by all of that user's boxes.
-        const raisedByUuid = new Map<string, boolean>();
+        // playerId -> raised. A player may be backed by several boxes (camera + screen share); last write
+        // wins, which is fine because handRaised is a per-user value shared by all of that user's boxes.
+        const raisedByPlayerId = new Map<number, boolean>();
 
         const recompute = (): void => {
-            const raised = new Set<string>();
-            for (const [uuid, isRaised] of raisedByUuid) {
+            const raised = new Set<number>();
+            for (const [playerId, isRaised] of raisedByPlayerId) {
                 if (isRaised) {
-                    raised.add(uuid);
+                    raised.add(playerId);
                 }
             }
             set(raised);
@@ -98,17 +115,18 @@ function createRaisedHandUuidsStore(): Readable<Set<string>> {
         const outerUnsubscriber = streamableCollectionStore.subscribe((boxes) => {
             innerUnsubscribers.forEach((unsubscribe) => unsubscribe());
             innerUnsubscribers = [];
-            raisedByUuid.clear();
+            raisedByPlayerId.clear();
 
             for (const box of boxes.values()) {
-                // uuid never changes for a given user, so a one-time read is enough.
-                const uuid = get(box.spaceUser.reactiveUser.uuid);
-                if (!uuid) {
+                // spaceUserId is the unique per-connection id and encodes the woka's numeric player id.
+                const playerId = getPlayerIdFromSpaceUserId(box.spaceUser.spaceUserId);
+                if (playerId === undefined) {
+                    // Local user ("local") or unexpected format: the local woka is handled separately.
                     continue;
                 }
                 innerUnsubscribers.push(
                     box.spaceUser.reactiveUser.handRaised.subscribe((isRaised) => {
-                        raisedByUuid.set(uuid, isRaised);
+                        raisedByPlayerId.set(playerId, isRaised);
                         recompute();
                     }),
                 );
@@ -124,6 +142,6 @@ function createRaisedHandUuidsStore(): Readable<Set<string>> {
 }
 
 /**
- * Readable set of UUIDs of meeting participants whose hand is currently raised.
+ * Readable set of numeric player ids of meeting participants whose hand is currently raised.
  */
-export const raisedHandUuidsStore = createRaisedHandUuidsStore();
+export const raisedHandPlayerIdsStore = createRaisedHandPlayerIdsStore();

@@ -9,16 +9,16 @@ vi.mock("./StreamableCollectionStore", async () => {
 });
 
 import { streamableCollectionStore } from "./StreamableCollectionStore";
-import { raisedHandsOrderStore, raisedHandUuidsStore } from "./RaisedHandsStore";
+import { raisedHandsOrderStore, raisedHandPlayerIdsStore } from "./RaisedHandsStore";
 
 const collection = streamableCollectionStore as unknown as Writable<Map<string, VideoBox>>;
 
-function fakeBox(uniqueId: string, raised: boolean, raisedAt: number, uuid: string = uniqueId) {
+function fakeBox(uniqueId: string, raised: boolean, raisedAt: number, spaceUserId: string = uniqueId) {
     const handRaised = writable(raised);
     const handRaisedAt = writable(raisedAt);
     const box = {
         uniqueId,
-        spaceUser: { reactiveUser: { handRaised, handRaisedAt, uuid: writable(uuid) } },
+        spaceUser: { spaceUserId, reactiveUser: { handRaised, handRaisedAt } },
     } as unknown as VideoBox;
     return { box, handRaised, handRaisedAt };
 }
@@ -103,13 +103,13 @@ describe("RaisedHandsStore", () => {
     });
 });
 
-describe("raisedHandUuidsStore", () => {
-    let latest = new Set<string>();
+describe("raisedHandPlayerIdsStore", () => {
+    let latest = new Set<number>();
     let unsubscribe: () => void;
 
     beforeEach(() => {
         collection.set(new Map());
-        unsubscribe = raisedHandUuidsStore.subscribe((value) => (latest = value));
+        unsubscribe = raisedHandPlayerIdsStore.subscribe((value) => (latest = value));
     });
 
     afterEach(() => {
@@ -117,25 +117,31 @@ describe("raisedHandUuidsStore", () => {
         collection.set(new Map());
     });
 
-    it("exposes the uuids of participants whose hand is raised", () => {
-        const a = fakeBox("a", true, 1000, "uuid-a");
-        const b = fakeBox("b", false, 0, "uuid-b");
+    it("exposes the player ids (parsed from spaceUserId) of participants whose hand is raised", () => {
+        const a = fakeBox("a", true, 1000, "room_5");
+        const b = fakeBox("b", false, 0, "room_6");
         collection.set(boxesMap(a.box, b.box));
 
-        expect(latest.has("uuid-a")).toBe(true);
-        expect(latest.has("uuid-b")).toBe(false);
+        expect(latest.has(5)).toBe(true);
+        expect(latest.has(6)).toBe(false);
         expect(latest.size).toBe(1);
     });
 
     it("reacts to a hand being raised and lowered", () => {
-        const a = fakeBox("a", false, 0, "uuid-a");
+        const a = fakeBox("a", false, 0, "room_5");
         collection.set(boxesMap(a.box));
         expect(latest.size).toBe(0);
 
         a.handRaised.set(true);
-        expect(latest.has("uuid-a")).toBe(true);
+        expect(latest.has(5)).toBe(true);
 
         a.handRaised.set(false);
-        expect(latest.has("uuid-a")).toBe(false);
+        expect(latest.has(5)).toBe(false);
+    });
+
+    it("ignores users whose spaceUserId has no numeric suffix (e.g. the local user)", () => {
+        const local = fakeBox("local", true, 1000, "local");
+        collection.set(boxesMap(local.box));
+        expect(latest.size).toBe(0);
     });
 });
