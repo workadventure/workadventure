@@ -102,6 +102,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "顯示表情符號",
             desc: "只要點一下就能用表情符號回應來表達您的感受。只要點一下即可！",
         },
+        raiseHand: {
+            title: "舉手",
+            desc: "示意你想發言。你舉起的手會顯示在地圖和你的視訊上，讓大家知道接下來輪到誰。",
+        },
         audioManager: {
             title: "環境聲音音量",
             desc: "點此設定音訊音量。",

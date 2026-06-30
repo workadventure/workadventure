@@ -1528,6 +1528,14 @@ export const ANALYTICS_EVENTS = {
     properties: meetingActionProperties,
     description: "The user resized the camera layout.",
   }),
+  "meeting.hand.toggled": event({
+    properties: meetingActionProperties.extend({
+      raised: z
+        .boolean()
+        .describe("True when the hand was raised, false when lowered."),
+    }),
+    description: "The user raised or lowered their hand in a meeting.",
+  }),
   "meeting.microphone.muted": event({
     properties: meetingActionProperties,
     description: "The user muted their microphone in a meeting.",
