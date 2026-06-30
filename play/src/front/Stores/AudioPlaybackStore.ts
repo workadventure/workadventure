@@ -18,11 +18,9 @@ export function createAudioPlaybackStore(): AudioPlaybackStore {
 
             let isRegistered = true;
             return () => {
-                console.warn("AUDIO UNREGISTERING");
                 if (!isRegistered) {
                     return;
                 }
-                console.warn("AUDIO UNREGISTERED");
                 isRegistered = false;
                 retries.update((currentRetries) => {
                     const updatedRetries = new Set(currentRetries);

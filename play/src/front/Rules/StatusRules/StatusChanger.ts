@@ -21,7 +21,9 @@ export class StatusChanger {
     }
     changeStatusTo(newStatus: AvailabilityStatus) {
         if (!this._rulesVerification.canChangeStatus(this._statusStrategy.getActualStatus()).to(newStatus)) {
-            throw new InvalidStatusTransitionError("");
+            throw new InvalidStatusTransitionError(
+                `Cannot change status from ${this._statusStrategy.getActualStatus()} to ${newStatus}`,
+            );
         }
         this._statusStrategy.cleanTimedRules();
         this.setStrategy(newStatus);
