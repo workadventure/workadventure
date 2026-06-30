@@ -1168,6 +1168,15 @@ message MuteVideoForEverybodyPublicMessage {
 message KickOffUserPrivateMessage {
 }
 
+// Sent within a megaphone space to give the floor to a user who raised their hand (promote them to speaker).
+// In an ALL_USERS (proximity) space it simply lowers the recipient's hand and notifies them it is their turn.
+message GiveFloorPrivateMessage {
+}
+
+// Sent within a megaphone space to take the floor back from a user (demote them from speaker).
+message RevokeFloorPrivateMessage {
+}
+
 message RecordingUnexpectedlyStoppedPrivateMessage {
 }
 
@@ -1217,6 +1226,8 @@ message PrivateSpaceEvent {
     UnblockUserMessage unblockUserMessage = 21;
     MeetingConnectionRestartMessage meetingConnectionRestartMessage = 22;
     RecordingUnexpectedlyStoppedPrivateMessage recordingUnexpectedlyStoppedMessage = 23;
+    GiveFloorPrivateMessage giveFloor = 24;
+    RevokeFloorPrivateMessage revokeFloor = 25;
   }
 }
 
