@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { EventType } from "matrix-js-sdk";
     import { onMount } from "svelte";
     import { get, readable } from "svelte/store";
     import { defaultColor } from "@workadventure/shared-utils";
@@ -37,6 +38,12 @@
     }
 
     let { room }: Props = $props();
+
+    let canEditName = $derived(room.hasPermissionForRoomStateEvent(EventType.RoomName));
+    let canEditTopic = $derived(room.hasPermissionForRoomStateEvent(EventType.RoomTopic));
+    let canEditAccess = $derived(room.hasPermissionForRoomStateEvent(EventType.RoomJoinRules));
+    let canEditHistory = $derived(room.hasPermissionForRoomStateEvent(EventType.RoomHistoryVisibility));
+    let canEditPermissions = $derived(room.hasPermissionForRoomStateEvent(EventType.RoomPowerLevels));
 
     const emptyThreads = readable<readonly ChatThreadSummary[]>([]);
     const emptyPolls = readable<readonly ChatPollItem[]>([]);
@@ -105,6 +112,9 @@
         room.pollCatalogueHydrationState != null && $pollCatalogueHydrationState.status === "error"
             ? $LL.chat.roomPanel.pollsLoadError()
             : undefined,
+    );
+    let hasAnyEditableSettingsField = $derived(
+        $canEditName || $canEditTopic || $canEditAccess || $canEditHistory || $canEditPermissions,
     );
 
     function openSection(section: RoomSidePanelSection) {
@@ -233,7 +243,9 @@
             >
                 <IconSettings font-size={18} />
                 <div class="mt-2 text-sm font-semibold">{$LL.chat.roomPanel.sections.settings()}</div>
-                <div class="mt-1 text-xs text-white/55">{$LL.chat.roomPanel.home.readOnly()}</div>
+                {#if !hasAnyEditableSettingsField}
+                    <div class="mt-1 text-xs text-white/55">{$LL.chat.roomPanel.home.readOnly()}</div>
+                {/if}
             </button>
         </div>
 

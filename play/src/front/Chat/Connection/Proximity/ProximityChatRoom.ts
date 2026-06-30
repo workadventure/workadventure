@@ -60,6 +60,8 @@ export class ProximityChatMessage implements ChatMessage {
     quotedMessage = undefined;
     isDeleted = writable(false);
     isModified = writable(false);
+    canEdit = writable(false);
+    canReact = writable(false);
     canDelete = writable(false);
     reactions: MapStore<string, ChatMessageReaction> = new MapStore();
     constructor(
