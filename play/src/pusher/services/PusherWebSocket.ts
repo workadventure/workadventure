@@ -20,6 +20,7 @@ export class PusherWebSocket {
 
     private socket: RawSocket;
     private _isDisconnecting = false;
+    private _isPermanentlyDisconnected = false;
     private keepAliveInterval: NodeJS.Timeout | undefined;
     private batchTimeout: NodeJS.Timeout | undefined;
     private pingBackpressured = false;
@@ -140,6 +141,22 @@ export class PusherWebSocket {
 
     public isDisconnecting(): boolean {
         return this._isDisconnecting;
+    }
+
+    /**
+     * Marks this logical connection as gone for good: the transport closed and no reconnect retry
+     * will replace it (either a normal client close, or the reconnection retention window expired).
+     */
+    public markPermanentlyDisconnected(): void {
+        this._isPermanentlyDisconnected = true;
+    }
+
+    /**
+     * Returns true once the connection can no longer be revived by a reconnecting transport
+     * (see replaceSocket). Useful to tell an expected teardown apart from an unexpected drop.
+     */
+    public isPermanentlyDisconnected(): boolean {
+        return this._isPermanentlyDisconnected;
     }
 
     public startDisconnecting(): boolean {
