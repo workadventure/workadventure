@@ -1,9 +1,11 @@
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import type { Subscription } from "rxjs";
+import { FilterType } from "@workadventure/messages";
 import type { PrivateEvents, SpaceInterface } from "../SpaceInterface";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { requestedHandRaiseState } from "../../Stores/RaiseHandStore";
 import LL from "../../../i18n/i18n-svelte";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
@@ -105,6 +107,33 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
             Sentry.captureException(e);
         });
         chatZoneLiveStore.set(false);
+    });
+
+    // The local user has been given the floor: promote to speaker (in megaphone spaces) and lower the raised hand.
+    // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
+    // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
+    space.observePrivateEvent("giveFloor").subscribe(() => {
+        // In an ALL_USERS (proximity) space everyone already speaks, so there is nothing to promote.
+        if (space.filterType !== FilterType.ALL_USERS) {
+            space.startStreaming();
+        }
+        requestedHandRaiseState.lowerHand();
+        // We never force the microphone on; if it is muted we invite the user to enable it.
+        if (get(requestedMicrophoneState)) {
+            notificationPlayingStore.playNotification(get(LL).notification.givenTheFloor());
+        } else {
+            notificationPlayingStore.playNotification(get(LL).notification.givenTheFloorEnableMicrophone());
+        }
+    });
+
+    // The floor has been taken back from the local user: demote from speaker (in megaphone spaces).
+    // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
+    // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
+    space.observePrivateEvent("revokeFloor").subscribe(() => {
+        if (space.filterType !== FilterType.ALL_USERS) {
+            space.stopStreaming();
+        }
+        notificationPlayingStore.playNotification(get(LL).notification.floorRevoked(), "microphone-off.png");
     });
 
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
