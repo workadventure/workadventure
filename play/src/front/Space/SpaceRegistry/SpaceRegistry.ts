@@ -4,7 +4,7 @@ import type { Subscription } from "rxjs";
 import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
 import type { Readable } from "svelte/store";
-import { derived } from "svelte/store";
+import { derived, get } from "svelte/store";
 import type { RaisedHand, SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import type { VideoBox } from "../VideoBox";
@@ -132,6 +132,20 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         const stores = Array.from($spaces.values(), (space) => space.raisedHandsStore);
         return derived(stores, (lists) => lists.flat()).subscribe(set);
     });
+
+    /**
+     * Gives the floor to (or takes it back from) a user identified by their spaceUserId, resolving the space
+     * from the raised-hands queue. Used by the host "raised hands" panel, which only has the spaceUserId (not
+     * the SpaceUserExtended) — in particular for a megaphone speaker who does not receive listeners' SpaceUser.
+     */
+    public giveFloor(spaceUserId: string): void {
+        for (const space of this.spaces.values()) {
+            if (get(space.raisedHandsStore).some((entry) => entry.spaceUserId === spaceUserId)) {
+                space.emitPrivateMessage({ $case: "giveFloor", giveFloor: {} }, spaceUserId);
+                return;
+            }
+        }
+    }
 
     public readonly isLiveStreamingAudioStore: Readable<boolean> = derived(this.spaces, ($spaces, set) => {
         if ($spaces.size === 0) {

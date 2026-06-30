@@ -182,6 +182,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         videoNotSupported: "Tu navegador no admite la etiqueta de vídeo.",
     },
+    raisedHands: {
+        title: "Manos levantadas",
+        empty: "Nadie ha levantado la mano",
+        help: "Mira quién ha levantado la mano, por orden, y dale la palabra.",
+    },
     listStatusTitle: {
         enable: "Cambiar tu estado",
     },
