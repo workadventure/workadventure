@@ -1,7 +1,9 @@
+import * as Phaser from "phaser";
 import { get } from "svelte/store";
 import { TextField } from "../Components/TextField";
 import { LL } from "../../../i18n/i18n-svelte";
 import { gameManager } from "../Game/GameManager";
+
 import Image = Phaser.GameObjects.Image;
 
 export const ReconnectingSceneName = "ReconnectingScene";

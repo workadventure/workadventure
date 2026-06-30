@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { Player } from "../Player/Player";
@@ -18,6 +19,9 @@ import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Shortcut } from "./UserInputManager";
+
+import Pointer = Phaser.Input.Pointer;
+import GameObject = Phaser.GameObjects.GameObject;
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -98,8 +102,8 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handleMouseWheelEvent(
-        pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[],
+        pointer: Pointer,
+        gameObjects: GameObject[],
         deltaX: number,
         deltaY: number,
         deltaZ: number,
@@ -107,7 +111,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         this.gameScene.handleMouseWheel(deltaY);
     }
 
-    public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+    public handlePointerUpEvent(pointer: Pointer, gameObjects: GameObject[]): void {
         if (pointer.wasTouch || pointer.leftButtonReleased()) {
             for (const object of gameObjects) {
                 if (isActivatable(object)) {
@@ -153,9 +157,9 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             });
     }
 
-    public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
+    public handlePointerDownEvent(pointer: Pointer, gameObjects: GameObject[]): void {}
 
-    public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
+    public handlePointerMoveEvent(pointer: Pointer, gameObjects: GameObject[]): void {}
 
     private handleKeyF() {
         const state = get(followStateStore);

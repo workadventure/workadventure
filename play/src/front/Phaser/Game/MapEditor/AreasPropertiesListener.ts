@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import { v4 as uuidv4 } from "uuid";
 import type {
     AreaData,
@@ -93,6 +94,9 @@ import { isInsidePersonalAreaStore } from "../../../Stores/PersonalDeskStore";
 import { currentPlayerLockableAreasStore, type LockableAreaEntry } from "../../../Stores/CurrentPlayerAreaLockStore";
 import { areaPropertyVariablesManagerStore } from "../../../Stores/AreaPropertyVariablesStore";
 import { touchScreenManager } from "../../../Touch/TouchScreenManager";
+
+import Rectangle = Phaser.Geom.Rectangle;
+import Color = Phaser.Display.Color;
 
 /**
  * Represents the state of an active megaphone zone (speaker or listener).
@@ -854,7 +858,7 @@ export class AreasPropertiesListener {
             bottom = Math.max(bottom, z.y + z.height);
         }
 
-        return new Phaser.Geom.Rectangle(left, top, right - left, bottom - top);
+        return new Rectangle(left, top, right - left, bottom - top);
     }
 
     private handleHighlightPropertyOnEnter(areaData: AreaData, property: HighlightPropertyData): void {
@@ -864,7 +868,7 @@ export class AreasPropertiesListener {
         }
         this.scene.focusFx.attachToArea(areaData);
         this.scene.focusFx.setFeather(property.gradientWidth);
-        this.scene.focusFx.setColor(Phaser.Display.Color.HexStringToColor(property.color));
+        this.scene.focusFx.setColor(Color.HexStringToColor(property.color));
         this.scene.focusFx.setTargetDarkness(property.opacity);
         this.scene.focusFx.setTransitionDuration(property.duration);
         this.scene.focusFx.show();
@@ -916,7 +920,7 @@ export class AreasPropertiesListener {
 
         this.scene.focusFx.attachToArea(unionRect);
         this.scene.focusFx.setFeather(property.gradientWidth);
-        this.scene.focusFx.setColor(Phaser.Display.Color.HexStringToColor(property.color));
+        this.scene.focusFx.setColor(Color.HexStringToColor(property.color));
         this.scene.focusFx.setTargetDarkness(property.opacity);
         this.scene.focusFx.setTransitionDuration(property.duration);
         this.scene.focusFx.show();

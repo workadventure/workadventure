@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import type { AreaData, AtLeast } from "@workadventure/map-editor";
 import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { Unsubscriber } from "svelte/store";
@@ -24,6 +25,11 @@ import { MapEditorTool } from "./MapEditorTool";
 import type { TrashEditorTool } from "./TrashEditorTool";
 import { modals } from "@wa-modals";
 
+import Graphics = Phaser.GameObjects.Graphics;
+import Key = Phaser.Input.Keyboard.Key;
+import Pointer = Phaser.Input.Pointer;
+import GameObject = Phaser.GameObjects.GameObject;
+
 export class AreaEditorTool extends MapEditorTool {
     private scene: GameScene;
     private mapEditorModeManager: MapEditorModeManager;
@@ -38,30 +44,24 @@ export class AreaEditorTool extends MapEditorTool {
 
     private drawingNewArea: boolean;
     private drawinNewAreaStartPos?: { x: number; y: number };
-    private newAreaPreview!: Phaser.GameObjects.Graphics;
-    private areaOldPositionPreview!: Phaser.GameObjects.Graphics;
+    private newAreaPreview!: Graphics;
+    private areaOldPositionPreview!: Graphics;
 
     private draggingdArea: boolean;
     private wasAreaMoved: boolean;
 
-    private shiftKey?: Phaser.Input.Keyboard.Key;
-    private ctrlKey?: Phaser.Input.Keyboard.Key;
+    private shiftKey?: Key;
+    private ctrlKey?: Key;
 
     private tooltip?: SpeechDomElement;
     private toolTipAlreadyPlayed: boolean = false;
 
     private selectedAreaPreviewStoreSubscriber!: Unsubscriber;
 
-    private pointerMoveEventHandler!: (pointer: Phaser.Input.Pointer) => void;
-    private pointerUpEventHandler!: (
-        pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[],
-    ) => void;
+    private pointerMoveEventHandler!: (pointer: Pointer) => void;
+    private pointerUpEventHandler!: (pointer: Pointer, gameObjects: GameObject[]) => void;
 
-    private pointerDownEventHandler!: (
-        pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[],
-    ) => void;
+    private pointerDownEventHandler!: (pointer: Pointer, gameObjects: GameObject[]) => void;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
@@ -235,16 +235,13 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private bindEventHandlers(): void {
-        this.pointerMoveEventHandler = (pointer: Phaser.Input.Pointer) => {
+        this.pointerMoveEventHandler = (pointer: Pointer) => {
             this.handlePointerMoveEvent(pointer);
         };
-        this.pointerUpEventHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+        this.pointerUpEventHandler = (pointer: Pointer, gameObjects: GameObject[]) => {
             this.handlePointerUpEvent(pointer, gameObjects);
         };
-        this.pointerDownEventHandler = (
-            pointer: Phaser.Input.Pointer,
-            gameObjects: Phaser.GameObjects.GameObject[],
-        ) => {
+        this.pointerDownEventHandler = (pointer: Pointer, gameObjects: GameObject[]) => {
             this.handlePointerDownEvent(pointer, gameObjects);
         };
 
@@ -281,10 +278,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.scene.input.off(Phaser.Input.Events.POINTER_OUT, this.pointerOutEventHandler);
     }
 
-    private pointerHoverEventHandler = (
-        pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[],
-    ) => {
+    private pointerHoverEventHandler = (pointer: Pointer, gameObjects: GameObject[]) => {
         if (!this.active) {
             return;
         }
@@ -296,7 +290,7 @@ export class AreaEditorTool extends MapEditorTool {
         }
     };
 
-    private pointerOutEventHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+    private pointerOutEventHandler = (pointer: Pointer, gameObjects: GameObject[]) => {
         if (!this.active) {
             return;
         }
@@ -308,7 +302,7 @@ export class AreaEditorTool extends MapEditorTool {
         }
     };
 
-    private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+    private handlePointerDownEvent(pointer: Pointer, gameObjects: GameObject[]): void {
         const areaEditorToolObjects = this.getAreaEditorToolObjectsFromGameObjects(gameObjects);
         if (pointer.rightButtonDown()) {
             return;
@@ -342,7 +336,7 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    private handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+    private handlePointerUpEvent(pointer: Pointer, gameObjects: GameObject[]): void {
         // Improve select mutliple zone and add tooltips to the areas to say "You can click again to select another zone"
         if (this.active && gameObjects.length > 1 && this.toolTipAlreadyPlayed == false) {
             if (this.tooltip == undefined)
@@ -418,7 +412,7 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    private handlePointerMoveEvent(pointer: Phaser.Input.Pointer): void {
+    private handlePointerMoveEvent(pointer: Pointer): void {
         if (this.drawingNewArea && this.drawinNewAreaStartPos) {
             this.drawNewArea(pointer);
         }
@@ -427,7 +421,7 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    private drawNewArea(pointer: Phaser.Input.Pointer): void {
+    private drawNewArea(pointer: Pointer): void {
         const drawingData = this.getNewAreaDrawingData(pointer);
         this.newAreaPreview.clear();
         this.newAreaPreview.fillStyle(0x0000ff, 0.5);
@@ -442,7 +436,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
-    private getNewAreaDrawingData(pointer: Phaser.Input.Pointer): {
+    private getNewAreaDrawingData(pointer: Pointer): {
         x: number;
         y: number;
         width: number;
@@ -471,9 +465,7 @@ export class AreaEditorTool extends MapEditorTool {
         };
     }
 
-    private getAreaEditorToolObjectsFromGameObjects(
-        gameObjects: Phaser.GameObjects.GameObject[],
-    ): (AreaPreview | SizeAlteringSquare)[] {
+    private getAreaEditorToolObjectsFromGameObjects(gameObjects: GameObject[]): (AreaPreview | SizeAlteringSquare)[] {
         const areaPreviews = gameObjects.filter((obj) => this.isAreaPreview(obj));
         const sizeAlteringSquares = gameObjects.filter((obj) => this.isSizeAlteringSquare(obj));
         return [...areaPreviews, ...sizeAlteringSquares] as (AreaPreview | SizeAlteringSquare)[];
@@ -754,11 +746,11 @@ export class AreaEditorTool extends MapEditorTool {
         this.areaPreviews.forEach((area) => area.setVisible(visible));
     }
 
-    private isAreaPreview(obj: Phaser.GameObjects.GameObject): obj is AreaPreview {
+    private isAreaPreview(obj: GameObject): obj is AreaPreview {
         return obj instanceof AreaPreview;
     }
 
-    private isSizeAlteringSquare(obj: Phaser.GameObjects.GameObject): obj is SizeAlteringSquare {
+    private isSizeAlteringSquare(obj: GameObject): obj is SizeAlteringSquare {
         return obj instanceof SizeAlteringSquare;
     }
 

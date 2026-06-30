@@ -1,3 +1,9 @@
+import * as Phaser from "phaser";
+
+import Container = Phaser.GameObjects.Container;
+import Graphics = Phaser.GameObjects.Graphics;
+import Image = Phaser.GameObjects.Image;
+
 export interface IconButtonConfig {
     width: number;
     height: number;
@@ -19,9 +25,9 @@ export enum IconButtonEvent {
     Clicked = "IconButton:Clicked",
 }
 
-export class IconButton extends Phaser.GameObjects.Container {
-    private background: Phaser.GameObjects.Graphics;
-    private icon: Phaser.GameObjects.Image;
+export class IconButton extends Container {
+    private background: Graphics;
+    private icon: Image;
 
     private config: IconButtonConfig;
 

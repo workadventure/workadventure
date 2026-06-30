@@ -1,3 +1,4 @@
+import type * as Phaser from "phaser";
 import { DEPTH_INGAME_TEXT_INDEX } from "./DepthIndexes";
 import type { GameScene } from "./GameScene";
 

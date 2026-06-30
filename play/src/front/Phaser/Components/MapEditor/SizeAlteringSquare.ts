@@ -1,4 +1,7 @@
+import * as Phaser from "phaser";
 import { GameScene } from "../../Game/GameScene";
+
+import Rectangle = Phaser.GameObjects.Rectangle;
 
 export enum SizeAlteringSquarePosition {
     TopLeft = 0,
@@ -17,7 +20,7 @@ export enum SizeAlteringSquareEvent {
     Released = "SizeAlteringSquare:Released",
 }
 
-export class SizeAlteringSquare extends Phaser.GameObjects.Rectangle {
+export class SizeAlteringSquare extends Rectangle {
     private selected: boolean;
 
     constructor(

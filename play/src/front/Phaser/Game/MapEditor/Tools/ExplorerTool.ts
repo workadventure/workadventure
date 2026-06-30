@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import type { EditMapCommandMessage } from "@workadventure/messages";
 import debug from "debug";
 import type { Unsubscriber } from "svelte/store";
@@ -21,6 +22,9 @@ import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { waScaleManager } from "../../../Services/WaScaleManager";
 import { enableUserInputsStore } from "../../../../Stores/UserInputStore";
 import type { MapEditorTool } from "./MapEditorTool";
+
+import Pointer = Phaser.Input.Pointer;
+import GameObject = Phaser.GameObjects.GameObject;
 
 const logger = debug("explorer-tool");
 
@@ -70,15 +74,15 @@ export class ExplorerTool implements MapEditorTool {
         this.mapEditorModeManager.handleKeyDownEvent(event);
     };
     private wheelHandler = (
-        pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[],
+        pointer: Pointer,
+        gameObjects: GameObject[],
         deltaX: number,
         deltaY: number,
         deltaZ: number,
     ) => {
         this.scene.handleMouseWheel(deltaY);
     };
-    private pointerDownHandler = (pointer: Phaser.Input.Pointer) => {
+    private pointerDownHandler = (pointer: Pointer) => {
         // The motion factor is used to smooth out the velocity of the camera.
         // By default, the 0.2 value is too low and if we release the pointer when the mouse is not moving but has
         // moved 0.1 second before, the camera will continue to move.
@@ -89,14 +93,14 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.input.setDefaultCursor("grabbing");
         this.scene.getCameraManager().stopSpeed();
     };
-    private pointerMoveHandler = (pointer: Phaser.Input.Pointer) => {
+    private pointerMoveHandler = (pointer: Pointer) => {
         if (!this.explorationMouseIsActive) return;
 
         this.scene
             .getCameraManager()
             .scrollCamera(pointer.prevPosition.x - pointer.x, pointer.prevPosition.y - pointer.y);
     };
-    private pointerUpHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+    private pointerUpHandler = (pointer: Pointer, gameObjects: GameObject[]) => {
         this.scene.input.setDefaultCursor("grab");
         this.explorationMouseIsActive = false;
 

@@ -1,4 +1,7 @@
+import * as Phaser from "phaser";
 import { gameManager } from "../Phaser/Game/GameManager";
+
+import Camera = Phaser.Cameras.Scene2D.Camera;
 
 let webRtcConnectionsCount = 0;
 let livekitConnectionsCount = 0;
@@ -17,10 +20,6 @@ interface E2ECoordinateOptions {
 
 interface CameraEffectWithIsRunning {
     isRunning?: boolean;
-}
-
-interface CameraWithTransform extends Phaser.Cameras.Scene2D.Camera {
-    matrix: Phaser.GameObjects.Components.TransformMatrix;
 }
 
 const DEFAULT_COORDINATE_STABILITY_TIMEOUT_MS = 10_000;
@@ -45,7 +44,7 @@ function isEffectRunning(effect: CameraEffectWithIsRunning | undefined): boolean
     return effect?.isRunning === true;
 }
 
-function hasRunningCameraEffect(camera: Phaser.Cameras.Scene2D.Camera): boolean {
+function hasRunningCameraEffect(camera: Camera): boolean {
     return (
         isEffectRunning(camera.fadeEffect) ||
         isEffectRunning(camera.flashEffect) ||
@@ -73,11 +72,9 @@ function getGameCanvas(): HTMLCanvasElement {
 function getGameToBrowserCoordinatesSnapshot(gameCoordinates: Coordinates): Coordinates {
     const scene = gameManager.getCurrentGameScene();
     const camera = scene.getCameraManager().getCamera();
-    const cameraWithTransform = camera as CameraWithTransform;
 
-    // camera.preRender() must be called before accessing worldView or the camera matrix to ensure it is up to date.
+    // camera.preRender() must be called before accessing worldView or camera matrices to ensure they are up to date.
     // See the same pattern in GameScene.connect().
-    // @ts-ignore preRender is protected, but Phaser documents it as the way to refresh worldView.
     camera.preRender();
 
     const canvas = getGameCanvas();
@@ -86,11 +83,7 @@ function getGameToBrowserCoordinatesSnapshot(gameCoordinates: Coordinates): Coor
     const canvasInternalHeight = canvas.height || camera.height;
     const scaleX = canvasRect.width / canvasInternalWidth;
     const scaleY = canvasRect.height / canvasInternalHeight;
-    const canvasPoint = cameraWithTransform.matrix.transformPoint(
-        gameCoordinates.x - camera.scrollX,
-        gameCoordinates.y - camera.scrollY,
-        { x: 0, y: 0 },
-    );
+    const canvasPoint = camera.matrixCombined.transformPoint(gameCoordinates.x, gameCoordinates.y, { x: 0, y: 0 });
     const x = canvasRect.left + canvasPoint.x * scaleX;
     const y = canvasRect.top + canvasPoint.y * scaleY;
     const roundTrip = camera.getWorldPoint(canvasPoint.x, canvasPoint.y);

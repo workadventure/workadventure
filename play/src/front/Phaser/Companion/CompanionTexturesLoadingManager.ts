@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import type { CancelablePromise } from "cancelable-promise";
 import type { CompanionTexture } from "@workadventure/messages";
 import { CompanionTextureCollection } from "@workadventure/messages";
@@ -6,6 +7,7 @@ import { localUserStore } from "../../Connection/LocalUserStore";
 import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
 import type { CompanionTextureDescriptionInterface, CompanionTextures } from "./CompanionTextures";
+
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 
 export function companionListMetakey() {
