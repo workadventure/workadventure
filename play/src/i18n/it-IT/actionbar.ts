@@ -104,6 +104,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Mostra un emoji",
             desc: "Esprimi come ti senti con un solo clic usando le reazioni emoji. Basta toccare e via!",
         },
+        raiseHand: {
+            title: "Alza la mano",
+            desc: "Segnala che vuoi parlare. La tua mano alzata viene mostrata sulla mappa e sul tuo video, così tutti sanno a chi tocca.",
+        },
         audioManager: {
             title: "Volume dei suoni ambientali",
             desc: "Configura il volume dell'audio facendo clic qui.",
