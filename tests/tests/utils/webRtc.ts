@@ -118,6 +118,33 @@ export async function triggerWebRtcRetryAndVerifyReconnection(
     return { disconnectionObserved, result };
 }
 
+export async function triggerWebRtcUnilateralDestroyRetryAndVerifyReconnection(
+    page: Page,
+    disconnectionTimeout = 10_000,
+    reconnectionTimeout = 60_000,
+): Promise<{
+    disconnectionObserved: boolean;
+    result: {
+        spaceName: string;
+        userId: string;
+        triggered: boolean;
+        initiator: boolean;
+        connectionId: string;
+    } | null;
+}> {
+    const result = await triggerWebRtcUnilateralDestroyRetry(page);
+
+    if (!result || !result.triggered) {
+        return { disconnectionObserved: false, result };
+    }
+
+    const disconnectionObserved = await waitForWebRtcDisconnection(page, disconnectionTimeout);
+
+    await expectWebRtcConnectionsCountToBe(page, 1, reconnectionTimeout);
+
+    return { disconnectionObserved, result };
+}
+
 /**
  * [E2E TEST] Forces a WebRTC peer failure to test the retry mechanism.
  * @returns Information about the triggered failure, or null if no peers found
@@ -126,6 +153,20 @@ export function triggerWebRtcRetry(
     page: Page,
 ): Promise<{ spaceName: string; userId: string; triggered: boolean } | null> {
     return page.evaluate(() => window.e2eHooks.testWebRtcRetry());
+}
+
+/**
+ * [E2E TEST] Unilaterally destroys a WebRTC peer to test the retry mechanism.
+ * @returns Information about the triggered failure, or null if no peers found
+ */
+export function triggerWebRtcUnilateralDestroyRetry(page: Page): Promise<{
+    spaceName: string;
+    userId: string;
+    triggered: boolean;
+    initiator: boolean;
+    connectionId: string;
+} | null> {
+    return page.evaluate(() => window.e2eHooks.testWebRtcUnilateralDestroyRetry());
 }
 
 /**
