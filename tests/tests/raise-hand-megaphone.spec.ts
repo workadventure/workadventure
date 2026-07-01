@@ -79,12 +79,66 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
             timeout: 30_000,
         });
 
+        // Bob can now speak, so his raise-hand button is hidden — never raise-hand and give-back at once.
+        await expect(bob.getByTestId("raise-hand-button")).toBeHidden({ timeout: 20_000 });
+
         // Bob now has a "give back the floor" control and can hand the floor back himself.
         await expect(bob.getByTestId("give-back-floor-button")).toBeVisible({ timeout: 20_000 });
         await bob.getByTestId("give-back-floor-button").click();
 
         // The control disappears and Bob is demoted, so the speaker no longer sees his camera.
         await expect(bob.getByTestId("give-back-floor-button")).toBeHidden({ timeout: 20_000 });
+        await expect(speaker.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
+            timeout: 30_000,
+        });
+
+        // Being a listener again, Bob can raise his hand once more.
+        await expect(bob.getByTestId("raise-hand-button")).toBeVisible({ timeout: 20_000 });
+    });
+
+    test("the host takes the floor back from the management panel @nofirefox", async ({ browser, request }) => {
+        test.skip(browser.browserType().name() === "firefox", "WebRTC promotion is sometimes flaky on Firefox");
+
+        await resetWamMaps(request);
+
+        const podiumName = `${browser.browserType().name()}RaiseHandRevokePodium`;
+
+        await using speaker = await getPage(browser, "Admin1", Map.url("empty"));
+        await Menu.openMapEditor(speaker);
+        await MapEditor.openAreaEditor(speaker);
+        await AreaEditor.drawArea(speaker, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
+        await AreaEditor.addProperty(speaker, "speakerMegaphone");
+        await AreaEditor.setPodiumNameProperty(speaker, podiumName, false, false);
+        await AreaEditor.drawArea(speaker, { x: 1 * 32, y: 6 * 32 }, { x: 9 * 32, y: 9 * 32 });
+        await AreaEditor.addProperty(speaker, "listenerMegaphone");
+        await AreaEditor.setMatchingPodiumZoneProperty(speaker, podiumName.toLowerCase());
+        await Menu.closeMapEditor(speaker);
+
+        await Map.teleportToPosition(speaker, 4 * 32, 3 * 32);
+        await expect(speaker.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 20_000 });
+
+        await using bob = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(bob, 4 * 32, 7 * 32);
+        await expect(bob.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
+
+        // Bob raises his hand and the host gives him the floor from the panel.
+        await bob.getByTestId("raise-hand-button").click();
+        await expect(speaker.getByTestId("raised-hands-panel-button")).toBeVisible({ timeout: 20_000 });
+        await speaker.getByTestId("raised-hands-panel-button").click();
+        await speaker.getByTestId("panel-give-floor").first().click();
+        await expect(speaker.locator("#cameras-container").getByText("Bob", { exact: true })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        // The panel button stays visible even though the queue is now empty (Bob is speaking), and the panel's
+        // "Speaking" section lets the host take the floor back.
+        await expect(speaker.getByTestId("raised-hands-panel-button")).toBeVisible({ timeout: 20_000 });
+        await speaker.getByTestId("raised-hands-panel-button").click();
+        await expect(speaker.getByTestId("raised-hands-panel").getByText("Bob")).toBeVisible({ timeout: 10_000 });
+        await speaker.getByTestId("panel-revoke-floor").first().click();
+
+        // Bob is told he no longer has the floor and is demoted (his camera disappears for the host).
+        await expect(bob.getByText(/no longer have the floor/i)).toBeVisible({ timeout: 20_000 });
         await expect(speaker.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
             timeout: 30_000,
         });
