@@ -24,6 +24,15 @@ export interface RaisedHand {
     at: number;
 }
 
+/**
+ * A user who currently holds the floor (is streaming as a speaker, `megaphoneState === true`) in a meeting.
+ * Used by the host panel to offer taking the floor back. Carries the name for the same reason as RaisedHand.
+ */
+export interface FloorSpeaker {
+    spaceUserId: string;
+    name: string;
+}
+
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
 export type PublicEventsObservables = {
@@ -81,6 +90,8 @@ export interface SpaceInterface {
     screenShareStreamStore: Readable<Map<string, VideoBox>>;
     /** Ordered queue of users who raised their hand in this space, derived from the space metadata. */
     readonly raisedHandsStore: Readable<RaisedHand[]>;
+    /** Users (other than the local user) who currently hold the floor in this space (megaphoneState === true). */
+    readonly speakingUsersStore: Readable<FloorSpeaker[]>;
 
     allVideoStreamStore: MapStore<string, VideoBox>;
     allScreenShareStreamStore: MapStore<string, VideoBox>;
