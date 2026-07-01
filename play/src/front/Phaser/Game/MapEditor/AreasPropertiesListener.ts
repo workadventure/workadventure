@@ -57,7 +57,7 @@ import {
 } from "../../../Stores/MediaStore";
 import { externalMeetingEnded, externalMeetingStarted } from "../../../ExternalModule/ExternalMeetingAnalytics";
 import { jitsiMeetingEnded, jitsiMeetingStarted } from "../../../WebRtc/JitsiMeetingAnalytics";
-import { currentLiveStreamingSpaceStore } from "../../../Stores/MegaphoneStore";
+import { currentLiveStreamingSpaceStore, givenFloorSpaceStore } from "../../../Stores/MegaphoneStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { getImageCoWebsiteTitle, ImageCoWebsite, isImageCoWebsiteUrl } from "../../../WebRtc/CoWebsite/ImageCoWebsite";
@@ -1570,6 +1570,8 @@ export class AreasPropertiesListener {
                 space.startStreaming();
                 currentLiveStreamingSpaceStore.set(space);
                 isSpeakerStore.set(true);
+                // Join succeeded: a granted raise-hand floor is superseded by the zone speaker role.
+                givenFloorSpaceStore.set(undefined);
 
                 // Track this zone
                 this.activeMegaphoneZones.set(property.id, {
