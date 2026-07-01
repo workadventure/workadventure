@@ -134,6 +134,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             bubbleLabel: "토론 말풍선",
             unnamedArea: "이름 없는 영역",
         },
+        giveBackFloor: {
+            title: "발언권 반납",
+            desc: "발언권을 받았습니다. 클릭하면 발언을 멈추고 반납합니다.",
+        },
         megaphone: {
             title: "확성기 중지",
             desc: "모든 사용자에게 메시지 전송을 중지합니다.",

@@ -7,7 +7,7 @@
     import { inLivekitStore } from "../../../Stores/MediaStore";
     import { onboardingStore } from "../../../Stores/OnboardingStore";
     import { followStateStore } from "../../../Stores/FollowStore";
-    import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
+    import { givenFloorSpaceStore, requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
     import { currentPlayerLockableAreasStore } from "../../../Stores/CurrentPlayerAreaLockStore";
     import { currentPlayerGroupLockStateStore } from "../../../Stores/CurrentPlayerGroupStore";
     import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -20,6 +20,7 @@
     import MusicMenuItem from "./MusicMenuItem.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import MegaphoneMenuItem from "./MegaphoneMenuItem.svelte";
+    import GiveBackFloorMenuItem from "./GiveBackFloorMenuItem.svelte";
     import RecordingMenuItem from "./RecordingMenuItem.svelte";
     import { createRecordingMenuStateStore } from "./RecordingMenuUtils";
 
@@ -66,6 +67,10 @@
 
 {#if $requestedMegaphoneStore}
     <MegaphoneMenuItem />
+{/if}
+
+{#if $givenFloorSpaceStore}
+    <GiveBackFloorMenuItem />
 {/if}
 
 {#if inProfileMenu}

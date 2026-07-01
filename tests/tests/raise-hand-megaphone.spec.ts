@@ -78,5 +78,15 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         await expect(speaker.locator("#cameras-container").getByText("Bob", { exact: true })).toBeVisible({
             timeout: 30_000,
         });
+
+        // Bob now has a "give back the floor" control and can hand the floor back himself.
+        await expect(bob.getByTestId("give-back-floor-button")).toBeVisible({ timeout: 20_000 });
+        await bob.getByTestId("give-back-floor-button").click();
+
+        // The control disappears and Bob is demoted, so the speaker no longer sees his camera.
+        await expect(bob.getByTestId("give-back-floor-button")).toBeHidden({ timeout: 20_000 });
+        await expect(speaker.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
+            timeout: 30_000,
+        });
     });
 });

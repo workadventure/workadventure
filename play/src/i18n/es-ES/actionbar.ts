@@ -134,6 +134,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             bubbleLabel: "Burbuja de discusión",
             unnamedArea: "Zona sin nombre",
         },
+        giveBackFloor: {
+            title: "Devolver la palabra",
+            desc: "Se te ha dado la palabra. Haz clic para dejar de hablar y devolverla.",
+        },
         megaphone: {
             title: "Detener megáfono",
             desc: "Deja de transmitir tu mensaje a todos los usuarios.",

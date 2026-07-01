@@ -133,6 +133,10 @@ const actionbar: BaseTranslation = {
             bubbleLabel: "Discussion bubble",
             unnamedArea: "Unnamed Area",
         },
+        giveBackFloor: {
+            title: "Give back the floor",
+            desc: "You were given the floor. Click to stop speaking and hand it back.",
+        },
         megaphone: {
             title: "Stop megaphone",
             desc: "Stop broadcasting your message to all users.",

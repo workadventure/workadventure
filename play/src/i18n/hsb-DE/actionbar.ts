@@ -134,6 +134,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             bubbleLabel: "Diskusijowa balonka",
             unnamedArea: "Wobłuk běz mjena",
         },
+        giveBackFloor: {
+            title: "Słowo wróćo dać",
+            desc: "Sy słowo dóstał. Klikń, zo by přestał rěčeć a je wróćo dał.",
+        },
         megaphone: {
             title: "Megafon zastajić",
             desc: "Zastajće wusyłanje wašeje powěsće na wšěch wužiwarjow.",

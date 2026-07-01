@@ -29,6 +29,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     },
     addNewTag: "새 태그 추가: '{tag}'",
     screenSharingError: "화면 공유를 시작할 수 없습니다",
+    floorGivenBack: "발언권을 반납했습니다",
     notificationSentToMuteMicrophone: "{name}님에게 마이크 음소거 알림이 전송되었습니다",
     notificationSentToMuteCamera: "{name}님에게 카메라 음소거 알림이 전송되었습니다",
     recordingStarted: "토론 중 한 명이 녹화를 시작했습니다.",
