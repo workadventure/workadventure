@@ -12,6 +12,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     givenTheFloor: "És el teu torn de parlar",
     givenTheFloorEnableMicrophone: "És el teu torn de parlar — activa el micròfon",
     floorRevoked: "Ja no tens la paraula",
+    floorGivenBack: "Has retornat la paraula",
     notificationSentToMuteMicrophone: "S'ha enviat una notificació a {name} per silenciar el seu micròfon",
     notificationSentToMuteCamera: "S'ha enviat una notificació a {name} per silenciar la seva càmera",
     announcement: "Anunci",
