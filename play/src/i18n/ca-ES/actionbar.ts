@@ -187,6 +187,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         videoNotSupported: "El teu navegador no admet l'etiqueta de vídeo.",
     },
     raisedHands: {
+        speaking: "Amb la paraula",
         title: "Mans aixecades",
         empty: "Ningú no ha aixecat la mà",
         help: "Mira qui ha aixecat la mà, per ordre, i dóna-li la paraula.",

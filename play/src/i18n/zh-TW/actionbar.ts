@@ -185,6 +185,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         videoNotSupported: "您的瀏覽器不支援影片標籤。",
     },
     raisedHands: {
+        speaking: "發言中",
         title: "舉手",
         empty: "沒有人舉手",
         help: "依順序查看誰舉了手，並把發言權交給他。",

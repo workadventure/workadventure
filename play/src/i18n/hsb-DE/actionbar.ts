@@ -187,6 +187,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         videoNotSupported: "Waš wobhladowak wideo-tag njepodpěruje.",
     },
     raisedHands: {
+        speaking: "Ma słowo",
         title: "Zběhnjene ruce",
         empty: "Nichtó njeje ruku zběhnył",
         help: "Hladaj, štó je ruku zběhnył po rjedźe, a daj jemu słowo.",

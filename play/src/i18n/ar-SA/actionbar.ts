@@ -185,6 +185,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         videoNotSupported: "متصفحك لا يدعم وسم الفيديو.",
     },
     raisedHands: {
+        speaking: "لديه الكلمة",
         title: "الأيدي المرفوعة",
         empty: "لا أحد رفع يده",
         help: "اطّلع على من رفع يده، بالترتيب، وأعطه الكلمة.",

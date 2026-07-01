@@ -191,6 +191,7 @@ const actionbar: BaseTranslation = {
         videoNotSupported: "Seu navegador não suporta a tag de vídeo.",
     },
     raisedHands: {
+        speaking: "Com a palavra",
         title: "Mãos levantadas",
         empty: "Ninguém levantou a mão",
         help: "Veja quem levantou a mão, em ordem, e dê a palavra a essa pessoa.",
