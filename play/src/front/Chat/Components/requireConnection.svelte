@@ -14,7 +14,7 @@
     let { emoji, title, buttonLabel, children }: Props = $props();
 </script>
 
-<div class="flex-col items-center justify-center text-center px-4 py-12">
+<div class="flex flex-col items-center justify-center text-center px-4 py-12">
     {@render children?.()}
     {#if emoji}
         {@render emoji()}
