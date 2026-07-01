@@ -67,11 +67,12 @@ const noiseSuppressionEnabledKey = "noiseSuppressionEnabled";
 const noiseSuppressionProviderKey = "noiseSuppressionProvider";
 const microphoneAutoGainControlKey = "microphoneAutoGainControl";
 const microphoneEchoCancellationKey = "microphoneEchoCancellation";
+const microphoneBrowserNoiseSuppressionKey = "microphoneBrowserNoiseSuppression";
 const INITIAL_MAP_EDITOR_SIDEBAR_WIDTH = 448;
 
 export type VideoQualitySetting = "low" | "recommended" | "high";
 export type BandwidthConstrainedPreference = "maintain-framerate" | "maintain-resolution" | "balanced";
-export type NoiseSuppressionProvider = "workadventure" | "browser" | "voiceIsolation";
+export type NoiseSuppressionProvider = "workadventure" | "voiceIsolation";
 
 const JwtAuthToken = z
     .object({
@@ -815,9 +816,12 @@ class LocalUserStore {
     }
 
     getNoiseSuppressionEnabled(): boolean {
-        // Default to enabled so a fresh user keeps the browser's native noise suppression that was
-        // always active before the noise suppression feature existed (see getNoiseSuppressionProvider).
-        return localStorage.getItem(noiseSuppressionEnabledKey) !== "false";
+        if (localStorage.getItem(noiseSuppressionProviderKey) === "browser") {
+            localStorage.setItem(noiseSuppressionEnabledKey, "false");
+            localStorage.setItem(noiseSuppressionProviderKey, "workadventure");
+            return false;
+        }
+        return localStorage.getItem(noiseSuppressionEnabledKey) === "true";
     }
 
     setNoiseSuppressionProvider(value: NoiseSuppressionProvider) {
@@ -826,12 +830,10 @@ class LocalUserStore {
 
     getNoiseSuppressionProvider(): NoiseSuppressionProvider {
         const value = localStorage.getItem(noiseSuppressionProviderKey);
-        if (value === "browser" || value === "voiceIsolation" || value === "workadventure") {
+        if (value === "voiceIsolation" || value === "workadventure") {
             return value;
         }
-        // Default to the lightweight browser denoiser so enabling-by-default does not spin up the
-        // heavier 16 kHz WorkAdventure worklet for every user. Restores the pre-feature baseline.
-        return "browser";
+        return "workadventure";
     }
 
     setMicrophoneAutoGainControl(value: boolean) {
@@ -848,6 +850,14 @@ class LocalUserStore {
 
     getMicrophoneEchoCancellation(): boolean {
         return localStorage.getItem(microphoneEchoCancellationKey) !== "false";
+    }
+
+    setMicrophoneBrowserNoiseSuppression(value: boolean) {
+        localStorage.setItem(microphoneBrowserNoiseSuppressionKey, value.toString());
+    }
+
+    getMicrophoneBrowserNoiseSuppression(): boolean {
+        return localStorage.getItem(microphoneBrowserNoiseSuppressionKey) !== "false";
     }
 
     getRequestedStatus(): RequestedStatus | null {
