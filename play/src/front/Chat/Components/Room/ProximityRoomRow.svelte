@@ -49,10 +49,12 @@
 </script>
 
 <div
-    class="wa-chat-item group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer w-full"
-    class:bg-white={$selectedRoomStore?.id === room.id}
-    class:bg-opacity-10={$selectedRoomStore?.id === room.id}
-    class:rounded={$selectedRoomStore?.id === room.id}
+    class={[
+        "wa-chat-item group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center transition-all hover:bg-white/10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer w-full",
+        {
+            "bg-white/10 rounded": $selectedRoomStore?.id === room.id,
+        },
+    ]}
     onclick={selectRoom}
     onkeydown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
