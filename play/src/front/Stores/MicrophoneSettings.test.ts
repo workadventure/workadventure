@@ -7,25 +7,7 @@ describe("getEffectiveNoiseSuppressionProvider", () => {
         expect(
             getEffectiveNoiseSuppressionProvider({
                 provider: "workadventure",
-                browserNoiseSuppressionSupported: true,
                 voiceIsolationSupported: true,
-            }),
-        ).toBe("workadventure");
-    });
-
-    it("uses browser noise suppression only when supported", () => {
-        expect(
-            getEffectiveNoiseSuppressionProvider({
-                provider: "browser",
-                browserNoiseSuppressionSupported: true,
-                voiceIsolationSupported: false,
-            }),
-        ).toBe("browser");
-        expect(
-            getEffectiveNoiseSuppressionProvider({
-                provider: "browser",
-                browserNoiseSuppressionSupported: false,
-                voiceIsolationSupported: false,
             }),
         ).toBe("workadventure");
     });
@@ -34,14 +16,12 @@ describe("getEffectiveNoiseSuppressionProvider", () => {
         expect(
             getEffectiveNoiseSuppressionProvider({
                 provider: "voiceIsolation",
-                browserNoiseSuppressionSupported: true,
                 voiceIsolationSupported: true,
             }),
         ).toBe("voiceIsolation");
         expect(
             getEffectiveNoiseSuppressionProvider({
                 provider: "voiceIsolation",
-                browserNoiseSuppressionSupported: true,
                 voiceIsolationSupported: false,
             }),
         ).toBe("workadventure");
@@ -54,6 +34,7 @@ describe("buildMicrophoneAudioConstraints", () => {
         autoGainControl: true,
         echoCancellation: true,
         noiseSuppressionEnabled: false,
+        browserNoiseSuppressionEnabled: true,
         effectiveNoiseSuppressionProvider: "workadventure" as const,
         browserNoiseSuppressionSupported: true,
         workAdventureNoiseSuppressionFailed: false,
@@ -63,10 +44,37 @@ describe("buildMicrophoneAudioConstraints", () => {
         sampleRateSupported: true,
     };
 
-    it("keeps automatic gain control and echo cancellation enabled by default", () => {
-        expect(buildMicrophoneAudioConstraints(defaultOptions)).toMatchObject({
+    it("keeps browser microphone processing enabled by default when WorkAdventure noise suppression is off", () => {
+        const constraints = buildMicrophoneAudioConstraints(defaultOptions);
+
+        expect(constraints).toMatchObject({
             autoGainControl: true,
             echoCancellation: true,
+            noiseSuppression: true,
+            voiceIsolation: false,
+        });
+        expect(constraints).not.toHaveProperty("sampleRate");
+    });
+
+    it("does not request browser noise suppression when the browser switch is off", () => {
+        expect(
+            buildMicrophoneAudioConstraints({
+                ...defaultOptions,
+                browserNoiseSuppressionEnabled: false,
+            }),
+        ).toMatchObject({
+            noiseSuppression: false,
+            voiceIsolation: false,
+        });
+    });
+
+    it("does not request browser noise suppression when the browser does not support it", () => {
+        expect(
+            buildMicrophoneAudioConstraints({
+                ...defaultOptions,
+                browserNoiseSuppressionSupported: false,
+            }),
+        ).toMatchObject({
             noiseSuppression: false,
             voiceIsolation: false,
         });
@@ -77,7 +85,7 @@ describe("buildMicrophoneAudioConstraints", () => {
             buildMicrophoneAudioConstraints({
                 ...defaultOptions,
                 noiseSuppressionEnabled: true,
-                effectiveNoiseSuppressionProvider: "browser",
+                browserNoiseSuppressionEnabled: true,
             }),
         ).toMatchObject({
             noiseSuppression: true,
@@ -119,6 +127,7 @@ describe("buildMicrophoneAudioConstraints", () => {
             buildMicrophoneAudioConstraints({
                 ...defaultOptions,
                 noiseSuppressionEnabled: true,
+                browserNoiseSuppressionEnabled: true,
                 workAdventureNoiseSuppressionFailed: true,
             }),
         ).toMatchObject({
