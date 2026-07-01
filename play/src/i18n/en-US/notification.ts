@@ -11,6 +11,7 @@ const notification: BaseTranslation = {
     givenTheFloor: "It's your turn to speak",
     givenTheFloorEnableMicrophone: "It's your turn to speak — enable your microphone",
     floorRevoked: "You no longer have the floor",
+    floorGivenBack: "You gave back the floor",
     notificationSentToMuteMicrophone: "A notification was sent to {name} to mute their microphone",
     notificationSentToMuteCamera: "A notification was sent to {name} to mute their camera",
     announcement: "Announcement",

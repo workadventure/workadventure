@@ -1,6 +1,6 @@
 <script lang="ts">
     import ActionBarButton from "../ActionBarButton.svelte";
-    import RaiseHandIcon from "../../Icons/RaiseHandIcon.svelte";
+    import AdminPanIcon from "../../Icons/AdminPanIcon.svelte";
     import RaisedHandsPanel from "../../Video/RaisedHandsPanel.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
@@ -19,7 +19,7 @@
     desc={$LL.actionbar.raisedHands.help()}
     action={floatingUiRef}
 >
-    <RaiseHandIcon
+    <AdminPanIcon
         strokeColor={open ? "stroke-contrast fill-white" : "stroke-white fill-transparent"}
         hover="group-hover/btn-raised-hands:fill-white"
     />
