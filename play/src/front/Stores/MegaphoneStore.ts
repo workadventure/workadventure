@@ -1,8 +1,9 @@
 import type { Readable } from "svelte/store";
 import { derived, writable } from "svelte/store";
 import type { SpaceInterface } from "../Space/SpaceInterface";
-import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "./MediaStore";
+import { isSpeakerStore, requestedCameraState } from "./MediaStore";
 import { requestedScreenSharingState } from "./ScreenSharingStore";
+import { effectiveMicrophoneState, shouldKeepMegaphoneStreaming } from "./MicrophoneSessionStore";
 
 export const currentLiveStreamingSpaceStore = writable<SpaceInterface | undefined>();
 export const megaphoneCanBeUsedStore = writable<boolean>(false);
@@ -27,7 +28,7 @@ export const liveStreamingEnabledStore: Readable<boolean> = derived(
         isSpeakerStore,
         requestedMegaphoneStore,
         requestedCameraState,
-        requestedMicrophoneState,
+        effectiveMicrophoneState,
         requestedScreenSharingState,
     ],
     (
@@ -35,22 +36,19 @@ export const liveStreamingEnabledStore: Readable<boolean> = derived(
             $isSpeakerStore,
             $requestedMegaphoneStore,
             $requestedCameraState,
-            $requestedMicrophoneState,
+            $effectiveMicrophoneState,
             $requestedScreenSharingState,
         ],
         set,
     ) => {
-        set(
-            $isSpeakerStore ||
-                ($requestedMegaphoneStore &&
-                    ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState)),
-        );
-        if (
-            $requestedMegaphoneStore &&
-            !$requestedCameraState &&
-            !$requestedMicrophoneState &&
-            !$requestedScreenSharingState
-        ) {
+        const hasMegaphoneMedia = shouldKeepMegaphoneStreaming({
+            requestedCameraState: $requestedCameraState,
+            effectiveMicrophoneState: $effectiveMicrophoneState,
+            requestedScreenSharingState: $requestedScreenSharingState,
+        });
+
+        set($isSpeakerStore || ($requestedMegaphoneStore && hasMegaphoneMedia));
+        if ($requestedMegaphoneStore && !hasMegaphoneMedia) {
             requestedMegaphoneStore.set(false);
         }
     },

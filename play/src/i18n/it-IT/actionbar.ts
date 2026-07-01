@@ -42,6 +42,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Il tuo microfono è disabilitato",
         activate: "Attiva il tuo microfono",
         noDevices: "Nessun dispositivo microfono trovato",
+        temporaryOn: "Microfono temporaneamente attivo",
+        temporaryRelease: "Rilascia Spazio per disattivarlo di nuovo.",
         noSoundWarning:
             "Nessun suono rilevato dal microfono. Potrebbe esserci un problema; prova a cambiare microfono nelle impostazioni.",
         noSoundWarningPressEnter: "Nessun suono rilevato dal microfono. Premi Invio per aprire le impostazioni.",

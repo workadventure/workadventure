@@ -17,15 +17,48 @@ import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
+import { availabilityStatusStore, pushToTalkAvailabilityStore } from "../../Stores/MediaStore";
+import { inExternalServiceStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
+import {
+    createTemporaryUnmuteReleaseController,
+    isUnavailableForMicrophone,
+    microphoneSession,
+    shouldIgnorePushToTalkKeyboardEvent,
+} from "../../Stores/MicrophoneSessionStore";
 import type { Shortcut } from "./UserInputManager";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
     private controlKeyisPressed: boolean = false;
+    private pushToTalkSpaceKeyConsumed: boolean = false;
+    private readonly temporaryUnmuteReleaseController: { destroy: () => void };
     public shortcuts: Shortcut[] = [];
+
+    /**
+     * Safety net for push-to-talk. The regular keyup is delivered through Phaser's keyboard
+     * plugin (see UserInputManager). If that delivery is ever skipped while Space is held
+     * (e.g. the keyboard plugin gets disabled), the missed keyup would leave the microphone
+     * temporarily unmuted. This raw window-level listener fires independently of Phaser and
+     * guarantees the temporary unmute is released as soon as Space is physically released.
+     *
+     * It only releases the microphone and intentionally does NOT clear
+     * `pushToTalkSpaceKeyConsumed`: in the normal case handleKeyUpEvent() still runs and owns
+     * clearing the flag + suppressing the Space interaction, so pre-clearing it here could let
+     * a spurious "interact" fire on release.
+     */
+    private readonly releasePushToTalkOnWindowSpaceUp = (event: KeyboardEvent): void => {
+        if (event.code === "Space" && this.pushToTalkSpaceKeyConsumed) {
+            microphoneSession.stopTemporaryUnmute();
+        }
+    };
 
     constructor(gameScene: GameScene) {
         this.gameScene = gameScene;
+        this.temporaryUnmuteReleaseController = createTemporaryUnmuteReleaseController({
+            pushToTalkAvailabilityStore,
+            stopTemporaryUnmute: () => this.stopPushToTalk(),
+        });
+        window.addEventListener("keyup", this.releasePushToTalkOnWindowSpaceUp, { capture: true });
 
         this.initShortcuts();
     }
@@ -47,6 +80,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             {
                 key: "R",
                 description: get(LL).menu.shortcuts.rotatePlayer(),
+            },
+            {
+                key: "Space",
+                description: get(LL).menu.shortcuts.pushToTalk(),
             },
             {
                 key: "1",
@@ -212,6 +249,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         }
 
         switch (event.code) {
+            case "Space": {
+                if (this.tryStartPushToTalk(event)) {
+                    return event;
+                }
+                break;
+            }
             case "KeyE": {
                 if (get(mapManagerActivated) == false) return event;
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));
@@ -285,6 +328,30 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         return event;
     }
 
+    private tryStartPushToTalk(event: KeyboardEvent): boolean {
+        if (
+            event.repeat ||
+            shouldIgnorePushToTalkKeyboardEvent(event.target) ||
+            !get(pushToTalkAvailabilityStore) ||
+            !get(myMicrophoneStore) ||
+            get(inExternalServiceStore) ||
+            isUnavailableForMicrophone(get(availabilityStatusStore))
+        ) {
+            return false;
+        }
+
+        microphoneSession.startTemporaryUnmute();
+        this.pushToTalkSpaceKeyConsumed = true;
+        event.preventDefault();
+        event.stopPropagation();
+        return true;
+    }
+
+    private stopPushToTalk(): void {
+        this.pushToTalkSpaceKeyConsumed = false;
+        microphoneSession.stopTemporaryUnmute();
+    }
+
     private openSayPopup(): void {
         if (!this.gameScene.room.isSayEnabled) {
             return;
@@ -315,6 +382,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
             // SPACE
             case " ": {
+                if (this.pushToTalkSpaceKeyConsumed) {
+                    this.stopPushToTalk();
+                    event.preventDefault();
+                    event.stopPropagation();
+                    break;
+                }
                 this.handleActivableEntity();
                 break;
             }
@@ -351,5 +424,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public removeSpaceEventListener(callback: () => void): void {
         this.gameScene.input.keyboard?.removeListener("keyup-SPACE", callback);
         this.gameScene.getActivatablesManager().enableSelectingByDistance();
+    }
+
+    public destroy(): void {
+        window.removeEventListener("keyup", this.releasePushToTalkOnWindowSpaceUp, { capture: true });
+        this.temporaryUnmuteReleaseController.destroy();
+        this.stopPushToTalk();
     }
 }

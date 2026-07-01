@@ -42,6 +42,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Je microfoon is uitgeschakeld",
         activate: "Activeer je microfoon",
         noDevices: "Geen microfoonapparaat gevonden",
+        temporaryOn: "Microfoon tijdelijk aan",
+        temporaryRelease: "Laat Spatie los om weer te dempen.",
         noSoundWarning:
             "Geen geluid gedetecteerd van je microfoon. Er kan een probleem zijn; probeer je microfoon te wijzigen in de instellingen.",
         noSoundWarningPressEnter:

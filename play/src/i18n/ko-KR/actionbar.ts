@@ -43,6 +43,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "마이크가 비활성화되어 있습니다",
         activate: "마이크 활성화",
         noDevices: "사용 가능한 마이크 장치를 찾을 수 없습니다",
+        temporaryOn: "마이크가 임시로 켜짐",
+        temporaryRelease: "다시 음소거하려면 Space를 놓으세요.",
         noSoundWarning:
             "마이크에서 소리가 감지되지 않습니다. 문제가 있을 수 있습니다 — 설정에서 마이크를 변경해 보세요.",
         noSoundWarningPressEnter: "마이크에서 소리가 감지되지 않습니다. Enter를 눌러 설정을 엽니다.",
