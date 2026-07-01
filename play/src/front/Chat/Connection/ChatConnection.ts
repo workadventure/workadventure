@@ -126,6 +126,7 @@ export interface ChatRoom extends ChatConversation {
     readonly openThread?: (rootMessageId: string) => Promise<ChatThread | undefined>;
     readonly threads?: Readable<readonly ChatThreadSummary[]>;
     readonly pollItems?: Readable<readonly ChatPollItem[]>;
+    readonly qaItems?: Readable<readonly ChatQuestionItem[]>;
     readonly threadsHydrationState?: Readable<ChatRoomSidePanelHydrationState>;
     readonly pollCatalogueHydrationState?: Readable<ChatRoomSidePanelHydrationState>;
     readonly pollRichHydrationState?: Readable<ChatRoomSidePanelHydrationState>;
@@ -158,6 +159,24 @@ export interface ChatRoomNotificationControl {
     readonly areNotificationsMuted: Readable<boolean>;
     readonly unmuteNotification: () => Promise<void>;
     readonly muteNotification: () => Promise<void>;
+}
+
+export type ProximityChatSidePanelParticipant = {
+    readonly spaceUserId: string;
+    readonly name: string | undefined;
+    readonly uuid?: string;
+    readonly pictureStore?: PictureStore;
+    readonly playUri?: string;
+    readonly roomName?: string;
+    readonly tags?: string[];
+};
+
+export interface ProximityChatSidePanelRoom extends ChatRoom, ChatRoomNotificationControl {
+    readonly currentMeetingParticipantsStore: Readable<readonly ProximityChatSidePanelParticipant[]>;
+    readonly qaItems?: Readable<readonly ChatQuestionItem[]>;
+    readonly unreadQuestionCount?: Readable<number>;
+    readonly questionCreation?: ChatQuestionCreationCapability;
+    readonly canModerateQuestions?: Readable<boolean>;
 }
 
 export interface ChatRoomModeration {
@@ -247,6 +266,43 @@ export interface ChatPollCreationCapability {
 
 export interface ChatRoomPollCreation {
     readonly pollCreation: ChatPollCreationCapability;
+}
+
+export type ChatQuestionCreateOptions = {
+    body: string;
+};
+
+export interface ChatQuestionCreationCapability {
+    readonly canCreate: Readable<boolean>;
+    readonly maxLength: number;
+    readonly create: (options: ChatQuestionCreateOptions) => Promise<void>;
+}
+
+export type ChatQuestionState = {
+    id: string;
+    body: string;
+    senderId: string;
+    senderName: string | undefined;
+    createdAt: number;
+    isAnswered: boolean;
+    upvoteCount: number;
+    hasUpvoted: boolean;
+    canUpvote: boolean;
+    canDelete: boolean;
+    canMarkAnswered: boolean;
+};
+
+export interface ChatQuestionItem {
+    id: string;
+    sender: AnyKindOfUser | undefined;
+    date: Date | null;
+    state: Readable<ChatQuestionState>;
+    canUpvote: Readable<boolean>;
+    canDelete: Readable<boolean>;
+    canMarkAnswered: Readable<boolean>;
+    toggleUpvote: () => Promise<void>;
+    remove: () => Promise<void>;
+    markAnswered: () => Promise<void>;
 }
 
 export type ChatPollAnswer = {
@@ -496,6 +552,20 @@ export function hasChatRoomNotificationControl(
     const candidate = conversation as (ChatRoom & Partial<ChatRoomNotificationControl>) | undefined;
     return (
         candidate?.conversationKind === "room" &&
+        typeof candidate.areNotificationsMuted?.subscribe === "function" &&
+        typeof candidate.muteNotification === "function" &&
+        typeof candidate.unmuteNotification === "function"
+    );
+}
+
+export function hasProximityChatSidePanel(
+    conversation: Partial<ChatConversation> | undefined,
+): conversation is ProximityChatSidePanelRoom {
+    const candidate = conversation as (ChatRoom & Partial<ProximityChatSidePanelRoom>) | undefined;
+    return (
+        candidate?.conversationKind === "room" &&
+        typeof candidate.pollItems?.subscribe === "function" &&
+        typeof candidate.currentMeetingParticipantsStore?.subscribe === "function" &&
         typeof candidate.areNotificationsMuted?.subscribe === "function" &&
         typeof candidate.muteNotification === "function" &&
         typeof candidate.unmuteNotification === "function"

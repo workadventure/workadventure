@@ -17,15 +17,29 @@ import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
+import { availabilityStatusStore, pushToTalkAvailabilityStore } from "../../Stores/MediaStore";
+import { inExternalServiceStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
+import {
+    createTemporaryUnmuteReleaseController,
+    isUnavailableForMicrophone,
+    microphoneSession,
+    shouldIgnorePushToTalkKeyboardEvent,
+} from "../../Stores/MicrophoneSessionStore";
 import type { Shortcut } from "./UserInputManager";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
     private controlKeyisPressed: boolean = false;
+    private pushToTalkSpaceKeyConsumed: boolean = false;
+    private readonly temporaryUnmuteReleaseController: { destroy: () => void };
     public shortcuts: Shortcut[] = [];
 
     constructor(gameScene: GameScene) {
         this.gameScene = gameScene;
+        this.temporaryUnmuteReleaseController = createTemporaryUnmuteReleaseController({
+            pushToTalkAvailabilityStore,
+            stopTemporaryUnmute: () => this.stopPushToTalk(),
+        });
 
         this.initShortcuts();
     }
@@ -47,6 +61,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             {
                 key: "R",
                 description: get(LL).menu.shortcuts.rotatePlayer(),
+            },
+            {
+                key: "Space",
+                description: get(LL).menu.shortcuts.pushToTalk(),
             },
             {
                 key: "1",
@@ -212,6 +230,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         }
 
         switch (event.code) {
+            case "Space": {
+                if (this.tryStartPushToTalk(event)) {
+                    return event;
+                }
+                break;
+            }
             case "KeyE": {
                 if (get(mapManagerActivated) == false) return event;
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));
@@ -285,6 +309,30 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         return event;
     }
 
+    private tryStartPushToTalk(event: KeyboardEvent): boolean {
+        if (
+            event.repeat ||
+            shouldIgnorePushToTalkKeyboardEvent(event.target) ||
+            !get(pushToTalkAvailabilityStore) ||
+            !get(myMicrophoneStore) ||
+            get(inExternalServiceStore) ||
+            isUnavailableForMicrophone(get(availabilityStatusStore))
+        ) {
+            return false;
+        }
+
+        microphoneSession.startTemporaryUnmute();
+        this.pushToTalkSpaceKeyConsumed = true;
+        event.preventDefault();
+        event.stopPropagation();
+        return true;
+    }
+
+    private stopPushToTalk(): void {
+        this.pushToTalkSpaceKeyConsumed = false;
+        microphoneSession.stopTemporaryUnmute();
+    }
+
     private openSayPopup(): void {
         if (!this.gameScene.room.isSayEnabled) {
             return;
@@ -315,6 +363,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
             // SPACE
             case " ": {
+                if (this.pushToTalkSpaceKeyConsumed) {
+                    this.stopPushToTalk();
+                    event.preventDefault();
+                    event.stopPropagation();
+                    break;
+                }
                 this.handleActivableEntity();
                 break;
             }
@@ -351,5 +405,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public removeSpaceEventListener(callback: () => void): void {
         this.gameScene.input.keyboard?.removeListener("keyup-SPACE", callback);
         this.gameScene.getActivatablesManager().enableSelectingByDistance();
+    }
+
+    public destroy(): void {
+        this.temporaryUnmuteReleaseController.destroy();
+        this.stopPushToTalk();
     }
 }

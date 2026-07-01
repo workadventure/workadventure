@@ -180,6 +180,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         follow: "跟隨",
         openChat: "開啟聊天",
         openUserList: "開啟使用者清單",
+        pushToTalk: "按住可在會議中暫時取消靜音",
         toggleMapEditor: "顯示／隱藏地圖編輯器",
         rotatePlayer: "旋轉玩家",
         emote1: "表情 1",

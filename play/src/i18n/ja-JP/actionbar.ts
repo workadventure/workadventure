@@ -42,6 +42,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "マイクが無効になっています",
         activate: "マイクを有効にする",
         noDevices: "マイクデバイスが見つかりません",
+        temporaryOn: "マイクが一時的にオン",
+        temporaryRelease: "Spaceキーを離すと再びミュートします。",
         noSoundWarning:
             "マイクから音が検出されません。問題がある可能性があります — 設定でマイクを変更してみてください。",
         noSoundWarningPressEnter: "マイクから音が検出されません。Enterキーを押して設定を開いてください。",
