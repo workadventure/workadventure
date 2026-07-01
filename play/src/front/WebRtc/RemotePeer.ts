@@ -188,7 +188,6 @@ export class RemotePeer extends Peer implements Streamable {
                     this._connected = false;
                     this.intentionalClose = true;
                     this._onFinish();
-                    this.destroy();
                     break;
                 }
                 case "stream_stopped": {
