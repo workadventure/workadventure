@@ -186,6 +186,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         videoNotSupported: "お使いのブラウザは動画タグに対応していません。",
     },
     raisedHands: {
+        speaking: "発言中",
         title: "挙手",
         empty: "挙手している人はいません",
         help: "誰が挙手したかを順番に確認し、発言権を与えましょう。",
