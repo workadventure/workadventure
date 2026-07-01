@@ -7,12 +7,13 @@ import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import LL from "../../i18n/i18n-svelte";
 import type { Streamable, WebRtcStreamable } from "../Space/Streamable";
 import { VideoBox } from "../Space/VideoBox";
-import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
-import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
+import type { LocalStreamStoreValue } from "./MediaStore";
+import { inExternalServiceStore } from "./MyMediaStore";
 import type {} from "../Api/Desktop";
-import { screenShareStreamElementsStore } from "./PeerStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
+import { gameSceneStore } from "./GameSceneStore";
+import { onboardingStore } from "./OnboardingStore";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -72,31 +73,41 @@ export const screenShareQualityStore = createScreenShareQualityStore();
  */
 export const screenSharingAvailableStore = isLiveStreamingStore;
 
+function isOnboardingScreenSharingAvailable(onboardingStep: string | null | undefined): boolean {
+    return (
+        onboardingStep === "screenSharing" ||
+        onboardingStep === "pictureInPicture" ||
+        onboardingStep === "communication" ||
+        onboardingStep === "lockBubble"
+    );
+}
+
+/**
+ * A store containing whether the current user can start publishing a screen share in at least one current space.
+ */
+export const screenSharingCanBeRequestedStore: Readable<boolean> = derived(
+    [gameSceneStore, onboardingStore],
+    ([gameScene, onboardingStep], set) => {
+        if (isOnboardingScreenSharingAvailable(onboardingStep)) {
+            set(true);
+            return;
+        }
+
+        if (gameScene == null) {
+            set(false);
+            return;
+        }
+
+        return gameScene.spaceRegistry.shouldPublishScreenShareStore.subscribe(set);
+    },
+);
+
 /**
  * A store containing the media constraints we want to apply.
  */
 export const screenSharingConstraintsStore = derived(
-    [
-        requestedScreenSharingState,
-        myCameraStore,
-        myMicrophoneStore,
-        inExternalServiceStore,
-        screenSharingAvailableStore,
-        screenShareStreamElementsStore,
-        isSpeakerStore,
-    ],
-    (
-        [
-            $requestedScreenSharingState,
-            $myCameraStore,
-            $myMicrophoneStore,
-            $inExternalServiceStore,
-            $screenSharingAvailableStore,
-            $screenShareStreamElementsStore,
-            $isSpeakerStore,
-        ],
-        set,
-    ) => {
+    [requestedScreenSharingState, inExternalServiceStore, screenSharingCanBeRequestedStore],
+    ([$requestedScreenSharingState, $inExternalServiceStore, $screenSharingCanBeRequestedStore], set) => {
         let currentVideoConstraint: boolean | MediaTrackConstraints = true;
         //TODO : passer a true si on veut que le son soit activé par défaut dans le screen sharing
         let currentAudioConstraint: boolean | MediaTrackConstraints = true;
@@ -113,8 +124,8 @@ export const screenSharingConstraintsStore = derived(
             currentAudioConstraint = false;
         }
 
-        // Disable screen sharing if not in a live streaming context and no active screen shares or speaker status
-        if (!$screenSharingAvailableStore && $screenShareStreamElementsStore.length === 0 && !$isSpeakerStore) {
+        // Disable screen sharing if no current space allows publishing it.
+        if (!$screenSharingCanBeRequestedStore) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
