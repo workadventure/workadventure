@@ -5,7 +5,7 @@ window.env = {
     DEBUG_MODE: true,
 };
 
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../../../src/front/Enum/EnvironmentVariable.ts", () => {
     return {
@@ -18,6 +18,7 @@ import {
     isUserNameValid,
     maxUserNameLength,
 } from "../../../../src/front/Connection/LocalUserUtils";
+import { localUserStore } from "../../../../src/front/Connection/LocalUserStore";
 
 describe("isUserNameValid()", () => {
     it("should validate name with letters", () => {
@@ -62,5 +63,34 @@ describe("areCharacterTextureValid()", () => {
 
     it("should not validate empty strings", () => {
         expect(areCharacterTexturesValid(["", "male1"])).toBe(false);
+    });
+});
+
+describe("localUserStore microphone noise suppression settings", () => {
+    beforeEach(() => {
+        localStorage.clear();
+    });
+
+    it("keeps advanced noise suppression off and browser noise suppression on by default", () => {
+        expect(localUserStore.getNoiseSuppressionEnabled()).toBe(false);
+        expect(localUserStore.getNoiseSuppressionProvider()).toBe("workadventure");
+        expect(localUserStore.getMicrophoneBrowserNoiseSuppression()).toBe(true);
+    });
+
+    it("does not migrate the legacy browser provider to active WorkAdventure noise suppression", () => {
+        localStorage.setItem("noiseSuppressionEnabled", "true");
+        localStorage.setItem("noiseSuppressionProvider", "browser");
+
+        expect(localUserStore.getNoiseSuppressionEnabled()).toBe(false);
+        expect(localStorage.getItem("noiseSuppressionEnabled")).toBe("false");
+        expect(localStorage.getItem("noiseSuppressionProvider")).toBe("workadventure");
+        expect(localUserStore.getNoiseSuppressionProvider()).toBe("workadventure");
+        expect(localUserStore.getMicrophoneBrowserNoiseSuppression()).toBe(true);
+    });
+
+    it("persists browser noise suppression when explicitly disabled", () => {
+        localUserStore.setMicrophoneBrowserNoiseSuppression(false);
+
+        expect(localUserStore.getMicrophoneBrowserNoiseSuppression()).toBe(false);
     });
 });

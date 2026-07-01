@@ -25,6 +25,7 @@
         browserNoiseSuppressionSupportedStore,
         effectiveNoiseSuppressionProviderStore,
         microphoneAutoGainControlStore,
+        microphoneBrowserNoiseSuppressionStore,
         microphoneEchoCancellationStore,
         noiseSuppressionEnabledStore,
         noiseSuppressionProviderStore,
@@ -146,6 +147,10 @@
 
     function toggleMicrophoneEchoCancellation() {
         microphoneEchoCancellationStore.setEnabled(!$microphoneEchoCancellationStore);
+    }
+
+    function toggleMicrophoneBrowserNoiseSuppression() {
+        microphoneBrowserNoiseSuppressionStore.setEnabled(!$microphoneBrowserNoiseSuppressionStore);
     }
 
     function toggleNoiseSuppression() {
@@ -472,7 +477,7 @@
 
         {#if $noiseSuppressionEnabledStore}
             <div class="input-label text-center mt-4">{$LL.menu.settings.microphone.noiseSuppressionMode()}</div>
-            <div class="mt-2 p-2 grid grid-cols-1 @lg/main-layout:grid-cols-3 gap-4 justify-center items-stretch">
+            <div class="mt-2 p-2 grid grid-cols-1 @lg/main-layout:grid-cols-2 gap-4 justify-center items-stretch">
                 <InputRadioBox
                     id="noise-suppression-provider-workadventure"
                     value="workadventure"
@@ -497,18 +502,6 @@
                         </div>
                     {/if}
                 </InputRadioBox>
-
-                {#if $browserNoiseSuppressionSupportedStore}
-                    <InputRadioBox
-                        id="noise-suppression-provider-browser"
-                        value="browser"
-                        label={$LL.menu.settings.microphone.browserNoiseSuppression()}
-                        bind:group={selectedNoiseSuppressionProvider}
-                        onchange={updateNoiseSuppressionProvider}
-                    >
-                        <em>{$LL.menu.settings.microphone.browserNoiseSuppressionDescription()}</em>
-                    </InputRadioBox>
-                {/if}
 
                 {#if $voiceIsolationSupportedStore}
                     <InputRadioBox
@@ -555,6 +548,24 @@
                 >
             </InputSwitch>
         </div>
+        {#if $browserNoiseSuppressionSupportedStore}
+            <div class="flex flex-col cursor-pointer relative m-4 gap-2">
+                <InputSwitch
+                    id="microphone-browser-noise-suppression-toggle"
+                    value={$microphoneBrowserNoiseSuppressionStore}
+                    onchange={toggleMicrophoneBrowserNoiseSuppression}
+                >
+                    <span
+                        >{$LL.menu.settings.microphone.browserNoiseSuppression()}
+                        <Chip size="xs" class="ml-2">{$LL.menu.settings.microphone.recommended()}</Chip></span
+                    >
+
+                    {#snippet description()}
+                        <span>{$LL.menu.settings.microphone.browserNoiseSuppressionDescription()}</span>
+                    {/snippet}
+                </InputSwitch>
+            </div>
+        {/if}
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">

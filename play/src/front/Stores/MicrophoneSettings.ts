@@ -2,7 +2,6 @@ import type { NoiseSuppressionProvider } from "../Connection/LocalUserStore";
 
 export interface EffectiveNoiseSuppressionProviderOptions {
     provider: NoiseSuppressionProvider;
-    browserNoiseSuppressionSupported: boolean;
     voiceIsolationSupported: boolean;
 }
 
@@ -11,6 +10,7 @@ export interface BuildMicrophoneAudioConstraintsOptions {
     autoGainControl: boolean;
     echoCancellation: boolean;
     noiseSuppressionEnabled: boolean;
+    browserNoiseSuppressionEnabled: boolean;
     effectiveNoiseSuppressionProvider: NoiseSuppressionProvider;
     browserNoiseSuppressionSupported: boolean;
     workAdventureNoiseSuppressionFailed: boolean;
@@ -22,14 +22,10 @@ export interface BuildMicrophoneAudioConstraintsOptions {
 
 export function getEffectiveNoiseSuppressionProvider({
     provider,
-    browserNoiseSuppressionSupported,
     voiceIsolationSupported,
 }: EffectiveNoiseSuppressionProviderOptions): NoiseSuppressionProvider {
     if (provider === "voiceIsolation" && voiceIsolationSupported) {
         return "voiceIsolation";
-    }
-    if (provider === "browser" && browserNoiseSuppressionSupported) {
-        return "browser";
     }
     return "workadventure";
 }
@@ -39,6 +35,7 @@ export function buildMicrophoneAudioConstraints({
     autoGainControl,
     echoCancellation,
     noiseSuppressionEnabled,
+    browserNoiseSuppressionEnabled,
     effectiveNoiseSuppressionProvider,
     browserNoiseSuppressionSupported,
     workAdventureNoiseSuppressionFailed,
@@ -48,11 +45,9 @@ export function buildMicrophoneAudioConstraints({
     sampleRateSupported,
 }: BuildMicrophoneAudioConstraintsOptions): MediaTrackConstraints {
     const shouldUseBrowserNoiseSuppression =
-        noiseSuppressionEnabled &&
+        browserNoiseSuppressionEnabled &&
         browserNoiseSuppressionSupported &&
-        (effectiveNoiseSuppressionProvider === "browser" ||
-            effectiveNoiseSuppressionProvider === "voiceIsolation" ||
-            (effectiveNoiseSuppressionProvider === "workadventure" && workAdventureNoiseSuppressionFailed));
+        (!customNoiseSuppressionActive || workAdventureNoiseSuppressionFailed);
 
     const constraints: MediaTrackConstraints = {
         autoGainControl,

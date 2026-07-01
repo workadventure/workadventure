@@ -63,6 +63,19 @@ function createMicrophoneEchoCancellationStore() {
     };
 }
 
+function createMicrophoneBrowserNoiseSuppressionStore() {
+    const initialValue = localUserStore.getMicrophoneBrowserNoiseSuppression();
+    const { subscribe, set } = writable(initialValue);
+
+    return {
+        subscribe,
+        setEnabled(value: boolean) {
+            localUserStore.setMicrophoneBrowserNoiseSuppression(value);
+            set(value);
+        },
+    };
+}
+
 function createNoiseSuppressionProviderStore() {
     const initialValue = localUserStore.getNoiseSuppressionProvider();
     const { subscribe, set } = writable<NoiseSuppressionProvider>(initialValue);
@@ -94,6 +107,7 @@ function createVoiceIsolationSupportedStore() {
 
 export const microphoneAutoGainControlStore = createMicrophoneAutoGainControlStore();
 export const microphoneEchoCancellationStore = createMicrophoneEchoCancellationStore();
+export const microphoneBrowserNoiseSuppressionStore = createMicrophoneBrowserNoiseSuppressionStore();
 
 export const noiseSuppressionStateStore = writable<NoiseSuppressionState>(
     localUserStore.getNoiseSuppressionEnabled() && localUserStore.getNoiseSuppressionProvider() === "workadventure"
@@ -111,11 +125,10 @@ export const browserNoiseSuppressionSupportedStore = writable(
 export const voiceIsolationSupportedStore = createVoiceIsolationSupportedStore();
 
 export const effectiveNoiseSuppressionProviderStore = derived(
-    [noiseSuppressionProviderStore, browserNoiseSuppressionSupportedStore, voiceIsolationSupportedStore],
-    ([$noiseSuppressionProviderStore, $browserNoiseSuppressionSupportedStore, $voiceIsolationSupportedStore]) => {
+    [noiseSuppressionProviderStore, voiceIsolationSupportedStore],
+    ([$noiseSuppressionProviderStore, $voiceIsolationSupportedStore]) => {
         return getEffectiveNoiseSuppressionProvider({
             provider: $noiseSuppressionProviderStore,
-            browserNoiseSuppressionSupported: $browserNoiseSuppressionSupportedStore,
             voiceIsolationSupported: $voiceIsolationSupportedStore,
         });
     },
