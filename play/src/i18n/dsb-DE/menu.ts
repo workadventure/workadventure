@@ -55,7 +55,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             autoGainControl: "Awtomatiske wózmócnjenje",
             autoGainControlDescription: "Awtomatiski pśiměrjujo głosnosć wašogo mikrofona.",
             echoCancellation: "Wótzašćitowanje echa",
-            enableNoiseSuppression: "Wótpóranje šuma zmóžniś",
+            enableAdvancedNoiseReduction: "Rozšyrjone wótpóranje šuma zmóžniś",
             noiseSuppressionMode: "Modus wótpóranja šuma:",
             workAdventureNoiseSuppression: "Wótpóranje šuma WorkAdventure",
             workAdventureNoiseSuppressionDescription: "Pśeźěłajśo swój mikrofon z wótpóranim šuma WorkAdventure.",
