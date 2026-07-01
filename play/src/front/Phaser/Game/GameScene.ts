@@ -2227,6 +2227,8 @@ export class GameScene extends DirtyScene {
                 const onStateChange = () => {
                     const state = context.state;
 
+                    // Note: some browsers (Vivaldi / Brave) will start in "running" state directly despite
+                    // no user activation and this will not stop them from blocking WebRTC sound afterwards.
                     if (state === "suspended") {
                         audioInterruptedStore.setInterrupted(false);
                         this.unregisterAudioContextPlaybackRetry = audioPlaybackStore.register(() => {
