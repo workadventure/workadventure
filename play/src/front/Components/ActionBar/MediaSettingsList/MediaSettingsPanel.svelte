@@ -213,7 +213,7 @@
                     alignLabel="center"
                 >
                     <span class:text-pop-red={isNoiseSuppressionErrorState}>
-                        {$LL.actionbar.microphone.noiseSuppressionBeta()}
+                        {$LL.actionbar.microphone.advancedNoiseReduction()}
                     </span>
                 </InputSwitch>
                 {#if $noiseSuppressionStateStore.status === "initializing"}

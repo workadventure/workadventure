@@ -55,7 +55,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             autoGainControl: "Controllo automatico del guadagno",
             autoGainControlDescription: "Regola automaticamente il volume del microfono.",
             echoCancellation: "Cancellazione dell'eco",
-            enableNoiseSuppression: "Attiva soppressione del rumore",
+            enableAdvancedNoiseReduction: "Attiva riduzione avanzata del rumore",
             noiseSuppressionMode: "Modalità di soppressione del rumore:",
             workAdventureNoiseSuppression: "Soppressione del rumore WorkAdventure",
             workAdventureNoiseSuppressionDescription:

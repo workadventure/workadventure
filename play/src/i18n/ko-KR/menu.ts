@@ -55,7 +55,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             autoGainControl: "자동 게인 제어",
             autoGainControlDescription: "마이크 음량을 자동으로 조절합니다.",
             echoCancellation: "에코 제거",
-            enableNoiseSuppression: "소음 억제 활성화",
+            enableAdvancedNoiseReduction: "고급 소음 감소 활성화",
             noiseSuppressionMode: "소음 억제 모드:",
             workAdventureNoiseSuppression: "WorkAdventure 소음 억제",
             workAdventureNoiseSuppressionDescription: "WorkAdventure의 소음 억제로 마이크를 처리합니다.",
