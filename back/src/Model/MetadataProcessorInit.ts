@@ -12,3 +12,10 @@ metadataProcessor.registerMetadataProcessor("raisedHands", (value, senderId, spa
     const raised = typeof value === "object" && value !== null && (value as { raised?: unknown }).raised === true;
     return Promise.resolve(space.applyRaisedHand(senderId, raised));
 });
+
+// The client only reports whether it currently holds a granted floor ({ holds: boolean }); the server keeps the
+// authoritative list of floor holders (only users given the floor, never the hosts). See Space.applyFloorHolder.
+metadataProcessor.registerMetadataProcessor("floorHolders", (value, senderId, space) => {
+    const holds = typeof value === "object" && value !== null && (value as { holds?: unknown }).holds === true;
+    return Promise.resolve(space.applyFloorHolder(senderId, holds));
+});
