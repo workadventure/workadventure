@@ -47,10 +47,10 @@
             await showSasCallbacks.confirm();
         };
 
-        const mismatchCallback = () => {
-            //TODO : use showSasCallbacks.mismatch(); after matris-js-sdk update
-            //showSasCallbacks.mismatch();
-            return request.cancel({ reason: "m.mismatched_sas" });
+        const mismatchCallback = async () => {
+            // Signal m.mismatched_sas to the other device (matrix-js-sdk 41). Previously this sent a
+            // plain request.cancel({ reason }) which the other side saw as a generic user cancellation.
+            showSasCallbacks.mismatch();
         };
 
         if (!emojis) return;
