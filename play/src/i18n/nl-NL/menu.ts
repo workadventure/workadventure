@@ -55,7 +55,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             autoGainControl: "Automatische versterkingsregeling",
             autoGainControlDescription: "Past automatisch het volume van je microfoon aan.",
             echoCancellation: "Echo-onderdrukking",
-            enableNoiseSuppression: "Ruisonderdrukking inschakelen",
+            enableAdvancedNoiseReduction: "Geavanceerde ruisreductie inschakelen",
             noiseSuppressionMode: "Ruisonderdrukkingsmodus:",
             workAdventureNoiseSuppression: "WorkAdventure-ruisonderdrukking",
             workAdventureNoiseSuppressionDescription:

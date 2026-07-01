@@ -44,7 +44,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noDevices: "找不到麥克風裝置",
         noSoundWarning: "未偵測到麥克風聲音。可能有問題 — 請嘗試在設定中更換麥克風。",
         noSoundWarningPressEnter: "未偵測到麥克風聲音。按 Enter 開啟設定。",
-        noiseSuppressionBeta: "噪音抑制（測試版）",
+        advancedNoiseReduction: "進階降噪",
         noiseSuppressionInitializing: "正在初始化自訂噪音抑制...",
         noiseSuppressionUnsupported: "此瀏覽器無法執行自訂噪音抑制。",
         noiseSuppressionError: "自訂噪音抑制失敗。正在回復到瀏覽器原生噪音抑制。",

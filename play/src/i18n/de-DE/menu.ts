@@ -56,7 +56,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             autoGainControl: "Automatische Verstärkungsregelung",
             autoGainControlDescription: "Passt die Lautstärke deines Mikrofons automatisch an.",
             echoCancellation: "Echounterdrückung",
-            enableNoiseSuppression: "Geräuschunterdrückung aktivieren",
+            enableAdvancedNoiseReduction: "Erweiterte Geräuschreduzierung aktivieren",
             noiseSuppressionMode: "Modus der Geräuschunterdrückung:",
             workAdventureNoiseSuppression: "WorkAdventure-Geräuschunterdrückung",
             workAdventureNoiseSuppressionDescription:

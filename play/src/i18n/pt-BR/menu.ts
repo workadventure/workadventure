@@ -54,7 +54,7 @@ const menu: BaseTranslation = {
             autoGainControl: "Controle automático de ganho",
             autoGainControlDescription: "Ajusta automaticamente o volume do microfone.",
             echoCancellation: "Cancelamento de eco",
-            enableNoiseSuppression: "Ativar supressão de ruído",
+            enableAdvancedNoiseReduction: "Ativar redução de ruído avançada",
             noiseSuppressionMode: "Modo de supressão de ruído:",
             workAdventureNoiseSuppression: "Supressão de ruído do WorkAdventure",
             workAdventureNoiseSuppressionDescription:

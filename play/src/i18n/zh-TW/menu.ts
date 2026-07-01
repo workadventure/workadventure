@@ -53,7 +53,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             autoGainControl: "自動增益控制",
             autoGainControlDescription: "自動調整你的麥克風音量。",
             echoCancellation: "回音消除",
-            enableNoiseSuppression: "啟用噪音抑制",
+            enableAdvancedNoiseReduction: "啟用進階降噪",
             noiseSuppressionMode: "噪音抑制模式：",
             workAdventureNoiseSuppression: "WorkAdventure 噪音抑制",
             workAdventureNoiseSuppressionDescription: "使用 WorkAdventure 的噪音抑制處理你的麥克風。",

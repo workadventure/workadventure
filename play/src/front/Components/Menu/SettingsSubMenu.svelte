@@ -471,7 +471,7 @@
                 id="noise-suppression-settings-toggle"
                 value={$noiseSuppressionEnabledStore}
                 onchange={toggleNoiseSuppression}
-                label={$LL.menu.settings.microphone.enableNoiseSuppression()}
+                label={$LL.menu.settings.microphone.enableAdvancedNoiseReduction()}
             />
         </div>
 
