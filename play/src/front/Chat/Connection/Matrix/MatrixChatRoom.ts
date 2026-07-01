@@ -144,6 +144,7 @@ export class MatrixChatRoom
     shouldRetrySendingEvents = derived(this.notSentEvents, (notSentEvents) => notSentEvents.size > 0);
 
     private handleRoomTimeline = this.onRoomTimeline.bind(this);
+    private handleLocalEchoUpdated = this.onLocalEchoUpdated.bind(this);
     private handleNewPoll = this.onNewPoll.bind(this);
     private handleRoomName = this.onRoomName.bind(this);
     private handleRoomRedaction = this.onRoomRedaction.bind(this);
@@ -1016,6 +1017,7 @@ export class MatrixChatRoom
 
     private startHandlingChatRoomShellEvents() {
         this.matrixRoom.on(RoomEvent.Timeline, this.handleRoomTimeline);
+        this.matrixRoom.on(RoomEvent.LocalEchoUpdated, this.handleLocalEchoUpdated);
         this.matrixRoom.on(PollEvent.New, this.handleNewPoll);
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
@@ -1390,6 +1392,62 @@ export class MatrixChatRoom
                 // them here used to create a duplicate Poll that overwrote room.polls and orphaned the
                 // rendered MatrixChatPoll's subscriptions, so incoming polls/votes were lost for joiners.
             })().catch((error) => console.error(error));
+        }
+    }
+
+    /**
+     * Optimistic local echo. The client is created with {@link PendingEventOrdering.Detached}
+     * (see MatrixChatConnection), so messages we send are kept in `room.getPendingEvents()` and are
+     * NOT part of the live timeline — `onRoomTimeline` would only render them once the server echoes
+     * them back through `/sync`. Mirror Element's TimelinePanel, which renders pending events and
+     * listens to {@link RoomEvent.LocalEchoUpdated}: show our own message instantly and reconcile it
+     * (id swap on send, cancellation) with the remote echo that later arrives on the live timeline.
+     */
+    private onLocalEchoUpdated(event: MatrixEvent, room: Room, oldEventId?: string): void {
+        if (room.roomId !== this.matrixRoom.roomId) {
+            return;
+        }
+        if (event.getType() !== EventType.RoomMessage || this.isEventReplacingExistingOne(event)) {
+            return;
+        }
+
+        const eventId = event.getId();
+
+        // As the send progresses the SDK swaps the local event id for the real one. Reconcile the
+        // optimistic entry so it neither duplicates nor loses its position once the remote echo lands.
+        if (oldEventId && oldEventId !== eventId) {
+            if (eventId && this.messages.has(eventId)) {
+                // Remote echo already rendered under the real id (via onRoomTimeline): drop the stale echo.
+                this.messages.delete(oldEventId);
+                return;
+            }
+            const index = this.messages.findIndex((displayed) => displayed.id === oldEventId);
+            if (index !== -1) {
+                // Re-key in place to keep ordering; the later remote echo (same id) updates this slot.
+                this.messages.splice(index, 1, this.createChatMessageFromEvent(event));
+                return;
+            }
+            this.messages.delete(oldEventId);
+        }
+
+        if (!eventId) {
+            return;
+        }
+
+        // A cancelled send: remove the optimistic message.
+        if (event.status === EventStatus.CANCELLED) {
+            this.messages.delete(eventId);
+            return;
+        }
+
+        if (!shouldDisplayEventInRoomTimeline(event)) {
+            return;
+        }
+
+        // Render our own just-sent message immediately. push() is keyed by id, so the later remote
+        // echo (same real id, via onRoomTimeline) updates this entry in place instead of duplicating.
+        if (!this.messages.has(eventId)) {
+            this.messages.push(this.createChatMessageFromEvent(event));
         }
     }
 
@@ -2023,6 +2081,7 @@ export class MatrixChatRoom
         this.currentUserRoomMember = undefined;
         this.matrixRoom.currentState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
         this.matrixRoom.off(RoomEvent.Timeline, this.handleRoomTimeline);
+        this.matrixRoom.off(RoomEvent.LocalEchoUpdated, this.handleLocalEchoUpdated);
         this.matrixRoom.off(PollEvent.New, this.handleNewPoll);
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.off(RoomEvent.Redaction, this.handleRoomRedaction);
