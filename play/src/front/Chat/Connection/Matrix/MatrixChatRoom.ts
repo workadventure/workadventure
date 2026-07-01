@@ -1154,6 +1154,12 @@ export class MatrixChatRoom
         });
         await richPoll.refresh();
 
+        if (this.destroyed) {
+            // The room was torn down while hydrating: don't track a poll that destroy() already skipped.
+            richPoll.destroy();
+            return richPoll;
+        }
+
         if (existingPoll instanceof MatrixChatLightPoll) {
             existingPoll.destroy();
         }
@@ -1293,7 +1299,14 @@ export class MatrixChatRoom
         if (merger) {
             newWrapper.setUserProviderMergerContext(merger);
         }
-        this.members.update((members) => [...members, newWrapper]);
+        this.members.update((members) => {
+            // Destroy any superseded wrapper for the same user before adding the new one, otherwise
+            // repeated NewMember events (e.g. rejoin, or a member already added by initializeMembers)
+            // leak the RoomMember/User listeners and merger subscriptions of the orphaned wrapper.
+            members.filter((existing) => existing.id === newWrapper.id).forEach((existing) => existing.destroy());
+            const remaining = members.filter((existing) => existing.id !== newWrapper.id);
+            return [...remaining, newWrapper];
+        });
         this.refreshRoomType();
         this.refreshJoinedMemberCount();
     }
@@ -1700,6 +1713,10 @@ export class MatrixChatRoom
         let thread = this.matrixRoom.getThread(rootMessageId);
         const rootEvent = await this.getMatrixEventById(rootMessageId);
 
+        if (this.destroyed) {
+            return undefined;
+        }
+
         if (!thread && (!rootEvent || rootEvent.getType() !== EventType.RoomMessage)) {
             return undefined;
         }
@@ -1719,6 +1736,14 @@ export class MatrixChatRoom
         const threadConversation = new MatrixChatThread(thread, this);
         this.openThreadConversations.set(rootMessageId, threadConversation);
         await threadConversation.refreshRootMessage();
+
+        if (this.destroyed) {
+            // Room torn down mid-refresh: destroy() already cleared the map, so drop this straggler too.
+            this.openThreadConversations.delete(rootMessageId);
+            threadConversation.destroy();
+            return undefined;
+        }
+
         this.refreshThreadSummary(rootMessageId);
 
         return threadConversation;
