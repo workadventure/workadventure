@@ -1339,14 +1339,15 @@ export class MatrixChatRoom
         if (removed) {
             return;
         }
-        // Event age when it arrived at the device; defensive guard for delayed sync (source of truth remains data.liveEvent).
-        const ageOfEvent = event.getAge();
-        if (
-            !MatrixChatRoom.isNewLiveTimelineEvent(removed, data, toStartOfTimeline) ||
-            (ageOfEvent !== undefined && ageOfEvent >= 2000)
-        ) {
+        // Only react to events the SDK reports as live (matches Element's TimelinePanel.onRoomTimeline).
+        if (!MatrixChatRoom.isNewLiveTimelineEvent(removed, data, toStartOfTimeline)) {
             return;
         }
+        // A live event delivered late by a delayed sync must STILL be rendered; the age only gates
+        // notifications / auto-open (the original intent of the #4136 guard). Dropping the render here
+        // is what made messages "appear only after a while" under the slower matrix-js-sdk 41 sync timing.
+        const ageOfEvent = event.getAge();
+        const isFreshLiveEvent = ageOfEvent === undefined || ageOfEvent < 2000;
 
         if (room !== undefined) {
             (async () => {
@@ -1377,7 +1378,7 @@ export class MatrixChatRoom
                     if (this.isEventReplacingExistingOne(event)) {
                         this.handleMessageModification(event);
                     } else if (shouldDisplayEventInRoomTimeline(event)) {
-                        this.handleNewMessage(event);
+                        this.handleNewMessage(event, isFreshLiveEvent);
                     }
                 }
                 if (event.getType() === "m.reaction") {
@@ -1455,7 +1456,7 @@ export class MatrixChatRoom
         this.prunePollStores();
     }
 
-    private handleNewMessage(event: MatrixEvent) {
+    private handleNewMessage(event: MatrixEvent, isFreshLiveEvent = true) {
         const message = this.createChatMessageFromEvent(event);
         this.messages.push(message);
         const senderID = event.getSender();
@@ -1465,12 +1466,13 @@ export class MatrixChatRoom
             }
         }
         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
-            // Only notify for "live" messages (after initial sync). Avoids notifying for messages loaded on room open (plan: live vs historical).
-            if (this.matrixRoom.client.isInitialSyncComplete()) {
+            // Only notify for "live" messages (after initial sync) that arrived fresh. A live event
+            // delivered late by a delayed sync is still rendered above, but must not notify / auto-open.
+            if (isFreshLiveEvent && this.matrixRoom.client.isInitialSyncComplete()) {
                 this.notifyNewMessage(message);
             }
 
-            if (!isAChatRoomIsVisible() && !(get(selectedRoomStore) instanceof ProximityChatRoom)) {
+            if (isFreshLiveEvent && !isAChatRoomIsVisible() && !(get(selectedRoomStore) instanceof ProximityChatRoom)) {
                 selectedRoomStore.set(this);
                 navChat.switchToChat();
             }
