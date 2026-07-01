@@ -53,6 +53,7 @@ import type {
     PrivateSpaceEvent,
     UpdateSpaceUserPusherToFrontMessage,
     AddSpaceUserMessage,
+    AnalyticsEventReportMessage,
     RemoveSpaceUserPusherToFrontMessage,
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
@@ -102,6 +103,7 @@ import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout
 import type { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { ENABLE_MAP_EDITOR, UPLOADER_URL, WOKA_SPEED } from "../Enum/EnvironmentVariable";
 import type { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
@@ -149,6 +151,7 @@ export class RoomConnection implements RoomConnection {
     public readonly websocketReconnectingStream: Observable<boolean>;
     private userId: number | null = null;
     private _closed = false;
+    private readonly cleanupCallbacks: Array<() => void> = [];
     private tags: string[] = [];
     private canEdit = false;
 
@@ -326,6 +329,12 @@ export class RoomConnection implements RoomConnection {
 
         this.socket = new WorkAdventureWebSocket(url, subProtocols);
         this.websocketReconnectingStream = this.socket.reconnectingStream;
+        const reconnectingSubscription = this.websocketReconnectingStream.subscribe((isReconnecting) => {
+            if (isReconnecting) {
+                analyticsClient.websocketReconnecting();
+            }
+        });
+        this.onCleanup(() => reconnectingSubscription.unsubscribe());
 
         this.socket.onopen = () => {
             console.info("Socket has been opened");
@@ -788,6 +797,7 @@ export class RoomConnection implements RoomConnection {
             this._roomJoinedPromise.reject(event);
         }
         if (event.code !== 1000) {
+            analyticsClient.websocketConnectionLost(event.reason || String(event.code));
             Sentry.captureMessage(
                 "WebSocket closed by remote side. Code: " +
                     event.code +
@@ -801,10 +811,15 @@ export class RoomConnection implements RoomConnection {
     };
 
     private handleSocketError = (event: Event) => {
+        analyticsClient.websocketConnectionLost(event.type);
         this._websocketErrorStream.next(event);
     };
 
     private cleanupConnection(isNormalClosure: boolean) {
+        for (const callback of this.cleanupCallbacks.splice(0)) {
+            callback();
+        }
+
         // Cleanup queries:
         for (const query of this.queries.values()) {
             query.reject(new ConnectionClosedError("Socket closed"));
@@ -2172,6 +2187,19 @@ export class RoomConnection implements RoomConnection {
                 videoQualityReportMessage: message,
             },
         });
+    }
+
+    public emitAnalyticsEventReport(message: AnalyticsEventReportMessage): void {
+        this.send({
+            message: {
+                $case: "analyticsEventReportMessage",
+                analyticsEventReportMessage: message,
+            },
+        });
+    }
+
+    public onCleanup(callback: () => void): void {
+        this.cleanupCallbacks.push(callback);
     }
 
     // "force" bypasses pre-join queuing for messages that must be sent before the room is joined (e.g. joinRoomFrontMessage).

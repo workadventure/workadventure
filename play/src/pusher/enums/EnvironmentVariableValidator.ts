@@ -295,6 +295,16 @@ export const EnvironmentVariables = z.object({
     VIDEO_ANALYTICS_MAX_BATCH_SIZE: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 1_000))
         .describe("Maximum number of video quality samples sent in one admin batch. Defaults to 1000"),
+    ANALYTICS_DRAIN_TIMEOUT_MS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 30_000))
+        .describe(
+            "Maximum time in milliseconds spent draining the generic analytics queue on SIGTERM / SIGINT before the process exits. Make sure your orchestrator's grace period (e.g. Kubernetes terminationGracePeriodSeconds) is at least this long. Defaults to 30000",
+        ),
+    VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 30_000))
+        .describe(
+            "Maximum time in milliseconds spent draining the legacy video-quality analytics queue on SIGTERM / SIGINT before the process exits. Defaults to 30000",
+        ),
     START_ROOM_URL: z.string().optional().describe("Default room URL where users start when accessing the platform"),
 
     // Front related environment variables

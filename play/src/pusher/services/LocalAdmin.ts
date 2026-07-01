@@ -251,6 +251,18 @@ class LocalAdmin implements AdminInterface {
             world: "localWorld",
             applications,
             canRecord,
+            analyticsEventsEnabled: true,
+            analyticsMetricsPolicy: {
+                schemaVersion: 1,
+                legalTemplateVersion: "2026-06-23.v1",
+                categories: {
+                    presence_sessions: true,
+                    collaboration_activity: true,
+                    workspace_actions: true,
+                    quality_diagnostics: true,
+                    user_level_activity: true,
+                },
+            },
         };
     }
 

@@ -26,6 +26,8 @@ import type { ConnectingSocketData, SpaceName } from "../models/Websocket/Socket
 import { ClientAbortError } from "../models/ClientAbortError";
 import { ClientNotPartOfSpaceError, UserAlreadyAddedInSpaceError } from "../models/SpaceValidationErrors";
 import { videoQualityAnalyticsQueue } from "../services/VideoQualityAnalyticsQueue";
+import { analyticsEventsQueue } from "../services/AnalyticsEventsQueue";
+import { processAnalyticsReportMessage } from "../services/AnalyticsReportMessageHandler";
 import { PusherRoomSocketController } from "../services/PusherRoomSocketController";
 import { AdminWebSocketBackpressureWriter } from "../services/AdminWebSocketBackpressureWriter";
 import type { PusherWebSocket } from "../services/PusherWebSocket";
@@ -350,6 +352,8 @@ export class IoSocketController {
                         world: "",
                         chatID,
                         canRecord: false,
+                        analyticsEventsEnabled: true,
+                        analyticsMetricsPolicy: undefined,
                     };
 
                     let characterTextures: WokaDetail[];
@@ -462,6 +466,8 @@ export class IoSocketController {
                         cameraState,
                         tabId: query.tabId,
                         attendeesState: false,
+                        analyticsEventsEnabled: userData.analyticsEventsEnabled ?? true,
+                        analyticsMetricsPolicy: userData.analyticsMetricsPolicy,
                         queryAbortControllers: new Map<number, AbortController>(),
                         canRecord: userData.canRecord ?? false,
                     };
@@ -1096,6 +1102,18 @@ export class IoSocketController {
                                 videoQualityAnalyticsQueue.enqueueReport(
                                     message.message.videoQualityReportMessage,
                                     socket.getUserData(),
+                                );
+                                analyticsEventsQueue.enqueueVideoQualityReport(
+                                    message.message.videoQualityReportMessage,
+                                    socket.getUserData(),
+                                );
+                                break;
+                            }
+                            case "analyticsEventReportMessage": {
+                                processAnalyticsReportMessage(
+                                    message.message.analyticsEventReportMessage,
+                                    socket.getUserData(),
+                                    analyticsEventsQueue,
                                 );
                                 break;
                             }

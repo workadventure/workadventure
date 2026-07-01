@@ -6,6 +6,7 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import * as Sentry from "@sentry/svelte";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { localUserStore } from "../Connection/LocalUserStore";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
@@ -54,6 +55,7 @@ import { browserNotificationStore } from "./BrowserNotificationStore";
 export const inBackgroundSettingsStore = writable<boolean>(false);
 
 export type MediaAccessIssue = "permission_denied" | "no_device";
+type MediaDeviceAnalyticsKind = "camera" | "microphone" | "camera_microphone";
 
 /**
  * Last camera access failure, or no videoinput reported by the browser.
@@ -450,6 +452,7 @@ export const availabilityStatusStore = derived(
 // This is a singleton so we can safely not ever unsubscribe from it.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
 availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
+    analyticsClient.statusChanged(AvailabilityStatus[newStatus] ?? String(newStatus));
     try {
         statusChanger.changeStatusTo(newStatus);
     } catch (e) {
@@ -658,6 +661,14 @@ function classifyMediaAccessError(error: unknown): MediaAccessIssue | null {
     return null;
 }
 
+function trackMediaAccessIssue(kind: MediaDeviceAnalyticsKind, issue: MediaAccessIssue | null): void {
+    if (issue === "permission_denied") {
+        analyticsClient.mediaPermissionDenied(kind, issue);
+    } else if (issue === "no_device") {
+        analyticsClient.mediaDeviceError(kind, issue);
+    }
+}
+
 function emitCurrentStreamOrError(setIfCurrent: SetRawStreamIfCurrent, error: unknown) {
     if (currentStream) {
         setIfCurrent({
@@ -679,6 +690,7 @@ async function runRawStreamUpdate(
     generation: number,
 ): Promise<{ video: false | MediaTrackConstraints; audio: false | MediaTrackConstraints }> {
     if (navigator.mediaDevices === undefined) {
+        analyticsClient.mediaDeviceError("camera_microphone", "media_devices_unavailable");
         if (window.location.protocol === "http:") {
             setIfCurrent({
                 type: "error",
@@ -819,6 +831,7 @@ async function runRawStreamUpdate(
             hideHelpCameraSettings();
         } catch (e) {
             if (isOverConstrainedError(e) && e.constraint === "deviceId") {
+                analyticsClient.mediaDeviceError("camera_microphone", "device_constraint");
                 console.info(
                     "Could not access the requested microphone or webcam. Falling back to default microphone and webcam",
                     newConstraints,
@@ -836,6 +849,7 @@ async function runRawStreamUpdate(
                 );
                 emitCurrentStreamOrError(setIfCurrent, e);
                 const classified = classifyMediaAccessError(e);
+                trackMediaAccessIssue(mustRequestNewAudio ? "camera_microphone" : "camera", classified);
                 requestedCameraState.disableWebcam();
                 cameraAccessIssueStore.set(classified);
                 if (mustRequestNewAudio) {
@@ -852,6 +866,7 @@ async function runRawStreamUpdate(
                 console.info("Error. Unable to get microphone and/or camera access.", newConstraints, e);
                 emitCurrentStreamOrError(setIfCurrent, e);
                 if (mustRequestNewAudio) {
+                    trackMediaAccessIssue("microphone", classifyMediaAccessError(e));
                     requestedMicrophoneState.disableMicrophone();
                     microphoneAccessIssueStore.set(classifyMediaAccessError(e));
                 }

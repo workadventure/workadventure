@@ -39,6 +39,10 @@ export const isCapabilities = z.object({
     description: "Means the api accepts video quality analytics batches.",
     example: "v1",
   }),
+  "api/analytics/events-batch": extendApi(z.optional(z.string()), {
+    description: "Means the api accepts generic analytics event batches.",
+    example: "v1",
+  }),
 });
 
 export type Capabilities = z.infer<typeof isCapabilities>;

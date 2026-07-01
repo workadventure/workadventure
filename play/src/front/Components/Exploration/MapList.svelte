@@ -6,6 +6,7 @@
     import { roomListVisibilityStore } from "../../Stores/ModalStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { scriptUtils } from "../../Api/ScriptUtils";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import LL from "../../../i18n/i18n-svelte";
     import PopUpContainer from "../PopUp/PopUpContainer.svelte";
 
@@ -74,6 +75,7 @@
     function clickRoom(roomUrl: string, roomName: string) {
         isMoving.set(true);
         roomNameSelected.set(roomName);
+        analyticsClient.clickedRoomListRoom(roomUrl);
         // Use the room url to join the room
         scriptUtils.goToPage(roomUrl);
     }
