@@ -231,6 +231,16 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 this.publishMetadata({ raisedHands: this.applyRaisedHand(spaceUserId, false) });
             }
 
+            // Same cleanup for the floor-holders list, so a user who leaves while holding the floor does not stay
+            // in the host's "take back" panel forever.
+            const floorHolders = this.metadata.get("floorHolders");
+            if (
+                Array.isArray(floorHolders) &&
+                (floorHolders as { spaceUserId?: unknown }[]).some((entry) => entry?.spaceUserId === spaceUserId)
+            ) {
+                this.publishMetadata({ floorHolders: this.applyFloorHolder(spaceUserId, false) });
+            }
+
             if (this.isPublishing(user)) {
                 this._nbPublishers--;
             }
@@ -742,6 +752,34 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         }
         this.metadata.set("raisedHands", queue);
         return queue;
+    }
+
+    /**
+     * Adds or removes a user from the "floor holders" list stored in the space metadata, server-authoritatively.
+     *
+     * This list contains only the users who were GIVEN the floor after raising their hand (self-reported by the
+     * holder via { holds: boolean }), never the original speakers/hosts. Like the raised-hands queue it lives in
+     * metadata (broadcast to ALL members regardless of role), so the host panel can offer taking the floor back
+     * even without seeAttendees, and a promoted guest can only ever act on other granted guests, not the host.
+     * Synchronous so read-modify-write is atomic; identity is the trusted senderId.
+     */
+    public applyFloorHolder(senderId: string, holds: boolean): { spaceUserId: string; name: string }[] {
+        const current = this.metadata.get("floorHolders");
+        const list = Array.isArray(current)
+            ? (current as { spaceUserId: string; name: string }[]).filter(
+                  (entry) => entry != undefined && typeof entry.spaceUserId === "string",
+              )
+            : [];
+        const existingIndex = list.findIndex((entry) => entry.spaceUserId === senderId);
+        if (holds) {
+            if (existingIndex === -1) {
+                list.push({ spaceUserId: senderId, name: this.getUser(senderId)?.name ?? "" });
+            }
+        } else if (existingIndex !== -1) {
+            list.splice(existingIndex, 1);
+        }
+        this.metadata.set("floorHolders", list);
+        return list;
     }
 
     public getSpaceName(): string {

@@ -11,6 +11,7 @@ import type { SpaceInterface } from "../SpaceInterface";
 import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
 import { effectiveCameraStateStore, effectiveMicrophoneStateStore } from "../../Stores/MediaStore";
 import { requestedHandRaiseState } from "../../Stores/RaiseHandStore";
+import { givenFloorSpaceStore } from "../../Stores/MegaphoneStore";
 import { recordingStore } from "../../Stores/RecordingStore";
 import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
@@ -511,6 +512,16 @@ export class SpacePeerManager {
         this.unsubscribes.push(
             requestedHandRaiseState.subscribe((state) => {
                 this.space.emitUpdateSpaceMetadata(new Map([["raisedHands", { raised: state.raised }]]));
+            }),
+        );
+
+        // The floor-holders list (key "floorHolders") is the counterpart used by the host "take back" panel: the
+        // local user reports whether it currently holds a floor granted in THIS space. Only granted users ever
+        // appear, so the host panel never lists the presenters. Cleared here on give-back/revoke/podium-entry; a
+        // user leaving is cleaned up server-side (see Space.removeUser on the back).
+        this.unsubscribes.push(
+            givenFloorSpaceStore.subscribe((grantedSpace) => {
+                this.space.emitUpdateSpaceMetadata(new Map([["floorHolders", { holds: grantedSpace === this.space }]]));
             }),
         );
     }
