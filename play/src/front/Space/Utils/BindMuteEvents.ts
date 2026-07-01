@@ -7,7 +7,7 @@ import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { requestedHandRaiseState } from "../../Stores/RaiseHandStore";
 import LL from "../../../i18n/i18n-svelte";
-import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
+import { currentLiveStreamingSpaceStore, givenFloorSpaceStore } from "../../Stores/MegaphoneStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { popupStore } from "../../Stores/PopupStore";
@@ -116,6 +116,11 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
         // In an ALL_USERS (proximity) space everyone already speaks, so there is nothing to promote.
         if (space.filterType !== FilterType.ALL_USERS) {
             space.startStreaming();
+            // Promote to a full speaker: this guarantees the local return feed (self-view) shows even when the
+            // user's availability status would otherwise hide it, and remembers the space so we can offer a
+            // "give back the floor" control (see GiveBackFloorMenuItem).
+            isSpeakerStore.set(true);
+            givenFloorSpaceStore.set(space);
         }
         requestedHandRaiseState.lowerHand();
         // We never force the microphone on; if it is muted we invite the user to enable it.
@@ -132,8 +137,25 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
     space.observePrivateEvent("revokeFloor").subscribe(() => {
         if (space.filterType !== FilterType.ALL_USERS) {
             space.stopStreaming();
+            // Undo the promotion only if we got the floor via a raised hand (not for a megaphone/zone speaker
+            // whose speaker state is owned by the zone listeners).
+            if (get(givenFloorSpaceStore) === space) {
+                isSpeakerStore.set(false);
+                givenFloorSpaceStore.set(undefined);
+            }
         }
         notificationPlayingStore.playNotification(get(LL).notification.floorRevoked(), "microphone-off.png");
+    });
+
+    // If the local user leaves the space while holding a floor granted through a raised hand, drop the
+    // promotion state so the "give back the floor" control does not linger, pointing at a space we left.
+    // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
+    // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
+    space.onLeaveSpace.subscribe(() => {
+        if (get(givenFloorSpaceStore) === space) {
+            isSpeakerStore.set(false);
+            givenFloorSpaceStore.set(undefined);
+        }
     });
 
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
