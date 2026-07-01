@@ -50,6 +50,12 @@ function parseRaisedHands(value: unknown): RaisedHand[] {
     const result = raisedHandsSchema.safeParse(value);
     return result.success ? result.data : [];
 }
+
+const floorHoldersSchema = z.array(z.object({ spaceUserId: z.string(), name: z.string() }));
+function parseFloorHolders(value: unknown): FloorSpeaker[] {
+    const result = floorHoldersSchema.safeParse(value);
+    return result.success ? result.data : [];
+}
 import type { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 import type { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
 import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
@@ -243,31 +249,16 @@ export class Space implements SpaceInterface {
             return () => subscription.unsubscribe();
         });
 
-        // Live list of the OTHER users currently holding the floor (megaphoneState === true). Kept in sync from
-        // the usersStore (add/remove) and observeUserUpdated (a megaphoneState toggle does not re-emit usersStore,
-        // it only updates the nested reactive field), so the host panel can offer taking the floor back.
+        // List of the OTHER users who currently hold a GRANTED floor (given after a raised hand), derived from the
+        // space metadata (broadcast to all members, so the host receives it even without seeAttendees). The local
+        // user is filtered out. Only granted guests appear here — never the hosts/original speakers — so a promoted
+        // guest can never take the floor back from the presenter.
         this.speakingUsersStore = readable<FloorSpeaker[]>([], (set) => {
-            let users = new Map<string, SpaceUserExtended>();
-            const compute = () => {
-                const speakers: FloorSpeaker[] = [];
-                for (const user of users.values()) {
-                    if (user.spaceUserId !== this._mySpaceUserId && get(user.reactiveUser.megaphoneState)) {
-                        speakers.push({ spaceUserId: user.spaceUserId, name: user.name });
-                    }
-                }
-                set(speakers);
-            };
-            // usersStore is a Svelte store: subscribe() returns an unsubscribe function.
-            const unsubscribeUsers = this.usersStore.subscribe((value) => {
-                users = value;
-                compute();
-            });
-            // observeUserUpdated is an RxJS observable: subscribe() returns a Subscription.
-            const updateSubscription = this.observeUserUpdated.subscribe(() => compute());
-            return () => {
-                unsubscribeUsers();
-                updateSubscription.unsubscribe();
-            };
+            const compute = (value: unknown) =>
+                set(parseFloorHolders(value).filter((entry) => entry.spaceUserId !== this._mySpaceUserId));
+            compute(this.getMetadata().get("floorHolders"));
+            const subscription = this.observeMetadataProperty("floorHolders").subscribe(compute);
+            return () => subscription.unsubscribe();
         });
 
         this.onBlockSubscribe = this._blackListManager.onBlockStream.subscribe((userUuid) => {
