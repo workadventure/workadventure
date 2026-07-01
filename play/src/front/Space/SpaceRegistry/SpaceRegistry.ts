@@ -5,7 +5,7 @@ import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
 import type { Readable } from "svelte/store";
 import { derived, get } from "svelte/store";
-import type { RaisedHand, SpaceInterface } from "../SpaceInterface";
+import type { FloorSpeaker, RaisedHand, SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import type { VideoBox } from "../VideoBox";
 import { Space } from "../Space";
@@ -134,15 +134,39 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return derived(stores, (lists) => lists.flat()).subscribe(set);
     });
 
+    // Aggregated list of users currently holding the floor across all spaces (in practice only the meeting space).
+    public readonly speakingUsersStore: Readable<FloorSpeaker[]> = derived(this.spaces, ($spaces, set) => {
+        if ($spaces.size === 0) {
+            set([]);
+            return () => {};
+        }
+
+        const stores = Array.from($spaces.values(), (space) => space.speakingUsersStore);
+        return derived(stores, (lists) => lists.flat()).subscribe(set);
+    });
+
     /**
-     * Gives the floor to (or takes it back from) a user identified by their spaceUserId, resolving the space
-     * from the raised-hands queue. Used by the host "raised hands" panel, which only has the spaceUserId (not
-     * the SpaceUserExtended) — in particular for a megaphone speaker who does not receive listeners' SpaceUser.
+     * Gives the floor to a user identified by their spaceUserId, resolving the space from the raised-hands queue.
+     * Used by the host "raised hands" panel, which only has the spaceUserId (not the SpaceUserExtended) — in
+     * particular for a megaphone speaker who does not receive listeners' SpaceUser.
      */
     public giveFloor(spaceUserId: string): void {
         for (const space of this.spaces.values()) {
             if (get(space.raisedHandsStore).some((entry) => entry.spaceUserId === spaceUserId)) {
                 space.emitPrivateMessage({ $case: "giveFloor", giveFloor: {} }, spaceUserId);
+                return;
+            }
+        }
+    }
+
+    /**
+     * Takes the floor back from a user identified by their spaceUserId, resolving the space from the list of
+     * current speakers. Counterpart of giveFloor for the host "raised hands" panel.
+     */
+    public revokeFloor(spaceUserId: string): void {
+        for (const space of this.spaces.values()) {
+            if (get(space.speakingUsersStore).some((entry) => entry.spaceUserId === spaceUserId)) {
+                space.emitPrivateMessage({ $case: "revokeFloor", revokeFloor: {} }, spaceUserId);
                 return;
             }
         }

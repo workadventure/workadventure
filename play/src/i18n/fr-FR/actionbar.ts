@@ -189,6 +189,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         videoNotSupported: "Votre navigateur ne prend pas en charge la balise vidéo.",
     },
     raisedHands: {
+        speaking: "Au micro",
         title: "Mains levées",
         empty: "Personne n’a levé la main",
         help: "Voyez qui a levé la main, dans l’ordre, et donnez-lui la parole.",

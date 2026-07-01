@@ -33,6 +33,7 @@ import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 
 import type {
+    FloorSpeaker,
     PrivateEventsObservables,
     PublicEventsObservables,
     RaisedHand,
@@ -73,6 +74,7 @@ export class Space implements SpaceInterface {
     public readonly videoStreamStore: Readable<Map<string, VideoBox>>;
     public readonly screenShareStreamStore: Readable<Map<string, VideoBox>>;
     public readonly raisedHandsStore: Readable<RaisedHand[]>;
+    public readonly speakingUsersStore: Readable<FloorSpeaker[]>;
     // private readonly blockedUsersVideoBox: Map<string, VideoBox> = new Map<string, VideoBox>();
     // private readonly blockedUsersScreenShareVideoBox: Map<string, VideoBox> = new Map<string, VideoBox>();
     private readonly _blockedUsersStore: Writable<Set<string>> = writable(new Set<string>());
@@ -239,6 +241,33 @@ export class Space implements SpaceInterface {
                 set(parseRaisedHands(value));
             });
             return () => subscription.unsubscribe();
+        });
+
+        // Live list of the OTHER users currently holding the floor (megaphoneState === true). Kept in sync from
+        // the usersStore (add/remove) and observeUserUpdated (a megaphoneState toggle does not re-emit usersStore,
+        // it only updates the nested reactive field), so the host panel can offer taking the floor back.
+        this.speakingUsersStore = readable<FloorSpeaker[]>([], (set) => {
+            let users = new Map<string, SpaceUserExtended>();
+            const compute = () => {
+                const speakers: FloorSpeaker[] = [];
+                for (const user of users.values()) {
+                    if (user.spaceUserId !== this._mySpaceUserId && get(user.reactiveUser.megaphoneState)) {
+                        speakers.push({ spaceUserId: user.spaceUserId, name: user.name });
+                    }
+                }
+                set(speakers);
+            };
+            // usersStore is a Svelte store: subscribe() returns an unsubscribe function.
+            const unsubscribeUsers = this.usersStore.subscribe((value) => {
+                users = value;
+                compute();
+            });
+            // observeUserUpdated is an RxJS observable: subscribe() returns a Subscription.
+            const updateSubscription = this.observeUserUpdated.subscribe(() => compute());
+            return () => {
+                unsubscribeUsers();
+                updateSubscription.unsubscribe();
+            };
         });
 
         this.onBlockSubscribe = this._blackListManager.onBlockStream.subscribe((userUuid) => {

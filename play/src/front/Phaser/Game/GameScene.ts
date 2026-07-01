@@ -194,7 +194,7 @@ import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEn
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import { ScriptLoadedError } from "../../Api/ScriptLoadedError";
-import { raisedHandsStore, screenShareStreamStore, videoStreamStore } from "../../Stores/PeerStore";
+import { raisedHandsStore, screenShareStreamStore, speakingUsersStore, videoStreamStore } from "../../Stores/PeerStore";
 import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
@@ -2047,6 +2047,7 @@ export class GameScene extends DirtyScene {
                 videoStreamStore.forward(this._spaceRegistry.videoStreamStore);
                 screenShareStreamStore.forward(this._spaceRegistry.screenShareStreamStore);
                 raisedHandsStore.forward(this._spaceRegistry.raisedHandsStore);
+                speakingUsersStore.forward(this._spaceRegistry.speakingUsersStore);
 
                 this.initExtensionModule();
 

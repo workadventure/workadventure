@@ -188,6 +188,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         videoNotSupported: "Uw browser ondersteunt de videotag niet.",
     },
     raisedHands: {
+        speaking: "Aan het woord",
         title: "Opgestoken handen",
         empty: "Niemand heeft de hand opgestoken",
         help: "Bekijk wie zijn hand heeft opgestoken, op volgorde, en geef diegene het woord.",
