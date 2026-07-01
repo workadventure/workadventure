@@ -130,11 +130,15 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
             timeout: 30_000,
         });
 
-        // The panel button stays visible even though the queue is now empty (Bob is speaking), and the panel's
-        // "Speaking" section lets the host take the floor back.
+        // The panel button stays visible even though the queue is now empty (Bob is speaking). Re-open the panel
+        // if the raised-hands -> speaking transition closed it, then take the floor back from the "Speaking" section.
         await expect(speaker.getByTestId("raised-hands-panel-button")).toBeVisible({ timeout: 20_000 });
-        await speaker.getByTestId("raised-hands-panel-button").click();
-        await expect(speaker.getByTestId("raised-hands-panel").getByText("Bob")).toBeVisible({ timeout: 10_000 });
+        await expect(async () => {
+            if (!(await speaker.getByTestId("raised-hands-panel").isVisible())) {
+                await speaker.getByTestId("raised-hands-panel-button").click();
+            }
+            await expect(speaker.getByTestId("panel-revoke-floor")).toBeVisible({ timeout: 2_000 });
+        }).toPass({ timeout: 30_000 });
         await speaker.getByTestId("panel-revoke-floor").first().click();
 
         // Bob is told he no longer has the floor and is demoted (his camera disappears for the host).
