@@ -815,7 +815,9 @@ class LocalUserStore {
     }
 
     getNoiseSuppressionEnabled(): boolean {
-        return localStorage.getItem(noiseSuppressionEnabledKey) === "true";
+        // Default to enabled so a fresh user keeps the browser's native noise suppression that was
+        // always active before the noise suppression feature existed (see getNoiseSuppressionProvider).
+        return localStorage.getItem(noiseSuppressionEnabledKey) !== "false";
     }
 
     setNoiseSuppressionProvider(value: NoiseSuppressionProvider) {
@@ -827,7 +829,9 @@ class LocalUserStore {
         if (value === "browser" || value === "voiceIsolation" || value === "workadventure") {
             return value;
         }
-        return "workadventure";
+        // Default to the lightweight browser denoiser so enabling-by-default does not spin up the
+        // heavier 16 kHz WorkAdventure worklet for every user. Restores the pre-feature baseline.
+        return "browser";
     }
 
     setMicrophoneAutoGainControl(value: boolean) {
