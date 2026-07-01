@@ -138,6 +138,10 @@ const actionbar: BaseTranslation = {
             bubbleLabel: "Bolha de discussão",
             unnamedArea: "Área sem nome",
         },
+        giveBackFloor: {
+            title: "Devolver a palavra",
+            desc: "Você recebeu a palavra. Clique para parar de falar e devolvê-la.",
+        },
         megaphone: {
             title: "Parar megafone",
             desc: "Parar de transmitir sua mensagem para todos os usuários.",

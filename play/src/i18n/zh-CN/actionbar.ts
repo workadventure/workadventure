@@ -132,6 +132,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             bubbleLabel: "讨论气泡",
             unnamedArea: "未命名区域",
         },
+        giveBackFloor: {
+            title: "交回发言权",
+            desc: "你已获得发言权。点击停止发言并交回。",
+        },
         megaphone: {
             title: "停止扩音器",
             desc: "停止向所有用户广播您的消息。",
