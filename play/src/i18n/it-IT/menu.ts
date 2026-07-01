@@ -196,6 +196,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "Apri popup di dire",
         openThinkPopup: "Apri popup di pensare",
         walkMyDesk: "Vai alla mia scrivania",
+        cycleStatus: "Cambia stato di disponibilità",
     },
 };
 

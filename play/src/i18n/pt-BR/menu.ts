@@ -195,6 +195,7 @@ const menu: BaseTranslation = {
         openSayPopup: "Abrir Popup de Fala",
         openThinkPopup: "Abrir Popup de Pensamento",
         walkMyDesk: "Ir para Minha Mesa",
+        cycleStatus: "Alternar status de disponibilidade",
     },
 };
 

@@ -196,6 +196,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "Obrir la finestra emergent en mode dir",
         openThinkPopup: "Obrir la finestra emergent en mode pensar",
         walkMyDesk: "Caminar fins al meu escriptori",
+        cycleStatus: "Canviar l'estat de disponibilitat",
     },
 };
 
