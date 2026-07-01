@@ -133,6 +133,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             bubbleLabel: "ディスカッション bubble",
             unnamedArea: "名前のないエリア",
         },
+        giveBackFloor: {
+            title: "発言権を返す",
+            desc: "発言権が与えられています。クリックすると発言をやめて返します。",
+        },
         megaphone: {
             title: "メガホンを停止",
             desc: "すべてのユーザーへのメッセージの放送を停止します。",

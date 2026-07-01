@@ -1533,6 +1533,10 @@ export const ANALYTICS_EVENTS = {
     description:
       "A moderator gave the floor to a participant who had raised their hand.",
   }),
+  "meeting.floor.given_back": event({
+    properties: meetingActionProperties,
+    description: "A participant handed the floor back themselves.",
+  }),
   "meeting.floor.revoked": event({
     properties: meetingActionProperties,
     description: "A moderator took the floor back from a participant.",
