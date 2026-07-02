@@ -320,9 +320,11 @@ export class MatrixSecurity {
                     confirmationCallback: async () => {
                         await showSasCallbacks.confirm();
                     },
-                    mismatchCallback: async () => {
-                        // Signal m.mismatched_sas to the other device (matrix-js-sdk 41).
+                    mismatchCallback: () => {
+                        // Signal m.mismatched_sas to the other device (matrix-js-sdk 41). mismatch() is
+                        // synchronous, so return a resolved promise to satisfy the Promise<void> callback type.
                         showSasCallbacks.mismatch();
+                        return Promise.resolve();
                     },
                     donePromise: doneVerificationDeferred.promise,
                     isThisDeviceVerification: verificationRequest.initiatedByMe,

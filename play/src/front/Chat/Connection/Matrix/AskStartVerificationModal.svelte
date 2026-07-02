@@ -48,10 +48,12 @@
             await showSasCallbacks.confirm();
         };
 
-        const mismatchCallback = async () => {
+        const mismatchCallback = () => {
             // Signal m.mismatched_sas to the other device (matrix-js-sdk 41). Previously this sent a
             // plain request.cancel({ reason }) which the other side saw as a generic user cancellation.
+            // mismatch() is synchronous, so return a resolved promise to satisfy the Promise<void> type.
             showSasCallbacks.mismatch();
+            return Promise.resolve();
         };
 
         if (!emojis) return;
