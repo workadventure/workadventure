@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import Map from "./utils/map";
 import AreaEditor from "./utils/map-editor/areaEditor";
+import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
+import Megaphone from "./utils/map-editor/megaphone";
 import { resetWamMaps } from "./utils/map-editor/uploader";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
@@ -143,6 +145,90 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
 
         // Bob is told he no longer has the floor and is demoted (his camera disappears for the host).
         await expect(bob.getByText(/no longer have the floor/i)).toBeVisible({ timeout: 20_000 });
+        await expect(speaker.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
+            timeout: 30_000,
+        });
+    });
+
+    // Regression test for the reported bug: a listener given the floor in the GLOBAL (room-level) megaphone —
+    // which is not tracked by the map's speaker/listener zones — then walks into a map speaker zone (a different
+    // space) and back out. The zone-leave logic only tears down zone spaces, so without the fix the global
+    // megaphone stream is never stopped and the user stays "in the space" as a stranded speaker.
+    test("a listener given the floor in the global megaphone is not stranded after visiting a map speaker zone @nofirefox", async ({
+        browser,
+        request,
+    }) => {
+        test.skip(browser.browserType().name() === "firefox", "WebRTC promotion is sometimes flaky on Firefox");
+
+        await resetWamMaps(request);
+
+        await using speaker = await getPage(browser, "Admin1", Map.url("empty"));
+        await Map.teleportToPosition(speaker, 5 * 32, 5 * 32);
+
+        // Configure the room-level (global) megaphone, then remove the tag restriction so everyone can use it.
+        await Menu.openMapEditor(speaker);
+        await MapEditor.openConfigureMyRoom(speaker);
+        await ConfigureMyRoom.selectMegaphoneItemInCMR(speaker);
+        await Megaphone.toggleMegaphone(speaker);
+        await Megaphone.megaphoneInputNameSpace(speaker, `${browser.browserType().name()}RaiseHandGlobal`);
+        await Megaphone.megaphoneSelectScope(speaker);
+        await Megaphone.megaphoneAddNewRights(speaker, "example");
+        await Megaphone.megaphoneSave(speaker);
+        await Megaphone.isCorrectlySaved(speaker);
+        await Menu.closeMapEditorConfigureMyRoomPopUp(speaker);
+
+        await Menu.openMapEditor(speaker);
+        await MapEditor.openConfigureMyRoom(speaker);
+        await ConfigureMyRoom.selectMegaphoneItemInCMR(speaker);
+        await Megaphone.megaphoneRemoveRights(speaker, "example");
+        await Megaphone.megaphoneSave(speaker);
+        await Megaphone.isCorrectlySaved(speaker);
+        await Menu.closeMapEditorConfigureMyRoomPopUp(speaker);
+
+        // Add a SEPARATE map speaker zone (a different space than the global megaphone).
+        await Menu.openMapEditor(speaker);
+        await MapEditor.openAreaEditor(speaker);
+        await AreaEditor.drawArea(speaker, { x: 1 * 32, y: 1 * 32 }, { x: 4 * 32, y: 3 * 32 });
+        await AreaEditor.addProperty(speaker, "speakerMegaphone");
+        await AreaEditor.setPodiumNameProperty(
+            speaker,
+            `${browser.browserType().name()}RaiseHandGlobalZone`,
+            false,
+            false,
+        );
+        await Menu.closeMapEditor(speaker);
+
+        // Admin1 starts the global megaphone -> becomes the global speaker.
+        await Menu.isThereMegaphoneButton(speaker);
+        await Menu.clickSendGlobalMessage(speaker);
+        await expect(speaker.getByRole("button", { name: "Start live message" })).toBeVisible();
+        await speaker.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
+        await expect(speaker.getByRole("button", { name: "Start megaphone" })).toBeVisible();
+        await speaker.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await speaker.locator(".close-btn").first().click();
+
+        // Bob joins away from the speaker zone and receives the global megaphone (sees Admin1).
+        await using bob = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(bob, 12 * 32, 12 * 32);
+        await expect(bob.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 30_000 });
+
+        // Bob raises his hand; Admin1 gives him the floor from the panel.
+        await bob.getByTestId("raise-hand-button").click();
+        await expect(speaker.getByTestId("raised-hands-panel-button")).toBeVisible({ timeout: 20_000 });
+        await speaker.getByTestId("raised-hands-panel-button").click();
+        await speaker.getByTestId("panel-give-floor").first().click();
+
+        // Bob is promoted: the global speaker now sees Bob's camera.
+        await expect(speaker.locator("#cameras-container").getByText("Bob", { exact: true })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        // Bob walks INTO the map speaker zone, then back OUT.
+        await Map.teleportToPosition(bob, 2 * 32, 2 * 32);
+        await Map.teleportToPosition(bob, 12 * 32, 12 * 32);
+
+        // Bob must be demoted back to a listener: the global speaker no longer sees his camera. Without the fix
+        // Bob stays streaming in the global megaphone and remains visible — stranded "in the space".
         await expect(speaker.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
             timeout: 30_000,
         });
