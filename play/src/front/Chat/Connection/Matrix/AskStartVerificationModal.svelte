@@ -2,7 +2,6 @@
     import type { ShowSasCallbacks, Verifier } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationRequestEvent, VerifierEvent, VerificationPhase } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationMethod } from "matrix-js-sdk/lib/types";
-    import { onDestroy } from "svelte";
     import { Deferred } from "@workadventure/shared-utils";
     import { asError } from "catch-unknown";
     import Popup from "../../../Components/Modal/Popup.svelte";
@@ -100,12 +99,10 @@
         }
     }
 
-    // handleVerifierEventShowSas closes the modal while the verification is still Started, and the user
-    // can dismiss it before Done/Cancelled; make sure the request/verifier listeners are always removed.
-    onDestroy(() => {
-        request?.off(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
-        verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
-    });
+    // NB: no onDestroy cleanup of the request/verifier listeners here. handleVerifierEventShowSas closes
+    // this modal (to open the emoji dialog) while the verification is still running, so the listeners must
+    // OUTLIVE the component to observe the later Done/Cancelled transition — which is where they remove
+    // themselves. Removing them on unmount would leave doneDeferred unresolved and the flow stuck.
 </script>
 
 <Popup {isOpen}>
