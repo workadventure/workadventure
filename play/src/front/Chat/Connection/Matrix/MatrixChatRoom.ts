@@ -1318,6 +1318,10 @@ export class MatrixChatRoom
             this.privacyState.set(this.getMatrixRoomPrivacyState());
         }
     }
+    // Max consecutive backward pages that yield no displayable message before loadMorePreviousMessages
+    // stops recursing (each page is 8 events).
+    private static readonly MAX_EMPTY_PAGINATION_DEPTH = 10;
+
     /**
      * Strict "newly arrived" rule (see Element Web / matrix-js-sdk): only treat as live when
      * !removed, data.liveEvent === true, and !toStartOfTimeline. Use this for notifications,
@@ -1653,7 +1657,7 @@ export class MatrixChatRoom
         return eventRelation?.rel_type === "m.replace";
     }
 
-    async loadMorePreviousMessages() {
+    async loadMorePreviousMessages(depth = 0) {
         await this.ensureTimelineInitialized();
         if (get(this.hasPreviousMessage)) {
             const existingEventsBeforePagination = this.timelineWindow.getEvents();
@@ -1672,8 +1676,11 @@ export class MatrixChatRoom
             await this.processPollEvents(paginatedEvents);
             await this.syncTimelinePollItemsFromEvents(paginatedEvents);
             this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
-            if (messages.length === 0) {
-                await this.loadMorePreviousMessages();
+            // A page can contain only non-message events (reactions, edits, thread replies), which yield no
+            // displayable messages. Keep paginating so the user sees something, but cap the recursion: a
+            // long run of such events would otherwise recurse deeply. The user can scroll again to continue.
+            if (messages.length === 0 && depth < MatrixChatRoom.MAX_EMPTY_PAGINATION_DEPTH) {
+                await this.loadMorePreviousMessages(depth + 1);
             }
         }
     }
