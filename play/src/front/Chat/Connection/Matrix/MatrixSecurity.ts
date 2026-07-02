@@ -313,10 +313,11 @@ export class MatrixSecurity {
                                 const confirmationCallback = async () => {
                                     await showSasCallbacks.confirm();
                                 };
-                                const mismatchCallback = () => {
-                                    //TODO : use showSasCallbacks.mismatch(); after matris-js-sdk update
-                                    //showSasCallbacks.mismatch();
-                                    return verificationRequest.cancel({ reason: "m.mismatched_sas" });
+                                const mismatchCallback = async () => {
+                                    // Signal m.mismatched_sas to the other device. Unblocked by the
+                                    // matrix-js-sdk 41 upgrade; the previous verificationRequest.cancel({ reason })
+                                    // sent a generic user cancellation (code m.user), not a mismatch.
+                                    showSasCallbacks.mismatch();
                                 };
 
                                 if (!emojis || this.isVerifyingDevice) return;
