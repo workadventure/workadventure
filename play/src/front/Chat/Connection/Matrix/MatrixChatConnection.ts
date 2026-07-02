@@ -726,7 +726,10 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         });
     }
 
-    private getOrCreateUserAvailabilityStore(userId: string, presence: string | undefined): Writable<AvailabilityStatus> {
+    private getOrCreateUserAvailabilityStore(
+        userId: string,
+        presence: string | undefined,
+    ): Writable<AvailabilityStatus> {
         let store = this.userAvailabilityStores.get(userId);
         if (!store) {
             store = writable(mapMatrixPresenceToAvailabilityStatus(presence));
