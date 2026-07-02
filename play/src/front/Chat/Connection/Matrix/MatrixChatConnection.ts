@@ -97,8 +97,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private displayNameMatrixSyncUnsubscriber: (() => void) | undefined;
     private displayNameMatrixSyncDebounceTimer: ReturnType<typeof setTimeout> | undefined;
     private isClientReady = false;
-    private usersStatus: MapStore<string, AvailabilityStatus>;
-    private userIdsNeedingPresenceUpdate = new Set();
+    // Per-user availability store, shared with the rendered ChatUser and kept live by
+    // onUserPresenceEvent. Persistent across directRoomsUsers recomputes so the UI subscription survives.
+    private readonly userAvailabilityStores = new Map<string, Writable<AvailabilityStatus>>();
     private readonly roomPlacementRetryTimers = new Map<string, ReturnType<typeof setTimeout>>();
     private readonly roomPlacementRetryGenerations = new Map<string, number>();
     private readonly parentRoomIdsByRoomId = new Map<string, Set<string>>();
@@ -180,8 +181,11 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                         if (member.id !== myUserID) {
                             const user = this.client?.getUser(member.id);
                             if (user) {
-                                acc.push(chatUserFactory(user, client));
-                                this.userIdsNeedingPresenceUpdate.add(user.userId);
+                                const availabilityStatus = this.getOrCreateUserAvailabilityStore(
+                                    user.userId,
+                                    user.presence,
+                                );
+                                acc.push(chatUserFactory(user, client, { availabilityStatus }));
                             }
                         }
                     });
@@ -227,7 +231,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             },
         );
 
-        this.usersStatus = new MapStore<string, AvailabilityStatus>();
         this.isEncryptionRequiredAndNotSet = this.matrixSecurity.isEncryptionRequiredAndNotSet;
 
         this.shouldRetrySendingEvents = derived(
@@ -723,11 +726,21 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         });
     }
 
+    private getOrCreateUserAvailabilityStore(userId: string, presence: string | undefined): Writable<AvailabilityStatus> {
+        let store = this.userAvailabilityStores.get(userId);
+        if (!store) {
+            store = writable(mapMatrixPresenceToAvailabilityStatus(presence));
+            this.userAvailabilityStores.set(userId, store);
+        }
+        return store;
+    }
+
     private onUserPresenceEvent(event: MatrixEvent | undefined, user: User): void {
-        const userStatus = get(this.usersStatus).get(user.userId);
-        const newStatus = mapMatrixPresenceToAvailabilityStatus(user.presence);
-        if (userStatus && newStatus !== userStatus && this.userIdsNeedingPresenceUpdate.has(user.userId)) {
-            get(this.usersStatus).set(user.userId, newStatus);
+        // Push the new presence into the shared store so the rendered DM peer's availabilityStatus updates
+        // live. (The previous implementation wrote to a map that was never seeded, so it never ran.)
+        const store = this.userAvailabilityStores.get(user.userId);
+        if (store) {
+            store.set(mapMatrixPresenceToAvailabilityStatus(user.presence));
         }
     }
 
@@ -2020,6 +2033,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.parentRoomIdsByRoomId.clear();
         this.childRoomIdsBySpaceId.clear();
         this.folderShellsByRoomId.clear();
+        this.userAvailabilityStores.clear();
         this.roomList.forEach((room) => {
             this.roomList.delete(room.id);
         });
