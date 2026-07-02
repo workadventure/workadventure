@@ -1575,7 +1575,9 @@ export class MatrixChatRoom
             if (event_id) {
                 const messageToUpdate = this.messages.get(event_id);
                 if (messageToUpdate !== undefined) {
-                    messageToUpdate.modifyContent(event.getOriginalContent()["m.new_content"].body);
+                    // The SDK has already applied the edit to the target event; re-render from it (handles
+                    // media / formatting and can't throw on a missing m.new_content).
+                    messageToUpdate.modifyContent();
                 }
             }
         }
