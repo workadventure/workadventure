@@ -14,6 +14,7 @@ import {
     EventStatus,
     EventType,
     Filter,
+    MatrixEventEvent,
     MsgType,
     NotificationCountType,
     PushRuleActionName,
@@ -152,6 +153,7 @@ export class MatrixChatRoom
     private handleNewMember = this.onRoomNewMember.bind(this);
     private handleRoomStateMembers = this.onRoomStateMembers.bind(this);
     private handleMyMembership = this.onRoomMyMembership.bind(this);
+    private handleEventDecrypted = this.onEventDecrypted.bind(this);
     private updateUnreadNotificationCount = this.onRoomUpdateUnreadNotificationCount.bind(this);
     private readonly openThreadConversations = new Map<string, MatrixChatThread>();
     private readonly threadSummaryStores = new Map<string, Writable<ChatThreadSummary | null>>();
@@ -1026,6 +1028,7 @@ export class MatrixChatRoom
     private startHandlingChatRoomShellEvents() {
         this.matrixRoom.on(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.on(RoomEvent.LocalEchoUpdated, this.handleLocalEchoUpdated);
+        this.matrixRoom.client.on(MatrixEventEvent.Decrypted, this.handleEventDecrypted);
         this.matrixRoom.on(PollEvent.New, this.handleNewPoll);
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
@@ -1405,6 +1408,47 @@ export class MatrixChatRoom
                 // rendered MatrixChatPoll's subscriptions, so incoming polls/votes were lost for joiners.
             })().catch((error) => console.error(error));
         }
+    }
+
+    /**
+     * A message received before its megolm key fails to decrypt and is skipped by onRoomTimeline (its type
+     * is still m.room.encrypted at that point). When the key later arrives the SDK re-decrypts and emits
+     * Decrypted, but nothing was rendered to observe it, so it stayed hidden until a reload. Mirror
+     * Element's TimelinePanel.onEventDecrypted: insert the now-decrypted message at its chronological
+     * position. Registered on the client (which re-emits MatrixEventEvent.Decrypted) and filtered to this room.
+     */
+    private onEventDecrypted(event: MatrixEvent): void {
+        try {
+            if (event.getRoomId() !== this.matrixRoom.roomId) {
+                return;
+            }
+            if (event.getType() !== EventType.RoomMessage) {
+                return;
+            }
+            const eventId = event.getId();
+            if (!eventId || this.messages.has(eventId)) {
+                // Already displayed: the per-message Decrypted listener updates it in place.
+                return;
+            }
+            if (this.isEventReplacingExistingOne(event) || !shouldDisplayEventInRoomTimeline(event)) {
+                return;
+            }
+            this.insertMessageInTimestampOrder(this.createChatMessageFromEvent(event));
+        } catch (error) {
+            console.error("Failed to handle a late-decrypted event", error);
+        }
+    }
+
+    private insertMessageInTimestampOrder(message: MatrixChatMessage): void {
+        const ts = message.getMatrixEvent().getTs();
+        let index = this.messages.length;
+        for (let i = 0; i < this.messages.length; i++) {
+            if (this.messages[i].getMatrixEvent().getTs() > ts) {
+                index = i;
+                break;
+            }
+        }
+        this.messages.splice(index, 0, message);
     }
 
     /**
@@ -2099,6 +2143,7 @@ export class MatrixChatRoom
         this.matrixRoom.currentState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
         this.matrixRoom.off(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.off(RoomEvent.LocalEchoUpdated, this.handleLocalEchoUpdated);
+        this.matrixRoom.client.off(MatrixEventEvent.Decrypted, this.handleEventDecrypted);
         this.matrixRoom.off(PollEvent.New, this.handleNewPoll);
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.off(RoomEvent.Redaction, this.handleRoomRedaction);
