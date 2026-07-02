@@ -268,10 +268,9 @@ export class MatrixChatThread implements ChatThread {
             return;
         }
 
-        const ageOfEvent = event.getAge();
-        if (ageOfEvent !== undefined && ageOfEvent >= 2000) {
-            return;
-        }
+        // No age guard here (unlike the old room-timeline handler): a live thread reply delivered late by
+        // the matrix-js-sdk 41 sync timing must still render. This handler has no notification side effect,
+        // so there is nothing that a freshness check needs to gate.
 
         (async () => {
             if (event.isEncrypted()) {

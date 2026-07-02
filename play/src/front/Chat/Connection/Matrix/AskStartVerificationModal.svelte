@@ -2,6 +2,7 @@
     import type { ShowSasCallbacks, Verifier } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationRequestEvent, VerifierEvent, VerificationPhase } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationMethod } from "matrix-js-sdk/lib/types";
+    import { onDestroy } from "svelte";
     import { Deferred } from "@workadventure/shared-utils";
     import { asError } from "catch-unknown";
     import Popup from "../../../Components/Modal/Popup.svelte";
@@ -96,6 +97,13 @@
             modals.close();
         }
     }
+
+    // handleVerifierEventShowSas closes the modal while the verification is still Started, and the user
+    // can dismiss it before Done/Cancelled; make sure the request/verifier listeners are always removed.
+    onDestroy(() => {
+        request?.off(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
+        verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
+    });
 </script>
 
 <Popup {isOpen}>
