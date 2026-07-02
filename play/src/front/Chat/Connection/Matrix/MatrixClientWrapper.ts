@@ -203,13 +203,12 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         const client = this._createClient(options);
 
         try {
-            const { user_id, access_token, refresh_token, expires_in_ms, device_id } = await client.login(
-                "m.login.token",
-                {
-                    token: loginToken,
-                    initial_device_display_name: "WorkAdventure",
-                },
-            );
+            // login(type, data) is deprecated in 41.8.0 in favour of loginRequest({ type, ...data }).
+            const { user_id, access_token, refresh_token, expires_in_ms, device_id } = await client.loginRequest({
+                type: "m.login.token",
+                token: loginToken,
+                initial_device_display_name: "WorkAdventure",
+            });
 
             this.localUserStore.setMatrixUserId(user_id);
             this.localUserStore.setMatrixAccessToken(access_token);

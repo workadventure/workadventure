@@ -1,7 +1,6 @@
 import type { Readable, Unsubscriber, Writable } from "svelte/store";
 import { derived, get, readable, readonly, writable } from "svelte/store";
 import type {
-    EmittedEvents,
     ICreateRoomOpts,
     ICreateRoomStateEvent,
     IPushRule,
@@ -1666,9 +1665,8 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
     private handleMatrixError(error: unknown): Error {
         if (error instanceof MatrixError) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            //@ts-ignore
-            return new Error(error.data.error, { cause: error });
+            // MatrixError.data is IErrorJson with an optional `error` string in 41.8.0, so no cast is needed.
+            return new Error(error.data.error ?? error.message, { cause: error });
         }
         return asError(error);
     }
@@ -1689,10 +1687,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 [],
             is_direct: roomOptions.is_direct,
             initial_state: this.computeInitialState(roomOptions),
-            power_level_content_override: {
-                // @ts-ignore TODO: fix type
-                suggested: roomOptions.suggested ?? false,
-            },
+            // No power_level_content_override: `suggested` is not an m.room.power_levels field (hence the
+            // suppressed type error). The real "suggested" flag is set on the m.space.child event in
+            // addRoomToSpace, so this only stored a junk key in the room power levels.
         };
     }
 
@@ -2030,7 +2027,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.client?.off(ClientEvent.Room, this.handleRoom);
         this.client?.off(ClientEvent.DeleteRoom, this.handleDeleteRoom);
         this.client?.off(RoomEvent.MyMembership, this.handleMyMembership);
-        this.client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
+        this.client?.off(RoomStateEvent.Events, this.handleRoomStateEvent);
         this.client?.off(RoomEvent.Name, this.handleName);
         this.client?.off(ClientEvent.AccountData, this.handleAccountDataEvent);
         this.client?.off(UserEvent.Presence, this.handleUserPresence);
