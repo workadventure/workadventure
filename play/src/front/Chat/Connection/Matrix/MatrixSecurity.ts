@@ -57,7 +57,7 @@ export class MatrixSecurity {
         }
         if (this.initializingEncryptionPromise) {
             console.info("Encryption already initialized");
-            return;
+            return this.initializingEncryptionPromise;
         }
 
         alreadyAskForInitCryptoConfiguration.set(true);
@@ -135,7 +135,9 @@ export class MatrixSecurity {
                     return;
                 });
         });
-        return;
+        // Return the promise (not undefined) so callers actually await bootstrap/secret-storage and can
+        // observe a UIA cancellation or createSecretStorageKey rejection instead of it being swallowed.
+        return this.initializingEncryptionPromise;
     };
 
     async restoreRoomsMessages() {
