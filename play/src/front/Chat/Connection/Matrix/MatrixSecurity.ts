@@ -57,7 +57,7 @@ export class MatrixSecurity {
         }
         if (this.initializingEncryptionPromise) {
             console.info("Encryption already initialized");
-            return this.initializingEncryptionPromise;
+            return;
         }
 
         alreadyAskForInitCryptoConfiguration.set(true);
@@ -82,11 +82,7 @@ export class MatrixSecurity {
                                 throw new Error("Cross-signing key upload auth canceled");
                             }
                         },
-                        // Never pass setupNewCrossSigning here: it forces a RESET of cross-signing keys
-                        // even when valid ones already exist. Tying it to "no key backup" regenerated the
-                        // master key for any user without a backup, invalidating all their existing device
-                        // and user signatures. bootstrapCrossSigning is a no-op when keys already exist,
-                        // so a brand-new user still gets set up. Resets stay confined to setupNewKeyStorage.
+                        setupNewCrossSigning: keyBackupInfo === null,
                     });
 
                     await crypto.bootstrapSecretStorage({
@@ -135,9 +131,7 @@ export class MatrixSecurity {
                     return;
                 });
         });
-        // Return the promise (not undefined) so callers actually await bootstrap/secret-storage and can
-        // observe a UIA cancellation or createSecretStorageKey rejection instead of it being swallowed.
-        return this.initializingEncryptionPromise;
+        return;
     };
 
     async restoreRoomsMessages() {

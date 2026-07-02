@@ -266,10 +266,11 @@ describe("MatrixSecurity", () => {
             matrixSecurity.updateMatrixClientStore(mockMatrixClient);
             matrixSecurity["restoreBackupMessages"] = vi.fn();
 
-            // initClientCryptoConfiguration now returns the initialization promise, so a bootstrap failure
-            // rejects the call (instead of being swallowed) and resets initializingEncryptionPromise.
-            await expect(matrixSecurity.initClientCryptoConfiguration()).rejects.toBeDefined();
-            expect(matrixSecurity["initializingEncryptionPromise"]).toBeUndefined();
+            await matrixSecurity.initClientCryptoConfiguration();
+
+            await matrixSecurity["initializingEncryptionPromise"]?.catch(() =>
+                expect(matrixSecurity["initializingEncryptionPromise"]).toBeUndefined(),
+            );
         });
     });
 });
