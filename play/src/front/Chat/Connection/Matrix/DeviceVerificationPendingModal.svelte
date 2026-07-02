@@ -15,14 +15,27 @@
     let { isOpen, startVerificationPromise, isInitiatedByMe = false }: Props = $props();
 
     $effect(() => {
+        let isActive = true;
+
         startVerificationPromise
             .then((verificationEmojiProps) => {
+                if (!isActive) {
+                    return;
+                }
                 modals.close();
                 matrixSecurity.openVerificationEmojiDialog(verificationEmojiProps);
             })
             .catch((error) => {
+                if (!isActive) {
+                    return;
+                }
                 console.error(error);
+                modals.close();
             });
+
+        return () => {
+            isActive = false;
+        };
     });
 </script>
 

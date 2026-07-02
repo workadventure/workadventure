@@ -82,6 +82,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private static readonly spaceReconciliationDelaysMs = [0, 100, 300, 700, 1500];
     private readonly roomList: MapStore<string, MatrixChatRoom>;
     private client: MatrixClient | undefined;
+    private handleSync: (state: SyncState, prevState: SyncState | null, res?: { error?: unknown }) => void;
     private handleRoom: (room: Room) => void;
     private handleDeleteRoom: (roomId: string) => void;
     private handleMyMembership: (room: Room, membership: string, prevMembership: string | undefined) => void;
@@ -158,7 +159,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity,
     ) {
         this.connectionStatus = writable("CONNECTING");
-        this.roomList = new AutoDestroyingMapStore<string, MatrixChatRoom>();
+        this.roomList = new MapStore<string, MatrixChatRoom>();
         this.clientPromise = clientPromise;
         this.directRooms = this.createJoinedRoomsReadable(
             (room) => get(room.myMembership) === KnownMembership.Join && get(room.type) === "direct",
@@ -261,6 +262,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.handleMyMembership = this.onRoomEventMembership.bind(this);
         this.handleRoomStateEvent = this.onRoomStateEvent.bind(this);
         this.handleName = this.onRoomNameEvent.bind(this);
+        this.handleSync = this.onClientSync.bind(this);
         this.handleAccountDataEvent = this.onAccountDataEvent.bind(this);
         this.handleUserPresence = this.onUserPresenceEvent.bind(this);
         this.handleVerificationRequestReceived = this.onVerificationRequestReceived.bind(this);
@@ -729,35 +731,37 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         }
     }
 
+    private onClientSync(state: SyncState, prevState: SyncState | null, res?: { error?: unknown }): void {
+        if (!this.client) return;
+        switch (state) {
+            case SyncState.Prepared:
+                this.connectionStatus.set("ONLINE");
+                this.isClientReady = true;
+                break;
+            case SyncState.Error:
+                this.connectionStatus.set("ON_ERROR");
+                if (res?.error) {
+                    console.error("Matrix sync error (previous state: ", prevState, "): ", res.error);
+                    Sentry.captureException(res.error);
+                }
+                break;
+            case SyncState.Reconnecting:
+                this.connectionStatus.set("CONNECTING");
+                break;
+            case SyncState.Stopped:
+                this.connectionStatus.set("OFFLINE");
+                break;
+            case SyncState.Syncing:
+                if (get(this.connectionStatus) !== "ONLINE" && this.isClientReady) {
+                    this.connectionStatus.set("ONLINE");
+                }
+                break;
+        }
+    }
+
     async startMatrixClient() {
         if (!this.client) return;
-        this.client.on(ClientEvent.Sync, (state, prevState, res) => {
-            if (!this.client) return;
-            switch (state) {
-                case SyncState.Prepared:
-                    this.connectionStatus.set("ONLINE");
-                    this.isClientReady = true;
-                    break;
-                case SyncState.Error:
-                    this.connectionStatus.set("ON_ERROR");
-                    if (res?.error) {
-                        console.error("Matrix sync error (previous state: ", prevState, "): ", res?.error);
-                        Sentry.captureException(res?.error);
-                    }
-                    break;
-                case SyncState.Reconnecting:
-                    this.connectionStatus.set("CONNECTING");
-                    break;
-                case SyncState.Stopped:
-                    this.connectionStatus.set("OFFLINE");
-                    break;
-                case SyncState.Syncing:
-                    if (get(this.connectionStatus) !== "ONLINE" && this.isClientReady) {
-                        this.connectionStatus.set("ONLINE");
-                    }
-                    break;
-            }
-        });
+        this.client.on(ClientEvent.Sync, this.handleSync);
 
         this.client.on(ClientEvent.Room, this.handleRoom);
         this.client.on(ClientEvent.DeleteRoom, this.handleDeleteRoom);
@@ -912,6 +916,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
 
     private detachRoomFromRootLists(roomId: string): void {
+        this.roomList.get(roomId)?.destroy();
+        this.roomFolders.get(roomId)?.destroy();
+
         this.roomList.delete(roomId);
         this.roomFolders.delete(roomId);
     }
@@ -1201,6 +1208,72 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.enqueueMatrixClientRoomManage(room);
     }
 
+    private setRootRoom(room: MatrixChatRoom): void {
+        const roomId = room.id;
+        const existingRoom = this.roomList.get(roomId);
+        if (existingRoom && existingRoom !== room) {
+            existingRoom.destroy();
+        }
+        this.roomList.delete(roomId);
+
+        const existingFolder = this.roomFolders.get(roomId);
+        if (existingFolder) {
+            existingFolder.destroy();
+        }
+        this.roomFolders.delete(roomId);
+
+        this.roomList.set(roomId, room);
+    }
+
+    private setRootFolder(folder: MatrixRoomFolder): void {
+        const folderId = folder.id;
+        const existingFolder = this.roomFolders.get(folderId);
+        if (existingFolder && existingFolder !== folder) {
+            existingFolder.destroy();
+        }
+        this.roomFolders.delete(folderId);
+
+        const existingRoom = this.roomList.get(folderId);
+        if (existingRoom) {
+            existingRoom.destroy();
+        }
+        this.roomList.delete(folderId);
+
+        this.roomFolders.set(folderId, folder);
+    }
+
+    private deleteRootRoom(roomId: string): boolean {
+        const existingRoom = this.roomList.get(roomId);
+        if (!existingRoom) {
+            return false;
+        }
+        existingRoom.destroy();
+        this.roomList.delete(roomId);
+        return true;
+    }
+
+    private deleteRootFolder(roomId: string): boolean {
+        const existingFolder = this.roomFolders.get(roomId);
+        if (!existingFolder) {
+            return false;
+        }
+        existingFolder.destroy();
+        this.roomFolders.delete(roomId);
+        return true;
+    }
+
+    private removeFromRootLists(roomId: string): void {
+        this.deleteRootRoom(roomId);
+        this.deleteRootFolder(roomId);
+    }
+
+    private clearRootLists(): void {
+        Array.from(this.roomList.values()).forEach((room) => room.destroy());
+        this.roomList.clear();
+        Array.from(this.roomFolders.values()).forEach((folder) => folder.destroy());
+        this.roomFolders.clear();
+    }
+
     private async manageRoomOrFolder(room: Room): Promise<void> {
         const parentsIds = this.getParentRoomID(room);
 
@@ -1272,14 +1345,14 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             let roomFolder = parentFolder.folderList.get(roomId);
             if (!roomFolder) {
                 roomFolder = new MatrixRoomFolder(room);
-                parentFolder.folderList.set(roomId, roomFolder);
+                parentFolder.setFolderNode(roomFolder);
             }
             this.registerFolderShell(roomFolder);
             // Keep child space shells cheap; remote hierarchy is loaded only when the space is opened.
             roomFolder.init();
         } else {
             if (!parentFolder.roomList.has(roomId)) {
-                parentFolder.roomList.set(roomId, new MatrixChatRoom(room));
+                parentFolder.setRoomNode(new MatrixChatRoom(room));
             }
         }
 
@@ -1293,12 +1366,12 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 const rootFolder = new MatrixRoomFolder(room);
                 rootFolder.init();
                 this.registerFolderShell(rootFolder);
-                this.roomFolders.set(roomId, rootFolder);
+                this.setRootFolder(rootFolder);
             }
             return;
         }
         if (!this.roomList.has(roomId)) {
-            this.roomList.set(roomId, new MatrixChatRoom(room));
+            this.setRootRoom(new MatrixChatRoom(room));
         }
     }
 
@@ -1412,6 +1485,11 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
 
     private async findRoomOrFolder(roomId: string): Promise<MatrixRoomFolder | MatrixChatRoom | undefined> {
+        const managedNode = this.findManagedNodeById(roomId);
+        if (managedNode) {
+            return managedNode;
+        }
+
         const roomInRoomList = this.roomList.get(roomId);
         if (roomInRoomList) {
             return roomInRoomList;
@@ -1434,7 +1512,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private createAndAddNewRootFolder(room: Room): void {
         if (this.roomFolders.get(room.roomId)) return;
         const newFolder = new MatrixRoomFolder(room);
-        this.roomFolders.set(newFolder.id, newFolder);
+        this.setRootFolder(newFolder);
         this.registerFolderShell(newFolder);
         newFolder.init();
 
@@ -1445,8 +1523,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                     return;
                 }
                 roomIDs.forEach((roomID) => {
-                    this.roomList.delete(roomID);
-                    this.roomFolders.delete(roomID);
+                    this.removeFromRootLists(roomID);
                 });
             })
             .catch((e) => {
@@ -1456,7 +1533,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
     private createAndAddNewRootRoom(room: Room): MatrixChatRoom {
         const newRoom = new MatrixChatRoom(room);
-        this.roomList.set(newRoom.id, newRoom);
+        this.setRootRoom(newRoom);
         if (get(selectedRoomStore)?.id === newRoom.id) {
             selectedRoomStore.set(newRoom);
         }
@@ -1470,11 +1547,12 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         });
     }
     private async deleteRoom(roomId: string) {
-        const isRootRoom = this.roomList.delete(roomId);
+        const isRootRoom = this.deleteRootRoom(roomId);
         if (isRootRoom) {
             return;
         }
-        const isRootFolder = this.roomFolders.delete(roomId);
+
+        const isRootFolder = this.deleteRootFolder(roomId);
 
         if (isRootFolder) {
             this.unregisterFolderShell(roomId);
@@ -1541,11 +1619,14 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                     // Only notify for "live" invitations (after initial sync). Avoids notifying for existing invites on load (plan: live vs historical).
                     if (client.isInitialSyncComplete()) {
                         const roomName = room.name?.trim() || get(LL).chat.roomInvitation.unknownRoom();
-                        const chatRoom = new MatrixChatRoom(room);
                         chatNotificationStore.addNotification(
                             get(LL).chat.roomInvitation.notificationTitle(),
                             get(LL).chat.roomInvitation.notification({ roomName }),
-                            chatRoom,
+                            {
+                                roomId: room.roomId,
+                                roomName,
+                                roomType: "multiple",
+                            },
                             undefined,
                             false,
                         );
@@ -1640,7 +1721,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                     await this.waitForNextSync();
                     return result;
                 } catch {
-                    this.roomFolders.delete(result.room_id);
+                    this.deleteRootFolder(result.room_id);
                     return Promise.reject(new Error(get(LL).chat.addRoomToFolderError()));
                 }
             }
@@ -1961,16 +2042,34 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         return user && user.some((user) => user.id === address);
     }
 
-    getRoomByID(roomId: string): ChatRoom {
-        if (!this.client) {
-            throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
-        }
-        const room = this.client.getRoom(roomId);
-        if (!room) {
-            throw new Error("Room not found");
+    private findManagedNodeById(roomId: string): MatrixRoomFolder | MatrixChatRoom | undefined {
+        const room = this.roomList.get(roomId);
+        if (room) {
+            return room;
         }
 
-        return new MatrixChatRoom(room);
+        const folder = this.roomFolders.get(roomId);
+        if (folder) {
+            return folder;
+        }
+
+        for (const rootFolder of this.roomFolders.values()) {
+            const node = rootFolder.findLoadedNode(roomId);
+            if (node) {
+                return node;
+            }
+        }
+
+        return undefined;
+    }
+
+    getRoomByID(roomId: string): ChatRoom {
+        const managedNode = this.findManagedNodeById(roomId);
+        if (!managedNode) {
+            throw new Error("Managed room not found");
+        }
+
+        return managedNode;
     }
 
     private rebuildSpaceHierarchy() {
@@ -1979,8 +2078,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
         this.roomFolders.forEach((folder) => {
             this.unregisterFolderShell(folder.id);
-            this.roomFolders.delete(folder.id);
+            folder.destroy();
         });
+        this.roomFolders.clear();
         const visibleSpaces = client.getVisibleRooms().filter((room) => room.isSpaceRoom());
 
         visibleSpaces.forEach((space) => {
@@ -1989,7 +2089,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 const spaceFolder = new MatrixRoomFolder(space);
                 spaceFolder.init();
                 this.registerFolderShell(spaceFolder);
-                this.roomFolders.set(spaceFolder.id, spaceFolder);
+                this.setRootFolder(spaceFolder);
             }
         });
     }
@@ -2013,22 +2113,27 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.parentRoomIdsByRoomId.clear();
         this.childRoomIdsBySpaceId.clear();
         this.folderShellsByRoomId.clear();
-        this.roomList.forEach((room) => {
-            this.roomList.delete(room.id);
-        });
-        this.client?.off(ClientEvent.Room, this.handleRoom);
-        this.client?.off(ClientEvent.DeleteRoom, this.handleDeleteRoom);
-        this.client?.off(RoomEvent.MyMembership, this.handleMyMembership);
-        this.client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
-        this.client?.off(RoomEvent.Name, this.handleName);
-        this.client?.off(UserEvent.Presence, this.handleUserPresence);
-        this.client?.off(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
+        this.clearRootLists();
+
+        const client = this.client;
+        client?.off(ClientEvent.Sync, this.handleSync);
+        client?.off(ClientEvent.Room, this.handleRoom);
+        client?.off(ClientEvent.DeleteRoom, this.handleDeleteRoom);
+        client?.off(RoomEvent.MyMembership, this.handleMyMembership);
+        client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
+        client?.off(RoomEvent.Name, this.handleName);
+        client?.off(ClientEvent.AccountData, this.handleAccountDataEvent);
+        client?.off(UserEvent.Presence, this.handleUserPresence);
+        client?.off(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
         if (this.directRoomsUnreadAggregateUnsubscriber) {
             this.directRoomsUnreadAggregateUnsubscriber();
             this.directRoomsUnreadAggregateUnsubscriber = undefined;
         }
         this.resetNbUnreadDirectRoomsMessagesAggregate();
-        if (this.statusUnsubscriber) this.statusUnsubscriber();
+        if (this.statusUnsubscriber) {
+            this.statusUnsubscriber();
+            this.statusUnsubscriber = undefined;
+        }
         if (this.wokaAvatarMatrixSyncUnsubscriber) {
             this.wokaAvatarMatrixSyncUnsubscriber();
             this.wokaAvatarMatrixSyncUnsubscriber = undefined;
@@ -2041,15 +2146,13 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             this.displayNameMatrixSyncUnsubscriber();
             this.displayNameMatrixSyncUnsubscriber = undefined;
         }
+        this.userIdsNeedingPresenceUpdate.clear();
     }
     async destroy(): Promise<void> {
-        await this.client?.logout(true);
-    }
-}
-
-class AutoDestroyingMapStore<K, V extends Required<{ destroy: () => void }>> extends MapStore<K, V> {
-    override delete(key: K): boolean {
-        this.get(key)?.destroy();
-        return super.delete(key);
+        const client = this.client;
+        this.clearListener();
+        this.client = undefined;
+        this.isClientReady = false;
+        await client?.logout(true);
     }
 }

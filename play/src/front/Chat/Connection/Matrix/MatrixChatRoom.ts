@@ -180,6 +180,7 @@ export class MatrixChatRoom
     private currentUserRoomMember: RoomMember | undefined;
     private currentUserPermissionLevel: Writable<ChatPermissionLevel | undefined> = writable(undefined);
     private handleCurrentUserRoomMemberPowerLevel = this.onCurrentUserRoomMemberPowerLevel.bind(this);
+    private destroyed = false;
 
     constructor(
         private matrixRoom: Room,
@@ -933,6 +934,9 @@ export class MatrixChatRoom
                 return;
             }
             this.dmMergerUsersByRoomUnsub = merger.usersByRoomStore.subscribe(() => {
+                if (this.destroyed) {
+                    return;
+                }
                 this.directRoomPeerAvatarStore?.refresh().catch(() => undefined);
                 const myUserId = this.matrixRoom.client.getUserId();
                 get(this.members)
@@ -965,7 +969,13 @@ export class MatrixChatRoom
         if (this.matrixRoom.hasEncryptionStateEvent()) {
             await this.matrixRoom.decryptAllEvents();
         }
+        if (this.destroyed) {
+            return;
+        }
         await this.timelineWindow.load();
+        if (this.destroyed) {
+            return;
+        }
         const events = this.timelineWindow.getEvents();
 
         const decryptMessagesPromises: Promise<MatrixChatMessage | undefined>[] = [];
@@ -976,6 +986,10 @@ export class MatrixChatRoom
 
         const result = await Promise.all(decryptMessagesPromises);
         const messages = result.filter((message): message is MatrixChatMessage => message !== undefined);
+        if (this.destroyed) {
+            messages.forEach((message) => message.destroy());
+            return;
+        }
         this.messages.push(...messages);
         await this.processPollEvents(events);
         await this.syncTimelinePollItemsFromEvents(events);
@@ -994,10 +1008,16 @@ export class MatrixChatRoom
         event: MatrixEvent,
         messages: SearchableArrayStore<string, MatrixChatMessage>,
     ): Promise<MatrixChatMessage | undefined> {
+        if (this.destroyed) {
+            return undefined;
+        }
         if (event.isEncrypted()) {
             await this.matrixRoom.client.decryptEventIfNeeded(event).catch(() => {
                 console.error("Failed to decrypt");
             });
+        }
+        if (this.destroyed) {
+            return undefined;
         }
         if (
             event.getType() === "m.room.message" &&
@@ -1133,6 +1153,12 @@ export class MatrixChatRoom
             retryHydration: options?.retryHydration,
         });
         await richPoll.refresh();
+
+        if (this.destroyed) {
+            // The room was torn down while hydrating: don't track a poll that destroy() already skipped.
+            richPoll.destroy();
+            return richPoll;
+        }
 
         if (existingPoll instanceof MatrixChatLightPoll) {
             existingPoll.destroy();
@@ -1273,7 +1299,14 @@ export class MatrixChatRoom
         if (merger) {
             newWrapper.setUserProviderMergerContext(merger);
         }
-        this.members.update((members) => [...members, newWrapper]);
+        this.members.update((members) => {
+            // Destroy any superseded wrapper for the same user before adding the new one, otherwise
+            // repeated NewMember events (e.g. rejoin, or a member already added by initializeMembers)
+            // leak the RoomMember/User listeners and merger subscriptions of the orphaned wrapper.
+            members.filter((existing) => existing.id === newWrapper.id).forEach((existing) => existing.destroy());
+            const remaining = members.filter((existing) => existing.id !== newWrapper.id);
+            return [...remaining, newWrapper];
+        });
         this.refreshRoomType();
         this.refreshJoinedMemberCount();
     }
@@ -1596,6 +1629,9 @@ export class MatrixChatRoom
         if (get(this.hasPreviousMessage)) {
             const existingEventsBeforePagination = this.timelineWindow.getEvents();
             await this.timelineWindow.paginate(Direction.Backward, 8);
+            if (this.destroyed) {
+                return;
+            }
             this.timelineWindow.unpaginate(existingEventsBeforePagination.length, false);
             const paginatedEvents = this.timelineWindow.getEvents();
             const tempMatrixChatMessages: Promise<MatrixChatMessage | undefined>[] = [];
@@ -1606,11 +1642,15 @@ export class MatrixChatRoom
             const result = await Promise.all(tempMatrixChatMessages);
 
             const messages = result.filter((message): message is MatrixChatMessage => message !== undefined);
+            if (this.destroyed) {
+                messages.forEach((message) => message.destroy());
+                return;
+            }
             this.messages.unshift(...messages);
             await this.processPollEvents(paginatedEvents);
             await this.syncTimelinePollItemsFromEvents(paginatedEvents);
             this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
-            if (messages.length === 0) {
+            if (messages.length === 0 && !this.destroyed) {
                 await this.loadMorePreviousMessages();
             }
         }
@@ -1673,6 +1713,10 @@ export class MatrixChatRoom
         let thread = this.matrixRoom.getThread(rootMessageId);
         const rootEvent = await this.getMatrixEventById(rootMessageId);
 
+        if (this.destroyed) {
+            return undefined;
+        }
+
         if (!thread && (!rootEvent || rootEvent.getType() !== EventType.RoomMessage)) {
             return undefined;
         }
@@ -1692,6 +1736,14 @@ export class MatrixChatRoom
         const threadConversation = new MatrixChatThread(thread, this);
         this.openThreadConversations.set(rootMessageId, threadConversation);
         await threadConversation.refreshRootMessage();
+
+        if (this.destroyed) {
+            // Room torn down mid-refresh: destroy() already cleared the map, so drop this straggler too.
+            this.openThreadConversations.delete(rootMessageId);
+            threadConversation.destroy();
+            return undefined;
+        }
+
         this.refreshThreadSummary(rootMessageId);
 
         return threadConversation;
@@ -2016,9 +2068,16 @@ export class MatrixChatRoom
     }
 
     destroy() {
+        if (this.destroyed) {
+            return;
+        }
+        this.destroyed = true;
+
         this.stopVisibleProfileSync();
         this.currentUserRoomMember?.off(RoomMemberEvent.PowerLevel, this.handleCurrentUserRoomMemberPowerLevel);
         this.currentUserRoomMember = undefined;
+        this.dmMergerRoomTypeUnsub?.();
+        this.dmMergerRoomTypeUnsub = undefined;
         this.matrixRoom.currentState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
         this.matrixRoom.off(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.off(PollEvent.New, this.handleNewPoll);
@@ -2034,11 +2093,14 @@ export class MatrixChatRoom
         this.threadList.set([]);
         this.openThreadConversations.forEach((threadConversation) => threadConversation.destroy());
         this.openThreadConversations.clear();
-        get(this.members).forEach((member) => {
+
+        const members = get(this.members);
+        members.forEach((member) => {
             member.destroy();
         });
+        this.members.set([]);
+
         this.messages.forEach((message) => {
-            message.relations?.destroy();
             message.destroy();
         });
         this.timelinePolls.forEach((poll) => {
@@ -2049,6 +2111,12 @@ export class MatrixChatRoom
                 poll.destroy();
             }
         });
+        this.messages.clear();
+        this.notSentEvents.clear();
+        this.inMemoryEventsContent.clear();
+        this.hasUnreadMessages.set(false);
+        this.unreadNotificationCount.set(0);
+        this.hasPreviousMessage.set(false);
     }
 
     startTyping(): Promise<object> {
@@ -2222,6 +2290,9 @@ export class MatrixChatRoom
             return message;
         }
         const event = await this.getMatrixEventById(messageId);
+        if (this.destroyed) {
+            return undefined;
+        }
         if (event) {
             return this.createChatMessageFromEvent(event);
         }
