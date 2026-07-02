@@ -73,7 +73,13 @@ export class MatrixChatThread implements ChatThread {
 
     private initializationPromise: Promise<void> | undefined;
 
-    private readonly replyMessages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
+    private readonly replyMessages = new SearchableArrayStore(
+        (item: MatrixChatMessage) => item.id,
+        (item: MatrixChatMessage) => {
+            item.relations?.destroy();
+            item.destroy();
+        },
+    );
     private readonly missingRootMessage = writable<ChatMessage | undefined>(undefined);
     private readonly inMemoryEventsContent = new Map<string, IContent>();
     private readonly handleRoomTimeline = this.onRoomTimeline.bind(this);

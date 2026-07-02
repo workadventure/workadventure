@@ -15,7 +15,15 @@ export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Arr
     private readonly _pushSubject = new Subject<V>();
     public readonly onPush = this._pushSubject.asObservable();
 
-    constructor(private getKeyCallback: (item: V) => K) {
+    /**
+     * @param getKeyCallback maps an item to its O(1) lookup key.
+     * @param disposeCallback optional; called with each item as it is removed or replaced (delete, splice,
+     *   shift, pop, clear, or an update that swaps the instance) so owners can release listeners/resources.
+     */
+    constructor(
+        private getKeyCallback: (item: V) => K,
+        private disposeCallback?: (removed: V) => void,
+    ) {
         super();
     }
 
@@ -24,9 +32,10 @@ export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Arr
     }
 
     clear() {
-        super.splice(0, this.length);
+        const removed = super.splice(0, this.length);
         this.store.set(this);
         this.storesByKey.clear();
+        removed.forEach((item) => this.disposeCallback?.(item));
     }
 
     delete(key: K): boolean {
@@ -80,6 +89,9 @@ export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Arr
             this.storesByKey.delete(this.getKeyCallback(item));
         }
         this.store.set(this);
+        if (item) {
+            this.disposeCallback?.(item);
+        }
         return item;
     }
 
@@ -89,6 +101,9 @@ export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Arr
             this.storesByKey.delete(this.getKeyCallback(item));
         }
         this.store.set(this);
+        if (item) {
+            this.disposeCallback?.(item);
+        }
         return item;
     }
 
@@ -108,6 +123,11 @@ export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Arr
             this.storesByKey.set(this.getKeyCallback(item), item);
         }
         this.store.set(this);
+        for (const item of removedItems) {
+            if (!addItems.includes(item)) {
+                this.disposeCallback?.(item);
+            }
+        }
         return removedItems;
     }
 
@@ -124,11 +144,16 @@ export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Arr
     }
 
     update(value: V) {
-        this.storesByKey.set(this.getKeyCallback(value), value);
-        const index = super.findIndex((item) => this.getKeyCallback(item) === this.getKeyCallback(value));
+        const key = this.getKeyCallback(value);
+        this.storesByKey.set(key, value);
+        const index = super.findIndex((item) => this.getKeyCallback(item) === key);
+        const previous = index !== -1 ? this[index] : undefined;
 
         this[index] = value;
         this.store.set(this);
+        if (previous !== undefined && previous !== value) {
+            this.disposeCallback?.(previous);
+        }
     }
 
     private separateNewAndUpdatedItems(items: V[]): { newItems: V[]; updatedItems: V[] } {

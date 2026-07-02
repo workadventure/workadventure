@@ -226,7 +226,15 @@ export class MatrixChatRoom
         const roomAvatarStore: PictureStore = readable(
             matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined,
         );
-        this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
+        this.messages = new SearchableArrayStore(
+            (item: MatrixChatMessage) => item.id,
+            // Release the per-message MatrixEvent listeners / media blobs when a message is replaced (edit,
+            // local->remote echo id swap) or removed, instead of leaking them for the room's lifetime.
+            (item: MatrixChatMessage) => {
+                item.relations?.destroy();
+                item.destroy();
+            },
+        );
         this.timelinePolls = new SearchableArrayStore((item: MatrixChatPoll) => item.id);
         this.sidePanelPolls = new SearchableArrayStore((item: ChatPollItem) => item.id);
         this.pollItems = this.sidePanelPolls;
