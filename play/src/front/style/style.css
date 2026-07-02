@@ -50,6 +50,26 @@ body {
     width: 100%;
 }
 
+@supports not (height: 100dvh) {
+    .h-dvh {
+        height: 100vh;
+    }
+
+    .min-h-dvh {
+        min-height: 100vh;
+    }
+
+    [class~="max-h-[calc(100dvh-100px)]"] {
+        max-height: calc(100vh - 100px);
+    }
+}
+
+@supports not (width: 100dvw) {
+    .w-dvw {
+        width: 100vw;
+    }
+}
+
 .main-container {
     height: 100%;
     width: 100%;

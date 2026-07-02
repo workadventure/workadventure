@@ -1,14 +1,51 @@
 import { app, BrowserWindow, globalShortcut } from "electron";
 
-import { createWindow, getWindow } from "./window";
+import { createWindow, getWindow, openDeepLinkTarget } from "./window";
 import { createTray } from "./tray";
 import autoUpdater from "./auto-updater";
 import { updateAutoLaunch } from "./auto-launch";
 import ipc from "./ipc";
 import settings from "./settings";
 import { setLogLevel } from "./log";
-import "./serve"; // prepare custom url scheme
 import { loadShortcuts } from "./shortcuts";
+import { DESKTOP_APP_NAME } from "./app-name-policy";
+import { createDefaultProtocolClientArgs } from "./protocol-client-policy";
+import {
+    extractDesktopAuthCallback,
+    extractDesktopTargetFromDeepLink,
+    type DesktopAuthCallback,
+} from "./desktop-url-policy";
+
+let pendingProtocolTarget: string | DesktopAuthCallback | undefined;
+
+app.setName(DESKTOP_APP_NAME);
+
+function getProtocolUrl(argv: string[]) {
+    return argv.find((arg) => arg.startsWith("workadventure://"));
+}
+
+function queueProtocolUrl(rawUrl?: string) {
+    if (!rawUrl) {
+        return;
+    }
+
+    pendingProtocolTarget =
+        extractDesktopAuthCallback(rawUrl) || extractDesktopTargetFromDeepLink(rawUrl) || pendingProtocolTarget;
+}
+
+function registerProtocolHandler() {
+    const args = createDefaultProtocolClientArgs({
+        defaultApp: Boolean(process.defaultApp),
+        argv: process.argv,
+        cwd: process.cwd(),
+    });
+    if (args.length > 0) {
+        app.setAsDefaultProtocolClient("workadventure", process.execPath, args);
+        return;
+    }
+
+    app.setAsDefaultProtocolClient("workadventure");
+}
 
 async function init() {
     const appLock = app.requestSingleInstanceLock();
@@ -19,9 +56,15 @@ async function init() {
         return;
     }
 
-    app.on("second-instance", () => {
+    queueProtocolUrl(getProtocolUrl(process.argv));
+    registerProtocolHandler();
+
+    app.on("second-instance", (event, argv) => {
+        queueProtocolUrl(getProtocolUrl(argv));
+        const target = pendingProtocolTarget;
+        pendingProtocolTarget = undefined;
         // re-create window if closed
-        void createWindow();
+        void openDeepLinkTarget(target);
 
         const mainWindow = getWindow();
 
@@ -32,6 +75,16 @@ async function init() {
             }
 
             mainWindow.focus();
+        }
+    });
+
+    app.on("open-url", (event, url) => {
+        event.preventDefault();
+        queueProtocolUrl(url);
+        if (app.isReady()) {
+            const target = pendingProtocolTarget;
+            pendingProtocolTarget = undefined;
+            void openDeepLinkTarget(target);
         }
     });
 
@@ -54,7 +107,16 @@ async function init() {
         //   app.dock.hide();
         // }
 
-        await createWindow();
+        const initialProtocolTarget = pendingProtocolTarget;
+        pendingProtocolTarget = undefined;
+        if (typeof initialProtocolTarget === "string") {
+            await createWindow(initialProtocolTarget);
+        } else {
+            await createWindow();
+            if (initialProtocolTarget) {
+                await openDeepLinkTarget(initialProtocolTarget);
+            }
+        }
         createTray();
 
         loadShortcuts();
