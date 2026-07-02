@@ -41,6 +41,14 @@ export class MatrixChatMessage implements ChatMessage {
     private readonly decryptedListener = () => this.updateMessageContentOnDecryptedEvent();
     // Fired when an m.replace edit is applied to this event; re-render so the edit shows.
     private readonly replacedListener = () => this.modifyContent();
+    // Fired when the first relation container is created for this event. initReactions() returns early
+    // when the message had no reactions at construction (so it never subscribed to reaction updates); this
+    // re-runs it so reactions that arrive later via aggregation/pagination still appear.
+    private readonly relationsCreatedListener = (relationType: string) => {
+        if (relationType === RelationType.Annotation) {
+            this.initReactions();
+        }
+    };
 
     constructor(
         private event: MatrixEvent,
@@ -82,6 +90,7 @@ export class MatrixChatMessage implements ChatMessage {
 
         event.on(MatrixEventEvent.Decrypted, this.decryptedListener);
         event.on(MatrixEventEvent.Replaced, this.replacedListener);
+        event.on(MatrixEventEvent.RelationsCreated, this.relationsCreatedListener);
         this.loadImageMediaIfNeeded();
         this.loadAttachmentMediaIfNeeded();
 
@@ -343,6 +352,7 @@ export class MatrixChatMessage implements ChatMessage {
     destroy() {
         this.event.off(MatrixEventEvent.Decrypted, this.decryptedListener);
         this.event.off(MatrixEventEvent.Replaced, this.replacedListener);
+        this.event.off(MatrixEventEvent.RelationsCreated, this.relationsCreatedListener);
         this.imageMediaAbortController?.abort();
         this.imageMediaCleanup();
         this.attachmentMediaAbortController?.abort();
