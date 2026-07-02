@@ -5,10 +5,10 @@ import type {
     ICreateRoomStateEvent,
     IPushRule,
     IRoomDirectoryOptions,
-    ISyncStateData,
     MatrixClient,
     MatrixEvent,
     Room,
+    SyncStateData,
     User,
     Visibility,
 } from "matrix-js-sdk";
@@ -87,7 +87,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private handleMyMembership: (room: Room, membership: string, prevMembership: string | undefined) => void;
     private handleRoomStateEvent: (event: MatrixEvent) => void;
     private handleName: (room: Room) => void;
-    private handleSync: (state: SyncState, prevState: SyncState | null, res?: ISyncStateData) => void;
+    private handleSync: (state: SyncState, prevState: SyncState | null, res?: SyncStateData) => void;
     private handleAccountDataEvent: (event: MatrixEvent) => void;
     private handleUserPresence: (event: MatrixEvent | undefined, user: User) => void;
     private handleVerificationRequestReceived: (request: VerificationRequest) => void;
@@ -744,7 +744,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         }
     }
 
-    private onSyncStateChange(state: SyncState, prevState: SyncState | null, res?: ISyncStateData): void {
+    private onSyncStateChange(state: SyncState, prevState: SyncState | null, res?: SyncStateData): void {
         if (!this.client) return;
         switch (state) {
             case SyncState.Prepared:

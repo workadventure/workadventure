@@ -108,7 +108,8 @@ export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Arr
     }
 
     splice(start: number, deleteCount?: number): V[];
-    splice(start: number, deleteCount: number, ...addItems: V[]): V[] {
+    splice(start: number, deleteCount: number, ...addItems: V[]): V[];
+    splice(start: number, deleteCount?: number, ...addItems: V[]): V[] {
         let removedItems: V[];
         if (deleteCount === undefined) {
             removedItems = super.splice(start);
