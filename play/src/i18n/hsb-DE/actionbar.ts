@@ -104,6 +104,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Emoji pokazać",
             desc: "Wurazće, kak so čuće, z jenož jednym klikom z emoji-reakcijemi. Jenož tknjenje a hić!",
         },
+        raiseHand: {
+            title: "Ruku zběhnyć",
+            desc: "Signalizuj, zo chceš rěčeć. Twoja zběhnjena ruka so na karće a na twojim widejje pokazuje, zo by kóždy wědźał, štó je na rjedźe.",
+        },
         audioManager: {
             title: "Hłošnosć wokolnych zwukow",
             desc: "Konfigurujće awdijowu hłošnosć, kliknje tu.",
@@ -129,6 +133,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "Wobłuk za zawrěćenje/wotewrjenje wubrać",
             bubbleLabel: "Diskusijowa balonka",
             unnamedArea: "Wobłuk běz mjena",
+        },
+        giveBackFloor: {
+            title: "Słowo wróćo dać",
+            desc: "Sy słowo dóstał. Klikń, zo by přestał rěčeć a je wróćo dał.",
         },
         megaphone: {
             title: "Megafon zastajić",
@@ -177,6 +185,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Móžeće funkciju wobraz we wobrazu wužiwać, zo byšće widejo abo prezentaciju woglědowali, mjeztym zo sće w rozmołwje. Klikńće jenož na symbol wobraz we wobrazu a wužiwajće swój wobsah.",
         },
         videoNotSupported: "Waš wobhladowak wideo-tag njepodpěruje.",
+    },
+    raisedHands: {
+        speaking: "Ma słowo",
+        title: "Zběhnjene ruce",
+        empty: "Nichtó njeje ruku zběhnył",
+        help: "Hladaj, štó je ruku zběhnył po rjedźe, a daj jemu słowo.",
     },
     listStatusTitle: {
         enable: "Waš status změnić",

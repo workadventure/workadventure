@@ -1,5 +1,7 @@
 <script lang="ts">
-    import { silentStore } from "../../Stores/MediaStore";
+    import { isSpeakerStore, silentStore } from "../../Stores/MediaStore";
+    import { userIsAdminStore } from "../../Stores/GameStore";
+    import { raisedHandsStore, speakingUsersStore } from "../../Stores/PeerStore";
 
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
@@ -18,6 +20,8 @@
     import MediaSettingsList from "./MediaSettingsList/MediaSettingsList.svelte";
     import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
+    import RaiseHandMenuItem from "./MenuIcons/RaiseHandMenuItem.svelte";
+    import RaisedHandsMenuItem from "./MenuIcons/RaisedHandsMenuItem.svelte";
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
     import ChatMenuItem from "./MenuIcons/ChatMenuItem.svelte";
     import UserListMenuItem from "./MenuIcons/UserListMenuItem.svelte";
@@ -126,6 +130,21 @@
                                     <PictureInPictureMenuItem />
                                 {/if}
                                 <!-- NAV : SCREENSHARING END -->
+
+                                <!-- NAV : RAISE HAND START -->
+                                <!-- Hidden for users who can already speak (speakers/promoted), so the raise-hand
+                                     and give-back-the-floor buttons are never shown at the same time. -->
+                                {#if !$inExternalServiceStore && $isInRemoteConversation && !$isSpeakerStore}
+                                    <RaiseHandMenuItem />
+                                {/if}
+                                <!-- NAV : RAISE HAND END -->
+
+                                <!-- NAV : RAISED HANDS PANEL START -->
+                                <!-- Stays visible while there are raised hands to grant OR speakers to take back. -->
+                                {#if ($userIsAdminStore || $isSpeakerStore) && ($raisedHandsStore.length > 0 || $speakingUsersStore.length > 0)}
+                                    <RaisedHandsMenuItem />
+                                {/if}
+                                <!-- NAV : RAISED HANDS PANEL END -->
                             </div>
                         </div>
                     </div>

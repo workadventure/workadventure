@@ -102,6 +102,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "显示表情符号",
             desc: "只需点击一下即可使用表情符号反应表达您的感受。只需点击即可！",
         },
+        raiseHand: {
+            title: "举手",
+            desc: "示意你想发言。你举起的手会显示在地图和你的视频上，让大家知道接下来轮到谁。",
+        },
         audioManager: {
             title: "环境声音音量",
             desc: "点击此处配置音频音量。",
@@ -127,6 +131,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "选择要锁定/解锁的区域",
             bubbleLabel: "讨论气泡",
             unnamedArea: "未命名区域",
+        },
+        giveBackFloor: {
+            title: "交回发言权",
+            desc: "你已获得发言权。点击停止发言并交回。",
         },
         megaphone: {
             title: "停止扩音器",
@@ -175,6 +183,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "您可以使用画中画功能在对话时观看视频或演示。只需点击画中画图标即可享受您的内容。",
         },
         videoNotSupported: "您的浏览器不支持视频标签。",
+    },
+    raisedHands: {
+        speaking: "发言中",
+        title: "举手",
+        empty: "没有人举手",
+        help: "按顺序查看谁举了手，并把发言权交给他。",
     },
     listStatusTitle: {
         enable: "更改您的状态",

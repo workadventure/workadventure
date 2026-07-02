@@ -88,6 +88,9 @@ import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore } from "../../Stores/EmoteStore";
+import { requestedHandRaiseState } from "../../Stores/RaiseHandStore";
+import { raisedHandPlayerIdsStore } from "../../Stores/RaisedHandsStore";
+import { isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
 import {
     jitsiParticipantsCountStore,
     userIsAdminStore,
@@ -191,7 +194,7 @@ import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEn
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import { ScriptLoadedError } from "../../Api/ScriptLoadedError";
-import { screenShareStreamStore, videoStreamStore } from "../../Stores/PeerStore";
+import { raisedHandsStore, screenShareStreamStore, speakingUsersStore, videoStreamStore } from "../../Stores/PeerStore";
 import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
@@ -326,6 +329,9 @@ export class GameScene extends DirtyScene {
     private messageSubscription: Subscription | null = null;
     private rxJsSubscriptions: Array<Subscription> = [];
     private emoteUnsubscriber!: Unsubscriber;
+    private raiseHandUnsubscriber: Unsubscriber | undefined;
+    // Player ids of remote players whose raised hand is currently shown above their woka (to diff on store updates).
+    private previousRaisedHandPlayerIds = new Set<number>();
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscriber!: Unsubscriber;
     private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
@@ -1196,6 +1202,7 @@ export class GameScene extends DirtyScene {
         }
         this.mapEditorModeStoreUnsubscriber?.();
         this.emoteUnsubscriber?.();
+        this.raiseHandUnsubscriber?.();
         this.followUsersColorStoreUnsubscriber?.();
         this.modalVisibilityStoreUnsubscriber?.();
         this.highlightedEmbedScreenUnsubscriber?.();
@@ -1599,6 +1606,16 @@ export class GameScene extends DirtyScene {
         if (update.updated.sayMessage) {
             character.say(update.player.sayMessage?.message ?? "", update.player.sayMessage?.type ?? 0);
         }
+    }
+
+    /**
+     * Shows/hides the raised-hand indicator above a remote player's woka, resolving the woka from the
+     * numeric player id (derived from the SpaceUser's spaceUserId). The raise-hand state lives on the
+     * SpaceUser (see SpacePeerManager), so this also covers participants who joined the meeting after the
+     * hand was raised.
+     */
+    private setRemotePlayerRaisedHand(playerId: number, raised: boolean): void {
+        this.MapPlayersByKey.get(playerId)?.setRaisedHand(raised);
     }
 
     /**
@@ -2029,6 +2046,8 @@ export class GameScene extends DirtyScene {
 
                 videoStreamStore.forward(this._spaceRegistry.videoStreamStore);
                 screenShareStreamStore.forward(this._spaceRegistry.screenShareStreamStore);
+                raisedHandsStore.forward(this._spaceRegistry.raisedHandsStore);
+                speakingUsersStore.forward(this._spaceRegistry.speakingUsersStore);
 
                 this.initExtensionModule();
 
@@ -2631,6 +2650,41 @@ export class GameScene extends DirtyScene {
                 emoteStore.set(null);
             }
         });
+
+        this.raiseHandUnsubscriber = requestedHandRaiseState.subscribe((state) => {
+            // Reflect the local user's raised hand on their own woka immediately. The state is broadcast to
+            // other participants as a SpaceUser property (see SpacePeerManager.synchronizeMediaState), which
+            // drives both their video tile badge and the indicator above their woka on the map.
+            this.CurrentPlayer?.setRaisedHand(state.raised);
+        });
+
+        // Drive the raised-hand indicator above REMOTE players' wokas from the (space-persisted) SpaceUser state.
+        // The store is keyed by numeric player id (derived from each participant's spaceUserId).
+        this.unsubscribers.push(
+            raisedHandPlayerIdsStore.subscribe((raisedPlayerIds) => {
+                for (const playerId of raisedPlayerIds) {
+                    if (!this.previousRaisedHandPlayerIds.has(playerId)) {
+                        this.setRemotePlayerRaisedHand(playerId, true);
+                    }
+                }
+                for (const playerId of this.previousRaisedHandPlayerIds) {
+                    if (!raisedPlayerIds.has(playerId)) {
+                        this.setRemotePlayerRaisedHand(playerId, false);
+                    }
+                }
+                this.previousRaisedHandPlayerIds = new Set(raisedPlayerIds);
+            }),
+        );
+
+        // Automatically lower the hand when leaving the conversation: the raise-hand button is only shown during a
+        // meeting, so a hand left raised on leave could otherwise no longer be lowered by the user.
+        this.unsubscribers.push(
+            isInRemoteConversation.subscribe((inConversation) => {
+                if (!inConversation && get(requestedHandRaiseState).raised) {
+                    requestedHandRaiseState.lowerHand();
+                }
+            }),
+        );
 
         this.followUsersColorStoreUnsubscriber = followUsersColorStore.subscribe((color) => {
             if (color !== undefined) {
@@ -4167,6 +4221,11 @@ ${escapedMessage}
         }
         if (addPlayerData.availabilityStatus !== 0) {
             player.setAvailabilityStatus(addPlayerData.availabilityStatus, true);
+        }
+        // If this player already had their hand raised before their woka was created (e.g. we just joined the
+        // meeting, or the SpaceUser arrived before the woka), reflect it immediately.
+        if (get(raisedHandPlayerIdsStore).has(player.userId)) {
+            player.setRaisedHand(true);
         }
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);

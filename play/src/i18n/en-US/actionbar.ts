@@ -103,6 +103,10 @@ const actionbar: BaseTranslation = {
             title: "Display an emoji",
             desc: "Express how you feel with just one click using emoji reactions. Just tap and go!",
         },
+        raiseHand: {
+            title: "Raise your hand",
+            desc: "Signal that you want to speak. Your raised hand is shown on the map and on your video, so everyone knows whose turn is next.",
+        },
         audioManager: {
             title: "Ambient sounds volume",
             desc: "Configure the audio volume to click here.",
@@ -128,6 +132,10 @@ const actionbar: BaseTranslation = {
             areaPickerTitle: "Choose area to lock/unlock",
             bubbleLabel: "Discussion bubble",
             unnamedArea: "Unnamed Area",
+        },
+        giveBackFloor: {
+            title: "Give back the floor",
+            desc: "You were given the floor. Click to stop speaking and hand it back.",
         },
         megaphone: {
             title: "Stop megaphone",
@@ -176,6 +184,12 @@ const actionbar: BaseTranslation = {
             desc: "You can use the picture in picture feature to watch a video or a presentation while you are in a conversation. Just click on the picture in picture icon and enjoy your content.",
         },
         videoNotSupported: "Your browser does not support the video tag.",
+    },
+    raisedHands: {
+        speaking: "Speaking",
+        title: "Raised hands",
+        empty: "No one has raised their hand",
+        help: "See who raised their hand, in order, and give them the floor.",
     },
     listStatusTitle: {
         enable: "Change your status",

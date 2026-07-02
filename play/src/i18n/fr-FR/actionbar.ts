@@ -106,6 +106,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Réagir avec un emoji",
             desc: "Exprimez ce que vous ressentez en un clic grâce aux réactions emoji. Un simple tap, et c’est parti !",
         },
+        raiseHand: {
+            title: "Lever la main",
+            desc: "Signalez que vous souhaitez prendre la parole. Votre main levée s’affiche sur la carte et sur votre vidéo, pour que chacun sache à qui c’est le tour.",
+        },
         audioManager: {
             title: "Volume des sons ambiants",
             desc: "Réglez le volume des sons d'ambiance de la carte (musique, bruitages).",
@@ -127,6 +131,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "Choisir la zone à verrouiller/déverrouiller",
             bubbleLabel: "Bulle de discussion",
             unnamedArea: "Zone sans nom",
+        },
+        giveBackFloor: {
+            title: "Rendre la parole",
+            desc: "On vous a donné la parole. Cliquez pour arrêter de parler et la rendre.",
         },
         megaphone: {
             title: "Arrêter le mégaphone",
@@ -179,6 +187,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Vous pouvez utiliser la fonctionnalité picture in picture pour regarder une vidéo ou une présentation pendant que vous êtes dans une conversation. Cliquez simplement sur l'icône picture in picture et profitez de votre contenu.",
         },
         videoNotSupported: "Votre navigateur ne prend pas en charge la balise vidéo.",
+    },
+    raisedHands: {
+        speaking: "Au micro",
+        title: "Mains levées",
+        empty: "Personne n’a levé la main",
+        help: "Voyez qui a levé la main, dans l’ordre, et donnez-lui la parole.",
     },
     listStatusTitle: {
         enable: "Changer de statut",

@@ -2,6 +2,7 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
 import { UsernameMegaphoneDisplay } from "./UsernameMegaphoneDisplay";
+import { UsernameRaisedHandDisplay } from "./UsernameRaisedHandDisplay";
 import { UsernameStatusDisplay } from "./UsernameStatusDisplay";
 
 const CORRECTION_RATE = 0.65; // When one game pixel is smaller than one screen pixel (zoomed-out), we zoom out the Woka name, but only up to CORRECTION_RATE. After that, the Woka name will stay at its current screen size even if we zoom out more (to keep the text readable)
@@ -29,6 +30,7 @@ export class UsernameDisplay {
     private displayScale: number;
     private readonly statusDisplay: UsernameStatusDisplay;
     private readonly megaphoneDisplay: UsernameMegaphoneDisplay;
+    private readonly raisedHandDisplay: UsernameRaisedHandDisplay;
     private sizeAnimation: Animation | undefined;
 
     private readonly onZoomChanged = (zoomModifier: number): void => {
@@ -51,6 +53,7 @@ export class UsernameDisplay {
         this.playerNameOutlineColor = outlineColor;
         this.statusDisplay = new UsernameStatusDisplay();
         this.megaphoneDisplay = new UsernameMegaphoneDisplay();
+        this.raisedHandDisplay = new UsernameRaisedHandDisplay();
         this.playerNameElement = this.createPlayerNameElement();
 
         this.element = document.createElement("div");
@@ -61,7 +64,12 @@ export class UsernameDisplay {
 
         this.applyStyles();
         this.updatePlayerDepth();
-        this.element.append(this.statusDisplay.element, this.playerNameElement, this.megaphoneDisplay.element);
+        this.element.append(
+            this.statusDisplay.element,
+            this.playerNameElement,
+            this.megaphoneDisplay.element,
+            this.raisedHandDisplay.element,
+        );
         this.updateUsernameBackgroundColor(outlineColor);
 
         this.gameScene.usernameDomLayer.addUsername(this.element);
@@ -94,6 +102,10 @@ export class UsernameDisplay {
     public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant = false, forceClose = false): void {
         this.statusDisplay.setAvailabilityStatus(availabilityStatus, instant);
         this.showMegaphone(availabilityStatus === AvailabilityStatus.SPEAKER, forceClose);
+    }
+
+    public setRaisedHand(raised: boolean, forceClose = false): void {
+        this.raisedHandDisplay.show(raised, forceClose);
     }
 
     public getAvailabilityStatus(): AvailabilityStatus {

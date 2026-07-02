@@ -1,6 +1,32 @@
+import { FilterType } from "@workadventure/messages";
 import { EventProcessor } from "./EventProcessor";
 
 export const eventProcessor = new EventProcessor();
+
+// Only admins or speakers (and anyone in an ALL_USERS proximity space, where everyone already speaks) may
+// give/revoke the floor. This protects the direct speaker-promotion in megaphone spaces from being abused.
+const assertCanManageFloor = (
+    sender: { tags: string[]; megaphoneState: boolean } | undefined,
+    filterType: FilterType | undefined,
+): void => {
+    if (!sender) {
+        throw new Error("Sender not found");
+    }
+    const isProximity = filterType === FilterType.ALL_USERS;
+    if (!isProximity && !sender.tags.includes("admin") && !sender.megaphoneState) {
+        throw new Error("Only admins or speakers can give or revoke the floor");
+    }
+};
+
+eventProcessor.registerPrivateEventProcessor("giveFloor", (event, sender, filterType) => {
+    assertCanManageFloor(sender, filterType);
+    return event;
+});
+
+eventProcessor.registerPrivateEventProcessor("revokeFloor", (event, sender, filterType) => {
+    assertCanManageFloor(sender, filterType);
+    return event;
+});
 
 eventProcessor.registerPublicEventProcessor("muteAudioForEverybody", (event, sender) => {
     if (!sender || !sender.tags.includes("admin")) {
