@@ -45,7 +45,13 @@
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
-    import { IconList, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
+    import {
+        completeFilePreview,
+        createFilePreview,
+        removeFilePreviews,
+        type MessageInputBarFilePreview,
+    } from "./MessageInputBarFilePreview";
+    import { IconList, IconLoader, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
     import { modals } from "@wa-modals";
 
     interface Props {
@@ -63,9 +69,7 @@
     let messageBarRef: HTMLDivElement;
     let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
     let files: { id: string; file: File }[] = $state([]);
-    let filesPreview: { id: string; size: number; name: string; type: string; url: FileReader["result"] }[] = $state(
-        [],
-    );
+    let filesPreview: MessageInputBarFilePreview[] = $state([]);
     const TYPINT_TIMEOUT = 10000;
     const inactiveProximityState = readable(false);
 
@@ -152,23 +156,21 @@
 
         // send files
         if (files && files.length > 0) {
-            if (!(room instanceof ProximityChatRoom)) {
-                const idsToSend = files.map((f) => f.id);
-                const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
-                    fileListAcc.items.add(currentFile.file);
-                    return fileListAcc;
-                }, new DataTransfer()).files;
+            const idsToSend = files.map((f) => f.id);
+            const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
+                fileListAcc.items.add(currentFile.file);
+                return fileListAcc;
+            }, new DataTransfer()).files;
 
-                try {
-                    await room.sendFiles(fileList);
-                    files = files.filter((f) => !idsToSend.includes(f.id));
-                    filesPreview = filesPreview.filter((p) => !idsToSend.includes(p.id));
-                } catch (error) {
-                    console.error(error);
-                    warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), {
-                        closable: true,
-                    });
-                }
+            try {
+                await room.sendFiles(fileList);
+                files = files.filter((f) => !idsToSend.includes(f.id));
+                filesPreview = removeFilePreviews(filesPreview, idsToSend);
+            } catch (error) {
+                console.error(error);
+                warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), {
+                    closable: true,
+                });
             }
         }
 
@@ -265,20 +267,20 @@
     }
 
     function addToPreviews(files: { id: string; file: File }[]) {
+        filesPreview = [...filesPreview, ...files.map(createFilePreview)];
+
         Array.from(files).forEach((file) => {
+            if (!file.file.type.includes("image")) {
+                return;
+            }
+
             const reader = new FileReader();
 
             reader.onload = () => {
-                filesPreview = [
-                    ...filesPreview,
-                    {
-                        id: file.id,
-                        name: file.file.name,
-                        type: file.file.type,
-                        size: file.file.size,
-                        url: reader.result,
-                    },
-                ];
+                filesPreview = completeFilePreview(filesPreview, file.id, reader.result);
+            };
+            reader.onerror = () => {
+                filesPreview = completeFilePreview(filesPreview, file.id, undefined);
             };
             reader.readAsDataURL(file.file);
         });
@@ -286,7 +288,7 @@
 
     function deleteFile(id: string) {
         files = files.filter((file) => file.id !== id);
-        filesPreview = filesPreview.filter((filePreview) => filePreview.id !== id);
+        filesPreview = removeFilePreviews(filesPreview, [id]);
     }
 
     function formatBytes(bytes: number) {
@@ -477,7 +479,7 @@
     let quotedMessageContent = $derived($selectedChatMessageToReply?.content);
 </script>
 
-{#if files.length > 0 && !(room instanceof ProximityChatRoom)}
+{#if files.length > 0}
     <div class="w-full min-w-0 p-1">
         <div
             class="flex flex-row flex-nowrap gap-2 w-full min-w-[200px] overflow-x-auto no-scroll-bar rounded-lg p-2 bg-contrast/80"
@@ -494,7 +496,7 @@
                     >
                         <IconX font-size="12" />
                     </button>
-                    {#if preview.type.includes("image") && typeof preview.url === "string"}
+                    {#if preview.type.includes("image") && typeof preview.url === "string" && !preview.preparing}
                         <img
                             draggable="false"
                             class="w-full h-full object-cover rounded-[10px]"
@@ -509,8 +511,11 @@
                             <span class="line-clamp-2 indent-3 text-xs">
                                 {preview.name}
                             </span>
-                            <div class="rounded-[6px] bg-white/10 p-0.5 text-xxs m-0.5">
-                                {formatBytes(preview.size)}
+                            <div class="flex items-center gap-1 rounded-[6px] bg-white/10 p-0.5 text-xxs m-0.5">
+                                {#if preview.preparing}
+                                    <IconLoader class="animate-spin shrink-0" font-size={12} />
+                                {/if}
+                                <span>{formatBytes(preview.size)}</span>
                             </div>
                         </div>
                     {/if}
@@ -527,12 +532,12 @@
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 onclick={() => openFileAttachmentComponent()}
                 class:bg-secondary-800={fileAttachmentComponentOpened}
-                disabled={!fileAttachementEnabled || isProximityChatRoom}
+                disabled={!fileAttachementEnabled}
             >
                 <IconPaperclip font-size={32} />
                 <h2 class="text-sm p-0 m-0">{$LL.chat.fileAttachment.title()}</h2>
                 <p class="text-xs p-0 m-0 w-full overflow-hidden overflow-ellipsis text-gray-400">
-                    {fileAttachementEnabled && !isProximityChatRoom
+                    {fileAttachementEnabled
                         ? $LL.chat.fileAttachment.description()
                         : $LL.chat.fileAttachment.featureComingSoon()}
                 </p>
@@ -747,7 +752,6 @@
 {/if}
 {#if fileAttachmentComponentOpened}
     <MessageFileInput
-        {room}
         filesSelected={(files) => {
             handleFiles(files);
             closeFileAttachmentComponent();

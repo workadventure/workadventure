@@ -181,6 +181,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     notification: {
         discussion: "vol parlar amb tu",
         message: "ha enviat un missatge",
+        file: "ha enviat un fitxer: {fileName}",
         forum: "al fòrum",
         in: "a",
     },
@@ -276,6 +277,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         download: "descarregar",
         openCoWebsite: "Obrir en co-website",
         loadingAttachment: "S'està carregant el fitxer adjunt...",
+        remainingTime: "queden ~{time}",
         attachmentDownloadError: "No s'ha pogut descarregar aquest fitxer adjunt.",
         attachmentDecryptError: "No s'ha pogut desxifrar aquest fitxer adjunt.",
         copy: "copiar l'enllaç",
