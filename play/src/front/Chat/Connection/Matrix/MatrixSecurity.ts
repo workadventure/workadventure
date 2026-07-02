@@ -3,6 +3,7 @@ import type {
     EmojiMapping,
     GeneratedSecretStorageKey,
     KeyBackupInfo,
+    ShowSasCallbacks,
     VerificationRequest,
 } from "matrix-js-sdk/lib/crypto-api";
 import {
@@ -81,7 +82,11 @@ export class MatrixSecurity {
                                 throw new Error("Cross-signing key upload auth canceled");
                             }
                         },
-                        setupNewCrossSigning: keyBackupInfo === null,
+                        // Never pass setupNewCrossSigning here: it forces a RESET of cross-signing keys
+                        // even when valid ones already exist. Tying it to "no key backup" regenerated the
+                        // master key for any user without a backup, invalidating all their existing device
+                        // and user signatures. bootstrapCrossSigning is a no-op when keys already exist,
+                        // so a brand-new user still gets set up. Resets stay confined to setupNewKeyStorage.
                     });
 
                     await crypto.bootstrapSecretStorage({
@@ -300,59 +305,75 @@ export class MatrixSecurity {
 
             const doneVerificationDeferred = new Deferred<void>();
 
-            verificationRequest.on(VerificationRequestEvent.Change, () => {
-                if (verificationRequest.phase === VerificationPhase.Started) {
+            let sasListenerAttached = false;
+
+            const showSasHandler = (showSasCallbacks: ShowSasCallbacks) => {
+                const emojis = showSasCallbacks.sas.emoji;
+                if (!emojis || this.isVerifyingDevice) return;
+
+                this.isVerifyingDevice = true;
+
+                startVerificationDeferred.resolve({
+                    emojis,
+                    confirmationCallback: async () => {
+                        await showSasCallbacks.confirm();
+                    },
+                    mismatchCallback: async () => {
+                        // Signal m.mismatched_sas to the other device (matrix-js-sdk 41).
+                        showSasCallbacks.mismatch();
+                    },
+                    donePromise: doneVerificationDeferred.promise,
+                    isThisDeviceVerification: verificationRequest.initiatedByMe,
+                });
+            };
+
+            // Named handler so it can be removed on terminal phases (the old inline arrow leaked on the
+            // request/verifier for the client's lifetime and could be re-attached on every Change).
+            const onVerificationChange = () => {
+                if (verificationRequest.phase === VerificationPhase.Started && !sasListenerAttached) {
                     const verifier = verificationRequest.verifier;
-
-                    if (!verifier) throw new Error("Verifier is undefined");
-
-                    switch (verificationRequest.chosenMethod) {
-                        case VerificationMethod.Sas:
-                            verifier.on(VerifierEvent.ShowSas, (showSasCallbacks) => {
-                                const emojis = showSasCallbacks.sas.emoji;
-                                const confirmationCallback = async () => {
-                                    await showSasCallbacks.confirm();
-                                };
-                                const mismatchCallback = async () => {
-                                    // Signal m.mismatched_sas to the other device. Unblocked by the
-                                    // matrix-js-sdk 41 upgrade; the previous verificationRequest.cancel({ reason })
-                                    // sent a generic user cancellation (code m.user), not a mismatch.
-                                    showSasCallbacks.mismatch();
-                                };
-
-                                if (!emojis || this.isVerifyingDevice) return;
-
-                                this.isVerifyingDevice = true;
-
-                                startVerificationDeferred.resolve({
-                                    emojis,
-                                    confirmationCallback,
-                                    mismatchCallback,
-                                    donePromise: doneVerificationDeferred.promise,
-                                    isThisDeviceVerification: verificationRequest.initiatedByMe,
-                                });
-                            });
-
-                            verifier.verify().catch((error) => {
-                                doneVerificationDeferred.reject(error);
-                            });
-                            break;
-                        default:
-                            throw new Error("The chosen verification method is not implemented");
+                    if (!verifier) {
+                        console.error("Verification reached Started phase without a verifier");
+                        return;
                     }
+                    if (verificationRequest.chosenMethod !== VerificationMethod.Sas) {
+                        console.error("The chosen verification method is not implemented");
+                        return;
+                    }
+
+                    sasListenerAttached = true;
+
+                    // The SAS may already have been computed before this handler first runs; pick it up
+                    // directly instead of waiting for a ShowSas event that already fired (would hang forever).
+                    const alreadyShownSas = verifier.getShowSasCallbacks();
+                    if (alreadyShownSas) {
+                        showSasHandler(alreadyShownSas);
+                    } else {
+                        verifier.on(VerifierEvent.ShowSas, showSasHandler);
+                    }
+
+                    verifier.verify().catch((error) => {
+                        doneVerificationDeferred.reject(error);
+                    });
                 }
 
                 if (verificationRequest.phase === VerificationPhase.Done) {
                     doneVerificationDeferred.resolve();
                     this.isVerifyingDevice = false;
                     this.isEncryptionRequiredAndNotSet.set(false);
+                    verificationRequest.off(VerificationRequestEvent.Change, onVerificationChange);
+                    verificationRequest.verifier?.off(VerifierEvent.ShowSas, showSasHandler);
                 }
 
                 if (verificationRequest.phase === VerificationPhase.Cancelled) {
                     doneVerificationDeferred.reject(new Error("verification request cancelled"));
                     this.isVerifyingDevice = false;
+                    verificationRequest.off(VerificationRequestEvent.Change, onVerificationChange);
+                    verificationRequest.verifier?.off(VerifierEvent.ShowSas, showSasHandler);
                 }
-            });
+            };
+
+            verificationRequest.on(VerificationRequestEvent.Change, onVerificationChange);
         } catch (error) {
             console.error("Failed to verify this device", error);
         }
@@ -417,6 +438,9 @@ export class MatrixSecurity {
 
                 if (!device.getIdentityKey()) return false;
                 if (device.deviceId === currentDeviceID) return false;
+                // A dehydrated device is not a real interactive device to verify against (matches Element's
+                // hasOtherVerifiedDevices); counting it would steer the user to "verify with another device".
+                if (device.dehydrated) return false;
 
                 const verificationStatus = await crypto.getDeviceVerificationStatus(userID, device.deviceId);
                 return !!verificationStatus?.signedByOwner;
