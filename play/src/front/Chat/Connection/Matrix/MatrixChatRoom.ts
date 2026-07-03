@@ -83,6 +83,7 @@ import { MatrixChatPoll } from "./MatrixChatPoll";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatThread } from "./MatrixChatThread";
 import { matrixSecurity } from "./MatrixSecurity";
+import { matrixMediaAuthService } from "./MatrixMediaAuthService";
 import { hasValidViaEntries } from "./MatrixSpaceRelations";
 import { resolveChatUserColor } from "./services/WaMatrixProfileService";
 import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
@@ -223,7 +224,14 @@ export class MatrixChatRoom
         this.hasUnreadMessages = writable(matrixRoom.getUnreadNotificationCount() > 0);
         this.unreadNotificationCount = writable(matrixRoom.getUnreadNotificationCount());
         const roomAvatarStore: PictureStore = readable(
-            matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined,
+            matrixRoom.getAvatarUrl(
+                matrixRoom.client.baseUrl,
+                24,
+                24,
+                "scale",
+                undefined,
+                matrixMediaAuthService.isEnabledForTagSrc(),
+            ) ?? undefined,
         );
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.timelinePolls = new SearchableArrayStore((item: MatrixChatPoll) => item.id);

@@ -64,6 +64,7 @@ import {
     pushLocalWokaAndNameToMatrixProfile,
     syncWokaAvatarToMatrixProfileOnWokaChange,
 } from "./services/WaMatrixProfileService";
+import { matrixMediaAuthService } from "./MatrixMediaAuthService";
 
 const debug = Debug("MatrixChatConnection");
 
@@ -552,6 +553,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         try {
             this.client = await this.clientPromise;
             this.matrixSecurity.updateMatrixClientStore(this.client);
+            await matrixMediaAuthService.configure(this.client);
             await this.startMatrixClient();
             this.isGuest.set(this.client.isGuest());
             if (typeof this.client.getVisibleRooms === "function") {
@@ -640,7 +642,15 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             /* profile fetch can fail on restricted networks */
         }
         const profileAvatarPreviewUrl = profileAvatarMxc
-            ? (this.client.mxcUrlToHttp(profileAvatarMxc, 96, 96) ?? undefined)
+            ? (this.client.mxcUrlToHttp(
+                  profileAvatarMxc,
+                  96,
+                  96,
+                  undefined,
+                  undefined,
+                  undefined,
+                  matrixMediaAuthService.isEnabledForTagSrc(),
+              ) ?? undefined)
             : undefined;
         const localDisplayName = localUserStore.getDisplayNameForMatrixProfile();
         const localWoka = get(currentPlayerWokaStore);
@@ -682,7 +692,15 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             /* profile fetch can fail */
         }
         const profileAvatarPreviewUrl = profileAvatarMxc
-            ? (this.client.mxcUrlToHttp(profileAvatarMxc, 96, 96) ?? undefined)
+            ? (this.client.mxcUrlToHttp(
+                  profileAvatarMxc,
+                  96,
+                  96,
+                  undefined,
+                  undefined,
+                  undefined,
+                  matrixMediaAuthService.isEnabledForTagSrc(),
+              ) ?? undefined)
             : undefined;
 
         return {

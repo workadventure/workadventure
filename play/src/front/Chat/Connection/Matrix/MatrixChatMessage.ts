@@ -1,4 +1,4 @@
-import type { MatrixEvent, Room } from "matrix-js-sdk";
+import type { MatrixClient, MatrixEvent, Room } from "matrix-js-sdk";
 import { Direction, EventType, MatrixEventEvent, MsgType, RelationType } from "matrix-js-sdk";
 import type { Writable } from "svelte/store";
 import { writable } from "svelte/store";
@@ -15,8 +15,28 @@ import type {
 import { chatUserFactoryFromRoom } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
+import type { MatrixMediaResolveOptions } from "./MatrixMediaResolver";
 import { resolveAttachmentMediaFromEvent, resolveImageMediaFromEvent } from "./MatrixMediaResolver";
+import { matrixMediaAuthService } from "./MatrixMediaAuthService";
 import { shouldRenderQuotedReply } from "./MatrixThreadUtils";
+
+/**
+ * Resolves an `mxc://` URL to an HTTP URL, optionally targeting the authenticated
+ * media endpoints (the media service worker injects the auth header for those).
+ */
+function mxcToHttp(
+    client: MatrixClient,
+    mxcUrl: string | undefined | null,
+    useAuthentication: boolean,
+): string | undefined {
+    if (!mxcUrl) {
+        return undefined;
+    }
+    return (
+        client.mxcUrlToHttp(mxcUrl, undefined, undefined, undefined, undefined, undefined, useAuthentication) ??
+        undefined
+    );
+}
 
 export class MatrixChatMessage implements ChatMessage {
     id: string;
@@ -123,11 +143,13 @@ export class MatrixChatMessage implements ChatMessage {
             };
         }
 
+        const useAuthenticatedUrls = matrixMediaAuthService.isEnabledForTagSrc();
+
         if (this.type === "image") {
             return {
                 body: content.body,
-                url: this.room.client.mxcUrlToHttp(content.url ?? content.file?.url) ?? undefined,
-                thumbnailUrl: this.room.client.mxcUrlToHttp(content.info?.thumbnail_url) ?? undefined,
+                url: mxcToHttp(this.room.client, content.url ?? content.file?.url, useAuthenticatedUrls),
+                thumbnailUrl: mxcToHttp(this.room.client, content.info?.thumbnail_url, useAuthenticatedUrls),
                 mediaState: content.file !== undefined ? "loading" : "ready",
             };
         }
@@ -135,7 +157,7 @@ export class MatrixChatMessage implements ChatMessage {
         if (this.type === "file" || this.type === "audio" || this.type === "video") {
             return {
                 body: content.body,
-                url: this.room.client.mxcUrlToHttp(content.url ?? content.file?.url) ?? undefined,
+                url: mxcToHttp(this.room.client, content.url ?? content.file?.url, useAuthenticatedUrls),
                 mediaState: content.file !== undefined ? "loading" : "ready",
             };
         }
@@ -160,7 +182,12 @@ export class MatrixChatMessage implements ChatMessage {
         this.content.update((content) => ({ ...content, mediaState: "loading", mediaErrorKind: undefined }));
 
         try {
-            const media = await resolveImageMediaFromEvent(this.event, this.room.client, signal);
+            const media = await resolveImageMediaFromEvent(
+                this.event,
+                this.room.client,
+                signal,
+                this.getMediaResolveOptions(),
+            );
             if (signal.aborted) {
                 media.cleanup();
                 return;
@@ -207,7 +234,12 @@ export class MatrixChatMessage implements ChatMessage {
         this.content.update((content) => ({ ...content, mediaState: "loading", mediaErrorKind: undefined }));
 
         try {
-            const media = await resolveAttachmentMediaFromEvent(this.event, this.room.client, signal);
+            const media = await resolveAttachmentMediaFromEvent(
+                this.event,
+                this.room.client,
+                signal,
+                this.getMediaResolveOptions(),
+            );
             if (signal.aborted) {
                 media.cleanup();
                 return;
@@ -278,7 +310,17 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     public mxcUrlToHttp(url: string) {
-        return this.room.client.mxcUrlToHttp(url);
+        return mxcToHttp(this.room.client, url, matrixMediaAuthService.isEnabledForTagSrc()) ?? null;
+    }
+
+    private getMediaResolveOptions(): MatrixMediaResolveOptions {
+        return {
+            useAuthenticatedUrls: matrixMediaAuthService.isEnabledForTagSrc(),
+            encryptedDownload: {
+                useAuthenticatedUrls: matrixMediaAuthService.isEnabledForDirectFetch(),
+                authorizationHeader: matrixMediaAuthService.getAuthorizationHeader(),
+            },
+        };
     }
     private mapMatrixMessageTypeToChatMessage() {
         const matrixMessageType = this.event.getOriginalContent().msgtype;
