@@ -383,10 +383,7 @@ export const EnvironmentVariables = z.object({
         .describe("The sampling rate for Sentry traces. Only used if SENTRY_DSN is configured. Defaults to 0.1"),
 
     // RoomAPI related environment variables
-    ROOM_API_BIND_HOST: z
-        .string()
-        .optional()
-        .describe("Bind host for the Room API gRPC server. Defaults to `[::]`."),
+    ROOM_API_BIND_HOST: z.string().optional().describe("Bind host for the Room API gRPC server. Defaults to `[::]`."),
     ROOM_API_PORT: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 50051))
         .describe("Port for the Room API gRPC server. Defaults to 50051"),
