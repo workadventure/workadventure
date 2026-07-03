@@ -130,7 +130,7 @@ export const TURN_STATIC_AUTH_SECRET: string | undefined = env.TURN_STATIC_AUTH_
 export const TURN_CREDENTIALS_RENEWAL_TIME: number = env.TURN_CREDENTIALS_RENEWAL_TIME;
 
 // RoomAPI
-export const ROOM_API_BIND_HOST = env.ROOM_API_BIND_HOST ?? "0.0.0.0";
+export const ROOM_API_BIND_HOST = env.ROOM_API_BIND_HOST ?? "[::]";
 export const ROOM_API_PORT = env.ROOM_API_PORT;
 export const ROOM_API_SECRET_KEY = env.ROOM_API_SECRET_KEY;
 
