@@ -791,7 +791,11 @@ class AnalyticsClient {
     }
 
     mapLoadingStarted(mapUrl?: string): void {
-        this.trackAdminEvent("map_loading.started", { mapUrl });
+        // Strip query string / fragment so map/WAM/room URLs carrying access
+        // tokens are not shipped as analytics, mirroring the cowebsite URL handling.
+        this.trackAdminEvent("map_loading.started", {
+            mapUrl: mapUrl ? this.stripUrlSensitiveParts(mapUrl) : undefined,
+        });
     }
 
     mapLoadingSucceeded(durationMs?: number): void {

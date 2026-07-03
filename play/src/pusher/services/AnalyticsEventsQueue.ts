@@ -30,6 +30,30 @@ const RETRY_MAX_DELAY_MS = 5_000;
  */
 const MAX_EVENT_PROPERTIES_BYTES = 8 * 1024;
 
+/**
+ * When a world opts out of `user_level_activity`, event `properties` are reduced
+ * to a privacy-safe allowlist rather than filtered through a denylist (which
+ * silently leaks any PII-bearing key we forget to enumerate — e.g. remoteUserUuid,
+ * remoteSpaceUserId, spaceName, free-form names). Numeric/boolean values are never
+ * PII and are always kept; among strings only these low-cardinality enums and
+ * opaque grouping ids are preserved. Mirrors the admin-side
+ * AnalyticsMetricsPolicyService allowlist so both anonymization gates agree.
+ */
+const ANONYMOUS_SAFE_PROPERTY_KEYS = new Set<string>([
+    "areaId",
+    "conversationId",
+    "id",
+    "conversationType",
+    "meetingType",
+    "meetingProvider",
+    "mediaKind",
+    "inviteType",
+    "provider",
+    "status",
+    "triggerProperty",
+    "fileExtension",
+]);
+
 export type AnalyticsEventSource = "front" | "pusher" | "media";
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 type JsonObject = { [key: string]: JsonValue };
@@ -363,6 +387,19 @@ export class AnalyticsEventsQueue {
             return undefined;
         }
 
+        // Reject samples attributed to a space the socket has not joined, so a
+        // client cannot spoof spaceName / remote-user attribution. This restores
+        // the membership check the legacy VideoQualityAnalyticsQueue enforced.
+        const fullSpaceName = `${socketData.world}.${sample.spaceName}`;
+        if (socketData.spaces.size > 0 && !socketData.spaces.has(fullSpaceName)) {
+            console.warn("Analytics video-quality sample dropped: socket not joined to reported space", {
+                streamId: sample.streamId,
+                spaceName: sample.spaceName,
+                reporterUserUuid: socketData.userUuid,
+            });
+            return undefined;
+        }
+
         return {
             eventName: "media.video_quality.sample",
             source: "media",
@@ -564,11 +601,6 @@ function analyticsMetricCategoryForEvent(eventName: string): AnalyticsMetricCate
 }
 
 function anonymizeEvent(event: AnalyticsEvent): AnalyticsEvent {
-    const properties = { ...event.properties };
-    delete properties.connectionId;
-    delete properties.sessionId;
-    delete properties.tabId;
-
     return {
         ...event,
         userUuid: anonymousIdentifier(event.world, event.userUuid),
@@ -576,8 +608,26 @@ function anonymizeEvent(event: AnalyticsEvent): AnalyticsEvent {
         spaceUserId: anonymousIdentifier(event.world, event.spaceUserId),
         clientIp: null,
         tabId: null,
-        properties,
+        properties: anonymizeProperties(event.properties),
     };
+}
+
+function anonymizeProperties(properties: JsonObject): JsonObject {
+    const safe: JsonObject = {};
+    for (const [key, value] of Object.entries(properties)) {
+        // Numbers and booleans carry counts/durations/flags, never PII.
+        if (value === null || typeof value === "number" || typeof value === "boolean") {
+            safe[key] = value;
+            continue;
+        }
+        // Among strings, keep only the explicitly allow-listed non-PII keys.
+        if (typeof value === "string" && ANONYMOUS_SAFE_PROPERTY_KEYS.has(key)) {
+            safe[key] = value;
+        }
+        // Everything else (free-form strings, URLs, nested arrays/objects,
+        // unknown keys) is intentionally dropped.
+    }
+    return safe;
 }
 
 function anonymousIdentifier(world: string, identifier: string): string {
