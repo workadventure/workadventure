@@ -14,7 +14,6 @@ import {
     EventStatus,
     EventType,
     Filter,
-    MatrixEventEvent,
     MsgType,
     NotificationCountType,
     PushRuleActionName,
@@ -145,7 +144,6 @@ export class MatrixChatRoom
     shouldRetrySendingEvents = derived(this.notSentEvents, (notSentEvents) => notSentEvents.size > 0);
 
     private handleRoomTimeline = this.onRoomTimeline.bind(this);
-    private handleLocalEchoUpdated = this.onLocalEchoUpdated.bind(this);
     private handleNewPoll = this.onNewPoll.bind(this);
     private handleRoomName = this.onRoomName.bind(this);
     private handleRoomRedaction = this.onRoomRedaction.bind(this);
@@ -153,7 +151,6 @@ export class MatrixChatRoom
     private handleNewMember = this.onRoomNewMember.bind(this);
     private handleRoomStateMembers = this.onRoomStateMembers.bind(this);
     private handleMyMembership = this.onRoomMyMembership.bind(this);
-    private handleEventDecrypted = this.onEventDecrypted.bind(this);
     private updateUnreadNotificationCount = this.onRoomUpdateUnreadNotificationCount.bind(this);
     private readonly openThreadConversations = new Map<string, MatrixChatThread>();
     private readonly threadSummaryStores = new Map<string, Writable<ChatThreadSummary | null>>();
@@ -228,15 +225,7 @@ export class MatrixChatRoom
         const roomAvatarStore: PictureStore = readable(
             matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined,
         );
-        this.messages = new SearchableArrayStore(
-            (item: MatrixChatMessage) => item.id,
-            // Release the per-message MatrixEvent listeners / media blobs when a message is replaced (edit,
-            // local->remote echo id swap) or removed, instead of leaking them for the room's lifetime.
-            (item: MatrixChatMessage) => {
-                item.relations?.destroy();
-                item.destroy();
-            },
-        );
+        this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.timelinePolls = new SearchableArrayStore((item: MatrixChatPoll) => item.id);
         this.sidePanelPolls = new SearchableArrayStore((item: ChatPollItem) => item.id);
         this.pollItems = this.sidePanelPolls;
@@ -1027,8 +1016,6 @@ export class MatrixChatRoom
 
     private startHandlingChatRoomShellEvents() {
         this.matrixRoom.on(RoomEvent.Timeline, this.handleRoomTimeline);
-        this.matrixRoom.on(RoomEvent.LocalEchoUpdated, this.handleLocalEchoUpdated);
-        this.matrixRoom.client.on(MatrixEventEvent.Decrypted, this.handleEventDecrypted);
         this.matrixRoom.on(PollEvent.New, this.handleNewPoll);
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
@@ -1407,103 +1394,6 @@ export class MatrixChatRoom
                 // them here used to create a duplicate Poll that overwrote room.polls and orphaned the
                 // rendered MatrixChatPoll's subscriptions, so incoming polls/votes were lost for joiners.
             })().catch((error) => console.error(error));
-        }
-    }
-
-    /**
-     * A message received before its megolm key fails to decrypt and is skipped by onRoomTimeline (its type
-     * is still m.room.encrypted at that point). When the key later arrives the SDK re-decrypts and emits
-     * Decrypted, but nothing was rendered to observe it, so it stayed hidden until a reload. Mirror
-     * Element's TimelinePanel.onEventDecrypted: insert the now-decrypted message at its chronological
-     * position. Registered on the client (which re-emits MatrixEventEvent.Decrypted) and filtered to this room.
-     */
-    private onEventDecrypted(event: MatrixEvent): void {
-        try {
-            if (event.getRoomId() !== this.matrixRoom.roomId) {
-                return;
-            }
-            if (event.getType() !== EventType.RoomMessage) {
-                return;
-            }
-            const eventId = event.getId();
-            if (!eventId || this.messages.has(eventId)) {
-                // Already displayed: the per-message Decrypted listener updates it in place.
-                return;
-            }
-            if (this.isEventReplacingExistingOne(event) || !shouldDisplayEventInRoomTimeline(event)) {
-                return;
-            }
-            this.insertMessageInTimestampOrder(this.createChatMessageFromEvent(event));
-        } catch (error) {
-            console.error("Failed to handle a late-decrypted event", error);
-        }
-    }
-
-    private insertMessageInTimestampOrder(message: MatrixChatMessage): void {
-        const ts = message.getMatrixEvent().getTs();
-        let index = this.messages.length;
-        for (let i = 0; i < this.messages.length; i++) {
-            if (this.messages[i].getMatrixEvent().getTs() > ts) {
-                index = i;
-                break;
-            }
-        }
-        this.messages.splice(index, 0, message);
-    }
-
-    /**
-     * Optimistic local echo. The client is created with {@link PendingEventOrdering.Detached}
-     * (see MatrixChatConnection), so messages we send are kept in `room.getPendingEvents()` and are
-     * NOT part of the live timeline — `onRoomTimeline` would only render them once the server echoes
-     * them back through `/sync`. Mirror Element's TimelinePanel, which renders pending events and
-     * listens to {@link RoomEvent.LocalEchoUpdated}: show our own message instantly and reconcile it
-     * (id swap on send, cancellation) with the remote echo that later arrives on the live timeline.
-     */
-    private onLocalEchoUpdated(event: MatrixEvent, room: Room, oldEventId?: string): void {
-        if (room.roomId !== this.matrixRoom.roomId) {
-            return;
-        }
-        if (event.getType() !== EventType.RoomMessage || this.isEventReplacingExistingOne(event)) {
-            return;
-        }
-
-        const eventId = event.getId();
-
-        // As the send progresses the SDK swaps the local event id for the real one. Reconcile the
-        // optimistic entry so it neither duplicates nor loses its position once the remote echo lands.
-        if (oldEventId && oldEventId !== eventId) {
-            if (eventId && this.messages.has(eventId)) {
-                // Remote echo already rendered under the real id (via onRoomTimeline): drop the stale echo.
-                this.messages.delete(oldEventId);
-                return;
-            }
-            const index = this.messages.findIndex((displayed) => displayed.id === oldEventId);
-            if (index !== -1) {
-                // Re-key in place to keep ordering; the later remote echo (same id) updates this slot.
-                this.messages.splice(index, 1, this.createChatMessageFromEvent(event));
-                return;
-            }
-            this.messages.delete(oldEventId);
-        }
-
-        if (!eventId) {
-            return;
-        }
-
-        // A cancelled send: remove the optimistic message.
-        if (event.status === EventStatus.CANCELLED) {
-            this.messages.delete(eventId);
-            return;
-        }
-
-        if (!shouldDisplayEventInRoomTimeline(event)) {
-            return;
-        }
-
-        // Render our own just-sent message immediately. push() is keyed by id, so the later remote
-        // echo (same real id, via onRoomTimeline) updates this entry in place instead of duplicating.
-        if (!this.messages.has(eventId)) {
-            this.messages.push(this.createChatMessageFromEvent(event));
         }
     }
 
@@ -2142,8 +2032,6 @@ export class MatrixChatRoom
         this.currentUserRoomMember = undefined;
         this.matrixRoom.currentState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
         this.matrixRoom.off(RoomEvent.Timeline, this.handleRoomTimeline);
-        this.matrixRoom.off(RoomEvent.LocalEchoUpdated, this.handleLocalEchoUpdated);
-        this.matrixRoom.client.off(MatrixEventEvent.Decrypted, this.handleEventDecrypted);
         this.matrixRoom.off(PollEvent.New, this.handleNewPoll);
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.off(RoomEvent.Redaction, this.handleRoomRedaction);
