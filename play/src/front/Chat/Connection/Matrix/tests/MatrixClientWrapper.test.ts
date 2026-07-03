@@ -37,7 +37,7 @@ describe("MatrixClientWrapper", () => {
     });
     describe("initMatrixClient", () => {
         const basicMockClient = {
-            login: () => {
+            loginRequest: () => {
                 return Promise.resolve({
                     user_id: null,
                     access_token: null,
@@ -172,7 +172,7 @@ describe("MatrixClientWrapper", () => {
 
             const mockClient = {
                 ...basicMockClient,
-                login: () => {
+                loginRequest: () => {
                     return Promise.resolve({
                         user_id: "userID",
                         access_token: "accessToken",
@@ -222,7 +222,7 @@ describe("MatrixClientWrapper", () => {
 
             const mockClient = {
                 ...basicMockClient,
-                login: () => {
+                loginRequest: () => {
                     return Promise.resolve({
                         user_id: userId,
                         access_token: accessToken,
@@ -280,7 +280,7 @@ describe("MatrixClientWrapper", () => {
 
             const mockClient = {
                 ...basicMockClient,
-                login: () => {
+                loginRequest: () => {
                     return Promise.resolve({
                         user_id: userId,
                         access_token: accessToken,

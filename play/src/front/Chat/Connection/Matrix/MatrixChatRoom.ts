@@ -225,6 +225,12 @@ export class MatrixChatRoom
         const roomAvatarStore: PictureStore = readable(
             matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined,
         );
+        // No disposeCallback here (unlike the thread reply store): this store is append-only and mutated in
+        // place. handleNewMessage / readEventsToAddMessagesAndReactions skip events already present, so an
+        // instance is never swapped out during the room's life. A disposeCallback firing on a same-id
+        // re-render would tear the MatrixEvent listeners (Decrypted / Replaced / RelationsCreated) off the
+        // displayed message — which left encrypted messages stuck on "Failed to decrypt" after a key-backup
+        // restore. Instances are released together in destroy() at room teardown.
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.timelinePolls = new SearchableArrayStore((item: MatrixChatPoll) => item.id);
         this.sidePanelPolls = new SearchableArrayStore((item: ChatPollItem) => item.id);
@@ -1004,6 +1010,13 @@ export class MatrixChatRoom
             !this.isEventReplacingExistingOne(event) &&
             shouldDisplayEventInRoomTimeline(event)
         ) {
+            // Don't recreate a message the store already holds (e.g. a live event rendered by onRoomTimeline
+            // before the timeline finished loading, or an overlap while paginating). Replacing the live
+            // instance would orphan its MatrixEvent listeners/media; the existing instance updates in place.
+            const eventId = event.getId();
+            if (eventId !== undefined && messages.has(eventId)) {
+                return undefined;
+            }
             this.addEventContentInMemory(event);
             return this.createChatMessageFromEvent(event);
         }
@@ -1316,6 +1329,10 @@ export class MatrixChatRoom
             this.privacyState.set(this.getMatrixRoomPrivacyState());
         }
     }
+    // Max consecutive backward pages that yield no displayable message before loadMorePreviousMessages
+    // stops recursing (each page is 8 events).
+    private static readonly MAX_EMPTY_PAGINATION_DEPTH = 10;
+
     /**
      * Strict "newly arrived" rule (see Element Web / matrix-js-sdk): only treat as live when
      * !removed, data.liveEvent === true, and !toStartOfTimeline. Use this for notifications,
@@ -1339,14 +1356,15 @@ export class MatrixChatRoom
         if (removed) {
             return;
         }
-        // Event age when it arrived at the device; defensive guard for delayed sync (source of truth remains data.liveEvent).
-        const ageOfEvent = event.getAge();
-        if (
-            !MatrixChatRoom.isNewLiveTimelineEvent(removed, data, toStartOfTimeline) ||
-            (ageOfEvent !== undefined && ageOfEvent >= 2000)
-        ) {
+        // Only react to events the SDK reports as live (matches Element's TimelinePanel.onRoomTimeline).
+        if (!MatrixChatRoom.isNewLiveTimelineEvent(removed, data, toStartOfTimeline)) {
             return;
         }
+        // A live event delivered late by a delayed sync must STILL be rendered; the age only gates
+        // notifications / auto-open (the original intent of the #4136 guard). Dropping the render here
+        // is what made messages "appear only after a while" under the slower matrix-js-sdk 41 sync timing.
+        const ageOfEvent = event.getAge();
+        const isFreshLiveEvent = ageOfEvent === undefined || ageOfEvent < 2000;
 
         if (room !== undefined) {
             (async () => {
@@ -1377,7 +1395,7 @@ export class MatrixChatRoom
                     if (this.isEventReplacingExistingOne(event)) {
                         this.handleMessageModification(event);
                     } else if (shouldDisplayEventInRoomTimeline(event)) {
-                        this.handleNewMessage(event);
+                        this.handleNewMessage(event, isFreshLiveEvent);
                     }
                 }
                 if (event.getType() === "m.reaction") {
@@ -1455,7 +1473,17 @@ export class MatrixChatRoom
         this.prunePollStores();
     }
 
-    private handleNewMessage(event: MatrixEvent) {
+    private handleNewMessage(event: MatrixEvent, isFreshLiveEvent = true) {
+        // A live event can reach onRoomTimeline more than once (replayed by a delayed sync now that the age
+        // guard renders late live events, or after the room was already populated by the initial load). The
+        // MatrixChatMessage already displayed for this event keeps itself current through its own MatrixEvent
+        // listeners (Decrypted / Replaced / RelationsCreated), so recreating and replacing it is pointless
+        // churn — and swapping the displayed instance out would strip those listeners, which left encrypted
+        // messages stuck on "Failed to decrypt" after a key-backup restore. Skip the duplicate.
+        const eventId = event.getId();
+        if (eventId !== undefined && this.messages.has(eventId)) {
+            return;
+        }
         const message = this.createChatMessageFromEvent(event);
         this.messages.push(message);
         const senderID = event.getSender();
@@ -1465,12 +1493,13 @@ export class MatrixChatRoom
             }
         }
         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
-            // Only notify for "live" messages (after initial sync). Avoids notifying for messages loaded on room open (plan: live vs historical).
-            if (this.matrixRoom.client.isInitialSyncComplete()) {
+            // Only notify for "live" messages (after initial sync) that arrived fresh. A live event
+            // delivered late by a delayed sync is still rendered above, but must not notify / auto-open.
+            if (isFreshLiveEvent && this.matrixRoom.client.isInitialSyncComplete()) {
                 this.notifyNewMessage(message);
             }
 
-            if (!isAChatRoomIsVisible() && !(get(selectedRoomStore) instanceof ProximityChatRoom)) {
+            if (isFreshLiveEvent && !isAChatRoomIsVisible() && !(get(selectedRoomStore) instanceof ProximityChatRoom)) {
                 selectedRoomStore.set(this);
                 navChat.switchToChat();
             }
@@ -1515,7 +1544,9 @@ export class MatrixChatRoom
             if (event_id) {
                 const messageToUpdate = this.messages.get(event_id);
                 if (messageToUpdate !== undefined) {
-                    messageToUpdate.modifyContent(event.getOriginalContent()["m.new_content"].body);
+                    // The SDK has already applied the edit to the target event; re-render from it (handles
+                    // media / formatting and can't throw on a missing m.new_content).
+                    messageToUpdate.modifyContent();
                 }
             }
         }
@@ -1591,7 +1622,7 @@ export class MatrixChatRoom
         return eventRelation?.rel_type === "m.replace";
     }
 
-    async loadMorePreviousMessages() {
+    async loadMorePreviousMessages(depth = 0) {
         await this.ensureTimelineInitialized();
         if (get(this.hasPreviousMessage)) {
             const existingEventsBeforePagination = this.timelineWindow.getEvents();
@@ -1610,8 +1641,11 @@ export class MatrixChatRoom
             await this.processPollEvents(paginatedEvents);
             await this.syncTimelinePollItemsFromEvents(paginatedEvents);
             this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
-            if (messages.length === 0) {
-                await this.loadMorePreviousMessages();
+            // A page can contain only non-message events (reactions, edits, thread replies), which yield no
+            // displayable messages. Keep paginating so the user sees something, but cap the recursion: a
+            // long run of such events would otherwise recurse deeply. The user can scroll again to continue.
+            if (messages.length === 0 && depth < MatrixChatRoom.MAX_EMPTY_PAGINATION_DEPTH) {
+                await this.loadMorePreviousMessages(depth + 1);
             }
         }
     }

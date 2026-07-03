@@ -1,7 +1,6 @@
 import type { Readable, Unsubscriber, Writable } from "svelte/store";
 import { derived, get, readable, readonly, writable } from "svelte/store";
 import type {
-    EmittedEvents,
     ICreateRoomOpts,
     ICreateRoomStateEvent,
     IPushRule,
@@ -9,6 +8,7 @@ import type {
     MatrixClient,
     MatrixEvent,
     Room,
+    SyncStateData,
     User,
     Visibility,
 } from "matrix-js-sdk";
@@ -87,6 +87,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private handleMyMembership: (room: Room, membership: string, prevMembership: string | undefined) => void;
     private handleRoomStateEvent: (event: MatrixEvent) => void;
     private handleName: (room: Room) => void;
+    private handleSync: (state: SyncState, prevState: SyncState | null, res?: SyncStateData) => void;
     private handleAccountDataEvent: (event: MatrixEvent) => void;
     private handleUserPresence: (event: MatrixEvent | undefined, user: User) => void;
     private handleVerificationRequestReceived: (request: VerificationRequest) => void;
@@ -96,8 +97,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private displayNameMatrixSyncUnsubscriber: (() => void) | undefined;
     private displayNameMatrixSyncDebounceTimer: ReturnType<typeof setTimeout> | undefined;
     private isClientReady = false;
-    private usersStatus: MapStore<string, AvailabilityStatus>;
-    private userIdsNeedingPresenceUpdate = new Set();
+    // Per-user availability store, shared with the rendered ChatUser and kept live by
+    // onUserPresenceEvent. Persistent across directRoomsUsers recomputes so the UI subscription survives.
+    private readonly userAvailabilityStores = new Map<string, Writable<AvailabilityStatus>>();
     private readonly roomPlacementRetryTimers = new Map<string, ReturnType<typeof setTimeout>>();
     private readonly roomPlacementRetryGenerations = new Map<string, number>();
     private readonly parentRoomIdsByRoomId = new Map<string, Set<string>>();
@@ -179,8 +181,11 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                         if (member.id !== myUserID) {
                             const user = this.client?.getUser(member.id);
                             if (user) {
-                                acc.push(chatUserFactory(user, client));
-                                this.userIdsNeedingPresenceUpdate.add(user.userId);
+                                const availabilityStatus = this.getOrCreateUserAvailabilityStore(
+                                    user.userId,
+                                    user.presence,
+                                );
+                                acc.push(chatUserFactory(user, client, { availabilityStatus }));
                             }
                         }
                     });
@@ -226,7 +231,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             },
         );
 
-        this.usersStatus = new MapStore<string, AvailabilityStatus>();
         this.isEncryptionRequiredAndNotSet = this.matrixSecurity.isEncryptionRequiredAndNotSet;
 
         this.shouldRetrySendingEvents = derived(
@@ -261,6 +265,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.handleMyMembership = this.onRoomEventMembership.bind(this);
         this.handleRoomStateEvent = this.onRoomStateEvent.bind(this);
         this.handleName = this.onRoomNameEvent.bind(this);
+        this.handleSync = this.onSyncStateChange.bind(this);
         this.handleAccountDataEvent = this.onAccountDataEvent.bind(this);
         this.handleUserPresence = this.onUserPresenceEvent.bind(this);
         this.handleVerificationRequestReceived = this.onVerificationRequestReceived.bind(this);
@@ -721,43 +726,60 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         });
     }
 
+    private getOrCreateUserAvailabilityStore(
+        userId: string,
+        presence: string | undefined,
+    ): Writable<AvailabilityStatus> {
+        let store = this.userAvailabilityStores.get(userId);
+        if (!store) {
+            store = writable(mapMatrixPresenceToAvailabilityStatus(presence));
+            this.userAvailabilityStores.set(userId, store);
+        }
+        return store;
+    }
+
     private onUserPresenceEvent(event: MatrixEvent | undefined, user: User): void {
-        const userStatus = get(this.usersStatus).get(user.userId);
-        const newStatus = mapMatrixPresenceToAvailabilityStatus(user.presence);
-        if (userStatus && newStatus !== userStatus && this.userIdsNeedingPresenceUpdate.has(user.userId)) {
-            get(this.usersStatus).set(user.userId, newStatus);
+        // Push the new presence into the shared store so the rendered DM peer's availabilityStatus updates
+        // live. (The previous implementation wrote to a map that was never seeded, so it never ran.)
+        const store = this.userAvailabilityStores.get(user.userId);
+        if (store) {
+            store.set(mapMatrixPresenceToAvailabilityStatus(user.presence));
+        }
+    }
+
+    private onSyncStateChange(state: SyncState, prevState: SyncState | null, res?: SyncStateData): void {
+        if (!this.client) return;
+        switch (state) {
+            case SyncState.Prepared:
+                this.connectionStatus.set("ONLINE");
+                this.isClientReady = true;
+                break;
+            case SyncState.Error:
+                this.connectionStatus.set("ON_ERROR");
+                if (res?.error) {
+                    console.error("Matrix sync error (previous state: ", prevState, "): ", res?.error);
+                    Sentry.captureException(res?.error);
+                }
+                break;
+            case SyncState.Reconnecting:
+                this.connectionStatus.set("CONNECTING");
+                break;
+            case SyncState.Stopped:
+                this.connectionStatus.set("OFFLINE");
+                break;
+            // Catchup follows a connectivity error while the client catches up before returning to Syncing.
+            case SyncState.Catchup:
+            case SyncState.Syncing:
+                if (get(this.connectionStatus) !== "ONLINE" && this.isClientReady) {
+                    this.connectionStatus.set("ONLINE");
+                }
+                break;
         }
     }
 
     async startMatrixClient() {
         if (!this.client) return;
-        this.client.on(ClientEvent.Sync, (state, prevState, res) => {
-            if (!this.client) return;
-            switch (state) {
-                case SyncState.Prepared:
-                    this.connectionStatus.set("ONLINE");
-                    this.isClientReady = true;
-                    break;
-                case SyncState.Error:
-                    this.connectionStatus.set("ON_ERROR");
-                    if (res?.error) {
-                        console.error("Matrix sync error (previous state: ", prevState, "): ", res?.error);
-                        Sentry.captureException(res?.error);
-                    }
-                    break;
-                case SyncState.Reconnecting:
-                    this.connectionStatus.set("CONNECTING");
-                    break;
-                case SyncState.Stopped:
-                    this.connectionStatus.set("OFFLINE");
-                    break;
-                case SyncState.Syncing:
-                    if (get(this.connectionStatus) !== "ONLINE" && this.isClientReady) {
-                        this.connectionStatus.set("ONLINE");
-                    }
-                    break;
-            }
-        });
+        this.client.on(ClientEvent.Sync, this.handleSync);
 
         this.client.on(ClientEvent.Room, this.handleRoom);
         this.client.on(ClientEvent.DeleteRoom, this.handleDeleteRoom);
@@ -1067,8 +1089,11 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         }
         if (event.getType() === "m.push_rules") {
             const content = event.getContent();
+            // `global` and its rule-kind arrays (override, room, …) are all optional in a PushRuleSet;
+            // a partial m.push_rules update can omit `override`, so never assume it exists.
+            const overrideRules: IPushRule[] = content?.global?.override ?? [];
 
-            content.global.override.forEach((rule: IPushRule) => {
+            overrideRules.forEach((rule: IPushRule) => {
                 const room = this.roomList.get(rule.rule_id);
                 if (!room) return;
                 if (rule.actions.includes(PushRuleActionName.DontNotify)) {
@@ -1078,7 +1103,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
             Array.from(this.roomList.values())
                 .filter((room) => {
-                    return !content.global.override.some(
+                    return !overrideRules.some(
                         (rule: IPushRule) =>
                             rule.rule_id === room.id && rule.actions.includes(PushRuleActionName.DontNotify),
                     );
@@ -1656,9 +1681,8 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
     private handleMatrixError(error: unknown): Error {
         if (error instanceof MatrixError) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            //@ts-ignore
-            return new Error(error.data.error, { cause: error });
+            // MatrixError.data is IErrorJson with an optional `error` string in 41.8.0, so no cast is needed.
+            return new Error(error.data.error ?? error.message, { cause: error });
         }
         return asError(error);
     }
@@ -1679,10 +1703,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 [],
             is_direct: roomOptions.is_direct,
             initial_state: this.computeInitialState(roomOptions),
-            power_level_content_override: {
-                // @ts-ignore TODO: fix type
-                suggested: roomOptions.suggested ?? false,
-            },
+            // No power_level_content_override: `suggested` is not an m.room.power_levels field (hence the
+            // suppressed type error). The real "suggested" flag is set on the m.space.child event in
+            // addRoomToSpace, so this only stored a junk key in the room power levels.
         };
     }
 
@@ -2013,14 +2036,17 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.parentRoomIdsByRoomId.clear();
         this.childRoomIdsBySpaceId.clear();
         this.folderShellsByRoomId.clear();
+        this.userAvailabilityStores.clear();
         this.roomList.forEach((room) => {
             this.roomList.delete(room.id);
         });
+        this.client?.off(ClientEvent.Sync, this.handleSync);
         this.client?.off(ClientEvent.Room, this.handleRoom);
         this.client?.off(ClientEvent.DeleteRoom, this.handleDeleteRoom);
         this.client?.off(RoomEvent.MyMembership, this.handleMyMembership);
-        this.client?.off("RoomState.events" as EmittedEvents, this.handleRoomStateEvent);
+        this.client?.off(RoomStateEvent.Events, this.handleRoomStateEvent);
         this.client?.off(RoomEvent.Name, this.handleName);
+        this.client?.off(ClientEvent.AccountData, this.handleAccountDataEvent);
         this.client?.off(UserEvent.Presence, this.handleUserPresence);
         this.client?.off(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
         if (this.directRoomsUnreadAggregateUnsubscriber) {

@@ -3,6 +3,7 @@
     import { VerificationRequestEvent, VerifierEvent, VerificationPhase } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationMethod } from "matrix-js-sdk/lib/types";
     import { Deferred } from "@workadventure/shared-utils";
+    import { asError } from "catch-unknown";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import type { AskStartVerificationModalProps } from "./MatrixSecurity";
@@ -23,17 +24,19 @@
     async function acceptToStartVerification() {
         try {
             await request.accept();
+
+            // startVerification() can reject (e.g. "startVerification(): other device is unknown" when the
+            // initiator's device keys are not cached yet). Keep it inside the try/catch so the failure is
+            // surfaced instead of becoming a silent unhandled rejection that leaves both devices stuck.
+            verifier = await request.startVerification(VerificationMethod.Sas);
+
+            request.on(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
+
+            verifier.on(VerifierEvent.ShowSas, handleVerifierEventShowSas);
         } catch (error) {
             console.error("Failed to accept verification request:", error);
-            errorLabel = "Failed to accept verification request ...";
-            return;
+            errorLabel = asError(error).message || "Failed to accept verification request ...";
         }
-
-        verifier = await request.startVerification(VerificationMethod.Sas);
-
-        request.on(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
-
-        verifier.on(VerifierEvent.ShowSas, handleVerifierEventShowSas);
     }
 
     const handleVerifierEventShowSas = (showSasCallbacks: ShowSasCallbacks) => {
@@ -45,9 +48,11 @@
         };
 
         const mismatchCallback = () => {
-            //TODO : use showSasCallbacks.mismatch(); after matris-js-sdk update
-            //showSasCallbacks.mismatch();
-            return request.cancel({ reason: "m.mismatched_sas" });
+            // Signal m.mismatched_sas to the other device (matrix-js-sdk 41). Previously this sent a
+            // plain request.cancel({ reason }) which the other side saw as a generic user cancellation.
+            // mismatch() is synchronous, so return a resolved promise to satisfy the Promise<void> type.
+            showSasCallbacks.mismatch();
+            return Promise.resolve();
         };
 
         if (!emojis) return;
@@ -93,6 +98,11 @@
             modals.close();
         }
     }
+
+    // NB: no onDestroy cleanup of the request/verifier listeners here. handleVerifierEventShowSas closes
+    // this modal (to open the emoji dialog) while the verification is still running, so the listeners must
+    // OUTLIVE the component to observe the later Done/Cancelled transition — which is where they remove
+    // themselves. Removing them on unmount would leave doneDeferred unresolved and the flow stuck.
 </script>
 
 <Popup {isOpen}>

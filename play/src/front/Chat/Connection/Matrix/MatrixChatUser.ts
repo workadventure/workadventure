@@ -1,12 +1,15 @@
 import type { MatrixClient, Room, User } from "matrix-js-sdk";
 import { SetPresence } from "matrix-js-sdk";
-import { readable, writable } from "svelte/store";
+import { readable, writable, type Writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { ChatUser } from "../ChatConnection";
 import { matrixAvatarProfile } from "./services/MatrixAvatarProfile";
 
 type ChatUserFactoryOptions = {
     username?: string;
+    // When provided, the caller owns a store shared across factory calls so live presence updates
+    // (MatrixChatConnection.onUserPresenceEvent) reach the rendered ChatUser instead of a snapshot.
+    availabilityStatus?: Writable<AvailabilityStatus>;
 };
 
 export const chatUserFactory: (
@@ -30,7 +33,8 @@ export const chatUserFactory: (
         ),
         color: undefined,
         spaceUserId: undefined,
-        availabilityStatus: writable(mapMatrixPresenceToAvailabilityStatus(matrixChatUser.presence)),
+        availabilityStatus:
+            options.availabilityStatus ?? writable(mapMatrixPresenceToAvailabilityStatus(matrixChatUser.presence)),
     };
 };
 

@@ -39,6 +39,16 @@ export class MatrixChatMessage implements ChatMessage {
     private attachmentMediaCleanup: () => void = () => undefined;
     private attachmentMediaAbortController: AbortController | undefined;
     private readonly decryptedListener = () => this.updateMessageContentOnDecryptedEvent();
+    // Fired when an m.replace edit is applied to this event; re-render so the edit shows.
+    private readonly replacedListener = () => this.modifyContent();
+    // Fired when the first relation container is created for this event. initReactions() returns early
+    // when the message had no reactions at construction (so it never subscribed to reaction updates); this
+    // re-runs it so reactions that arrive later via aggregation/pagination still appear.
+    private readonly relationsCreatedListener = (relationType: string) => {
+        if (relationType === RelationType.Annotation) {
+            this.initReactions();
+        }
+    };
 
     constructor(
         private event: MatrixEvent,
@@ -79,6 +89,8 @@ export class MatrixChatMessage implements ChatMessage {
         this.canDelete = writable(this.isMyMessage || (hasSufficientPowerLevel && myPowerLevel > senderPowerLevel));
 
         event.on(MatrixEventEvent.Decrypted, this.decryptedListener);
+        event.on(MatrixEventEvent.Replaced, this.replacedListener);
+        event.on(MatrixEventEvent.RelationsCreated, this.relationsCreatedListener);
         this.loadImageMediaIfNeeded();
         this.loadAttachmentMediaIfNeeded();
 
@@ -101,18 +113,16 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     private getMessageContent(): ChatMessageContent {
-        const unsigned = this.event.getUnsigned();
-        const relation = unsigned["m.relations"];
         if (this.event.isDecryptionFailure()) {
             return { body: "🔐 Failed to decrypt", url: undefined };
         }
-        if (relation) {
-            if (relation["m.replace"]) {
-                return { body: relation["m.replace"].content?.["m.new_content"]?.body, url: undefined };
-            }
-        }
 
-        const content = this.event.getOriginalContent();
+        // getContent() returns the effective content: the latest edit's `m.new_content` when the event has
+        // been replaced, and the decrypted content in E2EE rooms. The previous code read the raw
+        // `m.replace` bundle from unsigned, which in E2EE rooms is the *wire* (encrypted) content, so edited
+        // messages rendered with an empty body and lost msgtype/formatting/media. Live edits now re-render
+        // via the MatrixEventEvent.Replaced listener.
+        const content = this.event.getContent();
         const quotedMessage = this.getQuotedMessage();
 
         if (quotedMessage !== undefined && content.formatted_body) {
@@ -315,9 +325,14 @@ export class MatrixChatMessage implements ChatMessage {
         }
     }
 
-    public modifyContent(newContent: string) {
-        this.content.set({ body: newContent, url: undefined });
+    // Re-render from the (now SDK-replaced) event rather than a caller-supplied body string: getContent()
+    // resolves the edit's m.new_content and preserves msgtype/formatting/media instead of the old
+    // body-only update that dropped the URL of edited image/file messages.
+    public modifyContent() {
+        this.content.set(this.getMessageContent());
         this.isModified.set(true);
+        this.loadImageMediaIfNeeded();
+        this.loadAttachmentMediaIfNeeded();
     }
 
     public markAsRemoved() {
@@ -336,6 +351,8 @@ export class MatrixChatMessage implements ChatMessage {
 
     destroy() {
         this.event.off(MatrixEventEvent.Decrypted, this.decryptedListener);
+        this.event.off(MatrixEventEvent.Replaced, this.replacedListener);
+        this.event.off(MatrixEventEvent.RelationsCreated, this.relationsCreatedListener);
         this.imageMediaAbortController?.abort();
         this.imageMediaCleanup();
         this.attachmentMediaAbortController?.abort();

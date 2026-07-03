@@ -73,7 +73,13 @@ export class MatrixChatThread implements ChatThread {
 
     private initializationPromise: Promise<void> | undefined;
 
-    private readonly replyMessages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
+    private readonly replyMessages = new SearchableArrayStore(
+        (item: MatrixChatMessage) => item.id,
+        (item: MatrixChatMessage) => {
+            item.relations?.destroy();
+            item.destroy();
+        },
+    );
     private readonly missingRootMessage = writable<ChatMessage | undefined>(undefined);
     private readonly inMemoryEventsContent = new Map<string, IContent>();
     private readonly handleRoomTimeline = this.onRoomTimeline.bind(this);
@@ -268,10 +274,9 @@ export class MatrixChatThread implements ChatThread {
             return;
         }
 
-        const ageOfEvent = event.getAge();
-        if (ageOfEvent !== undefined && ageOfEvent >= 2000) {
-            return;
-        }
+        // No age guard here (unlike the old room-timeline handler): a live thread reply delivered late by
+        // the matrix-js-sdk 41 sync timing must still render. This handler has no notification side effect,
+        // so there is nothing that a freshness check needs to gate.
 
         (async () => {
             if (event.isEncrypted()) {
@@ -377,7 +382,9 @@ export class MatrixChatThread implements ChatThread {
 
         const messageToUpdate = this.getMessageFromThread(eventRelation.event_id);
         if (messageToUpdate !== undefined) {
-            messageToUpdate.modifyContent(event.getOriginalContent()["m.new_content"].body);
+            // The SDK has already applied the edit to the target event; re-render from it (handles media /
+            // formatting and can't throw on a missing m.new_content, unlike reading .body off it directly).
+            messageToUpdate.modifyContent();
             this.parentRoom.refreshThreadSummary(this.id);
         }
     }
