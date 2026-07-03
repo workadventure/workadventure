@@ -39,7 +39,9 @@
                     <td>{fpsStdDevDisplay}</td>
                 </tr>
                 <tr>
-                    <td>Resolution:</td><td>{webRtcStats.frameWidth}x{webRtcStats.frameHeight}</td>
+                    <td>Resolution:</td><td data-testid="resolution"
+                        >{webRtcStats.frameWidth}x{webRtcStats.frameHeight}</td
+                    >
                 </tr>
                 <tr>
                     <td>Codec:</td><td>{webRtcStats.mimeType}</td>
