@@ -320,10 +320,7 @@ describe("AnalyticsEventsQueue", () => {
         const queue = new AnalyticsEventsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));
         queue.setEnabled(true);
 
-        queue.enqueueVideoQualityReport(
-            { samples: [videoQualitySample({ spaceName: "http://play.test/@/team/world/room#1#123" })] },
-            socketData(),
-        );
+        queue.enqueueVideoQualityReport({ samples: [videoQualitySample()] }, socketData());
         await queue.flush();
 
         const batch = post.mock.calls[0][1] as AnalyticsEventsBatch;
@@ -335,13 +332,51 @@ describe("AnalyticsEventsQueue", () => {
                 streamId: "stream-id",
                 remoteUserUuid: "remote-uuid",
                 remoteSpaceUserId: "remote-space-user",
-                spaceName: "http://play.test/@/team/world/room#1#123",
+                spaceName: "space",
                 streamCategory: "video",
                 transportType: "P2P",
                 fps: 24.5,
                 jitter: 0.07,
             }),
         });
+    });
+
+    it("drops video quality samples for a space the socket has not joined", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));
+        queue.setEnabled(true);
+
+        // socketData() has joined only "world.space"; attribute a sample to another space.
+        queue.enqueueVideoQualityReport({ samples: [videoQualitySample({ spaceName: "other-space" })] }, socketData());
+        await queue.flush();
+
+        expect(post).not.toHaveBeenCalled();
+        expect(queue.getStats().droppedInvalid).toBe(1);
+    });
+
+    it("drops remote-user identifiers and free-form properties from video samples when user-level activity is disabled", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));
+        queue.setEnabled(true);
+
+        queue.enqueueVideoQualityReport(
+            { samples: [videoQualitySample()] },
+            socketData({
+                analyticsMetricsPolicy: analyticsMetricsPolicy({ user_level_activity: false }),
+            }),
+        );
+        await queue.flush();
+
+        const props = (post.mock.calls[0][1] as AnalyticsEventsBatch).events[0].properties;
+        // identity / free-form strings stripped
+        expect(props.remoteUserUuid).toBeUndefined();
+        expect(props.remoteSpaceUserId).toBeUndefined();
+        expect(props.spaceName).toBeUndefined();
+        expect(props.streamId).toBeUndefined();
+        expect(props.connectionId).toBeUndefined();
+        // numeric quality metrics preserved
+        expect(props.fps).toBe(24.5);
+        expect(props.jitter).toBe(0.07);
     });
 });
 

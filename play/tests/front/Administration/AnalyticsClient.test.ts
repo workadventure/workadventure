@@ -48,6 +48,28 @@ describe("AnalyticsClient admin analytics sink", () => {
         });
     });
 
+    it("strips the query string and fragment from the map URL", () => {
+        const sendAdmin = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(sendAdmin);
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+
+        analyticsClient.mapLoadingStarted("https://maps.example.com/team/secret-map.wam?token=abc123#section");
+
+        expect(sendAdmin).toHaveBeenCalledWith({
+            events: [
+                expect.objectContaining({
+                    eventName: "map_loading.started",
+                    source: "front",
+                    properties: {
+                        mapUrl: "https://maps.example.com/team/secret-map.wam",
+                    },
+                }),
+            ],
+        });
+    });
+
     it("tracks bubble lock and chat actions in the admin sink", () => {
         const sendAdmin = vi.fn();
         analyticsClient.setAdminAnalyticsSender(sendAdmin);
