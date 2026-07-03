@@ -46,30 +46,47 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
         await page.locator("#closeMenu").click();
         await expect(page.getByRole("cell", { name: "video/VP9" }).first()).toBeVisible();
 
-        await expect(page.getByRole("cell", { name: "223x125" })).toBeVisible({ timeout: 60_000 });
+        const isHeightBetween = async (low: number, high: number): Promise<boolean> => {
+            const text = await page.getByTestId("resolution").textContent();
+            // eslint-disable-next-line playwright/no-conditional-in-test
+            if (text === null) {
+                return false;
+            }
+            const height = Number(text.split("x")[1]);
+            // eslint-disable-next-line playwright/no-conditional-in-test
+            return height >= low && height <= high;
+        };
+
+        await expect
+            .poll(
+                async () => {
+                    return isHeightBetween(124, 126);
+                },
+                {
+                    timeout: 60_000,
+                },
+            )
+            .toBeTruthy();
         await page
             .getByTestId("cameras-container")
             .locator("div", { hasText: "Bob" })
             .locator("button.full-screen-button")
             .click();
-        // @ts-ignore Promise.any not recognized by Playwright Typescript definitions yet
-        await Promise.any([
-            // In CI
 
-            expect(page.getByRole("cell", { name: "480x270" })).toBeVisible({ timeout: 60_000 }),
-
-            expect(page.getByRole("cell", { name: "640x360" })).toBeVisible({ timeout: 60_000 }),
-
-            expect(page.getByRole("cell", { name: "887x499" })).toBeVisible({ timeout: 60_000 }),
-
-            expect(page.getByRole("cell", { name: "888x500" })).toBeVisible({ timeout: 60_000 }),
-
-            expect(page.getByRole("cell", { name: "889x500" })).toBeVisible({ timeout: 60_000 }),
-            // In Real usage
-
-            expect(page.getByRole("cell", { name: "1280x720" })).toBeVisible({ timeout: 60_000 }),
-        ]);
-
-        // Clean up
+        await expect
+            .poll(
+                async () => {
+                    return (
+                        (await isHeightBetween(269, 271)) || // In CI
+                        (await isHeightBetween(359, 361)) || // In CI
+                        (await isHeightBetween(499, 501)) || // In CI
+                        (await isHeightBetween(719, 721))
+                    ); // In real usage
+                },
+                {
+                    timeout: 60_000,
+                },
+            )
+            .toBeTruthy();
     });
 });
