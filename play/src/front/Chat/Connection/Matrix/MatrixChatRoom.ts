@@ -225,6 +225,12 @@ export class MatrixChatRoom
         const roomAvatarStore: PictureStore = readable(
             matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined,
         );
+        // No disposeCallback here (unlike the thread reply store): this store is append-only and mutated in
+        // place. handleNewMessage / readEventsToAddMessagesAndReactions skip events already present, so an
+        // instance is never swapped out during the room's life. A disposeCallback firing on a same-id
+        // re-render would tear the MatrixEvent listeners (Decrypted / Replaced / RelationsCreated) off the
+        // displayed message — which left encrypted messages stuck on "Failed to decrypt" after a key-backup
+        // restore. Instances are released together in destroy() at room teardown.
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.timelinePolls = new SearchableArrayStore((item: MatrixChatPoll) => item.id);
         this.sidePanelPolls = new SearchableArrayStore((item: ChatPollItem) => item.id);
@@ -1004,6 +1010,13 @@ export class MatrixChatRoom
             !this.isEventReplacingExistingOne(event) &&
             shouldDisplayEventInRoomTimeline(event)
         ) {
+            // Don't recreate a message the store already holds (e.g. a live event rendered by onRoomTimeline
+            // before the timeline finished loading, or an overlap while paginating). Replacing the live
+            // instance would orphan its MatrixEvent listeners/media; the existing instance updates in place.
+            const eventId = event.getId();
+            if (eventId !== undefined && messages.has(eventId)) {
+                return undefined;
+            }
             this.addEventContentInMemory(event);
             return this.createChatMessageFromEvent(event);
         }
@@ -1461,6 +1474,16 @@ export class MatrixChatRoom
     }
 
     private handleNewMessage(event: MatrixEvent, isFreshLiveEvent = true) {
+        // A live event can reach onRoomTimeline more than once (replayed by a delayed sync now that the age
+        // guard renders late live events, or after the room was already populated by the initial load). The
+        // MatrixChatMessage already displayed for this event keeps itself current through its own MatrixEvent
+        // listeners (Decrypted / Replaced / RelationsCreated), so recreating and replacing it is pointless
+        // churn — and swapping the displayed instance out would strip those listeners, which left encrypted
+        // messages stuck on "Failed to decrypt" after a key-backup restore. Skip the duplicate.
+        const eventId = event.getId();
+        if (eventId !== undefined && this.messages.has(eventId)) {
+            return;
+        }
         const message = this.createChatMessageFromEvent(event);
         this.messages.push(message);
         const senderID = event.getSender();
