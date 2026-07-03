@@ -1,0 +1,90 @@
+name: Cleanup stale test environments
+
+# Test environments are deployed by build-test-and-deploy.yml (helm-deploy job)
+# into namespaces named "workadventure-<branch-slug>". cleanup.yml removes them
+# when a PR is closed, but nothing reclaims environments whose PR stays open for
+# a long time (or push-based branches). This workflow deletes any test namespace
+# that has not been (re)deployed in the last MAX_AGE_DAYS days.
+
+on:
+  schedule:
+    # Every day at 03:00 UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'List what would be deleted without deleting anything'
+        type: boolean
+        default: true
+      max-age-days:
+        description: 'Delete environments not deployed in the last N days'
+        default: '3'
+
+concurrency:
+  group: cleanup-stale-environments
+  cancel-in-progress: false
+
+jobs:
+  cleanup-stale-environments:
+    runs-on: ubuntu-latest
+    # Only run in the WorkAdventure org (needs cluster credentials)
+    if: ${{ github.repository_owner == 'workadventure' }}
+    steps:
+      - name: 'Install kubeconfig file'
+        run: mkdir ~/.kube && echo "${KUBE_CONFIG_FILE}" > ~/.kube/config && chmod 0600 ~/.kube/config
+        env:
+          KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
+
+      - name: 'Delete stale test environments'
+        env:
+          MAX_AGE_DAYS: ${{ github.event.inputs.max-age-days || '3' }}
+          # Default to a real deletion on the cron schedule; dry-run only when a
+          # human triggers it via the Actions UI and leaves the box checked.
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry-run || 'false' }}
+          # Long-lived environments deployed from pushes to these branches: never delete.
+          PROTECTED: 'workadventure-master workadventure-develop'
+        run: |
+          set -euo pipefail
+
+          now=$(date -u +%s)
+          max_age_seconds=$(( MAX_AGE_DAYS * 24 * 3600 ))
+
+          namespaces=$(kubectl get namespaces \
+            -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' \
+            | grep '^workadventure-' || true)
+
+          if [[ -z "$namespaces" ]]; then
+            echo "No workadventure-* namespaces found."
+            exit 0
+          fi
+
+          for ns in $namespaces; do
+            if echo "$PROTECTED" | grep -qw "$ns"; then
+              echo "• $ns: protected, skipping."
+              continue
+            fi
+
+            # Only prune environments stamped by the deploy job. A namespace with
+            # no last-deployed annotation is left untouched.
+            ts=$(kubectl get namespace "$ns" \
+              -o jsonpath='{.metadata.annotations.workadventure\.re/last-deployed}' 2>/dev/null || true)
+            if [[ -z "$ts" ]]; then
+              echo "• $ns: no last-deployed annotation, skipping."
+              continue
+            fi
+
+            ns_epoch=$(date -u -d "$ts" +%s)
+            age=$(( now - ns_epoch ))
+            age_days=$(( age / 86400 ))
+
+            if (( age > max_age_seconds )); then
+              echo "• $ns: ${age_days}d old (> ${MAX_AGE_DAYS}d) -> deleting."
+              if [[ "$DRY_RUN" == "true" ]]; then
+                echo "    [dry-run] kubectl delete namespace $ns"
+              else
+                kubectl delete namespace "$ns" --wait=false
+              fi
+            else
+              echo "• $ns: ${age_days}d old, within ${MAX_AGE_DAYS}d retention, keeping."
+            fi
+          done

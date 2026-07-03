@@ -899,6 +899,11 @@ jobs:
         env:
           NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
 
+      - name: 'Stamp namespace with deploy timestamp (used by stale-environment cleanup)'
+        run: kubectl annotate namespace "${NAMESPACE}" "workadventure.re/last-deployed=$(date -u +%Y-%m-%dT%H:%M:%SZ)" --overwrite
+        env:
+          NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
+
       - name: "Fix path to assets in WAM test files"
         run: find "." -type f -name "*.wam" -exec sed -i "s|http://play.workadventure.localhost|${PLAY_URL}|g" {} \;
         working-directory: map-storage/tests
