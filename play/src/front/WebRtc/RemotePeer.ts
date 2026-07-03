@@ -902,9 +902,8 @@ export class RemotePeer extends Peer implements Streamable {
         const currentWidth = settings.width || 1280;
         const currentHeight = settings.height || 720;
 
-        // If the webcam resolution is less than the remote peer resolution, let's compute
-        // bandwidth and framerate based on the webcam resolution.
-        if (currentWidth < width || currentHeight < height) {
+        // Compute bandwidth and framerate based on the smallest of the displayed resolution and the capture resolution.
+        if (currentWidth * currentHeight < width * height) {
             width = currentWidth;
             height = currentHeight;
         }
