@@ -893,19 +893,25 @@ export class RemotePeer extends Peer implements Streamable {
             return;
         }
 
-        // Let's find the best presets
-        const preset = this.getPresetForDimensions(width, height);
-
         const videoSender = pc.getSenders().find((s) => s.track?.kind === "video");
         if (!videoSender || !videoSender.track) {
             console.warn("Adaptive video: no video sender found");
             return;
         }
-
-        // Calculate scale factor based on current capture resolution vs target preset
         const settings = videoSender.track.getSettings();
         const currentWidth = settings.width || 1280;
         const currentHeight = settings.height || 720;
+
+        // Compute bandwidth and framerate based on the smallest of the displayed resolution and the capture resolution.
+        if (currentWidth * currentHeight < width * height) {
+            width = currentWidth;
+            height = currentHeight;
+        }
+
+        // Let's find the best presets
+        const preset = this.getPresetForDimensions(width, height);
+
+        // Calculate scale factor based on current capture resolution vs target preset
         const scaleFactor = Math.max(1, Math.min(currentWidth / width, currentHeight / height));
 
         // Get current parameters and modify encoding settings
