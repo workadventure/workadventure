@@ -386,7 +386,7 @@ export const EnvironmentVariables = z.object({
     ROOM_API_BIND_HOST: z
         .string()
         .optional()
-        .describe("Bind host for the Room API gRPC server. Defaults to 0.0.0.0. Use `[::]` for dual-stack IPv6 deployments."),
+        .describe("Bind host for the Room API gRPC server. Defaults to `[::]`."),
     ROOM_API_PORT: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 50051))
         .describe("Port for the Room API gRPC server. Defaults to 50051"),

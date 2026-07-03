@@ -97,7 +97,7 @@ Environment variables for the Play service (frontend and pusher).
 | `SENTRY_RELEASE` | No | Sentry release version identifier for error tracking |
 | `SENTRY_ENVIRONMENT` | No | Sentry environment name (e.g., 'production', 'staging', 'development') |
 | `SENTRY_TRACES_SAMPLE_RATE` | No | The sampling rate for Sentry traces. Only used if SENTRY_DSN is configured. Defaults to 0.1 |
-| `ROOM_API_BIND_HOST` | No | Bind host for the Room API gRPC server. Defaults to 0.0.0.0. Use `[::]` for dual-stack IPv6 deployments. |
+| `ROOM_API_BIND_HOST` | No | Bind host for the Room API gRPC server. Defaults to `[::]`. |
 | `ROOM_API_PORT` | No | Port for the Room API gRPC server. Defaults to 50051 |
 | `ROOM_API_SECRET_KEY` | No | Secret key for Room API authentication |
 | `ENABLE_MAP_EDITOR` | No | Enable the built-in map editor. Defaults to false |
