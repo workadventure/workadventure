@@ -1,5 +1,8 @@
+import { EventEmitter } from "events";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MatrixClient } from "matrix-js-sdk";
+import { VerificationPhase, VerificationRequestEvent } from "matrix-js-sdk/lib/crypto-api";
+import { VerificationMethod } from "matrix-js-sdk/lib/types";
 import { writable } from "svelte/store";
 import { MatrixSecurity } from "../MatrixSecurity";
 
@@ -97,6 +100,106 @@ describe("MatrixSecurity", () => {
             await matrixSecurity.openChooseDeviceVerificationMethodModal();
 
             expect(openModal).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe("verifyOwnDevice", () => {
+        // The start sequence (getUserDeviceInfo -> startVerification) runs asynchronously, so let its
+        // microtasks settle before asserting (one macrotask tick drains the pending microtask queue).
+        const flush = () =>
+            new Promise((resolve) => {
+                setTimeout(resolve, 0);
+            });
+
+        // Minimal stand-in for a matrix-js-sdk VerificationRequest: an event emitter with a mutable phase
+        // and a startVerification() spy, so we can drive the phase transitions the SDK would emit.
+        const createFakeVerificationRequest = (otherPartySupportsSas = true) => {
+            const request = Object.assign(new EventEmitter(), {
+                phase: VerificationPhase.Requested,
+                initiatedByMe: true,
+                chosenMethod: null as string | null,
+                verifier: undefined,
+                otherPartySupportsMethod: vi.fn((method: string) =>
+                    method === VerificationMethod.Sas ? otherPartySupportsSas : false,
+                ),
+                startVerification: vi.fn().mockResolvedValue({
+                    getShowSasCallbacks: vi.fn(() => null),
+                    on: vi.fn(),
+                    off: vi.fn(),
+                    verify: vi.fn(() => new Promise(() => {})),
+                }),
+            });
+            return request;
+        };
+
+        const createInitiatingClient = (request: EventEmitter) => {
+            const crypto = {
+                requestOwnUserVerification: vi.fn().mockResolvedValue(request),
+                getUserDeviceInfo: vi.fn().mockResolvedValue(new Map()),
+            };
+            const mockMatrixClient = {
+                getCrypto: vi.fn(() => crypto),
+                getUserId: vi.fn(() => "@me:example.test"),
+            } as unknown as MatrixClient;
+            return { mockMatrixClient, crypto };
+        };
+
+        it("downloads the other device's keys, then sends the start once the peer is Ready", async () => {
+            const request = createFakeVerificationRequest();
+            const { mockMatrixClient, crypto } = createInitiatingClient(request);
+
+            const matrixSecurity = new MatrixSecurity(undefined, undefined, vi.fn());
+            matrixSecurity.updateMatrixClientStore(mockMatrixClient);
+
+            await matrixSecurity.verifyOwnDevice();
+
+            // Still only Requested: nothing to start yet.
+            expect(request.startVerification).not.toHaveBeenCalled();
+
+            // The other device accepts -> Ready. As the initiator we must drive the start ourselves,
+            // otherwise the flow stalls here forever (the bug this guards against).
+            request.phase = VerificationPhase.Ready;
+            request.emit(VerificationRequestEvent.Change);
+            await flush();
+
+            // Force-download our own devices first so startVerification() cannot reject with
+            // "other device is unknown" on a fresh session.
+            expect(crypto.getUserDeviceInfo).toHaveBeenCalledWith(["@me:example.test"], true);
+            expect(request.startVerification).toHaveBeenCalledTimes(1);
+            expect(request.startVerification).toHaveBeenCalledWith(VerificationMethod.Sas);
+        });
+
+        it("starts SAS only once even if the Ready phase is observed repeatedly", async () => {
+            const request = createFakeVerificationRequest();
+            const { mockMatrixClient } = createInitiatingClient(request);
+
+            const matrixSecurity = new MatrixSecurity(undefined, undefined, vi.fn());
+            matrixSecurity.updateMatrixClientStore(mockMatrixClient);
+
+            await matrixSecurity.verifyOwnDevice();
+
+            request.phase = VerificationPhase.Ready;
+            request.emit(VerificationRequestEvent.Change);
+            request.emit(VerificationRequestEvent.Change);
+            await flush();
+
+            expect(request.startVerification).toHaveBeenCalledTimes(1);
+        });
+
+        it("does not start SAS when the other party does not support it", async () => {
+            const request = createFakeVerificationRequest(false);
+            const { mockMatrixClient } = createInitiatingClient(request);
+
+            const matrixSecurity = new MatrixSecurity(undefined, undefined, vi.fn());
+            matrixSecurity.updateMatrixClientStore(mockMatrixClient);
+
+            await matrixSecurity.verifyOwnDevice();
+
+            request.phase = VerificationPhase.Ready;
+            request.emit(VerificationRequestEvent.Change);
+            await flush();
+
+            expect(request.startVerification).not.toHaveBeenCalled();
         });
     });
 

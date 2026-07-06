@@ -302,6 +302,7 @@ export class MatrixSecurity {
             const doneVerificationDeferred = new Deferred<void>();
 
             let sasListenerAttached = false;
+            let sasStartRequested = false;
 
             const showSasHandler = (showSasCallbacks: ShowSasCallbacks) => {
                 const emojis = showSasCallbacks.sas.emoji;
@@ -328,6 +329,41 @@ export class MatrixSecurity {
             // Named handler so it can be removed on terminal phases (the old inline arrow leaked on the
             // request/verifier for the client's lifetime and could be re-attached on every Change).
             const onVerificationChange = () => {
+                // As the initiating device we must send the `m.key.verification.start` ourselves once the other
+                // device is ready. `requestOwnUserVerification()` only sends the request; nothing here moves the
+                // flow to the Started phase on its own. Element never auto-starts either: at the Ready phase it
+                // renders a "Verify by emoji" button and only calls request.startVerification(Sas) when the user
+                // clicks it. Our pending UI is just a spinner with no such button, so when WA is the initiator
+                // against Element nobody ever sends the start and the request stalls at Ready forever (both
+                // devices sit "waiting for the other device").
+                //
+                // Before starting we force-download our own devices: on a fresh session the other device's keys
+                // are not cached yet, and startVerification() then rejects with "other device is unknown"
+                // (matrix-org/matrix-rust-sdk#2896). Combined with the sasStartRequested guard that would leave
+                // the request stuck at Ready. getUserDeviceInfo(..., downloadUncached = true) makes the other
+                // device known so the start succeeds. If the peer starts at the same time (glare), the SDK
+                // resolves the tie-break and a redundant start fails harmlessly while the Started branch runs.
+                if (
+                    verificationRequest.phase === VerificationPhase.Ready &&
+                    !sasStartRequested &&
+                    !sasListenerAttached
+                ) {
+                    sasStartRequested = true;
+                    const startSasVerification = async () => {
+                        const ownUserId = this.matrixClientStore?.getUserId();
+                        if (ownUserId) {
+                            await crypto.getUserDeviceInfo([ownUserId], true);
+                        }
+                        if (!verificationRequest.otherPartySupportsMethod(VerificationMethod.Sas)) {
+                            throw new Error("the other device does not support SAS verification");
+                        }
+                        await verificationRequest.startVerification(VerificationMethod.Sas);
+                    };
+                    startSasVerification().catch((error) => {
+                        console.error("Failed to start SAS verification from the initiating device", error);
+                    });
+                }
+
                 if (verificationRequest.phase === VerificationPhase.Started && !sasListenerAttached) {
                     const verifier = verificationRequest.verifier;
                     if (!verifier) {
@@ -372,6 +408,10 @@ export class MatrixSecurity {
             };
 
             verificationRequest.on(VerificationRequestEvent.Change, onVerificationChange);
+
+            // The request may already have moved on (e.g. the other device accepted before we subscribed);
+            // the Change listener only fires on *subsequent* transitions, so evaluate the current phase once.
+            onVerificationChange();
         } catch (error) {
             console.error("Failed to verify this device", error);
         }
