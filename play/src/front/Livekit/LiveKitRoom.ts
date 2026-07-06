@@ -392,7 +392,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
             const screenSharePublishOptions: TrackPublishOptions = {
                 source: Track.Source.ScreenShare,
-                videoCodec: "vp9",
+                videoCodec: "av1",
                 simulcast: true,
                 // Commented out: the default simulcast layers are sufficient for our use case
                 // screenShareSimulcastLayers: [ScreenSharePresets.h720fps30]
