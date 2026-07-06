@@ -537,7 +537,22 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Ihr Gerät überprüfen",
         description: "Überprüfungsmethode wählen",
         withOtherDevice: "Mit einem anderen Gerät überprüfen",
+        withQrCode: "QR-Code zum Scannen anzeigen",
         withPassphrase: "Mit der Sicherheitsphrase überprüfen",
+    },
+    verificationQrCodeDialog: {
+        title: "Mit QR-Code überprüfen",
+        preparing: "QR-Code wird vorbereitet …",
+        scanInstruction: "Scannen Sie diesen QR-Code mit Ihrem anderen Gerät (zum Beispiel der Element-Mobil-App).",
+        reciprocateQuestion: "Hat Ihr anderes Gerät den Code gescannt und ein grünes Schild angezeigt?",
+        reciprocateYes: "Ja",
+        reciprocateNo: "Nein",
+        cancel: "Abbrechen",
+        success: "Ihr Gerät ist jetzt überprüft.",
+        cancelled: "Die Überprüfung wurde abgebrochen.",
+        unsupported:
+            "Ihr anderes Gerät kann keinen QR-Code scannen. Versuchen Sie stattdessen die Überprüfung mit Emojis.",
+        error: "Der QR-Code konnte nicht generiert werden.",
     },
     askStartVerificationModal: {
         title: "Überprüfung erforderlich",

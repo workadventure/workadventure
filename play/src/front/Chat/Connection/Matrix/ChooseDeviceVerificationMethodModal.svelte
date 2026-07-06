@@ -23,6 +23,13 @@
         });
         modals.close();
     }
+
+    function startVerificationWithQrCode() {
+        matrixSecurity.showQrForOwnDevice().catch((error) => {
+            console.error("Failed to show QR code for own device : ", error);
+        });
+        modals.close();
+    }
 </script>
 
 <Popup {isOpen}>
@@ -40,6 +47,12 @@
             class="btn btn-secondary bg-secondary flex-1 justify-center"
             onclick={startVerificationWithOtherDevice}
             >{$LL.chat.chooseDeviceVerificationMethodModal.withOtherDevice()}
+        </button>
+        <button
+            data-testid="ShowQrCodeButton"
+            class="btn btn-secondary bg-secondary flex-1 justify-center"
+            onclick={startVerificationWithQrCode}
+            >{$LL.chat.chooseDeviceVerificationMethodModal.withQrCode()}
         </button>
         <button
             data-testid="VerifyWithPassphraseButton"

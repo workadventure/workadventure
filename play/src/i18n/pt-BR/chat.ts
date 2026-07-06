@@ -532,7 +532,22 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Verificar dispositivo",
         description: "Escolha o método de verificação",
         withOtherDevice: "Verificar com outro dispositivo",
+        withQrCode: "Mostrar um código QR para escanear",
         withPassphrase: "Verificar com frase secreta de segurança",
+    },
+    verificationQrCodeDialog: {
+        title: "Verificar por código QR",
+        preparing: "Preparando o código QR…",
+        scanInstruction:
+            "Escaneie este código QR com o seu outro dispositivo (por exemplo, o aplicativo móvel do Element).",
+        reciprocateQuestion: "O seu outro dispositivo escaneou o código e mostrou um escudo verde?",
+        reciprocateYes: "Sim",
+        reciprocateNo: "Não",
+        cancel: "Cancelar",
+        success: "Seu dispositivo agora está verificado.",
+        cancelled: "A verificação foi cancelada.",
+        unsupported: "Seu outro dispositivo não consegue escanear um código QR. Tente verificar com emojis.",
+        error: "Não foi possível gerar o código QR.",
     },
     askStartVerificationModal: {
         title: "Verificação necessária",
