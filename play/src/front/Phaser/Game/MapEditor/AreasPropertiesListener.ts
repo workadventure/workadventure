@@ -1489,8 +1489,6 @@ export class AreasPropertiesListener {
     ): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = getAreaProximitySpaceName(property.name, areaId);
-            const proximityRoom = this.scene.proximityChatRoomManager.resolveTargetRoom(uniqRoomName);
-            const currentSpaceName = proximityRoom?.getCurrentSpaceName();
             const wasListener = get(isListenerStore);
 
             // Update stores first so the bubble closes and UI reflects "in a meeting" before stream logic.
@@ -1498,33 +1496,13 @@ export class AreasPropertiesListener {
             isListenerStore.set(false);
 
             try {
-                // If already in this space (as listener), just switch to speaker role.
-                if (currentSpaceName === uniqRoomName && proximityRoom) {
-                    proximityRoom.kind.set("speaker");
-                    const space = proximityRoom.getCurrentSpace();
-                    if (space) {
-                        space.startStreaming();
-                        currentLiveStreamingSpaceStore.set(space);
-
-                        listenerWaitingMediaStore.set(undefined);
-                        listenerSharingCameraStore.set(false);
-
-                        // Update tracking
-                        this.activeMegaphoneZones.set(property.id, {
-                            spaceName: uniqRoomName,
-                            role: "speaker",
-                            propertyId: property.id,
-                            seeAttendees: property.seeAttendees,
-                            chatEnabled: property.chatEnabled,
-                            allowTalking: false,
-                            waitingLink: undefined,
-                        });
-                        this.refreshMegaphoneGlobalStores(uniqRoomName);
-                        return;
-                    }
-                }
-
-                // Otherwise, do the full join (stores already set above).
+                // Always go through the manager: it serializes joins and leaves targeting the same
+                // space, so a leave enqueued by a zone-exit handler processed in the same frame
+                // completes before this join runs. If we are still in the space (overlapping zones,
+                // e.g. switching from listener to speaker), the join is a cheap no-op returning the
+                // current space, and the room kind is switched to "speaker". Deciding here from
+                // getCurrentSpaceName() instead would read state that does not reflect a queued
+                // leave yet, and skip the join of a space that is about to be destroyed.
                 const joinedRoom = await this.scene.proximityChatRoomManager.joinSpace(
                     uniqRoomName,
                     property.name,
@@ -1641,29 +1619,14 @@ export class AreasPropertiesListener {
 
             {
                 const uniqRoomName = getAreaProximitySpaceName(speakerZoneName, property.speakerZoneName);
-                const proximityRoom = this.scene.proximityChatRoomManager.resolveTargetRoom(uniqRoomName);
-                const currentSpaceName = proximityRoom?.getCurrentSpaceName();
 
-                // If already in this space (as speaker or listener), just update tracking
-                if (currentSpaceName === uniqRoomName) {
-                    // Check if we're already as speaker - speaker has priority, don't change role
-                    const existingSpeakerZone = this.findActiveSpeakerZoneForSpace(uniqRoomName);
-                    if (existingSpeakerZone) {
-                        // Just track this listener zone, but don't change the role
-                        this.activeMegaphoneZones.set(property.id, {
-                            spaceName: uniqRoomName,
-                            role: "listener",
-                            propertyId: property.id,
-                            seeAttendees,
-                            chatEnabled: property.chatEnabled,
-                            allowTalking: property.allowTalking,
-                            waitingLink: property.waitingLink,
-                        });
-                        this.refreshMegaphoneGlobalStores(uniqRoomName);
-                        return;
-                    }
-
-                    // Already in as listener, just update tracking
+                // Speaker has priority: if we are also inside a speaker zone of this space, only
+                // track this listener zone, don't change the role. Unlike the room state,
+                // activeMegaphoneZones is updated synchronously by the enter/leave handlers, so
+                // this check cannot be stale.
+                const existingSpeakerZone = this.findActiveSpeakerZoneForSpace(uniqRoomName);
+                if (existingSpeakerZone) {
+                    // Just track this listener zone, but don't change the role
                     this.activeMegaphoneZones.set(property.id, {
                         spaceName: uniqRoomName,
                         role: "listener",
@@ -1673,14 +1636,15 @@ export class AreasPropertiesListener {
                         allowTalking: property.allowTalking,
                         waitingLink: property.waitingLink,
                     });
-                    proximityRoom?.kind.set("listener");
-                    // Update mute state based on all active listener zones
-                    isListenerStore.set(!this.shouldAllowTalkingInSpace(uniqRoomName));
                     this.refreshMegaphoneGlobalStores(uniqRoomName);
                     return;
                 }
 
-                // Otherwise, do the full join
+                // Always go through the manager (see handleSpeakerMegaphonePropertyOnEnter for why
+                // we must not decide from getCurrentSpaceName() here): if we are still in the
+                // space, the join is a no-op returning the current space and the room kind is
+                // switched to "listener"; if a leave is queued, the join runs after it and rebuilds
+                // the space.
                 const joinedRoom = await this.scene.proximityChatRoomManager.joinSpace(
                     uniqRoomName,
                     speakerZoneName,
