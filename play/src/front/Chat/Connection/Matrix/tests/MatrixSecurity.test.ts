@@ -3,8 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MatrixClient } from "matrix-js-sdk";
 import { VerificationPhase, VerificationRequestEvent, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
+import type { Readable } from "svelte/store";
 import { MatrixSecurity } from "../MatrixSecurity";
+import type { DeviceVerificationState } from "../MatrixSecurity";
 
 vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
     return {
@@ -241,16 +243,17 @@ describe("MatrixSecurity", () => {
 
             await matrixSecurity.verifyOwnDevice();
 
-            // DeviceVerificationPendingModal is opened first; the spinner closes only once its
-            // startVerificationPromise resolves (which opens the emoji dialog).
-            const pendingModalProps = openModal.mock.calls[0][1] as { startVerificationPromise: Promise<unknown> };
-            const startVerificationPromise = pendingModalProps.startVerificationPromise;
+            // A single store-driven DeviceVerificationModal is opened (no Deferred handoff). The emoji grid
+            // shows once the store's status reaches "emoji".
+            const modalProps = openModal.mock.calls[0][1] as { verificationState: Readable<DeviceVerificationState> };
+            const state = modalProps.verificationState;
 
             // Peer accepts -> Ready -> the fix downloads keys and calls startVerification.
             request.phase = VerificationPhase.Ready;
             request.emit(VerificationRequestEvent.Change);
             await flush();
             expect(request.startVerification).toHaveBeenCalledWith(VerificationMethod.Sas);
+            expect(get(state).status).toBe("waiting");
 
             // startSas() advances to Started with a verifier (as the SDK would); drive the Started branch.
             request.verifier = verifier;
@@ -258,8 +261,8 @@ describe("MatrixSecurity", () => {
             request.phase = VerificationPhase.Started;
             request.emit(VerificationRequestEvent.Change);
 
-            // SAS computed -> ShowSas. Before the fix, showSasHandler read this.isVerifyingDevice (true here)
-            // and silently returned, so the promise never resolved and the spinner hung forever.
+            // SAS computed -> ShowSas. Before the refactor, showSasHandler read this.isVerifyingDevice (true
+            // here) and silently returned, so the store never left "waiting" and the spinner hung forever.
             verifier.emit(VerifierEvent.ShowSas, {
                 sas: {
                     emoji: [
@@ -271,12 +274,12 @@ describe("MatrixSecurity", () => {
                 mismatch: vi.fn(),
             });
 
-            await expect(startVerificationPromise).resolves.toMatchObject({
-                emojis: [
-                    ["🐶", "Dog"],
-                    ["🐱", "Cat"],
-                ],
-            });
+            const finalState = get(state);
+            expect(finalState.status).toBe("emoji");
+            expect(finalState.emojis).toEqual([
+                ["🐶", "Dog"],
+                ["🐱", "Cat"],
+            ]);
         });
     });
 

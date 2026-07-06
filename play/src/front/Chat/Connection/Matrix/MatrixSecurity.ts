@@ -14,14 +14,14 @@ import {
     decodeRecoveryKey,
 } from "matrix-js-sdk/lib/crypto-api";
 import { writable } from "svelte/store";
+import type { Writable } from "svelte/store";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
-import { Deferred } from "@workadventure/shared-utils";
 import { asError } from "catch-unknown";
 import { alreadyAskForInitCryptoConfiguration } from "../../Stores/AlreadyAskForInitCryptoConfigurationStore";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
 import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
 import VerificationEmojiDialog from "./VerificationEmojiDialog.svelte";
-import DeviceVerificationPendingModal from "./DeviceVerificationPendingModal.svelte";
+import DeviceVerificationModal from "./DeviceVerificationModal.svelte";
 import AskStartVerificationModal from "./AskStartVerificationModal.svelte";
 import ChooseDeviceVerificationMethodModal from "./ChooseDeviceVerificationMethodModal.svelte";
 import { modals } from "@wa-modals";
@@ -33,6 +33,8 @@ export class MatrixSecurity {
     private matrixClientStore: MatrixClient | null = null;
     private isVerifyingDevice = false;
     private automaticDeviceVerificationPromptRequested = false;
+    // The in-flight own-device SAS verification request, so DeviceVerificationModal can cancel it on close.
+    private ownDeviceSasRequest: VerificationRequest | null = null;
     public shouldDisplayModal = false;
     constructor(
         private initializingEncryptionPromise: Promise<void> | undefined = undefined,
@@ -292,34 +294,37 @@ export class MatrixSecurity {
 
             const verificationRequest = await crypto.requestOwnUserVerification();
 
-            const startVerificationDeferred = new Deferred<VerificationEmojiDialogProps>();
+            // Single reactive modal driven by a store, mirroring Element's VerificationPanel: one component
+            // renders "waiting" -> "emoji" -> "done"/"error" straight from the request/verifier state, instead of
+            // handing off between a pending modal and an emoji dialog through a Deferred. That handoff — plus
+            // reading the shared this.isVerifyingDevice flag to gate the emoji display — was the intermittent-hang
+            // source; both are gone here.
+            this.ownDeviceSasRequest = verificationRequest;
+            // Re-entrancy guard for the modal openers ONLY. It is NEVER read to decide whether to show the emojis
+            // (the closure-local sasShown latch does that), and it is cleared on every terminal transition and on
+            // modal close, so it can no longer stick true and block later verification prompts.
+            this.isVerifyingDevice = true;
 
-            this._openModal(DeviceVerificationPendingModal, {
-                startVerificationPromise: startVerificationDeferred.promise,
-                isInitiatedByMe: true,
+            const isThisDeviceVerification = verificationRequest.initiatedByMe;
+            const state: Writable<DeviceVerificationState> = writable({
+                status: "waiting",
+                isThisDeviceVerification,
             });
 
-            const doneVerificationDeferred = new Deferred<void>();
+            this._openModal(DeviceVerificationModal, { verificationState: state });
 
             let sasListenerAttached = false;
             let sasStartRequested = false;
             let startRetries = 0;
-            // Per-attempt idempotency latch for opening the emoji dialog. It must NOT reuse the shared
-            // this.isVerifyingDevice singleton: that flag is a re-entrancy guard for the modal openers and can
-            // legitimately be true here — left set by an aborted earlier attempt (it is reset only on
-            // Done/Cancelled), or flipped by a concurrent openChooseDeviceVerificationMethodModal fired from a
-            // store subscription during the Ready->ShowSas window. Reading it made showSasHandler silently bail
-            // so the spinner hung forever; a closure-local latch makes each attempt independent and immune.
-            let emojiDialogOpened = false;
+            let sasShown = false;
 
             const showSasHandler = (showSasCallbacks: ShowSasCallbacks) => {
                 const emojis = showSasCallbacks.sas.emoji;
-                if (!emojis || emojiDialogOpened) return;
-
-                emojiDialogOpened = true;
-                this.isVerifyingDevice = true;
-
-                startVerificationDeferred.resolve({
+                if (!emojis || sasShown) return;
+                sasShown = true;
+                state.set({
+                    status: "emoji",
+                    isThisDeviceVerification,
                     emojis,
                     confirmationCallback: async () => {
                         await showSasCallbacks.confirm();
@@ -330,9 +335,16 @@ export class MatrixSecurity {
                         showSasCallbacks.mismatch();
                         return Promise.resolve();
                     },
-                    donePromise: doneVerificationDeferred.promise,
-                    isThisDeviceVerification: verificationRequest.initiatedByMe,
                 });
+            };
+
+            const cleanup = () => {
+                this.isVerifyingDevice = false;
+                if (this.ownDeviceSasRequest === verificationRequest) {
+                    this.ownDeviceSasRequest = null;
+                }
+                verificationRequest.off(VerificationRequestEvent.Change, onVerificationChange);
+                verificationRequest.verifier?.off(VerifierEvent.ShowSas, showSasHandler);
             };
 
             // Named handler so it can be removed on terminal phases (the old inline arrow leaked on the
@@ -403,23 +415,27 @@ export class MatrixSecurity {
                     }
 
                     verifier.verify().catch((error) => {
-                        doneVerificationDeferred.reject(error);
+                        console.error("SAS verify() failed", error);
+                        state.set({ status: "error", isThisDeviceVerification });
                     });
                 }
 
                 if (verificationRequest.phase === VerificationPhase.Done) {
-                    doneVerificationDeferred.resolve();
-                    this.isVerifyingDevice = false;
+                    state.set({ status: "done", isThisDeviceVerification });
                     this.isEncryptionRequiredAndNotSet.set(false);
-                    verificationRequest.off(VerificationRequestEvent.Change, onVerificationChange);
-                    verificationRequest.verifier?.off(VerifierEvent.ShowSas, showSasHandler);
+                    cleanup();
                 }
 
                 if (verificationRequest.phase === VerificationPhase.Cancelled) {
-                    doneVerificationDeferred.reject(new Error("verification request cancelled"));
-                    this.isVerifyingDevice = false;
-                    verificationRequest.off(VerificationRequestEvent.Change, onVerificationChange);
-                    verificationRequest.verifier?.off(VerifierEvent.ShowSas, showSasHandler);
+                    // A cancel AFTER the emojis were shown is a verification failure the user must see (e.g. the
+                    // peer clicked "they don't match" -> m.mismatched_sas), so surface it as an error. A cancel
+                    // BEFORE the emojis (peer declined / timed out) is a plain cancellation.
+                    state.update((current) =>
+                        current.status === "done"
+                            ? current
+                            : { status: sasShown ? "error" : "cancelled", isThisDeviceVerification },
+                    );
+                    cleanup();
                 }
             };
 
@@ -429,7 +445,28 @@ export class MatrixSecurity {
             // the Change listener only fires on *subsequent* transitions, so evaluate the current phase once.
             onVerificationChange();
         } catch (error) {
+            this.isVerifyingDevice = false;
+            this.ownDeviceSasRequest = null;
             console.error("Failed to verify this device", error);
+        }
+    }
+
+    /**
+     * Cancel the in-flight own-device SAS verification (e.g. the user closed the modal), driving the request to
+     * Cancelled so the re-entrancy flag is released and the peer stops waiting. No-op once terminal.
+     */
+    public async cancelOwnDeviceSasVerification() {
+        const request = this.ownDeviceSasRequest;
+        if (!request) return;
+        try {
+            if (request.phase !== VerificationPhase.Done && request.phase !== VerificationPhase.Cancelled) {
+                await request.cancel();
+            }
+        } catch (error) {
+            console.error("Failed to cancel own device SAS verification", error);
+        } finally {
+            this.isVerifyingDevice = false;
+            this.ownDeviceSasRequest = null;
         }
     }
 
@@ -522,6 +559,21 @@ export type VerificationEmojiDialogProps = {
     emojis: EmojiMapping[];
     donePromise: Promise<void>;
     isThisDeviceVerification: boolean;
+};
+
+// State of an own-device SAS verification, driven by verifyOwnDevice() and rendered by DeviceVerificationModal
+// (mirrors QrVerificationState). The whole flow lives in one modal that re-renders off this store.
+//   waiting   - request sent / waiting for the peer / waiting for the SAS to compute (spinner)
+//   emoji     - SAS emojis available; the user compares and clicks match / don't match
+//   done      - verification completed (check + "understood")
+//   cancelled - request cancelled before any emojis were shown (peer declined / timed out)
+//   error     - verification failed (verify() rejected, or the peer signalled a mismatch after the emojis)
+export type DeviceVerificationState = {
+    status: "waiting" | "emoji" | "done" | "cancelled" | "error";
+    isThisDeviceVerification: boolean;
+    emojis?: EmojiMapping[];
+    confirmationCallback?: () => Promise<void>;
+    mismatchCallback?: () => Promise<void>;
 };
 
 export type AskStartVerificationModalProps = {
