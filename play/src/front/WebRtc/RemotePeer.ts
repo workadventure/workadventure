@@ -233,7 +233,7 @@ export class RemotePeer extends Peer implements Streamable {
         public user: UserSimplePeerInterface,
         initiator: boolean,
         private space: SpaceInterface,
-        private iceServers: IceServer[],
+        iceServers: IceServer[],
         //private spaceUser: SpaceUserExtended,
         isLocalPeer: boolean,
         private localStreamStore: Readable<LocalStreamStoreValue | undefined>,
@@ -259,7 +259,9 @@ export class RemotePeer extends Peer implements Streamable {
                     rtcpMuxPolicy: "require",
                 }),
             },
-            preferredCodecs: { video: ["video/VP9", "video/VP8"] },
+            preferredCodecs: {
+                video: type === "video" ? ["video/VP9", "video/VP8"] : ["video/AV1", "video/VP9", "video/VP8"],
+            },
             // Firefox works better with trickle ICE enabled
             ...(firefoxBrowser && { trickle: true }),
         };
