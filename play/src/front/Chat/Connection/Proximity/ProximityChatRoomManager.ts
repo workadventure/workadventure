@@ -1,4 +1,5 @@
 import { FilterType } from "@workadventure/messages";
+import { LockByKey } from "@workadventure/shared-utils/src/LockByKey";
 import type { Readable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
 import LL from "../../../../i18n/i18n-svelte";
@@ -42,7 +43,18 @@ export class ProximityChatRoomManager {
     private readonly _roomsStore = writable<ProximityChatRoom[]>([]);
     private readonly _activeRoomStore = writable<ProximityChatRoom | undefined>(undefined);
     private readonly lastJoinedSpaceNames: string[] = [];
-    private readonly operationChains = new Map<string, Promise<void>>();
+    /**
+     * Serializes join/leave operations targeting the same room (keyed by the `rooms` map key).
+     * Both operations mutate `rooms`/`lastJoinedSpaceNames` after awaiting server round-trips, so
+     * letting them interleave corrupts the manager state: a leave resuming after its await would
+     * destroy and unregister a room that a concurrent join has started reusing, leaving the space
+     * alive in the SpaceRegistry but unreachable from this manager (every later join of that space
+     * then throws SpaceAlreadyExistError, and leaves become no-ops). This happens when a user
+     * crosses quickly from a megaphone zone to another one mapped to the same space.
+     * No timeout is used: on timeout LockByKey starts the next queued operation while the previous
+     * one is still running, which would reintroduce the race.
+     */
+    private readonly roomOperationLocks = new LockByKey<string>();
 
     public readonly roomsStore: Readable<ProximityChatRoom[]> = this._roomsStore;
     public readonly activeRoomStore: Readable<ProximityChatRoom | undefined> = this._activeRoomStore;
@@ -89,7 +101,7 @@ export class ProximityChatRoomManager {
         signal?: AbortSignal,
         kind: ProximityChatRoomKind = "area",
     ): Promise<ProximityChatRoom> {
-        return this.enqueueRoomOperation(spaceName, async () => {
+        return this.roomOperationLocks.waitForLock(spaceName, async () => {
             const room = this.getOrCreateRoom(spaceName, displayName, kind);
             await room.joinSpace(spaceName, propertiesToSync, isMeetingRoomChat, filterType, disableChat, signal);
             room.isJoined.set(true);
@@ -105,7 +117,7 @@ export class ProximityChatRoomManager {
         propertiesToSync: string[],
         signal?: AbortSignal,
     ): Promise<ProximityChatRoom> {
-        return this.enqueueRoomOperation(DEFAULT_PROXIMITY_SPACE_NAME, async () => {
+        return this.roomOperationLocks.waitForLock(DEFAULT_PROXIMITY_SPACE_NAME, async () => {
             const room = this.getOrCreateRoom(DEFAULT_PROXIMITY_SPACE_NAME, get(LL).chat.proximity(), "default");
             await room.joinSpace(spaceName, propertiesToSync, false, FilterType.ALL_USERS, false, signal);
             room.isJoined.set(true);
@@ -117,7 +129,7 @@ export class ProximityChatRoomManager {
     }
 
     public leaveDefaultSpace(spaceName: string): Promise<void> {
-        return this.enqueueRoomOperation(DEFAULT_PROXIMITY_SPACE_NAME, async () => {
+        return this.roomOperationLocks.waitForLock(DEFAULT_PROXIMITY_SPACE_NAME, async () => {
             const room = this.getDefaultRoom();
             if (!room) {
                 return;
@@ -143,7 +155,7 @@ export class ProximityChatRoomManager {
     }
 
     public leaveSpace(spaceName: string, isMeetingRoomChat = false): Promise<void> {
-        return this.enqueueRoomOperation(spaceName, async () => {
+        return this.roomOperationLocks.waitForLock(spaceName, async () => {
             const room = this.rooms.get(spaceName);
             if (!room) {
                 return;
@@ -171,28 +183,6 @@ export class ProximityChatRoomManager {
 
             this.syncRoomsStore();
         });
-    }
-
-    /**
-     * Serializes join/leave operations targeting the same room (keyed by the `rooms` map key).
-     * Both operations mutate `rooms`/`lastJoinedSpaceNames` after awaiting server round-trips, so
-     * letting them interleave corrupts the manager state: a leave resuming after its await would
-     * destroy and unregister a room that a concurrent join has started reusing, leaving the space
-     * alive in the SpaceRegistry but unreachable from this manager (every later join of that space
-     * then throws SpaceAlreadyExistError, and leaves become no-ops). This happens when a user
-     * crosses quickly from a megaphone zone to another one mapped to the same space.
-     */
-    private enqueueRoomOperation<T>(roomKey: string, operation: () => Promise<T>): Promise<T> {
-        const previous = this.operationChains.get(roomKey) ?? Promise.resolve();
-        const result = previous.then(operation);
-        const removeFromChain = () => {
-            if (this.operationChains.get(roomKey) === tail) {
-                this.operationChains.delete(roomKey);
-            }
-        };
-        const tail = result.then(removeFromChain, removeFromChain);
-        this.operationChains.set(roomKey, tail);
-        return result;
     }
 
     public resolveTargetRoom(spaceName?: string): ProximityChatRoom | undefined {
@@ -249,7 +239,6 @@ export class ProximityChatRoomManager {
         }
         this.rooms.clear();
         this.lastJoinedSpaceNames.length = 0;
-        this.operationChains.clear();
         this._activeRoomStore.set(undefined);
         this.syncRoomsStore();
     }
