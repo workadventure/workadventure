@@ -303,11 +303,20 @@ export class MatrixSecurity {
 
             let sasListenerAttached = false;
             let sasStartRequested = false;
+            let startRetries = 0;
+            // Per-attempt idempotency latch for opening the emoji dialog. It must NOT reuse the shared
+            // this.isVerifyingDevice singleton: that flag is a re-entrancy guard for the modal openers and can
+            // legitimately be true here — left set by an aborted earlier attempt (it is reset only on
+            // Done/Cancelled), or flipped by a concurrent openChooseDeviceVerificationMethodModal fired from a
+            // store subscription during the Ready->ShowSas window. Reading it made showSasHandler silently bail
+            // so the spinner hung forever; a closure-local latch makes each attempt independent and immune.
+            let emojiDialogOpened = false;
 
             const showSasHandler = (showSasCallbacks: ShowSasCallbacks) => {
                 const emojis = showSasCallbacks.sas.emoji;
-                if (!emojis || this.isVerifyingDevice) return;
+                if (!emojis || emojiDialogOpened) return;
 
+                emojiDialogOpened = true;
                 this.isVerifyingDevice = true;
 
                 startVerificationDeferred.resolve({
@@ -361,6 +370,13 @@ export class MatrixSecurity {
                     };
                     startSasVerification().catch((error) => {
                         console.error("Failed to start SAS verification from the initiating device", error);
+                        // sasStartRequested is set before the awaits, so a transient reject (e.g. the other
+                        // device's keys still propagating just after getUserDeviceInfo) would otherwise latch
+                        // the request at Ready forever. Allow a small, bounded number of retries on the next
+                        // Change instead of giving up permanently.
+                        if (startRetries++ < 2) {
+                            sasStartRequested = false;
+                        }
                     });
                 }
 

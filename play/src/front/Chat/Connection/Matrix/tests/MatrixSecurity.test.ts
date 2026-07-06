@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MatrixClient } from "matrix-js-sdk";
-import { VerificationPhase, VerificationRequestEvent } from "matrix-js-sdk/lib/crypto-api";
+import { VerificationPhase, VerificationRequestEvent, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
 import { writable } from "svelte/store";
 import { MatrixSecurity } from "../MatrixSecurity";
@@ -200,6 +200,83 @@ describe("MatrixSecurity", () => {
             await flush();
 
             expect(request.startVerification).not.toHaveBeenCalled();
+        });
+
+        it("opens the emoji dialog even when isVerifyingDevice is already true (stuck flag / concurrent opener)", async () => {
+            const openModal = vi.fn();
+
+            const verifier = Object.assign(new EventEmitter(), {
+                getShowSasCallbacks: vi.fn(() => null),
+                verify: vi.fn(() => new Promise(() => {})),
+            });
+
+            const request = Object.assign(new EventEmitter(), {
+                phase: VerificationPhase.Requested,
+                initiatedByMe: true,
+                chosenMethod: null,
+                verifier: undefined,
+                otherPartySupportsMethod: vi.fn(() => true),
+                startVerification: vi.fn((): Promise<unknown> => Promise.resolve(verifier)),
+            }) as unknown as EventEmitter & {
+                phase: number;
+                chosenMethod: string | null;
+                verifier: unknown;
+                startVerification: ReturnType<typeof vi.fn>;
+            };
+
+            const crypto = {
+                requestOwnUserVerification: vi.fn().mockResolvedValue(request),
+                getUserDeviceInfo: vi.fn().mockResolvedValue(new Map()),
+            };
+            const mockMatrixClient = {
+                getCrypto: vi.fn(() => crypto),
+                getUserId: vi.fn(() => "@me:example.test"),
+            } as unknown as MatrixClient;
+
+            const matrixSecurity = new MatrixSecurity(undefined, undefined, openModal);
+            matrixSecurity.updateMatrixClientStore(mockMatrixClient);
+            // Simulate the shared re-entrancy flag being stuck true — left set by an aborted prior attempt, or
+            // flipped by a concurrent openChooseDeviceVerificationMethodModal during the Ready->ShowSas window.
+            matrixSecurity["isVerifyingDevice"] = true;
+
+            await matrixSecurity.verifyOwnDevice();
+
+            // DeviceVerificationPendingModal is opened first; the spinner closes only once its
+            // startVerificationPromise resolves (which opens the emoji dialog).
+            const pendingModalProps = openModal.mock.calls[0][1] as { startVerificationPromise: Promise<unknown> };
+            const startVerificationPromise = pendingModalProps.startVerificationPromise;
+
+            // Peer accepts -> Ready -> the fix downloads keys and calls startVerification.
+            request.phase = VerificationPhase.Ready;
+            request.emit(VerificationRequestEvent.Change);
+            await flush();
+            expect(request.startVerification).toHaveBeenCalledWith(VerificationMethod.Sas);
+
+            // startSas() advances to Started with a verifier (as the SDK would); drive the Started branch.
+            request.verifier = verifier;
+            request.chosenMethod = VerificationMethod.Sas;
+            request.phase = VerificationPhase.Started;
+            request.emit(VerificationRequestEvent.Change);
+
+            // SAS computed -> ShowSas. Before the fix, showSasHandler read this.isVerifyingDevice (true here)
+            // and silently returned, so the promise never resolved and the spinner hung forever.
+            verifier.emit(VerifierEvent.ShowSas, {
+                sas: {
+                    emoji: [
+                        ["🐶", "Dog"],
+                        ["🐱", "Cat"],
+                    ],
+                },
+                confirm: vi.fn(),
+                mismatch: vi.fn(),
+            });
+
+            await expect(startVerificationPromise).resolves.toMatchObject({
+                emojis: [
+                    ["🐶", "Dog"],
+                    ["🐱", "Cat"],
+                ],
+            });
         });
     });
 
