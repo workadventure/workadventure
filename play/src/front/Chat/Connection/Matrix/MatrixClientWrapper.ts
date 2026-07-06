@@ -137,8 +137,11 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             logger: customMatrixLogger,
             verificationMethods: [
                 VerificationMethod.Sas,
-                //VerificationMethod.ShowQrCode,
-                //VerificationMethod.Reciprocate,
+                // ShowQrCode: we can DISPLAY a QR code for another device (e.g. Element mobile) to scan.
+                // Reciprocate: we are the target of the scanner's m.reciprocate.v1 start. We intentionally do
+                // NOT advertise ScanQrCode — WorkAdventure has no camera scanner.
+                VerificationMethod.ShowQrCode,
+                VerificationMethod.Reciprocate,
             ],
             timelineSupport: true,
         };

@@ -533,7 +533,22 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Verifieer je apparaat",
         description: "Kies de verificatiemethode",
         withOtherDevice: "Verifieer met een ander apparaat",
+        withQrCode: "Toon een QR-code om te scannen",
         withPassphrase: "Verifieer met de wachtwoordzin",
+    },
+    verificationQrCodeDialog: {
+        title: "Verifiëren met QR-code",
+        preparing: "QR-code voorbereiden…",
+        scanInstruction: "Scan deze QR-code met je andere apparaat (bijvoorbeeld de Element mobiele app).",
+        reciprocateQuestion: "Heeft je andere apparaat de code gescand en een groen schild getoond?",
+        reciprocateYes: "Ja",
+        reciprocateNo: "Nee",
+        cancel: "Annuleren",
+        success: "Je apparaat is nu geverifieerd.",
+        cancelled: "De verificatie is geannuleerd.",
+        unsupported:
+            "Je andere apparaat kan geen QR-code scannen. Probeer in plaats daarvan te verifiëren met emoji's.",
+        error: "De QR-code kon niet worden gegenereerd.",
     },
     askStartVerificationModal: {
         title: "Verificatie vereist",

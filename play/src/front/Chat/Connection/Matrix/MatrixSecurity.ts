@@ -3,6 +3,7 @@ import type {
     EmojiMapping,
     GeneratedSecretStorageKey,
     KeyBackupInfo,
+    ShowQrCodeCallbacks,
     ShowSasCallbacks,
     VerificationRequest,
 } from "matrix-js-sdk/lib/crypto-api";
@@ -24,6 +25,7 @@ import VerificationEmojiDialog from "./VerificationEmojiDialog.svelte";
 import DeviceVerificationModal from "./DeviceVerificationModal.svelte";
 import AskStartVerificationModal from "./AskStartVerificationModal.svelte";
 import ChooseDeviceVerificationMethodModal from "./ChooseDeviceVerificationMethodModal.svelte";
+import QrCodeVerificationModal from "./QrCodeVerificationModal.svelte";
 import { modals } from "@wa-modals";
 
 export type KeyParams = { passphrase?: string; recoveryKey?: string };
@@ -35,6 +37,8 @@ export class MatrixSecurity {
     private automaticDeviceVerificationPromptRequested = false;
     // The in-flight own-device SAS verification request, so DeviceVerificationModal can cancel it on close.
     private ownDeviceSasRequest: VerificationRequest | null = null;
+    // The in-flight "show a QR for another device to scan" request, so the modal can cancel it on close.
+    private ownDeviceQrRequest: VerificationRequest | null = null;
     public shouldDisplayModal = false;
     constructor(
         private initializingEncryptionPromise: Promise<void> | undefined = undefined,
@@ -470,6 +474,148 @@ export class MatrixSecurity {
         }
     }
 
+    /**
+     * Verify this device by DISPLAYING a QR code that another device (e.g. Element mobile) scans with its
+     * camera. Unlike verifyOwnDevice (SAS), we never send the m.key.verification.start — the scanner does, via
+     * m.reciprocate.v1. We only generate/show the QR and then confirm ("did your other device show the same
+     * shield?") once the scan reaches us. WorkAdventure has no camera, so we advertise ShowQrCode + Reciprocate
+     * but not ScanQrCode.
+     */
+    public async showQrForOwnDevice() {
+        try {
+            if (!this.matrixClientStore) throw new Error("MatrixClientStore is null");
+
+            const crypto = this.matrixClientStore.getCrypto();
+
+            if (!crypto) throw new Error("Crypto API is undefined");
+
+            const verificationRequest = await crypto.requestOwnUserVerification();
+            this.ownDeviceQrRequest = verificationRequest;
+            this.isVerifyingDevice = true;
+
+            const qrState: Writable<QrVerificationState> = writable({ status: "loading" });
+
+            this._openModal(QrCodeVerificationModal, { qrState });
+
+            let qrRequested = false;
+            let reciprocateAttached = false;
+
+            const showReciprocateHandler = (callbacks: ShowQrCodeCallbacks) => {
+                qrState.update((state) => ({
+                    ...state,
+                    status: "reciprocate",
+                    reciprocate: {
+                        confirm: () => callbacks.confirm(),
+                        cancel: () => callbacks.cancel(),
+                    },
+                }));
+            };
+
+            const cleanup = () => {
+                this.isVerifyingDevice = false;
+                if (this.ownDeviceQrRequest === verificationRequest) {
+                    this.ownDeviceQrRequest = null;
+                }
+                verificationRequest.off(VerificationRequestEvent.Change, onVerificationChange);
+                verificationRequest.verifier?.off(VerifierEvent.ShowReciprocateQr, showReciprocateHandler);
+            };
+
+            const onVerificationChange = () => {
+                // At Ready: generate and display the QR. We never call startVerification() — the scanner sends
+                // the start. generateQRCode() needs the other device's keys cached (same "other device is
+                // unknown" precondition as SAS), and only returns bytes if the peer advertised it can scan.
+                if (verificationRequest.phase === VerificationPhase.Ready && !qrRequested) {
+                    qrRequested = true;
+                    (async () => {
+                        const ownUserId = this.matrixClientStore?.getUserId();
+                        if (ownUserId) {
+                            await crypto.getUserDeviceInfo([ownUserId], true);
+                        }
+                        if (!verificationRequest.otherPartySupportsMethod(VerificationMethod.ScanQrCode)) {
+                            qrState.set({ status: "unsupported" });
+                            return;
+                        }
+                        const qrCodeBytes = await verificationRequest.generateQRCode();
+                        if (!qrCodeBytes) {
+                            qrState.set({ status: "unsupported" });
+                            return;
+                        }
+                        qrState.set({ status: "showing", qrCodeBytes });
+                    })().catch((error) => {
+                        console.error("Failed to show the verification QR code", error);
+                        qrState.set({ status: "error" });
+                    });
+                }
+
+                // At Started with the reciprocate method: the peer scanned our QR. Drive verify() and surface
+                // the "same shield?" confirm/cancel callbacks. (A peer may instead switch to SAS — we ignore
+                // that here; the QR entry point is QR-only.)
+                if (
+                    verificationRequest.phase === VerificationPhase.Started &&
+                    verificationRequest.chosenMethod === VerificationMethod.Reciprocate &&
+                    !reciprocateAttached
+                ) {
+                    const verifier = verificationRequest.verifier;
+                    if (!verifier) {
+                        console.error("QR reciprocate reached Started phase without a verifier");
+                        return;
+                    }
+                    reciprocateAttached = true;
+
+                    const alreadyReciprocate = verifier.getReciprocateQrCodeCallbacks();
+                    if (alreadyReciprocate) {
+                        showReciprocateHandler(alreadyReciprocate);
+                    } else {
+                        verifier.on(VerifierEvent.ShowReciprocateQr, showReciprocateHandler);
+                    }
+
+                    verifier.verify().catch((error) => {
+                        console.error("QR reciprocate verify failed", error);
+                    });
+                }
+
+                if (verificationRequest.phase === VerificationPhase.Done) {
+                    qrState.set({ status: "done" });
+                    this.isEncryptionRequiredAndNotSet.set(false);
+                    cleanup();
+                }
+
+                if (verificationRequest.phase === VerificationPhase.Cancelled) {
+                    qrState.update((state) => (state.status === "done" ? state : { status: "cancelled" }));
+                    cleanup();
+                }
+            };
+
+            verificationRequest.on(VerificationRequestEvent.Change, onVerificationChange);
+
+            // The request may already have advanced before we subscribed; evaluate the current phase once.
+            onVerificationChange();
+        } catch (error) {
+            this.isVerifyingDevice = false;
+            this.ownDeviceQrRequest = null;
+            console.error("Failed to show QR for own device", error);
+        }
+    }
+
+    /**
+     * Cancel the in-flight "show QR" verification (e.g. the user closed the modal), driving the request to the
+     * Cancelled phase so the flag is released and the scanning device stops waiting. No-op once terminal.
+     */
+    public async cancelOwnDeviceQrVerification() {
+        const request = this.ownDeviceQrRequest;
+        if (!request) return;
+        try {
+            if (request.phase !== VerificationPhase.Done && request.phase !== VerificationPhase.Cancelled) {
+                await request.cancel();
+            }
+        } catch (error) {
+            console.error("Failed to cancel own device QR verification", error);
+        } finally {
+            this.isVerifyingDevice = false;
+            this.ownDeviceQrRequest = null;
+        }
+    }
+
     public openVerificationEmojiDialog(verificationEmojiDialogProps: VerificationEmojiDialogProps) {
         this._openModal(VerificationEmojiDialog, {
             props: verificationEmojiDialogProps,
@@ -583,4 +729,19 @@ export type AskStartVerificationModalProps = {
         ip: string | undefined;
         name: string | undefined;
     };
+};
+
+// State of a "show a QR code for another device to scan" verification, driven by showQrForOwnDevice() and
+// rendered by QrCodeVerificationModal.
+//   loading      – requesting verification / generating the QR
+//   showing      – QR is displayed, waiting for the other device to scan it
+//   reciprocate  – the other device scanned; ask the user to confirm the shields match
+//   done         – verification completed
+//   cancelled    – the request was cancelled (by us or the peer)
+//   unsupported  – the other device cannot scan a QR code (no camera / did not advertise scan)
+//   error        – the QR could not be generated
+export type QrVerificationState = {
+    status: "loading" | "showing" | "reciprocate" | "done" | "cancelled" | "unsupported" | "error";
+    qrCodeBytes?: Uint8ClampedArray;
+    reciprocate?: { confirm: () => void; cancel: () => void };
 };
