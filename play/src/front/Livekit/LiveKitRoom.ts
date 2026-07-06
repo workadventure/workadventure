@@ -97,7 +97,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 // Commented out: the default simulcast layers are sufficient for our use case
                 // videoSimulcastLayers: [VideoPresets.h180, VideoPresets.h360],
                 videoCodec: "vp9",
-                // If a user does not support VP9, do not downgrade everyone to VP8.
+                // If a user does not support VP9 or AV1, do not downgrade everyone to VP8.
                 // Instead, let the publisher publish both VP9 and VP8 tracks using simulcast.
                 // Viewers will see the best possible codec they support.
                 backupCodecPolicy: BackupCodecPolicy.SIMULCAST,
