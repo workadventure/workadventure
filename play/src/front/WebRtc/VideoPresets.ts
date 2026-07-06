@@ -249,7 +249,7 @@ function selectVP9Preset(
 }
 
 /**
- * The bitrate for AV1 is computed linearly from the number of pixels to encode, with a strong maximum set at 4.5 Mbps (in high mode)
+ * The bitrate for AV1 scales with the frame size (sqrt of the pixel ratio vs 1920x1080) and is capped by the selected quality maximum.
  */
 export function selectAV1Preset(
     width: number,
@@ -273,7 +273,7 @@ export function selectAV1Preset(
         }
     }
 
-    const bitrate = Math.min(maxBitrate, Math.sqrt((width * height) / (1920 * 1080)) * maxBitrate);
+    const bitrate = Math.round(Math.min(maxBitrate, Math.sqrt((width * height) / (1920 * 1080)) * maxBitrate));
     return {
         bitrate,
         fps: 30,
