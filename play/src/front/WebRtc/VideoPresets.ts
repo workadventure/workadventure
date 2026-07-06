@@ -149,7 +149,7 @@ const videoMaxPreset: Preset = {
     },
 };
 
-export const screenSharePresets = {
+/*export const screenSharePresets = {
     h360: {
         pixels: 640 * 360,
         bitrate: {
@@ -203,7 +203,7 @@ const screenShareMaxPreset: Preset = {
         recommended: 30,
         high: 60,
     },
-};
+};*/
 
 /**
  * Select the most appropriate bandwidth and fps for your resolution.
@@ -218,19 +218,13 @@ export function selectVideoPreset(
     fps: number;
 } {
     if (isScreenShare) {
-        return selectPreset(
-            displayWidth,
-            displayHeight,
-            Object.values(screenSharePresets),
-            screenShareMaxPreset,
-            quality,
-        );
+        return selectAV1Preset(displayWidth, displayHeight, quality);
     } else {
-        return selectPreset(displayWidth, displayHeight, Object.values(videoPresets), videoMaxPreset, quality);
+        return selectVP9Preset(displayWidth, displayHeight, Object.values(videoPresets), videoMaxPreset, quality);
     }
 }
 
-function selectPreset(
+function selectVP9Preset(
     width: number,
     height: number,
     presets: Preset[],
@@ -251,5 +245,37 @@ function selectPreset(
     return {
         bitrate: maxPreset.bitrate[quality],
         fps: maxPreset.fps[quality],
+    };
+}
+
+/**
+ * The bitrate for AV1 is computed linearly from the number of pixels to encode, with a strong maximum set at 4.5 Mbps (in high mode)
+ */
+export function selectAV1Preset(
+    width: number,
+    height: number,
+    quality: VideoQualitySetting,
+): { bitrate: number; fps: number } {
+    let maxBitrate: number;
+    switch (quality) {
+        case "low":
+            maxBitrate = 1_000_000;
+            break;
+        case "recommended":
+            maxBitrate = 3_000_000;
+            break;
+        case "high":
+            maxBitrate = 4_500_000;
+            break;
+        default: {
+            const _exhaustiveCheck: never = quality;
+            throw new Error(`Unhandled quality setting: ${_exhaustiveCheck}`);
+        }
+    }
+
+    const bitrate = Math.min(maxBitrate, Math.sqrt((width * height) / (1920 * 1080)) * maxBitrate);
+    return {
+        bitrate,
+        fps: 30,
     };
 }
