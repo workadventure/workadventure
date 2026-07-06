@@ -104,6 +104,13 @@ describe("MatrixSecurity", () => {
     });
 
     describe("verifyOwnDevice", () => {
+        // The start sequence (getUserDeviceInfo -> startVerification) runs asynchronously, so let its
+        // microtasks settle before asserting (one macrotask tick drains the pending microtask queue).
+        const flush = () =>
+            new Promise((resolve) => {
+                setTimeout(resolve, 0);
+            });
+
         // Minimal stand-in for a matrix-js-sdk VerificationRequest: an event emitter with a mutable phase
         // and a startVerification() spy, so we can drive the phase transitions the SDK would emit.
         const createFakeVerificationRequest = (otherPartySupportsSas = true) => {
@@ -128,16 +135,18 @@ describe("MatrixSecurity", () => {
         const createInitiatingClient = (request: EventEmitter) => {
             const crypto = {
                 requestOwnUserVerification: vi.fn().mockResolvedValue(request),
+                getUserDeviceInfo: vi.fn().mockResolvedValue(new Map()),
             };
             const mockMatrixClient = {
                 getCrypto: vi.fn(() => crypto),
+                getUserId: vi.fn(() => "@me:example.test"),
             } as unknown as MatrixClient;
             return { mockMatrixClient, crypto };
         };
 
-        it("sends the m.key.verification.start itself once the peer is Ready", async () => {
+        it("downloads the other device's keys, then sends the start once the peer is Ready", async () => {
             const request = createFakeVerificationRequest();
-            const { mockMatrixClient } = createInitiatingClient(request);
+            const { mockMatrixClient, crypto } = createInitiatingClient(request);
 
             const matrixSecurity = new MatrixSecurity(undefined, undefined, vi.fn());
             matrixSecurity.updateMatrixClientStore(mockMatrixClient);
@@ -151,7 +160,11 @@ describe("MatrixSecurity", () => {
             // otherwise the flow stalls here forever (the bug this guards against).
             request.phase = VerificationPhase.Ready;
             request.emit(VerificationRequestEvent.Change);
+            await flush();
 
+            // Force-download our own devices first so startVerification() cannot reject with
+            // "other device is unknown" on a fresh session.
+            expect(crypto.getUserDeviceInfo).toHaveBeenCalledWith(["@me:example.test"], true);
             expect(request.startVerification).toHaveBeenCalledTimes(1);
             expect(request.startVerification).toHaveBeenCalledWith(VerificationMethod.Sas);
         });
@@ -168,6 +181,7 @@ describe("MatrixSecurity", () => {
             request.phase = VerificationPhase.Ready;
             request.emit(VerificationRequestEvent.Change);
             request.emit(VerificationRequestEvent.Change);
+            await flush();
 
             expect(request.startVerification).toHaveBeenCalledTimes(1);
         });
@@ -183,6 +197,7 @@ describe("MatrixSecurity", () => {
 
             request.phase = VerificationPhase.Ready;
             request.emit(VerificationRequestEvent.Change);
+            await flush();
 
             expect(request.startVerification).not.toHaveBeenCalled();
         });
