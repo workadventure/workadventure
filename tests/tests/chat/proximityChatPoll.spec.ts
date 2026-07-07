@@ -190,8 +190,13 @@ test.describe("Proximity chat polls and questions @oidc @nomobile @nowebkit", ()
         // Given Member1, Alice and Admin1 are in the same proximity chat.
         await using adminPage = await getPage(browser, "Admin1", Map.url("empty"));
         await using memberPage = await getPage(browser, "Member1", Map.url("empty"));
-        await using voterPage = await getPage(browser, "Alice", Map.url("empty"));
         await joinSameProximityChat(adminPage, memberPage);
+
+        // Alice is created only after Admin1 and Member1 have paired up. With MAX_PER_GROUP=100 the three
+        // participants would otherwise share the spawn tile and form a single group there; Admin1/Member1
+        // teleporting away would then churn the media renegotiation and flake their connection. Letting Alice
+        // walk into the already-established bubble mirrors the reliable "someone enters the proximity zone" flow.
+        await using voterPage = await getPage(browser, "Alice", Map.url("empty"));
         await Map.teleportToPosition(voterPage, 160, 160);
         await expect(adminPage.locator("#cameras-container").getByText("Alice", { exact: true }).first()).toBeVisible({
             timeout: 60_000,
