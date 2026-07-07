@@ -96,6 +96,16 @@ const roomManager = {
                         const myUser = await socketManager.handleJoinRoom(call, room, message.message.joinRoomMessage);
                         if (call.writable) {
                             setUser(myUser);
+
+                            if (room) {
+                                myUser.sendLivekitCredentialsForTestOfConnection(room.roomUrl).catch((e) => {
+                                    console.error(
+                                        "Error sending livekit credentials to the pusher for the test of connection livekit: ",
+                                        e,
+                                    );
+                                    Sentry.captureException(e);
+                                });
+                            }
                         } else {
                             // Connection may have been closed before the init was finished, so we have to manually disconnect the user.
                             if (room) {

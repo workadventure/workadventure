@@ -78,6 +78,7 @@ import type {
     MeetingInvitationResponseReceivedMessage,
     MeetingInvitationRequestClosedMessage,
     MeetingInvitationRequestTooHighMessage,
+    LivekitCredentialsMessage,
     VideoQualityReportMessage,
     ClientToServerMessage as ClientToServerMessageTsProto,
     ServerToClientMessage as ServerToClientMessageTsProto,
@@ -263,6 +264,8 @@ export class RoomConnection implements RoomConnection {
     public readonly externalModuleMessage = this._externalModuleMessage.asObservable();
     private readonly _spaceDestroyedMessage = new Subject<SpaceDestroyedMessage>();
     public readonly spaceDestroyedMessage = this._spaceDestroyedMessage.asObservable();
+    private readonly _livekitCredentialsMessageStream = new Subject<LivekitCredentialsMessage>();
+    public readonly livekitCredentialsMessageStream = this._livekitCredentialsMessageStream.asObservable();
 
     private queries = new Map<
         number,
@@ -755,6 +758,12 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "backConnectionCloseReasonMessage": {
                     console.warn("Received an internal back connection close reason message on the front.");
+                    break;
+                }
+                case "livekitCredentialsMessage": {
+                    // Transport layer only forwards the message; the connection test and the
+                    // user-facing UI are handled by the consumer (GameScene).
+                    this._livekitCredentialsMessageStream.next(message.livekitCredentialsMessage);
                     break;
                 }
                 default: {
@@ -2149,6 +2158,7 @@ export class RoomConnection implements RoomConnection {
         this._leaveSpaceRequestMessage.complete();
         this._externalModuleMessage.complete();
         this._spaceDestroyedMessage.complete();
+        this._livekitCredentialsMessageStream.complete();
     }
 
     private goToSelectYourWokaScene(): void {
