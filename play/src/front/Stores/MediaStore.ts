@@ -1105,6 +1105,31 @@ export const backgroundProcessedLocalVideoTrackStore = derived<
     },
 );
 
+/**
+ * The microphone state to broadcast to the space: true only when an audio track is actually
+ * being captured/published. Unlike requestedMicrophoneState / effectiveMicrophoneState (which are
+ * user-intent stores), this accounts for privacy shutdown, energy saving, unavailable status,
+ * external services, and getUserMedia not having resolved yet. This is what SpacePeerManager must
+ * emit so remote users see our real mic state (a push-to-talk temporary unmute produces a real
+ * audio track, so it turns this true as soon as the track exists).
+ */
+export const effectiveMicrophoneStateStore = derived(
+    audioProcessedLocalAudioTrackStore,
+    ($audioProcessedLocalAudioTrackStore) =>
+        $audioProcessedLocalAudioTrackStore.type === "success" &&
+        $audioProcessedLocalAudioTrackStore.track !== undefined,
+);
+
+/**
+ * The camera state to broadcast to the space; symmetric to effectiveMicrophoneStateStore.
+ */
+export const effectiveCameraStateStore = derived(
+    backgroundProcessedLocalVideoTrackStore,
+    ($backgroundProcessedLocalVideoTrackStore) =>
+        $backgroundProcessedLocalVideoTrackStore.type === "success" &&
+        $backgroundProcessedLocalVideoTrackStore.track !== undefined,
+);
+
 export const localStreamStore = derived<
     [
         typeof audioProcessedLocalAudioTrackStore,
