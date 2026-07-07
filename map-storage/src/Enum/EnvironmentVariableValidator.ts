@@ -51,6 +51,23 @@ export const EnvironmentVariables = z.object({
     S3_UPLOAD_CONCURRENCY_LIMIT: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 100))
         .describe("Maximum number of concurrent S3 upload operations. Defaults to 100"),
+    S3_THROW_ON_REQUEST_TIMEOUT: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe(
+            "If true, an S3 request that exceeds S3_REQUEST_TIMEOUT is aborted (its socket is released) and throws " +
+                "instead of only logging a warning. Defaults to false to preserve the behaviour of slow large transfers.",
+        ),
+    S3_HEALTH_CHECK_PERIOD: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 30000))
+        .describe(
+            "Period in milliseconds between S3 connectivity health checks (using the shared S3 client, so it detects " +
+                "an exhausted connection pool). Set to 0 to disable. Defaults to 30000 (30 seconds).",
+        ),
+    S3_HEALTH_CHECK_FAILURE_THRESHOLD: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 3))
+        .describe(
+            "Number of consecutive failed S3 health checks before an alert is reported to Sentry/logs. Defaults to 3.",
+        ),
     MAX_UNCOMPRESSED_SIZE: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 1024 * 1024 * 1024))
         .describe(

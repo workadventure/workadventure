@@ -23,7 +23,12 @@ import {
     SENTRY_ENVIRONMENT,
     GRPC_MAX_MESSAGE_SIZE,
     BODY_PARSER_JSON_SIZE_LIMIT,
+    AWS_BUCKET,
+    S3_HEALTH_CHECK_PERIOD,
+    S3_HEALTH_CHECK_FAILURE_THRESHOLD,
 } from "./Enum/EnvironmentVariable";
+import { getS3Client, hasS3Bucket } from "./Services/S3Client";
+import { S3HealthCheck } from "./Services/S3HealthCheck";
 
 // Sentry integration
 if (SENTRY_DSN != undefined) {
@@ -127,6 +132,13 @@ const mapListService = new MapListService(fileSystem, new WebHookService(WEB_HOO
 new UploadController(app, fileSystem, mapListService);
 new ValidatorController(app);
 new PingController(app);
+
+// When S3 storage is used, periodically probe S3 with the shared client so an exhausted
+// connection pool (or an S3 outage) surfaces as a Sentry alert instead of staying invisible
+// until users hit HTTP 500s.
+if (hasS3Bucket() && AWS_BUCKET) {
+    new S3HealthCheck(getS3Client(), AWS_BUCKET, S3_HEALTH_CHECK_PERIOD, S3_HEALTH_CHECK_FAILURE_THRESHOLD).start();
+}
 
 app.get(
     "/private/files/{*splat}",

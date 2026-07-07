@@ -205,6 +205,9 @@ Environment variables for the Map Storage service.
 | `S3_CONNECTION_TIMEOUT` | No | The timeout in milliseconds for the S3 connection in milliseconds. Defaults to 5000 (5 seconds). |
 | `S3_REQUEST_TIMEOUT` | No | The timeout in milliseconds for the S3 requests in milliseconds. Defaults to 60000 (60 seconds). |
 | `S3_UPLOAD_CONCURRENCY_LIMIT` | No | Maximum number of concurrent S3 upload operations. Defaults to 100 |
+| `S3_THROW_ON_REQUEST_TIMEOUT` | No | If true, an S3 request that exceeds S3_REQUEST_TIMEOUT is aborted (its socket is released) and throws instead of only logging a warning. Defaults to false to preserve the behaviour of slow large transfers. |
+| `S3_HEALTH_CHECK_PERIOD` | No | Period in milliseconds between S3 connectivity health checks (using the shared S3 client, so it detects an exhausted connection pool). Set to 0 to disable. Defaults to 30000 (30 seconds). |
+| `S3_HEALTH_CHECK_FAILURE_THRESHOLD` | No | Number of consecutive failed S3 health checks before an alert is reported to Sentry/logs. Defaults to 3. |
 | `MAX_UNCOMPRESSED_SIZE` | No | The maximum size of an uploaded file. This the total size of the uncompressed file (not the ZIP file). Defaults to 1GB |
 | `USE_DOMAIN_NAME_IN_PATH` | No | If true, the domain name will be used as a top level directory when fetching/storing files |
 | `PATH_PREFIX` | No | The prefix to strip if a reverse proxy is proxying calls to the map-storage from a path, e.g. /map-storage |
