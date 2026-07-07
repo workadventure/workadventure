@@ -213,13 +213,28 @@ export class UsernameDisplay {
     }
 
     private applyTransform(): void {
-        const scale = 1 / waScaleManager.zoomModifier;
+        // We deliberately avoid a `scale()` here. On Safari/WebKit the element is a promoted
+        // compositing layer (`will-change: transform` + `translate3d`), and a `scale()` > 1
+        // (which happens when the map is zoomed out, i.e. zoomModifier < 1) stretches the layer's
+        // cached bitmap instead of re-rasterizing the text, making the Woka name blurry.
+        // Instead, the zoom factor is baked into the layout size in applyStyles() so the text is
+        // always rasterized at its final resolution and only ever minified by the parent camera
+        // transform. See getDomScale().
         const position = this.getDomPosition();
-        this.element.style.transform = `translate3d(${position.x}px, ${position.y}px, 0) translate(-50%, -50%) scale(${scale})`;
+        this.element.style.transform = `translate3d(${position.x}px, ${position.y}px, 0) translate(-50%, -50%)`;
+    }
+
+    private getDomScale(): number {
+        // Final on-screen layout scale for the name. The 1/zoomModifier factor that used to live in
+        // applyTransform() as a `scale()` is folded in here so it becomes part of the layout size
+        // (font-size, padding, …) rather than a bitmap-stretching CSS transform. The rendered size
+        // is unchanged versus the previous transform-based approach: the parent Phaser DOM layer
+        // still applies the camera zoom (zoomModifier), which cancels this factor.
+        return this.displayScale;
     }
 
     private applyStyles(): void {
-        const domScale = waScaleManager.zoomModifier * this.displayScale;
+        const domScale = this.getDomScale();
         this.element.style.setProperty("--username-dom-scale", domScale.toString());
         this.element.style.height = `${PLAYER_NAME_HEIGHT * domScale}px`;
         this.element.style.gap = `${PLAYER_NAME_GAP * domScale}px`;
