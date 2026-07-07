@@ -61,6 +61,7 @@ vi.mock("../../Stores/MegaphoneStore", () => {
         requestedMegaphoneStore: writable(false),
         megaphoneSpaceStore: writable(undefined),
         megaphoneCanBeUsedStore: writable(false),
+        givenFloorSpaceStore: writable(undefined),
     };
 });
 
