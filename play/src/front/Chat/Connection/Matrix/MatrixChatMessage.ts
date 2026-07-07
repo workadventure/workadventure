@@ -303,8 +303,8 @@ export class MatrixChatMessage implements ChatMessage {
 
         const myRoomMember = this.room.getMember(currentUserId);
         const senderRoomMember = this.room.getMember(senderUserId);
-        const myPowerLevel = myRoomMember?.powerLevelNorm ?? 0;
-        const senderPowerLevel = senderRoomMember?.powerLevelNorm ?? 0;
+        const myPowerLevel = myRoomMember?.powerLevel ?? 0;
+        const senderPowerLevel = senderRoomMember?.powerLevel ?? 0;
         const hasSufficientPowerLevel = roomState?.hasSufficientPowerLevelFor("redact", myPowerLevel) ?? false;
 
         return hasSufficientPowerLevel && myPowerLevel > senderPowerLevel;
