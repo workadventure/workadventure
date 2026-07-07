@@ -218,17 +218,23 @@ export class UsernameDisplay {
      * A browser picks the rasterization resolution of a composited layer from its *own* transform,
      * not from an ancestor's. This element is a promoted layer (`will-change: transform` +
      * `translate3d`), so the scale must live here for the text to be rasterized crisply — handing
-     * the scaling to the parent Phaser camera transform blurs the cached bitmap in every browser.
+     * the scaling to the parent Phaser DOM layer blurs the cached bitmap in every browser.
      *
-     * The catch is the *direction*: Safari/WebKit does not re-rasterize a promoted layer when its
-     * transform scales it *up*, so a `scale()` > 1 stretches the cached bitmap (blurry text). We
-     * therefore only ever *minify* here (clamp at 1); when the map is zoomed out and we would need
-     * to enlarge (`1/zoomModifier > 1`), the enlargement is baked into the layout size instead
-     * (see getDomScale), which every browser rasterizes at full resolution. Scaling *down* a
+     * The parent Phaser DOM layer is scaled by the map's actual on-screen zoom (`actualZoom`), so
+     * that is the factor we must cancel here to keep the layer's total scale ≤ 1. It is NOT the same
+     * as `zoomModifier`: `actualZoom` divides by `devicePixelRatio` (see WaScaleManager), so at a
+     * medium zoom on a low-DPI screen it climbs above 1 while staying ≤ 1 on a Retina screen — which
+     * is why the name looked blurry only on the 2K monitor. Cancelling `actualZoom` instead of
+     * `zoomModifier` keeps the layer at full resolution regardless of the display's pixel density.
+     *
+     * We only ever *minify* here (clamp at 1): Safari/WebKit does not re-rasterize a promoted layer
+     * when its transform scales it *up*, so a `scale()` > 1 stretches the cached bitmap (blurry
+     * text). When `actualZoom < 1` (zoomed out) the enlargement is baked into the layout size
+     * instead (see getDomScale), which every browser rasterizes at full resolution. Scaling *down* a
      * high-resolution layout stays sharp everywhere.
      */
     private getTransformScale(): number {
-        return Math.min(1 / waScaleManager.zoomModifier, 1);
+        return Math.min(1 / waScaleManager.getActualZoom(), 1);
     }
 
     private applyTransform(): void {
@@ -238,13 +244,13 @@ export class UsernameDisplay {
     }
 
     private getDomScale(): number {
-        // Layout scale for the name (font-size, padding, …). The part of the zoom compensation that
-        // getTransformScale() cannot apply without magnifying (i.e. when zoomed out) is folded in
-        // here so the element is laid out — and therefore rasterized — at full resolution.
-        // `displayScale / transformScale` keeps the final rendered size identical to applying the
-        // whole `1/zoomModifier` factor through the transform, as the original code did: when zoomed
-        // in transformScale is `1/zoomModifier` and this reduces to the original `zoomModifier *
-        // displayScale`; when zoomed out transformScale is 1 and this is just `displayScale`.
+        // Layout scale for the name (font-size, padding, …). Dividing by the transform scale folds
+        // the part of the zoom compensation that getTransformScale() cannot apply without magnifying
+        // into the layout size, so the element is laid out — and therefore rasterized — at full
+        // resolution. `displayScale / transformScale` keeps the final rendered size independent of
+        // the split: the parent Phaser DOM layer re-applies `actualZoom`, which cancels the
+        // `1/actualZoom` the transform removed, leaving the rendered size at `displayScale *
+        // actualZoom` exactly as before.
         return this.displayScale / this.getTransformScale();
     }
 
