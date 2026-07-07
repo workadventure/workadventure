@@ -152,7 +152,13 @@
             {/snippet}
 
             {#snippet right()}
-                <div id="action-wrapper" class="flex flex-1 justify-end gap-1 @md/actions:gap-2 @xl/actions:gap-4">
+                <!-- relative z-[2] keeps the profile menu (and its "action-user" trigger) above the centre controls:
+                     on a narrow mobile action bar the extra raise-hand button can overflow into this area, and the
+                     centre group's own z-[1] would otherwise let it intercept clicks meant for the profile menu. -->
+                <div
+                    id="action-wrapper"
+                    class="relative z-[2] flex flex-1 justify-end gap-1 @md/actions:gap-2 @xl/actions:gap-4"
+                >
                     <div class="flex flex-row flex-0 gap-0">
                         {#if rightDiv}
                             {#each $rightActionBarMenuItems as button, index (button.id)}
