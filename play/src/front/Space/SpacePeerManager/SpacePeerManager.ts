@@ -23,6 +23,7 @@ import LL, { locale } from "../../../i18n/i18n-svelte";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import type { Streamable } from "../Streamable";
 import { deriveSwitchStore } from "../../Stores/InterruptorStore";
+import type { ProximityFileTransferTransport } from "../../Chat/Connection/Proximity/ProximityFileTransferTransport";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
@@ -38,6 +39,7 @@ interface PendingRecorderNameResolution {
 
 export interface ICommunicationState {
     getPeer(): SimplePeerConnectionInterface | undefined;
+    getProximityFileTransferTransport?(): ProximityFileTransferTransport | undefined;
 
     /**
      * Starts the shutdown process of the communication state. It does not remove all video peers immediately,
@@ -538,6 +540,10 @@ export class SpacePeerManager {
 
     getPeer(): SimplePeerConnectionInterface | undefined {
         return this._communicationState.getPeer();
+    }
+
+    getProximityFileTransferTransport(): ProximityFileTransferTransport | undefined {
+        return this._communicationState.getProximityFileTransferTransport?.();
     }
 
     retryAllFailedConnections(): void {

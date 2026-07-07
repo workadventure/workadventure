@@ -213,7 +213,7 @@
                     {/if}
 
                     {@const MessageComponent = messageType[type]}
-                    <MessageComponent updateMessageBody={handleUpdateMessageBody} {content} />
+                    <MessageComponent updateMessageBody={handleUpdateMessageBody} {content} {message} />
 
                     {#if $reactionsWithUsers.length > 0}
                         <MessageReactions

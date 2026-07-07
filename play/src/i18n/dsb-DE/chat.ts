@@ -182,6 +182,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     notification: {
         discussion: "co z tobu diskutěrowaś",
         message: "sćelo powěsć",
+        file: "jo dataju pósłał: {fileName}",
         forum: "w forumje",
         in: "w",
     },
@@ -277,6 +278,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         download: "Ześěgnuś",
         openCoWebsite: "Na co-webboku wótcyniś",
         loadingAttachment: "Pśiłožk se zacytujo...",
+        remainingTime: "hyšći ~{time}",
         attachmentDownloadError: "Toś ten pśiłožk njedajo se ześěgnuś.",
         attachmentDecryptError: "Toś ten pśiłožk njedajo se dešifrěrowaś.",
         copy: "Link kopěrowaś",

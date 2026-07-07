@@ -182,6 +182,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     notification: {
         discussion: "あなたとディスカッションを希望",
         message: "メッセージを送信",
+        file: "ファイルを送信しました: {fileName}",
         forum: "フォーラム上",
         in: "で",
     },
@@ -277,6 +278,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         download: "ダウンロード",
         openCoWebsite: "共同ウェブサイトで開く",
         loadingAttachment: "Loading attachment...",
+        remainingTime: "残り約{time}",
         attachmentDownloadError: "Unable to download this attachment.",
         attachmentDecryptError: "この添付ファイルを復号できません。",
         copy: "リンクをコピーする",
