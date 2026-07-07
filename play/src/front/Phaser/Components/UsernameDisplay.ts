@@ -212,25 +212,40 @@ export class UsernameDisplay {
         this.updatePlayerDepth();
     }
 
+    /**
+     * The scale applied through the element's own CSS `transform`.
+     *
+     * A browser picks the rasterization resolution of a composited layer from its *own* transform,
+     * not from an ancestor's. This element is a promoted layer (`will-change: transform` +
+     * `translate3d`), so the scale must live here for the text to be rasterized crisply — handing
+     * the scaling to the parent Phaser camera transform blurs the cached bitmap in every browser.
+     *
+     * The catch is the *direction*: Safari/WebKit does not re-rasterize a promoted layer when its
+     * transform scales it *up*, so a `scale()` > 1 stretches the cached bitmap (blurry text). We
+     * therefore only ever *minify* here (clamp at 1); when the map is zoomed out and we would need
+     * to enlarge (`1/zoomModifier > 1`), the enlargement is baked into the layout size instead
+     * (see getDomScale), which every browser rasterizes at full resolution. Scaling *down* a
+     * high-resolution layout stays sharp everywhere.
+     */
+    private getTransformScale(): number {
+        return Math.min(1 / waScaleManager.zoomModifier, 1);
+    }
+
     private applyTransform(): void {
-        // We deliberately avoid a `scale()` here. On Safari/WebKit the element is a promoted
-        // compositing layer (`will-change: transform` + `translate3d`), and a `scale()` > 1
-        // (which happens when the map is zoomed out, i.e. zoomModifier < 1) stretches the layer's
-        // cached bitmap instead of re-rasterizing the text, making the Woka name blurry.
-        // Instead, the zoom factor is baked into the layout size in applyStyles() so the text is
-        // always rasterized at its final resolution and only ever minified by the parent camera
-        // transform. See getDomScale().
+        const scale = this.getTransformScale();
         const position = this.getDomPosition();
-        this.element.style.transform = `translate3d(${position.x}px, ${position.y}px, 0) translate(-50%, -50%)`;
+        this.element.style.transform = `translate3d(${position.x}px, ${position.y}px, 0) translate(-50%, -50%) scale(${scale})`;
     }
 
     private getDomScale(): number {
-        // Final on-screen layout scale for the name. The 1/zoomModifier factor that used to live in
-        // applyTransform() as a `scale()` is folded in here so it becomes part of the layout size
-        // (font-size, padding, …) rather than a bitmap-stretching CSS transform. The rendered size
-        // is unchanged versus the previous transform-based approach: the parent Phaser DOM layer
-        // still applies the camera zoom (zoomModifier), which cancels this factor.
-        return this.displayScale;
+        // Layout scale for the name (font-size, padding, …). The part of the zoom compensation that
+        // getTransformScale() cannot apply without magnifying (i.e. when zoomed out) is folded in
+        // here so the element is laid out — and therefore rasterized — at full resolution.
+        // `displayScale / transformScale` keeps the final rendered size identical to applying the
+        // whole `1/zoomModifier` factor through the transform, as the original code did: when zoomed
+        // in transformScale is `1/zoomModifier` and this reduces to the original `zoomModifier *
+        // displayScale`; when zoomed out transformScale is 1 and this is just `displayScale`.
+        return this.displayScale / this.getTransformScale();
     }
 
     private applyStyles(): void {
