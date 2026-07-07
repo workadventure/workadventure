@@ -1304,7 +1304,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             roomFolder.init();
         } else {
             if (!parentFolder.roomList.has(roomId)) {
-                parentFolder.roomList.set(roomId, new MatrixChatRoom(room));
+                const newRoom = new MatrixChatRoom(room);
+                parentFolder.roomList.set(roomId, newRoom);
+                this.retargetSelectedRoomIfReplaced(newRoom);
             }
         }
 
@@ -1323,7 +1325,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             return;
         }
         if (!this.roomList.has(roomId)) {
-            this.roomList.set(roomId, new MatrixChatRoom(room));
+            const newRoom = new MatrixChatRoom(room);
+            this.roomList.set(roomId, newRoom);
+            this.retargetSelectedRoomIfReplaced(newRoom);
         }
     }
 
@@ -1482,10 +1486,21 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private createAndAddNewRootRoom(room: Room): MatrixChatRoom {
         const newRoom = new MatrixChatRoom(room);
         this.roomList.set(newRoom.id, newRoom);
+        this.retargetSelectedRoomIfReplaced(newRoom);
+        return newRoom;
+    }
+
+    /**
+     * A membership change (e.g. accepting an invitation) destroys the room's previous MatrixChatRoom
+     * wrapper and rebuilds a fresh one during placement reconciliation. Any UI still bound to the old,
+     * now-destroyed wrapper would stop receiving live timeline events — a message the user sends is
+     * delivered to the server but never renders until the room is re-opened. Keep `selectedRoomStore`
+     * pointing at the live wrapper so the open timeline keeps updating.
+     */
+    private retargetSelectedRoomIfReplaced(newRoom: MatrixChatRoom): void {
         if (get(selectedRoomStore)?.id === newRoom.id) {
             selectedRoomStore.set(newRoom);
         }
-        return newRoom;
     }
     private onClientEventDeleteRoom(roomId: string) {
         this.untrackRawUnreadRoom(roomId);
