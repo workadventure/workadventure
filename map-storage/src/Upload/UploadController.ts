@@ -7,7 +7,7 @@ import type { LimitFunction } from "p-limit";
 import pLimit from "p-limit";
 import ZipStream from "zip-stream";
 import { type File, type CentralDirectory, Open as UnzipperOpen } from "unzipper";
-import * as jsonpatch from "fast-json-patch";
+import jsonpatch from "fast-json-patch";
 import type { Operation } from "fast-json-patch";
 import type { OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { MapValidator } from "@workadventure/map-editor/src/GameMap/MapValidator";

@@ -1,4 +1,4 @@
-import * as jsonpatch from "fast-json-patch";
+import jsonpatch from "fast-json-patch";
 import type { Operation } from "fast-json-patch";
 import { describe, expect, it } from "vitest";
 
