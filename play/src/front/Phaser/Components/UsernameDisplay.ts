@@ -33,7 +33,13 @@ export class UsernameDisplay {
 
     private readonly onZoomChanged = (zoomModifier: number): void => {
         this.displayScale = this.getDisplayScale(zoomModifier);
-        this.applyStyles();
+        // The ancestor scale we cancel in applyStyles()/applyTransform() is measured from the DOM
+        // layer, so invalidate it and re-apply at render time, once Phaser has updated the layer's
+        // transform for the new zoom. Applying immediately would measure the previous frame's scale.
+        this.gameScene.usernameDomLayer.invalidateAncestorScale();
+        this.scene.events.once(Phaser.Scenes.Events.RENDER, () => {
+            this.applyStyles();
+        });
     };
     private toForeFront: boolean = false;
     private depth: number = 0;
@@ -65,6 +71,14 @@ export class UsernameDisplay {
         this.updateUsernameBackgroundColor(outlineColor);
 
         this.gameScene.usernameDomLayer.addUsername(this.element);
+
+        // The immediate applyStyles() above may have measured the ancestor scale before Phaser
+        // applied the layer transform for this frame. Re-apply once at render time so the initial
+        // scale is measured against the real on-screen transform.
+        this.gameScene.usernameDomLayer.invalidateAncestorScale();
+        this.scene.events.once(Phaser.Scenes.Events.RENDER, () => {
+            this.applyStyles();
+        });
 
         this.scene.game.events.on(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
     }
@@ -215,26 +229,26 @@ export class UsernameDisplay {
     /**
      * The scale applied through the element's own CSS `transform`.
      *
-     * A browser picks the rasterization resolution of a composited layer from its *own* transform,
-     * not from an ancestor's. This element is a promoted layer (`will-change: transform` +
-     * `translate3d`), so the scale must live here for the text to be rasterized crisply — handing
-     * the scaling to the parent Phaser DOM layer blurs the cached bitmap in every browser.
+     * This element is a promoted compositing layer (`will-change: transform` + `translate3d`). Safari
+     * rasterizes such a layer's backing store at full resolution ONLY when the element's own
+     * transform is a *minification* (scale < 1); when the own transform is a pure translation
+     * (scale === 1) it caches the bitmap at `devicePixelRatio` and lets the parent transform stretch
+     * it — blurry on a low-DPI screen, but fine on a 2× Retina screen whose backing store is already
+     * twice as dense. That is exactly why the name was blurry at a medium zoom only on the 2K
+     * monitor.
      *
-     * The parent Phaser DOM layer is scaled by the map's actual on-screen zoom (`actualZoom`), so
-     * that is the factor we must cancel here to keep the layer's total scale ≤ 1. It is NOT the same
-     * as `zoomModifier`: `actualZoom` divides by `devicePixelRatio` (see WaScaleManager), so at a
-     * medium zoom on a low-DPI screen it climbs above 1 while staying ≤ 1 on a Retina screen — which
-     * is why the name looked blurry only on the 2K monitor. Cancelling `actualZoom` instead of
-     * `zoomModifier` keeps the layer at full resolution regardless of the display's pixel density.
+     * So we cancel the parent DOM layer's on-screen scale here to bring the layer's total scale to
+     * ≤ 1, which makes the own transform a genuine minification whenever the parent magnifies. We
+     * MEASURE that parent scale from the DOM (`getAncestorScale`) rather than deriving it from
+     * `zoomModifier`/`actualZoom`, because the real value depends on the camera zoom and the device
+     * pixel ratio together and does not match either of those numbers.
      *
-     * We only ever *minify* here (clamp at 1): Safari/WebKit does not re-rasterize a promoted layer
-     * when its transform scales it *up*, so a `scale()` > 1 stretches the cached bitmap (blurry
-     * text). When `actualZoom < 1` (zoomed out) the enlargement is baked into the layout size
-     * instead (see getDomScale), which every browser rasterizes at full resolution. Scaling *down* a
-     * high-resolution layout stays sharp everywhere.
+     * Clamp at 1 so we never magnify: a scale ≥ 1 is the pure-translate/upscale case that blurs on
+     * Safari. When the parent is already minifying (ancestorScale < 1, e.g. zoomed out) the clamp
+     * leaves the own transform at 1, which is fine — minifying a bitmap stays sharp everywhere.
      */
     private getTransformScale(): number {
-        return Math.min(1 / waScaleManager.getActualZoom(), 1);
+        return Math.min(1 / this.gameScene.usernameDomLayer.getAncestorScale(), 1);
     }
 
     private applyTransform(): void {
@@ -248,9 +262,9 @@ export class UsernameDisplay {
         // the part of the zoom compensation that getTransformScale() cannot apply without magnifying
         // into the layout size, so the element is laid out — and therefore rasterized — at full
         // resolution. `displayScale / transformScale` keeps the final rendered size independent of
-        // the split: the parent Phaser DOM layer re-applies `actualZoom`, which cancels the
-        // `1/actualZoom` the transform removed, leaving the rendered size at `displayScale *
-        // actualZoom` exactly as before.
+        // the split: the parent Phaser DOM layer re-applies `ancestorScale`, which cancels the
+        // `1/ancestorScale` the transform removed, leaving the rendered size at
+        // `displayScale * ancestorScale` — unchanged from before this fix.
         return this.displayScale / this.getTransformScale();
     }
 
