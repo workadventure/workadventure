@@ -7,8 +7,8 @@ import type { LimitFunction } from "p-limit";
 import pLimit from "p-limit";
 import ZipStream from "zip-stream";
 import { type File, type CentralDirectory, Open as UnzipperOpen } from "unzipper";
-import type { Operation } from "rfc6902";
-import { applyPatch } from "rfc6902";
+import jsonpatch from "fast-json-patch";
+import type { Operation } from "fast-json-patch";
 import type { OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { MapValidator } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { WAMFileFormat } from "@workadventure/map-editor";
@@ -447,16 +447,34 @@ export class UploadController {
                         content.metadata = {};
                     }
 
-                    const patchedContent = structuredClone(content);
-                    const patchErrors = applyPatch(patchedContent, req.body as Operation[]);
-                    if (patchErrors.some(Boolean)) {
-                        console.error(
-                            `[${new Date().toISOString()}] Failed to apply patch on WAM file:`,
-                            patchErrors,
-                            typeof patchErrors,
-                        );
+                    const operations = req.body as unknown;
+                    if (!Array.isArray(operations)) {
                         res.status(400).json({
-                            patch: patchErrors,
+                            patch: "Invalid patch: expected a JSON-Patch document (an array of operations)",
+                        });
+                        return;
+                    }
+
+                    // `validateOperation = true` makes fast-json-patch validate every operation
+                    // and refuse to resolve a JSON Pointer through an inherited (prototype)
+                    // property, so a patch cannot reach shared, process-wide state instead of the
+                    // map document. `mutateDocument = false` returns a fresh document and leaves
+                    // `content` untouched; prototype modifications are banned by default.
+                    // The operations are entirely client-supplied, so any failure applying them
+                    // (a JsonPatchError, or the prototype-ban TypeError) is a bad request, not a
+                    // server error.
+                    let patchedContent: typeof content;
+                    try {
+                        patchedContent = jsonpatch.applyPatch(
+                            content,
+                            operations as Operation[],
+                            true,
+                            false,
+                        ).newDocument;
+                    } catch (e) {
+                        console.error(`[${new Date().toISOString()}] Failed to apply patch on WAM file:`, e);
+                        res.status(400).json({
+                            patch: e instanceof Error ? e.message : "Invalid patch",
                         });
                         return;
                     }
