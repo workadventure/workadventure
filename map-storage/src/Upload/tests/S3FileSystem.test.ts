@@ -132,5 +132,28 @@ describe("S3FileSystem", () => {
             await promise;
             expect(body.destroyed).toBe(true);
         });
+
+        it("rejects and destroys the S3 body when the archive emits a real error mid-entry", async () => {
+            const body = new PassThrough();
+            const archive = new PassThrough();
+            // entry() never calls back; the failure surfaces via the archive "error" event.
+            const entry = vi.fn();
+            (archive as unknown as { entry: unknown }).entry = entry;
+
+            const send = vi
+                .fn()
+                .mockResolvedValueOnce({ Contents: [{ Key: "map/a.png" }], IsTruncated: false })
+                .mockResolvedValueOnce({ Body: body });
+            const fileSystem = new S3FileSystem({ send } as unknown as S3, "bucket");
+
+            const promise = fileSystem.archiveDirectory(archive as unknown as ZipStream, "map");
+            await vi.waitFor(() => expect(entry).toHaveBeenCalledOnce());
+
+            // A genuine archiving error (not a teardown) must be propagated, not swallowed.
+            archive.emit("error", new Error("zip boom"));
+
+            await expect(promise).rejects.toThrow("zip boom");
+            expect(body.destroyed).toBe(true);
+        });
     });
 });

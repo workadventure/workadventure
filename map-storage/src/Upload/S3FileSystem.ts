@@ -397,21 +397,26 @@ export class S3FileSystem implements FileSystemInterface {
                     }
 
                     await new Promise<void>((resolve, reject) => {
-                        // If the archive is destroyed while this entry is being written (client
-                        // disconnect mid-file), archive.entry()'s callback may never fire. Settle
-                        // on archive teardown and destroy the body so it does not leak its socket.
-                        const onArchiveGone = () => {
-                            archive.removeListener("close", onArchiveGone);
-                            archive.removeListener("error", onArchiveGone);
+                        // archive.entry()'s callback may never fire if the archive is torn down
+                        // while this entry is being written. Watch the archive so we always settle
+                        // and release the S3 body's socket:
+                        //  - "close": teardown (archive.destroy(), e.g. the client disconnected) —
+                        //    stop cleanly; the outer `if (archive.destroyed)` check ends the loop.
+                        //  - "error": a real archiving error — propagate it (do not swallow).
+                        const onClose = () => {
                             body.destroy();
                             resolve();
                         };
-                        archive.once("close", onArchiveGone);
-                        archive.once("error", onArchiveGone);
+                        const onError = (err: Error) => {
+                            body.destroy();
+                            reject(err);
+                        };
+                        archive.once("close", onClose);
+                        archive.once("error", onError);
 
                         archive.entry(body, { name: key.substring(virtualPath.length) }, (err) => {
-                            archive.removeListener("close", onArchiveGone);
-                            archive.removeListener("error", onArchiveGone);
+                            archive.removeListener("close", onClose);
+                            archive.removeListener("error", onError);
                             if (err) {
                                 body.destroy();
                                 reject(err);

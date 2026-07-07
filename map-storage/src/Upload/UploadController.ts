@@ -662,7 +662,11 @@ export class UploadController {
 
                 await this.fileSystem.archiveDirectory(archive, virtualDirectory);
 
-                archive.finalize();
+                // If the client disconnected, the archive was already destroyed above; calling
+                // finalize() on it would write to a destroyed stream and emit a spurious error.
+                if (!archive.destroyed) {
+                    archive.finalize();
+                }
             })().catch((e) => {
                 console.error(`[${new Date().toISOString()}]`, e);
                 Sentry.captureException(e);
