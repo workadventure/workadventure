@@ -15,14 +15,23 @@ describe("fast-json-patch applyPatch with validateOperation=true", () => {
         jsonpatch.applyPatch(document, operations, true, false).newDocument;
 
     it("applies legitimate operations, including a leaf key that collides with a builtin name", () => {
-        const document = { metadata: { name: "Old" }, vendor: {}, layers: [{ id: 1 }] };
-        expect(
-            (applyValidated(document, [{ op: "replace", path: "/metadata/name", value: "New" }]) as typeof document)
-                .metadata.name,
-        ).toBe("New");
-        expect(applyValidated(document, [{ op: "add", path: "/vendor/foo", value: 1 }])).toBeTruthy();
+        const document = { metadata: { name: "Old" }, vendor: {} as Record<string, unknown>, layers: [{ id: 1 }] };
+
+        const replaced = applyValidated(document, [
+            { op: "replace", path: "/metadata/name", value: "New" },
+        ]) as typeof document;
+        expect(replaced.metadata.name).toBe("New");
+
+        const added = applyValidated(document, [{ op: "add", path: "/vendor/foo", value: 1 }]) as typeof document;
+        expect(added.vendor.foo).toBe(1);
+
         // A leaf key named like a builtin is only an own assignment and stays allowed.
-        expect(applyValidated(document, [{ op: "add", path: "/vendor/toString", value: "data" }])).toBeTruthy();
+        const withBuiltinLeaf = applyValidated(document, [
+            { op: "add", path: "/vendor/toString", value: "data" },
+        ]) as typeof document;
+        // eslint-disable-next-line @typescript-eslint/unbound-method -- reading the own value written by the patch, not invoking a method
+        expect(withBuiltinLeaf.vendor.toString).toBe("data");
+        expect(Object.hasOwn(withBuiltinLeaf.vendor, "toString")).toBe(true);
     });
 
     it("rejects operations whose path descends through an inherited property", () => {

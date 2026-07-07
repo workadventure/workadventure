@@ -449,7 +449,9 @@ export class UploadController {
 
                     const operations = req.body as unknown;
                     if (!Array.isArray(operations)) {
-                        res.status(400).send("Invalid patch: expected a JSON-Patch document (an array of operations)");
+                        res.status(400).json({
+                            patch: "Invalid patch: expected a JSON-Patch document (an array of operations)",
+                        });
                         return;
                     }
 
