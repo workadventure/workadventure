@@ -117,6 +117,10 @@ class AnalyticsClient {
         this.posthog?.capture("wa_microphone");
     }
 
+    raiseHand(raised: boolean): void {
+        this.posthog?.capture("wa_raise_hand", { raised });
+    }
+
     retryConnectionWebRtc(): void {
         this.posthog?.capture("wa_retry_connection_webrtc");
     }
@@ -371,6 +375,18 @@ class AnalyticsClient {
 
     kickoffMeetingAction(): void {
         this.posthog?.capture("wa_kickoff_meeting_action");
+    }
+
+    giveFloorMeetingAction(): void {
+        this.posthog?.capture("wa_give_floor_meeting_action");
+    }
+
+    revokeFloorMeetingAction(): void {
+        this.posthog?.capture("wa_revoke_floor_meeting_action");
+    }
+
+    giveBackFloorMeetingAction(): void {
+        this.posthog?.capture("wa_give_back_floor_meeting_action");
     }
 
     sendPrivateMessageMeetingAction(): void {

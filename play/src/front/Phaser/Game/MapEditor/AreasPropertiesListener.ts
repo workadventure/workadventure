@@ -26,6 +26,7 @@ import { get } from "svelte/store";
 import type { Member } from "@workadventure/messages";
 import { FilterType } from "@workadventure/messages";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import type { SpaceInterface } from "../../../Space/SpaceInterface";
 import { LL } from "../../../../i18n/i18n-svelte";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { scriptUtils } from "../../../Api/ScriptUtils";
@@ -54,7 +55,7 @@ import {
     requestedMicrophoneState,
     silentStore,
 } from "../../../Stores/MediaStore";
-import { currentLiveStreamingSpaceStore } from "../../../Stores/MegaphoneStore";
+import { currentLiveStreamingSpaceStore, givenFloorSpaceStore } from "../../../Stores/MegaphoneStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { getImageCoWebsiteTitle, ImageCoWebsite, isImageCoWebsiteUrl } from "../../../WebRtc/CoWebsite/ImageCoWebsite";
@@ -1505,6 +1506,9 @@ export class AreasPropertiesListener {
                     if (space) {
                         space.startStreaming();
                         currentLiveStreamingSpaceStore.set(space);
+                        // Join succeeded: a granted raise-hand floor is superseded by the zone speaker role.
+                        // Done only on success so a failed join does not strand the granted user.
+                        this.supersedeGrantedFloor(space);
 
                         listenerWaitingMediaStore.set(undefined);
                         listenerSharingCameraStore.set(false);
@@ -1545,6 +1549,8 @@ export class AreasPropertiesListener {
                 space.startStreaming();
                 currentLiveStreamingSpaceStore.set(space);
                 isSpeakerStore.set(true);
+                // Join succeeded: a granted raise-hand floor is superseded by the zone speaker role.
+                this.supersedeGrantedFloor(space);
 
                 // Track this zone
                 this.activeMegaphoneZones.set(property.id, {
@@ -1829,6 +1835,26 @@ export class AreasPropertiesListener {
             }
         }
         return undefined;
+    }
+
+    /**
+     * Called when the local user becomes a speaker in `newSpace` through a megaphone zone. If they were holding a
+     * floor granted through a raised hand in a DIFFERENT space — typically the global (room-level) megaphone, which
+     * is NOT tracked by activeMegaphoneZones — that space would keep streaming forever once they leave this zone,
+     * because the zone-leave logic only ever tears down zone spaces. So stop the granted stream here before dropping
+     * the grant (dropping the grant also hides the "give back the floor" control).
+     */
+    private supersedeGrantedFloor(newSpace: SpaceInterface): void {
+        const grantedSpace = get(givenFloorSpaceStore);
+        if (grantedSpace && grantedSpace !== newSpace) {
+            try {
+                grantedSpace.stopStreaming();
+            } catch (e) {
+                console.error("An error occurred while stopping the previously granted floor stream", e);
+                Sentry.captureException(e);
+            }
+        }
+        givenFloorSpaceStore.set(undefined);
     }
 
     private handleExitPropertyOnEnter(url: string): void {

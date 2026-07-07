@@ -102,6 +102,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "顯示表情符號",
             desc: "只要點一下就能用表情符號回應來表達您的感受。只要點一下即可！",
         },
+        raiseHand: {
+            title: "舉手",
+            desc: "示意你想發言。你舉起的手會顯示在地圖和你的視訊上，讓大家知道接下來輪到誰。",
+        },
         audioManager: {
             title: "環境聲音音量",
             desc: "點此設定音訊音量。",
@@ -127,6 +131,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "選擇要鎖定／解鎖的區域",
             bubbleLabel: "討論氣泡",
             unnamedArea: "未命名區域",
+        },
+        giveBackFloor: {
+            title: "交回發言權",
+            desc: "你已獲得發言權。點擊停止發言並交回。",
         },
         megaphone: {
             title: "停止擴音器",
@@ -175,6 +183,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "您可以使用子母畫面功能，在對話時觀看影片或簡報。只要點選子母畫面圖示即可享受您的內容。",
         },
         videoNotSupported: "您的瀏覽器不支援影片標籤。",
+    },
+    raisedHands: {
+        speaking: "發言中",
+        title: "舉手",
+        empty: "沒有人舉手",
+        help: "依順序查看誰舉了手，並把發言權交給他。",
     },
     listStatusTitle: {
         enable: "變更您的狀態",

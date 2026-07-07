@@ -9,6 +9,9 @@ const notification: DeepPartial<Translation["notification"]> = {
     askToMuteCamera: "يرجى كتم الكاميرا 🙏", // please mute your camera
     microphoneMuted: "تم كتم ميكروفونك بواسطة مشرف",
     cameraMuted: "تم كتم كاميرتك بواسطة مشرف",
+    givenTheFloor: "حان دورك للتحدث",
+    givenTheFloorEnableMicrophone: "حان دورك للتحدث — فعّل الميكروفون",
+    floorRevoked: "لم يعد لديك الكلمة",
     announcement: "إعلان",
     open: "فتح",
     help: {
@@ -26,6 +29,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     },
     addNewTag: "إضافة علامة جديدة: '{tag}'", // add new tag: '{tag}'
     screenSharingError: "تعذر بدء مشاركة الشاشة",
+    floorGivenBack: "لقد أعدت الكلمة",
     notificationSentToMuteMicrophone: "تم إرسال إشعار إلى {name} لكتم ميكروفونه",
     notificationSentToMuteCamera: "تم إرسال إشعار إلى {name} لكتم كاميرته",
     recordingStarted: "بدأ شخص واحد في المناقشة تسجيلاً.",

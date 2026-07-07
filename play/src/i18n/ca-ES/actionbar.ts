@@ -104,6 +104,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Mostrar un emoji",
             desc: "Expressa com et sents amb un sol clic utilitzant reaccions emoji. Només toca i ja està!",
         },
+        raiseHand: {
+            title: "Aixeca la mà",
+            desc: "Indica que vols parlar. La teva mà aixecada es mostra al mapa i al teu vídeo, perquè tothom sàpiga a qui li toca.",
+        },
         audioManager: {
             title: "Volum dels sons ambientals",
             desc: "Configureu el volum d'àudio fent clic aquí.",
@@ -129,6 +133,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "Tria la zona per bloquejar/desbloquejar",
             bubbleLabel: "Bombolla de discussió",
             unnamedArea: "Zona sense nom",
+        },
+        giveBackFloor: {
+            title: "Retornar la paraula",
+            desc: "Se t’ha donat la paraula. Fes clic per deixar de parlar i retornar-la.",
         },
         megaphone: {
             title: "Aturar megàfon",
@@ -177,6 +185,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Pots utilitzar la funció d'imatge en imatge per veure un vídeo o una presentació mentre estàs en una conversa. Simplement fes clic a la icona d'imatge en imatge i gaudeix del teu contingut.",
         },
         videoNotSupported: "El teu navegador no admet l'etiqueta de vídeo.",
+    },
+    raisedHands: {
+        speaking: "Amb la paraula",
+        title: "Mans aixecades",
+        empty: "Ningú no ha aixecat la mà",
+        help: "Mira qui ha aixecat la mà, per ordre, i dóna-li la paraula.",
     },
     listStatusTitle: {
         enable: "Canviar el teu estat",

@@ -108,6 +108,10 @@ const actionbar: BaseTranslation = {
             title: "Exibir um emoji",
             desc: "Expresse como você se sente com apenas um clique usando reações emoji. Apenas toque e vá!",
         },
+        raiseHand: {
+            title: "Levantar a mão",
+            desc: "Sinalize que você quer falar. Sua mão levantada aparece no mapa e no seu vídeo, para que todos saibam de quem é a vez.",
+        },
         audioManager: {
             title: "Volume dos sons ambiente",
             desc: "Controle o volume dos sons ambiente para uma experiência personalizada e confortável.",
@@ -133,6 +137,10 @@ const actionbar: BaseTranslation = {
             areaPickerTitle: "Escolher área para bloquear/desbloquear",
             bubbleLabel: "Bolha de discussão",
             unnamedArea: "Área sem nome",
+        },
+        giveBackFloor: {
+            title: "Devolver a palavra",
+            desc: "Você recebeu a palavra. Clique para parar de falar e devolvê-la.",
         },
         megaphone: {
             title: "Parar megafone",
@@ -181,6 +189,12 @@ const actionbar: BaseTranslation = {
             desc: "Você pode usar o recurso picture in picture para assistir a um vídeo ou uma apresentação enquanto está em uma conversa. Basta clicar no ícone picture in picture e aproveitar seu conteúdo.",
         },
         videoNotSupported: "Seu navegador não suporta a tag de vídeo.",
+    },
+    raisedHands: {
+        speaking: "Com a palavra",
+        title: "Mãos levantadas",
+        empty: "Ninguém levantou a mão",
+        help: "Veja quem levantou a mão, em ordem, e dê a palavra a essa pessoa.",
     },
     listStatusTitle: {
         enable: "Alterar seu status",

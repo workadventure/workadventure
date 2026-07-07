@@ -104,6 +104,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Mostra un emoji",
             desc: "Esprimi come ti senti con un solo clic usando le reazioni emoji. Basta toccare e via!",
         },
+        raiseHand: {
+            title: "Alza la mano",
+            desc: "Segnala che vuoi parlare. La tua mano alzata viene mostrata sulla mappa e sul tuo video, così tutti sanno a chi tocca.",
+        },
         audioManager: {
             title: "Volume dei suoni ambientali",
             desc: "Configura il volume dell'audio facendo clic qui.",
@@ -129,6 +133,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "Scegli l'area da bloccare/sbloccare",
             bubbleLabel: "Bolla di discussione",
             unnamedArea: "Area senza nome",
+        },
+        giveBackFloor: {
+            title: "Restituire la parola",
+            desc: "Ti è stata data la parola. Clicca per smettere di parlare e restituirla.",
         },
         megaphone: {
             title: "Ferma megafono",
@@ -177,6 +185,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Puoi utilizzare la funzionalità picture in picture per guardare un video o una presentazione mentre sei in una conversazione. Basta cliccare sull'icona picture in picture e goderti il tuo contenuto.",
         },
         videoNotSupported: "Il tuo browser non supporta il tag video.",
+    },
+    raisedHands: {
+        speaking: "Al microfono",
+        title: "Mani alzate",
+        empty: "Nessuno ha alzato la mano",
+        help: "Guarda chi ha alzato la mano, in ordine, e dagli la parola.",
     },
     listStatusTitle: {
         enable: "Cambia il tuo stato",

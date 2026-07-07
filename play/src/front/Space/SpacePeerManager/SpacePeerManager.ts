@@ -10,6 +10,8 @@ import { get } from "svelte/store";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
 import { effectiveCameraStateStore, effectiveMicrophoneStateStore } from "../../Stores/MediaStore";
+import { requestedHandRaiseState } from "../../Stores/RaiseHandStore";
+import { givenFloorSpaceStore } from "../../Stores/MegaphoneStore";
 import { recordingStore } from "../../Stores/RecordingStore";
 import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
@@ -499,6 +501,27 @@ export class SpacePeerManager {
                         screenSharingState: false,
                     });
                 }
+            }),
+        );
+
+        // Raise-hand state is synchronized through the space METADATA (key "raisedHands"), not via SpaceUser,
+        // so it reaches every meeting participant — including a megaphone speaker without seeAttendees, who
+        // does not receive the listeners' SpaceUser. The client only sends its own intent; the server keeps
+        // the authoritative, ordered queue (see Space.applyRaisedHand on the back). It is replayed to late
+        // joiners and drives the video tile badge, the woka indicator and the speaker's queue.
+        this.unsubscribes.push(
+            requestedHandRaiseState.subscribe((state) => {
+                this.space.emitUpdateSpaceMetadata(new Map([["raisedHands", { raised: state.raised }]]));
+            }),
+        );
+
+        // The floor-holders list (key "floorHolders") is the counterpart used by the host "take back" panel: the
+        // local user reports whether it currently holds a floor granted in THIS space. Only granted users ever
+        // appear, so the host panel never lists the presenters. Cleared here on give-back/revoke/podium-entry; a
+        // user leaving is cleaned up server-side (see Space.removeUser on the back).
+        this.unsubscribes.push(
+            givenFloorSpaceStore.subscribe((grantedSpace) => {
+                this.space.emitUpdateSpaceMetadata(new Map([["floorHolders", { holds: grantedSpace === this.space }]]));
             }),
         );
     }

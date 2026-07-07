@@ -102,6 +102,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "عرض رمز تعبيري",
             desc: "عبّر عن شعورك بنقرة واحدة باستخدام ردود الفعل الرمزية. فقط اضغط وانطلق!",
         },
+        raiseHand: {
+            title: "ارفع يدك",
+            desc: "أشر إلى أنك تريد التحدث. تظهر يدك المرفوعة على الخريطة وعلى الفيديو الخاص بك، حتى يعرف الجميع دور من التالي.",
+        },
         audioManager: {
             title: "حجم الأصوات المحيطة",
             desc: "قم بضبط حجم الأصوات المحيطة بسهولة.",
@@ -127,6 +131,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "اختر المنطقة لقفلها/فتحها",
             bubbleLabel: "فقاعة المناقشة",
             unnamedArea: "منطقة بدون اسم",
+        },
+        giveBackFloor: {
+            title: "إعادة الكلمة",
+            desc: "تم منحك الكلمة. انقر للتوقف عن التحدث وإعادتها.",
         },
         megaphone: {
             title: "إيقاف المكبر الصوتي",
@@ -175,6 +183,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "يمكنك استخدام ميزة صورة داخل صورة لمشاهدة فيديو أو عرض تقديمي أثناء وجودك في محادثة. ما عليك سوى النقر على أيقونة صورة داخل صورة والاستمتاع بمحتواك.",
         },
         videoNotSupported: "متصفحك لا يدعم وسم الفيديو.",
+    },
+    raisedHands: {
+        speaking: "لديه الكلمة",
+        title: "الأيدي المرفوعة",
+        empty: "لا أحد رفع يده",
+        help: "اطّلع على من رفع يده، بالترتيب، وأعطه الكلمة.",
     },
     listStatusTitle: {
         enable: "تغيير حالتك",

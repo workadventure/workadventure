@@ -104,6 +104,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "이모티콘 표시",
             desc: "이모티콘 반응을 사용해 한 번의 클릭으로 감정을 표현해 보세요. 탭 한 번이면 충분합니다!",
         },
+        raiseHand: {
+            title: "손 들기",
+            desc: "발언하고 싶다는 것을 알립니다. 든 손은 지도와 내 영상에 표시되어 누구 차례인지 모두가 알 수 있습니다.",
+        },
         audioManager: {
             title: "주변 소리 볼륨",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
@@ -129,6 +133,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "잠금/잠금 해제할 영역 선택",
             bubbleLabel: "토론 말풍선",
             unnamedArea: "이름 없는 영역",
+        },
+        giveBackFloor: {
+            title: "발언권 반납",
+            desc: "발언권을 받았습니다. 클릭하면 발언을 멈추고 반납합니다.",
         },
         megaphone: {
             title: "확성기 중지",
@@ -177,6 +185,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "대화 중에 비디오나 프레젠테이션을 보면서 화면 속 화면 기능을 사용할 수 있습니다. 화면 속 화면 아이콘을 클릭하기만 하면 콘텐츠를 즐길 수 있습니다.",
         },
         videoNotSupported: "브라우저에서 비디오 태그를 지원하지 않습니다.",
+    },
+    raisedHands: {
+        speaking: "발언 중",
+        title: "손 든 사람",
+        empty: "손을 든 사람이 없습니다",
+        help: "누가 순서대로 손을 들었는지 확인하고 발언권을 주세요.",
     },
     listStatusTitle: {
         enable: "상태 변경",
