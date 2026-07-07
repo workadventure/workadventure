@@ -152,7 +152,10 @@ function processEnd(
     assertSenderIdentity(end.senderId, sender, "Poll end sender does not match metadata sender");
 
     const poll = getPollMetadata(end.pollId, space);
-    if (poll.senderId !== end.senderId) {
+    // The stored senderId may be either the creator's spaceUserId or uuid, so match against the
+    // current sender identity instead of the end payload to avoid rejecting a legitimate creator
+    // who defined the poll with their other identifier.
+    if (!isSenderIdentity(poll.senderId, sender)) {
         throw new Error("Only poll creators can close a poll");
     }
 
@@ -175,7 +178,10 @@ function processDelete(
     assertSenderIdentity(deletion.senderId, sender, "Poll delete sender does not match metadata sender");
 
     const poll = getPollMetadata(deletion.pollId, space);
-    if (poll.senderId !== deletion.senderId) {
+    // The stored senderId may be either the creator's spaceUserId or uuid, so match against the
+    // current sender identity instead of the delete payload to avoid rejecting a legitimate creator
+    // who defined the poll with their other identifier.
+    if (!isSenderIdentity(poll.senderId, sender)) {
         throw new Error("Only poll creators can delete a poll");
     }
 
@@ -196,8 +202,12 @@ function getPollMetadata(pollId: string, space: SpaceWithMetadataLookup): Proxim
     );
 }
 
+function isSenderIdentity(valueSenderId: string, sender: ProximityPollSpaceUser): boolean {
+    return valueSenderId === sender.spaceUserId || valueSenderId === sender.uuid;
+}
+
 function assertSenderIdentity(valueSenderId: string, sender: ProximityPollSpaceUser, message: string): void {
-    if (valueSenderId === sender.spaceUserId || valueSenderId === sender.uuid) {
+    if (isSenderIdentity(valueSenderId, sender)) {
         return;
     }
 

@@ -62,6 +62,31 @@ describe("ProximityPollMetadataProcessor", () => {
         ).rejects.toThrow("Only poll creators can delete a poll");
     });
 
+    it("should allow the poll creator to end and delete using their other identifier", async () => {
+        const space = createSpace({
+            sender: { spaceUserId: "space-user-1", uuid: "creator-uuid", tags: [], megaphoneState: false },
+            metadata: new Map([["proximityPoll:poll-1", createPollDefinition()]]),
+        });
+
+        // The poll was stored with the creator's uuid, but the creator acts with their spaceUserId.
+        await expect(
+            processProximityPollMetadata(
+                "proximityPollEnd:poll-1",
+                { pollId: "poll-1", senderId: "space-user-1", closedAt: 12 },
+                "space-user-1",
+                space,
+            ),
+        ).resolves.toMatchObject({ pollId: "poll-1" });
+        await expect(
+            processProximityPollMetadata(
+                "proximityPollDelete:poll-1",
+                { pollId: "poll-1", senderId: "space-user-1", deletedAt: 13 },
+                "space-user-1",
+                space,
+            ),
+        ).resolves.toMatchObject({ pollId: "poll-1" });
+    });
+
     it("should reject votes that select more answers than the poll allows", async () => {
         const space = createSpace({
             sender: { spaceUserId: "space-user-1", uuid: "alice-uuid", tags: [], megaphoneState: false },

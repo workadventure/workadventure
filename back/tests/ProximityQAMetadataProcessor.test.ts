@@ -18,8 +18,8 @@ describe("ProximityQAMetadataProcessor", () => {
                     createdAt: 10,
                 },
                 "space-user-1",
-                space
-            )
+                space,
+            ),
         ).resolves.toMatchObject({ id: "question-1" });
     });
 
@@ -44,9 +44,63 @@ describe("ProximityQAMetadataProcessor", () => {
                 "proximityQaUpvote:question-1:author-uuid",
                 { questionId: "question-1", voterId: "author-uuid", upvoted: true, updatedAt: 11 },
                 "space-user-1",
-                space
-            )
+                space,
+            ),
         ).rejects.toThrow("Question authors cannot upvote their own question");
+    });
+
+    it("should reject author self-upvotes made with the author's other identifier", async () => {
+        const space = createSpace({
+            sender: { spaceUserId: "space-user-1", uuid: "author-uuid", tags: [], megaphoneState: false },
+            metadata: new Map([
+                [
+                    "proximityQaQuestion:question-1",
+                    {
+                        id: "question-1",
+                        body: "Can we record?",
+                        senderId: "author-uuid",
+                        createdAt: 10,
+                    },
+                ],
+            ]),
+        });
+
+        // The question was stored with the author's uuid, but the author upvotes with their spaceUserId.
+        await expect(
+            processProximityQAMetadata(
+                "proximityQaUpvote:question-1:space-user-1",
+                { questionId: "question-1", voterId: "space-user-1", upvoted: true, updatedAt: 11 },
+                "space-user-1",
+                space,
+            ),
+        ).rejects.toThrow("Question authors cannot upvote their own question");
+    });
+
+    it("should allow the question author to delete using their other identifier", async () => {
+        const space = createSpace({
+            sender: { spaceUserId: "space-user-1", uuid: "author-uuid", tags: [], megaphoneState: false },
+            metadata: new Map([
+                [
+                    "proximityQaQuestion:question-1",
+                    {
+                        id: "question-1",
+                        body: "Can we record?",
+                        senderId: "author-uuid",
+                        createdAt: 10,
+                    },
+                ],
+            ]),
+        });
+
+        // The question was stored with the author's uuid, but the author deletes with their spaceUserId.
+        await expect(
+            processProximityQAMetadata(
+                "proximityQaDelete:question-1",
+                { questionId: "question-1", senderId: "space-user-1", deletedAt: 13 },
+                "space-user-1",
+                space,
+            ),
+        ).resolves.toMatchObject({ questionId: "question-1" });
     });
 
     it("should reject metadata keys that do not match the payload", async () => {
@@ -64,8 +118,8 @@ describe("ProximityQAMetadataProcessor", () => {
                     createdAt: 10,
                 },
                 "space-user-1",
-                space
-            )
+                space,
+            ),
         ).rejects.toThrow("Question metadata key does not match payload");
     });
 
@@ -90,16 +144,16 @@ describe("ProximityQAMetadataProcessor", () => {
                 "proximityQaAnswer:question-1",
                 { questionId: "question-1", moderatorId: "moderator-uuid", answeredAt: 12 },
                 "space-user-1",
-                space
-            )
+                space,
+            ),
         ).resolves.toMatchObject({ questionId: "question-1" });
         await expect(
             processProximityQAMetadata(
                 "proximityQaDelete:question-1",
                 { questionId: "question-1", senderId: "moderator-uuid", deletedAt: 13 },
                 "space-user-1",
-                space
-            )
+                space,
+            ),
         ).resolves.toMatchObject({ questionId: "question-1" });
     });
 
@@ -124,16 +178,16 @@ describe("ProximityQAMetadataProcessor", () => {
                 "proximityQaAnswer:question-1",
                 { questionId: "question-1", moderatorId: "speaker-uuid", answeredAt: 12 },
                 "space-user-1",
-                space
-            )
+                space,
+            ),
         ).resolves.toMatchObject({ questionId: "question-1" });
         await expect(
             processProximityQAMetadata(
                 "proximityQaDelete:question-1",
                 { questionId: "question-1", senderId: "speaker-uuid", deletedAt: 13 },
                 "space-user-1",
-                space
-            )
+                space,
+            ),
         ).rejects.toThrow("Only question authors or admins can delete a question");
     });
 });

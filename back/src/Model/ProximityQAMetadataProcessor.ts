@@ -118,7 +118,10 @@ function processUpvote(
     assertSenderIdentity(upvote.voterId, sender, "Upvote voter does not match metadata sender");
 
     const question = getQuestionMetadata(upvote.questionId, space);
-    if (question.senderId === upvote.voterId) {
+    // The stored senderId may be either the author's spaceUserId or uuid, so compare against the
+    // current sender identity rather than the upvote payload to catch self-upvotes made with the
+    // author's other identifier.
+    if (isSenderIdentity(question.senderId, sender)) {
         throw new Error("Question authors cannot upvote their own question");
     }
 
@@ -150,7 +153,10 @@ function processDelete(
     assertSenderIdentity(deletion.senderId, sender, "Delete sender does not match metadata sender");
 
     const question = getQuestionMetadata(deletion.questionId, space);
-    if (question.senderId !== deletion.senderId && !isAdmin(sender)) {
+    // The stored senderId may be either the author's spaceUserId or uuid, so match against the
+    // current sender identity instead of the delete payload to avoid rejecting a legitimate author
+    // who created the question with their other identifier.
+    if (!isSenderIdentity(question.senderId, sender) && !isAdmin(sender)) {
         throw new Error("Only question authors or admins can delete a question");
     }
 
@@ -172,8 +178,12 @@ function getQuestionMetadata(questionId: string, space: SpaceWithMetadataLookup)
     return question;
 }
 
+function isSenderIdentity(valueSenderId: string, sender: ProximityQASpaceUser): boolean {
+    return valueSenderId === sender.spaceUserId || valueSenderId === sender.uuid;
+}
+
 function assertSenderIdentity(valueSenderId: string, sender: ProximityQASpaceUser, message: string): void {
-    if (valueSenderId === sender.spaceUserId || valueSenderId === sender.uuid) {
+    if (isSenderIdentity(valueSenderId, sender)) {
         return;
     }
 
