@@ -106,7 +106,7 @@ test.describe("chat moderation @matrix @nowebkit", () => {
 
         await page.getByTestId("@admin:matrix.workadventure.localhost-unbanButton").click();
 
-        await expect(page.getByTestId("@admin:matrix.workadventure.localhost-membership")).toHaveText("Leaved");
+        await expect(page.getByTestId("@admin:matrix.workadventure.localhost-membership")).toHaveText("Left");
         await expect(page.getByTestId("@admin:matrix.workadventure.localhost-inviteButton")).toBeAttached();
         await page.getByTestId("@admin:matrix.workadventure.localhost-inviteButton").click();
 
