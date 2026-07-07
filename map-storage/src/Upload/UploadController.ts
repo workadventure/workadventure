@@ -650,6 +650,16 @@ export class UploadController {
                 // pipe archive data to the file
                 archive.pipe(res);
 
+                // If the client disconnects before the archive is fully sent, destroy the
+                // archive so archiveDirectory() stops fetching S3 objects and releases any
+                // in-flight S3 response streams. Otherwise their sockets leak from the S3
+                // connection pool and eventually exhaust it (maxSockets).
+                res.on("close", () => {
+                    if (!res.writableFinished) {
+                        archive.destroy();
+                    }
+                });
+
                 await this.fileSystem.archiveDirectory(archive, virtualDirectory);
 
                 archive.finalize();

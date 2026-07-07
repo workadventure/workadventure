@@ -245,6 +245,16 @@ export class S3FileSystem implements FileSystemInterface {
         this.s3
             .getObject({ Bucket: this.bucketName, Key: virtualPath })
             .then((result) => {
+                // The client may have disconnected while we were fetching the object from S3.
+                // If the response is already gone, stream.pipeline() below would throw
+                // ERR_STREAM_UNABLE_TO_PIPE and leave the S3 body (and its socket) dangling.
+                // Destroy the body explicitly so its socket is returned to the S3 connection
+                // pool instead of leaking it.
+                if (res.destroyed) {
+                    (result.Body as Readable | undefined)?.destroy();
+                    return;
+                }
+
                 // Set the content type and content length headers
                 res.set("Content-Type", result.ContentType);
 
@@ -360,6 +370,14 @@ export class S3FileSystem implements FileSystemInterface {
                         continue;
                     }
 
+                    // The archive is piped to the HTTP response. When the client disconnects
+                    // the archive is destroyed. Stop here instead of opening another S3
+                    // GetObject stream that would never be consumed, leaking its socket from
+                    // the S3 connection pool.
+                    if (archive.destroyed) {
+                        return;
+                    }
+
                     const { Body } = await this.s3.send(
                         new GetObjectCommand({
                             Bucket: this.bucketName,
@@ -369,10 +387,33 @@ export class S3FileSystem implements FileSystemInterface {
                     if (!Body) {
                         throw new Error("Failed to get file from S3");
                     }
+                    const body = Body as Readable;
+
+                    // The client may have disconnected while the object was being fetched.
+                    // Destroy the body so its socket is released rather than leaked.
+                    if (archive.destroyed) {
+                        body.destroy();
+                        return;
+                    }
 
                     await new Promise<void>((resolve, reject) => {
-                        archive.entry(Body as Readable, { name: key.substring(virtualPath.length) }, (err) => {
+                        // If the archive is destroyed while this entry is being written (client
+                        // disconnect mid-file), archive.entry()'s callback may never fire. Settle
+                        // on archive teardown and destroy the body so it does not leak its socket.
+                        const onArchiveGone = () => {
+                            archive.removeListener("close", onArchiveGone);
+                            archive.removeListener("error", onArchiveGone);
+                            body.destroy();
+                            resolve();
+                        };
+                        archive.once("close", onArchiveGone);
+                        archive.once("error", onArchiveGone);
+
+                        archive.entry(body, { name: key.substring(virtualPath.length) }, (err) => {
+                            archive.removeListener("close", onArchiveGone);
+                            archive.removeListener("error", onArchiveGone);
                             if (err) {
+                                body.destroy();
                                 reject(err);
                                 return;
                             }
