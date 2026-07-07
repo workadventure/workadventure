@@ -378,7 +378,7 @@ const chat: BaseTranslation = {
         invite: "Invited",
         ban: "Banned",
         kick: "Kicked",
-        leave: "Leaved",
+        leave: "Left",
         roomID: "Room ID : {roomId}",
         membership: "Membership",
         permissionLevel: "Roles",
