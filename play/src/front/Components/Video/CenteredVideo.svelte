@@ -5,6 +5,7 @@
     import type { Streamable } from "../../Space/Streamable";
     import type { VideoBoxStatus } from "../../Space/VideoBox";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
+    import { visibilityStore } from "../../Stores/VisibilityStore";
     import WebRtcVideo from "./VideoTags/WebRtcVideo.svelte";
     import LivekitVideo from "./VideoTags/LivekitVideo.svelte";
     import ScriptingVideo from "./VideoTags/ScriptingVideo.svelte";
@@ -129,6 +130,9 @@
         }
     });
 
+    let hasVideoLayout = $derived(overlayWidth > 0 && overlayHeight > 0 && videoWidth > 0 && videoHeight > 0);
+    let shouldMountVideoElement = $derived(hasVideoLayout && ($visibilityStore || $activePictureInPictureStore));
+
     let displayNoVideoWarning = $state(false);
 </script>
 
@@ -185,7 +189,7 @@
                 </div>
             {/if}
 
-            {#if !isBlocked && videoEnabled && status === "connected"}
+            {#if !isBlocked && videoEnabled && status === "connected" && shouldMountVideoElement}
                 {#if media?.type === "webrtc"}
                     <WebRtcVideo
                         {media}
