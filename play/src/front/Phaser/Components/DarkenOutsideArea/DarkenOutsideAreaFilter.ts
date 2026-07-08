@@ -132,12 +132,3 @@ export class DarkenOutsideAreaRenderNode extends Phaser.Renderer.WebGL.RenderNod
         this.programManager.setUniform("uColor", [color.redGL, color.greenGL, color.blueGL]);
     }
 }
-
-export function registerDarkenOutsideAreaFilter(game: Phaser.Game): void {
-    const renderer = game.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
-    const renderNodes = renderer.renderNodes;
-
-    if (!renderNodes.hasNode(DarkenOutsideAreaFilterName)) {
-        renderNodes.addNodeConstructor(DarkenOutsideAreaFilterName, DarkenOutsideAreaRenderNode);
-    }
-}

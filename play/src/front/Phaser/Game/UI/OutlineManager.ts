@@ -16,36 +16,14 @@ type FilterableGameObject = GameObject & {
     filters?: Phaser.Types.GameObjects.FiltersInternalExternal | null;
 };
 
-/**
- * Temporary solution to fix the issue with the postFX pipeline:
- * https://github.com/photonstorm/phaser/issues/6503
- *
- * TODO: delete this when we migrate to 3.60.1+
- */
 export class OutlineManager {
-    private scene: DirtyScene;
-    private gameObjects: Map<GameObject, OutlineEntry>;
+    private readonly scene: DirtyScene;
+    private readonly gameObjects: Map<GameObject, OutlineEntry>;
     //private readonly scaleManagerResizeCallback: () => void;
 
     constructor(scene: DirtyScene) {
         this.scene = scene;
         this.gameObjects = new Map<GameObject, OutlineEntry>();
-
-        /*this.scaleManagerResizeCallback = () => {
-            for (const [gameObject, getOutline] of this.gameObjects) {
-                this.getOutlinePlugin()?.remove(gameObject);
-                const outline = getOutline();
-                if (outline.color !== undefined) {
-                    this.getOutlinePlugin()?.add(gameObject, {
-                        thickness: outline.thickness,
-                        outlineColor: outline.color,
-                    });
-                }
-            }
-            this.scene.markDirty();
-        };
-
-        this.scene.scale.on(Phaser.Scale.Events.RESIZE, this.scaleManagerResizeCallback);*/
     }
 
     public clear(): void {
@@ -104,6 +82,7 @@ export class OutlineManager {
 
         filters.internal.remove(entry.controller, true);
         entry.controller = undefined;
+        this.scene.markDirty();
     }
 
     private getOutlinePlugin(): OutlineFilterPlugin | undefined {

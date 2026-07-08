@@ -4121,7 +4121,6 @@ ${escapedMessage}
         if (forceRecomputeCamera) {
             // When calling this before the first render, camera.preRender() must be called before accessing worldView to ensure it's up to date.
             // See: https://docs.phaser.io/phaser/concepts/cameras#world-view
-            // @ts-ignore preRender is protected, but the Phaser docs advertises this, so we ignore the warning.
             camera.preRender();
         }
 
