@@ -813,10 +813,6 @@ class AnalyticsClient {
         this.trackAdminEvent("world.entered", { durationMs });
     }
 
-    statusChanged(status: string): void {
-        this.trackAdminEvent("status.changed", { status });
-    }
-
     tileOrAssetError(kind: "tile" | "asset", reason?: string): void {
         this.trackAdminEvent("asset.error", { kind, reason });
     }
