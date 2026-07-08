@@ -47,7 +47,7 @@ import type {
     MatrixPeerProfileDiagnostics,
     MatrixUserSettingsDiagnostics,
 } from "../ChatConnection";
-import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+import { retargetSelectedRoomIfReplaced, selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
 import { currentPlayerWokaStore } from "../../../Stores/CurrentPlayerWokaStore";
 import LL from "../../../../i18n/i18n-svelte";
@@ -1490,17 +1490,8 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         return newRoom;
     }
 
-    /**
-     * A membership change (e.g. accepting an invitation) destroys the room's previous MatrixChatRoom
-     * wrapper and rebuilds a fresh one during placement reconciliation. Any UI still bound to the old,
-     * now-destroyed wrapper would stop receiving live timeline events — a message the user sends is
-     * delivered to the server but never renders until the room is re-opened. Keep `selectedRoomStore`
-     * pointing at the live wrapper so the open timeline keeps updating.
-     */
     private retargetSelectedRoomIfReplaced(newRoom: MatrixChatRoom): void {
-        if (get(selectedRoomStore)?.id === newRoom.id) {
-            selectedRoomStore.set(newRoom);
-        }
+        retargetSelectedRoomIfReplaced(newRoom);
     }
     private onClientEventDeleteRoom(roomId: string) {
         this.untrackRawUnreadRoom(roomId);
