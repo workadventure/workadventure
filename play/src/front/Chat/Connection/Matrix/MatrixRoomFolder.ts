@@ -10,6 +10,7 @@ import { Deferred } from "@workadventure/shared-utils";
 import { matrixRateLimiter } from "../../Services/MatrixRateLimiter";
 import { ignoredSuggestedRoomIdsStore } from "../../Stores/ChatStore";
 import type { RoomFolder } from "../ChatConnection";
+import { retargetSelectedRoomIfReplaced } from "../../Stores/SelectRoomStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { hasValidViaEntries } from "./MatrixSpaceRelations";
 
@@ -431,7 +432,13 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                 }
                 spaceFolder.init();
             } else if (!this.roomList.has(child.roomId)) {
-                this.roomList.set(child.roomId, new MatrixChatRoom(child));
+                const newRoom = new MatrixChatRoom(child);
+                this.roomList.set(child.roomId, newRoom);
+                // Accepting an invitation rebuilds the room's wrapper here (the previous one was destroyed when
+                // the room was detached from its old placement). If it is the open room, keep selectedRoomStore
+                // on this live wrapper — otherwise the timeline stays bound to the destroyed wrapper and messages
+                // sent right after joining never render until the room is re-opened.
+                retargetSelectedRoomIfReplaced(newRoom);
             }
         });
     }

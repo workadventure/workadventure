@@ -9,6 +9,8 @@ import { MatrixChatConnection } from "../MatrixChatConnection";
 import { MatrixRoomFolder } from "../MatrixRoomFolder";
 import type { CreateRoomOptions } from "../../ChatConnection";
 import type { MatrixChatRoom } from "../MatrixChatRoom";
+import { MatrixChatRoom as MatrixChatRoomClass } from "../MatrixChatRoom";
+import { selectedRoomStore } from "../../../Stores/SelectRoomStore";
 import type { MatrixSecurity } from "../MatrixSecurity";
 import type { RequestedStatus } from "../../../../Rules/StatusRules/statusRules";
 
@@ -995,6 +997,65 @@ describe("MatrixChatConnection", () => {
 
             expect(folder.roomList.has(roomId)).toBeFalsy();
             expect(staleRoom.destroy).toHaveBeenCalledOnce();
+        });
+
+        it("should repoint selectedRoomStore to the rebuilt wrapper when folder getChildren re-adds the open room", () => {
+            // Reproduces the invite-accept regression: the open room's previous wrapper was destroyed when the
+            // room was detached from its old placement, leaving selectedRoomStore on a dead wrapper. getChildren
+            // rebuilds the wrapper for the same room id and must re-point selectedRoomStore at the live one,
+            // otherwise messages sent right after joining never render until the room is re-opened.
+            const roomId = "!child:server";
+            const childRoom = {
+                roomId,
+                getMyMembership: vi.fn().mockReturnValue(KnownMembership.Join),
+                isSpaceRoom: vi.fn().mockReturnValue(false),
+            };
+            const parentRoom = {
+                client: {
+                    getRoomUpgradeHistory: vi.fn().mockReturnValue([childRoom]),
+                },
+                getLiveTimeline: vi.fn().mockReturnValue({
+                    getState: vi.fn().mockReturnValue({
+                        getStateEvents: vi.fn().mockReturnValue([
+                            {
+                                getStateKey: vi.fn().mockReturnValue(roomId),
+                                getContent: vi.fn().mockReturnValue({ via: ["server"] }),
+                            },
+                        ]),
+                    }),
+                }),
+            };
+
+            vi.mocked(MatrixChatRoomClass).mockImplementation(function (this: unknown, room: { roomId: string }) {
+                return {
+                    id: room.roomId,
+                    conversationKind: "room",
+                    isEncrypted: writable(false),
+                    destroy: vi.fn(),
+                } as unknown as MatrixChatRoom;
+            });
+
+            const destroyedWrapper = {
+                id: roomId,
+                conversationKind: "room",
+                isEncrypted: writable(false),
+                destroy: vi.fn(),
+            } as unknown as MatrixChatRoom;
+            selectedRoomStore.set(destroyedWrapper);
+
+            const folder = Object.create(MatrixRoomFolder.prototype) as MatrixRoomFolder;
+            folder["room"] = parentRoom as never;
+            folder.roomList = new Map() as never;
+            folder.folderList = new Map() as never;
+
+            folder.getChildren();
+
+            const rebuiltWrapper = folder.roomList.get(roomId);
+            expect(rebuiltWrapper).toBeDefined();
+            expect(get(selectedRoomStore)).toBe(rebuiltWrapper);
+            expect(get(selectedRoomStore)).not.toBe(destroyedWrapper);
+
+            selectedRoomStore.set(undefined);
         });
 
         it("should ignore a parent relation when the parent has no matching m.space.child", () => {
