@@ -192,6 +192,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "말하기 팝업 열기",
         openThinkPopup: "생각하기 팝업 열기",
         walkMyDesk: "내 책상으로 이동",
+        cycleStatus: "가용 상태 전환",
     },
 };
 

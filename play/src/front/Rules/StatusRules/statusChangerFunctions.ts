@@ -1,9 +1,11 @@
-import { requestedStatusStore } from "../../Stores/MediaStore";
+import { get } from "svelte/store";
+import { availabilityStatusStore, requestedStatusStore } from "../../Stores/MediaStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { popupStore } from "../../Stores/PopupStore";
 import BubbleConfirmationModal from "../../Components/ActionBar/AvailabilityStatus/Modals/BubbleConfirmationModal.svelte";
 import ChangeStatusConfirmationModal from "../../Components/ActionBar/AvailabilityStatus/Modals/ChangeStatusConfirmationModal.svelte";
-import type { RequestedStatus } from "./statusRules";
+import { statusBlocksRequestedStatusChange, type RequestedStatus } from "./statusRules";
+import { getNextRequestedStatus } from "./requestedStatusCycle";
 
 export const askToChangeStatus = () => {
     popupStore.addPopup(ChangeStatusConfirmationModal, {}, "changeStatusConfirmationModal");
@@ -20,6 +22,15 @@ export const hideBubbleConfirmationModal = () => {
 export const resetAllStatusStoreExcept = (status: RequestedStatus | null = null) => {
     requestedStatusStore.set(status);
     localUserStore.setRequestedStatus(status);
+};
+
+export const cycleRequestedStatus = (): boolean => {
+    if (statusBlocksRequestedStatusChange(get(availabilityStatusStore))) {
+        return false;
+    }
+
+    resetAllStatusStoreExcept(getNextRequestedStatus(get(requestedStatusStore)));
+    return true;
 };
 
 export const passStatusToOnline = () => {

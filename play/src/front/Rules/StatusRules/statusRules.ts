@@ -29,6 +29,20 @@ export const setableStatus: Array<AvailabilityStatus> = [
     AvailabilityStatus.BACK_IN_A_MOMENT,
 ];
 
+export const requestedStatusChangeLockingStatuses: ReadonlyArray<AvailabilityStatus> = [
+    AvailabilityStatus.LISTENER,
+    AvailabilityStatus.SPEAKER,
+    AvailabilityStatus.JITSI,
+    AvailabilityStatus.LIVEKIT,
+    AvailabilityStatus.BBB,
+    AvailabilityStatus.DENY_PROXIMITY_MEETING,
+    AvailabilityStatus.SILENT,
+];
+
+export const statusBlocksRequestedStatusChange = (status: AvailabilityStatus): boolean => {
+    return requestedStatusChangeLockingStatuses.includes(status);
+};
+
 const invalidTransition: Map<AvailabilityStatus, Array<AvailabilityStatus>> = new Map([
     [AvailabilityStatus.UNCHANGED, [...setableStatus]],
     [AvailabilityStatus.ONLINE, []],

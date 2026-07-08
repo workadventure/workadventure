@@ -193,6 +193,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "فتح نافذة قل",
         openThinkPopup: "فتح نافذة فكر",
         walkMyDesk: "الذهاب إلى مكتبي",
+        cycleStatus: "تبديل حالة التوفر",
     },
 };
 

@@ -191,6 +191,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "打开说弹出窗口",
         openThinkPopup: "打开思考弹出窗口",
         walkMyDesk: "走到我的办公桌",
+        cycleStatus: "切换在线状态",
     },
 };
 

@@ -196,6 +196,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "Abrir la ventana emergente en modo decir",
         openThinkPopup: "Abrir la ventana emergente en modo pensar",
         walkMyDesk: "Caminar hasta mi escritorio",
+        cycleStatus: "Cambiar estado de disponibilidad",
     },
 };
 
