@@ -853,7 +853,6 @@ class AnalyticsClient {
         const fileExtension = this.normalizeFileExtension(
             context.fileExtension ?? this.getFileExtensionFromUrl(rawTargetUrl),
         );
-        const fileName = context.fileName ?? this.getFileNameFromUrl(rawTargetUrl);
         const mediaKind = context.mediaKind ?? this.inferCowebsiteMediaKind(rawTargetUrl, fileExtension);
 
         return {
@@ -863,7 +862,9 @@ class AnalyticsClient {
             targetUrl: this.stripUrlSensitiveParts(rawTargetUrl),
             mediaKind,
             triggerProperty: context.triggerProperty ?? "other",
-            fileName,
+            // fileName intentionally NOT collected: document filenames are frequently
+            // sensitive (NDA-acme.pdf, salary-2024.xlsx). fileExtension + mediaKind
+            // carry the analytic signal without the PII.
             fileExtension,
             areaId: context.areaId,
             areaName: context.areaName,
