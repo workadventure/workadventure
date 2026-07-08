@@ -11,9 +11,9 @@ const report: DeepPartial<Translation["report"]> = {
     title: "Signaler",
     content: "Signaler aux administrateurs de cette salle. Ils pourront par la suite bannir cet utilisateur.",
     message: {
-        title: "Votre message: ",
+        title: "Votre message : ",
         empty: "Le message du signalement ne peut pas être vide.",
-        error: "Erreur d'envoi du message, veullez contacter l'administrateur.",
+        error: "Erreur d'envoi du message, veuillez contacter l'administrateur.",
     },
     submit: "Signaler cet utilisateur",
     moderate: {
