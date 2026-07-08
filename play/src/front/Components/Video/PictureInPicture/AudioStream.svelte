@@ -5,6 +5,7 @@
     import type { Readable } from "svelte/store";
     import { signalAudioPlaybackBlocked } from "../../../Stores/AudioPlaybackStore";
     import { userActivationManager } from "../../../Stores/UserActivationStore";
+    import { audioContextManager } from "../../../WebRtc/AudioContextManager";
 
     interface Props {
         streamStore: Readable<MediaStream | undefined>;
@@ -29,6 +30,9 @@
     $effect(() => {
         if (audioElement) {
             audioElement.volume = $volume;
+        }
+        if (webAudioGain) {
+            webAudioGain.gain.value = $volume;
         }
     });
 
@@ -85,6 +89,56 @@
     });
 
     let destroyed = false;
+    let webAudioStream: MediaStream | undefined;
+    let webAudioSource: MediaStreamAudioSourceNode | undefined;
+    let webAudioGain: GainNode | undefined;
+
+    function stopWebAudioPlayback(): void {
+        webAudioSource?.disconnect();
+        webAudioGain?.disconnect();
+        webAudioStream = undefined;
+        webAudioSource = undefined;
+        webAudioGain = undefined;
+    }
+
+    async function startWebAudioPlayback(stream: MediaStream): Promise<boolean> {
+        if (destroyed) {
+            return false;
+        }
+
+        const context = audioContextManager.getContext();
+        if (context.state === "closed") {
+            return false;
+        }
+        if (context.state === "suspended") {
+            try {
+                await context.resume();
+            } catch (e) {
+                debug("Could not resume AudioContext for WebAudio playback fallback", e);
+                Sentry.captureException(e);
+            }
+        }
+        if (destroyed || context.state !== "running") {
+            return false;
+        }
+        if (webAudioStream === stream && webAudioSource && webAudioGain) {
+            return true;
+        }
+
+        stopWebAudioPlayback();
+        webAudioStream = stream;
+        webAudioSource = context.createMediaStreamSource(stream);
+        webAudioGain = context.createGain();
+        webAudioGain.gain.value = $volume;
+        webAudioSource.connect(webAudioGain);
+        webAudioGain.connect(context.destination);
+        debug("Audio playback routed through WebAudio fallback");
+        return true;
+    }
+
+    function shouldFallbackToWebAudio(e: unknown): boolean {
+        return e instanceof DOMException && e.name === "NotAllowedError";
+    }
 
     // Some Chromium-based browsers (Brave, Vivaldi) do NOT honor the `autoplay` attribute for a MediaStream
     // assigned to `srcObject` (verified: the element stays paused regardless of assignment timing), so the
@@ -101,32 +155,57 @@
         if (!el || destroyed || !el.srcObject) {
             return;
         }
-        el.play().catch((e) => {
-            // If the `autoplay` attribute already started playback, this rejection is harmless.
-            if (destroyed || !el.paused) {
-                return;
-            }
-            // Genuine block (missing user activation, e.g. Brave / Vivaldi: "play() can only be initiated
-            // by a user gesture").
-            debug("Audio playback blocked, waiting for a user gesture to retry", e);
-            // Keep the toast + BACK_IN_A_MOMENT status alive at app level (survives this component being
-            // destroyed when the bubble closes).
-            signalAudioPlaybackBlocked();
-            // Retry this specific element once the page gains user activation (covers the case where the
-            // bubble is NOT closed, e.g. when browser notifications are enabled). At most once, to avoid a
-            // tight loop if playback keeps failing for another reason after activation.
-            if (!activationRetryScheduled) {
-                activationRetryScheduled = true;
-                userActivationManager
-                    .waitForUserActivation()
-                    .then(() => {
-                        if (!destroyed) {
-                            playAudio();
-                        }
-                    })
-                    .catch((err: unknown) => Sentry.captureException(err));
-            }
-        });
+        el.play()
+            .then(() => {
+                stopWebAudioPlayback();
+            })
+            .catch((e) => {
+                // If the `autoplay` attribute already started playback, this rejection is harmless.
+                if (destroyed || !el.paused) {
+                    return;
+                }
+
+                const stream = el.srcObject;
+                if (shouldFallbackToWebAudio(e) && stream instanceof MediaStream) {
+                    startWebAudioPlayback(stream)
+                        .then((started) => {
+                            if (!started) {
+                                signalBlockedAudioPlayback(e);
+                            }
+                        })
+                        .catch((fallbackError: unknown) => {
+                            console.error("Could not start WebAudio playback fallback", fallbackError);
+                            Sentry.captureException(fallbackError);
+                            signalBlockedAudioPlayback(e);
+                        });
+                    return;
+                }
+
+                signalBlockedAudioPlayback(e);
+            });
+    }
+
+    function signalBlockedAudioPlayback(e: unknown): void {
+        // Genuine block (missing user activation, e.g. Brave / Vivaldi: "play() can only be initiated
+        // by a user gesture").
+        debug("Audio playback blocked, waiting for a user gesture to retry", e);
+        // Keep the toast + BACK_IN_A_MOMENT status alive at app level (survives this component being
+        // destroyed when the bubble closes).
+        signalAudioPlaybackBlocked();
+        // Retry this specific element once the page gains user activation (covers the case where the
+        // bubble is NOT closed, e.g. when browser notifications are enabled). At most once, to avoid a
+        // tight loop if playback keeps failing for another reason after activation.
+        if (!activationRetryScheduled) {
+            activationRetryScheduled = true;
+            userActivationManager
+                .waitForUserActivation()
+                .then(() => {
+                    if (!destroyed) {
+                        playAudio();
+                    }
+                })
+                .catch((err: unknown) => Sentry.captureException(err));
+        }
     }
 
     let stream = $derived($streamStore ? $streamStore : undefined);
@@ -164,6 +243,7 @@
 
     onDestroy(() => {
         destroyed = true;
+        stopWebAudioPlayback();
     });
 </script>
 
