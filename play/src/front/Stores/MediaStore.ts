@@ -1189,7 +1189,7 @@ function isOverConstrainedError(e: unknown): e is OverconstrainedErrorInterface 
     return e instanceof Error && e.name === "OverconstrainedError";
 }
 
-function createVolumeStore(mediaStream: MediaStream | undefined, set: (value: number[] | undefined) => void) {
+export function createVolumeStore(mediaStream: MediaStream | undefined, set: (value: number[] | undefined) => void) {
     if (mediaStream === undefined || mediaStream.getAudioTracks().length <= 0) {
         set(undefined);
         return;
