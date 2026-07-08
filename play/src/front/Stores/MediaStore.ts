@@ -456,7 +456,8 @@ export const availabilityStatusStore = derived(
 // This is a singleton so we can safely not ever unsubscribe from it.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
 availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
-    analyticsClient.statusChanged(AvailabilityStatus[newStatus] ?? String(newStatus));
+    // Per-member availability-status timelines are not collected (surveillance /
+    // GDPR data-minimisation); we no longer emit a status.changed analytics event.
     try {
         statusChanger.changeStatusTo(newStatus);
     } catch (e) {
