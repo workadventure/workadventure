@@ -18,6 +18,7 @@ export class WaScaleManager {
     private actualZoom = 1;
     private _saveZoom = 1;
     private lastEmittedZoomModifier: number | undefined;
+    private lastEmittedActualZoom: number | undefined;
 
     private focusTarget?: WaScaleManagerFocusTarget;
 
@@ -30,11 +31,16 @@ export class WaScaleManager {
 
     private emitZoomChangedIfNeeded(): void {
         const zoomModifier = this.hdpiManager.zoomModifier;
-        if (this.lastEmittedZoomModifier === zoomModifier) {
+        // We emit on actualZoom changes too, not only zoomModifier: DOM overlays whose CSS scale
+        // compensates for the parent's on-screen zoom (e.g. the Woka username) depend on actualZoom,
+        // which changes on resize or when the window moves to a screen with a different device pixel
+        // ratio while zoomModifier stays constant.
+        if (this.lastEmittedZoomModifier === zoomModifier && this.lastEmittedActualZoom === this.actualZoom) {
             return;
         }
 
         this.lastEmittedZoomModifier = zoomModifier;
+        this.lastEmittedActualZoom = this.actualZoom;
         this.game.events.emit(WaScaleManagerEvent.ZoomChanged, zoomModifier);
     }
 
