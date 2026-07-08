@@ -345,7 +345,10 @@ class AnalyticsClient {
     }
 
     openedWebsite(url: URL, context: CowebsiteOpenedAnalyticsContext = {}): void {
-        this.posthog?.capture("wa_opened_website", { url: url.toString() });
+        // Strip query string and hash before they reach PostHog too: cowebsite URLs
+        // routinely carry auth tokens (access_token, sas, signed URLs, …). The admin
+        // sink already does this via buildCowebsiteOpenedProperties; keep both in sync.
+        this.posthog?.capture("wa_opened_website", { url: this.stripUrlSensitiveParts(url) });
         this.trackAdminEvent("cowebsite.opened", this.buildCowebsiteOpenedProperties(url, context));
     }
 
