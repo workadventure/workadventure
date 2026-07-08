@@ -52,6 +52,13 @@ const ANONYMOUS_SAFE_PROPERTY_KEYS = new Set<string>([
     "status",
     "triggerProperty",
     "fileExtension",
+    // session lifecycle timestamps + reason (from AnalyticsPresenceTracker's
+    // user.disconnected): non-PII behavioural data the admin turns into
+    // connection_sessions rows. Must stay in sync with the admin allowlist —
+    // stripping them here would silently drop every anonymized world's sessions.
+    "connectedAt",
+    "disconnectedAt",
+    "disconnectReason",
 ]);
 
 export type AnalyticsEventSource = "front" | "pusher" | "media";
@@ -177,7 +184,7 @@ export class AnalyticsEventsQueue {
         while (this.queue.length > 0 && Date.now() < deadline) {
             const lengthBefore = this.queue.length;
             // eslint-disable-next-line no-await-in-loop
-            await this.flush();
+            await this.flush(deadline);
             // flush() splices maxBatchSize events; loop again until queue is empty.
             // If nothing was sent (e.g. another flush is in flight), wait briefly and retry.
             if (this.queue.length === lengthBefore) {
@@ -234,7 +241,7 @@ export class AnalyticsEventsQueue {
         }
     }
 
-    public async flush(): Promise<void> {
+    public async flush(deadline?: number): Promise<void> {
         if (!this.canSend() || this.queue.length === 0 || this.isFlushing) {
             return;
         }
@@ -249,7 +256,7 @@ export class AnalyticsEventsQueue {
         };
 
         try {
-            const sentEvents = await this.sendWithRetry(batch);
+            const sentEvents = await this.sendWithRetry(batch, deadline);
             this.batchesSent += 1;
             this.eventsSent += sentEvents;
         } catch (error) {
@@ -429,35 +436,46 @@ export class AnalyticsEventsQueue {
         };
     }
 
-    private async sendWithRetry(batch: AnalyticsEventsBatch): Promise<number> {
+    private async sendWithRetry(batch: AnalyticsEventsBatch, deadline?: number): Promise<number> {
         if (!this.endpointUrl) {
             return 0;
         }
 
         let lastError: unknown;
         for (let attempt = 0; attempt < MAX_FLUSH_ATTEMPTS; attempt++) {
+            // During a bounded drain (SIGTERM), stop before starting an attempt we
+            // have no time budget left for, so the drain never overshoots its deadline.
+            if (deadline !== undefined && Date.now() >= deadline) {
+                break;
+            }
             try {
                 // eslint-disable-next-line no-await-in-loop
-                await this.postBatch(batch);
+                await this.postBatch(batch, deadline);
                 return batch.events.length;
             } catch (error) {
                 lastError = error;
                 if (this.shouldSplitInvalidBatch(error, batch)) {
                     // eslint-disable-next-line no-await-in-loop
-                    return await this.sendEventsIndividually(batch);
+                    return await this.sendEventsIndividually(batch, deadline);
                 }
                 // Don't retry on non-transient errors (4xx that isn't 422 already handled above).
                 if (this.isNonRetryableError(error)) {
                     throw error;
                 }
                 if (attempt < MAX_FLUSH_ATTEMPTS - 1) {
+                    const delay = this.retryDelayMs(attempt);
+                    // Don't sleep past the drain deadline — that's exactly the overshoot
+                    // (SIGKILL mid-flush) this bound exists to prevent.
+                    if (deadline !== undefined && Date.now() + delay >= deadline) {
+                        break;
+                    }
                     // eslint-disable-next-line no-await-in-loop
-                    await sleep(this.retryDelayMs(attempt));
+                    await sleep(delay);
                 }
             }
         }
 
-        throw lastError;
+        throw lastError ?? new Error("Analytics drain deadline reached before the batch could be sent");
     }
 
     private isNonRetryableError(error: unknown): boolean {
@@ -476,17 +494,24 @@ export class AnalyticsEventsQueue {
         return status >= 400 && status < 500;
     }
 
-    private async postBatch(batch: AnalyticsEventsBatch): Promise<void> {
+    private async postBatch(batch: AnalyticsEventsBatch, deadline?: number): Promise<void> {
         if (!this.endpointUrl || this.config.adminApiToken === undefined) {
             return;
         }
+
+        // Under a bounded drain, cap the HTTP timeout to the time left so a single
+        // slow request cannot run past the drain deadline.
+        const timeout =
+            deadline !== undefined
+                ? Math.max(1, Math.min(this.config.timeoutMs, deadline - Date.now()))
+                : this.config.timeoutMs;
 
         await this.post(this.endpointUrl, batch, {
             headers: {
                 Authorization: `Bearer ${this.config.adminApiToken}`,
                 "Content-Type": "application/json",
             },
-            timeout: this.config.timeoutMs,
+            timeout,
         });
     }
 
@@ -497,16 +522,19 @@ export class AnalyticsEventsQueue {
      * succeeded individually. A non-validation error aborts the loop and the
      * remaining unsent events are recorded against `droppedAfterSendFailure`.
      */
-    private async sendEventsIndividually(batch: AnalyticsEventsBatch): Promise<number> {
+    private async sendEventsIndividually(batch: AnalyticsEventsBatch, deadline?: number): Promise<number> {
         let sentEvents = 0;
         for (let i = 0; i < batch.events.length; i++) {
             const event = batch.events[i];
             try {
                 // eslint-disable-next-line no-await-in-loop
-                await this.postBatch({
-                    ...batch,
-                    events: [event],
-                });
+                await this.postBatch(
+                    {
+                        ...batch,
+                        events: [event],
+                    },
+                    deadline,
+                );
                 sentEvents += 1;
             } catch (error) {
                 if (this.isValidationError(error)) {
