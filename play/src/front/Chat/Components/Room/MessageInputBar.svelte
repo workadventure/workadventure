@@ -50,7 +50,7 @@
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
-    import { IconHelpCircle, IconList, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
+    import { IconHelpCircle, IconList, IconLoader, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
     import { modals } from "@wa-modals";
 
     interface Props {
@@ -78,6 +78,7 @@
     let fileAttachmentComponentOpened = $state(false);
     let fileAttachementEnabled = $state(false);
     let applicationProperty: ApplicationProperty | undefined = $state(undefined);
+    let sendingMessage = $state(false);
     let isProximityChatRoom = $derived(room instanceof ProximityChatRoom);
     let isDefaultProximityRoom = $derived(
         room instanceof ProximityChatRoom && room.spaceName === DEFAULT_PROXIMITY_SPACE_NAME,
@@ -152,47 +153,123 @@
         }
     }
 
-    async function sendMessage(messageToSend: string) {
-        if (applicationProperty && applicationProperty.link.length !== 0) {
-            room?.sendMessage(applicationProperty.link);
+    function acquireSendingMessageLock() {
+        if (sendingMessage) {
+            return undefined;
         }
-        // close application part
+
+        sendingMessage = true;
+        return () => {
+            sendingMessage = false;
+        };
+    }
+
+    function getApplicationLink() {
+        return applicationProperty?.link;
+    }
+
+    async function sendApplicationLinkMessage(applicationLink: string | undefined) {
+        if (!applicationLink || applicationLink.length === 0) {
+            return true;
+        }
+
+        const applicationMessageResult = await room.sendMessage(applicationLink);
+        if (applicationMessageResult.status === "sent") {
+            return true;
+        }
+
+        warningMessageStore.addWarningMessage($LL.chat.failedToSendMessage(), {
+            closable: true,
+            id: "chat-message-send-error",
+        });
+        return false;
+    }
+
+    function closeApplicationPart() {
         applicationProperty = undefined;
         applicationComponentOpened = false;
+    }
 
-        // send files
-        if (files && files.length > 0) {
-            if (!(room instanceof ProximityChatRoom)) {
-                const idsToSend = files.map((f) => f.id);
-                const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
-                    fileListAcc.items.add(currentFile.file);
-                    return fileListAcc;
-                }, new DataTransfer()).files;
+    async function sendMessage(messageToSend: string) {
+        const releaseSendingMessage = acquireSendingMessageLock();
+        if (!releaseSendingMessage) {
+            return;
+        }
 
-                try {
-                    await room.sendFiles(fileList);
-                    files = files.filter((f) => !idsToSend.includes(f.id));
-                    filesPreview = filesPreview.filter((p) => !idsToSend.includes(p.id));
-                } catch (error) {
-                    console.error(error);
-                    warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), {
-                        closable: true,
-                    });
+        try {
+            const isApplicationMessageSent = await sendApplicationLinkMessage(getApplicationLink());
+            if (!isApplicationMessageSent) {
+                return;
+            }
+            // close application part
+            closeApplicationPart();
+
+            // send files
+            if (files && files.length > 0) {
+                if (!(room instanceof ProximityChatRoom)) {
+                    const idsToSend = files.map((f) => f.id);
+                    const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
+                        fileListAcc.items.add(currentFile.file);
+                        return fileListAcc;
+                    }, new DataTransfer()).files;
+
+                    try {
+                        await room.sendFiles(fileList);
+                        files = files.filter((f) => !idsToSend.includes(f.id));
+                        filesPreview = filesPreview.filter((p) => !idsToSend.includes(p.id));
+                    } catch (error) {
+                        console.error(error);
+                        warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), {
+                            closable: true,
+                        });
+                    }
                 }
             }
-        }
 
-        // send message
-        if (messageToSend.trim().length !== 0) {
-            room?.sendMessage(messageToSend);
-            if (messageInput) {
-                messageInput.innerText = "";
+            // send message
+            if (messageToSend.trim().length !== 0) {
+                const normalizedMessage = messageToSend.replace(/<br>/g, "\n");
+                const sendMessageResult = await room.sendMessage(normalizedMessage);
+
+                if (sendMessageResult.status === "sent") {
+                    clearMessageInput();
+                } else {
+                    restoreMessageInput(sendMessageResult.remainingMessage);
+                    warningMessageStore.addWarningMessage(
+                        sendMessageResult.status === "partial"
+                            ? $LL.chat.partiallyFailedToSendMessage()
+                            : $LL.chat.failedToSendMessage(),
+                        {
+                            closable: true,
+                            id: "chat-message-send-error",
+                        },
+                    );
+                }
+
+                if (stopTypingTimeOutID) {
+                    clearTimeout(stopTypingTimeOutID);
+                }
             }
-            message = "";
-            if (stopTypingTimeOutID) {
-                clearTimeout(stopTypingTimeOutID);
-            }
+        } finally {
+            releaseSendingMessage();
         }
+    }
+
+    function clearMessageInput() {
+        if (!messageInput) {
+            return;
+        }
+        messageInput.innerText = "";
+        message = "";
+    }
+
+    function restoreMessageInput(messageToRestore: string) {
+        if (!messageInput) {
+            message = messageToRestore;
+            return;
+        }
+        messageInput.innerText = messageToRestore;
+        message = messageInput.innerHTML;
     }
 
     function unselectChatMessageToReply() {
@@ -519,6 +596,7 @@
                     <button
                         class="border-2 border-white border-solid absolute flex items-center justify-center rounded-full bg-secondary hover:bg-secondary-600 p-0.5 -start-2 -top-2"
                         onclick={() => deleteFile(preview.id)}
+                        disabled={sendingMessage}
                     >
                         <IconX font-size="12" />
                     </button>
@@ -555,7 +633,7 @@
                 class={applicationButtonClass}
                 onclick={() => openFileAttachmentComponent()}
                 class:bg-secondary-800={fileAttachmentComponentOpened}
-                disabled={!fileAttachementEnabled || isProximityChatRoom}
+                disabled={sendingMessage || !fileAttachementEnabled || isProximityChatRoom}
             >
                 <IconPaperclip font-size={32} />
                 <h2 class={applicationTitleClass}>{$LL.chat.fileAttachment.title()}</h2>
@@ -570,7 +648,7 @@
                 data-testid="createPollButton"
                 class={applicationButtonClass}
                 onclick={openPollCreationModal}
-                disabled={!pollCreation || !$canCreatePoll}
+                disabled={sendingMessage || !pollCreation || !$canCreatePoll}
             >
                 <IconList font-size={32} />
                 <h2 class={applicationTitleClass}>{$LL.chat.poll.title()}</h2>
@@ -599,7 +677,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("youtube")}
                 class:bg-secondary-800={applicationProperty?.name === "youtube"}
-                disabled={!applicationManager.youtubeToolActivated}
+                disabled={sendingMessage || !applicationManager.youtubeToolActivated}
             >
                 <img draggable="false" class="w-8" src={youtubeSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.youtube.title()}</h2>
@@ -615,7 +693,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("klaxoon")}
                 class:bg-secondary-800={applicationProperty?.name === "klaxoon"}
-                disabled={!applicationManager.klaxoonToolActivated}
+                disabled={sendingMessage || !applicationManager.klaxoonToolActivated}
             >
                 <img draggable="false" class="w-8" src={klaxoonSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.klaxoon.title()}</h2>
@@ -631,7 +709,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("googleSheets")}
                 class:bg-secondary-800={applicationProperty?.name === "googleSheets"}
-                disabled={!applicationManager.googleSheetsToolActivated}
+                disabled={sendingMessage || !applicationManager.googleSheetsToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleSheetsSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.googleSheets.title()}</h2>
@@ -647,7 +725,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("googleDocs")}
                 class:bg-secondary-800={applicationProperty?.name === "googleDocs"}
-                disabled={!applicationManager.googleDocsToolActivated}
+                disabled={sendingMessage || !applicationManager.googleDocsToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleDocsSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.googleDocs.title()}</h2>
@@ -663,7 +741,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("googleSlides")}
                 class:bg-secondary-800={applicationProperty?.name === "googleSlides"}
-                disabled={!applicationManager.googleSlidesToolActivated}
+                disabled={sendingMessage || !applicationManager.googleSlidesToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleSlidesSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.googleSlides.title()}</h2>
@@ -679,7 +757,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("googleDrive")}
                 class:bg-secondary-800={applicationProperty?.name === "googleDrive"}
-                disabled={!applicationManager.googleDriveToolActivated}
+                disabled={sendingMessage || !applicationManager.googleDriveToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleDriveSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.googleDrive.title()}</h2>
@@ -695,7 +773,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("eraser")}
                 class:bg-secondary-800={applicationProperty?.name === "eraser"}
-                disabled={!applicationManager.eraserToolActivated}
+                disabled={sendingMessage || !applicationManager.eraserToolActivated}
             >
                 <img draggable="false" class="w-8" src={eraserSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.eraser.title()}</h2>
@@ -711,7 +789,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("excalidraw")}
                 class:bg-secondary-800={applicationProperty?.name === "excalidraw"}
-                disabled={!applicationManager.excalidrawToolActivated}
+                disabled={sendingMessage || !applicationManager.excalidrawToolActivated}
             >
                 <img draggable="false" class="w-8" src={excalidrawSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.excalidraw.title()}</h2>
@@ -727,7 +805,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("cards")}
                 class:bg-secondary-800={applicationProperty?.name === "cards"}
-                disabled={!applicationManager.cardsToolActivated}
+                disabled={sendingMessage || !applicationManager.cardsToolActivated}
             >
                 <img draggable="false" class="w-8" src={cardsPng} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.cards.title()}</h2>
@@ -743,7 +821,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("tldraw")}
                 class:bg-secondary-800={applicationProperty?.name === "tldraw"}
-                disabled={!applicationManager.tldrawToolActivated}
+                disabled={sendingMessage || !applicationManager.tldrawToolActivated}
             >
                 <img draggable="false" class="w-8" src={tldrawJpeg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.tldraw.title()}</h2>
@@ -762,6 +840,7 @@
                     class={applicationButtonClass}
                     class:bg-secondary-800={applicationProperty?.name === app.name}
                     onclick={() => openLinkForm(app.name)}
+                    disabled={sendingMessage}
                 >
                     <img draggable="false" class="w-8" src={app.image} alt={$LL.chat.a11y.applicationIcon()} />
                     <h2 class={applicationTitleClass}>{app.name}</h2>
@@ -781,6 +860,7 @@
             update={onUpdatApplicationProperty}
             processing={onProcessingApplicationProperty}
             processed={onProcessedApplicationProperty}
+            disabled={sendingMessage}
         />
     </div>
 {/if}
@@ -831,16 +911,17 @@
         {focusout}
         bind:message
         bind:messageInput
-        disabled={messageInputDisabled}
+        disabled={sendingMessage || messageInputDisabled}
         inputClass="message-input flex-grow !m-0 px-4 py-2.5 max-h-36 overflow-auto h-full rounded-lg wa-searchbar block text-sm text-white placeholder:text-white/50 placeholder:text-sm border border-white/10 !bg-white/5 resize-none outline-none shadow-none focus:ring-0 focus:border-white/20"
         dataText={$LL.chat.enter()}
         dataTestid="messageInput"
     />
     <button
         data-testid="addApplicationButton"
-        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0"
+        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
         class:bg-secondary-800={applicationComponentOpened}
         onclick={toggleApplicationComponent}
+        disabled={sendingMessage}
     >
         <IconX
             font-size={18}
@@ -849,8 +930,9 @@
         />
     </button>
     <button
-        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0"
+        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
         onclick={openCloseEmojiPicker}
+        disabled={sendingMessage}
     >
         <IconMoodSmile font-size={18} />
     </button>
@@ -858,13 +940,18 @@
         <button
             data-testid="sendMessageButton"
             class="disabled:opacity-30 disabled:!cursor-none disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-md"
-            disabled={shouldDisableSendButton({
-                applicationPropertyInProcessing,
-                isMessageInputDisabled: messageInputDisabled,
-            })}
+            disabled={sendingMessage ||
+                shouldDisableSendButton({
+                    applicationPropertyInProcessing,
+                    isMessageInputDisabled: messageInputDisabled,
+                })}
             onclick={() => sendMessage(message).catch((error) => console.error(error))}
         >
-            <IconSend />
+            {#if sendingMessage}
+                <IconLoader class="animate-[spin_2s_linear_infinite]" />
+            {:else}
+                <IconSend />
+            {/if}
         </button>
     {/if}
 </div>

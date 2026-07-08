@@ -314,6 +314,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     nothingToDisplay: "Niente da visualizzare",
     showMore: "Mostra {number} di più",
     showLess: "Mostra meno",
+    showFullMessage: "Show more",
+    showLessMessage: "Show less",
     addRoomToFolderError: "Impossibile aggiungere la stanza alla cartella",
     createRoom: {
         title: "Crea nuova stanza",
@@ -640,6 +642,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     whoops: "Ops! Si è verificato un errore",
     failedToOpenRoom: "Impossibile aprire la stanza: {roomId}",
     failedToSendAttachments: "Impossibile inviare gli allegati. Riprova.",
+    failedToSendMessage: "Failed to send message. Please try again.",
+    partiallyFailedToSendMessage: "Part of the message was sent. The unsent text was kept in the input.",
     refreshChatError: "Impossibile aggiornare la chat",
     discord: {
         chatBand: {

@@ -314,6 +314,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     nothingToDisplay: "Niets om weer te geven",
     showMore: "Toon {number} meer",
     showLess: "Toon minder",
+    showFullMessage: "Show more",
+    showLessMessage: "Show less",
     addRoomToFolderError: "Kamer kon niet aan de map worden toegevoegd",
     createRoom: {
         title: "Nieuwe kamer maken",
@@ -640,6 +642,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     whoops: "Oeps! Er is een fout opgetreden",
     failedToOpenRoom: "Kon kamer niet openen: {roomId}",
     failedToSendAttachments: "Bijlagen verzenden is mislukt. Probeer het opnieuw.",
+    failedToSendMessage: "Failed to send message. Please try again.",
+    partiallyFailedToSendMessage: "Part of the message was sent. The unsent text was kept in the input.",
     refreshChatError: "Kon chat niet vernieuwen",
     discord: {
         chatBand: {

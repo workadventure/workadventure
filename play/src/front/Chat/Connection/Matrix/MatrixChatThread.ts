@@ -19,6 +19,7 @@ import type {
     ChatMessageContent,
     ChatRoomInitializationState,
     ChatRoomMember,
+    ChatSendMessageResult,
     ChatThread,
     ChatTimelineItem,
     memberTypingInformation,
@@ -26,10 +27,12 @@ import type {
 import LL from "../../../../i18n/i18n-svelte";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
 import type { PictureStore } from "../../../Stores/PictureStore";
+import { MAX_MATRIX_MESSAGE_CHARS } from "../../Services/ChatMessageSplitter";
 import type { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import type { MatrixChatRoom } from "./MatrixChatRoom";
 import { applyThreadRelationToContent, isThreadReplyEvent } from "./MatrixThreadUtils";
+import { sendMatrixTextMessageInChunks } from "./MatrixSendMessage";
 
 export class MatrixChatThread implements ChatThread {
     readonly id: string;
@@ -492,16 +495,18 @@ export class MatrixChatThread implements ChatThread {
             .catch((error) => console.error(error));
     }
 
-    sendMessage(message: string) {
-        this.parentRoom
-            .getMatrixRoom()
-            .client.sendMessage(this.parentRoom.id, this.id, this.getMessageContent(message))
-            .then(() => {
-                selectedChatMessageToReply.set(null);
-            })
-            .catch((error) => {
-                console.error(error);
-            });
+    async sendMessage(message: string): Promise<ChatSendMessageResult> {
+        const result = await sendMatrixTextMessageInChunks(message, MAX_MATRIX_MESSAGE_CHARS, (chunk) =>
+            this.parentRoom
+                .getMatrixRoom()
+                .client.sendMessage(this.parentRoom.id, this.id, this.getMessageContent(chunk)),
+        );
+
+        if (result.status === "sent") {
+            selectedChatMessageToReply.set(null);
+        }
+
+        return result;
     }
 
     async sendFiles(files: FileList) {
@@ -537,7 +542,7 @@ export class MatrixChatThread implements ChatThread {
     }
 
     private getMessageContent(message: string): RoomMessageEventContent {
-        const content: RoomMessageEventContent = { body: message, msgtype: MsgType.Text, formatted_body: message };
+        const content: RoomMessageEventContent = { body: message, msgtype: MsgType.Text };
         this.applyThreadRelationContent(content);
         return content;
     }
