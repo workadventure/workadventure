@@ -7,7 +7,6 @@ services:
   play:
     environment:
       ALLOWED_CORS_ORIGIN: "http://play.workadventure.localhost"
-      VITE_URL: "http://front.workadventure.localhost"
       PUSHER_URL: "http://play.workadventure.localhost/"
       FRONT_URL: "http://play.workadventure.localhost"
       UPLOADER_URL: "http://play.workadventure.localhost/uploader"

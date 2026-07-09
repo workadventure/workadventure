@@ -38,7 +38,6 @@ export default defineConfig(({ mode }) => {
             rollupOptions: {
                 input: {
                     main: path.resolve(process.cwd(), "index.html"),
-                    pipLayoutTest: path.resolve(process.cwd(), "pip-layout-test.html"),
                 },
                 // external: ["@mediapipe/tasks-vision"],
                 //plugins: [inject({ Buffer: ["buffer/", "Buffer"] })],
