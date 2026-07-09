@@ -2,6 +2,7 @@ import * as Phaser from "phaser";
 import VirtualJoystick from "phaser4-rex-plugins/plugins/virtualjoystick.js";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
+import { DirtyScene } from "../Game/DirtyScene";
 
 import Image = Phaser.GameObjects.Image;
 
@@ -24,7 +25,7 @@ export class MobileJoystick extends VirtualJoystick {
     private setimeout: NodeJS.Timeout | null = null;
     private destroyed: boolean = false;
 
-    constructor(scene: Phaser.Scene) {
+    constructor(private scene: Phaser.Scene) {
         const joystickBase = scene.add
             .image(0, 0, joystickBaseKey)
             .setDisplaySize(
@@ -77,19 +78,24 @@ export class MobileJoystick extends VirtualJoystick {
         // The joystick is used by the player
         this.enable = true;
         this.visible = true;
+
+        if (this.setimeout) clearTimeout(this.setimeout);
     }
 
     public hide(delay: number): void {
         // The joystick is not used by the player
         this.enable = false;
 
-        // After 30 seconds, disable the joystick
+        // After the timeout, disable the joystick
         if (this.setimeout) clearTimeout(this.setimeout);
         this.setimeout = setTimeout(() => {
             if (this.destroyed) {
                 return;
             }
             this.visible = false;
+            if (this.scene instanceof DirtyScene) {
+                this.scene.markDirty();
+            }
         }, delay);
     }
 
@@ -103,9 +109,6 @@ export class MobileJoystick extends VirtualJoystick {
             this.getDisplaySizeByElement(thumbSize),
             this.getDisplaySizeByElement(thumbSize),
         );
-        this.setDisplayRadius(
-            (radius / (waScaleManager.zoomModifier * waScaleManager.uiScalingFactor)) * window.devicePixelRatio,
-        );
 
         // TODO: change it to apply the good ratio of the canvas
         // Show the joystick at the bottom middle of the screen
@@ -114,12 +117,7 @@ export class MobileJoystick extends VirtualJoystick {
         this.y = height * 0.8;
     }
 
-    private setDisplayRadius(radius: number): void {
-        this.joystickBase.setDisplaySize(radius * 2, radius * 2);
-        this.joystickThumb.setDisplaySize(radius, radius);
-    }
-
-    private getDisplaySizeByElement(element: integer): integer {
+    private getDisplaySizeByElement(element: number): number {
         return (element / (waScaleManager.zoomModifier * waScaleManager.uiScalingFactor)) * window.devicePixelRatio;
     }
 

@@ -137,6 +137,9 @@ export class UserInputManager {
                 }
             }
         });
+        this.joystick.on("pointerup", () => {
+            this.joystick?.hide(1_000); // Hide the joystick after 1 second of inactivity
+        });
     }
 
     initKeyBoardEvent() {
@@ -355,7 +358,6 @@ export class UserInputManager {
         );
 
         this.scene.input.on(Phaser.Input.Events.POINTER_UP, (pointer: Pointer, gameObjects: GameObject[]) => {
-            this.joystick?.hide(1_000); // Hide the joystick after 1 seconds of inactivity
             this.userInputHandler.handlePointerUpEvent(pointer, gameObjects);
 
             // Disable focus on iframe (need by Firefox)
