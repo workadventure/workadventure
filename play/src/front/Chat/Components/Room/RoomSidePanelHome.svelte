@@ -14,6 +14,7 @@
         ChatRoomMembershipManagement,
         ChatRoomModeration,
         ChatRoomNotificationControl,
+        ChatRoomSettingsManagement,
         ChatRoomSidePanelHydrationState,
         ChatThreadSummary,
     } from "../../Connection/ChatConnection";
@@ -34,7 +35,11 @@
     import { modals } from "@wa-modals";
 
     interface Props {
-        room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
+        room: ChatRoom &
+            ChatRoomMembershipManagement &
+            ChatRoomModeration &
+            ChatRoomNotificationControl &
+            ChatRoomSettingsManagement;
     }
 
     let { room }: Props = $props();
