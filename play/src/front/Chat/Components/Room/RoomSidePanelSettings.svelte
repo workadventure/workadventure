@@ -158,8 +158,7 @@
         const accessChanged = $canEditAccess && editableAccess !== currentAccessValue();
         const historyChanged = $canEditHistory && editableHistoryVisibility !== currentHistoryValue();
 
-        const shouldSaveSettings =
-            settingsDirty && (nameChanged || topicChanged || accessChanged || historyChanged);
+        const shouldSaveSettings = settingsDirty && (nameChanged || topicChanged || accessChanged || historyChanged);
         const shouldSavePermissions = permissionsDirty && $canEditPermissions;
 
         if (!shouldSaveSettings && !shouldSavePermissions) {
