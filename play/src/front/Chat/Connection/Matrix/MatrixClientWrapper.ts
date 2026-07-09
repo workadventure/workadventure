@@ -9,6 +9,9 @@ import type { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { matrixSecurity } from "./MatrixSecurity";
 import { customMatrixLogger } from "./CustomMatrixLogger";
+// Inline worker (bundled as a same-origin blob) that drives matrix-js-sdk's IndexedDB store off the
+// main thread. See matrixIndexedDbWorker.ts for why the entry script and `?worker&inline` are needed.
+import MatrixIndexedDbWorker from "./matrixIndexedDbWorker?worker&inline";
 import { modals } from "@wa-modals";
 
 window.Buffer = Buffer;
@@ -177,6 +180,11 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             indexedDB: globalThis.indexedDB,
             localStorage: globalThis.localStorage,
             dbName: "workadventure-matrix",
+            // Run sync persistence on a dedicated web worker so the structured-clone of the
+            // accumulated /sync blob (persistSyncData -> store.put) does not block the main
+            // thread. Without this, matrix-js-sdk falls back to the main-thread backend and can
+            // freeze the UI for several seconds on large stores.
+            workerFactory: typeof Worker !== "undefined" ? () => new MatrixIndexedDbWorker() : undefined,
         });
 
         const indexDbCryptoStore = new IndexedDBCryptoStore(
