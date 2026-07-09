@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
         server: {
             host: "0.0.0.0",
             port: 8080,
-            hmr: {
+            ws: {
                 // workaround for development in docker
                 clientPort: 80,
                 // The dev module graph is served same-origin under the play host (see the
