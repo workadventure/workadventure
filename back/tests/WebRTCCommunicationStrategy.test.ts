@@ -128,9 +128,9 @@ describe("WebRTCCommunicationStrategy", () => {
     });
 
     it("should create missing WebRTC connections when an attendee becomes a speaker", async () => {
-        const speaker = createUser("speaker", "attendee");
+        const otherAttendee = createUser("speaker", "attendee");
         const changingUser = createUser("changing-user", "attendee");
-        const users = [speaker, changingUser];
+        const users = [otherAttendee, changingUser];
         const usersMap = createUsersMap(users);
         const { space, privateEvents } = createSpace(users);
         const strategy = new WebRTCCommunicationStrategy(space, usersMap, usersMap);
