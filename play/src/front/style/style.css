@@ -635,6 +635,19 @@ div.emoji-picker {
 
 /* Style for the action or bulle info displayed a side of the user */
 .characterTriggerAction{
+    /*
+     * Fixes a position drift when zooming (Phaser 4). SpeechDomElement keeps its default origin
+     * (0.5, 0.5). Phaser's DOM renderer (DOMElementCSSRenderer) already bakes the origin offset
+     * into the element's CSS matrix via a `translate(-width*originX, -height*originY)`. For
+     * scene-level DOM elements it ALSO sets `transform-origin: 50% 50%`, which applies that same
+     * offset a second time. The two only cancel when the camera zoom is 1; under camera zoom the
+     * residual is `originX * width * (1 - zoom)`, so the bubble visibly drifts to the bottom-right
+     * as you zoom out. Forcing the origin back to `0 0` (what Phaser already does for
+     * container-nested DOM elements) leaves only the matrix offset and keeps the bubble anchored.
+     *
+     * Can be removed when https://github.com/phaserjs/phaser/pull/7330 is merged.
+     */
+    transform-origin: 0 0 !important;
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
     /* Hide scrollbar for Chrome, Safari and Opera */

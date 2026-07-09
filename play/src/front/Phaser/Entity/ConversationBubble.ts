@@ -5,6 +5,11 @@ import { MINIMUM_DISTANCE } from "../../Enum/EnvironmentVariable";
 import type { Character } from "./Character";
 import { RemotePlayer } from "./RemotePlayer";
 
+import Sprite = Phaser.GameObjects.Sprite;
+import Vector2 = Phaser.Math.Vector2;
+import Linear = Phaser.Math.Linear;
+import Spline = Phaser.Curves.Spline;
+
 /** A very small interface for whatever "player" object you use.
  *  Adapt or extend as needed. */
 export interface Avatar {
@@ -14,7 +19,7 @@ export interface Avatar {
 }
 
 /** Jelly-like circle that bulges / dimples toward or away from avatars. */
-export class ConversationBubble extends Phaser.GameObjects.Sprite {
+export class ConversationBubble extends Sprite {
     // ==== Tunables =========================================================
     private readonly R0 = MINIMUM_DISTANCE; // resting radius (px)
     private readonly lambda = 40; // fall-off distance for influence (px)
@@ -28,7 +33,7 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     private readonly influenceRadiusSquared = this.influenceRadius * this.influenceRadius;
 
     // ==== Internal state ===================================================
-    private center = new Phaser.Math.Vector2();
+    private center = new Vector2();
     private radii = new Array<number>(this.segments).fill(this.R0);
     private gameScene: GameScene;
     private locked: boolean;
@@ -136,7 +141,7 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
             }
 
             /* --- 2.  Dampen changes with simple lerp for a jelly feel ---- */
-            const newRadius = Phaser.Math.Linear(this.radii[s], targetR, this.speed);
+            const newRadius = Linear(this.radii[s], targetR, this.speed);
             if (Math.abs(newRadius - this.radii[s]) > this.stopAnimationThreshold) {
                 this._isAnimating = true; // mark as animating if there's a significant change
             }
@@ -192,15 +197,15 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
         }
 
         // Convert polar samples to Cartesian points
-        const pts: Phaser.Math.Vector2[] = [];
+        const pts: Vector2[] = [];
         for (let s = 0; s < this.segments; s++) {
             const θ = (s / this.segments) * Math.PI * 2;
             const r = this.radii[s];
-            pts.push(new Phaser.Math.Vector2(this.center.x + r * Math.cos(θ), this.center.y + r * Math.sin(θ)));
+            pts.push(new Vector2(this.center.x + r * Math.cos(θ), this.center.y + r * Math.sin(θ)));
         }
 
         // Create a spline and oversample for smoothness
-        const spline = new Phaser.Curves.Spline(pts);
+        const spline = new Spline(pts);
         const smooth = spline.getSpacedPoints(this.segments * 2);
 
         // Calculate bounding box

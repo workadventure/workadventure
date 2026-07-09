@@ -1,8 +1,7 @@
 import * as Sentry from "@sentry/svelte";
+import * as Phaser from "phaser";
 import type { Subscription } from "rxjs";
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
-import * as Phaser from "phaser";
-import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
@@ -237,13 +236,20 @@ import { LocateManager } from "./LocateManager";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { ScriptingVideoManager } from "./ScriptingVideoManager";
 import { UsernameDomLayer } from "./UsernameDomLayer";
-import EVENT_TYPE = Phaser.Scenes.Events;
-import Sprite = Phaser.GameObjects.Sprite;
+
+import Tileset = Phaser.Tilemaps.Tileset;
+import Tilemap = Phaser.Tilemaps.Tilemap;
+import PhysicsSprite = Phaser.Physics.Arcade.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import DOMElement = Phaser.GameObjects.DOMElement;
-import Tileset = Phaser.Tilemaps.Tileset;
-import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
-import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import Graphics = Phaser.GameObjects.Graphics;
+import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+import Sprite = Phaser.GameObjects.Sprite;
+import Body = Phaser.Physics.Arcade.Body;
+import StaticBody = Phaser.Physics.Arcade.StaticBody;
+import Tile = Phaser.Tilemaps.Tile;
+import Color = Phaser.Display.Color;
+import Pointer = Phaser.Input.Pointer;
 import Clamp = Phaser.Math.Clamp;
 
 const MOUSE_WHEEL_ZOOM_RATE = 0.5;
@@ -278,16 +284,15 @@ const WORLD_SPACE_NAME = "allWorldUser";
 const debug = Debug("GameScene");
 
 export class GameScene extends DirtyScene {
-    Terrains: Array<Phaser.Tilemaps.Tileset>;
+    Terrains: Array<Tileset>;
     CurrentPlayer!: Player;
     MapPlayersByKey: MapStore<number, RemotePlayer> = new MapStore<number, RemotePlayer>();
     CurrentRemotePlayerLocated: RemotePlayer | undefined = undefined;
     CurrentChatUserLocated: ChatUser | undefined = undefined;
-    Map!: Phaser.Tilemaps.Tilemap;
-    Objects!: Array<Phaser.Physics.Arcade.Sprite>;
+    Map!: Tilemap;
+    Objects!: Array<PhysicsSprite>;
     mapFile!: ITiledMap;
     wamFile!: WAMFileFormat;
-    animatedTiles!: AnimatedTiles;
     groups: Map<number, ConversationBubble>;
     circleTexture!: CanvasTexture;
     circleRedTexture!: CanvasTexture;
@@ -323,6 +328,7 @@ export class GameScene extends DirtyScene {
     private sceneReadyToStartDeferred: Deferred<void> = new Deferred<void>();
     private iframeSubscriptionList: Array<Subscription> = [];
     private gameMapChangedSubscription!: Subscription;
+    private tileAnimationRefreshEvent: Phaser.Time.TimerEvent | undefined;
     private messageSubscription: Subscription | null = null;
     private rxJsSubscriptions: Array<Subscription> = [];
     private emoteUnsubscriber!: Unsubscriber;
@@ -345,7 +351,7 @@ export class GameScene extends DirtyScene {
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     private isReconnecting: boolean | undefined = undefined;
     private playerName!: string;
-    private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
+    private popUpElements: Map<number, DOMElement> = new Map<number, DOMElement>();
     private remotePlayersSpatialIndex = new SpatialMap<number, RemotePlayer>(CONVERSATION_BUBBLE_SPATIAL_GRID_SIZE);
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
@@ -388,7 +394,7 @@ export class GameScene extends DirtyScene {
     public usernameDomLayer!: UsernameDomLayer;
     private throttledSendViewportToServer_!: throttle<() => void>;
     private lastSentViewport: ViewportInterface | undefined;
-    private serverViewportDebugGraphics: Phaser.GameObjects.Graphics | undefined;
+    private serverViewportDebugGraphics: Graphics | undefined;
     private playersDebugLogAlreadyDisplayed = false;
     private hideTimeout: ReturnType<typeof setTimeout> | undefined;
     // The promise that will resolve to the current player textures. This will be available only after connection is established.
@@ -502,7 +508,7 @@ export class GameScene extends DirtyScene {
 
         this.sound.pauseOnBlur = false;
 
-        this.load.on(FILE_LOAD_ERROR, (file: { src: string }) => {
+        this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: { src: string }) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
             if (
                 window.location.protocol === "http:" &&
@@ -554,7 +560,7 @@ export class GameScene extends DirtyScene {
 
             //once preloading is over, we don't want loading errors to crash the game, so we need to disable this behavior after preloading.
             //if SpriteSheetFile (WOKA file) don't display error and give an access for user
-            if (this.preloading && !(file instanceof SpriteSheetFile)) {
+            if (this.preloading && !(file instanceof Phaser.Loader.FileTypes.SpriteSheetFile)) {
                 //remove loader in progress
                 this.handleErrorAndCleanup(
                     new Error('Cannot load "' + (file?.src ?? this.originalMapUrl) + '"'),
@@ -565,7 +571,6 @@ export class GameScene extends DirtyScene {
             }
         });
 
-        this.load.scenePlugin("AnimatedTiles", AnimatedTiles, "animatedTiles", "animatedTiles");
         if (this.wamUrlFile) {
             const absoluteWamFileUrl = new URL(this.wamUrlFile, window.location.href).toString();
 
@@ -783,7 +788,7 @@ export class GameScene extends DirtyScene {
         mediaManager.setUserInputManager(this.userInputManager);
 
         //add entities
-        this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
+        this.Objects = new Array<PhysicsSprite>();
 
         if (localUserStore.getFullscreen()) {
             document
@@ -815,14 +820,7 @@ export class GameScene extends DirtyScene {
             this.mapEditorModeManager = new MapEditorModeManager(this);
         }
 
-        this.animatedTiles.init(this.Map);
-
-        // Phaser unsubscribes from the events when the scene is destroyed, so we don't need to unsubscribe here
-        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
-        this.events.on("tileanimationupdate", () => (this.dirty = true));
-        if (localUserStore.getDisableAnimations()) {
-            this.animatedTiles.pause();
-        }
+        this.configureTileAnimations();
 
         // Let's pause the scene if the connection is not established yet
         if (!this._room.isDisconnected()) {
@@ -1031,7 +1029,7 @@ export class GameScene extends DirtyScene {
                 Sentry.captureException(e);
             });
 
-        if (this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
+        if (this.game.renderer instanceof WebGLRenderer) {
             this._focusFx = new DarkenOutsideAreaEffect(this, this.cameras.main, {
                 feather: 10,
                 darkness: 0.65,
@@ -1173,6 +1171,8 @@ export class GameScene extends DirtyScene {
 
         this.connection?.closeConnection();
         this.outlineManager?.clear();
+        this.tileAnimationRefreshEvent?.remove(false);
+        this.tileAnimationRefreshEvent = undefined;
         this.userInputManager?.destroy();
         this.isLiveStreamingUnsubscriber?.();
         this.shouldPublishScreenShareUnsubscriber?.();
@@ -3159,7 +3159,7 @@ ${escapedMessage}
             iframeListener.loadPageStream.subscribe((url: string) => {
                 this.loadNextGameFromExitUrl(url)
                     .then(() => {
-                        this.events.once(EVENT_TYPE.POST_UPDATE, () => {
+                        this.events.once(Phaser.Scenes.Events.POST_UPDATE, () => {
                             this.onMapExit(Room.getRoomPathFromExitUrl(url, window.location.toString())).catch((e) =>
                                 console.error(e),
                             );
@@ -3345,7 +3345,6 @@ ${escapedMessage}
             iframeListener.setTilesStream.subscribe((eventTiles) => {
                 for (const eventTile of eventTiles) {
                     this.gameMapFrontWrapper.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
-                    this.animatedTiles.updateAnimatedTiles(eventTile.x, eventTile.y);
                 }
             }),
         );
@@ -3465,6 +3464,7 @@ ${escapedMessage}
                                 this.gameMapFrontWrapper,
                             );
                             this.gameMapPropertiesListener.register();
+                            this.configureTileAnimations();
                             resolve(newFirstgid);
                         });
                         this.load.off("loaderror", errorHandler);
@@ -3701,6 +3701,35 @@ ${escapedMessage}
 
     private setAreaProperty(areaName: string, propertyName: string, propertyValue: unknown): void {
         this.gameMapFrontWrapper.setDynamicAreaProperty(areaName, propertyName, propertyValue);
+    }
+
+    public setTileAnimationsPaused(paused: boolean): void {
+        this.gameMapFrontWrapper?.setTileAnimationsPaused(paused);
+        if (!paused) {
+            this.markDirty();
+        }
+    }
+
+    private configureTileAnimations(): void {
+        this.tileAnimationRefreshEvent?.remove(false);
+        this.tileAnimationRefreshEvent = undefined;
+
+        this.setTileAnimationsPaused(localUserStore.getDisableAnimations());
+
+        const refreshDelay = this.gameMapFrontWrapper.getTileAnimationRefreshDelay();
+        if (refreshDelay === undefined) {
+            return;
+        }
+
+        this.tileAnimationRefreshEvent = this.time.addEvent({
+            delay: refreshDelay,
+            loop: true,
+            callback: () => {
+                if (!localUserStore.getDisableAnimations()) {
+                    this.markDirty();
+                }
+            },
+        });
     }
 
     private removeAllRemotePlayers(): void {
@@ -3982,16 +4011,8 @@ ${escapedMessage}
                 this.CurrentPlayer,
                 phaserLayer,
                 (
-                    object1:
-                        | Phaser.Physics.Arcade.Body
-                        | Phaser.Physics.Arcade.StaticBody
-                        | Phaser.Tilemaps.Tile
-                        | Phaser.Types.Physics.Arcade.GameObjectWithBody,
-                    object2:
-                        | Phaser.Physics.Arcade.Body
-                        | Phaser.Physics.Arcade.StaticBody
-                        | Phaser.Tilemaps.Tile
-                        | Phaser.Types.Physics.Arcade.GameObjectWithBody,
+                    object1: Body | StaticBody | Tile | Phaser.Types.Physics.Arcade.GameObjectWithBody,
+                    object2: Body | StaticBody | Tile | Phaser.Types.Physics.Arcade.GameObjectWithBody,
                 ) => {},
             );
             phaserLayer.setCollisionByProperty({ collides: true });
@@ -3999,8 +4020,8 @@ ${escapedMessage}
                 //debug code to see the collision hitbox of the object in the top layer
                 phaserLayer.renderDebug(this.add.graphics(), {
                     tileColor: null, //non-colliding tiles
-                    collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
-                    faceColor: new Phaser.Display.Color(40, 39, 37, 255), // Colliding face edges
+                    collidingTileColor: new Color(243, 134, 48, 200), // Colliding tiles,
+                    faceColor: new Color(40, 39, 37, 255), // Colliding face edges
                 });
             }
             //});
@@ -4021,10 +4042,10 @@ ${escapedMessage}
                 false,
                 gameManager.getCompanionTextureId() != undefined ? this.currentCompanionTexturePromise : undefined,
             );
-            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
+            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(PHASER_COLOR_DESIGN_SYSTEM_SECONDARY);
             });
-            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OUT, (pointer: Phaser.Input.Pointer) => {
+            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OUT, (pointer: Pointer) => {
                 this.CurrentPlayer.pointerOutOutline();
             });
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
@@ -4100,7 +4121,6 @@ ${escapedMessage}
         if (forceRecomputeCamera) {
             // When calling this before the first render, camera.preRender() must be called before accessing worldView to ensure it's up to date.
             // See: https://docs.phaser.io/phaser/concepts/cameras#world-view
-            // @ts-ignore preRender is protected, but the Phaser docs advertises this, so we ignore the warning.
             camera.preRender();
         }
 

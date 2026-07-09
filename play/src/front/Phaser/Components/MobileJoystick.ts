@@ -1,6 +1,10 @@
-import VirtualJoystick from "phaser3-rex-plugins/plugins/virtualjoystick.js";
+import * as Phaser from "phaser";
+import VirtualJoystick from "phaser4-rex-plugins/plugins/virtualjoystick.js";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
+import { DirtyScene } from "../Game/DirtyScene";
+
+import Image = Phaser.GameObjects.Image;
 
 //the assets were found here: https://hannemann.itch.io/virtual-joystick-pack-free
 export const joystickBaseKey = "joystickBase";
@@ -13,48 +17,57 @@ const thumbSize = 25;
 const radius = 17.5;
 
 export class MobileJoystick extends VirtualJoystick {
+    private readonly joystickScene: Phaser.Scene;
+    private readonly joystickBase: Image;
+    private readonly joystickThumb: Image;
     private resizeCallback: () => void;
 
     private setimeout: NodeJS.Timeout | null = null;
     private destroyed: boolean = false;
 
-    constructor(scene: Phaser.Scene) {
+    constructor(private scene: Phaser.Scene) {
+        const joystickBase = scene.add
+            .image(0, 0, joystickBaseKey)
+            .setDisplaySize(
+                (baseSize / waScaleManager.zoomModifier) * window.devicePixelRatio,
+                (baseSize / waScaleManager.zoomModifier) * window.devicePixelRatio,
+            )
+            .setDepth(DEPTH_INGAME_TEXT_INDEX);
+        const joystickThumb = scene.add
+            .image(0, 0, joystickThumbKey)
+            .setDisplaySize(
+                (thumbSize / waScaleManager.zoomModifier) * window.devicePixelRatio,
+                (thumbSize / waScaleManager.zoomModifier) * window.devicePixelRatio,
+            )
+            .setDepth(DEPTH_INGAME_TEXT_INDEX);
+
         super(scene, {
             x: -1000,
             y: -1000,
             radius: radius * window.devicePixelRatio,
-            base: scene.add
-                .image(0, 0, joystickBaseKey)
-                .setDisplaySize(
-                    (baseSize / waScaleManager.zoomModifier) * window.devicePixelRatio,
-                    (baseSize / waScaleManager.zoomModifier) * window.devicePixelRatio,
-                )
-                .setDepth(DEPTH_INGAME_TEXT_INDEX),
-            thumb: scene.add
-                .image(0, 0, joystickThumbKey)
-                .setDisplaySize(
-                    (thumbSize / waScaleManager.zoomModifier) * window.devicePixelRatio,
-                    (thumbSize / waScaleManager.zoomModifier) * window.devicePixelRatio,
-                )
-                .setDepth(DEPTH_INGAME_TEXT_INDEX),
+            base: joystickBase,
+            thumb: joystickThumb,
             enable: true,
             dir: "8dir",
         });
+        this.joystickScene = scene;
+        this.joystickBase = joystickBase;
+        this.joystickThumb = joystickThumb;
 
         // Disable the joystick by default
         this.enable = false;
 
         // Show the joystick at the bottom middle of the screen
-        const { width, height } = this.scene.game.canvas;
+        const { width, height } = this.joystickScene.game.canvas;
         this.x = width / 2;
         this.y = height * 0.8;
 
         // Add opacity
-        this.base.setAlpha(0.3);
-        this.thumb.setAlpha(0.3);
+        this.joystickBase.setAlpha(0.3);
+        this.joystickThumb.setAlpha(0.3);
 
         this.resizeCallback = this.resize.bind(this);
-        this.scene.scale.on(Phaser.Scale.Events.RESIZE, this.resizeCallback);
+        this.joystickScene.scale.on(Phaser.Scale.Events.RESIZE, this.resizeCallback);
     }
 
     public showAt(x: number, y: number): void {
@@ -65,43 +78,51 @@ export class MobileJoystick extends VirtualJoystick {
         // The joystick is used by the player
         this.enable = true;
         this.visible = true;
+
+        if (this.setimeout) clearTimeout(this.setimeout);
     }
 
     public hide(delay: number): void {
         // The joystick is not used by the player
         this.enable = false;
 
-        // After 30 seconds, disable the joystick
+        // After the timeout, disable the joystick
         if (this.setimeout) clearTimeout(this.setimeout);
         this.setimeout = setTimeout(() => {
             if (this.destroyed) {
                 return;
             }
             this.visible = false;
+            if (this.scene instanceof DirtyScene) {
+                this.scene.markDirty();
+            }
         }, delay);
     }
 
     public resize() {
         // scale the joystick to the current zoom level
-        this.base.setDisplaySize(this.getDisplaySizeByElement(baseSize), this.getDisplaySizeByElement(baseSize));
-        this.thumb.setDisplaySize(this.getDisplaySizeByElement(thumbSize), this.getDisplaySizeByElement(thumbSize));
-        this.setRadius(
-            (radius / (waScaleManager.zoomModifier * waScaleManager.uiScalingFactor)) * window.devicePixelRatio,
+        this.joystickBase.setDisplaySize(
+            this.getDisplaySizeByElement(baseSize),
+            this.getDisplaySizeByElement(baseSize),
+        );
+        this.joystickThumb.setDisplaySize(
+            this.getDisplaySizeByElement(thumbSize),
+            this.getDisplaySizeByElement(thumbSize),
         );
 
         // TODO: change it to apply the good ratio of the canvas
         // Show the joystick at the bottom middle of the screen
-        const { width, height } = this.scene.game.canvas;
+        const { width, height } = this.joystickScene.game.canvas;
         this.x = width / 2;
         this.y = height * 0.8;
     }
 
-    private getDisplaySizeByElement(element: integer): integer {
+    private getDisplaySizeByElement(element: number): number {
         return (element / (waScaleManager.zoomModifier * waScaleManager.uiScalingFactor)) * window.devicePixelRatio;
     }
 
     public destroy() {
-        this.scene?.scale.removeListener(Phaser.Scale.Events.RESIZE, this.resizeCallback);
+        this.joystickScene.scale.removeListener(Phaser.Scale.Events.RESIZE, this.resizeCallback);
         super.destroy();
         this.destroyed = true;
     }

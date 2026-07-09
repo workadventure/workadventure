@@ -1,3 +1,5 @@
+import * as Phaser from "phaser";
+
 export class TextField extends Phaser.GameObjects.BitmapText {
     constructor(scene: Phaser.Scene, x: number, y: number, text: string | string[], center = true) {
         super(scene, x, y, "main_font", text, 8);

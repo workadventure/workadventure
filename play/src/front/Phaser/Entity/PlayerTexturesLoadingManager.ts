@@ -1,9 +1,11 @@
+import * as Phaser from "phaser";
 import { CancelablePromise } from "cancelable-promise";
 import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { PlayerTexturesKey } from "./PlayerTextures";
 import type { WokaTextureDescriptionInterface, PlayerTextures } from "./PlayerTextures";
-type Texture = Phaser.Textures.Texture;
-type LoaderPlugin = Phaser.Loader.LoaderPlugin;
+
+import Texture = Phaser.Textures.Texture;
+import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 
 export interface FrameConfig {
     frameWidth: number;

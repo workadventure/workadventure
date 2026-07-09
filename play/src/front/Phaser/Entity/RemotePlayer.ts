@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/svelte";
+import * as Phaser from "phaser";
 import { get } from "svelte/store";
 import type { CancelablePromise } from "cancelable-promise";
 import {

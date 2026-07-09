@@ -2,8 +2,10 @@
     /* eslint no-undef: 0 */
     import { onDestroy, onMount } from "svelte";
     import * as Sentry from "@sentry/svelte";
-    import AwaitLoaderPlugin from "phaser3-rex-plugins/plugins/awaitloader-plugin.js";
-    import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
+    import * as Phaser from "phaser";
+    import "phaser4-rex-plugins/plugins/awaitloader.js";
+    import AwaitLoaderPlugin from "phaser4-rex-plugins/plugins/awaitloader-plugin.js";
+    import OutlineFilterPlugin from "phaser4-rex-plugins/plugins/outlinefilter-plugin.js";
     import type { Unsubscriber } from "svelte/store";
     import { DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_ENVIRONMENT, SENTRY_RELEASE } from "../Enum/EnvironmentVariable";
     import { HdpiManager } from "../Phaser/Services/HdpiManager";
@@ -179,10 +181,10 @@
             powerPreference: "low-power",
             callbacks: {
                 postBoot: (game) => {
-                    // Install rexOutlinePipeline only if the renderer is WebGL.
+                    // Install rexOutlineFilter only if the renderer is WebGL.
                     const renderer = game.renderer;
                     if (renderer instanceof WebGLRenderer) {
-                        game.plugins.install("rexOutlinePipeline", OutlinePipelinePlugin, true);
+                        game.plugins.install("rexOutlineFilter", OutlineFilterPlugin, true);
                     }
                 },
             },

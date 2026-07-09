@@ -1,6 +1,7 @@
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
+import * as Phaser from "phaser";
 import { Deferred } from "@workadventure/shared-utils";
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { connectionManager } from "../../Connection/ConnectionManager";
@@ -39,6 +40,9 @@ import { generateRandomName } from "../../Utils/RandomNameGenerator";
 import { shouldShowPwaInstallSceneAsync } from "../../Utils/PwaInstallEligibility";
 import { raceTimeout } from "../../Utils/PromiseUtils";
 import { GameScene } from "./GameScene";
+
+import ScenePlugin = Phaser.Scenes.ScenePlugin;
+
 /**
  * This class should be responsible for any scene starting/stopping
  */
@@ -50,7 +54,7 @@ export class GameManager {
     private _startRoomPromise: Deferred<Room> = new Deferred();
     private currentGameSceneName: string | null = null;
     // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
-    private scenePlugin!: Phaser.Scenes.ScenePlugin;
+    private scenePlugin!: ScenePlugin;
     private visitCardUrl: string | null = null;
     private matrixServerUrl: string | undefined = undefined;
     private chatConnectionPromise: Promise<ChatConnectionInterface> | undefined;
@@ -65,7 +69,7 @@ export class GameManager {
         this.chatVisibilitySubscription = initializeChatVisibilitySubscription();
     }
 
-    public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
+    public async init(scenePlugin: ScenePlugin): Promise<string> {
         this.scenePlugin = scenePlugin;
         const result = await connectionManager.initGameConnexion();
         if (result instanceof URL) {

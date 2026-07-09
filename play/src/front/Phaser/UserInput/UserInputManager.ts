@@ -1,4 +1,4 @@
-import type { Direction } from "phaser3-rex-plugins/plugins/virtualjoystick.js";
+import * as Phaser from "phaser";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
@@ -8,11 +8,17 @@ import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandle
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import LL from "../../../i18n/i18n-svelte";
 
+import Key = Phaser.Input.Keyboard.Key;
+import Pointer = Phaser.Input.Pointer;
+import GameObject = Phaser.GameObjects.GameObject;
+
+type Direction = "left" | "right" | "up" | "down";
+
 // Event listeners are valid for the lifetime of the Phaser object and will be garbage collected when the object is destroyed
 /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
 
 interface UserInputManagerDatum extends Shortcut {
-    keyInstance?: Phaser.Input.Keyboard.Key;
+    keyInstance?: Key;
     event: UserInputEvent;
 }
 
@@ -130,6 +136,9 @@ export class UserInputManager {
                         break;
                 }
             }
+        });
+        this.joystick.on("pointerup", () => {
+            this.joystick?.hide(1_000); // Hide the joystick after 1 second of inactivity
         });
     }
 
@@ -340,13 +349,7 @@ export class UserInputManager {
     private bindInputEventHandlers() {
         this.scene.input.on(
             Phaser.Input.Events.POINTER_WHEEL,
-            (
-                pointer: Phaser.Input.Pointer,
-                gameObjects: Phaser.GameObjects.GameObject[],
-                deltaX: number,
-                deltaY: number,
-                deltaZ: number,
-            ) => {
+            (pointer: Pointer, gameObjects: GameObject[], deltaX: number, deltaY: number, deltaZ: number) => {
                 if (this.isInputDisabled) {
                     return;
                 }
@@ -354,49 +357,39 @@ export class UserInputManager {
             },
         );
 
-        this.scene.input.on(
-            Phaser.Input.Events.POINTER_UP,
-            (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
-                this.joystick?.hide(1_000); // Hide the joystick after 1 seconds of inactivity
-                this.userInputHandler.handlePointerUpEvent(pointer, gameObjects);
+        this.scene.input.on(Phaser.Input.Events.POINTER_UP, (pointer: Pointer, gameObjects: GameObject[]) => {
+            this.userInputHandler.handlePointerUpEvent(pointer, gameObjects);
 
-                // Disable focus on iframe (need by Firefox)
-                if (pointer.downElement?.nodeName === "CANVAS" && document.activeElement instanceof HTMLIFrameElement) {
-                    document.activeElement.blur();
-                }
-            },
-        );
+            // Disable focus on iframe (need by Firefox)
+            if (pointer.downElement?.nodeName === "CANVAS" && document.activeElement instanceof HTMLIFrameElement) {
+                document.activeElement.blur();
+            }
+        });
 
-        this.scene.input.on(
-            Phaser.Input.Events.POINTER_DOWN,
-            (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
-                if (this.isInputDisabled) {
-                    return;
-                }
-                this.userInputHandler.handlePointerDownEvent(pointer, gameObjects);
+        this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Pointer, gameObjects: GameObject[]) => {
+            if (this.isInputDisabled) {
+                return;
+            }
+            this.userInputHandler.handlePointerDownEvent(pointer, gameObjects);
 
-                if (!pointer.wasTouch || get(mapEditorModeStore)) {
-                    return;
-                }
+            if (!pointer.wasTouch || get(mapEditorModeStore)) {
+                return;
+            }
 
-                // Let's only display the joystick if there is one finger on the screen
-                if (pointer.event instanceof TouchEvent && pointer.event.touches.length === 1) {
-                    this.joystick?.showAt(pointer.x, pointer.y);
-                } else {
-                    this.joystick?.hide(30_000);
-                }
-            },
-        );
+            // Let's only display the joystick if there is one finger on the screen
+            if (pointer.event instanceof TouchEvent && pointer.event.touches.length === 1) {
+                this.joystick?.showAt(pointer.x, pointer.y);
+            } else {
+                this.joystick?.hide(30_000);
+            }
+        });
 
-        this.scene.input.on(
-            Phaser.Input.Events.POINTER_MOVE,
-            (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
-                if (this.isInputDisabled) {
-                    return;
-                }
-                this.userInputHandler.handlePointerMoveEvent(pointer, gameObjects);
-            },
-        );
+        this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, (pointer: Pointer, gameObjects: GameObject[]) => {
+            if (this.isInputDisabled) {
+                return;
+            }
+            this.userInputHandler.handlePointerMoveEvent(pointer, gameObjects);
+        });
 
         this.scene.input.keyboard?.on("keyup", (event: KeyboardEvent) => {
             if (this.isInputDisabled) {

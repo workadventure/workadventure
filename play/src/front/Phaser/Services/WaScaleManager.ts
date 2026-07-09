@@ -1,8 +1,11 @@
+import * as Phaser from "phaser";
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import type { Game } from "../Game/Game";
 import { ResizableScene } from "../Login/ResizableScene";
 import { HdpiManager } from "./HdpiManager";
+
 import ScaleManager = Phaser.Scale.ScaleManager;
+import Camera = Phaser.Cameras.Scene2D.Camera;
 
 export enum WaScaleManagerEvent {
     RefreshFocusOnTarget = "wa-scale-manager:refresh-focus-on-target",
@@ -50,7 +53,7 @@ export class WaScaleManager {
         this.lastEmittedZoomModifier = this.hdpiManager.zoomModifier;
     }
 
-    public applyNewSize(camera?: Phaser.Cameras.Scene2D.Camera, animating = false): void {
+    public applyNewSize(camera?: Camera, animating = false): void {
         if (this.scaleManager === undefined) {
             return;
         }
@@ -105,7 +108,7 @@ export class WaScaleManager {
     /**
      * Use this in case of resizing while focusing on something
      */
-    public refreshFocusOnTarget(camera?: Phaser.Cameras.Scene2D.Camera): void {
+    public refreshFocusOnTarget(camera?: Camera): void {
         if (!this.focusTarget) {
             return;
         }
@@ -152,7 +155,7 @@ export class WaScaleManager {
         this.setZoomModifier(zoomModifier, camera);
     }
 
-    public setZoomModifier(zoomModifier: number, camera?: Phaser.Cameras.Scene2D.Camera, animating = false): void {
+    public setZoomModifier(zoomModifier: number, camera?: Camera, animating = false): void {
         this.hdpiManager.zoomModifier = zoomModifier;
         this.applyNewSize(camera, animating);
     }
