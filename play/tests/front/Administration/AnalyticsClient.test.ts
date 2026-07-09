@@ -217,6 +217,9 @@ describe("AnalyticsClient admin analytics sink", () => {
         });
 
         // Query string + hash must be stripped to avoid leaking auth tokens to analytics.
+        // fileName is intentionally NOT emitted (document filenames are frequently
+        // sensitive, e.g. NDA-acme.pdf): the exact `properties` match below asserts its
+        // absence — fileExtension + mediaKind carry the analytic signal without the PII.
         expect(sendAdmin).toHaveBeenCalledWith({
             events: [
                 expect.objectContaining({
@@ -227,7 +230,6 @@ describe("AnalyticsClient admin analytics sink", () => {
                         targetUrl: "https://example.com/files/file.pdf",
                         mediaKind: "pdf",
                         triggerProperty: "openLink",
-                        fileName: "file.pdf",
                         fileExtension: "pdf",
                         areaId: "docs-zone",
                         areaName: "Docs zone",
