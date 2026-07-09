@@ -417,6 +417,22 @@ export class MapEditorModeManager {
         mapEditorSelectedToolStore.set(tool);
     }
 
+    public returnToLastMode(): boolean {
+        if (!this.active) {
+            return false;
+        }
+
+        // Only restore exploration when it is the currently active tool. Relying on the
+        // last used tool could switch the active editor tool (Area/Floor/Entity...) to
+        // exploration mode when the Woka menu is closed, which is not desired.
+        if (this.activeTool === EditorToolName.ExploreTheRoom) {
+            this.scene.getCameraManager().setExplorationMode();
+            return true;
+        }
+
+        return false;
+    }
+
     private emitMapEditorUpdate(command: FrontCommandInterface, delay = 0): void {
         const func = () => {
             if (this.scene.connection === undefined) {
