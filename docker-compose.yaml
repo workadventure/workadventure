@@ -179,6 +179,15 @@ services:
       - "traefik.http.routers.front.service=front"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
 
+      # Serve Vite's dev module graph (/src, /node_modules, /@fs) same-origin under the play host
+      # (instead of the pusher 303-redirecting them to front.*). Web Workers must be same-origin, so
+      # without this the matrix-js-sdk IndexedDB worker fails to load cross-origin and persistence
+      # falls back to the main thread. Priority 2 beats the play catch-all (priority 1); the front
+      # router still wins on the front.* host via its longer (higher default priority) Host rule.
+      - "traefik.http.routers.play-vite.rule=HostRegexp(`^.+$`) && (PathPrefix(`/src`) || PathPrefix(`/node_modules`) || PathPrefix(`/@fs`) || PathPrefix(`/@vite`) || PathPrefix(`/@id`))"
+      - "traefik.http.routers.play-vite.priority=2"
+      - "traefik.http.routers.play-vite.service=front"
+
       - "traefik.http.routers.room-api.rule=Host(`room-api.workadventure.localhost`)"
       - "traefik.http.routers.room-api.service=room-api"
       - "traefik.http.services.room-api.loadbalancer.server.port=50051"
