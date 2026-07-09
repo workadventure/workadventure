@@ -13,11 +13,11 @@ function createUser(spaceUserId: string): SpaceUser {
 }
 
 function createSpace(dispatchPrivateEvent: (event: PrivateEvent) => void): ICommunicationSpace {
-    return {
+    const space: ICommunicationSpace = {
         getAllUsers: () => [],
         getUsersInFilter: () => [],
         getUsersToNotify: () => [],
-        getRecordingState: () => ({ isRecording: false, recorder: "", status: "idle" }),
+        getRecordingState: () => ({ isRecording: false, recorder: null, status: "idle" }),
         dispatchPrivateEvent,
         dispatchPublicEvent: vi.fn(),
         getSpaceName: () => "test-space",
@@ -25,7 +25,8 @@ function createSpace(dispatchPrivateEvent: (event: PrivateEvent) => void): IComm
         publishMetadata: vi.fn(),
         stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
         getUser: vi.fn(),
-    } as unknown as ICommunicationSpace;
+    };
+    return space;
 }
 
 function eventsOfCase(
