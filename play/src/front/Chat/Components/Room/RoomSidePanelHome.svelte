@@ -58,6 +58,7 @@
 
     let members = $derived(room.members);
     let roomName = $derived(room.name);
+    let roomTopic = $derived(room.topic);
     let roomType = $derived(room.type);
     let isEncrypted = $derived(room.isEncrypted);
     let canInvite = $derived(room.hasPermissionTo("invite"));
@@ -161,6 +162,11 @@
 
             <div class="min-w-0 flex-1">
                 <div class="truncate text-lg font-bold text-white">{$roomName}</div>
+                {#if $roomTopic}
+                    <div class="mt-0.5 line-clamp-2 break-words text-xs text-white/60" data-testid="roomTopic">
+                        {$roomTopic}
+                    </div>
+                {/if}
                 <div class="mt-1 flex flex-wrap gap-1.5 text-xs text-white/65">
                     <span class="rounded-full bg-white/10 px-2 py-0.5">
                         {$roomType === "direct"
