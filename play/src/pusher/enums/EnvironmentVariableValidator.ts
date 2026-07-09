@@ -60,8 +60,6 @@ export const EnvironmentVariables = z.object({
         .describe(
             "Maximum uWebSockets backpressure bytes accepted on admin websocket connections. Defaults to 1048576.",
         ),
-    // Used only in development
-    VITE_URL: z.string().url().optional().describe("URL of the Vite development server (development only)"),
     // Use "*" to allow any domain
     ALLOWED_CORS_ORIGIN: z
         .string()

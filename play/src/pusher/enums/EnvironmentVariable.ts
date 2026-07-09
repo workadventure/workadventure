@@ -48,7 +48,6 @@ export const PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES = env.PUSHER_ADMIN_WS_MAX_BA
 export const ALLOWED_CORS_ORIGIN = env.ALLOWED_CORS_ORIGIN; // Use "*" to allow any domain
 export const PUSHER_URL = env.PUSHER_URL || "";
 export const FRONT_URL = env.FRONT_URL || "";
-export const VITE_URL = env.VITE_URL || FRONT_URL; // Used only in development
 export const PUBLIC_MAP_STORAGE_URL = env.PUBLIC_MAP_STORAGE_URL || "";
 export const INTERNAL_MAP_STORAGE_URL = env.INTERNAL_MAP_STORAGE_URL;
 export const REDIS_HOST = env.REDIS_HOST;
