@@ -104,6 +104,17 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     public deleteUser(user: SpaceUser): void {
         if (!this.usersToNotify.has(user.spaceUserId)) {
             this.shutdownAllConnections(user);
+        } else {
+            // The user left the filter but is still watching the space (e.g. an attendee that lost
+            // their role): shut down the connections their new state no longer allows.
+            for (const peer of this.getOtherKnownUsers(user.spaceUserId)) {
+                if (
+                    this.hasAnyExistingConnection(user.spaceUserId, peer.spaceUserId) &&
+                    !this.canEstablishConnection(user, peer)
+                ) {
+                    this.shutdownConnection(user.spaceUserId, peer.spaceUserId);
+                }
+            }
         }
 
         for (const userToNotify of this.usersToNotify.values()) {

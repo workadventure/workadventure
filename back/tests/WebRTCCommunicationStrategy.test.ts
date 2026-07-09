@@ -55,6 +55,14 @@ function webRtcDisconnectEvents(events: PrivateEvent[]): PrivateEvent[] {
     return events.filter((event) => event.spaceEvent?.event?.$case === "webRtcDisconnectMessage");
 }
 
+function hasWebRtcDisconnectBetween(events: PrivateEvent[], userId1: string, userId2: string): boolean {
+    return webRtcDisconnectEvents(events).some(
+        (event) =>
+            (event.senderUserId === userId1 && event.receiverUserId === userId2) ||
+            (event.senderUserId === userId2 && event.receiverUserId === userId1),
+    );
+}
+
 describe("WebRTCCommunicationStrategy", () => {
     it("should not start WebRTC when both feedback users are attendees", async () => {
         const attendees = [createUser("attendee-1", "attendee"), createUser("attendee-2", "attendee")];
@@ -181,5 +189,25 @@ describe("WebRTCCommunicationStrategy", () => {
         await strategy.initialize(createUsersMap(attendees), createUsersMap(attendees));
 
         expect(webRtcStartEvents(privateEvents)).toHaveLength(2);
+    });
+
+    it("should close the P2P connection when a watching attendee loses their role", async () => {
+        const speaker = createUser("speaker", "speaker");
+        const attendee = createUser("attendee", "attendee");
+        const users = new Map<string, SpaceUser>([speaker, attendee].map((user) => [user.spaceUserId, user]));
+        const usersToNotify = new Map<string, SpaceUser>([speaker, attendee].map((user) => [user.spaceUserId, user]));
+        const { space, privateEvents } = createSpace([speaker, attendee]);
+        const strategy = new WebRTCCommunicationStrategy(space, users, usersToNotify);
+
+        await strategy.initialize(users, usersToNotify);
+        privateEvents.length = 0;
+
+        // The attendee loses their role while still watching the space. In the real flow the registry
+        // removes them from the filtered `users` set before deleteUser runs.
+        attendee.attendeesState = false;
+        users.delete(attendee.spaceUserId);
+        strategy.deleteUser(attendee);
+
+        expect(hasWebRtcDisconnectBetween(privateEvents, "speaker", "attendee")).toBe(true);
     });
 });
