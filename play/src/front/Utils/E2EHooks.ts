@@ -1,4 +1,5 @@
 import * as Phaser from "phaser";
+import type { ForceFirstPeerUnilateralDestroyResult } from "../Space/SpacePeerManager/SpacePeerManager";
 import { gameManager } from "../Phaser/Game/GameManager";
 
 import Camera = Phaser.Cameras.Scene2D.Camera;
@@ -196,26 +197,16 @@ function testWebRtcRetry(): { spaceName: string; userId: string; triggered: bool
  * This simulates an unexpected local peer destruction without asking the remote peer to close.
  * @returns Information about the triggered failure, or null if no peers found
  */
-async function testWebRtcUnilateralDestroyRetry(): Promise<{
-    spaceName: string;
-    userId: string;
-    triggered: boolean;
-    initiator: boolean;
-    connectionId: string;
-} | null> {
+async function testWebRtcUnilateralDestroyRetry(): Promise<
+    (ForceFirstPeerUnilateralDestroyResult & { spaceName: string }) | null
+> {
     try {
         const spaceRegistry = gameManager.getCurrentGameScene().spaceRegistry;
         const spaces = spaceRegistry.getAll();
 
         const triggerForSpace = async (
             spaceIndex: number,
-        ): Promise<{
-            spaceName: string;
-            userId: string;
-            triggered: boolean;
-            initiator: boolean;
-            connectionId: string;
-        } | null> => {
+        ): Promise<(ForceFirstPeerUnilateralDestroyResult & { spaceName: string }) | null> => {
             const space = spaces[spaceIndex];
             if (!space) {
                 console.warn("[DEBUG] No active video peers found in any space to test unilateral destroy retry");

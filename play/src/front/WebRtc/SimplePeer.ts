@@ -7,7 +7,11 @@ import { asError } from "catch-unknown";
 import { raceTimeout } from "../Utils/PromiseUtils";
 import type { WebRtcSignalReceivedMessageInterface } from "../Connection/ConnexionModels";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import type { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
+import type {
+    ForceFirstPeerUnilateralDestroyResult,
+    SimplePeerConnectionInterface,
+    StreamableSubjects,
+} from "../Space/SpacePeerManager/SpacePeerManager";
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { localStreamStoreForPublishing, type LocalStreamStoreValue } from "../Stores/MediaStore";
 import { RetryWithBackoff } from "../Utils/RetryWithBackoff";
@@ -230,7 +234,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     return;
                 }
 
-                console.info("[WebRTC] connection starting on front", {
+                this._customWebRTCLogger.info("connection starting on front", {
                     userId: user.userId,
                     initiator: user.initiator ?? false,
                     connectionId,
@@ -246,7 +250,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     spaceUser.spaceUserId,
                     this._blockedUsersStore,
                     (intentionalClose: boolean) => {
-                        console.info("[WebRTC] video peer destroyed", {
+                        this._customWebRTCLogger.info("video peer destroyed", {
                             userId: user.userId,
                             initiator: user.initiator ?? false,
                             connectionId,
@@ -527,13 +531,18 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * Attempts to retry a connection by sending a meetingConnectionRestartMessage to the backend
      * The backend will respond with a new webRtcStartMessage containing a new connectionId
      */
-    private attemptRetry(userId: string, connectionId?: string): void {
+    private attemptRetry(userId: string, connectionId: string): void {
         if (this.abortController.signal.aborted) {
             return;
         }
 
-        // Track retry attempt in analytics
-        this._analyticsClient.retryConnectionWebRtc();
+        // Track only the first attempt of a retry cycle in analytics: the scheduler already
+        // incremented the counter, so a value of 1 means this is the first restart of the cycle.
+        // This avoids inflating the metric with every backoff attempt and with both peers
+        // retrying a symmetric failure.
+        if (this.retryManager.getAttemptCount(userId) <= 1) {
+            this._analyticsClient.retryConnectionWebRtc();
+        }
 
         // Send restart message to backend, which will respond with a new webRtcStartMessage
         this._space.emitBackEvent({
@@ -932,12 +941,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * This method is for development/testing purposes only.
      * @returns Information about the triggered failure, or null if no peers exist
      */
-    public async forceFirstPeerUnilateralDestroy(): Promise<{
-        userId: string;
-        triggered: boolean;
-        initiator: boolean;
-        connectionId: string;
-    } | null> {
+    public async forceFirstPeerUnilateralDestroy(): Promise<ForceFirstPeerUnilateralDestroyResult | null> {
         const firstEntry = this.videoPeers.entries().next().value;
 
         if (!firstEntry) {

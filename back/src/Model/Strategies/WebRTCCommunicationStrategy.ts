@@ -19,8 +19,8 @@ class ConnectionManager {
         return this.connections.get(user1Id)?.has(user2Id) ?? false;
     }
 
-    hasConnectionWithConnectionId(user1Id: string, user2Id: string, connectionId: string): boolean {
-        return this.connections.get(user1Id)?.get(user2Id) === connectionId;
+    getConnectionId(user1Id: string, user2Id: string): string | undefined {
+        return this.connections.get(user1Id)?.get(user2Id);
     }
 
     removeUser(userId: string): void {
@@ -282,33 +282,28 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             return;
         }
 
-        if (
-            this.hasExistingConnection(senderUserId, receiverId) ||
-            this.hasExistingConnection(receiverId, senderUserId)
-        ) {
-            if (
-                meetingConnectionRestartMessage.connectionId !== undefined &&
-                !this._connections.hasConnectionWithConnectionId(
-                    senderUserId,
-                    receiverId,
-                    meetingConnectionRestartMessage.connectionId,
-                ) &&
-                !this._connections.hasConnectionWithConnectionId(
-                    receiverId,
-                    senderUserId,
-                    meetingConnectionRestartMessage.connectionId,
-                )
-            ) {
-                return;
-            }
+        // A connection is tracked in both directions with the same id, but a partial cleanup may
+        // leave only one direction, so look both ways to recover the currently tracked id.
+        const existingConnectionId =
+            this._connections.getConnectionId(senderUserId, receiverId) ??
+            this._connections.getConnectionId(receiverId, senderUserId);
 
-            const connectionId = uuidv4();
-            this.sendWebRTCStart(receiverId, senderUserId, true, connectionId);
-            this.sendWebRTCStart(senderUserId, receiverId, false, connectionId);
+        if (existingConnectionId === undefined) {
+            console.warn("No existing connection found for meetingConnectionRestartMessage ", senderUserId, receiverId);
             return;
         }
 
-        console.warn("No existing connection found for meetingConnectionRestartMessage ", senderUserId, receiverId);
+        // Ignore stale restart requests that reference a connection we have already replaced.
+        if (
+            meetingConnectionRestartMessage.connectionId !== undefined &&
+            meetingConnectionRestartMessage.connectionId !== existingConnectionId
+        ) {
+            return;
+        }
+
+        const connectionId = uuidv4();
+        this.sendWebRTCStart(receiverId, senderUserId, true, connectionId);
+        this.sendWebRTCStart(senderUserId, receiverId, false, connectionId);
     }
 
     cleanup(): void {

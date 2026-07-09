@@ -67,6 +67,16 @@ export interface StreamableSubjects {
     screenSharingPeerRemoved: Subject<Streamable>;
 }
 
+/**
+ * [DEBUG] Result of forcing a unilateral video peer destruction to test the retry mechanism.
+ */
+export type ForceFirstPeerUnilateralDestroyResult = {
+    userId: string;
+    triggered: boolean;
+    initiator: boolean;
+    connectionId: string;
+};
+
 export interface SimplePeerConnectionInterface {
     blockedFromRemotePlayer(userId: string): void;
     destroy(): void;
@@ -108,12 +118,7 @@ export interface SimplePeerConnectionInterface {
      * [DEBUG] Unilaterally destroys the first video peer to test retry mechanism.
      * This method is for development/testing purposes only.
      */
-    forceFirstPeerUnilateralDestroy(): Promise<{
-        userId: string;
-        triggered: boolean;
-        initiator: boolean;
-        connectionId: string;
-    } | null>;
+    forceFirstPeerUnilateralDestroy(): Promise<ForceFirstPeerUnilateralDestroyResult | null>;
 }
 
 export interface PeerFactoryInterface {
