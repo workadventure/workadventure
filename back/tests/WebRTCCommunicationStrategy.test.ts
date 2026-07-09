@@ -1,44 +1,24 @@
 import { describe, expect, it, vi } from "vitest";
-import type { PrivateEvent, SpaceUser } from "@workadventure/messages";
+import { FilterType, SpaceUser, type PrivateEvent } from "@workadventure/messages";
 import { WebRTCCommunicationStrategy } from "../src/Model/Strategies/WebRTCCommunicationStrategy";
 import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
 
-vi.mock("@workadventure/messages", () => ({
-    FilterType: {
-        ALL_USERS: 0,
-        LIVE_STREAMING_USERS: 1,
-        LIVE_STREAMING_USERS_WITH_FEEDBACK: 2,
-    },
-}));
-
-const allUsersFilter = 0;
-const feedbackFilter = 2;
-
 function createUser(spaceUserId: string, role: "attendee" | "speaker" | "none"): SpaceUser {
-    return {
+    return SpaceUser.fromPartial({
         spaceUserId,
         uuid: `uuid-${spaceUserId}`,
         name: `User ${spaceUserId}`,
         playUri: "https://play.test",
-        color: "",
-        characterTextures: [],
-        isLogged: false,
-        availabilityStatus: 0,
-        roomName: undefined,
-        visitCardUrl: undefined,
-        tags: [],
-        cameraState: false,
-        microphoneState: false,
-        screenSharingState: false,
         attendeesState: role === "attendee",
         megaphoneState: role === "speaker",
-        jitsiParticipantId: undefined,
-        chatID: undefined,
         showVoiceIndicator: true,
-    };
+    });
 }
 
-function createSpace(users: SpaceUser[], filterType = feedbackFilter) {
+function createSpace(
+    users: SpaceUser[],
+    filterType: Exclude<FilterType, FilterType.UNRECOGNIZED> = FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK,
+) {
     const privateEvents: PrivateEvent[] = [];
     const space: ICommunicationSpace = {
         filterType,
@@ -97,7 +77,7 @@ describe("WebRTCCommunicationStrategy", () => {
         expect(
             webRtcStartEvents(privateEvents)
                 .map((event) => event.receiverUserId)
-                .sort()
+                .sort(),
         ).toEqual(["attendee", "speaker"]);
     });
 
@@ -135,7 +115,7 @@ describe("WebRTCCommunicationStrategy", () => {
         expect(
             webRtcStartEvents(privateEvents)
                 .map((event) => event.receiverUserId)
-                .sort()
+                .sort(),
         ).toEqual(["listener", "speaker"]);
     });
 
@@ -195,7 +175,7 @@ describe("WebRTCCommunicationStrategy", () => {
 
     it("should keep existing WebRTC behavior outside feedback live streaming", async () => {
         const attendees = [createUser("attendee-1", "attendee"), createUser("attendee-2", "attendee")];
-        const { space, privateEvents } = createSpace(attendees, allUsersFilter);
+        const { space, privateEvents } = createSpace(attendees, FilterType.ALL_USERS);
         const strategy = new WebRTCCommunicationStrategy(space, createUsersMap(attendees), createUsersMap(attendees));
 
         await strategy.initialize(createUsersMap(attendees), createUsersMap(attendees));

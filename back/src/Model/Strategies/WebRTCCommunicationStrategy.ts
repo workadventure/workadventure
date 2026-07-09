@@ -79,22 +79,19 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             return Promise.resolve();
         }
 
-        const freshNewUser = this.getFreshUser(newUser);
-
         for (const existingUser of this.usersToNotify.values()) {
             if (existingUser.spaceUserId === newUser.spaceUserId) {
                 continue;
             }
-            const freshExistingUser = this.getFreshUser(existingUser);
             try {
-                if (this.shouldEstablishConnection(freshNewUser, freshExistingUser)) {
-                    this.establishConnection(freshNewUser, freshExistingUser);
+                if (this.shouldEstablishConnection(newUser, existingUser)) {
+                    this.establishConnection(newUser, existingUser);
                 }
             } catch (error) {
                 console.error(
                     "An error occurred while adding a new user to WebRTC discussion",
-                    freshNewUser,
-                    freshExistingUser,
+                    newUser,
+                    existingUser,
                     error,
                 );
                 Sentry.captureException(error);
@@ -128,22 +125,19 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     public async addUserToNotify(user: SpaceUser): Promise<void> {
-        const freshUser = this.getFreshUser(user);
-
         for (const userInFilter of this.users.values()) {
             if (userInFilter.spaceUserId === user.spaceUserId) {
                 continue;
             }
-            const freshUserInFilter = this.getFreshUser(userInFilter);
             try {
-                if (this.shouldEstablishConnection(freshUser, freshUserInFilter)) {
-                    this.establishConnection(freshUser, freshUserInFilter);
+                if (this.shouldEstablishConnection(user, userInFilter)) {
+                    this.establishConnection(user, userInFilter);
                 }
             } catch (error) {
                 console.error(
                     "An error occurred while adding a user to notify in WebRTCCommunicationStrategy",
-                    freshUser,
-                    freshUserInFilter,
+                    user,
+                    userInFilter,
                     error,
                 );
                 Sentry.captureException(error);
@@ -211,19 +205,20 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             return true;
         }
 
+        // The user objects we hold (especially in usersToNotify) can be stale copies: read the roles
+        // from the canonical, up-to-date objects.
+        const freshUser1 = this.getFreshUser(user1);
+        const freshUser2 = this.getFreshUser(user2);
+
+        // P2P is only allowed between feedback participants when one of them is a speaker
         return (
-            this.hasFeedbackStreamingRole(user1) &&
-            this.hasFeedbackStreamingRole(user2) &&
-            this.hasSpeaker(user1, user2)
+            (freshUser1.megaphoneState && this.hasFeedbackStreamingRole(freshUser2)) ||
+            (freshUser2.megaphoneState && this.hasFeedbackStreamingRole(freshUser1))
         );
     }
 
     private hasFeedbackStreamingRole(user: SpaceUser): boolean {
         return user.megaphoneState || user.attendeesState;
-    }
-
-    private hasSpeaker(user1: SpaceUser, user2: SpaceUser): boolean {
-        return user1.megaphoneState || user2.megaphoneState;
     }
 
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {
@@ -251,7 +246,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     private getOtherKnownUsers(userId: string): SpaceUser[] {
         const knownUsers = new Map<string, SpaceUser>([...this.usersToNotify, ...this.users]);
         knownUsers.delete(userId);
-        return Array.from(knownUsers.values(), (user) => this.getFreshUser(user));
+        return Array.from(knownUsers.values());
     }
 
     private getKnownUser(userId: string): SpaceUser | undefined {
@@ -259,7 +254,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     private getFreshUser(user: SpaceUser): SpaceUser {
-        return this.users.get(user.spaceUserId) ?? this._space.getUser(user.spaceUserId) ?? user;
+        return this.getKnownUser(user.spaceUserId) ?? user;
     }
 
     private sendWebRTCStart(senderId: string, receiverId: string, isInitiator: boolean, connectionId: string): void {
@@ -307,18 +302,16 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                 if (user1.spaceUserId === user2.spaceUserId) {
                     return;
                 }
-                const freshUser1 = this.getFreshUser(user1);
-                const freshUser2 = this.getFreshUser(user2);
                 try {
-                    if (this.shouldEstablishConnection(freshUser1, freshUser2)) {
-                        this.establishConnection(freshUser1, freshUser2);
+                    if (this.shouldEstablishConnection(user1, user2)) {
+                        this.establishConnection(user1, user2);
                         return;
                     }
                 } catch (error) {
                     console.error(
                         "An error occurred while initializing WebRTCCommunicationStrategy",
-                        freshUser1,
-                        freshUser2,
+                        user1,
+                        user2,
                         error,
                     );
                     Sentry.captureException(error);
