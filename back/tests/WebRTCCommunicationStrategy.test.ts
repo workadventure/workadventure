@@ -210,4 +210,29 @@ describe("WebRTCCommunicationStrategy", () => {
 
         expect(hasWebRtcDisconnectBetween(privateEvents, "speaker", "attendee")).toBe(true);
     });
+
+    it("should not touch the topology on update outside the feedback filter", () => {
+        const user1 = createUser("user-1", "none");
+        const user2 = createUser("user-2", "none");
+        const { space, privateEvents } = createSpace([user1, user2], FilterType.ALL_USERS);
+        // Outside feedback, connections are driven only by add/delete: an update must be a no-op.
+        const strategy = new WebRTCCommunicationStrategy(space, createUsersMap([user1, user2]), new Map());
+
+        strategy.updateUser(user1);
+
+        expect(webRtcStartEvents(privateEvents)).toHaveLength(0);
+    });
+
+    it("should not connect two feedback users that are not watching on update", () => {
+        const speaker = createUser("speaker", "speaker");
+        const attendee = createUser("attendee", "attendee");
+        const { space, privateEvents } = createSpace([speaker, attendee]);
+        // Both are in the filter but nobody is watching yet (empty usersToNotify), so no P2P pair
+        // exists in the connection matrix.
+        const strategy = new WebRTCCommunicationStrategy(space, createUsersMap([speaker, attendee]), new Map());
+
+        strategy.updateUser(speaker);
+
+        expect(webRtcStartEvents(privateEvents)).toHaveLength(0);
+    });
 });

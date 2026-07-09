@@ -169,13 +169,22 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     public updateUser(user: SpaceUser): void {
+        // The connection topology only depends on a field (role) in the feedback filter. Everywhere
+        // else it is driven solely by add/delete, so an update never has to touch it.
+        if (this._space.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            return;
+        }
         for (const peer of this.getOtherKnownUsers(user.spaceUserId)) {
             const hasExistingConnection = this.hasAnyExistingConnection(user.spaceUserId, peer.spaceUserId);
             if (hasExistingConnection && !this.canEstablishConnection(user, peer)) {
                 this.shutdownConnection(user.spaceUserId, peer.spaceUserId);
                 continue;
             }
-            if (!hasExistingConnection && this.shouldEstablishConnection(user, peer)) {
+            if (
+                !hasExistingConnection &&
+                this.isPairInConnectionMatrix(user.spaceUserId, peer.spaceUserId) &&
+                this.canEstablishConnection(user, peer)
+            ) {
                 this.establishConnection(user, peer);
             }
         }
@@ -230,6 +239,16 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
     private hasFeedbackStreamingRole(user: SpaceUser): boolean {
         return user.megaphoneState || user.attendeesState;
+    }
+
+    /**
+     * Connections are only ever created between a user in the filter and a user watching the space.
+     */
+    private isPairInConnectionMatrix(userId1: string, userId2: string): boolean {
+        return (
+            (this.users.has(userId1) && this.usersToNotify.has(userId2)) ||
+            (this.usersToNotify.has(userId1) && this.users.has(userId2))
+        );
     }
 
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {
