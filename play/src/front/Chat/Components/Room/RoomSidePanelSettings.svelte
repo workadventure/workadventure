@@ -84,18 +84,29 @@
         $canEditName || $canEditTopic || $canEditAccess || $canEditHistory || $canEditPermissions,
     );
 
+    // The access/history <select>s can only represent a subset of the possible Matrix values, so we
+    // collapse the current room state down to the closest representable option (e.g. a "public" or
+    // "knock" join rule shows as "invite", a "shared" history visibility shows as "joined").
+    // saveSettings() reuses these helpers to detect whether the user actually changed the control, so
+    // that editing an unrelated field never rewrites join_rules / history_visibility with the lossy
+    // collapsed value.
+    function currentAccessValue(): ChatRoomSettingsAccess {
+        return $privacyState.joinRule === "restricted" ? "restricted" : "invite";
+    }
+    function currentHistoryValue(): historyVisibility {
+        return historyVisibilityOptions.includes($privacyState.historyVisibility as historyVisibility)
+            ? ($privacyState.historyVisibility as historyVisibility)
+            : "joined";
+    }
+
     $effect.pre(() => {
         if (settingsDirty) {
             return;
         }
         editableName = $roomName;
         editableTopic = $roomTopic;
-        editableAccess = $privacyState.joinRule === "restricted" ? "restricted" : "invite";
-        editableHistoryVisibility = historyVisibilityOptions.includes(
-            $privacyState.historyVisibility as historyVisibility,
-        )
-            ? ($privacyState.historyVisibility as historyVisibility)
-            : "joined";
+        editableAccess = currentAccessValue();
+        editableHistoryVisibility = currentHistoryValue();
     });
 
     $effect.pre(() => {
@@ -137,8 +148,18 @@
     }
 
     async function saveSettings() {
-        const canSaveSettings = $canEditName || $canEditTopic || $canEditAccess || $canEditHistory;
-        const shouldSaveSettings = settingsDirty && canSaveSettings;
+        // Only forward a field when the user actually changed it. Comparing against the collapsed
+        // current value (currentAccessValue / currentHistoryValue) is what prevents an edit to an
+        // unrelated field (e.g. the name) from silently rewriting join_rules / history_visibility to
+        // their lossy representable value — e.g. a "public" room being reset to "invite", or a
+        // "shared" history being reset to "joined".
+        const nameChanged = $canEditName && editableName !== $roomName;
+        const topicChanged = $canEditTopic && editableTopic !== $roomTopic;
+        const accessChanged = $canEditAccess && editableAccess !== currentAccessValue();
+        const historyChanged = $canEditHistory && editableHistoryVisibility !== currentHistoryValue();
+
+        const shouldSaveSettings =
+            settingsDirty && (nameChanged || topicChanged || accessChanged || historyChanged);
         const shouldSavePermissions = permissionsDirty && $canEditPermissions;
 
         if (!shouldSaveSettings && !shouldSavePermissions) {
@@ -151,11 +172,11 @@
             settingsSaving = true;
             if (shouldSaveSettings) {
                 await room.updateRoomSettings({
-                    name: $canEditName ? editableName : undefined,
-                    topic: $canEditTopic ? editableTopic : undefined,
-                    access: $canEditAccess ? editableAccess : undefined,
+                    name: nameChanged ? editableName : undefined,
+                    topic: topicChanged ? editableTopic : undefined,
+                    access: accessChanged ? editableAccess : undefined,
                     restrictedRoomId,
-                    historyVisibility: $canEditHistory ? editableHistoryVisibility : undefined,
+                    historyVisibility: historyChanged ? editableHistoryVisibility : undefined,
                 });
             }
             if (shouldSavePermissions) {
