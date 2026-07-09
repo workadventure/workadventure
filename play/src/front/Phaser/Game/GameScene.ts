@@ -1949,8 +1949,13 @@ export class GameScene extends DirtyScene {
     }
 
     private hide(hide = true): void {
-        this.scene.setVisible(!hide);
-        iframeListener?.hideIFrames(hide);
+        try {
+            this.scene.setVisible(!hide);
+            iframeListener?.hideIFrames(hide);
+        } catch (e) {
+            console.error("Error while hiding scene", e);
+            Sentry.captureException(e);
+        }
     }
 
     /**

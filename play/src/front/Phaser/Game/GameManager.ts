@@ -299,7 +299,7 @@ export class GameManager {
     }
 
     public gameSceneIsCreated(scene: GameScene) {
-        this.currentGameSceneName = scene.scene.key;
+        this.currentGameSceneName = scene.scene != undefined ? scene.scene.key : "default";
         menuIconVisiblilityStore.set(true);
     }
 
