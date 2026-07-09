@@ -23,6 +23,10 @@ const warning: DeepPartial<Translation["warning"]> = {
     backgroundProcessing: {
         failedToApply: "Error al aplicar los efectos de fondo",
     },
+    livekitConnection: {
+        critical: "Es posible que experimente problemas de comunicación con otros usuarios.",
+        warning: "La calidad de audio o video podría verse reducida.",
+    },
     popupBlocked: {
         title: "Bloqueo de ventanas emergentes",
         content: "Por favor, permita ventanas emergentes para este sitio web en la configuración de su navegador.",

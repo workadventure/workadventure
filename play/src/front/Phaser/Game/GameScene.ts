@@ -121,6 +121,7 @@ import NoMicrophoneSoundToast from "../../Components/Toasts/NoMicrophoneSoundToa
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { toastStore } from "../../Stores/ToastStoreSingleton";
 import { audioInterruptedStore } from "../../Stores/AudioInterruptedStore";
+import { runLivekitConnectionCheck } from "../../Livekit/utils/livekitConnectionCheckHandler";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
@@ -2097,6 +2098,12 @@ export class GameScene extends DirtyScene {
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.deleteMapMessageStream.subscribe(() => {
                     mapDeletedPromptStore.set(true);
+                });
+
+                // The livekitCredentialsMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.livekitCredentialsMessageStream.subscribe((message) => {
+                    runLivekitConnectionCheck(message.url, message.token);
                 });
 
                 // The playerDetailsUpdatedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
