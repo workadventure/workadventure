@@ -12,7 +12,6 @@ import { notWaHost } from "../middlewares/NotWaHost";
 import { version } from "../../../package.json";
 import {
     FRONT_ENVIRONMENT_VARIABLES,
-    VITE_URL,
     LOGROCKET_ID,
     AUTOLOGIN_URL,
     GOOGLE_DRIVE_PICKER_CLIENT_ID,
@@ -218,20 +217,11 @@ export class FrontController extends BaseHttpController {
             return;
         });
 
-        this.app.get("/src/{*splat}", (req: Request, res: Response) => {
-            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
-            res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
-        });
-
-        this.app.get("/node_modules/{*splat}", (req: Request, res: Response) => {
-            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
-            res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
-        });
-
-        this.app.get("/@fs/{*splat}", (req: Request, res: Response) => {
-            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
-            res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
-        });
+        // Note: in dev mode, Vite's module paths (/src, /node_modules, /@fs, ...) are served
+        // same-origin under the play host by Traefik (see the `play-vite` router in
+        // docker-compose.yaml), so the pusher no longer redirects them to the Vite dev server.
+        // Serving them same-origin (rather than redirecting cross-origin) is required for Web
+        // Workers to load their module graph.
     }
 
     private async displayFront(req: Request, res: Response, url: string) {
