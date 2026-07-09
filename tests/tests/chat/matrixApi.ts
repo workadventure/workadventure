@@ -180,6 +180,90 @@ class MatrixApi {
         }
     }
 
+    /**
+     * Uses the Synapse admin API to obtain an access token for an arbitrary user. This is required to
+     * read/write room state of private rooms, because the `@admin` user is not a member of them.
+     * See https://element-hq.github.io/synapse/latest/admin_api/user_admin_api.html#login-as-a-user
+     */
+    public async loginAsUser(userId: string): Promise<string> {
+        try {
+            await this.ensureAdminAccessToken();
+            const response = await axios.post<MatrixLoginResponse>(
+                `${matrix_server_url}/_synapse/admin/v1/users/${this.encodeRoomIdForPath(userId)}/login`,
+                {},
+                this.getAuthenticatedHeader(),
+            );
+            return response.data.access_token;
+        } catch (error) {
+            throw asError(error);
+        }
+    }
+
+    /**
+     * Reads a single room state event (e.g. "m.room.join_rules", "m.room.history_visibility",
+     * "m.room.name") using the provided user access token.
+     */
+    public async getRoomStateEvent<T = Record<string, unknown>>(
+        userToken: string,
+        roomId: string,
+        eventType: string,
+    ): Promise<T> {
+        try {
+            const response = await axios.get<T>(
+                `${matrix_server_url}/_matrix/client/r0/rooms/${this.encodeRoomIdForPath(roomId)}/state/${eventType}/`,
+                { headers: { Authorization: `Bearer ${userToken}` } },
+            );
+            return response.data;
+        } catch (error) {
+            throw asError(error);
+        }
+    }
+
+    /**
+     * Writes a single room state event using the provided user access token. Tests use this to force a
+     * room into a state the creation UI cannot produce (e.g. a "public" join rule).
+     */
+    public async setRoomStateEvent(
+        userToken: string,
+        roomId: string,
+        eventType: string,
+        content: Record<string, unknown>,
+    ): Promise<void> {
+        try {
+            await axios.put(
+                `${matrix_server_url}/_matrix/client/r0/rooms/${this.encodeRoomIdForPath(roomId)}/state/${eventType}/`,
+                content,
+                { headers: { Authorization: `Bearer ${userToken}` } },
+            );
+        } catch (error) {
+            throw asError(error);
+        }
+    }
+
+    /**
+     * Returns an access token for the creator of a room (its sole non-admin member for a freshly
+     * created private room), using the Synapse admin API. This avoids hard-coding the Matrix id of the
+     * OIDC test user. The members endpoint reads current room state, so it is available immediately
+     * after the room is created (unlike the stats-backed admin room-list endpoint).
+     */
+    public async getRoomCreatorToken(roomId: string): Promise<string> {
+        try {
+            await this.ensureAdminAccessToken();
+            const response = await axios.get<{ members: string[] }>(
+                `${matrix_server_url}/_synapse/admin/v1/rooms/${this.encodeRoomIdForPath(roomId)}/members`,
+                this.getAuthenticatedHeader(),
+            );
+            const creator =
+                response.data.members.find((member) => member !== MATRIX_ADMIN_USER) ?? response.data.members[0];
+            if (!creator) {
+                throw new Error(`Room ${roomId} has no members`);
+            }
+            return await this.loginAsUser(creator);
+        } catch (error) {
+            throw asError(error);
+        }
+    }
+
     public async overrideRateLimitForUser(userId: string) {
         try {
             await this.ensureAdminAccessToken();

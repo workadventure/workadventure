@@ -47,7 +47,9 @@ function createMessage(id: string, type: ChatMessageType): ChatMessage {
         edit: vi.fn(() => Promise.resolve()),
         isDeleted: readable(false),
         isModified: readable(false),
+        canEdit: readable(false),
         addReaction: vi.fn(() => Promise.resolve()),
+        canReact: readable(false),
         canDelete: readable(false),
     };
 }

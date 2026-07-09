@@ -1,7 +1,7 @@
 import type { MatrixEvent, Room } from "matrix-js-sdk";
-import { EventType, RelationType } from "matrix-js-sdk";
+import { Direction, EventType, RelationType } from "matrix-js-sdk";
 import { MapStore } from "@workadventure/store-utils";
-import type { Writable } from "svelte/store";
+import type { Readable, Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
 import type { ChatMessageReaction, ChatUser } from "../ChatConnection";
 import type { WorkAdventureComponent, WorkAdventureComponentProps } from "../../../../types/component";
@@ -16,10 +16,12 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
     messageId: string;
     users: MapStore<string, ChatUserWithEventId>;
     reacted: Writable<boolean>;
+    canReact: Readable<boolean>;
 
     constructor(
         private matrixRoom: Room,
         event: MatrixEvent,
+        canReactStore?: Readable<boolean>,
     ) {
         const relation = event.getRelation();
         if (relation === null || relation.rel_type !== "m.annotation") {
@@ -36,6 +38,14 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
         this.messageId = targetEventId;
         this.users = new MapStore<string, ChatUserWithEventId>();
         this.reacted = writable(false);
+        this.canReact =
+            canReactStore ??
+            writable(
+                this.matrixRoom
+                    .getLiveTimeline()
+                    .getState(Direction.Backward)
+                    ?.maySendEvent(EventType.Reaction, this.matrixRoom.client.getSafeUserId()) ?? false,
+            );
         this.addUser(event.getSender(), event.getId());
     }
 
@@ -64,6 +74,9 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
     }
 
     react() {
+        if (!get(this.canReact)) {
+            return;
+        }
         const userWithReactionEventId = this.users.get(this.matrixRoom.myUserId);
         if (userWithReactionEventId === undefined) {
             this.sendMyReaction().catch((error) => console.error(error));

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { EventType } from "matrix-js-sdk";
     import { onMount } from "svelte";
     import { get, readable } from "svelte/store";
     import { defaultColor } from "@workadventure/shared-utils";
@@ -13,6 +14,7 @@
         ChatRoomMembershipManagement,
         ChatRoomModeration,
         ChatRoomNotificationControl,
+        ChatRoomSettingsManagement,
         ChatRoomSidePanelHydrationState,
         ChatThreadSummary,
     } from "../../Connection/ChatConnection";
@@ -33,10 +35,20 @@
     import { modals } from "@wa-modals";
 
     interface Props {
-        room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
+        room: ChatRoom &
+            ChatRoomMembershipManagement &
+            ChatRoomModeration &
+            ChatRoomNotificationControl &
+            ChatRoomSettingsManagement;
     }
 
     let { room }: Props = $props();
+
+    let canEditName = $derived(room.hasPermissionForRoomStateEvent(EventType.RoomName));
+    let canEditTopic = $derived(room.hasPermissionForRoomStateEvent(EventType.RoomTopic));
+    let canEditAccess = $derived(room.hasPermissionForRoomStateEvent(EventType.RoomJoinRules));
+    let canEditHistory = $derived(room.hasPermissionForRoomStateEvent(EventType.RoomHistoryVisibility));
+    let canEditPermissions = $derived(room.hasPermissionForRoomStateEvent(EventType.RoomPowerLevels));
 
     const emptyThreads = readable<readonly ChatThreadSummary[]>([]);
     const emptyPolls = readable<readonly ChatPollItem[]>([]);
@@ -51,6 +63,7 @@
 
     let members = $derived(room.members);
     let roomName = $derived(room.name);
+    let roomTopic = $derived(room.topic);
     let roomType = $derived(room.type);
     let isEncrypted = $derived(room.isEncrypted);
     let canInvite = $derived(room.hasPermissionTo("invite"));
@@ -106,6 +119,9 @@
             ? $LL.chat.roomPanel.pollsLoadError()
             : undefined,
     );
+    let hasAnyEditableSettingsField = $derived(
+        $canEditName || $canEditTopic || $canEditAccess || $canEditHistory || $canEditPermissions,
+    );
 
     function openSection(section: RoomSidePanelSection) {
         roomSidePanelStore.setActiveSection(section);
@@ -151,6 +167,11 @@
 
             <div class="min-w-0 flex-1">
                 <div class="truncate text-lg font-bold text-white">{$roomName}</div>
+                {#if $roomTopic}
+                    <div class="mt-0.5 line-clamp-2 break-words text-xs text-white/60" data-testid="roomTopic">
+                        {$roomTopic}
+                    </div>
+                {/if}
                 <div class="mt-1 flex flex-wrap gap-1.5 text-xs text-white/65">
                     <span class="rounded-full bg-white/10 px-2 py-0.5">
                         {$roomType === "direct"
@@ -233,7 +254,9 @@
             >
                 <IconSettings font-size={18} />
                 <div class="mt-2 text-sm font-semibold">{$LL.chat.roomPanel.sections.settings()}</div>
-                <div class="mt-1 text-xs text-white/55">{$LL.chat.roomPanel.home.readOnly()}</div>
+                {#if !hasAnyEditableSettingsField}
+                    <div class="mt-1 text-xs text-white/55">{$LL.chat.roomPanel.home.readOnly()}</div>
+                {/if}
             </button>
         </div>
 

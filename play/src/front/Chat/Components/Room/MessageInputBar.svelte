@@ -78,15 +78,15 @@
     let fileAttachmentComponentOpened = $state(false);
     let fileAttachementEnabled = $state(false);
     let applicationProperty: ApplicationProperty | undefined = $state(undefined);
-    let isProximityChatRoom = $derived(room instanceof ProximityChatRoom);
-    let isDefaultProximityRoom = $derived(
-        room instanceof ProximityChatRoom && room.spaceName === DEFAULT_PROXIMITY_SPACE_NAME,
-    );
-    let proximityChatDisabled = $derived(
-        room instanceof ProximityChatRoom ? room.isChatDisabled : inactiveProximityState,
-    );
-    let proximityRoomJoined = $derived(room instanceof ProximityChatRoom ? room.isJoined : inactiveProximityState);
+    // `room` is snapshotted into a non-reactive const above (the parent keys this component), so all the
+    // values below derived purely from `room` are computed once and never recompute. They are plain consts,
+    // not `$derived`. The stores they hold (e.g. canSendMessages) are still auto-subscribed with `$` at use sites.
+    const isProximityChatRoom = room instanceof ProximityChatRoom;
+    const isDefaultProximityRoom = room instanceof ProximityChatRoom && room.spaceName === DEFAULT_PROXIMITY_SPACE_NAME;
+    const proximityChatDisabled = room instanceof ProximityChatRoom ? room.isChatDisabled : inactiveProximityState;
+    const proximityRoomJoined = room instanceof ProximityChatRoom ? room.isJoined : inactiveProximityState;
     const cannotCreatePoll = readable(false);
+    const canSendMessages = room.canSendMessages ?? readable(true);
 
     function getPollCreationCapability(currentRoom: ChatConversation) {
         return hasChatRoomPollCreation(currentRoom) ? currentRoom.pollCreation : undefined;
@@ -96,8 +96,8 @@
         return hasProximityChatSidePanel(currentRoom);
     }
 
-    let pollCreation = $derived(getPollCreationCapability(room));
-    let canCreatePoll = $derived(pollCreation?.canCreate ?? cannotCreatePoll);
+    const pollCreation = getPollCreationCapability(room);
+    const canCreatePoll = pollCreation?.canCreate ?? cannotCreatePoll;
     let messageInputDisabled = $derived(
         shouldDisableMessageInput({
             disabled,
@@ -105,11 +105,11 @@
             isDefaultProximityRoom,
             isProximityChatDisabled: $proximityChatDisabled,
             isProximityRoomJoined: $proximityRoomJoined,
-        }),
+        }) || !$canSendMessages,
     );
-    let canOpenQuestions = $derived(canOpenQuestionsPanel(room));
+    const canOpenQuestions = canOpenQuestionsPanel(room);
     let replyMessageId: string | null = null;
-    let draftId = $derived(`${room.id}-${localUserStore.getChatId() ?? "0"}`);
+    const draftId = `${room.id}-${localUserStore.getChatId() ?? "0"}`;
 
     const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
@@ -121,6 +121,9 @@
     });
 
     function sendMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
+        if (!$canSendMessages) {
+            return;
+        }
         if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
 
         const isEmptyMessage = message.replace(/<br>/g, "").trim() == "" || message == undefined;
@@ -153,6 +156,9 @@
     }
 
     async function sendMessage(messageToSend: string) {
+        if (!$canSendMessages) {
+            return;
+        }
         if (applicationProperty && applicationProperty.link.length !== 0) {
             room?.sendMessage(applicationProperty.link);
         }
@@ -555,7 +561,7 @@
                 class={applicationButtonClass}
                 onclick={() => openFileAttachmentComponent()}
                 class:bg-secondary-800={fileAttachmentComponentOpened}
-                disabled={!fileAttachementEnabled || isProximityChatRoom}
+                disabled={!fileAttachementEnabled || isProximityChatRoom || !$canSendMessages}
             >
                 <IconPaperclip font-size={32} />
                 <h2 class={applicationTitleClass}>{$LL.chat.fileAttachment.title()}</h2>
