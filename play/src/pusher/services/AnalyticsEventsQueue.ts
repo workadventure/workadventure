@@ -475,7 +475,10 @@ export class AnalyticsEventsQueue {
             }
         }
 
-        throw lastError ?? new Error("Analytics drain deadline reached before the batch could be sent");
+        if (lastError instanceof Error) {
+            throw lastError;
+        }
+        throw new Error("Analytics drain deadline reached before the batch could be sent");
     }
 
     private isNonRetryableError(error: unknown): boolean {
