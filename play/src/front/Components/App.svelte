@@ -7,7 +7,13 @@
     import AwaitLoaderPlugin from "phaser4-rex-plugins/plugins/awaitloader-plugin.js";
     import OutlineFilterPlugin from "phaser4-rex-plugins/plugins/outlinefilter-plugin.js";
     import type { Unsubscriber } from "svelte/store";
-    import { DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_ENVIRONMENT, SENTRY_RELEASE } from "../Enum/EnvironmentVariable";
+    import {
+        DEBUG_MODE,
+        SENTRY_DSN_FRONT,
+        SENTRY_ENVIRONMENT,
+        SENTRY_RELEASE,
+        SENTRY_TRACES_SAMPLE_RATE,
+    } from "../Enum/EnvironmentVariable";
     import { HdpiManager } from "../Phaser/Services/HdpiManager";
     import { EntryScene } from "../Phaser/Login/EntryScene";
     import { LoginScene } from "../Phaser/Login/LoginScene";
@@ -52,11 +58,18 @@
                     dsn: SENTRY_DSN_FRONT,
                     release: SENTRY_RELEASE,
                     environment: SENTRY_ENVIRONMENT,
-                    integrations: [Sentry.browserTracingIntegration()],
-                    // Set tracesSampleRate to 1.0 to capture 100%
-                    // of transactions for performance monitoring.
-                    // We recommend adjusting this value in production
-                    tracesSampleRate: 0.2,
+                    // Drop Sentry's default `browserApiErrors` integration: it wraps
+                    // setTimeout/setInterval/requestAnimationFrame/addEventListener/XHR callbacks and
+                    // re-wraps their arguments on every invocation, a measurable steady-state
+                    // main-thread cost in a real-time/game app. Unhandled errors are still captured
+                    // via the default global handlers.
+                    integrations: (defaultIntegrations) =>
+                        defaultIntegrations
+                            .filter((integration) => integration.name !== "BrowserApiErrors")
+                            .concat(Sentry.browserTracingIntegration()),
+                    // Sample rate for performance tracing; configurable via env (default 0.2).
+                    // Set to 1.0 to capture 100% of transactions.
+                    tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE ?? 0.2,
                     attachStacktrace: true,
                 };
 
