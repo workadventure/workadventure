@@ -543,5 +543,11 @@ class AnalyticsClient {
     pwaInstallFromProfileMenuClick(): void {
         this.posthog?.capture("wa_pwa_install_from_profile_menu_click");
     }
+    socketReconnecting(): void {
+        this.posthog?.capture("wa_socket_reconnecting");
+    }
+    socketReconnected(): void {
+        this.posthog?.capture("wa_socket_reconnected");
+    }
 }
 export const analyticsClient = new AnalyticsClient();
