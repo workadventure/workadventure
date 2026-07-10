@@ -24,7 +24,11 @@ import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages
 import { adminService } from "../services/AdminService";
 import type { ConnectingSocketData, SpaceName } from "../models/Websocket/SocketData";
 import { ClientAbortError } from "../models/ClientAbortError";
-import { ClientNotPartOfSpaceError, UserAlreadyAddedInSpaceError } from "../models/SpaceValidationErrors";
+import {
+    ClientNotPartOfSpaceError,
+    SpaceDestroyedError,
+    UserAlreadyAddedInSpaceError,
+} from "../models/SpaceValidationErrors";
 import { videoQualityAnalyticsQueue } from "../services/VideoQualityAnalyticsQueue";
 import { PusherRoomSocketController } from "../services/PusherRoomSocketController";
 import { AdminWebSocketBackpressureWriter } from "../services/AdminWebSocketBackpressureWriter";
@@ -998,8 +1002,12 @@ export class IoSocketController {
                                             error,
                                         );
 
-                                        // Expected join-space validation error: do not send to Sentry.
-                                        if (!(err instanceof UserAlreadyAddedInSpaceError)) {
+                                        // Expected join-space validation errors and space-destroyed cancellations:
+                                        // do not send to Sentry (already logged above).
+                                        if (
+                                            !(err instanceof UserAlreadyAddedInSpaceError) &&
+                                            !(err instanceof SpaceDestroyedError)
+                                        ) {
                                             Sentry.captureException(err, {
                                                 extra: {
                                                     queryType,
