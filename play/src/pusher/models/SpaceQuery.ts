@@ -1,6 +1,7 @@
 import type { SpaceAnswerMessage, SpaceQueryMessage } from "@workadventure/messages";
 import { asError } from "catch-unknown";
 import type { Space } from "./Space";
+import { SpaceDestroyedError } from "./SpaceValidationErrors";
 
 export class Query {
     private readonly _queries = new Map<
@@ -107,7 +108,7 @@ export class Query {
         for (const query of this._queries.values()) {
             const durationMs = Date.now() - query.createdAt;
             query.reject(
-                new Error(
+                new SpaceDestroyedError(
                     `Query "${query.answerType}" cancelled because the space is being destroyed (pending for ${durationMs}ms)`,
                 ),
             );

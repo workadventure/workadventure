@@ -62,7 +62,7 @@ import { EMBEDDED_DOMAINS_WHITELIST, GRPC_MAX_MESSAGE_SIZE, SECRET_KEY } from ".
 import type { SpaceInterface } from "../models/Space";
 import { Space } from "../models/Space";
 import { SpaceConnection } from "../models/SpaceConnection";
-import { ClientNotPartOfSpaceError } from "../models/SpaceValidationErrors";
+import { ClientNotPartOfSpaceError, SpaceDestroyedError } from "../models/SpaceValidationErrors";
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
 import { eventProcessor } from "../models/eventProcessorInit";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -538,7 +538,10 @@ export class SocketManager implements ZoneEventListener {
             }
             space.forwarder.unregisterUser(client).catch((error) => {
                 console.error("Error while unregistering user from space after abort", error);
-                Sentry.captureException(error);
+                // The space being destroyed is an expected lifecycle event: log it but don't report to Sentry.
+                if (!(error instanceof SpaceDestroyedError)) {
+                    Sentry.captureException(error);
+                }
             });
         });
     }
@@ -797,7 +800,10 @@ export class SocketManager implements ZoneEventListener {
                     return { space, spaceName, success: true };
                 } catch (error) {
                     console.error(`Error unregistering user from space ${spaceName}:`, error);
-                    Sentry.captureException(error);
+                    // The space being destroyed is an expected lifecycle event: log it but don't report to Sentry.
+                    if (!(error instanceof SpaceDestroyedError)) {
+                        Sentry.captureException(error);
+                    }
                     return { space, spaceName, success: false };
                 }
             } else {

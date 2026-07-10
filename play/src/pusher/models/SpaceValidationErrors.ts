@@ -50,6 +50,17 @@ export class UserAlreadyInSpaceError extends Error {
 }
 
 /**
+ * Thrown to reject pending queries when the space they belong to is being destroyed.
+ * This is an expected lifecycle event, so it is logged but not sent to Sentry.
+ */
+export class SpaceDestroyedError extends Error {
+    constructor(message: string, options?: { cause?: Error }) {
+        super(message, options);
+        this.name = "SpaceDestroyedError";
+    }
+}
+
+/**
  * Thrown when a client attempts an operation on a space they are not part of.
  * Used to avoid sending expected validation errors to Sentry.
  */
