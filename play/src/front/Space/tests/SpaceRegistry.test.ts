@@ -301,10 +301,12 @@ describe("SpaceProviderInterface implementation", () => {
                 // Delay emitJoinSpace so the server round-trip is still in flight when the second
                 // join starts. This is the window where the old "exist() then create" logic would
                 // let both joins pass the existence check.
-                let resolveJoin: (spaceUserId: string) => void;
-                const joinAnswerPromise = new Promise<string>((resolve) => {
-                    resolveJoin = resolve;
-                });
+                let resolveJoin: (answer: { spaceUserId: string; activeMicrophoneCount: number }) => void;
+                const joinAnswerPromise = new Promise<{ spaceUserId: string; activeMicrophoneCount: number }>(
+                    (resolve) => {
+                        resolveJoin = resolve;
+                    },
+                );
                 roomConnectionMock.emitJoinSpace.mockImplementation(() => joinAnswerPromise);
 
                 const firstJoin = spaceRegistry.joinSpace(
@@ -321,7 +323,7 @@ describe("SpaceProviderInterface implementation", () => {
                 );
 
                 // Let the in-flight server answer arrive.
-                resolveJoin!("space-user-id");
+                resolveJoin!({ spaceUserId: "space-user-id", activeMicrophoneCount: 0 });
 
                 const [firstSpace, secondSpace] = await Promise.all([firstJoin, secondJoin]);
 
