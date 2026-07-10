@@ -8,6 +8,15 @@ import type { ProximityChatRoom } from "./ProximityChatRoom";
 
 export const DEFAULT_PROXIMITY_SPACE_NAME = "proximity";
 
+/**
+ * Deadlock backstop for room join/leave operations. Without it, a single operation whose server
+ * round-trip never resolves would wedge the queue for that space forever, blocking every later
+ * join/leave. Set high enough that it only fires on a genuine hang, never on ordinary slowness:
+ * on timeout LockByKey releases the queue while the abandoned callback may still be alive, which
+ * can reintroduce the race the lock guards against — an acceptable trade only for a true deadlock.
+ */
+const ROOM_OPERATION_LOCK_TIMEOUT_MS = 10_000;
+
 export type ProximityChatRoomKind = "default" | "proximity" | "meeting" | "listener" | "speaker" | "area";
 
 export type ProximityChatRoomFactory = (
@@ -52,12 +61,11 @@ export class ProximityChatRoomManager {
      * alive in the SpaceRegistry but unreachable from this manager (every later join of that space
      * then throws SpaceAlreadyExistError, and leaves become no-ops). This happens when a user
      * crosses quickly from a megaphone zone to another one mapped to the same space.
-     * No timeout is used: on timeout LockByKey starts the next queued operation while the previous
-     * one is still running, which would reintroduce the race.
+     * A large timeout (ROOM_OPERATION_LOCK_TIMEOUT_MS) is used only as a deadlock backstop: a wedged
+     * operation would otherwise block the queue forever. It should never fire under normal slowness;
+     * if it does, the timeout is reported below.
      */
     private readonly roomOperationLocks = new LockByKey<string>(
-        // No timeout is ever passed for proximity room operations, so this should never fire; report it
-        // defensively in case that ever changes.
         (error, key, timeoutMs) => {
             console.error(`Proximity room operation timed out for space: ${key}`, error);
             Sentry.captureException(error, {
@@ -118,15 +126,19 @@ export class ProximityChatRoomManager {
         signal?: AbortSignal,
         kind: ProximityChatRoomKind = "area",
     ): Promise<ProximityChatRoom> {
-        return this.roomOperationLocks.waitForLock(spaceName, async () => {
-            const room = this.getOrCreateRoom(spaceName, displayName, kind);
-            await room.joinSpace(spaceName, propertiesToSync, isMeetingRoomChat, filterType, disableChat, signal);
-            room.isJoined.set(true);
-            this.markAsLastJoined(spaceName);
-            this._activeRoomStore.set(room);
-            this.syncRoomsStore();
-            return room;
-        });
+        return this.roomOperationLocks.waitForLock(
+            spaceName,
+            async () => {
+                const room = this.getOrCreateRoom(spaceName, displayName, kind);
+                await room.joinSpace(spaceName, propertiesToSync, isMeetingRoomChat, filterType, disableChat, signal);
+                room.isJoined.set(true);
+                this.markAsLastJoined(spaceName);
+                this._activeRoomStore.set(room);
+                this.syncRoomsStore();
+                return room;
+            },
+            ROOM_OPERATION_LOCK_TIMEOUT_MS,
+        );
     }
 
     public joinDefaultSpace(
@@ -134,72 +146,84 @@ export class ProximityChatRoomManager {
         propertiesToSync: string[],
         signal?: AbortSignal,
     ): Promise<ProximityChatRoom> {
-        return this.roomOperationLocks.waitForLock(DEFAULT_PROXIMITY_SPACE_NAME, async () => {
-            const room = this.getOrCreateRoom(DEFAULT_PROXIMITY_SPACE_NAME, get(LL).chat.proximity(), "default");
-            await room.joinSpace(spaceName, propertiesToSync, false, FilterType.ALL_USERS, false, signal);
-            room.isJoined.set(true);
-            this.markAsLastJoined(DEFAULT_PROXIMITY_SPACE_NAME);
-            this._activeRoomStore.set(room);
-            this.syncRoomsStore();
-            return room;
-        });
+        return this.roomOperationLocks.waitForLock(
+            DEFAULT_PROXIMITY_SPACE_NAME,
+            async () => {
+                const room = this.getOrCreateRoom(DEFAULT_PROXIMITY_SPACE_NAME, get(LL).chat.proximity(), "default");
+                await room.joinSpace(spaceName, propertiesToSync, false, FilterType.ALL_USERS, false, signal);
+                room.isJoined.set(true);
+                this.markAsLastJoined(DEFAULT_PROXIMITY_SPACE_NAME);
+                this._activeRoomStore.set(room);
+                this.syncRoomsStore();
+                return room;
+            },
+            ROOM_OPERATION_LOCK_TIMEOUT_MS,
+        );
     }
 
     public leaveDefaultSpace(spaceName: string): Promise<void> {
-        return this.roomOperationLocks.waitForLock(DEFAULT_PROXIMITY_SPACE_NAME, async () => {
-            const room = this.getDefaultRoom();
-            if (!room) {
-                return;
-            }
+        return this.roomOperationLocks.waitForLock(
+            DEFAULT_PROXIMITY_SPACE_NAME,
+            async () => {
+                const room = this.getDefaultRoom();
+                if (!room) {
+                    return;
+                }
 
-            const didLeave = await room.leaveSpace(spaceName, false);
-            if (!didLeave) {
-                return;
-            }
-            room.isJoined.set(false);
-            const lastJoinedIndex = this.lastJoinedSpaceNames.indexOf(DEFAULT_PROXIMITY_SPACE_NAME);
-            if (lastJoinedIndex !== -1) {
-                this.lastJoinedSpaceNames.splice(lastJoinedIndex, 1);
-            }
+                const didLeave = await room.leaveSpace(spaceName, false);
+                if (!didLeave) {
+                    return;
+                }
+                room.isJoined.set(false);
+                const lastJoinedIndex = this.lastJoinedSpaceNames.indexOf(DEFAULT_PROXIMITY_SPACE_NAME);
+                if (lastJoinedIndex !== -1) {
+                    this.lastJoinedSpaceNames.splice(lastJoinedIndex, 1);
+                }
 
-            const activeRoom = get(this._activeRoomStore);
-            if (activeRoom?.spaceName === DEFAULT_PROXIMITY_SPACE_NAME) {
-                this._activeRoomStore.set(this.resolveMostRecentJoinedRoom());
-            }
+                const activeRoom = get(this._activeRoomStore);
+                if (activeRoom?.spaceName === DEFAULT_PROXIMITY_SPACE_NAME) {
+                    this._activeRoomStore.set(this.resolveMostRecentJoinedRoom());
+                }
 
-            this.syncRoomsStore();
-        });
+                this.syncRoomsStore();
+            },
+            ROOM_OPERATION_LOCK_TIMEOUT_MS,
+        );
     }
 
     public leaveSpace(spaceName: string, isMeetingRoomChat = false): Promise<void> {
-        return this.roomOperationLocks.waitForLock(spaceName, async () => {
-            const room = this.rooms.get(spaceName);
-            if (!room) {
-                return;
-            }
+        return this.roomOperationLocks.waitForLock(
+            spaceName,
+            async () => {
+                const room = this.rooms.get(spaceName);
+                if (!room) {
+                    return;
+                }
 
-            const didLeave = await room.leaveSpace(spaceName, isMeetingRoomChat);
-            if (!didLeave) {
-                return;
-            }
-            room.isJoined.set(false);
-            const lastJoinedIndex = this.lastJoinedSpaceNames.indexOf(spaceName);
-            if (lastJoinedIndex !== -1) {
-                this.lastJoinedSpaceNames.splice(lastJoinedIndex, 1);
-            }
+                const didLeave = await room.leaveSpace(spaceName, isMeetingRoomChat);
+                if (!didLeave) {
+                    return;
+                }
+                room.isJoined.set(false);
+                const lastJoinedIndex = this.lastJoinedSpaceNames.indexOf(spaceName);
+                if (lastJoinedIndex !== -1) {
+                    this.lastJoinedSpaceNames.splice(lastJoinedIndex, 1);
+                }
 
-            if (!get(room.hasUserMessages) && spaceName !== DEFAULT_PROXIMITY_SPACE_NAME) {
-                room.destroy();
-                this.rooms.delete(spaceName);
-            }
+                if (!get(room.hasUserMessages) && spaceName !== DEFAULT_PROXIMITY_SPACE_NAME) {
+                    room.destroy();
+                    this.rooms.delete(spaceName);
+                }
 
-            const activeRoom = get(this._activeRoomStore);
-            if (activeRoom?.spaceName === spaceName) {
-                this._activeRoomStore.set(this.resolveMostRecentJoinedRoom());
-            }
+                const activeRoom = get(this._activeRoomStore);
+                if (activeRoom?.spaceName === spaceName) {
+                    this._activeRoomStore.set(this.resolveMostRecentJoinedRoom());
+                }
 
-            this.syncRoomsStore();
-        });
+                this.syncRoomsStore();
+            },
+            ROOM_OPERATION_LOCK_TIMEOUT_MS,
+        );
     }
 
     public resolveTargetRoom(spaceName?: string): ProximityChatRoom | undefined {
