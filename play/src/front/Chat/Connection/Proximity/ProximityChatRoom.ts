@@ -118,6 +118,13 @@ type SoundManager = Pick<
 
 const MAX_PARTICIPANTS_FOR_SOUND_NOTIFICATIONS = 5;
 
+// Deadlock backstop for getFirstUsers: if the peer's browser never registers in the space,
+// observeUserJoined would never fire and joinSpace would hang forever. Set below the LockByKey
+// backstop (ROOM_OPERATION_LOCK_TIMEOUT_MS = 10_000) so this fires first, letting joinSpace finish
+// cleanly before the room operation lock queue is released. High enough to only fire on a genuine
+// hang, never on ordinary slowness.
+const GET_FIRST_USERS_TIMEOUT_MS = 9_000;
+
 export class ProximityChatRoom implements ChatRoom {
     id: string;
     conversationKind = "room" as const;
@@ -342,6 +349,11 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     private addEnteringChatWithUsers(users: SpaceUserExtended[]) {
+        // No peer to announce (e.g. getFirstUsers hit its backstop while alone). A late peer will
+        // be announced by the observeUserJoined observers instead, so skip the empty message here.
+        if (users.length === 0) {
+            return;
+        }
         let userNames: string;
         if (Intl.ListFormat) {
             const formatter = new Intl.ListFormat(get(locale), { style: "long", type: "conjunction" });
@@ -1280,24 +1292,32 @@ export class ProximityChatRoom implements ChatRoom {
         }
 
         return new Promise<SpaceUserExtended[]>((resolve, reject) => {
+            const cleanup = () => {
+                subscription.unsubscribe();
+                clearTimeout(timeout);
+                options.signal.removeEventListener("abort", onAbort);
+            };
             const onAbort = (event: Event) => {
+                cleanup();
                 reject(asError(eventToAbortReason(event)));
             };
             const subscription = space.observeUserJoined.subscribe((user) => {
                 if (user.spaceUserId !== this._spaceUserId) {
+                    cleanup();
                     resolve([user]);
-                    subscription.unsubscribe();
-                    options.signal.removeEventListener("abort", onAbort);
                 }
             });
-            options.signal.addEventListener(
-                "abort",
-                (event: Event) => {
-                    subscription.unsubscribe();
-                    reject(asError(eventToAbortReason(event)));
-                },
-                { once: true },
-            );
+            // Deadlock backstop: if the peer's browser never registers in the space, observeUserJoined
+            // never fires. Resolve with no peer rather than hanging joinSpace forever; a late peer is
+            // still handled by the observeUserJoined observers wired later in joinSpace.
+            const timeout = setTimeout(() => {
+                Sentry.captureMessage(
+                    `getFirstUsers backstop fired: no peer joined space "${space.getName()}" within ${GET_FIRST_USERS_TIMEOUT_MS}ms`,
+                );
+                cleanup();
+                resolve([]);
+            }, GET_FIRST_USERS_TIMEOUT_MS);
+            options.signal.addEventListener("abort", onAbort, { once: true });
         });
     }
 
