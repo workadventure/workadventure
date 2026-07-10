@@ -214,7 +214,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             } else if (peerConnectionValue.connectionId !== connectionId) {
                 // The connectionId has changed (e.g., due to a reconnection attempt).
                 // We need to destroy the old peer and create a new one with the new connectionId.
-                peerConnection.abortController.abort();
+                // Abort with the "intentional" reason: this is an internal replacement, not a failure,
+                // so it must not trigger the retry flow (handleConnectionFailure) for the old peer.
+                peerConnection.abortController.abort("intentional");
             } else {
                 return peerConnectionValue;
             }
