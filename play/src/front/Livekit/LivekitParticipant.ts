@@ -21,6 +21,10 @@ import { subscribeToVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytic
 import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
 import type { Streamable } from "../Space/Streamable";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
+import {
+    type VideoSubscriptionBatcher,
+    videoSubscriptionBatcher as sharedVideoSubscriptionBatcher,
+} from "./VideoSubscriptionBatcher";
 
 // Maximize/minimize can briefly mount 2 video components for the same participant.
 // Delaying the final unsubscribe avoids sending a false->true bounce to LiveKit during that handoff.
@@ -90,6 +94,9 @@ export class LiveKitParticipant {
         private _blockedUsersStore: Readable<Set<string>>,
         private abortSignal: AbortSignal,
         private defaultVolume: number = get(volumeProximityDiscussionStore),
+        // Shared by default so video subscription changes across all participants batch together and
+        // collapse into a single LiveKit renegotiation. Injectable for tests.
+        private videoSubscriptionBatcher: VideoSubscriptionBatcher = sharedVideoSubscriptionBatcher,
     ) {
         incrementLivekitConnectionsCount();
         this.boundHandleTrackPublished = this.handleTrackPublished.bind(this);
@@ -209,7 +216,9 @@ export class LiveKitParticipant {
             }
 
             this._cameraVideoSubscribed = subscribed;
-            this._cameraPublication?.setSubscribed(subscribed);
+            if (this._cameraPublication) {
+                this.videoSubscriptionBatcher.request(this._cameraPublication, subscribed);
+            }
             return;
         }
 
@@ -218,16 +227,22 @@ export class LiveKitParticipant {
         }
 
         this._screenShareVideoSubscribed = subscribed;
-        this._screenSharePublication?.setSubscribed(subscribed);
+        if (this._screenSharePublication) {
+            this.videoSubscriptionBatcher.request(this._screenSharePublication, subscribed);
+        }
     }
 
     private syncVideoSubscriptionState(type: "camera" | "screenShare") {
         if (type === "camera") {
-            this._cameraPublication?.setSubscribed(this._cameraVideoSubscribed);
+            if (this._cameraPublication) {
+                this.videoSubscriptionBatcher.request(this._cameraPublication, this._cameraVideoSubscribed);
+            }
             return;
         }
 
-        this._screenSharePublication?.setSubscribed(this._screenShareVideoSubscribed);
+        if (this._screenSharePublication) {
+            this.videoSubscriptionBatcher.request(this._screenSharePublication, this._screenShareVideoSubscribed);
+        }
     }
 
     private isScriptingAudioPublication(publication: TrackPublication): boolean {
