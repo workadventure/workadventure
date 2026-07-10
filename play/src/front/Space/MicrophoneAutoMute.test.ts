@@ -43,7 +43,7 @@ vi.mock("../Stores/MediaStore", () => {
     };
 });
 
-vi.mock("../Stores/ToastStoreSingleton", () => ({ toastStore: { addToast: vi.fn() } }));
+vi.mock("../Stores/ToastStoreSingleton", () => ({ toastStore: { addToast: vi.fn(), removeToast: vi.fn() } }));
 vi.mock("../Components/Toasts/MicrophoneAutoMuteToast.svelte", () => ({ default: {} }));
 
 const mic = requestedMicrophoneState as unknown as {
@@ -51,7 +51,14 @@ const mic = requestedMicrophoneState as unknown as {
     disableMicrophone: (() => void) & { mockClear: () => void };
     __setValue: (v: boolean) => void;
 };
-const addToast = toastStore.addToast as unknown as (() => void) & { mockClear: () => void };
+const addToast = toastStore.addToast as unknown as ((...args: unknown[]) => void) & {
+    mockClear: () => void;
+    mock: { calls: unknown[][] };
+};
+const removeToast = toastStore.removeToast as unknown as ((...args: unknown[]) => void) & {
+    mockClear: () => void;
+    mock: { calls: unknown[][] };
+};
 
 function user(spaceUserId: string, microphoneState: boolean, megaphoneState = false): Readonly<SpaceUserExtended> {
     return { spaceUserId, microphoneState, megaphoneState } as unknown as SpaceUserExtended;
@@ -68,6 +75,7 @@ beforeEach(() => {
     mic.enableMicrophone.mockClear();
     mic.disableMicrophone.mockClear();
     addToast.mockClear();
+    removeToast.mockClear();
 });
 
 describe("countActiveMicrophones", () => {
@@ -158,6 +166,18 @@ describe("restoreMicrophoneAutoMuteOnLeave", () => {
 
         restoreMicrophoneAutoMuteOnLeave(space);
         expect(mic.enableMicrophone).toHaveBeenCalledTimes(1);
+    });
+
+    it("dismisses the warning toast when the user leaves the space", () => {
+        const space = makeSpace();
+        evaluateMicrophoneAutoMute(space, 6);
+        // The toast was added with a generated id (3rd argument of addToast).
+        const toastUuid = addToast.mock.calls[0][2];
+
+        restoreMicrophoneAutoMuteOnLeave(space);
+
+        expect(removeToast).toHaveBeenCalledTimes(1);
+        expect(removeToast).toHaveBeenCalledWith(toastUuid);
     });
 
     it("does not restore when the user manually toggled the microphone during the meeting", () => {
