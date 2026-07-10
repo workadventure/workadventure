@@ -1,5 +1,6 @@
 import { get, type Unsubscriber } from "svelte/store";
 import { FilterType } from "@workadventure/messages";
+import { v4 } from "uuid";
 import { requestedMicrophoneState } from "../Stores/MediaStore";
 import { toastStore } from "../Stores/ToastStoreSingleton";
 import MicrophoneAutoMuteToast from "../Components/Toasts/MicrophoneAutoMuteToast.svelte";
@@ -35,6 +36,8 @@ import type { SpaceInterface, SpaceUserExtended } from "./SpaceInterface";
 interface AutoMuteRecord {
     /** Set to true as soon as the user manually toggles the microphone after we auto-muted it. */
     manuallyToggled: boolean;
+    /** Id of the warning toast, so it can be dismissed when the user leaves the space. */
+    toastUuid: string;
     /** Stops watching for a manual toggle. */
     unsubscribe: Unsubscriber;
 }
@@ -126,8 +129,10 @@ export function evaluateMicrophoneAutoMute(space: SpaceInterface, activeMicropho
     }
 
     // Auto-mute and warn the user (the toast pulls its own text and offers a one-click unmute).
+    // Use a known id so the toast can be dismissed when the user leaves the space (see restore below).
+    const toastUuid = v4();
     requestedMicrophoneState.disableMicrophone();
-    toastStore.addToast(MicrophoneAutoMuteToast, {}, undefined);
+    toastStore.addToast(MicrophoneAutoMuteToast, {}, toastUuid);
 
     // Watch for a manual toggle so we know whether to restore the previous state on leave.
     // Svelte fires the subscriber immediately with the current value (false, i.e. our own mute); we
@@ -135,6 +140,7 @@ export function evaluateMicrophoneAutoMute(space: SpaceInterface, activeMicropho
     let skipInitial = true;
     const record: AutoMuteRecord = {
         manuallyToggled: false,
+        toastUuid,
         unsubscribe: () => {},
     };
     record.unsubscribe = requestedMicrophoneState.subscribe(() => {
@@ -159,6 +165,9 @@ export function restoreMicrophoneAutoMuteOnLeave(space: SpaceInterface): void {
     }
     autoMutedSpaces.delete(space);
     record.unsubscribe();
+
+    // Dismiss the "muted automatically" warning — it is only relevant while in the meeting.
+    toastStore.removeToast(record.toastUuid);
 
     if (!record.manuallyToggled) {
         // We muted on entry and the user left it untouched: restore the microphone they had on before.
