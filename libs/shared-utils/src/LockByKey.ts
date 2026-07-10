@@ -11,8 +11,14 @@ export class LockByKey<T> {
     /**
      * @param onTimeout Called when an operation exceeds its timeout, just before the returned promise rejects.
      *                  Use it to report the timeout (e.g. to Sentry).
+     * @param onError   Called when a queued callback rejects, just before the returned promise rejects.
+     *                  Use it to report the failure (e.g. console.error + Sentry). The error still
+     *                  propagates to the caller of waitForLock; this is only for observability.
      */
-    constructor(private readonly onTimeout?: (error: Error, key: T, timeoutMs: number) => void) {}
+    constructor(
+        private readonly onTimeout: (error: Error, key: T, timeoutMs: number) => void,
+        private readonly onError: (error: Error, key: T) => void,
+    ) {}
 
     /**
      * Wraps a promise with a timeout.
@@ -22,7 +28,7 @@ export class LockByKey<T> {
         return new Promise<R>((resolve, reject) => {
             const timeoutHandle = setTimeout(() => {
                 const error = new Error(`Lock timeout after ${timeoutMs}ms for key: ${String(key)}`);
-                this.onTimeout?.(error, key, timeoutMs);
+                this.onTimeout(error, key, timeoutMs);
                 reject(error);
             }, timeoutMs);
 
@@ -53,7 +59,14 @@ export class LockByKey<T> {
 
         // Chain the new operation after the previous one
         const newOperation = previousOperation.then(() => {
-            const result = callback();
+            // Tap the raw callback rejection for observability, then rethrow so the caller still sees
+            // it. Tapping here (not on the timeout wrapper) avoids double-reporting a timeout, which is
+            // already surfaced through onTimeout.
+            const result = callback().catch((err: unknown) => {
+                const error = asError(err);
+                this.onError(error, key);
+                throw error;
+            });
             return timeoutMs === undefined ? result : this.withTimeout(result, timeoutMs, key);
         });
 
