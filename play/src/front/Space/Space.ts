@@ -46,6 +46,11 @@ import type { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegi
 import type { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
 import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
+import {
+    countActiveMicrophones,
+    evaluateMicrophoneAutoMute,
+    restoreMicrophoneAutoMuteOnLeave,
+} from "./MicrophoneAutoMute";
 import { recordingSchema, spaceMetadataValidator } from "./SpaceMetadataValidator";
 import { VideoBox } from "./VideoBox";
 import type { Streamable } from "./Streamable";
@@ -129,6 +134,9 @@ export class Space implements SpaceInterface {
         private _mySpaceUserId: SpaceUser["spaceUserId"],
         // True if the user has the right to start recording in this space
         canRecord: boolean,
+        // Number of other users already publishing audio when the local user joined this space
+        // (reported by the back). Used to auto-mute before publishing in an already-crowded space.
+        public readonly initialActiveMicrophoneCount: number = 0,
         private _blackListManager: BlackListManager = blackListManager,
         private _highlightedEmbedScreenStore = highlightedEmbedScreen,
     ) {
@@ -351,9 +359,14 @@ export class Space implements SpaceInterface {
             canRecord?: boolean;
         },
     ): Promise<Space> {
-        const spaceUserId = await connection.emitJoinSpace(name, filterType, propertiesToSync, {
-            signal,
-        });
+        const { spaceUserId, activeMicrophoneCount } = await connection.emitJoinSpace(
+            name,
+            filterType,
+            propertiesToSync,
+            {
+                signal,
+            },
+        );
         return new Space(
             name,
             options?.metadata ?? new Map<string, unknown>(),
@@ -362,6 +375,7 @@ export class Space implements SpaceInterface {
             propertiesToSync,
             spaceUserId,
             options?.canRecord ?? false,
+            activeMicrophoneCount,
         );
     }
 
@@ -1103,6 +1117,18 @@ export class Space implements SpaceInterface {
             throw new Error("Cannot start streaming in a ALL_USERS space because everyone is always streaming");
         }
 
+        // Going live on a podium: if the stage already has too many active microphones, auto-mute.
+        // The join-time hook fires too early for the megaphone-button flow (the space is joined at map
+        // load, before going live), so this is the evaluation point that covers it. We count from the
+        // already-loaded roster and mute BEFORE enabling streaming below, so the audio track for an
+        // over-limit speaker is never published (no publish-then-mute renegotiation).
+        const activeMicrophoneCount = countActiveMicrophones(
+            get(this.usersStore),
+            this._mySpaceUserId,
+            this.filterType,
+        );
+        evaluateMicrophoneAutoMute(this, activeMicrophoneCount);
+
         this.emitUpdateUser({
             megaphoneState: true,
         });
@@ -1122,6 +1148,9 @@ export class Space implements SpaceInterface {
             megaphoneState: false,
         });
         this._isSpeakerStreamingStore.set(false);
+
+        // Leaving the stage: restore the microphone if we auto-muted it when going live.
+        restoreMicrophoneAutoMuteOnLeave(this);
     }
 
     /**
@@ -1241,7 +1270,7 @@ export class Space implements SpaceInterface {
         ]);
 
         (async () => {
-            const spaceUserId = await this._connection.emitJoinSpace(
+            const { spaceUserId } = await this._connection.emitJoinSpace(
                 this.name,
                 this.filterType,
                 this._propertiesToSync,

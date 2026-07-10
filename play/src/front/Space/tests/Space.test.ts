@@ -97,7 +97,7 @@ const startRecordingSpy = vi.fn();
 const stopRecordingSpy = vi.fn();
 
 const defaultRoomConnectionMock = {
-    emitJoinSpace: vi.fn(),
+    emitJoinSpace: vi.fn().mockResolvedValue({ spaceUserId: "space-user-id", activeMicrophoneCount: 0 }),
     emitLeaveSpace: vi.fn(),
     emitAddSpaceFilter: vi.fn(),
     emitRemoveSpaceFilter: vi.fn(),
@@ -221,7 +221,7 @@ describe("Space test", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
         const mockRoomConnection = {
-            emitJoinSpace: vi.fn(),
+            emitJoinSpace: vi.fn().mockResolvedValue({ spaceUserId: "space-user-id", activeMicrophoneCount: 0 }),
         };
 
         await Space.create(
@@ -252,7 +252,7 @@ describe("Space test", () => {
         const metadata = new Map<string, unknown>();
 
         const mockRoomConnection = {
-            emitJoinSpace: vi.fn(),
+            emitJoinSpace: vi.fn().mockResolvedValue({ spaceUserId: "space-user-id", activeMicrophoneCount: 0 }),
             emitLeaveSpace: vi.fn(),
         };
 

@@ -24,7 +24,9 @@ import {
 const debug = Debug("space-to-back-forwarder");
 
 export interface SpaceToBackForwarderInterface {
-    registerUser(client: PusherWebSocket, filterType: FilterType): Promise<void>;
+    // Resolves with the number of other users already publishing audio when this user joined
+    // (used by the client to auto-mute before publishing in an already-crowded space).
+    registerUser(client: PusherWebSocket, filterType: FilterType): Promise<number>;
     updateUser(spaceUser: PartialSpaceUser, updateMask: string[]): void;
     unregisterUser(socket: PusherWebSocket): Promise<void>;
     updateMetadata(metadata: { [key: string]: unknown }, senderId: string): void;
@@ -43,7 +45,11 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         private readonly eventProcessor: EventProcessor,
         private readonly _clientEventsEmitter = clientEventsEmitter,
     ) {}
-    async registerUser(client: PusherWebSocket, filterType: FilterType): Promise<void> {
+    /**
+     * Registers the user on the back and returns the number of OTHER users in the space that already
+     * have their microphone on (reported by the back). The client uses it to auto-mute before publishing.
+     */
+    async registerUser(client: PusherWebSocket, filterType: FilterType): Promise<number> {
         const socketData = client.getUserData();
         const spaceUserId = socketData.spaceUserId;
 
@@ -105,7 +111,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
 
             this._space._localConnectedUser.set(spaceUserId, client);
 
-            await this._space.query.send({
+            const answer = await this._space.query.send({
                 $case: "addSpaceUserQuery",
                 addSpaceUserQuery: {
                     spaceName: this._space.name,
@@ -115,6 +121,8 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             });
 
             debug(`${this._space.name} : user add sent ${spaceUser.spaceUserId}`);
+
+            return answer.$case === "addSpaceUserAnswer" ? answer.addSpaceUserAnswer.activeMicrophoneCount : 0;
         } catch (e) {
             socketData.spaces.delete(this._space.name);
             this._space._localConnectedUser.delete(spaceUser.spaceUserId);
