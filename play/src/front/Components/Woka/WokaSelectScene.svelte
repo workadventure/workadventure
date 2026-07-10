@@ -10,6 +10,8 @@
     import WokaImage from "./WokaImage.svelte";
     import { IconShuffle } from "@wa-icons";
 
+    /* eslint-disable svelte/require-each-key */
+
     interface Props {
         customize: () => void;
         saveAndContinue: (texturesId: string[]) => void;
@@ -245,7 +247,7 @@
                         <div
                             class="flex-none lg:flex-1 flex flex-col items-start gap-0 min-h-0 min-w-0 max-h-full overflow-y-scroll overflow-x-auto scroll-mask py-[20px]"
                         >
-                            {#each wokaData?.["woka"]?.collections || [] as collection, collectionIndex (collection.name)}
+                            {#each wokaData?.["woka"]?.collections || [] as collection, collectionIndex}
                                 <p class="text-sm text-gray-500 mb-1 mt-4 p-0">{collection.name}</p>
                                 <div
                                     id="woka-line-{collectionIndex}"
