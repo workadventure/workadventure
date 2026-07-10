@@ -22,12 +22,20 @@ class MapsManager {
     private saveMapIntervals: Map<string, NodeJS.Timeout>;
     private mapLastChangeTimestamp: Map<string, number>;
 
-    private readonly editionLocks = new LockByKey<string>((error, key, timeoutMs) => {
-        Sentry.captureException(error, {
-            tags: { key: String(key), location: "withTimeout" },
-            extra: { timeoutMs },
-        });
-    });
+    private readonly editionLocks = new LockByKey<string>(
+        (error, key, timeoutMs) => {
+            Sentry.captureException(error, {
+                tags: { key: String(key), location: "withTimeout" },
+                extra: { timeoutMs },
+            });
+        },
+        (error, key) => {
+            console.error(`Edition lock callback failed for key: ${key}`, error);
+            Sentry.captureException(error, {
+                tags: { key: String(key), location: "editionLockCallback" },
+            });
+        },
+    );
 
     private mapListService: MapListService;
 

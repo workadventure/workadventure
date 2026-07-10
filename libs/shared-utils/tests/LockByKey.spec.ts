@@ -7,7 +7,7 @@ describe("LockByKeys", () => {
     });
 
     it("should free the lock when promise is rejected", async () => {
-        const lock = new LockByKey<string>();
+        const lock = new LockByKey<string>(vi.fn(), vi.fn());
 
         const key = "myKey";
 
@@ -41,7 +41,7 @@ describe("LockByKeys", () => {
 
     it("should auto reject after timeout", async () => {
         vi.useFakeTimers();
-        const lock = new LockByKey<string>();
+        const lock = new LockByKey<string>(vi.fn(), vi.fn());
         const key = "timeoutKey";
 
         const neverResolvingPromise = new Promise<void>(() => {});
@@ -57,7 +57,7 @@ describe("LockByKeys", () => {
     it("should report timeouts through the onTimeout hook", async () => {
         vi.useFakeTimers();
         const onTimeout = vi.fn();
-        const lock = new LockByKey<string>(onTimeout);
+        const lock = new LockByKey<string>(onTimeout, vi.fn());
         const key = "timeoutKey";
 
         const waitPromise = lock.waitForLock(key, () => new Promise<void>(() => {}), 5000);
@@ -68,9 +68,49 @@ describe("LockByKeys", () => {
         expect(onTimeout).toHaveBeenCalledWith(expect.any(Error), key, 5000);
     });
 
+    it("should report callback rejections through the onError hook and still reject the caller", async () => {
+        const onError = vi.fn();
+        const lock = new LockByKey<string>(vi.fn(), onError);
+        const key = "errorKey";
+        const failure = new Error("callback boom");
+
+        const waitPromise = lock.waitForLock(key, () => Promise.reject(failure));
+
+        await expect(waitPromise).rejects.toThrow(/callback boom/);
+        expect(onError).toHaveBeenCalledWith(failure, key);
+    });
+
+    it("should keep the queue alive for a key after a callback rejects", async () => {
+        const onError = vi.fn();
+        const lock = new LockByKey<string>(vi.fn(), onError);
+        const key = "resilientKey";
+
+        const failing = lock.waitForLock(key, () => Promise.reject(new Error("boom")));
+        const following = lock.waitForLock(key, () => Promise.resolve("ok"));
+
+        await expect(failing).rejects.toThrow(/boom/);
+        await expect(following).resolves.toBe("ok");
+        expect(onError).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not invoke onError when a timeout fires (only onTimeout)", async () => {
+        vi.useFakeTimers();
+        const onTimeout = vi.fn();
+        const onError = vi.fn();
+        const lock = new LockByKey<string>(onTimeout, onError);
+        const key = "timeoutOnlyKey";
+
+        const waitPromise = lock.waitForLock(key, () => new Promise<void>(() => {}), 5000);
+        await vi.advanceTimersByTimeAsync(5_000);
+
+        await expect(waitPromise).rejects.toThrow(/Lock timeout/);
+        expect(onTimeout).toHaveBeenCalledTimes(1);
+        expect(onError).not.toHaveBeenCalled();
+    });
+
     it("should not time out when no timeout is passed", async () => {
         vi.useFakeTimers();
-        const lock = new LockByKey<string>();
+        const lock = new LockByKey<string>(vi.fn(), vi.fn());
         const key = "noTimeoutKey";
 
         let resolveOperation: (() => void) | undefined;
@@ -90,7 +130,7 @@ describe("LockByKeys", () => {
     });
 
     it("should resolve with the callback's return value", async () => {
-        const lock = new LockByKey<string>();
+        const lock = new LockByKey<string>(vi.fn(), vi.fn());
 
         const first = lock.waitForLock("key", () => Promise.resolve("first result"));
         const second = lock.waitForLock("key", () => Promise.resolve(42));
@@ -100,7 +140,7 @@ describe("LockByKeys", () => {
     });
 
     it("should execute concurrent requests sequentially (not in parallel)", async () => {
-        const lock = new LockByKey<string>();
+        const lock = new LockByKey<string>(vi.fn(), vi.fn());
         const key = "concurrentKey";
         const executionOrder: string[] = [];
         const concurrentExecutions: boolean[] = [];
@@ -141,7 +181,7 @@ describe("LockByKeys", () => {
     });
 
     it("should allow parallel execution for different keys", async () => {
-        const lock = new LockByKey<string>();
+        const lock = new LockByKey<string>(vi.fn(), vi.fn());
         const executionOrder: string[] = [];
 
         const delay = (ms: number): Promise<void> =>
@@ -175,7 +215,7 @@ describe("LockByKeys", () => {
         //   and then execute in parallel when A finishes
         // - With correct implementation, B chains after A, C chains after B
 
-        const lock = new LockByKey<string>();
+        const lock = new LockByKey<string>(vi.fn(), vi.fn());
         const key = "chainKey";
 
         let resolveA: (() => void) | undefined;

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/svelte";
 import { FilterType } from "@workadventure/messages";
 import { LockByKey } from "@workadventure/shared-utils/src/LockByKey";
 import type { Readable } from "svelte/store";
@@ -54,7 +55,23 @@ export class ProximityChatRoomManager {
      * No timeout is used: on timeout LockByKey starts the next queued operation while the previous
      * one is still running, which would reintroduce the race.
      */
-    private readonly roomOperationLocks = new LockByKey<string>();
+    private readonly roomOperationLocks = new LockByKey<string>(
+        // No timeout is ever passed for proximity room operations, so this should never fire; report it
+        // defensively in case that ever changes.
+        (error, key, timeoutMs) => {
+            console.error(`Proximity room operation timed out for space: ${key}`, error);
+            Sentry.captureException(error, {
+                tags: { spaceName: String(key), location: "roomOperationLockTimeout" },
+                extra: { timeoutMs },
+            });
+        },
+        (error, key) => {
+            console.error(`Proximity room operation failed for space: ${key}`, error);
+            Sentry.captureException(error, {
+                tags: { spaceName: String(key), location: "roomOperationLock" },
+            });
+        },
+    );
 
     public readonly roomsStore: Readable<ProximityChatRoom[]> = this._roomsStore;
     public readonly activeRoomStore: Readable<ProximityChatRoom | undefined> = this._activeRoomStore;
