@@ -58,15 +58,18 @@
                     dsn: SENTRY_DSN_FRONT,
                     release: SENTRY_RELEASE,
                     environment: SENTRY_ENVIRONMENT,
-                    // Drop Sentry's default `browserApiErrors` integration: it wraps
-                    // setTimeout/setInterval/requestAnimationFrame/addEventListener/XHR callbacks and
-                    // re-wraps their arguments on every invocation, a measurable steady-state
-                    // main-thread cost in a real-time/game app. Unhandled errors are still captured
-                    // via the default global handlers.
+                    // Keep Sentry's default `browserApiErrors` integration but disable its
+                    // requestAnimationFrame wrapping: it re-wraps the rAF callback on every frame,
+                    // a measurable steady-state main-thread cost in a real-time/game app that runs
+                    // a rAF loop continuously. The other wrapped APIs (setTimeout/setInterval/
+                    // addEventListener/XHR) fire far less often and keep their instrumentation.
                     integrations: (defaultIntegrations) =>
                         defaultIntegrations
                             .filter((integration) => integration.name !== "BrowserApiErrors")
-                            .concat(Sentry.browserTracingIntegration()),
+                            .concat(
+                                Sentry.browserApiErrorsIntegration({ requestAnimationFrame: false }),
+                                Sentry.browserTracingIntegration(),
+                            ),
                     // Sample rate for performance tracing; configurable via env (default 0.2).
                     // Set to 1.0 to capture 100% of transactions.
                     tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE ?? 0.2,
