@@ -103,10 +103,19 @@ spec:
             - name: grpc
               containerPort: 50053
               protocol: TCP
-          # livenessProbe:
-          #   httpGet:
-          #     path: /
-          #     port: http
+          # Liveness fails only when the S3 connection pool is provably wedged (S3 still reachable
+          # via a fresh pool) — see /health/live and INCIDENT_map-storage_s3_agent_exhaustion. A real
+          # S3 outage keeps this healthy, so the pod is not restart-looped during an outage.
+          # timeoutSeconds is generous because /health/live may issue a fresh-pool S3 probe (bounded
+          # by S3_CONNECTION_TIMEOUT, 5s by default).
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /ping
