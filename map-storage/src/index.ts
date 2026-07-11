@@ -23,7 +23,10 @@ import {
     SENTRY_ENVIRONMENT,
     GRPC_MAX_MESSAGE_SIZE,
     BODY_PARSER_JSON_SIZE_LIMIT,
+    AWS_BUCKET,
 } from "./Enum/EnvironmentVariable";
+import { createProbeS3Client, getS3Client, hasS3Bucket } from "./Services/S3Client";
+import { S3HealthCheck } from "./Services/S3HealthCheck";
 
 // Sentry integration
 if (SENTRY_DSN != undefined) {
@@ -119,8 +122,54 @@ app.get(/.*\.wam$/, (req, res, next) => {
     fileSystem.serveStaticFile(key, res, next);
 });
 
-app.get("/ping", (req, res) => {
-    res.send("pong");
+// On-demand S3 connectivity checks. Kubernetes drives the cadence and the consecutive-failure
+// counting via its probe config; the endpoints below just run a live check when polled, so a wedged
+// S3 connection pool is taken out of rotation and, if S3 is still reachable, restarted — instead of
+// silently serving 500s.
+const s3HealthCheck =
+    hasS3Bucket() && AWS_BUCKET ? new S3HealthCheck(getS3Client(), AWS_BUCKET, createProbeS3Client) : undefined;
+
+// Readiness probe: fail (503) when the shared S3 pool cannot answer right now, so Kubernetes stops
+// routing traffic to this pod. Kubernetes' readinessProbe.failureThreshold smooths transient blips.
+app.get("/ping", (req, res, next) => {
+    if (!s3HealthCheck) {
+        res.send("pong");
+        return;
+    }
+    s3HealthCheck
+        .isReachable()
+        .then((reachable) => {
+            if (reachable) {
+                res.send("pong");
+            } else {
+                res.status(503).send("S3 unreachable");
+            }
+        })
+        .catch(next);
+});
+
+// Liveness probe: fail (503) only when the pool is provably *wedged* (S3 reachable via a fresh pool
+// while the shared pool is stuck), so Kubernetes restarts the pod to clear it. A real S3 outage
+// leaves this healthy, avoiding a fleet-wide restart loop. Kubernetes' livenessProbe.failureThreshold
+// requires several consecutive failures before acting.
+app.get("/health/live", (req, res, next) => {
+    if (!s3HealthCheck) {
+        res.send("ok");
+        return;
+    }
+    s3HealthCheck
+        .isWedged()
+        .then((wedged) => {
+            if (wedged) {
+                console.error(
+                    `[${new Date().toISOString()}] S3 connection pool wedged — failing liveness so Kubernetes restarts this pod`,
+                );
+                res.status(503).send("S3 connection pool wedged");
+            } else {
+                res.send("ok");
+            }
+        })
+        .catch(next);
 });
 
 const mapListService = new MapListService(fileSystem, new WebHookService(WEB_HOOK_URL));
