@@ -4,7 +4,7 @@ import type { Response } from "express";
 import type ZipStream from "zip-stream";
 import { describe, expect, it, vi } from "vitest";
 import { MapListService } from "../../Services/MapListService";
-import { S3FileSystem } from "../S3FileSystem";
+import { ClientDisconnectedError, S3FileSystem } from "../S3FileSystem";
 
 vi.mock("../../Services/MapListService", () => ({
     MapListService: { CACHE_NAME: "__cache.json" },
@@ -33,6 +33,27 @@ describe("S3FileSystem", () => {
 
             // Releasing the socket = aborting the request (destroying the undrained body would leak it).
             await vi.waitFor(() => expect(signal?.aborted).toBe(true));
+            expect(next).not.toHaveBeenCalled();
+        });
+
+        it("swallows the abort rejection (no next()) when the client disconnected mid-fetch", async () => {
+            // The AWS SDK rejects an aborted request with an AbortError carrying our reason as `cause`.
+            const abortError = Object.assign(new Error("Request aborted"), {
+                name: "AbortError",
+                cause: new ClientDisconnectedError(),
+            });
+            const getObject = vi.fn().mockRejectedValue(abortError);
+            const fileSystem = new S3FileSystem({ getObject } as unknown as S3, "bucket");
+            const response = Object.assign(new PassThrough(), { set: vi.fn() }) as unknown as Response;
+            const next = vi.fn();
+
+            fileSystem.serveStaticFile("map/file.png", response, next);
+
+            await vi.waitFor(() => expect(getObject).toHaveBeenCalledOnce());
+            await new Promise((resolve) => {
+                setImmediate(resolve);
+            });
+            // A client disconnect is not an error to forward — no 500, no Sentry noise.
             expect(next).not.toHaveBeenCalled();
         });
 

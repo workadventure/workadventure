@@ -24,10 +24,21 @@ import type { FileSystemInterface } from "./FileSystemInterface";
 
 /* eslint-disable no-await-in-loop */
 
-// When a request is cancelled through an AbortController the AWS SDK rejects with an error whose
-// name is "AbortError" (there is no dedicated exported class to instanceof against).
-function isAbortError(err: unknown): boolean {
-    return err instanceof Error && err.name === "AbortError";
+/**
+ * Passed as the `AbortController` reason when we cancel an in-flight S3 read because the client
+ * disconnected. The AWS SDK rejects the request with a generic `AbortError` but carries this exact
+ * instance as its `cause`, so we can positively identify *our* abort (via `instanceof` on `.cause`)
+ * instead of string-matching the SDK's error name.
+ */
+export class ClientDisconnectedError extends Error {
+    constructor() {
+        super("The client disconnected before the S3 object finished serving");
+        this.name = "ClientDisconnectedError";
+    }
+}
+
+function isClientDisconnectedAbort(err: unknown): boolean {
+    return err instanceof Error && err.cause instanceof ClientDisconnectedError;
 }
 
 export class S3FileSystem implements FileSystemInterface {
@@ -256,11 +267,12 @@ export class S3FileSystem implements FileSystemInterface {
         // When the client disconnects we must release the S3 request's socket back to the pool.
         // Destroying the (undrained) response body does NOT do that — it leaks the socket, which is
         // how the connection pool gets permanently wedged (see aws-sdk-js-v3#6691). Aborting the
-        // request via an AbortController does release it.
+        // request via an AbortController does release it. We pass a ClientDisconnectedError as the
+        // abort reason so the resulting rejection is unambiguously ours (see the catch below).
         const controller = new AbortController();
         const onClose = () => {
             if (!res.writableFinished) {
-                controller.abort();
+                controller.abort(new ClientDisconnectedError());
             }
         };
         res.on("close", onClose);
@@ -269,7 +281,7 @@ export class S3FileSystem implements FileSystemInterface {
             .getObject({ Bucket: this.bucketName, Key: virtualPath }, { abortSignal: controller.signal })
             .then((result) => {
                 if (res.destroyed) {
-                    controller.abort();
+                    controller.abort(new ClientDisconnectedError());
                     return;
                 }
 
@@ -312,7 +324,7 @@ export class S3FileSystem implements FileSystemInterface {
                 });
             })
             .catch((err) => {
-                if (isAbortError(err)) {
+                if (isClientDisconnectedAbort(err)) {
                     // The client went away before/while we were fetching; the request was aborted and
                     // its socket released. Nothing to respond to.
                     return;
