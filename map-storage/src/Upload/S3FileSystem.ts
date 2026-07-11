@@ -275,6 +275,12 @@ export class S3FileSystem implements FileSystemInterface {
                 controller.abort(new ClientDisconnectedError());
             }
         };
+        // `stream.pipeline` below already registers several "close" listeners on the response, and the
+        // Express/Sentry stack adds more, leaving a served file right at Node's default limit of 10.
+        // Our disconnect listener is one more on top, which would trip a (harmless but noisy)
+        // MaxListenersExceededWarning. The set is bounded and removed in `finally`, so account for our
+        // one extra listener instead of masking leaks with an unlimited (0) budget.
+        res.setMaxListeners(res.getMaxListeners() + 1);
         res.on("close", onClose);
 
         this.s3
