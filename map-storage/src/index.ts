@@ -124,8 +124,8 @@ app.get(/.*\.wam$/, (req, res, next) => {
 
 // On-demand S3 connectivity checks. Kubernetes drives the cadence and the consecutive-failure
 // counting via its probe config; the endpoints below just run a live check when polled, so a wedged
-// S3 connection pool (see INCIDENT_map-storage_s3_agent_exhaustion) is taken out of rotation and, if
-// S3 is still reachable, restarted — instead of silently serving 500s.
+// S3 connection pool is taken out of rotation and, if S3 is still reachable, restarted — instead of
+// silently serving 500s.
 const s3HealthCheck =
     hasS3Bucket() && AWS_BUCKET ? new S3HealthCheck(getS3Client(), AWS_BUCKET, createProbeS3Client) : undefined;
 
@@ -162,7 +162,7 @@ app.get("/health/live", (req, res, next) => {
         .then((wedged) => {
             if (wedged) {
                 console.error(
-                    `[${new Date().toISOString()}] S3 connection pool wedged — failing liveness so Kubernetes restarts this pod (see INCIDENT_map-storage_s3_agent_exhaustion)`,
+                    `[${new Date().toISOString()}] S3 connection pool wedged — failing liveness so Kubernetes restarts this pod`,
                 );
                 res.status(503).send("S3 connection pool wedged");
             } else {

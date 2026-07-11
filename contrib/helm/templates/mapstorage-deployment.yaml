@@ -104,8 +104,8 @@ spec:
               containerPort: 50053
               protocol: TCP
           # Liveness fails only when the S3 connection pool is provably wedged (S3 still reachable
-          # via a fresh pool) — see /health/live and INCIDENT_map-storage_s3_agent_exhaustion. A real
-          # S3 outage keeps this healthy, so the pod is not restart-looped during an outage.
+          # via a fresh pool) — see the /health/live endpoint. A real S3 outage keeps this healthy,
+          # so the pod is not restart-looped during an outage.
           # The endpoint probes S3 live; timeoutSeconds must exceed the worst case of the shared probe
           # (S3_CONNECTION_TIMEOUT, 5s default) plus the fresh-pool probe (3s), so an outage returns
           # "not wedged" in time instead of timing out into a false restart. Kubernetes' own

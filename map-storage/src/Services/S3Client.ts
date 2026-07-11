@@ -55,10 +55,10 @@ export function getS3Client(): S3 {
  * Builds a *throwaway* S3 client backed by its own fresh HTTP connection pool (a brand new
  * `https.Agent`), independent of the shared pool returned by {@link getS3Client}.
  *
- * It exists only to tell two look-alike failures apart when the shared pool stops answering
- * (see INCIDENT_map-storage_s3_agent_exhaustion): a *wedged* shared pool (S3 is reachable, but our
- * pool's socket accounting is stuck) versus a *real* S3 outage (S3 is unreachable). A probe through
- * this fresh pool succeeds in the first case and fails in the second. The caller is expected to
+ * It exists only to tell two look-alike failures apart when the shared pool stops answering: a
+ * *wedged* shared pool (S3 is reachable, but our pool's socket accounting is stuck) versus a *real*
+ * S3 outage (S3 is unreachable). A probe through this fresh pool succeeds in the first case and fails
+ * in the second. The caller is expected to
  * `.destroy()` it after use so it never lingers.
  *
  * Timeouts are kept short and independent of the (larger) shared-client timeouts: the liveness probe

@@ -255,8 +255,8 @@ export class S3FileSystem implements FileSystemInterface {
 
         // When the client disconnects we must release the S3 request's socket back to the pool.
         // Destroying the (undrained) response body does NOT do that — it leaks the socket, which is
-        // how the connection pool gets permanently wedged (see INCIDENT_map-storage_s3_agent_exhaustion,
-        // and aws-sdk-js-v3#6691). Aborting the request via an AbortController does release it.
+        // how the connection pool gets permanently wedged (see aws-sdk-js-v3#6691). Aborting the
+        // request via an AbortController does release it.
         const controller = new AbortController();
         const onClose = () => {
             if (!res.writableFinished) {
@@ -431,7 +431,7 @@ export class S3FileSystem implements FileSystemInterface {
      * On the happy path `archive.entry()` fully drains the body, returning its socket to the pool. On
      * teardown/error the body is NOT drained, so we abort the S3 request via an AbortController —
      * destroying the undrained body would leak the socket and eventually wedge the pool (see
-     * INCIDENT_map-storage_s3_agent_exhaustion, aws-sdk-js-v3#6691).
+     * aws-sdk-js-v3#6691).
      */
     private async archiveEntry(archive: ZipStream, key: string, virtualPath: string): Promise<boolean> {
         const controller = new AbortController();

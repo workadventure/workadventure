@@ -7,9 +7,8 @@ import { ListObjectsV2Command } from "@aws-sdk/client-s3";
  * verdict: Kubernetes already polls on its own `periodSeconds` and decides when to act via its own
  * `failureThreshold`, so duplicating that in-process only adds state to get wrong.
  *
- * Detects the "S3 HTTP agent connection pool exhausted" failure mode
- * (see INCIDENT_map-storage_s3_agent_exhaustion): when the pool is wedged, a probe through the
- * shared client times out, while a probe through a *fresh* pool still succeeds.
+ * Detects the "S3 HTTP agent connection pool exhausted" failure mode: when the pool is wedged, a
+ * probe through the shared client times out, while a probe through a *fresh* pool still succeeds.
  */
 export class S3HealthCheck {
     constructor(
