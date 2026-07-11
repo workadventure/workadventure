@@ -456,7 +456,7 @@
                 isOnOneLine,
                 oneLineMode,
             ];
-            setTimeout(updateScrollIndicators, 100);
+            updateScrollIndicators();
         }
     });
 </script>
