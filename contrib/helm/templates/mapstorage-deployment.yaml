@@ -103,14 +103,30 @@ spec:
             - name: grpc
               containerPort: 50053
               protocol: TCP
-          # livenessProbe:
-          #   httpGet:
-          #     path: /
-          #     port: http
+          # Liveness fails only when the S3 connection pool is provably wedged (S3 still reachable
+          # via a fresh pool) — see the /health/live endpoint. A real S3 outage keeps this healthy,
+          # so the pod is not restart-looped during an outage.
+          # The endpoint probes S3 live; timeoutSeconds must exceed the worst case of the shared probe
+          # (S3_CONNECTION_TIMEOUT, 5s default) plus the fresh-pool probe (3s), so an outage returns
+          # "not wedged" in time instead of timing out into a false restart. Kubernetes' own
+          # failureThreshold (not the app) requires several consecutive failures before restarting.
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          # Readiness probes S3 live (/ping); its failureThreshold smooths transient blips before the
+          # pod is pulled from rotation.
           readinessProbe:
             httpGet:
               path: /ping
               port: http
+            periodSeconds: 10
+            timeoutSeconds: 8
+            failureThreshold: 3
           volumeMounts:
             - name: mapstorage
               mountPath: /maps

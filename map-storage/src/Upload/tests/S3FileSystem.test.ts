@@ -4,7 +4,7 @@ import type { Response } from "express";
 import type ZipStream from "zip-stream";
 import { describe, expect, it, vi } from "vitest";
 import { MapListService } from "../../Services/MapListService";
-import { S3FileSystem } from "../S3FileSystem";
+import { ClientDisconnectedError, S3FileSystem } from "../S3FileSystem";
 
 vi.mock("../../Services/MapListService", () => ({
     MapListService: { CACHE_NAME: "__cache.json" },
@@ -15,9 +15,13 @@ vi.mock("../../Services/S3Client", () => ({
 
 describe("S3FileSystem", () => {
     describe("serveStaticFile", () => {
-        it("destroys the S3 response body when the client disconnects", async () => {
+        it("aborts the S3 request (releasing its socket) when the client disconnects", async () => {
+            let signal: AbortSignal | undefined;
             const body = new PassThrough();
-            const getObject = vi.fn().mockResolvedValue({ Body: body });
+            const getObject = vi.fn((_input: unknown, opts?: { abortSignal?: AbortSignal }) => {
+                signal = opts?.abortSignal;
+                return Promise.resolve({ Body: body });
+            });
             const fileSystem = new S3FileSystem({ getObject } as unknown as S3, "bucket");
             const response = Object.assign(new PassThrough(), { set: vi.fn() }) as unknown as Response;
             const next = vi.fn();
@@ -27,23 +31,47 @@ describe("S3FileSystem", () => {
 
             response.destroy();
 
-            await vi.waitFor(() => expect(body.destroyed).toBe(true));
+            // Releasing the socket = aborting the request (destroying the undrained body would leak it).
+            await vi.waitFor(() => expect(signal?.aborted).toBe(true));
             expect(next).not.toHaveBeenCalled();
         });
 
-        it("destroys the S3 response body when the client already disconnected before it was fetched", async () => {
-            const body = new PassThrough();
-            const getObject = vi.fn().mockResolvedValue({ Body: body });
+        it("swallows the abort rejection (no next()) when the client disconnected mid-fetch", async () => {
+            // The AWS SDK rejects an aborted request with an AbortError carrying our reason as `cause`.
+            const abortError = Object.assign(new Error("Request aborted"), {
+                name: "AbortError",
+                cause: new ClientDisconnectedError(),
+            });
+            const getObject = vi.fn().mockRejectedValue(abortError);
+            const fileSystem = new S3FileSystem({ getObject } as unknown as S3, "bucket");
+            const response = Object.assign(new PassThrough(), { set: vi.fn() }) as unknown as Response;
+            const next = vi.fn();
+
+            fileSystem.serveStaticFile("map/file.png", response, next);
+
+            await vi.waitFor(() => expect(getObject).toHaveBeenCalledOnce());
+            await new Promise((resolve) => {
+                setImmediate(resolve);
+            });
+            // A client disconnect is not an error to forward — no 500, no Sentry noise.
+            expect(next).not.toHaveBeenCalled();
+        });
+
+        it("does not fetch from S3 at all when the client already disconnected before the read starts", async () => {
+            const getObject = vi.fn().mockResolvedValue({ Body: new PassThrough() });
             const fileSystem = new S3FileSystem({ getObject } as unknown as S3, "bucket");
             const set = vi.fn();
             const response = Object.assign(new PassThrough(), { set }) as unknown as Response;
             const next = vi.fn();
 
-            // The client is already gone by the time getObject resolves.
+            // The client is already gone: skip the S3 round-trip entirely.
             response.destroy();
             fileSystem.serveStaticFile("map/file.png", response, next);
 
-            await vi.waitFor(() => expect(body.destroyed).toBe(true));
+            await new Promise((resolve) => {
+                setImmediate(resolve);
+            });
+            expect(getObject).not.toHaveBeenCalled();
             expect(next).not.toHaveBeenCalled();
             expect(set).not.toHaveBeenCalled();
         });
@@ -64,7 +92,8 @@ describe("S3FileSystem", () => {
             expect(send.mock.calls.some(([command]) => command instanceof GetObjectCommand)).toBe(false);
         });
 
-        it("destroys the fetched body and stops when the archive is destroyed during the fetch", async () => {
+        it("aborts the fetch and stops when the archive is destroyed during the fetch", async () => {
+            let signal: AbortSignal | undefined;
             const body = new PassThrough();
             const archive = new PassThrough();
             const entry = vi.fn();
@@ -75,7 +104,8 @@ describe("S3FileSystem", () => {
                 .mockResolvedValueOnce({ Contents: [{ Key: "map/a.png" }, { Key: "map/b.png" }], IsTruncated: false })
                 // While the first object is being fetched, the client disconnects and the
                 // archive is destroyed.
-                .mockImplementationOnce(() => {
+                .mockImplementationOnce((_cmd: unknown, opts?: { abortSignal?: AbortSignal }) => {
+                    signal = opts?.abortSignal;
                     archive.destroy();
                     return Promise.resolve({ Body: body });
                 });
@@ -83,13 +113,14 @@ describe("S3FileSystem", () => {
 
             await fileSystem.archiveDirectory(archive as unknown as ZipStream, "map");
 
-            expect(body.destroyed).toBe(true);
+            expect(signal?.aborted).toBe(true);
             expect(entry).not.toHaveBeenCalled();
             // ListObjectsV2 + a single GetObject: the second object is never fetched.
             expect(send).toHaveBeenCalledTimes(2);
         });
 
-        it("destroys the S3 body when writing the archive entry fails", async () => {
+        it("aborts the S3 request when writing the archive entry fails", async () => {
+            let signal: AbortSignal | undefined;
             const body = new PassThrough();
             const archive = new PassThrough();
             (archive as unknown as { entry: unknown }).entry = vi.fn(
@@ -102,14 +133,18 @@ describe("S3FileSystem", () => {
             const send = vi
                 .fn()
                 .mockResolvedValueOnce({ Contents: [{ Key: "map/a.png" }], IsTruncated: false })
-                .mockResolvedValueOnce({ Body: body });
+                .mockImplementationOnce((_cmd: unknown, opts?: { abortSignal?: AbortSignal }) => {
+                    signal = opts?.abortSignal;
+                    return Promise.resolve({ Body: body });
+                });
             const fileSystem = new S3FileSystem({ send } as unknown as S3, "bucket");
 
             await expect(fileSystem.archiveDirectory(archive as unknown as ZipStream, "map")).rejects.toThrow("boom");
-            expect(body.destroyed).toBe(true);
+            expect(signal?.aborted).toBe(true);
         });
 
-        it("destroys the S3 body and resolves when the archive is torn down mid-entry", async () => {
+        it("aborts the S3 request and resolves when the archive is torn down mid-entry", async () => {
+            let signal: AbortSignal | undefined;
             const body = new PassThrough();
             const archive = new PassThrough();
             // entry() never calls back (archiver stalled because its output was destroyed).
@@ -119,7 +154,10 @@ describe("S3FileSystem", () => {
             const send = vi
                 .fn()
                 .mockResolvedValueOnce({ Contents: [{ Key: "map/a.png" }], IsTruncated: false })
-                .mockResolvedValueOnce({ Body: body });
+                .mockImplementationOnce((_cmd: unknown, opts?: { abortSignal?: AbortSignal }) => {
+                    signal = opts?.abortSignal;
+                    return Promise.resolve({ Body: body });
+                });
             const fileSystem = new S3FileSystem({ send } as unknown as S3, "bucket");
 
             const promise = fileSystem.archiveDirectory(archive as unknown as ZipStream, "map");
@@ -128,12 +166,13 @@ describe("S3FileSystem", () => {
             // Client disconnects: the archive (piped to the response) is destroyed.
             archive.destroy();
 
-            // archiveDirectory must not hang, and must release the in-flight S3 body.
+            // archiveDirectory must not hang, and must release the in-flight S3 request.
             await promise;
-            expect(body.destroyed).toBe(true);
+            expect(signal?.aborted).toBe(true);
         });
 
-        it("rejects and destroys the S3 body when the archive emits a real error mid-entry", async () => {
+        it("rejects and aborts the S3 request when the archive emits a real error mid-entry", async () => {
+            let signal: AbortSignal | undefined;
             const body = new PassThrough();
             const archive = new PassThrough();
             // entry() never calls back; the failure surfaces via the archive "error" event.
@@ -143,7 +182,10 @@ describe("S3FileSystem", () => {
             const send = vi
                 .fn()
                 .mockResolvedValueOnce({ Contents: [{ Key: "map/a.png" }], IsTruncated: false })
-                .mockResolvedValueOnce({ Body: body });
+                .mockImplementationOnce((_cmd: unknown, opts?: { abortSignal?: AbortSignal }) => {
+                    signal = opts?.abortSignal;
+                    return Promise.resolve({ Body: body });
+                });
             const fileSystem = new S3FileSystem({ send } as unknown as S3, "bucket");
 
             const promise = fileSystem.archiveDirectory(archive as unknown as ZipStream, "map");
@@ -153,7 +195,7 @@ describe("S3FileSystem", () => {
             archive.emit("error", new Error("zip boom"));
 
             await expect(promise).rejects.toThrow("zip boom");
-            expect(body.destroyed).toBe(true);
+            expect(signal?.aborted).toBe(true);
         });
     });
 });
