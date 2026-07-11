@@ -201,8 +201,6 @@ Environment variables for the Map Storage service.
 | `AWS_BUCKET` | No | S3 bucket name for map storage. If empty, local storage is used instead. |
 | `AWS_URL` | No | URL of the S3 endpoint. |
 | `S3_MAX_PARALLEL_REQUESTS` | No | The maximum parallel number of requests done to the S3 bucket. Defaults to 50. |
-| `S3_HEALTH_CHECK_PERIOD` | No | Interval in milliseconds between background S3 connectivity health checks. Set to 0 to disable. Defaults to 30000 (30 seconds). |
-| `S3_HEALTH_CHECK_FAILURE_THRESHOLD` | No | Number of consecutive failed S3 health checks before the pod is reported unhealthy (readiness) and, if S3 is still reachable via a fresh connection pool, wedged (liveness). Defaults to 3. |
 | `S3_CONNECTION_TIMEOUT` | No | The timeout in milliseconds for the S3 connection in milliseconds. Defaults to 5000 (5 seconds). |
 | `S3_REQUEST_TIMEOUT` | No | The timeout in milliseconds for the S3 requests in milliseconds. Defaults to 60000 (60 seconds). |
 | `S3_UPLOAD_CONCURRENCY_LIMIT` | No | Maximum number of concurrent S3 upload operations. Defaults to 100 |

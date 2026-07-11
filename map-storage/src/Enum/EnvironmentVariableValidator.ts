@@ -41,18 +41,6 @@ export const EnvironmentVariables = z.object({
     S3_MAX_PARALLEL_REQUESTS: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 50))
         .describe("The maximum parallel number of requests done to the S3 bucket. Defaults to 50."),
-    S3_HEALTH_CHECK_PERIOD: PositiveIntAsString.optional()
-        .transform((val) => toNumber(val, 30000))
-        .describe(
-            "Interval in milliseconds between background S3 connectivity health checks. Set to 0 to disable. " +
-                "Defaults to 30000 (30 seconds).",
-        ),
-    S3_HEALTH_CHECK_FAILURE_THRESHOLD: PositiveIntAsString.optional()
-        .transform((val) => toNumber(val, 3))
-        .describe(
-            "Number of consecutive failed S3 health checks before the pod is reported unhealthy (readiness) " +
-                "and, if S3 is still reachable via a fresh connection pool, wedged (liveness). Defaults to 3.",
-        ),
     S3_CONNECTION_TIMEOUT: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 5000))
         .describe("The timeout in milliseconds for the S3 connection in milliseconds. Defaults to 5000 (5 seconds)."),
