@@ -66,7 +66,7 @@ export function getS3Client(): S3 {
  * probe + this probe together stay under the Kubernetes liveness `timeoutSeconds`.
  */
 export function createProbeS3Client(): S3 {
-    // A tiny pool that issues a single request at a time, with short fail-fast timeouts.
+    // A tiny pool (maxSockets=2) with short fail-fast timeouts used only for health probing.
     return instantiateS3(buildS3Config({ maxSockets: 2, connectionTimeout: 3000, requestTimeout: 5000 }));
 }
 
