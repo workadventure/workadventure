@@ -10,6 +10,7 @@ import {
     S3_CONNECTION_TIMEOUT,
     S3_MAX_PARALLEL_REQUESTS,
     S3_REQUEST_TIMEOUT,
+    S3_THROW_ON_REQUEST_TIMEOUT,
     S3_UPLOAD_CONCURRENCY_LIMIT,
 } from "../Enum/EnvironmentVariable";
 import { createS3ClientWithMD5 } from "../Upload/S3ClientWithMD5";
@@ -27,6 +28,10 @@ export function getS3Client(): S3 {
         requestHandler: {
             connectionTimeout: S3_CONNECTION_TIMEOUT,
             requestTimeout: S3_REQUEST_TIMEOUT,
+            // When true, a request that exceeds requestTimeout is destroyed (releasing its socket)
+            // and rejected instead of only emitting a warning. Off by default so slow large
+            // transfers keep working.
+            throwOnRequestTimeout: S3_THROW_ON_REQUEST_TIMEOUT,
             httpsAgent: { maxSockets: S3_MAX_PARALLEL_REQUESTS },
         },
     };
