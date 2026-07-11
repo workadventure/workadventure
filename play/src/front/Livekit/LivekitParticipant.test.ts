@@ -7,6 +7,7 @@ import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerMana
 import type { LivekitStreamable, Streamable } from "../Space/Streamable";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 import { LiveKitParticipant } from "./LivekitParticipant";
+import { VideoSubscriptionBatcher } from "./VideoSubscriptionBatcher";
 
 type MockRemoteTrackPublication = RemoteTrackPublication & {
     setSubscribed: ReturnType<typeof vi.fn<(subscribed: boolean) => void>>;
@@ -27,35 +28,44 @@ describe("LiveKitParticipant", () => {
 
     it("should keep the camera publication subscribed until the last lease is released", () => {
         vi.useFakeTimers();
+        const batcher = new VideoSubscriptionBatcher(50);
         const publication = createCameraPublication();
-        const participant = createParticipant({ publications: [publication] });
+        const participant = createParticipant({ publications: [publication], batcher });
         const media = participant.getStreamable().media as LivekitStreamable;
 
         publication.setSubscribed.mockClear();
 
+        // Subscribe is now batched, not synchronous.
         const releaseFirst = media.acquireVideoSubscription();
+        expect(publication.setSubscribed).toHaveBeenCalledTimes(0);
+        batcher.flush();
         expect(publication.setSubscribed).toHaveBeenCalledTimes(1);
         expect(publication.setSubscribed).toHaveBeenLastCalledWith(true);
 
         const releaseSecond = media.acquireVideoSubscription();
+        batcher.flush();
         expect(publication.setSubscribed).toHaveBeenCalledTimes(1);
 
         releaseFirst();
+        batcher.flush();
         expect(publication.setSubscribed).toHaveBeenCalledTimes(1);
 
         releaseSecond();
+        batcher.flush();
         expect(publication.setSubscribed).toHaveBeenCalledTimes(1);
 
+        // After the 75ms unsubscribe grace, the unsubscribe is requested, then flushed.
         vi.advanceTimersByTime(75);
-
+        batcher.flush();
         expect(publication.setSubscribed).toHaveBeenCalledTimes(2);
         expect(publication.setSubscribed).toHaveBeenLastCalledWith(false);
     });
 
     it("should ignore duplicate lease releases", () => {
         vi.useFakeTimers();
+        const batcher = new VideoSubscriptionBatcher(50);
         const publication = createCameraPublication();
-        const participant = createParticipant({ publications: [publication] });
+        const participant = createParticipant({ publications: [publication], batcher });
         const media = participant.getStreamable().media as LivekitStreamable;
 
         publication.setSubscribed.mockClear();
@@ -64,9 +74,11 @@ describe("LiveKitParticipant", () => {
         release();
         release();
 
+        batcher.flush();
         expect(publication.setSubscribed).toHaveBeenCalledTimes(1);
 
         vi.advanceTimersByTime(75);
+        batcher.flush();
 
         expect(publication.setSubscribed).toHaveBeenCalledTimes(2);
         expect(publication.setSubscribed).toHaveBeenNthCalledWith(1, true);
@@ -75,7 +87,8 @@ describe("LiveKitParticipant", () => {
 
     it("should subscribe a newly published camera track when a lease is already active", () => {
         vi.useFakeTimers();
-        const participant = createParticipant({ publications: [] });
+        const batcher = new VideoSubscriptionBatcher(50);
+        const participant = createParticipant({ publications: [], batcher });
         const media = participant.getStreamable().media as LivekitStreamable;
         const publication = createCameraPublication();
 
@@ -83,13 +96,16 @@ describe("LiveKitParticipant", () => {
 
         participant["handleTrackPublished"](publication);
 
+        batcher.flush();
         expect(publication.setSubscribed).toHaveBeenCalledTimes(1);
         expect(publication.setSubscribed).toHaveBeenCalledWith(true);
 
         release();
+        batcher.flush();
         expect(publication.setSubscribed).toHaveBeenCalledTimes(1);
 
         vi.advanceTimersByTime(75);
+        batcher.flush();
 
         expect(publication.setSubscribed).toHaveBeenCalledTimes(2);
         expect(publication.setSubscribed).toHaveBeenLastCalledWith(false);
@@ -97,26 +113,32 @@ describe("LiveKitParticipant", () => {
 
     it("should cancel a pending unsubscribe when the same video is reacquired quickly", () => {
         vi.useFakeTimers();
+        const batcher = new VideoSubscriptionBatcher(50);
         const publication = createCameraPublication();
-        const participant = createParticipant({ publications: [publication] });
+        const participant = createParticipant({ publications: [publication], batcher });
         const media = participant.getStreamable().media as LivekitStreamable;
 
         publication.setSubscribed.mockClear();
 
         const releaseFirst = media.acquireVideoSubscription();
+        batcher.flush();
         releaseFirst();
 
         vi.advanceTimersByTime(50);
         const releaseSecond = media.acquireVideoSubscription();
+        batcher.flush();
 
+        // The reacquire cancelled the pending unsubscribe, so the video stayed subscribed (one call).
         expect(publication.setSubscribed).toHaveBeenCalledTimes(1);
         expect(publication.setSubscribed).toHaveBeenLastCalledWith(true);
 
         vi.advanceTimersByTime(100);
+        batcher.flush();
         expect(publication.setSubscribed).toHaveBeenCalledTimes(1);
 
         releaseSecond();
         vi.advanceTimersByTime(75);
+        batcher.flush();
 
         expect(publication.setSubscribed).toHaveBeenCalledTimes(2);
         expect(publication.setSubscribed).toHaveBeenLastCalledWith(false);
@@ -255,7 +277,13 @@ describe("LiveKitParticipant", () => {
     });
 });
 
-function createParticipant({ publications }: { publications: RemoteTrackPublication[] }): LiveKitParticipant {
+function createParticipant({
+    publications,
+    batcher,
+}: {
+    publications: RemoteTrackPublication[];
+    batcher?: VideoSubscriptionBatcher;
+}): LiveKitParticipant {
     const streamableSubjects: StreamableSubjects = {
         videoPeerAdded: new Subject<Streamable>(),
         videoPeerRemoved: new Subject<Streamable>(),
@@ -289,6 +317,8 @@ function createParticipant({ publications }: { publications: RemoteTrackPublicat
         streamableSubjects,
         writable(new Set<string>()),
         new AbortController().signal,
+        undefined,
+        batcher ?? new VideoSubscriptionBatcher(50),
     );
 }
 
