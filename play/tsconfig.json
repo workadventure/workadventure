@@ -31,6 +31,14 @@
       "@wa-modals": ["./src/front/Components/Modal/modalManager.ts"]
     },
   },
+  "include": [
+    "src/**/*.d.ts",
+    "src/**/*.ts",
+    "src/**/*.js",
+    "src/**/*.svelte",
+    ".storybook/**/*.ts",
+    "vitest.storybook.config.ts"
+  ],
   "exclude": [
     "dist",
     "node_modules",

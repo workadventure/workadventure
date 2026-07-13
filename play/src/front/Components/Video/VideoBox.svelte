@@ -1,7 +1,7 @@
 <script lang="ts">
+    import type { Snippet } from "svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { VideoBox } from "../../Space/VideoBox";
-    import { playerMovedInTheLast10Seconds } from "../../Stores/VideoLayoutStore";
     import VideoBoxOptimizer from "./VideoBoxOptimizer.svelte";
 
     interface Props {
@@ -10,9 +10,12 @@
         oneLineMode: "vertical" | "horizontal";
         videoWidth: number;
         videoHeight?: number;
+        playerMovedInTheLast10Seconds: boolean;
+        oneLineStreamableCount: number;
         intersectionObserver?: IntersectionObserver;
         forceDisplay: boolean;
         fitContainer: boolean;
+        mediaRenderer: Snippet<[VideoBox]>;
     }
 
     let {
@@ -21,23 +24,28 @@
         oneLineMode,
         videoWidth,
         videoHeight,
+        playerMovedInTheLast10Seconds,
+        oneLineStreamableCount,
         intersectionObserver,
         forceDisplay = false,
         fitContainer = false,
+        mediaRenderer,
     }: Props = $props();
 
     let streamable = $derived(videoBox.streamable);
 </script>
 
-{#if forceDisplay || (($highlightedEmbedScreen !== videoBox || $playerMovedInTheLast10Seconds) && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && ($streamable?.displayInPictureInPictureMode ?? false))}
+{#if forceDisplay || (($highlightedEmbedScreen !== videoBox || playerMovedInTheLast10Seconds) && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && ($streamable?.displayInPictureInPictureMode ?? false))}
     <VideoBoxOptimizer
         {videoBox}
         {isOnOneLine}
         {oneLineMode}
         {videoWidth}
         {videoHeight}
+        {oneLineStreamableCount}
         {intersectionObserver}
         forceVisible={forceDisplay}
         {fitContainer}
+        {mediaRenderer}
     />
 {/if}
