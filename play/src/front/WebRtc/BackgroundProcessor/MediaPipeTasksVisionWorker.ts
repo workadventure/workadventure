@@ -1,8 +1,7 @@
 import type { MPMask } from "@mediapipe/tasks-vision";
 import { DrawingUtils, ImageSegmenter } from "@mediapipe/tasks-vision";
-// This worker is emitted as a classic script, and MediaPipe loads this file with importScripts().
-import wasmBinaryPath from "@mediapipe/tasks-vision/vision_wasm_internal.wasm?url";
-import wasmLoaderPath from "@mediapipe/tasks-vision/vision_wasm_internal.js?url";
+import wasmBinaryPath from "@mediapipe/tasks-vision/vision_wasm_module_internal.wasm?url";
+import wasmLoaderPath from "@mediapipe/tasks-vision/vision_wasm_module_internal.js?url";
 import { TasksVisionBlurCompositor } from "./TasksVisionBlurCompositor";
 import type {
     SerializedWorkerError,

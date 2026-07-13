@@ -5,6 +5,8 @@ const workerMocks = vi.hoisted(
         instances: Array<{
             onmessage: ((event: MessageEvent) => void) | null;
             messages: Array<{ type: string; requestId?: number; config?: { backgroundImage?: string } }>;
+            url: string | URL;
+            options?: WorkerOptions;
             response: "ready" | "unsupported";
             terminate: ReturnType<typeof vi.fn>;
         }>;
@@ -27,47 +29,8 @@ const fallbackMocks = vi.hoisted(() => ({
     constructor: vi.fn(),
 }));
 
-vi.mock("../../../../src/front/WebRtc/BackgroundProcessor/MediaPipeTasksVisionWorker?worker", () => ({
-    default: class {
-        public onmessage: ((event: MessageEvent) => void) | null = null;
-        public onerror: ((event: ErrorEvent) => void) | null = null;
-        public messages: Array<{
-            type: string;
-            requestId?: number;
-            config?: { backgroundImage?: string };
-        }> = [];
-        public response = workerMocks.response;
-        public terminate = vi.fn();
-
-        constructor() {
-            workerMocks.instances.push(this);
-        }
-
-        public postMessage(message: { type: string; requestId?: number; config?: { backgroundImage?: string } }): void {
-            this.messages.push(message);
-            if (message.type === "update-config") {
-                if (!workerMocks.respondToConfigUpdates) {
-                    return;
-                }
-                queueMicrotask(() => {
-                    this.onmessage?.({
-                        data: { type: "config-updated", requestId: message.requestId },
-                    } as MessageEvent);
-                });
-                return;
-            }
-            if (message.type !== "initialize") {
-                return;
-            }
-            queueMicrotask(() => {
-                const data =
-                    this.response === "ready"
-                        ? { type: "ready", delegate: "GPU" }
-                        : { type: "unsupported", reason: "WebGL2 is unavailable in OffscreenCanvas workers" };
-                this.onmessage?.({ data } as MessageEvent);
-            });
-        }
-    },
+vi.mock("../../../../src/front/WebRtc/BackgroundProcessor/MediaPipeTasksVisionWorker?worker&url", () => ({
+    default: "/assets/tasks-vision-worker.js",
 }));
 
 vi.mock("../../../../src/front/WebRtc/BackgroundProcessor/MediaPipeTasksVisionTransformer", () => ({
@@ -94,7 +57,59 @@ describe("MediaPipeTasksVisionWorkerTransformer", () => {
         workerMocks.response = "ready";
         workerMocks.respondToConfigUpdates = true;
         workerMocks.instances.length = 0;
-        vi.stubGlobal("Worker", class {});
+        vi.stubGlobal(
+            "Worker",
+            class {
+                public onmessage: ((event: MessageEvent) => void) | null = null;
+                public onerror: ((event: ErrorEvent) => void) | null = null;
+                public messages: Array<{
+                    type: string;
+                    requestId?: number;
+                    config?: { backgroundImage?: string };
+                }> = [];
+                public response = workerMocks.response;
+                public terminate = vi.fn();
+
+                constructor(
+                    public url: string | URL,
+                    public options?: WorkerOptions,
+                ) {
+                    workerMocks.instances.push(this);
+                }
+
+                public postMessage(message: {
+                    type: string;
+                    requestId?: number;
+                    config?: { backgroundImage?: string };
+                }): void {
+                    this.messages.push(message);
+                    if (message.type === "update-config") {
+                        if (!workerMocks.respondToConfigUpdates) {
+                            return;
+                        }
+                        queueMicrotask(() => {
+                            this.onmessage?.({
+                                data: { type: "config-updated", requestId: message.requestId },
+                            } as MessageEvent);
+                        });
+                        return;
+                    }
+                    if (message.type !== "initialize") {
+                        return;
+                    }
+                    queueMicrotask(() => {
+                        const data =
+                            this.response === "ready"
+                                ? { type: "ready", delegate: "GPU" }
+                                : {
+                                      type: "unsupported",
+                                      reason: "WebGL2 is unavailable in OffscreenCanvas workers",
+                                  };
+                        this.onmessage?.({ data } as MessageEvent);
+                    });
+                }
+            },
+        );
         vi.stubGlobal("OffscreenCanvas", class {});
         vi.stubGlobal("createImageBitmap", vi.fn());
         vi.spyOn(console, "info").mockImplementation(() => undefined);
@@ -139,6 +154,10 @@ describe("MediaPipeTasksVisionWorkerTransformer", () => {
         await transformer.waitForInitialization();
 
         expect(workerMocks.instances).toHaveLength(1);
+        expect(workerMocks.instances[0]).toMatchObject({
+            url: "/assets/tasks-vision-worker.js",
+            options: { type: "module" },
+        });
         expect(fallbackMocks.constructor).not.toHaveBeenCalled();
         expect(transformer.getPerformanceStats()).toMatchObject({
             captureBackend: "worker-2d-copy-capture",

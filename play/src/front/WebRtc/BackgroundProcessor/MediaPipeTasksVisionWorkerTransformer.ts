@@ -1,8 +1,7 @@
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
-// MediaPipe loads its generated WASM loader with importScripts(), so this worker
-// must have an HTTP URL rather than a blob URL.
-import TasksVisionWorker from "./MediaPipeTasksVisionWorker?worker";
+// Use an emitted URL so the worker type stays explicit in both dev and production.
+import tasksVisionWorkerUrl from "./MediaPipeTasksVisionWorker?worker&url";
 import type {
     SerializedWorkerError,
     TasksVisionWorkerRequest,
@@ -148,7 +147,7 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
             throw new Error("Cannot initialize a closed Tasks Vision transformer");
         }
 
-        const worker = new TasksVisionWorker();
+        const worker = new Worker(tasksVisionWorkerUrl, { type: "module" });
         this.worker = worker;
         worker.onmessage = (event: MessageEvent<TasksVisionWorkerResponse>) => this.handleWorkerMessage(event.data);
         worker.onerror = (event: ErrorEvent) => {
