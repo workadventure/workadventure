@@ -27,7 +27,7 @@ const fallbackMocks = vi.hoisted(() => ({
     constructor: vi.fn(),
 }));
 
-vi.mock("../../../../src/front/WebRtc/BackgroundProcessor/MediaPipeTasksVisionWorker?worker&inline", () => ({
+vi.mock("../../../../src/front/WebRtc/BackgroundProcessor/MediaPipeTasksVisionWorker?worker", () => ({
     default: class {
         public onmessage: ((event: MessageEvent) => void) | null = null;
         public onerror: ((event: ErrorEvent) => void) | null = null;
