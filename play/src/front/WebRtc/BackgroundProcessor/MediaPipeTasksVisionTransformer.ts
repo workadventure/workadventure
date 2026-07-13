@@ -2,7 +2,15 @@ import type { MPMask } from "@mediapipe/tasks-vision";
 import { ImageSegmenter, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
-import type { BackgroundConfig, BackgroundTransformer } from "./createBackgroundTransformer";
+import type {
+    BackgroundConfig,
+    BackgroundTransformer,
+    BackgroundTransformerFailureHandler,
+} from "./createBackgroundTransformer";
+
+const DEFAULT_FRAME_RATE = 30;
+const MAX_CONSECUTIVE_RECOVERY_ATTEMPTS = 2;
+const SUCCESSFUL_FRAMES_BEFORE_RECOVERY_RESET = 30;
 
 /**
  * MediaPipe Tasks Vision-based background transformer for video streams
@@ -30,11 +38,12 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private frameCount = 0;
     private startTime = performance.now();
     private initPromise: Promise<void>;
-    private frameRate = 33;
-    // Use a global timestamp that never resets to ensure monotonic timestamps for MediaPipe
-    private globalStartTime = performance.now();
-    // Track the last timestamp to guarantee strict monotonic increase
-    private lastTimestampMicroseconds = 0;
+    private frameRate = DEFAULT_FRAME_RATE;
+    private frameIntervalMs = 1000 / DEFAULT_FRAME_RATE;
+    private lastTimestampMs = -1;
+    private recoveryPromise: Promise<void> | null = null;
+    private consecutiveRecoveryAttempts = 0;
+    private successfulFramesSinceRecovery = 0;
 
     // Canvas for blurred background (used as texture source for DrawingUtils)
     private blurredCanvas: HTMLCanvasElement | null = null;
@@ -48,9 +57,12 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private foregroundCanvas: HTMLCanvasElement | null = null;
     private foregroundCtx: CanvasRenderingContext2D | null = null;
 
-    constructor(private config: BackgroundConfig) {
+    constructor(
+        private config: BackgroundConfig,
+        private readonly onTerminalFailure?: BackgroundTransformerFailureHandler,
+    ) {
         // Create WebGL canvas for MediaPipe (shared with ImageSegmenter and DrawingUtils)
-        this.glCanvas = document.createElement("canvas");
+        this.glCanvas = this.createGlCanvas();
 
         // Create output canvas for stream capture (2D context for captureStream compatibility)
         this.outputCanvas = document.createElement("canvas");
@@ -135,6 +147,10 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         this.drawingUtils = new DrawingUtils(this.gl);
     }
 
+    private createGlCanvas(): HTMLCanvasElement {
+        return document.createElement("canvas");
+    }
+
     private initializeBlurredCanvas(): void {
         this.blurredCanvas = document.createElement("canvas");
         this.blurredCtx = this.blurredCanvas.getContext("2d")!;
@@ -185,10 +201,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
 
         // Skip processing if canvas has invalid dimensions
         if (!width || !height || width === 0 || height === 0) {
-            if (this.timeoutId) {
-                clearTimeout(this.timeoutId);
-            }
-            this.timeoutId = setTimeout(() => this.processFrame(), this.frameRate);
+            this.scheduleNextFrame();
             return;
         }
 
@@ -197,59 +210,145 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         const videoHeight = this.inputVideo.videoHeight;
 
         if (!videoWidth || !videoHeight || videoWidth === 0 || videoHeight === 0) {
-            if (this.timeoutId) {
-                clearTimeout(this.timeoutId);
-            }
-            this.timeoutId = setTimeout(() => this.processFrame(), this.frameRate);
+            this.scheduleNextFrame();
             return;
         }
 
         if (this.inputVideo.readyState < 2) {
             // Video not ready yet, retry
-            if (this.timeoutId) {
-                clearTimeout(this.timeoutId);
-            }
-            this.timeoutId = setTimeout(() => this.processFrame(), this.frameRate);
+            this.scheduleNextFrame();
             return;
         }
 
         try {
-            // Calculate timestamp in microseconds (MediaPipe requires microseconds)
-            // Use a global timestamp that never resets to ensure strict monotonic increase
-            // This is critical: MediaPipe requires timestamps to be STRICTLY increasing
-            const currentTime = performance.now();
-            let timestampMicroseconds = Math.floor((currentTime - this.globalStartTime) * 1000);
-
-            // Ensure timestamp is strictly greater than the last one
-            // performance.now() can return the same value on rapid calls, causing MediaPipe errors
-            if (timestampMicroseconds <= this.lastTimestampMicroseconds) {
-                timestampMicroseconds = this.lastTimestampMicroseconds + 1;
-            }
-            this.lastTimestampMicroseconds = timestampMicroseconds;
+            // The Tasks Vision API expects milliseconds and requires monotonically increasing values.
+            const timestampMs = Math.max(performance.now(), this.lastTimestampMs + 1);
+            this.lastTimestampMs = timestampMs;
 
             // Segment the current video frame
-            const result = this.imageSegmenter.segmentForVideo(this.inputVideo, timestampMicroseconds);
-
-            if (result.confidenceMasks && result.confidenceMasks.length > 0) {
-                this.processResults(result.confidenceMasks[0]);
+            const result = this.imageSegmenter.segmentForVideo(this.inputVideo, timestampMs);
+            try {
+                if (result.confidenceMasks && result.confidenceMasks.length > 0) {
+                    this.processResults(result.confidenceMasks[0]);
+                }
+                // Silently skip if no mask - this can happen occasionally and is not critical
+            } finally {
+                result.close();
             }
-            // Silently skip if no mask - this can happen occasionally and is not critical
 
-            // Schedule next frame
-            if (this.timeoutId) {
-                clearTimeout(this.timeoutId);
-            }
-            this.timeoutId = setTimeout(() => this.processFrame(), this.frameRate);
+            this.markSuccessfulFrame();
+            this.scheduleNextFrame();
         } catch (error) {
-            console.error("[MediaPipe Tasks Vision] : ", error);
-            this.timeoutId = setTimeout(() => this.processFrame(), this.frameRate);
+            this.startRecovery(error);
+        }
+    }
+
+    private scheduleNextFrame(): void {
+        this.cancelScheduledFrame();
+        if (this.closed || !this.outputStream || this.config.mode === "none") {
             return;
         }
+        this.timeoutId = setTimeout(() => this.processFrame(), this.frameIntervalMs);
+    }
+
+    private cancelScheduledFrame(): void {
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = null;
+        }
+    }
+
+    private markSuccessfulFrame(): void {
+        if (this.consecutiveRecoveryAttempts === 0) {
+            return;
+        }
+
+        this.successfulFramesSinceRecovery++;
+        if (this.successfulFramesSinceRecovery >= SUCCESSFUL_FRAMES_BEFORE_RECOVERY_RESET) {
+            this.consecutiveRecoveryAttempts = 0;
+            this.successfulFramesSinceRecovery = 0;
+        }
+    }
+
+    private startRecovery(error: unknown): void {
+        if (this.closed || this.recoveryPromise) {
+            return;
+        }
+
+        this.cancelScheduledFrame();
+        const errorMessage = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+        const inputTrack =
+            this.inputVideo.srcObject instanceof MediaStream
+                ? this.inputVideo.srcObject.getVideoTracks()[0]
+                : undefined;
+        console.error(
+            `[MediaPipe Tasks Vision] Frame processing failed: ${errorMessage}; ` +
+                `timestampMs=${this.lastTimestampMs}; videoTime=${this.inputVideo.currentTime}; ` +
+                `readyState=${this.inputVideo.readyState}; trackState=${inputTrack?.readyState ?? "unavailable"}; ` +
+                `visibility=${document.visibilityState}; webGlContextLost=${this.gl?.isContextLost() ?? true}`,
+        );
+
+        this.recoveryPromise = this.recoverMediaPipe()
+            .catch((recoveryError: unknown) => {
+                const recoveryErrorMessage =
+                    recoveryError instanceof Error
+                        ? `${recoveryError.name}: ${recoveryError.message}`
+                        : String(recoveryError);
+                console.error(`[MediaPipe Tasks Vision] Recovery failed: ${recoveryErrorMessage}`);
+
+                const terminalError = new Error("MediaPipe Tasks Vision recovery failed", {
+                    cause: recoveryError,
+                });
+                this.close();
+                try {
+                    this.onTerminalFailure?.(terminalError);
+                } catch (callbackError) {
+                    console.error("[MediaPipe Tasks Vision] Terminal failure handler failed:", callbackError);
+                }
+            })
+            .finally(() => {
+                this.recoveryPromise = null;
+            });
+    }
+
+    private async recoverMediaPipe(): Promise<void> {
+        if (this.closed || this.consecutiveRecoveryAttempts >= MAX_CONSECUTIVE_RECOVERY_ATTEMPTS) {
+            throw new Error("MediaPipe recovery attempts exhausted");
+        }
+
+        this.consecutiveRecoveryAttempts++;
+        this.successfulFramesSinceRecovery = 0;
+
+        this.disposeMediaPipeResources();
+        this.glCanvas = this.createGlCanvas();
+        this.glCanvas.width = this.outputCanvas.width;
+        this.glCanvas.height = this.outputCanvas.height;
+
+        try {
+            await this.initializeMediaPipe();
+        } catch (error) {
+            if (this.consecutiveRecoveryAttempts >= MAX_CONSECUTIVE_RECOVERY_ATTEMPTS) {
+                throw error;
+            }
+            return this.recoverMediaPipe();
+        }
+
+        if (this.closed) {
+            this.disposeMediaPipeResources();
+            return;
+        }
+        if (!this.outputStream || this.config.mode === "none") {
+            return;
+        }
+
+        console.info(
+            `[MediaPipe Tasks Vision] Recovered after attempt ${this.consecutiveRecoveryAttempts}/${MAX_CONSECUTIVE_RECOVERY_ATTEMPTS}`,
+        );
+        this.scheduleNextFrame();
     }
 
     private processResults(mask: MPMask): void {
         if (this.closed) {
-            mask.close();
             return;
         }
 
@@ -257,7 +356,6 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
 
         // Skip processing if canvas has invalid dimensions
         if (!width || !height || width === 0 || height === 0) {
-            mask.close();
             console.warn(
                 `[MediaPipe Tasks Vision] Skipping frame processing: canvas dimensions are ${width}x${height}`,
             );
@@ -269,20 +367,14 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         } else if (this.config.mode === "image" || this.config.mode === "video") {
             this.processReplaceMode(mask);
         } else {
-            mask.close();
             throw new Error(`[MediaPipe Tasks Vision] Unknown mode: ${this.config.mode}`);
         }
 
-        // Clean up mask resources
-        mask.close();
-
-        // Copy from WebGL canvas to output canvas for stream capture
-        this.outputCtx.drawImage(this.glCanvas, 0, 0, width, height);
-
-        // Ensure WebGL operations are flushed for captureStream
+        // Ensure WebGL operations are submitted before copying to the capture canvas.
         if (this.gl) {
             this.gl.flush();
         }
+        this.outputCtx.drawImage(this.glCanvas, 0, 0, width, height);
 
         this.frameCount++;
     }
@@ -470,21 +562,13 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     }
 
     public stop(): void {
-        // Stop timeout
-        if (this.timeoutId) {
-            clearTimeout(this.timeoutId);
-            this.timeoutId = null;
-        }
+        this.cancelScheduledFrame();
     }
 
     public close(): void {
         this.closed = true;
 
-        // Stop timeout
-        if (this.timeoutId) {
-            clearTimeout(this.timeoutId);
-            this.timeoutId = null;
-        }
+        this.cancelScheduledFrame();
 
         // Stop output stream
         if (this.outputStream) {
@@ -492,27 +576,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             this.outputStream = null;
         }
 
-        // Close DrawingUtils (frees WebGL resources)
-        if (this.drawingUtils) {
-            try {
-                this.drawingUtils.close();
-            } catch (error) {
-                console.warn("[MediaPipe Tasks Vision] Error closing DrawingUtils:", error);
-            }
-            this.drawingUtils = null;
-        }
-
-        // Close MediaPipe
-        if (this.imageSegmenter) {
-            try {
-                this.imageSegmenter.close();
-            } catch (error) {
-                console.warn("[MediaPipe Tasks Vision] Error closing segmenter:", error);
-            }
-            this.imageSegmenter = null;
-        }
-
-        this.gl = null;
+        this.disposeMediaPipeResources();
 
         // Clean up resources
         if (this.backgroundVideo) {
@@ -533,11 +597,44 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         // Clean up foreground canvas
         this.foregroundCanvas = null;
         this.foregroundCtx = null;
+
+        this.inputVideo.pause();
+        this.inputVideo.srcObject = null;
+    }
+
+    private disposeMediaPipeResources(): void {
+        if (this.drawingUtils) {
+            try {
+                this.drawingUtils.close();
+            } catch (error) {
+                console.warn("[MediaPipe Tasks Vision] Error closing DrawingUtils:", error);
+            }
+            this.drawingUtils = null;
+        }
+
+        if (this.imageSegmenter) {
+            try {
+                this.imageSegmenter.close();
+            } catch (error) {
+                console.warn("[MediaPipe Tasks Vision] Error closing segmenter:", error);
+            }
+            this.imageSegmenter = null;
+        }
+
+        if (this.gl) {
+            // This extension only releases the transformer's context; Phaser uses a different canvas/context.
+            this.gl.getExtension("WEBGL_lose_context")?.loseContext();
+        }
+        this.gl = null;
     }
 
     public async transform(inputStream: MediaStream, signal?: AbortSignal): Promise<MediaStream> {
-        this.frameRate = inputStream.getVideoTracks()[0]?.getSettings().frameRate || 33;
+        this.frameRate = inputStream.getVideoTracks()[0]?.getSettings().frameRate || DEFAULT_FRAME_RATE;
+        this.frameIntervalMs = 1000 / this.frameRate;
         await this.initPromise;
+        if (this.recoveryPromise) {
+            await raceAbort(this.recoveryPromise, signal);
+        }
         if (signal?.aborted) {
             throw signal.reason ?? new AbortError("Transform aborted after initialization");
         }
@@ -601,16 +698,9 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             this.outputStream.addTrack(audioTrack);
         }
 
-        // Don't reset timestamp - keep it monotonic across stream changes
-        // MediaPipe requires strictly increasing timestamps, so we use a global timestamp
-        // that never resets
-
         // Stop any existing processing loop before starting a new one
         // This prevents race conditions when transform() is called multiple times
-        if (this.timeoutId) {
-            clearTimeout(this.timeoutId);
-            this.timeoutId = null;
-        }
+        this.cancelScheduledFrame();
 
         // Start processing loop
         this.processFrame();

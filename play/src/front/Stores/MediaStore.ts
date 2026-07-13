@@ -1032,7 +1032,20 @@ async function runLocalVideoTrackUpdate(
 
     if (!backgroundTransformer) {
         const currentConfig = get(backgroundConfigStore);
-        backgroundTransformer = createBackgroundTransformer(currentConfig);
+        const transformer = createBackgroundTransformer(currentConfig, (error) => {
+            if (backgroundTransformer !== transformer) {
+                return;
+            }
+
+            console.warn("[MediaStore] Background transformer stopped after a terminal failure:", error);
+            Sentry.captureException(error);
+            warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.failedToApply());
+            transformer.close();
+            backgroundTransformer = undefined;
+            lastBackgroundConfig = undefined;
+            backgroundConfigStore.reset();
+        });
+        backgroundTransformer = transformer;
     }
 
     if (!backgroundTransformer) {

@@ -21,6 +21,8 @@ export interface BackgroundTransformer {
     stop(): void;
 }
 
+export type BackgroundTransformerFailureHandler = (error: Error) => void;
+
 /**
  * Create a MediaPipe-based background transformer with fallback support
  * Supports both the new Tasks Vision API (GPU-accelerated) and legacy Selfie Segmentation (CPU)
@@ -29,13 +31,16 @@ export interface BackgroundTransformer {
  * @param config Background configuration
  * @returns A MediaPipe transformer instance or fallback
  */
-export function createBackgroundTransformer(config: BackgroundConfig): BackgroundTransformer {
+export function createBackgroundTransformer(
+    config: BackgroundConfig,
+    onTerminalFailure?: BackgroundTransformerFailureHandler,
+): BackgroundTransformer {
     const engine = BACKGROUND_TRANSFORMER_ENGINE || "tasks-vision";
     console.info(`[BackgroundProcessor] Using transformer engine: ${engine}`);
 
     if (engine === "tasks-vision") {
         try {
-            const transformer = new MediaPipeTasksVisionTransformer(config);
+            const transformer = new MediaPipeTasksVisionTransformer(config, onTerminalFailure);
             return transformer;
         } catch (error) {
             console.error("[BackgroundTransformer] Failed to create Tasks Vision transformer, using fallback:", error);
