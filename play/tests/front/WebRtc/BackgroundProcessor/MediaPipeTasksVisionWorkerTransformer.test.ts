@@ -9,9 +9,11 @@ const workerMocks = vi.hoisted(
             terminate: ReturnType<typeof vi.fn>;
         }>;
         response: "ready" | "unsupported";
+        respondToConfigUpdates: boolean;
     } => ({
         instances: [],
         response: "ready",
+        respondToConfigUpdates: true,
     }),
 );
 
@@ -44,6 +46,9 @@ vi.mock("../../../../src/front/WebRtc/BackgroundProcessor/MediaPipeTasksVisionWo
         public postMessage(message: { type: string; requestId?: number; config?: { backgroundImage?: string } }): void {
             this.messages.push(message);
             if (message.type === "update-config") {
+                if (!workerMocks.respondToConfigUpdates) {
+                    return;
+                }
                 queueMicrotask(() => {
                     this.onmessage?.({
                         data: { type: "config-updated", requestId: message.requestId },
@@ -87,6 +92,7 @@ describe("MediaPipeTasksVisionWorkerTransformer", () => {
 
     beforeEach(() => {
         workerMocks.response = "ready";
+        workerMocks.respondToConfigUpdates = true;
         workerMocks.instances.length = 0;
         vi.stubGlobal("Worker", class {});
         vi.stubGlobal("OffscreenCanvas", class {});
@@ -115,6 +121,7 @@ describe("MediaPipeTasksVisionWorkerTransformer", () => {
     afterEach(() => {
         transformer?.close();
         transformer = undefined;
+        vi.useRealTimers();
         vi.unstubAllGlobals();
         vi.restoreAllMocks();
         fallbackMocks.close.mockReset();
@@ -166,5 +173,20 @@ describe("MediaPipeTasksVisionWorkerTransformer", () => {
                 backgroundImage: new URL("./static/images/background/library.jpg", document.baseURI).href,
             },
         });
+    });
+
+    it("rejects a stalled config update and recovers the worker", async () => {
+        transformer = new MediaPipeTasksVisionWorkerTransformer({ mode: "blur" });
+        await transformer.waitForInitialization();
+        vi.useFakeTimers();
+        workerMocks.respondToConfigUpdates = false;
+
+        const updatePromise = transformer.updateConfig({ blurAmount: 25 });
+        const updateRejection = expect(updatePromise).rejects.toThrow("Tasks Vision worker config update 1 timed out");
+        await vi.advanceTimersByTimeAsync(30_000);
+
+        await updateRejection;
+        expect(workerMocks.instances[0].terminate).toHaveBeenCalledOnce();
+        expect(workerMocks.instances).toHaveLength(2);
     });
 });

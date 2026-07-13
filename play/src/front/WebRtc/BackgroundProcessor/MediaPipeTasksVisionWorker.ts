@@ -268,14 +268,25 @@ function getBackgroundCanvas(width: number, height: number): OffscreenCanvas | n
     return backgroundCanvas;
 }
 
+function closeResource(name: string, resource: { close(): void } | null): void {
+    if (!resource) {
+        return;
+    }
+    try {
+        resource.close();
+    } catch (error) {
+        console.warn(`[MediaPipe Tasks Vision Worker] Error closing ${name}:`, error);
+    }
+}
+
 function dispose(): void {
-    blurCompositor?.close();
+    closeResource("blur compositor", blurCompositor);
     blurCompositor = null;
-    drawingUtils?.close();
+    closeResource("DrawingUtils", drawingUtils);
     drawingUtils = null;
-    imageSegmenter?.close();
+    closeResource("ImageSegmenter", imageSegmenter);
     imageSegmenter = null;
-    backgroundImage?.close();
+    closeResource("background image", backgroundImage);
     backgroundImage = null;
     gl?.getExtension("WEBGL_lose_context")?.loseContext();
     gl = null;

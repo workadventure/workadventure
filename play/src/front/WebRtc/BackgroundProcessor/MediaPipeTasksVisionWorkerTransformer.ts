@@ -15,6 +15,7 @@ import type {
 
 const DEFAULT_FRAME_RATE = 30;
 const WORKER_INITIALIZATION_TIMEOUT_MS = 30_000;
+const CONFIG_UPDATE_TIMEOUT_MS = 30_000;
 const MAX_CONSECUTIVE_RECOVERY_ATTEMPTS = 2;
 const SUCCESSFUL_FRAMES_BEFORE_RECOVERY_RESET = 30;
 
@@ -25,12 +26,16 @@ class UnsupportedTasksVisionWorkerError extends Error {
     }
 }
 
-type PendingConfigRequest = {
+type PendingRequestCallbacks = {
     resolve: () => void;
     reject: (error: Error) => void;
 };
 
-type PendingInitialFrame = PendingConfigRequest & {
+type PendingConfigRequest = PendingRequestCallbacks & {
+    timeoutId: ReturnType<typeof setTimeout>;
+};
+
+type PendingInitialFrame = PendingRequestCallbacks & {
     generation: number;
 };
 
@@ -231,11 +236,10 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
     private handleConfigResponse(
         message: Extract<TasksVisionWorkerResponse, { type: "config-updated" | "config-update-error" }>,
     ): void {
-        const request = this.pendingConfigRequests.get(message.requestId);
+        const request = this.takePendingConfigRequest(message.requestId);
         if (!request) {
             return;
         }
-        this.pendingConfigRequests.delete(message.requestId);
         if (message.type === "config-updated") {
             request.resolve();
         } else {
@@ -462,17 +466,30 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
         await this.updateBackgroundVideo();
         const requestId = this.nextConfigRequestId++;
         const responsePromise = new Promise<void>((resolve, reject) => {
-            this.pendingConfigRequests.set(requestId, { resolve, reject });
+            const timeoutId = setTimeout(() => {
+                const request = this.takePendingConfigRequest(requestId);
+                if (!request) {
+                    return;
+                }
+                const error = new Error(`Tasks Vision worker config update ${requestId} timed out`);
+                request.reject(error);
+                this.startRecovery(error);
+            }, CONFIG_UPDATE_TIMEOUT_MS);
+            this.pendingConfigRequests.set(requestId, { resolve, reject, timeoutId });
         });
         const workerConfig = { ...nextConfig };
         if (nextConfig.backgroundImage !== undefined) {
             workerConfig.backgroundImage = this.resolveDocumentUrl(nextConfig.backgroundImage);
         }
-        this.postToWorker({
-            type: "update-config",
-            requestId,
-            config: workerConfig,
-        });
+        try {
+            this.postToWorker({
+                type: "update-config",
+                requestId,
+                config: workerConfig,
+            });
+        } catch (error) {
+            this.takePendingConfigRequest(requestId)?.reject(error instanceof Error ? error : new Error(String(error)));
+        }
         await responsePromise;
 
         if (this.config.mode === "none") {
@@ -513,6 +530,16 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
 
     private resolveDocumentUrl(url: string | undefined): string | undefined {
         return url ? new URL(url, document.baseURI).href : undefined;
+    }
+
+    private takePendingConfigRequest(requestId: number): PendingConfigRequest | undefined {
+        const request = this.pendingConfigRequests.get(requestId);
+        if (!request) {
+            return undefined;
+        }
+        this.pendingConfigRequests.delete(requestId);
+        clearTimeout(request.timeoutId);
+        return request;
     }
 
     public getPerformanceStats(): unknown {
@@ -580,6 +607,7 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
         this.workerDelegate = "none";
         const error = new Error("Tasks Vision worker was terminated");
         for (const request of this.pendingConfigRequests.values()) {
+            clearTimeout(request.timeoutId);
             request.reject(error);
         }
         this.pendingConfigRequests.clear();
