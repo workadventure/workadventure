@@ -30,7 +30,7 @@ interface SegmenterMock {
 interface TestDom {
     contextLoss: ReturnType<typeof vi.fn>;
     inputTrack: MediaStreamTrack;
-    outputTrack: MediaStreamTrack;
+    outputTrackStop: ReturnType<typeof vi.fn>;
 }
 
 function createSegmenter(): SegmenterMock {
@@ -51,10 +51,11 @@ function installTestDom(frameRate = 25): TestDom {
         getSettings: () => ({ frameRate }),
         stop: vi.fn(),
     } as unknown as MediaStreamTrack;
+    const outputTrackStop = vi.fn();
     const outputTrack = {
         kind: "video",
         readyState: "live",
-        stop: vi.fn(),
+        stop: outputTrackStop,
     } as unknown as MediaStreamTrack;
     const inputVideo = {
         autoplay: false,
@@ -95,7 +96,7 @@ function installTestDom(frameRate = 25): TestDom {
         throw new Error(`Unexpected element requested by test: ${tagName}`);
     });
 
-    return { contextLoss, inputTrack, outputTrack };
+    return { contextLoss, inputTrack, outputTrackStop };
 }
 
 async function flushPromises(): Promise<void> {
@@ -167,5 +168,35 @@ describe("MediaPipeTasksVisionTransformer", () => {
 
         await vi.advanceTimersByTimeAsync(40);
         expect(recoveredSegmenter.segmentForVideo).toHaveBeenCalledTimes(1);
+    });
+
+    it("closes the output and surfaces a terminal recovery failure", async () => {
+        const { inputTrack, outputTrackStop } = installTestDom();
+        const segmenters = [createSegmenter(), createSegmenter(), createSegmenter()];
+        for (const segmenter of segmenters) {
+            segmenter.segmentForVideo.mockImplementation(() => {
+                throw new Error("Packet timestamp mismatch on free_memory");
+            });
+        }
+        mediaPipeMocks.createFromOptions
+            .mockResolvedValueOnce(segmenters[0])
+            .mockResolvedValueOnce(segmenters[1])
+            .mockResolvedValueOnce(segmenters[2]);
+        const onTerminalFailure = vi.fn();
+        transformer = new MediaPipeTasksVisionTransformer({ mode: "blur" }, onTerminalFailure);
+
+        await transformer.transform(new MediaStream([inputTrack]));
+        await flushPromises();
+        await vi.advanceTimersByTimeAsync(40);
+        await flushPromises();
+        await vi.advanceTimersByTimeAsync(40);
+        await flushPromises();
+
+        expect(mediaPipeMocks.createFromOptions).toHaveBeenCalledTimes(3);
+        expect(onTerminalFailure).toHaveBeenCalledOnce();
+        expect(onTerminalFailure.mock.calls[0][0]).toMatchObject({
+            message: "MediaPipe Tasks Vision recovery failed",
+        });
+        expect(outputTrackStop).toHaveBeenCalledOnce();
     });
 });

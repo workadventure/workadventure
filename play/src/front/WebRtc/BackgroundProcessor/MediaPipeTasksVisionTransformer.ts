@@ -2,7 +2,11 @@ import type { MPMask } from "@mediapipe/tasks-vision";
 import { ImageSegmenter, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
-import type { BackgroundConfig, BackgroundTransformer } from "./createBackgroundTransformer";
+import type {
+    BackgroundConfig,
+    BackgroundTransformer,
+    BackgroundTransformerFailureHandler,
+} from "./createBackgroundTransformer";
 
 const DEFAULT_FRAME_RATE = 30;
 const MAX_CONSECUTIVE_RECOVERY_ATTEMPTS = 2;
@@ -53,7 +57,10 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private foregroundCanvas: HTMLCanvasElement | null = null;
     private foregroundCtx: CanvasRenderingContext2D | null = null;
 
-    constructor(private config: BackgroundConfig) {
+    constructor(
+        private config: BackgroundConfig,
+        private readonly onTerminalFailure?: BackgroundTransformerFailureHandler,
+    ) {
         // Create WebGL canvas for MediaPipe (shared with ImageSegmenter and DrawingUtils)
         this.glCanvas = this.createGlCanvas();
 
@@ -288,6 +295,16 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
                         ? `${recoveryError.name}: ${recoveryError.message}`
                         : String(recoveryError);
                 console.error(`[MediaPipe Tasks Vision] Recovery failed: ${recoveryErrorMessage}`);
+
+                const terminalError = new Error("MediaPipe Tasks Vision recovery failed", {
+                    cause: recoveryError,
+                });
+                this.close();
+                try {
+                    this.onTerminalFailure?.(terminalError);
+                } catch (callbackError) {
+                    console.error("[MediaPipe Tasks Vision] Terminal failure handler failed:", callbackError);
+                }
             })
             .finally(() => {
                 this.recoveryPromise = null;
