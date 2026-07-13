@@ -1,0 +1,58 @@
+diff --git a/node_modules/phaser/dist/phaser.esm.js b/node_modules/phaser/dist/phaser.esm.js
+index 07a961e..07bdd4f 100644
+--- a/node_modules/phaser/dist/phaser.esm.js
++++ b/node_modules/phaser/dist/phaser.esm.js
+@@ -208488,6 +208488,9 @@ module.exports = [
+     '{',
+     '    vec2 layerTexCoord = outTexCoord;',
+     '    Tile tile = getLayerData(layerTexCoord);',
++    '    // WA patch: empty cells must be transparent. Without this, empty tiles sample tile 0 of the',
++    '    // tileset (opaque for most tilesets) and paint over whatever is drawn beneath the layer.',
++    '    if (tile.empty) { discard; }',
+     '    Samples samples = getFinalSamples(tile, layerTexCoord);',
+     '    vec4 fragColor = samples.color;',
+     '    #pragma phaserTemplate(declareSamples)',
+@@ -246698,7 +246701,11 @@ var Tileset = new Class({
+                 var animationDuration = tileDatum.animationDuration;
+ 
+                 // This index maps to an animation, not a single tile.
+-                indexToAnimMap.set(i, animations.length);
++                // WA patch: each animation header occupies 2 texels ([duration, frameOffset]) at
++                // texel 2*ordinal, but the shader's animationIndex() reads the header at texel `index`.
++                // Storing the raw ordinal only worked for ordinal 0; store 2*ordinal so every animated
++                // tile past the first resolves to the correct frames instead of a wrong tile.
++                indexToAnimMap.set(i, animations.length * 2);
+ 
+                 // This animation points to a run of frames.
+                 animations.push([ animationDuration, animFrames.length ]);
+diff --git a/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js b/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js
+index 8f3f66c..e1ce878 100644
+--- a/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js
++++ b/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js
+@@ -227,6 +227,9 @@ module.exports = [
+     '{',
+     '    vec2 layerTexCoord = outTexCoord;',
+     '    Tile tile = getLayerData(layerTexCoord);',
++    '    // WA patch: empty cells must be transparent. Without this, empty tiles sample tile 0 of the',
++    '    // tileset (opaque for most tilesets) and paint over whatever is drawn beneath the layer.',
++    '    if (tile.empty) { discard; }',
+     '    Samples samples = getFinalSamples(tile, layerTexCoord);',
+     '    vec4 fragColor = samples.color;',
+     '    #pragma phaserTemplate(declareSamples)',
+diff --git a/node_modules/phaser/src/tilemaps/Tileset.js b/node_modules/phaser/src/tilemaps/Tileset.js
+index 5447865..cea245f 100644
+--- a/node_modules/phaser/src/tilemaps/Tileset.js
++++ b/node_modules/phaser/src/tilemaps/Tileset.js
+@@ -614,7 +614,11 @@ var Tileset = new Class({
+                 var animationDuration = tileDatum.animationDuration;
+ 
+                 // This index maps to an animation, not a single tile.
+-                indexToAnimMap.set(i, animations.length);
++                // WA patch: each animation header occupies 2 texels ([duration, frameOffset]) at
++                // texel 2*ordinal, but the shader's animationIndex() reads the header at texel `index`.
++                // Storing the raw ordinal only worked for ordinal 0; store 2*ordinal so every animated
++                // tile past the first resolves to the correct frames instead of a wrong tile.
++                indexToAnimMap.set(i, animations.length * 2);
+ 
+                 // This animation points to a run of frames.
+                 animations.push([ animationDuration, animFrames.length ]);
