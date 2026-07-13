@@ -692,6 +692,7 @@ jobs:
             replicaCount: 2
             env:
               PROMETHEUS_PORT: "9090"
+              BACKGROUND_TRANSFORMER_ENGINE: "tasks-vision"
             secretEnv:
               ROOM_API_SECRET_KEY: "password"
             podAnnotations:
