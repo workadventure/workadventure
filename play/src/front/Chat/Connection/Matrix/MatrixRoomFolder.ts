@@ -12,6 +12,7 @@ import { ignoredSuggestedRoomIdsStore } from "../../Stores/ChatStore";
 import type { RoomFolder } from "../ChatConnection";
 import { retargetSelectedRoomIfReplaced } from "../../Stores/SelectRoomStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
+import { matrixMediaAuthService } from "./MatrixMediaAuthService";
 import { hasValidViaEntries } from "./MatrixSpaceRelations";
 
 export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
@@ -289,7 +290,15 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                     return;
                 }
 
-                const avatarUrl = chatRoom.getAvatarUrl(chatRoom.client.baseUrl, 24, 24, "scale") ?? "";
+                const avatarUrl =
+                    chatRoom.getAvatarUrl(
+                        chatRoom.client.baseUrl,
+                        24,
+                        24,
+                        "scale",
+                        undefined,
+                        matrixMediaAuthService.isEnabledForTagSrc(),
+                    ) ?? "";
                 suggestedRooms.push({
                     name: room.name ?? "",
                     id: roomId,
@@ -314,7 +323,15 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                 const membership = chatRoom.getMyMembership();
 
                 if (membership !== "join" && membership !== "invite" && membership !== "ban") {
-                    const avatarUrl = chatRoom.getAvatarUrl(chatRoom.client.baseUrl, 24, 24, "scale") ?? "";
+                    const avatarUrl =
+                        chatRoom.getAvatarUrl(
+                            chatRoom.client.baseUrl,
+                            24,
+                            24,
+                            "scale",
+                            undefined,
+                            matrixMediaAuthService.isEnabledForTagSrc(),
+                        ) ?? "";
                     availableRooms.push({
                         name: room.name ?? "",
                         id: roomId,

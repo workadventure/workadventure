@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { MatrixClient } from "matrix-js-sdk";
+    import { matrixMediaAuthService } from "../../Connection/Matrix/MatrixMediaAuthService";
 
     interface Props {
         // A valid Matrix reaction key is either a Unicode emoji or an mxc URI pointing to an image, or even some text.
@@ -13,7 +14,15 @@
 
     $effect(() => {
         if (key.startsWith("mxc://")) {
-            imageUrl = matrixClient.mxcUrlToHttp(key, 40, 40);
+            imageUrl = matrixClient.mxcUrlToHttp(
+                key,
+                40,
+                40,
+                undefined,
+                undefined,
+                undefined,
+                matrixMediaAuthService.isEnabledForTagSrc(),
+            );
         }
     });
 

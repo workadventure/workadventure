@@ -4,6 +4,7 @@ import { readable, writable, type Writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { ChatUser } from "../ChatConnection";
 import { matrixAvatarProfile } from "./services/MatrixAvatarProfile";
+import { matrixMediaAuthService } from "./MatrixMediaAuthService";
 
 type ChatUserFactoryOptions = {
     username?: string;
@@ -43,7 +44,16 @@ export function chatUserFactoryFromRoom(room: Room, userId: string): ChatUser | 
     const roomMember = room.getMember(userId);
     const displayName =
         roomMember?.name?.trim() || matrixUser?.displayName?.trim() || matrixUser?.rawDisplayName?.trim();
-    const pictureUrl = roomMember?.getAvatarUrl(room.client.baseUrl, 48, 48, "scale", false, false) ?? undefined;
+    const pictureUrl =
+        roomMember?.getAvatarUrl(
+            room.client.baseUrl,
+            48,
+            48,
+            "scale",
+            false,
+            false,
+            matrixMediaAuthService.isEnabledForTagSrc(),
+        ) ?? undefined;
 
     if (matrixUser) {
         return chatUserFactory(matrixUser, room.client, {

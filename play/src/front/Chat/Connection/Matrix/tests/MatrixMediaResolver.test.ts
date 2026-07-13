@@ -174,3 +174,132 @@ describe("resolveAttachmentMediaFromEvent", () => {
         result.cleanup();
     });
 });
+
+describe("resolveAttachmentMediaFromEvent authenticated media", () => {
+    it("targets the authenticated endpoint for unencrypted media when enabled", async () => {
+        const mxcUrlToHttp = vi.fn(
+            (mxc: string, _w?: number, _h?: number, _rm?: string, _adl?: boolean, _ar?: boolean, useAuth?: boolean) =>
+                `https://hs/${useAuth ? "v1" : "legacy"}?mxc=${encodeURIComponent(mxc)}`,
+        );
+        const client = { mxcUrlToHttp } as unknown as MatrixClient;
+
+        const event = {
+            getOriginalContent: () => ({
+                msgtype: "m.file",
+                body: "report.pdf",
+                url: "mxc://example.org/abcdef",
+            }),
+        } as unknown as MatrixEvent;
+
+        const result = await resolveAttachmentMediaFromEvent(event, client, new AbortController().signal, {
+            useAuthenticatedUrls: true,
+        });
+
+        expect(result.error).toBeUndefined();
+        expect(result.sourceUrl).toBe("https://hs/v1?mxc=mxc%3A%2F%2Fexample.org%2Fabcdef");
+        expect(mxcUrlToHttp).toHaveBeenCalledWith(
+            "mxc://example.org/abcdef",
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            true,
+        );
+        result.cleanup();
+    });
+
+    it("keeps the legacy endpoint for unencrypted media when disabled", async () => {
+        const mxcUrlToHttp = vi.fn(
+            (mxc: string, _w?: number, _h?: number, _rm?: string, _adl?: boolean, _ar?: boolean, useAuth?: boolean) =>
+                `https://hs/${useAuth ? "v1" : "legacy"}?mxc=${encodeURIComponent(mxc)}`,
+        );
+        const client = { mxcUrlToHttp } as unknown as MatrixClient;
+
+        const event = {
+            getOriginalContent: () => ({ msgtype: "m.file", body: "report.pdf", url: "mxc://example.org/abcdef" }),
+        } as unknown as MatrixEvent;
+
+        const result = await resolveAttachmentMediaFromEvent(event, client, new AbortController().signal);
+
+        expect(result.sourceUrl).toBe("https://hs/legacy?mxc=mxc%3A%2F%2Fexample.org%2Fabcdef");
+        expect(mxcUrlToHttp).toHaveBeenCalledWith(
+            "mxc://example.org/abcdef",
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            false,
+        );
+        result.cleanup();
+    });
+
+    it("adds the Authorization header when downloading encrypted media with auth", async () => {
+        const encryptedBuffer = new Uint8Array([1, 2, 3]).buffer;
+        const decryptedBuffer = new Uint8Array([4, 5, 6]).buffer;
+        const fetchSpy = vi.fn(() =>
+            Promise.resolve({
+                ok: true,
+                arrayBuffer: () => Promise.resolve(encryptedBuffer),
+            }),
+        );
+        vi.stubGlobal("fetch", fetchSpy);
+        vi.stubGlobal("URL", {
+            createObjectURL: vi.fn(() => "blob:auth"),
+            revokeObjectURL: vi.fn(),
+        });
+        vi.stubGlobal("crypto", {
+            subtle: {
+                digest: vi.fn(() => Promise.resolve(new Uint8Array([9, 8, 7]).buffer)),
+                importKey: vi.fn(() => Promise.resolve("imported-key")),
+                decrypt: vi.fn(() => Promise.resolve(decryptedBuffer)),
+            },
+        });
+
+        const mxcUrlToHttp = vi.fn(
+            (mxc: string, _w?: number, _h?: number, _rm?: string, _adl?: boolean, _ar?: boolean, useAuth?: boolean) =>
+                `https://hs/${useAuth ? "v1" : "legacy"}/${encodeURIComponent(mxc)}`,
+        );
+        const client = { mxcUrlToHttp } as unknown as MatrixClient;
+
+        const event = {
+            getOriginalContent: () => ({
+                msgtype: "m.file",
+                body: "secret.pdf",
+                file: {
+                    url: "mxc://example.org/encrypted",
+                    iv: "AA",
+                    hashes: { sha256: "CQgH" },
+                    key: { k: "AQIDBA", alg: "A256CTR", ext: true, key_ops: ["encrypt", "decrypt"], kty: "oct" },
+                    v: "v2",
+                },
+                info: { mimetype: "application/pdf" },
+            }),
+        } as unknown as MatrixEvent;
+
+        const result = await resolveAttachmentMediaFromEvent(event, client, new AbortController().signal, {
+            encryptedDownload: {
+                useAuthenticatedUrls: true,
+                authorizationHeader: { Authorization: "Bearer token" },
+            },
+        });
+
+        expect(result.error).toBeUndefined();
+        expect(result.sourceUrl).toBe("blob:auth");
+        expect(mxcUrlToHttp).toHaveBeenCalledWith(
+            "mxc://example.org/encrypted",
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            true,
+        );
+        expect(fetchSpy).toHaveBeenCalledWith("https://hs/v1/mxc%3A%2F%2Fexample.org%2Fencrypted", {
+            signal: expect.anything(),
+            headers: { Authorization: "Bearer token" },
+        });
+        result.cleanup();
+    });
+});
