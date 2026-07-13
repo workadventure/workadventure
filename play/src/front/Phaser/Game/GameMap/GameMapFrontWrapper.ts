@@ -259,7 +259,6 @@ export class GameMapFrontWrapper {
         }
 
         let layerTileset: Tileset | undefined;
-        let hasAnimatedTile = false;
         for (const tileIndex of tileIndices) {
             const tileset = terrains.find((terrain) => terrain.containsTileIndex(tileIndex));
             if (!tileset) {
@@ -272,10 +271,9 @@ export class GameMapFrontWrapper {
                 return undefined;
             }
             layerTileset = tileset;
-            hasAnimatedTile ||= this.tileHasAnimation(tileset, tileIndex);
         }
 
-        return hasAnimatedTile ? layerTileset : undefined;
+        return layerTileset;
     }
 
     private getLayerTileIndices(layer: ITiledMapTileLayer): Set<number> | undefined {
@@ -343,11 +341,6 @@ export class GameMapFrontWrapper {
         }
 
         return refreshDelay;
-    }
-
-    private tileHasAnimation(tileset: Tileset, tileIndex: number): boolean {
-        const tileData = tileset.tileData as Record<string, TileAnimationData | undefined>;
-        return tileData[tileIndex - tileset.firstgid]?.animation !== undefined;
     }
 
     private isGpuTilemapLayer(layer: RenderableTilemapLayer): layer is TilemapGPULayer {
