@@ -34,7 +34,7 @@ import Tilemap = Phaser.Tilemaps.Tilemap;
 import Tileset = Phaser.Tilemaps.Tileset;
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 
-type RenderableTilemapLayer = TilemapLayer | TilemapGPULayer;
+export type RenderableTilemapLayer = TilemapLayer | TilemapGPULayer;
 type TileAnimationData = {
     animation?: Array<{ duration?: number }>;
 };
@@ -75,6 +75,7 @@ export type PropertyChangeCallback = (
 export class GameMapFrontWrapper {
     private scene: GameScene;
     private gameMap: GameMap;
+    private readonly terrains: Array<Tileset>;
 
     private oldKey: number | undefined;
     /**
@@ -156,6 +157,7 @@ export class GameMapFrontWrapper {
         this.scene = scene;
         this.gameMap = gameMap;
         this.phaserMap = phaserMap;
+        this.terrains = terrains;
 
         this.existingTileIndex = terrains.length > 0 ? terrains[0].firstgid : -1;
 
@@ -894,20 +896,23 @@ export class GameMapFrontWrapper {
     }
 
     public putTile(tile: string | number | null, x: number, y: number, layer: string): void {
-        const phaserLayer = this.findPhaserLayer(layer);
+        let phaserLayer = this.findPhaserLayer(layer);
         if (phaserLayer) {
+            // A layer modified by the scripting API loses its GPU eligibility: scripts may place
+            // tiles from any tileset of the map, but a GPU layer can only render a single one.
+            if (this.isGpuTilemapLayer(phaserLayer)) {
+                const demotedLayer = this.demoteGpuLayerToCpu(phaserLayer);
+                if (!demotedLayer) {
+                    return;
+                }
+                phaserLayer = demotedLayer;
+            }
             if (tile === null) {
                 phaserLayer.putTileAt(-1, x, y);
             } else {
                 const tileIndex = this.gameMap.getIndexForTileType(tile);
                 if (tileIndex === undefined) {
                     console.error("The tile '" + tile + "' that you want to place doesn't exist.");
-                    return;
-                }
-                if (this.isGpuTilemapLayer(phaserLayer) && !phaserLayer.tileset.containsTileIndex(tileIndex)) {
-                    console.warn(
-                        `Cannot place tile ${tileIndex} on GPU tile layer "${layer}" because it belongs to another tileset.`,
-                    );
                     return;
                 }
                 this.gameMap.putTileInFlatLayer(tileIndex, x, y, layer);
@@ -920,13 +925,47 @@ export class GameMapFrontWrapper {
                     }
                 }
             }
-            if (this.isGpuTilemapLayer(phaserLayer)) {
-                phaserLayer.generateLayerDataTexture();
-            }
             this.invalidateCollisionGrid({ modifiedLayer: phaserLayer });
         } else {
             console.error("The layer '" + layer + "' does not exist (or is not a tilelaye).");
         }
+    }
+
+    /**
+     * Replaces a GPU tile layer with a classic CPU tile layer rendering the same LayerData.
+     * The CPU layer receives every tileset of the map, so tiles from any tileset can be
+     * placed on it afterwards.
+     */
+    private demoteGpuLayerToCpu(gpuLayer: TilemapGPULayer): TilemapLayer | undefined {
+        const arrayIndex = this.phaserLayers.indexOf(gpuLayer);
+        const layerName = gpuLayer.layer.name;
+        const { layerIndex, x, y, depth, alpha, visible, scrollFactorX, scrollFactorY, timePaused } = gpuLayer;
+        const layerDataTexture = gpuLayer.layerDataTexture;
+
+        // destroy(false) detaches the game object but keeps the LayerData in the Tilemap,
+        // so a new layer can be created on top of the same data.
+        gpuLayer.destroy(false);
+        // The GPU layer does not release its tile data texture on destroy.
+        layerDataTexture?.destroy();
+
+        const cpuLayer = this.phaserMap.createLayer(layerIndex, this.terrains, x, y, false);
+        if (!cpuLayer || this.isGpuTilemapLayer(cpuLayer)) {
+            console.error(`Could not demote GPU tile layer "${layerName}" to a CPU tile layer.`);
+            return undefined;
+        }
+        cpuLayer
+            .setDepth(depth)
+            .setScrollFactor(scrollFactorX, scrollFactorY)
+            .setAlpha(alpha)
+            .setVisible(visible)
+            .setTimerPaused(timePaused);
+        if (arrayIndex !== -1) {
+            this.phaserLayers[arrayIndex] = cpuLayer;
+        }
+        this.scene.onTileLayerReplaced(gpuLayer, cpuLayer);
+        this.scene.markDirty();
+        console.info(`Tile layer "${layerName}" was modified by a script: switching it to the CPU rendering path.`);
+        return cpuLayer;
     }
 
     public canEntityBePlacedOnMap(
