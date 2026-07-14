@@ -1,8 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import MediaBox from "../Video/MediaBox.svelte";
+    import type { Snippet } from "svelte";
     import type { VideoBox } from "../../Space/VideoBox";
-    import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
     import type { ObservableElement } from "../../Interfaces/ObservableElement";
     import type { TokenRemovalHandle } from "../../Utils/TokenBucket";
     import type { DocumentPictureInPictureEvent } from "./PictureInPicture/PictureInPictureWindow";
@@ -14,9 +13,11 @@
         oneLineMode?: "vertical" | "horizontal";
         videoWidth?: number;
         videoHeight?: number;
+        oneLineStreamableCount: number;
         intersectionObserver?: IntersectionObserver;
         forceVisible?: boolean;
         fitContainer?: boolean;
+        mediaRenderer: Snippet<[VideoBox]>;
     }
 
     let {
@@ -25,9 +26,11 @@
         oneLineMode,
         videoWidth,
         videoHeight,
+        oneLineStreamableCount,
         intersectionObserver,
         forceVisible = false,
         fitContainer = false,
+        mediaRenderer,
     }: Props = $props();
 
     let isVisible = $state((() => forceVisible || !intersectionObserver)());
@@ -37,7 +40,7 @@
 
     let isFirst = $derived($orderStore === 0);
 
-    let isLast = $derived($orderStore === $oneLineStreamableCollectionStore.length - 1);
+    let isLast = $derived($orderStore === oneLineStreamableCount - 1);
 
     let currentDocumentPictureInPictureWindow: Window | undefined;
     let intersectionObserverRefreshTimeout: number | undefined;
@@ -169,6 +172,8 @@
     class:aspect-video={!fitContainer && videoHeight === undefined}
 >
     {#if isVisible}
-        <MediaBox {videoBox} />
+        {#if mediaRenderer}
+            {@render mediaRenderer(videoBox)}
+        {/if}
     {/if}
 </div>
