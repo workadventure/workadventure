@@ -341,6 +341,7 @@ export class UserInputManager {
     }
 
     destroy(): void {
+        this.userInputHandler.destroy?.();
         this.enableUserInputsStoreUnsubscribe();
         this.joystick?.destroy();
         this.joystick = undefined;

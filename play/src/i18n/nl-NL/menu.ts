@@ -181,6 +181,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         moveRight: "Naar rechts bewegen",
         speedUp: "Rennen",
         interact: "Interacteren",
+        pushToTalk: "Ingedrukt houden om tijdelijk te dempen op te heffen in een meeting",
         follow: "Volgen",
         openChat: "Chat openen",
         openUserList: "Gebruikerslijst openen",
