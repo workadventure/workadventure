@@ -1,13 +1,6 @@
 ## Version develop
 
 ### Updates
-- Added a generic analytics pipeline replacing the legacy `video-quality-batch` endpoint. Front, pusher and media events now flow through a unified queue, batched and sent to admin via `POST /api/analytics/events-batch`. When admin advertises the new capability, video quality samples ride on top of it as `media.video_quality.sample`; the legacy endpoint is kept as a fallback.
-- Conversation analytics: spontaneous bubbles, meetings and remote sessions now emit `conversation.started`, `conversation.heartbeat`, `conversation.ended` and `meeting.provider_changed` events with `meetingProvider`, `conversationType` and optional `participantCount`.
-- Map editor analytics: area and entity create/update/delete commands emit `map_editor.*` events.
-- Screenshare & cowebsite analytics: `screenshare.started/ended`, `cowebsite.opened` with media-kind detection. Cowebsite URLs are stripped of their query string and hash before they enter analytics, to avoid leaking auth tokens.
-- Per-world / per-category analytics policy: pusher fetches `analyticsEventsEnabled` and `analyticsMetricsPolicy` from admin at JOIN_ROOM and filters events by category (`presence_sessions`, `collaboration_activity`, `workspace_actions`, `quality_diagnostics`, `user_level_activity`) before queuing.
-- Graceful shutdown: pusher drains its analytics queues on SIGTERM / SIGINT (default 30 seconds, see `ANALYTICS_DRAIN_TIMEOUT_MS` and `VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS`).
-- Pusher hardening: cap of 100 events per `analyticsEventReportMessage`, strict `source` whitelist (only `front` and `media` accepted from clients), 8 KiB cap on per-event properties, exponential backoff with jitter on flush retries.
 - Added multi Co-Website management
 
 ### Bugfix

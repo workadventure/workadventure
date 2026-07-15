@@ -62,10 +62,10 @@ Environment variables for the Play service (frontend and pusher).
 | `ENABLE_ISSUE_REPORT` | No | Whether the feature 'issue report' is enabled or not on this room. Defaults to true. |
 | `ENABLE_TUTORIAL` | No | Whether the onboarding tutorial is enabled or not on this room. Defaults to true. |
 | `ENABLE_OPENAPI_ENDPOINT` | No | Enable/disable the OpenAPI documentation endpoint. Defaults to false |
-| `VIDEO_ANALYTICS_FLUSH_INTERVAL_MS` | No | Interval in milliseconds between video quality analytics batch flushes. Defaults to 10000 |
-| `VIDEO_ANALYTICS_TIMEOUT_MS` | No | HTTP timeout in milliseconds for video quality analytics ingestion calls. Defaults to 2000 |
-| `VIDEO_ANALYTICS_MAX_QUEUE_SIZE` | No | Maximum number of video quality samples queued in pusher memory. Defaults to 10000 |
-| `VIDEO_ANALYTICS_MAX_BATCH_SIZE` | No | Maximum number of video quality samples sent in one admin batch. Defaults to 1000 |
+| `VIDEO_ANALYTICS_FLUSH_INTERVAL_MS` | No | Interval in milliseconds between analytics batch flushes. Also drives the generic analytics queue, which reuses the VIDEO_ANALYTICS_* settings instead of defining its own — tuning either queue tunes both. Defaults to 10000 |
+| `VIDEO_ANALYTICS_TIMEOUT_MS` | No | HTTP timeout in milliseconds for analytics ingestion calls. Also used by the generic analytics queue. Defaults to 2000 |
+| `VIDEO_ANALYTICS_MAX_QUEUE_SIZE` | No | Maximum number of analytics events queued in pusher memory. Caps the generic analytics queue as well as video quality samples. Defaults to 10000 |
+| `VIDEO_ANALYTICS_MAX_BATCH_SIZE` | No | Maximum number of analytics events sent in one admin batch. Caps the generic analytics queue as well as video quality samples. Defaults to 1000 |
 | `ANALYTICS_DRAIN_TIMEOUT_MS` | No | Maximum time in milliseconds spent draining the generic analytics queue on SIGTERM / SIGINT before the process exits. Make sure your orchestrator's grace period (e.g. Kubernetes terminationGracePeriodSeconds) is at least this long. Defaults to 30000 |
 | `VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS` | No | Maximum time in milliseconds spent draining the legacy video-quality analytics queue on SIGTERM / SIGINT before the process exits. Defaults to 30000 |
 | `START_ROOM_URL` | No | Default room URL where users start when accessing the platform |
