@@ -113,6 +113,32 @@ describe("subscribeToConversationAnalytics", () => {
         expect(ended?.properties.endedAt).toEqual(expect.any(String));
     });
 
+    it("does not emit a phantom remote conversation when subscribing to a bubble already in progress", () => {
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+        const sendReport = vi.fn();
+        // Both stores already carry their value: this is a reconnect into a bubble
+        // that is already running, not a fresh join.
+        const inConversation = writable(true);
+        const conversationGroupId = writable<number | undefined>(42);
+
+        subscribeToConversationAnalytics(inConversation, sendReport, 60_000, {
+            conversationGroupIdStore: conversationGroupId,
+        });
+
+        const started = sentEvents(sendReport).filter((event) => event.eventName === "conversation.started");
+        const ended = sentEvents(sendReport).filter((event) => event.eventName === "conversation.ended");
+
+        // Subscribing in the wrong order used to emit a "remote" conversation with a
+        // throwaway uuid, immediately closed as "type_changed" and replaced by the
+        // real bubble — inflating conversation counts on every such reconnect.
+        expect(started).toHaveLength(1);
+        expect(ended).toHaveLength(0);
+        expect(started[0].properties.conversationType).toBe("spontaneous_bubble");
+        expect(started[0].properties.conversationId).toBe("group:42");
+    });
+
     it("keeps the same conversation id while the conversation stays active", async () => {
         window.capabilities = {
             "api/analytics/events-batch": "v1",
