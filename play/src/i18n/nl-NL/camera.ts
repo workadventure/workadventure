@@ -23,6 +23,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "Je moet toegang tot de camera en microfoon toestaan in je browser.",
         cameraContent: "Je moet toegang tot de camera toestaan in je browser.",
         microphoneContent: "Je moet toegang tot de microfoon toestaan in je browser.",
+        safariContent:
+            'Open Safari > Instellingen voor deze website… (of Safari > Instellingen > Websites > Camera / Microfoon), zet deze site op "Sta toe" en ververs de pagina.',
         firefoxContent:
             'Vink het vakje "Deze beslissing onthouden" aan als je niet wilt dat Firefox je steeds om toestemming vraagt.',
         allow: "Webcam toestaan",

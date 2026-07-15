@@ -7,8 +7,17 @@
     import { IconInfoCircle } from "@wa-icons";
 
     let isAndroid = isAndroidFct();
-    let isFirefox = getNavigatorType() === NavigatorType.firefox;
-    let isChrome = getNavigatorType() === NavigatorType.chrome;
+    let navigatorType = (() => {
+        try {
+            return getNavigatorType();
+        } catch {
+            // getNavigatorType() throws on some embedded or uncommon browsers
+            return undefined;
+        }
+    })();
+    let isFirefox = navigatorType === NavigatorType.firefox;
+    let isChrome = navigatorType === NavigatorType.chrome;
+    let isSafari = navigatorType === NavigatorType.safari;
     let showDetails = $state(false);
 
     let cameraDenied = $derived($mediaPermissionDeniedStore.camera);
@@ -68,24 +77,30 @@
                 <p class="err">
                     {$LL.camera.help.firefoxContent()}
                 </p>
+            {:else if isSafari}
+                <p class="err">
+                    {$LL.camera.help.safariContent()}
+                </p>
             {/if}
-            <div class="h-72 overflow-hidden opacity-80 saturate-50">
-                {#if isFirefox}
-                    <img
-                        draggable="false"
-                        src={$LL.camera.help.screen.firefox()}
-                        alt="help media setup"
-                        class="w-full m-auto"
-                    />
-                {:else if isChrome && !isAndroid}
-                    <img
-                        draggable="false"
-                        src={$LL.camera.help.screen.chrome()}
-                        alt="help media setup"
-                        class="w-full m-auto"
-                    />
-                {/if}
-            </div>
+            {#if isFirefox || (isChrome && !isAndroid)}
+                <div class="h-72 overflow-hidden opacity-80 saturate-50">
+                    {#if isFirefox}
+                        <img
+                            draggable="false"
+                            src={$LL.camera.help.screen.firefox()}
+                            alt="help media setup"
+                            class="w-full m-auto"
+                        />
+                    {:else}
+                        <img
+                            draggable="false"
+                            src={$LL.camera.help.screen.chrome()}
+                            alt="help media setup"
+                            class="w-full m-auto"
+                        />
+                    {/if}
+                </div>
+            {/if}
         {/if}
     </section>
     <section class="flex row justify-center p-4 bg-contrast">

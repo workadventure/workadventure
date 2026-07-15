@@ -23,6 +23,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "Der Zugriff auf Kamera und Mikrofon muss im Browser freigegeben werden.",
         cameraContent: "Der Zugriff auf die Kamera muss im Browser freigegeben werden.",
         microphoneContent: "Der Zugriff auf das Mikrofon muss im Browser freigegeben werden.",
+        safariContent:
+            'Öffne Safari > Einstellungen für diese Website… (oder Safari > Einstellungen > Websites > Kamera / Mikrofon), setze diese Website auf "Erlauben" und lade die Seite neu.',
         firefoxContent:
             'Bitte klicke auf die Schaltfläche "Diese Entscheidung speichern", um erneute Nachfragen nach der Freigabe in Firefox zu verhindern.',
         allow: "Webcam erlauben",
