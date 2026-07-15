@@ -196,16 +196,16 @@ export function subscribeToConversationAnalytics(
         endConversation("type_changed");
         startConversation(nextConversationType);
     };
-    const unsubscribe = inConversationStore.subscribe((value) => {
-        if (value && !inConversation) {
-            inConversation = value;
-            startConversation();
-            return;
-        } else if (!value && inConversation) {
-            endConversation("left_conversation");
-        }
-        inConversation = value;
-    });
+    // Order matters. Svelte fires a subscriber immediately with the current value,
+    // so the stores describing *what kind* of conversation this is must be read
+    // before the one that opens it. Subscribing to inConversationStore first meant
+    // that reconnecting into a bubble already in progress opened a "remote"
+    // conversation with a throwaway uuid — because conversationGroupId was still
+    // undefined — and closed it again as "type_changed" one line later, inflating
+    // conversation counts by one phantom per reconnect.
+    //
+    // These three are safe to run first: transitionConversationType only updates
+    // local state while inConversation is false, and emits nothing.
     const unsubscribeGroupId = options.conversationGroupIdStore?.subscribe((value) => {
         conversationGroupId = value;
         transitionConversationType(conversationTypeFromState(inMeeting, value));
@@ -240,6 +240,19 @@ export function subscribeToConversationAnalytics(
                 meetingProvider,
             });
         }
+    });
+
+    // Last, now that conversationGroupId / inMeeting / meetingProvider are known:
+    // this is the subscription that actually opens a conversation.
+    const unsubscribe = inConversationStore.subscribe((value) => {
+        if (value && !inConversation) {
+            inConversation = value;
+            startConversation();
+            return;
+        } else if (!value && inConversation) {
+            endConversation("left_conversation");
+        }
+        inConversation = value;
     });
 
     const interval = setInterval(() => {
