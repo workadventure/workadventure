@@ -18,12 +18,28 @@ type ConversationAnalyticsOptions = {
 
 type ConversationType = "spontaneous_bubble" | "meeting" | "remote";
 
+/**
+ * Reports the local user's conversation lifecycle (started / heartbeat / ended).
+ *
+ * How well a conversation correlates across participants depends on its type,
+ * and anything querying these events has to account for it:
+ * - a spontaneous bubble is keyed on the server-assigned group id (`group:<id>`),
+ *   so every participant reports the *same* conversationId and both sides of a
+ *   bubble can be joined;
+ * - meetings and remote conversations have no shared handle here, so each client
+ *   falls back to a locally generated uuid. Two participants in one meeting
+ *   report *different* conversationIds (and meetingSessionIds) — they can only
+ *   be correlated on room and time, never by id.
+ */
 export function subscribeToConversationAnalytics(
     inConversationStore: Readable<boolean>,
     sendReport: (message: AnalyticsEventReportMessage) => void,
     sendIntervalMs = CONVERSATION_ANALYTICS_SEND_INTERVAL_MS,
     options: ConversationAnalyticsOptions = {},
 ): Unsubscriber {
+    // Capability is resolved once, at subscribe time: a world whose admin does
+    // not advertise the endpoint emits nothing at all rather than queueing
+    // events that would be dropped further down the pipeline.
     if (hasCapability(ANALYTICS_EVENTS_CAPABILITY) !== "v1") {
         return () => {};
     }
@@ -78,6 +94,11 @@ export function subscribeToConversationAnalytics(
         sendConversationEvent("conversation.ended", conversationId, conversationType, { reason });
         conversationId = undefined;
     };
+    // Changing type mid-conversation is reported as ended("type_changed") followed
+    // by a fresh started, so a single uninterrupted conversation from the user's
+    // point of view can span several conversationIds (e.g. a bubble that turns
+    // into a meeting). Consumers must stitch those on time rather than assume one
+    // id per conversation.
     const transitionConversationType = (nextConversationType: ConversationType): void => {
         if (!inConversation) {
             conversationType = nextConversationType;
@@ -117,6 +138,10 @@ export function subscribeToConversationAnalytics(
     const unsubscribeMeetingProvider = options.meetingProviderStore?.subscribe((value) => {
         const previousMeetingProvider = meetingProvider;
         meetingProvider = value ?? options.meetingProvider;
+        // ConnectionManager passes meetingProviderStore but no meetingStore, so in
+        // practice "in a meeting" *is* "a meeting provider is active". The second
+        // operand only matters for callers that supply an explicit meetingStore
+        // (the tests), where it keeps that store authoritative.
         const nextInMeeting = value !== undefined || Boolean(options.meetingStore && inMeeting);
         if (nextInMeeting !== inMeeting) {
             inMeeting = nextInMeeting;
@@ -179,6 +204,11 @@ export function subscribeToConversationAnalytics(
     }, sendIntervalMs);
 
     return () => {
+        // Registered through connection.onCleanup(): RoomConnection.closeConnection()
+        // runs the cleanups while the socket is still OPEN, which is the only reason
+        // this last conversation.ended reaches the pusher — send() silently drops
+        // frames once the socket is manually closed. Remote or abnormal closes never
+        // run this at all; AnalyticsPresenceTracker covers those server-side.
         endConversation("cleanup");
         clearInterval(interval);
         unsubscribe();
