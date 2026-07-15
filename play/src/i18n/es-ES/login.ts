@@ -15,6 +15,7 @@ const login: DeepPartial<Translation["login"]> = {
     termsOfUse: "términos de uso",
     privacyPolicy: "política de privacidad",
     cookiePolicy: "política de cookie",
+    analyticsNotice: "aviso de analítica",
     continue: "Continuar",
 };
 

@@ -14,6 +14,7 @@ const login: BaseTranslation = {
     termsOfUse: "terms of use",
     privacyPolicy: "privacy policy",
     cookiePolicy: "cookie policy",
+    analyticsNotice: "analytics notice",
     continue: "Continue",
 };
 
