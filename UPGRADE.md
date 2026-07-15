@@ -30,6 +30,14 @@ New optional environment variables (all have safe defaults):
 | `ANALYTICS_DRAIN_TIMEOUT_MS`             | `30000`          | Max time `SIGTERM` drains the generic queue.     |
 | `VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS`       | `30000`          | Same as above for the legacy video-quality queue.|
 
+As the flush interval above suggests, the generic analytics queue reuses the
+existing video-quality settings rather than defining its own: its HTTP timeout,
+queue size and batch size likewise come from `VIDEO_ANALYTICS_TIMEOUT_MS`
+(2 000 ms), `VIDEO_ANALYTICS_MAX_QUEUE_SIZE` (10 000) and
+`VIDEO_ANALYTICS_MAX_BATCH_SIZE` (1 000). Tuning either queue therefore tunes
+both; splitting them into dedicated `ANALYTICS_EVENTS_*` variables is left for a
+follow-up.
+
 ## Upgrading from v1.27.2 to v1.27.3
 
 ### TURN Credentials Architecture Change (BREAKING CHANGE)
