@@ -216,18 +216,20 @@ describe("AnalyticsClient admin analytics sink", () => {
             areaName: "Docs zone",
         });
 
-        // Query string + hash must be stripped to avoid leaking auth tokens to analytics.
-        // fileName is intentionally NOT emitted (document filenames are frequently
-        // sensitive, e.g. NDA-acme.pdf): the exact `properties` match below asserts its
-        // absence — fileExtension + mediaKind carry the analytic signal without the PII.
+        // Only the origin survives. Query string and hash carry auth tokens, and the
+        // path carries the document name — dropping fileName while still shipping
+        // ".../file.pdf" in url/targetUrl left the PII in plain sight, and the admin
+        // re-derived fileName from exactly that path. fileExtension and mediaKind are
+        // computed in the browser from the full URL, so the analytic signal survives;
+        // the exact `properties` match below asserts fileName's absence.
         expect(sendAdmin).toHaveBeenCalledWith({
             events: [
                 expect.objectContaining({
                     eventName: "cowebsite.opened",
                     source: "front",
                     properties: {
-                        url: "https://example.com/secured/file.pdf",
-                        targetUrl: "https://example.com/files/file.pdf",
+                        url: "https://example.com",
+                        targetUrl: "https://example.com",
                         mediaKind: "pdf",
                         triggerProperty: "openLink",
                         fileExtension: "pdf",
@@ -238,6 +240,27 @@ describe("AnalyticsClient admin analytics sink", () => {
                 }),
             ],
         });
+    });
+
+    it("keeps the document name out of cowebsite urls entirely", () => {
+        const sendAdmin = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(sendAdmin);
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+
+        analyticsClient.openedWebsite(new URL("https://acme.tld/legal/NDA-acme-2026.pdf"), {
+            targetUrl: "https://acme.tld/hr/salary-2026.xlsx",
+        });
+
+        const properties = sendAdmin.mock.calls[0][0].events[0].properties as Record<string, unknown>;
+        const serialized = JSON.stringify(properties);
+        expect(serialized).not.toContain("NDA-acme-2026");
+        expect(serialized).not.toContain("salary-2026");
+        expect(properties.url).toBe("https://acme.tld");
+        expect(properties.targetUrl).toBe("https://acme.tld");
+        // The signal we actually wanted still survives.
+        expect(properties.fileExtension).toBe("xlsx");
     });
 
     it("classifies generic website openings as website when no file extension is present", () => {
@@ -257,7 +280,7 @@ describe("AnalyticsClient admin analytics sink", () => {
                     eventName: "cowebsite.opened",
                     source: "front",
                     properties: expect.objectContaining({
-                        targetUrl: "https://example.com/workadventure",
+                        targetUrl: "https://example.com",
                         mediaKind: "website",
                         triggerProperty: "other",
                     }),
