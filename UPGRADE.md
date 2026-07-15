@@ -2,42 +2,6 @@
 
 This document provides instructions for upgrading WorkAdventure between versions.
 
-## Upgrading to the generic analytics pipeline (develop)
-
-The pusher (`play` service) now ships a unified analytics queue and drains it on
-`SIGTERM` / `SIGINT` before exiting. This is a behaviour change to keep in mind
-when configuring orchestrator shutdown timings:
-
-- **Kubernetes**: the pusher honours up to `ANALYTICS_DRAIN_TIMEOUT_MS` (default
-  30 000 ms) per queue when receiving `SIGTERM`. Make sure
-  `terminationGracePeriodSeconds` on the `play` Deployment is at least the sum
-  of `ANALYTICS_DRAIN_TIMEOUT_MS + VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS` plus a few
-  seconds of headroom (35–45 s is safe with defaults). Setting it lower will
-  cause the orchestrator to send `SIGKILL` while events are still being flushed,
-  silently dropping any events that had not reached admin yet.
-- **Docker / docker-compose**: `stop_grace_period` should be raised to at least
-  `40s` for the `play` service.
-
-If your admin does not advertise the new `api/analytics/events-batch`
-capability, the legacy `video-quality-batch` endpoint keeps being used and the
-generic queue is idle — no further configuration is required.
-
-New optional environment variables (all have safe defaults):
-
-| Variable                                 | Default          | Purpose                                          |
-|------------------------------------------|------------------|--------------------------------------------------|
-| `VIDEO_ANALYTICS_FLUSH_INTERVAL_MS`      | `10000`          | Interval in ms between analytics batch flushes.   |
-| `ANALYTICS_DRAIN_TIMEOUT_MS`             | `30000`          | Max time `SIGTERM` drains the generic queue.     |
-| `VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS`       | `30000`          | Same as above for the legacy video-quality queue.|
-
-As the flush interval above suggests, the generic analytics queue reuses the
-existing video-quality settings rather than defining its own: its HTTP timeout,
-queue size and batch size likewise come from `VIDEO_ANALYTICS_TIMEOUT_MS`
-(2 000 ms), `VIDEO_ANALYTICS_MAX_QUEUE_SIZE` (10 000) and
-`VIDEO_ANALYTICS_MAX_BATCH_SIZE` (1 000). Tuning either queue therefore tunes
-both; splitting them into dedicated `ANALYTICS_EVENTS_*` variables is left for a
-follow-up.
-
 ## Upgrading from v1.27.2 to v1.27.3
 
 ### TURN Credentials Architecture Change (BREAKING CHANGE)
