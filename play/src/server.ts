@@ -78,12 +78,28 @@ const shutdown = (signal: NodeJS.Signals): void => {
     }
     shuttingDown = true;
     console.info(`Received ${signal}, draining analytics queues before exit…`);
-    Promise.allSettled([
-        analyticsEventsQueue.drain(ANALYTICS_DRAIN_TIMEOUT_MS).finally(() => analyticsEventsQueue.stop()),
-        videoQualityAnalyticsQueue
-            .drain(VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS)
-            .finally(() => videoQualityAnalyticsQueue.stop()),
-    ])
+    const drains: [string, Promise<void>][] = [
+        [
+            "generic analytics",
+            analyticsEventsQueue.drain(ANALYTICS_DRAIN_TIMEOUT_MS).finally(() => analyticsEventsQueue.stop()),
+        ],
+        [
+            "video-quality analytics",
+            videoQualityAnalyticsQueue
+                .drain(VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS)
+                .finally(() => videoQualityAnalyticsQueue.stop()),
+        ],
+    ];
+    (async () => {
+        // allSettled never rejects, so each drain has to be inspected individually:
+        // a rejected one would otherwise be dropped silently on the way out.
+        const results = await Promise.allSettled(drains.map(([, drain]) => drain));
+        results.forEach((result, index) => {
+            if (result.status === "rejected") {
+                console.error(`Error while draining the ${drains[index][0]} queue during shutdown`, result.reason);
+            }
+        });
+    })()
         .catch((error) => {
             console.error("Error while draining analytics queues during shutdown", error);
         })
