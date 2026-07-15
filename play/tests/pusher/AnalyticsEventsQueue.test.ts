@@ -23,6 +23,7 @@ const baseConfig: AnalyticsEventsQueueConfig = {
     maxQueueSize: 10,
     maxBatchSize: 10,
     pusherInstanceId: "pusher-test",
+    pseudonymizationSecret: "test-pseudonymization-secret",
 };
 
 describe("AnalyticsEventsQueue", () => {
@@ -142,6 +143,70 @@ describe("AnalyticsEventsQueue", () => {
             eventsSent: 0,
             queueSize: 0,
         });
+    });
+
+    it("drops anonymized worlds' events entirely when no pseudonymization secret is configured", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const queue = new AnalyticsEventsQueue({ ...baseConfig, pseudonymizationSecret: undefined }, post);
+        queue.setEnabled(true);
+
+        // Fail closed: with no secret the pseudonym would be one the world's own
+        // administrator could recompute from their user list, which is exactly what
+        // this world opted out of. Sending nothing beats sending identifiers under a
+        // label that claims they are anonymous.
+        queue.enqueueEvent(
+            event("event-id"),
+            socketData({ analyticsMetricsPolicy: analyticsMetricsPolicy({ user_level_activity: false }) }),
+        );
+        await queue.flush();
+
+        expect(post).not.toHaveBeenCalled();
+        expect(queue.getStats()).toMatchObject({ droppedMissingPseudonymizationSecret: 1 });
+
+        consoleWarn.mockRestore();
+    });
+
+    it("still reports worlds that did not opt out when no pseudonymization secret is configured", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue({ ...baseConfig, pseudonymizationSecret: undefined }, post);
+        queue.setEnabled(true);
+
+        // The secret only gates anonymized worlds; everyone else is unaffected.
+        queue.enqueueEvent(event("event-id"), socketData());
+        await queue.flush();
+
+        expect(post).toHaveBeenCalledTimes(1);
+        expect(queue.getStats()).toMatchObject({ droppedMissingPseudonymizationSecret: 0 });
+    });
+
+    it("derives the pseudonym from the secret, so it cannot be recomputed without it", async () => {
+        const pseudonymFor = async (pseudonymizationSecret: string): Promise<string> => {
+            const post = vi.fn().mockResolvedValue(undefined);
+            const queue = new AnalyticsEventsQueue({ ...baseConfig, pseudonymizationSecret }, post);
+            queue.setEnabled(true);
+            queue.enqueueEvent(
+                event("event-id"),
+                socketData({ analyticsMetricsPolicy: analyticsMetricsPolicy({ user_level_activity: false }) }),
+            );
+            await queue.flush();
+
+            return (post.mock.calls[0][1] as AnalyticsEventsBatch).events[0].userUuid;
+        };
+
+        // The whole point of keying the HMAC: the previous implementation salted with
+        // a constant published in this repository, so anyone holding the world's user
+        // list could hash it and undo the anonymization.
+        const [withSecret, withOtherSecret, sameSecretAgain] = await Promise.all([
+            pseudonymFor("secret-a"),
+            pseudonymFor("secret-b"),
+            pseudonymFor("secret-a"),
+        ]);
+
+        expect(withSecret).not.toEqual(withOtherSecret);
+        // …but stable for a given secret, or distinct-user counts would be nonsense.
+        expect(withSecret).toEqual(sameSecretAgain);
+        expect(withSecret).toMatch(/^anonymous:[a-f0-9]{64}$/);
     });
 
     it("anonymizes event identifiers when user-level activity metrics are disabled", async () => {
