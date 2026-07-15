@@ -102,6 +102,40 @@ describe("processAnalyticsReportMessage", () => {
         );
     });
 
+    it.each(["user.connected", "user.disconnected", "media.video_quality.sample"])(
+        'drops "%s" reported by a client: the name is reserved for the backend',
+        (eventName) => {
+            const queue = newQueue();
+            // A legal client source is deliberately used here: guarding the source
+            // alone does not stop this. The admin projects user.disconnected into
+            // analytics_connection_sessions using the event's own connectedAt /
+            // durationSeconds, so a forged one would let a browser invent its own
+            // session durations.
+            processAnalyticsReportMessage(
+                { events: [buildEvent({ source: "front", eventName })] },
+                newSocketData(),
+                queue,
+            );
+
+            expect(queue.enqueueEvent).not.toHaveBeenCalled();
+            expect(warnSpy).toHaveBeenCalledWith(
+                "Analytics event dropped: event name is reserved for the backend",
+                expect.objectContaining({ eventName }),
+            );
+        },
+    );
+
+    it("keeps accepting other media.* events: only the exact reserved name is closed", () => {
+        const queue = newQueue();
+        processAnalyticsReportMessage(
+            { events: [buildEvent({ source: "media", eventName: "media.camera.enabled" })] },
+            newSocketData(),
+            queue,
+        );
+
+        expect(queue.enqueueEvent).toHaveBeenCalledTimes(1);
+    });
+
     it("drops events with an unknown source value", () => {
         const queue = newQueue();
         processAnalyticsReportMessage({ events: [buildEvent({ source: "shenanigans" })] }, newSocketData(), queue);
