@@ -22,6 +22,7 @@ import {
 import RoomApiServer from "./room-api/RoomApiServer";
 import { analyticsEventsQueue } from "./pusher/services/AnalyticsEventsQueue";
 import { videoQualityAnalyticsQueue } from "./pusher/services/VideoQualityAnalyticsQueue";
+import { analyticsPresenceTracker } from "./pusher/services/AnalyticsPresenceTracker";
 
 // In production, the current working directory is "dist".
 if (fs.existsSync("dist") && !fs.existsSync("src")) {
@@ -77,7 +78,18 @@ const shutdown = (signal: NodeJS.Signals): void => {
         return;
     }
     shuttingDown = true;
-    console.info(`Received ${signal}, draining analytics queues before exit…`);
+
+    // Close the connections still open BEFORE draining, not after: closeAll only
+    // enqueues, so draining first would leave its events behind. Without this the
+    // drain flushes what happens to be queued and then exits, and every live
+    // session on this instance is lost — the pairing dies with the heap and no
+    // user.disconnected is ever emitted. A rolling deploy does that to every
+    // connection on every replica.
+    const closedConnections = analyticsPresenceTracker.closeAll();
+    console.info(
+        `Received ${signal}, closed ${closedConnections} open connection(s) and draining analytics queues before exit…`,
+    );
+
     const drains: [string, Promise<void>][] = [
         [
             "generic analytics",
