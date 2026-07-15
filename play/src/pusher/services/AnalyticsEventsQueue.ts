@@ -218,6 +218,10 @@ export class AnalyticsEventsQueue {
             return;
         }
 
+        // Must stay after normalizeEvent, never before it: normalizeEvent enriches
+        // the event from socketData, so anonymizing last is what guarantees the
+        // allowlist sees the *final* properties. Anonymizing first would let
+        // anything added during normalization through unfiltered.
         if (socketData.analyticsMetricsPolicy?.categories?.user_level_activity === false) {
             normalizedEvent = anonymizeEvent(normalizedEvent);
         }
