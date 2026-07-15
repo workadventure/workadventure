@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHmac } from "crypto";
 import axios, { isAxiosError } from "axios";
 import {
     VideoQualityRelayProtocol,
@@ -11,6 +11,7 @@ import type { AnalyticsMetricCategory, SocketData } from "../models/Websocket/So
 import {
     ADMIN_API_TOKEN,
     ADMIN_API_URL,
+    ANALYTICS_PSEUDONYMIZATION_SECRET,
     VIDEO_ANALYTICS_FLUSH_INTERVAL_MS,
     VIDEO_ANALYTICS_MAX_BATCH_SIZE,
     VIDEO_ANALYTICS_MAX_QUEUE_SIZE,
@@ -104,6 +105,8 @@ export type AnalyticsEventsQueueConfig = {
     maxQueueSize: number;
     maxBatchSize: number;
     pusherInstanceId: string;
+    /** Must match the admin's. Absent ⇒ worlds that opted out report nothing. */
+    pseudonymizationSecret?: string;
 };
 
 export type AnalyticsEventsQueueStats = {
@@ -112,6 +115,7 @@ export type AnalyticsEventsQueueStats = {
     droppedInvalid: number;
     droppedByWorldSettings: number;
     droppedAfterSendFailure: number;
+    droppedMissingPseudonymizationSecret: number;
     batchesSent: number;
     eventsSent: number;
     flushErrors: number;
@@ -133,6 +137,8 @@ export class AnalyticsEventsQueue {
     private droppedInvalid = 0;
     private droppedByWorldSettings = 0;
     private droppedAfterSendFailure = 0;
+    private droppedMissingPseudonymizationSecret = 0;
+    private warnedAboutMissingSecret = false;
     private batchesSent = 0;
     private eventsSent = 0;
     private flushErrors = 0;
@@ -223,7 +229,18 @@ export class AnalyticsEventsQueue {
         // allowlist sees the *final* properties. Anonymizing first would let
         // anything added during normalization through unfiltered.
         if (socketData.analyticsMetricsPolicy?.categories?.user_level_activity === false) {
-            normalizedEvent = anonymizeEvent(normalizedEvent);
+            const secret = this.config.pseudonymizationSecret;
+            // Fail closed. Without a secret we cannot produce a pseudonym the
+            // world's administrator is unable to recompute from their own user
+            // list, and this world asked precisely not to be tracked at user
+            // level. Emitting anything here would hand over identifiers under a
+            // label that promises they are anonymous.
+            if (secret === undefined || secret === "") {
+                this.droppedMissingPseudonymizationSecret += 1;
+                this.warnOnceAboutMissingSecret();
+                return;
+            }
+            normalizedEvent = anonymizeEvent(normalizedEvent, secret);
         }
 
         if (this.queue.length >= this.config.maxQueueSize) {
@@ -279,10 +296,26 @@ export class AnalyticsEventsQueue {
             droppedInvalid: this.droppedInvalid,
             droppedByWorldSettings: this.droppedByWorldSettings,
             droppedAfterSendFailure: this.droppedAfterSendFailure,
+            droppedMissingPseudonymizationSecret: this.droppedMissingPseudonymizationSecret,
             batchesSent: this.batchesSent,
             eventsSent: this.eventsSent,
             flushErrors: this.flushErrors,
         };
+    }
+
+    /**
+     * Once per process: a world opting out is a normal, per-event condition, so
+     * warning each time would bury the operator in a log line per event while
+     * telling them nothing new.
+     */
+    private warnOnceAboutMissingSecret(): void {
+        if (this.warnedAboutMissingSecret) {
+            return;
+        }
+        this.warnedAboutMissingSecret = true;
+        console.warn(
+            "Analytics events dropped: ANALYTICS_PSEUDONYMIZATION_SECRET is not set, so worlds that opted out of user-level activity cannot be pseudonymized. Set it (to the same value as the admin) to collect analytics for those worlds.",
+        );
     }
 
     private hasAdminApiConfig(): boolean {
@@ -653,12 +686,12 @@ function analyticsMetricCategoryForEvent(eventName: string): AnalyticsMetricCate
     return "workspace_actions";
 }
 
-function anonymizeEvent(event: AnalyticsEvent): AnalyticsEvent {
+function anonymizeEvent(event: AnalyticsEvent, secret: string): AnalyticsEvent {
     return {
         ...event,
-        userUuid: anonymousIdentifier(event.world, event.userUuid),
+        userUuid: anonymousIdentifier(event.world, event.userUuid, secret),
         userId: null,
-        spaceUserId: anonymousIdentifier(event.world, event.spaceUserId),
+        spaceUserId: anonymousIdentifier(event.world, event.spaceUserId, secret),
         clientIp: null,
         tabId: null,
         properties: anonymizeProperties(event.properties),
@@ -683,8 +716,22 @@ function anonymizeProperties(properties: JsonObject): JsonObject {
     return safe;
 }
 
-function anonymousIdentifier(world: string, identifier: string): string {
-    return `anonymous:${createHash("sha256").update(`${world}|${identifier}|2026-06-23.v1`).digest("hex")}`;
+/**
+ * Pseudonymizes an identifier for a world that opted out of user-level activity.
+ *
+ * Keyed HMAC, not a salted hash. The previous version hashed with the legal
+ * template version as its "salt" — a constant that lives in this repository and
+ * is shipped to the pusher inside the policy itself. That protected nobody: the
+ * party this anonymization exists to defend users *against* is the world's own
+ * administrator, and they hold the list of user uuids. Hashing that list with a
+ * public constant re-identifies every "anonymous" row. A secret the tenant does
+ * not have makes the pseudonym actually opaque to them.
+ *
+ * The world is still part of the message so the same user is a different
+ * pseudonym in each world, which stops cross-world correlation.
+ */
+function anonymousIdentifier(world: string, identifier: string, secret: string): string {
+    return `anonymous:${createHmac("sha256", secret).update(`${world}|${identifier}`).digest("hex")}`;
 }
 
 function toStreamCategory(streamCategory: VideoQualityStreamCategory): "video" | "screenSharing" | undefined {
@@ -735,6 +782,7 @@ function buildDefaultConfig(): AnalyticsEventsQueueConfig {
         maxQueueSize: VIDEO_ANALYTICS_MAX_QUEUE_SIZE,
         maxBatchSize: VIDEO_ANALYTICS_MAX_BATCH_SIZE,
         pusherInstanceId: process.env.HOSTNAME || process.env.SERVER_NAME || "pusher",
+        pseudonymizationSecret: ANALYTICS_PSEUDONYMIZATION_SECRET,
     };
 }
 
