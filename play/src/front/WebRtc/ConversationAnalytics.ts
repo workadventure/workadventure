@@ -4,7 +4,22 @@ import { v4 as uuidv4 } from "uuid";
 import { hasCapability } from "../Connection/Capabilities";
 
 const ANALYTICS_EVENTS_CAPABILITY = "api/analytics/events-batch";
-const CONVERSATION_ANALYTICS_SEND_INTERVAL_MS = 5_000;
+
+/**
+ * How often an open conversation checkpoints itself.
+ *
+ * This is a durability knob, not an accuracy one. Each heartbeat now reports the
+ * time actually elapsed since the previous one, and closing a conversation emits
+ * the exact remainder, so `sum(sampleDurationSeconds)` equals the real duration
+ * whatever the cadence — which is why this can be 60s rather than the 5s it used
+ * to need. It only bounds what is lost when a tab dies mid-conversation and no
+ * close is ever emitted: at most one interval.
+ *
+ * At 5s each conversing user cost 720 events/hour, and the pusher flushes at
+ * most ~100 events/s, so a single instance saturated at roughly 500 concurrent
+ * conversing users. 60s divides that by twelve.
+ */
+const CONVERSATION_ANALYTICS_SEND_INTERVAL_MS = 60_000;
 
 export type MeetingProvider = "livekit" | "jitsi" | "webrtc";
 
@@ -13,7 +28,6 @@ type ConversationAnalyticsOptions = {
     meetingStore?: Readable<boolean>;
     meetingProvider?: MeetingProvider;
     meetingProviderStore?: Readable<MeetingProvider | undefined>;
-    participantCountStore?: Readable<number | undefined>;
 };
 
 type ConversationType = "spontaneous_bubble" | "meeting" | "remote";
@@ -50,7 +64,56 @@ export function subscribeToConversationAnalytics(
     let conversationGroupId: number | string | undefined;
     let conversationId: string | undefined;
     let conversationType: ConversationType = "remote";
-    let participantCount: number | undefined;
+    /** Start of the open conversation, and the instant its last sample covered up to. */
+    let startedAtMs: number | undefined;
+    let lastSampleAtMs: number | undefined;
+
+    /**
+     * Reports the time elapsed since the previous sample, rather than a fixed
+     * slice of the cadence.
+     *
+     * The old code sent `sendIntervalMs / 1000` on every tick, which made the
+     * total systematically short by up to one interval: the first tick only fires
+     * after one full interval, so a 12s conversation reported 10s and a 4s one
+     * reported nothing at all. Measuring the real gap, plus a closing sample for
+     * the remainder, makes the sum exact and independent of the cadence.
+     */
+    const sendHeartbeat = (
+        untilMs: number,
+        currentConversationId: string,
+        currentConversationType: ConversationType,
+    ) => {
+        if (lastSampleAtMs === undefined) {
+            return;
+        }
+
+        const sampleDurationSeconds = (untilMs - lastSampleAtMs) / 1000;
+        if (sampleDurationSeconds <= 0) {
+            return;
+        }
+        lastSampleAtMs = untilMs;
+
+        sendReport({
+            events: [
+                {
+                    eventName: "conversation.heartbeat",
+                    source: "front",
+                    clientEventTimeMs: untilMs,
+                    // uuid suffix so two heartbeats sharing a millisecond don't collide
+                    // (the backend dedupes by eventId).
+                    eventId: `conversation-heartbeat:${currentConversationId}:${uuidv4()}`,
+                    properties: {
+                        schemaVersion: 1,
+                        conversationId: currentConversationId,
+                        meetingSessionId: currentConversationType === "meeting" ? currentConversationId : undefined,
+                        conversationType: currentConversationType,
+                        meetingProvider: meetingProviderFromConversationType(currentConversationType, meetingProvider),
+                        sampleDurationSeconds,
+                    },
+                },
+            ],
+        });
+    };
     const sendConversationEvent = (
         eventName: "conversation.started" | "conversation.ended" | "meeting.provider_changed",
         currentConversationId: string,
@@ -84,6 +147,8 @@ export function subscribeToConversationAnalytics(
     ): void => {
         conversationType = nextConversationType;
         conversationId = conversationIdFromState(conversationType, conversationGroupId) ?? uuidv4();
+        startedAtMs = Date.now();
+        lastSampleAtMs = startedAtMs;
         sendConversationEvent("conversation.started", conversationId, conversationType);
     };
     const endConversation = (reason?: string): void => {
@@ -91,8 +156,25 @@ export function subscribeToConversationAnalytics(
             return;
         }
 
-        sendConversationEvent("conversation.ended", conversationId, conversationType, { reason });
+        const endedAtMs = Date.now();
+        // Close the sampling first: this last heartbeat carries the remainder since
+        // the previous one, which is what makes sum(sampleDurationSeconds) exact.
+        sendHeartbeat(endedAtMs, conversationId, conversationType);
+
+        // conversation.ended now carries the interval as a scalar, the same shape
+        // meeting.screenshare.ended and user.disconnected already use, so a consumer
+        // can read the duration straight off this event instead of summing samples.
+        // Both are emitted for now: the heartbeats remain the durable record while
+        // the admin queries still derive duration from them.
+        sendConversationEvent("conversation.ended", conversationId, conversationType, {
+            reason,
+            startedAt: startedAtMs !== undefined ? new Date(startedAtMs).toISOString() : undefined,
+            endedAt: new Date(endedAtMs).toISOString(),
+            durationSeconds: startedAtMs !== undefined ? (endedAtMs - startedAtMs) / 1000 : undefined,
+        });
         conversationId = undefined;
+        startedAtMs = undefined;
+        lastSampleAtMs = undefined;
     };
     // Changing type mid-conversation is reported as ended("type_changed") followed
     // by a fresh started, so a single uninterrupted conversation from the user's
@@ -131,9 +213,6 @@ export function subscribeToConversationAnalytics(
     const unsubscribeMeeting = options.meetingStore?.subscribe((value) => {
         inMeeting = value;
         transitionConversationType(conversationTypeFromState(value, conversationGroupId));
-    });
-    const unsubscribeParticipantCount = options.participantCountStore?.subscribe((value) => {
-        participantCount = typeof value === "number" && value >= 0 ? value : undefined;
     });
     const unsubscribeMeetingProvider = options.meetingProviderStore?.subscribe((value) => {
         const previousMeetingProvider = meetingProvider;
@@ -177,30 +256,17 @@ export function subscribeToConversationAnalytics(
 
         const currentConversationId =
             conversationId ?? conversationIdFromState(currentConversationType, conversationGroupId) ?? uuidv4();
-        conversationId = currentConversationId;
-        const currentMeetingProvider = meetingProviderFromConversationType(currentConversationType, meetingProvider);
+        if (conversationId !== currentConversationId) {
+            // The interval re-derived the conversation from drifted state: treat it as
+            // a fresh one rather than back-dating the sample to a conversation that no
+            // longer exists.
+            conversationId = currentConversationId;
+            startedAtMs = startedAtMs ?? now;
+            lastSampleAtMs = now;
+            return;
+        }
 
-        sendReport({
-            events: [
-                {
-                    eventName: "conversation.heartbeat",
-                    source: "front",
-                    clientEventTimeMs: now,
-                    // uuid suffix so two heartbeats sharing a millisecond don't collide
-                    // (the backend dedupes by eventId).
-                    eventId: `conversation-heartbeat:${currentConversationId}:${uuidv4()}`,
-                    properties: {
-                        schemaVersion: 1,
-                        conversationId: currentConversationId,
-                        meetingSessionId: currentConversationType === "meeting" ? currentConversationId : undefined,
-                        conversationType: currentConversationType,
-                        meetingProvider: currentMeetingProvider,
-                        participantCount,
-                        sampleDurationSeconds: Math.round(sendIntervalMs / 1000),
-                    },
-                },
-            ],
-        });
+        sendHeartbeat(now, currentConversationId, currentConversationType);
     }, sendIntervalMs);
 
     return () => {
@@ -215,7 +281,6 @@ export function subscribeToConversationAnalytics(
         unsubscribeGroupId?.();
         unsubscribeMeeting?.();
         unsubscribeMeetingProvider?.();
-        unsubscribeParticipantCount?.();
     };
 }
 
