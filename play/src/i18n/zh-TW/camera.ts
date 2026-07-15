@@ -23,6 +23,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "你必須在瀏覽器設定裡允許攝影機和麥克風的存取權限。",
         cameraContent: "你必須在瀏覽器設定裡允許攝影機的存取權限。",
         microphoneContent: "你必須在瀏覽器設定裡允許麥克風的存取權限。",
+        safariContent:
+            "打開 Safari >「此網站的設定」（或 Safari > 設定 > 網站 > 攝影機 / 麥克風），將本站設為「允許」，然後重新整理頁面。",
         firefoxContent: "如果你不希望 Firefox 反覆要求授權，請勾選「記住此決定」。",
         allow: "允許網路攝影機",
         allowMicrophone: "允許麥克風",
