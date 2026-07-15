@@ -8,10 +8,9 @@
     interface Props {
         content: Readable<ChatMessageContent>;
         hasDepth: false;
-        updateMessageBody?: () => void;
     }
 
-    let { content, hasDepth, updateMessageBody = () => {} }: Props = $props();
+    let { content, hasDepth }: Props = $props();
 
     async function getMarked(body: string): Promise<Marked> {
         let marked: Marked;
@@ -65,9 +64,6 @@
                 .catch((error) => {
                     console.error("Failed to parse markdown content", error);
                     html = $content.body;
-                })
-                .finally(() => {
-                    updateMessageBody();
                 });
         });
     });

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount, tick } from "svelte";
+    import { onDestroy, onMount, tick, untrack } from "svelte";
     import { get, readable } from "svelte/store";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import {
@@ -54,16 +54,38 @@
     // Time gap threshold for message grouping (5 minutes)
     const TIME_GAP_THRESHOLD = 5 * 60 * 1000;
 
+    const AUTO_SCROLL_THRESHOLD_PX = 20;
+    /** No scroll event for this long means our own smooth animation has landed. */
+    const PROGRAMMATIC_SCROLL_SETTLE_MS = 150;
+    /** Release the anchor once the content has stopped resizing for this long. */
+    const ANCHOR_IDLE_RELEASE_MS = 400;
+    /** Absolute cap, so a pathological stream of resizes cannot hold the anchor forever. */
+    const ANCHOR_MAX_HOLD_MS = 3000;
+    /** Paginate while the topmost visible message is within this many items of the start. */
+    const PAGINATION_TRIGGER_ITEM_INDEX = 10;
+
+    type ProgrammaticScrollKind = "pin-bottom" | "resync";
+    type ScrollAnchor = { element: HTMLLIElement; offset: number };
+
     let messageListRef: HTMLDivElement | undefined = $state();
+    /** Sticky-bottom intent. Only real user scrolls and explicit pin/unpin calls write this. */
     let autoScroll = $state(true);
-    let onScrollTop = $state(false);
-    let oldScrollHeight = $state(0);
     let loadingMessagePromise: Promise<void> | undefined = $state();
-    let scrollTimer: ReturnType<typeof setTimeout>;
     let shouldDisplayLoader = $state(false);
     let messageInputBarRef: MessageInputBar | undefined = $state();
     let lastTimelineFocusSequence = $state(0);
     let initialMessagesLoaded = $state(false);
+
+    // Imperative, deliberately not $state: read and written from DOM handlers, never from the template.
+    let scrollTimer: ReturnType<typeof setTimeout> | undefined;
+    let programmaticScrollKind: ProgrammaticScrollKind | undefined;
+    let programmaticScrollSettleTimer: ReturnType<typeof setTimeout> | undefined;
+    let scrollAnchor: ScrollAnchor | undefined;
+    let anchorIdleReleaseTimer: ReturnType<typeof setTimeout> | undefined;
+    let anchorHardReleaseTimer: ReturnType<typeof setTimeout> | undefined;
+    let lastSeenLastItemKey: string | undefined;
+    let contentResizeObserver: ResizeObserver | undefined;
+    const observedItems = new WeakSet<Element>();
 
     const gameScene = gameManager.getCurrentGameScene();
     const chatRoomsEnableInAdmin = gameScene.room.isChatEnabled;
@@ -197,39 +219,76 @@
         return out;
     });
 
+    const MAX_INITIAL_FILL_ROUNDS = 5;
+
     onMount(() => {
+        // Catches every height change: async markdown, lazy-loaded highlight.js, images, edits.
+        // Runs after layout and before paint, so repositioning here is invisible.
+        contentResizeObserver = new ResizeObserver(() => {
+            if (!initialMessagesLoaded) return;
+            if (scrollAnchor !== undefined) {
+                restoreScrollAnchor();
+                return;
+            }
+            if (autoScroll) scrollToMessageListBottom();
+        });
+        syncContentResizeObservations();
+
         initMessages()
             .catch((error) => console.error(error))
             .finally(() => focusPendingTimelineRequestOrScrollToBottom().catch((error) => console.error(error)));
+
+        return () => contentResizeObserver?.disconnect();
     });
+
+    /**
+     * Observes each <li>, not the <ul>: the list is capped by `max-h-full`, so its own box never
+     * grows with the content and a ResizeObserver on it would never fire. Items are observed once
+     * each — the initial callback on a newly observed item is what repositions after a prepend.
+     */
+    function syncContentResizeObservations() {
+        if (!contentResizeObserver || !messageListRef) return;
+        for (const item of messageListRef.querySelectorAll<HTMLLIElement>("li[data-event-id]")) {
+            if (observedItems.has(item)) continue;
+            observedItems.add(item);
+            contentResizeObserver.observe(item);
+        }
+    }
+
+    onDestroy(() => {
+        clearTimeout(scrollTimer);
+        clearTimeout(programmaticScrollSettleTimer);
+        clearTimeout(anchorIdleReleaseTimer);
+        clearTimeout(anchorHardReleaseTimer);
+    });
+
+    /** Fills the viewport on open, one page at a time. Rounds are inherently sequential. */
+    async function fillViewport(remainingRounds: number) {
+        await room.loadMorePreviousMessages();
+        // isViewportNotFilled() reads the DOM: without this it measures the pre-insert list.
+        await tick();
+
+        if (remainingRounds > 1 && get(room.hasPreviousMessage) && isViewportNotFilled()) {
+            await fillViewport(remainingRounds - 1);
+        }
+    }
 
     async function initMessages() {
         if (!messageListRef) return;
         initialMessagesLoaded = false;
 
-        const loadMessages = async () => {
-            try {
-                await room.ensureTimelineInitialized();
-                if (get(room.isEncrypted) && get(matrixSecurity.isEncryptionRequiredAndNotSet)) {
-                    return;
-                }
-
-                await room.loadMorePreviousMessages();
-
-                if (get(room.hasPreviousMessage) && isViewportNotFilled()) {
-                    await loadMessages();
-                }
-            } catch (error) {
-                console.error(`Failed to load messages: ${error}`);
-            }
-        };
-
         try {
-            await loadMessages();
-            setFirstListItem();
-            initialMessagesLoaded = true;
+            await room.ensureTimelineInitialized();
+            if (get(room.isEncrypted) && get(matrixSecurity.isEncryptionRequiredAndNotSet)) {
+                return;
+            }
+
+            await fillViewport(MAX_INITIAL_FILL_ROUNDS);
         } catch (error) {
             console.error(`Failed to load messages: ${error}`);
+        } finally {
+            // Must be set even on failure, otherwise the $roomTimelineFocusStore effect stays frozen.
+            initialMessagesLoaded = true;
         }
     }
 
@@ -251,38 +310,149 @@
             return;
         }
 
-        scrollToMessageListBottom();
+        // Instant: a smooth scroll from top to bottom on a fresh room looks wrong, and it opens a
+        // ~300ms window where handleScroll's debounce can paginate from scrollTop = 0.
+        scrollToMessageListBottom("auto");
     }
-
-    $effect.pre(() => {
-        if (messageListRef) {
-            oldScrollHeight = messageListRef.scrollHeight;
-            const scrollableDistance = messageListRef.scrollHeight - messageListRef.offsetHeight;
-            autoScroll = messageListRef.scrollTop > scrollableDistance - 20;
-            onScrollTop = messageListRef.scrollTop === 0;
-        }
-    });
 
     $effect(() => {
         if ($initializationState === "ready") {
             room.setTimelineAsRead();
         }
-        if (autoScroll) {
-            scrollToMessageListBottom();
-        } else if (onScrollTop && messageListRef) {
-            const oldFirstListItem = messageListRef.querySelector<HTMLLIElement>('li[data-first-li="true"]');
+    });
 
-            if (oldFirstListItem !== null) {
-                const newScrollHeight = messageListRef.scrollHeight;
-                messageListRef.scrollTop = newScrollHeight - oldScrollHeight;
-            }
-            setFirstListItem();
+    $effect(() => {
+        const items = renderItems;
+        const lastKey = items[items.length - 1]?.key;
+
+        // Newly rendered messages must be observed before they finish resizing.
+        syncContentResizeObservations();
+
+        if (!initialMessagesLoaded) {
+            // Seed the baseline; onMount owns the initial scroll (bottom, or a pending focus request).
+            lastSeenLastItemKey = lastKey;
+            return;
+        }
+
+        // False by construction during back-pagination: prepending does not change the last item.
+        const isNewLastItem = lastKey !== undefined && lastKey !== lastSeenLastItemKey;
+        lastSeenLastItemKey = lastKey;
+
+        const lastItem = items[items.length - 1];
+        const lastMessage =
+            lastItem?.kind === "item" && lastItem.timelineItem.kind === "message"
+                ? lastItem.timelineItem.message
+                : undefined;
+
+        if (isNewLastItem && lastMessage?.sender?.chatId === myChatID) {
+            // I just sent this: jump to it even if I was reading history.
+            scrollToMessageListBottom();
+            return;
+        }
+        // Older messages were prepended: hold position, never fall through to a bottom scroll.
+        if (scrollAnchor !== undefined) {
+            restoreScrollAnchor();
+            return;
+        }
+        // untrack: scrollToMessageListBottom writes autoScroll, reading it reactively would re-enter.
+        if (isNewLastItem && untrack(() => autoScroll)) {
+            scrollToMessageListBottom();
         }
     });
 
-    function scrollToMessageListBottom() {
+    function isAtBottom(): boolean {
+        if (!messageListRef) return true;
+        const distanceToBottom = messageListRef.scrollHeight - messageListRef.scrollTop - messageListRef.clientHeight;
+        return distanceToBottom <= AUTO_SCROLL_THRESHOLD_PX;
+    }
+
+    /**
+     * Programmatic scrolls emit `scroll` events just like user ones. Without this guard they would
+     * clobber `autoScroll` mid-animation and trigger spurious backward pagination.
+     */
+    function beginProgrammaticScroll(kind: ProgrammaticScrollKind) {
+        programmaticScrollKind = kind;
+        armProgrammaticScrollSettle();
+    }
+
+    function armProgrammaticScrollSettle() {
+        clearTimeout(programmaticScrollSettleTimer);
+        programmaticScrollSettleTimer = setTimeout(() => {
+            const kind = programmaticScrollKind;
+            programmaticScrollKind = undefined;
+            // "pin-bottom" deliberately does not resync: a smooth scroll freezes its target at call
+            // time, so async markdown growing the list makes it land on the old bottom. Resyncing
+            // would then read "not at bottom" and kill every later pin.
+            if (kind === "resync") {
+                autoScroll = isAtBottom();
+            }
+        }, PROGRAMMATIC_SCROLL_SETTLE_MS);
+    }
+
+    /** An explicit user gesture always wins over an in-flight programmatic animation. */
+    function cancelProgrammaticScroll() {
+        if (programmaticScrollKind === undefined) return;
+        clearTimeout(programmaticScrollSettleTimer);
+        programmaticScrollKind = undefined;
+        autoScroll = isAtBottom();
+    }
+
+    function captureScrollAnchor() {
+        if (!messageListRef) return;
+        const containerTop = messageListRef.getBoundingClientRect().top;
+        // Only real messages: day separators and loader/empty-state <li>s have no stable id and can
+        // be inserted or removed by the prepend itself.
+        const items = messageListRef.querySelectorAll<HTMLLIElement>("li[data-event-id]");
+        for (const item of items) {
+            const rect = item.getBoundingClientRect();
+            if (rect.bottom > containerTop) {
+                scrollAnchor = { element: item, offset: rect.top - containerTop };
+                return;
+            }
+        }
+        scrollAnchor = undefined;
+    }
+
+    function restoreScrollAnchor() {
+        const anchor = scrollAnchor;
+        if (!messageListRef || !anchor) return;
+        if (!anchor.element.isConnected || !messageListRef.contains(anchor.element)) {
+            // Anchor was unmounted (redaction, timeline rebuild). Releasing is the only safe move:
+            // any fallback would be a guess, and a wrong guess is exactly the jump we are fixing.
+            releaseScrollAnchor();
+            return;
+        }
+        const containerTop = messageListRef.getBoundingClientRect().top;
+        const delta = anchor.element.getBoundingClientRect().top - containerTop - anchor.offset;
+        // Sub-pixel deltas are noise; writing scrollTop would emit a pointless scroll event.
+        if (Math.abs(delta) < 1) return;
+        beginProgrammaticScroll("resync");
+        messageListRef.scrollTop += delta;
+        armAnchorIdleRelease();
+    }
+
+    function releaseScrollAnchor() {
+        scrollAnchor = undefined;
+        clearTimeout(anchorIdleReleaseTimer);
+        clearTimeout(anchorHardReleaseTimer);
+    }
+
+    function armAnchorIdleRelease() {
+        clearTimeout(anchorIdleReleaseTimer);
+        anchorIdleReleaseTimer = setTimeout(releaseScrollAnchor, ANCHOR_IDLE_RELEASE_MS);
+    }
+
+    function armAnchorHardRelease() {
+        clearTimeout(anchorHardReleaseTimer);
+        anchorHardReleaseTimer = setTimeout(releaseScrollAnchor, ANCHOR_MAX_HOLD_MS);
+    }
+
+    function scrollToMessageListBottom(behavior: ScrollBehavior = "smooth") {
         if (messageListRef == undefined) return;
-        messageListRef.scroll({ top: messageListRef.scrollHeight, behavior: "smooth" });
+        releaseScrollAnchor();
+        autoScroll = true;
+        beginProgrammaticScroll("pin-bottom");
+        messageListRef.scroll({ top: messageListRef.scrollHeight, behavior });
     }
 
     function goBackAndClearSelectedChatMessage() {
@@ -305,80 +475,59 @@
     }
 
     function handleScroll() {
+        if (programmaticScrollKind !== undefined) {
+            // Keep extending the settle window while our own animation is still emitting events.
+            armProgrammaticScrollSettle();
+            return;
+        }
+        autoScroll = isAtBottom();
+        // The user is driving: keep the anchor on where they are now, not where they were.
+        if (scrollAnchor !== undefined) captureScrollAnchor();
+
         clearTimeout(scrollTimer);
-        scrollTimer = setTimeout(() => {
-            loadMorePreviousMessages();
-        }, 100);
+        scrollTimer = setTimeout(loadMorePreviousMessages, 100);
     }
 
     function loadMorePreviousMessages() {
         if (loadingMessagePromise || !shouldLoadMoreMessages()) return;
 
-        loadingMessagePromise = new Promise<void>((resolve) => {
-            (async () => {
-                const loadMessages = async () => {
-                    if (!messageListRef) {
-                        return;
-                    }
-                    if (messageListRef.scrollTop === 0) {
-                        shouldDisplayLoader = true;
-                    }
-                    await room.loadMorePreviousMessages();
+        // Synchronous, before any await: the DOM here is exactly what the user is looking at.
+        captureScrollAnchor();
+        armAnchorHardRelease();
 
-                    if (shouldLoadMoreMessages()) {
-                        loadMorePreviousMessages();
-                    }
-                };
+        if (messageListRef?.scrollTop === 0) {
+            shouldDisplayLoader = true;
+        }
 
-                await loadMessages();
-            })()
-                .catch((error) => {
-                    console.error(`Failed to load messages: ${error}`);
-                    throw new Error(`Failed to load messages: ${error}`);
-                })
-                .finally(() => {
-                    if (shouldDisplayLoader) {
-                        shouldDisplayLoader = false;
-                    }
-                    resolve();
-                });
-        }).finally(() => {
-            loadingMessagePromise = undefined;
-        });
+        const pending = room
+            .loadMorePreviousMessages()
+            .then(() => tick())
+            .then(() => restoreScrollAnchor());
+
+        loadingMessagePromise = pending;
+        pending
+            .catch((error) => console.error(`Failed to load messages: ${error}`))
+            .finally(() => {
+                // The identity check keeps a stale round from clearing a newer one.
+                if (loadingMessagePromise === pending) loadingMessagePromise = undefined;
+                shouldDisplayLoader = false;
+                armAnchorIdleRelease();
+            });
     }
 
-    function shouldLoadMoreMessages() {
-        const messages = Array.from(messageListRef?.querySelectorAll("li") || []);
-        const messagesBeforeViewportTop = messages.find((msg) => msg.getBoundingClientRect().top >= 0);
+    function shouldLoadMoreMessages(): boolean {
+        if (!messageListRef || !get(room.hasPreviousMessage)) return false;
+        // Compare against the container, not the viewport: the chat header pushes messageListRef
+        // below y=0, so `top >= 0` matches items already scrolled out the top.
+        const containerTop = messageListRef.getBoundingClientRect().top;
+        const items = Array.from(messageListRef.querySelectorAll<HTMLLIElement>("li[data-event-id]"));
+        const firstVisibleIndex = items.findIndex((item) => item.getBoundingClientRect().top >= containerTop);
 
-        return (
-            messagesBeforeViewportTop &&
-            messages.indexOf(messagesBeforeViewportTop) < 10 &&
-            messages.indexOf(messagesBeforeViewportTop) !== -1 &&
-            get(room.hasPreviousMessage)
-        );
-    }
-
-    function setFirstListItem() {
-        if (!messageListRef) return;
-        const oldFirstListItem = messageListRef.querySelector<HTMLLIElement>('li[data-first-li="true"]');
-        oldFirstListItem?.removeAttribute("data-first-li");
-
-        const firstListItem = messageListRef.getElementsByTagName("li").item(0);
-        firstListItem?.setAttribute("data-first-li", "true");
+        return firstVisibleIndex !== -1 && firstVisibleIndex < PAGINATION_TRIGGER_ITEM_INDEX;
     }
 
     function isViewportNotFilled() {
         return messageListRef ? messageListRef.scrollHeight <= messageListRef.clientHeight : false;
-    }
-
-    function onUpdateMessageBody(event: { id: string }) {
-        const currentTimelineItems = get(timelineItems);
-        const lastTimelineItem = currentTimelineItems[currentTimelineItems.length - 1];
-        const lastMessage = lastTimelineItem?.kind === "message" ? lastTimelineItem.message : undefined;
-        if (autoScroll || (lastMessage && event.id === lastMessage.id && lastMessage.sender?.chatId === myChatID)) {
-            scrollToMessageListBottom();
-        }
     }
 
     function onDropFiles(event: DragEvent) {
@@ -413,6 +562,11 @@
         }
 
         lastTimelineFocusSequence = request.sequence;
+        // Focusing an arbitrary event is an explicit un-pin: otherwise a ResizeObserver firing while
+        // autoScroll is still true would drag us back to the bottom.
+        autoScroll = false;
+        releaseScrollAnchor();
+        beginProgrammaticScroll("resync");
         target.scrollIntoView({ block: "center", behavior: "smooth" });
         target.classList.remove("highlight-message");
         // // Force the highlight animation to restart when the same poll is clicked again.
@@ -493,6 +647,8 @@
             bind:this={messageListRef}
             class="flex overflow-auto h-full justify-center items-end relative"
             onscroll={handleScroll}
+            onwheel={cancelProgrammaticScroll}
+            ontouchstart={cancelProgrammaticScroll}
         >
             <ul
                 class="list-none p-0 flex-1 flex flex-col max-w-full max-h-full pt-10 gap-1 {$timelineItems.length === 0
@@ -561,7 +717,6 @@
                             <PollCard poll={item.timelineItem.poll} />
                         {:else}
                             <Message
-                                updateMessageBody={onUpdateMessageBody}
                                 message={item.timelineItem.message}
                                 showHeader={item.showHeader}
                                 membersForMessageAvatars={room.membersForMessageAvatars}
