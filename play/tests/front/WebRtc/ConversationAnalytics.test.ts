@@ -29,7 +29,7 @@ describe("subscribeToConversationAnalytics", () => {
         const sendReport = vi.fn();
         const inConversation = writable(false);
 
-        subscribeToConversationAnalytics(inConversation, sendReport);
+        subscribeToConversationAnalytics(inConversation, sendReport, 5_000);
         inConversation.set(true);
         await vi.advanceTimersByTimeAsync(5_000);
 
@@ -42,7 +42,8 @@ describe("subscribeToConversationAnalytics", () => {
                     properties: expect.objectContaining({
                         conversationId: expect.any(String),
                         conversationType: "remote",
-                        participantCount: undefined,
+                        // Time actually elapsed since the previous sample, not a fixed
+                        // slice of the cadence.
                         sampleDurationSeconds: 5,
                     }),
                 }),
@@ -65,19 +66,51 @@ describe("subscribeToConversationAnalytics", () => {
         expect(new Set(eventIds).size).toBe(eventIds.length);
     });
 
-    it("reports the participant count provided by the participantCountStore option", async () => {
+    it("counts a conversation shorter than one interval instead of dropping it", async () => {
         window.capabilities = {
             "api/analytics/events-batch": "v1",
         };
         const sendReport = vi.fn();
-        const inConversation = writable(true);
-        const participantCountStore = writable<number | undefined>(3);
+        const inConversation = writable(false);
 
-        subscribeToConversationAnalytics(inConversation, sendReport, undefined, { participantCountStore });
-        await vi.advanceTimersByTimeAsync(5_000);
+        // The first tick only fires after a full interval, so before the closing
+        // sample existed a conversation shorter than the cadence contributed
+        // sampleDurationSeconds: 0 — it was invisible to every duration metric.
+        subscribeToConversationAnalytics(inConversation, sendReport, 60_000);
+        inConversation.set(true);
+        await vi.advanceTimersByTimeAsync(4_000);
+        inConversation.set(false);
 
-        const heartbeat = sentEvents(sendReport).find((event) => event.eventName === "conversation.heartbeat");
-        expect(heartbeat?.properties.participantCount).toBe(3);
+        const heartbeats = sentEvents(sendReport).filter((event) => event.eventName === "conversation.heartbeat");
+        const total = heartbeats.reduce((sum, event) => sum + Number(event.properties.sampleDurationSeconds ?? 0), 0);
+        expect(total).toBe(4);
+    });
+
+    it("makes the summed samples match the interval carried by conversation.ended", async () => {
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+        const sendReport = vi.fn();
+        const inConversation = writable(false);
+
+        // A conversation spanning several ticks plus a partial remainder: the two
+        // duration primitives must agree, which is what lets the admin migrate from
+        // summing samples to reading durationSeconds.
+        subscribeToConversationAnalytics(inConversation, sendReport, 60_000);
+        inConversation.set(true);
+        await vi.advanceTimersByTimeAsync(150_000);
+        inConversation.set(false);
+
+        const events = sentEvents(sendReport);
+        const summed = events
+            .filter((event) => event.eventName === "conversation.heartbeat")
+            .reduce((sum, event) => sum + Number(event.properties.sampleDurationSeconds ?? 0), 0);
+        const ended = events.find((event) => event.eventName === "conversation.ended");
+
+        expect(summed).toBe(150);
+        expect(ended?.properties.durationSeconds).toBe(150);
+        expect(ended?.properties.startedAt).toEqual(expect.any(String));
+        expect(ended?.properties.endedAt).toEqual(expect.any(String));
     });
 
     it("keeps the same conversation id while the conversation stays active", async () => {
@@ -87,7 +120,7 @@ describe("subscribeToConversationAnalytics", () => {
         const sendReport = vi.fn();
         const inConversation = writable(false);
 
-        subscribeToConversationAnalytics(inConversation, sendReport);
+        subscribeToConversationAnalytics(inConversation, sendReport, 5_000);
         inConversation.set(true);
         await vi.advanceTimersByTimeAsync(10_000);
 
@@ -105,7 +138,7 @@ describe("subscribeToConversationAnalytics", () => {
         const sendReport = vi.fn();
         const inConversation = writable(false);
 
-        subscribeToConversationAnalytics(inConversation, sendReport);
+        subscribeToConversationAnalytics(inConversation, sendReport, 5_000);
         inConversation.set(true);
         await vi.advanceTimersByTimeAsync(5_000);
         inConversation.set(false);
