@@ -301,6 +301,12 @@ export const EnvironmentVariables = z.object({
         .describe(
             "Maximum number of analytics events sent in one admin batch. Caps the generic analytics queue as well as video quality samples. Defaults to 1000",
         ),
+    ANALYTICS_PSEUDONYMIZATION_SECRET: z
+        .string()
+        .optional()
+        .describe(
+            "Secret key used to pseudonymize user identifiers for worlds that opted out of user-level activity metrics. Must be set to the same value on the admin. Without it those worlds report no analytics at all, because a pseudonym anyone can recompute is not a pseudonym: the world's own administrator holds the user list and could hash it to re-identify every row. Changing the value re-pseudonymizes everyone and breaks joins against already-ingested data.",
+        ),
     ANALYTICS_DRAIN_TIMEOUT_MS: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 30_000))
         .describe(
