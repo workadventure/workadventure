@@ -536,6 +536,21 @@ export class AnalyticsEventsQueue {
         let sentEvents = 0;
         for (let i = 0; i < batch.events.length; i++) {
             const event = batch.events[i];
+
+            // postBatch caps each request's timeout by the remaining budget, but the
+            // loop itself must stop too: past the deadline this would still fire one
+            // request per event (up to maxBatchSize, i.e. 1000 by default) with a 1ms
+            // timeout each, pushing the shutdown well past its grace period.
+            if (deadline !== undefined && Date.now() >= deadline) {
+                const remaining = batch.events.length - i;
+                this.droppedAfterSendFailure += remaining;
+                console.warn("Analytics events dropped: drain deadline reached during the per-event retry", {
+                    dropped: remaining,
+                    sent: sentEvents,
+                });
+                return sentEvents;
+            }
+
             try {
                 // eslint-disable-next-line no-await-in-loop
                 await this.postBatch(
