@@ -97,7 +97,7 @@ describe("VideoQualityAnalyticsQueue", () => {
                     "Content-Type": "application/json",
                 },
                 timeout: 500,
-            }
+            },
         );
         expect(queue.getStats()).toMatchObject({
             queueSize: 0,
@@ -141,7 +141,7 @@ describe("VideoQualityAnalyticsQueue", () => {
                     }),
                 ],
             },
-            socketData()
+            socketData(),
         );
         await queue.flush();
 
@@ -223,6 +223,35 @@ describe("VideoQualityAnalyticsQueue", () => {
             flushErrors: 1,
             queueSize: 0,
         });
+
+        consoleWarn.mockRestore();
+    });
+
+    it("honours the drain deadline instead of overshooting it by a retry round", async () => {
+        const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        // An admin that never answers: every request burns its full timeout. drain()
+        // used to call flush() without passing its deadline down, so the last loop
+        // iteration could start just before the deadline and still run two full
+        // timeouts plus a retry sleep past it — overshooting the grace period the
+        // orchestrator granted the pod.
+        const post = vi.fn(
+            (_url: string, _payload: unknown, options?: { timeout?: number }) =>
+                new Promise((_resolve, reject) => {
+                    setTimeout(() => reject(new Error("timeout")), options?.timeout ?? 500);
+                }),
+        );
+        const queue = new VideoQualityAnalyticsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));
+        queue.setEnabled(true);
+        queue.enqueueReport({ samples: [sample()] }, socketData());
+
+        const startedAt = Date.now();
+        await queue.drain(200);
+        const elapsed = Date.now() - startedAt;
+
+        // baseConfig.timeoutMs is 500, so an unbounded retry round would take well
+        // past the 200ms budget. Allow generous slack for a loaded CI box while still
+        // failing on the ~2x timeout + retry sleep the old code spent.
+        expect(elapsed).toBeLessThan(600);
 
         consoleWarn.mockRestore();
     });
