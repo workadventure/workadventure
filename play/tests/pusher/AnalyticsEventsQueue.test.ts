@@ -197,6 +197,23 @@ describe("AnalyticsEventsQueue", () => {
         });
     });
 
+    it("caps oversized properties on UTF-8 bytes rather than UTF-16 code units", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue(baseConfig, post);
+        queue.setEnabled(true);
+
+        // 5000 CJK characters: 5000 UTF-16 code units (under the 8 KiB cap when
+        // measured with .length) but 15000 UTF-8 bytes (well over it).
+        const multiByte = "世".repeat(5000);
+        expect(multiByte.length).toBeLessThan(8 * 1024);
+        expect(Buffer.byteLength(multiByte, "utf8")).toBeGreaterThan(8 * 1024);
+
+        queue.enqueueEvent({ ...event("oversized-multibyte"), properties: { blob: multiByte } }, socketData());
+        await queue.flush();
+
+        expect(post).not.toHaveBeenCalled();
+    });
+
     it("splits batches rejected by admin validation and drops only invalid events", async () => {
         const validationError = {
             isAxiosError: true,
