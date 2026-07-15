@@ -136,6 +136,44 @@ describe("processAnalyticsReportMessage", () => {
         expect(queue.enqueueEvent).toHaveBeenCalledTimes(1);
     });
 
+    it.each([
+        ["eventName", { eventName: "a".repeat(256) }],
+        ["eventId", { eventId: "b".repeat(256) }],
+    ])("drops events whose %s exceeds the 255 chars the admin accepts", (_label, overrides) => {
+        const queue = newQueue();
+        // The admin validator caps both at 255 and answers 422. That 422 makes the
+        // queue re-send the whole batch one event at a time, and a throttled run
+        // then counts the rest as send failures that are never requeued — so one
+        // oversized name from one client costs everyone else's events in the batch.
+        // Drop it here instead.
+        processAnalyticsReportMessage({ events: [buildEvent(overrides)] }, newSocketData(), queue);
+
+        expect(queue.enqueueEvent).not.toHaveBeenCalled();
+        expect(warnSpy).toHaveBeenCalledWith("Analytics event dropped: malformed envelope", expect.any(Object));
+    });
+
+    it("drops events whose properties are not an object", () => {
+        const queue = newQueue();
+        // properties is google.protobuf.Value on the wire, so it reaches us as `any`:
+        // a scalar passes the byte cap (JSON.stringify(42) is 2 bytes) and is only
+        // rejected by the admin, poisoning the batch it travels in.
+        const event = { ...buildEvent(), properties: 42 as never };
+        processAnalyticsReportMessage({ events: [event] }, newSocketData(), queue);
+
+        expect(queue.enqueueEvent).not.toHaveBeenCalled();
+    });
+
+    it("accepts an event sitting exactly on the length limit", () => {
+        const queue = newQueue();
+        processAnalyticsReportMessage(
+            { events: [buildEvent({ eventName: "c".repeat(255), eventId: "d".repeat(255) })] },
+            newSocketData(),
+            queue,
+        );
+
+        expect(queue.enqueueEvent).toHaveBeenCalledTimes(1);
+    });
+
     it("drops events with an unknown source value", () => {
         const queue = newQueue();
         processAnalyticsReportMessage({ events: [buildEvent({ source: "shenanigans" })] }, newSocketData(), queue);

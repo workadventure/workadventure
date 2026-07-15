@@ -1,6 +1,7 @@
 import type { AnalyticsEventReportMessage } from "@workadventure/messages";
 import type { SocketData } from "../models/Websocket/SocketData";
-import type { AnalyticsEventsQueue } from "./AnalyticsEventsQueue";
+import type { AnalyticsEventInput, AnalyticsEventsQueue } from "./AnalyticsEventsQueue";
+import { isAnalyticsEventInput, isClientAnalyticsEventSource } from "./AnalyticsEventSchema";
 
 /**
  * Maximum number of analytics events a single websocket message may carry.
@@ -9,12 +10,6 @@ import type { AnalyticsEventsQueue } from "./AnalyticsEventsQueue";
  * could otherwise saturate it in one go and evict everyone else's events).
  */
 export const MAX_EVENTS_PER_REPORT_MESSAGE = 100;
-
-/**
- * Sources that may legitimately originate from a connected client. "pusher" is
- * reserved for backend-emitted events and must not be accepted from a socket.
- */
-const CLIENT_ALLOWED_SOURCES = new Set(["front", "media"] as const);
 
 /**
  * Event names the backend synthesizes itself, which a socket must never be able
@@ -59,7 +54,7 @@ export function processAnalyticsReportMessage(
     }
 
     for (const event of events) {
-        if (!CLIENT_ALLOWED_SOURCES.has(event.source as "front" | "media")) {
+        if (!isClientAnalyticsEventSource.safeParse(event.source).success) {
             console.warn("Analytics event dropped: invalid client source", {
                 eventName: event.eventName,
                 eventId: event.eventId,
@@ -79,13 +74,32 @@ export function processAnalyticsReportMessage(
             continue;
         }
 
+        // `properties` is `any` here: the proto declares it as google.protobuf.Value,
+        // so nothing has checked its shape yet. Everything below the envelope is
+        // validated here rather than cast.
+        const parsed = isAnalyticsEventInput.safeParse({
+            eventName: event.eventName,
+            source: event.source,
+            clientEventTimeMs: event.clientEventTimeMs,
+            eventId: event.eventId,
+            properties: event.properties ?? {},
+        });
+        if (!parsed.success) {
+            console.warn("Analytics event dropped: malformed envelope", {
+                eventName: typeof event.eventName === "string" ? event.eventName.slice(0, 64) : typeof event.eventName,
+                eventId: typeof event.eventId === "string" ? event.eventId.slice(0, 64) : typeof event.eventId,
+                issues: parsed.error.issues.map((issue) => ({ path: issue.path.join("."), code: issue.code })),
+                reporterUserUuid: socketData.userUuid,
+            });
+            continue;
+        }
+
         queue.enqueueEvent(
             {
-                eventName: event.eventName,
-                source: event.source as "front" | "media",
-                clientEventTimeMs: event.clientEventTimeMs,
-                eventId: event.eventId,
-                properties: event.properties ?? {},
+                ...parsed.data,
+                // Sound because google.protobuf.Value can only carry JSON — see
+                // AnalyticsEventSchema for why this is not a recursive schema.
+                properties: parsed.data.properties as AnalyticsEventInput["properties"],
             },
             socketData,
         );
