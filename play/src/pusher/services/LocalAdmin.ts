@@ -251,16 +251,23 @@ class LocalAdmin implements AdminInterface {
             world: "localWorld",
             applications,
             canRecord,
-            analyticsEventsEnabled: true,
+            // LocalAdmin is the no-admin-backoffice path, so there is nothing to
+            // report analytics to and nobody who could have accepted a metrics
+            // policy. Deny explicitly rather than omitting these: both fields are
+            // optional and the queue gates on `=== false`, so leaving them
+            // undefined would fail *open* the day LocalAdmin advertises the
+            // analytics capability. Today the capability gate in app.ts already
+            // disables both queues; this is the second lock, on the privacy side.
+            analyticsEventsEnabled: false,
             analyticsMetricsPolicy: {
                 schemaVersion: 1,
-                legalTemplateVersion: "2026-06-23.v1",
+                legalTemplateVersion: "none",
                 categories: {
-                    presence_sessions: true,
-                    collaboration_activity: true,
-                    workspace_actions: true,
-                    quality_diagnostics: true,
-                    user_level_activity: true,
+                    presence_sessions: false,
+                    collaboration_activity: false,
+                    workspace_actions: false,
+                    quality_diagnostics: false,
+                    user_level_activity: false,
                 },
             },
         };
