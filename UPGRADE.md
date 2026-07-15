@@ -26,7 +26,7 @@ New optional environment variables (all have safe defaults):
 
 | Variable                                 | Default          | Purpose                                          |
 |------------------------------------------|------------------|--------------------------------------------------|
-| `ANALYTICS_EVENTS_FLUSH_INTERVAL_MS`     | (admin-driven)   | Inherits the admin capability default if unset.  |
+| `VIDEO_ANALYTICS_FLUSH_INTERVAL_MS`      | `10000`          | Interval in ms between analytics batch flushes.   |
 | `ANALYTICS_DRAIN_TIMEOUT_MS`             | `30000`          | Max time `SIGTERM` drains the generic queue.     |
 | `VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS`       | `30000`          | Same as above for the legacy video-quality queue.|
 
