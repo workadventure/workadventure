@@ -79,6 +79,11 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             if (existingUser.spaceUserId === newUser.spaceUserId) {
                 continue;
             }
+            // Only send webRtcStart to listeners: connections between speakers are already
+            // established via addUserToNotify(), so re-establishing them here would duplicate the offer.
+            if (this.users.has(existingUser.spaceUserId)) {
+                continue;
+            }
             try {
                 if (this.shouldEstablishConnection(newUser, existingUser)) {
                     this.establishConnection(newUser, existingUser);
@@ -103,6 +108,9 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         }
 
         for (const userToNotify of this.usersToNotify.values()) {
+            if (userToNotify.spaceUserId === user.spaceUserId) {
+                continue;
+            }
             if (!this.users.has(userToNotify.spaceUserId)) {
                 this.shutdownConnection(user.spaceUserId, userToNotify.spaceUserId);
             }
