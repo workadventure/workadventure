@@ -58,8 +58,10 @@
     if (legals?.analyticsNoticeUrl) {
         legalStrings.push(
             '<a href="' +
-                encodeURI(legals.analyticsNoticeUrl).replace(/"/g, "%22") +
-                '" target="_blank" rel="noopener noreferrer" class="text-white no-underline hover:underline bold hover:text-white">analytics notice</a>',
+                encodeURI(legals.analyticsNoticeUrl) +
+                '" target="_blank" rel="noopener noreferrer" class="text-white no-underline hover:underline bold hover:text-white">' +
+                $LL.login.analyticsNotice() +
+                "</a>",
         );
     }
 
