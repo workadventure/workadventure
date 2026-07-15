@@ -345,10 +345,10 @@ class AnalyticsClient {
     }
 
     openedWebsite(url: URL, context: CowebsiteOpenedAnalyticsContext = {}): void {
-        // Strip query string and hash before they reach PostHog too: cowebsite URLs
-        // routinely carry auth tokens (access_token, sas, signed URLs, …). The admin
-        // sink already does this via buildCowebsiteOpenedProperties; keep both in sync.
-        this.posthog?.capture("wa_opened_website", { url: this.stripUrlSensitiveParts(url) });
+        // Origin only before it reaches PostHog too: cowebsite URLs carry auth tokens
+        // in the query/hash and the document name in the path. The admin sink does the
+        // same via buildCowebsiteOpenedProperties; keep both in sync.
+        this.posthog?.capture("wa_opened_website", { url: this.stripUrlToOrigin(url) });
         this.trackAdminEvent("cowebsite.opened", this.buildCowebsiteOpenedProperties(url, context));
     }
 
@@ -856,15 +856,17 @@ class AnalyticsClient {
         const mediaKind = context.mediaKind ?? this.inferCowebsiteMediaKind(rawTargetUrl, fileExtension);
 
         return {
-            // Strip query string and hash: they routinely carry auth tokens
-            // (access_token, sas, signed URLs, …) that must not leak to analytics.
-            url: this.stripUrlSensitiveParts(url),
-            targetUrl: this.stripUrlSensitiveParts(rawTargetUrl),
+            // Origin only — query, hash and path are all dropped. Query/hash carry
+            // auth tokens; the path carries the document name.
+            url: this.stripUrlToOrigin(url),
+            targetUrl: this.stripUrlToOrigin(rawTargetUrl),
             mediaKind,
             triggerProperty: context.triggerProperty ?? "other",
             // fileName intentionally NOT collected: document filenames are frequently
             // sensitive (NDA-acme.pdf, salary-2024.xlsx). fileExtension + mediaKind
-            // carry the analytic signal without the PII.
+            // carry the analytic signal without the PII. Note fileExtension is derived
+            // from the full URL *here*, client-side, so only the extension leaves the
+            // browser.
             fileExtension,
             areaId: context.areaId,
             areaName: context.areaName,
@@ -872,12 +874,47 @@ class AnalyticsClient {
         };
     }
 
+    /**
+     * Drops the query string and hash, which routinely carry auth tokens
+     * (access_token, sas, signed URLs). The path is kept on purpose: for a map
+     * URL it *is* the analytic signal — it names which map was loaded, and every
+     * map would otherwise collapse onto its host.
+     *
+     * Not suitable for URLs the user chose: use stripUrlToOrigin for those.
+     */
     private stripUrlSensitiveParts(input: string | URL): string {
         try {
             const parsed = input instanceof URL ? input : new URL(input, window.location.origin);
             return parsed.origin + parsed.pathname;
         } catch {
             return typeof input === "string" ? input.split("?")[0].split("#")[0] : input.toString();
+        }
+    }
+
+    /**
+     * Reduces a user-chosen URL (an opened cowebsite) to its origin.
+     *
+     * The path is dropped as well as the query and hash, because it ends in the
+     * document name — keeping it re-introduced exactly the filenames this class
+     * refuses to collect (see buildCowebsiteOpenedProperties). getFileNameFromUrl
+     * below derives the name from nothing but that path, and the admin ran the
+     * very same extraction on the URL we shipped, so stripping fileName alone
+     * achieved nothing. The origin answers the analytic question — which apps do
+     * worlds open — without naming the document.
+     */
+    private stripUrlToOrigin(input: string | URL): string {
+        try {
+            const parsed = input instanceof URL ? input : new URL(input, window.location.origin);
+            return parsed.origin;
+        } catch {
+            // Unparseable: return the scheme+host prefix rather than the raw
+            // string, which would leak the path we just refused to send.
+            const asString = typeof input === "string" ? input : input.toString();
+            const schemeMatch = asString
+                .split("?")[0]
+                .split("#")[0]
+                .match(/^[a-z][a-z0-9+.-]*:\/\/[^/]+/i);
+            return schemeMatch ? schemeMatch[0] : "";
         }
     }
 
