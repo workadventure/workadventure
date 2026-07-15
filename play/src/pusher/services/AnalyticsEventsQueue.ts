@@ -341,7 +341,10 @@ export class AnalyticsEventsQueue {
         // oversized events with 422; capping here keeps the in-memory queue
         // from being filled with multi-MB junk.
         try {
-            const serializedPropertiesLength = JSON.stringify(event.properties ?? {}).length;
+            // Byte length, not string length: `.length` counts UTF-16 code units, which
+            // undercounts multi-byte characters and lets a CJK payload through at up to
+            // ~3x the intended cap.
+            const serializedPropertiesLength = Buffer.byteLength(JSON.stringify(event.properties ?? {}), "utf8");
             if (serializedPropertiesLength > MAX_EVENT_PROPERTIES_BYTES) {
                 console.warn("Analytics event dropped", {
                     reason: "properties exceed max bytes",
