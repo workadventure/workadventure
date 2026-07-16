@@ -1,28 +1,12 @@
 import type { SocketData } from "../models/Websocket/SocketData";
 import { analyticsEventsQueue, type AnalyticsEventInput } from "./AnalyticsEventsQueue";
 import { analyticsConnectionId } from "./AnalyticsConnectionId";
+import type { TimedEventEndReason } from "./AnalyticsEventSchema";
 
 type AnalyticsEventQueue = {
     enqueueEvent(event: AnalyticsEventInput, socketData: SocketData): void;
 };
 
-/**
- * Why a timed event ends. Enum-constrained on purpose, and named `endReason`
- * rather than `reason`: the anonymization allowlist is keyed on the property key
- * alone, not on (eventName, key), and `reason` is already **free text** on the
- * experience-issue events (AnalyticsEventCatalog). Allow-listing `reason` to let
- * this one through would un-strip free-form text on those unrelated families for
- * every world that opted out of user-level activity. Mirrors `disconnectReason`.
- */
-export const TIMED_EVENT_END_REASONS = [
-    "closed_by_client",
-    "socket_closed",
-    "join_failed",
-    "pusher_shutdown",
-    "pusher_crashed",
-    "other",
-] as const;
-export type TimedEventEndReason = (typeof TIMED_EVENT_END_REASONS)[number];
 
 /**
  * The only event names a client may ask the pusher to synthesize.
