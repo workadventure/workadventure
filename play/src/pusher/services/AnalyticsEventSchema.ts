@@ -78,6 +78,7 @@ export const TIMED_EVENT_END_REASONS = [
     // has to be stitched on time rather than by id.
     "closed_by_client",
     "left_conversation",
+    "left_area",
     "type_changed",
     "cleanup",
     // Forced by the pusher, when the client never got to say anything.

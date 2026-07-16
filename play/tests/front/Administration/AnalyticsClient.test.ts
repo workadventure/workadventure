@@ -1,7 +1,14 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { analyticsClient } from "../../../src/front/Administration/AnalyticsClient";
 
 describe("AnalyticsClient admin analytics sink", () => {
+    beforeEach(() => {
+        // analyticsClient is a singleton, so an interval left open by one test would
+        // still be open in the next. Dropping the sender is what a disconnect does,
+        // and it clears them.
+        analyticsClient.setAdminAnalyticsSender(undefined);
+    });
+
     afterEach(() => {
         analyticsClient.setAdminAnalyticsSender(undefined);
         window.capabilities = {};
@@ -129,7 +136,7 @@ describe("AnalyticsClient admin analytics sink", () => {
         });
     });
 
-    it("tracks area enter and leave events in the admin sink", () => {
+    it("opens and closes one interval for an area visit", () => {
         const sendAdmin = vi.fn();
         analyticsClient.setAdminAnalyticsSender(sendAdmin);
         window.capabilities = {
@@ -139,33 +146,65 @@ describe("AnalyticsClient admin analytics sink", () => {
         analyticsClient.enterArea("area-1", "Focus room");
         analyticsClient.leaveArea("area-1", "Focus room");
 
-        expect(sendAdmin).toHaveBeenCalledWith({
-            events: [
-                expect.objectContaining({
-                    eventName: "area.entered",
-                    source: "front",
-                    properties: {
-                        areaId: "area-1",
-                        areaName: "Focus room",
-                    },
-                }),
-            ],
-        });
-        expect(sendAdmin).toHaveBeenCalledWith({
-            events: [
-                expect.objectContaining({
-                    eventName: "area.left",
-                    source: "front",
-                    properties: {
-                        areaId: "area-1",
-                        areaName: "Focus room",
-                    },
-                }),
-            ],
-        });
+        const events = sendAdmin.mock.calls.flatMap(([message]) => message.events);
+        const opened = events.find((event) => event.eventName === "timed_event.open");
+        const closed = events.find((event) => event.eventName === "timed_event.close");
+
+        expect(opened?.properties).toEqual(
+            expect.objectContaining({
+                eventName: "area.dwell",
+                properties: { areaId: "area-1", areaName: "Focus room" },
+            })
+        );
+        // Same handle, or the pusher drops the close and the visit is lost.
+        expect(closed?.properties.handle).toBe(opened?.properties.handle);
+        expect(closed?.properties.endReason).toBe("left_area");
     });
 
-    it("tracks screen sharing start and end events in the admin sink", () => {
+    it("closes an area left open rather than orphaning it", () => {
+        const sendAdmin = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(sendAdmin);
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+
+        // Entering twice without leaving: the leave went missing. Overwriting the
+        // handle would strand the first interval until the socket died, dating a
+        // walk-through to the end of the session.
+        analyticsClient.enterArea("area-1", "Focus room");
+        analyticsClient.enterArea("area-1", "Focus room");
+
+        const events = sendAdmin.mock.calls.flatMap(([message]) => message.events);
+        const opens = events.filter((event) => event.eventName === "timed_event.open");
+        const closes = events.filter((event) => event.eventName === "timed_event.close");
+
+        expect(opens).toHaveLength(2);
+        expect(closes).toHaveLength(1);
+        expect(closes[0].properties.handle).toBe(opens[0].properties.handle);
+    });
+
+    it("tracks each area independently while several are open at once", () => {
+        const sendAdmin = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(sendAdmin);
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+
+        // Areas overlap on a map, so leaving one must not close the other.
+        analyticsClient.enterArea("area-1", "Focus room");
+        analyticsClient.enterArea("area-2", "Silent room");
+        analyticsClient.leaveArea("area-1", "Focus room");
+
+        const events = sendAdmin.mock.calls.flatMap(([message]) => message.events);
+        const opens = events.filter((event) => event.eventName === "timed_event.open");
+        const closes = events.filter((event) => event.eventName === "timed_event.close");
+
+        expect(opens).toHaveLength(2);
+        expect(closes).toHaveLength(1);
+        expect(closes[0].properties.handle).toBe(opens[0].properties.handle);
+    });
+
+    it("opens and closes one interval for a screen share, without reporting a duration", () => {
         const sendAdmin = vi.fn();
         analyticsClient.setAdminAnalyticsSender(sendAdmin);
         window.capabilities = {
@@ -173,33 +212,22 @@ describe("AnalyticsClient admin analytics sink", () => {
         };
 
         analyticsClient.screenSharingStarted("screen-share-session-1", true);
-        analyticsClient.screenSharingEnded("screen-share-session-1", 42, true);
+        analyticsClient.screenSharingEnded("screen-share-session-1");
 
-        expect(sendAdmin).toHaveBeenCalledWith({
-            events: [
-                expect.objectContaining({
-                    eventName: "meeting.screenshare.started",
-                    source: "front",
-                    properties: {
-                        screenShareSessionId: "screen-share-session-1",
-                        hasAudio: true,
-                    },
-                }),
-            ],
-        });
-        expect(sendAdmin).toHaveBeenCalledWith({
-            events: [
-                expect.objectContaining({
-                    eventName: "meeting.screenshare.ended",
-                    source: "front",
-                    properties: {
-                        screenShareSessionId: "screen-share-session-1",
-                        durationSeconds: 42,
-                        hasAudio: true,
-                    },
-                }),
-            ],
-        });
+        const events = sendAdmin.mock.calls.flatMap(([message]) => message.events);
+        const opened = events.find((event) => event.eventName === "timed_event.open");
+        const closed = events.find((event) => event.eventName === "timed_event.close");
+
+        expect(opened?.properties).toEqual(
+            expect.objectContaining({
+                eventName: "meeting.screenshare.ended",
+                properties: { screenShareSessionId: "screen-share-session-1", hasAudio: true },
+            })
+        );
+        expect(closed?.properties.handle).toBe(opened?.properties.handle);
+        // The caller cannot state a duration anymore: it used to send
+        // max(1, round(now - startedAt)), a floor that invented a second.
+        expect(JSON.stringify(events)).not.toContain("durationSeconds");
     });
 
     it("enriches cowebsite openings coming from world properties", () => {
