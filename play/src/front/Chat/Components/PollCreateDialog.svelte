@@ -1,6 +1,10 @@
 <script lang="ts">
     import type { ChatPollCreationCapability, ChatPollKind } from "../Connection/ChatConnection";
     import Popup from "../../Components/Modal/Popup.svelte";
+    import Input from "../../Components/Input/Input.svelte";
+    import TextArea from "../../Components/Input/TextArea.svelte";
+    import InputRadioBox from "../../Components/Input/InputRadioBox.svelte";
+    import { chatInputFocusStore } from "../../Stores/ChatStore";
     import LL from "../../../i18n/i18n-svelte";
     import { IconLoader, IconPlus, IconTrash } from "@wa-icons";
     import { modals } from "@wa-modals";
@@ -33,6 +37,16 @@
             !hasInvalidAnswerLength &&
             !isSubmitting,
     );
+
+    function focusChatInput() {
+        // Disable input manager to prevent the game from receiving the input
+        chatInputFocusStore.set(true);
+    }
+
+    function unfocusChatInput() {
+        // Enable input manager to allow the game to receive the input
+        chatInputFocusStore.set(false);
+    }
 
     function addAnswer() {
         if (!canAddAnswer) {
@@ -83,41 +97,44 @@
     {#snippet content()}
         <div class="w-full flex flex-col gap-4">
             <div class="w-full">
-                <label class="text-sm font-bold mb-2 block" for="poll-question">{$LL.chat.poll.create.question()}</label
-                >
-                <textarea
-                    data-testid="createPollQuestionInput"
+                <TextArea
+                    dataTestId="createPollQuestionInput"
                     id="poll-question"
+                    label={$LL.chat.poll.create.question()}
+                    placeHolder={$LL.chat.poll.create.questionPlaceholder()}
                     bind:value={question}
-                    rows={3}
                     maxlength={limits.questionMaxLength}
-                    class="wa-searchbar block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 resize-none outline-none shadow-none focus:ring-0 focus:border-white/20"
-                    placeholder={$LL.chat.poll.create.questionPlaceholder()}
-                ></textarea>
-                <div class="mt-1 text-xs text-white/50 text-right">{question.length}/{limits.questionMaxLength}</div>
+                    onfocus={focusChatInput}
+                    onblur={unfocusChatInput}
+                />
+                <div class="px-3 mt-1 text-xs text-white text-right opacity-50">
+                    {question.length}/{limits.questionMaxLength}
+                </div>
             </div>
 
             <div class="w-full">
-                <div class="flex items-center justify-between gap-3 mb-2">
-                    <div class="text-sm font-bold block">{$LL.chat.poll.create.answers()}</div>
+                <div class="flex items-center justify-between gap-3">
+                    <div class="input-label" id="poll-answers-label">{$LL.chat.poll.create.answers()}</div>
                     <button class="btn btn-light btn-ghost btn-sm" disabled={!canAddAnswer} onclick={addAnswer}>
                         <IconPlus font-size={16} class="mr-1" />
                         {$LL.chat.poll.create.addAnswer()}
                     </button>
                 </div>
 
-                <div class="flex flex-col gap-2">
+                <div class="flex flex-col gap-2" role="group" aria-labelledby="poll-answers-label">
                     {#each answers as answer, index (index)}
-                        <div class="flex items-start gap-2">
-                            <input
+                        <div class="flex items-center gap-2">
+                            <Input
                                 data-testid={`createPollAnswerInput-${index}`}
                                 bind:value={answers[index]}
                                 maxlength={limits.answerMaxLength}
-                                class="wa-searchbar block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none shadow-none focus:ring-0 focus:border-white/20"
                                 placeholder={$LL.chat.poll.create.answerPlaceholder({ index: index + 1 })}
+                                onfocusin={focusChatInput}
+                                onfocusout={unfocusChatInput}
                             />
                             <button
-                                class="btn btn-light btn-ghost btn-sm mt-1"
+                                class="btn btn-light btn-ghost btn-sm"
+                                aria-label={$LL.chat.poll.create.removeAnswer({ index: index + 1 })}
                                 disabled={answers.length <= limits.minAnswers}
                                 onclick={() => removeAnswer(index)}
                             >
@@ -127,45 +144,43 @@
                     {/each}
                 </div>
 
-                <div class="mt-1 text-xs text-white/50">
+                <div class="px-3 mt-1 text-xs text-white opacity-50">
                     {$LL.chat.poll.create.answerCount({ count: normalizedAnswers.length, max: limits.maxAnswers })}
                 </div>
             </div>
 
             {#if supportedKinds.length > 1}
                 <div class="w-full">
-                    <div class="text-sm font-bold mb-2">{$LL.chat.poll.create.visibility()}</div>
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="input-label" id="poll-visibility-label">{$LL.chat.poll.create.visibility()}</div>
+                    <div class="flex gap-2" role="radiogroup" aria-labelledby="poll-visibility-label">
                         {#if supportedKinds.includes("open")}
-                            <button
-                                data-testid="createPollVisibilityOpen"
-                                class={`rounded-xl border border-white/10 p-3 text-left ${
-                                    selectedKind === "open" ? "bg-white/10 border-white/30" : ""
-                                }`}
-                                onclick={() => (selectedKind = "open")}
+                            <InputRadioBox
+                                dataTestId="createPollVisibilityOpen"
+                                value="open"
+                                label={$LL.chat.poll.kind.open()}
+                                bind:group={selectedKind}
+                                outerClass="flex-1"
                             >
-                                <div class="font-bold">{$LL.chat.poll.kind.open()}</div>
-                                <div class="text-xs text-white/60 mt-1">{$LL.chat.poll.create.openDescription()}</div>
-                            </button>
+                                <span class="text-xs">{$LL.chat.poll.create.openDescription()}</span>
+                            </InputRadioBox>
                         {/if}
                         {#if supportedKinds.includes("closed")}
-                            <button
-                                data-testid="createPollVisibilityClosed"
-                                class={`rounded-xl border border-white/10 p-3 text-left ${
-                                    selectedKind === "closed" ? "bg-white/10 border-white/30" : ""
-                                }`}
-                                onclick={() => (selectedKind = "closed")}
+                            <InputRadioBox
+                                dataTestId="createPollVisibilityClosed"
+                                value="closed"
+                                label={$LL.chat.poll.kind.closed()}
+                                bind:group={selectedKind}
+                                outerClass="flex-1"
                             >
-                                <div class="font-bold">{$LL.chat.poll.kind.closed()}</div>
-                                <div class="text-xs text-white/60 mt-1">{$LL.chat.poll.create.closedDescription()}</div>
-                            </button>
+                                <span class="text-xs">{$LL.chat.poll.create.closedDescription()}</span>
+                            </InputRadioBox>
                         {/if}
                     </div>
                 </div>
             {/if}
 
             {#if errorMessage}
-                <div class="w-full rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-200">{errorMessage}</div>
+                <div class="w-full rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger-400">{errorMessage}</div>
             {/if}
         </div>
     {/snippet}

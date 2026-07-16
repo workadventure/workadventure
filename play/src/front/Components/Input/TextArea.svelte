@@ -5,6 +5,7 @@
 
     interface Props {
         id?: string;
+        dataTestId?: string;
         label: string;
         placeHolder?: string;
         onchange?: () => void;
@@ -18,11 +19,13 @@
         variant?: "light";
         size?: "xs" | "sm" | "lg";
         height?: string;
+        maxlength?: number;
         info?: Snippet;
     }
 
     let {
         id = undefined,
+        dataTestId = undefined,
         label,
         placeHolder = "",
         onchange = () => {},
@@ -36,6 +39,7 @@
         variant = undefined,
         size = undefined,
         height = "h-[85px]",
+        maxlength = 524288,
         info,
     }: Props = $props();
 
@@ -70,11 +74,13 @@
     <div class="relative flex flex-auto">
         <textarea
             id={uniqueId}
+            data-testid={dataTestId}
             class="grow input-text input-icon {height} font-sans"
             class:input-text-light={variant === "light"}
             class:input-text-xs={size === "xs"}
             class:input-text-sm={size === "sm"}
             class:input-text-lg={size === "lg"}
+            {maxlength}
             bind:value
             placeholder={placeHolder}
             {onkeypress}

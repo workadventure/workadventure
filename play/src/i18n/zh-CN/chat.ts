@@ -258,6 +258,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             questionPlaceholder: "输入问题",
             answers: "选项",
             addAnswer: "添加选项",
+            removeAnswer: "删除选项 {index}",
             answerPlaceholder: "选项 {index}",
             answerCount: "已准备 {count}/{max} 个选项",
             visibility: "可见性",

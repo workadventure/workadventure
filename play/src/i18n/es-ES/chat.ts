@@ -260,6 +260,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             questionPlaceholder: "Haga una pregunta",
             answers: "Respuestas",
             addAnswer: "Añadir respuesta",
+            removeAnswer: "Eliminar respuesta {index}",
             answerPlaceholder: "Respuesta {index}",
             answerCount: "{count}/{max} respuestas listas",
             visibility: "Visibilidad",

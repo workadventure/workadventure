@@ -260,6 +260,7 @@ const chat: BaseTranslation = {
             questionPlaceholder: "Ask a question",
             answers: "Answers",
             addAnswer: "Add answer",
+            removeAnswer: "Remove answer {index}",
             answerPlaceholder: "Answer {index}",
             answerCount: "{count}/{max} answers ready",
             visibility: "Visibility",
