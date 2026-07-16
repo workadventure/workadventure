@@ -53,7 +53,7 @@ export const MAX_EVENT_ID_LENGTH = 255;
  * 1e300, which yields an Invalid Date downstream — and clientEventTimeMs is a
  * uint64 on the wire, so a client really can send one.
  */
-const MAX_TIMESTAMP_MS = 8.64e15;
+export const MAX_TIMESTAMP_MS = 8.64e15;
 
 export const isAnalyticsEventInput = z.object({
     eventName: z.string().min(1).max(MAX_EVENT_NAME_LENGTH),
