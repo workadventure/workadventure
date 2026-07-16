@@ -25,6 +25,8 @@
     let searchLoader = $state(false);
     const DONE_TYPING_INTERVAL = 2000;
 
+    // ChatSidebar floats its own close button over this header as soon as a room is selected, so the
+    // menu must drop its close there or the two stack up.
     let isInSpecificDiscussion = $derived($selectedRoomStore !== undefined);
 
     function handleToggleSearch() {
@@ -123,7 +125,7 @@
     <div class="relative">
         <ChatActionMenu
             {searchActive}
-            hasCloseChat={$hideActionBarStoreBecauseOfChatBar}
+            hasCloseChat={$hideActionBarStoreBecauseOfChatBar && !isInSpecificDiscussion}
             hasSearch={$chatStatusStore !== "OFFLINE" && !isInSpecificDiscussion}
             matrixChatConnection={hasMatrixChatCapabilities(chat) ? chat : undefined}
             onToggleSearch={handleToggleSearch}

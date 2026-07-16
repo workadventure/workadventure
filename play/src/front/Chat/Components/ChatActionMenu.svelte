@@ -146,6 +146,18 @@
             {/if}
         </button>
     </div>
+{:else if !hasSearch && hasCloseChat}
+    <!-- No search to offer, so there is no menu to hang the close on: show it on its own. Without
+         this, an OFFLINE chat (any anonymous user gets VoidChatConnection) has no way out at all,
+         since the action bar that owns the close is hidden whenever hasCloseChat is true. -->
+    <button
+        class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50"
+        data-testid="closeChatButton"
+        onclick={closeChat}
+        aria-label={$LL.chat.closeChat()}
+    >
+        <IconX font-size="20" />
+    </button>
 {/if}
 
 {#if menuOpen && !searchActive}
