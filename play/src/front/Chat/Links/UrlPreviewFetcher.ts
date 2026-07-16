@@ -149,7 +149,10 @@ export function previewFromResponse(
 export class UrlPreviewFetcher {
     private readonly cache = new Map<string, UrlPreview | null>();
 
-    public constructor(private readonly client: MatrixClient, private readonly eventTimestamp: number) {}
+    public constructor(
+        private readonly client: MatrixClient,
+        private readonly eventTimestamp: number,
+    ) {}
 
     public async fetchPreview(link: string, loadImage: boolean): Promise<UrlPreview | null> {
         const cached = this.cache.get(link);

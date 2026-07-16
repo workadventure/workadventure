@@ -102,7 +102,12 @@ describe("previewFromResponse", () => {
             link,
             true,
         );
-        expect(preview?.image).toEqual({ src: "https://media/mxc://x/y?w=478&h=200", width: 478, height: 630, alt: undefined });
+        expect(preview?.image).toEqual({
+            src: "https://media/mxc://x/y?w=478&h=200",
+            width: 478,
+            height: 630,
+            alt: undefined,
+        });
         expect(preview?.siteIcon).toBeUndefined();
     });
 
