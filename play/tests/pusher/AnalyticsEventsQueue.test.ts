@@ -436,6 +436,24 @@ describe("AnalyticsEventsQueue", () => {
         expect(queue.getStats().droppedInvalid).toBe(1);
     });
 
+    it("drops video quality samples from a socket that has joined no space at all", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));
+        queue.setEnabled(true);
+
+        // The membership check used to be skipped when the socket had joined nothing,
+        // which made it opt-out: connect, never join a space, and spaceName /
+        // remoteUserUuid / remoteSpaceUserId were yours to pick.
+        queue.enqueueVideoQualityReport(
+            { samples: [videoQualitySample({ spaceName: "any-space-i-like" })] },
+            socketData({ spaces: new Set<string>() }),
+        );
+        await queue.flush();
+
+        expect(post).not.toHaveBeenCalled();
+        expect(queue.getStats().droppedInvalid).toBe(1);
+    });
+
     it("drops remote-user identifiers and free-form properties from video samples when user-level activity is disabled", async () => {
         const post = vi.fn().mockResolvedValue(undefined);
         const queue = new AnalyticsEventsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));
