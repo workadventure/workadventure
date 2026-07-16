@@ -1,7 +1,10 @@
+import { z } from "zod";
 import type { AnalyticsEventReportMessage } from "@workadventure/messages";
 import type { SocketData } from "../models/Websocket/SocketData";
 import type { AnalyticsEventInput, AnalyticsEventsQueue } from "./AnalyticsEventsQueue";
-import { isAnalyticsEventInput, isClientAnalyticsEventSource } from "./AnalyticsEventSchema";
+import { isAnalyticsEventInput, isClientAnalyticsEventSource, MAX_EVENT_ID_LENGTH } from "./AnalyticsEventSchema";
+import type { AnalyticsTimedEventTracker } from "./AnalyticsTimedEventTracker";
+import { analyticsTimedEventTracker, TIMED_EVENT_NAMES, TIMED_EVENT_END_REASONS } from "./AnalyticsTimedEventTracker";
 
 /**
  * Maximum number of analytics events a single websocket message may carry.
@@ -27,7 +30,39 @@ export const MAX_EVENTS_PER_REPORT_MESSAGE = 100;
  * The `media.` prefix as such stays open — the front legitimately emits other
  * `media.*` events; only this exact name is reserved.
  */
-const PUSHER_RESERVED_EVENT_NAMES = new Set(["user.connected", "user.disconnected", "media.video_quality.sample"]);
+const PUSHER_SYNTHESIZED_EVENT_NAMES = ["user.connected", "user.disconnected", "media.video_quality.sample"];
+
+/**
+ * Names a socket may not send directly. The timed-event names join the list for the
+ * same reason: the pusher is their sole emitter (it measures the interval on its own
+ * clock), so one arriving from a client is either a mistake or an attempt to claim a
+ * duration.
+ */
+const PUSHER_RESERVED_EVENT_NAMES = new Set([...PUSHER_SYNTHESIZED_EVENT_NAMES, ...TIMED_EVENT_NAMES]);
+
+/**
+ * Control frames. They ride the analytics event channel because it already carries a
+ * validated, batched, source-checked envelope — a dedicated proto message would buy
+ * nothing and cost a regen plus a second validation path. They are intercepted here
+ * and **never enqueued**: they are instructions to the tracker, not events, so
+ * grepping the admin for `timed_event.open` will find nothing. On purpose.
+ */
+const TIMED_EVENT_OPEN = "timed_event.open";
+const TIMED_EVENT_CLOSE = "timed_event.close";
+const CONTROL_EVENT_NAMES = new Set([TIMED_EVENT_OPEN, TIMED_EVENT_CLOSE]);
+
+const isTimedEventOpen = z.object({
+    handle: z.string().min(1).max(MAX_EVENT_ID_LENGTH),
+    eventName: z.string().min(1).max(MAX_EVENT_ID_LENGTH),
+    properties: z.record(z.unknown()).default({}),
+});
+
+const isTimedEventClose = z.object({
+    handle: z.string().min(1).max(MAX_EVENT_ID_LENGTH),
+    // Anything outside the enum becomes "other" rather than being rejected: an
+    // unknown reason is not worth losing the interval's duration over.
+    endReason: z.enum(TIMED_EVENT_END_REASONS).catch("other").default("closed_by_client"),
+});
 
 /**
  * Process an incoming AnalyticsEventReportMessage from a websocket client,
@@ -41,6 +76,7 @@ export function processAnalyticsReportMessage(
     report: AnalyticsEventReportMessage,
     socketData: SocketData,
     queue: Pick<AnalyticsEventsQueue, "enqueueEvent">,
+    tracker: Pick<AnalyticsTimedEventTracker, "open" | "close"> = analyticsTimedEventTracker,
 ): void {
     const events = report.events ?? [];
     if (events.length > MAX_EVENTS_PER_REPORT_MESSAGE) {
@@ -74,6 +110,11 @@ export function processAnalyticsReportMessage(
             continue;
         }
 
+        if (CONTROL_EVENT_NAMES.has(event.eventName)) {
+            handleControlFrame(event.eventName, event.properties, socketData, tracker);
+            continue;
+        }
+
         // `properties` is `any` here: the proto declares it as google.protobuf.Value,
         // so nothing has checked its shape yet. Everything below the envelope is
         // validated here rather than cast.
@@ -104,4 +145,38 @@ export function processAnalyticsReportMessage(
             socketData,
         );
     }
+}
+
+/**
+ * Routes an open/close instruction to the tracker. Nothing is enqueued here: the row
+ * is emitted by the tracker when the interval closes, timed on the pusher's clock.
+ */
+function handleControlFrame(
+    eventName: string,
+    rawProperties: unknown,
+    socketData: SocketData,
+    tracker: Pick<AnalyticsTimedEventTracker, "open" | "close">,
+): void {
+    if (eventName === TIMED_EVENT_OPEN) {
+        const parsed = isTimedEventOpen.safeParse(rawProperties ?? {});
+        if (!parsed.success) {
+            console.warn("Timed event open dropped: malformed control frame", {
+                issues: parsed.error.issues.map((issue) => ({ path: issue.path.join("."), code: issue.code })),
+                reporterUserUuid: socketData.userUuid,
+            });
+            return;
+        }
+        tracker.open(parsed.data.handle, parsed.data.eventName, parsed.data.properties, socketData);
+        return;
+    }
+
+    const parsed = isTimedEventClose.safeParse(rawProperties ?? {});
+    if (!parsed.success) {
+        console.warn("Timed event close dropped: malformed control frame", {
+            issues: parsed.error.issues.map((issue) => ({ path: issue.path.join("."), code: issue.code })),
+            reporterUserUuid: socketData.userUuid,
+        });
+        return;
+    }
+    tracker.close(parsed.data.handle, socketData, parsed.data.endReason);
 }
