@@ -9,10 +9,20 @@
     import { modals } from "@wa-modals";
 
     let chatSounds: boolean = $state(localUserStore.getChatSounds());
+    let chatUrlPreviews: boolean = $state(localUserStore.getChatUrlPreviews());
+    let chatUrlPreviewsInPrivate: boolean = $state(localUserStore.getChatUrlPreviewsInPrivate());
     let mychatID = localUserStore.getChatId();
 
     function changeChatSounds() {
         localUserStore.setChatSounds(chatSounds);
+    }
+
+    function changeChatUrlPreviews() {
+        localUserStore.setChatUrlPreviews(chatUrlPreviews);
+    }
+
+    function changeChatUrlPreviewsInPrivate() {
+        localUserStore.setChatUrlPreviewsInPrivate(chatUrlPreviewsInPrivate);
     }
 
     function openResetKeyStorage() {
@@ -37,6 +47,20 @@
                         bind:value={chatSounds}
                         onchange={changeChatSounds}
                         label={$LL.menu.settings.chatSounds()}
+                    />
+                    <InputCheckbox
+                        data-testid="chatUrlPreviews"
+                        bind:value={chatUrlPreviews}
+                        onchange={changeChatUrlPreviews}
+                        label={$LL.menu.settings.chatUrlPreviews()}
+                    />
+                    <!-- Fetching a preview tells the homeserver about the URL, which is exactly
+                         what encryption and proximity chat keep from it. Off unless asked for. -->
+                    <InputCheckbox
+                        data-testid="chatUrlPreviewsInPrivate"
+                        bind:value={chatUrlPreviewsInPrivate}
+                        onchange={changeChatUrlPreviewsInPrivate}
+                        label={$LL.menu.settings.chatUrlPreviewsInPrivate()}
                     />
                 </div>
                 <section class="centered-column resizing-width m-auto resizing-text">

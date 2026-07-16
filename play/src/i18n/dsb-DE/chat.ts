@@ -55,6 +55,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         notAvailable: "Wobraz njedajo se pokazaś.",
         imageActions: "Akcije wobraza",
     },
+    urlPreview: {
+        label: "Pśeglěd wótkaza",
+        hide: "Pśeglědy schowaś",
+    },
     join: "Pśizamknuś",
     search: "Pytaś",
     closeSearch: "Pytaś zacyniś",

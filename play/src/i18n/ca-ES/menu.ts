@@ -83,6 +83,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         notifications: "Notificacions",
         enablePictureInPicture: "Activar picture-in-picture",
         chatSounds: "Sons del xat",
+        chatUrlPreviews: "Mostra les vistes prèvies dels enllaços al xat",
+        chatUrlPreviewsInPrivate: "Mostra les vistes prèvies a les sales xifrades i al xat de proximitat",
         cowebsiteTrigger: "Preguntar sempre abans d'obrir llocs web i habitacions Jitsi Meet",
         ignoreFollowRequest: "Ignorar peticions de seguir altres usuaris",
         proximityDiscussionVolume: "Volum de les bombolles de discussió",

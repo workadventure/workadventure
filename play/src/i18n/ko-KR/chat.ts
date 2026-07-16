@@ -54,6 +54,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         notAvailable: "이미지를 사용할 수 없습니다.",
         imageActions: "이미지 작업",
     },
+    urlPreview: {
+        label: "링크 미리보기",
+        hide: "미리보기 숨기기",
+    },
     join: "참가",
     search: "검색",
     closeSearch: "검색 닫기",

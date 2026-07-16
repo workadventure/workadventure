@@ -82,6 +82,8 @@ const menu: BaseTranslation = {
         notifications: "Notificações",
         enablePictureInPicture: "Habilitar picture-in-picture",
         chatSounds: "Sons do chat",
+        chatUrlPreviews: "Mostrar pré-visualizações de links no chat",
+        chatUrlPreviewsInPrivate: "Mostrar pré-visualizações em salas criptografadas e no chat de proximidade",
         cowebsiteTrigger: "Sempre pergunte antes de abrir sites e salas do Jitsi Meet",
         ignoreFollowRequest: "Ignorar solicitações para seguir outros usuários",
         proximityDiscussionVolume: "Volume de discussão de proximidade",
