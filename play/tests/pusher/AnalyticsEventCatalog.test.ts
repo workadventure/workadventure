@@ -1,5 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
+
+// TIMED_EVENT_NAMES lives next to the tracker, which pulls AnalyticsEventsQueue and
+// therefore the real environment validation at import time — that calls process.exit
+// when the vars are absent. Same stub every other pusher test uses.
+vi.mock("../../src/pusher/enums/EnvironmentVariable", () => import("./mocks/pusherEnvironmentVariableMock"));
+
 import {
     ANALYTICS_EVENT_CATALOG,
     analyticsEventNameOf,
@@ -9,12 +15,80 @@ import {
     meetingProviderChangedEvent,
     userDisconnectedEvent,
 } from "../../src/pusher/services/AnalyticsEventCatalog";
+import { TIMED_EVENT_NAMES } from "../../src/pusher/services/AnalyticsTimedEventTracker";
 
 /** Reads the `properties` sub-schema off a catalog entry. */
 function propertiesOf(schema: z.ZodDiscriminatedUnionOption<"eventName">): z.ZodTypeAny {
     const shape = schema.shape as unknown as { properties: z.ZodTypeAny };
 
     return shape.properties;
+}
+
+/**
+ * The source of every file that names an event which ends up stored.
+ *
+ * Read through import.meta.glob rather than fs: Vite inlines the text at build
+ * time, so this needs neither a working cwd (jsdom reports "/") nor
+ * import.meta.url (it does not survive the transform).
+ *
+ * TimedAnalyticsEvent.ts is deliberately absent: it names the `timed_event.*`
+ * control frames, which the handler intercepts and never enqueues.
+ */
+const EMITTER_SOURCES = import.meta.glob<string>(
+    [
+        "../../src/front/Administration/AnalyticsClient.ts",
+        "../../src/front/WebRtc/ConversationAnalytics.ts",
+        "../../src/pusher/services/AnalyticsPresenceTracker.ts",
+        "../../src/pusher/services/AnalyticsEventsQueue.ts",
+    ],
+    { query: "?raw", import: "default", eager: true },
+);
+
+/** The names the front asks the pusher to time, e.g. openTimedAnalyticsEvent("area.dwell", …). */
+function extractTimedEventRequests(): Set<string> {
+    const names = new Set<string>();
+    for (const source of Object.values(EMITTER_SOURCES)) {
+        for (const [, name] of source.matchAll(/openTimedAnalyticsEvent\(\s*"([a-z][a-z0-9_.]*)"/g)) {
+            names.add(name);
+        }
+    }
+
+    return names;
+}
+
+/**
+ * Every event name the code can actually produce.
+ *
+ * Regex over the sources, because the names are literals at call sites rather than
+ * a registry — that is the whole reason this check has to exist. Note `\s*` after
+ * the opening paren: prettier moves the name onto its own line as soon as a call
+ * grows, and a regex demanding `("` silently matches almost nothing.
+ */
+function extractEmittedEventNames(): Set<string> {
+    // Exact, not scraped: the pusher's own allowlist for client-requested timed
+    // events. These names are never literals at an emit site — the pusher emits
+    // whatever the client asked for, once it is in this set.
+    const names = new Set<string>(TIMED_EVENT_NAMES);
+
+    for (const source of Object.values(EMITTER_SOURCES)) {
+        for (const [, name] of source.matchAll(
+            /(?:trackAdminEvent|openTimedAnalyticsEvent)\(\s*"([a-z][a-z0-9_.]*)"/g,
+        )) {
+            names.add(name);
+        }
+        // trackAdminEvent(open ? "map_editor.opened" : "map_editor.closed")
+        for (const [, whenTrue, whenFalse] of source.matchAll(
+            /trackAdminEvent\(\s*\w+\s*\?\s*"([a-z][a-z0-9_.]*)"\s*:\s*"([a-z][a-z0-9_.]*)"/g,
+        )) {
+            names.add(whenTrue);
+            names.add(whenFalse);
+        }
+        for (const [, name] of source.matchAll(/eventName:\s*"([a-z][a-z0-9_.]*)"/g)) {
+            names.add(name);
+        }
+    }
+
+    return names;
 }
 
 describe("AnalyticsEventCatalog", () => {
@@ -24,12 +98,35 @@ describe("AnalyticsEventCatalog", () => {
         }
     });
 
-    it("covers the whole taxonomy", () => {
-        // The catalog is documentation: an event missing from it is an event nobody
-        // can look up. This number tracks the names actually emitted across
-        // AnalyticsClient, ConversationAnalytics, AnalyticsPresenceTracker and the
-        // video-quality path — if you add an event, add it here too.
-        expect(Object.keys(ANALYTICS_EVENT_CATALOG)).toHaveLength(165);
+    it("catalogues exactly the events the code emits — no more, no less", () => {
+        // This used to be a hardcoded count, which was worth very little: it never
+        // named anything, an add+remove pair slipped straight through it, and it had
+        // to be hand-corrected 169 → 165 the day events were dropped. The catalog is
+        // documentation — an event missing from it is an event nobody can look up,
+        // and an entry with no emitter documents something that no longer exists.
+        //
+        // Front and pusher ship from the same `play/`, so this is fully knowable
+        // here, with the exact names, at no runtime cost.
+        const emitted = extractEmittedEventNames();
+
+        // Guard the extractor before trusting it: it scrapes literals, so a refactor
+        // that changes how events are named would leave `emitted` empty and make both
+        // diffs below pass vacuously. Real number is ~165; this only catches collapse.
+        expect(emitted.size).toBeGreaterThan(150);
+
+        const catalogued = new Set(Object.keys(ANALYTICS_EVENT_CATALOG));
+        expect([...emitted].filter((name) => !catalogued.has(name)).sort()).toEqual([]);
+        expect([...catalogued].filter((name) => !emitted.has(name)).sort()).toEqual([]);
+    });
+
+    it("only asks the pusher to time events it will accept", () => {
+        // The front names the interval it wants; the pusher emits it only if the name
+        // is in TIMED_EVENT_NAMES. Ask for one that is not and the pusher silently
+        // rejects the open — the interval simply never appears, with nothing failing.
+        const requested = extractTimedEventRequests();
+
+        expect(requested.size).toBeGreaterThan(0);
+        expect([...requested].filter((name) => !TIMED_EVENT_NAMES.has(name)).sort()).toEqual([]);
     });
 
     it("describes every event and every property field", () => {
