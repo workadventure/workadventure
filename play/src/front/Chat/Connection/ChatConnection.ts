@@ -419,9 +419,19 @@ export type ChatTimelineItem =
 export type ChatMessageType = "proximity" | "text" | "incoming" | "outcoming" | "image" | "file" | "audio" | "video";
 export type ChatMessageContent = {
     /**
-     * The body can contain HTML. It will be run against DOMPurify before being outputted to the user.
+     * The plain text of the message (the Matrix `body`). It is never HTML: it is the fallback shown by
+     * clients that cannot render `formattedBody`, so it must stay readable as-is.
      */
     body: string;
+    /**
+     * The HTML rendering of the message, from the Matrix `formatted_body` of a sender that advertised
+     * `format: "org.matrix.custom.html"`. It will be run against DOMPurify before being outputted to
+     * the user.
+     *
+     * Undefined for plain text messages, for non-Matrix (proximity) messages, and for messages sent
+     * before WorkAdventure emitted a `format`. Those are rendered by parsing `body` as Markdown.
+     */
+    formattedBody?: string;
     url: string | undefined;
     thumbnailUrl?: string;
     mediaState?: "ready" | "loading" | "error";

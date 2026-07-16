@@ -26,6 +26,7 @@ import type {
 import LL from "../../../../i18n/i18n-svelte";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
 import type { PictureStore } from "../../../Stores/PictureStore";
+import { htmlSerializeIfNeeded } from "../../Services/MessageFormatter";
 import type { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import type { MatrixChatRoom } from "./MatrixChatRoom";
@@ -503,9 +504,8 @@ export class MatrixChatThread implements ChatThread {
         if (!get(this.canSendMessages)) {
             return;
         }
-        this.parentRoom
-            .getMatrixRoom()
-            .client.sendMessage(this.parentRoom.id, this.id, this.getMessageContent(message))
+        this.getMessageContent(message)
+            .then((content) => this.parentRoom.getMatrixRoom().client.sendMessage(this.parentRoom.id, this.id, content))
             .then(() => {
                 selectedChatMessageToReply.set(null);
             })
@@ -552,8 +552,15 @@ export class MatrixChatThread implements ChatThread {
         }
     }
 
-    private getMessageContent(message: string): RoomMessageEventContent {
-        const content: RoomMessageEventContent = { body: message, msgtype: MsgType.Text, formatted_body: message };
+    private async getMessageContent(message: string): Promise<RoomMessageEventContent> {
+        const formattedBody = await htmlSerializeIfNeeded(message);
+        const content: RoomMessageEventContent = {
+            body: message,
+            msgtype: MsgType.Text,
+            // `formatted_body` is only honoured by receiving clients when `format` comes along with it,
+            // and it is only worth sending when the Markdown rendering adds something to the body.
+            ...(formattedBody !== undefined ? { format: "org.matrix.custom.html", formatted_body: formattedBody } : {}),
+        };
         this.applyThreadRelationContent(content);
         return content;
     }

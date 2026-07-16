@@ -12,11 +12,21 @@ import type {
     ChatThreadSummary,
     ChatUser,
 } from "../ChatConnection";
+import { htmlSerializeIfNeeded } from "../../Services/MessageFormatter";
 import { chatUserFactoryFromRoom } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
 import { resolveAttachmentMediaFromEvent, resolveImageMediaFromEvent } from "./MatrixMediaResolver";
 import { shouldRenderQuotedReply } from "./MatrixThreadUtils";
+
+/**
+ * Strips the `<mx-reply>` block that senders prepend to the `formatted_body` of a reply as a fallback
+ * for clients that cannot resolve the quoted event. We render the quoted message ourselves, so the
+ * fallback would show up twice.
+ */
+function stripReplyFallback(formattedBody: string): string {
+    return formattedBody.replace(/^(<mx-reply>).*(<\/mx-reply>)/, "");
+}
 
 export class MatrixChatMessage implements ChatMessage {
     id: string;
@@ -127,10 +137,19 @@ export class MatrixChatMessage implements ChatMessage {
         const content = this.event.getContent();
         const quotedMessage = this.getQuotedMessage();
 
+        // `formatted_body` is only HTML when the sender advertises `format`. WorkAdventure used to mirror
+        // the Markdown source into `formatted_body` without any `format`, so messages sent by older
+        // clients must not be treated as HTML: leaving formattedBody undefined sends them down the
+        // Markdown-on-`body` path in MessageText, which is how they have always been rendered.
+        const isFormattedBody =
+            content.format === "org.matrix.custom.html" && typeof content.formatted_body === "string";
+        const formattedBody = isFormattedBody ? stripReplyFallback(content.formatted_body) : undefined;
+
         if (quotedMessage !== undefined && content.formatted_body) {
             this.quotedMessage = quotedMessage;
             return {
-                body: content.formatted_body.replace(/^(<mx-reply>).*(<\/mx-reply>)/, ""),
+                body: isFormattedBody ? content.body : stripReplyFallback(content.formatted_body),
+                formattedBody,
                 url: undefined,
             };
         }
@@ -152,7 +171,7 @@ export class MatrixChatMessage implements ChatMessage {
             };
         }
 
-        return { body: content.body, url: undefined };
+        return { body: content.body, formattedBody, url: undefined };
     }
 
     private loadImageMediaIfNeeded() {
@@ -348,11 +367,17 @@ export class MatrixChatMessage implements ChatMessage {
             throw new Error("Missing permission to edit this message");
         }
         try {
+            const formattedBody = await htmlSerializeIfNeeded(newContent);
+            const formatting =
+                formattedBody !== undefined
+                    ? { format: "org.matrix.custom.html" as const, formatted_body: formattedBody }
+                    : {};
             await this.room.client.sendEvent(this.room.roomId, EventType.RoomMessage, {
                 msgtype: MsgType.Text,
                 "m.relates_to": { rel_type: RelationType.Replace, event_id: this.id },
-                "m.new_content": { msgtype: MsgType.Text, body: newContent },
+                "m.new_content": { msgtype: MsgType.Text, body: newContent, ...formatting },
                 body: newContent,
+                ...formatting,
             });
         } catch (error) {
             console.error(error);
