@@ -437,8 +437,15 @@ export class AnalyticsEventsQueue {
         // Reject samples attributed to a space the socket has not joined, so a
         // client cannot spoof spaceName / remote-user attribution. This restores
         // the membership check the legacy VideoQualityAnalyticsQueue enforced.
+        //
+        // No "only check when the socket has joined something" escape hatch: that
+        // made the guard opt-out by simply never joining a space, and a socket with
+        // no space membership was free to pick spaceName, remoteUserUuid and
+        // remoteSpaceUserId. It also protected nothing real — a quality sample
+        // measures a stream, a stream lives in a space, so a socket in no space has
+        // nothing legitimate to report.
         const fullSpaceName = `${socketData.world}.${sample.spaceName}`;
-        if (socketData.spaces.size > 0 && !socketData.spaces.has(fullSpaceName)) {
+        if (!socketData.spaces.has(fullSpaceName)) {
             console.warn("Analytics video-quality sample dropped: socket not joined to reported space", {
                 streamId: sample.streamId,
                 spaceName: sample.spaceName,
