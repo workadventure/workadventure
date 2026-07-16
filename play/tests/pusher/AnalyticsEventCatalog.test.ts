@@ -6,6 +6,7 @@ import {
     conversationEndedEvent,
     cowebsiteOpenedEvent,
     mediaVideoQualitySampleEvent,
+    meetingProviderChangedEvent,
     userDisconnectedEvent,
 } from "../../src/pusher/services/AnalyticsEventCatalog";
 
@@ -126,6 +127,28 @@ describe("AnalyticsEventCatalog", () => {
                 frameHeight: 720,
                 mimeType: "video/VP8",
                 sampleSeq: 1,
+            },
+        });
+
+        expect(parsed.success).toBe(true);
+    });
+
+    it("validates a provider change the way ConversationAnalytics actually sends it", () => {
+        // One emitter, one shape. AnalyticsClient used to carry a second, never-called
+        // method emitting this same name with the meeting context instead — the shapes
+        // would have diverged the day anyone called it.
+        const parsed = meetingProviderChangedEvent.safeParse({
+            eventName: "meeting.provider_changed",
+            source: "front",
+            clientEventTimeMs: Date.parse("2026-04-24T12:00:05.000Z"),
+            eventId: "meeting.provider_changed:conv-1:1777032005000",
+            properties: {
+                schemaVersion: 1,
+                conversationId: "conv-1",
+                meetingSessionId: "conv-1",
+                conversationType: "meeting",
+                meetingProvider: "livekit",
+                previousMeetingProvider: "jitsi",
             },
         });
 

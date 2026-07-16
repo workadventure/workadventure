@@ -745,9 +745,11 @@ class AnalyticsClient {
         this.trackAdminEvent("meeting.ended", properties);
     }
 
-    meetingProviderChanged(properties: MeetingAnalyticsProperties & { previousMeetingProvider?: string } = {}): void {
-        this.trackAdminEvent("meeting.provider_changed", properties);
-    }
+    // meeting.provider_changed is emitted by ConversationAnalytics, which owns the
+    // provider transition and reports it with the conversation's context. A second
+    // emitter lived here with a different payload for the same event name; nothing
+    // ever called it, so it was only ever going to give the event two shapes the
+    // day someone did.
 
     sessionStarted(roomId?: string): void {
         this.trackAdminEvent("session.started", { roomId, schemaVersion: 1 });
