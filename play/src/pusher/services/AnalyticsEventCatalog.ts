@@ -358,17 +358,12 @@ export const meetingEndedEvent = defineEvent(
 
 export const meetingProviderChangedEvent = defineEvent(
     "meeting.provider_changed",
-    meetingContextProperties.extend({
-        previousMeetingProvider: z.string().optional().describe("Provider in use before the switch."),
-        schemaVersion: z.literal(1).optional().describe("Present only on the ConversationAnalytics variant."),
-        conversationId: z.string().optional().describe("Present only on the ConversationAnalytics variant."),
-        meetingSessionId: z.string().optional().describe("Present only on the ConversationAnalytics variant."),
-        conversationType: z
-            .enum(["spontaneous_bubble", "meeting", "remote"])
-            .optional()
-            .describe("Present only on the ConversationAnalytics variant."),
+    conversationContextProperties.extend({
+        previousMeetingProvider: z
+            .enum(["livekit", "jitsi", "webrtc"])
+            .describe("Provider in use before the switch; meetingProvider carries the one switched to."),
     }),
-    "A meeting switched media backend mid-session. This name is emitted from two places with different payloads — AnalyticsClient sends the meeting context, ConversationAnalytics sends the conversation context — so the shape here is the union of both and every field beyond the provider pair is optional.",
+    "A meeting switched media backend mid-session, reported with the conversation it happened in. Despite the `meeting.` prefix this belongs to the conversation family: ConversationAnalytics owns the transition and is the only emitter.",
 );
 
 export const meetingScreenshareStartedEvent = defineEvent(
