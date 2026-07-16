@@ -300,13 +300,13 @@ describe("AnalyticsEventsQueue", () => {
         const queue = new AnalyticsEventsQueue(baseConfig, post);
         queue.setEnabled(true);
 
-        queue.enqueueEvent(event("valid-event", "area.entered"), socketData());
+        queue.enqueueEvent(event("valid-event", "chat.message_sent"), socketData());
         queue.enqueueEvent(event("invalid-event", "status.changed"), socketData());
         await queue.flush();
 
         expect(post).toHaveBeenCalledTimes(3);
         expect((post.mock.calls[1][1] as AnalyticsEventsBatch).events).toHaveLength(1);
-        expect((post.mock.calls[1][1] as AnalyticsEventsBatch).events[0].eventName).toBe("area.entered");
+        expect((post.mock.calls[1][1] as AnalyticsEventsBatch).events[0].eventName).toBe("chat.message_sent");
         expect((post.mock.calls[2][1] as AnalyticsEventsBatch).events).toHaveLength(1);
         expect((post.mock.calls[2][1] as AnalyticsEventsBatch).events[0].eventName).toBe("status.changed");
         expect(queue.getStats()).toMatchObject({
@@ -340,7 +340,7 @@ describe("AnalyticsEventsQueue", () => {
         const queue = new AnalyticsEventsQueue(baseConfig, post);
         queue.setEnabled(true);
 
-        queue.enqueueEvent(event("valid-event", "area.entered"), socketData());
+        queue.enqueueEvent(event("valid-event", "chat.message_sent"), socketData());
         queue.enqueueEvent(event("server-error-event", "status.changed"), socketData());
         await queue.flush();
 
