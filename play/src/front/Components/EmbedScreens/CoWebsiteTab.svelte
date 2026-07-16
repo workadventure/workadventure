@@ -7,6 +7,7 @@
     import PopUpCopyUrl from "../PopUp/PopUpCopyUrl.svelte";
     import { popupStore } from "../../Stores/PopupStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { scriptUtils } from "../../Api/ScriptUtils";
 
     interface Props {
         coWebsite: CoWebsite;
@@ -29,8 +30,25 @@
         analyticsClient.switchCowebsite();
     }
 
-    function copyUrl() {
+    /**
+     * The URL a human should get: a co-website may hold an embed-only link (Klaxoon's
+     * `from=embedded`, Google's embed form), which is not what you want to paste into a
+     * browser or hand to a colleague.
+     */
+    function baseUrl(): string {
         const url = coWebsite.getUrl().toString();
+        try {
+            return scriptUtils.getWebsiteUrl(url);
+        } catch (error) {
+            // Cards links need the game scene, which is gone mid-transition. The embed URL
+            // still beats doing nothing.
+            console.info("Could not resolve the shareable URL of this co-website", error);
+            return url;
+        }
+    }
+
+    function copyUrl() {
+        const url = baseUrl();
 
         navigator.clipboard.writeText(url).catch((e) => console.error(e));
         analyticsClient.copyCowebsiteLink();
@@ -39,7 +57,7 @@
     }
 
     function openInNewTab() {
-        const url = coWebsite.getUrl().toString();
+        const url = baseUrl();
 
         window.open(url, "_blank");
         analyticsClient.openCowebsiteInNewTab();

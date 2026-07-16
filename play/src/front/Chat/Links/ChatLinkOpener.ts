@@ -5,6 +5,8 @@ import { openCoWebSiteWithoutSource } from "../Utils";
 
 function openInNewTab(url: string): void {
     try {
+        // openTab() runs the link back through getWebsiteUrl(), which strips embed-only
+        // parameters, so a new tab always lands on the page a human would expect.
         scriptUtils.openTab(url);
     } catch (error) {
         console.error("Failed to open chat link in a new tab", error);
@@ -15,22 +17,14 @@ function openInNewTab(url: string): void {
 /**
  * Opens a chat link as a co-website, falling back to a new tab whenever embedding
  * would leave the user staring at a blank iframe.
+ *
+ * Everything here works off the link exactly as it was posted. That is what the sender
+ * shared, what we probe, and what we embed.
  */
 export async function openChatLinkAsCoWebsite(rawUrl: string): Promise<void> {
-    // getWebsiteUrl() reaches for the current game scene on Cards links, which throws
-    // while a scene is being swapped.
-    let url: string;
-    try {
-        url = scriptUtils.getWebsiteUrl(rawUrl);
-    } catch (error) {
-        console.info("Could not normalize chat link, opening it in a new tab instead", error);
-        openInNewTab(rawUrl);
-        return;
-    }
-
     let embeddable: boolean;
     try {
-        const answer = await gameManager.getCurrentGameScene().connection?.queryEmbeddableWebsite(url);
+        const answer = await gameManager.getCurrentGameScene().connection?.queryEmbeddableWebsite(rawUrl);
         // state=false means the URL is unreachable, embeddable=false means it refuses to be
         // framed. Both end up as a blank iframe, so both belong in a new tab.
         embeddable = answer?.state === true && answer.embeddable;
@@ -45,6 +39,6 @@ export async function openChatLinkAsCoWebsite(rawUrl: string): Promise<void> {
         return;
     }
 
-    openCoWebSiteWithoutSource({ url, closable: true });
-    analyticsClient.openedWebsite(new URL(url));
+    openCoWebSiteWithoutSource({ url: rawUrl, closable: true });
+    analyticsClient.openedWebsite(new URL(rawUrl));
 }
