@@ -473,7 +473,6 @@ class ConnectionManager {
                         subscribeToConversationAnalytics(
                             analyticsConversationStore,
                             (message) => connection.emitAnalyticsEventReport(message),
-                            undefined,
                             {
                                 conversationGroupIdStore: currentPlayerGroupIdStore,
                                 meetingProviderStore: activeMeetingProviderStore,
