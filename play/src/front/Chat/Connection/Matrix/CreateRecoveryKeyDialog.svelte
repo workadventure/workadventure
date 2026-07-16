@@ -85,7 +85,9 @@
             {#if generatedSecretStorageKey?.encodedPrivateKey}
                 <p>{$LL.chat.e2ee.createRecoveryKey.privateKeyDescription()}</p>
                 <div class="flex justify-between">
-                    <p class="text-green-500 m-0 content-center">{generatedSecretStorageKey.encodedPrivateKey}</p>
+                    <p class="text-green-500 m-0 content-center select-text">
+                        {generatedSecretStorageKey.encodedPrivateKey}
+                    </p>
                     <button data-testid="downloadRecoveryKeyButton" onclick={downloadPrivateKeyFile}>
                         <IconFileDownload />
                     </button>
