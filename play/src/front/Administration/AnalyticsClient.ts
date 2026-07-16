@@ -856,17 +856,23 @@ class AnalyticsClient {
         const mediaKind = context.mediaKind ?? this.inferCowebsiteMediaKind(rawTargetUrl, fileExtension);
 
         return {
-            // Origin only — query, hash and path are all dropped. Query/hash carry
-            // auth tokens; the path carries the document name.
+            // Origin only. The query and hash carry auth tokens (access_token, sas,
+            // signed URLs) and the rest of the path carries whatever else the URL
+            // encodes, none of which analytics needs — the document name is reported
+            // on its own below, so the path would only be a second, unfiltered copy.
             url: this.stripUrlToOrigin(url),
             targetUrl: this.stripUrlToOrigin(rawTargetUrl),
             mediaKind,
             triggerProperty: context.triggerProperty ?? "other",
-            // fileName intentionally NOT collected: document filenames are frequently
-            // sensitive (NDA-acme.pdf, salary-2024.xlsx). fileExtension + mediaKind
-            // carry the analytic signal without the PII. Note fileExtension is derived
-            // from the full URL *here*, client-side, so only the extension leaves the
-            // browser.
+            // Which documents a world opens is a metric its own administrator asks
+            // for, so the name is reported as its own field rather than smuggled
+            // inside a URL. It is deliberately NOT in the anonymization allowlist
+            // (AnalyticsEventsQueue.ANONYMOUS_SAFE_PROPERTY_KEYS): document names are
+            // frequently sensitive (NDA-acme.pdf, salary-2026.xlsx), so a world that
+            // opts out of user-level activity stops sending them, and the internal
+            // Kiosk does not project the column at all — only the world's own
+            // back-office shows it.
+            fileName: context.fileName ?? this.getFileNameFromUrl(rawTargetUrl),
             fileExtension,
             areaId: context.areaId,
             areaName: context.areaName,

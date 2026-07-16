@@ -216,12 +216,10 @@ describe("AnalyticsClient admin analytics sink", () => {
             areaName: "Docs zone",
         });
 
-        // Only the origin survives. Query string and hash carry auth tokens, and the
-        // path carries the document name — dropping fileName while still shipping
-        // ".../file.pdf" in url/targetUrl left the PII in plain sight, and the admin
-        // re-derived fileName from exactly that path. fileExtension and mediaKind are
-        // computed in the browser from the full URL, so the analytic signal survives;
-        // the exact `properties` match below asserts fileName's absence.
+        // The URL is reduced to its origin: query and hash carry auth tokens, and the
+        // path would only be a second, unfiltered copy of the document name. The name
+        // is reported once, as its own field, so anonymization and the Kiosk can each
+        // drop that single field.
         expect(sendAdmin).toHaveBeenCalledWith({
             events: [
                 expect.objectContaining({
@@ -232,6 +230,7 @@ describe("AnalyticsClient admin analytics sink", () => {
                         targetUrl: "https://example.com",
                         mediaKind: "pdf",
                         triggerProperty: "openLink",
+                        fileName: "file.pdf",
                         fileExtension: "pdf",
                         areaId: "docs-zone",
                         areaName: "Docs zone",
@@ -242,7 +241,7 @@ describe("AnalyticsClient admin analytics sink", () => {
         });
     });
 
-    it("keeps the document name out of cowebsite urls entirely", () => {
+    it("reports the document name only in fileName, never inside the urls", () => {
         const sendAdmin = vi.fn();
         analyticsClient.setAdminAnalyticsSender(sendAdmin);
         window.capabilities = {
@@ -254,12 +253,12 @@ describe("AnalyticsClient admin analytics sink", () => {
         });
 
         const properties = sendAdmin.mock.calls[0][0].events[0].properties as Record<string, unknown>;
-        const serialized = JSON.stringify(properties);
-        expect(serialized).not.toContain("NDA-acme-2026");
-        expect(serialized).not.toContain("salary-2026");
+        // The name lives in exactly one field — that is the whole point. A single
+        // field can be dropped by the anonymization allowlist and by the Kiosk
+        // projection; a name buried in a URL cannot.
+        expect(properties.fileName).toBe("salary-2026.xlsx");
         expect(properties.url).toBe("https://acme.tld");
         expect(properties.targetUrl).toBe("https://acme.tld");
-        // The signal we actually wanted still survives.
         expect(properties.fileExtension).toBe("xlsx");
     });
 
