@@ -53,6 +53,10 @@ const chat: BaseTranslation = {
         notAvailable: "Image is not available.",
         imageActions: "Image actions",
     },
+    urlPreview: {
+        label: "Link preview",
+        hide: "Hide previews",
+    },
     join: "Join",
     search: "Search",
     closeSearch: "Close search",

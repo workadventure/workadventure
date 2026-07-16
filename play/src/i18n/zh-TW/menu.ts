@@ -79,6 +79,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         notifications: "通知",
         enablePictureInPicture: "啟用子母畫面",
         chatSounds: "聊天音效",
+        chatUrlPreviews: "在聊天中顯示連結預覽",
+        chatUrlPreviewsInPrivate: "在加密房間和鄰近聊天中顯示連結預覽",
         cowebsiteTrigger: "在開啟網頁和 Jitsi Meet 會議前總是詢問",
         ignoreFollowRequest: "忽略跟隨其他使用者的請求",
         proximityDiscussionVolume: "鄰近討論音量",
