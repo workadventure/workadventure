@@ -2,9 +2,9 @@ import { z } from "zod";
 import type { AnalyticsEventReportMessage } from "@workadventure/messages";
 import type { SocketData } from "../models/Websocket/SocketData";
 import type { AnalyticsEventInput, AnalyticsEventsQueue } from "./AnalyticsEventsQueue";
-import { isAnalyticsEventInput, isClientAnalyticsEventSource, MAX_EVENT_ID_LENGTH } from "./AnalyticsEventSchema";
+import { MAX_EVENT_ID_LENGTH, TIMED_EVENT_END_REASONS, isAnalyticsEventInput, isClientAnalyticsEventSource } from "./AnalyticsEventSchema";
 import type { AnalyticsTimedEventTracker } from "./AnalyticsTimedEventTracker";
-import { analyticsTimedEventTracker, TIMED_EVENT_NAMES, TIMED_EVENT_END_REASONS } from "./AnalyticsTimedEventTracker";
+import { analyticsTimedEventTracker, TIMED_EVENT_NAMES } from "./AnalyticsTimedEventTracker";
 
 /**
  * Maximum number of analytics events a single websocket message may carry.
