@@ -11,13 +11,17 @@
         silentStore,
         usedCameraDeviceIdStore,
         usedMicrophoneDeviceIdStore,
-        cameraAccessIssueStore,
-        microphoneAccessIssueStore,
         devicesNotLoaded,
         rawLocalStreamStore,
         mediaStreamConstraintsStore,
     } from "../../../Stores/MediaStore";
-    import { cameraPermissionStateStore, microphonePermissionStateStore } from "../../../Stores/MediaStatusStore";
+    import {
+        cameraAccessIssueStore,
+        cameraPermissionStateStore,
+        mediaPermissionDeniedStore,
+        microphoneAccessIssueStore,
+        microphonePermissionStateStore,
+    } from "../../../Stores/MediaStatusStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { noiseSuppressionEnabledStore, noiseSuppressionStateStore } from "../../../Stores/NoiseSuppressionStore";
@@ -85,14 +89,8 @@
         $noiseSuppressionStateStore.status === "error" || $noiseSuppressionStateStore.status === "unsupported",
     );
 
-    let cameraDenied = $derived(
-        $cameraPermissionStateStore === "denied" ||
-            ($cameraAccessIssueStore === "permission_denied" && $cameraPermissionStateStore !== "granted"),
-    );
-    let microphoneDenied = $derived(
-        $microphonePermissionStateStore === "denied" ||
-            ($microphoneAccessIssueStore === "permission_denied" && $microphonePermissionStateStore !== "granted"),
-    );
+    let cameraDenied = $derived($mediaPermissionDeniedStore.camera);
+    let microphoneDenied = $derived($mediaPermissionDeniedStore.microphone);
 
     let cameraLoaded = $derived(
         ($rawLocalStreamStore.type === "success" &&

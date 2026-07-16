@@ -51,22 +51,9 @@ import { NoiseSuppressionController } from "./NoiseSuppressionController";
 import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
 import { audioPlaybackStore } from "./AudioPlaybackStore";
 import { browserNotificationStore } from "./BrowserNotificationStore";
+import { cameraAccessIssueStore, type MediaAccessIssue, microphoneAccessIssueStore } from "./MediaStatusStore";
 
 export const inBackgroundSettingsStore = writable<boolean>(false);
-
-export type MediaAccessIssue = "permission_denied" | "no_device";
-
-/**
- * Last camera access failure, or no videoinput reported by the browser.
- * Cleared when the user turns the camera off manually, when a video track is obtained, or when a camera appears.
- */
-export const cameraAccessIssueStore = writable<MediaAccessIssue | null>(null);
-
-/**
- * Last microphone access failure, or no audioinput reported by the browser.
- * Cleared when the user turns the microphone off manually, when an audio track is obtained, or when a microphone appears.
- */
-export const microphoneAccessIssueStore = writable<MediaAccessIssue | null>(null);
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -83,6 +70,14 @@ function createRequestedCameraState() {
         disableWebcam: () => {
             set(false);
             localUserStore.setRequestedCameraState(false);
+        },
+        /**
+         * Turns the webcam off for this session only, without recording it as a user choice.
+         * A browser refusal must not look like the user wanting the camera off: the persisted state would stop
+         * the next page load from calling getUserMedia at all, leaving the denial undetected.
+         */
+        forceDisableWebcam: () => {
+            set(false);
         },
     };
 }
@@ -102,6 +97,13 @@ function createRequestedMicrophoneState() {
         disableMicrophone: () => {
             set(false);
             localUserStore.setRequestedMicrophoneState(false);
+        },
+        /**
+         * Turns the microphone off for this session only, without recording it as a user choice.
+         * See forceDisableWebcam.
+         */
+        forceDisableMicrophone: () => {
+            set(false);
         },
     };
 }
@@ -662,6 +664,29 @@ function classifyMediaAccessError(error: unknown): MediaAccessIssue | null {
     return null;
 }
 
+/**
+ * Turns a device off after a failed access attempt.
+ *
+ * A denial is the browser's decision, not the user's, so it must not be persisted: otherwise the next page load
+ * skips getUserMedia entirely and the denial can never be detected again. Any other failure (no device...) keeps
+ * the regular persisting behaviour.
+ */
+function disableCameraAfterFailure(issue: MediaAccessIssue | null): void {
+    if (issue === "permission_denied") {
+        requestedCameraState.forceDisableWebcam();
+        return;
+    }
+    requestedCameraState.disableWebcam();
+}
+
+function disableMicrophoneAfterFailure(issue: MediaAccessIssue | null): void {
+    if (issue === "permission_denied") {
+        requestedMicrophoneState.forceDisableMicrophone();
+        return;
+    }
+    requestedMicrophoneState.disableMicrophone();
+}
+
 function emitCurrentStreamOrError(setIfCurrent: SetRawStreamIfCurrent, error: unknown) {
     if (currentStream) {
         setIfCurrent({
@@ -711,9 +736,6 @@ async function runRawStreamUpdate(
         });
     }
 
-    cameraAccessIssueStore.set(null);
-    microphoneAccessIssueStore.set(null);
-
     const nextConstraints = {
         video: constraints.video ?? false,
         audio: constraints.audio ?? false,
@@ -725,6 +747,16 @@ async function runRawStreamUpdate(
         constraints.video !== false && (!deepEqual(oldConstraints.video, constraints.video) || !hasLiveVideoTrack);
     const mustRequestNewAudio =
         constraints.audio !== false && (!deepEqual(oldConstraints.audio, constraints.audio) || !hasLiveAudioTrack);
+
+    // Only clear an issue for a device we are about to retry. Failing to access a device turns it off, which
+    // immediately triggers another update for the very same device with no request in it: clearing
+    // unconditionally would erase the failure we just recorded.
+    if (mustRequestNewVideo) {
+        cameraAccessIssueStore.set(null);
+    }
+    if (mustRequestNewAudio) {
+        microphoneAccessIssueStore.set(null);
+    }
 
     if (currentStream) {
         const oldStream = currentStream;
@@ -840,11 +872,11 @@ async function runRawStreamUpdate(
                 );
                 emitCurrentStreamOrError(setIfCurrent, e);
                 const classified = classifyMediaAccessError(e);
-                requestedCameraState.disableWebcam();
                 cameraAccessIssueStore.set(classified);
+                disableCameraAfterFailure(classified);
                 if (mustRequestNewAudio) {
-                    requestedMicrophoneState.disableMicrophone();
                     microphoneAccessIssueStore.set(classified);
+                    disableMicrophoneAfterFailure(classified);
                 }
             } else if (!constraints.video && !constraints.audio) {
                 console.error("Error. getUserMedia called with no audio and no video.");
@@ -856,8 +888,9 @@ async function runRawStreamUpdate(
                 console.info("Error. Unable to get microphone and/or camera access.", newConstraints, e);
                 emitCurrentStreamOrError(setIfCurrent, e);
                 if (mustRequestNewAudio) {
-                    requestedMicrophoneState.disableMicrophone();
-                    microphoneAccessIssueStore.set(classifyMediaAccessError(e));
+                    const classified = classifyMediaAccessError(e);
+                    microphoneAccessIssueStore.set(classified);
+                    disableMicrophoneAfterFailure(classified);
                 }
             }
         }
