@@ -1,8 +1,25 @@
 diff --git a/node_modules/phaser/dist/phaser.esm.js b/node_modules/phaser/dist/phaser.esm.js
-index 07a961e..07bdd4f 100644
+index 9164140..4406a13 100644
 --- a/node_modules/phaser/dist/phaser.esm.js
 +++ b/node_modules/phaser/dist/phaser.esm.js
-@@ -208488,6 +208488,9 @@ module.exports = [
+@@ -208333,6 +208333,16 @@ module.exports = [
+     '    /* Bit 29 is animation. */',
+     '    bool animated = mod(flags, 64.0) > 31.0;',
+     '    #endif',
++    '    /* Bits 24-25 hold the tile rotation as a 0-3 quadrant (0/90/180/270 deg). */',
++    '    float rotQuad = mod(flags, 4.0);',
++    '    if (rotQuad > 0.5)',
++    '    {',
++    '        vec2 c = uv - 0.5;',
++    '        float ang = -rotQuad * 1.5707963267948966;',
++    '        float cs = cos(ang);',
++    '        float sn = sin(ang);',
++    '        uv = vec2(cs * c.x - sn * c.y, sn * c.x + cs * c.y) + 0.5;',
++    '    }',
+     '    if (flipX)',
+     '    {',
+     '        uv.x = 1.0 - uv.x;',
+@@ -208488,6 +208498,9 @@ module.exports = [
      '{',
      '    vec2 layerTexCoord = outTexCoord;',
      '    Tile tile = getLayerData(layerTexCoord);',
@@ -12,7 +29,27 @@ index 07a961e..07bdd4f 100644
      '    Samples samples = getFinalSamples(tile, layerTexCoord);',
      '    vec4 fragColor = samples.color;',
      '    #pragma phaserTemplate(declareSamples)',
-@@ -246698,7 +246701,11 @@ var Tileset = new Class({
+@@ -243957,6 +243970,19 @@ var TilemapGPULayer = new Class({
+                 {
+                     index |= 0x20000000;
+                 }
++
++                // Encode the tile rotation as a 0-3 quadrant (0, 90, 180, 270
++                // degrees) in bits 24-25. Tiled stores 90-degree rotations via
++                // the anti-diagonal flip flag, which the parser resolves into
++                // `tile.rotation`; without this the shader would render rotated
++                // tiles (e.g. arrows built by rotating a base tile) unrotated.
++                var rotQuad = Math.round(tile.rotation / (Math.PI / 2)) % 4;
++                if (rotQuad < 0)
++                {
++                    rotQuad += 4;
++                }
++                index |= rotQuad << 24;
++
+                 if (tile.index === -1)
+                 {
+                     // Set the fourth bit to 1 to indicate an empty tile.
+@@ -246698,7 +246724,11 @@ var Tileset = new Class({
                  var animationDuration = tileDatum.animationDuration;
  
                  // This index maps to an animation, not a single tile.
@@ -26,10 +63,27 @@ index 07a961e..07bdd4f 100644
                  // This animation points to a run of frames.
                  animations.push([ animationDuration, animFrames.length ]);
 diff --git a/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js b/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js
-index 8f3f66c..e1ce878 100644
+index 8f3f66c..b5875e4 100644
 --- a/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js
 +++ b/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js
-@@ -227,6 +227,9 @@ module.exports = [
+@@ -72,6 +72,16 @@ module.exports = [
+     '    /* Bit 29 is animation. */',
+     '    bool animated = mod(flags, 64.0) > 31.0;',
+     '    #endif',
++    '    /* Bits 24-25 hold the tile rotation as a 0-3 quadrant (0/90/180/270 deg). */',
++    '    float rotQuad = mod(flags, 4.0);',
++    '    if (rotQuad > 0.5)',
++    '    {',
++    '        vec2 c = uv - 0.5;',
++    '        float ang = -rotQuad * 1.5707963267948966;',
++    '        float cs = cos(ang);',
++    '        float sn = sin(ang);',
++    '        uv = vec2(cs * c.x - sn * c.y, sn * c.x + cs * c.y) + 0.5;',
++    '    }',
+     '    if (flipX)',
+     '    {',
+     '        uv.x = 1.0 - uv.x;',
+@@ -227,6 +237,9 @@ module.exports = [
      '{',
      '    vec2 layerTexCoord = outTexCoord;',
      '    Tile tile = getLayerData(layerTexCoord);',
@@ -39,6 +93,30 @@ index 8f3f66c..e1ce878 100644
      '    Samples samples = getFinalSamples(tile, layerTexCoord);',
      '    vec4 fragColor = samples.color;',
      '    #pragma phaserTemplate(declareSamples)',
+diff --git a/node_modules/phaser/src/tilemaps/TilemapGPULayer.js b/node_modules/phaser/src/tilemaps/TilemapGPULayer.js
+index 272bb1c..a895ab8 100644
+--- a/node_modules/phaser/src/tilemaps/TilemapGPULayer.js
++++ b/node_modules/phaser/src/tilemaps/TilemapGPULayer.js
+@@ -217,6 +217,19 @@ var TilemapGPULayer = new Class({
+                 {
+                     index |= 0x20000000;
+                 }
++
++                // Encode the tile rotation as a 0-3 quadrant (0, 90, 180, 270
++                // degrees) in bits 24-25. Tiled stores 90-degree rotations via
++                // the anti-diagonal flip flag, which the parser resolves into
++                // `tile.rotation`; without this the shader would render rotated
++                // tiles (e.g. arrows built by rotating a base tile) unrotated.
++                var rotQuad = Math.round(tile.rotation / (Math.PI / 2)) % 4;
++                if (rotQuad < 0)
++                {
++                    rotQuad += 4;
++                }
++                index |= rotQuad << 24;
++
+                 if (tile.index === -1)
+                 {
+                     // Set the fourth bit to 1 to indicate an empty tile.
 diff --git a/node_modules/phaser/src/tilemaps/Tileset.js b/node_modules/phaser/src/tilemaps/Tileset.js
 index 5447865..cea245f 100644
 --- a/node_modules/phaser/src/tilemaps/Tileset.js
