@@ -74,6 +74,7 @@ import { matrixProvider } from "./MatrixProvider";
 import RecordingService from "./RecordingService";
 import type { PusherWebSocket } from "./PusherWebSocket";
 import { analyticsPresenceTracker } from "./AnalyticsPresenceTracker";
+import { analyticsTimedEventTracker } from "./AnalyticsTimedEventTracker";
 
 const debug = Debug("socket");
 
@@ -432,6 +433,8 @@ export class SocketManager implements ZoneEventListener {
             try {
                 if (joinRoomEventEmitted) {
                     clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                    // Same ordering rule as leaveRoom: intervals before the session.
+                    analyticsTimedEventTracker.closeConnection(socketData, "join_failed");
                     analyticsPresenceTracker.trackDisconnected(socketData, "join_failed");
                 }
             } catch (emitErr) {
@@ -781,6 +784,13 @@ export class SocketManager implements ZoneEventListener {
                 } finally {
                     //delete Client.roomId;
                     clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                    // Close open intervals BEFORE the session: both read the clock in
+                    // the same tick, so this ordering is what guarantees
+                    // endedAt <= disconnectedAt. The admin attributes a conversation to
+                    // the session containing it, and an interval ending even one
+                    // millisecond after its session's disconnect would be dropped
+                    // outright — a silent zero on the headline metric.
+                    analyticsTimedEventTracker.closeConnection(socketData, "socket_closed");
                     analyticsPresenceTracker.trackDisconnected(socketData, "client_closed");
                     debug("User ", socketData.name, " left: ", socketData.userUuid);
                 }

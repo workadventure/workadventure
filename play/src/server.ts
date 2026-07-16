@@ -23,6 +23,7 @@ import RoomApiServer from "./room-api/RoomApiServer";
 import { analyticsEventsQueue } from "./pusher/services/AnalyticsEventsQueue";
 import { videoQualityAnalyticsQueue } from "./pusher/services/VideoQualityAnalyticsQueue";
 import { analyticsPresenceTracker } from "./pusher/services/AnalyticsPresenceTracker";
+import { analyticsTimedEventTracker } from "./pusher/services/AnalyticsTimedEventTracker";
 
 // In production, the current working directory is "dist".
 if (fs.existsSync("dist") && !fs.existsSync("src")) {
@@ -70,24 +71,35 @@ if (SENTRY_DSN != undefined) {
     Sentry.captureException(e);
 });
 
-// Graceful shutdown: drain analytics queues before exit so events buffered at
-// SIGTERM time still reach the admin instead of being silently dropped.
+// Graceful shutdown: close what is still open, then drain the analytics queues, so
+// events buffered at exit time still reach the admin instead of being silently
+// dropped.
+//
+// This matters more than it looks for timed events (conversations, and later areas
+// and screenshares): an interval is reported by exactly ONE row, emitted when it
+// closes. There is no periodic sample to fall back on, so an interval that is never
+// closed is not merely imprecise — it never happened as far as analytics knows. Every
+// exit path we can observe must therefore close first. The one we cannot is
+// SIGKILL/OOM, where the process dies with the map; persisting it would not help,
+// because on recovery we would know an interval was open but not when it ended, and
+// inventing that timestamp is worse than losing it.
 let shuttingDown = false;
-const shutdown = (signal: NodeJS.Signals): void => {
+const shutdown = (reason: string, endReason: "pusher_shutdown" | "pusher_crashed", exitCode: number): void => {
     if (shuttingDown) {
         return;
     }
     shuttingDown = true;
 
-    // Close the connections still open BEFORE draining, not after: closeAll only
-    // enqueues, so draining first would leave its events behind. Without this the
-    // drain flushes what happens to be queued and then exits, and every live
-    // session on this instance is lost — the pairing dies with the heap and no
-    // user.disconnected is ever emitted. A rolling deploy does that to every
-    // connection on every replica.
+    // Close BEFORE draining, not after: both closeAll() calls only enqueue, so
+    // draining first would leave their events behind.
+    //
+    // Timed events before connection sessions, deliberately: both read the clock as
+    // they go, and the admin drops an interval whose end falls outside its session.
+    // Same ordering as SocketManager.leaveRoom.
+    const closedTimedEvents = analyticsTimedEventTracker.closeAll(endReason);
     const closedConnections = analyticsPresenceTracker.closeAll();
     console.info(
-        `Received ${signal}, closed ${closedConnections} open connection(s) and draining analytics queues before exit…`,
+        `${reason}: closed ${closedTimedEvents} timed event(s) and ${closedConnections} connection(s), draining analytics queues before exit…`,
     );
 
     const drains: [string, Promise<void>][] = [
@@ -116,11 +128,28 @@ const shutdown = (signal: NodeJS.Signals): void => {
             console.error("Error while draining analytics queues during shutdown", error);
         })
         .finally(() => {
-            process.exit(0);
+            process.exit(exitCode);
         });
 };
-process.once("SIGTERM", shutdown);
-process.once("SIGINT", shutdown);
+
+process.once("SIGTERM", (signal) => shutdown(`Received ${signal}`, "pusher_shutdown", 0));
+process.once("SIGINT", (signal) => shutdown(`Received ${signal}`, "pusher_shutdown", 0));
+
+// A crash used to take every open interval down with it: only SIGTERM/SIGINT were
+// handled, so an uncaught throw exited without closing anything. The process is going
+// to die either way — but it can still spend its last moments flushing what it
+// already knows, which is the difference between a conversation being reported and
+// never having existed.
+process.once("uncaughtException", (error) => {
+    console.error("Uncaught exception — closing open analytics intervals before exit", error);
+    Sentry.captureException(error);
+    shutdown("Uncaught exception", "pusher_crashed", 1);
+});
+process.once("unhandledRejection", (error) => {
+    console.error("Unhandled rejection — closing open analytics intervals before exit", error);
+    Sentry.captureException(error);
+    shutdown("Unhandled rejection", "pusher_crashed", 1);
+});
 
 // Room API
 if (!ADMIN_API_URL && !ROOM_API_SECRET_KEY) {
