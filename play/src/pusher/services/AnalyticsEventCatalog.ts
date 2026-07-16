@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MAX_EVENT_ID_LENGTH, MAX_TIMESTAMP_MS } from "./AnalyticsEventSchema";
+import { MAX_EVENT_ID_LENGTH, MAX_TIMESTAMP_MS, TIMED_EVENT_END_REASONS } from "./AnalyticsEventSchema";
 
 /**
  * One schema per analytics event, with every field `.describe()`d so the catalog
@@ -205,36 +205,17 @@ export const userDisconnectedEvent = defineEvent(
 /*                          Conversations — front                             */
 /* -------------------------------------------------------------------------- */
 
-export const conversationStartedEvent = defineEvent(
-    "conversation.started",
-    conversationContextProperties,
-    "The local user entered a conversation.",
-);
-
-export const conversationHeartbeatEvent = defineEvent(
-    "conversation.heartbeat",
-    conversationContextProperties.extend({
-        sampleDurationSeconds: z
-            .number()
-            .nonnegative()
-            .describe(
-                "Time actually elapsed since the previous sample, not a fixed slice of the cadence — so summing the samples gives the exact duration whatever the interval.",
-            ),
-    }),
-    "Periodic checkpoint while a conversation is open. It exists so a conversation still has a measured duration when the tab dies and no end is ever emitted; the cadence bounds what is lost, not the accuracy.",
-);
-
 export const conversationEndedEvent = defineEvent(
     "conversation.ended",
     conversationContextProperties.merge(timedEventProperties).extend({
-        reason: z
-            .enum(["type_changed", "left_conversation", "cleanup"])
-            .optional()
+        endReason: z
+            .enum(TIMED_EVENT_END_REASONS)
             .describe(
-                "`type_changed` means one conversation was split because its type changed — a bubble that became a meeting reports two conversations, so stitch on time rather than assuming one id per conversation.",
+                "Why the interval ended. `type_changed` means one conversation was split because its type changed — a bubble that became a meeting reports two conversations, so stitch on time rather than assuming one id per conversation. The `socket_closed` / `pusher_*` values mean the client never got to say, and the pusher closed it.",
             ),
     }),
-    "The local user's conversation ended, carrying the finished interval.",
+    "A conversation, measured. Emitted by the pusher when the interval closes — never by the client, which cannot state a duration — and timestamped at its end.",
+    "pusher",
 );
 
 /* -------------------------------------------------------------------------- */
@@ -978,8 +959,6 @@ const EVENTS_WITHOUT_PROPERTIES: Record<string, string> = {
 const eventsWithProperties: z.ZodDiscriminatedUnionOption<"eventName">[] = [
     userConnectedEvent,
     userDisconnectedEvent,
-    conversationStartedEvent,
-    conversationHeartbeatEvent,
     conversationEndedEvent,
     mediaVideoQualitySampleEvent,
     authUserIdentifiedEvent,

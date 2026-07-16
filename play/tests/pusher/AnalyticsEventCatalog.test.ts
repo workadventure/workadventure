@@ -29,7 +29,7 @@ describe("AnalyticsEventCatalog", () => {
         // can look up. This number tracks the names actually emitted across
         // AnalyticsClient, ConversationAnalytics, AnalyticsPresenceTracker and the
         // video-quality path — if you add an event, add it here too.
-        expect(Object.keys(ANALYTICS_EVENT_CATALOG)).toHaveLength(169);
+        expect(Object.keys(ANALYTICS_EVENT_CATALOG)).toHaveLength(167);
     });
 
     it("describes every event and every property field", () => {
@@ -83,7 +83,9 @@ describe("AnalyticsEventCatalog", () => {
     it("validates the real payload of a conversation ending", () => {
         const parsed = conversationEndedEvent.safeParse({
             eventName: "conversation.ended",
-            source: "front",
+            // The pusher synthesizes this one: a client saying "conversation.ended"
+            // is refused, precisely so nobody can claim a duration.
+            source: "pusher",
             clientEventTimeMs: Date.parse("2026-04-24T12:02:30.000Z"),
             eventId: "conversation.ended:group:42:1777032150000",
             properties: {
@@ -91,7 +93,7 @@ describe("AnalyticsEventCatalog", () => {
                 conversationId: "group:42",
                 conversationType: "spontaneous_bubble",
                 meetingProvider: "webrtc",
-                reason: "left_conversation",
+                endReason: "left_conversation",
                 startedAt: "2026-04-24T12:00:00.000Z",
                 endedAt: "2026-04-24T12:02:30.000Z",
                 durationSeconds: 150,
