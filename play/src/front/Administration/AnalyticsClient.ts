@@ -3,6 +3,8 @@ import type { AnalyticsEventReportMessage } from "@workadventure/messages";
 import type { Emoji } from "../Stores/Utils/emojiSchema";
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import { hasCapability } from "../Connection/Capabilities";
+import type { TimedAnalyticsEventHandle } from "./TimedAnalyticsEvent";
+import { openTimedAnalyticsEvent } from "./TimedAnalyticsEvent";
 
 type AdminAnalyticsProperties = Record<string, string | number | boolean | null | undefined>;
 type AdminAnalyticsSender = (message: AnalyticsEventReportMessage) => void;
@@ -52,6 +54,9 @@ class AnalyticsClient {
     private isEnabled_ = false;
     private adminAnalyticsSender: AdminAnalyticsSender | undefined;
     private pendingAdminEvents: AdminAnalyticsEvent[] = [];
+    /** Open intervals, by the thing they are measuring. Closing is by the same key. */
+    private openAreas = new Map<string, TimedAnalyticsEventHandle>();
+    private openScreenShares = new Map<string, TimedAnalyticsEventHandle>();
     private previousRoomId: string | undefined;
 
     constructor() {
@@ -80,6 +85,15 @@ class AnalyticsClient {
 
     setAdminAnalyticsSender(sender: AdminAnalyticsSender | undefined): void {
         this.adminAnalyticsSender = sender;
+        if (!sender) {
+            // The connection is going away (ConnectionManager clears the sender on
+            // cleanup). Every interval this socket still holds open is closed by the
+            // pusher itself as socket_closed, so these handles are already spent:
+            // keeping them would mean a later visit to the same area closes a handle
+            // from a dead socket, which the pusher drops as unpaired.
+            this.openAreas.clear();
+            this.openScreenShares.clear();
+        }
         this.flushPendingAdminEvents();
     }
 
@@ -97,6 +111,10 @@ class AnalyticsClient {
             properties,
         } satisfies AdminAnalyticsEvent;
 
+        this.dispatchAdminEvent(event);
+    }
+
+    private dispatchAdminEvent(event: AdminAnalyticsEvent): void {
         if (!this.adminAnalyticsSender) {
             this.pendingAdminEvents.push(event);
             if (this.pendingAdminEvents.length > MAX_PENDING_ADMIN_EVENTS) {
@@ -107,6 +125,28 @@ class AnalyticsClient {
 
         this.adminAnalyticsSender({ events: [event] });
     }
+
+    /**
+     * Routes a timed event's control frames through the same buffer as everything
+     * else, rather than straight at the sender.
+     *
+     * The buffer is why: before the room connection exists there is nowhere to send,
+     * and an interval opened then would otherwise vanish while its close still went
+     * out — the pusher drops an unpaired close, so the interval would be lost with no
+     * trace. Buffered, both frames arrive in order and the pusher pairs them.
+     *
+     * The pusher starts timing when the open *reaches* it, so a frame that waits in
+     * this buffer shortens the interval it reports. Nothing here opens an interval
+     * before the connection is up (you cannot stand in an area, or share a screen, in
+     * a room you have not joined), so the wait is bounded by the flush that
+     * setAdminAnalyticsSender triggers. If the buffer overflows and drops an open,
+     * the pusher drops the close too: a lost interval, never an invented one.
+     */
+    private readonly sendTimedEventReport = (message: AnalyticsEventReportMessage): void => {
+        for (const event of message.events ?? []) {
+            this.dispatchAdminEvent(event);
+        }
+    };
 
     private canSendAdminAnalytics(): boolean {
         return "capabilities" in window && hasCapability(ANALYTICS_EVENTS_CAPABILITY) === "v1";
@@ -230,18 +270,29 @@ class AnalyticsClient {
     }
 
     screenSharingStarted(screenShareSessionId: string, hasAudio: boolean): void {
-        this.trackAdminEvent("meeting.screenshare.started", {
+        if (!this.canSendAdminAnalytics()) {
+            return;
+        }
+
+        this.openScreenShares.get(screenShareSessionId)?.close("other");
+        this.openScreenShares.set(
             screenShareSessionId,
-            hasAudio,
-        });
+            openTimedAnalyticsEvent(
+                "meeting.screenshare.ended",
+                { screenShareSessionId, hasAudio },
+                this.sendTimedEventReport
+            )
+        );
     }
 
-    screenSharingEnded(screenShareSessionId: string, durationSeconds: number, hasAudio: boolean): void {
-        this.trackAdminEvent("meeting.screenshare.ended", {
-            screenShareSessionId,
-            durationSeconds,
-            hasAudio,
-        });
+    /**
+     * The caller no longer passes a duration, and cannot: the pusher measures the
+     * interval. This used to take a client-computed durationSeconds straight into the
+     * pipeline.
+     */
+    screenSharingEnded(screenShareSessionId: string): void {
+        this.openScreenShares.get(screenShareSessionId)?.close("left_conversation");
+        this.openScreenShares.delete(screenShareSessionId);
     }
 
     follow(): void {
@@ -528,12 +579,26 @@ class AnalyticsClient {
 
     enterArea(id: string, name: string): void {
         this.posthog?.capture(`wa_map-editor_enter_area`, { id, name });
-        this.trackAdminEvent("area.entered", { areaId: id, areaName: name });
+        if (!this.canSendAdminAnalytics()) {
+            return;
+        }
+
+        // Entering an area already open means the previous leave never arrived.
+        // Close it rather than orphan it: the map holds one handle per area, so
+        // overwriting would leave an interval nothing could ever close, and the
+        // pusher would only close it when the socket died — dating a walk-through
+        // to the end of the session.
+        this.openAreas.get(id)?.close("other");
+        this.openAreas.set(
+            id,
+            openTimedAnalyticsEvent("area.dwell", { areaId: id, areaName: name }, this.sendTimedEventReport)
+        );
     }
 
     leaveArea(id: string, name: string): void {
         this.posthog?.capture(`wa_map-editor_leaver_area`, { id, name });
-        this.trackAdminEvent("area.left", { areaId: id, areaName: name });
+        this.openAreas.get(id)?.close("left_area");
+        this.openAreas.delete(id);
     }
 
     enterAreaMapEditor(id: string, name: string): void {
