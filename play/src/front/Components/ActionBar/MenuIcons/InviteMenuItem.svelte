@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import { inviteUserActivated } from "../../../Stores/MenuStore";
     import ActionBarButton from "../ActionBarButton.svelte";
     import LL from "../../../../i18n/i18n-svelte";
@@ -15,29 +16,45 @@
 
     let { first = undefined, last = undefined, classList = undefined }: Props = $props();
 
-    let displayTooltip = true;
     let closeFloatingUi: (() => void) | undefined = undefined;
     let triggerElement: HTMLElement | undefined = $state(undefined);
 
-    function showInviteScreen() {
-        if (!displayTooltip) {
-            closeFloatingUi?.();
-            closeFloatingUi = undefined;
-        } else if (triggerElement) {
-            analyticsClient.openInvite();
-            closeFloatingUi = showFloatingUi(
-                triggerElement,
-                GuestSubMenu,
-                {},
-                {
-                    placement: "bottom",
-                },
-                12,
-                true,
-            );
-        }
-        displayTooltip = !displayTooltip;
+    function closeInviteMenu(): void {
+        // Reset the handle before closing: close() calls back into onClose synchronously.
+        const close = closeFloatingUi;
+        closeFloatingUi = undefined;
+        close?.();
     }
+
+    function showInviteScreen() {
+        if (closeFloatingUi !== undefined) {
+            closeInviteMenu();
+            return;
+        }
+        if (triggerElement === undefined) {
+            return;
+        }
+        analyticsClient.openInvite();
+        closeFloatingUi = showFloatingUi(
+            triggerElement,
+            GuestSubMenu,
+            {},
+            {
+                placement: "bottom",
+            },
+            12,
+            true,
+            true,
+            () => {
+                closeFloatingUi = undefined;
+            },
+        );
+    }
+
+    // The popup is rendered by FloatingUiPopupList at the root of the app, so it outlives this
+    // component. The action bar is unmounted whenever the chat or the map editor leaves less than
+    // 285px of room, which would otherwise strand the popup with no way to close it.
+    onDestroy(closeInviteMenu);
 </script>
 
 {#if $inviteUserActivated}

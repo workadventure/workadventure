@@ -75,6 +75,8 @@ export default defineConfig(({ mode }) => {
             tsconfigPaths(),
         ],
         resolve: {
+            // Without this, vitest resolves Svelte to its server build and mount() is unavailable.
+            conditions: mode === "test" ? ["browser"] : undefined,
             alias: {
                 events: "events",
                 "@wa-icons": fileURLToPath(new URL("./src/front/Components/Icons.ts", import.meta.url)),
