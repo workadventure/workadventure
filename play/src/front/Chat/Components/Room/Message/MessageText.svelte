@@ -3,6 +3,8 @@
     import { Marked } from "marked";
     import { onDestroy, onMount } from "svelte";
     import type { ChatMessageContent } from "../../../Connection/ChatConnection";
+    import { openChatLinkAsCoWebsite } from "../../../Links/ChatLinkOpener";
+    import { resolveChatLinkClick } from "../../../Links/ChatLinkPolicy";
     import { sanitizeHTML } from "./WA-HTML-Sanitizer";
 
     interface Props {
@@ -78,10 +80,55 @@
         }
     });
 
+    let pendingUrl: string | undefined = $state();
+
+    // Delegated so it covers both the links marked builds from plain bodies and the ones
+    // already baked into the formatted_body HTML of a reply, which never reach our renderer.
+    function onBubbleClick(event: MouseEvent) {
+        const target = event.target;
+        if (!(target instanceof Element)) {
+            return;
+        }
+        const anchor = target.closest("a");
+        if (!(anchor instanceof HTMLAnchorElement)) {
+            return;
+        }
+
+        const action = resolveChatLinkClick(anchor, event);
+        if (action.kind === "native") {
+            return;
+        }
+
+        event.preventDefault();
+
+        // Probing embeddability is a round trip; ignore repeat clicks while one is in flight.
+        if (pendingUrl !== undefined) {
+            return;
+        }
+        pendingUrl = action.url;
+
+        (async () => {
+            try {
+                await openChatLinkAsCoWebsite(action.url);
+            } finally {
+                pendingUrl = undefined;
+            }
+        })().catch((error) => console.error("Failed to open chat link", error));
+    }
+
     /* eslint-disable svelte/no-at-html-tags */
 </script>
 
-<div class="message-bubble m-0 {hasDepth ? 'text-xs leading-4' : 'text-sm'} text-white py-1 px-3" lang="">
+<!-- The click target is always a real anchor, which already handles Enter and focus itself. -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+    class="message-bubble m-0 {hasDepth ? 'text-xs leading-4' : 'text-sm'} text-white py-1 px-3"
+    class:cursor-wait={pendingUrl !== undefined}
+    aria-busy={pendingUrl !== undefined}
+    lang=""
+    onclick={onBubbleClick}
+>
     {@html sanitizeHTML(html)}
 </div>
 
