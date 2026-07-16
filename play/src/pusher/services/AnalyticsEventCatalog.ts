@@ -347,26 +347,15 @@ export const meetingProviderChangedEvent = defineEvent(
     "A meeting switched media backend mid-session, reported with the conversation it happened in. Despite the `meeting.` prefix this belongs to the conversation family: ConversationAnalytics owns the transition and is the only emitter.",
 );
 
-export const meetingScreenshareStartedEvent = defineEvent(
-    "meeting.screenshare.started",
-    z.object({
-        screenShareSessionId: z.string().describe("Pairs this start with its end."),
-        hasAudio: z.boolean().describe("Whether the shared screen carried audio."),
-    }),
-    "The user started sharing their screen.",
-);
-
 export const meetingScreenshareEndedEvent = defineEvent(
     "meeting.screenshare.ended",
-    z.object({
-        screenShareSessionId: z.string().describe("Pairs this end with its start."),
-        durationSeconds: z
-            .number()
-            .nonnegative()
-            .describe("How long the share lasted, reported on the end event so nothing has to pair rows."),
+    timedEventProperties.extend({
+        screenShareSessionId: z.string().describe("Identifies the share this interval measures."),
         hasAudio: z.boolean().describe("Whether the shared screen carried audio."),
+        endReason: z.enum(TIMED_EVENT_END_REASONS).describe("Why the share stopped, or what stopped it."),
     }),
-    "The user stopped sharing their screen, carrying the duration.",
+    "A screen share, measured. One row per share, emitted by the pusher when the interval closes and timestamped at its end. There is no matching `.started`: the interval carries its own start.",
+    "pusher",
 );
 
 export const meetingLayoutChangedEvent = defineEvent(
@@ -427,13 +416,14 @@ const areaProperties = z.object({
     areaName: z.string().describe("Human-readable area name, as authored on the map."),
 });
 
-export const areaEnteredEvent = defineEvent(
-    "area.entered",
-    areaProperties,
-    "The user walked into an area. Paired with area.left to derive dwell time in SQL — the admin pairs these with a window function rather than a duration field.",
+export const areaDwellEvent = defineEvent(
+    "area.dwell",
+    areaProperties.merge(timedEventProperties).extend({
+        endReason: z.enum(TIMED_EVENT_END_REASONS).describe("Why the dwell ended, or what ended it."),
+    }),
+    "Time the user spent inside an area. One row per visit, emitted by the pusher when the interval closes and timestamped at its end. This replaced an area.entered/area.left pair that the admin re-paired with a window function over every event in the room.",
+    "pusher",
 );
-
-export const areaLeftEvent = defineEvent("area.left", areaProperties, "The user walked out of an area.");
 
 /* -------------------------------------------------------------------------- */
 /*                                Map editor                                  */
@@ -971,7 +961,6 @@ const eventsWithProperties: z.ZodDiscriminatedUnionOption<"eventName">[] = [
     meetingStartedEvent,
     meetingEndedEvent,
     meetingProviderChangedEvent,
-    meetingScreenshareStartedEvent,
     meetingScreenshareEndedEvent,
     meetingLayoutChangedEvent,
     meetingPictureInPictureToggledEvent,
@@ -979,8 +968,7 @@ const eventsWithProperties: z.ZodDiscriminatedUnionOption<"eventName">[] = [
     inviteSentEvent,
     inviteAcceptedEvent,
     inviteWalkLinkOptionChangedEvent,
-    areaEnteredEvent,
-    areaLeftEvent,
+    areaDwellEvent,
     mapEditorAreaLockToggledEvent,
     mapEditorPropertyAddedEvent,
     mapEditorPropertyRemovedEvent,

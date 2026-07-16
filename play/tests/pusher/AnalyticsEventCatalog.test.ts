@@ -29,7 +29,7 @@ describe("AnalyticsEventCatalog", () => {
         // can look up. This number tracks the names actually emitted across
         // AnalyticsClient, ConversationAnalytics, AnalyticsPresenceTracker and the
         // video-quality path — if you add an event, add it here too.
-        expect(Object.keys(ANALYTICS_EVENT_CATALOG)).toHaveLength(167);
+        expect(Object.keys(ANALYTICS_EVENT_CATALOG)).toHaveLength(165);
     });
 
     it("describes every event and every property field", () => {

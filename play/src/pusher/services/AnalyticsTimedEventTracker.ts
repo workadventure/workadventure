@@ -24,7 +24,7 @@ type AnalyticsEventQueue = {
  * from a new replica reconnecting to an old one mid-deploy; the degraded outcome is
  * a rejected open, i.e. what an unknown name already does today.
  */
-export const TIMED_EVENT_NAMES = new Set<string>(["conversation.ended"]);
+export const TIMED_EVENT_NAMES = new Set<string>(["conversation.ended", "area.dwell", "meeting.screenshare.ended"]);
 
 /**
  * Bounds the per-socket map. A client that opens handles and never closes them
