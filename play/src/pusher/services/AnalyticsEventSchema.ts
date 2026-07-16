@@ -62,3 +62,29 @@ export const isAnalyticsEventInput = z.object({
     eventId: z.string().min(1).max(MAX_EVENT_ID_LENGTH),
     properties: z.record(z.unknown()),
 });
+
+/**
+ * Why a timed event ends. Enum-constrained on purpose, and named `endReason`
+ * rather than `reason`: the anonymization allowlist is keyed on the property key
+ * alone, not on (eventName, key), and `reason` is already **free text** on the
+ * experience-issue events (AnalyticsEventCatalog). Allow-listing `reason` to let
+ * this one through would un-strip free-form text on those unrelated families for
+ * every world that opted out of user-level activity. Mirrors `disconnectReason`.
+ */
+export const TIMED_EVENT_END_REASONS = [
+    // Stated by the client when it closes its own interval. `type_changed` is the
+    // one consumers cannot do without: it means one conversation was split because
+    // its type changed, so a bubble that became a meeting reports two intervals and
+    // has to be stitched on time rather than by id.
+    "closed_by_client",
+    "left_conversation",
+    "type_changed",
+    "cleanup",
+    // Forced by the pusher, when the client never got to say anything.
+    "socket_closed",
+    "join_failed",
+    "pusher_shutdown",
+    "pusher_crashed",
+    "other",
+] as const;
+export type TimedEventEndReason = (typeof TIMED_EVENT_END_REASONS)[number];

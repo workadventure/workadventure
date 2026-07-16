@@ -20,6 +20,10 @@ function newQueue(): QueueMock {
     return { enqueueEvent: vi.fn<(event: AnalyticsEventInput, socketData: SocketData) => void>() };
 }
 
+function newTracker() {
+    return { open: vi.fn(), close: vi.fn() };
+}
+
 function newSocketData(): SocketData {
     return {
         userUuid: "reporter-uuid",
@@ -37,6 +41,10 @@ function buildEvent(overrides: Partial<{ source: string; eventName: string; even
         eventId: overrides.eventId ?? "event-id",
         properties: { schemaVersion: 1 },
     };
+}
+
+function controlFrame(eventName: string, properties: Record<string, unknown>) {
+    return { eventName, source: "front" as never, clientEventTimeMs: 1_000, eventId: `id:${eventName}`, properties };
 }
 
 describe("processAnalyticsReportMessage", () => {
@@ -206,5 +214,73 @@ describe("processAnalyticsReportMessage", () => {
             expect.objectContaining({ eventId: "valid", source: "front" }),
             expect.any(Object),
         );
+    });
+
+    /**
+     * The seam between the two halves of the timed-event mechanism, and the one place
+     * where they can disagree in silence.
+     *
+     * The front states why it closed an interval; the pusher parses that string
+     * against an enum and coerces anything unknown to "other" rather than losing the
+     * interval. That coercion is right, but it means a reason the front actually sends
+     * and the enum does not list is destroyed with no error anywhere -- which is
+     * exactly what happened to every front-initiated close until this test existed.
+     */
+    it.each(["left_conversation", "type_changed", "cleanup"])(
+        "keeps the reason the front actually sends: %s",
+        (endReason) => {
+            const queue = newQueue();
+            const tracker = newTracker();
+
+            processAnalyticsReportMessage(
+                { events: [controlFrame("timed_event.close", { handle: "conversation.ended:h1", endReason })] },
+                newSocketData(),
+                queue,
+                tracker
+            );
+
+            expect(tracker.close).toHaveBeenCalledWith("conversation.ended:h1", expect.any(Object), endReason);
+        }
+    );
+
+    it("coerces a reason it does not know rather than dropping the interval", () => {
+        const queue = newQueue();
+        const tracker = newTracker();
+
+        processAnalyticsReportMessage(
+            { events: [controlFrame("timed_event.close", { handle: "h1", endReason: "wharrgarbl" })] },
+            newSocketData(),
+            queue,
+            tracker
+        );
+
+        expect(tracker.close).toHaveBeenCalledWith("h1", expect.any(Object), "other");
+    });
+
+    it("treats the control frames as instructions, never as events", () => {
+        const queue = newQueue();
+        const tracker = newTracker();
+
+        processAnalyticsReportMessage(
+            {
+                events: [
+                    controlFrame("timed_event.open", {
+                        handle: "conversation.ended:h1",
+                        eventName: "conversation.ended",
+                        properties: { conversationType: "meeting" },
+                    }),
+                    controlFrame("timed_event.close", { handle: "conversation.ended:h1" }),
+                ],
+            },
+            newSocketData(),
+            queue,
+            tracker
+        );
+
+        expect(tracker.open).toHaveBeenCalledTimes(1);
+        expect(tracker.close).toHaveBeenCalledTimes(1);
+        // Grepping the admin for timed_event.* finds nothing, and that is the point:
+        // these frames drive the tracker and must never reach the pipeline themselves.
+        expect(queue.enqueueEvent).not.toHaveBeenCalled();
     });
 });
