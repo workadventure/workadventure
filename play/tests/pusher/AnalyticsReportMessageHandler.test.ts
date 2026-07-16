@@ -35,7 +35,7 @@ function newSocketData(): SocketData {
 
 function buildEvent(overrides: Partial<{ source: string; eventName: string; eventId: string }> = {}) {
     return {
-        eventName: overrides.eventName ?? "area.entered",
+        eventName: overrides.eventName ?? "chat.message_sent",
         source: (overrides.source ?? "front") as never,
         clientEventTimeMs: 1_000,
         eventId: overrides.eventId ?? "event-id",
