@@ -60,6 +60,19 @@ const ANONYMOUS_SAFE_PROPERTY_KEYS = new Set<string>([
     "connectedAt",
     "disconnectedAt",
     "disconnectReason",
+    // Interval bounds + reason for every timed event (AnalyticsTimedEventTracker).
+    // Pusher-generated ISO instants and an enum: non-PII by construction. Without
+    // these, an anonymized world's conversations would arrive with a durationSeconds
+    // (numbers always survive) but no interval to allocate it over — every query that
+    // needs the start would silently read nothing.
+    //
+    // `endReason`, deliberately NOT `reason`: this allowlist is keyed on the property
+    // key alone, not on (eventName, key), and `reason` is free text on the
+    // experience-issue events (AnalyticsEventCatalog). Allow-listing `reason` to let
+    // this one through would un-strip free-form text on those unrelated families.
+    "startedAt",
+    "endedAt",
+    "endReason",
 ]);
 
 export type AnalyticsEventSource = "front" | "pusher" | "media";

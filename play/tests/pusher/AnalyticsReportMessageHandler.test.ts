@@ -1,4 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+// The handler defaults its tracker argument to the analyticsTimedEventTracker
+// singleton, which pulls AnalyticsEventsQueue and therefore the real environment
+// validation in at import time. Same stub every other pusher test uses.
+vi.mock("../../src/pusher/enums/EnvironmentVariable", () => import("./mocks/pusherEnvironmentVariableMock"));
+
 import type { SocketData } from "../../src/pusher/models/Websocket/SocketData";
 import type { AnalyticsEventInput, AnalyticsEventsQueue } from "../../src/pusher/services/AnalyticsEventsQueue";
 import {
