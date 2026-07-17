@@ -308,14 +308,14 @@ export const EnvironmentVariables = z.object({
             "Secret key used to pseudonymize user identifiers for worlds that opted out of user-level activity metrics. Must be set to the same value on the admin. Without it those worlds report no analytics at all, because a pseudonym anyone can recompute is not a pseudonym: the world's own administrator holds the user list and could hash it to re-identify every row. Changing the value re-pseudonymizes everyone and breaks joins against already-ingested data.",
         ),
     ANALYTICS_DRAIN_TIMEOUT_MS: PositiveIntAsString.optional()
-        .transform((val) => toNumber(val, 30_000))
+        .transform((val) => toNumber(val, 20_000))
         .describe(
-            "Maximum time in milliseconds spent draining the generic analytics queue on SIGTERM / SIGINT before the process exits. Make sure your orchestrator's grace period (e.g. Kubernetes terminationGracePeriodSeconds) is at least this long. Defaults to 30000",
+            "Maximum time in milliseconds spent draining the generic analytics queue on SIGTERM / SIGINT before the process exits. Must stay comfortably BELOW your orchestrator's grace period (Kubernetes terminationGracePeriodSeconds defaults to 30s), not merely equal to it: the drain has to finish and the process exit before SIGKILL lands, or the intervals it just closed die with it. Defaults to 20000, i.e. 10s of headroom under the Kubernetes default. Raising it above the grace period cannot buy more draining — it only converts a clean exit into a kill.",
         ),
     VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS: PositiveIntAsString.optional()
-        .transform((val) => toNumber(val, 30_000))
+        .transform((val) => toNumber(val, 20_000))
         .describe(
-            "Maximum time in milliseconds spent draining the legacy video-quality analytics queue on SIGTERM / SIGINT before the process exits. Defaults to 30000",
+            "Maximum time in milliseconds spent draining the legacy video-quality analytics queue on SIGTERM / SIGINT before the process exits. Both queues drain in parallel and the process waits for both, so the shutdown budget is the LARGER of the two: raising this one alone is enough to push the exit past the grace period. Defaults to 20000",
         ),
     START_ROOM_URL: z.string().optional().describe("Default room URL where users start when accessing the platform"),
 
