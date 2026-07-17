@@ -145,11 +145,13 @@ process.once("uncaughtException", (error) => {
     Sentry.captureException(error);
     shutdown("Uncaught exception", "pusher_crashed", 1);
 });
-process.once("unhandledRejection", (error) => {
-    console.error("Unhandled rejection — closing open analytics intervals before exit", error);
-    Sentry.captureException(error);
-    shutdown("Unhandled rejection", "pusher_crashed", 1);
-});
+// Deliberately NOT hooking unhandledRejection. IoSocketController already listens for
+// it, logs it and lets the pusher keep serving — and that listener is what suppresses
+// Node's default "throw on unhandled rejection". Shutting down here would turn a
+// survivable, logged rejection into the death of the replica, reporting every live
+// conversation on it as pusher_crashed. An analytics handler that manufactures the
+// outage it exists to record is worse than no handler: the process is still healthy,
+// so the intervals it holds are still going to close normally.
 
 // Room API
 if (!ADMIN_API_URL && !ROOM_API_SECRET_KEY) {
