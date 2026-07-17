@@ -4,6 +4,10 @@
     import Input from "../../Components/Input/Input.svelte";
     import TextArea from "../../Components/Input/TextArea.svelte";
     import InputRadioBox from "../../Components/Input/InputRadioBox.svelte";
+    import InputGroupLabel from "../../Components/Input/InputGroupLabel.svelte";
+    import InputHelperText from "../../Components/Input/InputHelperText.svelte";
+    import Button from "../../Components/UI/Button.svelte";
+    import Alert from "../../Components/UI/Alert.svelte";
     import { chatInputFocusStore } from "../../Stores/ChatStore";
     import LL from "../../../i18n/i18n-svelte";
     import { IconLoader, IconPlus, IconTrash } from "@wa-icons";
@@ -89,6 +93,10 @@
     }
 </script>
 
+{#snippet submitSpinner()}
+    <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={16} />
+{/snippet}
+
 <Popup isOpen withAction>
     {#snippet title()}
         <h1 class="text-2xl font-bold">{$LL.chat.poll.create.title()}</h1>
@@ -107,18 +115,20 @@
                     onfocus={focusChatInput}
                     onblur={unfocusChatInput}
                 />
-                <div class="px-3 mt-1 text-xs text-white text-right opacity-50">
+                <InputHelperText align="right">
                     {question.length}/{limits.questionMaxLength}
-                </div>
+                </InputHelperText>
             </div>
 
             <div class="w-full">
                 <div class="flex items-center justify-between gap-3">
-                    <div class="input-label" id="poll-answers-label">{$LL.chat.poll.create.answers()}</div>
-                    <button class="btn btn-light btn-ghost btn-sm" disabled={!canAddAnswer} onclick={addAnswer}>
-                        <IconPlus font-size={16} class="mr-1" />
+                    <InputGroupLabel id="poll-answers-label">{$LL.chat.poll.create.answers()}</InputGroupLabel>
+                    <Button variant="light" appearance="ghost" size="sm" disabled={!canAddAnswer} onclick={addAnswer}>
+                        {#snippet icon()}
+                            <IconPlus font-size={16} />
+                        {/snippet}
                         {$LL.chat.poll.create.addAnswer()}
-                    </button>
+                    </Button>
                 </div>
 
                 <div class="flex flex-col gap-2" role="group" aria-labelledby="poll-answers-label">
@@ -132,26 +142,31 @@
                                 onfocusin={focusChatInput}
                                 onfocusout={unfocusChatInput}
                             />
-                            <button
-                                class="btn btn-light btn-ghost btn-sm"
+                            <Button
+                                variant="light"
+                                appearance="ghost"
+                                size="sm"
+                                square
                                 aria-label={$LL.chat.poll.create.removeAnswer({ index: index + 1 })}
                                 disabled={answers.length <= limits.minAnswers}
                                 onclick={() => removeAnswer(index)}
                             >
-                                <IconTrash font-size={16} />
-                            </button>
+                                {#snippet icon()}
+                                    <IconTrash font-size={16} />
+                                {/snippet}
+                            </Button>
                         </div>
                     {/each}
                 </div>
 
-                <div class="px-3 mt-1 text-xs text-white opacity-50">
+                <InputHelperText>
                     {$LL.chat.poll.create.answerCount({ count: normalizedAnswers.length, max: limits.maxAnswers })}
-                </div>
+                </InputHelperText>
             </div>
 
             {#if supportedKinds.length > 1}
                 <div class="w-full">
-                    <div class="input-label" id="poll-visibility-label">{$LL.chat.poll.create.visibility()}</div>
+                    <InputGroupLabel id="poll-visibility-label">{$LL.chat.poll.create.visibility()}</InputGroupLabel>
                     <div class="flex gap-2" role="radiogroup" aria-labelledby="poll-visibility-label">
                         {#if supportedKinds.includes("open")}
                             <InputRadioBox
@@ -180,27 +195,26 @@
             {/if}
 
             {#if errorMessage}
-                <div class="w-full rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger-400">{errorMessage}</div>
+                <Alert class="w-full">{errorMessage}</Alert>
             {/if}
         </div>
     {/snippet}
 
     {#snippet action()}
         <div class="flex w-full gap-3">
-            <button class="btn btn-light btn-ghost flex-1 justify-center" onclick={() => modals.close()}>
+            <Button variant="light" appearance="ghost" class="flex-1" onclick={() => modals.close()}>
                 {$LL.chat.poll.create.cancel()}
-            </button>
-            <button
-                data-testid="submitCreatePollButton"
-                class="btn btn-secondary flex-1 justify-center"
+            </Button>
+            <Button
+                variant="secondary"
+                class="flex-1"
+                dataTestId="submitCreatePollButton"
+                icon={isSubmitting ? submitSpinner : undefined}
                 disabled={!canSubmit}
                 onclick={createPoll}
             >
-                {#if isSubmitting}
-                    <IconLoader class="animate-[spin_2s_linear_infinite] mr-2" font-size={16} />
-                {/if}
                 {$LL.chat.poll.create.submit()}
-            </button>
+            </Button>
         </div>
     {/snippet}
 </Popup>
