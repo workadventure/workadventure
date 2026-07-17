@@ -1,5 +1,5 @@
 diff --git a/node_modules/phaser/dist/phaser.esm.js b/node_modules/phaser/dist/phaser.esm.js
-index 9164140..4406a13 100644
+index 07a961e..3d9a420 100644
 --- a/node_modules/phaser/dist/phaser.esm.js
 +++ b/node_modules/phaser/dist/phaser.esm.js
 @@ -208333,6 +208333,16 @@ module.exports = [
@@ -29,7 +29,20 @@ index 9164140..4406a13 100644
      '    Samples samples = getFinalSamples(tile, layerTexCoord);',
      '    vec4 fragColor = samples.color;',
      '    #pragma phaserTemplate(declareSamples)',
-@@ -243957,6 +243970,19 @@ var TilemapGPULayer = new Class({
+@@ -208526,7 +208539,11 @@ module.exports = [
+     '{',
+     '    gl_Position = uProjectionMatrix * vec4(inPosition, 1.0, 1.0);',
+     '    outTexCoord = inTexCoord;',
+-    '    outTileStride = uTileWidthHeightMarginSpacing.xy + uTileWidthHeightMarginSpacing.zz;',
++    '    // WA patch: the stride from one tile to the next is tile size + SPACING (.w), not',
++    '    // + margin (.z). Margin is only the one-off border offset, and getFrameCorner()',
++    '    // already adds it. With margin != spacing the sampled frame drifted by',
++    '    // (spacing - margin) * index, so tiles low in a tileset rendered as unrelated tiles.',
++    '    outTileStride = uTileWidthHeightMarginSpacing.xy + uTileWidthHeightMarginSpacing.ww;',
+     '    #pragma phaserTemplate(vertexProcess)',
+     '}',
+ ].join('\n');
+@@ -243957,6 +243974,19 @@ var TilemapGPULayer = new Class({
                  {
                      index |= 0x20000000;
                  }
@@ -49,7 +62,7 @@ index 9164140..4406a13 100644
                  if (tile.index === -1)
                  {
                      // Set the fourth bit to 1 to indicate an empty tile.
-@@ -246698,7 +246724,11 @@ var Tileset = new Class({
+@@ -246698,7 +246728,11 @@ var Tileset = new Class({
                  var animationDuration = tileDatum.animationDuration;
  
                  // This index maps to an animation, not a single tile.
@@ -93,6 +106,40 @@ index 8f3f66c..b5875e4 100644
      '    Samples samples = getFinalSamples(tile, layerTexCoord);',
      '    vec4 fragColor = samples.color;',
      '    #pragma phaserTemplate(declareSamples)',
+diff --git a/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-vert.js b/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-vert.js
+index 83dc1e9..e65229a 100644
+--- a/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-vert.js
++++ b/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-vert.js
+@@ -21,7 +21,11 @@ module.exports = [
+     '{',
+     '    gl_Position = uProjectionMatrix * vec4(inPosition, 1.0, 1.0);',
+     '    outTexCoord = inTexCoord;',
+-    '    outTileStride = uTileWidthHeightMarginSpacing.xy + uTileWidthHeightMarginSpacing.zz;',
++    '    // WA patch: the stride from one tile to the next is tile size + SPACING (.w), not',
++    '    // + margin (.z). Margin is only the one-off border offset, and getFrameCorner()',
++    '    // already adds it. With margin != spacing the sampled frame drifted by',
++    '    // (spacing - margin) * index, so tiles low in a tileset rendered as unrelated tiles.',
++    '    outTileStride = uTileWidthHeightMarginSpacing.xy + uTileWidthHeightMarginSpacing.ww;',
+     '    #pragma phaserTemplate(vertexProcess)',
+     '}',
+ ].join('\n');
+diff --git a/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.vert b/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.vert
+index f0976f0..9b03dd8 100644
+--- a/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.vert
++++ b/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.vert
+@@ -31,7 +31,11 @@ void main ()
+     gl_Position = uProjectionMatrix * vec4(inPosition, 1.0, 1.0);
+ 
+     outTexCoord = inTexCoord;
+-    outTileStride = uTileWidthHeightMarginSpacing.xy + uTileWidthHeightMarginSpacing.zz;
++    // WA patch: the stride from one tile to the next is tile size + SPACING (.w), not
++    // + margin (.z). Margin is only the one-off border offset, and getFrameCorner()
++    // already adds it. With margin != spacing the sampled frame drifted by
++    // (spacing - margin) * index, so tiles low in a tileset rendered as unrelated tiles.
++    outTileStride = uTileWidthHeightMarginSpacing.xy + uTileWidthHeightMarginSpacing.ww;
+ 
+     #pragma phaserTemplate(vertexProcess)
+ }
 diff --git a/node_modules/phaser/src/tilemaps/TilemapGPULayer.js b/node_modules/phaser/src/tilemaps/TilemapGPULayer.js
 index 272bb1c..a895ab8 100644
 --- a/node_modules/phaser/src/tilemaps/TilemapGPULayer.js
