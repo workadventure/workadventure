@@ -307,6 +307,35 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await expect(page.getByText(chatMessageContent)).toBeAttached();
     });
 
+    test("Validating an edition with Enter does not send the in-progress draft", async ({ browser }) => {
+        await using page = await getPage(browser, "Alice", Map.url("empty"));
+        await oidcMatrixUserLogin(page);
+        await ChatUtils.openChat(page);
+        await ChatUtils.openCreateRoomDialog(page);
+        const publicChatRoomName = ChatUtils.getRandomName();
+        await page.getByTestId("createRoomName").fill(publicChatRoomName);
+        await page.getByPlaceholder("Users").click();
+        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByTestId("createRoomButton").click();
+        await page.getByText(publicChatRoomName).click();
+        const chatMessageContent = "This is a test message";
+        const chatMessageEdited = "This is a test edited message";
+        const draftInProgress = "This draft must not be sent";
+        // Send a first message that we will edit later.
+        await page.getByTestId("messageInput").fill(chatMessageContent);
+        await page.getByTestId("sendMessageButton").click();
+        // Start writing a new message in the composer, but do NOT send it.
+        await page.getByTestId("messageInput").fill(draftInProgress);
+        // Edit the first message and validate the edition with Enter.
+        await page.getByTestId("editMessageButton").click();
+        await page.getByTestId("editMessageInput").fill(chatMessageEdited);
+        await page.getByTestId("editMessageInput").press("Enter");
+        // The edition is applied...
+        await expect(page.getByText(chatMessageEdited)).toBeAttached();
+        // ...and the in-progress draft is still in the composer (i.e. it was NOT sent: sending clears it).
+        await expect(page.getByTestId("messageInput")).toHaveText(draftInProgress);
+    });
+
     // test("Create a private chat room", async ({ browser }) => {
     //   await using page = await getPage(browser, 'Alice', Map.url("empty"));
     //   await oidcMatrixUserLogin(page);

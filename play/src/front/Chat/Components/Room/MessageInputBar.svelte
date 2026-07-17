@@ -19,7 +19,7 @@
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { defaultNativeIntegrationAppName } from "@workadventure/shared-utils";
     import { hasChatRoomPollCreation, type ChatConversation } from "../../Connection/ChatConnection";
-    import { selectedChatMessageToReply } from "../../Stores/ChatStore";
+    import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import LL from "../../../../i18n/i18n-svelte";
@@ -134,7 +134,9 @@
             keyDownEvent.preventDefault();
         }
 
-        if (keyDownEvent.key === "Enter" && !isEmptyMessage) {
+        // When a message edition is in progress, the Enter key must only validate the edition. Never
+        // send the in-progress draft from the composer, even if it still holds the focus.
+        if (keyDownEvent.key === "Enter" && !isEmptyMessage && $selectedChatMessageToEdit === null) {
             // message contains HTML tags. Actually, the only tags we allow are for the new line, ie. <br> tags.
             // We can turn those back into carriage returns.
             const messageToSend = message.replace(/<br>/g, "\n");

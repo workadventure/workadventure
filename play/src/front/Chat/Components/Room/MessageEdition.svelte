@@ -1,5 +1,6 @@
 <script lang="ts">
     import { get } from "svelte/store";
+    import { onMount } from "svelte";
     import type { ChatMessage } from "../../Connection/ChatConnection";
     import { selectedChatMessageToEdit } from "../../Stores/ChatStore";
     import LL from "../../../../i18n/i18n-svelte";
@@ -27,12 +28,42 @@
             }, 2000);
         }
     }
+
+    function editMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
+        // Shift+Enter (or any other key) keeps the default behaviour, e.g. inserting a new line.
+        if (keyDownEvent.key !== "Enter" || keyDownEvent.shiftKey) {
+            return;
+        }
+        // Enter validates the edition instead of inserting a new line.
+        keyDownEvent.preventDefault();
+        editMessage(inputValue).catch((error) => console.error(error));
+    }
+
+    onMount(() => {
+        // Move the focus (and caret) into the edition input so that keystrokes - and especially the
+        // Enter used to validate the edition - are handled here and do not leak to the message
+        // composer, which would otherwise send the in-progress draft alongside the edition.
+        if (!messageInput) {
+            return;
+        }
+        messageInput.focus();
+        const selection = window.getSelection();
+        if (!selection) {
+            return;
+        }
+        const range = document.createRange();
+        range.selectNodeContents(messageInput);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    });
 </script>
 
 <div>
     <MessageInput
         bind:message={inputValue}
         bind:messageInput
+        onkeydown={editMessageOrEscapeLine}
         dataTestid="editMessageInput"
         inputClass=" p-1  !m-0 px-2 max-h-36 overflow-auto w-full h-full rounded-md !leading-6 block !text-sm !text-white !bg-white/20 placeholder:text-sm  !text-black border  resize-none  shadow-none focus:ring-0"
         dataText={$LL.chat.enter()}
