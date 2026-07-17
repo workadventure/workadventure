@@ -999,12 +999,13 @@ export class GameRoom implements BrothersFinder {
     }
 
     public removeVariableListener(socket: VariableSocket) {
-        let listenersSet = this.variableListeners.get(socket.request.name);
-        if (!listenersSet) {
-            listenersSet = new Set<VariableSocket>();
-            this.variableListeners.set(socket.request.name, listenersSet);
+        const listenersSet = this.variableListeners.get(socket.request.name);
+        if (listenersSet) {
+            listenersSet.delete(socket);
+            if (listenersSet.size === 0) {
+                this.variableListeners.delete(socket.request.name);
+            }
         }
-        listenersSet.add(socket);
     }
 
     public addEventListener(socket: EventSocket) {
