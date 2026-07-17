@@ -11,6 +11,7 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
     import ExternalComponents from "../ExternalModules/ExternalComponents.svelte";
+    import Button from "../UI/Button.svelte";
     import TodoTask from "./TodoTask.svelte";
     import { IconChevronRight } from "@wa-icons";
 
@@ -75,11 +76,11 @@
                         <p class="text-xs text-left">{$LL.externalModule.teams.connectToYourTeams()}</p>
                         -->
                         {#if get(externalSvelteComponentService.getComponentsByZone("todoListButton")).size === 0}
-                            <button
-                                class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+                            <Button
+                                class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1"
                                 onclick={goToLoginPage}
                                 >{$LL.menu.profile.login()}
-                            </button>
+                            </Button>
                         {/if}
                     </div>
                 {/if}

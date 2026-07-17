@@ -2,6 +2,7 @@
     import { duplicateUserConnectedStore } from "../../Stores/DuplicateUserConnectedStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { localUserStore } from "../../Connection/LocalUserStore";
+    import Button from "./Button.svelte";
 
     let dontRemindAgain = $state(false);
 
@@ -41,14 +42,14 @@
                 <span>{$LL.warning.duplicateUserConnected.dontRemindAgain()}</span>
             </label>
             <div class="mt-6 flex justify-center">
-                <button
+                <Button
                     type="button"
-                    class="btn btn-secondary"
+                    variant="secondary"
                     onclick={confirmAndContinue}
-                    data-testid="duplicate-user-confirm-continue"
+                    dataTestId="duplicate-user-confirm-continue"
                 >
                     {$LL.warning.duplicateUserConnected.confirmContinue()}
-                </button>
+                </Button>
             </div>
         </div>
     </div>

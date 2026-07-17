@@ -3,6 +3,7 @@
     import { get } from "svelte/store";
     import LL from "../../../../i18n/i18n-svelte";
     import type { ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration } from "../../Connection/ChatConnection";
+    import Button from "../../../Components/UI/Button.svelte";
     import ManageParticipantsModal from "./ManageParticipantsModal.svelte";
     import RoomSidePanelParticipantRow from "./RoomSidePanelParticipantRow.svelte";
     import { IconLoader } from "@wa-icons";
@@ -82,13 +83,9 @@
         {:else if membersLoadingError}
             <div class="flex flex-col items-center justify-center gap-3 py-8 px-2 text-center">
                 <p class="text-sm text-red-100">{$LL.chat.manageRoomUsers.error()} : {membersLoadingError}</p>
-                <button
-                    type="button"
-                    class="btn btn-secondary"
-                    onclick={() => loadMembers().catch((e) => console.error(e))}
-                >
+                <Button variant="secondary" onclick={() => loadMembers().catch((e) => console.error(e))}>
                     {$LL.chat.load()}
-                </button>
+                </Button>
             </div>
         {:else if joinedMembers.length === 0}
             <div

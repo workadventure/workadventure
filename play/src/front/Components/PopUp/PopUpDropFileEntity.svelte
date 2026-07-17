@@ -21,6 +21,7 @@
     import { isTodoListVisibleStore } from "../../Stores/TodoListStore";
     import { warningMessageStore } from "../../Stores/ErrorStore";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
+    import Button from "../UI/Button.svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
     import DropFileEntityPicker from "./DropFileEntityPicker.svelte";
 
@@ -148,15 +149,11 @@
     </div>
 
     {#snippet buttons()}
-        <button
-            class="btn btn-secondary btn-sm w-full max-w-96 justify-center"
-            onclick={onSave}
-            data-testid="dropFileSave"
-        >
+        <Button variant="secondary" size="sm" class="w-full max-w-96" onclick={onSave} dataTestId="dropFileSave">
             {$LL.mapEditor.entityEditor.buttons.save()}
-        </button>
-        <button class="btn bg-white/10 hover:bg-white/30 btn-sm w-full max-w-96 justify-center" onclick={removePopup}>
+        </Button>
+        <Button size="sm" class="bg-white/10 hover:bg-white/30 w-full max-w-96" onclick={removePopup}>
             {$LL.mapEditor.entityEditor.buttons.cancel()}
-        </button>
+        </Button>
     {/snippet}
 </PopUpContainer>

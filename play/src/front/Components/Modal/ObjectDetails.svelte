@@ -14,6 +14,7 @@
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
+    import Button from "../UI/Button.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { warningMessageStore } from "../../Stores/ErrorStore";
@@ -216,12 +217,12 @@
             </div>
             <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
                 <div class="flex flex-row justify-center w-full gap-2">
-                    <button class="btn btn-outline w-full hover:bg-contrast-600/50" onclick={close}
+                    <Button class="btn-outline w-full hover:bg-contrast-600/50" onclick={close}
                         >{$LL.mapEditor.explorer.details.close()}
-                    </button>
-                    <button class="btn btn-secondary w-full whitespace-nowrap" onclick={goTo}>
+                    </Button>
+                    <Button variant="secondary" class="w-full whitespace-nowrap" onclick={goTo}>
                         {actionButtonText}
-                    </button>
+                    </Button>
                 </div>
             </div>
         {:else if $mapExplorationObjectSelectedStore instanceof AreaPreview}
@@ -240,12 +241,12 @@
             </div>
             <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
                 <div class="flex flex-row justify-center w-full gap-2">
-                    <button class="btn btn-outline w-full hover:bg-contrast-600/50" onclick={close}>
+                    <Button class="btn-outline w-full hover:bg-contrast-600/50" onclick={close}>
                         {$LL.mapEditor.explorer.details.close()}
-                    </button>
-                    <button class="btn btn-secondary w-full whitespace-nowrap" onclick={goTo}>
+                    </Button>
+                    <Button variant="secondary" class="w-full whitespace-nowrap" onclick={goTo}>
                         {actionButtonText}
-                    </button>
+                    </Button>
                 </div>
             </div>
         {/if}

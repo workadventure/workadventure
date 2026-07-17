@@ -5,6 +5,7 @@
     import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import Button from "../UI/Button.svelte";
     import { IconX, IconArrowsMaximize, IconArrowsMinimize } from "@wa-icons";
 
     let modalIframe: HTMLIFrameElement | undefined = $state();
@@ -84,30 +85,39 @@
         >
             {#if modalUrl != undefined}
                 {#if $modalIframeStore?.allowFullScreen}
-                    <button
-                        class="btn btn-light btn-ghost rounded hidden @lg/main-layout:block"
+                    <Button
+                        variant="light"
+                        appearance="ghost"
+                        square
+                        class="rounded hidden @lg/main-layout:block"
                         onclick={() => (isFullScreened = !isFullScreened)}
                     >
-                        {#if isFullScreened}
-                            <IconArrowsMinimize font-size="20" class="text-white" />
-                        {:else}
-                            <IconArrowsMaximize font-size="20" class="text-white" />
-                        {/if}
-                    </button>
+                        {#snippet icon()}
+                            {#if isFullScreened}
+                                <IconArrowsMinimize font-size="20" class="text-white" />
+                            {:else}
+                                <IconArrowsMaximize font-size="20" class="text-white" />
+                            {/if}
+                        {/snippet}
+                    </Button>
                 {/if}
             {/if}
             {#if $modalIframeStore?.closable == undefined || $modalIframeStore?.closable == true}
-                <button
+                <Button
                     onclick={(event) => {
                         event.preventDefault();
                         close();
                     }}
-                    class="btn btn-danger rounded m-0"
+                    variant="danger"
+                    square
+                    class="rounded m-0"
                     style={isFullScreened == true ? "" : "margin: 0px;"}
-                    data-testid="close-modal-button"
+                    dataTestId="close-modal-button"
                 >
-                    <IconX font-size="20" class="text-white" />
-                </button>
+                    {#snippet icon()}
+                        <IconX font-size="20" class="text-white" />
+                    {/snippet}
+                </Button>
             {/if}
         </div>
         {#if modalUrl != undefined}

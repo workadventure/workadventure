@@ -10,6 +10,7 @@
     import outlookSvg from "../images/applications/outlook.svg";
     import calendarPng from "../images/applications/calendar.png";
     import ButtonClose from "../Input/ButtonClose.svelte";
+    import Button from "../UI/Button.svelte";
     import { userIsConnected } from "../../Stores/MenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
@@ -98,11 +99,12 @@
                         <p class="text-xs text-left">{$LL.externalModule.teams.connectToYourTeams()}</p>
                         -->
                         {#if get(externalSvelteComponentService.getComponentsByZone("calendarButton")).size == 0}
-                            <button
-                                class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+                            <Button
+                                class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1"
                                 onclick={goToLoginPage}
-                                >{$LL.menu.profile.login()}
-                            </button>
+                            >
+                                {$LL.menu.profile.login()}
+                            </Button>
                         {/if}
                     </div>
                 {/if}

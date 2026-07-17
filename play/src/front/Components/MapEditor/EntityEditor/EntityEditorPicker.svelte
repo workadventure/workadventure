@@ -16,6 +16,7 @@
     } from "../../../Stores/MapEditorStore";
     import Input from "../../Input/Input.svelte";
     import ButtonClose from "../../Input/ButtonClose.svelte";
+    import Button from "../../UI/Button.svelte";
     import CustomEntityEditionForm from "./CustomEntityEditionForm/CustomEntityEditionForm.svelte";
     import EntitiesGrid from "./EntitiesGrid.svelte";
     import EntityImage from "./EntityItem/EntityImage.svelte";
@@ -329,12 +330,16 @@
                             />
                         </div>
                         {#if pickedEntity.type === "Custom"}
-                            <button
-                                class="btn btn-secondary"
-                                data-testid="editEntity"
+                            <Button
+                                variant="secondary"
+                                dataTestId="editEntity"
                                 onclick={() => setIsEditingCustomEntity(true)}
-                                ><IconPencil font-size={16} />{$LL.mapEditor.entityEditor.buttons.editEntity()}</button
                             >
+                                {#snippet icon()}
+                                    <IconPencil font-size={16} />
+                                {/snippet}
+                                {$LL.mapEditor.entityEditor.buttons.editEntity()}
+                            </Button>
                         {/if}
                         <div class="absolute top-1 right-1 p-1">
                             <ButtonClose

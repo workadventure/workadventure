@@ -6,6 +6,7 @@
     import Input from "../../Input/Input.svelte";
     import PopUpContainer from "../../PopUp/PopUpContainer.svelte";
     import ButtonClose from "../../Input/ButtonClose.svelte";
+    import Button from "../../UI/Button.svelte";
     import { modals } from "@wa-modals";
 
     let defaultConfig: LivekitRoomConfigData = {
@@ -119,16 +120,17 @@
 
                 {#snippet buttons()}
                     <div class="w-full flex justify-between gap-2 p-2">
-                        <button class=" btn btn-light btn-border w-full h-12" onclick={() => modals.close()}>
+                        <Button variant="light" appearance="border" class="w-full h-12" onclick={() => modals.close()}>
                             {$LL.mapEditor.properties.livekitRoomProperty.livekitRoomConfig.cancel()}
-                        </button>
-                        <button
-                            class=" btn btn-secondary w-full h-12"
-                            data-testid="livekitRoomConfigValidateButton"
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            class="w-full h-12"
+                            dataTestId="livekitRoomConfigValidateButton"
                             onclick={saveAndClose}
                         >
                             {$LL.mapEditor.properties.livekitRoomProperty.livekitRoomConfig.validate()}
-                        </button>
+                        </Button>
                     </div>
                 {/snippet}
             </PopUpContainer>
@@ -150,10 +152,6 @@
                 margin-bottom: 0.25em;
                 padding-top: 0.25em;
                 padding-bottom: 0.25em;
-            }
-
-            button {
-                padding: 0;
             }
         }
     }
