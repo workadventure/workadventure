@@ -64,7 +64,7 @@
         const text = event.clipboardData.getData("text");
 
         insertTextAtCursor(text);
-        message = messageInput?.innerHTML ?? "";
+        message = messageInput?.innerText ?? "";
         event.preventDefault();
     }
     function insertTextAtCursor(text: string) {
@@ -105,7 +105,7 @@
 {#if !disabled}
     <div
         data-testid={dataTestid}
-        bind:innerHTML={message}
+        bind:innerText={message}
         contenteditable="true"
         bind:this={messageInput}
         onkeydown={handleKeyDown}
@@ -125,7 +125,7 @@
 {:else}
     <div
         data-testid={dataTestid}
-        bind:innerHTML={message}
+        bind:innerText={message}
         contenteditable="false"
         bind:this={messageInput}
         class={`${inputClass} opacity-70/50 cursor-not-allowed`}

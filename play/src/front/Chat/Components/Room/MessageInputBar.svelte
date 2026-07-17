@@ -126,7 +126,7 @@
         }
         if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
 
-        const isEmptyMessage = message.replace(/<br>/g, "").trim() == "" || message == undefined;
+        const isEmptyMessage = message == undefined || message.trim() === "";
         if (keyDownEvent.key === "Enter" || isEmptyMessage) {
             room.stopTyping().catch((error) => console.error(error));
         } else {
@@ -148,10 +148,7 @@
         }
 
         if (keyDownEvent.key === "Enter" && !isEmptyMessage) {
-            // message contains HTML tags. Actually, the only tags we allow are for the new line, ie. <br> tags.
-            // We can turn those back into carriage returns.
-            const messageToSend = message.replace(/<br>/g, "\n");
-            sendMessage(messageToSend).catch((error) => console.error(error));
+            sendMessage(message).catch((error) => console.error(error));
         }
     }
 
@@ -207,9 +204,7 @@
     }
 
     function onInputHandler() {
-        // We remove the <br> tags and the whitespace to check if the message is empty
-        const messageToSend = message.replace(/<br>/g, "").trim();
-        if (messageToSend == "" || messageToSend == undefined) {
+        if (message == undefined || message.trim() === "") {
             if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
             room.stopTyping().catch((error) => console.error(error));
         }

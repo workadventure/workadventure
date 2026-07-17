@@ -83,6 +83,7 @@ import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { waitForGameSceneStore } from "../../../Stores/GameSceneStore";
 import { ProximityChatRoom } from "../Proximity/ProximityChatRoom";
+import { htmlSerializeIfNeeded } from "../../Services/MessageFormatter";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatLightPoll } from "./MatrixChatLightPoll";
 import { MatrixChatPoll } from "./MatrixChatPoll";
@@ -1709,8 +1710,8 @@ export class MatrixChatRoom
     }
 
     sendMessage(message: string) {
-        this.matrixRoom.client
-            .sendMessage(this.matrixRoom.roomId, this.getMessageContent(message))
+        this.getMessageContent(message)
+            .then((content) => this.matrixRoom.client.sendMessage(this.matrixRoom.roomId, content))
             .then(() => {
                 selectedChatMessageToReply.set(null);
             })
@@ -1764,8 +1765,15 @@ export class MatrixChatRoom
         return threadConversation;
     }
 
-    private getMessageContent(message: string): RoomMessageEventContent {
-        const content: RoomMessageEventContent = { body: message, msgtype: MsgType.Text, formatted_body: message };
+    private async getMessageContent(message: string): Promise<RoomMessageEventContent> {
+        const formattedBody = await htmlSerializeIfNeeded(message);
+        const content: RoomMessageEventContent = {
+            body: message,
+            msgtype: MsgType.Text,
+            // `formatted_body` is only honoured by receiving clients when `format` comes along with it,
+            // and it is only worth sending when the Markdown rendering adds something to the body.
+            ...(formattedBody !== undefined ? { format: "org.matrix.custom.html", formatted_body: formattedBody } : {}),
+        };
         this.applyReplyContentIfReplyTo(content);
         return content;
     }
