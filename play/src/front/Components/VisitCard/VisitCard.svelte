@@ -8,6 +8,7 @@
     import chat from "../images/chat.png";
 
     import ButtonClose from "../Input/ButtonClose.svelte";
+    import Button from "../UI/Button.svelte";
     import Spinner from "../Icons/Spinner.svelte";
     import { IconLoader } from "@wa-icons";
 
@@ -82,14 +83,17 @@
             <div class="buttonContainer p-2.5 flex flex-row justify-end gap-2 bg-contrast rounded-b-lg">
                 {#if selectPlayerChatID && showSendMessageButton}
                     {#if !$roomCreationInProgress}
-                        <button
-                            class="btn btn-secondary text-nowrap justify-center m-2 flex-1 min-w-0"
-                            data-testid="sendMessagefromVisitCardButton"
+                        <Button
+                            variant="secondary"
+                            class="text-nowrap m-2 flex-1 min-w-0"
+                            dataTestId="sendMessagefromVisitCardButton"
                             onclick={openChat}
                         >
-                            <img src={chat} alt="chat" class="w-6 h-6 mx-2" draggable="false" />
+                            {#snippet icon()}
+                                <img src={chat} alt="chat" class="w-6 h-6 mx-2" draggable="false" />
+                            {/snippet}
                             {$LL.menu.visitCard.sendMessage()}
-                        </button>
+                        </Button>
                     {:else}
                         <button
                             class="light cursor-pointer px-3 mb-2 mr-0"
@@ -121,7 +125,8 @@
             }
         }
 
-        button {
+        /* Global so it reaches the <button> rendered by <Button> (scoped CSS would not). */
+        :global(button) {
             float: right;
         }
     }

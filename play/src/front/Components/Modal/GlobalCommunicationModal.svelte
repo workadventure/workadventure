@@ -526,8 +526,8 @@
                     </div>
                     <div class="flex flew-row justify-center">
                         {#if !$requestedMegaphoneStore}
-                            <button
-                                class="btn light text-black bg-white mt-4 rounded-md"
+                            <Button
+                                class="font-light text-black bg-white mt-4 rounded-md disabled:bg-[#4a5568] disabled:cursor-not-allowed"
                                 onclick={startLive}
                                 disabled={!$requestedCameraState && !$requestedMicrophoneState}
                             >
@@ -535,7 +535,7 @@
                                     <Tooltip text={$LL.warning.megaphoneNeeds()} />
                                 {/if}
                                 {$LL.megaphone.modal.liveMessage.startMegaphone()}
-                            </button>
+                            </Button>
                         {:else}
                             <Button variant="danger" onclick={stopLive}>
                                 {$LL.megaphone.modal.liveMessage.stopMegaphone()}
@@ -554,10 +554,5 @@
         &:hover {
             scale: 1.1;
         }
-    }
-
-    button.light[disabled] {
-        background-color: #4a5568;
-        cursor: not-allowed;
     }
 </style>

@@ -235,10 +235,14 @@
     </div>
     {#snippet buttons()}
         <div class="tutorial-buttons flex flex-col-reverse sm:flex-row w-full gap-2 sm:gap-2 sm:space-x-2">
-            <button
-                class="btn btn-light btn-sm btn-ghost flex-1 min-h-10 sm:min-h-0 justify-center tutorial-btn-secondary"
-                >View full tutorial</button
+            <Button
+                variant="light"
+                appearance="ghost"
+                size="sm"
+                class="flex-1 min-h-10 sm:min-h-0 tutorial-btn-secondary"
             >
+                View full tutorial
+            </Button>
             <Button variant="secondary" size="sm" class="flex-1 min-h-10 sm:min-h-0" onclick={closeBanner}>
                 Close
             </Button>
@@ -249,7 +253,8 @@
 <style>
     /* Responsive: larger touch targets and readable text on small screens */
     @media (max-width: 768px) {
-        .tutorial-btn-secondary {
+        /* Global so it reaches the <button> rendered by <Button> (scoped CSS would not). */
+        :global(.tutorial-btn-secondary) {
             font-size: 0.9375rem; /* Slightly larger for readability */
         }
     }

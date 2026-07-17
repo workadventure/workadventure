@@ -10,6 +10,7 @@
     import PopUpContainer from "../PopUp/PopUpContainer.svelte";
     import Button from "../UI/Button.svelte";
     import Chip from "../UI/Chip.svelte";
+    import InputSearch from "../Input/InputSearch.svelte";
 
     interface RoomData {
         name: string;
@@ -93,13 +94,14 @@
                         <div class="w-full flex flex-col items-start gap-2 px-6">
                             <label for="search" class="text-white pl-2">{$LL.mapEditor.listRoom.searchLabel()}</label>
                             <div class="relative flex grow w-full">
-                                <input
+                                <InputSearch
                                     id="search"
                                     type="text"
+                                    size="lg"
                                     placeholder={$LL.mapEditor.listRoom.searchPlaceholder()}
                                     bind:value={search}
                                     oninput={onUpdateSearch}
-                                    class="grow input-search input-search-lg peer w-full"
+                                    class="grow peer w-full"
                                 />
                                 <svg
                                     class="icon icon-tabler icon-tabler-search stroke-contrast-400 absolute top-0 bottom-0 right-5 m-auto peer-focus:stroke-secondary peer-hover:stroke-secondary-500 transition-all peer-focus:-translate-x-1"
