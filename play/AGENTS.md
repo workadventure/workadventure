@@ -1,6 +1,7 @@
 # AGENTS.md - play/
 
-Svelte/Phaser frontend, pusher server, and Room API server.
+Svelte/Phaser frontend, pusher server, and Room API server. UI components are developed and tested in isolation with
+Storybook (`npm run storybook`).
 
 ## Areas
 
@@ -20,10 +21,14 @@ npm run svelte-check
 npm run lint
 npm run pretty-check
 npm test
+npm run test:storybook
 npm run build
 ```
 
 Prefer checks over mutating commands during validation. Use `npm run lint-fix` and `npm run pretty` only when fixing files.
+
+`npm test` runs the node/jsdom unit suite. `npm run test:storybook` runs the Storybook stories as browser tests (needs
+Playwright's Chromium: `npx playwright install chromium`). See `../docs/agent/svelte.md` and `../docs/agent/testing-vitest.md`.
 
 Run a focused unit test once:
 
