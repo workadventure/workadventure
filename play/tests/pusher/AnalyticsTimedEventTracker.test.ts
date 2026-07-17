@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("../../src/pusher/enums/EnvironmentVariable", () => import("./mocks/pusherEnvironmentVariableMock"));
 
 import type { SocketData } from "../../src/pusher/models/Websocket/SocketData";
+import type { AnalyticsEventInput } from "../../src/pusher/services/AnalyticsEventsQueue";
 import {
     AnalyticsTimedEventTracker,
     MAX_OPEN_TIMED_EVENTS_PER_CONNECTION,
@@ -135,7 +136,7 @@ describe("AnalyticsTimedEventTracker", () => {
         // zero on the headline metric. Probed against ClickHouse: 30 minutes → 0s.
         const calls: string[] = [];
         const queue = {
-            enqueueEvent: vi.fn((event: { eventName: string }) => {
+            enqueueEvent: vi.fn((event: AnalyticsEventInput) => {
                 calls.push(event.eventName);
             }),
         };
@@ -155,7 +156,7 @@ describe("AnalyticsTimedEventTracker", () => {
         expect(calls).toEqual(["user.connected", "conversation.ended", "user.disconnected"]);
         const ended = queue.enqueueEvent.mock.calls[1][0].properties;
         const disconnected = queue.enqueueEvent.mock.calls[2][0].properties;
-        expect(Date.parse(ended.endedAt)).toBeLessThanOrEqual(Date.parse(disconnected.disconnectedAt));
+        expect(timestampOf(ended, "endedAt")).toBeLessThanOrEqual(timestampOf(disconnected, "disconnectedAt"));
     });
 
     it("carries each socket's own context, not the last one seen", () => {
@@ -171,6 +172,22 @@ describe("AnalyticsTimedEventTracker", () => {
         expect(queue.enqueueEvent.mock.calls.map((call) => call[1])).toEqual([first, second]);
     });
 });
+
+/**
+ * Reads an ISO timestamp out of an emitted event's properties.
+ *
+ * They are typed JsonValue, so narrowing here rather than casting: a property that stopped being a
+ * string would otherwise stringify to something Date.parse turns into NaN, and every comparison
+ * against NaN is false — the test would fail, but pointing at the wrong thing.
+ */
+function timestampOf(properties: AnalyticsEventInput["properties"], key: string): number {
+    const value = properties[key];
+    if (typeof value !== "string") {
+        throw new Error(`Expected ${key} to be an ISO string, got ${typeof value}`);
+    }
+
+    return Date.parse(value);
+}
 
 function socketDataFixture(overrides: Partial<SocketData> = {}): SocketData {
     return {
