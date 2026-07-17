@@ -447,7 +447,7 @@
     }
 
     // Re-run scroll indicator check when layout or content changes
-    $effect(() => {
+    $effect.pre(() => {
         if (camerasContainer) {
             const _exhaustiveCheck = [
                 $oneLineStreamableCollectionStore,
