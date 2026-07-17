@@ -2,6 +2,7 @@
     import type { LivekitRoomConfigData, LivekitRoomPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
+    import Button from "../../UI/Button.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import LivekitRoomConfigEditor from "./LivekitRoomConfigEditor.svelte";
     import { IconUsersGroup } from "@wa-icons";
@@ -69,33 +70,37 @@
                     onchange={onValueChange}
                 />
             </div>
-            <button
-                class="w-full mt-4 btn bg-transparent rounded-md hover:!bg-white/10 transition-all border !border-white py-2"
+            <Button
+                class="livekit-config-btn w-full mt-4 bg-transparent rounded-md hover:!bg-white/10 transition-all border !border-white py-2"
                 onclick={OpenPopup}
-                data-testid="livekitRoomMoreOptionsButton"
+                dataTestId="livekitRoomMoreOptionsButton"
             >
                 {$LL.mapEditor.properties.livekitRoomProperty.moreOptionsLabel()}
-            </button>
+            </Button>
             {#if !hasHighlightProperty}
-                <button
-                    class=" btn btn-sm btn-light btn-ghost w-full"
+                <Button
+                    variant="light"
+                    appearance="ghost"
+                    size="sm"
+                    class="livekit-config-btn w-full"
                     onclick={() => {
                         onhighlightareaonenter?.();
                     }}
                 >
                     {$LL.mapEditor.properties.livekitRoomProperty.highlightAreaOnEnter()}
-                </button>
+                </Button>
             {/if}
         </span>
     {/snippet}
 </PropertyEditorBase>
 
 <style>
-    button {
+    /* Global so it reaches the <button> rendered by <Button> (scoped CSS would not). */
+    :global(.livekit-config-btn) {
         flex: 1 1 0px;
         border: 1px solid grey;
     }
-    button:hover {
+    :global(.livekit-config-btn):hover {
         background-color: rgb(77 75 103);
     }
 </style>

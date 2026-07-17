@@ -9,6 +9,7 @@
     } from "../../Connection/ChatConnection";
     import type { WorkAdventureComponent } from "../../../../types/component";
     import LL, { locale } from "../../../../i18n/i18n-svelte";
+    import AvatarBox from "../../../Components/UI/Avatar.svelte";
     import Avatar from "../Avatar.svelte";
 
     import { resolveChatUserColor } from "../../Connection/Matrix/services/WaMatrixProfileService";
@@ -143,14 +144,14 @@
             : 'justify-start pl-3'}"
     >
         {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0 && showHeader}
-            <div class="avatar overflow-hidden mt-4 shrink-0">
+            <AvatarBox class="overflow-hidden mt-4 shrink-0">
                 <Avatar
                     compact
                     pictureStore={messageAvatarPictureStore}
                     fallbackName={sender?.username}
                     color={messageSenderAvatarColor}
                 />
-            </div>
+            </AvatarBox>
         {/if}
 
         <div class="flex flex-col justify-end max-w-full {replyDepth === 0 && !showHeader ? 'ml-12' : ''}">
