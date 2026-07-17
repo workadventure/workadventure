@@ -10,6 +10,8 @@
     import SelectMatrixUser from "../SelectMatrixUser.svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import Input from "../../../Components/Input/Input.svelte";
+    import InputGroupLabel from "../../../Components/Input/InputGroupLabel.svelte";
+    import Button from "../../../Components/UI/Button.svelte";
     import { modals } from "@wa-modals";
 
     interface Props {
@@ -122,9 +124,9 @@
                 ></textarea>
                 {#if createFolderOptions.visibility === "private"}
                     <div class="flex flex-col items-start gap-1">
-                        <div class="input-label">
+                        <InputGroupLabel id="createFolderUsersLabel">
                             <span>{$LL.chat.createFolder.users()}</span>
-                        </div>
+                        </InputGroupLabel>
                         <SelectMatrixUser
                             onerror={handleSelectMatrixUserError}
                             bind:value={createFolderOptions.invite}
@@ -140,16 +142,17 @@
         {#if loadingFolderCreation}
             <p>{$LL.chat.createFolder.loadingCreation()}</p>
         {:else}
-            <button class="btn btn-contrast flex-1 justify-center" onclick={() => modals.close()}
-                >{$LL.chat.createFolder.buttons.cancel()}</button
+            <Button variant="contrast" class="flex-1" onclick={() => modals.close()}
+                >{$LL.chat.createFolder.buttons.cancel()}</Button
             >
-            <button
-                data-testid="createFolderButton"
-                class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+            <Button
+                dataTestId="createFolderButton"
+                variant="secondary"
+                class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1"
                 disabled={createFolderOptions.name === undefined || createFolderOptions.name?.trim().length === 0}
                 onclick={() => createNewFolder(createFolderOptions)}
                 >{$LL.chat.createFolder.buttons.create()}
-            </button>
+            </Button>
         {/if}
     {/snippet}
 </Popup>

@@ -1,5 +1,6 @@
 <script lang="ts">
     import Popup from "../../Components/Modal/Popup.svelte";
+    import Button from "../../Components/UI/Button.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { modals } from "@wa-modals";
@@ -29,14 +30,11 @@
     {/snippet}
 
     {#snippet action()}
-        <button
-            class="btn border border-solid border-white/10 hover:bg-white/10 flex-1 justify-center"
-            onclick={() => modals.close()}>{$LL.chat.createFolder.buttons.cancel()}</button
+        <Button class="border border-solid border-white/10 hover:bg-white/10 flex-1" onclick={() => modals.close()}
+            >{$LL.chat.createFolder.buttons.cancel()}</Button
         >
-        <button
-            class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
-            onclick={goToLoginPage}
+        <Button class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1" onclick={goToLoginPage}
             >{$LL.menu.profile.login()}
-        </button>
+        </Button>
     {/snippet}
 </Popup>

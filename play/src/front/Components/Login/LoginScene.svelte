@@ -9,6 +9,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import { NameNotValidError, NameTooLongError } from "../../Exception/NameError";
+    import Button from "../UI/Button.svelte";
 
     interface Props {
         game: Game;
@@ -146,12 +147,15 @@
             class="action flex h-fit justify-center m-0"
             class:opacity-50={(name.trim() === "" && startValidating) || errorName !== ""}
         >
-            <button
+            <Button
                 type="submit"
                 disabled={(name.trim() === "" && startValidating) || errorName !== ""}
-                class="mt-4 w-52 md:w-96 bold text-center block btn btn-secondary btn-lg loginSceneFormSubmit"
-                >{$LL.login.continue()}</button
+                variant="secondary"
+                size="lg"
+                class="mt-4 w-52 md:w-96 bold text-center block loginSceneFormSubmit"
             >
+                {$LL.login.continue()}
+            </Button>
         </section>
         {#if legalString}
             <section class="terms-and-conditions h-fit text-center w-full">

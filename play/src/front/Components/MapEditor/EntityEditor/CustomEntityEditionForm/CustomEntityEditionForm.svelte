@@ -7,6 +7,7 @@
     import Select from "../../../Input/Select.svelte";
     import Input from "../../../Input/Input.svelte";
     import InputCheckbox from "../../../Input/InputCheckbox.svelte";
+    import Button from "../../../UI/Button.svelte";
     import LogoCollisionGrid from "./LogoCollisionGrid.svg";
     import EntityEditionCollisionGrid from "./EntityEditionCollisionGrid.svelte";
 
@@ -185,27 +186,31 @@
     {/if}
     <div class="flex gap-2 flex-wrap justify-center w-full text-sm">
         {#if !isUploadForm}
-            <button
-                class="btn-lg btn btn-danger w-full"
-                data-testid="removeEntity"
+            <Button
+                size="lg"
+                variant="danger"
+                class="w-full"
+                dataTestId="removeEntity"
                 onclick={() => removeEntity({ entityId: customEntity.id })}
-                >{$LL.mapEditor.entityEditor.buttons.delete()}</button
             >
+                {$LL.mapEditor.entityEditor.buttons.delete()}
+            </Button>
         {/if}
 
         <div class="flex gap-2 w-full mt-2">
-            <button class="btn-lg btn btn-contrast w-full" onclick={closeForm}
-                >{$LL.mapEditor.entityEditor.buttons.cancel()}</button
-            >
+            <Button size="lg" variant="contrast" class="w-full" onclick={closeForm}>
+                {$LL.mapEditor.entityEditor.buttons.cancel()}
+            </Button>
 
-            <button
-                class="btn-lg btn btn-secondary w-full"
-                data-testid="applyEntityModifications"
+            <Button
+                size="lg"
+                variant="secondary"
+                class="w-full"
+                dataTestId="applyEntityModifications"
                 onclick={() => applyEntityModifications(getModifiedCustomEntity())}
-                >{isUploadForm
-                    ? $LL.mapEditor.entityEditor.buttons.upload()
-                    : $LL.mapEditor.entityEditor.buttons.save()}</button
             >
+                {isUploadForm ? $LL.mapEditor.entityEditor.buttons.upload() : $LL.mapEditor.entityEditor.buttons.save()}
+            </Button>
         </div>
     </div>
 </div>

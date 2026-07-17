@@ -13,6 +13,7 @@
     import { VideoCoWebsite } from "../../../WebRtc/CoWebsite/VideoCoWebsite";
     import DownloadIcon from "../../Icons/DownloadIcon.svelte";
     import { localUserStore } from "../../../Connection/LocalUserStore";
+    import Button from "../../UI/Button.svelte";
     import { IconRefresh, IconTrash, IconCamera, IconLayoutGrid, IconList, IconPlayFilled, IconDots } from "@wa-icons";
 
     const connection: GameScene["connection"] = gameManager.getCurrentGameScene().connection;
@@ -261,9 +262,9 @@
                             !
                         </div>
                         <p class="m-0 text-[0.9375rem] text-red-300">{$LL.recording.errorFetchingRecordings()}</p>
-                        <button class="btn btn-secondary btn-sm" onclick={() => queryRecordings()}>
+                        <Button variant="secondary" size="sm" onclick={() => queryRecordings()}>
                             {$LL.recording.refresh()}
-                        </button>
+                        </Button>
                     </div>
                 {:else if recordings.length === 0}
                     <div class="flex flex-col items-center justify-center gap-3 py-8 px-4 text-center">

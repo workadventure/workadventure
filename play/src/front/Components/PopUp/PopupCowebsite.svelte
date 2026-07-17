@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
     import type { UserInputManager } from "../../Phaser/UserInput/UserInputManager";
+    import Button from "../UI/Button.svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
 
     interface Props {
@@ -23,6 +24,6 @@
 <PopUpContainer reduceOnSmallScreen={true}>
     {message}
     {#snippet buttons()}
-        <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" onclick={click}>Open Website</button>
+        <Button variant="secondary" size="sm" class="w-full max-w-96" onclick={click}>Open Website</Button>
     {/snippet}
 </PopUpContainer>

@@ -4,6 +4,7 @@
     import { getNavigatorType, isAndroid as isAndroidFct, NavigatorType } from "../../WebRtc/DeviceUtils";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import Button from "../UI/Button.svelte";
     import { IconInfoCircle } from "@wa-icons";
 
     let isAndroid = isAndroidFct();
@@ -70,24 +71,25 @@
         </div>
     </section>
     <section class="flex row justify-center p-4 bg-contrast">
-        <button
-            class="btn bg-white/10 hover:bg-white/20 mr-2 w-full justify-center"
+        <Button
+            class="bg-white/10 hover:bg-white/20 mr-2 w-full"
             onclick={(event) => {
                 event.preventDefault();
                 refresh();
             }}
         >
             {$LL.notification.help.refresh()}
-        </button>
-        <button
+        </Button>
+        <Button
             type="submit"
-            class="btn btn-danger w-full justify-center"
+            variant="danger"
+            class="w-full"
             onclick={(event) => {
                 event.preventDefault();
                 close();
             }}
         >
             {$LL.notification.help.continue()}
-        </button>
+        </Button>
     </section>
 </form>

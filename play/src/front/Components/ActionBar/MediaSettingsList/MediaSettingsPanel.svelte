@@ -25,6 +25,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { showHelpCameraSettings } from "../../../Stores/HelpSettingsStore";
     import InputSwitch from "../../Input/InputSwitch.svelte";
+    import Button from "../../UI/Button.svelte";
     import SectionDivider from "./SectionDivider.svelte";
     import SectionTitle from "./SectionTitle.svelte";
     import DeviceListItem from "./DeviceListItem.svelte";
@@ -151,19 +152,21 @@
             {#if $silentStore == false}
                 <div class="group flex items-center relative z-10 py-1 px-2 overflow-hidden">
                     {#if cameraDenied}
-                        <button class="btn btn-danger btn-sm w-full justify-center" onclick={showHelpCameraSettings}>
+                        <Button variant="danger" size="sm" class="w-full" onclick={showHelpCameraSettings}>
                             {$LL.actionbar.microphone.openSettings()}
-                        </button>
+                        </Button>
                     {:else}
-                        <button
-                            class="btn btn-danger btn-sm w-full justify-center"
+                        <Button
+                            variant="danger"
+                            size="sm"
+                            class="w-full"
                             onclick={() => {
                                 analyticsClient.camera();
                                 cameraClick();
                             }}
                         >
                             {$LL.actionbar.camera.activate()}
-                        </button>
+                        </Button>
                     {/if}
                 </div>
             {/if}
@@ -253,19 +256,21 @@
             {#if $silentStore == false}
                 <div class="group flex items-center relative z-10 py-1 px-2 overflow-hidden">
                     {#if microphoneDenied}
-                        <button class="btn btn-danger btn-sm w-full justify-center" onclick={showHelpCameraSettings}>
+                        <Button variant="danger" size="sm" class="w-full" onclick={showHelpCameraSettings}>
                             {$LL.actionbar.microphone.openSettings()}
-                        </button>
+                        </Button>
                     {:else}
-                        <button
-                            class="btn btn-danger btn-sm w-full justify-center"
+                        <Button
+                            variant="danger"
+                            size="sm"
+                            class="w-full"
                             onclick={() => {
                                 analyticsClient.microphone();
                                 microphoneClick();
                             }}
                         >
                             {$LL.actionbar.microphone.activate()}
-                        </button>
+                        </Button>
                     {/if}
                 </div>
             {/if}
