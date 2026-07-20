@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { SpaceUser } from "@workadventure/messages";
+import { FilterType, SpaceUser } from "@workadventure/messages";
 import { LivekitCommunicationStrategy } from "../src/Model/Strategies/LivekitCommunicationStrategy";
 import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
 
@@ -12,11 +12,12 @@ function createUser(spaceUserId: string): SpaceUser {
 }
 
 describe("LivekitCommunicationStrategy", () => {
-    it("stops recording through the server path when the last streaming user leaves",async () => {
+    it("stops recording through the server path when the last streaming user leaves", async () => {
         const dispatchPrivateEvent = vi.fn();
         const stopRecordingByServer = vi.fn().mockResolvedValue(undefined);
 
         const space: ICommunicationSpace = {
+            filterType: FilterType.ALL_USERS,
             getAllUsers: () => [],
             getUsersInFilter: () => [],
             getUsersToNotify: () => [],
@@ -61,6 +62,7 @@ describe("LivekitCommunicationStrategy", () => {
 
     it("keeps recording running while another streaming user remains", async () => {
         const space: ICommunicationSpace = {
+            filterType: FilterType.ALL_USERS,
             getAllUsers: () => [],
             getUsersInFilter: () => [],
             getUsersToNotify: () => [],
