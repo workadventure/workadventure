@@ -527,7 +527,7 @@
                     <div class="flex flew-row justify-center">
                         {#if !$requestedMegaphoneStore}
                             <Button
-                                class="font-light text-black bg-white mt-4 rounded-md disabled:bg-[#4a5568] disabled:cursor-not-allowed"
+                                class="font-light [&_.btn-label]:text-black bg-white mt-4 rounded-md disabled:bg-[#4a5568] disabled:cursor-not-allowed"
                                 onclick={startLive}
                                 disabled={!$requestedCameraState && !$requestedMicrophoneState}
                             >
