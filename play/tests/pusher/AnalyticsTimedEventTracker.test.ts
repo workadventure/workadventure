@@ -42,6 +42,35 @@ describe("AnalyticsTimedEventTracker", () => {
         );
     });
 
+    it("drops an interval shorter than a second as transition churn", () => {
+        const queue = { enqueueEvent: vi.fn() };
+        let now = Date.parse("2026-04-24T12:00:00.000Z");
+        const tracker = new AnalyticsTimedEventTracker(queue, () => now);
+        const socketData = socketDataFixture();
+
+        tracker.open("h1", "conversation.ended", { conversationId: "group:5" }, socketData);
+        // The phantom: a "remote" conversation opened for two milliseconds while a
+        // meeting tore down, then closed. It carried no duration but used to count.
+        now += 2;
+        tracker.close("h1", socketData, "left_conversation");
+
+        expect(queue.enqueueEvent).not.toHaveBeenCalled();
+    });
+
+    it("keeps an interval of exactly one second", () => {
+        const queue = { enqueueEvent: vi.fn() };
+        let now = Date.parse("2026-04-24T12:00:00.000Z");
+        const tracker = new AnalyticsTimedEventTracker(queue, () => now);
+        const socketData = socketDataFixture();
+
+        tracker.open("h1", "conversation.ended", { conversationId: "group:5" }, socketData);
+        now += 1000;
+        tracker.close("h1", socketData);
+
+        expect(queue.enqueueEvent).toHaveBeenCalledTimes(1);
+        expect(queue.enqueueEvent.mock.calls[0][0].properties.durationSeconds).toBe(1);
+    });
+
     it("rejects opening a name the client is not allowed to have synthesized", () => {
         const queue = { enqueueEvent: vi.fn() };
         const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -115,12 +144,14 @@ describe("AnalyticsTimedEventTracker", () => {
 
     it("closes only the socket that went away", () => {
         const queue = { enqueueEvent: vi.fn() };
-        const tracker = new AnalyticsTimedEventTracker(queue);
+        let now = Date.parse("2026-04-24T12:00:00.000Z");
+        const tracker = new AnalyticsTimedEventTracker(queue, () => now);
         const leaving = socketDataFixture({ tabId: "tab-leaving" });
         const staying = socketDataFixture({ tabId: "tab-staying" });
 
         tracker.open("h1", "conversation.ended", {}, leaving);
         tracker.open("h2", "conversation.ended", {}, staying);
+        now += 1000;
 
         expect(tracker.closeConnection(leaving, "socket_closed")).toBe(1);
         expect(queue.enqueueEvent).toHaveBeenCalledTimes(1);
@@ -161,12 +192,14 @@ describe("AnalyticsTimedEventTracker", () => {
 
     it("carries each socket's own context, not the last one seen", () => {
         const queue = { enqueueEvent: vi.fn() };
-        const tracker = new AnalyticsTimedEventTracker(queue);
+        let now = Date.parse("2026-04-24T12:00:00.000Z");
+        const tracker = new AnalyticsTimedEventTracker(queue, () => now);
         const first = socketDataFixture({ tabId: "tab-1" });
         const second = socketDataFixture({ tabId: "tab-2", userUuid: "other-uuid" });
 
         tracker.open("h1", "conversation.ended", {}, first);
         tracker.open("h2", "conversation.ended", {}, second);
+        now += 1000;
         tracker.closeAll();
 
         expect(queue.enqueueEvent.mock.calls.map((call) => call[1])).toEqual([first, second]);

@@ -34,6 +34,21 @@ export const TIMED_EVENT_NAMES = new Set<string>(["conversation.ended", "area.dw
  */
 export const MAX_OPEN_TIMED_EVENTS_PER_CONNECTION = 32;
 
+/**
+ * Intervals shorter than this are dropped, not emitted.
+ *
+ * They are transition churn, not collaboration. Leaving a meeting flips the
+ * conversation type for a millisecond: the front closes the meeting as
+ * `type_changed` and opens a "remote" conversation that it closes 1-2ms later as
+ * `left_conversation` — a 0-second phantom. Those phantoms carried no duration but
+ * still counted as distinct conversations, inflating conversation counts (and, when
+ * a solo user bounced in and out of a meeting zone, dominating them). A sub-second
+ * area dwell (walking through) or screenshare (an instant mis-toggle) is the same
+ * kind of noise. Nothing real is lost: a sub-second interval contributes ~0 seconds
+ * to every duration metric by construction.
+ */
+export const MIN_TIMED_EVENT_DURATION_MS = 1000;
+
 type OpenTimedEvent = {
     eventName: string;
     startedAtMs: number;
@@ -178,6 +193,13 @@ export class AnalyticsTimedEventTracker {
 
     private emit(connectionId: string, handle: string, entry: OpenTimedEvent, endReason: TimedEventEndReason): void {
         const endedAtMs = this.nowMs();
+
+        if (endedAtMs - entry.startedAtMs < MIN_TIMED_EVENT_DURATION_MS) {
+            // Transition churn, not a real interval — see MIN_TIMED_EVENT_DURATION_MS.
+            // Dropped rather than emitted so it never reaches a count; its ~0 duration
+            // means no metric loses anything.
+            return;
+        }
 
         this.queue.enqueueEvent(
             {
