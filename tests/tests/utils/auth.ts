@@ -120,12 +120,19 @@ async function createUser(
     await dismissNoBrowserSoundInfoToast(page);
     await skipOnboardingWhenShown(page);
 
+    // Acquiring the (fake) media devices after clicking "Save" is asynchronous: on slower
+    // browsers/CI the mic/camera buttons can stay transiently in the bg-danger state past the
+    // default 10s expect timeout, flaking every test that logs in through this helper (and,
+    // since the auth state is only cached on success, forcing the whole shard to re-run it).
+    // Give the button-state assertions a generous timeout so they resolve as soon as the track
+    // goes live, without masking a genuinely stuck button.
+    const mediaStateTimeout = 30_000;
     if (browser.browserType().name() !== "webkit") {
-        await Menu.expectButtonState(page, "microphone-button", "normal");
-        await Menu.expectButtonState(page, "camera-button", "normal");
+        await Menu.expectButtonState(page, "microphone-button", "normal", mediaStateTimeout);
+        await Menu.expectButtonState(page, "camera-button", "normal", mediaStateTimeout);
     } else {
-        await Menu.expectButtonState(page, "microphone-button", "forbidden");
-        await Menu.expectButtonState(page, "camera-button", "forbidden");
+        await Menu.expectButtonState(page, "microphone-button", "forbidden", mediaStateTimeout);
+        await Menu.expectButtonState(page, "camera-button", "forbidden", mediaStateTimeout);
     }
 
     switch (name) {
@@ -181,6 +188,15 @@ export async function getPage(
     if (options.pageCreatedHook) {
         options.pageCreatedHook(page);
     }
+    // Surface uncaught exceptions / renderer crashes so a stalled map load fails with the
+    // underlying JS error in the log instead of an opaque 120s "microphone-button not visible"
+    // timeout. Keep it to actual errors (not every console message) to avoid noise.
+    page.on("pageerror", (error) => {
+        console.error(`[getPage:${name}] uncaught page error: ${error.message}`);
+    });
+    page.on("crash", () => {
+        console.error(`[getPage:${name}] page crashed`);
+    });
     const targetUrl = new URL(url, play_url).toString();
     await page.goto(targetUrl);
     await dismissPwaInstallScreenIfShown(page, true);

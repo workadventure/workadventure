@@ -54,7 +54,14 @@ class AreaEditor {
     }
 
     async addProperty(page: Page, property: string) {
-        await page.getByTestId(property).click();
+        // When adding a property to a freshly drawn area, the property panel for that area can
+        // take a moment to (re)render — a bare click() then times out on the default 20s action
+        // timeout (seen on the 2nd area of the megaphone speaker-zone test). Wait explicitly for
+        // the button to be visible and scroll it into view before clicking.
+        const propertyButton = page.getByTestId(property);
+        await expect(propertyButton).toBeVisible({ timeout: 30_000 });
+        await propertyButton.scrollIntoViewIfNeeded();
+        await propertyButton.click();
     }
 
     async setPodiumNameProperty(page: Page, name: string, enableChat = false, enableSeeAttendees = false) {

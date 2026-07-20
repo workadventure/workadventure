@@ -70,6 +70,13 @@ const config: PlaywrightTestConfig = {
             "permissions.default.microphone": 1,
             "permissions.default.camera": 1,
 
+            // Force a (software) WebGL context in headless CI. Otherwise Firefox exhausts its
+            // GL driver options, WebGL creation fails, and Phaser 4 falls back to the Canvas
+            // renderer — which cannot bring the game scene up, so the game never becomes ready
+            // and the mic button never appears (the 120s load-gate flake).
+            "webgl.force-enabled": true,
+            "webgl.disable-fail-if-major-performance-caveat": true,
+            "gfx.webrender.software": true,
           },
         },
         ignoreHTTPSErrors: true,
@@ -110,6 +117,11 @@ const config: PlaywrightTestConfig = {
             "media.navigator.streams.fake": true,
             "permissions.default.microphone": 1,
             "permissions.default.camera": 1,
+
+            // Force a (software) WebGL context in headless CI (see the desktop firefox project).
+            "webgl.force-enabled": true,
+            "webgl.disable-fail-if-major-performance-caveat": true,
+            "gfx.webrender.software": true,
           },
         },
       },
