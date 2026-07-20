@@ -236,3 +236,93 @@ describe("WebRTCCommunicationStrategy", () => {
         expect(webRtcStartEvents(privateEvents)).toHaveLength(0);
     });
 });
+
+function webRtcStartPayload(event: PrivateEvent): { initiator: boolean; connectionId: string } | undefined {
+    const inner = event.spaceEvent?.event;
+    return inner?.$case === "webRtcStartMessage" ? inner.webRtcStartMessage : undefined;
+}
+
+describe("WebRTCCommunicationStrategy.handleMeetingConnectionRestartMessage", () => {
+    // Outside the feedback filter, a connection is always allowed, so these tests isolate the
+    // restart/stale-connection bookkeeping from the feedback-role rules.
+    async function setupStrategyWithConnection() {
+        const userA = createUser("user-a", "none");
+        const userB = createUser("user-b", "none");
+        const usersMap = createUsersMap([userA, userB]);
+        const { space, privateEvents } = createSpace([userA, userB], FilterType.ALL_USERS);
+
+        const strategy = new WebRTCCommunicationStrategy(space, usersMap, usersMap);
+        await strategy.initialize(usersMap, usersMap);
+
+        const connectionId = webRtcStartPayload(webRtcStartEvents(privateEvents)[0])?.connectionId;
+        if (!connectionId) {
+            throw new Error("Test setup failed: no WebRTC connection was established");
+        }
+
+        privateEvents.length = 0;
+        return { strategy, privateEvents, connectionId };
+    }
+
+    it("establishes exactly one bidirectional connection on initialize", async () => {
+        const { connectionId } = await setupStrategyWithConnection();
+        expect(connectionId).toBeTruthy();
+    });
+
+    it("regenerates a fresh connection when the restart references the current connection", async () => {
+        const { strategy, privateEvents, connectionId } = await setupStrategyWithConnection();
+
+        strategy.handleMeetingConnectionRestartMessage({ userId: "user-b", connectionId }, "user-a");
+
+        const starts = webRtcStartEvents(privateEvents);
+        expect(starts).toHaveLength(2);
+
+        // Both starts share a single new id, different from the superseded one.
+        const newIds = starts.map((event) => webRtcStartPayload(event)?.connectionId);
+        expect(new Set(newIds).size).toBe(1);
+        expect(newIds[0]).not.toBe(connectionId);
+
+        // One peer is the initiator, the other is not.
+        const initiators = starts.map((event) => webRtcStartPayload(event)?.initiator);
+        expect(initiators).toContain(true);
+        expect(initiators).toContain(false);
+    });
+
+    it("ignores a stale restart that references a superseded connection", async () => {
+        const { strategy, privateEvents } = await setupStrategyWithConnection();
+
+        strategy.handleMeetingConnectionRestartMessage(
+            { userId: "user-b", connectionId: "stale-connection-id" },
+            "user-a",
+        );
+
+        expect(privateEvents).toHaveLength(0);
+    });
+
+    it("regenerates when the restart omits the connectionId (backward compatibility)", async () => {
+        const { strategy, privateEvents } = await setupStrategyWithConnection();
+
+        strategy.handleMeetingConnectionRestartMessage({ userId: "user-b" }, "user-a");
+
+        expect(webRtcStartEvents(privateEvents)).toHaveLength(2);
+    });
+
+    it("ignores a restart when no connection exists between the peers", () => {
+        const { space, privateEvents } = createSpace([], FilterType.ALL_USERS);
+        const strategy = new WebRTCCommunicationStrategy(space, new Map(), new Map());
+
+        strategy.handleMeetingConnectionRestartMessage(
+            { userId: "user-b", connectionId: "any-connection-id" },
+            "user-a",
+        );
+
+        expect(privateEvents).toHaveLength(0);
+    });
+
+    it("ignores a restart without a target userId", async () => {
+        const { strategy, privateEvents } = await setupStrategyWithConnection();
+
+        strategy.handleMeetingConnectionRestartMessage({}, "user-a");
+
+        expect(privateEvents).toHaveLength(0);
+    });
+});
