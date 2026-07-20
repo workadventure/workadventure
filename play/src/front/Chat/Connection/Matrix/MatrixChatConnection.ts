@@ -157,6 +157,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             | AvailabilityStatus.SPEAKER
             | AvailabilityStatus.LIVEKIT
             | AvailabilityStatus.LISTENER
+            | AvailabilityStatus.SOUND_BLOCKED
             | RequestedStatus
         >,
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity,

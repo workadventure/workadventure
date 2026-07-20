@@ -91,6 +91,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unavailable: "不可用",
         meeting: "会议中",
         megaphone: "使用扩音器",
+        sound_blocked: "声音被阻止",
     },
     logIn: "登录",
     signIn: "注册或登录以享受聊天的所有功能！",

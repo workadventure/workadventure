@@ -21,6 +21,10 @@ enum AvailabilityStatus {
   BACK_IN_A_MOMENT = 10;
   LIVEKIT = 11;
   LISTENER = 12;
+  // Set automatically when the browser refuses to play audio for lack of a user
+  // gesture. Unlike BACK_IN_A_MOMENT, which the user picks, this one is imposed and
+  // clears on the next click.
+  SOUND_BLOCKED = 13;
 }
 
 message PositionMessage {

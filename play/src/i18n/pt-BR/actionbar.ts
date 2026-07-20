@@ -78,6 +78,7 @@ const actionbar: BaseTranslation = {
         SPEAKER: "Em uma reunião",
         LIVEKIT: "Em uma reunião",
         LISTENER: "Em uma reunião",
+        SOUND_BLOCKED: "Som bloqueado",
     },
     subtitle: {
         camera: "Câmera",
