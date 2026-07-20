@@ -5,10 +5,10 @@ import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrateg
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 
 class ConnectionManager {
-    private connections: Map<string, Set<string>> = new Map();
+    private connections: Map<string, Map<string, string>> = new Map();
 
-    addConnection(user1Id: string, user2Id: string): void {
-        this.getOrCreateUserConnections(user1Id).add(user2Id);
+    addConnection(user1Id: string, user2Id: string, connectionId: string): void {
+        this.getOrCreateUserConnections(user1Id).set(user2Id, connectionId);
     }
 
     removeConnection(user1Id: string, user2Id: string): void {
@@ -17,6 +17,10 @@ class ConnectionManager {
 
     hasConnection(user1Id: string, user2Id: string): boolean {
         return this.connections.get(user1Id)?.has(user2Id) ?? false;
+    }
+
+    getConnectionId(user1Id: string, user2Id: string): string | undefined {
+        return this.connections.get(user1Id)?.get(user2Id);
     }
 
     removeUser(userId: string): void {
@@ -32,7 +36,7 @@ class ConnectionManager {
     getAllConnections(): Array<[string, string]> {
         const result: Array<[string, string]> = [];
         for (const [userId, connections] of this.connections) {
-            for (const connectedId of connections) {
+            for (const connectedId of connections.keys()) {
                 result.push([userId, connectedId]);
             }
         }
@@ -40,12 +44,12 @@ class ConnectionManager {
     }
 
     getConnections(userId: string): Set<string> {
-        return this.connections.get(userId) ?? new Set();
+        return new Set(this.connections.get(userId)?.keys());
     }
 
-    private getOrCreateUserConnections(userId: string): Set<string> {
+    private getOrCreateUserConnections(userId: string): Map<string, string> {
         if (!this.connections.has(userId)) {
-            this.connections.set(userId, new Set());
+            this.connections.set(userId, new Map());
         }
         return this.connections.get(userId)!;
     }
@@ -207,7 +211,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     private sendWebRTCStart(senderId: string, receiverId: string, isInitiator: boolean, connectionId: string): void {
-        this._connections.addConnection(senderId, receiverId);
+        this._connections.addConnection(senderId, receiverId, connectionId);
 
         this._space.dispatchPrivateEvent({
             spaceName: this._space.getSpaceName(),
@@ -278,17 +282,28 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             return;
         }
 
-        if (
-            this.hasExistingConnection(senderUserId, receiverId) ||
-            this.hasExistingConnection(receiverId, senderUserId)
-        ) {
-            const connectionId = uuidv4();
-            this.sendWebRTCStart(receiverId, senderUserId, true, connectionId);
-            this.sendWebRTCStart(senderUserId, receiverId, false, connectionId);
+        // A connection is tracked in both directions with the same id, but a partial cleanup may
+        // leave only one direction, so look both ways to recover the currently tracked id.
+        const existingConnectionId =
+            this._connections.getConnectionId(senderUserId, receiverId) ??
+            this._connections.getConnectionId(receiverId, senderUserId);
+
+        if (existingConnectionId === undefined) {
+            console.warn("No existing connection found for meetingConnectionRestartMessage ", senderUserId, receiverId);
             return;
         }
 
-        console.warn("No existing connection found for meetingConnectionRestartMessage ", senderUserId, receiverId);
+        // Ignore stale restart requests that reference a connection we have already replaced.
+        if (
+            meetingConnectionRestartMessage.connectionId !== undefined &&
+            meetingConnectionRestartMessage.connectionId !== existingConnectionId
+        ) {
+            return;
+        }
+
+        const connectionId = uuidv4();
+        this.sendWebRTCStart(receiverId, senderUserId, true, connectionId);
+        this.sendWebRTCStart(senderUserId, receiverId, false, connectionId);
     }
 
     cleanup(): void {

@@ -7,6 +7,7 @@ import {
     expectWebRtcConnectionsCountToBe,
     expectLivekitConnectionsCountToBe,
     triggerWebRtcRetryAndVerifyReconnection,
+    triggerWebRtcUnilateralDestroyRetryAndVerifyReconnection,
     triggerLivekitRetryAndVerifyReconnection,
 } from "./utils/webRtc";
 
@@ -61,6 +62,46 @@ test.describe("WebRTC/LiveKit Reconnection @nomobile @nowebkit", () => {
         await expect(userBob.locator("#cameras-container").getByText("Alice")).toBeVisible({ timeout: 30_000 });
 
         // Clean up
+    });
+
+    test("Should reconnect WebRTC peer after unilateral unintentional destroy", async ({ browser }) => {
+        // Given: 2 users in a meeting (WebRTC mode - less than 4 users)
+        await using page = await getPage(
+            browser,
+            "Alice",
+            publicTestMapUrl("tests/E2E/empty.json", "webrtc-unilateral-destroy-retry"),
+        );
+        await using userBob = await getPage(
+            browser,
+            "Bob",
+            publicTestMapUrl("tests/E2E/empty.json", "webrtc-unilateral-destroy-retry"),
+        );
+
+        // Move both users to the same position to trigger WebRTC meeting
+        await Map.teleportToPosition(page, 160, 160);
+        await Map.teleportToPosition(userBob, 160, 160);
+
+        // Wait for cameras to be visible
+        await expect(page.locator("#cameras-container")).toBeVisible({ timeout: 30_000 });
+        await expect(page.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 30_000 });
+
+        // Verify initial WebRTC connection
+        await expectWebRtcConnectionsCountToBe(page, 1);
+        await expectWebRtcConnectionsCountToBe(userBob, 1);
+
+        // When: Destroy Alice's local peer without going through an intentional close path
+        const { disconnectionObserved, result } = await triggerWebRtcUnilateralDestroyRetryAndVerifyReconnection(page);
+
+        // Then: Alice observed a real local disconnect and reconnected
+        expect(result).not.toBeNull();
+        expect(result?.triggered).toBe(true);
+        expect(disconnectionObserved).toBe(true);
+
+        // And: Both users should still be connected and see each other
+        await expectWebRtcConnectionsCountToBe(page, 1);
+        await expectWebRtcConnectionsCountToBe(userBob, 1, 60_000);
+        await expect(page.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 30_000 });
+        await expect(userBob.locator("#cameras-container").getByText("Alice")).toBeVisible({ timeout: 30_000 });
     });
 
     test("should reconnect LiveKit after WebSocket close", async ({ browser }) => {

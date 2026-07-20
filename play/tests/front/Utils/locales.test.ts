@@ -4,6 +4,67 @@ describe("Locale Detection", () => {
     beforeEach(() => {
         vi.resetModules();
         vi.clearAllMocks();
+        vi.doMock("typesafe-i18n/detectors", () => ({
+            detectLocale: vi.fn((fallback, _locales, detector) => {
+                const detected = detector();
+                return detected.length > 0 ? detected[0] : fallback;
+            }),
+            initLocalStorageDetector: vi.fn(),
+            navigatorDetector: vi.fn(),
+        }));
+        vi.doMock("../../../src/i18n/i18n-util", () => ({
+            baseLocale: "en-US",
+            isLocale: (locale: string) =>
+                [
+                    "ar-SA",
+                    "ca-ES",
+                    "de-DE",
+                    "dsb-DE",
+                    "en-US",
+                    "es-ES",
+                    "fr-FR",
+                    "hsb-DE",
+                    "it-IT",
+                    "ja-JP",
+                    "nl-NL",
+                    "pt-BR",
+                    "zh-CN",
+                ].includes(locale),
+            locales: [
+                "ar-SA",
+                "ca-ES",
+                "de-DE",
+                "dsb-DE",
+                "en-US",
+                "es-ES",
+                "fr-FR",
+                "hsb-DE",
+                "it-IT",
+                "ja-JP",
+                "nl-NL",
+                "pt-BR",
+                "zh-CN",
+            ],
+            loadedLocales: {},
+            loadedFormatters: {},
+        }));
+        vi.doMock("../../../src/i18n/i18n-util.async", () => ({
+            loadLocaleAsync: vi.fn().mockResolvedValue(undefined),
+        }));
+        vi.doMock("../../../src/i18n/i18n-svelte", () => ({
+            setLocale: vi.fn(),
+        }));
+        vi.doMock("../../../src/front/Enum/EnvironmentVariable", () => ({
+            FALLBACK_LOCALE: "en-US",
+            MAX_USERNAME_LENGTH: 20,
+        }));
+        vi.doMock("../../../src/front/Connection/LocalUserStore", () => ({
+            languageKey: "language",
+            localUserStore: {
+                getLanguage: vi.fn(() => undefined),
+                setLanguage: vi.fn(),
+            },
+        }));
     });
 
     // Mock localStorage

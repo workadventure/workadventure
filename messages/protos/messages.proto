@@ -1050,6 +1050,9 @@ message MeetingConnectionRestartMessage {
   // Optional. Present for WebRTC reconnections to specify which peer to reconnect with.
   // Absent for LiveKit reconnections, where no specific peer is targeted.
   optional string userId = 1;
+  // Optional for backward compatibility during rolling deployments.
+  // Once all clients send it, this can become required in the next protocol version.
+  optional string connectionId = 2;
 }
 
 message WebRtcDisconnectMessage {
