@@ -130,6 +130,8 @@
         p.code {
             font-size: 12px;
             opacity: 0.6;
+            /* Prefixed too, or WebKit ignores the opt-in and `body` keeps this unselectable. */
+            -webkit-user-select: text;
             user-select: text;
         }
         .loading {

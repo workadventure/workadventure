@@ -7,6 +7,28 @@ body {
     overflow: hidden;
 }
 
+/* Nothing is selectable except real text, so a long press on a control cannot start a
+ * selection that spills over the map. Opt back in with the `select-text` utility.
+ *
+ * Anchor on `body`, never `*`: `user-select` propagates, so a direct declaration on a
+ * descendant beats the propagated value. `*` would match every element directly and,
+ * this file being unlayered, would override `select-text` in @layer utilities.
+ *
+ * `-webkit-user-select` is load-bearing: WebKit ignores the unprefixed property before
+ * Safari 17.4. */
+body {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Guard for older iOS, where an inherited `user-select: none` could block typing. */
+input,
+textarea,
+[contenteditable]:not([contenteditable="false"]) {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
 body button:focus,
 body img:focus,
 body input:focus {
@@ -528,40 +550,6 @@ div.action.danger p.action-body {
         bottom: 40px;
     }
 }
-
-#game-overlay {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    user-select: none;
-
-    & + div {
-        pointer-events: none;
-        z-index: 2;
-    }
-
-    & + div > div {
-        pointer-events: auto;
-    }
-
-    & > div {
-        position: relative;
-        width: 100%;
-        height: 100%;
-
-        & > div.scrollable {
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            pointer-events: auto;
-        }
-    }
-
-    &.hide {
-        visibility: hidden;
-    }
-}
-
 
 .active-discussion div.emoji-picker {
     transform: translateX(-188px);
