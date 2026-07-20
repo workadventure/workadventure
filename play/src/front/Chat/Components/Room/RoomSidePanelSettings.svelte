@@ -3,6 +3,7 @@
     import { readable } from "svelte/store";
     import LL from "../../../../i18n/i18n-svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
+    import Button from "../../../Components/UI/Button.svelte";
     import type {
         ChatRoom,
         ChatRoomMembershipManagement,
@@ -414,17 +415,17 @@
                     {saveError}
                 </div>
             {/if}
-            <button
-                type="button"
-                class="btn btn-secondary m-0 w-full justify-center disabled:opacity-50"
-                data-testid="roomSettingsSaveButton"
+            <Button
+                variant="secondary"
+                class="m-0 w-full disabled:opacity-50"
+                dataTestId="roomSettingsSaveButton"
                 disabled={settingsSaving ||
                     (!settingsDirty && !permissionsDirty) ||
                     ($canEditName && editableName.trim().length === 0)}
                 onclick={saveSettings}
             >
                 {settingsSaving ? $LL.chat.roomPanel.settings.saving() : $LL.chat.roomPanel.settings.save()}
-            </button>
+            </Button>
         </div>
     {/if}
 </div>

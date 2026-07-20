@@ -4,6 +4,7 @@
     import { onDestroy, onMount } from "svelte";
     import { wokaMenuStore, wokaMenuProgressStore } from "../../Stores/WokaMenuStore";
     import ButtonClose from "../Input/ButtonClose.svelte";
+    import Button from "../UI/Button.svelte";
     import VisitCard from "../VisitCard/VisitCard.svelte";
     import WokaFromUserId from "../Woka/WokaFromUserId.svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -163,12 +164,13 @@
                 class:flex-wrap={buttonsLayout === "wrap"}
             >
                 {#each sortedActions ?? [] as action (action.uuid)}
-                    <button
-                        type="button"
-                        data-testid={action.testId}
-                        class="btn btn-light btn-ghost text-nowrap justify-center my-2 mx-1 min-w-0 {action.style ??
-                            ''}"
-                        class:mx-2={buttonsLayout === "column"}
+                    <Button
+                        dataTestId={action.testId}
+                        variant="light"
+                        appearance="ghost"
+                        class="text-nowrap my-2 mx-1 min-w-0 {action.style ?? ''} {buttonsLayout === 'column'
+                            ? 'mx-2'
+                            : ''}"
                         onclick={(event) => {
                             analyticsClient.clickPropertyMapEditor(action.actionName, action.style);
                             event.preventDefault();
@@ -187,13 +189,14 @@
                             {/if}
                             {action.actionName}
                         </span>
-                    </button>
+                    </Button>
                 {/each}
 
                 {#if !wokaMenuData.wokaName}
-                    <button
-                        type="button"
-                        class="btn btn-light btn-ghost text-nowrap justify-center my-2 mx-1 w-fit"
+                    <Button
+                        variant="light"
+                        appearance="ghost"
+                        class="text-nowrap my-2 mx-1 w-fit"
                         onclick={(event) => {
                             event.preventDefault();
                             event.stopPropagation();
@@ -201,7 +204,7 @@
                         }}
                     >
                         {$LL.actionbar.close()}
-                    </button>
+                    </Button>
                 {/if}
             </div>
         {/if}

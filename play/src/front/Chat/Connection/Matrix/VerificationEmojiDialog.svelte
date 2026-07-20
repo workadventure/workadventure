@@ -1,5 +1,6 @@
 <script lang="ts">
     import Popup from "../../../Components/Modal/Popup.svelte";
+    import Button from "../../../Components/UI/Button.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import type { VerificationEmojiDialogProps } from "./MatrixSecurity";
     import { IconVerify } from "@wa-icons";
@@ -101,30 +102,29 @@
             {#await donePromise}
                 {$LL.chat.verificationEmojiDialog.waitOtherDeviceConfirmation()}
             {:then}
-                <button
-                    data-testid="understoodButton"
-                    class="btn btn-secondary flex-1 justify-center bg-secondary"
+                <Button
+                    dataTestId="understoodButton"
+                    variant="secondary"
+                    class="flex-1 bg-secondary"
                     onclick={() => modals.close()}
                     >{$LL.chat.verificationEmojiDialog.understood()}
-                </button>
+                </Button>
             {:catch}
                 <span data-testid="errorEmojiLabel">
                     {$LL.chat.verificationEmojiDialog.error()}
                 </span>
             {/await}
         {:else}
-            <button
-                class="btn btn-danger flex-1 justify-center mx-4 py-1"
-                data-testid="mismatchButton"
+            <Button
+                variant="danger"
+                class="flex-1 mx-4 py-1"
+                dataTestId="mismatchButton"
                 onclick={mismatchAndCloseModal}
                 >{$LL.chat.verificationEmojiDialog.mismatch()}
-            </button>
-            <button
-                data-testid="matchButton"
-                class="btn btn-secondary flex-1 justify-center mx-4 my-2 py-1"
-                onclick={confirmEmoji}
+            </Button>
+            <Button dataTestId="matchButton" variant="secondary" class="flex-1 mx-4 my-2 py-1" onclick={confirmEmoji}
                 >{$LL.chat.verificationEmojiDialog.confirmation()}
-            </button>
+            </Button>
         {/if}
     {/snippet}
 </Popup>

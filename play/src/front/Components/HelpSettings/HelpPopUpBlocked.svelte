@@ -4,6 +4,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { helpSettingsPopupBlockedStore } from "../../Stores/HelpSettingsPopupBlockedStore";
+    import Button from "../UI/Button.svelte";
 
     function getBackgroundColor() {
         if (!gameManager.currentStartedRoom) return undefined;
@@ -38,14 +39,15 @@
     </section>
 
     <section class="justify-center bottom-0 w-full bg-contrast p-4 flex flex-row space-x-4 mt-4 rounded-b-lg">
-        <button
-            class="btn btn-secondary grow"
+        <Button
+            variant="secondary"
+            class="grow"
             onclick={(event) => {
                 event.preventDefault();
                 close();
             }}
         >
             {$LL.warning.popupBlocked.done()}
-        </button>
+        </Button>
     </section>
 </form>

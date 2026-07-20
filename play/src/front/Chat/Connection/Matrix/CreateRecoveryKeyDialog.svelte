@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { CryptoApi, GeneratedSecretStorageKey } from "matrix-js-sdk/lib/crypto-api";
     import Popup from "../../../Components/Modal/Popup.svelte";
+    import Button from "../../../Components/UI/Button.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { IconFileDownload } from "@wa-icons";
@@ -101,19 +102,21 @@
             {$LL.chat.e2ee.createRecoveryKey.buttons.cancel()}
         </button>
         {#if generatedSecretStorageKey === undefined}
-            <button
+            <Button
+                variant="secondary"
                 disabled={passphraseInput === undefined || passphraseInput?.trim().length === 0}
-                class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+                class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1"
                 onclick={() => generateRecoveryKey(passphraseInput)}
                 >{$LL.chat.e2ee.createRecoveryKey.buttons.generate()}
-            </button>
+            </Button>
         {:else}
-            <button
+            <Button
+                variant="secondary"
                 disabled={!isPrivateKeyDownloaded}
-                class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+                class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1"
                 onclick={closeModalAndContinueToWorkAdventure}
                 >{$LL.chat.e2ee.createRecoveryKey.buttons.continue()}
-            </button>
+            </Button>
         {/if}
     {/snippet}
 </Popup>

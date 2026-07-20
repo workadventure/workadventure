@@ -137,7 +137,7 @@
             <div class="absolute w-full h-full z-40 right-0 top-0 bg-contrast/30">
                 <input
                     autocomplete="new-password"
-                    class="wa-searchbar block text-white placeholder:text-white/50 w-full placeholder:text-sm border-none pl-6 pr-20 bg-transparent py-3 text-base h-full"
+                    class="block text-white placeholder:text-white/50 w-full placeholder:text-sm border-none pl-6 pr-20 bg-transparent py-3 text-base h-full"
                     placeholder={$navChat.key === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
                     onkeydown={handleKeyDown}
                     onkeyup={() => handleKeyUp(userProviderMerger)}

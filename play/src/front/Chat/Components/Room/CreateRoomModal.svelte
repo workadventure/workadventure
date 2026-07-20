@@ -11,8 +11,10 @@
     import SelectMatrixUser from "../SelectMatrixUser.svelte";
     import Input from "../../../Components/Input/Input.svelte";
     import InputCheckbox from "../../../Components/Input/InputCheckbox.svelte";
+    import InputGroupLabel from "../../../Components/Input/InputGroupLabel.svelte";
     import InputRadio from "../../../Components/Input/InputRadio.svelte";
     import Spinner from "../../../Components/Icons/Spinner.svelte";
+    import Button from "../../../Components/UI/Button.svelte";
     import { modals } from "@wa-modals";
 
     interface Props {
@@ -166,9 +168,9 @@
                 </div>
                 {#if !parentID}
                     <div class="flex flex-col items-start gap-1">
-                        <div class="input-label">
+                        <InputGroupLabel id="createRoomUsersLabel">
                             <span>{$LL.chat.createRoom.users()}</span>
-                        </div>
+                        </InputGroupLabel>
                         <SelectMatrixUser
                             onerror={handleSelectMatrixUserError}
                             bind:value={createRoomOptions.invite}
@@ -199,16 +201,17 @@
         {#if loadingRoomCreation}
             <p>{$LL.chat.createRoom.loadingCreation()}</p>
         {:else}
-            <button class="flex-1 justify-cente btn btn-contrast m-1" onclick={() => modals.close()}
-                >{$LL.chat.createRoom.buttons.cancel()}</button
+            <Button variant="contrast" class="flex-1 m-1" onclick={() => modals.close()}
+                >{$LL.chat.createRoom.buttons.cancel()}</Button
             >
-            <button
-                data-testid="createRoomButton"
-                class="disabled:text-gray-400 btn btn-secondary disabled:bg-gray-500 bg-secondary flex-1 justify-center m-1"
+            <Button
+                dataTestId="createRoomButton"
+                variant="secondary"
+                class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 m-1"
                 disabled={createRoomOptions.name === undefined || createRoomOptions.name?.trim().length === 0}
                 onclick={() => createNewRoom(createRoomOptions)}
                 >{$LL.chat.createRoom.buttons.create()}
-            </button>
+            </Button>
         {/if}
     {/snippet}
 </Popup>

@@ -22,6 +22,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
 
     import bgMap from "../images/map-exemple.png";
+    import Button from "../UI/Button.svelte";
     import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
     import SelectMicrophone from "./SelectMicrophone.svelte";
     import SelectCamera from "./SelectCamera.svelte";
@@ -280,16 +281,13 @@
                 <section
                     class="container m-auto p-4 flex flex-col-reverse md:flex-row items-center justify-center space-y-2 md:space-y-0 md:space-x-4"
                 >
-                    <button
-                        type="submit"
-                        class="btn btn-light btn-lg btn-ghost w-full md:w-1/2
-              
-                     hidden">{$LL.actionbar.cancel()}</button
-                    >
+                    <Button type="submit" variant="light" appearance="ghost" size="lg" class="w-full md:w-1/2 hidden">
+                        {$LL.actionbar.cancel()}
+                    </Button>
                     <!-- TODO ACTION -->
-                    <button type="submit" class="btn btn-secondary btn-lg w-full md:w-1/2 block"
-                        >{$LL.menu.settings.save()}</button
-                    >
+                    <Button type="submit" variant="secondary" size="lg" class="w-full md:w-1/2 block">
+                        {$LL.menu.settings.save()}
+                    </Button>
                 </section>
                 {#if legalString}
                     <section class="terms-and-conditions h-fit z-40 text-center w-full">
