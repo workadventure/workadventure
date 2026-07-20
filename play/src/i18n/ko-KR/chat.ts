@@ -93,6 +93,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         busy: "바쁨",
         meeting: "회의 중",
         megaphone: "확성기 사용 중",
+        sound_blocked: "소리 차단됨",
     },
     logIn: "로그인",
     signIn: "채팅의 모든 기능을 이용하려면 회원가입 또는 로그인을 해 주세요!",

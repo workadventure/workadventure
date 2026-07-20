@@ -76,6 +76,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         SPEAKER: "In einer Besprechung",
         LIVEKIT: "In einer Besprechung",
         LISTENER: "In einer Besprechung",
+        SOUND_BLOCKED: "Ton blockiert",
     },
     subtitle: {
         camera: "Kamera",

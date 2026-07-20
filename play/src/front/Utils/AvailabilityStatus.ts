@@ -20,14 +20,19 @@ const COLORS: Record<AvailabilityStatus, { filling: number; outline: number }> =
     [AvailabilityStatus.BUSY]: { filling: 0xe9c84e, outline: 0xd3873b },
     [AvailabilityStatus.LIVEKIT]: { filling: 0x68e97a, outline: 0x44d45a },
     [AvailabilityStatus.LISTENER]: { filling: 0x68e97a, outline: 0x44d45a },
+    [AvailabilityStatus.SOUND_BLOCKED]: { filling: 0x7382e2, outline: 0x4156f6 },
 };
 
+// A peer running an older build sends statuses this one has no colour for, and the
+// protobuf reader hands them over as raw ints rather than UNRECOGNIZED.
+const UNKNOWN_STATUS_COLOR = { filling: 0xffffff, outline: 0xffffff };
+
 export const getColorOfStatus = (status: AvailabilityStatus): { filling: number; outline: number } => {
-    return COLORS[status];
+    return COLORS[status] ?? UNKNOWN_STATUS_COLOR;
 };
 
 export const getColorHexOfStatus = (status: AvailabilityStatus): string => {
-    return `#${COLORS[status].filling.toString(16)}`;
+    return `#${getColorOfStatus(status).filling.toString(16)}`;
 };
 
 export const getStatusLabel = (status: AvailabilityStatus): string => {

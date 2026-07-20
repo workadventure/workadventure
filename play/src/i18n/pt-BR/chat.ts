@@ -93,6 +93,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         busy: "Ocupado",
         meeting: "Em uma reunião",
         megaphone: "Usando o megafone",
+        sound_blocked: "Som bloqueado",
     },
     logIn: "Entrar",
     signIn: "Registre-se ou faça login para aproveitar todos os recursos do chat!",
