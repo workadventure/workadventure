@@ -1,7 +1,6 @@
 <script lang="ts">
     import TextGlobalMessage from "../Menu/TextGlobalMessage.svelte";
     import { consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
-    import Button from "../UI/Button.svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
 
     interface Props {
@@ -50,8 +49,8 @@
     </div>
     {#snippet buttons()}
         <!-- TODO -->
-        <Button variant="light" appearance="ghost" class="w-1/2">Send Message</Button>
+        <button class="btn btn-light btn-ghost w-1/2 justify-center"> Send Message </button>
         <!-- Mettre l'action du send message -->
-        <Button variant="secondary" class="w-1/2" onclick={closeBanner}>Close</Button>
+        <button class="btn btn-secondary w-1/2 justify-center" onclick={closeBanner}> Close </button>
     {/snippet}
 </PopUpContainer>

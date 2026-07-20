@@ -6,7 +6,6 @@
     import AppsIcon from "../../Icons/AppsIcon.svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import ToastContainer from "../../Toasts/ToastContainer.svelte";
-    import Button from "../../UI/Button.svelte";
 
     interface Props {
         toastUuid: string;
@@ -68,18 +67,16 @@
     </div>
 
     {#snippet buttons()}
-        <Button appearance="ghost" size="sm" class="w-1/2" onclick={() => recordingStore.hideCompletedPopup()}>
+        <button class="btn btn-ghost btn-sm w-1/2" onclick={() => recordingStore.hideCompletedPopup()}>
             {$LL.recording.close()}
-        </Button>
-        <Button
-            variant="secondary"
-            size="sm"
-            class="w-1/2"
-            dataTestId="recording-completed-modal-open-recordings-list-button"
+        </button>
+        <button
+            class="btn btn-secondary btn-sm w-1/2"
+            data-testid="recording-completed-modal-open-recordings-list-button"
             onclick={openRecordingList}
         >
             {$LL.recording.notification.viewRecordings()}
-        </Button>
+        </button>
     {/snippet}
 </ToastContainer>
 

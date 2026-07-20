@@ -1,7 +1,6 @@
 <script lang="ts">
     import { getBrowserInfo, getBrowserDisplayName } from "../../Utils/BrowserCompatibility";
     import { LL } from "../../../i18n/i18n-svelte";
-    import Button from "../UI/Button.svelte";
     import bgMap from "../images/map-exemple.png";
 
     let browserInfo = getBrowserInfo();
@@ -57,12 +56,12 @@
         </div>
 
         <div class="footer flex flex-row justify-evenly items-center bg-contrast/80 w-full p-4 gap-3 rounded-b-3xl">
-            <Button variant="secondary" class="flex-1" onclick={handleUpdateBrowser} dataTestId="update-browser-button">
+            <button class="btn btn-secondary flex-1" onclick={handleUpdateBrowser} data-testid="update-browser-button">
                 {$LL.warning.browserNotSupported.updateBrowser()}
-            </Button>
-            <Button variant="light" appearance="ghost" class="flex-1" onclick={handleLeave} dataTestId="leave-button">
+            </button>
+            <button class="btn btn-ghost btn-light flex-1" onclick={handleLeave} data-testid="leave-button">
                 {$LL.warning.browserNotSupported.leave()}
-            </Button>
+            </button>
         </div>
     </div>
 </div>

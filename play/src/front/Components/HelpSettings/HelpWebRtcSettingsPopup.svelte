@@ -8,7 +8,6 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import Spinner from "../Icons/Spinner.svelte";
     import InputCheckbox from "../Input/InputCheckbox.svelte";
-    import Button from "../UI/Button.svelte";
 
     let notAskAgain = $state(false);
 
@@ -82,25 +81,24 @@
         />
     </section>
     <section class="justify-center bottom-0 w-full bg-contrast p-4 flex flex-row space-x-4 mt-4 rounded-b-lg">
-        <Button
-            class="bg-white/10 hover:bg-white/20 grow"
+        <button
+            class="btn bg-white/10 hover:bg-white/20 grow"
             onclick={(event) => {
                 event.preventDefault();
                 refresh();
             }}
         >
             {$LL.camera.webrtc.refresh()}
-        </Button>
-        <Button
+        </button>
+        <button
             type="submit"
-            variant="secondary"
-            class="grow"
+            class="btn btn-secondary grow"
             onclick={(event) => {
                 event.preventDefault();
                 close();
             }}
         >
             {$LL.camera.webrtc.continue()}
-        </Button>
+        </button>
     </section>
 </form>

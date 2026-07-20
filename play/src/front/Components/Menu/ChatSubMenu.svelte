@@ -5,7 +5,6 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import InputCheckbox from "../Input/InputCheckbox.svelte";
-    import Button from "../UI/Button.svelte";
     import resetKeyStorageConfirmationModal from "./ResetKeyStorageConfirmationModal.svelte";
     import { modals } from "@wa-modals";
 
@@ -41,8 +40,10 @@
                     />
                 </div>
                 <section class="centered-column resizing-width m-auto resizing-text">
-                    <Button class="p-2 bg-danger-900 min-w-[220px] flex items-center" onclick={openResetKeyStorage}
-                        >{$LL.menu.chat.resetKeyStorageUpButtonLabel()}</Button
+                    <button
+                        type="button"
+                        class="btn p-2 bg-danger-900 min-w-[220px] flex justify-center items-center"
+                        onclick={openResetKeyStorage}>{$LL.menu.chat.resetKeyStorageUpButtonLabel()}</button
                     >
                 </section>
             {:else}
@@ -50,8 +51,13 @@
                     <p class="text-gray-400 w-full text-center pt-2">
                         {$LL.chat.requiresLoginForChat()}
                     </p>
-                    <Button class="light flex items-center w-1/2" href="/login" onclick={() => analyticsClient.login()}>
-                        {$LL.menu.profile.login()}</Button
+                    <a
+                        type="button"
+                        class="btn light flex justify-center items-center w-1/2"
+                        href="/login"
+                        onclick={() => analyticsClient.login()}
+                    >
+                        {$LL.menu.profile.login()}</a
                     >
                 </div>
             {/if}

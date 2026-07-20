@@ -11,7 +11,6 @@
     } from "../../Stores/MapEditorStore";
     import { userIsAdminStore, userIsEditorStore } from "../../Stores/GameStore";
     import ButtonClose from "../Input/ButtonClose.svelte";
-    import Button from "../UI/Button.svelte";
     import Megaphone from "./ConfigureMyRoom/Megaphone.svelte";
     import RecordingSettings from "./ConfigureMyRoom/RecordingSettings.svelte";
     import RoomSettings from "./ConfigureMyRoom/RoomSettings.svelte";
@@ -128,16 +127,15 @@
 
         <div class="w-full h-fit flex items-center justify-center p-2 space-x-2 bg-contrast/50 pointer-events-auto">
             <div class="flex flex-row justify-content-center w-full gap-2">
-                <Button
-                    class="btn-outline hover:bg-white/10 w-full close-window"
+                <button
+                    class="btn btn-outline hover:bg-white/10 w-full close-window"
                     onclick={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
                         close();
                     }}
-                >
-                    close
-                </Button>
+                    >close
+                </button>
             </div>
         </div>
     </div>

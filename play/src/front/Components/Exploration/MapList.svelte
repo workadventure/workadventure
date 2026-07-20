@@ -8,8 +8,6 @@
     import { scriptUtils } from "../../Api/ScriptUtils";
     import LL from "../../../i18n/i18n-svelte";
     import PopUpContainer from "../PopUp/PopUpContainer.svelte";
-    import Button from "../UI/Button.svelte";
-    import Chip from "../UI/Chip.svelte";
 
     interface RoomData {
         name: string;
@@ -160,12 +158,11 @@
                                                     {roomData.name}
                                                 </span>
                                                 {#if currentRoomUrl === new URL(roomData.roomUrl, window.location.href).toString()}
-                                                    <Chip
-                                                        variant="secondary"
-                                                        class="z-20 bg-secondary text-white rounded-[8px] absolute top-3 right-3"
+                                                    <span
+                                                        class="chip z-20 chip-sm chip-secondary bg-secondary text-white rounded-[8px] absolute top-3 right-3"
                                                     >
                                                         <div class="px-2">Active</div>
-                                                    </Chip>
+                                                    </span>
                                                 {/if}
                                             </div>
                                             <div class="py-2 text-center">
@@ -191,9 +188,9 @@
             </div>
             {#snippet buttons()}
                 <div class="flex flex-row justify-center w-full">
-                    <Button size="lg" variant="secondary" class="w-1/2 m-auto" onclick={close}>
+                    <button class="btn btn-lg btn-secondary w-1/2 m-auto" onclick={close}>
                         {$LL.mapEditor.listRoom.close()}
-                    </Button>
+                    </button>
                 </div>
             {/snippet}
         </PopUpContainer>

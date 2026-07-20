@@ -4,7 +4,6 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { mediaPermissionDeniedStore } from "../../Stores/MediaStatusStore";
     import { popupStore } from "../../Stores/PopupStore";
-    import Button from "../UI/Button.svelte";
     import { IconInfoCircle } from "@wa-icons";
 
     let isAndroid = isAndroidFct();
@@ -90,11 +89,8 @@
         {/if}
     </section>
     <section class="flex row justify-center p-4 bg-contrast">
-        <Button
-            variant="success"
-            appearance="border"
-            size="sm"
-            class="mr-2 w-full"
+        <button
+            class="btn btn-sm btn-border btn-success mr-2 w-full justify-center"
             onclick={(event) => {
                 event.preventDefault();
                 allow();
@@ -107,12 +103,10 @@
             {:else}
                 {$LL.camera.help.allowMicrophone()}
             {/if}
-        </Button>
-        <Button
+        </button>
+        <button
             type="submit"
-            variant="danger"
-            size="sm"
-            class="w-full"
+            class="btn btn-danger btn-sm w-full justify-center"
             onclick={(event) => {
                 event.preventDefault();
                 close();
@@ -125,6 +119,6 @@
             {:else}
                 {$LL.camera.help.continueWithoutMicrophone()}
             {/if}
-        </Button>
+        </button>
     </section>
 </form>

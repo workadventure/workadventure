@@ -2,7 +2,6 @@
     import type { Snippet } from "svelte";
     import type { ConfirmationModalPropsInterface } from "../Interfaces/ConfirmationModalPropsInterface";
     import PopUpContainer from "../../../PopUp/PopUpContainer.svelte";
-    import Button from "../../../UI/Button.svelte";
     interface Props {
         props: ConfirmationModalPropsInterface;
         children?: Snippet;
@@ -38,9 +37,9 @@
 <PopUpContainer>
     {@render children?.()}
     <div class="buttons-wrapper flex items-center justify-center p-2 gap-2 pointer-events-auto mt-2">
-        <Button variant="light" appearance="ghost" size="sm" class="w-1/2 responsive-message" onclick={handleClose}
-            >{closeLabel}</Button
+        <button class="btn btn-light btn-ghost btn-sm w-1/2 justify-center responsive-message" onclick={handleClose}
+            >{closeLabel}</button
         >
-        <Button variant="secondary" size="sm" class="w-1/2" onclick={handleAccept}>{acceptLabel}</Button>
+        <button class="btn btn-secondary btn-sm w-1/2 justify-center" onclick={handleAccept}>{acceptLabel}</button>
     </div>
 </PopUpContainer>

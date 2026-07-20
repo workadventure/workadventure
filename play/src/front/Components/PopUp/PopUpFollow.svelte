@@ -2,7 +2,6 @@
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import Button from "../UI/Button.svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
 
     interface Props {
@@ -126,87 +125,82 @@
 
     {#snippet buttons()}
         {#if $followStateStore === "requesting" && $followRoleStore === "follower"}
-            <Button
-                variant="light"
-                appearance="ghost"
-                class="w-1/2"
+            <button
+                type="button"
+                class="btn btn-light btn-ghost w-1/2 justify-center"
                 onclick={(event) => {
                     event.preventDefault();
                     reset();
                 }}
             >
                 {$LL.follow.interactMenu.no()}
-            </Button>
-            <Button
-                variant="secondary"
-                class="w-1/2"
+            </button>
+            <button
+                type="button"
+                class="btn btn-secondary w-1/2 justify-center"
                 onclick={(event) => {
                     event.preventDefault();
                     acceptFollowRequest();
                 }}
             >
                 {$LL.follow.interactMenu.yes()}
-            </Button>
+            </button>
         {/if}
 
         {#if $followStateStore === "ending"}
-            <Button
-                variant="secondary"
-                class="w-1/2"
+            <button
+                type="button"
+                class="btn btn-secondary w-1/2 justify-center"
                 onclick={(event) => {
                     event.preventDefault();
                     reset();
                 }}
             >
                 {$LL.follow.interactMenu.yes()}
-            </Button>
-            <Button
-                variant="light"
-                appearance="ghost"
-                class="w-1/2"
+            </button>
+            <button
+                type="button"
+                class="btn btn-light btn-ghost w-1/2 justify-center"
                 onclick={(event) => {
                     event.preventDefault();
                     abortEnding();
                 }}
             >
                 {$LL.follow.interactMenu.no()}
-            </Button>
+            </button>
         {/if}
 
         {#if $followStateStore === "active" || $followStateStore === "ending"}
             {#if $followRoleStore === "follower"}
-                <Button
-                    variant="danger"
-                    size="sm"
-                    class="w-full"
+                <button
+                    type="button"
+                    class="btn btn-sm btn-danger w-full justify-center"
                     onclick={(event) => {
                         event.preventDefault();
                         reset();
                     }}
                     >{$LL.actionbar.help.unfollow.title()}
-                </Button>
+                </button>
             {:else if $followUsersStore.length === 1}
-                <Button
-                    variant="danger"
-                    size="sm"
-                    class="w-full"
+                <button
+                    type="button"
+                    class="btn btn-sm btn-danger w-full justify-center"
                     onclick={(event) => {
                         event.preventDefault();
                         reset();
                     }}
                     >{$LL.actionbar.help.unfollow.title()}
-                </Button>
+                </button>
             {:else if $followUsersStore.length > 2}
-                <Button
-                    variant="danger"
-                    size="sm"
-                    class="w-full"
+                <button
+                    type="button"
+                    class="btn btn-sm btn-danger w-full justify-center"
                     onclick={(event) => {
                         event.preventDefault();
                         reset();
                     }}
                     >{$LL.actionbar.cancel()}
-                </Button>
+                </button>
             {/if}
         {/if}
     {/snippet}

@@ -2,7 +2,6 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import LL from "../../../i18n/i18n-svelte";
     import { popupStore } from "../../Stores/PopupStore";
-    import Button from "../UI/Button.svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
 
     function goToLogin() {
@@ -15,11 +14,14 @@
 <PopUpContainer reduceOnSmallScreen={true}>
     {$LL.mapEditor.entityEditor.errors.dragNotConnected()}
     {#snippet buttons()}
-        <Button variant="secondary" size="sm" class="w-full max-w-96" onclick={goToLogin}>
+        <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" onclick={goToLogin}>
             {$LL.actionbar.login()}
-        </Button>
-        <Button size="sm" class="btn-outline w-full max-w-96" onclick={() => popupStore.removePopup("popupConnect")}>
+        </button>
+        <button
+            class="btn btn-outline btn-sm w-full max-w-96 justify-center"
+            onclick={() => popupStore.removePopup("popupConnect")}
+        >
             {$LL.actionbar.cancel()}
-        </Button>
+        </button>
     {/snippet}
 </PopUpContainer>

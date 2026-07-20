@@ -3,7 +3,6 @@
     import { onDestroy } from "svelte";
     import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
     import ButtonClose from "../Input/ButtonClose.svelte";
-    import Button from "../UI/Button.svelte";
     import VisitCard from "../VisitCard/VisitCard.svelte";
 
     import type { ActionsMenuAction, ActionsMenuData } from "../../Stores/ActionsMenuStore";
@@ -109,11 +108,11 @@
                 class:flex-row={buttonsLayout === "row"}
             >
                 {#each sortedActions ?? [] as action (action.uuid)}
-                    <Button
-                        variant="light"
-                        appearance="ghost"
-                        class="text-nowrap w-full h-full !bg-white/10 hover:!bg-white/20 {action.style ??
-                            ''} {buttonsLayout === 'column' ? 'mx-2' : ''}"
+                    <button
+                        type="button"
+                        class="btn btn-light btn-ghost text-nowrap justify-center w-full h-full !bg-white/10 hover:!bg-white/20 {action.style ??
+                            ''}"
+                        class:mx-2={buttonsLayout === "column"}
                         onclick={(event) => {
                             analyticsClient.clickPropertyMapEditor(action.actionName, action.style);
                             event.preventDefault();
@@ -133,7 +132,7 @@
                             {/if}
                             {action.actionName}
                         </span>
-                    </Button>
+                    </button>
                 {/each}
             </div>
         {/if}

@@ -6,7 +6,6 @@
         showDesktopCapturerSourcePicker,
     } from "../../Stores/ScreenSharingStore";
     import type { DesktopCapturerSource } from "../../Interfaces/DesktopAppInterfaces";
-    import Button from "../UI/Button.svelte";
 
     let desktopCapturerSources: DesktopCapturerSource[] = $state([]);
     let interval: ReturnType<typeof setInterval>;
@@ -57,7 +56,7 @@
 </script>
 
 <div class="source-picker" transition:fly={{ y: -50, duration: 500 }}>
-    <Button type="button" class="danger close" onclick={cancel}>&times;</Button>
+    <button type="button" class="btn danger close" onclick={cancel}>&times;</button>
     <h2>Select a Screen or Window to share!</h2>
     <section class="streams">
         {#each desktopCapturerSources as source (source.id)}

@@ -11,7 +11,6 @@
     import HatIcon from "../Icons/HatIcon.svelte";
     import SwordIcon from "../Icons/SwordIcon.svelte";
     import ShuffleIcon from "../Icons/ShuffleIcon.svelte";
-    import Button from "../UI/Button.svelte";
     import WokaPreview from "./WokaPreview.svelte";
     import type { WokaBodyPart, WokaData, WokaTexture } from "./WokaTypes";
     import { getItemsPerRow } from "./ItemsPerRow";
@@ -293,18 +292,13 @@
                         />
 
                         <div class="mt-4 space-y-2">
-                            <Button
-                                size="sm"
-                                variant="light"
-                                appearance="border"
-                                class="w-full px-4 py-2 bg-white/10 text-white rounded hover:bg-white/10 flex flex-row items-center gap-2"
+                            <button
+                                class="btn btn-sm btn-light btn-border w-full px-4 py-2 bg-white/10 text-white rounded hover:bg-white/10 flex flex-row items-center justify-center gap-2"
                                 onclick={randomizeOutfit}
                             >
-                                {#snippet icon()}
-                                    <ShuffleIcon fillColor="white" width="w-4" height="h-4" />
-                                {/snippet}
+                                <ShuffleIcon fillColor="white" width="w-4" height="h-4" />
                                 <span>{$LL.woka.customWoka.randomize()}</span>
-                            </Button>
+                            </button>
                         </div>
                     </div>
                     <div class="flex flex-col gap-0 mb-4 w-full lg:w-fit sm:hidden">

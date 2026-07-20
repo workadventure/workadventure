@@ -3,7 +3,6 @@
     import type { AuthDict, MatrixClient } from "matrix-js-sdk";
     import { AuthType } from "matrix-js-sdk";
     import LL from "../../../../i18n/i18n-svelte";
-    import Button from "../../../Components/UI/Button.svelte";
     import { INTERACTIVE_AUTH_PHASE } from "./InteractiveAuthPhase";
 
     interface Props {
@@ -73,11 +72,11 @@
     {$LL.chat.e2ee.interactiveAuth.buttons.cancel()}
 </button>
 {#if phase === INTERACTIVE_AUTH_PHASE.PRE_AUTH}
-    <Button variant="secondary" class="flex-1" onclick={onStartAuthClick}>
+    <button class="btn btn-secondary flex-1 justify-center" onclick={onStartAuthClick}>
         {$LL.chat.e2ee.interactiveAuth.buttons.continueSSO()}
-    </Button>
+    </button>
 {:else}
-    <Button variant="secondary" class="flex-1" onclick={onConfirmClick}>
+    <button class="btn btn-secondary flex-1 justify-center" onclick={onConfirmClick}>
         {$LL.chat.e2ee.interactiveAuth.buttons.finish()}
-    </Button>
+    </button>
 {/if}

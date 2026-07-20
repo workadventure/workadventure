@@ -2,7 +2,6 @@
     import type { Readable } from "svelte/store";
     import { get } from "svelte/store";
     import Popup from "../../../Components/Modal/Popup.svelte";
-    import Button from "../../../Components/UI/Button.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import ChatLoader from "../../Components/ChatLoader.svelte";
     import type { DeviceVerificationState } from "./MatrixSecurity";
@@ -95,28 +94,29 @@
     {/snippet}
     {#snippet action()}
         {#if current.status === "done"}
-            <Button
-                dataTestId="understoodButton"
-                variant="secondary"
-                class="flex-1 bg-secondary"
+            <button
+                data-testid="understoodButton"
+                class="btn btn-secondary flex-1 justify-center bg-secondary"
                 onclick={() => modals.close()}
                 >{$LL.chat.verificationEmojiDialog.understood()}
-            </Button>
+            </button>
         {:else if current.status === "error"}
             <span data-testid="errorEmojiLabel">
                 {$LL.chat.verificationEmojiDialog.error()}
             </span>
         {:else if current.status === "emoji" && !matchClicked}
-            <Button
-                variant="danger"
-                class="flex-1 mx-4 py-1"
-                dataTestId="mismatchButton"
+            <button
+                class="btn btn-danger flex-1 justify-center mx-4 py-1"
+                data-testid="mismatchButton"
                 onclick={mismatchAndCloseModal}
                 >{$LL.chat.verificationEmojiDialog.mismatch()}
-            </Button>
-            <Button dataTestId="matchButton" variant="secondary" class="flex-1 mx-4 my-2 py-1" onclick={confirmEmoji}
+            </button>
+            <button
+                data-testid="matchButton"
+                class="btn btn-secondary flex-1 justify-center mx-4 my-2 py-1"
+                onclick={confirmEmoji}
                 >{$LL.chat.verificationEmojiDialog.confirmation()}
-            </Button>
+            </button>
         {:else}
             {$LL.chat.verificationEmojiDialog.waitOtherDeviceConfirmation()}
         {/if}

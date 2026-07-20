@@ -7,7 +7,6 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import SelectMatrixUser from "../SelectMatrixUser.svelte";
-    import Button from "../../../Components/UI/Button.svelte";
     import RoomParticipant from "./RoomParticipant.svelte";
     import { IconLoader, IconLink } from "@wa-icons";
     import { modals } from "@wa-modals";
@@ -96,9 +95,9 @@
             {:else if membersLoadingError}
                 <div class="flex flex-col items-center justify-center gap-3 py-8">
                     <p class="text-sm text-red-100">{$LL.chat.manageRoomUsers.error()} : {membersLoadingError}</p>
-                    <Button variant="secondary" onclick={loadMembers}>
+                    <button type="button" class="btn btn-secondary" onclick={loadMembers}>
                         {$LL.chat.load()}
-                    </Button>
+                    </button>
                 </div>
             {:else if sendingInvitationsToRoom}
                 <div class="flex flex-col items-center justify-center gap-3 py-10">
@@ -154,17 +153,18 @@
         {#if sendingInvitationsToRoom}
             <p class="text-sm text-white/70">{$LL.chat.createRoom.loadingCreation()}</p>
         {:else}
-            <Button variant="secondary" class="flex-1" onclick={() => modals.close()}>
+            <button type="button" class="btn btn-secondary flex-1 justify-center" onclick={() => modals.close()}>
                 {$LL.chat.manageRoomUsers.buttons.cancel()}
-            </Button>
+            </button>
             {#if $isRoomAdmin}
-                <Button
-                    dataTestId="createRoomButton"
-                    class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1"
+                <button
+                    type="button"
+                    data-testid="createRoomButton"
+                    class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
                     disabled={invitations === undefined || invitations.length === 0 || !$hasPermissionToInvite}
                     onclick={inviteUsersAndCloseModalOnSuccess}
                     >{$LL.chat.manageRoomUsers.buttons.sendInvitations()}
-                </Button>
+                </button>
             {/if}
         {/if}
     {/snippet}

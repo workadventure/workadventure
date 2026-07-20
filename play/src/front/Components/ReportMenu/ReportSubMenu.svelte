@@ -3,7 +3,6 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { LL } from "../../../i18n/i18n-svelte";
     import TextArea from "../Input/TextArea.svelte";
-    import Button from "../UI/Button.svelte";
 
     interface Props {
         userUUID?: string;
@@ -54,10 +53,9 @@
             {/if}
         </section>
         <section>
-            <Button
+            <button
                 type="submit"
-                variant="danger"
-                class="w-full"
+                class="btn btn-danger w-full"
                 onclick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
@@ -65,7 +63,7 @@
                 }}
             >
                 {$LL.report.submit()}
-            </Button>
+            </button>
         </section>
     </form>
 </div>

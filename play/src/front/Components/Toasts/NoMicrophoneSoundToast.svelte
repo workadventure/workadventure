@@ -5,7 +5,6 @@
     import { usedMicrophoneDeviceIdStore } from "../../Stores/MediaStore";
     import { microphoneValidatedForDeviceIdStore } from "../../Stores/MicrophoneValidatedForDeviceIdStore";
     import { toastStore } from "../../Stores/ToastStoreSingleton";
-    import Button from "../UI/Button.svelte";
     import ToastContainer from "./ToastContainer.svelte";
 
     interface Props {
@@ -35,11 +34,10 @@
         </p>
     </div>
     {#snippet buttons()}
-        <Button
-            appearance="ghost"
-            size="sm"
-            class="flex-1"
-            dataTestId="no-microphone-sound-ignore"
+        <button
+            type="button"
+            class="btn btn-ghost btn-sm flex-1"
+            data-testid="no-microphone-sound-ignore"
             onclick={(event) => {
                 event.stopPropagation();
                 event.preventDefault();
@@ -47,13 +45,11 @@
             }}
         >
             {$LL.actionbar.microphone.ignore()}
-        </Button>
-        <Button
+        </button>
+        <button
             type="button"
-            variant="danger"
-            size="sm"
-            class="flex-1"
-            dataTestId="no-microphone-sound-open-settings"
+            class="btn btn-danger btn-sm flex-1"
+            data-testid="no-microphone-sound-open-settings"
             onclick={(event) => {
                 event.stopPropagation();
                 event.preventDefault();
@@ -61,6 +57,6 @@
             }}
         >
             {$LL.actionbar.microphone.openSettings()}
-        </Button>
+        </button>
     {/snippet}
 </ToastContainer>

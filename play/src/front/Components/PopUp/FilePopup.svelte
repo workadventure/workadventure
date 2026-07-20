@@ -2,7 +2,6 @@
     import { onMount, onDestroy } from "svelte";
     import type { UserInputManager } from "../../Phaser/UserInput/UserInputManager";
     import LL from "../../../i18n/i18n-svelte";
-    import Button from "../UI/Button.svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
 
     interface Props {
@@ -25,8 +24,8 @@
 <PopUpContainer reduceOnSmallScreen={true}>
     {message}
     {#snippet buttons()}
-        <Button variant="secondary" size="sm" class="w-full max-w-96" onclick={click}>
+        <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" onclick={click}>
             {$LL.mapEditor.properties.openFile.label()}
-        </Button>
+        </button>
     {/snippet}
 </PopUpContainer>

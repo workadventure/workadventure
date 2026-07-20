@@ -34,7 +34,6 @@
     import ButtonClose from "../Input/ButtonClose.svelte";
     import Select from "../Input/Select.svelte";
     import InputCheckbox from "../Input/InputCheckbox.svelte";
-    import Button from "../UI/Button.svelte";
     import { IconAlertTriangle, IconInfoCircle, IconMessageShare, IconMusicShare, IconSpeakerPhone } from "@wa-icons";
 
     let mainModal: HTMLDivElement;
@@ -255,16 +254,13 @@
                             {$LL.megaphone.modal.liveMessage.title()}
                         </h4>
 
-                        <Button
-                            variant="light"
-                            appearance="border"
-                            size="lg"
-                            class="mt-2 mb-4"
+                        <button
+                            class="btn-lg btn btn-light btn-border mt-2 mb-4"
                             onclick={activateLiveMessage}
                             disabled={!$megaphoneCanBeUsedStore}
                         >
                             {$LL.megaphone.modal.liveMessage.button()}
-                        </Button>
+                        </button>
 
                         {#if !$megaphoneCanBeUsedStore}
                             <p class="help-text !text-danger-800">
@@ -301,16 +297,13 @@
                             {$LL.megaphone.modal.textMessage.title()}
                         </h4>
 
-                        <Button
-                            variant="light"
-                            appearance="border"
-                            size="lg"
-                            class="mb-4"
+                        <button
+                            class="btn-lg btn btn-light btn-border mb-4"
                             onclick={activateInputText}
                             disabled={!$userIsAdminStore}
                         >
                             {$LL.megaphone.modal.textMessage.button()}
-                        </Button>
+                        </button>
 
                         {#if !$userIsAdminStore}
                             <p class="help-text !text-danger-800">
@@ -347,16 +340,13 @@
                             {$LL.megaphone.modal.audioMessage.title()}
                         </h4>
 
-                        <Button
-                            variant="light"
-                            appearance="border"
-                            size="lg"
-                            class="mb-4"
+                        <button
+                            class="btn-lg btn btn-light btn-border mb-4"
                             onclick={activateUploadAudio}
                             disabled={!$userIsAdminStore}
                         >
                             {$LL.megaphone.modal.audioMessage.button()}
-                        </Button>
+                        </button>
 
                         {#if !$userIsAdminStore}
                             <p class="help-text !text-danger-800">
@@ -412,15 +402,15 @@
                     </div>
                     <div class="flex justify-center">
                         <section class="centered-column">
-                            <Button
-                                variant="light"
+                            <button
+                                class="btn btn-light"
                                 onclick={(event) => {
                                     event.preventDefault();
                                     send();
                                 }}
                             >
                                 {$LL.menu.globalMessage.send()}
-                            </Button>
+                            </button>
                         </section>
                     </div>
                 </div>
@@ -537,9 +527,9 @@
                                 {$LL.megaphone.modal.liveMessage.startMegaphone()}
                             </button>
                         {:else}
-                            <Button variant="danger" onclick={stopLive}>
+                            <button class="btn btn-danger" onclick={stopLive}>
                                 {$LL.megaphone.modal.liveMessage.stopMegaphone()}
-                            </Button>
+                            </button>
                         {/if}
                     </div>
                 </div>

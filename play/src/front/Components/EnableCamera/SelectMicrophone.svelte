@@ -3,7 +3,6 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
     import Chip from "../UI/Chip.svelte";
-    import Button from "../UI/Button.svelte";
     import { IconMicrophoneOff, IconCheck } from "@wa-icons";
 
     let editMode = $state(false);
@@ -27,9 +26,8 @@
         <div class="grow pe-8 ps-2">
             {@render title?.()}
         </div>
-        <Button
-            variant={!editMode ? "secondary" : "light"}
-            appearance={!editMode ? "filled" : "ghost"}
+        <button
+            class="btn {!editMode ? 'btn-secondary' : 'btn-light btn-ghost'}"
             onclick={(event) => {
                 event.stopPropagation();
                 event.preventDefault();
@@ -37,7 +35,7 @@
             }}
         >
             {!editMode ? $LL.actionbar.edit() : $LL.actionbar.cancel()}
-        </Button>
+        </button>
     </div>
 
     <div class="flex w-full">

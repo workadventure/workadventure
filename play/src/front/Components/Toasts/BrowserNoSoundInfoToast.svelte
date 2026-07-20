@@ -3,7 +3,6 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { userActivationManager } from "../../Stores/UserActivationStore";
     import { audioPlaybackStore } from "../../Stores/AudioPlaybackStore";
-    import Button from "../UI/Button.svelte";
     import ToastContainer from "./ToastContainer.svelte";
 
     let isRetrying = $state(false);
@@ -57,12 +56,10 @@
         </p>
     </div>
     {#snippet buttons()}
-        <Button
+        <button
             type="button"
-            variant="secondary"
-            size="sm"
-            class="flex-1"
-            dataTestId="audio-playback-retry"
+            class="btn btn-secondary btn-sm flex-1"
+            data-testid="audio-playback-retry"
             disabled={isRetrying}
             onclick={(event) => {
                 event.stopPropagation();
@@ -71,6 +68,6 @@
             }}
         >
             {$LL.statusModal.turnSoundOn()}
-        </Button>
+        </button>
     {/snippet}
 </ToastContainer>

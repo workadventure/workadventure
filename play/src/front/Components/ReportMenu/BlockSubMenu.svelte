@@ -3,7 +3,6 @@
     import { blackListManager } from "../../WebRtc/BlackListManager";
     import { showReportScreenStore, userReportEmpty } from "../../Stores/ShowReportScreenStore";
     import { LL } from "../../../i18n/i18n-svelte";
-    import Button from "../UI/Button.svelte";
 
     interface Props {
         userUUID?: string;
@@ -40,17 +39,16 @@
     <section class="w-full">
         <h3 class="blue-title justify-start">{$LL.report.block.title()}</h3>
         <p>{$LL.report.block.content({ userName })}</p>
-        <Button
+        <button
             type="button"
-            dataTestId="blockmenu-block-user-button"
-            variant="danger"
-            class="w-full"
+            data-testid="blockmenu-block-user-button"
+            class="btn btn-danger w-full"
             onclick={(event) => {
                 event.preventDefault();
                 blockUser();
             }}
         >
             {userIsBlocked ? $LL.report.block.unblock() : $LL.report.block.block()}
-        </Button>
+        </button>
     </section>
 </div>

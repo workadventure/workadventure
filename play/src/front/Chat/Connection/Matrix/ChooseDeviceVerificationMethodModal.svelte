@@ -1,6 +1,5 @@
 <script lang="ts">
     import Popup from "../../../Components/Modal/Popup.svelte";
-    import Button from "../../../Components/UI/Button.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { matrixSecurity } from "./MatrixSecurity";
     import { modals } from "@wa-modals";
@@ -36,19 +35,17 @@
         </div>
     {/snippet}
     {#snippet action()}
-        <Button
-            dataTestId="VerifyWithAnotherDeviceButton"
-            variant="secondary"
-            class="bg-secondary flex-1"
+        <button
+            data-testid="VerifyWithAnotherDeviceButton"
+            class="btn btn-secondary bg-secondary flex-1 justify-center"
             onclick={startVerificationWithOtherDevice}
             >{$LL.chat.chooseDeviceVerificationMethodModal.withOtherDevice()}
-        </Button>
-        <Button
-            dataTestId="VerifyWithPassphraseButton"
-            variant="secondary"
-            class="bg-secondary flex-1"
+        </button>
+        <button
+            data-testid="VerifyWithPassphraseButton"
+            class="btn btn-secondary bg-secondary flex-1 justify-center"
             onclick={startVerificationWithPassphrase}
             >{$LL.chat.chooseDeviceVerificationMethodModal.withPassphrase()}
-        </Button>
+        </button>
     {/snippet}
 </Popup>

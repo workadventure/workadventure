@@ -2,7 +2,6 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
-    import Button from "../UI/Button.svelte";
     import WokaFromUserId from "../Woka/WokaFromUserId.svelte";
     import { IconUsersGroup } from "@wa-icons";
 
@@ -55,21 +54,19 @@
         </div>
     </div>
     <div class="flex items-center bg-contrast w-full justify-center flex-row">
-        <Button
-            variant="light"
-            appearance="ghost"
-            class="text-nowrap my-2 mx-1 min-w-0 !border !border-solid !border-transparent hover:!bg-white/30"
+        <button
+            type="button"
+            class="btn btn-light btn-ghost text-nowrap justify-center my-2 mx-1 min-w-0 !border !border-solid !border-transparent hover:!bg-white/30"
             onclick={onAccept}
         >
             {$LL.chat.accept()}
-        </Button>
-        <Button
-            variant="light"
-            appearance="ghost"
-            class="text-nowrap my-2 mx-1 min-w-0 !border !border-solid !border-transparent hover:!border hover:!border-solid hover:!border-white/30 hover:!bg-transparent"
+        </button>
+        <button
+            type="button"
+            class="btn btn-light btn-ghost text-nowrap justify-center my-2 mx-1 min-w-0 !border !border-solid !border-transparent hover:!border hover:!border-solid hover:!border-white/30 hover:!bg-transparent"
             onclick={onDecline}
         >
             {$LL.chat.decline()}
-        </Button>
+        </button>
     </div>
 </div>
