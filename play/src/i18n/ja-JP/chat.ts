@@ -261,6 +261,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             questionPlaceholder: "質問を入力",
             answers: "選択肢",
             addAnswer: "選択肢を追加",
+            removeAnswer: "選択肢 {index} を削除",
             answerPlaceholder: "選択肢 {index}",
             answerCount: "{count}/{max} 件の選択肢",
             visibility: "表示設定",

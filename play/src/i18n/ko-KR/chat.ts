@@ -262,6 +262,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             questionPlaceholder: "질문을 입력하세요",
             answers: "선택지",
             addAnswer: "선택지 추가",
+            removeAnswer: "선택지 {index} 삭제",
             answerPlaceholder: "선택지 {index}",
             answerCount: "{count}/{max}개 선택지 준비됨",
             visibility: "공개 설정",

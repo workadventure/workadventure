@@ -261,6 +261,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             questionPlaceholder: "Stajće prašenje",
             answers: "Wotmołwy",
             addAnswer: "Wotmołwu přidać",
+            removeAnswer: "Wotmołwu {index} wotstronić",
             answerPlaceholder: "Wotmołwa {index}",
             answerCount: "{count}/{max} wotmołwow hotowe",
             visibility: "Widźomnosć",
