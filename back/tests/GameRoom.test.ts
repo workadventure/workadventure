@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, expect, it, vi } from "vitest";
 import { JoinRoomMessage, PositionMessage_Direction, RoomJoinedMessage } from "@workadventure/messages";
+import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
+import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import type { ConnectCallback, DisconnectCallback } from "../src/Model/GameRoom";
 import { GameRoom } from "../src/Model/GameRoom";
 import { Point } from "../src/Model/Websocket/MessageUserPosition";
 import type { Group } from "../src/Model/Group";
 import type { User, UserSocket } from "../src/Model/User";
+import type { VariableSocket } from "../src/RoomManager";
 import type { EmoteCallback } from "../src/Model/Zone";
 
 function createMockUser(userId: number): User {
@@ -64,6 +67,40 @@ function getWrittenMessageCases(socket: ReturnType<typeof createMockUserSocket>)
 }
 
 const emote: EmoteCallback = (emoteEventMessage, listener): void => {};
+
+const ROOM_URL = "https://play.workadventu.re/_/global/localhost/test.json";
+
+function createMockVariableSocket(name: string) {
+    const write = vi.fn().mockReturnValue(true);
+    const end = vi.fn();
+
+    return {
+        socket: {
+            request: { name, room: ROOM_URL },
+            write,
+            end,
+        } as unknown as VariableSocket,
+        write,
+        end,
+    };
+}
+
+function createWorld(): Promise<GameRoom> {
+    return GameRoom.create(
+        ROOM_URL,
+        () => {},
+        () => {},
+        160,
+        160,
+        () => {},
+        () => {},
+        () => {},
+        emote,
+        () => {},
+        () => {},
+        () => {}
+    );
+}
 
 describe("GameRoom", () => {
     it("should connect user1 and user2", async () => {
@@ -279,5 +316,46 @@ describe("GameRoom", () => {
         flushPendingMessages(secondUser);
 
         expect(getWrittenMessageCases(secondSocket)).toContain("duplicateUserConnectedMessage");
+    });
+
+    describe("variable listeners", () => {
+        it("should not write to a listener that was removed", async () => {
+            // Loading the map is irrelevant here: failing the fetch makes GameRoom fall back to a
+            // permission-less variable manager, which is enough to dispatch a variable change.
+            vi.spyOn(mapFetcher, "fetchMap").mockRejectedValue(new LocalUrlError("Local map"));
+
+            const world = await createWorld();
+
+            const removedListener = createMockVariableSocket("myVariable");
+            const remainingListener = createMockVariableSocket("myVariable");
+            world.addVariableListener(removedListener.socket);
+            world.addVariableListener(remainingListener.socket);
+
+            world.removeVariableListener(removedListener.socket);
+
+            await world.setVariable("myVariable", JSON.stringify("new value"), "RoomApi");
+
+            expect(removedListener.write).not.toHaveBeenCalled();
+            expect(remainingListener.write).toHaveBeenCalledWith("new value");
+        });
+
+        it("should forget the variable name once its last listener is removed", async () => {
+            const world = await createWorld();
+
+            const listener = createMockVariableSocket("myVariable");
+            world.addVariableListener(listener.socket);
+            world.removeVariableListener(listener.socket);
+
+            // isEmpty() drives cleanupRoomIfEmpty(): a leftover entry keeps the room alive forever.
+            expect(world.isEmpty()).toBe(true);
+        });
+
+        it("should not register a variable name when removing an unknown listener", async () => {
+            const world = await createWorld();
+
+            world.removeVariableListener(createMockVariableSocket("neverListenedTo").socket);
+
+            expect(world.isEmpty()).toBe(true);
+        });
     });
 });
