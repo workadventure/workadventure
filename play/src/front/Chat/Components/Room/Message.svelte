@@ -39,7 +39,6 @@
         membersForMessageAvatars?: Readable<readonly ChatRoomMember[]>;
         /** Root message reply preview; hide inside an open thread timeline (main room only). */
         showThreadSummary?: boolean;
-        updateMessageBody?: (event: { id: string }) => void;
     }
 
     let {
@@ -48,7 +47,6 @@
         showHeader = true,
         membersForMessageAvatars = undefined,
         showThreadSummary = true,
-        updateMessageBody = () => {},
     }: Props = $props();
 
     let messageRef: HTMLDivElement | undefined = $state();
@@ -66,12 +64,6 @@
         isModified,
         reactions,
     } = $derived(message);
-
-    const handleUpdateMessageBody = () => {
-        updateMessageBody({
-            id: message.id,
-        });
-    };
 
     let messageFromSystem = $derived(type === "incoming" || type === "outcoming");
 
@@ -213,7 +205,7 @@
                     {/if}
 
                     {@const MessageComponent = messageType[type]}
-                    <MessageComponent updateMessageBody={handleUpdateMessageBody} {content} />
+                    <MessageComponent {content} />
 
                     {#if $reactionsWithUsers.length > 0}
                         <MessageReactions
