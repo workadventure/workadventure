@@ -16,6 +16,13 @@ import {
     OPID_TAGS_CLAIM,
 } from "../enums/EnvironmentVariable";
 
+const OIDC_COOKIE_OPTIONS = {
+    httpOnly: true,
+    path: "/",
+    sameSite: "lax" as const,
+    maxAge: 10 * 60 * 1000,
+};
+
 custom.setHttpOptionsDefaults({
     timeout: 50000,
 });
@@ -71,31 +78,31 @@ class OpenIDClient {
         chatRoomId: string | undefined,
         providerId: string | undefined,
         providerScopes: string[] | undefined,
-    ): Promise<string> {
+    ): Promise<{ loginUri: string; state: string; codeVerifier: string }> {
         return this.initClient().then((client) => {
             if (!OPID_SCOPE.includes("email") || !OPID_SCOPE.includes("openid")) {
                 throw new Error("Invalid scope, 'email' and 'openid' are required in OPID_SCOPE.");
             }
 
-            const code_verifier = generators.codeVerifier();
+            const codeVerifier = generators.codeVerifier();
             // store the code_verifier in your framework's session mechanism, if it is a cookie based solution
             // it should be httpOnly (not readable by javascript) and encrypted.
-            res.cookie("code_verifier", this.encrypt(code_verifier), {
-                httpOnly: true, // dont let browser javascript access cookie ever
-                secure: req.secure, // only use cookie over https
+            res.cookie("code_verifier", this.encrypt(codeVerifier), {
+                ...OIDC_COOKIE_OPTIONS,
+                secure: req.secure,
             });
 
             // We also store the state in cookies. The state should not be needed, except for older OpenID client servers that
             // don't understand PKCE
             const state = v4();
             res.cookie("oidc_state", state, {
-                httpOnly: true, // dont let browser javascript access cookie ever
-                secure: req.secure, // only use cookie over https
+                ...OIDC_COOKIE_OPTIONS,
+                secure: req.secure,
             });
 
-            const code_challenge = generators.codeChallenge(code_verifier);
+            const code_challenge = generators.codeChallenge(codeVerifier);
 
-            return client.authorizationUrl({
+            const loginUri = client.authorizationUrl({
                 scope: OPID_SCOPE,
                 prompt: OPID_PROMPT,
                 state: state,
@@ -111,6 +118,11 @@ class OpenIDClient {
                 code_challenge,
                 code_challenge_method: "S256",
             });
+            return {
+                loginUri,
+                state,
+                codeVerifier,
+            };
         });
     }
 
@@ -118,6 +130,10 @@ class OpenIDClient {
         req: Request,
         res: Response,
         playUri: string,
+        desktopTransaction?: {
+            state: string;
+            codeVerifier: string;
+        },
     ): Promise<{
         tags: string[] | undefined;
         email: string;
@@ -131,12 +147,12 @@ class OpenIDClient {
         const fullUrl = req.url;
         const cookies = req.cookies;
 
-        if (typeof cookies?.code_verifier !== "string") {
+        if (!desktopTransaction && typeof cookies?.code_verifier !== "string") {
             throw new Error("code verifier doesn't exist");
         }
 
-        const code_verifier = this.decrypt(cookies.code_verifier);
-        const state = cookies.oidc_state;
+        const code_verifier = desktopTransaction?.codeVerifier ?? this.decrypt(cookies.code_verifier);
+        const state = desktopTransaction?.state ?? cookies.oidc_state;
 
         return this.initClient().then((client) => {
             const params = client.callbackParams(fullUrl);
