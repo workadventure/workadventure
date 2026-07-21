@@ -3,6 +3,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import type { SpaceUserExtended } from "../../Space/SpaceInterface";
     import Woka from "../Woka/Woka.svelte";
+    import Button from "../UI/Button.svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
 
     interface Props {
@@ -32,22 +33,17 @@
         </div>
     </div>
     {#snippet buttons()}
-        <button
-            type="button"
-            class="btn btn-outline w-1/2 max-w-80 justify-center responsive-message refuse-request"
+        <Button
+            class="btn-outline w-1/2 max-w-80 responsive-message refuse-request"
             onclick={(event) => {
                 event.preventDefault();
                 refuseRequest();
             }}
         >
             {$LL.follow.interactMenu.no()}
-        </button>
-        <button
-            type="button"
-            class="btn btn-secondary w-1/2 max-w-80 justify-center responsive-message accept-request"
-            onclick={acceptRequest}
-        >
+        </Button>
+        <Button variant="secondary" class="w-1/2 max-w-80 responsive-message accept-request" onclick={acceptRequest}>
             {$LL.follow.interactMenu.yes()}
-        </button>
+        </Button>
     {/snippet}
 </PopUpContainer>

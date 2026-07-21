@@ -3,6 +3,7 @@
     import { onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { LL } from "../../../i18n/i18n-svelte";
+    import Button from "../UI/Button.svelte";
 
     let gameScene = gameManager.getCurrentGameScene();
 
@@ -69,8 +70,8 @@
         <h3 class="h5 text-white/50">{mapName}</h3>
         <p class="whitespace-pre-line italic text-white/50">{mapDescription}</p>
         {#if mapLink}
-            <a href={mapLink} class="btn btn-sm btn-secondary uppercase inline-block" target="_blank"
-                >{$LL.menu.about.mapLink()}</a
+            <Button href={mapLink} variant="secondary" size="sm" class="uppercase inline-block" target="_blank"
+                >{$LL.menu.about.mapLink()}</Button
             >
         {/if}
         <!-- svelte-ignore a11y_click_events_have_key_events -->

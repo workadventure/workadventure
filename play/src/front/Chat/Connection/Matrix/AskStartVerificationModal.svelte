@@ -5,6 +5,7 @@
     import { Deferred } from "@workadventure/shared-utils";
     import { asError } from "catch-unknown";
     import Popup from "../../../Components/Modal/Popup.svelte";
+    import Button from "../../../Components/UI/Button.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import type { AskStartVerificationModalProps } from "./MatrixSecurity";
     import { matrixSecurity } from "./MatrixSecurity";
@@ -123,16 +124,17 @@
     {/snippet}
     {#snippet action()}
         {#if !errorLabel}
-            <button class="btn flex-1 justify-center bg-danger-900" onclick={refuseToStartVerification}>
+            <Button class="flex-1 bg-danger-900" onclick={refuseToStartVerification}>
                 {$LL.chat.askStartVerificationModal.ignore()}
-            </button>
-            <button
-                class="btn btn-secondary flex-1 justify-center bg-secondary"
-                data-testid="VerifyTheSessionButton"
+            </Button>
+            <Button
+                variant="secondary"
+                class="flex-1 bg-secondary"
+                dataTestId="VerifyTheSessionButton"
                 onclick={acceptToStartVerification}
             >
                 {$LL.chat.askStartVerificationModal.accept()}
-            </button>
+            </Button>
         {:else}
             <div>
                 {errorLabel}

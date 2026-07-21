@@ -6,6 +6,7 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import PopUpContainer from "../PopUp/PopUpContainer.svelte";
     import Input from "../Input/Input.svelte";
+    import Button from "../UI/Button.svelte";
 
     let name = $state("");
     /** True if this user already owns another personal area on the map (may be replaced when claiming). */
@@ -56,17 +57,18 @@
             <p class="m-0 mt-2 max-w-xs">{$LL.area.personalArea.alreadyHavePersonalArea()}</p>
             {#snippet buttons()}
                 <div class="flex flex-row justify-center items-center w-full">
-                    <button
-                        data-testid="claimPersonalAreaReplaceConfirmButton"
+                    <Button
+                        dataTestId="claimPersonalAreaReplaceConfirmButton"
                         type="button"
-                        class="btn btn-secondary w-fit px-10"
+                        variant="secondary"
+                        class="w-fit px-10"
                         onclick={(event) => {
                             event.preventDefault();
                             replaceExistingConfirmed = true;
                         }}
                     >
                         {$LL.area.personalArea.buttons.confirm()}
-                    </button>
+                    </Button>
                 </div>
             {/snippet}
         </PopUpContainer>
@@ -82,25 +84,28 @@
             />
             {#snippet buttons()}
                 <div class="flex flex-row justify-center w-full gap-2">
-                    <button
+                    <Button
                         type="button"
-                        class="btn btn-outline w-fit px-10 hover:bg-contrast-600/50"
+                        class="btn-outline w-fit px-10 hover:bg-contrast-600/50"
                         onclick={(event) => {
                             event.preventDefault();
                             closeDialog();
                         }}
-                        >{$LL.area.personalArea.buttons.no()}
-                    </button>
-                    <button
-                        data-testid="claimPersonalAreaButton"
+                    >
+                        {$LL.area.personalArea.buttons.no()}
+                    </Button>
+                    <Button
+                        dataTestId="claimPersonalAreaButton"
                         type="button"
-                        class="btn btn-secondary w-fit px-10"
+                        variant="secondary"
+                        class="w-fit px-10"
                         onclick={() => {
                             mapEditorModeManager.claimPersonalArea(name);
                             closeDialog();
                         }}
-                        >{$LL.area.personalArea.buttons.yes()}
-                    </button>
+                    >
+                        {$LL.area.personalArea.buttons.yes()}
+                    </Button>
                 </div>
             {/snippet}
         </PopUpContainer>

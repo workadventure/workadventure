@@ -1,6 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
+    import Button from "../UI/Button.svelte";
 
     function register() {
         window.open(`${ADMIN_URL}/second-step-register`, "_self");
@@ -21,15 +22,16 @@
     </section>
 
     <section class="justify-center bottom-0 w-full bg-contrast p-4 flex flex-row space-x-4 mt-4 rounded-b-lg">
-        <button
-            class="btn btn-secondary grow"
+        <Button
+            variant="secondary"
+            class="grow"
             onclick={(event) => {
                 event.preventDefault();
                 register();
             }}
         >
             Register
-        </button>
+        </Button>
     </section>
 </div>
 

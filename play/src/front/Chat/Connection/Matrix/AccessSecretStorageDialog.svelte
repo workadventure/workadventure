@@ -2,6 +2,7 @@
     import type { MatrixClient, SecretStorage } from "matrix-js-sdk";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import resetKeyStorageConfirmationModal from "../../../Components/Menu/ResetKeyStorageConfirmationModal.svelte";
+    import Button from "../../../Components/UI/Button.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { MatrixSecurity } from "./MatrixSecurity";
@@ -170,13 +171,14 @@
         </div>
     {/snippet}
     {#snippet action()}
-        <button class="btn flex-1 justify-center hover:bg-white/10" onclick={cancelAccessSecretStorage}>
+        <Button class="flex-1 hover:bg-white/10" onclick={cancelAccessSecretStorage}>
             {$LL.chat.e2ee.accessSecretStorage.buttons.cancel()}
-        </button>
-        <button
+        </Button>
+        <Button
+            variant="secondary"
             disabled={confirmInputDisabled || isCheckingPassphrase}
-            class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
-            data-testid="confirmAccessSecretStorageButton"
+            class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1"
+            dataTestId="confirmAccessSecretStorageButton"
             onclick={() => checkAndSubmitRecoveryOrPassphraseIfValid()}
         >
             {#if isCheckingPassphrase}
@@ -184,6 +186,6 @@
             {:else}
                 {$LL.chat.e2ee.accessSecretStorage.buttons.confirm()}
             {/if}
-        </button>
+        </Button>
     {/snippet}
 </Popup>
