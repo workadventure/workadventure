@@ -60,6 +60,24 @@ function hudKindOfSender(sender: Electron.WebContents): HudKind | undefined {
     return undefined;
 }
 
+/**
+ * Force every open HUD window back to the top of its z-level. Called when another window at the
+ * same always-on-top level (specifically the transparent annotation overlay) is shown after the
+ * HUDs — otherwise the newcomer sits above them and swallows the presenter's clicks.
+ */
+export function raiseHudsToTop(): void {
+    for (const entry of hudWindows.values()) {
+        if (entry.window.isDestroyed()) {
+            continue;
+        }
+        try {
+            entry.window.moveTop();
+        } catch (error) {
+            ElectronLog.debug("HUD moveTop failed", error);
+        }
+    }
+}
+
 function positionFor(kind: HudKind, display: Electron.Display): { x: number; y: number } {
     const { width, height } = HUD_SIZES[kind];
     const area = display.workArea;
@@ -126,7 +144,13 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
         ElectronLog.debug(`HUD ${kind} setVisibleOnAllWorkspaces failed`, error);
     }
     try {
-        newWindow.setAlwaysOnTop(true, "screen-saver");
+        // relativeLevel +1 lifts the HUD one layer above the transparent overlay window (which
+        // also lives at "screen-saver"). Without this the overlay — opened asynchronously from
+        // the draw-mode subscription — lands on top of the HUD and, once draw mode captures
+        // pointer events, the presenter can no longer click the meeting-bar / annotation-bar
+        // buttons: the clicks are absorbed by the overlay. macOS reads the relativeLevel; on
+        // other platforms the second-layer bump is a no-op but the moveTop below still runs.
+        newWindow.setAlwaysOnTop(true, "screen-saver", 1);
     } catch (error) {
         ElectronLog.debug(`HUD ${kind} setAlwaysOnTop failed`, error);
     }
@@ -143,6 +167,10 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
         if (!newWindow.isDestroyed()) {
             // Never steal focus from the app the presenter is currently driving.
             newWindow.showInactive();
+            // Cross-platform belt-and-braces: even with the relativeLevel bump above, if the
+            // overlay was created just after the HUD, it can end up sitting above until the next
+            // window ordering event. moveTop() forces the HUD to the top of its level right now.
+            newWindow.moveTop();
         }
     });
 
