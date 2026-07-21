@@ -1,5 +1,7 @@
 import type { Decorator, Preview } from "@storybook/svelte-vite";
 
+// Must run before any story module evaluates: sets window.env so config-reading components import.
+import "./preview-env";
 import "../src/front/style/index.css";
 import type { Locales } from "../src/i18n/i18n-types";
 import { loadLocale } from "../src/i18n/i18n-util.sync";
