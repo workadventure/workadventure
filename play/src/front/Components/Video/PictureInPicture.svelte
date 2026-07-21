@@ -157,18 +157,26 @@
     function requestPictureInPicture() {
         debug("Request Picture in Picture mode");
 
-        if (!hasPictureInPictureContent($isInRemoteConversation, $streamableCollectionStore.size)) {
-            debug("Request Picture in Picture mode but no video content is available");
-            askPictureInPictureActivatingStore.set(false);
-            return;
-        }
-
         if (useNativeDesktopPip) {
             // Native path: do not open a DocumentPictureInPicture window — the Electron utility
             // window covers this case (and avoids the user-gesture limitation). Keep the request
             // store active while the native PiP is open: the action-bar button uses the same
             // value to turn a second click into an explicit close request.
+            //
+            // We deliberately skip the hasPictureInPictureContent gate here: it wants either an
+            // existing remote video stream or a non-empty streamable collection, but the native
+            // PiP is happy to open with placeholder tiles as soon as the user is engaged in an
+            // active conversation. Requiring streams caused the first click to be silently dropped
+            // whenever the user pressed the button before any peer had published video, so users
+            // had to click twice. evaluateNativePipState + shouldOpenNativePictureInPicture already
+            // gate on isInActiveConversation, which is the right signal for the native path.
             evaluateNativePipState();
+            return;
+        }
+
+        if (!hasPictureInPictureContent($isInRemoteConversation, $streamableCollectionStore.size)) {
+            debug("Request Picture in Picture mode but no video content is available");
+            askPictureInPictureActivatingStore.set(false);
             return;
         }
 
@@ -402,7 +410,12 @@
             console.warn("PictureInPicture => Could not get mapImage from the current game scene", e);
         }
 
+        // Browser PiP is closed as soon as the main window regains focus (the DocumentPictureInPicture
+        // spec assumes you no longer need it once you're back on the tab). The native Electron PiP
+        // has its own lifecycle policy in shouldOpenNativePictureInPicture — manual-opens must
+        // stay visible even when the user clicks back on the main app — so we skip the reset here.
         const onFocus = () => {
+            if (useNativeDesktopPip) return;
             destroyPictureInPictureComponent();
         };
 
