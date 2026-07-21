@@ -16,6 +16,7 @@
         pictureInPictureSupportedStore,
     } from "../../Stores/PeerStore";
     import { userAwayFromAppStore } from "../../Stores/DesktopVisibilityStore";
+    import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {} from "./PictureInPicture/PictureInPictureWindow";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -391,26 +392,46 @@
             }
         });
 
+        // Tear down every presenter-facing surface (annotation drawing + screen share) whose
+        // audience just vanished. Cascades through the existing bridges:
+        //   localAnnotationActiveStore=false → PresenterHudBridge closes annotation bar,
+        //     ScreenOverlayBridge drops draw mode.
+        //   requestedScreenSharingState=false → ScreenOverlayBridge closes the overlay,
+        //     activeScreenShareSourceStore clears → PresenterHudBridge closes meeting bar.
+        function closePresenterSurfaces(): void {
+            if (get(localAnnotationActiveStore)) {
+                localAnnotationActiveStore.set(false);
+            }
+            if (get(requestedScreenSharingState)) {
+                requestedScreenSharingState.disableScreenSharing();
+            }
+        }
+
         // Re-evaluate the moment a proximity bubble forms (someone walked into our meeting), even
         // before any media stream actually lands. Lets PiP pop up as soon as a participant joins.
-        // On the way OUT (bubble breaks, presenter walks away, meeting ends), also tear down the
-        // presenter-facing surfaces: annotation drawing and screen sharing. This cascades to close
-        // the annotation bar + overlay (via localAnnotationActiveStore=false) and the meeting bar
-        // + overlay window (via requestedScreenSharingState=false → activeScreenShareSourceStore
-        // clearing) — without this the HUD bars linger on the presenter's screen after the
-        // audience has already dispersed.
+        // On the way OUT (bubble breaks, presenter walks away, meeting ends), also clean up so
+        // the HUD bars don't linger on the presenter's screen after the audience has dispersed.
         const unsubscribeActiveConv = isInActiveConversationStore.subscribe((inConversation) => {
             if (!inConversation) {
-                if (get(localAnnotationActiveStore)) {
-                    localAnnotationActiveStore.set(false);
-                }
-                if (get(requestedScreenSharingState)) {
-                    requestedScreenSharingState.disableScreenSharing();
-                }
+                closePresenterSurfaces();
             }
             if (useNativeDesktopPip) {
                 evaluateNativePipState();
             }
+        });
+
+        // A room-to-room transition (portal, teleport, /!command switch) tears the Phaser scene
+        // down without necessarily emptying the current proximity bubble in the same tick — the
+        // conversation-end subscription above wouldn't catch it. gameSceneIsLoadedStore flips
+        // false on every scene shutdown, so we use it as a room-change signal to close the
+        // presenter surfaces (they belong to the OLD room's audience). Skip the first
+        // false→false initial notification with wasLoaded.
+        let wasSceneLoaded = get(gameSceneIsLoadedStore);
+        const unsubscribeSceneLoaded = gameSceneIsLoadedStore.subscribe((loaded) => {
+            if (wasSceneLoaded && !loaded) {
+                closePresenterSurfaces();
+            }
+            wasSceneLoaded = loaded;
         });
 
         try {
@@ -441,6 +462,7 @@
             unsubscribeStreamables();
             unsubscribeRemote();
             unsubscribeActiveConv();
+            unsubscribeSceneLoaded();
             screenOverlayBridge.stop();
             presenterHudBridge.stop();
             try {
