@@ -28,6 +28,7 @@ import messageScreen from "./messageScreen";
 import refreshPrompt from "./refreshPrompt";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
+import screenAnnotation from "./screenAnnotation";
 import recording from "./recording";
 
 const ja_JP = deepmerge(en_US, {
@@ -60,6 +61,7 @@ const ja_JP = deepmerge(en_US, {
     randomNames,
     onboarding,
     recording,
+    screenAnnotation,
 });
 
 export default ja_JP;
