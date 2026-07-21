@@ -319,17 +319,34 @@
     }
 
     // ─────────── IPC plumbing ───────────
+    // Serialize offer handling. Two offers arriving in quick succession (main renderer
+    // renegotiates on new track then immediately again on state push) would otherwise interleave:
+    // offer1 → createAnswer1 (in-flight), offer2 → setRemoteDescription rewrites state, answer1
+    // resolves and tries setLocalDescription on a state that's already back to `stable`, WebRTC
+    // throws "Called in wrong state: stable". Chaining onto a promise queue guarantees the
+    // sequence is offer→createAnswer→setLocalDescription→sendAnswer for offer N before offer N+1
+    // starts, matching the invariant setRemoteDescription/setLocalDescription enforce.
+    var offerQueue = Promise.resolve();
     api.onOffer(function (sdp) {
-        var pc = ensurePeerConnection();
-        pc.setRemoteDescription(sdp)
-            .then(function () { return pc.createAnswer(); })
-            .then(function (answer) { return pc.setLocalDescription(answer); })
-            .then(function () {
-                if (pc.localDescription) {
-                    api.sendAnswer({ type: pc.localDescription.type, sdp: pc.localDescription.sdp });
-                }
-            })
-            .catch(function (err) { console.warn("PiP offer handling failed", err); });
+        offerQueue = offerQueue.then(function () {
+            var pc = ensurePeerConnection();
+            return pc
+                .setRemoteDescription(sdp)
+                .then(function () {
+                    return pc.createAnswer();
+                })
+                .then(function (answer) {
+                    return pc.setLocalDescription(answer);
+                })
+                .then(function () {
+                    if (pc.localDescription) {
+                        api.sendAnswer({ type: pc.localDescription.type, sdp: pc.localDescription.sdp });
+                    }
+                })
+                .catch(function (err) {
+                    console.warn("PiP offer handling failed", err);
+                });
+        });
     });
 
     api.onIce(function (candidate) {
