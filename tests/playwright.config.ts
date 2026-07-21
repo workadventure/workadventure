@@ -63,6 +63,11 @@ const config: PlaywrightTestConfig = {
     {
       name: 'firefox',
       use: {
+        // In CI we run Firefox HEADED under a virtual X display (Xvfb) so it gets a stable
+        // software WebGL context instead of exhausting its GL driver options in pure headless
+        // mode. The CI workflow sets WA_FIREFOX_HEADED (and DISPLAY) only for the firefox E2E
+        // jobs that start Xvfb; elsewhere this stays undefined (Playwright default / headless).
+        headless: process.env.WA_FIREFOX_HEADED ? false : undefined,
         launchOptions: {
           firefoxUserPrefs: {
             // use fake audio and video media
@@ -70,6 +75,13 @@ const config: PlaywrightTestConfig = {
             "permissions.default.microphone": 1,
             "permissions.default.camera": 1,
 
+            // Accept a (software) WebGL context. Otherwise Firefox exhausts its GL driver
+            // options, WebGL creation fails, and Phaser 4 falls back to the Canvas renderer —
+            // which cannot bring the game scene up, so the game never becomes ready and the mic
+            // button never appears (the 120s load-gate flake).
+            "webgl.force-enabled": true,
+            "webgl.disable-fail-if-major-performance-caveat": true,
+            "gfx.webrender.software": true,
           },
         },
         ignoreHTTPSErrors: true,
@@ -104,12 +116,19 @@ const config: PlaywrightTestConfig = {
         browserName: 'firefox',
         isMobile: false,
         ignoreHTTPSErrors: true,
+        // Run headed under Xvfb in CI for a stable WebGL context (see the desktop firefox project).
+        headless: process.env.WA_FIREFOX_HEADED ? false : undefined,
         launchOptions: {
           firefoxUserPrefs: {
             // use fake audio and video media
             "media.navigator.streams.fake": true,
             "permissions.default.microphone": 1,
             "permissions.default.camera": 1,
+
+            // Accept a (software) WebGL context in CI (see the desktop firefox project).
+            "webgl.force-enabled": true,
+            "webgl.disable-fail-if-major-performance-caveat": true,
+            "gfx.webrender.software": true,
           },
         },
       },

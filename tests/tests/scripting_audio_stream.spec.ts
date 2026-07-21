@@ -59,10 +59,13 @@ async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
 
             return new Promise<void>((resolve, reject) => {
                 const timeout = setTimeout(() => {
-                    // If no audio received after 20 seconds, we consider that there is no audio stream
+                    // If no audio received after 40 seconds, we consider that there is no audio stream.
+                    // The proximity -> LiveKit audio path can take a while to establish under CI load;
+                    // 20s was too tight and flaked with "No audio stream received" (the test itself has
+                    // a 240s budget).
                     reject(new Error("No audio stream received"));
                     subscription.unsubscribe();
-                }, 20000);
+                }, 40000);
 
                 const subscription = meeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
                     // At some point, the volume of the sound should be high enough to be noticed in the sample
