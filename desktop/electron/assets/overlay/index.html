@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>WorkAdventure annotation overlay</title>
+        <style>
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                background: transparent;
+            }
+            #overlay-canvas {
+                position: fixed;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                display: block;
+            }
+            #overlay-canvas.draw {
+                cursor: crosshair;
+            }
+            /* The annotation toolbar is a SEPARATE content-protected window (annotation-bar):
+               this overlay window is captured into the shared stream, so any UI drawn here
+               would leak to every viewer. Only the strokes belong here. */
+        </style>
+    </head>
+    <body>
+        <canvas id="overlay-canvas"></canvas>
+        <script src="renderer.js"></script>
+    </body>
+</html>

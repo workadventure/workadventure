@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+    <title>WorkAdventure annotation bar</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --fg: #f8fafc;
+            --contrast: rgba(27, 42, 65, 0.92);
+            --secondary: #4156F6;
+            --danger: #E96D51;
+        }
+        html, body {
+            margin: 0;
+            height: 100%;
+            background: transparent;
+            color: var(--fg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body { display: flex; justify-content: center; align-items: flex-start; }
+        #toolbar {
+            -webkit-app-region: drag;
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 3px;
+            padding: 6px 10px;
+            margin-top: 4px;
+            border-radius: 12px;
+            background: var(--contrast);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+        }
+        .tb-btn {
+            -webkit-app-region: no-drag;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+        .tb-btn:hover { background: rgba(255, 255, 255, 0.12); }
+        .tb-btn.is-active { background: var(--secondary); }
+        .tb-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: transparent;
+            stroke-width: 1.7;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .tb-sep {
+            width: 1px;
+            height: 22px;
+            background: rgba(255, 255, 255, 0.18);
+            margin: 0 4px;
+            -webkit-app-region: no-drag;
+        }
+        .tb-color {
+            -webkit-app-region: no-drag;
+            cursor: pointer;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            padding: 0;
+            margin: 0 1px;
+        }
+        .tb-color.is-active { border-color: #fff; }
+        .tb-btn.done { background: rgba(233, 109, 81, 0.9); }
+        .tb-btn.done:hover { background: rgba(233, 109, 81, 1); }
+        .icon-only-on, .icon-only-off { display: none; }
+        .tb-btn[data-state="on"] .icon-only-on { display: inline; }
+        .tb-btn[data-state="off"] .icon-only-off { display: inline; }
+    </style>
+</head>
+<body>
+    <div id="toolbar">
+        <button class="tb-btn" data-tool="pen" type="button" title="Pen" aria-label="Pen"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg></button>
+        <button class="tb-btn" data-tool="line" type="button" title="Line" aria-label="Line"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 19l14 -14"/></svg></button>
+        <button class="tb-btn" data-tool="arrow" type="button" title="Arrow" aria-label="Arrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0"/><path d="M15 16l4 -4"/><path d="M15 8l4 4"/></svg></button>
+        <button class="tb-btn" data-tool="rect" type="button" title="Rectangle" aria-label="Rectangle"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 5h14v14h-14z"/></svg></button>
+        <button class="tb-btn" data-tool="text" type="button" title="Text" aria-label="Text"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 6h10"/><path d="M12 6v12"/></svg></button>
+        <button class="tb-btn" data-tool="eraser" type="button" title="Eraser" aria-label="Eraser"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19 20h-10l-5 -5a1 1 0 0 1 0 -1.5l9 -9a1 1 0 0 1 1.5 0l5 5a1 1 0 0 1 0 1.5l-9 9"/></svg></button>
+        <div class="tb-sep"></div>
+        <button class="tb-color" data-color="#ff3b30" type="button" style="background:#ff3b30" title="Red" aria-label="Red"></button>
+        <button class="tb-color" data-color="#ffcc00" type="button" style="background:#ffcc00" title="Yellow" aria-label="Yellow"></button>
+        <button class="tb-color" data-color="#34c759" type="button" style="background:#34c759" title="Green" aria-label="Green"></button>
+        <button class="tb-color" data-color="#0a84ff" type="button" style="background:#0a84ff" title="Blue" aria-label="Blue"></button>
+        <button class="tb-color" data-color="#ffffff" type="button" style="background:#ffffff" title="White" aria-label="White"></button>
+        <div class="tb-sep"></div>
+        <button class="tb-btn" id="tb-undo" type="button" title="Undo" aria-label="Undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg></button>
+        <button class="tb-btn" id="tb-clear" type="button" title="Clear all" aria-label="Clear all"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-2a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v2"/></svg></button>
+        <div class="tb-sep"></div>
+        <button class="tb-btn" id="tb-eye" type="button" data-state="on" title="Hide annotations for me only (others keep drawing)" aria-label="Hide annotations locally">
+            <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/></svg>
+            <svg class="icon-only-off" viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.585 10.587a2 2 0 0 0 2.829 2.828"/><path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87"/><path d="M3 3l18 18"/></svg>
+        </button>
+        <button class="tb-btn" id="tb-others" type="button" data-state="off" title="Allow others to annotate" aria-label="Allow others to annotate">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 7m0 2a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M3 21v-2a4 4 0 0 1 4 -4h2"/><path d="M15 7m0 2a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M13 21v-2a4 4 0 0 1 4 -4h2a4 4 0 0 1 2 .5"/></svg>
+        </button>
+        <div class="tb-sep"></div>
+        <button class="tb-btn done" id="tb-done" type="button" title="Stop annotating" aria-label="Stop annotating"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg></button>
+    </div>
+    <script src="./renderer.js"></script>
+</body>
+</html>

@@ -18,12 +18,16 @@
     import { blackListManager } from "../../WebRtc/BlackListManager";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { blocker } from "../../Utils/screenBlocker";
+    import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
+    import { localAnnotationActiveStore, screenAnnotationEnabledStore } from "../../Stores/ScreenAnnotationStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
     import CenteredVideo from "./CenteredVideo.svelte";
+    import ScreenAnnotationOverlay from "./ScreenAnnotationOverlay.svelte";
+    import ScreenAnnotationToolbar from "./ScreenAnnotationToolbar.svelte";
     import WebRtcStats from "./WebRtcStatsBox.svelte";
-    import { IconArrowsMinimize, IconArrowsMaximize, IconMicrophoneOff } from "@wa-icons";
+    import { IconArrowsMinimize, IconArrowsMaximize, IconMicrophoneOff, IconPencil } from "@wa-icons";
 
     interface Props {
         fullScreen?: boolean;
@@ -273,6 +277,12 @@
         window.focus();
     }
 
+    // Enlarge the shared screen and enter drawing mode in a single click.
+    function startAnnotating() {
+        highlightPeer();
+        localAnnotationActiveStore.set(true);
+    }
+
     onMount(() => {
         blackListSubject = blackListManager.onBlockStream.subscribe(() => {
             blackListVersion += 1;
@@ -438,7 +448,7 @@
                             <!-- The menu to go fullscreen -->
                             {#if !inCameraContainer && videoEnabled}
                                 <div
-                                    class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 hover:!opacity-100 group-hover/centered-video:opacity-20 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                                    class="absolute m-auto top-0 right-0 left-0 z-[256] h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 hover:!opacity-100 group-hover/centered-video:opacity-20 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
                                 >
                                     <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
                                         {#if !fullScreen && !$highlightFullScreen}
@@ -469,6 +479,24 @@
                                 </div>
                             {/if}
                         {/if}
+
+                        <!-- Annotation layer: shown on the enlarged shared screen (not in the camera grid) -->
+                        {#if streamableEntry.streamable.videoType === "screenSharing" && !inCameraContainer && videoEnabled}
+                            {@const annotationTargetUserId = isLocalUser
+                                ? screenAnnotationManager.localUserId
+                                : streamableEntry.streamable.spaceUserId}
+                            {#if annotationTargetUserId}
+                                {@const canDraw =
+                                    isLocalUser || ($screenAnnotationEnabledStore.get(annotationTargetUserId) ?? false)}
+                                <ScreenAnnotationOverlay targetUserId={annotationTargetUserId} {canDraw} />
+                                {#if canDraw}
+                                    <ScreenAnnotationToolbar
+                                        targetUserId={annotationTargetUserId}
+                                        isPresenter={isLocalUser}
+                                    />
+                                {/if}
+                            {/if}
+                        {/if}
                     </CenteredVideo>
                 </div>
             {/each}
@@ -476,12 +504,34 @@
     </div>
 
     {#if inCameraContainer && videoEnabled && $isBlockedStore === false}
-        <button
-            class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
-            onclick={highlightPeer}
+        {@const isScreenShare = streamable?.videoType === "screenSharing"}
+        {@const annotationTargetUserId = isLocalUser ? screenAnnotationManager.localUserId : streamable?.spaceUserId}
+        {@const canAnnotate =
+            isScreenShare &&
+            !!annotationTargetUserId &&
+            (isLocalUser || ($screenAnnotationEnabledStore.get(annotationTargetUserId) ?? false))}
+        <div
+            class="absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-fit z-20 flex items-center justify-center gap-2 opacity-0 group-hover/screenshare:opacity-100 [@media(pointer:coarse)]:opacity-100 transition-all"
         >
-            <IconArrowsMaximize font-size="20" class="text-white" />
-        </button>
+            <button
+                class="full-screen-button h-14 w-14 p-4 rounded-lg bg-contrast/50 backdrop-blur hover:bg-white/10 cursor-pointer"
+                data-testid={isScreenShare ? "screenshare-fullscreen-button" : undefined}
+                onclick={highlightPeer}
+            >
+                <IconArrowsMaximize font-size="20" class="text-white" />
+            </button>
+            {#if canAnnotate}
+                <button
+                    class="h-14 w-14 p-4 rounded-lg bg-contrast/50 backdrop-blur hover:bg-white/10 cursor-pointer"
+                    data-testid="screenshare-annotate-button"
+                    title={$LL.screenAnnotation.startAnnotating()}
+                    aria-label={$LL.screenAnnotation.startAnnotating()}
+                    onclick={startAnnotating}
+                >
+                    <IconPencil font-size="20" class="text-white" />
+                </button>
+            {/if}
+        </div>
     {/if}
 
     {#if isCurrentUserBlackListed}

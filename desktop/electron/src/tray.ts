@@ -4,18 +4,19 @@ import { showAboutWindow } from "electron-util";
 
 import * as autoUpdater from "./auto-updater";
 import * as log from "./log";
-import { getAppView, getWindow } from "./window";
+import settings from "./settings";
+import { getWindow, loadDesktopTarget } from "./window";
+import { createRecentWorldMenuItems, openNativeWorldSwitcher } from "./native-menu";
+import { onWorldHistoryChange } from "./world-history";
 
 let tray: Tray | undefined;
 
 const assetsDirectory = path.join(__dirname, "..", "assets");
 
-export function getTray() {
-    return tray;
-}
-
-export function createTray() {
-    tray = new Tray(path.join(assetsDirectory, "icons", "logo.png"));
+function updateTrayContextMenu() {
+    if (!tray) {
+        return;
+    }
 
     const trayContextMenu = Menu.buildFromTemplate([
         {
@@ -35,6 +36,15 @@ export function createTray() {
             },
         },
         {
+            label: "Change world…",
+            click: openNativeWorldSwitcher,
+        },
+        {
+            label: "Recent worlds",
+            submenu: createRecentWorldMenuItems(),
+        },
+        { type: "separator" },
+        {
             label: "Check for updates",
             click() {
                 void autoUpdater.manualRequestUpdateCheck();
@@ -47,12 +57,12 @@ export function createTray() {
             },
         },
         {
-            label: "Open DevTools",
+            label: "Open Portal",
             click() {
-                getWindow()?.webContents.openDevTools({ mode: "detach" });
-                getAppView()?.webContents.openDevTools({ mode: "detach" });
+                void loadDesktopTarget(settings.get("portal_url"));
             },
         },
+        { type: "separator" },
         {
             label: "About",
             click() {
@@ -72,6 +82,16 @@ export function createTray() {
     ]);
 
     tray.setContextMenu(trayContextMenu);
+}
+
+export function getTray() {
+    return tray;
+}
+
+export function createTray() {
+    tray = new Tray(path.join(assetsDirectory, "icons", "logo.png"));
+    updateTrayContextMenu();
+    onWorldHistoryChange(updateTrayContextMenu);
 
     tray.on("double-click", () => {
         const mainWindow = getWindow();

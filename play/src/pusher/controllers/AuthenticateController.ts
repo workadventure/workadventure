@@ -10,8 +10,10 @@ import Debug from "debug";
 import type { AuthTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
-import { DISABLE_ANONYMOUS, FRONT_URL, MATRIX_PUBLIC_URI, PUSHER_URL } from "../enums/EnvironmentVariable";
+import { ADMIN_URL, DISABLE_ANONYMOUS, FRONT_URL, MATRIX_PUBLIC_URI, PUSHER_URL } from "../enums/EnvironmentVariable";
 import { adminService } from "../services/AdminService";
+import { desktopAuthService } from "../services/DesktopAuthService";
+import { desktopOidcTransactionService } from "../services/DesktopOidcTransactionService";
 import { validateQuery } from "../services/QueryValidator";
 import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
 import { matrixProvider } from "../services/MatrixProvider";
@@ -19,6 +21,33 @@ import { getClientIpFromXForwardedFor } from "../services/ClientIp";
 import { BaseHttpController } from "./BaseHttpController";
 
 const debug = Debug("pusher:requests");
+
+const OIDC_COOKIE_OPTIONS = {
+    httpOnly: true,
+    path: "/",
+    sameSite: "lax" as const,
+    maxAge: 10 * 60 * 1000,
+};
+
+function normalizeDesktopCallbackUrl(value: string | undefined): string | undefined {
+    if (!value) {
+        return undefined;
+    }
+
+    try {
+        const url = new URL(value);
+        if (url.protocol !== "http:" || !["127.0.0.1", "localhost"].includes(url.hostname)) {
+            return undefined;
+        }
+        if (url.pathname !== "/auth/callback" && url.pathname !== "/logout/callback") {
+            return undefined;
+        }
+
+        return url.toString();
+    } catch {
+        return undefined;
+    }
+}
 
 export class AuthenticateController extends BaseHttpController {
     private readonly redirectToMatrixFile: string;
@@ -61,6 +90,7 @@ export class AuthenticateController extends BaseHttpController {
 
     routes(): void {
         this.openIDLogin();
+        this.desktopAuthExchange();
         this.me();
         this.openIDCallback();
         this.matrixCallback();
@@ -110,6 +140,8 @@ export class AuthenticateController extends BaseHttpController {
                     chatRoomId: z.string().optional(),
                     providerId: z.string().optional(),
                     providerScopes: z.string().array().optional(), // Optional scopes to request
+                    desktop: z.literal("true").optional(),
+                    desktopCallbackUrl: z.string().optional(),
                 }),
             );
             if (query === undefined) {
@@ -125,7 +157,7 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             }
 
-            const loginUri = await openIDClient.authorizationUrl(
+            const authorization = await openIDClient.authorizationUrl(
                 res,
                 query.playUri,
                 req,
@@ -135,11 +167,61 @@ export class AuthenticateController extends BaseHttpController {
                 query.providerScopes,
             );
             res.cookie("playUri", query.playUri, {
-                httpOnly: true, // dont let browser javascript access cookie ever
-                secure: req.secure, // only use cookie over https
+                ...OIDC_COOKIE_OPTIONS,
+                secure: req.secure,
             });
+            if (query.desktop === "true") {
+                const desktopCallbackUrl = normalizeDesktopCallbackUrl(query.desktopCallbackUrl);
+                res.cookie("desktopAuth", "true", {
+                    ...OIDC_COOKIE_OPTIONS,
+                    secure: req.secure,
+                });
+                await desktopOidcTransactionService.createDesktopOidcTransaction(authorization.state, {
+                    playUri: query.playUri,
+                    codeVerifier: authorization.codeVerifier,
+                    callbackUrl: desktopCallbackUrl,
+                });
+                debug(
+                    `Desktop OIDC transaction created for state ${authorization.state.substring(0, 8)}... and playUri ${
+                        query.playUri
+                    } with callback ${desktopCallbackUrl ?? "workadventure://auth/callback"}`,
+                );
+            } else {
+                res.clearCookie("desktopAuth", { path: "/" });
+            }
 
-            res.redirect(loginUri);
+            res.redirect(authorization.loginUri);
+            return;
+        });
+    }
+
+    private desktopAuthExchange(): void {
+        this.app.post("/desktop-auth/exchange", async (req, res) => {
+            debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
+            res.setHeader("Cache-Control", "no-store");
+
+            const body = z
+                .object({
+                    code: z.string().min(1),
+                })
+                .safeParse(req.body);
+
+            if (!body.success) {
+                res.status(400).json(body.error.flatten());
+                return;
+            }
+
+            const payload = await desktopAuthService.exchangeDesktopAuthCode(body.data.code);
+            if (!payload) {
+                debug(`Desktop auth exchange failed for code ${body.data.code.substring(0, 8)}...`);
+                res.status(410).json({
+                    error: "desktop_auth_code_expired_or_consumed",
+                });
+                return;
+            }
+
+            debug(`Desktop auth exchange succeeded for code ${body.data.code.substring(0, 8)}...`);
+            res.json(payload);
             return;
         });
     }
@@ -295,14 +377,34 @@ export class AuthenticateController extends BaseHttpController {
 
         this.app.get("/openid-callback", async (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
-            const playUri = req.cookies.playUri;
+            const callbackState = typeof req.query.state === "string" ? req.query.state : undefined;
+            const desktopTransaction =
+                await desktopOidcTransactionService.exchangeDesktopOidcTransaction(callbackState);
+            debug(
+                `OpenID callback received state ${callbackState?.substring(0, 8) ?? "missing"}... desktop transaction: ${
+                    desktopTransaction ? "found" : "not found"
+                }`,
+            );
+
+            const playUri = desktopTransaction?.playUri ?? req.cookies.playUri;
             if (!playUri) {
-                throw new Error("Missing playUri in cookies");
+                res.status(400).type("html").send(this.getOpenIdCallbackErrorHtml());
+                return;
             }
 
             let userInfo = null;
             try {
-                userInfo = await openIDClient.getUserInfo(req, res, playUri);
+                userInfo = await openIDClient.getUserInfo(
+                    req,
+                    res,
+                    playUri,
+                    desktopTransaction && callbackState
+                        ? {
+                              state: callbackState,
+                              codeVerifier: desktopTransaction.codeVerifier,
+                          }
+                        : undefined,
+                );
             } catch (err) {
                 //if no access on openid provider, return error
                 console.error("An error occurred while connecting to OpenID Provider => ", err);
@@ -324,6 +426,29 @@ export class AuthenticateController extends BaseHttpController {
             );
 
             const matrixPublicUri = userInfo.matrix_url ?? MATRIX_PUBLIC_URI;
+            if (desktopTransaction || req.cookies.desktopAuth === "true") {
+                res.clearCookie("playUri", { path: "/" });
+                res.clearCookie("desktopAuth", { path: "/" });
+
+                const code = await desktopAuthService.createDesktopAuthCode({
+                    token: authToken,
+                    targetUrl: playUri,
+                });
+                const callbackUrl = new URL("workadventure://auth/callback");
+                if (desktopTransaction?.callbackUrl) {
+                    callbackUrl.href = desktopTransaction.callbackUrl;
+                }
+                callbackUrl.searchParams.set("origin", new URL(PUSHER_URL).origin);
+                callbackUrl.searchParams.set("code", code);
+                debug(
+                    `Desktop OIDC callback generated deep link for state ${
+                        callbackState?.substring(0, 8) ?? "missing"
+                    }...`,
+                );
+
+                res.redirect(callbackUrl.toString());
+                return;
+            }
 
             // If Matrix is configured, we need to get an access token for the Synapse server
             if (matrixPublicUri) {
@@ -350,11 +475,26 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             }
 
-            res.clearCookie("playUri");
+            res.clearCookie("playUri", { path: "/" });
+            res.clearCookie("desktopAuth", { path: "/" });
             // FIXME: possibly redirect to Admin instead.
             res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
             return;
         });
+    }
+
+    private getOpenIdCallbackErrorHtml(): string {
+        return `<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <title>Connexion WorkAdventure</title>
+</head>
+<body>
+    <h1>Connexion impossible</h1>
+    <p>La session de connexion a expiré ou n'a pas pu être retrouvée. Relancez la connexion depuis WorkAdventure.</p>
+</body>
+</html>`;
     }
 
     private matrixCallback(): void {
@@ -640,6 +780,8 @@ export class AuthenticateController extends BaseHttpController {
                     playUri: z.string(),
                     token: z.string(),
                     redirect: z.string().optional(),
+                    desktop: z.literal("true").optional(),
+                    desktopCallbackUrl: z.string().optional(),
                 }),
             );
             if (query === undefined) {
@@ -662,6 +804,14 @@ export class AuthenticateController extends BaseHttpController {
             // Use post logout redirect and id token hint to redirect on the logut session endpoint of the OpenId provider
             // https://openid.net/specs/openid-connect-session-1_0.html#RPLogout
             await openIDClient.logoutUser(authTokenData.accessToken);
+
+            if (query.desktop === "true") {
+                const desktopCallbackUrl = normalizeDesktopCallbackUrl(query.desktopCallbackUrl);
+                const callbackUrl = new URL(desktopCallbackUrl || "workadventure://join");
+                callbackUrl.searchParams.set("url", ADMIN_URL || FRONT_URL || query.playUri);
+                res.redirect(callbackUrl.toString());
+                return;
+            }
 
             // if no redirect, redirect to playUri and connect user to the world
             // if the world is with authentication mandatory, the user will be redirected to the login screen
