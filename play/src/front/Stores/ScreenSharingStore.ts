@@ -19,6 +19,7 @@ import type {} from "../Api/Desktop";
 import { screenShareStreamElementsStore } from "./PeerStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isScreenSharingAvailableStore } from "./IsStreamingStore";
+import { selectScreenSharingCaptureMethod } from "./ScreenSharingCapturePolicy";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -40,6 +41,13 @@ export const requestedScreenSharingState = createRequestedScreenSharingState();
 let currentStream: MediaStream | undefined = undefined;
 let screenSharingRequestId = 0;
 let previousScreenSharingHadStream = false;
+
+/**
+ * The desktopCapturer source currently being shared (Electron). Retained for the whole duration of
+ * the share so the screen-annotation overlay can be placed on the RIGHT display. Set when a source
+ * is chosen; cleared only when sharing is turned off (not on every re-acquire).
+ */
+export const activeScreenShareSourceStore = writable<DesktopCapturerSource | undefined>(undefined);
 
 /**
  * Stops the screen sharing (both video and audio tracks)
@@ -154,21 +162,34 @@ export const screenSharingConstraintsStore = derived(
 );
 
 export function isScreenSharingSupported(): boolean {
-    if (window.WAD?.getDesktopCapturerSources) {
-        return true;
-    }
-
-    return !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+    return (
+        selectScreenSharingCaptureMethod({
+            hasDesktopCapturer: Boolean(window.WAD?.getDesktopCapturerSources),
+            hasDisplayMedia: Boolean(navigator.mediaDevices?.getDisplayMedia),
+        }) !== "unsupported"
+    );
 }
 
 async function getDesktopCapturerSources() {
-    showDesktopCapturerSourcePicker.set(true);
-    const source = await new Promise<DesktopCapturerSource | null>((resolve) => {
-        desktopCapturerSourcePromiseResolve = resolve;
-    });
+    let source: DesktopCapturerSource | null;
+    const preselected = get(pipPreselectedScreenSource);
+    if (preselected) {
+        // The source was already chosen from the desktop PiP utility window — skip the in-app
+        // picker UI entirely. Without this, clicking "share" in PiP would still open the picker
+        // in the main window and force the user to switch focus back to it.
+        pipPreselectedScreenSource.set(undefined);
+        source = preselected;
+    } else {
+        showDesktopCapturerSourcePicker.set(true);
+        source = await new Promise<DesktopCapturerSource | null>((resolve) => {
+            desktopCapturerSourcePromiseResolve = resolve;
+        });
+    }
     if (source === null) {
         return;
     }
+    // Retain the chosen source so the annotation overlay can target its display.
+    activeScreenShareSourceStore.set(source);
     // Note: getUserMedia with chromeMediaSource does not support audio capture.
     // Audio is only available with getDisplayMedia when sharing a browser tab.
     return navigator.mediaDevices.getUserMedia({
@@ -183,6 +204,28 @@ async function getDesktopCapturerSources() {
 }
 
 /**
+ * When set, the next call to `getDesktopCapturerSources()` skips the in-app picker and uses this
+ * source directly. The PiP utility window populates it via `startScreenShareWithSource()` so the
+ * user can pick a screen WITHOUT having to refocus the main window.
+ */
+export const pipPreselectedScreenSource = writable<DesktopCapturerSource | undefined>(undefined);
+
+/**
+ * Programmatically start screen sharing with a specific desktopCapturer source. Used by the
+ * desktop PiP utility window to bypass the in-app source picker. Stops any in-flight share first
+ * so a fresh stream is published with the new source.
+ */
+export function startScreenShareWithSource(source: DesktopCapturerSource): void {
+    pipPreselectedScreenSource.set(source);
+    if (get(requestedScreenSharingState)) {
+        // Re-trigger by toggling off then on so the constraints store recomputes with the new
+        // preselected source.
+        requestedScreenSharingState.disableScreenSharing();
+    }
+    requestedScreenSharingState.enableScreenSharing();
+}
+
+/**
  * A store containing the MediaStream object for ScreenSharing (or undefined if nothing requested, or Error if an error occurred)
  */
 export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstraints>, LocalStreamStoreValue>(
@@ -193,6 +236,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
 
         if ($screenSharingConstraintsStore.video === false && $screenSharingConstraintsStore.audio === false) {
             stopScreenSharing();
+            activeScreenShareSourceStore.set(undefined);
             requestedScreenSharingState.disableScreenSharing();
             set({
                 type: "success",
@@ -201,12 +245,15 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
             return;
         }
 
-        let currentStreamPromise: Promise<MediaStream>;
-        // Prefer getDisplayMedia over getDesktopCapturerSources to support audio capture
-        // According to MDN: audio is optional, default is false
-        // Audio is only available for certain display surfaces (mainly browser tabs)
-        // See: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia
-        if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+        let currentStreamPromise: Promise<MediaStream | undefined>;
+        const captureMethod = selectScreenSharingCaptureMethod({
+            hasDesktopCapturer: Boolean(window.WAD?.getDesktopCapturerSources),
+            hasDisplayMedia: Boolean(navigator.mediaDevices?.getDisplayMedia),
+        });
+
+        if (captureMethod === "desktop") {
+            currentStreamPromise = getDesktopCapturerSources();
+        } else if (captureMethod === "display-media") {
             // Build constraints according to MDN specification
             // video can be boolean or MediaTrackConstraints, default is true
             // audio can be boolean or MediaTrackConstraints, default is false
@@ -218,8 +265,6 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 audio: !!constraints.audio,
             };
             currentStreamPromise = navigator.mediaDevices.getDisplayMedia(displayMediaConstraints);
-        } else if (window.WAD?.getDesktopCapturerSources) {
-            currentStreamPromise = getDesktopCapturerSources();
         } else {
             stopScreenSharing();
             set({
@@ -233,6 +278,17 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
             try {
                 stopScreenSharing();
                 const stream = await currentStreamPromise;
+
+                if (!stream) {
+                    if (currentRequestId === screenSharingRequestId) {
+                        requestedScreenSharingState.disableScreenSharing();
+                        set({
+                            type: "success",
+                            stream: undefined,
+                        });
+                    }
+                    return;
+                }
 
                 // Ignore stale async completions from older requests.
                 if (currentRequestId !== screenSharingRequestId) {
