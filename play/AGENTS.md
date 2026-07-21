@@ -51,6 +51,10 @@ Do not edit generated `src/i18n/i18n-*.ts` files directly.
 
 ## Storybook stories
 
+- **Scaffold** a story in one command: `npm run new-story -- src/front/Components/UI/MyComponent.svelte`
+  (colocates the file, picks the title from the folder, drops in a `Default` story to fill in).
+- **Required for the design system**: a CI gate (`.github/workflows/story-gate.yml`) fails a PR that adds
+  a new `Components/UI/` or `Components/Input/` component without a colocated `*.stories.svelte`.
 - **Colocate** the story with its component: `Button.stories.svelte` next to `Button.svelte`.
 - **Title taxonomy** (the `title` in `defineMeta`) groups the sidebar:
   - `Design System/*` — the primitives in `Components/UI/` (Button, Badge, Chip, Avatar, Alert…).
