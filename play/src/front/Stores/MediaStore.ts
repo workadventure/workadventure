@@ -456,8 +456,11 @@ export const availabilityStatusStore = derived(
 // This is a singleton so we can safely not ever unsubscribe from it.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
 availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
-    // Per-member availability-status timelines are not collected (surveillance /
-    // GDPR data-minimisation); we no longer emit a status.changed analytics event.
+    // Time-in-status is reported as a `status.dwell` timed event, gated per world by
+    // the `user_level_activity` policy: without opt-in the pusher pseudonymizes it,
+    // so no named per-member timeline is stored. The enum key name ("ONLINE", …) is
+    // sent, low-cardinality and non-PII, so it survives that pseudonymization.
+    analyticsClient.statusChanged(AvailabilityStatus[newStatus] ?? String(newStatus));
     try {
         statusChanger.changeStatusTo(newStatus);
     } catch (e) {

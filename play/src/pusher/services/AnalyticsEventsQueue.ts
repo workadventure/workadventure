@@ -675,7 +675,12 @@ function isRequiredString(value: string | undefined): value is string {
 }
 
 function analyticsMetricCategoryForEvent(eventName: string): AnalyticsMetricCategory {
-    if (eventName === "user.connected" || eventName === "user.disconnected" || eventName.startsWith("session.")) {
+    if (
+        eventName === "user.connected" ||
+        eventName === "user.disconnected" ||
+        eventName.startsWith("session.") ||
+        eventName.startsWith("status.")
+    ) {
         return "presence_sessions";
     }
 
