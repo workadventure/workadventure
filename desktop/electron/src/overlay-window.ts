@@ -1,6 +1,7 @@
 import { BrowserWindow, screen } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
+import { raiseHudsToTop } from "./hud-windows";
 
 let overlayWindow: BrowserWindow | undefined;
 let overlayReady = false;
@@ -117,6 +118,12 @@ export function createOverlayWindow(opts: CreateOverlayOptions = {}): BrowserWin
     newWindow.once("ready-to-show", () => {
         if (!newWindow.isDestroyed()) {
             newWindow.showInactive();
+            // The overlay shares the "screen-saver" always-on-top level with the HUD bars. Since
+            // it is shown after them (opened asynchronously from the draw-mode subscription), it
+            // would otherwise land on top and — once draw mode captures the mouse — swallow every
+            // click the presenter aims at the meeting-bar / annotation-bar. Re-raise the HUDs so
+            // they stay clickable.
+            raiseHudsToTop();
         }
     });
 
@@ -164,6 +171,11 @@ export function setOverlayDrawMode(enabled: boolean): void {
         return;
     }
     overlayWindow.setIgnoreMouseEvents(!enabled, { forward: true });
+    // Entering draw mode is the moment the overlay actually competes with the HUDs for clicks —
+    // re-raise them now in case a space switch or unrelated re-order dropped them behind.
+    if (enabled) {
+        raiseHudsToTop();
+    }
 }
 
 export function sendToOverlay(channel: string, payload?: unknown): void {
