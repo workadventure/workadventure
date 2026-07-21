@@ -37,6 +37,11 @@ export default defineConfig({
                         headless: true,
                         instances: [{ browser: "chromium" }],
                     },
+                    // Browser mode tears Chromium down while Vite's HMR client socket is still
+                    // opening, surfacing a benign "WebSocket closed without opened" unhandled
+                    // rejection. The stories themselves pass; without this, that stray rejection
+                    // fails the whole run. Scoped to the storybook project on purpose.
+                    dangerouslyIgnoreUnhandledErrors: true,
                 },
             },
         ],
