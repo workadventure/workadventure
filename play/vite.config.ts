@@ -7,7 +7,6 @@ import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { noiseSuppressionAudioWorkletVitePlugin } from "@workadventure/noise-suppression/vite";
 import tailwindcss from "@tailwindcss/vite";
 import Icons from "unplugin-icons/vite";
-import tsconfigPaths from "vite-tsconfig-paths";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 // https://vitejs.dev/config/
@@ -72,25 +71,15 @@ export default defineConfig(({ mode }) => {
             Icons({
                 compiler: "svelte",
             }),
-            tsconfigPaths(),
         ],
         resolve: {
             // Without this, vitest resolves Svelte to its server build and mount() is unavailable.
             conditions: mode === "test" ? ["browser"] : undefined,
+            tsconfigPaths: true,
             alias: {
                 events: "events",
                 "@wa-icons": fileURLToPath(new URL("./src/front/Components/Icons.ts", import.meta.url)),
                 "@wa-modals": fileURLToPath(new URL("./src/front/Components/Modal/modalManager.ts", import.meta.url)),
-            },
-        },
-        test: {
-            environment: "jsdom",
-            globals: true,
-            setupFiles: ["./tests/setup/vitest.setup.ts"],
-            coverage: {
-                all: true,
-                include: ["src/*.ts", "src/**/*.ts"],
-                exclude: ["src/i18n", "src/enum"],
             },
         },
         optimizeDeps: {
