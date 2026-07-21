@@ -19,8 +19,7 @@
     name="Shown"
     play={async ({ canvasElement }) => {
         await expect(canvasElement.querySelector("[role=alertdialog]")).toBeInTheDocument();
-        await expect(
-            canvasElement.querySelector("[data-testid=duplicate-user-confirm-continue]"),
-        ).toBeInTheDocument();
+        const confirmButton = canvasElement.querySelector("[data-testid=duplicate-user-confirm-continue]");
+        await expect(confirmButton).toBeInTheDocument();
     }}
 />
