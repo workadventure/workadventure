@@ -1,9 +1,9 @@
 <script module lang="ts">
     import { expect } from "storybook/test";
     import { defineMeta } from "@storybook/addon-svelte-csf";
-    import DuplicateUserConnectedModal from "./DuplicateUserConnectedModal.svelte";
     import { duplicateUserConnectedStore } from "../../Stores/DuplicateUserConnectedStore";
     import { withStore } from "../../../../.storybook/storyHelpers";
+    import DuplicateUserConnectedModal from "./DuplicateUserConnectedModal.svelte";
 
     // The modal only renders while `duplicateUserConnectedStore` is true. The harness sets it
     // for the story and restores it afterwards — a store-coupled component shown in isolation.
