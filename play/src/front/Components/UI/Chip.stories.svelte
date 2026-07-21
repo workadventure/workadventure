@@ -4,7 +4,7 @@
     import Chip from "./Chip.svelte";
 
     const { Story } = defineMeta({
-        title: "UI/Chip",
+        title: "Design System/Chip",
         component: Chip,
         tags: ["autodocs"],
         argTypes: {

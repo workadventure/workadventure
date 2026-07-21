@@ -49,6 +49,21 @@ npm run i18n:check
 
 Do not edit generated `src/i18n/i18n-*.ts` files directly.
 
+## Storybook stories
+
+- **Colocate** the story with its component: `Button.stories.svelte` next to `Button.svelte`.
+- **Title taxonomy** (the `title` in `defineMeta`) groups the sidebar:
+  - `Design System/*` — the primitives in `Components/UI/` (Button, Badge, Chip, Avatar, Alert…).
+  - `Forms/*` — the controls in `Components/Input/`.
+  - `Feedback/*` — toasts, popups, modals, alerts shown over the app.
+  - `Feature/*` — everything else worth documenting in isolation.
+- Let `args` drive props; add `argTypes` controls and `tags: ["autodocs"]` for free interactive docs.
+- Use the `play` function for interaction/assertions (`expect` from `storybook/test`), not a separate test file.
+- **Store coupling** is the ceiling on what is worth story-ising:
+  - Prop-driven component → story directly.
+  - Reads a writable store → set it with the `withStore()` `beforeEach` helper in `.storybook/storyHelpers.ts`.
+  - Reads `gameManager` / Phaser game state → out of scope for Storybook.
+
 ## Frontend conventions
 
 - New and migrated Svelte components use Svelte 5 runes (`$props`, `$state`, `$derived`, `$effect`).
