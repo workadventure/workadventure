@@ -139,10 +139,11 @@ function normalizePersistedPortalUrl(value, fallback = DEFAULT_PORTAL_URL) {
 }
 
 function normalizePersistedLastRoomUrl(value) {
-    if (isBrokenPersistedUrl(value)) {
-        return undefined;
-    }
-
+    // BROKEN_PERSISTED_URLS is a portal_url migration list — those URLs were mistakenly seeded
+    // as portal_url in an old buggy build. They are legitimate room URLs to navigate to today, so
+    // we must NOT filter them here (that would silently drop them from world_history / last_room_url
+    // even when the user genuinely visited them). If a persisted URL is actually unreachable, the
+    // did-fail-load recovery bounces the user to Landing with an inline error instead.
     const url = parseHttpUrl(value);
     if (!url || url.username || url.password) {
         return undefined;
