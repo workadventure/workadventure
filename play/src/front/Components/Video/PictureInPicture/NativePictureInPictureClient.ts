@@ -135,6 +135,10 @@ export class NativePictureInPictureClient {
     private stateSendScheduled = false;
     private active = false;
     private onClosedCallback: (() => void) | undefined;
+    /** Resolves when the answer for the currently-outstanding offer arrives (or times out). */
+    private answerDeferred: { resolve: () => void; reject: (err: Error) => void } | undefined;
+    /** Bumped on every stop()/start pair so late deferreds from the previous session can be dropped. */
+    private negotiationEpoch = 0;
 
     constructor(private readonly deps: NativeClientDeps) {}
 
@@ -263,6 +267,12 @@ export class NativePictureInPictureClient {
         this.renegotiating = false;
         this.pendingRenegotiate = false;
         this.stateSendScheduled = false;
+        // Release any waitForAnswer awaiter from the previous negotiation cycle so its
+        // maybeRenegotiate loop terminates and the next start() has a clean slate. Bumping the
+        // epoch also makes any late answer/timeout for the previous cycle a no-op.
+        this.negotiationEpoch++;
+        this.answerDeferred?.resolve();
+        this.answerDeferred = undefined;
 
         for (const unsub of this.unsubscribers) {
             try {
@@ -378,9 +388,29 @@ export class NativePictureInPictureClient {
     private async handleAnswer(sdp: DesktopPipSdp): Promise<void> {
         const pc = this.peerConnection;
         if (!pc || pc.signalingState === "closed") {
+            this.answerDeferred?.resolve();
+            this.answerDeferred = undefined;
             return;
         }
-        await pc.setRemoteDescription(sdp);
+        // Only setRemoteDescription(answer) is valid in the have-local-offer state. If we've
+        // already moved on (e.g. a follow-up renegotiation reset us to stable), the answer we're
+        // holding is for a previous offer we no longer care about — dropping it silently is
+        // safer than triggering "The order of m-lines in answer doesn't match order in offer".
+        if (pc.signalingState !== "have-local-offer") {
+            debug(`Ignoring answer arrived in signalingState=${pc.signalingState}`);
+            this.answerDeferred?.resolve();
+            this.answerDeferred = undefined;
+            return;
+        }
+        try {
+            await pc.setRemoteDescription(sdp);
+            this.answerDeferred?.resolve();
+        } catch (error) {
+            debug("setRemoteDescription failed", error);
+            this.answerDeferred?.reject(error instanceof Error ? error : new Error(String(error)));
+        } finally {
+            this.answerDeferred = undefined;
+        }
     }
 
     private async handleIce(candidate: RTCIceCandidateInit): Promise<void> {
@@ -388,7 +418,20 @@ export class NativePictureInPictureClient {
         if (!pc || pc.signalingState === "closed") {
             return;
         }
-        await pc.addIceCandidate(candidate);
+        // A remote description is required before addIceCandidate can bind the candidate to a
+        // media section. If ours hasn't landed yet (the answer for the currently-outstanding
+        // offer is still in flight), the ICE belongs to that offer and will arrive uselessly
+        // early — drop it. The remote peer resends candidates over the same negotiation, and
+        // the initial ICE burst from the answerer is normally enough on its own.
+        if (!pc.remoteDescription) {
+            debug("Ignoring ICE candidate — no remote description yet");
+            return;
+        }
+        try {
+            await pc.addIceCandidate(candidate);
+        } catch (error) {
+            debug("addIceCandidate failed", error);
+        }
     }
 
     private handleCommand(command: DesktopPipCommand): void {
@@ -643,14 +686,22 @@ export class NativePictureInPictureClient {
             return;
         }
         this.renegotiating = true;
+        const epoch = this.negotiationEpoch;
         try {
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
             if (pc.localDescription) {
                 pip.sendOffer({ type: pc.localDescription.type, sdp: pc.localDescription.sdp });
             }
-            // State send AFTER the offer so the renderer has both the new transceivers and the
-            // matching metadata in roughly the same tick.
+            // Await the answer BEFORE releasing the flag. Without this, a second track change
+            // (e.g. screen share added right after a camera unpublish) starts a new renegotiation
+            // while answer1 is still in flight; when answer1 finally arrives, main's local
+            // description has already been overwritten by offer2 and the m-line order no longer
+            // matches, so WebRTC rejects the answer with "The order of m-lines in answer doesn't
+            // match order in offer".
+            await this.waitForAnswer(epoch);
+            // State send AFTER the offer/answer roundtrip so the renderer has both the new
+            // transceivers and the matching metadata in roughly the same tick.
             this.sendState();
         } catch (error) {
             debug("renegotiation failed", error);
@@ -661,6 +712,42 @@ export class NativePictureInPictureClient {
                 this.maybeRenegotiate().catch(() => {});
             }
         }
+    }
+
+    /**
+     * Wait for the answer to the offer that was just sent. Bounded so a lost answer (PiP
+     * renderer crashed, transport dropped) cannot deadlock renegotiation forever — the caller
+     * will simply produce the next offer, and the stale answer (if it arrives) will be dropped
+     * by handleAnswer's state check.
+     */
+    private waitForAnswer(epoch: number): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            const timeoutMs = 5000;
+            const timeoutHandle = setTimeout(() => {
+                if (this.answerDeferred === deferred) {
+                    this.answerDeferred = undefined;
+                    debug(`answer wait timed out after ${timeoutMs} ms`);
+                    resolve();
+                }
+            }, timeoutMs);
+            const deferred = {
+                resolve: () => {
+                    if (this.negotiationEpoch !== epoch) {
+                        return;
+                    }
+                    clearTimeout(timeoutHandle);
+                    resolve();
+                },
+                reject: (error: Error) => {
+                    if (this.negotiationEpoch !== epoch) {
+                        return;
+                    }
+                    clearTimeout(timeoutHandle);
+                    reject(error);
+                },
+            };
+            this.answerDeferred = deferred;
+        });
     }
 
     private scheduleStateSend(): void {
