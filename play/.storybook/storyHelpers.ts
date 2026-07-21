@@ -26,3 +26,28 @@ export function withStore<T>(set: (value: T) => void, value: T, restore: T): () 
         return () => set(restore);
     };
 }
+
+/**
+ * Composes several `withStore` (or any `beforeEach`) setups into a single `beforeEach`. Each
+ * setup is applied before the story renders; their cleanups run in reverse on teardown. Use it
+ * for components that read more than one store.
+ *
+ * @example
+ * defineMeta({
+ *     component: WarningBanner,
+ *     beforeEach: withStores([
+ *         withStore(bannerStore.set, banner, null),
+ *         withStore(warningBannerStore.set, true, false),
+ *     ]),
+ * });
+ */
+export function withStores(setups: Array<() => (() => void) | void>): () => () => void {
+    return () => {
+        const cleanups = setups.map((setup) => setup());
+        return () => {
+            for (const cleanup of cleanups.reverse()) {
+                cleanup?.();
+            }
+        };
+    };
+}

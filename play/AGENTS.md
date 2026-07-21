@@ -59,10 +59,14 @@ Do not edit generated `src/i18n/i18n-*.ts` files directly.
   - `Feature/*` — everything else worth documenting in isolation.
 - Let `args` drive props; add `argTypes` controls and `tags: ["autodocs"]` for free interactive docs.
 - Use the `play` function for interaction/assertions (`expect` from `storybook/test`), not a separate test file.
-- **Store coupling** is the ceiling on what is worth story-ising:
-  - Prop-driven component → story directly.
-  - Reads a writable store → set it with the `withStore()` `beforeEach` helper in `.storybook/storyHelpers.ts`.
-  - Reads `gameManager` / Phaser game state → out of scope for Storybook.
+- **Store coupling** is the ceiling on what is worth story-ising. Method: write the story, read the
+  import-time crash, mock that dependency, repeat. Helpers live in `.storybook/storyHelpers.ts`:
+  - Prop-driven component → story directly (many components only _look_ store-coupled — the stores
+    are read on interaction, not render, so a plain `args` fixture is enough).
+  - Reads one writable store → `beforeEach: withStore(store.set, value, restore)`.
+  - Reads several stores → `beforeEach: withStores([...])`.
+  - Reads config (`window.env`) → already provided by `.storybook/preview-env.ts`.
+  - Reads `gameManager` / Phaser game state → out of scope; extract a presentational view instead.
 
 ## Frontend conventions
 
