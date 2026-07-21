@@ -4,9 +4,14 @@
     import Chip from "./Chip.svelte";
 
     const { Story } = defineMeta({
-        title: "UI/Chip",
+        title: "Design System/Chip",
         component: Chip,
         tags: ["autodocs"],
+        parameters: {
+            // Ratchet a11y from the global "todo" up to failing on the cleanest primitives.
+            // color-contrast is disabled: it is computed unreliably in headless Chromium.
+            a11y: { test: "error", config: { rules: [{ id: "color-contrast", enabled: false }] } },
+        },
         argTypes: {
             size: {
                 control: { type: "select" },
