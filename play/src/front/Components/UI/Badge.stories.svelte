@@ -9,6 +9,11 @@
         title: "Design System/Badge",
         component: Badge,
         tags: ["autodocs"],
+        parameters: {
+            // Ratchet a11y from the global "todo" up to failing on the cleanest primitives.
+            // color-contrast is disabled: it is computed unreliably in headless Chromium.
+            a11y: { test: "error", config: { rules: [{ id: "color-contrast", enabled: false }] } },
+        },
         argTypes: {
             variant: { control: { type: "select" }, options: VARIANTS },
             size: { control: { type: "select" }, options: ["lg", "sm", "xs", "xxs", "xxxs"] },
