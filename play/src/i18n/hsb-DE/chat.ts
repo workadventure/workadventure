@@ -289,6 +289,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         markAnswered: "Jako wotmołwjene markěrować",
         unknownAuthor: "Njeznaty",
         notification: "Prašenje: {question}",
+        badge: "Prašenje",
+        viewAll: "Wšě prašenja pokazać",
     },
     file: {
         fileContentNoEmbed: "Wobsah nic wužiwajomny. Prošu instalować",

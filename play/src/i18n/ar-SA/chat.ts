@@ -287,6 +287,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         markAnswered: "وضع علامة كتمت الإجابة",
         unknownAuthor: "غير معروف",
         notification: "سؤال: {question}",
+        badge: "سؤال",
+        viewAll: "عرض كل الأسئلة",
     },
     file: {
         fileContentNoEmbed: "المحتوى غير متاح للعرض. يرجى تنزيله",
