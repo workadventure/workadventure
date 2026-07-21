@@ -38,7 +38,7 @@
     let classes = $derived(
         ["input-search", size && `input-search-${size}`, variant === "light" && "input-search-light", className]
             .filter(Boolean)
-            .join(" ")
+            .join(" "),
     );
 </script>
 

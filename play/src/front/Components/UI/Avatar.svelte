@@ -44,7 +44,7 @@
             className,
         ]
             .filter(Boolean)
-            .join(" ")
+            .join(" "),
     );
 </script>
 
