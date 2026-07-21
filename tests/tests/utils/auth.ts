@@ -93,6 +93,16 @@ async function createUser(
     }
     const context: BrowserContext = await browser.newContext();
     const page: Page = await context.newPage();
+    // Surface uncaught exceptions / renderer crashes during user creation. mobilefirefox
+    // intermittently closes its page mid-login with "Target page ... has been closed"; these
+    // listeners make the underlying JS error / crash visible in the log instead of a bare
+    // "closed" error further down the flow.
+    page.on("pageerror", (error) => {
+        console.error(`[createUser:${name}] uncaught page error: ${error.message}`);
+    });
+    page.on("crash", () => {
+        console.error(`[createUser:${name}] page crashed`);
+    });
     const targetUrl = new URL(url, play_url).toString();
 
     await page.goto(targetUrl);
