@@ -288,6 +288,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         markAnswered: "Marcar como respondida",
         unknownAuthor: "Desconocido",
         notification: "Pregunta: {question}",
+        badge: "Pregunta",
+        viewAll: "Ver todas las preguntas",
     },
     file: {
         fileContentNoEmbed: "Contenido no disponible para visualizar. Por favor, descárguelo",

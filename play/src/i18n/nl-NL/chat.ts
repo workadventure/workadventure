@@ -289,6 +289,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         markAnswered: "Markeren als beantwoord",
         unknownAuthor: "Onbekend",
         notification: "Vraag: {question}",
+        badge: "Vraag",
+        viewAll: "Alle vragen bekijken",
     },
     file: {
         fileContentNoEmbed: "Inhoud niet beschikbaar om te bekijken. Download het alstublieft.",

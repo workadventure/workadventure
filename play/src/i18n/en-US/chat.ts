@@ -288,6 +288,8 @@ const chat: BaseTranslation = {
         markAnswered: "Mark answered",
         unknownAuthor: "Unknown",
         notification: "Question: {question}",
+        badge: "Question",
+        viewAll: "See all questions",
     },
     file: {
         fileContentNoEmbed: "Content unavailable for viewing. Please download it",

@@ -286,6 +286,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         markAnswered: "標記為已回答",
         unknownAuthor: "未知",
         notification: "問題：{question}",
+        badge: "問題",
+        viewAll: "查看所有問題",
     },
     file: {
         fileContentNoEmbed: "內容無法檢視。請下載",

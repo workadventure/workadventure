@@ -290,6 +290,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         markAnswered: "답변됨으로 표시",
         unknownAuthor: "알 수 없음",
         notification: "질문: {question}",
+        badge: "질문",
+        viewAll: "모든 질문 보기",
     },
     file: {
         fileContentNoEmbed: "내용을 바로 볼 수 없습니다. 파일을 다운로드해 확인해 주세요",
