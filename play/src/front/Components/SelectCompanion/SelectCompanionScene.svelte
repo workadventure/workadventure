@@ -1,5 +1,6 @@
 <script lang="ts">
     import { LL } from "../../../i18n/i18n-svelte";
+    import Button from "../UI/Button.svelte";
     import type { Game } from "../../Phaser/Game/Game";
     import type { SelectCompanionScene } from "../../Phaser/Login/SelectCompanionScene";
     import { SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
@@ -74,18 +75,23 @@
     <section
         class="action container m-auto p-4 flex flex-col-reverse md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 justify-between"
     >
-        <button
-            class="btn btn-light btn-lg btn-ghost w-full md:w-1/2 block selectCompanionSceneFormBack"
+        <Button
+            variant="light"
+            appearance="ghost"
+            size="lg"
+            class="w-full md:w-1/2 block selectCompanionSceneFormBack pointer-events-auto"
             onclick={(event) => {
                 event.preventDefault();
                 noCompanion();
             }}
         >
             {$LL.companion.select.any()}
-        </button>
-        <button
+        </Button>
+        <Button
             type="submit"
-            class="btn btn-secondary btn-lg w-full md:w-1/2 block selectCompanionSceneFormSubmit"
+            variant="secondary"
+            size="lg"
+            class="w-full md:w-1/2 block selectCompanionSceneFormSubmit pointer-events-auto"
             onclick={(event) => {
                 event.preventDefault();
                 analyticsClient.selectCompanion();
@@ -93,7 +99,7 @@
             }}
         >
             {$LL.companion.select.continue()}
-        </button>
+        </Button>
     </section>
 </div>
 

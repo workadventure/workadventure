@@ -203,17 +203,19 @@
                         </Button>
                     {/if}
 
-                    <button
+                    <!-- No variant: the design system's `.btn-light .btn-label` is dark, but this
+                         translucent button needs the base white label, which no-variant keeps. -->
+                    <Button
                         type="button"
-                        class="btn btn-light !bg-white/10 !text-lg !text-white hover:!bg-white/20"
+                        class="!bg-white/10 !text-lg !text-white hover:!bg-white/20"
                         onclick={() => {
                             analyticsClient.pwaContinueInBrowserClick();
                             handleContinue();
                         }}
-                        data-testid="pwa-install-skip"
+                        dataTestId="pwa-install-skip"
                     >
                         {$LL.warning.pwaInstall.continue()}
-                    </button>
+                    </Button>
 
                     <div class="flex flex-col items-center gap-2">
                         <button
