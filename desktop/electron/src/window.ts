@@ -23,7 +23,7 @@ import {
     type DesktopConfig,
 } from "./desktop-url-policy";
 import { shouldMaximizeBeforeLoad } from "./window-state-policy";
-import { closePipWindow, isPipWindowOpen } from "./pip-window";
+import { closePipWindow } from "./pip-window";
 import { rememberWorldUrl } from "./world-history";
 import { closeOverlayWindow } from "./overlay-window";
 import { closeAllHudWindows } from "./hud-windows";
@@ -619,25 +619,16 @@ export async function createWindow(initialUrl?: string) {
     mainWindow.on("restore", () => refreshRendererViewport("restore"));
     mainWindow.on("enter-full-screen", () => refreshRendererViewport("enter-full-screen"));
     mainWindow.on("leave-full-screen", () => refreshRendererViewport("leave-full-screen"));
-    mainWindow.on("focus", () => {
-        emitDesktopWindowStateChange();
-        // Defensive close in main process: the renderer also closes PiP via store reactivity,
-        // but main fires this event before the renderer has a chance to react, which avoids a
-        // brief flash of PiP+main on rapid alt-tab.
-        if (isPipWindowOpen()) {
-            closePipWindow();
-        }
-    });
+    // PiP lifecycle is owned by the renderer (shouldOpenNativePictureInPicture policy). Don't
+    // close PiP defensively here: doing so would wipe manually-opened PiP whenever the user
+    // clicks back onto the main app, AND the destroy-in-flight also races with the utility
+    // window's loadFile, spraying ERR_FAILED logs and occasionally taking the whole app down.
+    mainWindow.on("focus", emitDesktopWindowStateChange);
     mainWindow.on("blur", emitDesktopWindowStateChange);
     mainWindow.on("show", emitDesktopWindowStateChange);
     mainWindow.on("hide", emitDesktopWindowStateChange);
     mainWindow.on("minimize", emitDesktopWindowStateChange);
-    mainWindow.on("restore", () => {
-        emitDesktopWindowStateChange();
-        if (isPipWindowOpen()) {
-            closePipWindow();
-        }
-    });
+    mainWindow.on("restore", emitDesktopWindowStateChange);
 
     // mainWindow.on('close', async (event) => {
     //   if (!app.confirmedExitPrompt) {

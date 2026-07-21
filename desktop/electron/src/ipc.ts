@@ -52,7 +52,12 @@ function getAdminSignupUrl(): string {
 const DESKTOP_CAPTURER_ALLOWED_TYPES = new Set(["screen", "window"]);
 const DESKTOP_CAPTURER_MAX_THUMBNAIL = { width: 320, height: 180 };
 const DESKTOP_CAPTURER_MIN_INTERVAL_MS = 250;
-const desktopCapturerLastCallByFrame = new Map<string, number>();
+
+type CapturerCacheEntry = {
+    at: number;
+    result: Array<{ id: string; name: string; thumbnailURL: string; display_id?: number }>;
+};
+const desktopCapturerCacheByFrame = new Map<string, CapturerCacheEntry>();
 
 function clampThumbnailSize(value: unknown): { width: number; height: number } {
     const fallback = DESKTOP_CAPTURER_MAX_THUMBNAIL;
@@ -144,15 +149,18 @@ export default () => {
 
         const frameKey = `${event.sender.id}:${senderFrame.routingId}`;
         const now = Date.now();
-        const last = desktopCapturerLastCallByFrame.get(frameKey) ?? 0;
-        if (now - last < DESKTOP_CAPTURER_MIN_INTERVAL_MS) {
-            return [];
+        const cached = desktopCapturerCacheByFrame.get(frameKey);
+        // Throttle repeat calls but serve the last-known list instead of a silent empty array.
+        // The picker polls once per second and re-mounts on the user's second attempt land inside
+        // the throttle window: returning [] then would show "no sources" even though the sources
+        // are readily available.
+        if (cached && now - cached.at < DESKTOP_CAPTURER_MIN_INTERVAL_MS) {
+            return cached.result;
         }
-        desktopCapturerLastCallByFrame.set(frameKey, now);
 
         const sanitized = sanitizeDesktopCapturerOptions(options);
         const sources = await desktopCapturer.getSources(sanitized);
-        return sources.map((source) => ({
+        const result = sources.map((source) => ({
             id: source.id,
             name: source.name,
             thumbnailURL: source.thumbnail.toDataURL(),
@@ -160,6 +168,8 @@ export default () => {
             // annotation overlay on the correct display.
             display_id: source.display_id ? Number(source.display_id) : undefined,
         }));
+        desktopCapturerCacheByFrame.set(frameKey, { at: Date.now(), result });
+        return result;
     });
 
     ipcMain.handle("app:loadPortal", async () => loadDesktopTarget(settings.get("portal_url")));
