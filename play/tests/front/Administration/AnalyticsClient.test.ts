@@ -204,6 +204,29 @@ describe("AnalyticsClient admin analytics sink", () => {
         expect(closes[0].properties.handle).toBe(opens[0].properties.handle);
     });
 
+    it("opens a status.dwell interval, transitions on change, and dedupes a repeat", () => {
+        const sendAdmin = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(sendAdmin);
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+
+        analyticsClient.statusChanged("ONLINE");
+        analyticsClient.statusChanged("ONLINE"); // same status: no churn
+        analyticsClient.statusChanged("BUSY"); // change: close ONLINE, open BUSY
+
+        const events = sendAdmin.mock.calls.flatMap(([message]) => message.events);
+        const opens = events.filter((event) => event.eventName === "timed_event.open");
+        const closes = events.filter((event) => event.eventName === "timed_event.close");
+
+        expect(opens.map((event) => event.properties.eventName)).toEqual(["status.dwell", "status.dwell"]);
+        expect(opens.map((event) => event.properties.properties.status)).toEqual(["ONLINE", "BUSY"]);
+        expect(closes).toHaveLength(1);
+        expect(closes[0].properties.endReason).toBe("status_changed");
+        // The BUSY open pairs with the ONLINE close by handle, or the pusher drops it.
+        expect(closes[0].properties.handle).toBe(opens[0].properties.handle);
+    });
+
     it("opens and closes one interval for a screen share, without reporting a duration", () => {
         const sendAdmin = vi.fn();
         analyticsClient.setAdminAnalyticsSender(sendAdmin);

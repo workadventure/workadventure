@@ -425,6 +425,22 @@ export const areaDwellEvent = defineEvent(
     "pusher",
 );
 
+export const statusDwellEvent = defineEvent(
+    "status.dwell",
+    z
+        .object({
+            status: z
+                .string()
+                .describe("Availability status held during this period (ONLINE, BUSY, DO_NOT_DISTURB, BACK_IN_A_MOMENT, …)."),
+        })
+        .merge(timedEventProperties)
+        .extend({
+            endReason: z.enum(TIMED_EVENT_END_REASONS).describe("Why the status period ended, or what ended it."),
+        }),
+    "Time the user held one availability status, measured by the pusher between status changes and closed at disconnect. Gated per world by the user_level_activity policy: without opt-in the pusher pseudonymizes it, so no named per-member timeline is stored.",
+    "pusher",
+);
+
 /* -------------------------------------------------------------------------- */
 /*                                Map editor                                  */
 /* -------------------------------------------------------------------------- */
@@ -969,6 +985,7 @@ const eventsWithProperties: z.ZodDiscriminatedUnionOption<"eventName">[] = [
     inviteAcceptedEvent,
     inviteWalkLinkOptionChangedEvent,
     areaDwellEvent,
+    statusDwellEvent,
     mapEditorAreaLockToggledEvent,
     mapEditorPropertyAddedEvent,
     mapEditorPropertyRemovedEvent,
