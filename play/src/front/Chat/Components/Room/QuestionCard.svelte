@@ -2,6 +2,8 @@
     import LL, { locale } from "../../../../i18n/i18n-svelte";
     import type { ChatQuestionItem } from "../../Connection/ChatConnection";
     import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
+    import Button from "../../../Components/UI/Button.svelte";
+    import Chip from "../../../Components/UI/Chip.svelte";
     import { IconCheck, IconHelpCircle, IconList, IconLoader, IconTrash } from "@wa-icons";
 
     interface Props {
@@ -65,21 +67,16 @@
 <div class="px-3">
     <div
         data-testid="questionCard"
-        class="question-card rounded-2xl bg-contrast/90 border border-solid border-white/10 border-l-4 border-l-yellow-300/70 p-4 max-w-2xl"
+        class="question-card rounded-2xl bg-contrast/90 border border-solid border-white/10 p-4 max-w-2xl"
     >
         <div class="flex flex-wrap items-center gap-2">
-            <span
-                class="flex items-center gap-1 rounded-full border border-solid border-yellow-300/35 bg-yellow-400/15 px-2 py-0.5 text-xxs font-bold uppercase text-yellow-100"
-            >
-                <IconHelpCircle font-size={12} />
+            <Chip variant="warning" size="xs">
+                <IconHelpCircle font-size={12} class="mr-1" />
                 {$LL.chat.question.badge()}
-            </span>
+            </Chip>
             {#if $questionState.isAnswered}
-                <span
-                    class="rounded-full bg-emerald-500/20 px-2 py-0.5 text-xxs font-bold uppercase text-emerald-100"
-                    data-testid="questionAnsweredBadge"
-                >
-                    {$LL.chat.question.answered()}
+                <span data-testid="questionAnsweredBadge">
+                    <Chip variant="success" size="xs">{$LL.chat.question.answered()}</Chip>
                 </span>
             {/if}
         </div>
@@ -95,64 +92,75 @@
         </div>
 
         <div class="mt-3 flex flex-wrap items-center gap-2">
-            <button
-                type="button"
-                class="m-0 flex items-center gap-1.5 rounded-full border border-solid px-3 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-45 {$questionState.hasUpvoted
-                    ? 'border-yellow-300/35 bg-yellow-400/15 text-yellow-100'
-                    : 'border-white/10 bg-black/15 text-white/80 hover:bg-white/10'}"
+            <Button
+                variant={$questionState.hasUpvoted ? "primary" : "light"}
+                appearance={$questionState.hasUpvoted ? "filled" : "border"}
+                size="xs"
                 disabled={!$questionState.canUpvote || isUpvoting}
                 aria-label={$LL.chat.question.upvote()}
                 aria-pressed={$questionState.hasUpvoted}
-                data-testid="questionUpvoteButton"
+                dataTestId="questionUpvoteButton"
                 onclick={toggleUpvote}
             >
-                <span aria-hidden="true">👍</span>
+                {#snippet icon()}
+                    <span aria-hidden="true">👍</span>
+                {/snippet}
                 <span data-testid="questionUpvoteCount">{$questionState.upvoteCount}</span>
-            </button>
+            </Button>
 
             {#if $questionState.canMarkAnswered}
-                <button
-                    type="button"
-                    class="m-0 flex items-center gap-1.5 rounded-full border border-solid border-emerald-300/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-100 transition-colors hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-45"
+                <Button
+                    variant="success"
+                    appearance="border"
+                    size="xs"
                     disabled={isMarkingAnswered}
-                    data-testid="questionMarkAnsweredButton"
+                    dataTestId="questionMarkAnsweredButton"
                     onclick={markAnswered}
                 >
-                    {#if isMarkingAnswered}
-                        <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={14} />
-                    {:else}
-                        <IconCheck font-size={14} />
-                    {/if}
+                    {#snippet icon()}
+                        {#if isMarkingAnswered}
+                            <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={14} />
+                        {:else}
+                            <IconCheck font-size={14} />
+                        {/if}
+                    {/snippet}
                     {$LL.chat.question.markAnswered()}
-                </button>
+                </Button>
             {/if}
 
             {#if $questionState.canDelete}
-                <button
-                    type="button"
-                    class="m-0 flex items-center gap-1.5 rounded-full border border-solid border-red-300/25 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-100 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-45"
+                <Button
+                    variant="danger"
+                    appearance="border"
+                    size="xs"
                     disabled={isDeleting}
-                    data-testid="questionDeleteButton"
+                    dataTestId="questionDeleteButton"
                     onclick={removeQuestion}
                 >
-                    {#if isDeleting}
-                        <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={14} />
-                    {:else}
-                        <IconTrash font-size={14} />
-                    {/if}
+                    {#snippet icon()}
+                        {#if isDeleting}
+                            <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={14} />
+                        {:else}
+                            <IconTrash font-size={14} />
+                        {/if}
+                    {/snippet}
                     {$LL.chat.delete()}
-                </button>
+                </Button>
             {/if}
 
-            <button
-                type="button"
-                class="m-0 ms-auto flex items-center gap-1.5 rounded-full border border-solid border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white"
-                data-testid="questionViewAllButton"
+            <Button
+                variant="light"
+                appearance="ghost"
+                size="xs"
+                class="ms-auto"
+                dataTestId="questionViewAllButton"
                 onclick={openQuestionsPanel}
             >
-                <IconList font-size={14} />
+                {#snippet icon()}
+                    <IconList font-size={14} />
+                {/snippet}
                 {$LL.chat.question.viewAll()}
-            </button>
+            </Button>
         </div>
     </div>
 </div>
