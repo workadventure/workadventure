@@ -33,15 +33,24 @@ async function setVariable(page: Page, value: string) {
 }
 
 async function expectVariableToBe(page: Page, value: string) {
-    const variable = await evaluateScript(page, async () => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        await WA.onInit();
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        return WA.state.textField;
-    });
-    expect(variable).toBe(value);
+    // This test reboots the back/play containers and cuts Traefik/Redis mid-run, so the scripting
+    // state (WA.state.textField) can lag behind by a few seconds after a reconnect. Poll the value
+    // instead of reading it once, otherwise the very first read after a reboot flakes (the test has
+    // a 360s budget).
+    await expect
+        .poll(
+            () =>
+                evaluateScript(page, async () => {
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
+                    await WA.onInit();
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
+                    return WA.state.textField;
+                }),
+            { timeout: 30_000 },
+        )
+        .toBe(value);
 }
 
 test.setTimeout(360000);

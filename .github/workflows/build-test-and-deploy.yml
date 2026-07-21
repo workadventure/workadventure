@@ -223,13 +223,18 @@ jobs:
           pactl info
       - name: Enable software WebGL for Firefox
         if: ${{ contains(matrix.project, 'firefox') }}
-        # Headless Firefox on the runner otherwise exhausts its GL driver options, WebGL
-        # creation fails, and Phaser 4 falls back to the Canvas renderer — which cannot bring
-        # the game scene up, so the game never becomes ready (the 120s load-gate flake that
-        # intermittently red-fails E2E). Provide the Mesa software rasteriser and force its use;
-        # the firefox projects also set webgl.force-enabled so Firefox accepts the software context.
+        # Headless Firefox on the runner exhausts its GL driver options, WebGL creation fails,
+        # and Phaser 4 falls back to the Canvas renderer — which cannot bring the game scene up,
+        # so the game never becomes ready (the 120s load-gate flake that intermittently red-fails
+        # E2E). Providing Mesa's software rasteriser + prefs helps but is not 100% reliable in
+        # pure headless mode, so we run Firefox HEADED under a virtual X display (Xvfb): it then
+        # gets a stable GLX + llvmpipe WebGL context. WA_FIREFOX_HEADED gates the headed mode to
+        # exactly these jobs (via playwright.config.ts) so no other job is affected.
         run: |
-          sudo apt-get install --yes libgl1-mesa-dri
+          sudo apt-get install --yes libgl1-mesa-dri xvfb
+          Xvfb :99 -screen 0 1920x1080x24 -ac +extension GLX +render -noreset > /tmp/xvfb.log 2>&1 &
+          echo "DISPLAY=:99" >> "$GITHUB_ENV"
+          echo "WA_FIREFOX_HEADED=1" >> "$GITHUB_ENV"
           echo "LIBGL_ALWAYS_SOFTWARE=true" >> "$GITHUB_ENV"
           echo "GALLIUM_DRIVER=llvmpipe" >> "$GITHUB_ENV"
       - name: 'Setup .env file'
