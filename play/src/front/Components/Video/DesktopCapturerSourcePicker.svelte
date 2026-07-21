@@ -23,13 +23,20 @@
         }
         try {
             errorMessage = undefined;
-            desktopCapturerSources = await window.WAD.getDesktopCapturerSources({
+            const fresh = await window.WAD.getDesktopCapturerSources({
                 thumbnailSize: {
                     height: 180,
                     width: 320,
                 },
                 types: ["screen", "window"],
             });
+            // Don't clobber a non-empty list with an empty one: Electron's desktopCapturer
+            // occasionally returns [] transiently on macOS under load (or when the main process
+            // is busy with a concurrent renegotiation). Retain the last known sources; the next
+            // 1s poll will refresh them for real if the user really has no sources.
+            if (fresh.length > 0 || desktopCapturerSources.length === 0) {
+                desktopCapturerSources = fresh;
+            }
         } catch (error) {
             errorMessage = error instanceof Error ? error.message : "Impossible de charger les sources.";
         } finally {
