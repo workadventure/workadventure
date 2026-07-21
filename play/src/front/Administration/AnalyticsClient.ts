@@ -57,6 +57,9 @@ class AnalyticsClient {
     /** Open intervals, by the thing they are measuring. Closing is by the same key. */
     private openAreas = new Map<string, TimedAnalyticsEventHandle>();
     private openScreenShares = new Map<string, TimedAnalyticsEventHandle>();
+    /** Availability status is a single continuous state, so one handle, not a map. */
+    private openStatus: TimedAnalyticsEventHandle | undefined;
+    private currentStatus: string | undefined;
     private previousRoomId: string | undefined;
 
     constructor() {
@@ -93,6 +96,8 @@ class AnalyticsClient {
             // from a dead socket, which the pusher drops as unpaired.
             this.openAreas.clear();
             this.openScreenShares.clear();
+            this.openStatus = undefined;
+            this.currentStatus = undefined;
         }
         this.flushPendingAdminEvents();
     }
@@ -599,6 +604,22 @@ class AnalyticsClient {
         this.posthog?.capture(`wa_map-editor_leaver_area`, { id, name });
         this.openAreas.get(id)?.close("left_area");
         this.openAreas.delete(id);
+    }
+
+    // Availability status (Online/Busy/Do-not-disturb/…) as a timed event: one row
+    // per period, measured by the pusher. Like a conversation, the current period
+    // stays open until the status changes or the socket dies (the pusher closes the
+    // last one). A flip faster than 1s is dropped as churn. A reconnect leaves the
+    // status untracked until the next change — the same gap the old status.changed
+    // pairing had, since it only fired on a change too.
+    statusChanged(status: string): void {
+        if (!this.canSendAdminAnalytics() || status === this.currentStatus) {
+            return;
+        }
+
+        this.currentStatus = status;
+        this.openStatus?.close("status_changed");
+        this.openStatus = openTimedAnalyticsEvent("status.dwell", { status }, this.sendTimedEventReport);
     }
 
     enterAreaMapEditor(id: string, name: string): void {

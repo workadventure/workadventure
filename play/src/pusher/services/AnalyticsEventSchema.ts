@@ -80,6 +80,7 @@ export const TIMED_EVENT_END_REASONS = [
     "left_conversation",
     "left_area",
     "type_changed",
+    "status_changed",
     "cleanup",
     // Forced by the pusher, when the client never got to say anything.
     "socket_closed",
