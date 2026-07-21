@@ -393,7 +393,21 @@
 
         // Re-evaluate the moment a proximity bubble forms (someone walked into our meeting), even
         // before any media stream actually lands. Lets PiP pop up as soon as a participant joins.
-        const unsubscribeActiveConv = isInActiveConversationStore.subscribe(() => {
+        // On the way OUT (bubble breaks, presenter walks away, meeting ends), also tear down the
+        // presenter-facing surfaces: annotation drawing and screen sharing. This cascades to close
+        // the annotation bar + overlay (via localAnnotationActiveStore=false) and the meeting bar
+        // + overlay window (via requestedScreenSharingState=false → activeScreenShareSourceStore
+        // clearing) — without this the HUD bars linger on the presenter's screen after the
+        // audience has already dispersed.
+        const unsubscribeActiveConv = isInActiveConversationStore.subscribe((inConversation) => {
+            if (!inConversation) {
+                if (get(localAnnotationActiveStore)) {
+                    localAnnotationActiveStore.set(false);
+                }
+                if (get(requestedScreenSharingState)) {
+                    requestedScreenSharingState.disableScreenSharing();
+                }
+            }
             if (useNativeDesktopPip) {
                 evaluateNativePipState();
             }
