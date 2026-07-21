@@ -6,6 +6,8 @@
  * story and restore it afterwards, keeping stories isolated from one another.
  */
 
+import WithContext from "./WithContext.svelte";
+
 /**
  * `beforeEach` factory for a store-coupled story.
  *
@@ -50,4 +52,18 @@ export function withStores(setups: Array<() => (() => void) | void>): () => () =
             }
         };
     };
+}
+
+/**
+ * Decorator that provides a Svelte context value to the story, for components that read it with
+ * `getContext(key)`. Wraps the story in a component that calls `setContext(key, value)`.
+ *
+ * @example
+ * <Story name="InMenu" decorators={[withContext("inMenu", true)]} />
+ */
+export function withContext(contextKey: string, contextValue: unknown) {
+    return () => ({
+        Component: WithContext,
+        props: { contextKey, contextValue },
+    });
 }
