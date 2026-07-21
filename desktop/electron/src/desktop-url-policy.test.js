@@ -181,11 +181,15 @@ test("allows http:// in development for any allow-listed host", () => {
     });
 });
 
-test("migrates the previous broken local hosted map URL from persisted settings to the admin portal", () => {
+test("migrates the previous broken local hosted map URL from persisted portal_url to the admin portal", () => {
     const brokenLocalMapUrl = "https://play.workadventure.localhost/~/maps/areas.wam";
 
+    // Portal URL migration: this URL was mistakenly seeded as portal_url in an old build,
+    // so we swap it for the admin portal when the user still has it in settings.
     assert.equal(normalizePersistedPortalUrl(brokenLocalMapUrl), "http://admin.workadventure.localhost/");
-    assert.equal(normalizePersistedLastRoomUrl(brokenLocalMapUrl), undefined);
+    // But as a room URL it's a perfectly valid target — the user must be able to visit it and
+    // have it appear in Recent worlds. If the site is unreachable, did-fail-load bounces to Landing.
+    assert.equal(normalizePersistedLastRoomUrl(brokenLocalMapUrl), brokenLocalMapUrl);
 });
 
 test("migrates the previous https local global map URL to the admin portal", () => {
@@ -225,6 +229,20 @@ test("normalizePersistedLastRoomUrl strips the URL fragment so hash-only changes
     assert.equal(
         normalizePersistedLastRoomUrl("https://play.workadventu.re/@/team/world/room?foo=bar#lang=fr"),
         "https://play.workadventu.re/@/team/world/room?foo=bar"
+    );
+});
+
+test("normalizePersistedLastRoomUrl keeps URLs that were once seeded as broken portal_url values", () => {
+    // These URLs were on the legacy portal_url migration list because an old buggy build
+    // saved them as portal_url. They are still legitimate room URLs — the user must be able
+    // to visit them and have them recorded in Recent worlds.
+    assert.equal(
+        normalizePersistedLastRoomUrl("http://play.workadventure.localhost/~/maps/areas.wam"),
+        "http://play.workadventure.localhost/~/maps/areas.wam"
+    );
+    assert.equal(
+        normalizePersistedLastRoomUrl("https://play.workadventure.localhost/~/maps/areas.wam"),
+        "https://play.workadventure.localhost/~/maps/areas.wam"
     );
 });
 
