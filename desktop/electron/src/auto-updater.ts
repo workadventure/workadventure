@@ -1,10 +1,11 @@
-import { app, dialog } from "electron";
+import { app, dialog, type MessageBoxOptions } from "electron";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 import * as isDev from "electron-is-dev";
 import * as util from "util";
 
 import { createAndShowNotification } from "./notification";
+import { createDesktopConfig } from "./desktop-url-policy";
 
 const sleep = util.promisify(setTimeout);
 
@@ -21,10 +22,17 @@ export async function checkForUpdates() {
         return;
     }
 
-    // check for updates right away
-    await autoUpdater.checkForUpdates();
-
-    isCheckPending = false;
+    isCheckPending = true;
+    try {
+        await autoUpdater.checkForUpdates();
+    } catch (error) {
+        // Previously the flag was never reset on error, which silently disabled every subsequent
+        // check for the lifetime of the process. Always reset in a finally so a transient network
+        // failure does not break auto-update forever.
+        log.warn("Auto-update check failed.", error);
+    } finally {
+        isCheckPending = false;
+    }
 }
 
 export async function manualRequestUpdateCheck() {
@@ -39,13 +47,25 @@ export async function manualRequestUpdateCheck() {
 }
 
 async function init() {
+    // In dev (electron .) the app.version is whatever package.json says — often "managedbyci"
+    // which electron-updater rejects with ERR_UPDATER_INVALID_VERSION. The unhandledRejection
+    // handler then pops a modal dialog that blocks the boot. Skip entirely in dev.
+    if (isDev) {
+        log.info("Auto-updater disabled in development.");
+        return;
+    }
+
     autoUpdater.logger = log;
+    autoUpdater.setFeedURL({
+        provider: "generic",
+        url: createDesktopConfig().updateFeedUrl,
+    });
 
     autoUpdater.on(
         "update-downloaded",
         ({ releaseNotes, releaseName }: { releaseNotes: string; releaseName: string }) => {
             void (async () => {
-                const dialogOpts = {
+                const dialogOpts: MessageBoxOptions = {
                     type: "question",
                     buttons: ["Install and Restart", "Install Later"],
                     defaultId: 0,
@@ -91,7 +111,9 @@ async function init() {
     await checkForUpdates();
 
     // run update check every hour again
-    setInterval(() => checkForUpdates, 1000 * 60 * 1);
+    setInterval(() => {
+        void checkForUpdates();
+    }, 1000 * 60 * 60);
 }
 
 export default {
