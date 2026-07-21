@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
     import type { UserInputManager } from "../../Phaser/UserInput/UserInputManager";
+    import Button from "../UI/Button.svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
 
     interface Props {
@@ -23,15 +24,13 @@
 <PopUpContainer reduceOnSmallScreen={true}>
     {message}
     {#snippet buttons()}
-        <button class="btn btn-secondary w-1/2 justify-center responsive-message" onclick={click}>
-            See preferences
-        </button>
+        <Button variant="secondary" class="w-1/2 responsive-message" onclick={click}>See preferences</Button>
     {/snippet}
 </PopUpContainer>
 
 <style>
     @media (max-width: 768px) {
-        .responsive-message {
+        :global(.responsive-message) {
             scale: 1.2;
         }
     }

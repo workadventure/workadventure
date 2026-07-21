@@ -17,6 +17,8 @@
         dataTestId?: string;
         class?: string;
         onclick?: (event: MouseEvent) => void;
+        // Bind to get the rendered element, e.g. as a floating-UI anchor.
+        element?: HTMLElement;
         icon?: Snippet;
         notification?: Snippet;
         children?: Snippet;
@@ -35,6 +37,7 @@
         dataTestId = undefined,
         class: className = "",
         onclick = undefined,
+        element = $bindable(),
         icon,
         notification,
         children,
@@ -77,11 +80,19 @@
 {/snippet}
 
 {#if href}
-    <a {...rest} {...testIdAttr} {href} class={classes} aria-disabled={disabled || undefined} {onclick}>
+    <a
+        bind:this={element}
+        {...rest}
+        {...testIdAttr}
+        {href}
+        class={classes}
+        aria-disabled={disabled || undefined}
+        {onclick}
+    >
         {@render body()}
     </a>
 {:else}
-    <button {...rest} {...testIdAttr} {type} class={classes} {disabled} {onclick}>
+    <button bind:this={element} {...rest} {...testIdAttr} {type} class={classes} {disabled} {onclick}>
         {@render body()}
     </button>
 {/if}

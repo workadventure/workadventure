@@ -11,6 +11,7 @@
     import logoImg from "../images/logo-min-white.png";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
     import type { Room } from "../../Connection/Room";
+    import Button from "./Button.svelte";
     import errorGif from "./images/error.gif";
     import { IconRefresh } from "@wa-icons";
 
@@ -50,6 +51,10 @@
 
     let detailsStylized = $derived((details ?? "").replace("{time}", `${timeVar / 1000}`));
 </script>
+
+{#snippet refreshIcon()}
+    <IconRefresh />
+{/snippet}
 
 {#if $errorScreenStore}
     <main
@@ -94,18 +99,21 @@
             </div>
             <div class="flex gap-2">
                 {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
-                    <button
+                    <Button
                         type="button"
-                        class="btn-lg btn btn-light btn-border button flex items-center gap-2"
+                        size="lg"
+                        variant="light"
+                        appearance="border"
+                        class="button"
+                        icon={$errorScreenStore.type === "retry" ? refreshIcon : undefined}
                         onclick={click}
                     >
-                        {#if $errorScreenStore.type === "retry"}<IconRefresh />{/if}
                         {$errorScreenStore.buttonTitle}
-                    </button>
+                    </Button>
                     {#if $userIsConnected}
-                        <button type="button" class="btn-lg btn btn-secondary button" onclick={logout}>
+                        <Button type="button" size="lg" variant="secondary" class="button" onclick={logout}>
                             {$LL.menu.profile.logout()}
-                        </button>
+                        </Button>
                     {/if}
                 {/if}
             </div>
@@ -154,7 +162,8 @@
             left: 0;
             top: -19px;
         }
-        .button {
+        /* Global so it reaches the <button> rendered by <Button> (scoped CSS would not). */
+        :global(.button) {
             cursor: pointer;
             font-size: 14px;
         }

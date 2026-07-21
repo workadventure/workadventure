@@ -22,6 +22,7 @@
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { popupStore } from "../../Stores/PopupStore";
     import SayPopUp from "../PopUp/SayPopUp.svelte";
+    import Button from "../UI/Button.svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { IconPencil, IconXIcon } from "@wa-icons";
 
@@ -204,37 +205,49 @@
             <div
                 class="transition-all bottom-action-button flex items-center h-full pl-2 relative before:content-[''] before:absolute before:top-0 before:left-1 before:w-[1px] before:h-full before:bg-white/10"
             >
-                <button
-                    class="btn btn-sm btn-ghost btn-light flex"
+                <Button
+                    variant="light"
+                    appearance="ghost"
+                    size="sm"
                     onclick={(event) => {
                         event.stopPropagation();
                         event.preventDefault();
                         edit();
                     }}
-                    bind:this={triggerElement}
+                    bind:element={triggerElement}
                 >
-                    {#if emoteDataLoading}
-                        <svg
-                            class="animate-spin h-5 w-5 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                        >
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                            <path
-                                class="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            />
-                        </svg>
-                    {:else if !$emoteMenuStore}
-                        <IconPencil stroke="1" font-size="12" class="text-white" />
-                        <div>{$LL.actionbar.edit()}</div>
-                    {:else}
-                        <IconXIcon stroke="1" font-size="16" class="text-white" />
-                        <div>{$LL.actionbar.cancel()}</div>
-                    {/if}
-                </button>
+                    <!-- Flex wrapper keeps the icon and label side by side inside .btn-label. -->
+                    <span class="flex items-center gap-2">
+                        {#if emoteDataLoading}
+                            <svg
+                                class="animate-spin h-5 w-5 text-white"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    class="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    stroke-width="4"
+                                />
+                                <path
+                                    class="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                />
+                            </svg>
+                        {:else if !$emoteMenuStore}
+                            <IconPencil stroke="1" font-size="12" class="text-white" />
+                            <div>{$LL.actionbar.edit()}</div>
+                        {:else}
+                            <IconXIcon stroke="1" font-size="16" class="text-white" />
+                            <div>{$LL.actionbar.cancel()}</div>
+                        {/if}
+                    </span>
+                </Button>
             </div>
             <!--
             <div class="transition-all bottom-action-button flex items-center rounded-r-lg h-full ml-2">
