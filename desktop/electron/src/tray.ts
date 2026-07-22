@@ -8,7 +8,7 @@ import * as log from "./log";
 import settings from "./settings";
 import { getWindow, loadDesktopTarget } from "./window";
 import { emitCameraToggle, emitMuteToggle } from "./ipc";
-import { createRecentWorldMenuItems, openNativeWorldSwitcher } from "./native-menu";
+import { createPinnedWorldMenuItems, createRecentWorldMenuItems, openNativeWorldSwitcher } from "./native-menu";
 import { onWorldHistoryChange } from "./world-history";
 import { getMediaState, getTrayStatus, onPresenceChange, type TrayStatus } from "./presence";
 import { stripSensitiveQueryParams } from "./desktop-url-policy";
@@ -206,6 +206,10 @@ function updateTrayContextMenu() {
         {
             label: "Change world…",
             click: openNativeWorldSwitcher,
+        },
+        {
+            label: "Pinned worlds",
+            submenu: createPinnedWorldMenuItems(),
         },
         {
             label: "Recent worlds",
