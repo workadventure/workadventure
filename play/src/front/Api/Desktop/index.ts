@@ -9,6 +9,8 @@ import {
 import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { notificationManager } from "../../Notification/NotificationManager";
+import { desktopAwayStore } from "../../Stores/DesktopStatusStore";
+import { focusStore } from "../../Stores/FocusStore";
 import type { ChatConnectionInterface, ChatRoom } from "../../Chat/Connection/ChatConnection";
 import type { WorkAdventureDesktopApi } from "../../Interfaces/DesktopAppInterfaces";
 
@@ -120,18 +122,29 @@ class DesktopApi {
         }
 
         // Auto-away: when the OS reports the user idle (no input for a while, or screen locked),
-        // set the WA availability to "back in a moment". This also hushes notifications for free
-        // via the existing allowNotificationSound() gate (BACK_IN_A_MOMENT returns false). We set
-        // requestedStatusStore directly WITHOUT persisting (no localUserStore.setRequestedStatus)
-        // so the transient auto-away never survives a restart, and we only manage it when the user
-        // has NOT chosen a manual status — a manual DND / busy / brb is left untouched.
+        // hush notifications and reflect "away" in WA.
+        //
+        // Notification hush goes through the dedicated desktopAwayStore (checked by
+        // NotificationManager.hasNotification), NOT the availability status machine: a backgrounded
+        // window is already AWAY via privacyShutdown, and AWAY→BACK_IN_A_MOMENT is a rejected
+        // transition, so a status-only hush would silently fail in exactly the common
+        // "backgrounded + idle" case. The dedicated flag is immune to that.
+        //
+        // Visible presence: we additionally set requestedStatusStore to BACK_IN_A_MOMENT, but only
+        // when the window is FOCUSED (idle-at-keyboard) — there the current status is ONLINE and the
+        // transition is valid. When the window is backgrounded, privacyShutdown already shows the
+        // user as AWAY, so there's nothing to add and we avoid the rejected transition. We write the
+        // store WITHOUT persisting (no localUserStore.setRequestedStatus) so auto-away never
+        // survives a restart, and only from the neutral (null) state so a manual DND/busy/brb is
+        // left untouched.
         if (window.WAD.onSystemIdle) {
             let autoAwayActive = false;
             window.WAD.onSystemIdle((idle) => {
+                desktopAwayStore.set(idle);
                 if (idle) {
                     if (autoAwayActive) return;
-                    // Respect a manual status choice: only auto-away from the neutral (null) state.
                     if (get(requestedStatusStore) !== null) return;
+                    if (!get(focusStore)) return;
                     requestedStatusStore.set(AvailabilityStatus.BACK_IN_A_MOMENT);
                     autoAwayActive = true;
                 } else {
