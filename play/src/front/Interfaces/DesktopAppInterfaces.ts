@@ -201,6 +201,67 @@ export type DesktopNotificationPayload = {
     silent?: boolean;
 };
 
+/** A room/nearby participant shown in the companion People tab. */
+export type CompanionUser = {
+    id: string;
+    name: string;
+    status: string;
+    color?: string;
+    isSelf: boolean;
+    inBubble?: boolean;
+};
+
+export type CompanionMessage = {
+    id: string;
+    author: string;
+    text: string;
+    isSelf: boolean;
+};
+
+export type CompanionMention = {
+    id: string;
+    title: string;
+    body: string;
+    tag?: string;
+};
+
+export type CompanionMedia = {
+    micEnabled: boolean;
+    cameraEnabled: boolean;
+    screenSharing: boolean;
+    canScreenShare: boolean;
+    inMeeting: boolean;
+    status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
+    statusLocked: boolean;
+};
+
+export type CompanionState = {
+    world: { name: string; participantCount: number };
+    users: CompanionUser[];
+    messages: CompanionMessage[];
+    mentions: CompanionMention[];
+    media: CompanionMedia;
+};
+
+export type CompanionCommand =
+    | { type: "focus-main" }
+    | { type: "close" }
+    | { type: "toggle-mic" }
+    | { type: "toggle-camera" }
+    | { type: "toggle-screenshare" }
+    | { type: "set-status"; status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb" }
+    | { type: "send-chat"; text: string }
+    | { type: "dm"; userId: string }
+    | { type: "locate"; userId: string }
+    | { type: "ping"; userId: string }
+    | { type: "open-mention"; tag?: string };
+
+/** Drives the companion quick-access panel (People / Chat / Controls / Mentions). */
+export type WorkAdventureDesktopCompanionApi = {
+    pushState: (state: CompanionState) => void;
+    onCommand: (callback: (command: CompanionCommand) => void) => () => void;
+};
+
 export type WorkAdventureDesktopApi = {
     desktop: boolean;
     isDevelopment: () => Promise<boolean>;
@@ -242,4 +303,5 @@ export type WorkAdventureDesktopApi = {
     navigation?: WorkAdventureDesktopNavigationApi;
     screenOverlay?: WorkAdventureDesktopOverlayApi;
     presenterHud?: WorkAdventureDesktopHudApi;
+    companion?: WorkAdventureDesktopCompanionApi;
 };

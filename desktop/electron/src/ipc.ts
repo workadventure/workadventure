@@ -46,6 +46,7 @@ import {
     isHudSender,
     markHudReady,
     openHudWindow,
+    sendHudState,
     setMeetingBarExpanded,
 } from "./hud-windows";
 import { getPinnedWorlds, getRecentWorlds, isWorldPinned, toggleWorldPin } from "./world-history";
@@ -648,6 +649,13 @@ export default () => {
         broadcastHudState(state);
     });
 
+    // Main renderer → companion panel. Separate channel/state from the presenter bars (different
+    // shape); sendHudState targets only the companion window and replays on (re)open.
+    ipcMain.on("app:companion:state-from-main", (event, state: unknown) => {
+        if (!isFromMainRenderer(event)) return;
+        sendHudState("companion", state);
+    });
+
     // HUD windows → main renderer
     ipcMain.on("app:hud:command-from-hud", (event, command: unknown) => {
         if (!isHudSender(event.sender)) return;
@@ -673,6 +681,21 @@ export default () => {
                 emitMuteToggle();
             } else if (type === "toggle-camera") {
                 emitCameraToggle();
+            }
+            return;
+        }
+        // The companion panel: mic/camera toggles and "close" are handled in main (same rationale as
+        // the floating toolbar); everything else (status, chat, per-user actions, mentions,
+        // screen-share) is forwarded to the active world renderer on a dedicated channel.
+        if (hudKindOfSender(event.sender) === "companion") {
+            if (type === "toggle-mic") {
+                emitMuteToggle();
+            } else if (type === "toggle-camera") {
+                emitCameraToggle();
+            } else if (type === "close") {
+                closeHudWindow("companion");
+            } else {
+                getActiveWorldContents()?.send("app:companion:command-to-main", command);
             }
             return;
         }
