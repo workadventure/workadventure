@@ -28,24 +28,24 @@ function isMainWindowFocused(): boolean {
     return Boolean(mainWindow && !mainWindow.isDestroyed() && mainWindow.isFocused());
 }
 
-/**
- * Auto-show whenever the user is away (main window unfocused) inside a world, and not screen
- * sharing (there the presenter HUD carries the controls). Gated on `inWorld` so the panel never
- * pops on the landing / login page.
- */
-function shouldAutoShow(): boolean {
-    const p = getPresenceSnapshot();
-    return !isMainWindowFocused() && !p.screenSharing && p.inWorld;
-}
-
 function wantOpen(): boolean {
+    const p = getPresenceSnapshot();
+    // Focus and screen sharing hard-hide the panel (the presenter HUD carries controls while sharing).
+    if (isMainWindowFocused() || p.screenSharing) {
+        return false;
+    }
+    // An incoming meeting invitation force-opens the panel even after a manual dismissal.
+    if (p.invitationPending) {
+        return true;
+    }
     if (override === "force-open") {
         return true;
     }
     if (override === "force-closed") {
         return false;
     }
-    return shouldAutoShow();
+    // Auto-show while away inside a world (never on the landing / login page).
+    return p.inWorld;
 }
 
 function cancelPendingOpen(): void {

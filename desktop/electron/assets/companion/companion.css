@@ -91,6 +91,33 @@ html, body {
 .hdr-toggle[data-state="off"] .i-off { display: block; }
 .hdr-sep { width: 1px; align-self: stretch; margin: 4px 2px; background: var(--border); }
 
+/* Meeting invitation banner (shown when an invite is pending; force-opens the panel). */
+.invitation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--accent-soft);
+    border-bottom: 1px solid var(--border);
+}
+.invitation[hidden] { display: none; }
+.invitation-text { font-size: 12px; min-width: 0; }
+.invitation-actions { display: flex; gap: 6px; flex: none; }
+.inv-btn {
+    border: 0;
+    border-radius: 8px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #fff;
+}
+.inv-accept { background: var(--accent); }
+.inv-accept:hover { background: #5568ff; }
+.inv-decline { background: var(--panel-2); color: var(--fg); }
+.inv-decline:hover { background: var(--panel-2-hover); }
+
 .tabs {
     display: flex;
     gap: 2px;
