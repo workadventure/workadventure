@@ -37,6 +37,7 @@ function resolveIdleThresholdSeconds(): number {
 let pollTimer: ReturnType<typeof setInterval> | undefined;
 let currentIdle = false;
 let onIdleChange: ((idle: boolean) => void) | undefined;
+let idleThresholdSeconds = DEFAULT_IDLE_THRESHOLD_SECONDS;
 
 function applyIdle(idle: boolean): void {
     if (idle === currentIdle) {
@@ -71,20 +72,23 @@ export function startIdleMonitor(onChange: (idle: boolean) => void): void {
         return;
     }
     onIdleChange = onChange;
-    const thresholdSeconds = resolveIdleThresholdSeconds();
+    idleThresholdSeconds = resolveIdleThresholdSeconds();
 
     // Immediate + interval polling for the no-input case (powerMonitor exposes no "went idle" event).
-    pollIdleState(thresholdSeconds);
-    pollTimer = setInterval(() => pollIdleState(thresholdSeconds), POLL_INTERVAL_MS);
+    pollIdleState(idleThresholdSeconds);
+    pollTimer = setInterval(() => pollIdleState(idleThresholdSeconds), POLL_INTERVAL_MS);
     if (typeof pollTimer.unref === "function") {
         pollTimer.unref();
     }
 
     // Discrete events give an instant transition without waiting for the next poll.
+    // lock/suspend definitely mean "away". unlock/resume DON'T necessarily mean "active": with
+    // password-on-wake, `resume` fires while the machine is still locked, so re-poll for the
+    // ground truth (getSystemIdleState returns "locked") instead of blindly clearing idle.
     powerMonitor.on("lock-screen", () => applyIdle(true));
     powerMonitor.on("suspend", () => applyIdle(true));
-    powerMonitor.on("unlock-screen", () => applyIdle(false));
-    powerMonitor.on("resume", () => applyIdle(false));
+    powerMonitor.on("unlock-screen", () => pollIdleState(idleThresholdSeconds));
+    powerMonitor.on("resume", () => pollIdleState(idleThresholdSeconds));
 }
 
 export function stopIdleMonitor(): void {

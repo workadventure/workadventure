@@ -30,9 +30,10 @@ const TRAY_STATUS_LABEL: Record<TrayStatus, string> = {
     available: "🟢 Available",
 };
 
+// Logical tray icon size in points; a matching @2x representation is added for Retina crispness.
 const TRAY_ICON_SIZE = 32;
 const trayIconCache = new Map<TrayStatus, NativeImage>();
-let baseTrayImage: NativeImage | undefined;
+const baseTrayImageByPixelSize = new Map<number, NativeImage>();
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
     const value = hex.replace("#", "");
@@ -43,11 +44,66 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
     };
 }
 
+function getBaseTrayImage(pixelSize: number): NativeImage | undefined {
+    const cached = baseTrayImageByPixelSize.get(pixelSize);
+    if (cached) {
+        return cached;
+    }
+    const resized = nativeImage
+        .createFromPath(path.join(assetsDirectory, "icons", "logo.png"))
+        .resize({ width: pixelSize, height: pixelSize });
+    if (!resized.getSize().width) {
+        return undefined;
+    }
+    baseTrayImageByPixelSize.set(pixelSize, resized);
+    return resized;
+}
+
 /**
- * Composite a colored status dot onto the (resized) logo bitmap. Done pixel-wise on the BGRA
- * buffer from toBitmap() rather than via an SVG data URL, because nativeImage.createFromDataURL
- * does NOT reliably rasterize SVG across platforms — a bitmap round-trip always works. Stays a
- * non-template image (a template image would flatten the colored dot to monochrome).
+ * Composite a colored status dot onto a `pixelSize`×`pixelSize` copy of the logo and return the
+ * BGRA buffer. Done pixel-wise on the toBitmap() buffer rather than via an SVG data URL, because
+ * nativeImage.createFromDataURL does NOT reliably rasterize SVG across platforms — a bitmap
+ * round-trip always works. The dot geometry scales with pixelSize so the 1x and 2x reps match.
+ */
+function compositeStatusDotBuffer(status: TrayStatus, pixelSize: number): Buffer | undefined {
+    const base = getBaseTrayImage(pixelSize);
+    if (!base) {
+        return undefined;
+    }
+    const buffer = Buffer.from(base.toBitmap());
+    const { width, height } = base.getSize();
+    const { r, g, b } = hexToRgb(TRAY_STATUS_COLOR[status]);
+    const radius = Math.max(3, Math.round(Math.min(width, height) * 0.3));
+    const cx = width - radius - 1;
+    const cy = height - radius - 1;
+    const ring = Math.max(1, pixelSize / TRAY_ICON_SIZE * 1.5);
+
+    for (let y = Math.max(0, cy - radius - 2); y < Math.min(height, cy + radius + 2); y++) {
+        for (let x = Math.max(0, cx - radius - 2); x < Math.min(width, cx + radius + 2); x++) {
+            const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+            const idx = (y * width + x) * 4;
+            // toBitmap yields BGRA.
+            if (dist <= radius) {
+                buffer[idx] = b;
+                buffer[idx + 1] = g;
+                buffer[idx + 2] = r;
+                buffer[idx + 3] = 255;
+            } else if (dist <= radius + ring) {
+                // White ring so the dot reads against a dark logo / dark menubar.
+                buffer[idx] = 255;
+                buffer[idx + 1] = 255;
+                buffer[idx + 2] = 255;
+                buffer[idx + 3] = 255;
+            }
+        }
+    }
+    return buffer;
+}
+
+/**
+ * Build the tray image for a status as a non-template colored bitmap (a template image would
+ * flatten the colored dot to monochrome), with a @2x representation so the glyph stays crisp on
+ * Retina menu bars. Cached per status.
  */
 function drawTrayStatusImage(status: TrayStatus): NativeImage {
     const cached = trayIconCache.get(status);
@@ -55,53 +111,29 @@ function drawTrayStatusImage(status: TrayStatus): NativeImage {
         return cached;
     }
 
-    if (!baseTrayImage) {
-        baseTrayImage = nativeImage
-            .createFromPath(path.join(assetsDirectory, "icons", "logo.png"))
-            .resize({ width: TRAY_ICON_SIZE, height: TRAY_ICON_SIZE });
-    }
-
-    // If the logo somehow failed to load, fall back to the raw glyph without a dot.
-    const size = baseTrayImage.getSize();
-    if (!size.width || !size.height) {
-        return baseTrayImage;
-    }
-
     try {
-        const buffer = Buffer.from(baseTrayImage.toBitmap());
-        const { width, height } = size;
-        const { r, g, b } = hexToRgb(TRAY_STATUS_COLOR[status]);
-        const radius = Math.max(3, Math.round(Math.min(width, height) * 0.3));
-        const cx = width - radius - 1;
-        const cy = height - radius - 1;
-        const ring = 1.5;
+        const buffer1x = compositeStatusDotBuffer(status, TRAY_ICON_SIZE);
+        if (!buffer1x) {
+            throw new Error("logo bitmap unavailable");
+        }
+        const image = nativeImage.createFromBitmap(buffer1x, { width: TRAY_ICON_SIZE, height: TRAY_ICON_SIZE });
 
-        for (let y = Math.max(0, cy - radius - 2); y < Math.min(height, cy + radius + 2); y++) {
-            for (let x = Math.max(0, cx - radius - 2); x < Math.min(width, cx + radius + 2); x++) {
-                const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-                const idx = (y * width + x) * 4;
-                // toBitmap yields BGRA.
-                if (dist <= radius) {
-                    buffer[idx] = b;
-                    buffer[idx + 1] = g;
-                    buffer[idx + 2] = r;
-                    buffer[idx + 3] = 255;
-                } else if (dist <= radius + ring) {
-                    // White ring so the dot reads against a dark logo / dark menubar.
-                    buffer[idx] = 255;
-                    buffer[idx + 1] = 255;
-                    buffer[idx + 2] = 255;
-                    buffer[idx + 3] = 255;
-                }
-            }
+        const buffer2x = compositeStatusDotBuffer(status, TRAY_ICON_SIZE * 2);
+        if (buffer2x) {
+            image.addRepresentation({
+                scaleFactor: 2,
+                width: TRAY_ICON_SIZE * 2,
+                height: TRAY_ICON_SIZE * 2,
+                buffer: buffer2x,
+            });
         }
 
-        const image = nativeImage.createFromBitmap(buffer, { width, height });
         trayIconCache.set(status, image);
         return image;
     } catch (error) {
         ElectronLog.warn(`Failed to composite tray status dot for "${status}"`, error);
-        return baseTrayImage;
+        // Fall back to the plain logo (never leave the tray without an icon).
+        return getBaseTrayImage(TRAY_ICON_SIZE) ?? nativeImage.createFromPath(path.join(assetsDirectory, "icons", "logo.png"));
     }
 }
 
