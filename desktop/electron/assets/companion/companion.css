@@ -269,6 +269,61 @@ html, body {
 .send-btn:hover { background: #5568ff; }
 .send-btn svg { width: 15px; height: 15px; display: block; }
 
+/* Conversation list */
+.conversations[hidden] { display: none; }
+.conversation-row {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: 0;
+    background: transparent;
+    color: var(--fg);
+    padding: 8px 9px;
+    border-radius: 9px;
+    cursor: pointer;
+}
+.conversation-row:hover { background: var(--panel-2); }
+.conv-top { display: flex; align-items: center; gap: 8px; }
+.conv-name { flex: 1; min-width: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-badge.hl {
+    flex: none;
+    background: var(--danger);
+    color: #fff;
+    font-size: 10px;
+    line-height: 16px;
+    padding: 0 5px;
+    border-radius: 8px;
+}
+.conv-unread { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.conv-preview {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+}
+
+/* Conversation view */
+.conversation { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.conversation[hidden] { display: none; }
+.conversation-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+}
+.conversation-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* Controls */
 .controls { padding: 12px; display: flex; flex-direction: column; gap: 16px; }
 .control-row { display: flex; gap: 8px; }
