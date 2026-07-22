@@ -2,7 +2,7 @@ import { app, Menu, type MenuItemConstructorOptions } from "electron";
 import ElectronLog from "electron-log";
 
 import { createWindow, getWindow, loadDesktopTarget, loadLandingPage } from "./window";
-import { getRecentWorlds, onWorldHistoryChange } from "./world-history";
+import { getPinnedWorlds, getRecentWorlds, onWorldHistoryChange } from "./world-history";
 
 let isListeningForHistoryChanges = false;
 
@@ -25,6 +25,19 @@ export function createRecentWorldMenuItems(): MenuItemConstructorOptions[] {
     }
 
     return recentWorlds.map((world) => ({
+        label: world.label,
+        toolTip: world.url,
+        click: () => openNativeWorld(world.url),
+    }));
+}
+
+export function createPinnedWorldMenuItems(): MenuItemConstructorOptions[] {
+    const pinnedWorlds = getPinnedWorlds();
+    if (pinnedWorlds.length === 0) {
+        return [{ label: "No pinned worlds", enabled: false }];
+    }
+
+    return pinnedWorlds.map((world) => ({
         label: world.label,
         toolTip: world.url,
         click: () => openNativeWorld(world.url),
@@ -69,6 +82,10 @@ export function createNativeApplicationMenu(): void {
                     label: "Change world…",
                     accelerator: "CmdOrCtrl+Shift+O",
                     click: openNativeWorldSwitcher,
+                },
+                {
+                    label: "Pinned worlds",
+                    submenu: createPinnedWorldMenuItems(),
                 },
                 {
                     label: "Recent worlds",

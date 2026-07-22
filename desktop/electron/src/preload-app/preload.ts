@@ -85,6 +85,9 @@ const api: WorkAdventureDesktopApi = {
     navigation: {
         joinWorld: (url: string) => ipcRenderer.invoke("app:navigation:joinWorld", url),
         getRecentWorlds: () => ipcRenderer.invoke("app:navigation:getRecentWorlds"),
+        getPinnedWorlds: () => ipcRenderer.invoke("app:navigation:getPinnedWorlds"),
+        togglePin: (url: string) => ipcRenderer.invoke("app:navigation:togglePin", url),
+        isPinned: (url: string) => ipcRenderer.invoke("app:navigation:isPinned", url),
         openAdminSignup: () => ipcRenderer.invoke("app:navigation:openAdminSignup"),
     },
     screenOverlay: screenOverlayApi,
