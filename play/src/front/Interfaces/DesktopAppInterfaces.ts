@@ -235,12 +235,17 @@ export type CompanionMedia = {
     statusLocked: boolean;
 };
 
+export type CompanionInvitation = {
+    name: string;
+};
+
 export type CompanionState = {
     world: { name: string; participantCount: number };
     users: CompanionUser[];
     messages: CompanionMessage[];
     mentions: CompanionMention[];
     media: CompanionMedia;
+    invitation?: CompanionInvitation | null;
 };
 
 export type CompanionCommand =
@@ -253,7 +258,9 @@ export type CompanionCommand =
     | { type: "send-chat"; text: string }
     | { type: "dm"; userId: string }
     | { type: "locate"; userId: string }
-    | { type: "open-mention"; tag?: string };
+    | { type: "open-mention"; tag?: string }
+    | { type: "accept-invitation" }
+    | { type: "decline-invitation" };
 
 /** Drives the companion quick-access panel (People / Chat / Controls / Mentions). */
 export type WorkAdventureDesktopCompanionApi = {
@@ -280,6 +287,7 @@ export type WorkAdventureDesktopApi = {
         cameraEnabled: boolean;
         screenSharing: boolean;
         inWorld?: boolean;
+        invitationPending?: boolean;
         requestedStatus?: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
         statusLocked?: boolean;
     }) => void;

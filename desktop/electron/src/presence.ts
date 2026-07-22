@@ -25,6 +25,8 @@ type PresenceState = {
     idle: boolean;
     /** True while a game scene is loaded (the user is actually in a world, not on landing/login). */
     inWorld: boolean;
+    /** True while a meeting invitation is pending — the companion force-opens to show its banner. */
+    invitationPending: boolean;
     /** The user's current chosen availability (the tray Status radio reflects this). */
     requestedStatus: TrayAvailability;
     /** True while WA locks the status bar (in a meeting / silent zone) — the tray submenu grays out. */
@@ -38,6 +40,7 @@ const state: PresenceState = {
     screenSharing: false,
     idle: false,
     inWorld: false,
+    invitationPending: false,
     requestedStatus: "online",
     statusLocked: false,
 };
@@ -80,6 +83,7 @@ export function setRendererPresence(next: {
     cameraEnabled?: boolean;
     screenSharing?: boolean;
     inWorld?: boolean;
+    invitationPending?: boolean;
     requestedStatus?: unknown;
     statusLocked?: boolean;
 }): void {
@@ -88,6 +92,7 @@ export function setRendererPresence(next: {
     const cameraEnabled = Boolean(next.cameraEnabled);
     const screenSharing = Boolean(next.screenSharing);
     const inWorld = Boolean(next.inWorld);
+    const invitationPending = Boolean(next.invitationPending);
     const requestedStatus = coerceAvailability(next.requestedStatus);
     const statusLocked = Boolean(next.statusLocked);
     if (
@@ -96,6 +101,7 @@ export function setRendererPresence(next: {
         state.cameraEnabled === cameraEnabled &&
         state.screenSharing === screenSharing &&
         state.inWorld === inWorld &&
+        state.invitationPending === invitationPending &&
         state.requestedStatus === requestedStatus &&
         state.statusLocked === statusLocked
     ) {
@@ -106,6 +112,7 @@ export function setRendererPresence(next: {
     state.cameraEnabled = cameraEnabled;
     state.screenSharing = screenSharing;
     state.inWorld = inWorld;
+    state.invitationPending = invitationPending;
     state.requestedStatus = requestedStatus;
     state.statusLocked = statusLocked;
     emit();
@@ -147,6 +154,7 @@ export function getPresenceSnapshot(): {
     cameraEnabled: boolean;
     screenSharing: boolean;
     inWorld: boolean;
+    invitationPending: boolean;
 } {
     return {
         inMeeting: state.inMeeting,
@@ -154,5 +162,6 @@ export function getPresenceSnapshot(): {
         cameraEnabled: state.cameraEnabled,
         screenSharing: state.screenSharing,
         inWorld: state.inWorld,
+        invitationPending: state.invitationPending,
     };
 }

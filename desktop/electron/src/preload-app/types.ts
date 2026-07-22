@@ -251,12 +251,19 @@ export type CompanionMedia = {
 };
 
 /** Full state pushed to the companion panel on every change. */
+/** A pending meeting invitation shown as a banner in the companion. */
+export type CompanionInvitation = {
+    name: string;
+};
+
 export type CompanionState = {
     world: { name: string; participantCount: number };
     users: CompanionUser[];
     messages: CompanionMessage[];
     mentions: CompanionMention[];
     media: CompanionMedia;
+    /** Set when a meeting invitation is pending; null/absent otherwise. */
+    invitation?: CompanionInvitation | null;
 };
 
 /** User actions raised by the companion panel, routed back to the active world renderer. */
@@ -270,7 +277,9 @@ export type CompanionCommand =
     | { type: "send-chat"; text: string }
     | { type: "dm"; userId: string }
     | { type: "locate"; userId: string }
-    | { type: "open-mention"; tag?: string };
+    | { type: "open-mention"; tag?: string }
+    | { type: "accept-invitation" }
+    | { type: "decline-invitation" };
 
 /**
  * Drives the companion panel — a compact, interactive quick-access window (People / Chat / Controls
@@ -321,6 +330,8 @@ export type WorkAdventureDesktopApi = {
         screenSharing: boolean;
         /** True while a game scene is loaded (gates the companion auto-show to actual worlds). */
         inWorld?: boolean;
+        /** True while a meeting invitation is pending — force-opens the companion for its banner. */
+        invitationPending?: boolean;
         requestedStatus?: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
         statusLocked?: boolean;
     }) => void;
