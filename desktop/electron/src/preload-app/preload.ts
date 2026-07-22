@@ -61,7 +61,7 @@ const api: WorkAdventureDesktopApi = {
     setPresence: (presence) => ipcRenderer.send("app:setPresence", presence),
     onSystemIdle: (callback) => subscribe("app:on-system-idle", (idle) => callback(Boolean(idle))),
     presenter: {
-        setTool: (tool, displayId) => ipcRenderer.send("app:presenter:setTool", { tool, displayId }),
+        setTool: (tool, displayId, sourceId) => ipcRenderer.send("app:presenter:setTool", { tool, displayId, sourceId }),
         onCursor: (callback) =>
             subscribe("app:on-presenter-cursor", (point) => {
                 const p = (point && typeof point === "object" ? point : {}) as { x?: unknown; y?: unknown };
