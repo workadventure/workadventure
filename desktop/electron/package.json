@@ -7,7 +7,7 @@
     "main": "dist/main.js",
     "license": "SEE LICENSE IN LICENSE.txt",
     "scripts": {
-        "build": "tsup-node ./src/main.ts ./src/preload-app/preload.ts ./src/preload-pip/preload.ts ./src/preload-overlay/preload.ts ./src/preload-screen-identify/preload.ts ./src/preload-hud/preload.ts",
+        "build": "tsup-node ./src/main.ts ./src/preload-app/preload.ts ./src/preload-pip/preload.ts ./src/preload-overlay/preload.ts ./src/preload-screen-identify/preload.ts ./src/preload-hud/preload.ts ./src/preload-tabs/preload.ts",
         "build:local-app": "echo 'local app is no longer bundled by the remote SaaS desktop shell'",
         "dev": "npm run build -- --watch --onSuccess 'electron dist/main.js'",
         "dev:local-app": "echo 'local app is no longer bundled by the remote SaaS desktop shell'",
