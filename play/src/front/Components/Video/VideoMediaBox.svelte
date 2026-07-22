@@ -25,6 +25,7 @@
     import UpDownChevron from "./UpDownChevron.svelte";
     import CenteredVideo from "./CenteredVideo.svelte";
     import ScreenAnnotationOverlay from "./ScreenAnnotationOverlay.svelte";
+    import PresenterEffectsOverlay from "./PresenterEffectsOverlay.svelte";
     import ScreenAnnotationToolbar from "./ScreenAnnotationToolbar.svelte";
     import WebRtcStats from "./WebRtcStatsBox.svelte";
     import { IconArrowsMinimize, IconArrowsMaximize, IconMicrophoneOff, IconPencil } from "@wa-icons";
@@ -488,7 +489,13 @@
                             {#if annotationTargetUserId}
                                 {@const canDraw =
                                     isLocalUser || ($screenAnnotationEnabledStore.get(annotationTargetUserId) ?? false)}
+                                {@const effectStream =
+                                    streamableEntry.streamable.media.type === "webrtc" ||
+                                    streamableEntry.streamable.media.type === "livekit"
+                                        ? streamableEntry.streamable.media.streamStore
+                                        : undefined}
                                 <ScreenAnnotationOverlay targetUserId={annotationTargetUserId} {canDraw} />
+                                <PresenterEffectsOverlay targetUserId={annotationTargetUserId} stream={effectStream} />
                                 {#if canDraw}
                                     <ScreenAnnotationToolbar
                                         targetUserId={annotationTargetUserId}
