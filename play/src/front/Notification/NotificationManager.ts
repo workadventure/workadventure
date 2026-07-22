@@ -65,6 +65,15 @@ class NotificationManager {
         this.channels.set(NotificationChannel.message, messageChannel);
     }
 
+    /**
+     * Route a click on an OS notification (Electron main sends the tag it received via the
+     * enriched notify() payload). BroadcastChannel doesn't roundtrip to the same context, so
+     * desktop can't reuse the SW-style channel — it calls this directly instead.
+     */
+    public async openChatFromNotificationClick(chatRoomId: string): Promise<void> {
+        await this.handleMessageNotification(chatRoomId);
+    }
+
     private async handleMessageNotification(chatRoomId: string) {
         chatVisibilityStore.set(true);
         let room: ChatRoom | undefined;
