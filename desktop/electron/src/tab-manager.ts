@@ -37,9 +37,20 @@ let tabIdCounter = 0;
 let tabStripHeight = 0;
 
 const listeners = new Set<() => void>();
+const activeChangeListeners = new Set<() => void>();
 
 function emitChange(): void {
     for (const listener of listeners) {
+        try {
+            listener();
+        } catch {
+            /* a broken listener must not stop the others */
+        }
+    }
+}
+
+function emitActiveChange(): void {
+    for (const listener of activeChangeListeners) {
         try {
             listener();
         } catch {
@@ -52,6 +63,16 @@ function emitChange(): void {
 export function onTabsChange(listener: () => void): () => void {
     listeners.add(listener);
     return () => listeners.delete(listener);
+}
+
+/**
+ * Subscribe to ACTIVE-tab changes only (not title/list churn). window.ts uses this to tear down
+ * the PiP / overlay / HUD windows that belonged to the previously-active world when the user
+ * switches tabs — otherwise their relays would misroute to the new tab's renderer.
+ */
+export function onActiveTabChange(listener: () => void): () => void {
+    activeChangeListeners.add(listener);
+    return () => activeChangeListeners.delete(listener);
 }
 
 export function setShell(window: BrowserWindow): void {
@@ -157,18 +178,26 @@ export function activateTab(id: string): void {
     if (view && !view.webContents.isDestroyed()) {
         view.webContents.focus();
     }
+    emitActiveChange();
     emitChange();
 }
 
 export function closeTab(id: string): void {
+    // Never close the last tab — that would leave an empty shell with no world view (and every
+    // subsequent navigation would throw "No active world view"). The strip hides its close button
+    // for a lone tab, but the Cmd+W menu path can still reach here.
+    if (tabs.length <= 1) {
+        return;
+    }
     const index = tabs.findIndex((tab) => tab.id === id);
     if (index === -1) {
         return;
     }
+    const wasActive = activeTabId === id;
     const [tab] = tabs.splice(index, 1);
-    if (activeTabId === id) {
+    if (wasActive) {
         // Activate the neighbour (prefer the one to the left, like browsers).
-        const next = tabs[index - 1] ?? tabs[index] ?? undefined;
+        const next = tabs[index - 1] ?? tabs[index];
         activeTabId = next?.id;
     }
     try {
@@ -182,6 +211,9 @@ export function closeTab(id: string): void {
         ElectronLog.debug("closeTab teardown failed", error);
     }
     layoutActiveView();
+    if (wasActive) {
+        emitActiveChange();
+    }
     emitChange();
 }
 
@@ -256,4 +288,8 @@ export function resetTabs(): void {
     }
     tabs.length = 0;
     activeTabId = undefined;
+    // Drop the destroyed shell reference (its listeners die with the window); the next
+    // createWindow → setShell installs a fresh one. Mirrors resetTabStrip's own cleanup.
+    shell = undefined;
+    tabStripHeight = 0;
 }
