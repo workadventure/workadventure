@@ -36,6 +36,7 @@ type PresenceSnapshot = {
     micEnabled: boolean;
     cameraEnabled: boolean;
     screenSharing: boolean;
+    inWorld: boolean;
     requestedStatus: TrayAvailability;
     statusLocked: boolean;
 };
@@ -348,12 +349,14 @@ class DesktopApi {
                     requestedScreenSharingState,
                     requestedStatusStore,
                     availabilityStatusStore,
+                    gameSceneIsLoadedStore,
                 ],
-                ([$inMeeting, $mic, $cam, $share, $requested, $availability]): PresenceSnapshot => ({
+                ([$inMeeting, $mic, $cam, $share, $requested, $availability, $inWorld]): PresenceSnapshot => ({
                     inMeeting: Boolean($inMeeting),
                     micEnabled: Boolean($mic),
                     cameraEnabled: Boolean($cam),
                     screenSharing: Boolean($share),
+                    inWorld: Boolean($inWorld),
                     requestedStatus: requestedStatusToKey($requested),
                     statusLocked: STATUS_LOCKED_SET.has($availability),
                 })
