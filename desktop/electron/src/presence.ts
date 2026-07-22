@@ -14,6 +14,7 @@ type PresenceState = {
     inMeeting: boolean;
     micEnabled: boolean;
     cameraEnabled: boolean;
+    screenSharing: boolean;
     idle: boolean;
 };
 
@@ -21,6 +22,7 @@ const state: PresenceState = {
     inMeeting: false,
     micEnabled: false,
     cameraEnabled: false,
+    screenSharing: false,
     idle: false,
 };
 
@@ -47,16 +49,24 @@ export function setRendererPresence(next: {
     inMeeting?: boolean;
     micEnabled?: boolean;
     cameraEnabled?: boolean;
+    screenSharing?: boolean;
 }): void {
     const inMeeting = Boolean(next.inMeeting);
     const micEnabled = Boolean(next.micEnabled);
     const cameraEnabled = Boolean(next.cameraEnabled);
-    if (state.inMeeting === inMeeting && state.micEnabled === micEnabled && state.cameraEnabled === cameraEnabled) {
+    const screenSharing = Boolean(next.screenSharing);
+    if (
+        state.inMeeting === inMeeting &&
+        state.micEnabled === micEnabled &&
+        state.cameraEnabled === cameraEnabled &&
+        state.screenSharing === screenSharing
+    ) {
         return;
     }
     state.inMeeting = inMeeting;
     state.micEnabled = micEnabled;
     state.cameraEnabled = cameraEnabled;
+    state.screenSharing = screenSharing;
     emit();
 }
 
@@ -82,4 +92,19 @@ export function getTrayStatus(): TrayStatus {
 
 export function getMediaState(): { micEnabled: boolean; cameraEnabled: boolean; inMeeting: boolean } {
     return { micEnabled: state.micEnabled, cameraEnabled: state.cameraEnabled, inMeeting: state.inMeeting };
+}
+
+/** Snapshot used by the floating-toolbar visibility controller. */
+export function getPresenceSnapshot(): {
+    inMeeting: boolean;
+    micEnabled: boolean;
+    cameraEnabled: boolean;
+    screenSharing: boolean;
+} {
+    return {
+        inMeeting: state.inMeeting,
+        micEnabled: state.micEnabled,
+        cameraEnabled: state.cameraEnabled,
+        screenSharing: state.screenSharing,
+    };
 }
