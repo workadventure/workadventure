@@ -480,8 +480,12 @@
                             {/if}
                         {/if}
 
-                        <!-- Annotation layer: shown on the enlarged shared screen (not in the camera grid) -->
-                        {#if streamableEntry.streamable.videoType === "screenSharing" && !inCameraContainer && videoEnabled}
+                        <!-- Annotation layer: shown on the enlarged shared screen (not in the camera grid).
+                             Gated on !isPending so a transport switch (WebRTC ↔ LiveKit, reconnect) doesn't
+                             mount TWO overlays on the same tile — both would subscribe to the presenter's
+                             annotations and render them onto stacked canvases, which the viewer perceives
+                             as duplicated strokes. -->
+                        {#if streamableEntry.streamable.videoType === "screenSharing" && !inCameraContainer && videoEnabled && !streamableEntry.isPending}
                             {@const annotationTargetUserId = isLocalUser
                                 ? screenAnnotationManager.localUserId
                                 : streamableEntry.streamable.spaceUserId}
