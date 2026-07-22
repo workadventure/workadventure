@@ -36,6 +36,7 @@
     import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
     import { screenOverlayBridge } from "../../Api/Desktop/ScreenOverlayBridge";
     import { presenterHudBridge } from "../../Api/Desktop/PresenterHudBridge";
+    import { presenterEffectsBridge } from "../../Api/Desktop/PresenterEffectsBridge";
     import {
         NativePictureInPictureClient,
         isNativePictureInPictureAvailable,
@@ -376,6 +377,7 @@
             });
             screenOverlayBridge.start();
             presenterHudBridge.start();
+            presenterEffectsBridge.start();
         } else if (!isDocumentPictureInPictureSupported(window)) {
             debug("PictureInPicture is not supported by the browser");
             pictureInPictureSupportedStore.set(false);
@@ -494,6 +496,7 @@
             unsubscribeSceneLoaded();
             screenOverlayBridge.stop();
             presenterHudBridge.stop();
+            presenterEffectsBridge.stop();
             try {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 //@ts-ignore
