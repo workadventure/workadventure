@@ -20,6 +20,9 @@
     var btnStop = document.getElementById("bar-stop");
     var btnAnnotate = document.getElementById("bar-annotate");
     var btnEye = document.getElementById("bar-eye");
+    var btnLaser = document.getElementById("bar-laser");
+    var btnSpotlight = document.getElementById("bar-spotlight");
+    var btnLoupe = document.getElementById("bar-loupe");
     var btnBack = document.getElementById("bar-back");
     var picker = document.getElementById("picker");
     var pickerBody = document.getElementById("pk-body");
@@ -45,6 +48,11 @@
         // Eye "on" = annotations visible; locallyHidden flips it off.
         setBtnState(btnEye, annotation.locallyHidden !== true, false);
         btnEye.classList.toggle("is-active", annotation.locallyHidden === true);
+        // Presenter tools: highlight only the active one.
+        var presenterTool = state.presenterTool || "none";
+        setBtnState(btnLaser, presenterTool === "laser", false);
+        setBtnState(btnSpotlight, presenterTool === "spotlight", false);
+        setBtnState(btnLoupe, presenterTool === "loupe", false);
     });
 
     btnMic.addEventListener("click", function () {
@@ -61,6 +69,15 @@
     });
     btnEye.addEventListener("click", function () {
         api.sendCommand({ type: "annotation-toggle-local-hide" });
+    });
+    btnLaser.addEventListener("click", function () {
+        api.sendCommand({ type: "presenter-set-tool", tool: "laser" });
+    });
+    btnSpotlight.addEventListener("click", function () {
+        api.sendCommand({ type: "presenter-set-tool", tool: "spotlight" });
+    });
+    btnLoupe.addEventListener("click", function () {
+        api.sendCommand({ type: "presenter-set-tool", tool: "loupe" });
     });
     btnBack.addEventListener("click", function () {
         api.sendCommand({ type: "focus-main" });

@@ -7,6 +7,7 @@ import settings from "./settings";
 import { loadShortcuts, setShortcutsEnabled } from "./shortcuts";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
 import { setRendererPresence } from "./presence";
+import { startPresenterCursor, stopPresenterCursor } from "./presenter-cursor";
 import { getDesktopWindowState, getWindow, loadDesktopTarget } from "./window";
 import { createDesktopConfig, isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
 import {
@@ -201,6 +202,28 @@ export default () => {
             cameraEnabled: Boolean(raw.cameraEnabled),
             screenSharing: Boolean(raw.screenSharing),
         });
+    });
+
+    // Presenter tools: start/stop global cursor tracking over the shared display. When a tool is
+    // active, main polls the cursor and streams normalized positions back to the renderer, which
+    // broadcasts them to viewers over the space. tool === "none" (or empty) stops tracking.
+    ipcMain.on("app:presenter:setTool", (event, payload: unknown) => {
+        if (!isFromMainRenderer(event)) {
+            return;
+        }
+        const raw = (payload && typeof payload === "object" ? payload : {}) as Record<string, unknown>;
+        const tool = typeof raw.tool === "string" ? raw.tool : "none";
+        const displayId = typeof raw.displayId === "number" ? raw.displayId : undefined;
+        if (tool === "laser" || tool === "spotlight" || tool === "loupe") {
+            startPresenterCursor(displayId, (x, y) => {
+                const mainWindow = getWindow();
+                if (mainWindow && !mainWindow.webContents.isDestroyed()) {
+                    mainWindow.webContents.send("app:on-presenter-cursor", { x, y });
+                }
+            });
+        } else {
+            stopPresenterCursor();
+        }
     });
 
     ipcMain.handle("app:getDesktopCapturerSources", async (event, options: unknown) => {
