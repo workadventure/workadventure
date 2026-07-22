@@ -2,6 +2,8 @@ import { BrowserWindow } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
 import { resolveDisplay } from "./overlay-window";
+import settings from "./settings";
+import { COMPANION_MIN_HEIGHT, COMPANION_MIN_WIDTH, normalizeCompanionBounds } from "./companion-window-policy";
 
 /**
  * Presenter HUD windows (Zoom-style), placed on the SHARED display while screen sharing:
@@ -117,28 +119,32 @@ function positionFor(kind: HudKind, display: Electron.Display): { x: number; y: 
 export async function openHudWindow(kind: HudKind, displayId?: number): Promise<boolean> {
     const existing = hudWindows.get(kind);
     if (existing && !existing.window.isDestroyed()) {
-        // Re-open on a (possibly) different display: reposition instead of recreating.
-        const display = resolveDisplay(displayId, `HUD ${kind}`);
-        const { x, y } = positionFor(kind, display);
-        const { width, height } = HUD_SIZES[kind];
-        existing.window.setBounds({ x, y, width, height });
+        // Re-open on a (possibly) different display: reposition instead of recreating. The companion
+        // is resizable and user-placed, so leave its bounds alone.
+        if (kind !== "companion") {
+            const display = resolveDisplay(displayId, `HUD ${kind}`);
+            const { x, y } = positionFor(kind, display);
+            const { width, height } = HUD_SIZES[kind];
+            existing.window.setBounds({ x, y, width, height });
+        }
         existing.window.showInactive();
         await existing.readyPromise;
         return true;
     }
 
     const display = resolveDisplay(displayId, `HUD ${kind}`);
-    const { x, y } = positionFor(kind, display);
-    const { width, height } = HUD_SIZES[kind];
+    // The companion is the one resizable HUD: restore its saved size/position (clamped into the
+    // current work area). Every other HUD uses its fixed size + computed anchor.
+    const bounds =
+        kind === "companion"
+            ? normalizeCompanionBounds(settings.get("companion_bounds"), display.workArea, HUD_SIZES.companion)
+            : { ...positionFor(kind, display), ...HUD_SIZES[kind] };
 
     const newWindow = new BrowserWindow({
-        x,
-        y,
-        width,
-        height,
+        ...bounds,
         transparent: true,
         frame: false,
-        resizable: false,
+        resizable: kind === "companion",
         // Movable so the pill can be dragged with -webkit-app-region: drag.
         movable: true,
         minimizable: false,
@@ -163,6 +169,24 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
         },
     });
     newWindow.setMenu(null);
+    if (kind === "companion") {
+        newWindow.setMinimumSize(COMPANION_MIN_WIDTH, COMPANION_MIN_HEIGHT);
+        // Persist the resizable panel's bounds (debounced) so it reopens where the user left it.
+        let boundsSaveTimer: ReturnType<typeof setTimeout> | undefined;
+        const scheduleSaveBounds = () => {
+            if (boundsSaveTimer !== undefined) {
+                return;
+            }
+            boundsSaveTimer = setTimeout(() => {
+                boundsSaveTimer = undefined;
+                if (!newWindow.isDestroyed()) {
+                    settings.set("companion_bounds", newWindow.getBounds());
+                }
+            }, 400);
+        };
+        newWindow.on("resize", scheduleSaveBounds);
+        newWindow.on("move", scheduleSaveBounds);
+    }
     try {
         // Excluded from screen capture: the presenter sees the bar, viewers do NOT.
         newWindow.setContentProtection(true);
