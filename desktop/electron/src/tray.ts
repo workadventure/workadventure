@@ -18,6 +18,7 @@ import {
     type TrayAvailability,
     type TrayStatus,
 } from "./presence";
+import { isCompanionVisible, toggleCompanion } from "./companion-controller";
 import { stripSensitiveQueryParams } from "./desktop-url-policy";
 
 let tray: Tray | undefined;
@@ -220,6 +221,14 @@ function updateTrayContextMenu() {
             label: "Copy current world URL",
             enabled: Boolean(lastRoomUrl),
             click: copyCurrentWorldUrl,
+        },
+        {
+            label: "Companion panel",
+            type: "checkbox",
+            checked: isCompanionVisible(),
+            click() {
+                toggleCompanion();
+            },
         },
         { type: "separator" },
         {
