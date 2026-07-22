@@ -324,6 +324,37 @@ html, body {
     text-overflow: ellipsis;
 }
 
+/* Meeting tab */
+.tab[hidden] { display: none; }
+.meeting-pane { align-items: center; justify-content: center; }
+.meeting-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 24px;
+    text-align: center;
+}
+.meeting-note { font-size: 13px; color: var(--fg); }
+.meeting-video-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+.meeting-video-btn:hover { background: #5568ff; }
+.meeting-video-btn[data-state="on"] { background: var(--danger); }
+.meeting-video-btn[data-state="on"]:hover { background: #ef7e63; }
+.meeting-video-btn svg { width: 18px; height: 18px; display: block; }
+.meeting-hint { font-size: 11px; color: var(--muted); max-width: 240px; }
+
 /* Controls */
 .controls { padding: 12px; display: flex; flex-direction: column; gap: 16px; }
 .control-row { display: flex; gap: 8px; }
