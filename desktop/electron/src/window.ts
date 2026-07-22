@@ -27,6 +27,7 @@ import { closePipWindow } from "./pip-window";
 import { rememberWorldUrl } from "./world-history";
 import { closeOverlayWindow } from "./overlay-window";
 import { updateFloatingToolbar } from "./floating-toolbar";
+import { stopPresenterCursor } from "./presenter-cursor";
 import { closeAllHudWindows } from "./hud-windows";
 
 const DESKTOP_CALLBACK_FLOW_TTL_MS = 5 * 60 * 1000;
@@ -612,6 +613,7 @@ export async function createWindow(initialUrl?: string) {
         closePipWindow();
         closeOverlayWindow();
         closeAllHudWindows();
+        stopPresenterCursor();
     });
 
     mainWindow.on("resize", () => refreshRendererViewport("resize"));
