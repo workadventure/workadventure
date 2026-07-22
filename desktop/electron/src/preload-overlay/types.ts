@@ -22,6 +22,23 @@ export type OverlayToolState = {
     width: number;
 };
 
+/**
+ * The presenter's live cursor effect, rendered on the overlay so the PRESENTER sees what the
+ * audience sees. The overlay is content-protected, so this local render is never captured — the
+ * viewers get the effect from the network channel instead, with no double-render.
+ */
+export type OverlayPresenterEffect = {
+    /** "laser" | "spotlight" | "loupe". Only meaningful when active. */
+    tool: string;
+    /** Cursor position normalized 0..1 over the shared display. */
+    x: number;
+    y: number;
+    /** Loupe/spotlight parameter (radius fraction / zoom); 0 = renderer default. */
+    scale: number;
+    /** False clears the effect. */
+    active: boolean;
+};
+
 /** A drawing operation produced BY the overlay when the presenter draws, sent back to WorkAdventure. */
 export type OverlayDrawOp =
     | { type: "upsert"; element: OverlayElement; commit: boolean }
@@ -36,6 +53,8 @@ export type WorkAdventureOverlayApi = {
     onDrawMode: (callback: (enabled: boolean) => void) => () => void;
     /** Current tool/color/width for new strokes. */
     onTool: (callback: (tool: OverlayToolState) => void) => () => void;
+    /** The presenter's live cursor effect (laser / spotlight / loupe) to render locally. */
+    onPresenterEffect: (callback: (effect: OverlayPresenterEffect) => void) => () => void;
     /** Emit a drawing operation back to the main renderer. */
     emitDraw: (op: OverlayDrawOp) => void;
     /** Ask the user to leave drawing mode (e.g. the overlay caught Escape). */
