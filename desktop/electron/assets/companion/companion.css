@@ -290,22 +290,3 @@ html, body {
 .status-opt .dot { width: 10px; height: 10px; }
 .status-group.is-locked .status-opts { opacity: 0.4; pointer-events: none; }
 .status-locked { margin-top: 8px; font-size: 11px; color: var(--muted); }
-
-/* Mentions */
-.mention {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 9px 10px;
-    border-radius: 9px;
-    cursor: pointer;
-}
-.mention:hover { background: var(--panel-2); }
-.mention-title { font-size: 12px; font-weight: 600; }
-.mention-body {
-    font-size: 12px;
-    color: var(--muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
