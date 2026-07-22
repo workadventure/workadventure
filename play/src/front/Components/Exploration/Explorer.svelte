@@ -40,6 +40,24 @@
         if ($mapExplorationAreasStore) areasListFiltered.set($mapExplorationAreasStore);
     }
 
+    // Name used to display and sort an entity: its custom name if set, otherwise the prefab name.
+    function getEntityDisplayName(entity: Entity): string {
+        const name = entity.getEntityData().name;
+        return name && name !== "" ? name : entity.getPrefab().name;
+    }
+
+    // Name used to display and sort an area (may be an empty string when the area has no name).
+    function getAreaDisplayName(area: AreaPreview): string {
+        return area.getAreaData().name;
+    }
+
+    // Sort the filtered entries alphabetically by display name (case-insensitive, natural number order).
+    function sortByName<T>(entries: Iterable<[string, T]>, getName: (item: T) => string): Array<[string, T]> {
+        return [...entries].sort(([, a], [, b]) =>
+            getName(a).localeCompare(getName(b), undefined, { sensitivity: "base", numeric: true }),
+        );
+    }
+
     function onChangeFilterHandle() {
         entitiesListFiltered.set(new Map());
         for (let [key, entity] of $mapExplorationEntitiesStore) {
@@ -398,7 +416,7 @@
 
             {#if entityListActive && $entitiesListFiltered.size > 0}
                 <div class="entity-items p-2 flex flex-col">
-                    {#each [...$entitiesListFiltered] as [key, entity] (key)}
+                    {#each sortByName($entitiesListFiltered, getEntityDisplayName) as [key, entity] (key)}
                         <!-- svelte-ignore a11y_click_events_have_key_events -->
                         <!-- svelte-ignore a11y_no_static_element_interactions -->
                         <div
@@ -487,7 +505,7 @@
             {#if areaListActive && $areasListFiltered.size > 0}
                 <div class="area-items p-2 flex flex-col">
                     {#if $areasListFiltered.size > 0}
-                        {#each [...$areasListFiltered] as [key, area] (key)}
+                        {#each sortByName($areasListFiltered, getAreaDisplayName) as [key, area] (key)}
                             <!-- svelte-ignore a11y_click_events_have_key_events -->
                             <!-- svelte-ignore a11y_no_static_element_interactions -->
                             <div
