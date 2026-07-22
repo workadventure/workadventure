@@ -1,8 +1,9 @@
 import { app, Menu, type MenuItemConstructorOptions } from "electron";
 import ElectronLog from "electron-log";
 
-import { createWindow, getWindow, loadDesktopTarget, loadLandingPage } from "./window";
+import { createWindow, getWindow, openWorldTab } from "./window";
 import { getPinnedWorlds, getRecentWorlds, onWorldHistoryChange } from "./world-history";
+import { closeActiveTab, cycleTab } from "./tab-manager";
 
 let isListeningForHistoryChanges = false;
 
@@ -12,7 +13,8 @@ function openNativeWorld(url: string): void {
             await createWindow(url);
             return;
         }
-        await loadDesktopTarget(url);
+        // Recent / pinned worlds open in a new tab so they never replace what the user is in.
+        await openWorldTab(url);
     })().catch((error) => {
         ElectronLog.error(`Failed to open recent world "${url}".`, error);
     });
@@ -48,8 +50,10 @@ export function openNativeWorldSwitcher(): void {
     void (async () => {
         if (!getWindow()) {
             await createWindow();
+            return;
         }
-        await loadLandingPage();
+        // Open the Landing in a new tab rather than replacing the world the user is in.
+        await openWorldTab();
     })().catch((error) => {
         ElectronLog.error("Failed to open the native world switcher.", error);
     });
@@ -78,6 +82,27 @@ export function createNativeApplicationMenu(): void {
         {
             label: "World",
             submenu: [
+                {
+                    label: "New tab",
+                    accelerator: "CmdOrCtrl+T",
+                    click: () => void openWorldTab(),
+                },
+                {
+                    label: "Close tab",
+                    accelerator: "CmdOrCtrl+W",
+                    click: closeActiveTab,
+                },
+                {
+                    label: "Next tab",
+                    accelerator: "CmdOrCtrl+Shift+]",
+                    click: () => cycleTab(1),
+                },
+                {
+                    label: "Previous tab",
+                    accelerator: "CmdOrCtrl+Shift+[",
+                    click: () => cycleTab(-1),
+                },
+                { type: "separator" },
                 {
                     label: "Change world…",
                     accelerator: "CmdOrCtrl+Shift+O",
