@@ -61,6 +61,9 @@
         invitationName: byId("c-invitation-name"),
         inviteAccept: byId("c-invite-accept"),
         inviteDecline: byId("c-invite-decline"),
+        meetingTab: byId("c-meeting-tab"),
+        videoToggle: byId("c-video-toggle"),
+        videoLabel: byId("c-video-label"),
     };
 
     function send(command) {
@@ -211,6 +214,13 @@
             send({ type: "set-status", status: btn.dataset.status });
         }
     });
+
+    // ---- Meeting ----
+    if (els.videoToggle) {
+        els.videoToggle.addEventListener("click", function () {
+            send({ type: "toggle-pip" });
+        });
+    }
 
     // ---- Rendering ----
     function miniButton(action, userId, title, iconSvg) {
@@ -387,6 +397,24 @@
         }
     }
 
+    function renderMeeting(media) {
+        var inMeeting = media.inMeeting === true;
+        if (els.meetingTab) {
+            els.meetingTab.hidden = !inMeeting;
+        }
+        // If the meeting ended while the Meeting tab was open, fall back to People.
+        if (!inMeeting && activeTab === "meeting") {
+            setTab("people");
+        }
+        if (els.videoToggle) {
+            var open = media.pipOpen === true;
+            els.videoToggle.dataset.state = open ? "on" : "off";
+            if (els.videoLabel) {
+                els.videoLabel.textContent = open ? "Close meeting video" : "Open meeting video";
+            }
+        }
+    }
+
     function renderInvitation(invitation) {
         if (!els.invitation) {
             return;
@@ -408,17 +436,18 @@
         renderInvitation(state.invitation);
         renderPeople(Array.isArray(state.users) ? state.users : []);
         renderChat(Array.isArray(state.conversations) ? state.conversations : [], state.selectedConversation || null);
-        renderControls(
-            state.media || {
-                micEnabled: false,
-                cameraEnabled: false,
-                screenSharing: false,
-                canScreenShare: false,
-                inMeeting: false,
-                status: "online",
-                statusLocked: false,
-            }
-        );
+        var media = state.media || {
+            micEnabled: false,
+            cameraEnabled: false,
+            screenSharing: false,
+            canScreenShare: false,
+            inMeeting: false,
+            pipOpen: false,
+            status: "online",
+            statusLocked: false,
+        };
+        renderMeeting(media);
+        renderControls(media);
     }
 
     api.onState(function (state) {

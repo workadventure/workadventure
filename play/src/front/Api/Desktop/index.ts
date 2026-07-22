@@ -11,6 +11,7 @@ import { resetAllStatusStoreExcept } from "../../Rules/StatusRules/statusChanger
 import type { RequestedStatus } from "../../Rules/StatusRules/statusRules";
 import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { activePictureInPictureStore, askPictureInPictureActivatingStore } from "../../Stores/PeerStore";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
 import { playersStore } from "../../Stores/PlayersStore";
@@ -451,6 +452,7 @@ class DesktopApi {
             screenSharing: false,
             canScreenShare: true,
             inMeeting: false,
+            pipOpen: false,
             status: "online",
             statusLocked: false,
         };
@@ -518,13 +520,15 @@ class DesktopApi {
                 requestedScreenSharingState,
                 requestedStatusStore,
                 availabilityStatusStore,
+                activePictureInPictureStore,
             ],
-            ([$inMeeting, $mic, $cam, $share, $requested, $availability]): CompanionMedia => ({
+            ([$inMeeting, $mic, $cam, $share, $requested, $availability, $pipOpen]): CompanionMedia => ({
                 micEnabled: Boolean($mic),
                 cameraEnabled: Boolean($cam),
                 screenSharing: Boolean($share),
                 canScreenShare: true,
                 inMeeting: Boolean($inMeeting),
+                pipOpen: Boolean($pipOpen),
                 status: requestedStatusToKey($requested),
                 statusLocked: STATUS_LOCKED_SET.has($availability),
             })
@@ -722,6 +726,17 @@ class DesktopApi {
                         requestedScreenSharingState.disableScreenSharing();
                     } else {
                         requestedScreenSharingState.enableScreenSharing();
+                    }
+                    break;
+                case "toggle-pip":
+                    // Open / close the proven native meeting-video window (PiP).
+                    if (get(activePictureInPictureStore)) {
+                        window.WAD?.pip?.close().catch(() => {
+                            /* best-effort */
+                        });
+                        askPictureInPictureActivatingStore.set(false);
+                    } else {
+                        askPictureInPictureActivatingStore.set(true);
                     }
                     break;
                 case "set-status":

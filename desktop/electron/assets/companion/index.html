@@ -45,6 +45,7 @@
             <button class="tab" data-tab="chat" type="button">
                 Chat<span class="badge" id="c-chat-mentions-badge" title="Unread mentions" hidden></span>
             </button>
+            <button class="tab" data-tab="meeting" type="button" id="c-meeting-tab" hidden>Meeting</button>
             <button class="tab" data-tab="controls" type="button">Controls</button>
         </nav>
 
@@ -75,6 +76,17 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
                 </form>
+            </div>
+        </section>
+
+        <section class="pane meeting-pane" data-pane="meeting">
+            <div class="meeting-body">
+                <div class="meeting-note">You're in a meeting.</div>
+                <button class="meeting-video-btn" id="c-video-toggle" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                    <span id="c-video-label">Open meeting video</span>
+                </button>
+                <div class="meeting-hint">Video opens in a floating window you can keep on top while you work.</div>
             </div>
         </section>
 
