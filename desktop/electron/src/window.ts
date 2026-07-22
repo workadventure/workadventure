@@ -26,6 +26,7 @@ import { shouldMaximizeBeforeLoad } from "./window-state-policy";
 import { closePipWindow } from "./pip-window";
 import { rememberWorldUrl } from "./world-history";
 import { closeOverlayWindow } from "./overlay-window";
+import { updateFloatingToolbar } from "./floating-toolbar";
 import { closeAllHudWindows } from "./hud-windows";
 
 const DESKTOP_CALLBACK_FLOW_TTL_MS = 5 * 60 * 1000;
@@ -623,12 +624,18 @@ export async function createWindow(initialUrl?: string) {
     // close PiP defensively here: doing so would wipe manually-opened PiP whenever the user
     // clicks back onto the main app, AND the destroy-in-flight also races with the utility
     // window's loadFile, spraying ERR_FAILED logs and occasionally taking the whole app down.
-    mainWindow.on("focus", emitDesktopWindowStateChange);
-    mainWindow.on("blur", emitDesktopWindowStateChange);
-    mainWindow.on("show", emitDesktopWindowStateChange);
-    mainWindow.on("hide", emitDesktopWindowStateChange);
-    mainWindow.on("minimize", emitDesktopWindowStateChange);
-    mainWindow.on("restore", emitDesktopWindowStateChange);
+    // Any of these can change whether the main window is focused, which is the trigger for the
+    // floating meeting toolbar (shown when in a call and tabbed away).
+    const onWindowStateEvent = () => {
+        emitDesktopWindowStateChange();
+        updateFloatingToolbar();
+    };
+    mainWindow.on("focus", onWindowStateEvent);
+    mainWindow.on("blur", onWindowStateEvent);
+    mainWindow.on("show", onWindowStateEvent);
+    mainWindow.on("hide", onWindowStateEvent);
+    mainWindow.on("minimize", onWindowStateEvent);
+    mainWindow.on("restore", onWindowStateEvent);
 
     // mainWindow.on('close', async (event) => {
     //   if (!app.confirmedExitPrompt) {

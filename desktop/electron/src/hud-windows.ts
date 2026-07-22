@@ -13,7 +13,7 @@ import { resolveDisplay } from "./overlay-window";
  * captured pixels. Only the transparent annotation overlay (a separate window) is captured.
  */
 
-export type HudKind = "meeting-bar" | "annotation-bar";
+export type HudKind = "meeting-bar" | "annotation-bar" | "floating-meeting";
 
 type HudEntry = {
     window: BrowserWindow;
@@ -25,6 +25,8 @@ type HudEntry = {
 const HUD_SIZES: Record<HudKind, { width: number; height: number }> = {
     "meeting-bar": { width: 520, height: 76 },
     "annotation-bar": { width: 700, height: 64 },
+    // Compact Zoom-style pill: mic / camera / back-to-app.
+    "floating-meeting": { width: 188, height: 62 },
 };
 
 /** Meeting-bar height while the screen-switch source picker is open (bottom edge stays anchored). */
@@ -51,13 +53,21 @@ export function isHudSender(sender: Electron.WebContents): boolean {
     return false;
 }
 
-function hudKindOfSender(sender: Electron.WebContents): HudKind | undefined {
+export function hudKindOfSender(sender: Electron.WebContents): HudKind | undefined {
     for (const [kind, entry] of hudWindows.entries()) {
         if (!entry.window.isDestroyed() && entry.window.webContents === sender) {
             return kind;
         }
     }
     return undefined;
+}
+
+/** Push state to a single HUD window (used by the floating toolbar, driven directly from main). */
+export function sendHudState(kind: HudKind, state: unknown): void {
+    const entry = hudWindows.get(kind);
+    if (entry && !entry.window.isDestroyed() && entry.ready) {
+        entry.window.webContents.send("app:hud:state", state);
+    }
 }
 
 /**
@@ -82,8 +92,10 @@ function positionFor(kind: HudKind, display: Electron.Display): { x: number; y: 
     const { width, height } = HUD_SIZES[kind];
     const area = display.workArea;
     const x = Math.round(area.x + (area.width - width) / 2);
-    // Meeting bar sits bottom-center (like Zoom's control bar); annotation bar top-center.
-    const y = kind === "meeting-bar" ? Math.round(area.y + area.height - height - HUD_MARGIN) : area.y + HUD_MARGIN;
+    // Meeting bar + floating toolbar sit bottom-center (like Zoom's control bar); annotation bar
+    // sits top-center so it doesn't overlap the meeting bar.
+    const bottomAnchored = kind === "meeting-bar" || kind === "floating-meeting";
+    const y = bottomAnchored ? Math.round(area.y + area.height - height - HUD_MARGIN) : area.y + HUD_MARGIN;
     return { x, y };
 }
 
