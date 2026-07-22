@@ -7,6 +7,7 @@ import settings from "./settings";
 import { loadShortcuts, setShortcutsEnabled } from "./shortcuts";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
 import { setRendererPresence } from "./presence";
+import { setCompanionUnread } from "./companion-controller";
 import { startPresenterCursor, stopPresenterCursor } from "./presenter-cursor";
 import {
     getActiveWorldContents,
@@ -195,6 +196,8 @@ export default () => {
         }
         const parsed = typeof count === "number" && Number.isFinite(count) ? count : 0;
         setUnreadCount(parsed, getWindow() ?? undefined);
+        // Unread mentions are one of the companion panel's auto-show triggers.
+        setCompanionUnread(parsed);
     });
 
     ipcMain.on("app:setPresence", (event, presence: unknown) => {

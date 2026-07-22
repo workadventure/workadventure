@@ -1,6 +1,7 @@
 import { globalShortcut } from "electron";
 import settings, { SettingsData } from "./settings";
 import { emitCameraToggle, emitMuteToggle } from "./ipc";
+import { toggleCompanion } from "./companion-controller";
 
 export function setShortcutsEnabled(enabled: boolean) {
     if (enabled) {
@@ -24,6 +25,12 @@ export function loadShortcuts() {
     if (shortcuts?.camera_toggle && shortcuts.camera_toggle.length > 0) {
         globalShortcut.register(shortcuts.camera_toggle, () => {
             emitCameraToggle();
+        });
+    }
+
+    if (shortcuts?.companion_toggle && shortcuts.companion_toggle.length > 0) {
+        globalShortcut.register(shortcuts.companion_toggle, () => {
+            toggleCompanion();
         });
     }
 }
