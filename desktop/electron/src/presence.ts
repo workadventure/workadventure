@@ -23,6 +23,8 @@ type PresenceState = {
     cameraEnabled: boolean;
     screenSharing: boolean;
     idle: boolean;
+    /** True while a game scene is loaded (the user is actually in a world, not on landing/login). */
+    inWorld: boolean;
     /** The user's current chosen availability (the tray Status radio reflects this). */
     requestedStatus: TrayAvailability;
     /** True while WA locks the status bar (in a meeting / silent zone) — the tray submenu grays out. */
@@ -35,6 +37,7 @@ const state: PresenceState = {
     cameraEnabled: false,
     screenSharing: false,
     idle: false,
+    inWorld: false,
     requestedStatus: "online",
     statusLocked: false,
 };
@@ -76,6 +79,7 @@ export function setRendererPresence(next: {
     micEnabled?: boolean;
     cameraEnabled?: boolean;
     screenSharing?: boolean;
+    inWorld?: boolean;
     requestedStatus?: unknown;
     statusLocked?: boolean;
 }): void {
@@ -83,6 +87,7 @@ export function setRendererPresence(next: {
     const micEnabled = Boolean(next.micEnabled);
     const cameraEnabled = Boolean(next.cameraEnabled);
     const screenSharing = Boolean(next.screenSharing);
+    const inWorld = Boolean(next.inWorld);
     const requestedStatus = coerceAvailability(next.requestedStatus);
     const statusLocked = Boolean(next.statusLocked);
     if (
@@ -90,6 +95,7 @@ export function setRendererPresence(next: {
         state.micEnabled === micEnabled &&
         state.cameraEnabled === cameraEnabled &&
         state.screenSharing === screenSharing &&
+        state.inWorld === inWorld &&
         state.requestedStatus === requestedStatus &&
         state.statusLocked === statusLocked
     ) {
@@ -99,6 +105,7 @@ export function setRendererPresence(next: {
     state.micEnabled = micEnabled;
     state.cameraEnabled = cameraEnabled;
     state.screenSharing = screenSharing;
+    state.inWorld = inWorld;
     state.requestedStatus = requestedStatus;
     state.statusLocked = statusLocked;
     emit();
@@ -133,17 +140,19 @@ export function getAvailabilityInfo(): { status: TrayAvailability; locked: boole
     return { status: state.requestedStatus, locked: state.statusLocked };
 }
 
-/** Snapshot used by the floating-toolbar visibility controller. */
+/** Snapshot used by the companion + floating-toolbar visibility controllers. */
 export function getPresenceSnapshot(): {
     inMeeting: boolean;
     micEnabled: boolean;
     cameraEnabled: boolean;
     screenSharing: boolean;
+    inWorld: boolean;
 } {
     return {
         inMeeting: state.inMeeting,
         micEnabled: state.micEnabled,
         cameraEnabled: state.cameraEnabled,
         screenSharing: state.screenSharing,
+        inWorld: state.inWorld,
     };
 }
