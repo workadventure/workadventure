@@ -7,10 +7,17 @@ import * as autoUpdater from "./auto-updater";
 import * as log from "./log";
 import settings from "./settings";
 import { getWindow, loadDesktopTarget } from "./window";
-import { emitCameraToggle, emitMuteToggle } from "./ipc";
+import { emitCameraToggle, emitMuteToggle, emitSetStatus } from "./ipc";
 import { createPinnedWorldMenuItems, createRecentWorldMenuItems, openNativeWorldSwitcher } from "./native-menu";
 import { onWorldHistoryChange } from "./world-history";
-import { getMediaState, getTrayStatus, onPresenceChange, type TrayStatus } from "./presence";
+import {
+    getAvailabilityInfo,
+    getMediaState,
+    getTrayStatus,
+    onPresenceChange,
+    type TrayAvailability,
+    type TrayStatus,
+} from "./presence";
 import { stripSensitiveQueryParams } from "./desktop-url-policy";
 
 let tray: Tray | undefined;
@@ -29,6 +36,30 @@ const TRAY_STATUS_LABEL: Record<TrayStatus, string> = {
     idle: "🟡 Idle",
     available: "🟢 Available",
 };
+
+// The four user-selectable availability statuses, in display order. Colors mirror WA's status dots.
+const AVAILABILITY_ITEMS: ReadonlyArray<{ status: TrayAvailability; label: string }> = [
+    { status: "online", label: "🟢 Available" },
+    { status: "busy", label: "🔴 Busy" },
+    { status: "back_in_a_moment", label: "🟠 Be right back" },
+    { status: "do_not_disturb", label: "⛔ Do not disturb" },
+];
+
+function buildStatusSubmenuItems(): Electron.MenuItemConstructorOptions[] {
+    const { status, locked } = getAvailabilityInfo();
+    if (locked) {
+        // WA locks the status bar in a meeting / silent zone; mirror that so we don't fight it.
+        return [{ label: "Locked while in a meeting", enabled: false }];
+    }
+    return AVAILABILITY_ITEMS.map((item) => ({
+        label: item.label,
+        type: "radio" as const,
+        checked: status === item.status,
+        click() {
+            emitSetStatus(item.status);
+        },
+    }));
+}
 
 // Logical tray icon size in points; a matching @2x representation is added for Retina crispness.
 const TRAY_ICON_SIZE = 32;
@@ -158,6 +189,10 @@ function updateTrayContextMenu() {
         {
             label: TRAY_STATUS_LABEL[status],
             enabled: false,
+        },
+        {
+            label: "Set status",
+            submenu: buildStatusSubmenuItems(),
         },
         { type: "separator" },
         {

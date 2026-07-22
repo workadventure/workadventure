@@ -235,15 +235,24 @@ export type WorkAdventureDesktopApi = {
      */
     setUnreadCount: (count: number) => void;
     /**
-     * Push the live presence (in-meeting + mic/camera state) to main, which drives the tray
-     * status dot and the tray quick-action checkmarks.
+     * Push the live presence (in-meeting + mic/camera state + availability) to main, which drives
+     * the tray status dot, the tray quick-action checkmarks, and the tray "Set status" submenu.
+     * `requestedStatus` is the user's chosen availability; `statusLocked` mirrors WA locking the
+     * status bar while in a meeting / silent zone (the submenu grays out in that case).
      */
     setPresence: (presence: {
         inMeeting: boolean;
         micEnabled: boolean;
         cameraEnabled: boolean;
         screenSharing: boolean;
+        requestedStatus?: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
+        statusLocked?: boolean;
     }) => void;
+    /**
+     * Subscribe to status changes requested from the tray "Set status" submenu. The renderer maps
+     * the key back to an AvailabilityStatus and applies it. Returns an unsubscriber.
+     */
+    onSetStatus: (callback: (status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb") => void) => () => void;
     /** Set the current world's display name on the active tab (admin-configured room name). */
     setTabTitle: (title: string) => void;
     /**
