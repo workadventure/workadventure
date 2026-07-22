@@ -206,6 +206,10 @@ export type WorkAdventureDesktopApi = {
     setKeepAwake?: (enabled: boolean) => void;
     /** Dock (macOS) / taskbar (Windows) unread badge; 0 clears. Linux is a silent no-op. */
     setUnreadCount?: (count: number) => void;
+    /** Push live presence (meeting + mic/camera) to main for the tray status dot + checkmarks. */
+    setPresence?: (presence: { inMeeting: boolean; micEnabled: boolean; cameraEnabled: boolean }) => void;
+    /** Subscribe to system idle/active transitions (main powerMonitor). Returns unsubscriber. */
+    onSystemIdle?: (callback: (idle: boolean) => void) => () => void;
     onMuteToggle: (callback: () => void) => void;
     onCameraToggle: (callback: () => void) => void;
     getWindowState: () => Promise<DesktopWindowState>;
