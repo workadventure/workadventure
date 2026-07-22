@@ -3,9 +3,9 @@ import ElectronLog from "electron-log";
 import electronIsDev from "electron-is-dev";
 import path from "path";
 import { pathToFileURL } from "url";
-import { createAndShowNotification } from "./notification";
 import settings from "./settings";
 import { loadShortcuts, setShortcutsEnabled } from "./shortcuts";
+import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
 import { getDesktopWindowState, getWindow, loadDesktopTarget } from "./window";
 import { createDesktopConfig, isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
 import {
@@ -123,14 +123,67 @@ export function emitCameraToggle() {
     mainWindow.webContents.send("app:on-camera-toggle");
 }
 
+function normalizeNotifyPayload(payload: unknown): ShowNotificationOptions | undefined {
+    if (typeof payload === "string") {
+        const body = payload.trim();
+        return body ? { title: "WorkAdventure", body } : undefined;
+    }
+    if (payload && typeof payload === "object") {
+        const raw = payload as Record<string, unknown>;
+        const title = typeof raw.title === "string" && raw.title.trim() ? raw.title.trim() : "WorkAdventure";
+        const body = typeof raw.body === "string" ? raw.body.trim() : "";
+        if (!body) {
+            return undefined;
+        }
+        return {
+            title,
+            body,
+            tag: typeof raw.tag === "string" && raw.tag ? raw.tag : undefined,
+            silent: Boolean(raw.silent),
+        };
+    }
+    return undefined;
+}
+
 export default () => {
     ipcMain.handle("is-development", () => electronIsDev);
     ipcMain.handle("get-version", () => (electronIsDev ? "dev" : app.getVersion()));
     ipcMain.handle("app:getWindowState", () => getDesktopWindowState());
 
     // app ipc
-    ipcMain.on("app:notify", (event, txt: string) => {
-        createAndShowNotification({ body: txt });
+    ipcMain.on("app:notify", (event, payload: unknown) => {
+        // Accept both the legacy plain-string form (`notify(body)`) and the enriched object form
+        // (`notify({title, body, tag, silent})`). Anything else is ignored — the renderer
+        // typedef gates this at compile time, but we still guard so a mis-wired call from an
+        // untyped surface doesn't crash the main process.
+        const options = normalizeNotifyPayload(payload);
+        if (!options) {
+            return;
+        }
+        showNotification(options, (tag) => {
+            const mainWindow = getWindow();
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                if (mainWindow.isMinimized()) mainWindow.restore();
+                mainWindow.show();
+                mainWindow.focus();
+                mainWindow.webContents.send("app:on-notification-click", tag ?? "");
+            }
+        });
+    });
+
+    ipcMain.on("app:setKeepAwake", (event, enabled: unknown) => {
+        if (!isFromMainRenderer(event)) {
+            return;
+        }
+        setKeepAwake(Boolean(enabled));
+    });
+
+    ipcMain.on("app:setUnreadCount", (event, count: unknown) => {
+        if (!isFromMainRenderer(event)) {
+            return;
+        }
+        const parsed = typeof count === "number" && Number.isFinite(count) ? count : 0;
+        setUnreadCount(parsed, getWindow() ?? undefined);
     });
 
     ipcMain.handle("app:getDesktopCapturerSources", async (event, options: unknown) => {
