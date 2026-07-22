@@ -1,10 +1,12 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type {
+    CompanionCommand,
     DesktopOverlayDrawOp,
     DesktopPipCommand,
     DesktopPipSdp,
     DesktopWindowState,
     WorkAdventureDesktopApi,
+    WorkAdventureDesktopCompanionApi,
     WorkAdventureDesktopHudApi,
     WorkAdventureDesktopOverlayApi,
     WorkAdventureDesktopPipApi,
@@ -47,6 +49,12 @@ const presenterHudApi: WorkAdventureDesktopHudApi = {
     closeAnnotationBar: () => ipcRenderer.invoke("app:hud:close-annotation-bar"),
     pushState: (state) => ipcRenderer.send("app:hud:state-from-main", state),
     onCommand: (callback) => subscribe("app:hud:command-to-main", (command) => callback(command as DesktopPipCommand)),
+};
+
+const companionApi: WorkAdventureDesktopCompanionApi = {
+    pushState: (state) => ipcRenderer.send("app:companion:state-from-main", state),
+    onCommand: (callback) =>
+        subscribe("app:companion:command-to-main", (command) => callback(command as CompanionCommand)),
 };
 
 const api: WorkAdventureDesktopApi = {
@@ -104,6 +112,7 @@ const api: WorkAdventureDesktopApi = {
     },
     screenOverlay: screenOverlayApi,
     presenterHud: presenterHudApi,
+    companion: companionApi,
 };
 
 contextBridge.exposeInMainWorld("WAD", api);
