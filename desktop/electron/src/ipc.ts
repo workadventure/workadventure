@@ -7,7 +7,7 @@ import settings from "./settings";
 import { loadShortcuts, setShortcutsEnabled } from "./shortcuts";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
 import { setRendererPresence } from "./presence";
-import { setCompanionUnread } from "./companion-controller";
+import { dismissCompanion, setCompanionUnread } from "./companion-controller";
 import { startPresenterCursor, stopPresenterCursor } from "./presenter-cursor";
 import {
     getActiveWorldContents,
@@ -696,7 +696,9 @@ export default () => {
             } else if (type === "toggle-camera") {
                 emitCameraToggle();
             } else if (type === "close") {
-                closeHudWindow("companion");
+                // Go through the controller so the dismissal sticks (force-closed), instead of a bare
+                // close that would re-open on the next presence change.
+                dismissCompanion();
             } else {
                 getActiveWorldContents()?.send("app:companion:command-to-main", command);
             }
