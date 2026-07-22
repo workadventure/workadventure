@@ -16,7 +16,7 @@ import {
     loadDesktopTarget,
     openWorldTab,
 } from "./window";
-import { activateTab, closeTab } from "./tab-manager";
+import { activateTab, closeTab, setActiveWorldTitle } from "./tab-manager";
 import { isTabStripSender, markTabStripReady } from "./tab-strip";
 import { createDesktopConfig, isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
 import {
@@ -202,6 +202,13 @@ export default () => {
             cameraEnabled: Boolean(raw.cameraEnabled),
             screenSharing: Boolean(raw.screenSharing),
         });
+    });
+
+    ipcMain.on("app:setTabTitle", (event, title: unknown) => {
+        if (!isFromMainRenderer(event) || typeof title !== "string") {
+            return;
+        }
+        setActiveWorldTitle(title);
     });
 
     // Presenter tools: start/stop global cursor tracking over the shared display. When a tool is
