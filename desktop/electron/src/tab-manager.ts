@@ -17,9 +17,16 @@ import { formatWorldHistoryLabel } from "./desktop-url-policy";
 export type WorldTab = {
     id: string;
     view: WebContentsView;
-    title: string;
+    /** The WorkAdventure world name (admin-configured), pushed by the renderer. Highest priority. */
+    appTitle?: string;
+    /** URL-derived fallback label (e.g. "team / world / room"), used until the app pushes a name. */
+    urlLabel: string;
     url: string;
 };
+
+function tabTitle(tab: WorldTab): string {
+    return tab.appTitle || tab.urlLabel || "New world";
+}
 
 /** Lightweight tab descriptor for the tab-strip renderer. */
 export type TabInfo = {
@@ -126,23 +133,20 @@ export function createWorldView(configure: (view: WebContentsView) => void): Wor
         },
     });
     const id = `tab-${++tabIdCounter}`;
-    const tab: WorldTab = { id, view, title: "New world", url: "" };
+    const tab: WorldTab = { id, view, urlLabel: "New world", url: "" };
     tabs.push(tab);
     shell.contentView.addChildView(view);
 
-    // Track a friendly label for the strip: the page title if WA set one, else a URL-derived
-    // label. The Landing page's <title> is "WorkAdventure", so a room label from the URL is nicer.
-    view.webContents.on("page-title-updated", (_event, title) => {
-        if (title && title !== "WorkAdventure") {
-            tab.title = title;
-            emitChange();
-        }
-    });
+    // Tab label priority: the WA world name (setActiveTabTitle, admin-configured) over a
+    // URL-derived label. A full navigation loads a new document → a new world → clear the app
+    // title and wait for the renderer to push the new world's name. An in-page (SPA) navigation
+    // just refreshes the URL fallback and keeps the app-pushed name.
     view.webContents.on("did-navigate", (_event, url) => {
         tab.url = url;
+        tab.appTitle = undefined;
         const label = formatWorldHistoryLabel(url);
         if (label && label !== "Unknown world") {
-            tab.title = label;
+            tab.urlLabel = label;
         }
         emitChange();
     });
@@ -153,7 +157,7 @@ export function createWorldView(configure: (view: WebContentsView) => void): Wor
         tab.url = url;
         const label = formatWorldHistoryLabel(url);
         if (label && label !== "Unknown world") {
-            tab.title = label;
+            tab.urlLabel = label;
             emitChange();
         }
     });
@@ -222,7 +226,21 @@ export function getTabs(): WorldTab[] {
 }
 
 export function getTabsInfo(): TabInfo[] {
-    return tabs.map((tab) => ({ id: tab.id, title: tab.title, active: tab.id === activeTabId }));
+    return tabs.map((tab) => ({ id: tab.id, title: tabTitle(tab), active: tab.id === activeTabId }));
+}
+
+/** Set the WorkAdventure world name for the ACTIVE tab (pushed by the renderer on scene load). */
+export function setActiveWorldTitle(title: string): void {
+    const tab = tabs.find((entry) => entry.id === activeTabId);
+    if (!tab) {
+        return;
+    }
+    const next = title.trim() || undefined;
+    if (tab.appTitle === next) {
+        return;
+    }
+    tab.appTitle = next;
+    emitChange();
 }
 
 /** Activate the tab at a given index (0-based), for Cmd+1..9 style switching. */

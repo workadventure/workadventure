@@ -8,6 +8,8 @@ import {
 } from "../../Stores/MediaStore";
 import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
+import { connectionManager } from "../../Connection/ConnectionManager";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { notificationManager } from "../../Notification/NotificationManager";
 import { desktopAwayStore } from "../../Stores/DesktopStatusStore";
@@ -193,6 +195,23 @@ class DesktopApi {
             //eslint-disable-next-line svelte/no-ignored-unsubscribe
             presenceStore.subscribe((presence) => {
                 setPresence(presence);
+            });
+        }
+
+        // Give the desktop tab a meaningful label: the admin-configured world name, pushed once
+        // the scene has loaded (and re-pushed on every scene load, e.g. walking through a portal to
+        // another map). Falls back silently to the tab's URL-derived label when a world has no name.
+        if (window.WAD.setTabTitle) {
+            const setTabTitle = window.WAD.setTabTitle;
+            //eslint-disable-next-line svelte/no-ignored-unsubscribe
+            gameSceneIsLoadedStore.subscribe((loaded) => {
+                if (!loaded) {
+                    return;
+                }
+                const name = connectionManager.currentRoom?.roomName;
+                if (name) {
+                    setTabTitle(name);
+                }
             });
         }
 
