@@ -29,13 +29,16 @@ import { closeOverlayWindow } from "./overlay-window";
 import { updateFloatingToolbar } from "./floating-toolbar";
 import { stopPresenterCursor } from "./presenter-cursor";
 import {
+    activateTab,
     createWorldView,
     getActiveWorldContents,
+    getTabCount,
     isActiveWorldContents,
     layoutActiveView,
     resetTabs,
     setShell,
 } from "./tab-manager";
+import { createTabStrip, resetTabStrip } from "./tab-strip";
 
 // Re-exported so ipc.ts (and others) target the active world view without importing tab-manager
 // directly — window.ts remains the single entry point for "the renderer to talk to".
@@ -614,6 +617,8 @@ export async function createWindow(initialUrl?: string) {
     });
     mainWindow.setMenu(null);
     setShell(mainWindow);
+    // The tab strip is pinned to the top and reserves space; world views sit below it.
+    createTabStrip(mainWindow);
     // Create the first world view (the initial tab). window.ts wires navigation security onto it;
     // it becomes the active view and everything below (load/PiP/presence) targets it.
     createWorldView((view) => configureNavigationSecurity(view.webContents, config));
@@ -628,6 +633,7 @@ export async function createWindow(initialUrl?: string) {
 
     mainWindow.on("closed", () => {
         mainWindow = undefined;
+        resetTabStrip();
         resetTabs();
         closePipWindow();
         closeOverlayWindow();
@@ -758,6 +764,32 @@ export async function loadDesktopTarget(requestedUrl?: string): Promise<boolean>
     }
 }
 
+/**
+ * Open a world in a NEW tab (Landing when no url). Used by the tab strip's "+" button, the
+ * tray/menu recent + pinned entries, and deep-links, so opening a world never replaces the tab
+ * the user is currently in.
+ */
+export async function openWorldTab(url?: string): Promise<void> {
+    if (!mainWindow) {
+        await createWindow(url);
+        return;
+    }
+    const config = getDesktopConfig();
+    const tab = createWorldView((view) => configureNavigationSecurity(view.webContents, config));
+    activateTab(tab.id);
+    if (url) {
+        await loadDesktopTarget(url);
+    } else {
+        await loadLandingPage();
+    }
+    showWindow();
+}
+
+/** Number of open world tabs. */
+export function getWorldTabCount(): number {
+    return getTabCount();
+}
+
 function requestDesktopAuthExchange(origin: string, code: string): Promise<{ token: string; targetUrl: string }> {
     return new Promise((resolve, reject) => {
         const exchangeUrl = new URL("/desktop-auth/exchange", origin).toString();
@@ -835,11 +867,13 @@ export async function openDeepLinkTarget(target?: string | DesktopAuthCallback) 
         return;
     }
 
-    pendingDeepLinkUrl = target;
     if (!mainWindow) {
+        pendingDeepLinkUrl = target;
         await createWindow(target);
         return;
     }
 
-    await loadDesktopTarget(target);
+    // A deep-link into a world opens in a new tab (running instance), so it never disrupts a
+    // meeting the user already has open in the active tab.
+    await openWorldTab(target);
 }

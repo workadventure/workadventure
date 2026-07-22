@@ -8,7 +8,16 @@ import { loadShortcuts, setShortcutsEnabled } from "./shortcuts";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
 import { setRendererPresence } from "./presence";
 import { startPresenterCursor, stopPresenterCursor } from "./presenter-cursor";
-import { getActiveWorldContents, getDesktopWindowState, getWindow, isActiveWorldContents, loadDesktopTarget } from "./window";
+import {
+    getActiveWorldContents,
+    getDesktopWindowState,
+    getWindow,
+    isActiveWorldContents,
+    loadDesktopTarget,
+    openWorldTab,
+} from "./window";
+import { activateTab, closeTab } from "./tab-manager";
+import { isTabStripSender, markTabStripReady } from "./tab-strip";
 import { createDesktopConfig, isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
 import {
     awaitPipReady,
@@ -318,6 +327,31 @@ export default () => {
             return false;
         }
         return isWorldPinned(rawUrl);
+    });
+
+    // ---- Tab strip ----
+    // All tab operations must originate from the strip's own webContents (the only holder of the
+    // preload-tabs script), so no world page can spawn/close tabs on its own.
+    ipcMain.on("app:tabs:ready", (event) => {
+        markTabStripReady(event.sender);
+    });
+    ipcMain.on("app:tabs:new", (event) => {
+        if (!isTabStripSender(event.sender)) {
+            return;
+        }
+        void openWorldTab();
+    });
+    ipcMain.on("app:tabs:activate", (event, id: unknown) => {
+        if (!isTabStripSender(event.sender) || typeof id !== "string") {
+            return;
+        }
+        activateTab(id);
+    });
+    ipcMain.on("app:tabs:close", (event, id: unknown) => {
+        if (!isTabStripSender(event.sender) || typeof id !== "string") {
+            return;
+        }
+        closeTab(id);
     });
 
     ipcMain.handle("app:navigation:openAdminSignup", async (event) => {

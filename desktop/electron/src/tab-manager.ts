@@ -1,6 +1,7 @@
 import { BrowserWindow, WebContentsView } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
+import { formatWorldHistoryLabel } from "./desktop-url-policy";
 
 /**
  * Owns the world tabs. Each open world is a WebContentsView (Electron 42 — BrowserView is
@@ -16,6 +17,15 @@ import path from "path";
 export type WorldTab = {
     id: string;
     view: WebContentsView;
+    title: string;
+    url: string;
+};
+
+/** Lightweight tab descriptor for the tab-strip renderer. */
+export type TabInfo = {
+    id: string;
+    title: string;
+    active: boolean;
 };
 
 let shell: BrowserWindow | undefined;
@@ -95,9 +105,37 @@ export function createWorldView(configure: (view: WebContentsView) => void): Wor
         },
     });
     const id = `tab-${++tabIdCounter}`;
-    const tab: WorldTab = { id, view };
+    const tab: WorldTab = { id, view, title: "New world", url: "" };
     tabs.push(tab);
     shell.contentView.addChildView(view);
+
+    // Track a friendly label for the strip: the page title if WA set one, else a URL-derived
+    // label. The Landing page's <title> is "WorkAdventure", so a room label from the URL is nicer.
+    view.webContents.on("page-title-updated", (_event, title) => {
+        if (title && title !== "WorkAdventure") {
+            tab.title = title;
+            emitChange();
+        }
+    });
+    view.webContents.on("did-navigate", (_event, url) => {
+        tab.url = url;
+        const label = formatWorldHistoryLabel(url);
+        if (label && label !== "Unknown world") {
+            tab.title = label;
+        }
+        emitChange();
+    });
+    view.webContents.on("did-navigate-in-page", (_event, url, isMainFrame) => {
+        if (!isMainFrame) {
+            return;
+        }
+        tab.url = url;
+        const label = formatWorldHistoryLabel(url);
+        if (label && label !== "Unknown world") {
+            tab.title = label;
+            emitChange();
+        }
+    });
 
     configure(view);
 
@@ -149,6 +187,34 @@ export function closeTab(id: string): void {
 
 export function getTabs(): WorldTab[] {
     return tabs;
+}
+
+export function getTabsInfo(): TabInfo[] {
+    return tabs.map((tab) => ({ id: tab.id, title: tab.title, active: tab.id === activeTabId }));
+}
+
+/** Activate the tab at a given index (0-based), for Cmd+1..9 style switching. */
+export function activateTabByIndex(index: number): void {
+    const tab = tabs[index];
+    if (tab) {
+        activateTab(tab.id);
+    }
+}
+
+/** Activate the next/previous tab, wrapping around. */
+export function cycleTab(direction: 1 | -1): void {
+    if (tabs.length < 2) {
+        return;
+    }
+    const currentIndex = tabs.findIndex((tab) => tab.id === activeTabId);
+    const nextIndex = (currentIndex + direction + tabs.length) % tabs.length;
+    activateTab(tabs[nextIndex].id);
+}
+
+export function closeActiveTab(): void {
+    if (activeTabId) {
+        closeTab(activeTabId);
+    }
 }
 
 export function getTabCount(): number {
