@@ -8,7 +8,7 @@ import { loadShortcuts, setShortcutsEnabled } from "./shortcuts";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
 import { setRendererPresence } from "./presence";
 import { startPresenterCursor, stopPresenterCursor } from "./presenter-cursor";
-import { getDesktopWindowState, getWindow, loadDesktopTarget } from "./window";
+import { getActiveWorldContents, getDesktopWindowState, getWindow, isActiveWorldContents, loadDesktopTarget } from "./window";
 import { createDesktopConfig, isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
 import {
     awaitPipReady,
@@ -109,21 +109,12 @@ async function resolveDisplayIdFromScreenSource(sourceId: string): Promise<numbe
 }
 
 export function emitMuteToggle() {
-    const mainWindow = getWindow();
-    if (!mainWindow) {
-        throw new Error("Main window not found");
-    }
-
-    mainWindow.webContents.send("app:on-mute-toggle");
+    // Toggle mic in the on-screen world (only it captures media).
+    getActiveWorldContents()?.send("app:on-mute-toggle");
 }
 
 export function emitCameraToggle() {
-    const mainWindow = getWindow();
-    if (!mainWindow) {
-        throw new Error("Main window not found");
-    }
-
-    mainWindow.webContents.send("app:on-camera-toggle");
+    getActiveWorldContents()?.send("app:on-camera-toggle");
 }
 
 function normalizeNotifyPayload(payload: unknown): ShowNotificationOptions | undefined {
@@ -171,8 +162,8 @@ export default () => {
                 if (mainWindow.isMinimized()) mainWindow.restore();
                 mainWindow.show();
                 mainWindow.focus();
-                mainWindow.webContents.send("app:on-notification-click", tag ?? "");
             }
+            getActiveWorldContents()?.send("app:on-notification-click", tag ?? "");
         });
     });
 
@@ -216,10 +207,7 @@ export default () => {
         const displayId = typeof raw.displayId === "number" ? raw.displayId : undefined;
         if (tool === "laser" || tool === "spotlight" || tool === "loupe") {
             startPresenterCursor(displayId, (x, y) => {
-                const mainWindow = getWindow();
-                if (mainWindow && !mainWindow.webContents.isDestroyed()) {
-                    mainWindow.webContents.send("app:on-presenter-cursor", { x, y });
-                }
+                getActiveWorldContents()?.send("app:on-presenter-cursor", { x, y });
             });
         } else {
             stopPresenterCursor();
@@ -351,9 +339,11 @@ export default () => {
     // The PiP utility window is a frameless, always-on-top BrowserWindow that mirrors video tracks
     // from the main renderer via a renderer↔renderer RTCPeerConnection. All SDP/ICE signalling is
     // relayed through the main process; no external network is involved.
+    // "The main renderer" is now the ACTIVE world view (the on-screen tab). Media / PiP / presence
+    // / presenter / navigation IPC is only honoured from the foreground world; a backgrounded tab
+    // must not drive the tray, PiP or capture. Window operations still use getWindow() (the shell).
     function isFromMainRenderer(event: Electron.IpcMainInvokeEvent | Electron.IpcMainEvent): boolean {
-        const mainWindow = getWindow();
-        return Boolean(mainWindow) && event.sender === mainWindow!.webContents;
+        return isActiveWorldContents(event.sender);
     }
 
     function isFromNativeLanding(event: Electron.IpcMainInvokeEvent): boolean {
@@ -376,10 +366,7 @@ export default () => {
         if (!isPipWindowOpen()) {
             createPipWindow({
                 onClosed: () => {
-                    const mainWindow = getWindow();
-                    if (mainWindow && !mainWindow.webContents.isDestroyed()) {
-                        mainWindow.webContents.send("app:pip:closed");
-                    }
+                    getActiveWorldContents()?.send("app:pip:closed");
                 },
             });
         }
@@ -405,32 +392,20 @@ export default () => {
         sendToPip("app:pip:ice-from-main", candidate);
     });
 
-    // PiP renderer → main renderer (relayed by main process)
+    // PiP renderer → main renderer (relayed by main process, to the active world view)
     ipcMain.on("app:pip:answer", (_event, sdp: unknown) => {
-        const mainWindow = getWindow();
-        if (mainWindow && !mainWindow.webContents.isDestroyed()) {
-            mainWindow.webContents.send("app:pip:answer-to-main", sdp);
-        }
+        getActiveWorldContents()?.send("app:pip:answer-to-main", sdp);
     });
     ipcMain.on("app:pip:ice-from-pip", (_event, candidate: unknown) => {
-        const mainWindow = getWindow();
-        if (mainWindow && !mainWindow.webContents.isDestroyed()) {
-            mainWindow.webContents.send("app:pip:ice-to-main", candidate);
-        }
+        getActiveWorldContents()?.send("app:pip:ice-to-main", candidate);
     });
     ipcMain.on("app:pip:request-close", () => {
-        const mainWindow = getWindow();
-        if (mainWindow && !mainWindow.webContents.isDestroyed()) {
-            mainWindow.webContents.send("app:pip:request-close-from-pip");
-        }
+        getActiveWorldContents()?.send("app:pip:request-close-from-pip");
         closePipWindow();
     });
     ipcMain.on("app:pip:ready", () => {
         markPipReady();
-        const mainWindow = getWindow();
-        if (mainWindow && !mainWindow.webContents.isDestroyed()) {
-            mainWindow.webContents.send("app:pip:opened");
-        }
+        getActiveWorldContents()?.send("app:pip:opened");
     });
 
     // Source enumeration FOR the PiP window only. The main renderer goes through
@@ -499,10 +474,7 @@ export default () => {
             }
             return;
         }
-        const mainWindow = getWindow();
-        if (mainWindow && !mainWindow.webContents.isDestroyed()) {
-            mainWindow.webContents.send("app:pip:command-to-main", command);
-        }
+        getActiveWorldContents()?.send("app:pip:command-to-main", command);
     });
 
     // ---- Screen-annotation overlay (transparent, always-on-top, click-through) ----
@@ -534,10 +506,7 @@ export default () => {
             createOverlayWindow({
                 displayId,
                 onClosed: () => {
-                    const mainWindow = getWindow();
-                    if (mainWindow && !mainWindow.webContents.isDestroyed()) {
-                        mainWindow.webContents.send("app:overlay:exit-to-main");
-                    }
+                    getActiveWorldContents()?.send("app:overlay:exit-to-main");
                 },
             });
         }
@@ -564,20 +533,14 @@ export default () => {
         sendToOverlay("app:overlay:elements", elements);
     });
 
-    // Overlay renderer → main renderer
+    // Overlay renderer → main renderer (active world view)
     ipcMain.on("app:overlay:draw-from-overlay", (event, op: unknown) => {
         if (!isFromOverlayRenderer(event)) return;
-        const mainWindow = getWindow();
-        if (mainWindow && !mainWindow.webContents.isDestroyed()) {
-            mainWindow.webContents.send("app:overlay:draw-to-main", op);
-        }
+        getActiveWorldContents()?.send("app:overlay:draw-to-main", op);
     });
     ipcMain.on("app:overlay:request-exit", (event) => {
         if (!isFromOverlayRenderer(event)) return;
-        const mainWindow = getWindow();
-        if (mainWindow && !mainWindow.webContents.isDestroyed()) {
-            mainWindow.webContents.send("app:overlay:exit-to-main");
-        }
+        getActiveWorldContents()?.send("app:overlay:exit-to-main");
     });
     ipcMain.on("app:overlay:ready", (event) => {
         if (!isFromOverlayRenderer(event)) return;
@@ -652,10 +615,7 @@ export default () => {
             }
             return;
         }
-        const mainWindow = getWindow();
-        if (mainWindow && !mainWindow.webContents.isDestroyed()) {
-            mainWindow.webContents.send("app:hud:command-to-main", command);
-        }
+        getActiveWorldContents()?.send("app:hud:command-to-main", command);
     });
 
     // Source enumeration for the meeting bar's direct screen switcher. Sender-validated: only the
