@@ -35,6 +35,7 @@ import {
     getTabCount,
     isActiveWorldContents,
     layoutActiveView,
+    onActiveTabChange,
     resetTabs,
     setShell,
 } from "./tab-manager";
@@ -62,6 +63,7 @@ let desktopAuthCallbackServer: http.Server | undefined;
 let desktopCallbackServerOrigin: string | undefined;
 let desktopAuthWindow: BrowserWindow | undefined;
 let landingRecoveryInProgress = false;
+let activeTabTeardownWired = false;
 const desktopCallbackFlows = new Map<string, DesktopCallbackFlow>();
 
 const LOAD_FAILURE_LANDING_MESSAGE =
@@ -617,6 +619,21 @@ export async function createWindow(initialUrl?: string) {
     });
     mainWindow.setMenu(null);
     setShell(mainWindow);
+    // Switching tabs must tear down the PiP / overlay / HUD windows + presenter cursor that
+    // belonged to the previously-active world — those relays are keyed to "the active renderer",
+    // so leaving them open would misroute SDP/state to the newly-active tab. The new tab re-opens
+    // PiP itself if it's in a meeting. Wired once for the app's lifetime (the closure only calls
+    // module singletons), so a window re-creation doesn't stack duplicate teardowns.
+    if (!activeTabTeardownWired) {
+        activeTabTeardownWired = true;
+        onActiveTabChange(() => {
+            closePipWindow();
+            closeOverlayWindow();
+            closeAllHudWindows();
+            stopPresenterCursor();
+            updateFloatingToolbar();
+        });
+    }
     // The tab strip is pinned to the top and reserves space; world views sit below it.
     createTabStrip(mainWindow);
     // Create the first world view (the initial tab). window.ts wires navigation security onto it;
@@ -707,8 +724,14 @@ export async function loadLandingPage(errorMessage?: string): Promise<void> {
         await contents.loadFile(landingPath, loadOptions);
     } catch (error) {
         ElectronLog.error(`Failed to load Landing page at ${landingPath}`, error);
-        // Fall back to the portal URL — worst case the user still lands somewhere usable.
-        await contents.loadURL(getDesktopConfig().portalUrl);
+        // Fall back to the portal URL — worst case the user still lands somewhere usable. Guard
+        // the fallback too: if BOTH the Landing file and the portal fail to load (e.g. offline on
+        // first launch), we must still reveal the window rather than leave it hidden forever.
+        try {
+            await contents.loadURL(getDesktopConfig().portalUrl);
+        } catch (fallbackError) {
+            ElectronLog.error("Failed to load Landing fallback portal", fallbackError);
+        }
     }
     showWindow();
 }
