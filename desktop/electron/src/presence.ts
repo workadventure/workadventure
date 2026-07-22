@@ -140,7 +140,7 @@ export function getAvailabilityInfo(): { status: TrayAvailability; locked: boole
     return { status: state.requestedStatus, locked: state.statusLocked };
 }
 
-/** Snapshot used by the companion + floating-toolbar visibility controllers. */
+/** Snapshot used by the companion visibility controller. */
 export function getPresenceSnapshot(): {
     inMeeting: boolean;
     micEnabled: boolean;

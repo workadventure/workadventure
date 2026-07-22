@@ -3,7 +3,6 @@ import { app, BrowserWindow, globalShortcut } from "electron";
 import { createWindow, getWindow, openDeepLinkTarget } from "./window";
 import { createTray } from "./tray";
 import { startIdleMonitor } from "./idle-monitor";
-import { startFloatingToolbarController } from "./floating-toolbar";
 import { startCompanionController } from "./companion-controller";
 import { createNativeApplicationMenu } from "./native-menu";
 import autoUpdater from "./auto-updater";
@@ -134,11 +133,8 @@ async function init() {
             }
         });
 
-        // Floating meeting toolbar: appears when in a call and the main window is not focused.
-        startFloatingToolbarController();
-
-        // Companion panel: auto-shows (People/Chat/Controls/Mentions) when backgrounded in a meeting
-        // or with unread mentions; also toggled from the tray + optional global shortcut.
+        // The unified Companion auto-shows (People / Chat / Controls) whenever the main window is
+        // backgrounded in a world; also toggled from the tray + optional global shortcut.
         startCompanionController();
 
         loadShortcuts();
