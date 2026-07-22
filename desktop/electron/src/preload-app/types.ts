@@ -244,6 +244,8 @@ export type WorkAdventureDesktopApi = {
         cameraEnabled: boolean;
         screenSharing: boolean;
     }) => void;
+    /** Set the current world's display name on the active tab (admin-configured room name). */
+    setTabTitle: (title: string) => void;
     /**
      * Subscribe to system idle/active transitions (main polls powerMonitor + screen-lock events).
      * The renderer uses this to auto-set the WA availability to "away" and back. Returns an
