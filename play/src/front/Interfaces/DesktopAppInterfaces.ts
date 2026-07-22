@@ -109,11 +109,15 @@ export type DesktopNavigationResult = { ok: true } | { ok: false; error: string 
 export type DesktopRecentWorld = {
     url: string;
     label: string;
+    pinned: boolean;
 };
 
 export type WorkAdventureDesktopNavigationApi = {
     joinWorld: (url: string) => Promise<DesktopNavigationResult>;
     getRecentWorlds: () => Promise<DesktopRecentWorld[]>;
+    getPinnedWorlds?: () => Promise<DesktopRecentWorld[]>;
+    togglePin?: (url: string) => Promise<{ ok: boolean; pinned?: boolean; error?: string }>;
+    isPinned?: (url: string) => Promise<boolean>;
     openAdminSignup: () => Promise<DesktopNavigationResult>;
 };
 

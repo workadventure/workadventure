@@ -39,7 +39,7 @@ import {
     openHudWindow,
     setMeetingBarExpanded,
 } from "./hud-windows";
-import { getRecentWorlds } from "./world-history";
+import { getPinnedWorlds, getRecentWorlds, isWorldPinned, toggleWorldPin } from "./world-history";
 
 const DEFAULT_ADMIN_SIGNUP_URL = "https://admin.workadventu.re/funnel/connection";
 // Compared on pathname only — the actual sender URL may carry a `?error=…` query when we bounce
@@ -301,6 +301,35 @@ export default () => {
             return [];
         }
         return getRecentWorlds();
+    });
+
+    ipcMain.handle("app:navigation:getPinnedWorlds", (event) => {
+        // Pinned worlds are shown on the native Landing and in the in-game switcher, both of which
+        // run in the main renderer.
+        if (!isFromMainRenderer(event)) {
+            ElectronLog.warn("Rejected pinned worlds request from non-main renderer");
+            return [];
+        }
+        return getPinnedWorlds();
+    });
+
+    ipcMain.handle("app:navigation:togglePin", (event, rawUrl: unknown) => {
+        if (!isFromMainRenderer(event)) {
+            ElectronLog.warn("Rejected pin toggle from non-main renderer");
+            return { ok: false, error: "This action is only available in the desktop app." };
+        }
+        if (typeof rawUrl !== "string" || !rawUrl.trim()) {
+            return { ok: false, error: "A world URL is required." };
+        }
+        const pinned = toggleWorldPin(rawUrl);
+        return { ok: true, pinned };
+    });
+
+    ipcMain.handle("app:navigation:isPinned", (event, rawUrl: unknown) => {
+        if (!isFromMainRenderer(event) || typeof rawUrl !== "string") {
+            return false;
+        }
+        return isWorldPinned(rawUrl);
     });
 
     ipcMain.handle("app:navigation:openAdminSignup", async (event) => {
