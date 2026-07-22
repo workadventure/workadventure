@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+    <title>WorkAdventure meeting controls</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --fg: #f8fafc;
+            --contrast: rgba(27, 42, 65, 0.92);
+            --danger: #E96D51;
+        }
+        html, body {
+            margin: 0;
+            height: 100%;
+            background: transparent;
+            color: var(--fg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body { display: flex; align-items: center; justify-content: center; }
+
+        /* The pill is the drag handle; buttons opt out of dragging so clicks register. */
+        .pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 9px;
+            border-radius: 16px;
+            background: var(--contrast);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+            -webkit-app-region: drag;
+        }
+        .btn {
+            -webkit-app-region: no-drag;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border: 0;
+            border-radius: 11px;
+            background: rgba(255, 255, 255, 0.10);
+            color: var(--fg);
+            cursor: pointer;
+            transition: background-color 120ms ease;
+        }
+        .btn:hover { background: rgba(255, 255, 255, 0.18); }
+        .btn svg { width: 19px; height: 19px; display: block; }
+        /* "off" = muted mic / camera off → danger fill. */
+        .btn[data-state="off"] { background: var(--danger); }
+        .btn[data-state="off"]:hover { background: #ef7e63; }
+        .btn .icon-on { display: block; }
+        .btn .icon-off { display: none; }
+        .btn[data-state="off"] .icon-on { display: none; }
+        .btn[data-state="off"] .icon-off { display: block; }
+        .sep { width: 1px; height: 22px; background: rgba(255, 255, 255, 0.16); margin: 0 1px; }
+        .btn-back { background: rgba(65, 86, 246, 0.28); }
+        .btn-back:hover { background: rgba(65, 86, 246, 0.45); }
+    </style>
+</head>
+<body>
+    <div class="pill">
+        <button class="btn" id="fm-mic" type="button" data-state="on" title="Toggle microphone" aria-label="Toggle microphone">
+            <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            <svg class="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="3" x2="21" y2="21"/><path d="M9 9v2a3 3 0 0 0 5.12 2.12M15 9.34V5a3 3 0 0 0-5.94-.6"/><path d="M19 10v1a7 7 0 0 1-.11 1.23M15.54 15.54A7 7 0 0 1 5 11v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+        </button>
+        <button class="btn" id="fm-cam" type="button" data-state="on" title="Toggle camera" aria-label="Toggle camera">
+            <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            <svg class="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="3" x2="21" y2="21"/><path d="M16 16H3a2 2 0 0 1-2-2V6M9.5 5H14a2 2 0 0 1 2 2v4l.5.5M23 7l-7 5"/></svg>
+        </button>
+        <span class="sep"></span>
+        <button class="btn btn-back" id="fm-back" type="button" title="Back to WorkAdventure" aria-label="Back to WorkAdventure">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+        </button>
+    </div>
+    <script src="./renderer.js"></script>
+</body>
+</html>
