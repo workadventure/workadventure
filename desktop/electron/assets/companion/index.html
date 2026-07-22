@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+    <title>WorkAdventure companion</title>
+    <link rel="stylesheet" href="./companion.css" />
+</head>
+<body>
+    <div class="panel">
+        <header class="header" id="c-header">
+            <div class="world">
+                <div class="world-name" id="c-world-name">WorkAdventure</div>
+                <div class="world-sub" id="c-world-sub">Not connected</div>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="c-back" type="button" title="Back to WorkAdventure" aria-label="Back to WorkAdventure">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+                </button>
+                <button class="icon-btn" id="c-close" type="button" title="Close panel" aria-label="Close panel">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <nav class="tabs" id="c-tabs">
+            <button class="tab is-active" data-tab="people" type="button">People</button>
+            <button class="tab" data-tab="chat" type="button">Chat</button>
+            <button class="tab" data-tab="controls" type="button">Controls</button>
+            <button class="tab" data-tab="mentions" type="button">
+                Mentions<span class="badge" id="c-mentions-badge" hidden></span>
+            </button>
+        </nav>
+
+        <section class="pane is-active" data-pane="people">
+            <div class="list" id="c-people"></div>
+            <div class="empty" id="c-people-empty">No one around yet.</div>
+        </section>
+
+        <section class="pane" data-pane="chat">
+            <div class="list messages" id="c-messages"></div>
+            <div class="empty" id="c-chat-empty">No recent messages.</div>
+            <form class="composer" id="c-composer">
+                <input id="c-chat-input" type="text" autocomplete="off" placeholder="Message nearby…" maxlength="2000" />
+                <button class="send-btn" id="c-send" type="submit" aria-label="Send">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+            </form>
+        </section>
+
+        <section class="pane" data-pane="controls">
+            <div class="controls">
+                <div class="control-row">
+                    <button class="ctl" id="c-mic" type="button" data-state="on">
+                        <span class="ctl-ico" aria-hidden="true">
+                            <svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                            <svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="3" x2="21" y2="21"/><path d="M9 9v2a3 3 0 0 0 5.12 2.12M15 9.34V5a3 3 0 0 0-5.94-.6"/><path d="M19 10v1a7 7 0 0 1-.11 1.23M15.54 15.54A7 7 0 0 1 5 11v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                        </span>
+                        <span class="ctl-label" id="c-mic-label">Mute</span>
+                    </button>
+                    <button class="ctl" id="c-cam" type="button" data-state="on">
+                        <span class="ctl-ico" aria-hidden="true">
+                            <svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                            <svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="3" x2="21" y2="21"/><path d="M16 16H3a2 2 0 0 1-2-2V6M9.5 5H14a2 2 0 0 1 2 2v4l.5.5M23 7l-7 5"/></svg>
+                        </span>
+                        <span class="ctl-label" id="c-cam-label">Camera off</span>
+                    </button>
+                    <button class="ctl" id="c-share" type="button" data-state="off">
+                        <span class="ctl-ico" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                        </span>
+                        <span class="ctl-label" id="c-share-label">Share</span>
+                    </button>
+                </div>
+
+                <div class="status-group">
+                    <div class="group-title">Status</div>
+                    <div class="status-opts" id="c-status">
+                        <button class="status-opt" data-status="online" type="button"><span class="dot" data-status="online"></span>Available</button>
+                        <button class="status-opt" data-status="busy" type="button"><span class="dot" data-status="busy"></span>Busy</button>
+                        <button class="status-opt" data-status="back_in_a_moment" type="button"><span class="dot" data-status="back_in_a_moment"></span>Be right back</button>
+                        <button class="status-opt" data-status="do_not_disturb" type="button"><span class="dot" data-status="do_not_disturb"></span>Do not disturb</button>
+                    </div>
+                    <div class="status-locked" id="c-status-locked" hidden>Locked while in a meeting</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="pane" data-pane="mentions">
+            <div class="list" id="c-mentions"></div>
+            <div class="empty" id="c-mentions-empty">No unread mentions.</div>
+        </section>
+    </div>
+    <script src="./companion.js"></script>
+</body>
+</html>

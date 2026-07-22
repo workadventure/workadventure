@@ -210,6 +210,81 @@ export type DesktopNotificationPayload = {
     silent?: boolean;
 };
 
+/** A room/nearby participant shown in the companion People tab. */
+export type CompanionUser = {
+    id: string;
+    name: string;
+    /** Availability key ("online" | "busy" | "back_in_a_moment" | "do_not_disturb" | "offline"). */
+    status: string;
+    /** Status dot color (hex); optional — the panel has a fallback per status key. */
+    color?: string;
+    isSelf: boolean;
+    /** True when this user is in the local user's current proximity meeting. */
+    inBubble?: boolean;
+};
+
+/** A proximity-chat message mirrored into the companion Chat tab. */
+export type CompanionMessage = {
+    id: string;
+    author: string;
+    text: string;
+    isSelf: boolean;
+};
+
+/** An unread mention/notification shown in the companion Mentions tab. */
+export type CompanionMention = {
+    id: string;
+    title: string;
+    body: string;
+    /** Opaque routing tag (same value space as notification tags) passed back on open-mention. */
+    tag?: string;
+};
+
+export type CompanionMedia = {
+    micEnabled: boolean;
+    cameraEnabled: boolean;
+    screenSharing: boolean;
+    canScreenShare: boolean;
+    inMeeting: boolean;
+    status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
+    statusLocked: boolean;
+};
+
+/** Full state pushed to the companion panel on every change. */
+export type CompanionState = {
+    world: { name: string; participantCount: number };
+    users: CompanionUser[];
+    messages: CompanionMessage[];
+    mentions: CompanionMention[];
+    media: CompanionMedia;
+};
+
+/** User actions raised by the companion panel, routed back to the active world renderer. */
+export type CompanionCommand =
+    | { type: "focus-main" }
+    | { type: "close" }
+    | { type: "toggle-mic" }
+    | { type: "toggle-camera" }
+    | { type: "toggle-screenshare" }
+    | { type: "set-status"; status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb" }
+    | { type: "send-chat"; text: string }
+    | { type: "dm"; userId: string }
+    | { type: "locate"; userId: string }
+    | { type: "ping"; userId: string }
+    | { type: "open-mention"; tag?: string };
+
+/**
+ * Drives the companion panel — a compact, interactive quick-access window (People / Chat / Controls
+ * / Mentions) shown when WA is backgrounded. The active world renderer feeds it state and handles
+ * the commands it raises. Pure IPC (no media capture), so it is safe across tabs.
+ */
+export type WorkAdventureDesktopCompanionApi = {
+    /** Push the current companion state to the panel (no-op if the panel is closed). */
+    pushState: (state: CompanionState) => void;
+    /** Subscribe to commands raised by the panel. Returns an unsubscriber. */
+    onCommand: (callback: (command: CompanionCommand) => void) => () => void;
+};
+
 export type WorkAdventureDesktopApi = {
     desktop: boolean;
     isDevelopment: () => Promise<boolean>;
@@ -284,4 +359,5 @@ export type WorkAdventureDesktopApi = {
     navigation: WorkAdventureDesktopNavigationApi;
     screenOverlay?: WorkAdventureDesktopOverlayApi;
     presenterHud?: WorkAdventureDesktopHudApi;
+    companion?: WorkAdventureDesktopCompanionApi;
 };
