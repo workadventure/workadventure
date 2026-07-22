@@ -220,6 +220,8 @@ export type WorkAdventureDesktopApi = {
         cameraEnabled: boolean;
         screenSharing: boolean;
     }) => void;
+    /** Set the current world's display name on the active tab. */
+    setTabTitle?: (title: string) => void;
     /** Subscribe to system idle/active transitions (main powerMonitor). Returns unsubscriber. */
     onSystemIdle?: (callback: (idle: boolean) => void) => () => void;
     /** Presenter tools: main tracks the global cursor over the shared display and streams it here. */
