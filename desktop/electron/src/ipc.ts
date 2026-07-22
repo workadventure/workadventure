@@ -675,20 +675,10 @@ export default () => {
             }
             return;
         }
-        // The floating meeting toolbar is main-managed (not tied to the screen-share PresenterHud
-        // bridge), so its mic/camera toggles are handled here via the same path the global
-        // shortcuts use — reliable whether or not a screen share is active.
-        if (hudKindOfSender(event.sender) === "floating-meeting" && getWindow()) {
-            if (type === "toggle-mic") {
-                emitMuteToggle();
-            } else if (type === "toggle-camera") {
-                emitCameraToggle();
-            }
-            return;
-        }
-        // The companion panel: mic/camera toggles and "close" are handled in main (same rationale as
-        // the floating toolbar); everything else (status, chat, per-user actions, mentions,
-        // screen-share) is forwarded to the active world renderer on a dedicated channel.
+        // The companion panel is main-managed (not tied to the screen-share PresenterHud bridge):
+        // mic/camera toggles and "close" are handled here (mic/cam via the same path the global
+        // shortcuts use, reliable whether or not a screen share is active); everything else (status,
+        // chat, per-user actions, screen-share) is forwarded to the active world renderer.
         if (hudKindOfSender(event.sender) === "companion") {
             if (type === "toggle-mic") {
                 emitMuteToggle();

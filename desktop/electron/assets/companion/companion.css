@@ -83,6 +83,14 @@ html, body {
 #c-back { background: var(--accent-soft); }
 #c-back:hover { background: rgba(65, 86, 246, 0.45); }
 
+/* Header mic/camera quick toggles: danger fill when off, on/off glyph swap. */
+.hdr-toggle .i-off { display: none; }
+.hdr-toggle[data-state="off"] { background: var(--danger); }
+.hdr-toggle[data-state="off"]:hover { background: #ef7e63; }
+.hdr-toggle[data-state="off"] .i-on { display: none; }
+.hdr-toggle[data-state="off"] .i-off { display: block; }
+.hdr-sep { width: 1px; align-self: stretch; margin: 4px 2px; background: var(--border); }
+
 .tabs {
     display: flex;
     gap: 2px;

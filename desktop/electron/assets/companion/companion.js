@@ -46,6 +46,8 @@
         mentions: document.getElementById("c-mentions"),
         mentionsEmpty: document.getElementById("c-mentions-empty"),
         mentionsBadge: document.getElementById("c-mentions-badge"),
+        hdrMic: document.getElementById("c-hdr-mic"),
+        hdrCam: document.getElementById("c-hdr-cam"),
     };
 
     function send(command) {
@@ -96,6 +98,17 @@
     els.close.addEventListener("click", function () {
         send({ type: "close" });
     });
+    // Always-visible mic / camera quick toggles (fold-in of the old floating pill).
+    if (els.hdrMic) {
+        els.hdrMic.addEventListener("click", function () {
+            send({ type: "toggle-mic" });
+        });
+    }
+    if (els.hdrCam) {
+        els.hdrCam.addEventListener("click", function () {
+            send({ type: "toggle-camera" });
+        });
+    }
 
     // ---- Chat ----
     els.composer.addEventListener("submit", function (e) {
@@ -268,6 +281,13 @@
             media.cameraEnabled ? "Camera on" : "Camera off",
             media.cameraEnabled ? "on" : "off"
         );
+        // Mirror mic/camera state into the always-visible header quick toggles.
+        if (els.hdrMic) {
+            els.hdrMic.dataset.state = media.micEnabled ? "on" : "off";
+        }
+        if (els.hdrCam) {
+            els.hdrCam.dataset.state = media.cameraEnabled ? "on" : "off";
+        }
         els.share.dataset.state = media.screenSharing ? "active" : "off";
         els.shareLabel.textContent = media.screenSharing ? "Stop share" : "Share";
         els.share.disabled = !media.canScreenShare && !media.screenSharing;
