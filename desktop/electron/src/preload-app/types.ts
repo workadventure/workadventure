@@ -181,11 +181,49 @@ export type WorkAdventureDesktopHudApi = {
     onCommand: (callback: (command: DesktopPipCommand) => void) => () => void;
 };
 
+/**
+ * Rich notification payload used by the enriched `WorkAdventureDesktopApi.notify` path. Main
+ * creates the OS notification with the WA icon and wires a click handler that focuses the main
+ * window, emitting `onNotificationClick(tag)` back to the renderer so it can route to the right
+ * room / conversation.
+ */
+export type DesktopNotificationPayload = {
+    title: string;
+    body: string;
+    /**
+     * Groups notifications so the OS coalesces subsequent ones with the same tag (e.g. per chat
+     * room) instead of stacking them. Also passed to `onNotificationClick` when the notif is
+     * clicked.
+     */
+    tag?: string;
+    /** Silent notifications don't play a sound / bounce the dock. */
+    silent?: boolean;
+};
+
 export type WorkAdventureDesktopApi = {
     desktop: boolean;
     isDevelopment: () => Promise<boolean>;
     getVersion: () => Promise<string>;
-    notify: (txt: string) => void;
+    /**
+     * Show an OS notification. Plain string keeps backward compat with the older `notify(body)`
+     * call site; the object form adds title, click routing (`tag`) and silence control.
+     */
+    notify: (payload: string | DesktopNotificationPayload) => void;
+    /**
+     * Subscribe to notification-click events. The tag is the same value passed to `notify`; use
+     * it to route to the originating chat room / world / etc. Returns an unsubscriber.
+     */
+    onNotificationClick: (callback: (tag: string | undefined) => void) => () => void;
+    /**
+     * Keep the display awake while the user is in an active proximity meeting. Main manages a
+     * single powerSaveBlocker; toggle on entry / off on leave (idempotent).
+     */
+    setKeepAwake: (enabled: boolean) => void;
+    /**
+     * Update the dock (macOS) / taskbar (Windows) unread badge. Pass 0 to clear. Linux is a
+     * silent no-op — X11/Wayland have no cross-DE badge primitive.
+     */
+    setUnreadCount: (count: number) => void;
     onMuteToggle: (callback: () => void) => void;
     onCameraToggle: (callback: () => void) => void;
     getWindowState: () => Promise<DesktopWindowState>;
