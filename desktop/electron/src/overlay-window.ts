@@ -92,6 +92,17 @@ export function createOverlayWindow(opts: CreateOverlayOptions = {}): BrowserWin
     });
     overlayWindow = newWindow;
     newWindow.setMenu(null);
+    // Exclude the overlay from screen capture so its strokes are NOT baked into the shared video
+    // stream. Viewers already receive every stroke over the annotation network channel and render
+    // them via their own local ScreenAnnotationOverlay — if the overlay was also captured, they'd
+    // see the drawing twice (once from the baked-in video, once from the network overlay).
+    // NSWindowSharingNone on macOS; SetWindowDisplayAffinity(WDA_MONITOR) on Windows 10+. Linux
+    // silently no-ops (unsupported by X11/Wayland); no additional handling needed here.
+    try {
+        newWindow.setContentProtection(true);
+    } catch (error) {
+        ElectronLog.warn("Overlay setContentProtection failed", error);
+    }
     // Click-through by default: the presenter keeps using their real apps until draw mode is on.
     newWindow.setIgnoreMouseEvents(true, { forward: true });
     try {
