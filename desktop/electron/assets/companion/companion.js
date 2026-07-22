@@ -46,6 +46,10 @@
         chatMentionsBadge: document.getElementById("c-chat-mentions-badge"),
         hdrMic: document.getElementById("c-hdr-mic"),
         hdrCam: document.getElementById("c-hdr-cam"),
+        invitation: document.getElementById("c-invitation"),
+        invitationName: document.getElementById("c-invitation-name"),
+        inviteAccept: document.getElementById("c-invite-accept"),
+        inviteDecline: document.getElementById("c-invite-decline"),
     };
 
     function send(command) {
@@ -105,6 +109,20 @@
     if (els.hdrCam) {
         els.hdrCam.addEventListener("click", function () {
             send({ type: "toggle-camera" });
+        });
+    }
+
+    // ---- Meeting invitation banner ----
+    if (els.inviteAccept) {
+        els.inviteAccept.addEventListener("click", function () {
+            // Accept, then bring WorkAdventure to the front so the user lands in the meeting.
+            send({ type: "focus-main" });
+            send({ type: "accept-invitation" });
+        });
+    }
+    if (els.inviteDecline) {
+        els.inviteDecline.addEventListener("click", function () {
+            send({ type: "decline-invitation" });
         });
     }
 
@@ -278,12 +296,25 @@
         }
     }
 
+    function renderInvitation(invitation) {
+        if (!els.invitation) {
+            return;
+        }
+        if (invitation && typeof invitation === "object") {
+            els.invitationName.textContent = invitation.name || "Someone";
+            els.invitation.hidden = false;
+        } else {
+            els.invitation.hidden = true;
+        }
+    }
+
     function render(state) {
         var world = state.world || {};
         els.worldName.textContent = world.name || "WorkAdventure";
         var count = typeof world.participantCount === "number" ? world.participantCount : 0;
         els.worldSub.textContent = count === 1 ? "1 person present" : count + " people present";
 
+        renderInvitation(state.invitation);
         renderPeople(Array.isArray(state.users) ? state.users : []);
         renderMessages(Array.isArray(state.messages) ? state.messages : []);
         renderChatMentionBadge(Array.isArray(state.mentions) ? state.mentions : []);
