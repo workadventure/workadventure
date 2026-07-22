@@ -10,12 +10,23 @@
 
 export type TrayStatus = "meeting" | "idle" | "available";
 
+/**
+ * The four user-selectable availability statuses, as stable string keys. Kept as strings (not the
+ * numeric AvailabilityStatus enum) so the main process needs no dependency on @workadventure/messages
+ * — the renderer maps to/from the enum on its side.
+ */
+export type TrayAvailability = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
+
 type PresenceState = {
     inMeeting: boolean;
     micEnabled: boolean;
     cameraEnabled: boolean;
     screenSharing: boolean;
     idle: boolean;
+    /** The user's current chosen availability (the tray Status radio reflects this). */
+    requestedStatus: TrayAvailability;
+    /** True while WA locks the status bar (in a meeting / silent zone) — the tray submenu grays out. */
+    statusLocked: boolean;
 };
 
 const state: PresenceState = {
@@ -24,7 +35,22 @@ const state: PresenceState = {
     cameraEnabled: false,
     screenSharing: false,
     idle: false,
+    requestedStatus: "online",
+    statusLocked: false,
 };
+
+const TRAY_AVAILABILITY_VALUES: readonly TrayAvailability[] = [
+    "online",
+    "busy",
+    "back_in_a_moment",
+    "do_not_disturb",
+];
+
+function coerceAvailability(value: unknown): TrayAvailability {
+    return typeof value === "string" && (TRAY_AVAILABILITY_VALUES as readonly string[]).includes(value)
+        ? (value as TrayAvailability)
+        : "online";
+}
 
 const listeners = new Set<() => void>();
 
@@ -44,22 +70,28 @@ export function onPresenceChange(listener: () => void): () => void {
     return () => listeners.delete(listener);
 }
 
-/** Renderer-sourced presence (in-meeting + media state). Emits only on a real change. */
+/** Renderer-sourced presence (in-meeting + media + availability). Emits only on a real change. */
 export function setRendererPresence(next: {
     inMeeting?: boolean;
     micEnabled?: boolean;
     cameraEnabled?: boolean;
     screenSharing?: boolean;
+    requestedStatus?: unknown;
+    statusLocked?: boolean;
 }): void {
     const inMeeting = Boolean(next.inMeeting);
     const micEnabled = Boolean(next.micEnabled);
     const cameraEnabled = Boolean(next.cameraEnabled);
     const screenSharing = Boolean(next.screenSharing);
+    const requestedStatus = coerceAvailability(next.requestedStatus);
+    const statusLocked = Boolean(next.statusLocked);
     if (
         state.inMeeting === inMeeting &&
         state.micEnabled === micEnabled &&
         state.cameraEnabled === cameraEnabled &&
-        state.screenSharing === screenSharing
+        state.screenSharing === screenSharing &&
+        state.requestedStatus === requestedStatus &&
+        state.statusLocked === statusLocked
     ) {
         return;
     }
@@ -67,6 +99,8 @@ export function setRendererPresence(next: {
     state.micEnabled = micEnabled;
     state.cameraEnabled = cameraEnabled;
     state.screenSharing = screenSharing;
+    state.requestedStatus = requestedStatus;
+    state.statusLocked = statusLocked;
     emit();
 }
 
@@ -92,6 +126,11 @@ export function getTrayStatus(): TrayStatus {
 
 export function getMediaState(): { micEnabled: boolean; cameraEnabled: boolean; inMeeting: boolean } {
     return { micEnabled: state.micEnabled, cameraEnabled: state.cameraEnabled, inMeeting: state.inMeeting };
+}
+
+/** The user's chosen availability + whether WA currently locks it (tray Status submenu). */
+export function getAvailabilityInfo(): { status: TrayAvailability; locked: boolean } {
+    return { status: state.requestedStatus, locked: state.statusLocked };
 }
 
 /** Snapshot used by the floating-toolbar visibility controller. */

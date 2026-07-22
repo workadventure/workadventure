@@ -213,13 +213,17 @@ export type WorkAdventureDesktopApi = {
     setKeepAwake?: (enabled: boolean) => void;
     /** Dock (macOS) / taskbar (Windows) unread badge; 0 clears. Linux is a silent no-op. */
     setUnreadCount?: (count: number) => void;
-    /** Push live presence (meeting + mic/camera + screen-share) to main for the tray dot + floating toolbar. */
+    /** Push live presence (meeting + mic/camera + screen-share + availability) to main for the tray dot, floating toolbar and Set-status submenu. */
     setPresence?: (presence: {
         inMeeting: boolean;
         micEnabled: boolean;
         cameraEnabled: boolean;
         screenSharing: boolean;
+        requestedStatus?: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
+        statusLocked?: boolean;
     }) => void;
+    /** Subscribe to availability changes requested from the tray "Set status" submenu. */
+    onSetStatus?: (callback: (status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb") => void) => () => void;
     /** Set the current world's display name on the active tab. */
     setTabTitle?: (title: string) => void;
     /** Subscribe to system idle/active transitions (main powerMonitor). Returns unsubscriber. */
