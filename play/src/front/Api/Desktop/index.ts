@@ -12,6 +12,7 @@ import type { RequestedStatus } from "../../Rules/StatusRules/statusRules";
 import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
+import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { gameManager } from "../../Phaser/Game/GameManager";
@@ -22,6 +23,7 @@ import { focusStore } from "../../Stores/FocusStore";
 import type { PlayerInterface } from "../../Phaser/Game/PlayerInterface";
 import type { ChatConnectionInterface, ChatRoom } from "../../Chat/Connection/ChatConnection";
 import type {
+    CompanionInvitation,
     CompanionMedia,
     CompanionMention,
     CompanionMessage,
@@ -37,6 +39,7 @@ type PresenceSnapshot = {
     cameraEnabled: boolean;
     screenSharing: boolean;
     inWorld: boolean;
+    invitationPending: boolean;
     requestedStatus: TrayAvailability;
     statusLocked: boolean;
 };
@@ -350,13 +353,24 @@ class DesktopApi {
                     requestedStatusStore,
                     availabilityStatusStore,
                     gameSceneIsLoadedStore,
+                    meetingInvitationRequestStore,
                 ],
-                ([$inMeeting, $mic, $cam, $share, $requested, $availability, $inWorld]): PresenceSnapshot => ({
+                ([
+                    $inMeeting,
+                    $mic,
+                    $cam,
+                    $share,
+                    $requested,
+                    $availability,
+                    $inWorld,
+                    $invitation,
+                ]): PresenceSnapshot => ({
                     inMeeting: Boolean($inMeeting),
                     micEnabled: Boolean($mic),
                     cameraEnabled: Boolean($cam),
                     screenSharing: Boolean($share),
                     inWorld: Boolean($inWorld),
+                    invitationPending: $invitation !== null,
                     requestedStatus: requestedStatusToKey($requested),
                     statusLocked: STATUS_LOCKED_SET.has($availability),
                 })
@@ -423,6 +437,7 @@ class DesktopApi {
         let latestOtherUsers: CompanionUser[] = [];
         let latestMessages: CompanionMessage[] = [];
         let latestMentions: CompanionMention[] = [];
+        let latestInvitation: CompanionInvitation | null = null;
         let latestMedia: CompanionMedia = {
             micEnabled: false,
             cameraEnabled: false,
@@ -452,6 +467,7 @@ class DesktopApi {
                 messages: latestMessages,
                 mentions: latestMentions,
                 media: latestMedia,
+                invitation: latestInvitation,
             });
         };
         const schedulePush = () => {
@@ -506,6 +522,13 @@ class DesktopApi {
         //eslint-disable-next-line svelte/no-ignored-unsubscribe
         mediaStore.subscribe((media) => {
             latestMedia = media;
+            schedulePush();
+        });
+
+        // Pending meeting invitation → banner in the panel (the controller force-opens for it).
+        //eslint-disable-next-line svelte/no-ignored-unsubscribe
+        meetingInvitationRequestStore.subscribe((request) => {
+            latestInvitation = request ? { name: request.senderName ?? "" } : null;
             schedulePush();
         });
 
@@ -623,6 +646,33 @@ class DesktopApi {
                         });
                     }
                     break;
+                case "accept-invitation":
+                case "decline-invitation": {
+                    // Respond to the pending invitation with the same handlers as the in-app popup.
+                    // Bringing the app to the front on accept is done by the panel (it also sends
+                    // focus-main), so the user lands in the meeting they just joined.
+                    const request = get(meetingInvitationRequestStore);
+                    if (request) {
+                        const payload = {
+                            senderUserUuid: request.senderUserUuid ?? "",
+                            senderPlayUri: request.senderPlayUri ?? "",
+                            senderName: request.senderName ?? "",
+                            senderUserId: request.senderUserId ?? 0,
+                        };
+                        try {
+                            const inviteManager = gameManager.getCurrentGameScene().inviteManager;
+                            if (command.type === "accept-invitation") {
+                                inviteManager?.handleAccept(payload);
+                            } else {
+                                inviteManager?.handleDecline(payload);
+                            }
+                        } catch (error) {
+                            console.warn("Desktop companion: invitation response failed", error);
+                        }
+                        meetingInvitationRequestStore.set(null);
+                    }
+                    break;
+                }
                 default:
                     break;
             }
