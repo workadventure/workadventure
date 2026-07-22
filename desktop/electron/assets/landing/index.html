@@ -313,33 +313,72 @@
             .recent-item {
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
-                gap: 16px;
+                gap: 6px;
                 min-width: 0;
-                padding: 13px 14px;
+                padding: 5px 8px 5px 6px;
                 color: var(--text);
-                text-align: left;
                 background: rgba(5, 12, 22, 0.42);
                 border: 1px solid var(--border);
                 border-radius: 11px;
-                cursor: pointer;
                 transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
             }
 
-            .recent-item:hover:not(:disabled) {
+            .recent-item:hover {
                 background: rgba(109, 93, 252, 0.12);
                 border-color: rgba(169, 160, 255, 0.34);
                 transform: translateY(-1px);
             }
 
-            .recent-item:focus-visible {
+            .recent-open {
+                display: flex;
+                flex: 1;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                min-width: 0;
+                padding: 8px;
+                background: none;
+                border: 0;
+                border-radius: 8px;
+                color: inherit;
+                text-align: left;
+                cursor: pointer;
+            }
+
+            .recent-open:focus-visible,
+            .recent-pin:focus-visible {
                 outline: 3px solid rgba(169, 160, 255, 0.42);
                 outline-offset: 2px;
             }
 
-            .recent-item:disabled {
+            .recent-item button:disabled {
                 opacity: 0.55;
                 cursor: wait;
+            }
+
+            .recent-pin {
+                flex: 0 0 auto;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 30px;
+                height: 30px;
+                padding: 0;
+                background: none;
+                border: 0;
+                border-radius: 8px;
+                color: var(--text-muted);
+                cursor: pointer;
+                transition: color 140ms ease, background-color 140ms ease;
+            }
+
+            .recent-pin:hover {
+                color: #f5c451;
+                background: rgba(255, 255, 255, 0.06);
+            }
+
+            .recent-pin.is-pinned {
+                color: #f5c451;
             }
 
             .recent-copy {
@@ -484,6 +523,14 @@
                         <div class="error" id="create-error" role="alert" aria-live="polite"></div>
                     </section>
                 </div>
+
+                <section class="recent-worlds" id="pinned-worlds" aria-labelledby="pinned-worlds-title" hidden>
+                    <div class="recent-heading">
+                        <h2 id="pinned-worlds-title">Pinned worlds</h2>
+                        <span>Your favourites</span>
+                    </div>
+                    <div class="recent-list" id="pinned-list"></div>
+                </section>
 
                 <section class="recent-worlds" id="recent-worlds" aria-labelledby="recent-worlds-title" hidden>
                     <div class="recent-heading">

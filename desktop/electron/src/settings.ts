@@ -12,6 +12,7 @@ export type SettingsData = {
     portal_url: string;
     last_room_url?: string;
     world_history: string[];
+    pinned_worlds: string[];
     shortcuts: Record<"mute_toggle" | "camera_toggle", string>;
 };
 
@@ -25,6 +26,7 @@ const defaultSettings: SettingsData = {
     auto_launch_enabled: false,
     portal_url: process.env.WA_DESKTOP_PORTAL_URL || "http://admin.workadventure.localhost/",
     world_history: [],
+    pinned_worlds: [],
     shortcuts: {
         mute_toggle: "",
         camera_toggle: "",
@@ -38,6 +40,7 @@ async function init() {
     }
     const persistedSettings = _settings as Partial<SettingsData>;
     const persistedWorldHistory = Array.isArray(persistedSettings.world_history) ? persistedSettings.world_history : [];
+    const persistedPinnedWorlds = Array.isArray(persistedSettings.pinned_worlds) ? persistedSettings.pinned_worlds : [];
     settings = {
         ...defaultSettings,
         ...persistedSettings,
@@ -49,6 +52,8 @@ async function init() {
     settings.portal_url = normalizePersistedPortalUrl(process.env.WA_DESKTOP_PORTAL_URL || settings.portal_url);
     settings.last_room_url = normalizePersistedLastRoomUrl(settings.last_room_url);
     settings.world_history = normalizePersistedWorldHistory([settings.last_room_url, ...persistedWorldHistory]);
+    // Pinned worlds are sanitized the same way; a modest cap keeps the sidebar/menus tidy.
+    settings.pinned_worlds = normalizePersistedWorldHistory(persistedPinnedWorlds, 12);
     await Settings.set(settings);
 }
 

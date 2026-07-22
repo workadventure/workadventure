@@ -102,6 +102,7 @@ export type DesktopNavigationResult = { ok: true } | { ok: false; error: string 
 export type DesktopRecentWorld = {
     url: string;
     label: string;
+    pinned: boolean;
 };
 
 export type WorkAdventureDesktopNavigationApi = {
@@ -112,6 +113,12 @@ export type WorkAdventureDesktopNavigationApi = {
     joinWorld: (url: string) => Promise<DesktopNavigationResult>;
     /** Return up to 10 worlds, ordered by most recent visit. */
     getRecentWorlds: () => Promise<DesktopRecentWorld[]>;
+    /** Return the user's pinned worlds, most recently pinned first. */
+    getPinnedWorlds: () => Promise<DesktopRecentWorld[]>;
+    /** Pin/unpin a world; resolves to the new pinned state. */
+    togglePin: (url: string) => Promise<{ ok: boolean; pinned?: boolean; error?: string }>;
+    /** Whether a world is currently pinned. */
+    isPinned: (url: string) => Promise<boolean>;
     /** Open the admin signup URL in the OS default browser. */
     openAdminSignup: () => Promise<DesktopNavigationResult>;
 };

@@ -16,6 +16,8 @@
     var recentSection = document.getElementById("recent-worlds");
     var recentList = document.getElementById("recent-list");
     var recentErrorEl = document.getElementById("recent-error");
+    var pinnedSection = document.getElementById("pinned-worlds");
+    var pinnedList = document.getElementById("pinned-list");
 
     function showError(element, message) {
         element.textContent = message || "";
@@ -36,65 +38,122 @@
         console.warn("Landing renderer: failed to read initial error param", err);
     }
 
-    function renderRecentWorlds(worlds) {
-        if (!Array.isArray(worlds) || worlds.length === 0) {
-            return;
-        }
+    // Star (filled = pinned, outline = not). Inline SVG so the sandboxed page needs no assets.
+    function pinIconSvg(filled) {
+        return (
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="' +
+            (filled ? "currentColor" : "none") +
+            '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z"/></svg>'
+        );
+    }
 
-        worlds.forEach(function (world) {
-            if (!world || typeof world.url !== "string" || typeof world.label !== "string") {
-                return;
-            }
+    function buildWorldItem(world, listEl) {
+        var row = document.createElement("div");
+        row.className = "recent-item";
+        row.title = world.url;
 
-            var button = document.createElement("button");
-            button.type = "button";
-            button.className = "recent-item";
-            button.title = world.url;
+        var open = document.createElement("button");
+        open.type = "button";
+        open.className = "recent-open";
 
-            var copy = document.createElement("span");
-            copy.className = "recent-copy";
-            var name = document.createElement("span");
-            name.className = "recent-name";
-            name.textContent = world.label;
-            var url = document.createElement("span");
-            url.className = "recent-url";
-            url.textContent = world.url;
-            copy.appendChild(name);
-            copy.appendChild(url);
+        var copy = document.createElement("span");
+        copy.className = "recent-copy";
+        var name = document.createElement("span");
+        name.className = "recent-name";
+        name.textContent = world.label;
+        var url = document.createElement("span");
+        url.className = "recent-url";
+        url.textContent = world.url;
+        copy.appendChild(name);
+        copy.appendChild(url);
 
-            var action = document.createElement("span");
-            action.className = "recent-action";
-            action.textContent = "Open";
-            button.appendChild(copy);
-            button.appendChild(action);
+        var action = document.createElement("span");
+        action.className = "recent-action";
+        action.textContent = "Open";
+        open.appendChild(copy);
+        open.appendChild(action);
 
-            button.addEventListener("click", function () {
-                showError(recentErrorEl, "");
-                Array.prototype.forEach.call(recentList.querySelectorAll("button"), function (item) {
-                    item.setAttribute("disabled", "disabled");
+        open.addEventListener("click", function () {
+            showError(recentErrorEl, "");
+            Array.prototype.forEach.call(document.querySelectorAll(".recent-item button"), function (b) {
+                b.setAttribute("disabled", "disabled");
+            });
+            action.textContent = "Opening...";
+            api.joinWorld(world.url)
+                .then(function (result) {
+                    if (!result || !result.ok) {
+                        throw new Error((result && result.error) || "Failed to join world.");
+                    }
+                })
+                .catch(function (err) {
+                    console.warn("landing.joinWorld rejected", err);
+                    showError(recentErrorEl, (err && err.message) || "Failed to join world.");
+                    Array.prototype.forEach.call(document.querySelectorAll(".recent-item button"), function (b) {
+                        b.removeAttribute("disabled");
+                    });
+                    action.textContent = "Open";
                 });
-                action.textContent = "Opening...";
-                api.joinWorld(world.url)
-                    .then(function (result) {
-                        if (!result || !result.ok) {
-                            throw new Error((result && result.error) || "Failed to join world.");
-                        }
+        });
+        row.appendChild(open);
+
+        // Pin toggle (only when the API supports it).
+        if (typeof api.togglePin === "function") {
+            var pin = document.createElement("button");
+            pin.type = "button";
+            pin.className = "recent-pin" + (world.pinned ? " is-pinned" : "");
+            pin.setAttribute("aria-label", world.pinned ? "Unpin world" : "Pin world");
+            pin.title = world.pinned ? "Unpin" : "Pin";
+            pin.innerHTML = pinIconSvg(Boolean(world.pinned));
+            pin.addEventListener("click", function (event) {
+                event.stopPropagation();
+                api.togglePin(world.url)
+                    .then(function () {
+                        refreshWorlds();
                     })
                     .catch(function (err) {
-                        console.warn("landing.recentWorld rejected", err);
-                        showError(recentErrorEl, (err && err.message) || "Failed to join world.");
-                        Array.prototype.forEach.call(recentList.querySelectorAll("button"), function (item) {
-                            item.removeAttribute("disabled");
-                        });
-                        action.textContent = "Open";
+                        console.warn("landing.togglePin rejected", err);
                     });
             });
+            row.appendChild(pin);
+        }
 
-            recentList.appendChild(button);
+        listEl.appendChild(row);
+    }
+
+    function renderInto(listEl, sectionEl, worlds) {
+        listEl.innerHTML = "";
+        if (!Array.isArray(worlds)) {
+            return;
+        }
+        worlds.forEach(function (world) {
+            if (world && typeof world.url === "string" && typeof world.label === "string") {
+                buildWorldItem(world, listEl);
+            }
         });
+        if (sectionEl) {
+            sectionEl.toggleAttribute("hidden", listEl.childElementCount === 0);
+        }
+    }
 
-        if (recentList.childElementCount > 0) {
-            recentSection.removeAttribute("hidden");
+    function refreshWorlds() {
+        if (typeof api.getRecentWorlds === "function") {
+            api.getRecentWorlds()
+                .then(function (worlds) {
+                    renderInto(recentList, recentSection, worlds);
+                })
+                .catch(function (err) {
+                    console.warn("landing.getRecentWorlds rejected", err);
+                });
+        }
+        if (typeof api.getPinnedWorlds === "function") {
+            api.getPinnedWorlds()
+                .then(function (worlds) {
+                    renderInto(pinnedList, pinnedSection, worlds);
+                })
+                .catch(function (err) {
+                    console.warn("landing.getPinnedWorlds rejected", err);
+                });
         }
     }
 
@@ -145,13 +204,7 @@
             });
     });
 
-    if (typeof api.getRecentWorlds === "function") {
-        api.getRecentWorlds()
-            .then(renderRecentWorlds)
-            .catch(function (err) {
-                console.warn("landing.getRecentWorlds rejected", err);
-            });
-    }
+    refreshWorlds();
 
     // Autofocus the URL field so the user can just paste and hit Enter.
     setTimeout(function () {
