@@ -32,6 +32,7 @@ import { handleScreenIdentifyCancel, handleScreenIdentifyPick, identifyScreens }
 import {
     broadcastHudState,
     closeHudWindow,
+    hudKindOfSender,
     isHudSender,
     markHudReady,
     openHudWindow,
@@ -198,6 +199,7 @@ export default () => {
             inMeeting: Boolean(raw.inMeeting),
             micEnabled: Boolean(raw.micEnabled),
             cameraEnabled: Boolean(raw.cameraEnabled),
+            screenSharing: Boolean(raw.screenSharing),
         });
     });
 
@@ -573,8 +575,10 @@ export default () => {
     // HUD windows → main renderer
     ipcMain.on("app:hud:command-from-hud", (event, command: unknown) => {
         if (!isHudSender(event.sender)) return;
+        const type =
+            command !== null && typeof command === "object" ? (command as { type?: unknown }).type : undefined;
         // `focus-main` is handled directly in the main process, like the PiP command.
-        if (command !== null && typeof command === "object" && (command as { type?: unknown }).type === "focus-main") {
+        if (type === "focus-main") {
             const mainWindow = getWindow();
             if (mainWindow && !mainWindow.isDestroyed()) {
                 if (mainWindow.isMinimized()) {
@@ -582,6 +586,17 @@ export default () => {
                 }
                 mainWindow.show();
                 mainWindow.focus();
+            }
+            return;
+        }
+        // The floating meeting toolbar is main-managed (not tied to the screen-share PresenterHud
+        // bridge), so its mic/camera toggles are handled here via the same path the global
+        // shortcuts use — reliable whether or not a screen share is active.
+        if (hudKindOfSender(event.sender) === "floating-meeting" && getWindow()) {
+            if (type === "toggle-mic") {
+                emitMuteToggle();
+            } else if (type === "toggle-camera") {
+                emitCameraToggle();
             }
             return;
         }
