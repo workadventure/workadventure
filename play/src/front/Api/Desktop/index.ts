@@ -1,5 +1,6 @@
 import { get } from "svelte/store";
 import { requestedCameraState, requestedMicrophoneState, silentStore } from "../../Stores/MediaStore";
+import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
 import type { WorkAdventureDesktopApi } from "../../Interfaces/DesktopAppInterfaces";
 
 declare global {
@@ -41,6 +42,17 @@ class DesktopApi {
         silentStore.subscribe((silent) => {
             this.isSilent = silent;
         });
+
+        // Prevent the display from sleeping while the user is engaged in a proximity meeting.
+        // Main manages a single powerSaveBlocker, so idempotent toggles from rapid store updates
+        // are safe — no per-transition cleanup needed here.
+        if (window.WAD.setKeepAwake) {
+            const setKeepAwake = window.WAD.setKeepAwake;
+            //eslint-disable-next-line svelte/no-ignored-unsubscribe
+            isInActiveConversationStore.subscribe((inConversation) => {
+                setKeepAwake(Boolean(inConversation));
+            });
+        }
     }
 }
 
