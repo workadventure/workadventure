@@ -17,16 +17,18 @@ import { playersStore } from "../../Stores/PlayersStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { notificationManager } from "../../Notification/NotificationManager";
-import { openDirectChatRoom } from "../../Chat/Utils";
+import { chatVisibilityStore } from "../../Stores/ChatStore";
+import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { desktopAwayStore } from "../../Stores/DesktopStatusStore";
 import { focusStore } from "../../Stores/FocusStore";
 import type { PlayerInterface } from "../../Phaser/Game/PlayerInterface";
-import type { ChatConnectionInterface, ChatRoom } from "../../Chat/Connection/ChatConnection";
+import type { ChatConnectionInterface, ChatMessage, ChatRoom } from "../../Chat/Connection/ChatConnection";
 import type {
+    CompanionConversation,
     CompanionInvitation,
     CompanionMedia,
-    CompanionMention,
     CompanionMessage,
+    CompanionSelectedConversation,
     CompanionUser,
     WorkAdventureDesktopApi,
 } from "../../Interfaces/DesktopAppInterfaces";
@@ -116,72 +118,74 @@ function availabilityToCompanionKey(status: AvailabilityStatus): string {
     }
 }
 
+/** Sort companion conversations: unread / mentioned first, then most-recent activity. */
+function sortCompanionConversations(list: CompanionConversation[]): CompanionConversation[] {
+    return [...list].sort((a, b) => {
+        const aUnread = a.unreadCount > 0 || a.highlightCount > 0 ? 1 : 0;
+        const bUnread = b.unreadCount > 0 || b.highlightCount > 0 ? 1 : 0;
+        return bUnread - aUnread || b.lastActivityAt - a.lastActivityAt;
+    });
+}
+
 /**
- * Chat rooms with unread mentions, as a Readable<CompanionMention[]>. Same dynamic per-room
- * subscribe pattern as {@link createTotalUnreadStore}: each room's unreadNotificationCount is
- * watched, and on any change the mention list is rebuilt from the rooms that currently have a
- * positive count (title = room name, body = last message preview, tag = room id for click routing).
+ * Matrix conversation summaries (direct rooms + rooms) as a Readable<CompanionConversation[]>. Same
+ * dynamic per-room subscribe idea as {@link createTotalUnreadStore}: each room's unread / highlight
+ * counts and messages are watched, and the list is rebuilt from a fresh read on any change.
  */
-function createMentionsStore(connection: ChatConnectionInterface): Readable<CompanionMention[]> {
+function createConversationsStore(connection: ChatConnectionInterface): Readable<CompanionConversation[]> {
     return derived(
-        connection.rooms,
-        ($rooms, set) => {
-            const perRoom = new Map<string, { unsub: Unsubscriber; count: number; room: ChatRoom }>();
-            const nextIds = new Set($rooms.map((r) => r.id));
+        [connection.directRooms, connection.rooms],
+        ([$direct, $rooms], set) => {
+            const entries: Array<{ room: ChatRoom; kind: "direct" | "room" }> = [
+                ...$direct.map((room) => ({ room, kind: "direct" as const })),
+                ...$rooms.map((room) => ({ room, kind: "room" as const })),
+            ];
+            const unsubs: Unsubscriber[] = [];
 
             const emit = () => {
-                const mentions: CompanionMention[] = [];
-                for (const entry of perRoom.values()) {
-                    if (entry.count <= 0) {
-                        continue;
-                    }
-                    const room = entry.room;
-                    let body = "";
-                    try {
-                        const msgs = get(room.messages);
-                        const last = msgs[msgs.length - 1];
-                        if (last) {
-                            body = get(last.content).body ?? "";
+                set(
+                    entries.map(({ room, kind }): CompanionConversation => {
+                        let preview = "";
+                        let lastActivityAt = room.lastMessageTimestamp || 0;
+                        try {
+                            const msgs = get(room.messages);
+                            const last = msgs[msgs.length - 1];
+                            if (last) {
+                                preview = get(last.content).body ?? "";
+                                if (last.date instanceof Date) {
+                                    lastActivityAt = Math.max(lastActivityAt, last.date.getTime());
+                                }
+                            }
+                        } catch {
+                            /* a room without a readable last message still lists by name */
                         }
-                    } catch {
-                        /* a room without a readable last message still shows its title */
-                    }
-                    mentions.push({ id: room.id, title: get(room.name), body, tag: room.id });
-                }
-                set(mentions);
+                        return {
+                            id: room.id,
+                            name: get(room.name),
+                            kind,
+                            preview,
+                            lastActivityAt,
+                            unreadCount: get(room.hasUnreadMessages) ? 1 : 0,
+                            highlightCount: get(room.unreadNotificationCount) || 0,
+                        };
+                    })
+                );
             };
 
-            for (const room of $rooms) {
-                if (perRoom.has(room.id)) {
-                    continue;
-                }
-                const entry: { unsub: Unsubscriber; count: number; room: ChatRoom } = {
-                    count: 0,
-                    room,
-                    unsub: () => {},
-                };
-                entry.unsub = (room as ChatRoom).unreadNotificationCount.subscribe((n) => {
-                    entry.count = n;
-                    emit();
-                });
-                perRoom.set(room.id, entry);
-            }
-            for (const [id, entry] of perRoom) {
-                if (!nextIds.has(id)) {
-                    entry.unsub();
-                    perRoom.delete(id);
-                }
+            for (const { room } of entries) {
+                unsubs.push(room.unreadNotificationCount.subscribe(() => emit()));
+                unsubs.push(room.hasUnreadMessages.subscribe(() => emit()));
+                unsubs.push(room.messages.subscribe(() => emit()));
             }
             emit();
 
             return () => {
-                for (const entry of perRoom.values()) {
-                    entry.unsub();
+                for (const unsub of unsubs) {
+                    unsub();
                 }
-                perRoom.clear();
             };
         },
-        [] as CompanionMention[]
+        [] as CompanionConversation[]
     );
 }
 
@@ -435,8 +439,11 @@ class DesktopApi {
      */
     private initCompanion(companion: NonNullable<WorkAdventureDesktopApi["companion"]>): void {
         let latestOtherUsers: CompanionUser[] = [];
-        let latestMessages: CompanionMessage[] = [];
-        let latestMentions: CompanionMention[] = [];
+        let latestMatrixConversations: CompanionConversation[] = [];
+        let latestNearby: CompanionConversation | null = null;
+        let latestSelected: CompanionSelectedConversation | null = null;
+        let selectedConversationId: string | null = null;
+        let chatConnection: ChatConnectionInterface | undefined;
         let latestInvitation: CompanionInvitation | null = null;
         let latestMedia: CompanionMedia = {
             micEnabled: false,
@@ -464,8 +471,11 @@ class DesktopApi {
                     participantCount: latestOtherUsers.length + 1,
                 },
                 users: [self, ...latestOtherUsers],
-                messages: latestMessages,
-                mentions: latestMentions,
+                conversations: sortCompanionConversations([
+                    ...(latestNearby ? [latestNearby] : []),
+                    ...latestMatrixConversations,
+                ]),
+                selectedConversation: latestSelected,
                 media: latestMedia,
                 invitation: latestInvitation,
             });
@@ -532,30 +542,87 @@ class DesktopApi {
             schedulePush();
         });
 
-        // Mentions from chat rooms with unread counts (async: the chat connection hydrates late).
+        const NEARBY_ID = "nearby";
+        const mapMessage = (m: ChatMessage): CompanionMessage => ({
+            id: m.id,
+            author: m.sender?.username ?? "",
+            text: get(m.content).body ?? "",
+            isSelf: m.isMyMessage === true,
+        });
+
+        // Stream the currently-selected conversation's last 50 messages. Reading the room is a fresh
+        // lookup each time so it survives scene reloads / late-hydrating chat.
+        let selectedMessagesUnsub: Unsubscriber | undefined;
+        const streamSelected = () => {
+            selectedMessagesUnsub?.();
+            selectedMessagesUnsub = undefined;
+            const id = selectedConversationId;
+            if (id === null) {
+                latestSelected = null;
+                schedulePush();
+                return;
+            }
+            let name = "";
+            let messages: Readable<readonly ChatMessage[]> | undefined;
+            if (id === NEARBY_ID) {
+                name = "Nearby";
+                try {
+                    messages = gameManager.getCurrentGameScene().proximityChatRoomManager.resolveTargetRoom()?.messages;
+                } catch {
+                    messages = undefined;
+                }
+            } else {
+                try {
+                    const room = chatConnection?.getRoomByID(id);
+                    name = room ? get(room.name) : "";
+                    messages = room?.messages;
+                } catch {
+                    messages = undefined;
+                }
+            }
+            if (!messages) {
+                latestSelected = null;
+                schedulePush();
+                return;
+            }
+            selectedMessagesUnsub = messages.subscribe((msgs) => {
+                latestSelected = { id, name, messages: msgs.slice(-50).map(mapMessage) };
+                schedulePush();
+            });
+        };
+
+        // Matrix conversation list (async: the chat connection hydrates late).
         gameManager
             .getChatConnection()
             .then((connection) => {
+                chatConnection = connection;
                 //eslint-disable-next-line svelte/no-ignored-unsubscribe
-                createMentionsStore(connection).subscribe((mentions) => {
-                    latestMentions = mentions;
+                createConversationsStore(connection).subscribe((conversations) => {
+                    latestMatrixConversations = conversations;
                     schedulePush();
                 });
+                // A conversation may have been selected before the connection hydrated.
+                if (selectedConversationId !== null && selectedConversationId !== NEARBY_ID) {
+                    streamSelected();
+                }
             })
             .catch((error) => {
                 console.warn("Desktop companion: chat connection failed to hydrate", error);
             });
 
-        // Proximity chat messages. The manager is per-scene, so re-wire on every scene (re)load.
+        // Nearby proximity conversation summary. The manager is per-scene, so re-wire on every load.
         let proximityRoomUnsub: Unsubscriber | undefined;
-        let messagesUnsub: Unsubscriber | undefined;
+        let nearbyMessagesUnsub: Unsubscriber | undefined;
         //eslint-disable-next-line svelte/no-ignored-unsubscribe
         gameSceneIsLoadedStore.subscribe((loaded) => {
-            messagesUnsub?.();
-            messagesUnsub = undefined;
+            nearbyMessagesUnsub?.();
+            nearbyMessagesUnsub = undefined;
             proximityRoomUnsub?.();
             proximityRoomUnsub = undefined;
-            latestMessages = [];
+            latestNearby = null;
+            if (selectedConversationId === NEARBY_ID) {
+                streamSelected();
+            }
             schedulePush();
             if (!loaded) {
                 return;
@@ -564,27 +631,88 @@ class DesktopApi {
                 proximityRoomUnsub = gameManager
                     .getCurrentGameScene()
                     .proximityChatRoomManager.activeRoomStore.subscribe((room) => {
-                        messagesUnsub?.();
-                        messagesUnsub = undefined;
+                        nearbyMessagesUnsub?.();
+                        nearbyMessagesUnsub = undefined;
                         if (!room) {
-                            latestMessages = [];
+                            latestNearby = null;
+                            if (selectedConversationId === NEARBY_ID) {
+                                streamSelected();
+                            }
                             schedulePush();
                             return;
                         }
-                        messagesUnsub = room.messages.subscribe((msgs) => {
-                            latestMessages = msgs.slice(-40).map((m) => ({
-                                id: m.id,
-                                author: m.sender?.username ?? "",
-                                text: get(m.content).body ?? "",
-                                isSelf: m.isMyMessage === true,
-                            }));
+                        nearbyMessagesUnsub = room.messages.subscribe((msgs) => {
+                            const last = msgs[msgs.length - 1];
+                            latestNearby = {
+                                id: NEARBY_ID,
+                                name: "Nearby",
+                                kind: "nearby",
+                                preview: last ? get(last.content).body ?? "" : "",
+                                lastActivityAt: last?.date instanceof Date ? last.date.getTime() : 0,
+                                unreadCount: 0,
+                                highlightCount: 0,
+                            };
                             schedulePush();
                         });
+                        if (selectedConversationId === NEARBY_ID) {
+                            streamSelected();
+                        }
                     });
             } catch (error) {
                 console.warn("Desktop companion: proximity chat not available", error);
             }
         });
+
+        const resolveMatrixRoom = (id: string) => {
+            try {
+                return chatConnection?.getRoomByID(id);
+            } catch {
+                return undefined;
+            }
+        };
+        const markConversationRead = (id: string) => {
+            if (id === NEARBY_ID) {
+                return; // proximity chat has no read receipts
+            }
+            try {
+                resolveMatrixRoom(id)?.setTimelineAsRead();
+            } catch (error) {
+                console.warn("Desktop companion: mark read failed", error);
+            }
+        };
+        const sendToConversation = (id: string, text: string) => {
+            try {
+                if (id === NEARBY_ID) {
+                    gameManager.getCurrentGameScene().proximityChatRoomManager.resolveTargetRoom()?.sendMessage(text);
+                } else {
+                    resolveMatrixRoom(id)?.sendMessage(text);
+                }
+            } catch (error) {
+                console.warn("Desktop companion: send message failed", error);
+            }
+        };
+        const openConversationInMain = (id: string) => {
+            if (id === NEARBY_ID) {
+                return;
+            }
+            const room = resolveMatrixRoom(id);
+            if (room) {
+                selectedRoomStore.set(room);
+                chatVisibilityStore.set(true);
+            }
+        };
+        const openDmConversation = async (chatId: string) => {
+            try {
+                const room = chatConnection?.getDirectRoomFor(chatId) ?? (await chatConnection?.createDirectRoom(chatId));
+                if (room) {
+                    selectedConversationId = room.id;
+                    markConversationRead(room.id);
+                    streamSelected();
+                }
+            } catch (error) {
+                console.warn("Desktop companion: open DM failed", error);
+            }
+        };
 
         // Route panel commands back to the app (focus-main / close / mic / camera handled in main).
         companion.onCommand((command) => {
@@ -599,25 +727,27 @@ class DesktopApi {
                 case "set-status":
                     applyRequestedStatus(command.status);
                     break;
-                case "send-chat": {
+                case "select-conversation":
+                    selectedConversationId = command.conversationId;
+                    // Mark read ONLY on an explicit selection — never on auto-open / state replay.
+                    markConversationRead(command.conversationId);
+                    streamSelected();
+                    break;
+                case "send-message": {
                     const text = command.text.trim();
                     if (text) {
-                        try {
-                            gameManager
-                                .getCurrentGameScene()
-                                .proximityChatRoomManager.resolveTargetRoom()
-                                ?.sendMessage(text);
-                        } catch (error) {
-                            console.warn("Desktop companion: send chat failed", error);
-                        }
+                        sendToConversation(command.conversationId, text);
                     }
                     break;
                 }
+                case "open-conversation-in-main":
+                    openConversationInMain(command.conversationId);
+                    break;
                 case "dm": {
                     const player = playerById.get(command.userId);
                     if (player?.chatID) {
-                        openDirectChatRoom(player.chatID).catch((error) => {
-                            console.warn("Desktop companion: open DM failed", error);
+                        openDmConversation(player.chatID).catch(() => {
+                            /* errors are handled inside openDmConversation */
                         });
                     }
                     break;
@@ -639,13 +769,6 @@ class DesktopApi {
                     }
                     break;
                 }
-                case "open-mention":
-                    if (command.tag) {
-                        notificationManager.openChatFromNotificationClick(command.tag).catch((error) => {
-                            console.warn("Desktop companion: open mention failed", error);
-                        });
-                    }
-                    break;
                 case "accept-invitation":
                 case "decline-invitation": {
                     // Respond to the pending invitation with the same handlers as the in-app popup.
