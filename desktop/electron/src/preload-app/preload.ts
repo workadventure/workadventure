@@ -60,6 +60,14 @@ const api: WorkAdventureDesktopApi = {
     setUnreadCount: (count) => ipcRenderer.send("app:setUnreadCount", Number(count) || 0),
     setPresence: (presence) => ipcRenderer.send("app:setPresence", presence),
     onSystemIdle: (callback) => subscribe("app:on-system-idle", (idle) => callback(Boolean(idle))),
+    presenter: {
+        setTool: (tool, displayId) => ipcRenderer.send("app:presenter:setTool", { tool, displayId }),
+        onCursor: (callback) =>
+            subscribe("app:on-presenter-cursor", (point) => {
+                const p = (point && typeof point === "object" ? point : {}) as { x?: unknown; y?: unknown };
+                callback(Number(p.x) || 0, Number(p.y) || 0);
+            }),
+    },
     onMuteToggle: (callback) => {
         ipcRenderer.on("app:on-mute-toggle", callback);
     },
