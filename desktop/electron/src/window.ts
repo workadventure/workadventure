@@ -27,6 +27,7 @@ import { closePipWindow } from "./pip-window";
 import { rememberWorldUrl } from "./world-history";
 import { closeOverlayWindow } from "./overlay-window";
 import { updateFloatingToolbar } from "./floating-toolbar";
+import { stopCompanion, updateCompanion } from "./companion-controller";
 import { stopPresenterCursor } from "./presenter-cursor";
 import {
     activateTab,
@@ -631,6 +632,7 @@ export async function createWindow(initialUrl?: string) {
             closeOverlayWindow();
             closeAllHudWindows();
             stopPresenterCursor();
+            stopCompanion();
             updateFloatingToolbar();
         });
     }
@@ -656,6 +658,7 @@ export async function createWindow(initialUrl?: string) {
         closeOverlayWindow();
         closeAllHudWindows();
         stopPresenterCursor();
+        stopCompanion();
     });
 
     mainWindow.on("resize", () => refreshRendererViewport("resize"));
@@ -673,6 +676,7 @@ export async function createWindow(initialUrl?: string) {
     const onWindowStateEvent = () => {
         emitDesktopWindowStateChange();
         updateFloatingToolbar();
+        updateCompanion();
     };
     mainWindow.on("focus", onWindowStateEvent);
     mainWindow.on("blur", onWindowStateEvent);
