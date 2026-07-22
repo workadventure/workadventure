@@ -2,6 +2,7 @@ import { app, BrowserWindow, globalShortcut } from "electron";
 
 import { createWindow, getWindow, openDeepLinkTarget } from "./window";
 import { createTray } from "./tray";
+import { startIdleMonitor } from "./idle-monitor";
 import { createNativeApplicationMenu } from "./native-menu";
 import autoUpdater from "./auto-updater";
 import { updateAutoLaunch } from "./auto-launch";
@@ -120,6 +121,16 @@ async function init() {
         }
         createNativeApplicationMenu();
         createTray();
+
+        // Auto-away + notification hush: forward system idle transitions to the renderer, which
+        // flips the WA availability to "away" and back. presence.setIdle (called inside) also
+        // drives the tray status dot.
+        startIdleMonitor((idle) => {
+            const mainWindow = getWindow();
+            if (mainWindow && !mainWindow.webContents.isDestroyed()) {
+                mainWindow.webContents.send("app:on-system-idle", idle);
+            }
+        });
 
         loadShortcuts();
     });
