@@ -27,6 +27,11 @@
 
     var draft = undefined;
     var drawing = false;
+    // Presenter cursor effect (laser / spotlight / loupe), rendered locally for the presenter only
+    // (this window is content-protected → excluded from the shared capture; viewers get the effect
+    // over the network channel instead).
+    var presenterEffect = null;
+    var laserTrail = [];
     var lastEmit = 0;
     var localCounter = 0;
 
@@ -138,12 +143,63 @@
         }
     }
 
+    function drawPresenterEffect() {
+        if (!presenterEffect) return;
+        var w = canvas.width;
+        var h = canvas.height;
+        var dpr = window.devicePixelRatio || 1;
+        var px = presenterEffect.x * w;
+        var py = presenterEffect.y * h;
+        if (presenterEffect.tool === "spotlight") {
+            var radius = Math.max(
+                60 * dpr,
+                (presenterEffect.scale > 0 ? presenterEffect.scale : 0.18) * Math.min(w, h)
+            );
+            ctx.save();
+            ctx.fillStyle = "rgba(6, 12, 22, 0.55)";
+            ctx.fillRect(0, 0, w, h);
+            ctx.globalCompositeOperation = "destination-out";
+            ctx.beginPath();
+            ctx.arc(px, py, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        } else if (presenterEffect.tool === "loupe") {
+            // The magnification is rendered viewer-side; locally we show a ring so the presenter
+            // knows where the loupe is pointing.
+            ctx.save();
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+            ctx.lineWidth = 2 * dpr;
+            ctx.beginPath();
+            ctx.arc(px, py, 72 * dpr, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        } else if (presenterEffect.tool === "laser") {
+            ctx.save();
+            for (var i = 0; i < laserTrail.length; i++) {
+                ctx.globalAlpha = ((i + 1) / laserTrail.length) * 0.4;
+                ctx.fillStyle = "#ff3b30";
+                ctx.beginPath();
+                ctx.arc(laserTrail[i].x * w, laserTrail[i].y * h, 4 * dpr, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+            ctx.shadowColor = "rgba(255, 59, 48, 0.7)";
+            ctx.shadowBlur = 12 * dpr;
+            ctx.fillStyle = "#ff3b30";
+            ctx.beginPath();
+            ctx.arc(px, py, 8 * dpr, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
     function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         for (var i = 0; i < elements.length; i++) {
             drawElement(elements[i]);
         }
         if (draft) drawElement(draft);
+        drawPresenterEffect();
     }
 
     function pointerToNorm(event) {
@@ -252,8 +308,26 @@
     api.onDrawMode(function (enabled) {
         drawMode = enabled === true;
         canvas.classList.toggle("draw", drawMode);
-        // Tools live in the separate content-protected annotation-bar window — this window is
-        // captured into the shared stream, so it must only ever contain the strokes themselves.
+    });
+    api.onPresenterEffect(function (effect) {
+        var valid =
+            effect &&
+            effect.active === true &&
+            (effect.tool === "laser" || effect.tool === "spotlight" || effect.tool === "loupe");
+        if (!valid) {
+            presenterEffect = null;
+            laserTrail = [];
+            render();
+            return;
+        }
+        presenterEffect = effect;
+        if (effect.tool === "laser") {
+            laserTrail.push({ x: effect.x, y: effect.y });
+            if (laserTrail.length > 8) laserTrail.shift();
+        } else {
+            laserTrail = [];
+        }
+        render();
     });
 
     window.addEventListener("resize", resize);
