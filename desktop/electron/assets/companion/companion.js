@@ -43,9 +43,7 @@
         statusGroup: document.querySelector(".status-group"),
         status: document.getElementById("c-status"),
         statusLocked: document.getElementById("c-status-locked"),
-        mentions: document.getElementById("c-mentions"),
-        mentionsEmpty: document.getElementById("c-mentions-empty"),
-        mentionsBadge: document.getElementById("c-mentions-badge"),
+        chatMentionsBadge: document.getElementById("c-chat-mentions-badge"),
         hdrMic: document.getElementById("c-hdr-mic"),
         hdrCam: document.getElementById("c-hdr-cam"),
     };
@@ -156,13 +154,6 @@
         }
     });
 
-    // ---- Mentions ----
-    els.mentions.addEventListener("click", function (e) {
-        var row = e.target.closest(".mention");
-        if (row) {
-            send({ type: "open-mention", tag: row.dataset.tag || undefined });
-        }
-    });
 
     // ---- Rendering ----
     function renderPeople(users) {
@@ -236,33 +227,16 @@
         els.messages.scrollTop = els.messages.scrollHeight;
     }
 
-    function renderMentions(mentions) {
-        els.mentions.textContent = "";
-        setEmpty(els.mentionsEmpty, mentions.length === 0);
-        for (var i = 0; i < mentions.length; i++) {
-            var mn = mentions[i];
-            var row = document.createElement("div");
-            row.className = "mention";
-            if (mn.tag) {
-                row.dataset.tag = mn.tag;
-            }
-            var title = document.createElement("div");
-            title.className = "mention-title";
-            title.textContent = mn.title || "Mention";
-            row.appendChild(title);
-            if (mn.body) {
-                var body = document.createElement("div");
-                body.className = "mention-body";
-                body.textContent = mn.body;
-                row.appendChild(body);
-            }
-            els.mentions.appendChild(row);
-        }
-        if (mentions.length > 0) {
-            els.mentionsBadge.textContent = String(mentions.length);
-            els.mentionsBadge.hidden = false;
+    // Unread mentions are surfaced as a count badge on the Chat tab (they resolve to Matrix
+    // conversations, which live under Chat). Full per-conversation @ markers arrive with the
+    // Matrix chat list.
+    function renderChatMentionBadge(mentions) {
+        var count = mentions.length;
+        if (count > 0) {
+            els.chatMentionsBadge.textContent = count > 99 ? "99+" : String(count);
+            els.chatMentionsBadge.hidden = false;
         } else {
-            els.mentionsBadge.hidden = true;
+            els.chatMentionsBadge.hidden = true;
         }
     }
 
@@ -310,7 +284,7 @@
 
         renderPeople(Array.isArray(state.users) ? state.users : []);
         renderMessages(Array.isArray(state.messages) ? state.messages : []);
-        renderMentions(Array.isArray(state.mentions) ? state.mentions : []);
+        renderChatMentionBadge(Array.isArray(state.mentions) ? state.mentions : []);
         renderControls(
             state.media || {
                 micEnabled: false,
