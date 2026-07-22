@@ -59,6 +59,7 @@ const api: WorkAdventureDesktopApi = {
     setKeepAwake: (enabled) => ipcRenderer.send("app:setKeepAwake", Boolean(enabled)),
     setUnreadCount: (count) => ipcRenderer.send("app:setUnreadCount", Number(count) || 0),
     setPresence: (presence) => ipcRenderer.send("app:setPresence", presence),
+    setTabTitle: (title) => ipcRenderer.send("app:setTabTitle", String(title ?? "")),
     onSystemIdle: (callback) => subscribe("app:on-system-idle", (idle) => callback(Boolean(idle))),
     presenter: {
         setTool: (tool, displayId, sourceId) => ipcRenderer.send("app:presenter:setTool", { tool, displayId, sourceId }),
