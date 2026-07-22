@@ -240,6 +240,7 @@ export type CompanionMedia = {
     screenSharing: boolean;
     canScreenShare: boolean;
     inMeeting: boolean;
+    pipOpen: boolean;
     status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
     statusLocked: boolean;
 };
@@ -263,6 +264,7 @@ export type CompanionCommand =
     | { type: "toggle-mic" }
     | { type: "toggle-camera" }
     | { type: "toggle-screenshare" }
+    | { type: "toggle-pip" }
     | { type: "set-status"; status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb" }
     | { type: "select-conversation"; conversationId: string }
     | { type: "send-message"; conversationId: string; text: string }
