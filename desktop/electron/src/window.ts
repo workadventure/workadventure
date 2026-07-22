@@ -26,7 +26,6 @@ import { shouldMaximizeBeforeLoad } from "./window-state-policy";
 import { closePipWindow } from "./pip-window";
 import { rememberWorldUrl } from "./world-history";
 import { closeOverlayWindow } from "./overlay-window";
-import { updateFloatingToolbar } from "./floating-toolbar";
 import { stopCompanion, updateCompanion } from "./companion-controller";
 import { stopPresenterCursor } from "./presenter-cursor";
 import {
@@ -633,7 +632,6 @@ export async function createWindow(initialUrl?: string) {
             closeAllHudWindows();
             stopPresenterCursor();
             stopCompanion();
-            updateFloatingToolbar();
         });
     }
     // The tab strip is pinned to the top and reserves space; world views sit below it.
@@ -672,10 +670,9 @@ export async function createWindow(initialUrl?: string) {
     // clicks back onto the main app, AND the destroy-in-flight also races with the utility
     // window's loadFile, spraying ERR_FAILED logs and occasionally taking the whole app down.
     // Any of these can change whether the main window is focused, which is the trigger for the
-    // floating meeting toolbar (shown when in a call and tabbed away).
+    // companion panel (shown while backgrounded in a world).
     const onWindowStateEvent = () => {
         emitDesktopWindowStateChange();
-        updateFloatingToolbar();
         updateCompanion();
     };
     mainWindow.on("focus", onWindowStateEvent);
