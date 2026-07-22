@@ -53,15 +53,29 @@
             <div class="empty" id="c-people-empty">No one around yet.</div>
         </section>
 
-        <section class="pane" data-pane="chat">
-            <div class="list messages" id="c-messages"></div>
-            <div class="empty" id="c-chat-empty">No recent messages.</div>
-            <form class="composer" id="c-composer">
-                <input id="c-chat-input" type="text" autocomplete="off" placeholder="Message nearby…" maxlength="2000" />
-                <button class="send-btn" id="c-send" type="submit" aria-label="Send">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                </button>
-            </form>
+        <section class="pane chat-pane" data-pane="chat" id="c-chat-pane">
+            <div class="list conversations" id="c-conversations"></div>
+            <div class="empty" id="c-conversations-empty">No conversations yet.</div>
+
+            <div class="conversation" id="c-conversation" hidden>
+                <div class="conversation-head">
+                    <button class="icon-btn" id="c-conv-back" type="button" title="Back to conversations" aria-label="Back to conversations">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <div class="conversation-title" id="c-conv-title">Conversation</div>
+                    <button class="icon-btn" id="c-conv-open-main" type="button" title="Open in WorkAdventure" aria-label="Open in WorkAdventure">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    </button>
+                </div>
+                <div class="list messages" id="c-messages"></div>
+                <div class="empty" id="c-messages-empty">No messages yet.</div>
+                <form class="composer" id="c-composer">
+                    <input id="c-chat-input" type="text" autocomplete="off" placeholder="Message…" maxlength="2000" />
+                    <button class="send-btn" id="c-send" type="submit" aria-label="Send">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                </form>
+            </div>
         </section>
 
         <section class="pane" data-pane="controls">

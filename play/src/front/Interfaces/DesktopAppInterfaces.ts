@@ -218,11 +218,20 @@ export type CompanionMessage = {
     isSelf: boolean;
 };
 
-export type CompanionMention = {
+export type CompanionConversation = {
     id: string;
-    title: string;
-    body: string;
-    tag?: string;
+    name: string;
+    kind: "nearby" | "direct" | "room";
+    preview: string;
+    lastActivityAt: number;
+    unreadCount: number;
+    highlightCount: number;
+};
+
+export type CompanionSelectedConversation = {
+    id: string;
+    name: string;
+    messages: CompanionMessage[];
 };
 
 export type CompanionMedia = {
@@ -242,8 +251,8 @@ export type CompanionInvitation = {
 export type CompanionState = {
     world: { name: string; participantCount: number };
     users: CompanionUser[];
-    messages: CompanionMessage[];
-    mentions: CompanionMention[];
+    conversations: CompanionConversation[];
+    selectedConversation?: CompanionSelectedConversation | null;
     media: CompanionMedia;
     invitation?: CompanionInvitation | null;
 };
@@ -255,10 +264,11 @@ export type CompanionCommand =
     | { type: "toggle-camera" }
     | { type: "toggle-screenshare" }
     | { type: "set-status"; status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb" }
-    | { type: "send-chat"; text: string }
+    | { type: "select-conversation"; conversationId: string }
+    | { type: "send-message"; conversationId: string; text: string }
+    | { type: "open-conversation-in-main"; conversationId: string }
     | { type: "dm"; userId: string }
     | { type: "locate"; userId: string }
-    | { type: "open-mention"; tag?: string }
     | { type: "accept-invitation" }
     | { type: "decline-invitation" };
 
