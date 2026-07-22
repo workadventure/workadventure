@@ -58,6 +58,8 @@ const api: WorkAdventureDesktopApi = {
         subscribe("app:on-notification-click", (tag) => callback(typeof tag === "string" ? tag : undefined)),
     setKeepAwake: (enabled) => ipcRenderer.send("app:setKeepAwake", Boolean(enabled)),
     setUnreadCount: (count) => ipcRenderer.send("app:setUnreadCount", Number(count) || 0),
+    setPresence: (presence) => ipcRenderer.send("app:setPresence", presence),
+    onSystemIdle: (callback) => subscribe("app:on-system-idle", (idle) => callback(Boolean(idle))),
     onMuteToggle: (callback) => {
         ipcRenderer.on("app:on-mute-toggle", callback);
     },
