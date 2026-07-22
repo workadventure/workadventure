@@ -209,6 +209,7 @@ export default () => {
             cameraEnabled: Boolean(raw.cameraEnabled),
             screenSharing: Boolean(raw.screenSharing),
             inWorld: Boolean(raw.inWorld),
+            invitationPending: Boolean(raw.invitationPending),
             requestedStatus: raw.requestedStatus,
             statusLocked: Boolean(raw.statusLocked),
         });
