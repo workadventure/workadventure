@@ -53,7 +53,11 @@ const api: WorkAdventureDesktopApi = {
     desktop: true,
     isDevelopment: () => ipcRenderer.invoke("is-development"),
     getVersion: () => ipcRenderer.invoke("get-version"),
-    notify: (txt) => ipcRenderer.send("app:notify", txt),
+    notify: (payload) => ipcRenderer.send("app:notify", payload),
+    onNotificationClick: (callback) =>
+        subscribe("app:on-notification-click", (tag) => callback(typeof tag === "string" ? tag : undefined)),
+    setKeepAwake: (enabled) => ipcRenderer.send("app:setKeepAwake", Boolean(enabled)),
+    setUnreadCount: (count) => ipcRenderer.send("app:setUnreadCount", Number(count) || 0),
     onMuteToggle: (callback) => {
         ipcRenderer.on("app:on-mute-toggle", callback);
     },
