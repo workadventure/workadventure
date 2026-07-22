@@ -185,11 +185,27 @@ export type WorkAdventureDesktopHudApi = {
     onCommand: (callback: (command: DesktopPipCommand) => void) => () => void;
 };
 
+export type DesktopNotificationPayload = {
+    title: string;
+    body: string;
+    /** Groups OS notifications so subsequent ones with the same tag replace instead of stacking. */
+    tag?: string;
+    /** Silent notifications don't play a sound / bounce the dock. */
+    silent?: boolean;
+};
+
 export type WorkAdventureDesktopApi = {
     desktop: boolean;
     isDevelopment: () => Promise<boolean>;
     getVersion: () => Promise<string>;
-    notify: (txt: string) => void;
+    /** String form kept for backward compat; object form adds title, click routing (tag) and silence. */
+    notify: (payload: string | DesktopNotificationPayload) => void;
+    /** Subscribe to notification-click events (tag is the value passed to notify). */
+    onNotificationClick?: (callback: (tag: string | undefined) => void) => () => void;
+    /** Keep the display awake while in an active meeting. Main manages a single blocker id. */
+    setKeepAwake?: (enabled: boolean) => void;
+    /** Dock (macOS) / taskbar (Windows) unread badge; 0 clears. Linux is a silent no-op. */
+    setUnreadCount?: (count: number) => void;
     onMuteToggle: (callback: () => void) => void;
     onCameraToggle: (callback: () => void) => void;
     getWindowState: () => Promise<DesktopWindowState>;
