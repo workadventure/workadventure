@@ -87,7 +87,8 @@ export type DesktopPipCommand =
     | { type: "annotation-undo" }
     | { type: "annotation-clear" }
     | { type: "annotation-toggle-local-hide" }
-    | { type: "annotation-toggle-others" };
+    | { type: "annotation-toggle-others" }
+    | { type: "presenter-set-tool"; tool: string };
 
 export type WorkAdventureDesktopPipApi = {
     readonly supported: true;
@@ -170,6 +171,8 @@ export type DesktopPresenterHudState = {
         /** Local-only render toggle: annotations hidden on THIS client, others keep drawing. */
         locallyHidden: boolean;
     };
+    /** Active presenter cursor tool: "none" | "laser" | "spotlight" | "loupe". */
+    presenterTool?: string;
 };
 
 /**
@@ -215,6 +218,11 @@ export type WorkAdventureDesktopApi = {
     }) => void;
     /** Subscribe to system idle/active transitions (main powerMonitor). Returns unsubscriber. */
     onSystemIdle?: (callback: (idle: boolean) => void) => () => void;
+    /** Presenter tools: main tracks the global cursor over the shared display and streams it here. */
+    presenter?: {
+        setTool: (tool: "none" | "laser" | "spotlight" | "loupe", displayId?: number) => void;
+        onCursor: (callback: (x: number, y: number) => void) => () => void;
+    };
     onMuteToggle: (callback: () => void) => void;
     onCameraToggle: (callback: () => void) => void;
     getWindowState: () => Promise<DesktopWindowState>;

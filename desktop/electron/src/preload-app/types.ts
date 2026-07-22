@@ -80,7 +80,8 @@ export type DesktopPipCommand =
     | { type: "annotation-undo" }
     | { type: "annotation-clear" }
     | { type: "annotation-toggle-local-hide" }
-    | { type: "annotation-toggle-others" };
+    | { type: "annotation-toggle-others" }
+    | { type: "presenter-set-tool"; tool: string };
 
 export type WorkAdventureDesktopPipApi = {
     readonly supported: true;
@@ -166,6 +167,8 @@ export type DesktopPresenterHudState = {
         othersCanDraw: boolean;
         locallyHidden: boolean;
     };
+    /** Active presenter cursor tool: "none" | "laser" | "spotlight" | "loupe". */
+    presenterTool?: string;
 };
 
 /**
@@ -240,6 +243,16 @@ export type WorkAdventureDesktopApi = {
      * unsubscriber.
      */
     onSystemIdle: (callback: (idle: boolean) => void) => () => void;
+    /**
+     * Presenter tools: main tracks the global cursor over the shared display and streams it here
+     * so the renderer can mirror the effect (laser / spotlight / loupe) to viewers.
+     */
+    presenter: {
+        /** Start tracking for the given tool on the shared display; "none" stops tracking. */
+        setTool: (tool: "none" | "laser" | "spotlight" | "loupe", displayId?: number) => void;
+        /** Normalized (0..1) cursor position over the shared display. Returns an unsubscriber. */
+        onCursor: (callback: (x: number, y: number) => void) => () => void;
+    };
     onMuteToggle: (callback: () => void) => void;
     onCameraToggle: (callback: () => void) => void;
     getWindowState: () => Promise<DesktopWindowState>;

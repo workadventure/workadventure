@@ -13,6 +13,8 @@ export type HudState = {
         othersCanDraw: boolean;
         locallyHidden: boolean;
     };
+    /** Active presenter tool: "none" | "laser" | "spotlight" | "loupe". */
+    presenterTool?: string;
 };
 
 /** Commands raised by the bars; a subset/mirror of DesktopPipCommand on the WorkAdventure side. */
@@ -28,7 +30,8 @@ export type HudCommand =
     | { type: "annotation-undo" }
     | { type: "annotation-clear" }
     | { type: "annotation-toggle-local-hide" }
-    | { type: "annotation-toggle-others" };
+    | { type: "annotation-toggle-others" }
+    | { type: "presenter-set-tool"; tool: string };
 
 export type HudSource = {
     id: string;
