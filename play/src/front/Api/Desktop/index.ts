@@ -1,5 +1,11 @@
 import { derived, get, type Readable, type Unsubscriber } from "svelte/store";
-import { requestedCameraState, requestedMicrophoneState, silentStore } from "../../Stores/MediaStore";
+import { AvailabilityStatus } from "@workadventure/messages";
+import {
+    requestedCameraState,
+    requestedMicrophoneState,
+    requestedStatusStore,
+    silentStore,
+} from "../../Stores/MediaStore";
 import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { notificationManager } from "../../Notification/NotificationManager";
@@ -110,6 +116,33 @@ class DesktopApi {
             //eslint-disable-next-line svelte/no-ignored-unsubscribe
             isInActiveConversationStore.subscribe((inConversation) => {
                 setKeepAwake(Boolean(inConversation));
+            });
+        }
+
+        // Auto-away: when the OS reports the user idle (no input for a while, or screen locked),
+        // set the WA availability to "back in a moment". This also hushes notifications for free
+        // via the existing allowNotificationSound() gate (BACK_IN_A_MOMENT returns false). We set
+        // requestedStatusStore directly WITHOUT persisting (no localUserStore.setRequestedStatus)
+        // so the transient auto-away never survives a restart, and we only manage it when the user
+        // has NOT chosen a manual status — a manual DND / busy / brb is left untouched.
+        if (window.WAD.onSystemIdle) {
+            let autoAwayActive = false;
+            window.WAD.onSystemIdle((idle) => {
+                if (idle) {
+                    if (autoAwayActive) return;
+                    // Respect a manual status choice: only auto-away from the neutral (null) state.
+                    if (get(requestedStatusStore) !== null) return;
+                    requestedStatusStore.set(AvailabilityStatus.BACK_IN_A_MOMENT);
+                    autoAwayActive = true;
+                } else {
+                    if (!autoAwayActive) return;
+                    // Only clear if the value is still OUR auto-away — if the user changed status
+                    // in the meantime (e.g. synced from another device), don't clobber it.
+                    if (get(requestedStatusStore) === AvailabilityStatus.BACK_IN_A_MOMENT) {
+                        requestedStatusStore.set(null);
+                    }
+                    autoAwayActive = false;
+                }
             });
         }
 
