@@ -126,6 +126,11 @@ export function emitCameraToggle() {
     getActiveWorldContents()?.send("app:on-camera-toggle");
 }
 
+/** Ask the active world to change the user's availability status (from the tray Status submenu). */
+export function emitSetStatus(status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb") {
+    getActiveWorldContents()?.send("app:on-set-status", status);
+}
+
 function normalizeNotifyPayload(payload: unknown): ShowNotificationOptions | undefined {
     if (typeof payload === "string") {
         const title = payload.trim();
@@ -201,6 +206,8 @@ export default () => {
             micEnabled: Boolean(raw.micEnabled),
             cameraEnabled: Boolean(raw.cameraEnabled),
             screenSharing: Boolean(raw.screenSharing),
+            requestedStatus: raw.requestedStatus,
+            statusLocked: Boolean(raw.statusLocked),
         });
     });
 
