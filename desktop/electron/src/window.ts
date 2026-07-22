@@ -28,6 +28,18 @@ import { rememberWorldUrl } from "./world-history";
 import { closeOverlayWindow } from "./overlay-window";
 import { updateFloatingToolbar } from "./floating-toolbar";
 import { stopPresenterCursor } from "./presenter-cursor";
+import {
+    createWorldView,
+    getActiveWorldContents,
+    isActiveWorldContents,
+    layoutActiveView,
+    resetTabs,
+    setShell,
+} from "./tab-manager";
+
+// Re-exported so ipc.ts (and others) target the active world view without importing tab-manager
+// directly — window.ts remains the single entry point for "the renderer to talk to".
+export { getActiveWorldContents, isActiveWorldContents } from "./tab-manager";
 import { closeAllHudWindows } from "./hud-windows";
 
 const DESKTOP_CALLBACK_FLOW_TTL_MS = 5 * 60 * 1000;
@@ -117,11 +129,8 @@ export function getDesktopWindowState(): DesktopWindowState {
 }
 
 function emitDesktopWindowStateChange() {
-    if (!mainWindow || mainWindow.webContents.isDestroyed()) {
-        return;
-    }
-
-    mainWindow.webContents.send("app:on-window-state-change", getDesktopWindowState());
+    // Window-state changes are relevant to the on-screen (active) world renderer.
+    getActiveWorldContents()?.send("app:on-window-state-change", getDesktopWindowState());
 }
 
 function getDesktopConfig(): DesktopConfig {
@@ -146,16 +155,16 @@ function showWindow() {
 }
 
 function refreshRendererViewport(reason: string) {
-    if (!mainWindow || mainWindow.webContents.isDestroyed()) {
-        return;
-    }
+    // Re-fit the active world view to the shell, then nudge its renderer to re-measure. The view
+    // bounds are managed by the tab manager; a window resize/show is when they need re-applying.
+    layoutActiveView();
 
     const dispatchResize = () => {
-        if (!mainWindow || mainWindow.webContents.isDestroyed()) {
+        const contents = getActiveWorldContents();
+        if (!contents) {
             return;
         }
-
-        void mainWindow.webContents
+        void contents
             .executeJavaScript(
                 `requestAnimationFrame(() => {
                     window.dispatchEvent(new Event("resize"));
@@ -204,7 +213,8 @@ function escapeHtml(value: string) {
 }
 
 async function showDesktopBrowserFlowPendingScreen(title: string, message: string, actionUrl: string) {
-    if (!mainWindow) {
+    const contents = getActiveWorldContents();
+    if (!contents) {
         return;
     }
 
@@ -249,7 +259,7 @@ async function showDesktopBrowserFlowPendingScreen(title: string, message: strin
 </body>
 </html>`;
 
-    await mainWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+    await contents.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
     showWindow();
 }
 
@@ -493,7 +503,8 @@ function configureSession(config: DesktopConfig) {
     });
 }
 
-function configureNavigationSecurity(window: BrowserWindow, config: DesktopConfig) {
+function configureNavigationSecurity(webContents: Electron.WebContents, config: DesktopConfig) {
+    const window = { webContents };
     window.webContents.setWindowOpenHandler(({ url }) => {
         if (isAllowedDesktopBrowserFlowUrl(url, config)) {
             void openDesktopBrowserFlow(url);
@@ -559,6 +570,14 @@ function configureNavigationSecurity(window: BrowserWindow, config: DesktopConfi
         ElectronLog.warn(`did-fail-load (${errorCode}: ${errorDescription}) for "${safeUrl}".`);
         void recoverToLandingWithError(LOAD_FAILURE_LANDING_MESSAGE);
     });
+
+    window.webContents.on("did-finish-load", () => {
+        // Only the active (on-screen) view drives the shell window title + viewport refresh.
+        if (webContents === getActiveWorldContents()) {
+            mainWindow?.setTitle(createDesktopWindowTitle());
+            refreshRendererViewport("did-finish-load");
+        }
+    });
 }
 
 export async function createWindow(initialUrl?: string) {
@@ -582,6 +601,8 @@ export async function createWindow(initialUrl?: string) {
     });
     const maximizeBeforeLoad = shouldMaximizeBeforeLoad(windowState);
 
+    // The shell hosts the tab strip + the world views; it loads no app content itself, so it needs
+    // no preload. Each world runs in its own WebContentsView (see tab-manager) with preload-app.
     mainWindow = new BrowserWindow({
         x: windowState.x,
         y: windowState.y,
@@ -589,16 +610,13 @@ export async function createWindow(initialUrl?: string) {
         height: windowState.height,
         autoHideMenuBar: true,
         show: false,
-        webPreferences: {
-            preload: path.resolve(__dirname, "..", "dist", "preload-app", "preload.js"),
-            nodeIntegration: false,
-            contextIsolation: true,
-            sandbox: true,
-            webSecurity: true,
-        },
+        backgroundColor: "#0a1422",
     });
     mainWindow.setMenu(null);
-    configureNavigationSecurity(mainWindow, config);
+    setShell(mainWindow);
+    // Create the first world view (the initial tab). window.ts wires navigation security onto it;
+    // it becomes the active view and everything below (load/PiP/presence) targets it.
+    createWorldView((view) => configureNavigationSecurity(view.webContents, config));
 
     // Let us register listeners on the window, so we can update the state
     // automatically (the listeners will be removed when the window is closed)
@@ -610,6 +628,7 @@ export async function createWindow(initialUrl?: string) {
 
     mainWindow.on("closed", () => {
         mainWindow = undefined;
+        resetTabs();
         closePipWindow();
         closeOverlayWindow();
         closeAllHudWindows();
@@ -657,14 +676,8 @@ export async function createWindow(initialUrl?: string) {
     //   }
     // });
 
-    mainWindow.once("ready-to-show", () => {
-        mainWindow?.show();
-    });
-
-    mainWindow.webContents.on("did-finish-load", () => {
-        mainWindow?.setTitle(createDesktopWindowTitle());
-        refreshRendererViewport("did-finish-load");
-    });
+    // The shell has no content of its own, so rely on loadDesktopTarget → showWindow to reveal it
+    // once the first world view has something to paint (avoids a blank flash).
 
     await loadDesktopTarget(initialUrl);
 }
@@ -678,17 +691,18 @@ export async function createWindow(initialUrl?: string) {
  * to the portal.
  */
 export async function loadLandingPage(errorMessage?: string): Promise<void> {
-    if (!mainWindow) {
-        throw new Error("Main window not found");
+    const contents = getActiveWorldContents();
+    if (!contents) {
+        throw new Error("No active world view");
     }
     const landingPath = path.resolve(__dirname, "..", "assets", "landing", "index.html");
     const loadOptions = errorMessage ? { query: { error: errorMessage } } : undefined;
     try {
-        await mainWindow.loadFile(landingPath, loadOptions);
+        await contents.loadFile(landingPath, loadOptions);
     } catch (error) {
         ElectronLog.error(`Failed to load Landing page at ${landingPath}`, error);
         // Fall back to the portal URL — worst case the user still lands somewhere usable.
-        await mainWindow.loadURL(getDesktopConfig().portalUrl);
+        await contents.loadURL(getDesktopConfig().portalUrl);
     }
     showWindow();
 }
@@ -712,8 +726,9 @@ async function recoverToLandingWithError(errorMessage: string): Promise<void> {
 }
 
 export async function loadDesktopTarget(requestedUrl?: string): Promise<boolean> {
-    if (!mainWindow) {
-        throw new Error("Main window not found");
+    const contents = getActiveWorldContents();
+    if (!contents) {
+        throw new Error("No active world view");
     }
 
     const config = getDesktopConfig();
@@ -733,7 +748,7 @@ export async function loadDesktopTarget(requestedUrl?: string): Promise<boolean>
     });
     pendingDeepLinkUrl = undefined;
     try {
-        await mainWindow.loadURL(target);
+        await contents.loadURL(target);
         showWindow();
         return true;
     } catch (error) {
