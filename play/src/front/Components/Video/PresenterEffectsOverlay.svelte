@@ -70,9 +70,11 @@
                 style={`background: rgba(3, 7, 18, 0.6); -webkit-mask: radial-gradient(circle ${spotlightRadius}px at ${activeEffect.x * clientWidth}px ${activeEffect.y * clientHeight}px, transparent 0, transparent ${spotlightRadius - 2}px, #000 ${spotlightRadius}px); mask: radial-gradient(circle ${spotlightRadius}px at ${activeEffect.x * clientWidth}px ${activeEffect.y * clientHeight}px, transparent 0, transparent ${spotlightRadius - 2}px, #000 ${spotlightRadius}px);`}
             ></div>
         {:else if activeEffect.tool === "loupe"}
+            <!-- Ring drawn as an inset box-shadow, not a border, so it doesn't shrink the content
+                 box and shift the magnified video off the cursor point. -->
             <div
-                class="absolute rounded-full border-2 border-white/80 shadow-lg overflow-hidden bg-black"
-                style={`left: ${activeEffect.x * clientWidth - LOUPE_RADIUS}px; top: ${activeEffect.y * clientHeight - LOUPE_RADIUS}px; width: ${LOUPE_RADIUS * 2}px; height: ${LOUPE_RADIUS * 2}px;`}
+                class="absolute rounded-full shadow-lg overflow-hidden bg-black"
+                style={`left: ${activeEffect.x * clientWidth - LOUPE_RADIUS}px; top: ${activeEffect.y * clientHeight - LOUPE_RADIUS}px; width: ${LOUPE_RADIUS * 2}px; height: ${LOUPE_RADIUS * 2}px; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.8), 0 4px 14px rgba(0,0,0,0.4);`}
             >
                 <!-- svelte-ignore a11y_media_has_caption -->
                 <video

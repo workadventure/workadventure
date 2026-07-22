@@ -33,31 +33,42 @@ function defaultScale(tool: ActivePresenterTool): number {
  *
  * Started/stopped with the other desktop bridges in PictureInPicture.svelte.
  */
+// A still cursor re-broadcasts at most this often, so a viewer who joins while the presenter
+// holds the pointer on one spot still receives the effect within ~1s (public events aren't
+// replayed to late joiners).
+const KEEPALIVE_MS = 900;
+
 class PresenterEffectsBridge {
     private subscriptions: Unsubscriber[] = [];
     private onCursorUnsub: (() => void) | undefined;
+    private started = false;
     private lastX = -1;
     private lastY = -1;
+    private lastEmitAt = 0;
 
     public start(): void {
         const api = getPresenterApi();
-        if (!api) {
+        if (!api || this.started) {
             return;
         }
+        this.started = true;
 
         this.onCursorUnsub = api.onCursor((x, y) => {
             const tool = get(presenterToolStore);
             if (tool === "none") {
                 return;
             }
-            // Round to 1e-3 and skip unchanged positions — a still cursor needs one event, not 30/s.
+            // Round to 1e-3; skip unchanged positions EXCEPT for a periodic keepalive so a still
+            // cursor (the whole point of spotlight/loupe) still reaches late-joining viewers.
             const rx = Math.round(x * 1000) / 1000;
             const ry = Math.round(y * 1000) / 1000;
-            if (rx === this.lastX && ry === this.lastY) {
+            const now = Date.now();
+            if (rx === this.lastX && ry === this.lastY && now - this.lastEmitAt < KEEPALIVE_MS) {
                 return;
             }
             this.lastX = rx;
             this.lastY = ry;
+            this.lastEmitAt = now;
             presenterEffectManager.emitEffect(tool, rx, ry, defaultScale(tool));
         });
 
@@ -65,6 +76,7 @@ class PresenterEffectsBridge {
             presenterToolStore.subscribe((tool) => {
                 this.lastX = -1;
                 this.lastY = -1;
+                this.lastEmitAt = 0;
                 if (tool === "none") {
                     api.setTool("none");
                     const target = presenterEffectManager.localUserId;
@@ -96,6 +108,7 @@ class PresenterEffectsBridge {
         this.subscriptions = [];
         this.onCursorUnsub?.();
         this.onCursorUnsub = undefined;
+        this.started = false;
         getPresenterApi()?.setTool("none");
         presenterToolStore.set("none");
     }
