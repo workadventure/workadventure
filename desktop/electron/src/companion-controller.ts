@@ -94,6 +94,16 @@ export function toggleCompanion(): void {
     updateCompanion();
 }
 
+/**
+ * Dismiss from the panel's own close button. Goes through the override (unlike a bare close) so the
+ * panel stays closed for the rest of the away-session instead of re-opening on the next presence
+ * change while the meeting / mentions trigger is still active.
+ */
+export function dismissCompanion(): void {
+    override = "force-closed";
+    updateCompanion();
+}
+
 export function isCompanionVisible(): boolean {
     return isHudWindowOpen("companion");
 }
