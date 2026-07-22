@@ -156,6 +156,10 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
             contextIsolation: true,
             sandbox: true,
             webSecurity: true,
+            // These HUD windows live in the background by definition (shown while WA is unfocused).
+            // Chromium throttles timers/rendering in unfocused windows, which would freeze the
+            // companion's meeting video once it hosts one — so opt out of throttling.
+            backgroundThrottling: false,
         },
     });
     newWindow.setMenu(null);
