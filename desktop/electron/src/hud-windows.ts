@@ -15,7 +15,7 @@ import { COMPANION_MIN_HEIGHT, COMPANION_MIN_WIDTH, normalizeCompanionBounds } f
  * captured pixels. Only the transparent annotation overlay (a separate window) is captured.
  */
 
-export type HudKind = "meeting-bar" | "annotation-bar" | "floating-meeting" | "companion";
+export type HudKind = "meeting-bar" | "annotation-bar" | "companion";
 
 type HudEntry = {
     window: BrowserWindow;
@@ -27,9 +27,7 @@ type HudEntry = {
 const HUD_SIZES: Record<HudKind, { width: number; height: number }> = {
     "meeting-bar": { width: 680, height: 76 },
     "annotation-bar": { width: 700, height: 64 },
-    // Compact Zoom-style pill: mic / camera / back-to-app.
-    "floating-meeting": { width: 188, height: 62 },
-    // Interactive quick-access panel (People / Chat / Controls / Mentions).
+    // Interactive quick-access panel (People / Chat / Controls). Resizable; this is the initial size.
     companion: { width: 340, height: 480 },
 };
 
@@ -111,7 +109,7 @@ function positionFor(kind: HudKind, display: Electron.Display): { x: number; y: 
     const x = Math.round(area.x + (area.width - width) / 2);
     // Meeting bar + floating toolbar sit bottom-center (like Zoom's control bar); annotation bar
     // sits top-center so it doesn't overlap the meeting bar.
-    const bottomAnchored = kind === "meeting-bar" || kind === "floating-meeting";
+    const bottomAnchored = kind === "meeting-bar";
     const y = bottomAnchored ? Math.round(area.y + area.height - height - HUD_MARGIN) : area.y + HUD_MARGIN;
     return { x, y };
 }
