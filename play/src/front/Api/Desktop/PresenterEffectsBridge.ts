@@ -85,7 +85,7 @@ class PresenterEffectsBridge {
                     }
                 } else {
                     const source = get(activeScreenShareSourceStore);
-                    api.setTool(tool, source?.display_id);
+                    api.setTool(tool, source?.display_id, source?.id);
                 }
             }),
         );

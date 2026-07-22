@@ -224,7 +224,7 @@ export type WorkAdventureDesktopApi = {
     onSystemIdle?: (callback: (idle: boolean) => void) => () => void;
     /** Presenter tools: main tracks the global cursor over the shared display and streams it here. */
     presenter?: {
-        setTool: (tool: "none" | "laser" | "spotlight" | "loupe", displayId?: number) => void;
+        setTool: (tool: "none" | "laser" | "spotlight" | "loupe", displayId?: number, sourceId?: string) => void;
         onCursor: (callback: (x: number, y: number) => void) => () => void;
     };
     onMuteToggle: (callback: () => void) => void;
