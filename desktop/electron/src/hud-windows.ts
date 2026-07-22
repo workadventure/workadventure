@@ -23,7 +23,7 @@ type HudEntry = {
 };
 
 const HUD_SIZES: Record<HudKind, { width: number; height: number }> = {
-    "meeting-bar": { width: 520, height: 76 },
+    "meeting-bar": { width: 680, height: 76 },
     "annotation-bar": { width: 700, height: 64 },
     // Compact Zoom-style pill: mic / camera / back-to-app.
     "floating-meeting": { width: 188, height: 62 },
