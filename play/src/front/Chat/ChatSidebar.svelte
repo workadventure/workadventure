@@ -38,9 +38,13 @@
         "keyup",
         "mousedown",
         "mousemove",
+        "mouseout",
+        "mouseover",
         "mouseup",
         "pointerdown",
         "pointermove",
+        "pointerout",
+        "pointerover",
         "pointerup",
         "touchend",
         "touchmove",
@@ -116,10 +120,13 @@
     }
 
     onDestroy(() => {
-        // If the sidebar unmounts while detached (e.g. leaving the world), close the floating
-        // window and drop the delegation listeners. Svelte still destroys the reparented <Chat>.
+        // If the sidebar unmounts while detached (e.g. leaving the world), move the chat back into
+        // the main document FIRST so Svelte destroys <Chat>'s DOM from a live document (not the
+        // closing PiP one), then close the floating window and drop the delegation listeners.
         stopPipDelegation.forEach((stop) => stop());
         stopPipDelegation = [];
+        // eslint-disable-next-line svelte/no-dom-manipulating
+        if (attachHome && detachTarget) attachHome.append(detachTarget);
         if (chatPipWindow) {
             chatPipWindow.removeEventListener("pagehide", reattachChat);
             chatPipWindow.close();
