@@ -7,6 +7,7 @@ import {
     silentStore,
 } from "../../Stores/MediaStore";
 import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
+import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { notificationManager } from "../../Notification/NotificationManager";
 import { desktopAwayStore } from "../../Stores/DesktopStatusStore";
@@ -14,7 +15,12 @@ import { focusStore } from "../../Stores/FocusStore";
 import type { ChatConnectionInterface, ChatRoom } from "../../Chat/Connection/ChatConnection";
 import type { WorkAdventureDesktopApi } from "../../Interfaces/DesktopAppInterfaces";
 
-type PresenceSnapshot = { inMeeting: boolean; micEnabled: boolean; cameraEnabled: boolean };
+type PresenceSnapshot = {
+    inMeeting: boolean;
+    micEnabled: boolean;
+    cameraEnabled: boolean;
+    screenSharing: boolean;
+};
 
 /**
  * Aggregate `unreadNotificationCount` across every room on the chat connection into a single
@@ -176,11 +182,12 @@ class DesktopApi {
         if (window.WAD.setPresence) {
             const setPresence = window.WAD.setPresence;
             const presenceStore = derived(
-                [isInActiveConversationStore, requestedMicrophoneState, requestedCameraState],
-                ([$inMeeting, $mic, $cam]): PresenceSnapshot => ({
+                [isInActiveConversationStore, requestedMicrophoneState, requestedCameraState, requestedScreenSharingState],
+                ([$inMeeting, $mic, $cam, $share]): PresenceSnapshot => ({
                     inMeeting: Boolean($inMeeting),
                     micEnabled: Boolean($mic),
                     cameraEnabled: Boolean($cam),
+                    screenSharing: Boolean($share),
                 })
             );
             //eslint-disable-next-line svelte/no-ignored-unsubscribe

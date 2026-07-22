@@ -3,6 +3,7 @@ import { app, BrowserWindow, globalShortcut } from "electron";
 import { createWindow, getWindow, openDeepLinkTarget } from "./window";
 import { createTray } from "./tray";
 import { startIdleMonitor } from "./idle-monitor";
+import { startFloatingToolbarController } from "./floating-toolbar";
 import { createNativeApplicationMenu } from "./native-menu";
 import autoUpdater from "./auto-updater";
 import { updateAutoLaunch } from "./auto-launch";
@@ -131,6 +132,9 @@ async function init() {
                 mainWindow.webContents.send("app:on-system-idle", idle);
             }
         });
+
+        // Floating meeting toolbar: appears when in a call and the main window is not focused.
+        startFloatingToolbarController();
 
         loadShortcuts();
     });

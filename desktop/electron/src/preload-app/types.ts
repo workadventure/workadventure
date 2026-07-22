@@ -228,7 +228,12 @@ export type WorkAdventureDesktopApi = {
      * Push the live presence (in-meeting + mic/camera state) to main, which drives the tray
      * status dot and the tray quick-action checkmarks.
      */
-    setPresence: (presence: { inMeeting: boolean; micEnabled: boolean; cameraEnabled: boolean }) => void;
+    setPresence: (presence: {
+        inMeeting: boolean;
+        micEnabled: boolean;
+        cameraEnabled: boolean;
+        screenSharing: boolean;
+    }) => void;
     /**
      * Subscribe to system idle/active transitions (main polls powerMonitor + screen-lock events).
      * The renderer uses this to auto-set the WA availability to "away" and back. Returns an
