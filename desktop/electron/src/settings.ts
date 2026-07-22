@@ -13,7 +13,7 @@ export type SettingsData = {
     last_room_url?: string;
     world_history: string[];
     pinned_worlds: string[];
-    shortcuts: Record<"mute_toggle" | "camera_toggle", string>;
+    shortcuts: Record<"mute_toggle" | "camera_toggle" | "companion_toggle", string>;
 };
 
 let settings: SettingsData;
@@ -30,6 +30,9 @@ const defaultSettings: SettingsData = {
     shortcuts: {
         mute_toggle: "",
         camera_toggle: "",
+        // Opt-in like the others: no default global accelerator (avoids OS-wide conflicts); the tray
+        // "Companion panel" item toggles it without a shortcut.
+        companion_toggle: "",
     },
 };
 
