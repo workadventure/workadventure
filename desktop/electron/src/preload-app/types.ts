@@ -255,8 +255,12 @@ export type WorkAdventureDesktopApi = {
      * so the renderer can mirror the effect (laser / spotlight / loupe) to viewers.
      */
     presenter: {
-        /** Start tracking for the given tool on the shared display; "none" stops tracking. */
-        setTool: (tool: "none" | "laser" | "spotlight" | "loupe", displayId?: number) => void;
+        /**
+         * Start tracking for the given tool on the shared display; "none" stops tracking. Pass the
+         * capture sourceId (`screen:<id>`) so main can resolve the display when display_id is
+         * absent (e.g. Wayland) instead of falling back to the primary screen.
+         */
+        setTool: (tool: "none" | "laser" | "spotlight" | "loupe", displayId?: number, sourceId?: string) => void;
         /** Normalized (0..1) cursor position over the shared display. Returns an unsubscriber. */
         onCursor: (callback: (x: number, y: number) => void) => () => void;
     };
