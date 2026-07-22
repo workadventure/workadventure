@@ -319,6 +319,8 @@ export type WorkAdventureDesktopApi = {
         micEnabled: boolean;
         cameraEnabled: boolean;
         screenSharing: boolean;
+        /** True while a game scene is loaded (gates the companion auto-show to actual worlds). */
+        inWorld?: boolean;
         requestedStatus?: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
         statusLocked?: boolean;
     }) => void;
