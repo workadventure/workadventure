@@ -223,7 +223,7 @@ export type CompanionUser = {
     inBubble?: boolean;
 };
 
-/** A proximity-chat message mirrored into the companion Chat tab. */
+/** A chat message shown in the companion's selected conversation. */
 export type CompanionMessage = {
     id: string;
     author: string;
@@ -231,13 +231,25 @@ export type CompanionMessage = {
     isSelf: boolean;
 };
 
-/** An unread mention/notification shown in the companion Mentions tab. */
-export type CompanionMention = {
+/** A conversation summary in the companion Chat list (nearby proximity + Matrix DMs / rooms). */
+export type CompanionConversation = {
     id: string;
-    title: string;
-    body: string;
-    /** Opaque routing tag (same value space as notification tags) passed back on open-mention. */
-    tag?: string;
+    name: string;
+    kind: "nearby" | "direct" | "room";
+    /** Last message preview (may be empty). */
+    preview: string;
+    /** Timestamp used to sort the list (most recent first). */
+    lastActivityAt: number;
+    unreadCount: number;
+    /** Unread @-mentions / highlights, distinct from plain unread. */
+    highlightCount: number;
+};
+
+/** The currently-open conversation and its recent messages. */
+export type CompanionSelectedConversation = {
+    id: string;
+    name: string;
+    messages: CompanionMessage[];
 };
 
 export type CompanionMedia = {
@@ -250,17 +262,19 @@ export type CompanionMedia = {
     statusLocked: boolean;
 };
 
-/** Full state pushed to the companion panel on every change. */
 /** A pending meeting invitation shown as a banner in the companion. */
 export type CompanionInvitation = {
     name: string;
 };
 
+/** Full state pushed to the companion panel on every change. */
 export type CompanionState = {
     world: { name: string; participantCount: number };
     users: CompanionUser[];
-    messages: CompanionMessage[];
-    mentions: CompanionMention[];
+    /** Chat conversations (nearby + Matrix), sorted most-relevant first. */
+    conversations: CompanionConversation[];
+    /** The open conversation + its messages, or null/absent when the list is shown. */
+    selectedConversation?: CompanionSelectedConversation | null;
     media: CompanionMedia;
     /** Set when a meeting invitation is pending; null/absent otherwise. */
     invitation?: CompanionInvitation | null;
@@ -274,10 +288,11 @@ export type CompanionCommand =
     | { type: "toggle-camera" }
     | { type: "toggle-screenshare" }
     | { type: "set-status"; status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb" }
-    | { type: "send-chat"; text: string }
+    | { type: "select-conversation"; conversationId: string }
+    | { type: "send-message"; conversationId: string; text: string }
+    | { type: "open-conversation-in-main"; conversationId: string }
     | { type: "dm"; userId: string }
     | { type: "locate"; userId: string }
-    | { type: "open-mention"; tag?: string }
     | { type: "accept-invitation" }
     | { type: "decline-invitation" };
 

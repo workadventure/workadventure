@@ -1,7 +1,7 @@
 // Companion panel renderer (sandboxed, vanilla JS).
 //
-// A compact, interactive quick-access panel (People / Chat / Controls / Mentions) shown by the main
-// process when WorkAdventure is backgrounded. Stateless: the active world renderer pushes the full
+// A compact, interactive quick-access panel (People / Chat / Controls) shown by the main process
+// when WorkAdventure is backgrounded. Stateless: the active world renderer pushes the full
 // CompanionState on every change; every action goes back as a command. Reuses the generic WAHud
 // bridge (onState / sendCommand / ready) — the state/command shapes are companion-specific.
 (function () {
@@ -15,6 +15,7 @@
     }
 
     var STATUS_KEYS = ["online", "busy", "back_in_a_moment", "do_not_disturb"];
+    var NEARBY_ID = "nearby";
 
     // Static icon markup (constant, never user data — safe to assign via innerHTML).
     var ICON_DM =
@@ -22,34 +23,44 @@
     var ICON_LOCATE =
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
 
+    function byId(id) {
+        return document.getElementById(id);
+    }
+
     var els = {
-        worldName: document.getElementById("c-world-name"),
-        worldSub: document.getElementById("c-world-sub"),
-        back: document.getElementById("c-back"),
-        close: document.getElementById("c-close"),
-        tabs: document.getElementById("c-tabs"),
-        people: document.getElementById("c-people"),
-        peopleEmpty: document.getElementById("c-people-empty"),
-        messages: document.getElementById("c-messages"),
-        chatEmpty: document.getElementById("c-chat-empty"),
-        composer: document.getElementById("c-composer"),
-        chatInput: document.getElementById("c-chat-input"),
-        mic: document.getElementById("c-mic"),
-        micLabel: document.getElementById("c-mic-label"),
-        cam: document.getElementById("c-cam"),
-        camLabel: document.getElementById("c-cam-label"),
-        share: document.getElementById("c-share"),
-        shareLabel: document.getElementById("c-share-label"),
+        worldName: byId("c-world-name"),
+        worldSub: byId("c-world-sub"),
+        back: byId("c-back"),
+        close: byId("c-close"),
+        tabs: byId("c-tabs"),
+        people: byId("c-people"),
+        peopleEmpty: byId("c-people-empty"),
+        conversations: byId("c-conversations"),
+        conversationsEmpty: byId("c-conversations-empty"),
+        conversation: byId("c-conversation"),
+        convBack: byId("c-conv-back"),
+        convTitle: byId("c-conv-title"),
+        convOpenMain: byId("c-conv-open-main"),
+        messages: byId("c-messages"),
+        messagesEmpty: byId("c-messages-empty"),
+        composer: byId("c-composer"),
+        chatInput: byId("c-chat-input"),
+        mic: byId("c-mic"),
+        micLabel: byId("c-mic-label"),
+        cam: byId("c-cam"),
+        camLabel: byId("c-cam-label"),
+        share: byId("c-share"),
+        shareLabel: byId("c-share-label"),
         statusGroup: document.querySelector(".status-group"),
-        status: document.getElementById("c-status"),
-        statusLocked: document.getElementById("c-status-locked"),
-        chatMentionsBadge: document.getElementById("c-chat-mentions-badge"),
-        hdrMic: document.getElementById("c-hdr-mic"),
-        hdrCam: document.getElementById("c-hdr-cam"),
-        invitation: document.getElementById("c-invitation"),
-        invitationName: document.getElementById("c-invitation-name"),
-        inviteAccept: document.getElementById("c-invite-accept"),
-        inviteDecline: document.getElementById("c-invite-decline"),
+        status: byId("c-status"),
+        statusLocked: byId("c-status-locked"),
+        chatMentionsBadge: byId("c-chat-mentions-badge"),
+        hdrMic: byId("c-hdr-mic"),
+        hdrCam: byId("c-hdr-cam"),
+        invitation: byId("c-invitation"),
+        invitationName: byId("c-invitation-name"),
+        inviteAccept: byId("c-invite-accept"),
+        inviteDecline: byId("c-invite-decline"),
     };
 
     function send(command) {
@@ -81,9 +92,6 @@
         var panes = document.querySelectorAll(".pane");
         for (var j = 0; j < panes.length; j++) {
             panes[j].classList.toggle("is-active", panes[j].dataset.pane === tab);
-        }
-        if (tab === "chat" && els.chatInput) {
-            els.chatInput.focus();
         }
     }
     els.tabs.addEventListener("click", function (e) {
@@ -126,14 +134,42 @@
         });
     }
 
-    // ---- Chat ----
+    // ---- Chat (conversation list <-> conversation view) ----
+    var chatView = "list"; // "list" | "conversation"
+    var currentConvId = null;
+
+    function showConversationView(show) {
+        chatView = show ? "conversation" : "list";
+        els.conversation.hidden = !show;
+        els.conversations.hidden = show;
+        setEmpty(els.conversationsEmpty, false);
+    }
+
+    els.conversations.addEventListener("click", function (e) {
+        var row = e.target.closest(".conversation-row");
+        if (!row || !row.dataset.conversationId) {
+            return;
+        }
+        send({ type: "select-conversation", conversationId: row.dataset.conversationId });
+        currentConvId = row.dataset.conversationId;
+        showConversationView(true);
+    });
+    els.convBack.addEventListener("click", function () {
+        showConversationView(false);
+    });
+    els.convOpenMain.addEventListener("click", function () {
+        if (currentConvId && currentConvId !== NEARBY_ID) {
+            send({ type: "focus-main" });
+            send({ type: "open-conversation-in-main", conversationId: currentConvId });
+        }
+    });
     els.composer.addEventListener("submit", function (e) {
         e.preventDefault();
         var text = els.chatInput.value.trim();
-        if (!text) {
+        if (!text || !currentConvId) {
             return;
         }
-        send({ type: "send-chat", text: text });
+        send({ type: "send-message", conversationId: currentConvId, text: text });
         els.chatInput.value = "";
     });
 
@@ -150,6 +186,8 @@
         }
         if (action === "dm") {
             send({ type: "dm", userId: userId });
+            setTab("chat");
+            showConversationView(true);
         } else if (action === "locate") {
             // "Go to" someone: bring WorkAdventure to the front, then walk there.
             send({ type: "focus-main" });
@@ -174,8 +212,19 @@
         }
     });
 
-
     // ---- Rendering ----
+    function miniButton(action, userId, title, iconSvg) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "mini-btn";
+        btn.dataset.action = action;
+        btn.dataset.userId = userId;
+        btn.title = title;
+        btn.setAttribute("aria-label", title);
+        btn.innerHTML = iconSvg;
+        return btn;
+    }
+
     function renderPeople(users) {
         els.people.textContent = "";
         setEmpty(els.peopleEmpty, users.length === 0);
@@ -213,21 +262,47 @@
         }
     }
 
-    function miniButton(action, userId, title, iconSvg) {
-        var btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "mini-btn";
-        btn.dataset.action = action;
-        btn.dataset.userId = userId;
-        btn.title = title;
-        btn.setAttribute("aria-label", title);
-        btn.innerHTML = iconSvg;
-        return btn;
+    function renderConversationList(conversations) {
+        els.conversations.textContent = "";
+        for (var i = 0; i < conversations.length; i++) {
+            var c = conversations[i];
+            var row = document.createElement("button");
+            row.type = "button";
+            row.className = "conversation-row";
+            row.dataset.conversationId = c.id;
+
+            var top = document.createElement("div");
+            top.className = "conv-top";
+            var name = document.createElement("span");
+            name.className = "conv-name";
+            name.textContent = c.name || "Conversation";
+            top.appendChild(name);
+            var highlight = Number(c.highlightCount) || 0;
+            if (highlight > 0) {
+                var hl = document.createElement("span");
+                hl.className = "conv-badge hl";
+                hl.textContent = "@" + (highlight > 99 ? "99+" : highlight);
+                top.appendChild(hl);
+            } else if (Number(c.unreadCount) > 0) {
+                var dot = document.createElement("span");
+                dot.className = "conv-unread";
+                top.appendChild(dot);
+            }
+            row.appendChild(top);
+
+            if (c.preview) {
+                var pv = document.createElement("div");
+                pv.className = "conv-preview";
+                pv.textContent = c.preview;
+                row.appendChild(pv);
+            }
+            els.conversations.appendChild(row);
+        }
     }
 
     function renderMessages(messages) {
         els.messages.textContent = "";
-        setEmpty(els.chatEmpty, messages.length === 0);
+        setEmpty(els.messagesEmpty, messages.length === 0);
         for (var i = 0; i < messages.length; i++) {
             var m = messages[i];
             var wrap = document.createElement("div");
@@ -247,16 +322,32 @@
         els.messages.scrollTop = els.messages.scrollHeight;
     }
 
-    // Unread mentions are surfaced as a count badge on the Chat tab (they resolve to Matrix
-    // conversations, which live under Chat). Full per-conversation @ markers arrive with the
-    // Matrix chat list.
-    function renderChatMentionBadge(mentions) {
-        var count = mentions.length;
-        if (count > 0) {
-            els.chatMentionsBadge.textContent = count > 99 ? "99+" : String(count);
+    function renderChat(conversations, selected) {
+        // Chat-tab badge = total unread @-mentions across conversations.
+        var highlights = 0;
+        for (var i = 0; i < conversations.length; i++) {
+            highlights += Number(conversations[i].highlightCount) || 0;
+        }
+        if (highlights > 0) {
+            els.chatMentionsBadge.textContent = highlights > 99 ? "99+" : String(highlights);
             els.chatMentionsBadge.hidden = false;
         } else {
             els.chatMentionsBadge.hidden = true;
+        }
+
+        renderConversationList(conversations);
+        currentConvId = selected ? selected.id : currentConvId;
+
+        var inConversation = chatView === "conversation";
+        els.conversation.hidden = !inConversation;
+        els.conversations.hidden = inConversation;
+        setEmpty(els.conversationsEmpty, !inConversation && conversations.length === 0);
+
+        if (inConversation) {
+            var name = selected ? selected.name : "Conversation";
+            els.convTitle.textContent = name || "Conversation";
+            els.convOpenMain.hidden = currentConvId === NEARBY_ID;
+            renderMessages(selected && Array.isArray(selected.messages) ? selected.messages : []);
         }
     }
 
@@ -316,8 +407,7 @@
 
         renderInvitation(state.invitation);
         renderPeople(Array.isArray(state.users) ? state.users : []);
-        renderMessages(Array.isArray(state.messages) ? state.messages : []);
-        renderChatMentionBadge(Array.isArray(state.mentions) ? state.mentions : []);
+        renderChat(Array.isArray(state.conversations) ? state.conversations : [], state.selectedConversation || null);
         renderControls(
             state.media || {
                 micEnabled: false,
