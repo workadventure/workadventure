@@ -1,11 +1,14 @@
 import { derived, get, type Readable, type Unsubscriber } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import {
+    availabilityStatusStore,
     requestedCameraState,
     requestedMicrophoneState,
     requestedStatusStore,
     silentStore,
 } from "../../Stores/MediaStore";
+import { resetAllStatusStoreExcept } from "../../Rules/StatusRules/statusChangerFunctions";
+import type { RequestedStatus } from "../../Rules/StatusRules/statusRules";
 import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
@@ -17,12 +20,41 @@ import { focusStore } from "../../Stores/FocusStore";
 import type { ChatConnectionInterface, ChatRoom } from "../../Chat/Connection/ChatConnection";
 import type { WorkAdventureDesktopApi } from "../../Interfaces/DesktopAppInterfaces";
 
+type TrayAvailability = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
+
 type PresenceSnapshot = {
     inMeeting: boolean;
     micEnabled: boolean;
     cameraEnabled: boolean;
     screenSharing: boolean;
+    requestedStatus: TrayAvailability;
+    statusLocked: boolean;
 };
+
+// WA locks the status bar while the user is in a meeting / silent zone; mirror that set so the
+// tray "Set status" submenu grays out instead of fighting the availability machine.
+const STATUS_LOCKED_SET: ReadonlySet<AvailabilityStatus> = new Set([
+    AvailabilityStatus.LISTENER,
+    AvailabilityStatus.SPEAKER,
+    AvailabilityStatus.JITSI,
+    AvailabilityStatus.LIVEKIT,
+    AvailabilityStatus.BBB,
+    AvailabilityStatus.DENY_PROXIMITY_MEETING,
+    AvailabilityStatus.SILENT,
+]);
+
+function requestedStatusToKey(status: RequestedStatus | null): TrayAvailability {
+    switch (status) {
+        case AvailabilityStatus.BUSY:
+            return "busy";
+        case AvailabilityStatus.BACK_IN_A_MOMENT:
+            return "back_in_a_moment";
+        case AvailabilityStatus.DO_NOT_DISTURB:
+            return "do_not_disturb";
+        default:
+            return "online";
+    }
+}
 
 /**
  * Aggregate `unreadNotificationCount` across every room on the chat connection into a single
@@ -184,17 +216,49 @@ class DesktopApi {
         if (window.WAD.setPresence) {
             const setPresence = window.WAD.setPresence;
             const presenceStore = derived(
-                [isInActiveConversationStore, requestedMicrophoneState, requestedCameraState, requestedScreenSharingState],
-                ([$inMeeting, $mic, $cam, $share]): PresenceSnapshot => ({
+                [
+                    isInActiveConversationStore,
+                    requestedMicrophoneState,
+                    requestedCameraState,
+                    requestedScreenSharingState,
+                    requestedStatusStore,
+                    availabilityStatusStore,
+                ],
+                ([$inMeeting, $mic, $cam, $share, $requested, $availability]): PresenceSnapshot => ({
                     inMeeting: Boolean($inMeeting),
                     micEnabled: Boolean($mic),
                     cameraEnabled: Boolean($cam),
                     screenSharing: Boolean($share),
+                    requestedStatus: requestedStatusToKey($requested),
+                    statusLocked: STATUS_LOCKED_SET.has($availability),
                 })
             );
             //eslint-disable-next-line svelte/no-ignored-unsubscribe
             presenceStore.subscribe((presence) => {
                 setPresence(presence);
+            });
+        }
+
+        // Apply availability changes requested from the tray "Set status" submenu. Uses the same
+        // persisted setter as the in-app status picker (resetAllStatusStoreExcept), so a tray choice
+        // behaves exactly like picking the status from the profile menu. "online" clears to null.
+        if (window.WAD.onSetStatus) {
+            window.WAD.onSetStatus((status) => {
+                switch (status) {
+                    case "busy":
+                        resetAllStatusStoreExcept(AvailabilityStatus.BUSY);
+                        break;
+                    case "back_in_a_moment":
+                        resetAllStatusStoreExcept(AvailabilityStatus.BACK_IN_A_MOMENT);
+                        break;
+                    case "do_not_disturb":
+                        resetAllStatusStoreExcept(AvailabilityStatus.DO_NOT_DISTURB);
+                        break;
+                    case "online":
+                    default:
+                        resetAllStatusStoreExcept(null);
+                        break;
+                }
             });
         }
 

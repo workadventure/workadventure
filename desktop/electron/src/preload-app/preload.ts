@@ -59,6 +59,17 @@ const api: WorkAdventureDesktopApi = {
     setKeepAwake: (enabled) => ipcRenderer.send("app:setKeepAwake", Boolean(enabled)),
     setUnreadCount: (count) => ipcRenderer.send("app:setUnreadCount", Number(count) || 0),
     setPresence: (presence) => ipcRenderer.send("app:setPresence", presence),
+    onSetStatus: (callback) =>
+        subscribe("app:on-set-status", (status) => {
+            if (
+                status === "online" ||
+                status === "busy" ||
+                status === "back_in_a_moment" ||
+                status === "do_not_disturb"
+            ) {
+                callback(status);
+            }
+        }),
     setTabTitle: (title) => ipcRenderer.send("app:setTabTitle", String(title ?? "")),
     onSystemIdle: (callback) => subscribe("app:on-system-idle", (idle) => callback(Boolean(idle))),
     presenter: {
