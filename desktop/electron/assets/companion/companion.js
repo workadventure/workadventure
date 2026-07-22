@@ -133,6 +133,8 @@
         if (action === "dm") {
             send({ type: "dm", userId: userId });
         } else if (action === "locate") {
+            // "Go to" someone: bring WorkAdventure to the front, then walk there.
+            send({ type: "focus-main" });
             send({ type: "locate", userId: userId });
         }
     });
