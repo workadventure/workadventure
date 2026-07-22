@@ -14,6 +14,8 @@ export type SettingsData = {
     world_history: string[];
     pinned_worlds: string[];
     shortcuts: Record<"mute_toggle" | "camera_toggle" | "companion_toggle", string>;
+    /** Last size + position of the resizable companion panel, restored (and clamped) on reopen. */
+    companion_bounds?: { x: number; y: number; width: number; height: number };
 };
 
 let settings: SettingsData;
