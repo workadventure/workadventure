@@ -216,10 +216,15 @@ export default () => {
         const displayId = typeof raw.displayId === "number" ? raw.displayId : undefined;
         if (tool === "laser" || tool === "spotlight" || tool === "loupe") {
             startPresenterCursor(displayId, (x, y) => {
+                // → the world renderer, which broadcasts to viewers over the space.
                 getActiveWorldContents()?.send("app:on-presenter-cursor", { x, y });
+                // → the content-protected overlay, so the PRESENTER sees the effect locally over
+                // the shared app (not captured, so viewers don't get a doubled render).
+                sendToOverlay("app:overlay:presenter-effect", { tool, x, y, scale: 0, active: true });
             });
         } else {
             stopPresenterCursor();
+            sendToOverlay("app:overlay:presenter-effect", { tool: "none", x: 0, y: 0, scale: 0, active: false });
         }
     });
 
