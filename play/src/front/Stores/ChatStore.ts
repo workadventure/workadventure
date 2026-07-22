@@ -3,6 +3,8 @@ import { writable } from "svelte/store";
 export const chatZoneLiveStore = writable(false);
 export const chatVisibilityStore = writable(false);
 export const chatInputFocusStore = writable(false);
+/** True while the chat is detached into a floating Document Picture-in-Picture window (desktop). */
+export const chatDetachedStore = writable(false);
 
 // Call "forceRefresh" to force the refresh of the chat iframe.
 function createForceRefreshChatStore() {
