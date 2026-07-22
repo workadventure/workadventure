@@ -16,21 +16,22 @@ import { resolveDisplay } from "./overlay-window";
 const POLL_INTERVAL_MS = 33; // ~30fps — smooth enough for a laser, light on the space channel.
 
 let pollTimer: ReturnType<typeof setInterval> | undefined;
-let currentDisplayId: number | undefined;
 let onCursor: ((x: number, y: number) => void) | undefined;
+// Resolved ONCE per (re)target rather than on every poll tick: resolveDisplay logs on each call,
+// which at 30fps would flood electron-log.
+let targetBounds: { x: number; y: number; width: number; height: number } | undefined;
 
 function clamp01(value: number): number {
     return Math.min(1, Math.max(0, value));
 }
 
 function poll(): void {
-    if (!onCursor) {
+    if (!onCursor || !targetBounds) {
         return;
     }
     try {
         const point = screen.getCursorScreenPoint();
-        const display = resolveDisplay(currentDisplayId, "Presenter cursor");
-        const { x, y, width, height } = display.bounds;
+        const { x, y, width, height } = targetBounds;
         if (width <= 0 || height <= 0) {
             return;
         }
@@ -45,8 +46,8 @@ function poll(): void {
  * display id just retargets. `onChange` receives normalized cursor positions.
  */
 export function startPresenterCursor(displayId: number | undefined, onChange: (x: number, y: number) => void): void {
-    currentDisplayId = displayId;
     onCursor = onChange;
+    targetBounds = { ...resolveDisplay(displayId, "Presenter cursor").bounds };
     if (pollTimer) {
         return;
     }
@@ -62,6 +63,6 @@ export function stopPresenterCursor(): void {
         clearInterval(pollTimer);
         pollTimer = undefined;
     }
-    currentDisplayId = undefined;
+    targetBounds = undefined;
     onCursor = undefined;
 }
