@@ -183,7 +183,6 @@
                 actions.className = "person-actions";
                 actions.appendChild(miniButton("dm", u.id, "Message", ICON_DM));
                 actions.appendChild(miniButton("locate", u.id, "Locate", ICON_LOCATE));
-                actions.appendChild(miniButton("ping", u.id, "Ping", ICON_PING));
                 row.appendChild(actions);
             }
             els.people.appendChild(row);
@@ -306,8 +305,16 @@
     }
 
     api.onState(function (state) {
-        if (state && typeof state === "object") {
+        if (!state || typeof state !== "object") {
+            return;
+        }
+        // Never let one malformed field freeze the whole panel: a throw here would abort render and
+        // leave every later state push unrendered too.
+        try {
             render(state);
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error("Companion panel: render failed", e);
         }
     });
 
