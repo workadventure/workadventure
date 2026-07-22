@@ -1210,6 +1210,25 @@ message ScreenAnnotationEvent {
   }
 }
 
+// A public event broadcast to every member of a space: an ephemeral presenter cursor effect
+// (laser pointer, spotlight, or magnifier loupe) over a shared screen. Not persisted — viewers
+// render it live on their own copy of the shared video tile and drop it when active=false.
+message PresenterEffectEvent {
+  // spaceUserId of the screen-sharing presenter this effect applies to.
+  string targetUserId = 1;
+  // "laser" | "spotlight" | "loupe". Ignored when active=false.
+  string tool = 2;
+  // Cursor position normalized (0..1) against the visible shared video area — same space as
+  // screen annotations.
+  float x = 3;
+  float y = 4;
+  // Tool parameter: loupe magnification factor (e.g. 2.0), or spotlight radius as a fraction of
+  // the smallest video side. 0 = use the viewer default.
+  float scale = 5;
+  // True while the tool follows the cursor; false clears the effect on every viewer.
+  bool active = 6;
+}
+
 message KickOffUserPrivateMessage {
 }
 
@@ -1239,6 +1258,7 @@ message SpaceEvent {
     MuteAudioForEverybodyPublicMessage muteAudioForEverybody = 3;
     MuteVideoForEverybodyPublicMessage muteVideoForEverybody = 4;
     ScreenAnnotationEvent screenAnnotation = 5;
+    PresenterEffectEvent presenterEffect = 6;
   }
 }
 
