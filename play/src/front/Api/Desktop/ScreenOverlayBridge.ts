@@ -15,6 +15,7 @@ import {
     screenAnnotationLocallyHiddenStore,
 } from "../../Stores/ScreenAnnotationStore";
 import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
+import { presenterToolStore } from "../../Stores/PresenterEffectStore";
 
 type WindowWithDesktop = Window & { WAD?: WorkAdventureDesktopApi };
 
@@ -78,6 +79,17 @@ class ScreenOverlayBridge {
                         .catch(() => {});
                 } else if (this.overlayOpen) {
                     api.setDrawMode(false);
+                }
+            }),
+        );
+
+        // A presenter tool (laser / spotlight / loupe) also needs the overlay open — it's where
+        // the local, presenter-only effect preview is drawn (content-protected, so not captured).
+        // Stays click-through (no draw mode): the presenter is driving the shared app, not drawing.
+        this.subscriptions.push(
+            presenterToolStore.subscribe((tool) => {
+                if (tool !== "none") {
+                    this.ensureOpen().catch(() => {});
                 }
             }),
         );
