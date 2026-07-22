@@ -253,7 +253,6 @@ export type CompanionCommand =
     | { type: "send-chat"; text: string }
     | { type: "dm"; userId: string }
     | { type: "locate"; userId: string }
-    | { type: "ping"; userId: string }
     | { type: "open-mention"; tag?: string };
 
 /** Drives the companion quick-access panel (People / Chat / Controls / Mentions). */
