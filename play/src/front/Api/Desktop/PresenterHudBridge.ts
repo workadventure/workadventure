@@ -20,6 +20,7 @@ import {
     type AnnotationTool,
 } from "../../Stores/ScreenAnnotationStore";
 import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
+import { isActivePresenterTool, presenterToolStore } from "../../Stores/PresenterEffectStore";
 
 type WindowWithDesktop = Window & { WAD?: WorkAdventureDesktopApi };
 
@@ -101,6 +102,7 @@ class PresenterHudBridge {
             currentAnnotationColorStore,
             screenAnnotationLocallyHiddenStore,
             screenAnnotationEnabledStore,
+            presenterToolStore,
         ] as const;
         for (const store of pushOnChange) {
             this.subscriptions.push(store.subscribe(() => this.pushState()));
@@ -129,6 +131,7 @@ class PresenterHudBridge {
                 othersCanDraw: target ? get(screenAnnotationEnabledStore).get(target) === true : false,
                 locallyHidden: get(screenAnnotationLocallyHiddenStore),
             },
+            presenterTool: get(presenterToolStore),
         };
     }
 
@@ -250,6 +253,16 @@ class PresenterHudBridge {
                 if (target) {
                     const enabled = get(screenAnnotationEnabledStore).get(target) === true;
                     screenAnnotationManager.setAnnotationEnabled(target, !enabled);
+                }
+                break;
+            }
+            case "presenter-set-tool": {
+                // Toggle: clicking the active tool turns it off; picking another switches to it.
+                const current = get(presenterToolStore);
+                if (isActivePresenterTool(command.tool)) {
+                    presenterToolStore.set(current === command.tool ? "none" : command.tool);
+                } else {
+                    presenterToolStore.set("none");
                 }
                 break;
             }
