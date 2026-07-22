@@ -13,7 +13,7 @@ import { resolveDisplay } from "./overlay-window";
  * captured pixels. Only the transparent annotation overlay (a separate window) is captured.
  */
 
-export type HudKind = "meeting-bar" | "annotation-bar" | "floating-meeting";
+export type HudKind = "meeting-bar" | "annotation-bar" | "floating-meeting" | "companion";
 
 type HudEntry = {
     window: BrowserWindow;
@@ -27,6 +27,8 @@ const HUD_SIZES: Record<HudKind, { width: number; height: number }> = {
     "annotation-bar": { width: 700, height: 64 },
     // Compact Zoom-style pill: mic / camera / back-to-app.
     "floating-meeting": { width: 188, height: 62 },
+    // Interactive quick-access panel (People / Chat / Controls / Mentions).
+    companion: { width: 340, height: 480 },
 };
 
 /** Meeting-bar height while the screen-switch source picker is open (bottom edge stays anchored). */
@@ -35,8 +37,12 @@ const HUD_MARGIN = 24;
 
 const hudWindows = new Map<HudKind, HudEntry>();
 
-/** The last state pushed by the main renderer; replayed to a bar that opens afterwards. */
-let lastHudState: unknown;
+/**
+ * The last state pushed per kind; replayed to a window that opens (or becomes ready) afterwards.
+ * Kept per-kind so the interactive companion panel — whose state shape differs entirely from the
+ * presenter bars — never receives a stale presenter-HUD state on open, and vice versa.
+ */
+const lastStateByKind = new Map<HudKind, unknown>();
 
 export function isHudWindowOpen(kind: HudKind): boolean {
     const entry = hudWindows.get(kind);
@@ -62,8 +68,9 @@ export function hudKindOfSender(sender: Electron.WebContents): HudKind | undefin
     return undefined;
 }
 
-/** Push state to a single HUD window (used by the floating toolbar, driven directly from main). */
+/** Push state to a single HUD window (floating toolbar + companion, driven directly from main). */
 export function sendHudState(kind: HudKind, state: unknown): void {
+    lastStateByKind.set(kind, state);
     const entry = hudWindows.get(kind);
     if (entry && !entry.window.isDestroyed() && entry.ready) {
         entry.window.webContents.send("app:hud:state", state);
@@ -91,6 +98,14 @@ export function raiseHudsToTop(): void {
 function positionFor(kind: HudKind, display: Electron.Display): { x: number; y: number } {
     const { width, height } = HUD_SIZES[kind];
     const area = display.workArea;
+    // The companion panel anchors to the bottom-right corner (Slack-style), out of the way of the
+    // centered meeting controls.
+    if (kind === "companion") {
+        return {
+            x: Math.round(area.x + area.width - width - HUD_MARGIN),
+            y: Math.round(area.y + area.height - height - HUD_MARGIN),
+        };
+    }
     const x = Math.round(area.x + (area.width - width) / 2);
     // Meeting bar + floating toolbar sit bottom-center (like Zoom's control bar); annotation bar
     // sits top-center so it doesn't overlap the meeting bar.
@@ -223,10 +238,19 @@ export function closeAllHudWindows(): void {
     closeHudWindow("annotation-bar");
 }
 
-/** Push the presenter state to every open HUD window (and replay it to late-opening ones). */
+/**
+ * Push the presenter state to the presenter-HUD windows (and replay it to late-opening ones — e.g.
+ * the annotation bar opens after the meeting bar). Both presenter-bar kinds are pre-seeded so a bar
+ * that opens after the broadcast still gets the state on ready. The companion panel is excluded — it
+ * carries a different state shape, fed via sendHudState.
+ */
 export function broadcastHudState(state: unknown): void {
-    lastHudState = state;
-    for (const entry of hudWindows.values()) {
+    lastStateByKind.set("meeting-bar", state);
+    lastStateByKind.set("annotation-bar", state);
+    for (const [kind, entry] of hudWindows.entries()) {
+        if (kind === "companion") {
+            continue;
+        }
         if (!entry.window.isDestroyed() && entry.ready) {
             entry.window.webContents.send("app:hud:state", state);
         }
@@ -244,8 +268,9 @@ export function markHudReady(sender: Electron.WebContents): void {
     }
     entry.ready = true;
     entry.readyResolve();
-    if (lastHudState !== undefined) {
-        entry.window.webContents.send("app:hud:state", lastHudState);
+    const replay = lastStateByKind.get(kind);
+    if (replay !== undefined) {
+        entry.window.webContents.send("app:hud:state", replay);
     }
 }
 
