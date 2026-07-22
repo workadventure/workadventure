@@ -2,6 +2,7 @@ import { derived, get, type Readable, type Unsubscriber } from "svelte/store";
 import { requestedCameraState, requestedMicrophoneState, silentStore } from "../../Stores/MediaStore";
 import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
+import { notificationManager } from "../../Notification/NotificationManager";
 import type { ChatConnectionInterface, ChatRoom } from "../../Chat/Connection/ChatConnection";
 import type { WorkAdventureDesktopApi } from "../../Interfaces/DesktopAppInterfaces";
 
@@ -107,6 +108,18 @@ class DesktopApi {
             //eslint-disable-next-line svelte/no-ignored-unsubscribe
             isInActiveConversationStore.subscribe((inConversation) => {
                 setKeepAwake(Boolean(inConversation));
+            });
+        }
+
+        // Notification clicks arrive from main once the user has focused the window; route them
+        // to the same chat-open path the service-worker click path uses on the web, so the
+        // originating chat room is opened and highlighted.
+        if (window.WAD.onNotificationClick) {
+            window.WAD.onNotificationClick((tag) => {
+                if (!tag) return;
+                notificationManager.openChatFromNotificationClick(tag).catch((error) => {
+                    console.warn("Desktop notification click routing failed", error);
+                });
             });
         }
 
