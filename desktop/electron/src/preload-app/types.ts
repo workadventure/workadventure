@@ -224,6 +224,17 @@ export type WorkAdventureDesktopApi = {
      * silent no-op — X11/Wayland have no cross-DE badge primitive.
      */
     setUnreadCount: (count: number) => void;
+    /**
+     * Push the live presence (in-meeting + mic/camera state) to main, which drives the tray
+     * status dot and the tray quick-action checkmarks.
+     */
+    setPresence: (presence: { inMeeting: boolean; micEnabled: boolean; cameraEnabled: boolean }) => void;
+    /**
+     * Subscribe to system idle/active transitions (main polls powerMonitor + screen-lock events).
+     * The renderer uses this to auto-set the WA availability to "away" and back. Returns an
+     * unsubscriber.
+     */
+    onSystemIdle: (callback: (idle: boolean) => void) => () => void;
     onMuteToggle: (callback: () => void) => void;
     onCameraToggle: (callback: () => void) => void;
     getWindowState: () => Promise<DesktopWindowState>;

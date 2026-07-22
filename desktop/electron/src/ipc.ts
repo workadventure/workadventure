@@ -6,6 +6,7 @@ import { pathToFileURL } from "url";
 import settings from "./settings";
 import { loadShortcuts, setShortcutsEnabled } from "./shortcuts";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
+import { setRendererPresence } from "./presence";
 import { getDesktopWindowState, getWindow, loadDesktopTarget } from "./window";
 import { createDesktopConfig, isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
 import {
@@ -186,6 +187,18 @@ export default () => {
         }
         const parsed = typeof count === "number" && Number.isFinite(count) ? count : 0;
         setUnreadCount(parsed, getWindow() ?? undefined);
+    });
+
+    ipcMain.on("app:setPresence", (event, presence: unknown) => {
+        if (!isFromMainRenderer(event) || !presence || typeof presence !== "object") {
+            return;
+        }
+        const raw = presence as Record<string, unknown>;
+        setRendererPresence({
+            inMeeting: Boolean(raw.inMeeting),
+            micEnabled: Boolean(raw.micEnabled),
+            cameraEnabled: Boolean(raw.cameraEnabled),
+        });
     });
 
     ipcMain.handle("app:getDesktopCapturerSources", async (event, options: unknown) => {
