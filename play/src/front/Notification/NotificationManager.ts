@@ -1,6 +1,6 @@
 import { z } from "zod";
 import * as Sentry from "@sentry/svelte";
-import type { Subscriber, Unsubscriber, Writable } from "svelte/store";
+import { get, type Subscriber, type Unsubscriber, type Writable } from "svelte/store";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { localUserStore } from "../Connection/LocalUserStore";
 import type { ChatConversation, ChatRoom } from "../Chat/Connection/ChatConnection";
@@ -8,6 +8,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { selectedRoomStore } from "../Chat/Stores/SelectRoomStore";
 import { proximityMeetingStore } from "../Stores/MyMediaStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
+import { desktopAwayStore } from "../Stores/DesktopStatusStore";
 import type { NotificationWA } from "./Notification";
 
 type SelectedRoomStore = {
@@ -29,6 +30,10 @@ class NotificationManager {
         return (
             Notification.permission === "granted" &&
             statusChanger.allowNotificationSound() &&
+            // Desktop idle/away hush: robust even when the availability status machine can't be
+            // moved to a silencing status (e.g. a backgrounded window is already AWAY, and
+            // AWAY→BACK_IN_A_MOMENT is a rejected transition). See DesktopStatusStore.
+            !get(desktopAwayStore) &&
             localUserStore.getNotification()
         );
     }
