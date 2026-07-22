@@ -34,11 +34,10 @@
 
         <nav class="tabs" id="c-tabs">
             <button class="tab is-active" data-tab="people" type="button">People</button>
-            <button class="tab" data-tab="chat" type="button">Chat</button>
-            <button class="tab" data-tab="controls" type="button">Controls</button>
-            <button class="tab" data-tab="mentions" type="button">
-                Mentions<span class="badge" id="c-mentions-badge" hidden></span>
+            <button class="tab" data-tab="chat" type="button">
+                Chat<span class="badge" id="c-chat-mentions-badge" title="Unread mentions" hidden></span>
             </button>
+            <button class="tab" data-tab="controls" type="button">Controls</button>
         </nav>
 
         <section class="pane is-active" data-pane="people">
@@ -95,10 +94,6 @@
             </div>
         </section>
 
-        <section class="pane" data-pane="mentions">
-            <div class="list" id="c-mentions"></div>
-            <div class="empty" id="c-mentions-empty">No unread mentions.</div>
-        </section>
     </div>
     <script src="./companion.js"></script>
 </body>
