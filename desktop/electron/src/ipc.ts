@@ -213,8 +213,19 @@ export default () => {
         }
         const raw = (payload && typeof payload === "object" ? payload : {}) as Record<string, unknown>;
         const tool = typeof raw.tool === "string" ? raw.tool : "none";
-        const displayId = typeof raw.displayId === "number" ? raw.displayId : undefined;
-        if (tool === "laser" || tool === "spotlight" || tool === "loupe") {
+        const sourceId = typeof raw.sourceId === "string" ? raw.sourceId : undefined;
+        if (tool !== "laser" && tool !== "spotlight" && tool !== "loupe") {
+            stopPresenterCursor();
+            sendToOverlay("app:overlay:presenter-effect", { tool: "none", x: 0, y: 0, scale: 0, active: false });
+            return;
+        }
+        void (async () => {
+            let displayId = typeof raw.displayId === "number" ? raw.displayId : undefined;
+            // Resolve the display from the capture source when display_id is missing (e.g. Wayland),
+            // so the cursor is normalized against the SHARED screen, not the primary one.
+            if (displayId === undefined && sourceId && sourceId.startsWith("screen:")) {
+                displayId = await resolveDisplayIdFromScreenSource(sourceId);
+            }
             startPresenterCursor(displayId, (x, y) => {
                 // → the world renderer, which broadcasts to viewers over the space.
                 getActiveWorldContents()?.send("app:on-presenter-cursor", { x, y });
@@ -222,10 +233,7 @@ export default () => {
                 // the shared app (not captured, so viewers don't get a doubled render).
                 sendToOverlay("app:overlay:presenter-effect", { tool, x, y, scale: 0, active: true });
             });
-        } else {
-            stopPresenterCursor();
-            sendToOverlay("app:overlay:presenter-effect", { tool: "none", x: 0, y: 0, scale: 0, active: false });
-        }
+        })();
     });
 
     ipcMain.handle("app:getDesktopCapturerSources", async (event, options: unknown) => {
