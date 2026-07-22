@@ -125,14 +125,16 @@ export function emitCameraToggle() {
 
 function normalizeNotifyPayload(payload: unknown): ShowNotificationOptions | undefined {
     if (typeof payload === "string") {
-        const body = payload.trim();
-        return body ? { title: "WorkAdventure", body } : undefined;
+        const title = payload.trim();
+        return title ? { title, body: "" } : undefined;
     }
     if (payload && typeof payload === "object") {
         const raw = payload as Record<string, unknown>;
         const title = typeof raw.title === "string" && raw.title.trim() ? raw.title.trim() : "WorkAdventure";
         const body = typeof raw.body === "string" ? raw.body.trim() : "";
-        if (!body) {
+        // A notification needs at least a title. Body may be empty (short "Follow request from
+        // Alice"-style alerts where the whole message fits into the title).
+        if (!title && !body) {
             return undefined;
         }
         return {
