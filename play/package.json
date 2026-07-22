@@ -40,7 +40,8 @@
     "i18n:check": "TSX_TSCONFIG_PATH=tsconfig.json tsx ./scripts/diff-i18n.ts --check",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "test:storybook": "vitest --project=storybook"
+    "test:storybook": "vitest --project=storybook",
+    "new-story": "node scripts/new-story.mjs"
   },
   "lint-staged": {
     "*.svelte": [

@@ -1,0 +1,31 @@
+name: "Storybook story gate"
+
+# Fails a PR that adds a new design-system component (Components/UI or Components/Input)
+# without a colocated *.stories.svelte, so Storybook coverage of the design system never regresses.
+# Only runs when those folders (or the gate script) change, so it is cheap.
+
+on:
+    pull_request:
+        paths:
+            - "play/src/front/Components/UI/**"
+            - "play/src/front/Components/Input/**"
+            - "play/scripts/check-stories.mjs"
+
+jobs:
+    story-gate:
+        name: "Every new UI/Input component has a story"
+        runs-on: "ubuntu-latest"
+        steps:
+            - name: "Checkout"
+              uses: "actions/checkout@v5"
+              with:
+                  # Full history so we can diff the PR against its base.
+                  fetch-depth: 0
+
+            - name: "Setup NodeJS"
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 24
+
+            - name: "Check every new UI/Input component ships with a story"
+              run: node play/scripts/check-stories.mjs "${{ github.event.pull_request.base.sha }}"
