@@ -6,6 +6,8 @@ import { notificationManager } from "../../Notification/NotificationManager";
 import type { ChatConnectionInterface, ChatRoom } from "../../Chat/Connection/ChatConnection";
 import type { WorkAdventureDesktopApi } from "../../Interfaces/DesktopAppInterfaces";
 
+type PresenceSnapshot = { inMeeting: boolean; micEnabled: boolean; cameraEnabled: boolean };
+
 /**
  * Aggregate `unreadNotificationCount` across every room on the chat connection into a single
  * Readable<number>. Uses a manual per-room subscribe map (svelte's `derived` can't span a
@@ -120,6 +122,24 @@ class DesktopApi {
                 notificationManager.openChatFromNotificationClick(tag).catch((error) => {
                     console.warn("Desktop notification click routing failed", error);
                 });
+            });
+        }
+
+        // Push live presence (meeting + mic/camera) to main so the tray shows a status dot and
+        // reflects the mic/camera state in its quick-action checkmarks.
+        if (window.WAD.setPresence) {
+            const setPresence = window.WAD.setPresence;
+            const presenceStore = derived(
+                [isInActiveConversationStore, requestedMicrophoneState, requestedCameraState],
+                ([$inMeeting, $mic, $cam]): PresenceSnapshot => ({
+                    inMeeting: Boolean($inMeeting),
+                    micEnabled: Boolean($mic),
+                    cameraEnabled: Boolean($cam),
+                })
+            );
+            //eslint-disable-next-line svelte/no-ignored-unsubscribe
+            presenceStore.subscribe((presence) => {
+                setPresence(presence);
             });
         }
 
