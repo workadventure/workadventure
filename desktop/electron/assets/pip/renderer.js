@@ -162,13 +162,19 @@
         return span;
     }
 
-    function reorderSelfTilesLast() {
-        // Match the web PiP layout: peers lead the grid, self appears last.
+    function reorderSelfTilesFirst() {
+        // Keep the local user's own camera at the front of the grid, always. Collect the self tiles
+        // then re-insert them before the current first child in reverse, so multiple self tiles
+        // (e.g. camera + screen share) keep their relative order and all land ahead of the peers.
+        var selfTiles = [];
         tiles.forEach(function (tile) {
             if (tile.container.classList.contains("is-self") && tile.container.parentNode === videosContainer) {
-                videosContainer.appendChild(tile.container);
+                selfTiles.push(tile.container);
             }
         });
+        for (var i = selfTiles.length - 1; i >= 0; i--) {
+            videosContainer.insertBefore(selfTiles[i], videosContainer.firstChild);
+        }
     }
 
     function updateLayout() {
@@ -282,7 +288,7 @@
         currentScreenSharing = state.screenSharing === true;
         if (currentScreenSharing && sourcePickerOpen) closeSourcePicker();
 
-        reorderSelfTilesLast();
+        reorderSelfTilesFirst();
         updateLayout();
     }
 
