@@ -19,6 +19,7 @@ import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainServic
 import { matrixProvider } from "../services/MatrixProvider";
 import { getClientIpFromXForwardedFor } from "../services/ClientIp";
 import { BaseHttpController } from "./BaseHttpController";
+import { normalizeDesktopCallbackUrl } from "./DesktopCallbackUrl";
 
 const debug = Debug("pusher:requests");
 
@@ -28,26 +29,6 @@ const OIDC_COOKIE_OPTIONS = {
     sameSite: "lax" as const,
     maxAge: 10 * 60 * 1000,
 };
-
-function normalizeDesktopCallbackUrl(value: string | undefined): string | undefined {
-    if (!value) {
-        return undefined;
-    }
-
-    try {
-        const url = new URL(value);
-        if (url.protocol !== "http:" || !["127.0.0.1", "localhost"].includes(url.hostname)) {
-            return undefined;
-        }
-        if (url.pathname !== "/auth/callback" && url.pathname !== "/logout/callback") {
-            return undefined;
-        }
-
-        return url.toString();
-    } catch {
-        return undefined;
-    }
-}
 
 export class AuthenticateController extends BaseHttpController {
     private readonly redirectToMatrixFile: string;
