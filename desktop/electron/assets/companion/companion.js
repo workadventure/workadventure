@@ -14,7 +14,7 @@
         return;
     }
 
-    var STATUS_KEYS = ["online", "busy", "back_in_a_moment", "do_not_disturb"];
+    var STATUS_KEYS = ["online", "busy", "back_in_a_moment", "do_not_disturb", "away"];
     var NEARBY_ID = "nearby";
 
     // Static icon markup (constant, never user data — safe to assign via innerHTML).
