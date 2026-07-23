@@ -267,10 +267,6 @@ export function closeActiveTab(): void {
     }
 }
 
-export function getTabCount(): number {
-    return tabs.length;
-}
-
 export function getActiveTabId(): string | undefined {
     return activeTabId;
 }
