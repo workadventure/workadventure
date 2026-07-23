@@ -445,6 +445,7 @@ class DesktopApi {
         let latestSelected: CompanionSelectedConversation | null = null;
         let selectedConversationId: string | null = null;
         let chatConnection: ChatConnectionInterface | undefined;
+        let latestChatStatus: "connecting" | "online" | "unavailable" = "connecting";
         let latestInvitation: CompanionInvitation | null = null;
         let latestMedia: CompanionMedia = {
             micEnabled: false,
@@ -480,6 +481,7 @@ class DesktopApi {
                 selectedConversation: latestSelected,
                 media: latestMedia,
                 invitation: latestInvitation,
+                chatStatus: latestChatStatus,
             });
         };
         const schedulePush = () => {
@@ -552,6 +554,7 @@ class DesktopApi {
             author: m.sender?.username ?? "",
             text: get(m.content).body ?? "",
             isSelf: m.isMyMessage === true,
+            ts: m.date ? m.date.getTime() : 0,
         });
 
         // Stream the currently-selected conversation's last 50 messages. Reading the room is a fresh
@@ -605,6 +608,14 @@ class DesktopApi {
                     latestMatrixConversations = conversations;
                     schedulePush();
                 });
+                // Reflect the live connection status so the panel can distinguish "connecting" /
+                // "chat unavailable" from a genuinely empty conversation list.
+                //eslint-disable-next-line svelte/no-ignored-unsubscribe
+                connection.connectionStatus.subscribe((status) => {
+                    latestChatStatus =
+                        status === "ONLINE" ? "online" : status === "CONNECTING" ? "connecting" : "unavailable";
+                    schedulePush();
+                });
                 // A conversation may have been selected before the connection hydrated.
                 if (selectedConversationId !== null && selectedConversationId !== NEARBY_ID) {
                     streamSelected();
@@ -612,6 +623,8 @@ class DesktopApi {
             })
             .catch((error) => {
                 console.warn("Desktop companion: chat connection failed to hydrate", error);
+                latestChatStatus = "unavailable";
+                schedulePush();
             });
 
         // Nearby proximity conversation summary. The manager is per-scene, so re-wire on every load.
