@@ -7,7 +7,7 @@ import settings from "./settings";
 import { loadShortcuts, setShortcutsEnabled } from "./shortcuts";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
 import { setRendererPresence } from "./presence";
-import { dismissCompanion } from "./companion-controller";
+import { closeCompanionPip, dismissCompanion, openCompanionForPip } from "./companion-controller";
 import { startPresenterCursor, stopPresenterCursor } from "./presenter-cursor";
 import {
     getActiveWorldContents,
@@ -24,10 +24,12 @@ import {
     awaitPipReady,
     closePipWindow,
     createPipWindow,
-    getPipWindow,
+    getPipWebContents,
     isPipWindowOpen,
     markPipReady,
     sendToPip,
+    setPipViewBounds,
+    setPipViewVisible,
 } from "./pip-window";
 import {
     awaitOverlayReady,
@@ -428,10 +430,14 @@ export default () => {
             ElectronLog.warn("Rejected PiP open from non-main renderer");
             return false;
         }
+        // The meeting video is embedded in the companion window (Meeting tab). Ensure the companion
+        // is open + on the Meeting tab first — createPipWindow attaches the PiP view to it.
+        await openCompanionForPip();
         if (!isPipWindowOpen()) {
             createPipWindow({
                 onClosed: () => {
                     getActiveWorldContents()?.send("app:pip:closed");
+                    closeCompanionPip();
                 },
             });
         }
@@ -445,6 +451,7 @@ export default () => {
 
     ipcMain.handle("app:pip:close", () => {
         closePipWindow();
+        closeCompanionPip();
     });
 
     // Main renderer → PiP renderer
@@ -467,6 +474,7 @@ export default () => {
     ipcMain.on("app:pip:request-close", () => {
         getActiveWorldContents()?.send("app:pip:request-close-from-pip");
         closePipWindow();
+        closeCompanionPip();
     });
     ipcMain.on("app:pip:ready", () => {
         markPipReady();
@@ -479,8 +487,8 @@ export default () => {
     // window's webContents — there is no other webContents in the app with the preload-pip script,
     // so no third party can reach this handler.
     ipcMain.handle("app:pip:request-sources", async (event) => {
-        const pipWindow = getPipWindow();
-        if (!pipWindow || pipWindow.isDestroyed() || event.sender !== pipWindow.webContents) {
+        const pipContents = getPipWebContents();
+        if (!pipContents || event.sender !== pipContents) {
             ElectronLog.warn("Rejected app:pip:request-sources from a non-PiP renderer");
             return [];
         }
@@ -501,8 +509,8 @@ export default () => {
     // Show a big number on every physical display; the user clicks one to share it. Resolves the
     // matching screen source (with its display id) so the annotation overlay can target it exactly.
     ipcMain.handle("app:pip:identify-screens", async (event) => {
-        const pipWindow = getPipWindow();
-        if (!pipWindow || pipWindow.isDestroyed() || event.sender !== pipWindow.webContents) {
+        const pipContents = getPipWebContents();
+        if (!pipContents || event.sender !== pipContents) {
             ElectronLog.warn("Rejected app:pip:identify-screens from a non-PiP renderer");
             return null;
         }
@@ -689,6 +697,26 @@ export default () => {
                 // Go through the controller so the dismissal sticks (force-closed), instead of a bare
                 // close that would re-open on the next presence change.
                 dismissCompanion();
+            } else if (type === "meeting-rect") {
+                // The companion reports the Meeting-tab content rect; position the embedded PiP there.
+                const rect = (command as { rect?: Record<string, unknown> }).rect;
+                if (rect && typeof rect === "object") {
+                    const x = Number(rect.x);
+                    const y = Number(rect.y);
+                    const width = Number(rect.width);
+                    const height = Number(rect.height);
+                    if ([x, y, width, height].every((n) => Number.isFinite(n)) && width > 0 && height > 0) {
+                        setPipViewBounds({
+                            x: Math.round(x),
+                            y: Math.round(y),
+                            width: Math.round(width),
+                            height: Math.round(height),
+                        });
+                    }
+                }
+            } else if (type === "companion-tab") {
+                // Show the embedded PiP only while the Meeting tab is active.
+                setPipViewVisible((command as { tab?: unknown }).tab === "meeting");
             } else {
                 getActiveWorldContents()?.send("app:companion:command-to-main", command);
             }

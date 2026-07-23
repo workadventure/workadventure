@@ -62,6 +62,7 @@
         inviteAccept: byId("c-invite-accept"),
         inviteDecline: byId("c-invite-decline"),
         meetingTab: byId("c-meeting-tab"),
+        meetingPane: document.querySelector('.pane[data-pane="meeting"]'),
         videoToggle: byId("c-video-toggle"),
         videoLabel: byId("c-video-label"),
     };
@@ -86,6 +87,16 @@
 
     // ---- Tabs (local state) ----
     var activeTab = "people";
+    // Report the Meeting-tab content rect so main can position the embedded meeting-video view there.
+    function reportMeetingRect() {
+        if (activeTab !== "meeting" || !els.meetingPane) {
+            return;
+        }
+        var r = els.meetingPane.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+            send({ type: "meeting-rect", rect: { x: r.left, y: r.top, width: r.width, height: r.height } });
+        }
+    }
     function setTab(tab) {
         activeTab = tab;
         var tabButtons = els.tabs.querySelectorAll(".tab");
@@ -96,6 +107,11 @@
         for (var j = 0; j < panes.length; j++) {
             panes[j].classList.toggle("is-active", panes[j].dataset.pane === tab);
         }
+        // Main shows the embedded meeting video only while the Meeting tab is active.
+        send({ type: "companion-tab", tab: tab });
+        if (tab === "meeting") {
+            requestAnimationFrame(reportMeetingRect);
+        }
     }
     els.tabs.addEventListener("click", function (e) {
         var btn = e.target.closest(".tab");
@@ -103,6 +119,15 @@
             setTab(btn.dataset.tab);
         }
     });
+    // Main can ask the panel to switch tabs (e.g. to "meeting" when the video opens).
+    if (api.onSelectTab) {
+        api.onSelectTab(function (tab) {
+            if (tab) {
+                setTab(tab);
+            }
+        });
+    }
+    window.addEventListener("resize", reportMeetingRect);
 
     // ---- Header ----
     els.back.addEventListener("click", function () {

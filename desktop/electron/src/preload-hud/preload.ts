@@ -9,6 +9,8 @@ function subscribe(channel: string, callback: (...args: unknown[]) => void): () 
 
 const api: WorkAdventureHudApi = {
     onState: (callback) => subscribe("app:hud:state", (state) => callback(state as HudState)),
+    onSelectTab: (callback) =>
+        subscribe("app:companion:select-tab", (tab) => callback(typeof tab === "string" ? tab : "")),
     sendCommand: (command: HudCommand) => ipcRenderer.send("app:hud:command-from-hud", command),
     requestSources: () => ipcRenderer.invoke("app:hud:request-sources"),
     setExpanded: (expanded) => ipcRenderer.send("app:hud:set-expanded", expanded === true),
