@@ -18,7 +18,7 @@ import { playersStore } from "../../Stores/PlayersStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { notificationManager } from "../../Notification/NotificationManager";
-import { chatVisibilityStore } from "../../Stores/ChatStore";
+import { chatVisibilityStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { desktopAwayStore } from "../../Stores/DesktopStatusStore";
 import { focusStore } from "../../Stores/FocusStore";
@@ -602,34 +602,48 @@ class DesktopApi {
             });
         };
 
-        // Matrix conversation list (async: the chat connection hydrates late).
-        gameManager
-            .getChatConnection()
-            .then((connection) => {
-                chatConnection = connection;
-                //eslint-disable-next-line svelte/no-ignored-unsubscribe
-                createConversationsStore(connection).subscribe((conversations) => {
-                    latestMatrixConversations = conversations;
+        // Matrix conversation list. The chat connection is a lazy singleton built during scene load
+        // (needs login + a matrix server url). Calling getChatConnection() before that only ever
+        // returns a throwaway VoidChatConnection with empty rooms — which is why a one-shot early call
+        // left the companion list permanently empty while the main app chat (opened later) worked.
+        // Instead, (re)acquire the real connection whenever chat becomes enabled.
+        let conversationsUnsub: Unsubscriber | undefined;
+        let chatStatusUnsub: Unsubscriber | undefined;
+        const wireChatConnection = () => {
+            gameManager
+                .getChatConnection()
+                .then((connection) => {
+                    chatConnection = connection;
+                    conversationsUnsub?.();
+                    conversationsUnsub = createConversationsStore(connection).subscribe((conversations) => {
+                        latestMatrixConversations = conversations;
+                        schedulePush();
+                    });
+                    // Reflect the live connection status so the panel can distinguish "connecting" /
+                    // "chat unavailable" from a genuinely empty conversation list.
+                    chatStatusUnsub?.();
+                    chatStatusUnsub = connection.connectionStatus.subscribe((status) => {
+                        latestChatStatus =
+                            status === "ONLINE" ? "online" : status === "CONNECTING" ? "connecting" : "unavailable";
+                        schedulePush();
+                    });
+                    // A conversation may have been selected before the connection hydrated.
+                    if (selectedConversationId !== null && selectedConversationId !== NEARBY_ID) {
+                        streamSelected();
+                    }
+                })
+                .catch((error) => {
+                    console.warn("Desktop companion: chat connection failed to hydrate", error);
+                    latestChatStatus = "unavailable";
                     schedulePush();
                 });
-                // Reflect the live connection status so the panel can distinguish "connecting" /
-                // "chat unavailable" from a genuinely empty conversation list.
-                //eslint-disable-next-line svelte/no-ignored-unsubscribe
-                connection.connectionStatus.subscribe((status) => {
-                    latestChatStatus =
-                        status === "ONLINE" ? "online" : status === "CONNECTING" ? "connecting" : "unavailable";
-                    schedulePush();
-                });
-                // A conversation may have been selected before the connection hydrated.
-                if (selectedConversationId !== null && selectedConversationId !== NEARBY_ID) {
-                    streamSelected();
-                }
-            })
-            .catch((error) => {
-                console.warn("Desktop companion: chat connection failed to hydrate", error);
-                latestChatStatus = "unavailable";
-                schedulePush();
-            });
+        };
+        //eslint-disable-next-line svelte/no-ignored-unsubscribe
+        isMatrixChatEnabledStore.subscribe((enabled) => {
+            if (enabled) {
+                wireChatConnection();
+            }
+        });
 
         // Nearby proximity conversation summary. The manager is per-scene, so re-wire on every load.
         let proximityRoomUnsub: Unsubscriber | undefined;
