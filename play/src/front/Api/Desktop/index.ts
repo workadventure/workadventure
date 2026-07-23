@@ -93,8 +93,8 @@ function applyRequestedStatus(status: TrayAvailability): void {
 
 /**
  * Map any effective availability to a companion status-dot key. Meeting/engaged statuses collapse to
- * "busy" and away-like ones to "back_in_a_moment" so the People list shows a meaningful dot color
- * even for statuses the user can't pick directly.
+ * "busy" so the People list shows a meaningful dot color even for statuses the user can't pick
+ * directly. AWAY keeps its own key so it renders in WA's away color, not the (blue) back_in_a_moment.
  */
 function availabilityToCompanionKey(status: AvailabilityStatus): string {
     switch (status) {
@@ -103,8 +103,9 @@ function availabilityToCompanionKey(status: AvailabilityStatus): string {
         case AvailabilityStatus.DO_NOT_DISTURB:
             return "do_not_disturb";
         case AvailabilityStatus.BACK_IN_A_MOMENT:
-        case AvailabilityStatus.AWAY:
             return "back_in_a_moment";
+        case AvailabilityStatus.AWAY:
+            return "away";
         case AvailabilityStatus.SILENT:
         case AvailabilityStatus.DENY_PROXIMITY_MEETING:
         case AvailabilityStatus.JITSI:
