@@ -326,6 +326,19 @@ test("extracts desktop auth callback origin and one-shot code", () => {
         {
             origin: "https://play.workadventu.re",
             code: "abc123",
+            matrixLoginToken: undefined,
+        }
+    );
+
+    // Matrix-configured deployments carry the one-shot Synapse login token alongside the WA code.
+    assert.deepEqual(
+        extractDesktopAuthCallback(
+            "workadventure://auth/callback?origin=https%3A%2F%2Fplay.workadventu.re&code=abc123&matrixLoginToken=syt_login"
+        ),
+        {
+            origin: "https://play.workadventu.re",
+            code: "abc123",
+            matrixLoginToken: "syt_login",
         }
     );
 
@@ -340,11 +353,23 @@ test("adds exchanged desktop auth token to target room URL", () => {
         createRoomUrlWithAuthToken("https://play.workadventu.re/@/team/world/room?foo=bar#spawn", "token value"),
         "https://play.workadventu.re/@/team/world/room?foo=bar&token=token+value#spawn"
     );
+
+    // With a Matrix login token, both land on the room URL for the front to consume.
+    assert.equal(
+        createRoomUrlWithAuthToken(
+            "https://play.workadventu.re/@/team/world/room?foo=bar#spawn",
+            "token value",
+            "syt_login"
+        ),
+        "https://play.workadventu.re/@/team/world/room?foo=bar&token=token+value&matrixLoginToken=syt_login#spawn"
+    );
 });
 
 test("strips sensitive query params before persisting a URL", () => {
     assert.equal(
-        stripSensitiveQueryParams("https://play.workadventu.re/@/team/world/room?token=secret&foo=bar&code=abc"),
+        stripSensitiveQueryParams(
+            "https://play.workadventu.re/@/team/world/room?token=secret&matrixLoginToken=syt_login&foo=bar&code=abc"
+        ),
         "https://play.workadventu.re/@/team/world/room?foo=bar"
     );
     assert.equal(stripSensitiveQueryParams(undefined), undefined);
