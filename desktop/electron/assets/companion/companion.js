@@ -326,11 +326,45 @@
         }
     }
 
+    function formatTime(ts) {
+        try {
+            return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        } catch (e) {
+            return "";
+        }
+    }
+    function formatDaySeparator(ts) {
+        var d = new Date(ts);
+        var now = new Date();
+        var startOfDay = function (x) {
+            return new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+        };
+        var diffDays = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
+        if (diffDays === 0) return "Today";
+        if (diffDays === 1) return "Yesterday";
+        return d.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
+    }
+
     function renderMessages(messages) {
         els.messages.textContent = "";
         setEmpty(els.messagesEmpty, messages.length === 0);
+        var lastDayKey = null;
         for (var i = 0; i < messages.length; i++) {
             var m = messages[i];
+            var ts = Number(m.ts) || 0;
+            // Date separator whenever the calendar day changes (skipped for messages with no date).
+            if (ts) {
+                var dayKey = new Date(ts).toDateString();
+                if (dayKey !== lastDayKey) {
+                    lastDayKey = dayKey;
+                    var sep = document.createElement("div");
+                    sep.className = "date-sep";
+                    var sepLabel = document.createElement("span");
+                    sepLabel.textContent = formatDaySeparator(ts);
+                    sep.appendChild(sepLabel);
+                    els.messages.appendChild(sep);
+                }
+            }
             var wrap = document.createElement("div");
             wrap.className = "msg" + (m.isSelf ? " is-self" : "");
             if (!m.isSelf && m.author) {
@@ -343,12 +377,18 @@
             text.className = "msg-text";
             text.textContent = m.text || "";
             wrap.appendChild(text);
+            if (ts) {
+                var time = document.createElement("div");
+                time.className = "msg-time";
+                time.textContent = formatTime(ts);
+                wrap.appendChild(time);
+            }
             els.messages.appendChild(wrap);
         }
         els.messages.scrollTop = els.messages.scrollHeight;
     }
 
-    function renderChat(conversations, selected) {
+    function renderChat(conversations, selected, chatStatus) {
         // Chat-tab badge = total unread @-mentions across conversations.
         var highlights = 0;
         for (var i = 0; i < conversations.length; i++) {
@@ -367,7 +407,17 @@
         var inConversation = chatView === "conversation";
         els.conversation.hidden = !inConversation;
         els.conversations.hidden = inConversation;
-        setEmpty(els.conversationsEmpty, !inConversation && conversations.length === 0);
+        var showEmpty = !inConversation && conversations.length === 0;
+        if (showEmpty) {
+            // Don't mistake "chat still connecting / unavailable" for a genuinely empty list.
+            els.conversationsEmpty.textContent =
+                chatStatus === "connecting"
+                    ? "Connecting to chat…"
+                    : chatStatus === "unavailable"
+                    ? "Chat unavailable."
+                    : "No conversations yet.";
+        }
+        setEmpty(els.conversationsEmpty, showEmpty);
 
         if (inConversation) {
             var name = selected ? selected.name : "Conversation";
@@ -447,7 +497,11 @@
 
         renderInvitation(state.invitation);
         renderPeople(Array.isArray(state.users) ? state.users : []);
-        renderChat(Array.isArray(state.conversations) ? state.conversations : [], state.selectedConversation || null);
+        renderChat(
+            Array.isArray(state.conversations) ? state.conversations : [],
+            state.selectedConversation || null,
+            state.chatStatus
+        );
         var media = state.media || {
             micEnabled: false,
             cameraEnabled: false,
