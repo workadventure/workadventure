@@ -9,10 +9,11 @@
     --accent: #4156f6;
     --accent-soft: rgba(65, 86, 246, 0.28);
     --danger: #e96d51;
-    --st-online: #2ecc71;
-    --st-busy: #e96d51;
-    --st-back_in_a_moment: #f5a623;
-    --st-do_not_disturb: #e24b4a;
+    /* Mirror WA's own availability colors (play Utils/AvailabilityStatus.ts getColorHexOfStatus). */
+    --st-online: #68e97a;
+    --st-busy: #e9c84e;
+    --st-back_in_a_moment: #7382e2;
+    --st-do_not_disturb: #e96e53;
     --st-offline: #6b7280;
 }
 
