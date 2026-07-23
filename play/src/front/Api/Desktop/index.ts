@@ -784,6 +784,26 @@ class DesktopApi {
                     }
                     break;
                 }
+                case "invite": {
+                    // Same action as the in-app user list "Invite to meeting" button:
+                    // InviteManager applies the antispam rules and emits the request over the wire.
+                    const player = playerById.get(command.userId);
+                    if (player) {
+                        try {
+                            const scene = gameManager.getCurrentGameScene();
+                            const sent = scene.inviteManager?.requestMeetingInvitation(
+                                player.userUuid,
+                                player.userId
+                            );
+                            if (sent) {
+                                scene.playSound("meeting-in", 0.15);
+                            }
+                        } catch (error) {
+                            console.warn("Desktop companion: invite failed", error);
+                        }
+                    }
+                    break;
+                }
                 case "accept-invitation":
                 case "decline-invitation": {
                     // Respond to the pending invitation with the same handlers as the in-app popup.

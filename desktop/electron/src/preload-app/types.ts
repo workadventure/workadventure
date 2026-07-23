@@ -296,6 +296,7 @@ export type CompanionCommand =
     | { type: "open-conversation-in-main"; conversationId: string }
     | { type: "dm"; userId: string }
     | { type: "locate"; userId: string }
+    | { type: "invite"; userId: string }
     | { type: "accept-invitation" }
     | { type: "decline-invitation" };
 
