@@ -1,6 +1,6 @@
 import { screen } from "electron";
 import ElectronLog from "electron-log";
-import { closeHudWindow, isHudWindowOpen, openHudWindow } from "./hud-windows";
+import { closeHudWindow, getHudWindow, isHudWindowOpen, openHudWindow } from "./hud-windows";
 import { getPresenceSnapshot, onPresenceChange } from "./presence";
 import { getWindow } from "./window";
 
@@ -22,6 +22,9 @@ let started = false;
 let opening = false;
 let override: Override = "auto";
 let openTimer: ReturnType<typeof setTimeout> | undefined;
+// True while the embedded meeting-video (PiP) is open — keeps the companion open even when WA is
+// focused, so clicking back to the app doesn't kill the video (preserving the old "PiP stays alive").
+let pipActive = false;
 
 function isMainWindowFocused(): boolean {
     const mainWindow = getWindow();
@@ -30,8 +33,16 @@ function isMainWindowFocused(): boolean {
 
 function wantOpen(): boolean {
     const p = getPresenceSnapshot();
-    // Focus and screen sharing hard-hide the panel (the presenter HUD carries controls while sharing).
-    if (isMainWindowFocused() || p.screenSharing) {
+    // Screen sharing hard-hides the panel — the content-protected presenter HUD carries controls.
+    if (p.screenSharing) {
+        return false;
+    }
+    // Active meeting video (embedded PiP) keeps the companion open even when WA is focused, so
+    // clicking back to the app doesn't tear down the video.
+    if (pipActive) {
+        return true;
+    }
+    if (isMainWindowFocused()) {
         return false;
     }
     // An incoming meeting invitation force-opens the panel even after a manual dismissal.
@@ -46,6 +57,14 @@ function wantOpen(): boolean {
     }
     // Auto-show while away inside a world (never on the landing / login page).
     return p.inWorld;
+}
+
+/** Ask the companion to switch to a given tab (main → companion). */
+function sendSelectTab(tab: "people" | "chat" | "meeting" | "controls"): void {
+    const companion = getHudWindow("companion");
+    if (companion) {
+        companion.webContents.send("app:companion:select-tab", tab);
+    }
 }
 
 function cancelPendingOpen(): void {
@@ -127,6 +146,29 @@ export function isCompanionVisible(): boolean {
     return isHudWindowOpen("companion");
 }
 
+/**
+ * The front is opening the meeting video (embedded PiP): make sure the companion is open and on the
+ * Meeting tab, and mark the video active so the panel stays open (even focused) until it closes.
+ */
+export async function openCompanionForPip(): Promise<void> {
+    pipActive = true;
+    cancelPendingOpen();
+    if (!isHudWindowOpen("companion")) {
+        const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+        await openHudWindow("companion", display.id);
+    }
+    sendSelectTab("meeting");
+}
+
+/** The meeting video closed: drop the keep-open and re-evaluate the panel's visibility. */
+export function closeCompanionPip(): void {
+    if (!pipActive) {
+        return;
+    }
+    pipActive = false;
+    updateCompanion();
+}
+
 /** Start reacting to presence changes. Focus/blur updates are pushed in from window.ts. */
 export function startCompanionController(): void {
     if (started) {
@@ -141,5 +183,7 @@ export function startCompanionController(): void {
 export function stopCompanion(): void {
     cancelPendingOpen();
     override = "auto";
+    // The embedded PiP view is a child of the companion window and dies with it.
+    pipActive = false;
     closeHudWindow("companion");
 }
