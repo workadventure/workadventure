@@ -216,6 +216,8 @@ export type CompanionMessage = {
     author: string;
     text: string;
     isSelf: boolean;
+    /** Epoch ms of the message; 0 when unknown. Drives per-message time + date separators. */
+    ts: number;
 };
 
 export type CompanionConversation = {
@@ -256,6 +258,8 @@ export type CompanionState = {
     selectedConversation?: CompanionSelectedConversation | null;
     media: CompanionMedia;
     invitation?: CompanionInvitation | null;
+    /** Matrix chat availability, so the empty conversation list isn't mistaken for "no chat". */
+    chatStatus?: "connecting" | "online" | "unavailable";
 };
 
 export type CompanionCommand =
