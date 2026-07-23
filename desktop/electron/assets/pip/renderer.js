@@ -22,13 +22,10 @@
     var api = window.WADPiP;
     var videosContainer = document.getElementById("videos");
     var emptyEl = document.getElementById("empty");
-    var closeWindowBtn = document.getElementById("close-window");
-    var btnClose = document.getElementById("btn-close");
     var btnMic = document.getElementById("btn-mic");
     var btnCam = document.getElementById("btn-cam");
     var btnShare = document.getElementById("btn-share");
     var btnBack = document.getElementById("btn-back");
-    var recordingDot = document.getElementById("recording-dot");
     var sourcePicker = document.getElementById("source-picker");
     var sourcePickerBody = document.getElementById("sp-body");
     var sourcePickerCancel = document.getElementById("sp-cancel");
@@ -281,7 +278,6 @@
         } else {
             btnShare.removeAttribute("disabled");
         }
-        recordingDot.classList.toggle("visible", state.recording === true);
         applyAnnotationState(state.annotation);
         currentScreenSharing = state.screenSharing === true;
         if (currentScreenSharing && sourcePickerOpen) closeSourcePicker();
@@ -367,8 +363,6 @@
     bindCommand(btnMic, "toggle-mic");
     bindCommand(btnCam, "toggle-camera");
     bindCommand(btnBack, "focus-main");
-    closeWindowBtn.addEventListener("click", function () { api.requestClose(); });
-    btnClose.addEventListener("click", function () { api.requestClose(); });
 
     // Annotation ON/OFF toggle (the tools themselves live on the overlay window).
     if (btnAnnotate) {

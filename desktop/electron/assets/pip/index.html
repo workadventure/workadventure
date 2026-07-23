@@ -31,53 +31,6 @@
         }
         body { display: flex; flex-direction: column; }
 
-        #drag-handle {
-            -webkit-app-region: drag;
-            height: 26px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 8px;
-            background: rgba(0, 0, 0, 0.55);
-            font-size: 11px;
-            color: var(--fg-muted);
-            flex-shrink: 0;
-        }
-        #drag-handle .label {
-            letter-spacing: 0.4px;
-            text-transform: uppercase;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        #recording-dot {
-            display: none;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--danger);
-            box-shadow: 0 0 0 0 rgba(233, 109, 81, 0.55);
-            animation: pulse 1.6s ease-in-out infinite;
-        }
-        #recording-dot.visible { display: inline-block; }
-        @keyframes pulse {
-            0%   { box-shadow: 0 0 0 0 rgba(233, 109, 81, 0.55); }
-            70%  { box-shadow: 0 0 0 6px rgba(233, 109, 81, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(233, 109, 81, 0); }
-        }
-        #close-window {
-            -webkit-app-region: no-drag;
-            cursor: pointer;
-            padding: 3px 9px;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 0;
-            color: inherit;
-            font-size: 11px;
-            line-height: 1;
-        }
-        #close-window:hover { background: rgba(255, 255, 255, 0.16); }
-
         #stage {
             position: relative;
             flex: 1;
@@ -433,13 +386,6 @@
     </style>
 </head>
 <body>
-    <div id="drag-handle">
-        <span class="label">
-            <span id="recording-dot" aria-hidden="true"></span>
-            WorkAdventure · Picture-in-Picture
-        </span>
-        <button id="close-window" type="button" aria-label="Close picture-in-picture">×</button>
-    </div>
     <div id="stage">
         <div id="videos"></div>
         <div id="empty">Waiting for the call view…</div>
@@ -532,13 +478,6 @@
                     <path d="M5 12l14 0"/>
                     <path d="M5 12l4 4"/>
                     <path d="M5 12l4 -4"/>
-                </svg>
-            </button>
-            <button class="toolbar-btn is-forbidden" id="btn-close" type="button" data-state="on" title="Close PiP" aria-label="Close picture-in-picture">
-                <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M18 6l-12 12"/>
-                    <path d="M6 6l12 12"/>
                 </svg>
             </button>
         </div>

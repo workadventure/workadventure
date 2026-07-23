@@ -45,18 +45,13 @@
         messagesEmpty: byId("c-messages-empty"),
         composer: byId("c-composer"),
         chatInput: byId("c-chat-input"),
-        mic: byId("c-mic"),
-        micLabel: byId("c-mic-label"),
-        cam: byId("c-cam"),
-        camLabel: byId("c-cam-label"),
-        share: byId("c-share"),
-        shareLabel: byId("c-share-label"),
         statusGroup: document.querySelector(".status-group"),
         status: byId("c-status"),
         statusLocked: byId("c-status-locked"),
         chatMentionsBadge: byId("c-chat-mentions-badge"),
         hdrMic: byId("c-hdr-mic"),
         hdrCam: byId("c-hdr-cam"),
+        hdrShare: byId("c-hdr-share"),
         invitation: byId("c-invitation"),
         invitationName: byId("c-invitation-name"),
         inviteAccept: byId("c-invite-accept"),
@@ -136,7 +131,7 @@
     els.close.addEventListener("click", function () {
         send({ type: "close" });
     });
-    // Always-visible mic / camera quick toggles (fold-in of the old floating pill).
+    // Always-visible mic / camera / screen-share quick toggles (fold-in of the old floating pill).
     if (els.hdrMic) {
         els.hdrMic.addEventListener("click", function () {
             send({ type: "toggle-mic" });
@@ -145,6 +140,12 @@
     if (els.hdrCam) {
         els.hdrCam.addEventListener("click", function () {
             send({ type: "toggle-camera" });
+        });
+    }
+    if (els.hdrShare) {
+        els.hdrShare.addEventListener("click", function () {
+            if (els.hdrShare.disabled) return;
+            send({ type: "toggle-screenshare" });
         });
     }
 
@@ -223,16 +224,7 @@
         }
     });
 
-    // ---- Controls ----
-    els.mic.addEventListener("click", function () {
-        send({ type: "toggle-mic" });
-    });
-    els.cam.addEventListener("click", function () {
-        send({ type: "toggle-camera" });
-    });
-    els.share.addEventListener("click", function () {
-        send({ type: "toggle-screenshare" });
-    });
+    // ---- Controls (status only; mic/cam/share live in the header) ----
     els.status.addEventListener("click", function (e) {
         var btn = e.target.closest(".status-opt");
         if (btn && btn.dataset.status && !els.statusGroup.classList.contains("is-locked")) {
@@ -386,32 +378,20 @@
         }
     }
 
-    function setCtl(btn, label, text, state) {
-        btn.dataset.state = state;
-        if (label) {
-            label.textContent = text;
-        }
-    }
-
     function renderControls(media) {
-        setCtl(els.mic, els.micLabel, media.micEnabled ? "Mute" : "Unmute", media.micEnabled ? "on" : "off");
-        setCtl(
-            els.cam,
-            els.camLabel,
-            media.cameraEnabled ? "Camera on" : "Camera off",
-            media.cameraEnabled ? "on" : "off"
-        );
-        // Mirror mic/camera state into the always-visible header quick toggles.
+        // Mic / camera / screen-share all live in the always-visible header quick toggles.
         if (els.hdrMic) {
             els.hdrMic.dataset.state = media.micEnabled ? "on" : "off";
         }
         if (els.hdrCam) {
             els.hdrCam.dataset.state = media.cameraEnabled ? "on" : "off";
         }
-        els.share.dataset.state = media.screenSharing ? "active" : "off";
-        els.shareLabel.textContent = media.screenSharing ? "Stop share" : "Share";
-        els.share.disabled = !media.canScreenShare && !media.screenSharing;
-        els.share.style.opacity = els.share.disabled ? "0.45" : "";
+        if (els.hdrShare) {
+            els.hdrShare.dataset.state = media.screenSharing ? "active" : "off";
+            els.hdrShare.disabled = !media.canScreenShare && !media.screenSharing;
+            els.hdrShare.title = media.screenSharing ? "Stop sharing your screen" : "Share your screen";
+            els.hdrShare.setAttribute("aria-label", els.hdrShare.title);
+        }
 
         var locked = media.statusLocked === true;
         els.statusGroup.classList.toggle("is-locked", locked);
