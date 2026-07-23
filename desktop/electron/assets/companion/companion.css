@@ -89,6 +89,13 @@ html, body {
 .hdr-toggle[data-state="off"]:hover { background: #ef7e63; }
 .hdr-toggle[data-state="off"] .i-on { display: none; }
 .hdr-toggle[data-state="off"] .i-off { display: block; }
+
+/* Header screen-share toggle: neutral when idle, accent fill while sharing. */
+.hdr-share[data-state="active"] { background: var(--accent); }
+.hdr-share[data-state="active"]:hover { background: var(--accent); }
+.hdr-share:disabled { opacity: 0.4; cursor: default; }
+.hdr-share:disabled:hover { background: var(--panel-2); }
+
 .hdr-sep { width: 1px; align-self: stretch; margin: 4px 2px; background: var(--border); }
 
 /* Meeting invitation banner (shown when an invite is pending; force-opens the panel). */
@@ -355,32 +362,8 @@ html, body {
 .meeting-video-btn svg { width: 18px; height: 18px; display: block; }
 .meeting-hint { font-size: 11px; color: var(--muted); max-width: 240px; }
 
-/* Controls */
+/* Controls (status selector only; mic/cam/share live in the header) */
 .controls { padding: 12px; display: flex; flex-direction: column; gap: 16px; }
-.control-row { display: flex; gap: 8px; }
-.ctl {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    padding: 12px 4px;
-    border: 0;
-    border-radius: 11px;
-    background: var(--panel-2);
-    color: var(--fg);
-    cursor: pointer;
-    transition: background-color 120ms ease;
-}
-.ctl:hover { background: var(--panel-2-hover); }
-.ctl[data-state="off"] { background: var(--danger); }
-.ctl[data-state="off"]:hover { background: #ef7e63; }
-.ctl[data-state="active"] { background: var(--accent); }
-.ctl-ico svg { width: 20px; height: 20px; display: block; }
-.ctl .i-off { display: none; }
-.ctl[data-state="off"] .i-on { display: none; }
-.ctl[data-state="off"] .i-off { display: block; }
-.ctl-label { font-size: 11px; }
 
 .group-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
 .status-opts { display: flex; flex-direction: column; gap: 3px; }
