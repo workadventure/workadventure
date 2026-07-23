@@ -49,6 +49,12 @@ export function isHudWindowOpen(kind: HudKind): boolean {
     return Boolean(entry && !entry.window.isDestroyed());
 }
 
+/** The live BrowserWindow for a HUD kind (used to host the companion's embedded PiP view). */
+export function getHudWindow(kind: HudKind): BrowserWindow | undefined {
+    const entry = hudWindows.get(kind);
+    return entry && !entry.window.isDestroyed() ? entry.window : undefined;
+}
+
 /** True when the given IPC sender is one of the HUD windows. */
 export function isHudSender(sender: Electron.WebContents): boolean {
     for (const entry of hudWindows.values()) {
