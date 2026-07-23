@@ -22,6 +22,9 @@
                     <svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                     <svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="3" x2="21" y2="21"/><path d="M16 16H3a2 2 0 0 1-2-2V6M9.5 5H14a2 2 0 0 1 2 2v4l.5.5M23 7l-7 5"/></svg>
                 </button>
+                <button class="icon-btn hdr-share" id="c-hdr-share" type="button" data-state="off" title="Share your screen" aria-label="Share your screen">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </button>
                 <span class="hdr-sep"></span>
                 <button class="icon-btn" id="c-back" type="button" title="Back to WorkAdventure" aria-label="Back to WorkAdventure">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
@@ -86,35 +89,12 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                     <span id="c-video-label">Open meeting video</span>
                 </button>
-                <div class="meeting-hint">Video opens in a floating window you can keep on top while you work.</div>
+                <div class="meeting-hint">Video opens right here in the panel so you can keep it in view while you work.</div>
             </div>
         </section>
 
         <section class="pane" data-pane="controls">
             <div class="controls">
-                <div class="control-row">
-                    <button class="ctl" id="c-mic" type="button" data-state="on">
-                        <span class="ctl-ico" aria-hidden="true">
-                            <svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-                            <svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="3" x2="21" y2="21"/><path d="M9 9v2a3 3 0 0 0 5.12 2.12M15 9.34V5a3 3 0 0 0-5.94-.6"/><path d="M19 10v1a7 7 0 0 1-.11 1.23M15.54 15.54A7 7 0 0 1 5 11v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-                        </span>
-                        <span class="ctl-label" id="c-mic-label">Mute</span>
-                    </button>
-                    <button class="ctl" id="c-cam" type="button" data-state="on">
-                        <span class="ctl-ico" aria-hidden="true">
-                            <svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-                            <svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="3" x2="21" y2="21"/><path d="M16 16H3a2 2 0 0 1-2-2V6M9.5 5H14a2 2 0 0 1 2 2v4l.5.5M23 7l-7 5"/></svg>
-                        </span>
-                        <span class="ctl-label" id="c-cam-label">Camera off</span>
-                    </button>
-                    <button class="ctl" id="c-share" type="button" data-state="off">
-                        <span class="ctl-ico" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                        </span>
-                        <span class="ctl-label" id="c-share-label">Share</span>
-                    </button>
-                </div>
-
                 <div class="status-group">
                     <div class="group-title">Status</div>
                     <div class="status-opts" id="c-status">
