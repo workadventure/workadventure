@@ -291,7 +291,9 @@ html, body {
 /* Conversation list */
 .conversations[hidden] { display: none; }
 .conversation-row {
-    display: block;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
     width: 100%;
     text-align: left;
     border: 0;
@@ -302,18 +304,34 @@ html, body {
     cursor: pointer;
 }
 .conversation-row:hover { background: var(--panel-2); }
+.conv-icon {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--panel-2);
+    color: var(--muted);
+    margin-top: 1px;
+}
+.conversation-row:hover .conv-icon { background: var(--panel-2-hover); }
+.conv-icon svg { width: 14px; height: 14px; display: block; }
+.conv-icon.kind-nearby { color: var(--accent); }
+.conv-main { flex: 1; min-width: 0; }
 .conv-top { display: flex; align-items: center; gap: 8px; }
 .conv-name { flex: 1; min-width: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.conv-badge.hl {
+.conv-badge {
     flex: none;
-    background: var(--danger);
     color: #fff;
     font-size: 10px;
     line-height: 16px;
     padding: 0 5px;
     border-radius: 8px;
 }
-.conv-unread { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.conv-badge.hl { background: var(--danger); }
+.conv-badge.count { background: var(--accent); }
 .conv-preview {
     font-size: 11px;
     color: var(--muted);

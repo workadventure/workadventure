@@ -135,6 +135,9 @@ export interface ChatConversation {
     readonly unreadNotificationCount: Readable<number>;
     /** Some unread message mentions the current user: the unread badge takes the mention color. */
     readonly hasUnreadMentions?: Readable<boolean>;
+    /** Unread @-mentions / highlights only (subset of unreadNotificationCount). Optional: not every
+     * conversation kind tracks highlights separately. */
+    readonly unreadHighlightCount?: Readable<number>;
     readonly initializationState: Readable<ChatRoomInitializationState>;
     readonly initializationError?: Readable<Error | undefined>;
     readonly ensureInitialized: () => Promise<void>;

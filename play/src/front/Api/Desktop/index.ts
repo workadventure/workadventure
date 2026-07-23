@@ -166,8 +166,9 @@ function createConversationsStore(connection: ChatConnectionInterface): Readable
                             kind,
                             preview,
                             lastActivityAt,
-                            unreadCount: get(room.hasUnreadMessages) ? 1 : 0,
-                            highlightCount: get(room.unreadNotificationCount) || 0,
+                            // Real total unread count, and the @-mention subset when the room exposes it.
+                            unreadCount: get(room.unreadNotificationCount) || 0,
+                            highlightCount: room.unreadHighlightCount ? get(room.unreadHighlightCount) || 0 : 0,
                         };
                     })
                 );
@@ -176,6 +177,9 @@ function createConversationsStore(connection: ChatConnectionInterface): Readable
             for (const { room } of entries) {
                 unsubs.push(room.unreadNotificationCount.subscribe(() => emit()));
                 unsubs.push(room.hasUnreadMessages.subscribe(() => emit()));
+                if (room.unreadHighlightCount) {
+                    unsubs.push(room.unreadHighlightCount.subscribe(() => emit()));
+                }
                 unsubs.push(room.messages.subscribe(() => emit()));
             }
             emit();
