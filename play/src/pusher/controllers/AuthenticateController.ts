@@ -408,16 +408,47 @@ export class AuthenticateController extends BaseHttpController {
 
             const matrixPublicUri = userInfo.matrix_url ?? MATRIX_PUBLIC_URI;
             if (desktopTransaction || req.cookies.desktopAuth === "true") {
-                res.clearCookie("playUri", { path: "/" });
-                res.clearCookie("desktopAuth", { path: "/" });
-
                 const code = await desktopAuthService.createDesktopAuthCode({
                     token: authToken,
                     targetUrl: playUri,
                 });
+                const desktopCallbackUrl = normalizeDesktopCallbackUrl(desktopTransaction?.callbackUrl);
+
+                // If Matrix is configured, run the same Synapse SSO round-trip the browser does, but
+                // carry the desktop loopback context (callback URL + WA auth code) across it via
+                // cookies so /matrix-callback can hand the resulting matrixLoginToken back to the app
+                // through the loopback. Without this the desktop flow returns with only the WA token
+                // and Matrix chat has no login token to initialise with.
+                if (matrixPublicUri && desktopCallbackUrl) {
+                    res.cookie("desktopAuth", "true", { ...OIDC_COOKIE_OPTIONS, secure: req.secure });
+                    res.cookie("desktopCallbackUrl", desktopCallbackUrl, {
+                        ...OIDC_COOKIE_OPTIONS,
+                        secure: req.secure,
+                    });
+                    res.cookie("desktopAuthCode", code, { ...OIDC_COOKIE_OPTIONS, secure: req.secure });
+
+                    const matrixCallbackUrl = new URL("/matrix-callback", PUSHER_URL).toString();
+                    let redirectPath = "/_matrix/client/v3/login/sso/redirect";
+                    if (userInfo.matrix_identity_provider) {
+                        redirectPath += "/" + userInfo.matrix_identity_provider;
+                    }
+                    const matrixRedirectUrl = new URL(redirectPath, matrixPublicUri);
+                    matrixRedirectUrl.searchParams.append("redirectUrl", matrixCallbackUrl);
+
+                    const html = Mustache.render(this.redirectToMatrixFile, {
+                        authToken,
+                        matrixRedirectUrl: matrixRedirectUrl.toString(),
+                    });
+                    res.type("html").send(html);
+                    return;
+                }
+
+                // No Matrix (or no loopback callback): finish the desktop login straight away.
+                res.clearCookie("playUri", { path: "/" });
+                res.clearCookie("desktopAuth", { path: "/" });
                 const callbackUrl = new URL("workadventure://auth/callback");
-                if (desktopTransaction?.callbackUrl) {
-                    callbackUrl.href = desktopTransaction.callbackUrl;
+                if (desktopCallbackUrl) {
+                    callbackUrl.href = desktopCallbackUrl;
                 }
                 callbackUrl.searchParams.set("origin", new URL(PUSHER_URL).origin);
                 callbackUrl.searchParams.set("code", code);
@@ -496,10 +527,6 @@ export class AuthenticateController extends BaseHttpController {
          */
         this.app.get("/matrix-callback", (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
-            const playUri = req.cookies.playUri;
-            if (!playUri) {
-                throw new Error("Missing playUri in cookies");
-            }
 
             const query = validateQuery(
                 req,
@@ -508,6 +535,31 @@ export class AuthenticateController extends BaseHttpController {
             );
             if (query === undefined) {
                 return;
+            }
+
+            // Desktop: hand the Matrix login token back to the app via the loopback callback (together
+            // with the WA auth code carried from /openid-callback), instead of loading the play page in
+            // the throwaway auth window. The front then consumes matrixLoginToken from the room URL.
+            const desktopCallbackUrl = normalizeDesktopCallbackUrl(req.cookies.desktopCallbackUrl);
+            const desktopAuthCode =
+                typeof req.cookies.desktopAuthCode === "string" ? req.cookies.desktopAuthCode : undefined;
+            if (req.cookies.desktopAuth === "true" && desktopCallbackUrl && desktopAuthCode) {
+                res.clearCookie("playUri", { path: "/" });
+                res.clearCookie("desktopAuth", { path: "/" });
+                res.clearCookie("desktopCallbackUrl", { path: "/" });
+                res.clearCookie("desktopAuthCode", { path: "/" });
+
+                const callbackUrl = new URL(desktopCallbackUrl);
+                callbackUrl.searchParams.set("origin", new URL(PUSHER_URL).origin);
+                callbackUrl.searchParams.set("code", desktopAuthCode);
+                callbackUrl.searchParams.set("matrixLoginToken", query.loginToken);
+                res.redirect(callbackUrl.toString());
+                return;
+            }
+
+            const playUri = req.cookies.playUri;
+            if (!playUri) {
+                throw new Error("Missing playUri in cookies");
             }
 
             res.clearCookie("playUri");
