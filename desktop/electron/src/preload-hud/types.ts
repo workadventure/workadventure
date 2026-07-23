@@ -44,8 +44,6 @@ export type HudSource = {
 export type WorkAdventureHudApi = {
     /** Full presenter state (mic/camera/share/annotation), pushed on every change. */
     onState: (callback: (state: HudState) => void) => () => void;
-    /** Companion only: main asks the panel to switch to a tab (e.g. "meeting" when video opens). */
-    onSelectTab: (callback: (tab: string) => void) => () => void;
     /** Send a user action back to the WorkAdventure renderer. */
     sendCommand: (command: HudCommand) => void;
     /** Enumerate shareable screens/windows (for the direct screen-switch picker). */
