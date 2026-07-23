@@ -3,12 +3,14 @@
  *   - the renderer (in-meeting / mic / camera), pushed via `app:setPresence`;
  *   - the main process idle monitor (see idle-monitor.ts), pushed via setIdle().
  *
- * The tray reflects the effective status (meeting > idle > available) as a colored dot and
- * mirrors the mic/camera booleans into its quick-action checkmarks. Kept deliberately dumb: it
+ * The tray reflects the effective status (meeting > chosen availability > idle > online) as a colored
+ * dot and mirrors the mic/camera booleans into its quick-action checkmarks. Kept deliberately dumb: it
  * holds state and fans out a change event; consumers decide what to render.
  */
 
-export type TrayStatus = "meeting" | "idle" | "available";
+// The effective status shown by the tray dot: an active meeting, the user's chosen availability
+// (busy / back_in_a_moment / do_not_disturb), the auto-idle state, or plain online.
+export type TrayStatus = "meeting" | "idle" | "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
 
 /**
  * The four user-selectable availability statuses, as stable string keys. Kept as strings (not the
@@ -127,15 +129,23 @@ export function setIdle(idle: boolean): void {
     emit();
 }
 
-/** Effective tray status: an active meeting outranks idle, which outranks the available default. */
+/**
+ * Effective tray status: an active meeting outranks everything; then an explicitly-chosen availability
+ * (busy / back_in_a_moment / do_not_disturb) outranks the auto-idle heuristic; otherwise idle, then the
+ * plain online default. Previously this ignored the chosen availability, so the dot stayed green
+ * (online) for Busy / Be right back / Do not disturb.
+ */
 export function getTrayStatus(): TrayStatus {
     if (state.inMeeting) {
         return "meeting";
     }
+    if (state.requestedStatus !== "online") {
+        return state.requestedStatus;
+    }
     if (state.idle) {
         return "idle";
     }
-    return "available";
+    return "online";
 }
 
 export function getMediaState(): { micEnabled: boolean; cameraEnabled: boolean; inMeeting: boolean } {
