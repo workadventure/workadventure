@@ -9,6 +9,7 @@ export type DesktopConfig = {
 export type DesktopAuthCallback = {
     origin: string;
     code: string;
+    matrixLoginToken?: string;
 };
 
 export type DesktopNavigationValidationResult = { ok: true; url: string } | { ok: false; error: string };
@@ -16,7 +17,7 @@ export type DesktopNavigationValidationResult = { ok: true; url: string } | { ok
 export function createDesktopConfig(env?: Record<string, unknown>): DesktopConfig;
 export function createDesktopLoginUrl(value: string, desktopCallbackUrl?: string): string;
 export function createDesktopLogoutUrl(value: string, desktopCallbackUrl?: string): string;
-export function createRoomUrlWithAuthToken(targetUrl: string, token: string): string;
+export function createRoomUrlWithAuthToken(targetUrl: string, token: string, matrixLoginToken?: string): string;
 export function extractDesktopAuthCallback(value: string): DesktopAuthCallback | undefined;
 export function extractDesktopTargetFromDeepLink(value: string): string | undefined;
 export function isAllowedNavigationUrl(value: string, config: DesktopConfig): boolean;

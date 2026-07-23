@@ -468,12 +468,17 @@ function ensureDesktopCallbackServer(): Promise<string> {
             maybeStopDesktopCallbackServer();
             return;
         }
+        // Present only when Matrix is configured: the one-shot Synapse login token the front exchanges
+        // for a Matrix access token (carried through the Synapse SSO round-trip by the pusher).
+        const matrixLoginToken = requestUrl.searchParams.get("matrixLoginToken") || undefined;
 
         response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
         response.end(createDesktopCallbackPage("Connexion terminée. Vous pouvez revenir dans WorkAdventure."));
 
         closeDesktopAuthWindow();
-        void openDesktopAuthCallback({ origin: callbackOrigin, code }).finally(maybeStopDesktopCallbackServer);
+        void openDesktopAuthCallback({ origin: callbackOrigin, code, matrixLoginToken }).finally(
+            maybeStopDesktopCallbackServer,
+        );
     });
     desktopAuthCallbackServer = server;
 
@@ -873,7 +878,9 @@ async function openDesktopAuthCallback(callback: DesktopAuthCallback) {
 
     try {
         const payload = await requestDesktopAuthExchange(callback.origin, callback.code);
-        await loadDesktopTarget(createRoomUrlWithAuthToken(payload.targetUrl, payload.token));
+        await loadDesktopTarget(
+            createRoomUrlWithAuthToken(payload.targetUrl, payload.token, callback.matrixLoginToken),
+        );
     } catch (error) {
         ElectronLog.warn("Failed to exchange desktop auth callback.", error);
         await loadDesktopTarget(getDesktopConfig().portalUrl);
