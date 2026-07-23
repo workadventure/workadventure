@@ -22,6 +22,8 @@
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
     var ICON_LOCATE =
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
+    var ICON_INVITE =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>';
 
     function byId(id) {
         return document.getElementById(id);
@@ -213,7 +215,11 @@
         if (!userId || !action) {
             return;
         }
-        if (action === "dm") {
+        if (action === "invite") {
+            // Invite someone to a meeting — same action as the in-app user list.
+            // No focus stealing: the invite is sent server-side and the target gets a popup.
+            send({ type: "invite", userId: userId });
+        } else if (action === "dm") {
             send({ type: "dm", userId: userId });
             setTab("chat");
             showConversationView(true);
@@ -281,6 +287,7 @@
             } else {
                 var actions = document.createElement("div");
                 actions.className = "person-actions";
+                actions.appendChild(miniButton("invite", u.id, "Invite to meeting", ICON_INVITE));
                 actions.appendChild(miniButton("dm", u.id, "Message", ICON_DM));
                 actions.appendChild(miniButton("locate", u.id, "Locate", ICON_LOCATE));
                 row.appendChild(actions);
