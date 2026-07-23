@@ -116,14 +116,6 @@
             setTab(btn.dataset.tab);
         }
     });
-    // Main can ask the panel to switch tabs (e.g. to "meeting" when the video opens).
-    if (api.onSelectTab) {
-        api.onSelectTab(function (tab) {
-            if (tab) {
-                setTab(tab);
-            }
-        });
-    }
     window.addEventListener("resize", reportMeetingRect);
 
     // ---- Header ----
@@ -409,15 +401,23 @@
         }
     }
 
+    var prevInMeeting = false;
     function renderMeeting(media) {
         var inMeeting = media.inMeeting === true;
         if (els.meetingTab) {
             els.meetingTab.hidden = !inMeeting;
         }
-        // If the meeting ended while the Meeting tab was open, fall back to People.
-        if (!inMeeting && activeTab === "meeting") {
+        // Entering a meeting/conversation: jump straight to the Meeting tab. Edge-triggered (only on
+        // the false->true transition) so the user can still switch away to People/Chat mid-meeting.
+        // Because the panel window is recreated on each (re)open, prevInMeeting starts false, so a
+        // panel that opens while a meeting is already active also lands on Meeting.
+        if (inMeeting && !prevInMeeting) {
+            setTab("meeting");
+        } else if (!inMeeting && activeTab === "meeting") {
+            // Meeting ended (or never started) while the Meeting tab was open: fall back to People.
             setTab("people");
         }
+        prevInMeeting = inMeeting;
         if (els.videoToggle) {
             var open = media.pipOpen === true;
             els.videoToggle.dataset.state = open ? "on" : "off";
