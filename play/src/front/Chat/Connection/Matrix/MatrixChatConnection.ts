@@ -814,6 +814,12 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             threadSupport: true,
             //Detached to prevent using listener on localIdReplaced for each event
             pendingEventOrdering: PendingEventOrdering.Detached,
+            // Lazy-load room members instead of pulling every m.room.member event on initial sync.
+            // For accounts in many/large rooms, member state is the dominant part of the accumulated
+            // /sync blob that gets structured-cloned to IndexedDB on persist; loading members on
+            // demand (loadOutOfBandMembers, done transparently by the SDK when a room needs them)
+            // keeps that blob — and the persist cost — small.
+            lazyLoadMembers: true,
         });
 
         try {
