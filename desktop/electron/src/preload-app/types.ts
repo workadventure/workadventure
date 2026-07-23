@@ -229,6 +229,8 @@ export type CompanionMessage = {
     author: string;
     text: string;
     isSelf: boolean;
+    /** Epoch ms of the message; 0 when unknown. Drives per-message time + date separators. */
+    ts: number;
 };
 
 /** A conversation summary in the companion Chat list (nearby proximity + Matrix DMs / rooms). */
@@ -280,6 +282,8 @@ export type CompanionState = {
     media: CompanionMedia;
     /** Set when a meeting invitation is pending; null/absent otherwise. */
     invitation?: CompanionInvitation | null;
+    /** Matrix chat availability, so the empty conversation list isn't mistaken for "no chat". */
+    chatStatus?: "connecting" | "online" | "unavailable";
 };
 
 /** User actions raised by the companion panel, routed back to the active world renderer. */
