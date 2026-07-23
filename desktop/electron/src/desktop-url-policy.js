@@ -3,7 +3,15 @@
 const DEFAULT_PORTAL_URL = "http://admin.workadventure.localhost/";
 const DEFAULT_ALLOWED_HOST_SUFFIXES_PROD = [".workadventu.re", ".workadventure.fr"];
 const DEFAULT_ALLOWED_HOST_SUFFIXES_DEV = [".workadventu.re", ".workadventure.fr", ".workadventure.localhost"];
-const SENSITIVE_QUERY_PARAMS = ["token", "code", "code_verifier", "id_token", "access_token", "refresh_token"];
+const SENSITIVE_QUERY_PARAMS = [
+    "token",
+    "matrixLoginToken",
+    "code",
+    "code_verifier",
+    "id_token",
+    "access_token",
+    "refresh_token",
+];
 const MAX_WORLD_HISTORY_LENGTH = 10;
 const BROKEN_PERSISTED_URLS = new Set([
     "http://play.workadventure.localhost/~/maps/areas.wam",
@@ -307,7 +315,8 @@ function extractDesktopAuthCallback(value) {
         return undefined;
     }
 
-    return { origin, code };
+    const matrixLoginToken = url.searchParams.get("matrixLoginToken") || undefined;
+    return { origin, code, matrixLoginToken };
 }
 
 function stripSensitiveQueryParams(value) {
@@ -340,13 +349,16 @@ function redactSensitiveString(value) {
     return result;
 }
 
-function createRoomUrlWithAuthToken(targetUrl, token) {
+function createRoomUrlWithAuthToken(targetUrl, token, matrixLoginToken) {
     const url = parseHttpUrl(targetUrl);
     if (!url) {
         return targetUrl;
     }
 
     url.searchParams.set("token", token);
+    if (matrixLoginToken) {
+        url.searchParams.set("matrixLoginToken", matrixLoginToken);
+    }
     return url.toString();
 }
 
