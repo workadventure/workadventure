@@ -25,22 +25,24 @@ let tray: Tray | undefined;
 
 const assetsDirectory = path.join(__dirname, "..", "assets");
 
-// Status-dot colors composited onto the tray glyph, mirroring WA's status dots: green = online,
-// orange = be-right-back / idle, red = busy / do-not-disturb / in a meeting.
+// Status-dot colors composited onto the tray glyph. Mirror WA's own availability colors (the
+// `filling` values in play/src/front/Utils/AvailabilityStatus.ts getColorHexOfStatus): online green,
+// busy gold, back-in-a-moment blue, do-not-disturb coral. Idle reuses WA's AWAY gold; meeting reuses
+// WA's SILENT red as a "busy in a meeting" signal.
 const TRAY_STATUS_COLOR: Record<TrayStatus, string> = {
-    meeting: "#E24B4A",
-    do_not_disturb: "#E24B4A",
-    busy: "#E24B4A",
-    back_in_a_moment: "#F5A623",
-    idle: "#F5A623",
-    online: "#2ECC71",
+    meeting: "#e74c3c",
+    do_not_disturb: "#e96e53",
+    busy: "#e9c84e",
+    back_in_a_moment: "#7382e2",
+    idle: "#e9c84e",
+    online: "#68e97a",
 };
 
 const TRAY_STATUS_LABEL: Record<TrayStatus, string> = {
     meeting: "🔴 In a meeting",
     do_not_disturb: "⛔ Do not disturb",
-    busy: "🔴 Busy",
-    back_in_a_moment: "🟠 Be right back",
+    busy: "🟡 Busy",
+    back_in_a_moment: "🔵 Be right back",
     idle: "🟡 Idle",
     online: "🟢 Available",
 };
@@ -48,8 +50,8 @@ const TRAY_STATUS_LABEL: Record<TrayStatus, string> = {
 // The four user-selectable availability statuses, in display order. Colors mirror WA's status dots.
 const AVAILABILITY_ITEMS: ReadonlyArray<{ status: TrayAvailability; label: string }> = [
     { status: "online", label: "🟢 Available" },
-    { status: "busy", label: "🔴 Busy" },
-    { status: "back_in_a_moment", label: "🟠 Be right back" },
+    { status: "busy", label: "🟡 Busy" },
+    { status: "back_in_a_moment", label: "🔵 Be right back" },
     { status: "do_not_disturb", label: "⛔ Do not disturb" },
 ];
 
