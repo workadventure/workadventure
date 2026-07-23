@@ -1,6 +1,6 @@
 import { screen } from "electron";
 import ElectronLog from "electron-log";
-import { closeHudWindow, getHudWindow, isHudWindowOpen, openHudWindow } from "./hud-windows";
+import { closeHudWindow, isHudWindowOpen, openHudWindow } from "./hud-windows";
 import { getPresenceSnapshot, onPresenceChange } from "./presence";
 import { getWindow } from "./window";
 
@@ -57,14 +57,6 @@ function wantOpen(): boolean {
     }
     // Auto-show while away inside a world (never on the landing / login page).
     return p.inWorld;
-}
-
-/** Ask the companion to switch to a given tab (main → companion). */
-function sendSelectTab(tab: "people" | "chat" | "meeting" | "controls"): void {
-    const companion = getHudWindow("companion");
-    if (companion) {
-        companion.webContents.send("app:companion:select-tab", tab);
-    }
 }
 
 function cancelPendingOpen(): void {
@@ -147,8 +139,9 @@ export function isCompanionVisible(): boolean {
 }
 
 /**
- * The front is opening the meeting video (embedded PiP): make sure the companion is open and on the
- * Meeting tab, and mark the video active so the panel stays open (even focused) until it closes.
+ * The front is opening the meeting video (embedded PiP): make sure the companion is open and mark the
+ * video active so the panel stays open (even focused) until it closes. The panel jumps to the Meeting
+ * tab on its own, driven by the meeting state (inMeeting rising edge), so no explicit tab select here.
  */
 export async function openCompanionForPip(): Promise<void> {
     pipActive = true;
@@ -157,7 +150,6 @@ export async function openCompanionForPip(): Promise<void> {
         const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
         await openHudWindow("companion", display.id);
     }
-    sendSelectTab("meeting");
 }
 
 /** The meeting video closed: drop the keep-open and re-evaluate the panel's visibility. */
