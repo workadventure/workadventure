@@ -295,8 +295,6 @@ export default () => {
         return result;
     });
 
-    ipcMain.handle("app:loadPortal", async () => loadDesktopTarget(settings.get("portal_url")));
-
     // ---- Desktop navigation (first-launch Landing + in-game world switcher) ----
     // Validate a user-supplied world URL before handing it to the main window. This gives both
     // UIs a useful error instead of silently falling back to the portal.
