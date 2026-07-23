@@ -32,7 +32,6 @@ import {
     activateTab,
     createWorldView,
     getActiveWorldContents,
-    getTabCount,
     isActiveWorldContents,
     layoutActiveView,
     onActiveTabChange,
@@ -812,11 +811,6 @@ export async function openWorldTab(url?: string): Promise<void> {
         await loadLandingPage();
     }
     showWindow();
-}
-
-/** Number of open world tabs. */
-export function getWorldTabCount(): number {
-    return getTabCount();
 }
 
 function requestDesktopAuthExchange(origin: string, code: string): Promise<{ token: string; targetUrl: string }> {
