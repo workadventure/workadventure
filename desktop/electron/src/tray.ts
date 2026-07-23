@@ -63,7 +63,10 @@ function buildStatusSubmenuItems(): Electron.MenuItemConstructorOptions[] {
 }
 
 // Logical tray icon size in points; a matching @2x representation is added for Retina crispness.
-const TRAY_ICON_SIZE = 32;
+// Keep this at the macOS menu-bar glyph size (~18pt) — the image is a non-template colored icon, so
+// macOS renders it at its point size (it does not auto-fit to the bar height). A larger value makes
+// the icon overflow the ~22pt menu bar and read as an oversized blob next to the system icons.
+const TRAY_ICON_SIZE = 18;
 const trayIconCache = new Map<TrayStatus, NativeImage>();
 const baseTrayImageByPixelSize = new Map<number, NativeImage>();
 
