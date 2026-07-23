@@ -735,6 +735,10 @@ message EnterChatRoomAreaAnswer{
 
 message JoinSpaceAnswer{
   string spaceUserId = 1;
+  // Number of OTHER users already in the space with their microphone on when this user joined.
+  // The client combines this with its own microphone state and MAX_SPEAKERS_BEFORE_AUTOMUTE to decide
+  // whether to auto-mute before publishing audio (avoiding a publish-then-mute renegotiation).
+  int32 activeMicrophoneCount = 2;
 }
 
 message LeaveSpaceAnswer{
@@ -860,6 +864,10 @@ message SpaceAnswerMessage {
 message AddSpaceUserAnswer {
   string spaceName = 1;
   string spaceUserId = 2;
+  // Number of OTHER users already in the space with their microphone on at the moment this user
+  // joined. Used by the client to decide whether to auto-mute before publishing audio (see
+  // MAX_SPEAKERS_BEFORE_AUTOMUTE). Counted server-side because the back holds the authoritative membership.
+  int32 activeMicrophoneCount = 3;
 }
 
 message RemoveSpaceUserAnswer {

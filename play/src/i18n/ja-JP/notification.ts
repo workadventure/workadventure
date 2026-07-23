@@ -8,6 +8,8 @@ const notification: DeepPartial<Translation["notification"]> = {
     askToMuteMicrophone: "マイクのミュートを依頼します 🙏",
     askToMuteCamera: "カメラのミュートを依頼します 🙏",
     microphoneMuted: "マイクがモデレーターによってミュートされました",
+    microphoneAutoMuted: "マイクが自動的にミュートされました",
+    unmute: "ミュート解除",
     cameraMuted: "カメラがモデレーターによってミュートされました",
     notificationSentToMuteMicrophone: "{name} にマイクをミュートする通知が送信されました",
     notificationSentToMuteCamera: "{name} にカメラをミュートする通知が送信されました",
