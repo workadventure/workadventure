@@ -241,6 +241,18 @@ html, body {
 .msg.is-self { align-self: flex-end; background: var(--accent-soft); }
 .msg-author { font-size: 10px; color: var(--muted); margin-bottom: 1px; }
 .msg-text { font-size: 12px; word-wrap: break-word; overflow-wrap: anywhere; -webkit-user-select: text; user-select: text; }
+.msg-time { font-size: 9px; color: var(--muted); margin-top: 2px; text-align: right; opacity: 0.8; }
+.msg.is-self .msg-time { text-align: right; }
+.date-sep { display: flex; align-items: center; justify-content: center; margin: 6px 0 2px; }
+.date-sep span {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--panel-2);
+    padding: 2px 8px;
+    border-radius: 9px;
+}
 .composer {
     display: flex;
     gap: 6px;
