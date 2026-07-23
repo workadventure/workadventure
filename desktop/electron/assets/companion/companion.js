@@ -24,6 +24,13 @@
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
     var ICON_INVITE =
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>';
+    // Conversation-kind glyphs: proximity (broadcast), DM (person), group room (hash).
+    var ICON_KIND_NEARBY =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.6"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M6 6a8 8 0 0 0 0 12M18 6a8 8 0 0 1 0 12"/></svg>';
+    var ICON_KIND_DIRECT =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20v-1a6.5 6.5 0 0 1 13 0v1"/></svg>';
+    var ICON_KIND_ROOM =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg>';
 
     function byId(id) {
         return document.getElementById(id);
@@ -288,6 +295,13 @@
         }
     }
 
+    function conversationIcon(kind) {
+        var span = document.createElement("span");
+        span.className = "conv-icon kind-" + (kind || "room");
+        span.innerHTML = kind === "nearby" ? ICON_KIND_NEARBY : kind === "direct" ? ICON_KIND_DIRECT : ICON_KIND_ROOM;
+        return span;
+    }
+
     function renderConversationList(conversations) {
         els.conversations.textContent = "";
         for (var i = 0; i < conversations.length; i++) {
@@ -297,6 +311,12 @@
             row.className = "conversation-row";
             row.dataset.conversationId = c.id;
 
+            // Leading type glyph so proximity / DM / group rooms read apart at a glance.
+            row.appendChild(conversationIcon(c.kind));
+
+            var main = document.createElement("div");
+            main.className = "conv-main";
+
             var top = document.createElement("div");
             top.className = "conv-top";
             var name = document.createElement("span");
@@ -304,24 +324,29 @@
             name.textContent = c.name || "Conversation";
             top.appendChild(name);
             var highlight = Number(c.highlightCount) || 0;
+            var unread = Number(c.unreadCount) || 0;
             if (highlight > 0) {
+                // @-mentions take priority (red).
                 var hl = document.createElement("span");
                 hl.className = "conv-badge hl";
                 hl.textContent = "@" + (highlight > 99 ? "99+" : highlight);
                 top.appendChild(hl);
-            } else if (Number(c.unreadCount) > 0) {
-                var dot = document.createElement("span");
-                dot.className = "conv-unread";
-                top.appendChild(dot);
+            } else if (unread > 0) {
+                // Plain unread: the real count, not just a dot.
+                var cnt = document.createElement("span");
+                cnt.className = "conv-badge count";
+                cnt.textContent = unread > 99 ? "99+" : String(unread);
+                top.appendChild(cnt);
             }
-            row.appendChild(top);
+            main.appendChild(top);
 
             if (c.preview) {
                 var pv = document.createElement("div");
                 pv.className = "conv-preview";
                 pv.textContent = c.preview;
-                row.appendChild(pv);
+                main.appendChild(pv);
             }
+            row.appendChild(main);
             els.conversations.appendChild(row);
         }
     }
