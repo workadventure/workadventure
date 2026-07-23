@@ -25,17 +25,24 @@ let tray: Tray | undefined;
 
 const assetsDirectory = path.join(__dirname, "..", "assets");
 
-// Status-dot colors composited onto the tray glyph. Meeting reuses the unread-badge red.
+// Status-dot colors composited onto the tray glyph, mirroring WA's status dots: green = online,
+// orange = be-right-back / idle, red = busy / do-not-disturb / in a meeting.
 const TRAY_STATUS_COLOR: Record<TrayStatus, string> = {
     meeting: "#E24B4A",
+    do_not_disturb: "#E24B4A",
+    busy: "#E24B4A",
+    back_in_a_moment: "#F5A623",
     idle: "#F5A623",
-    available: "#2ECC71",
+    online: "#2ECC71",
 };
 
 const TRAY_STATUS_LABEL: Record<TrayStatus, string> = {
     meeting: "🔴 In a meeting",
+    do_not_disturb: "⛔ Do not disturb",
+    busy: "🔴 Busy",
+    back_in_a_moment: "🟠 Be right back",
     idle: "🟡 Idle",
-    available: "🟢 Available",
+    online: "🟢 Available",
 };
 
 // The four user-selectable availability statuses, in display order. Colors mirror WA's status dots.
