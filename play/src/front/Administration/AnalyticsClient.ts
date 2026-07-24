@@ -285,8 +285,8 @@ class AnalyticsClient {
             openTimedAnalyticsEvent(
                 "meeting.screenshare.ended",
                 { screenShareSessionId, hasAudio },
-                this.sendTimedEventReport
-            )
+                this.sendTimedEventReport,
+            ),
         );
     }
 
@@ -596,7 +596,7 @@ class AnalyticsClient {
         this.openAreas.get(id)?.close("other");
         this.openAreas.set(
             id,
-            openTimedAnalyticsEvent("area.dwell", { areaId: id, areaName: name }, this.sendTimedEventReport)
+            openTimedAnalyticsEvent("area.dwell", { areaId: id, areaName: name }, this.sendTimedEventReport),
         );
     }
 

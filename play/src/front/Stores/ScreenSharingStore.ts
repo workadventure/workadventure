@@ -378,7 +378,7 @@ screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {
         screenSharingAnalyticsSessionId = `screenshare:${Date.now()}:${Math.random().toString(36).slice(2)}`;
         analyticsClient.screenSharingStarted(
             screenSharingAnalyticsSessionId,
-            (stream?.getAudioTracks().length ?? 0) > 0
+            (stream?.getAudioTracks().length ?? 0) > 0,
         );
     }
 
