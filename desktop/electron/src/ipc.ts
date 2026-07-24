@@ -668,8 +668,7 @@ export default () => {
     // HUD windows → main renderer
     ipcMain.on("app:hud:command-from-hud", (event, command: unknown) => {
         if (!isHudSender(event.sender)) return;
-        const type =
-            command !== null && typeof command === "object" ? (command as { type?: unknown }).type : undefined;
+        const type = command !== null && typeof command === "object" ? (command as { type?: unknown }).type : undefined;
         // `focus-main` is handled directly in the main process, like the PiP command.
         if (type === "focus-main") {
             const mainWindow = getWindow();

@@ -1,4 +1,4 @@
-import { get, type Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 import type { Observable } from "rxjs";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import {

@@ -120,7 +120,7 @@ function compositeStatusDotBuffer(status: TrayStatus, pixelSize: number): Buffer
     const radius = Math.max(3, Math.round(Math.min(width, height) * 0.3));
     const cx = width - radius - 1;
     const cy = height - radius - 1;
-    const ring = Math.max(1, pixelSize / TRAY_ICON_SIZE * 1.5);
+    const ring = Math.max(1, (pixelSize / TRAY_ICON_SIZE) * 1.5);
 
     for (let y = Math.max(0, cy - radius - 2); y < Math.min(height, cy + radius + 2); y++) {
         for (let x = Math.max(0, cx - radius - 2); x < Math.min(width, cx + radius + 2); x++) {
@@ -177,7 +177,10 @@ function drawTrayStatusImage(status: TrayStatus): NativeImage {
     } catch (error) {
         ElectronLog.warn(`Failed to composite tray status dot for "${status}"`, error);
         // Fall back to the plain logo (never leave the tray without an icon).
-        return getBaseTrayImage(TRAY_ICON_SIZE) ?? nativeImage.createFromPath(path.join(assetsDirectory, "icons", "logo.png"));
+        return (
+            getBaseTrayImage(TRAY_ICON_SIZE) ??
+            nativeImage.createFromPath(path.join(assetsDirectory, "icons", "logo.png"))
+        );
     }
 }
 
