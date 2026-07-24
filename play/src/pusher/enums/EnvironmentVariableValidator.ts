@@ -283,16 +283,40 @@ export const EnvironmentVariables = z.object({
         .describe("Enable/disable the OpenAPI documentation endpoint. Defaults to false"),
     VIDEO_ANALYTICS_FLUSH_INTERVAL_MS: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 10_000))
-        .describe("Interval in milliseconds between video quality analytics batch flushes. Defaults to 10000"),
+        .describe(
+            "Interval in milliseconds between analytics batch flushes. Also drives the generic analytics queue, which reuses the VIDEO_ANALYTICS_* settings instead of defining its own — tuning either queue tunes both. Defaults to 10000",
+        ),
     VIDEO_ANALYTICS_TIMEOUT_MS: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 2_000))
-        .describe("HTTP timeout in milliseconds for video quality analytics ingestion calls. Defaults to 2000"),
+        .describe(
+            "HTTP timeout in milliseconds for analytics ingestion calls. Also used by the generic analytics queue. Defaults to 2000",
+        ),
     VIDEO_ANALYTICS_MAX_QUEUE_SIZE: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 10_000))
-        .describe("Maximum number of video quality samples queued in pusher memory. Defaults to 10000"),
+        .describe(
+            "Maximum number of analytics events queued in pusher memory. Caps the generic analytics queue as well as video quality samples. Defaults to 10000",
+        ),
     VIDEO_ANALYTICS_MAX_BATCH_SIZE: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 1_000))
-        .describe("Maximum number of video quality samples sent in one admin batch. Defaults to 1000"),
+        .describe(
+            "Maximum number of analytics events sent in one admin batch. Caps the generic analytics queue as well as video quality samples. Defaults to 1000",
+        ),
+    ANALYTICS_PSEUDONYMIZATION_SECRET: z
+        .string()
+        .optional()
+        .describe(
+            "Secret key used to pseudonymize user identifiers for worlds that opted out of user-level activity metrics. Must be set to the same value on the admin. Without it those worlds report no analytics at all, because a pseudonym anyone can recompute is not a pseudonym: the world's own administrator holds the user list and could hash it to re-identify every row. Changing the value re-pseudonymizes everyone and breaks joins against already-ingested data.",
+        ),
+    ANALYTICS_DRAIN_TIMEOUT_MS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 20_000))
+        .describe(
+            "Maximum time in milliseconds spent draining the generic analytics queue on SIGTERM / SIGINT before the process exits. Must stay comfortably BELOW your orchestrator's grace period (Kubernetes terminationGracePeriodSeconds defaults to 30s), not merely equal to it: the drain has to finish and the process exit before SIGKILL lands, or the intervals it just closed die with it. Defaults to 20000, i.e. 10s of headroom under the Kubernetes default. Raising it above the grace period cannot buy more draining — it only converts a clean exit into a kill.",
+        ),
+    VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 20_000))
+        .describe(
+            "Maximum time in milliseconds spent draining the legacy video-quality analytics queue on SIGTERM / SIGINT before the process exits. Both queues drain in parallel and the process waits for both, so the shutdown budget is the LARGER of the two: raising this one alone is enough to push the exit past the grace period. Defaults to 20000",
+        ),
     START_ROOM_URL: z.string().optional().describe("Default room URL where users start when accessing the platform"),
 
     // Front related environment variables

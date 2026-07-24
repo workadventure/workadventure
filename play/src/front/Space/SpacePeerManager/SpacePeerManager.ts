@@ -16,6 +16,7 @@ import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintS
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
 import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
+import { activeCommunicationProviderStore } from "../../Stores/CommunicationProviderStore";
 import { microphoneValidatedForDeviceIdStore } from "../../Stores/MicrophoneValidatedForDeviceIdStore";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
@@ -200,6 +201,7 @@ export class SpacePeerManager {
 
                 // create factory for the new state instead of creating the state directly ?
                 if (message.switchMessage.strategy === CommunicationType.WEBRTC) {
+                    activeCommunicationProviderStore.set("webrtc");
                     this._communicationState = new WebRTCState(
                         this.space,
                         this._streamableSubjects,
@@ -207,6 +209,7 @@ export class SpacePeerManager {
                         this._effectiveScreenSharingLocalStreamStore,
                     );
                 } else if (message.switchMessage.strategy === CommunicationType.LIVEKIT) {
+                    activeCommunicationProviderStore.set("livekit");
                     this._communicationState = new LivekitState(
                         this.space,
                         this._streamableSubjects,
@@ -214,6 +217,7 @@ export class SpacePeerManager {
                         this._effectiveScreenSharingLocalStreamStore,
                     );
                 } else {
+                    activeCommunicationProviderStore.set(undefined);
                     console.error("Unknown communication strategy: " + message.switchMessage.strategy);
                     Sentry.captureMessage("Unknown communication strategy: " + message.switchMessage.strategy);
                 }
@@ -550,6 +554,7 @@ export class SpacePeerManager {
         this.metadataSubscription.unsubscribe();
         this.cancelPendingRecorderNameResolution(this.space.getName());
         this._recordingStore.removeSpace(this.space.getName());
+        activeCommunicationProviderStore.set(undefined);
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {

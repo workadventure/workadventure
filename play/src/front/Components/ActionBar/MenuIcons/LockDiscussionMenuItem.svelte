@@ -29,6 +29,7 @@
     function lockAreaClick(entry: LockableAreaEntry) {
         const newLockState = !entry.lockState;
         setAreaPropertyLockState(entry.areaId, entry.propertyId, newLockState);
+        analyticsClient.lockArea(entry.areaId, entry.areaName, newLockState);
         if (newLockState) {
             const areasManager = gameManager.getCurrentGameScene().getGameMapFrontWrapper().areasManager;
             areasManager?.flashAreaAsLocked(entry.areaId);

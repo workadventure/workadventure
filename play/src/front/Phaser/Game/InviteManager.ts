@@ -10,6 +10,7 @@ import { gameManager } from "../../Phaser/Game/GameManager";
 import MeetingInvitationDeclinedToast from "../../Components/MeetingInvitation/MeetingInvitationDeclinedToast.svelte";
 import MeetingInvitationAcceptedToast from "../../Components/MeetingInvitation/MeetingInvitationAcceptToast.svelte";
 import MeetingInvitationLimitToast from "../../Components/MeetingInvitation/MeetingInvitationLimitToast.svelte";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
 
 const MEETING_INVITATION_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 const MEETING_INVITATION_MAX_REQUESTS = 50;
@@ -93,6 +94,7 @@ export class InviteManager {
 
     public handleAccept(request: MeetingInvitationRequestReceivedMessage): void {
         this.connection.emitMeetingInvitationResponse(true, request.senderUserUuid);
+        analyticsClient.inviteAccepted("meeting");
         // TODO: Change emitAskPosition to a server query to allow for error handling
         // NOTE: For now, if the user leaves while their position is being requested, nothing happens
         this.connection.emitAskPosition(
@@ -135,6 +137,7 @@ export class InviteManager {
         }
 
         this.connection.emitMeetingInvitationRequest(receiverUserUuid, receiverUserId);
+        analyticsClient.inviteSent("meeting");
         return true;
     }
 

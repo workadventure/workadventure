@@ -135,6 +135,30 @@ export class VideoQualityAnalyticsQueue {
         }
     }
 
+    /**
+     * Drains the queue by flushing batches sequentially until it is empty or the deadline elapses.
+     * Used by the graceful-shutdown hook so events queued at SIGTERM time still reach the admin.
+     * Sequential awaits are intentional: flush() must complete before the next batch is sent.
+     */
+    public async drain(timeoutMs = 10_000): Promise<void> {
+        if (!this.canSend()) {
+            return;
+        }
+
+        const deadline = Date.now() + timeoutMs;
+        while (this.queue.length > 0 && Date.now() < deadline) {
+            const lengthBefore = this.queue.length;
+            // eslint-disable-next-line no-await-in-loop
+            await this.flush(deadline);
+            if (this.queue.length === lengthBefore) {
+                // eslint-disable-next-line no-await-in-loop
+                await new Promise<void>((resolve) => {
+                    setTimeout(resolve, 50);
+                });
+            }
+        }
+    }
+
     public enqueueReport(report: VideoQualityReportMessage, socketData: SocketData): void {
         if (!this.canSend()) {
             return;
@@ -159,7 +183,7 @@ export class VideoQualityAnalyticsQueue {
         }
     }
 
-    public async flush(): Promise<void> {
+    public async flush(deadline?: number): Promise<void> {
         if (!this.canSend() || this.queue.length === 0 || this.isFlushing) {
             return;
         }
@@ -174,7 +198,7 @@ export class VideoQualityAnalyticsQueue {
         };
 
         try {
-            await this.sendWithRetry(batch);
+            await this.sendWithRetry(batch, deadline);
             this.batchesSent += 1;
             this.samplesSent += batchSamples.length;
         } catch (error) {
@@ -351,32 +375,46 @@ export class VideoQualityAnalyticsQueue {
         };
     }
 
-    private async sendWithRetry(batch: VideoQualityAnalyticsBatch): Promise<void> {
+    private async sendWithRetry(batch: VideoQualityAnalyticsBatch, deadline?: number): Promise<void> {
         if (!this.endpointUrl) {
             return;
         }
 
         try {
-            await this.postBatch(batch);
+            await this.postBatch(batch, deadline);
             return;
         } catch {
-            await sleep(this.retryDelayMs());
+            const delay = this.retryDelayMs();
+            // Don't sleep past the drain deadline, and don't start a retry we have
+            // no time budget left for: either would push the shutdown past the
+            // grace period the orchestrator granted us.
+            if (deadline !== undefined && Date.now() + delay >= deadline) {
+                throw new Error("Video quality analytics drain deadline reached before the batch could be sent");
+            }
+            await sleep(delay);
         }
 
-        await this.postBatch(batch);
+        await this.postBatch(batch, deadline);
     }
 
-    private async postBatch(batch: VideoQualityAnalyticsBatch): Promise<void> {
+    private async postBatch(batch: VideoQualityAnalyticsBatch, deadline?: number): Promise<void> {
         if (!this.endpointUrl || this.config.adminApiToken === undefined) {
             return;
         }
+
+        // Cap the HTTP timeout by whatever is left of the drain budget, so a single
+        // slow request cannot run past the drain deadline.
+        const timeout =
+            deadline !== undefined
+                ? Math.max(1, Math.min(this.config.timeoutMs, deadline - Date.now()))
+                : this.config.timeoutMs;
 
         await this.post(this.endpointUrl, batch, {
             headers: {
                 Authorization: `Bearer ${this.config.adminApiToken}`,
                 "Content-Type": "application/json",
             },
-            timeout: this.config.timeoutMs,
+            timeout,
         });
     }
 

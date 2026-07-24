@@ -1,4 +1,3 @@
-```suggestion
 # Upgrade Guide
 
 This document provides instructions for upgrading WorkAdventure between versions.

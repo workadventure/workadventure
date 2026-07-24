@@ -5,6 +5,7 @@ import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import { localUserStore } from "../Connection/LocalUserStore";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import LL from "../../i18n/i18n-svelte";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { Streamable, WebRtcStreamable } from "../Space/Streamable";
 import { VideoBox } from "../Space/VideoBox";
 import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
@@ -33,6 +34,8 @@ export const requestedScreenSharingState = createRequestedScreenSharingState();
 
 let currentStream: MediaStream | undefined = undefined;
 let screenSharingRequestId = 0;
+let screenSharingAnalyticsSessionId: string | undefined;
+let previousScreenSharingHadStream = false;
 
 /**
  * Stops the screen sharing (both video and audio tracks)
@@ -364,3 +367,31 @@ export const screenSharingLocalVideoBox: Readable<VideoBox | undefined> = derive
 export const showDesktopCapturerSourcePicker = writable(false);
 
 export let desktopCapturerSourcePromiseResolve: ((source: DesktopCapturerSource | null) => void) | undefined;
+
+// This is a singleton so we can safely not ever unsubscribe from it.
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
+screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {
+    const stream = screenSharingLocalStream.type === "success" ? screenSharingLocalStream.stream : undefined;
+    const hasStream = !!stream;
+
+    if (hasStream && !previousScreenSharingHadStream) {
+        screenSharingAnalyticsSessionId = `screenshare:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+        analyticsClient.screenSharingStarted(
+            screenSharingAnalyticsSessionId,
+            (stream?.getAudioTracks().length ?? 0) > 0,
+        );
+    }
+
+    if (!hasStream && previousScreenSharingHadStream && screenSharingAnalyticsSessionId) {
+        // No duration, and no clock read: the pusher measures the interval. This used
+        // to report max(1, round(now - startedAt)) — a floor that turned a share
+        // cancelled in 200ms into a reported second.
+        analyticsClient.screenSharingEnded(screenSharingAnalyticsSessionId);
+    }
+
+    if (!hasStream) {
+        screenSharingAnalyticsSessionId = undefined;
+    }
+
+    previousScreenSharingHadStream = hasStream;
+});

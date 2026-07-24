@@ -6,44 +6,53 @@ import "google/protobuf/empty.proto";
 
 /**
  * Service handled by the "back". Pusher servers connect to this service.
+ *
+ * A back holds only the rooms currently live on it, so a call here acts on that server's share of the
+ * cluster. Anything meant to reach every room is fanned out by the caller, one call per back.
  */
 service RoomManager {
   rpc connectToRoom(stream PusherToBackMessage) returns (stream ServerToClientMessage); // Holds a connection between one given client and the back
   rpc listenRoom(stream PusherToBackRoomMessage) returns (stream BatchToPusherRoomMessage); // Bidirectional connection used to send to a pusher messages related to a given room and to subscribe/unsubscribe to zones
-  rpc adminRoom(stream AdminPusherToBackMessage) returns (stream ServerToAdminClientMessage);
-  rpc sendAdminMessage(AdminMessage) returns (google.protobuf.Empty);
-  rpc sendGlobalAdminMessage(AdminGlobalMessage) returns (google.protobuf.Empty);
-  rpc ban(BanMessage) returns (google.protobuf.Empty);
-  rpc sendAdminMessageToRoom(AdminRoomMessage) returns (google.protobuf.Empty);
-  rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (google.protobuf.Empty);
-  rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (google.protobuf.Empty);
-  rpc getRooms(google.protobuf.Empty) returns (RoomsList);
-  rpc ping(PingMessage) returns (PingMessage);
-  rpc readVariable(VariableRequest) returns (google.protobuf.Value);
-  rpc listenVariable(VariableRequest) returns (stream google.protobuf.Value);
-  rpc saveVariable(SaveVariableRequest) returns (google.protobuf.Empty);
+  rpc adminRoom(stream AdminPusherToBackMessage) returns (stream ServerToAdminClientMessage); // Holds a connection between one admin client and the back, for the duration of its moderation session
+  // sendAdminMessage through sendRefreshRoomPrompt all answer Empty as soon as the request is accepted,
+  // before the work is done: delivery runs detached, and failures only reach the logs and Sentry. A
+  // successful response means "taken in charge", never "delivered".
+  rpc sendAdminMessage(AdminMessage) returns (google.protobuf.Empty); // Send a moderation message to one user of a room
+  rpc sendGlobalAdminMessage(AdminGlobalMessage) returns (google.protobuf.Empty); // NOT IMPLEMENTED: the handler throws on every call. Do not use it until it is written.
+  rpc ban(BanMessage) returns (google.protobuf.Empty); // Ban one user from a room
+  rpc sendAdminMessageToRoom(AdminRoomMessage) returns (google.protobuf.Empty); // Send a moderation message to every user of a room
+  rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (google.protobuf.Empty); // Warn the users of a room that the world is nearly full
+  rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (google.protobuf.Empty); // Ask the users of a room to reload it, e.g. after the map changed
+  rpc getRooms(google.protobuf.Empty) returns (RoomsList); // List the rooms live on this back, with their users
+  rpc ping(PingMessage) returns (PingMessage); // Echoes the request back unchanged, to check the back answers
+  rpc readVariable(VariableRequest) returns (google.protobuf.Value); // Get the current value of the given variable. Answers nothing if it was never set and the map declares no default. Tag permissions do not apply here: every variable of the room is readable.
+  rpc listenVariable(VariableRequest) returns (stream google.protobuf.Value); // Listen to value updates for a given variable. The current value is not replayed on subscribe.
+  rpc saveVariable(SaveVariableRequest) returns (google.protobuf.Empty); // Set the value of the given variable. Fails if the map does not declare it; writing the value it already holds notifies nobody.
   rpc dispatchEvent(DispatchEventRequest) returns (google.protobuf.Empty); // Dispatch an event to all users in the room
   rpc listenEvent(EventRequest) returns (stream EventResponse); // Listen to events dispatched in the room
-  rpc handleMapStorageUploadMapDetected(MapStorageClearAfterUploadMessage) returns (google.protobuf.Empty);
-  rpc handleMapStorageDeleteMapDetected(MapStorageDeleteMessage) returns (google.protobuf.Empty);
-  rpc dispatchGlobalEvent(DispatchGlobalEventRequest) returns (google.protobuf.Empty); // Dispatch a scripting API message to ALL rooms
-  rpc dispatchExternalModuleMessage(ExternalModuleMessage) returns (google.protobuf.Empty); // Dispatch an externam module message to room and user if is defined
+  rpc handleMapStorageUploadMapDetected(MapStorageClearAfterUploadMessage) returns (google.protobuf.Empty); // Ask the map-storage attached to this back to drop a WAM map from memory. Callers send it to every back, because only one of them is attached to the map-storage holding that map.
+  rpc handleMapStorageDeleteMapDetected(MapStorageDeleteMessage) returns (google.protobuf.Empty); // Tell the users of a deleted WAM map that it is gone. Only rooms live on this back are told, so callers send it to every back.
+  rpc dispatchGlobalEvent(DispatchGlobalEventRequest) returns (google.protobuf.Empty); // Dispatch a scripting API message to ALL rooms — of this back. The caller reaches the whole cluster by calling every back.
+  rpc dispatchExternalModuleMessage(ExternalModuleMessage) returns (google.protobuf.Empty); // Dispatch an external module message to one user of one room. Despite both fields being optional on the wire, the back drops the message unless it names a room AND a recipient.
 }
 
 /**
  * Service handled by the "back" about spaces. Pusher servers connect to this service.
  */
 service SpaceManager {
-  rpc watchSpace(stream PusherToBackSpaceMessage) returns (stream BackToPusherSpaceMessage);
-  rpc handleLivekitWebhook(HandleLivekitWebhookRequest) returns (google.protobuf.Empty);
+  rpc watchSpace(stream PusherToBackSpaceMessage) returns (stream BackToPusherSpaceMessage); // Holds one pusher's subscription to the back's spaces: the pusher joins/leaves spaces and pushes user and metadata updates, the back streams back what changed
+  rpc handleLivekitWebhook(HandleLivekitWebhookRequest) returns (google.protobuf.Empty); // Forward a webhook received from LiveKit. Errors are graded on purpose: a bad signature or payload answers UNAUTHENTICATED/INVALID_ARGUMENT, which the pusher turns into a non-retryable status, while anything else is treated as worth retrying.
 }
 
 /**
  * Service handled by the "map-storage". Back servers connect to this service.
+ *
+ * The mapKey these calls carry is the complete URL of the map; the map-storage turns it into its own
+ * virtual path before touching storage.
  */
 service MapStorage {
-  rpc ping(PingMessage) returns (PingMessage);
-  rpc handleEditMapCommandWithKeyMessage(EditMapCommandWithKeyMessage) returns (EditMapCommandMessage);
-  rpc handleUpdateMapToNewestMessage(UpdateMapToNewestWithKeyMessage) returns (EditMapCommandsArrayMessage);
-  rpc handleClearAfterUpload(MapStorageClearAfterUploadMessage) returns (google.protobuf.Empty);
+  rpc ping(PingMessage) returns (PingMessage); // Echoes the request back unchanged, to check the map-storage answers
+  rpc handleEditMapCommandWithKeyMessage(EditMapCommandWithKeyMessage) returns (EditMapCommandMessage); // Apply one map-editor command to a WAM map, under a per-map lock, and answer the command as stored
+  rpc handleUpdateMapToNewestMessage(UpdateMapToNewestWithKeyMessage) returns (EditMapCommandsArrayMessage); // Answer the commands a client is missing, so it can catch its copy of the map up with the stored one
+  rpc handleClearAfterUpload(MapStorageClearAfterUploadMessage) returns (google.protobuf.Empty); // Drop a WAM map from memory after it was re-uploaded, so the next read reloads it from storage
 }

@@ -71,6 +71,15 @@
                 "</a>",
         );
     }
+    if (legals?.analyticsNoticeUrl) {
+        legalStrings.push(
+            '<a href="' +
+                encodeURI(legals.analyticsNoticeUrl) +
+                '" target="_blank" rel="noopener noreferrer" class="text-white no-underline hover:underline bold hover:text-white">' +
+                $LL.login.analyticsNotice() +
+                "</a>",
+        );
+    }
 
     let legalString: string | undefined = $state();
     if (legalStrings.length > 0) {
