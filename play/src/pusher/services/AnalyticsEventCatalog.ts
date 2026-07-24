@@ -431,7 +431,9 @@ export const statusDwellEvent = defineEvent(
         .object({
             status: z
                 .string()
-                .describe("Availability status held during this period (ONLINE, BUSY, DO_NOT_DISTURB, BACK_IN_A_MOMENT, …)."),
+                .describe(
+                    "Availability status held during this period (ONLINE, BUSY, DO_NOT_DISTURB, BACK_IN_A_MOMENT, …).",
+                ),
         })
         .merge(timedEventProperties)
         .extend({
