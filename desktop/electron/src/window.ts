@@ -65,8 +65,7 @@ let landingRecoveryInProgress = false;
 let activeTabTeardownWired = false;
 const desktopCallbackFlows = new Map<string, DesktopCallbackFlow>();
 
-const LOAD_FAILURE_LANDING_MESSAGE =
-    "This world could not be loaded. It may be offline, or the URL may be wrong.";
+const LOAD_FAILURE_LANDING_MESSAGE = "This world could not be loaded. It may be offline, or the URL may be wrong.";
 
 function randomToken(bytes: number) {
     return crypto.randomBytes(bytes).toString("hex");
@@ -476,7 +475,7 @@ function ensureDesktopCallbackServer(): Promise<string> {
 
         closeDesktopAuthWindow();
         void openDesktopAuthCallback({ origin: callbackOrigin, code, matrixLoginToken }).finally(
-            maybeStopDesktopCallbackServer,
+            maybeStopDesktopCallbackServer
         );
     });
     desktopAuthCallbackServer = server;
@@ -873,7 +872,7 @@ async function openDesktopAuthCallback(callback: DesktopAuthCallback) {
     try {
         const payload = await requestDesktopAuthExchange(callback.origin, callback.code);
         await loadDesktopTarget(
-            createRoomUrlWithAuthToken(payload.targetUrl, payload.token, callback.matrixLoginToken),
+            createRoomUrlWithAuthToken(payload.targetUrl, payload.token, callback.matrixLoginToken)
         );
     } catch (error) {
         ElectronLog.warn("Failed to exchange desktop auth callback.", error);

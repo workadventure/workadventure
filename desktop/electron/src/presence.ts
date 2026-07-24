@@ -47,12 +47,7 @@ const state: PresenceState = {
     statusLocked: false,
 };
 
-const TRAY_AVAILABILITY_VALUES: readonly TrayAvailability[] = [
-    "online",
-    "busy",
-    "back_in_a_moment",
-    "do_not_disturb",
-];
+const TRAY_AVAILABILITY_VALUES: readonly TrayAvailability[] = ["online", "busy", "back_in_a_moment", "do_not_disturb"];
 
 function coerceAvailability(value: unknown): TrayAvailability {
     return typeof value === "string" && (TRAY_AVAILABILITY_VALUES as readonly string[]).includes(value)
