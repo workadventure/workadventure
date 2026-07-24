@@ -7,7 +7,6 @@ type AnalyticsEventQueue = {
     enqueueEvent(event: AnalyticsEventInput, socketData: SocketData): void;
 };
 
-
 /**
  * The only event names a client may ask the pusher to synthesize.
  *
