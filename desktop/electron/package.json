@@ -3,7 +3,8 @@
     "productName": "WorkAdventure",
     "version": "managedbyci",
     "description": "Desktop application for WorkAdventure",
-    "author": "thecodingmachine",
+    "author": "TheCodingMachine <hello@workadventu.re>",
+    "homepage": "https://workadventu.re",
     "main": "dist/main.js",
     "license": "SEE LICENSE IN LICENSE.txt",
     "scripts": {
