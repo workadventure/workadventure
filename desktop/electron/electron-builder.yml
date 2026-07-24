@@ -41,6 +41,7 @@ mac:
 
 linux:
     category: Network;InstantMessaging
+    maintainer: TheCodingMachine <hello@workadventu.re>
     target:
         - AppImage
         - deb
