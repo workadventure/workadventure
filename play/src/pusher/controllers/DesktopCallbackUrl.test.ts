@@ -25,10 +25,10 @@ describe("normalizeDesktopCallbackUrl", () => {
 
     it("accepts the bare callback path (no secret) for backward compatibility", () => {
         expect(normalizeDesktopCallbackUrl("http://127.0.0.1:48919/auth/callback")).toBe(
-            "http://127.0.0.1:48919/auth/callback"
+            "http://127.0.0.1:48919/auth/callback",
         );
         expect(normalizeDesktopCallbackUrl("http://localhost:48919/logout/callback")).toBe(
-            "http://localhost:48919/logout/callback"
+            "http://localhost:48919/logout/callback",
         );
     });
 
