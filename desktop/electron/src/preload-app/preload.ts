@@ -81,7 +81,8 @@ const api: WorkAdventureDesktopApi = {
     setTabTitle: (title) => ipcRenderer.send("app:setTabTitle", String(title ?? "")),
     onSystemIdle: (callback) => subscribe("app:on-system-idle", (idle) => callback(Boolean(idle))),
     presenter: {
-        setTool: (tool, displayId, sourceId) => ipcRenderer.send("app:presenter:setTool", { tool, displayId, sourceId }),
+        setTool: (tool, displayId, sourceId) =>
+            ipcRenderer.send("app:presenter:setTool", { tool, displayId, sourceId }),
         onCursor: (callback) =>
             subscribe("app:on-presenter-cursor", (point) => {
                 const p = (point && typeof point === "object" ? point : {}) as { x?: unknown; y?: unknown };
