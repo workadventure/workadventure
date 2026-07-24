@@ -171,7 +171,7 @@ function createConversationsStore(connection: ChatConnectionInterface): Readable
                             unreadCount: get(room.unreadNotificationCount) || 0,
                             highlightCount: room.unreadHighlightCount ? get(room.unreadHighlightCount) || 0 : 0,
                         };
-                    })
+                    }),
                 );
             };
 
@@ -191,7 +191,7 @@ function createConversationsStore(connection: ChatConnectionInterface): Readable
                 }
             };
         },
-        [] as CompanionConversation[]
+        [] as CompanionConversation[],
     );
 }
 
@@ -245,7 +245,7 @@ function createTotalUnreadStore(connection: ChatConnectionInterface): Readable<n
                 perRoom.clear();
             };
         },
-        0
+        0,
     );
 }
 
@@ -383,7 +383,7 @@ class DesktopApi {
                     invitationPending: $invitation !== null,
                     requestedStatus: requestedStatusToKey($requested),
                     statusLocked: STATUS_LOCKED_SET.has($availability),
-                })
+                }),
             );
             //eslint-disable-next-line svelte/no-ignored-unsubscribe
             presenceStore.subscribe((presence) => {
@@ -538,7 +538,7 @@ class DesktopApi {
                 pipOpen: Boolean($pipOpen),
                 status: requestedStatusToKey($requested),
                 statusLocked: STATUS_LOCKED_SET.has($availability),
-            })
+            }),
         );
         //eslint-disable-next-line svelte/no-ignored-unsubscribe
         mediaStore.subscribe((media) => {
@@ -683,7 +683,7 @@ class DesktopApi {
                                 id: NEARBY_ID,
                                 name: "Nearby",
                                 kind: "nearby",
-                                preview: last ? get(last.content).body ?? "" : "",
+                                preview: last ? (get(last.content).body ?? "") : "",
                                 lastActivityAt: last?.date instanceof Date ? last.date.getTime() : 0,
                                 unreadCount: 0,
                                 highlightCount: 0,
@@ -739,7 +739,8 @@ class DesktopApi {
         };
         const openDmConversation = async (chatId: string) => {
             try {
-                const room = chatConnection?.getDirectRoomFor(chatId) ?? (await chatConnection?.createDirectRoom(chatId));
+                const room =
+                    chatConnection?.getDirectRoomFor(chatId) ?? (await chatConnection?.createDirectRoom(chatId));
                 if (room) {
                     selectedConversationId = room.id;
                     markConversationRead(room.id);
@@ -808,7 +809,7 @@ class DesktopApi {
                                 player.userUuid,
                                 scene.roomUrl,
                                 AskPositionMessage_AskType.MOVE,
-                                player.userId
+                                player.userId,
                             );
                         } catch (error) {
                             console.warn("Desktop companion: locate failed", error);
@@ -823,10 +824,7 @@ class DesktopApi {
                     if (player) {
                         try {
                             const scene = gameManager.getCurrentGameScene();
-                            const sent = scene.inviteManager?.requestMeetingInvitation(
-                                player.userUuid,
-                                player.userId
-                            );
+                            const sent = scene.inviteManager?.requestMeetingInvitation(player.userUuid, player.userId);
                             if (sent) {
                                 scene.playSound("meeting-in", 0.15);
                             }
