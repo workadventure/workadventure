@@ -51,7 +51,7 @@
     let spotlightRadius = $derived(
         activeEffect
             ? Math.max(40, (activeEffect.scale > 0 ? activeEffect.scale : 0.18) * Math.min(clientWidth, clientHeight))
-            : 0
+            : 0,
     );
     const LOUPE_RADIUS = 72;
     let loupeZoom = $derived(activeEffect && activeEffect.scale > 0 ? activeEffect.scale : 2.4);
