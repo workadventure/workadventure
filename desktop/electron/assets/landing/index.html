@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';"
+        />
+        <title>WorkAdventure</title>
+        <style>
+            :root {
+                color-scheme: dark;
+                --bg: #0a1422;
+                --surface: #13243a;
+                --surface-raised: #192d47;
+                --text: #f8fafc;
+                --text-muted: #a8b6c8;
+                --primary: #6d5dfc;
+                --primary-hover: #8173ff;
+                --primary-soft: rgba(109, 93, 252, 0.18);
+                --danger: #ff8c78;
+                --border: rgba(255, 255, 255, 0.11);
+                --focus: #a9a0ff;
+                font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+                min-height: 100%;
+            }
+
+            body {
+                margin: 0;
+                min-width: 320px;
+                color: var(--text);
+                background: radial-gradient(circle at 15% 12%, rgba(109, 93, 252, 0.2), transparent 30rem),
+                    radial-gradient(circle at 88% 82%, rgba(64, 187, 164, 0.12), transparent 28rem), var(--bg);
+            }
+
+            button,
+            input {
+                font: inherit;
+            }
+
+            .page {
+                display: flex;
+                flex-direction: column;
+                width: min(1080px, 100%);
+                min-height: 100vh;
+                margin: 0 auto;
+                padding: 36px clamp(20px, 5vw, 64px) 28px;
+            }
+
+            .brand {
+                display: inline-flex;
+                align-items: center;
+                gap: 12px;
+                width: fit-content;
+                color: var(--text);
+                font-size: 17px;
+                font-weight: 750;
+                letter-spacing: -0.01em;
+            }
+
+            .brand img {
+                width: 40px;
+                height: 40px;
+                border-radius: 11px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.26);
+            }
+
+            main {
+                display: flex;
+                flex: 1;
+                flex-direction: column;
+                justify-content: center;
+                padding: 48px 0;
+            }
+
+            .eyebrow {
+                display: inline-flex;
+                align-items: center;
+                width: fit-content;
+                margin-bottom: 16px;
+                padding: 7px 11px;
+                color: #cbc6ff;
+                background: var(--primary-soft);
+                border: 1px solid rgba(169, 160, 255, 0.2);
+                border-radius: 999px;
+                font-size: 12px;
+                font-weight: 700;
+                letter-spacing: 0.02em;
+            }
+
+            h1 {
+                max-width: 680px;
+                margin: 0;
+                font-size: clamp(34px, 5vw, 54px);
+                line-height: 1.04;
+                letter-spacing: -0.045em;
+            }
+
+            .intro {
+                max-width: 630px;
+                margin: 18px 0 32px;
+                color: var(--text-muted);
+                font-size: 16px;
+                line-height: 1.6;
+            }
+
+            .cards {
+                display: grid;
+                grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+                gap: 18px;
+            }
+
+            .card {
+                display: flex;
+                flex-direction: column;
+                min-height: 276px;
+                padding: clamp(22px, 3vw, 30px);
+                background: linear-gradient(155deg, rgba(255, 255, 255, 0.035), transparent 55%), var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 20px;
+                box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+            }
+
+            .card.primary-card {
+                background: linear-gradient(145deg, rgba(109, 93, 252, 0.12), transparent 48%), var(--surface-raised);
+                border-color: rgba(169, 160, 255, 0.23);
+            }
+
+            .card-number {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 30px;
+                height: 30px;
+                margin-bottom: 22px;
+                color: #d8d4ff;
+                background: var(--primary-soft);
+                border: 1px solid rgba(169, 160, 255, 0.22);
+                border-radius: 9px;
+                font-size: 12px;
+                font-weight: 800;
+            }
+
+            .card.secondary-card .card-number {
+                color: #b9c7d8;
+                background: rgba(255, 255, 255, 0.06);
+                border-color: var(--border);
+            }
+
+            .card h2 {
+                margin: 0 0 8px;
+                font-size: 20px;
+                letter-spacing: -0.015em;
+            }
+
+            .card p {
+                margin: 0 0 22px;
+                color: var(--text-muted);
+                font-size: 13px;
+                line-height: 1.55;
+            }
+
+            .field {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                margin-top: auto;
+            }
+
+            .field label {
+                color: #dce5ef;
+                font-size: 12px;
+                font-weight: 700;
+            }
+
+            input[type="url"] {
+                width: 100%;
+                height: 46px;
+                padding: 0 14px;
+                color: var(--text);
+                background: rgba(5, 12, 22, 0.5);
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                outline: none;
+                transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+            }
+
+            input[type="url"]::placeholder {
+                color: #6f8095;
+            }
+
+            input[type="url"]:hover {
+                background: rgba(5, 12, 22, 0.65);
+            }
+
+            input[type="url"]:focus-visible {
+                border-color: var(--focus);
+                box-shadow: 0 0 0 3px rgba(109, 93, 252, 0.22);
+            }
+
+            .actions {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-top: 14px;
+            }
+
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 44px;
+                padding: 0 18px;
+                color: #fff;
+                background: var(--primary);
+                border: 1px solid transparent;
+                border-radius: 10px;
+                box-shadow: 0 10px 24px rgba(64, 48, 213, 0.22);
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 750;
+                transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+            }
+
+            .btn:hover:not(:disabled) {
+                background: var(--primary-hover);
+                transform: translateY(-1px);
+            }
+
+            .btn:focus-visible {
+                outline: 3px solid rgba(169, 160, 255, 0.42);
+                outline-offset: 2px;
+            }
+
+            .btn:disabled {
+                opacity: 0.55;
+                cursor: wait;
+            }
+
+            .btn.secondary {
+                width: 100%;
+                margin-top: auto;
+                color: var(--text);
+                background: rgba(255, 255, 255, 0.07);
+                border-color: var(--border);
+                box-shadow: none;
+            }
+
+            .btn.secondary:hover:not(:disabled) {
+                background: rgba(255, 255, 255, 0.12);
+            }
+
+            .error {
+                min-height: 18px;
+                margin-top: 8px;
+                color: var(--danger);
+                font-size: 12px;
+                line-height: 1.45;
+                visibility: hidden;
+            }
+
+            .error.visible {
+                visibility: visible;
+            }
+
+            .recent-worlds {
+                margin-top: 18px;
+                padding: clamp(20px, 3vw, 26px);
+                background: rgba(19, 36, 58, 0.82);
+                border: 1px solid var(--border);
+                border-radius: 20px;
+                box-shadow: 0 18px 50px rgba(0, 0, 0, 0.16);
+            }
+
+            .recent-worlds[hidden] {
+                display: none;
+            }
+
+            .recent-heading {
+                display: flex;
+                align-items: baseline;
+                justify-content: space-between;
+                gap: 16px;
+                margin-bottom: 14px;
+            }
+
+            .recent-heading h2 {
+                margin: 0;
+                font-size: 18px;
+                letter-spacing: -0.015em;
+            }
+
+            .recent-heading span {
+                color: var(--text-muted);
+                font-size: 11px;
+            }
+
+            .recent-list {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .recent-item {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                min-width: 0;
+                padding: 5px 8px 5px 6px;
+                color: var(--text);
+                background: rgba(5, 12, 22, 0.42);
+                border: 1px solid var(--border);
+                border-radius: 11px;
+                transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+            }
+
+            .recent-item:hover {
+                background: rgba(109, 93, 252, 0.12);
+                border-color: rgba(169, 160, 255, 0.34);
+                transform: translateY(-1px);
+            }
+
+            .recent-open {
+                display: flex;
+                flex: 1;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                min-width: 0;
+                padding: 8px;
+                background: none;
+                border: 0;
+                border-radius: 8px;
+                color: inherit;
+                text-align: left;
+                cursor: pointer;
+            }
+
+            .recent-open:focus-visible,
+            .recent-pin:focus-visible {
+                outline: 3px solid rgba(169, 160, 255, 0.42);
+                outline-offset: 2px;
+            }
+
+            .recent-item button:disabled {
+                opacity: 0.55;
+                cursor: wait;
+            }
+
+            .recent-pin {
+                flex: 0 0 auto;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 30px;
+                height: 30px;
+                padding: 0;
+                background: none;
+                border: 0;
+                border-radius: 8px;
+                color: var(--text-muted);
+                cursor: pointer;
+                transition: color 140ms ease, background-color 140ms ease;
+            }
+
+            .recent-pin:hover {
+                color: #f5c451;
+                background: rgba(255, 255, 255, 0.06);
+            }
+
+            .recent-pin.is-pinned {
+                color: #f5c451;
+            }
+
+            .recent-copy {
+                display: flex;
+                min-width: 0;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .recent-name,
+            .recent-url {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .recent-name {
+                font-size: 13px;
+                font-weight: 750;
+            }
+
+            .recent-url {
+                color: var(--text-muted);
+                font-size: 10px;
+            }
+
+            .recent-action {
+                flex: 0 0 auto;
+                color: #cbc6ff;
+                font-size: 11px;
+                font-weight: 750;
+            }
+
+            .recent-error {
+                min-height: 0;
+            }
+
+            .recent-error.visible {
+                min-height: 18px;
+            }
+
+            footer {
+                color: #718198;
+                font-size: 11px;
+                line-height: 1.4;
+            }
+
+            @media (max-width: 760px) {
+                .page {
+                    padding-top: 24px;
+                }
+                main {
+                    justify-content: flex-start;
+                    padding: 44px 0 32px;
+                }
+                .cards {
+                    grid-template-columns: 1fr;
+                }
+                .recent-list {
+                    grid-template-columns: 1fr;
+                }
+                .card {
+                    min-height: 250px;
+                }
+            }
+
+            @media (max-height: 700px) and (min-width: 761px) {
+                .page {
+                    padding-top: 24px;
+                }
+                main {
+                    justify-content: flex-start;
+                    padding: 28px 0;
+                }
+                h1 {
+                    font-size: 38px;
+                }
+                .intro {
+                    margin: 12px 0 22px;
+                }
+                .card {
+                    min-height: 244px;
+                }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                *,
+                *::before,
+                *::after {
+                    scroll-behavior: auto !important;
+                    transition: none !important;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page">
+            <header>
+                <div class="brand">
+                    <img src="../icons/logo-round.png" alt="" />
+                    <span>WorkAdventure</span>
+                </div>
+            </header>
+
+            <main>
+                <div class="eyebrow">Desktop app</div>
+                <h1>Your workplace, one URL away.</h1>
+                <p class="intro">
+                    Open a world you already belong to, or create a new space for your team. Your last world will reopen
+                    automatically next time.
+                </p>
+
+                <div class="cards">
+                    <form class="card primary-card" id="join-form" novalidate>
+                        <span class="card-number" aria-hidden="true">01</span>
+                        <h2>Join a world</h2>
+                        <p>Paste the complete URL from your invitation or browser.</p>
+                        <div class="field">
+                            <label for="world-url">World URL</label>
+                            <input
+                                type="url"
+                                id="world-url"
+                                name="url"
+                                placeholder="https://play.workadventu.re/@/..."
+                                inputmode="url"
+                                autocomplete="url"
+                                aria-describedby="join-error"
+                                required
+                            />
+                        </div>
+                        <div class="error" id="join-error" role="alert" aria-live="polite"></div>
+                        <div class="actions">
+                            <button class="btn" type="submit" id="join-btn">Open world</button>
+                        </div>
+                    </form>
+
+                    <section class="card secondary-card" aria-labelledby="create-world-title">
+                        <span class="card-number" aria-hidden="true">02</span>
+                        <h2 id="create-world-title">Create a world</h2>
+                        <p>Set up a new virtual office from the WorkAdventure administration console.</p>
+                        <button class="btn secondary" type="button" id="create-btn">Create my world</button>
+                        <div class="error" id="create-error" role="alert" aria-live="polite"></div>
+                    </section>
+                </div>
+
+                <section class="recent-worlds" id="pinned-worlds" aria-labelledby="pinned-worlds-title" hidden>
+                    <div class="recent-heading">
+                        <h2 id="pinned-worlds-title">Pinned worlds</h2>
+                        <span>Your favourites</span>
+                    </div>
+                    <div class="recent-list" id="pinned-list"></div>
+                </section>
+
+                <section class="recent-worlds" id="recent-worlds" aria-labelledby="recent-worlds-title" hidden>
+                    <div class="recent-heading">
+                        <h2 id="recent-worlds-title">Recent worlds</h2>
+                        <span>Stored on this device</span>
+                    </div>
+                    <div class="recent-list" id="recent-list"></div>
+                    <div class="error recent-error" id="recent-error" role="alert" aria-live="polite"></div>
+                </section>
+            </main>
+
+            <footer>WorkAdventure Desktop keeps up to 10 recent world URLs on this device.</footer>
+        </div>
+
+        <script src="./renderer.js"></script>
+    </body>
+</html>

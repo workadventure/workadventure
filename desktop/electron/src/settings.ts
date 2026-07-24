@@ -1,29 +1,40 @@
 import ElectronLog from "electron-log";
 import Settings from "electron-settings";
-import type { Server } from "./preload-local-app/types";
+import {
+    normalizePersistedLastRoomUrl,
+    normalizePersistedPortalUrl,
+    normalizePersistedWorldHistory,
+} from "./desktop-url-policy";
 
 export type SettingsData = {
     log_level: ElectronLog.LogLevel;
     auto_launch_enabled: boolean;
-    servers: Server[];
-    shortcuts: Record<"mute_toggle" | "camera_toggle", string>;
+    portal_url: string;
+    last_room_url?: string;
+    world_history: string[];
+    pinned_worlds: string[];
+    shortcuts: Record<"mute_toggle" | "camera_toggle" | "companion_toggle", string>;
+    /** Last size + position of the resizable companion panel, restored (and clamped) on reopen. */
+    companion_bounds?: { x: number; y: number; width: number; height: number };
 };
 
 let settings: SettingsData;
 
 const defaultSettings: SettingsData = {
     log_level: "info",
-    auto_launch_enabled: true,
-    servers: [
-        {
-            _id: `${Date.now()}-1`,
-            name: "WA Demo",
-            url: "https://play.staging.workadventu.re/@/tcm/workadventure/wa-village",
-        },
-    ],
+    // Auto-launch is OPT-IN: silently adding WorkAdventure to OS startup is non-compliant with
+    // macOS Sonoma+ background-item guidelines and Windows install best practices. Users explicitly
+    // opt in via the preferences UI.
+    auto_launch_enabled: false,
+    portal_url: process.env.WA_DESKTOP_PORTAL_URL || "http://admin.workadventure.localhost/",
+    world_history: [],
+    pinned_worlds: [],
     shortcuts: {
         mute_toggle: "",
         camera_toggle: "",
+        // Opt-in like the others: no default global accelerator (avoids OS-wide conflicts); the tray
+        // "Companion panel" item toggles it without a shortcut.
+        companion_toggle: "",
     },
 };
 
@@ -32,7 +43,23 @@ async function init() {
     if (Object.keys(_settings).length === 0) {
         _settings = defaultSettings;
     }
-    settings = _settings as SettingsData;
+    const persistedSettings = _settings as Partial<SettingsData>;
+    const persistedWorldHistory = Array.isArray(persistedSettings.world_history) ? persistedSettings.world_history : [];
+    const persistedPinnedWorlds = Array.isArray(persistedSettings.pinned_worlds) ? persistedSettings.pinned_worlds : [];
+    settings = {
+        ...defaultSettings,
+        ...persistedSettings,
+        shortcuts: {
+            ...defaultSettings.shortcuts,
+            ...(persistedSettings.shortcuts || {}),
+        },
+    };
+    settings.portal_url = normalizePersistedPortalUrl(process.env.WA_DESKTOP_PORTAL_URL || settings.portal_url);
+    settings.last_room_url = normalizePersistedLastRoomUrl(settings.last_room_url);
+    settings.world_history = normalizePersistedWorldHistory([settings.last_room_url, ...persistedWorldHistory]);
+    // Pinned worlds are sanitized the same way; a modest cap keeps the sidebar/menus tidy.
+    settings.pinned_worlds = normalizePersistedWorldHistory(persistedPinnedWorlds, 12);
+    await Settings.set(settings);
 }
 
 function get(): SettingsData;

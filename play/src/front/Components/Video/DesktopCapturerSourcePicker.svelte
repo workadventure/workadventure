@@ -1,27 +1,47 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import {
         desktopCapturerSourcePromiseResolve,
         showDesktopCapturerSourcePicker,
     } from "../../Stores/ScreenSharingStore";
     import type { DesktopCapturerSource } from "../../Interfaces/DesktopAppInterfaces";
-    import Button from "../UI/Button.svelte";
+    import { getDesktopCapturerSourceKind, type DesktopCapturerSourceKind } from "./DesktopCapturerSourcePickerPolicy";
 
     let desktopCapturerSources: DesktopCapturerSource[] = $state([]);
     let interval: ReturnType<typeof setInterval>;
+    let selectedKind: DesktopCapturerSourceKind = $state("screen");
+    let loading = $state(true);
+    let errorMessage: string | undefined = $state(undefined);
+
+    let visibleSources = $derived(
+        desktopCapturerSources.filter((source) => getDesktopCapturerSourceKind(source) === selectedKind),
+    );
 
     async function getDesktopCapturerSources() {
         if (!window.WAD) {
             throw new Error("This component can only be used in the desktop app");
         }
-        desktopCapturerSources = await window.WAD.getDesktopCapturerSources({
-            thumbnailSize: {
-                height: 144,
-                width: 256,
-            },
-            types: ["screen", "window"],
-        });
+        try {
+            errorMessage = undefined;
+            const fresh = await window.WAD.getDesktopCapturerSources({
+                thumbnailSize: {
+                    height: 180,
+                    width: 320,
+                },
+                types: ["screen", "window"],
+            });
+            // Don't clobber a non-empty list with an empty one: Electron's desktopCapturer
+            // occasionally returns [] transiently on macOS under load (or when the main process
+            // is busy with a concurrent renegotiation). Retain the last known sources; the next
+            // 1s poll will refresh them for real if the user really has no sources.
+            if (fresh.length > 0 || desktopCapturerSources.length === 0) {
+                desktopCapturerSources = fresh;
+            }
+        } catch (error) {
+            errorMessage = error instanceof Error ? error.message : "Impossible de charger les sources.";
+        } finally {
+            loading = false;
+        }
     }
 
     onMount(async () => {
@@ -54,114 +74,260 @@
     function close() {
         $showDesktopCapturerSourcePicker = false;
     }
+
+    function selectKind(kind: DesktopCapturerSourceKind) {
+        selectedKind = kind;
+    }
+
+    function stopPropagation(event: Event) {
+        event.stopPropagation();
+    }
 </script>
 
-<div class="source-picker" transition:fly={{ y: -50, duration: 500 }}>
-    <Button type="button" class="danger close" onclick={cancel}>&times;</Button>
-    <h2>Select a Screen or Window to share!</h2>
-    <section class="streams">
-        {#each desktopCapturerSources as source (source.id)}
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div
-                class="media-box clickable"
-                onclick={(event) => {
-                    event.preventDefault();
-                    selectDesktopCapturerSource(source);
-                }}
-            >
-                <img src={source.thumbnailURL} alt={source.name} draggable="false" />
-                <div class="container">
-                    {source.name}
-                </div>
+<div class="source-picker-backdrop" role="presentation" onclick={cancel}>
+    <div
+        class="source-picker"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="desktop-source-picker-title"
+        tabindex="-1"
+        onclick={stopPropagation}
+        onkeydown={stopPropagation}
+    >
+        <header class="source-picker-header">
+            <div>
+                <h2 id="desktop-source-picker-title">Partager votre ecran</h2>
+                <p>Choisissez ce que les autres participants verront.</p>
             </div>
-        {/each}
-    </section>
+            <button type="button" class="close-button" aria-label="Fermer" onclick={cancel}>×</button>
+        </header>
+
+        <div class="source-picker-tabs" role="tablist" aria-label="Type de source">
+            <button
+                type="button"
+                role="tab"
+                aria-selected={selectedKind === "screen"}
+                class:active={selectedKind === "screen"}
+                onclick={() => selectKind("screen")}
+            >
+                Ecrans
+            </button>
+            <button
+                type="button"
+                role="tab"
+                aria-selected={selectedKind === "window"}
+                class:active={selectedKind === "window"}
+                onclick={() => selectKind("window")}
+            >
+                Fenetres
+            </button>
+        </div>
+
+        <div class="source-picker-body">
+            {#if loading}
+                <div class="source-picker-state">Chargement des sources...</div>
+            {:else if errorMessage}
+                <div class="source-picker-state error">{errorMessage}</div>
+            {:else if visibleSources.length === 0}
+                <div class="source-picker-state">Aucune source disponible.</div>
+            {:else}
+                <div class="source-grid">
+                    {#each visibleSources as source (source.id)}
+                        <button type="button" class="source-tile" onclick={() => selectDesktopCapturerSource(source)}>
+                            <span class="source-thumbnail">
+                                <img src={source.thumbnailURL} alt="" draggable="false" />
+                            </span>
+                            <span class="source-name" title={source.name}>{source.name}</span>
+                        </button>
+                    {/each}
+                </div>
+            {/if}
+        </div>
+
+        <footer class="source-picker-footer">
+            <button type="button" class="secondary-button" onclick={cancel}>Annuler</button>
+        </footer>
+    </div>
 </div>
 
 <style>
-    .source-picker {
+    .source-picker-backdrop {
         position: absolute;
-        pointer-events: auto;
-        background: #eceeee;
-        margin-left: auto;
-        margin-right: auto;
-        left: 0;
-        right: 0;
-        margin-top: 4%;
-        height: 80vh;
-        width: 80vw;
-        max-width: 1024px;
+        inset: 0;
         z-index: 900;
-        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        pointer-events: auto;
+        background: rgb(0 0 0 / 56%);
+        backdrop-filter: blur(4px);
+    }
+
+    .source-picker {
         display: flex;
         flex-direction: column;
-        background-color: #333333;
-        color: whitesmoke;
+        width: min(1040px, 100%);
+        max-height: min(760px, calc(100vh - 48px));
+        overflow: hidden;
+        color: #f8fafc;
+        background: #111827;
+        border: 1px solid rgb(255 255 255 / 14%);
+        border-radius: 8px;
+        box-shadow: 0 24px 80px rgb(0 0 0 / 45%);
+    }
+
+    .source-picker-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 20px 24px 14px;
+        border-bottom: 1px solid rgb(255 255 255 / 10%);
 
         h2 {
-            font-family: "Press Start 2P";
+            margin: 0 0 6px;
+            font-family: "Roboto", sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0;
         }
 
-        section.streams {
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-            gap: 10px;
-            overflow-y: auto;
-            justify-content: center;
-            align-content: flex-start;
-            height: 100%;
+        p {
+            margin: 0;
+            color: #cbd5e1;
+            font-size: 14px;
         }
+    }
 
-        .media-box {
-            position: relative;
-            padding: 0;
-            width: calc(100% / 3 - 20px);
-            max-width: 256px;
-            padding-bottom: calc(min((100% / 3 - 20px), 256px) * (144px / 256px));
-            max-height: 144px;
-            justify-content: center;
-            background-color: #000;
-            background-clip: padding-box;
+    .close-button,
+    .secondary-button,
+    .source-picker-tabs button,
+    .source-tile {
+        border: 0;
+        font: inherit;
+        cursor: pointer;
+    }
 
-            &.clickable * {
-                cursor: pointer;
-            }
+    .close-button {
+        width: 36px;
+        height: 36px;
+        flex: none;
+        color: #e2e8f0;
+        background: rgb(255 255 255 / 10%);
+        border-radius: 6px;
+        font-size: 24px;
+        line-height: 1;
+    }
 
-            &:hover {
-                transform: scale(1.05);
-            }
+    .close-button:hover,
+    .secondary-button:hover,
+    .source-picker-tabs button:hover {
+        background: rgb(255 255 255 / 16%);
+    }
 
-            img {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                max-width: 100%;
-                max-height: 100%;
-                transform: translate(-50%, -50%);
-            }
+    .source-picker-tabs {
+        display: flex;
+        gap: 8px;
+        padding: 14px 24px 0;
+    }
 
-            div.container {
-                position: absolute;
-                width: 90%;
-                height: auto;
-                left: 5%;
-                top: calc(100% - 28px);
-                text-align: center;
-                padding: 2px 36px;
+    .source-picker-tabs button {
+        min-width: 112px;
+        padding: 10px 14px;
+        color: #cbd5e1;
+        background: rgb(255 255 255 / 8%);
+        border-radius: 6px;
+        font-weight: 600;
+    }
 
-                white-space: nowrap;
-                overflow-x: hidden;
-                text-overflow: ellipsis;
-                font-size: 14px;
-                margin: 2px;
-                background-color: white;
-                color: #333333;
-                border: solid 3px black;
-                border-radius: 8px;
-                font-style: normal;
-            }
-        }
+    .source-picker-tabs button.active {
+        color: white;
+        background: #4353ff;
+    }
+
+    .source-picker-body {
+        min-height: 280px;
+        overflow: auto;
+        padding: 18px 24px 24px;
+    }
+
+    .source-picker-state {
+        display: grid;
+        min-height: 260px;
+        place-items: center;
+        color: #cbd5e1;
+        font-size: 15px;
+    }
+
+    .source-picker-state.error {
+        color: #fecaca;
+    }
+
+    .source-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 14px;
+    }
+
+    .source-tile {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+        color: #f8fafc;
+        text-align: left;
+        background: rgb(255 255 255 / 7%);
+        border: 1px solid rgb(255 255 255 / 10%);
+        border-radius: 8px;
+    }
+
+    .source-tile:hover,
+    .source-tile:focus-visible {
+        outline: none;
+        background: rgb(67 83 255 / 22%);
+        border-color: rgb(129 140 248 / 80%);
+    }
+
+    .source-thumbnail {
+        display: grid;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        place-items: center;
+        background: #020617;
+        border-radius: 6px;
+    }
+
+    .source-thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .source-name {
+        min-width: 0;
+        overflow: hidden;
+        color: #e2e8f0;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .source-picker-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding: 14px 24px 20px;
+        border-top: 1px solid rgb(255 255 255 / 10%);
+    }
+
+    .secondary-button {
+        padding: 10px 14px;
+        color: #e2e8f0;
+        background: rgb(255 255 255 / 10%);
+        border-radius: 6px;
+        font-weight: 600;
     }
 </style>

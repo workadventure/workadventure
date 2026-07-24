@@ -28,6 +28,7 @@ import locate from "./locate";
 import messageScreen from "./messageScreen";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
+import screenAnnotation from "./screenAnnotation";
 import recording from "./recording";
 
 const it_IT = deepmerge(en_US, {
@@ -60,6 +61,7 @@ const it_IT = deepmerge(en_US, {
     randomNames,
     onboarding,
     recording,
+    screenAnnotation,
 });
 
 export default it_IT;

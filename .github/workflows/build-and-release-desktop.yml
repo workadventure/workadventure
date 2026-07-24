@@ -21,8 +21,11 @@ jobs:
     name: "Build & release desktop app for ${{ matrix.os }}"
 
     strategy:
+      # Build each OS independently: a flake on one (e.g. a transient GitHub download of the NSIS
+      # tool on Windows) should not cancel the ubuntu/macOS builds.
+      fail-fast: false
       matrix:
-        node-version: [16.x]
+        node-version: [22.x]
         runtime: [ linux-x64, win-x64, osx-x64 ]
         include:
         - runtime: linux-x64

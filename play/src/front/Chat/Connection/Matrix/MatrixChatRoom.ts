@@ -118,6 +118,7 @@ export class MatrixChatRoom
     readonly type: Readable<"multiple" | "direct">;
     readonly hasUnreadMessages: Writable<boolean>;
     readonly unreadNotificationCount: Writable<number>;
+    readonly unreadHighlightCount: Writable<number>;
     readonly initializationState: Writable<ChatRoomInitializationState> = writable("idle");
     readonly initializationError: Writable<Error | undefined> = writable(undefined);
     pictureStore: LazyPictureStore;
@@ -234,6 +235,7 @@ export class MatrixChatRoom
         this.type = readonly(this.roomTypeStore);
         this.hasUnreadMessages = writable(matrixRoom.getUnreadNotificationCount() > 0);
         this.unreadNotificationCount = writable(matrixRoom.getUnreadNotificationCount());
+        this.unreadHighlightCount = writable(matrixRoom.getUnreadNotificationCount(NotificationCountType.Highlight));
         const roomAvatarStore: PictureStore = readable(
             matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined,
         );
@@ -1406,6 +1408,7 @@ export class MatrixChatRoom
                 }
                 this.hasUnreadMessages.set(room.getUnreadNotificationCount() > 0);
                 this.unreadNotificationCount.set(room.getUnreadNotificationCount());
+                this.unreadHighlightCount.set(room.getUnreadNotificationCount(NotificationCountType.Highlight));
                 if (event.getType() === "m.room.message") {
                     const threadRootId = event.threadRootId;
                     const eventId = event.getId();
@@ -1464,6 +1467,7 @@ export class MatrixChatRoom
     ) {
         this.hasUnreadMessages.set(this.matrixRoom.getUnreadNotificationCount() > 0);
         this.unreadNotificationCount.set(this.matrixRoom.getUnreadNotificationCount());
+        this.unreadHighlightCount.set(this.matrixRoom.getUnreadNotificationCount(NotificationCountType.Highlight));
         if (threadId) {
             this.refreshThreadSummary(threadId);
         }
@@ -1702,6 +1706,7 @@ export class MatrixChatRoom
         this.matrixRoom.setUnreadNotificationCount(NotificationCountType.Total, 0);
         this.hasUnreadMessages.set(false);
         this.unreadNotificationCount.set(0);
+        this.unreadHighlightCount.set(0);
         // Read receipt must target the live timeline; getLastLiveEvent() matches the data.liveEvent semantics used in onRoomTimeline.
         this.matrixRoom.client
             .sendReadReceipt(this.matrixRoom.getLastLiveEvent() ?? null, ReceiptType.Read)

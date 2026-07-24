@@ -14,6 +14,7 @@ import { recordingStore } from "../../Stores/RecordingStore";
 import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
+import { bindScreenAnnotationEventsToSpace } from "../Utils/BindScreenAnnotationEvents";
 import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { microphoneValidatedForDeviceIdStore } from "../../Stores/MicrophoneValidatedForDeviceIdStore";
@@ -289,6 +290,7 @@ export class SpacePeerManager {
         );
 
         _bindMuteEventsToSpace(this.space);
+        bindScreenAnnotationEventsToSpace(this.space, this.screenSharingPeerRemoved);
 
         this.metadataSubscription = this.space.observeMetadataProperty("recording").subscribe((value) => {
             const recording = recordingSchema.safeParse(value);

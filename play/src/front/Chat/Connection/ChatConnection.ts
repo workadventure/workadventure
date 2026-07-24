@@ -119,6 +119,9 @@ export interface ChatConversation {
     readonly parentRoom?: ChatRoom;
     readonly hasUnreadMessages: Readable<boolean>;
     readonly unreadNotificationCount: Readable<number>;
+    /** Unread @-mentions / highlights only (subset of unreadNotificationCount). Optional: not every
+     * conversation kind tracks highlights separately. */
+    readonly unreadHighlightCount?: Readable<number>;
     readonly initializationState: Readable<ChatRoomInitializationState>;
     readonly initializationError?: Readable<Error | undefined>;
     readonly ensureInitialized: () => Promise<void>;
