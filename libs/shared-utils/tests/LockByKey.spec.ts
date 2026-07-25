@@ -1,5 +1,5 @@
 import { describe, it, vi, expect, afterEach } from "vitest";
-import { LockByKey } from "../LockByKey";
+import { LockByKey } from "../src/LockByKey";
 
 describe("LockByKeys", () => {
     afterEach(() => {
@@ -52,6 +52,51 @@ describe("LockByKeys", () => {
         await vi.advanceTimersByTimeAsync(10_000);
 
         await expect(waitPromise).rejects.toThrow(/Lock timeout after 10000ms/);
+    });
+
+    it("should report timeouts through the onTimeout hook", async () => {
+        vi.useFakeTimers();
+        const onTimeout = vi.fn();
+        const lock = new LockByKey<string>(onTimeout);
+        const key = "timeoutKey";
+
+        const waitPromise = lock.waitForLock(key, () => new Promise<void>(() => {}), 5000);
+
+        await vi.advanceTimersByTimeAsync(5_000);
+
+        await expect(waitPromise).rejects.toThrow(/Lock timeout after 5000ms/);
+        expect(onTimeout).toHaveBeenCalledWith(expect.any(Error), key, 5000);
+    });
+
+    it("should not time out when no timeout is passed", async () => {
+        vi.useFakeTimers();
+        const lock = new LockByKey<string>();
+        const key = "noTimeoutKey";
+
+        let resolveOperation: (() => void) | undefined;
+        const waitPromise = lock.waitForLock(
+            key,
+            () =>
+                new Promise<void>((resolve) => {
+                    resolveOperation = resolve;
+                }),
+        );
+
+        // Way past any conceivable default timeout
+        await vi.advanceTimersByTimeAsync(3_600_000);
+
+        resolveOperation?.();
+        await expect(waitPromise).resolves.toBeUndefined();
+    });
+
+    it("should resolve with the callback's return value", async () => {
+        const lock = new LockByKey<string>();
+
+        const first = lock.waitForLock("key", () => Promise.resolve("first result"));
+        const second = lock.waitForLock("key", () => Promise.resolve(42));
+
+        await expect(first).resolves.toBe("first result");
+        await expect(second).resolves.toBe(42);
     });
 
     it("should execute concurrent requests sequentially (not in parallel)", async () => {

@@ -18,6 +18,14 @@ function createFakeSpace(spaceName: string): SpaceInterface {
     } as SpaceInterface;
 }
 
+function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
+    let resolve!: (value: T) => void;
+    const promise = new Promise<T>((res) => {
+        resolve = res;
+    });
+    return { promise, resolve };
+}
+
 type FakeProximityChatRoom = Pick<
     ProximityChatRoom,
     | "id"
@@ -251,6 +259,73 @@ describe("ProximityChatRoomManager", () => {
         expect(get(room.isJoined)).toBe(true);
         expect(get(manager.activeRoomStore)).toBe(room);
         expect(manager.resolveTargetRoom()).toBe(room);
+    });
+
+    it("does not lose a concurrently re-joined room when a leave completes after its server round-trip", async () => {
+        const manager = createManager();
+
+        await manager.joinSpace(
+            "megaphone-space",
+            "Audience",
+            [],
+            true,
+            FilterType.ALL_USERS,
+            false,
+            undefined,
+            "listener",
+        );
+        const firstRoom = roomByName.get("megaphone-space")!;
+
+        // The leave hangs on its server round-trip while a re-join for the same space comes in
+        // (a user crossing quickly from a listener zone to the matching speaker zone).
+        const pendingLeave = deferred<boolean>();
+        firstRoom.leaveSpace.mockReturnValueOnce(pendingLeave.promise);
+
+        const leavePromise = manager.leaveSpace("megaphone-space", true);
+        const joinPromise = manager.joinSpace(
+            "megaphone-space",
+            "Podium",
+            [],
+            true,
+            FilterType.ALL_USERS,
+            false,
+            undefined,
+            "speaker",
+        );
+
+        pendingLeave.resolve(true);
+        await leavePromise;
+        const rejoinedRoom = await joinPromise;
+
+        expect(manager.resolveTargetRoom("megaphone-space")).toBe(rejoinedRoom);
+        expect(get(rejoinedRoom.isJoined)).toBe(true);
+        expect(get(manager.roomsStore)).toContain(rejoinedRoom);
+    });
+
+    it("runs a leave requested during an in-flight join only after the join completes", async () => {
+        const manager = createManager();
+
+        const room = await manager.joinSpace("space-a", "Space A", [], false, FilterType.ALL_USERS, false);
+        room.hasUserMessages.set(true);
+        await manager.leaveSpace("space-a", false);
+
+        const fakeRoom = roomByName.get("space-a")!;
+        const pendingJoin = deferred<SpaceInterface>();
+        fakeRoom.joinSpace.mockReturnValueOnce(pendingJoin.promise);
+
+        const joinPromise = manager.joinSpace("space-a", "Space A", [], false, FilterType.ALL_USERS, false);
+        const leavePromise = manager.leaveSpace("space-a", false);
+
+        pendingJoin.resolve(createFakeSpace("space-a"));
+        await joinPromise;
+        await leavePromise;
+
+        // The room must end up left: the leave was requested last, so it must not run (and be
+        // overwritten) while the join is still in flight.
+        expect(get(fakeRoom.isJoined)).toBe(false);
+        expect(fakeRoom.leaveSpace.mock.invocationCallOrder[1]).toBeGreaterThan(
+            fakeRoom.joinSpace.mock.invocationCallOrder[1],
+        );
     });
 
     it("resolves legacy targets from selected joined room then most recent joined room", async () => {
