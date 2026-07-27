@@ -1,9 +1,54 @@
-import { app, Menu, type MenuItemConstructorOptions } from "electron";
+import { app, dialog, Menu, type MenuItem, type MenuItemConstructorOptions, type MessageBoxOptions } from "electron";
 import ElectronLog from "electron-log";
 
 import { createWindow, getWindow, openWorldTab } from "./window";
 import { getPinnedWorlds, getRecentWorlds, onWorldHistoryChange } from "./world-history";
-import { closeActiveTab, cycleTab } from "./tab-manager";
+import { closeActiveTab, closeInactiveTabs, cycleTab, getTabs } from "./tab-manager";
+import { setTabStripVisible } from "./tab-strip";
+import settings from "./settings";
+
+/**
+ * Toggle the tab bar from the menu. Electron flips `menuItem.checked` to the requested state BEFORE
+ * calling this. Turning it off while several tabs are open would strand the background tabs (no
+ * strip to switch/close them), so we confirm first and close all but the active one; cancelling
+ * reverts the checkbox and keeps the bar visible.
+ */
+async function toggleTabBar(menuItem: MenuItem): Promise<void> {
+    if (menuItem.checked) {
+        settings.set("tab_bar_enabled", true);
+        setTabStripVisible(true);
+        return;
+    }
+
+    const openTabs = getTabs().length;
+    if (openTabs > 1) {
+        const others = openTabs - 1;
+        const window = getWindow();
+        const options: MessageBoxOptions = {
+            type: "question",
+            buttons: ["Cancel", `Close ${others} other tab${others > 1 ? "s" : ""} & hide bar`],
+            defaultId: 1,
+            cancelId: 0,
+            title: "Hide the tab bar?",
+            message: "Hide the tab bar?",
+            detail: `You have ${openTabs} worlds open in tabs. Hiding the tab bar keeps the current world and closes the ${others} other${
+                others > 1 ? "s" : ""
+            }.`,
+        };
+        const { response } = window
+            ? await dialog.showMessageBox(window, options)
+            : await dialog.showMessageBox(options);
+        if (response !== 1) {
+            // Cancelled: revert the checkbox and leave the bar enabled.
+            menuItem.checked = true;
+            return;
+        }
+        closeInactiveTabs();
+    }
+
+    settings.set("tab_bar_enabled", false);
+    setTabStripVisible(false);
+}
 
 let isListeningForHistoryChanges = false;
 
@@ -101,6 +146,12 @@ export function createNativeApplicationMenu(): void {
                     label: "Previous tab",
                     accelerator: "CmdOrCtrl+Shift+[",
                     click: () => cycleTab(-1),
+                },
+                {
+                    label: "Show tab bar",
+                    type: "checkbox",
+                    checked: settings.get("tab_bar_enabled") !== false,
+                    click: (menuItem) => void toggleTabBar(menuItem),
                 },
                 { type: "separator" },
                 {
