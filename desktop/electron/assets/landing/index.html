@@ -273,7 +273,7 @@
             }
 
             .recent-worlds {
-                margin-top: 18px;
+                margin-bottom: 18px;
                 padding: clamp(20px, 3vw, 26px);
                 background: rgba(19, 36, 58, 0.82);
                 border: 1px solid var(--border);
@@ -491,6 +491,26 @@
                     automatically next time.
                 </p>
 
+                <!-- Pinned + recent worlds are shown FIRST when the user has any (returning users
+                     reopen a world in one click); both stay `hidden` until populated, so on first
+                     launch the Join / Create cards remain the top action. -->
+                <section class="recent-worlds" id="pinned-worlds" aria-labelledby="pinned-worlds-title" hidden>
+                    <div class="recent-heading">
+                        <h2 id="pinned-worlds-title">Pinned worlds</h2>
+                        <span>Your favourites</span>
+                    </div>
+                    <div class="recent-list" id="pinned-list"></div>
+                </section>
+
+                <section class="recent-worlds" id="recent-worlds" aria-labelledby="recent-worlds-title" hidden>
+                    <div class="recent-heading">
+                        <h2 id="recent-worlds-title">Recent worlds</h2>
+                        <span>Stored on this device</span>
+                    </div>
+                    <div class="recent-list" id="recent-list"></div>
+                    <div class="error recent-error" id="recent-error" role="alert" aria-live="polite"></div>
+                </section>
+
                 <div class="cards">
                     <form class="card primary-card" id="join-form" novalidate>
                         <span class="card-number" aria-hidden="true">01</span>
@@ -523,23 +543,6 @@
                         <div class="error" id="create-error" role="alert" aria-live="polite"></div>
                     </section>
                 </div>
-
-                <section class="recent-worlds" id="pinned-worlds" aria-labelledby="pinned-worlds-title" hidden>
-                    <div class="recent-heading">
-                        <h2 id="pinned-worlds-title">Pinned worlds</h2>
-                        <span>Your favourites</span>
-                    </div>
-                    <div class="recent-list" id="pinned-list"></div>
-                </section>
-
-                <section class="recent-worlds" id="recent-worlds" aria-labelledby="recent-worlds-title" hidden>
-                    <div class="recent-heading">
-                        <h2 id="recent-worlds-title">Recent worlds</h2>
-                        <span>Stored on this device</span>
-                    </div>
-                    <div class="recent-list" id="recent-list"></div>
-                    <div class="error recent-error" id="recent-error" role="alert" aria-live="polite"></div>
-                </section>
             </main>
 
             <footer>WorkAdventure Desktop keeps up to 10 recent world URLs on this device.</footer>
