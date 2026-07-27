@@ -2,6 +2,7 @@ import { BrowserWindow, screen } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
 import { raiseHudsToTop } from "./hud-windows";
+import { shouldProtectWindowFromCapture } from "./content-protection";
 
 let overlayWindow: BrowserWindow | undefined;
 let overlayReady = false;
@@ -98,10 +99,14 @@ export function createOverlayWindow(opts: CreateOverlayOptions = {}): BrowserWin
     // see the drawing twice (once from the baked-in video, once from the network overlay).
     // NSWindowSharingNone on macOS; SetWindowDisplayAffinity(WDA_MONITOR) on Windows 10+. Linux
     // silently no-ops (unsupported by X11/Wayland); no additional handling needed here.
-    try {
-        newWindow.setContentProtection(true);
-    } catch (error) {
-        ElectronLog.warn("Overlay setContentProtection failed", error);
+    // Lifted in development / with WA_ALLOW_WINDOW_CAPTURE=1 so the overlay can be screenshotted
+    // (see content-protection); in a real dev screen-share this means strokes are drawn twice.
+    if (shouldProtectWindowFromCapture()) {
+        try {
+            newWindow.setContentProtection(true);
+        } catch (error) {
+            ElectronLog.warn("Overlay setContentProtection failed", error);
+        }
     }
     // Click-through by default: the presenter keeps using their real apps until draw mode is on.
     newWindow.setIgnoreMouseEvents(true, { forward: true });
