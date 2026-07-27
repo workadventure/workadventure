@@ -267,6 +267,19 @@ export function closeActiveTab(): void {
     }
 }
 
+/**
+ * Close every tab except the active one, returning how many were closed. Used when the user hides
+ * the tab bar while several tabs are open (otherwise the background tabs become unreachable).
+ */
+export function closeInactiveTabs(): number {
+    const keepId = activeTabId;
+    const toClose = tabs.filter((tab) => tab.id !== keepId).map((tab) => tab.id);
+    for (const id of toClose) {
+        closeTab(id);
+    }
+    return toClose.length;
+}
+
 export function getActiveTabId(): string | undefined {
     return activeTabId;
 }
