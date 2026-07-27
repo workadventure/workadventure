@@ -16,7 +16,9 @@ import { resolveDisplay } from "./overlay-window";
 const POLL_INTERVAL_MS = 33; // ~30fps — smooth enough for a laser, light on the space channel.
 
 let pollTimer: ReturnType<typeof setInterval> | undefined;
-let onCursor: ((x: number, y: number) => void) | undefined;
+// Receives the position normalized (0..1) against the shared DISPLAY (for viewers), plus the raw
+// screen point so the caller can re-normalize against the presenter's overlay window (see below).
+let onCursor: ((x: number, y: number, point: { x: number; y: number }) => void) | undefined;
 // Resolved ONCE per (re)target rather than on every poll tick: resolveDisplay logs on each call,
 // which at 30fps would flood electron-log.
 let targetBounds: { x: number; y: number; width: number; height: number } | undefined;
@@ -35,7 +37,7 @@ function poll(): void {
         if (width <= 0 || height <= 0) {
             return;
         }
-        onCursor(clamp01((point.x - x) / width), clamp01((point.y - y) / height));
+        onCursor(clamp01((point.x - x) / width), clamp01((point.y - y) / height), point);
     } catch {
         /* getCursorScreenPoint can transiently fail; the next tick retries */
     }
@@ -43,9 +45,13 @@ function poll(): void {
 
 /**
  * Start (or retarget) cursor tracking on the given display. Idempotent: re-calling with a new
- * display id just retargets. `onChange` receives normalized cursor positions.
+ * display id just retargets. `onChange` receives the display-normalized position plus the raw screen
+ * point (so the caller can re-normalize it against the overlay window for the presenter's own view).
  */
-export function startPresenterCursor(displayId: number | undefined, onChange: (x: number, y: number) => void): void {
+export function startPresenterCursor(
+    displayId: number | undefined,
+    onChange: (x: number, y: number, point: { x: number; y: number }) => void
+): void {
     onCursor = onChange;
     targetBounds = { ...resolveDisplay(displayId, "Presenter cursor").bounds };
     if (pollTimer) {
