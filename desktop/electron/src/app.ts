@@ -1,3 +1,4 @@
+import path from "path";
 import { app, BrowserWindow, globalShortcut } from "electron";
 
 import { createWindow, getWindow, openDeepLinkTarget } from "./window";
@@ -105,10 +106,11 @@ async function init() {
         // load ipc handler
         ipc();
 
-        // Don't show the app in the doc
-        // if (app.dock) {
-        //   app.dock.hide();
-        // }
+        // In development (unpackaged) the macOS dock shows the default Electron icon — the bundle's
+        // .icns is only applied to a packaged .app. Set it explicitly so dev matches the shipped icon.
+        if (process.platform === "darwin" && !app.isPackaged) {
+            app.dock?.setIcon(path.join(__dirname, "..", "assets", "icons", "logo.png"));
+        }
 
         const initialProtocolTarget = pendingProtocolTarget;
         pendingProtocolTarget = undefined;
