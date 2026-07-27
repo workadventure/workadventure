@@ -2,10 +2,13 @@ import { BrowserWindow, WebContentsView } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
 import { getTabsInfo, onTabsChange, setTabStripHeight } from "./tab-manager";
+import settings from "./settings";
 
 /**
- * The tab strip: a thin always-visible WebContentsView pinned to the top of the shell, above the
- * world views. It renders the open tabs + a "new tab" button and drives tab operations over IPC.
+ * The tab strip: a thin WebContentsView pinned to the top of the shell, above the world views. It
+ * renders the open tabs + a "new tab" button and drives tab operations over IPC. Most users run
+ * single-tab, so it can be hidden via the "Show tab bar" menu item (persisted in settings); when
+ * hidden it collapses to zero height and the active world view reclaims the whole shell.
  */
 
 export const TAB_STRIP_HEIGHT = 40;
@@ -14,13 +17,27 @@ let shell: BrowserWindow | undefined;
 let stripView: WebContentsView | undefined;
 let stripReady = false;
 let unsubscribeTabs: (() => void) | undefined;
+let tabBarVisible = true;
 
 function layoutStrip(): void {
     if (!shell || shell.isDestroyed() || !stripView) {
         return;
     }
     const [width] = shell.getContentSize();
-    stripView.setBounds({ x: 0, y: 0, width, height: TAB_STRIP_HEIGHT });
+    stripView.setBounds({ x: 0, y: 0, width, height: tabBarVisible ? TAB_STRIP_HEIGHT : 0 });
+}
+
+/**
+ * Show/hide the tab strip at runtime (the "Show tab bar" menu toggle). Collapses the reserved top
+ * offset so the active world view grows to fill the freed space, and hides the strip view itself.
+ */
+export function setTabStripVisible(visible: boolean): void {
+    tabBarVisible = visible;
+    if (stripView && !stripView.webContents.isDestroyed()) {
+        stripView.setVisible(visible);
+    }
+    layoutStrip();
+    setTabStripHeight(visible ? TAB_STRIP_HEIGHT : 0);
 }
 
 export function pushTabs(): void {
@@ -41,8 +58,11 @@ export function createTabStrip(shellWindow: BrowserWindow): void {
         },
     });
     shell.contentView.addChildView(stripView);
+    // Respect the persisted preference: start hidden (zero height) when the user turned the bar off.
+    tabBarVisible = settings.get("tab_bar_enabled") !== false;
+    stripView.setVisible(tabBarVisible);
     layoutStrip();
-    setTabStripHeight(TAB_STRIP_HEIGHT);
+    setTabStripHeight(tabBarVisible ? TAB_STRIP_HEIGHT : 0);
 
     shell.on("resize", layoutStrip);
     shell.on("enter-full-screen", layoutStrip);
