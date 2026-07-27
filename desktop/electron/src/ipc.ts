@@ -246,12 +246,23 @@ export default () => {
             if (displayId === undefined && sourceId && sourceId.startsWith("screen:")) {
                 displayId = await resolveDisplayIdFromScreenSource(sourceId);
             }
-            startPresenterCursor(displayId, (x, y) => {
-                // → the world renderer, which broadcasts to viewers over the space.
+            startPresenterCursor(displayId, (x, y, point) => {
+                // → the world renderer, which broadcasts to viewers over the space. Viewers map this
+                // onto the full shared-display video, so the display-normalized (x, y) is right for them.
                 getActiveWorldContents()?.send("app:on-presenter-cursor", { x, y });
-                // → the content-protected overlay, so the PRESENTER sees the effect locally over
-                // the shared app (not captured, so viewers don't get a doubled render).
-                sendToOverlay("app:overlay:presenter-effect", { tool, x, y, scale: 0, active: true });
+                // → the content-protected overlay, so the PRESENTER sees the effect locally over the
+                // shared app (not captured, so viewers don't get a doubled render). The overlay window
+                // does NOT always cover the whole display (on macOS the menu-bar strip is excluded), so
+                // the display-normalized (x, y) would draw the dot off the real cursor. Re-normalize the
+                // raw cursor against the overlay's actual on-screen rect so it sits on the cursor tip.
+                const overlay = getOverlayWindow();
+                if (!overlay || overlay.isDestroyed()) {
+                    return;
+                }
+                const rect = overlay.getContentBounds();
+                const ox = rect.width > 0 ? Math.min(1, Math.max(0, (point.x - rect.x) / rect.width)) : x;
+                const oy = rect.height > 0 ? Math.min(1, Math.max(0, (point.y - rect.y) / rect.height)) : y;
+                sendToOverlay("app:overlay:presenter-effect", { tool, x: ox, y: oy, scale: 0, active: true });
             });
         })();
     });
