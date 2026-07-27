@@ -4,6 +4,7 @@ import path from "path";
 import { resolveDisplay } from "./overlay-window";
 import settings from "./settings";
 import { COMPANION_MIN_HEIGHT, COMPANION_MIN_WIDTH, normalizeCompanionBounds } from "./companion-window-policy";
+import { shouldProtectWindowFromCapture } from "./content-protection";
 
 /**
  * Presenter HUD windows (Zoom-style), placed on the SHARED display while screen sharing:
@@ -191,11 +192,17 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
         newWindow.on("resize", scheduleSaveBounds);
         newWindow.on("move", scheduleSaveBounds);
     }
-    try {
-        // Excluded from screen capture: the presenter sees the bar, viewers do NOT.
-        newWindow.setContentProtection(true);
-    } catch (error) {
-        ElectronLog.warn(`HUD ${kind} setContentProtection failed`, error);
+    // Presenter bars (meeting-bar / annotation-bar) must stay out of the *shared* screen — viewers
+    // must not see the presenter's own controls. The companion is a normal utility panel, so it is
+    // never protected (it would otherwise be impossible to screenshot). Protection is also lifted in
+    // development / with WA_ALLOW_WINDOW_CAPTURE=1 so the bars can be captured (see content-protection).
+    if (kind !== "companion" && shouldProtectWindowFromCapture()) {
+        try {
+            // Excluded from screen capture: the presenter sees the bar, viewers do NOT.
+            newWindow.setContentProtection(true);
+        } catch (error) {
+            ElectronLog.warn(`HUD ${kind} setContentProtection failed`, error);
+        }
     }
     try {
         newWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
