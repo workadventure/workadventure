@@ -1,7 +1,7 @@
 import { app, dialog, type MessageBoxOptions } from "electron";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
-import * as isDev from "electron-is-dev";
+import isDev from "electron-is-dev";
 import * as util from "util";
 
 import { createAndShowNotification } from "./notification";
