@@ -9,6 +9,9 @@ import {
 export type SettingsData = {
     log_level: ElectronLog.LogLevel;
     auto_launch_enabled: boolean;
+    /** Show the multi-tab strip at the top of the shell. Most users run single-tab, so it can be
+     * turned off via the "Show tab bar" menu item. Defaults to on for backward compatibility. */
+    tab_bar_enabled: boolean;
     portal_url: string;
     last_room_url?: string;
     world_history: string[];
@@ -26,6 +29,7 @@ const defaultSettings: SettingsData = {
     // macOS Sonoma+ background-item guidelines and Windows install best practices. Users explicitly
     // opt in via the preferences UI.
     auto_launch_enabled: false,
+    tab_bar_enabled: true,
     portal_url: process.env.WA_DESKTOP_PORTAL_URL || "http://admin.workadventure.localhost/",
     world_history: [],
     pinned_worlds: [],
