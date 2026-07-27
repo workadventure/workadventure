@@ -619,6 +619,9 @@ export async function createWindow(initialUrl?: string) {
         autoHideMenuBar: true,
         show: false,
         backgroundColor: "#0a1422",
+        // Window / taskbar icon (Windows + Linux; macOS uses the dock icon). Matters mainly in dev —
+        // packaged builds get the icon from the executable via electron-builder.
+        icon: path.join(__dirname, "..", "assets", "icons", "logo.png"),
     });
     mainWindow.setMenu(null);
     setShell(mainWindow);

@@ -17,6 +17,7 @@ win:
         - nsis
 
 mac:
+    icon: assets/icons/logo.icns
     category: public.app-category.business
     hardenedRuntime: true
     gatekeeperAssess: false
@@ -40,6 +41,7 @@ mac:
               - arm64
 
 linux:
+    icon: assets/icons/logo.png
     category: Network;InstantMessaging
     maintainer: TheCodingMachine <hello@workadventu.re>
     target:
