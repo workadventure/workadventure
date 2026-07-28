@@ -75,6 +75,7 @@
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
+    import RaisedHandsDock from "./Video/RaisedHandsDock.svelte";
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
@@ -400,6 +401,9 @@
                     {/each}
                 </div>
             {/if}
+
+            <!-- Host-side raised-hands management, docked top-right (self-gates on raisedHandsAdminVisibleStore) -->
+            <RaisedHandsDock />
 
             {#if $showRecordingList}
                 <RecordingsListModal />
