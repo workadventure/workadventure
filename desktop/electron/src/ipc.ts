@@ -20,17 +20,7 @@ import {
 import { activateTab, closeTab, setActiveWorldTitle } from "./tab-manager";
 import { isTabStripSender, markTabStripReady } from "./tab-strip";
 import { createDesktopConfig, isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
-import {
-    awaitPipReady,
-    closePipWindow,
-    createPipWindow,
-    getPipWebContents,
-    isPipWindowOpen,
-    markPipReady,
-    sendToPip,
-    setPipViewBounds,
-    setPipViewVisible,
-} from "./pip-window";
+import { getPipWebContents, isPipWindowOpen, sendToPip } from "./pip-window";
 import {
     awaitOverlayReady,
     closeOverlayWindow,
@@ -45,6 +35,7 @@ import { handleScreenIdentifyCancel, handleScreenIdentifyPick, identifyScreens }
 import {
     broadcastHudState,
     closeHudWindow,
+    getHudWindow,
     hudKindOfSender,
     isHudSender,
     markHudReady,
@@ -74,6 +65,11 @@ type CapturerCacheEntry = {
     result: Array<{ id: string; name: string; thumbnailURL: string; display_id?: number }>;
 };
 const desktopCapturerCacheByFrame = new Map<string, CapturerCacheEntry>();
+
+// Companion windows we've already wired the "closed → tell the WA renderer to stop the PiP" hook to.
+// The companion outlives a single meeting (it stays open on People after a call ends), so app:pip:open
+// can fire several times against the same window — this keeps exactly one close listener per window.
+const pipClosedHookWired = new WeakSet<Electron.BrowserWindow>();
 
 function clampThumbnailSize(value: unknown): { width: number; height: number } {
     const fallback = DESKTOP_CAPTURER_MAX_THUMBNAIL;
@@ -439,31 +435,33 @@ export default () => {
             ElectronLog.warn("Rejected PiP open from non-main renderer");
             return false;
         }
-        // The meeting video is embedded in the companion window (Meeting tab). Ensure the companion
-        // is open + on the Meeting tab first — createPipWindow attaches the PiP view to it.
+        // The meeting video renders as HTML <video> tiles inside the companion window. Ensure the
+        // companion is open and its renderer is ready (openCompanionForPip awaits hud-ready) before
+        // the WA renderer starts sending its SDP offer — otherwise the first offer lands in a deaf
+        // renderer and tracks only start mirroring on the next store change (someone joining/leaving).
         await openCompanionForPip();
-        if (!isPipWindowOpen()) {
-            createPipWindow({
-                onClosed: () => {
-                    getActiveWorldContents()?.send("app:pip:closed");
-                    closeCompanionPip();
-                },
+        const companion = getHudWindow("companion");
+        if (companion && !pipClosedHookWired.has(companion)) {
+            pipClosedHookWired.add(companion);
+            // Mirror the old PiP window's onClosed: if the user closes the companion (its host) while
+            // the call is live, tell the WA renderer to tear its side down too. stop() is idempotent,
+            // so a late fire after the meeting already ended is harmless.
+            companion.once("closed", () => {
+                getActiveWorldContents()?.send("app:pip:closed");
+                closeCompanionPip();
             });
         }
-        // Block until the PiP renderer has wired up its IPC listeners. Without this, the very
-        // first SDP offer (sent immediately after open() resolves on the main renderer side)
-        // would land in a deaf renderer, and tracks would only start mirroring after the next
-        // store change (someone joining/leaving the meeting).
-        await awaitPipReady();
-        return true;
+        return isPipWindowOpen();
     });
 
     ipcMain.handle("app:pip:close", () => {
-        closePipWindow();
+        // Tear down the companion's meeting peer connection + tiles, then drop the keep-open and
+        // re-evaluate the panel's visibility (it stays open on People if WA is still backgrounded).
+        sendToPip("app:pip:close");
         closeCompanionPip();
     });
 
-    // Main renderer → PiP renderer
+    // Main renderer → companion renderer (the meeting-video peer lives in the companion)
     ipcMain.on("app:pip:offer-from-main", (event, sdp: unknown) => {
         if (!isFromMainRenderer(event) || !isPipWindowOpen()) return;
         sendToPip("app:pip:offer", sdp);
@@ -473,21 +471,16 @@ export default () => {
         sendToPip("app:pip:ice-from-main", candidate);
     });
 
-    // PiP renderer → main renderer (relayed by main process, to the active world view)
-    ipcMain.on("app:pip:answer", (_event, sdp: unknown) => {
+    // Companion renderer → main renderer (relayed by main process, to the active world view). Both
+    // are sender-validated: the answer/ICE can only originate from the companion window (the sole
+    // holder of the WAHud meeting bridge), never from arbitrary web content.
+    ipcMain.on("app:pip:answer", (event, sdp: unknown) => {
+        if (hudKindOfSender(event.sender) !== "companion") return;
         getActiveWorldContents()?.send("app:pip:answer-to-main", sdp);
     });
-    ipcMain.on("app:pip:ice-from-pip", (_event, candidate: unknown) => {
+    ipcMain.on("app:pip:ice-from-pip", (event, candidate: unknown) => {
+        if (hudKindOfSender(event.sender) !== "companion") return;
         getActiveWorldContents()?.send("app:pip:ice-to-main", candidate);
-    });
-    ipcMain.on("app:pip:request-close", () => {
-        getActiveWorldContents()?.send("app:pip:request-close-from-pip");
-        closePipWindow();
-        closeCompanionPip();
-    });
-    ipcMain.on("app:pip:ready", () => {
-        markPipReady();
-        getActiveWorldContents()?.send("app:pip:opened");
     });
 
     // Source enumeration FOR the PiP window only. The main renderer goes through
@@ -702,29 +695,13 @@ export default () => {
             } else if (type === "toggle-camera") {
                 emitCameraToggle();
             } else if (type === "close") {
+                // If a meeting video is running in the companion, tell the WA renderer to tear its
+                // PiP side down too before we dismiss (mirrors the old PiP window's close). stop() is
+                // idempotent, so this is a no-op when no call is active.
+                getActiveWorldContents()?.send("app:pip:closed");
                 // Go through the controller so the dismissal sticks (force-closed), instead of a bare
                 // close that would re-open on the next presence change.
                 dismissCompanion();
-            } else if (type === "meeting-rect") {
-                // The companion reports the Meeting-tab content rect; position the embedded PiP there.
-                const rect = (command as { rect?: Record<string, unknown> }).rect;
-                if (rect && typeof rect === "object") {
-                    const x = Number(rect.x);
-                    const y = Number(rect.y);
-                    const width = Number(rect.width);
-                    const height = Number(rect.height);
-                    if ([x, y, width, height].every((n) => Number.isFinite(n)) && width > 0 && height > 0) {
-                        setPipViewBounds({
-                            x: Math.round(x),
-                            y: Math.round(y),
-                            width: Math.round(width),
-                            height: Math.round(height),
-                        });
-                    }
-                }
-            } else if (type === "companion-tab") {
-                // Show the embedded PiP only while the Meeting tab is active.
-                setPipViewVisible((command as { tab?: unknown }).tab === "meeting");
             } else {
                 getActiveWorldContents()?.send("app:companion:command-to-main", command);
             }
