@@ -1,7 +1,5 @@
 <script lang="ts">
     import { isSpeakerStore, silentStore } from "../../Stores/MediaStore";
-    import { userIsAdminStore } from "../../Stores/GameStore";
-    import { raisedHandsStore, speakingUsersStore } from "../../Stores/PeerStore";
 
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
@@ -22,7 +20,6 @@
     import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
     import RaiseHandMenuItem from "./MenuIcons/RaiseHandMenuItem.svelte";
-    import RaisedHandsMenuItem from "./MenuIcons/RaisedHandsMenuItem.svelte";
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
     import ChatMenuItem from "./MenuIcons/ChatMenuItem.svelte";
     import UserListMenuItem from "./MenuIcons/UserListMenuItem.svelte";
@@ -139,13 +136,8 @@
                                     <RaiseHandMenuItem />
                                 {/if}
                                 <!-- NAV : RAISE HAND END -->
-
-                                <!-- NAV : RAISED HANDS PANEL START -->
-                                <!-- Stays visible while there are raised hands to grant OR speakers to take back. -->
-                                {#if ($userIsAdminStore || $isSpeakerStore) && ($raisedHandsStore.length > 0 || $speakingUsersStore.length > 0)}
-                                    <RaisedHandsMenuItem />
-                                {/if}
-                                <!-- NAV : RAISED HANDS PANEL END -->
+                                <!-- Host-side management of raised hands is the docked RaisedHandsDock (top-right),
+                                     mounted in MainLayout — no longer an action-bar button. -->
                             </div>
                         </div>
                     </div>

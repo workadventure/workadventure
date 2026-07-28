@@ -1,5 +1,7 @@
 import { type Readable, derived } from "svelte/store";
-import { raisedHandsStore } from "./PeerStore";
+import { raisedHandsStore, speakingUsersStore } from "./PeerStore";
+import { userIsAdminStore } from "./GameStore";
+import { isSpeakerStore } from "./MediaStore";
 
 /**
  * Extracts the numeric player (zone) id encoded in a spaceUserId of the form `${roomUrl}_${userId}`.
@@ -42,3 +44,15 @@ export const raisedHandPlayerIdsStore: Readable<Set<number>> = derived(raisedHan
     }
     return playerIds;
 });
+
+/**
+ * Whether the host-side raised-hands panel should be shown: only to a user who can act on it
+ * (an admin, or a megaphone speaker) and only while there is something to act on (at least one
+ * raised hand or one user currently holding the floor). This is the single source of truth for the
+ * panel's auto show/hide; it used to live inline in ActionBar.svelte.
+ */
+export const raisedHandsAdminVisibleStore: Readable<boolean> = derived(
+    [userIsAdminStore, isSpeakerStore, raisedHandsStore, speakingUsersStore],
+    ([$userIsAdmin, $isSpeaker, $raisedHands, $speakers]) =>
+        ($userIsAdmin || $isSpeaker) && ($raisedHands.length > 0 || $speakers.length > 0),
+);
