@@ -22,10 +22,8 @@
     var api = window.WADPiP;
     var videosContainer = document.getElementById("videos");
     var emptyEl = document.getElementById("empty");
-    var btnMic = document.getElementById("btn-mic");
-    var btnCam = document.getElementById("btn-cam");
-    var btnShare = document.getElementById("btn-share");
-    var btnBack = document.getElementById("btn-back");
+    // Mic / camera / share / back all live in the companion header now (this PiP is embedded in it),
+    // so the PiP toolbar keeps only the annotate toggle.
     var sourcePicker = document.getElementById("source-picker");
     var sourcePickerBody = document.getElementById("sp-body");
     var sourcePickerCancel = document.getElementById("sp-cancel");
@@ -275,15 +273,7 @@
         // 4. Now that the new mapping is in place, attach any pending tracks that found a home.
         flushPendingTracks();
 
-        // 5. Toolbar.
-        setBtnState(btnMic, state.micEnabled, /*forbiddenWhenOff*/ true);
-        setBtnState(btnCam, state.cameraEnabled, /*forbiddenWhenOff*/ true);
-        setBtnState(btnShare, state.screenSharing, /*forbiddenWhenOff*/ false);
-        if (state.canScreenShare === false) {
-            btnShare.setAttribute("disabled", "disabled");
-        } else {
-            btnShare.removeAttribute("disabled");
-        }
+        // 5. Toolbar: only the annotate toggle remains (mic/cam/share/back live in the companion header).
         applyAnnotationState(state.annotation);
         currentScreenSharing = state.screenSharing === true;
         if (currentScreenSharing && sourcePickerOpen) closeSourcePicker();
@@ -305,6 +295,11 @@
             // Only offer the toggle while a screen is being shared.
             btnAnnotate.style.display = available ? "" : "none";
             setBtnState(btnAnnotate, active, false);
+        }
+        // Annotate is the only toolbar button left, so hide the whole bar when it's not offered.
+        var toolbar = document.getElementById("toolbar");
+        if (toolbar) {
+            toolbar.style.display = available ? "" : "none";
         }
     }
 
@@ -360,15 +355,6 @@
     api.onClose(function () { teardown(); });
     api.onState(applyState);
 
-    function bindCommand(el, type) {
-        el.addEventListener("click", function () {
-            if (el.hasAttribute("disabled")) return;
-            api.sendCommand({ type: type });
-        });
-    }
-    bindCommand(btnMic, "toggle-mic");
-    bindCommand(btnCam, "toggle-camera");
-    bindCommand(btnBack, "focus-main");
 
     // Annotation ON/OFF toggle (the tools themselves live on the overlay window).
     if (btnAnnotate) {
@@ -379,14 +365,8 @@
     }
 
     // ─────────── Screen-share source picker ───────────
-    btnShare.addEventListener("click", function () {
-        if (btnShare.hasAttribute("disabled")) return;
-        if (currentScreenSharing) {
-            api.sendCommand({ type: "toggle-screenshare" });
-            return;
-        }
-        openSourcePicker();
-    });
+    // No longer surfaced in the PiP: screen sharing is driven from the companion header. The picker
+    // helpers below are kept dormant (unused) for now.
 
     function openSourcePicker() {
         if (sourcePickerOpen) return;

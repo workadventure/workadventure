@@ -409,73 +409,11 @@
          the shared content), not in the PiP. The PiP only hosts the "annotate" toggle (btn-annotate). -->
     <div id="toolbar">
         <div class="toolbar-pill">
-            <button class="toolbar-btn" id="btn-mic" type="button" data-state="on" title="Toggle microphone" aria-label="Toggle microphone">
-                <!-- Mic ON (matches Components/Icons/MicOnIcon.svelte) -->
-                <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M9 2m0 3a3 3 0 0 1 3 -3h0a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3h0a3 3 0 0 1 -3 -3z"/>
-                    <path d="M5 10a7 7 0 0 0 14 0"/>
-                    <path d="M8 21l8 0"/>
-                    <path d="M12 17l0 4"/>
-                </svg>
-                <!-- Mic OFF (matches Components/Icons/MicOffIcon.svelte) -->
-                <svg class="icon-only-off" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M3 3l18 18"/>
-                    <path d="M9 5a3 3 0 0 1 6 0v5a3 3 0 0 1 -.13 .874m-2 2a3 3 0 0 1 -3.87 -2.872v-1"/>
-                    <path d="M5 10a7 7 0 0 0 10.846 5.85m2 -2a6.967 6.967 0 0 0 1.152 -3.85"/>
-                    <path d="M8 21l8 0"/>
-                    <path d="M12 17l0 4"/>
-                </svg>
-            </button>
-            <button class="toolbar-btn" id="btn-cam" type="button" data-state="on" title="Toggle camera" aria-label="Toggle camera">
-                <!-- Cam ON -->
-                <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4z"/>
-                    <path d="M3 6m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z"/>
-                </svg>
-                <!-- Cam OFF -->
-                <svg class="icon-only-off" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M3 3l18 18"/>
-                    <path d="M15 11v-1l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -.675 .946"/>
-                    <path d="M10 6h3a2 2 0 0 1 2 2v3m0 4v1a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-8a2 2 0 0 1 2 -2h1"/>
-                </svg>
-            </button>
-            <button class="toolbar-btn" id="btn-share" type="button" data-state="on" title="Toggle screen sharing" aria-label="Toggle screen sharing">
-                <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M21 12v3a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10a1 1 0 0 1 1 -1h9"/>
-                    <path d="M7 20l10 0"/>
-                    <path d="M9 16l0 4"/>
-                    <path d="M15 16l0 4"/>
-                    <path d="M17 4h4v4"/>
-                    <path d="M16 9l5 -5"/>
-                </svg>
-                <svg class="icon-only-off" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M21 12v3a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10a1 1 0 0 1 1 -1h9"/>
-                    <path d="M7 20l10 0"/>
-                    <path d="M9 16l0 4"/>
-                    <path d="M15 16l0 4"/>
-                    <path d="M17 4h4v4"/>
-                    <path d="M16 9l5 -5"/>
-                </svg>
-            </button>
             <button class="toolbar-btn" id="btn-annotate" type="button" data-state="off" title="Annotate the shared screen" aria-label="Annotate the shared screen" style="display: none;">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                     <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/>
                     <path d="M13.5 6.5l4 4"/>
-                </svg>
-            </button>
-            <button class="toolbar-btn" id="btn-back" type="button" data-state="on" title="Back to WorkAdventure" aria-label="Back to WorkAdventure">
-                <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M5 12l14 0"/>
-                    <path d="M5 12l4 4"/>
-                    <path d="M5 12l4 -4"/>
                 </svg>
             </button>
         </div>
