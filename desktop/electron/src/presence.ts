@@ -10,7 +10,7 @@
 
 // The effective status shown by the tray dot: an active meeting, the user's chosen availability
 // (busy / back_in_a_moment / do_not_disturb), the auto-idle state, or plain online.
-export type TrayStatus = "meeting" | "idle" | "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
+export type TrayStatus = "meeting" | "idle" | "online" | "busy" | "back_in_a_moment" | "do_not_disturb" | "offline";
 
 /**
  * The four user-selectable availability statuses, as stable string keys. Kept as strings (not the
@@ -125,12 +125,34 @@ export function setIdle(idle: boolean): void {
 }
 
 /**
- * Effective tray status: an active meeting outranks everything; then an explicitly-chosen availability
- * (busy / back_in_a_moment / do_not_disturb) outranks the auto-idle heuristic; otherwise idle, then the
- * plain online default. Previously this ignored the chosen availability, so the dot stayed green
- * (online) for Busy / Be right back / Do not disturb.
+ * Reset to the disconnected baseline. Called when the main window is closed: the renderer that feeds
+ * presence is gone, so without this the tray would keep showing the last status (e.g. a green
+ * "online" dot while no window is even connected). The tray then falls back to "offline".
+ */
+export function resetPresence(): void {
+    state.inMeeting = false;
+    state.micEnabled = false;
+    state.cameraEnabled = false;
+    state.screenSharing = false;
+    state.idle = false;
+    state.inWorld = false;
+    state.invitationPending = false;
+    state.requestedStatus = "online";
+    state.statusLocked = false;
+    emit();
+}
+
+/**
+ * Effective tray status: not being in a world (landing / login / no window) is "offline" and outranks
+ * everything; then an active meeting; then an explicitly-chosen availability (busy / back_in_a_moment /
+ * do_not_disturb) outranks the auto-idle heuristic; otherwise idle, then the plain online default.
  */
 export function getTrayStatus(): TrayStatus {
+    if (!state.inWorld) {
+        // Not connected to a world (landing / login, or the window is closed): no live availability,
+        // so the dot is "offline" rather than a stale green.
+        return "offline";
+    }
     if (state.inMeeting) {
         return "meeting";
     }
