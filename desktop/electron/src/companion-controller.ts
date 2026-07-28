@@ -37,23 +37,26 @@ function wantOpen(): boolean {
     if (p.screenSharing) {
         return false;
     }
-    // Active meeting video (embedded PiP) keeps the companion open even when WA is focused, so
-    // clicking back to the app doesn't tear down the video.
-    if (pipActive) {
-        return true;
-    }
-    if (isMainWindowFocused()) {
+    // Focused on WA (with no active meeting video keeping it alive) → hide; the app has everything.
+    if (isMainWindowFocused() && !pipActive) {
         return false;
     }
     // An incoming meeting invitation force-opens the panel even after a manual dismissal.
     if (p.invitationPending) {
         return true;
     }
-    if (override === "force-open") {
-        return true;
-    }
+    // A manual dismissal (close button / tray) wins over the active-video keep-open and the auto-show:
+    // closing the companion during a meeting tears down its embedded video, which is the intent.
     if (override === "force-closed") {
         return false;
+    }
+    // Active meeting video (embedded PiP) keeps the companion open even when WA is focused, so
+    // clicking back to the app doesn't tear down the video.
+    if (pipActive) {
+        return true;
+    }
+    if (override === "force-open") {
+        return true;
     }
     // Auto-show while away inside a world (never on the landing / login page).
     return p.inWorld;
