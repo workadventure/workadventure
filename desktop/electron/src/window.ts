@@ -23,7 +23,6 @@ import {
     type DesktopConfig,
 } from "./desktop-url-policy";
 import { shouldMaximizeBeforeLoad } from "./window-state-policy";
-import { closePipWindow } from "./pip-window";
 import { rememberWorldUrl } from "./world-history";
 import { closeOverlayWindow } from "./overlay-window";
 import { stopCompanion, updateCompanion } from "./companion-controller";
@@ -626,15 +625,15 @@ export async function createWindow(initialUrl?: string) {
     });
     mainWindow.setMenu(null);
     setShell(mainWindow);
-    // Switching tabs must tear down the PiP / overlay / HUD windows + presenter cursor that
-    // belonged to the previously-active world — those relays are keyed to "the active renderer",
-    // so leaving them open would misroute SDP/state to the newly-active tab. The new tab re-opens
-    // PiP itself if it's in a meeting. Wired once for the app's lifetime (the closure only calls
-    // module singletons), so a window re-creation doesn't stack duplicate teardowns.
+    // Switching tabs must tear down the companion (which hosts the meeting video) / overlay / HUD
+    // windows + presenter cursor that belonged to the previously-active world — those relays are
+    // keyed to "the active renderer", so leaving them open would misroute SDP/state to the newly-
+    // active tab. The new tab re-opens its meeting video itself if it's in a call. Wired once for the
+    // app's lifetime (the closure only calls module singletons), so a window re-creation doesn't
+    // stack duplicate teardowns.
     if (!activeTabTeardownWired) {
         activeTabTeardownWired = true;
         onActiveTabChange(() => {
-            closePipWindow();
             closeOverlayWindow();
             closeAllHudWindows();
             stopPresenterCursor();
@@ -659,7 +658,6 @@ export async function createWindow(initialUrl?: string) {
         mainWindow = undefined;
         resetTabStrip();
         resetTabs();
-        closePipWindow();
         closeOverlayWindow();
         closeAllHudWindows();
         stopPresenterCursor();

@@ -52,6 +52,22 @@ export type WorkAdventureHudApi = {
     setExpanded: (expanded: boolean) => void;
     /** Signal the renderer has wired all its subscriptions and is ready to receive pushes. */
     ready: () => void;
+
+    // ── Meeting video (WebRTC) — the companion hosts the peer connection and answers the WA
+    // renderer's offer, so the meeting tiles render as HTML <video> in the companion instead of a
+    // separate native PiP view. Only the companion uses these; the presenter bars ignore them. ──
+    /** WA renderer's SDP offer (relayed by main). */
+    onMeetingOffer: (callback: (sdp: RTCSessionDescriptionInit) => void) => () => void;
+    /** ICE candidate from the WA renderer (relayed by main). */
+    onMeetingIce: (callback: (candidate: RTCIceCandidateInit) => void) => () => void;
+    /** Tile metadata (participant → tileKey/trackId, mic/cam), pushed on every change. */
+    onMeetingTiles: (callback: (state: unknown) => void) => () => void;
+    /** The WA renderer tore the meeting video down — clear the tiles. */
+    onMeetingClose: (callback: () => void) => () => void;
+    /** Send the SDP answer back to the WA renderer (via main). */
+    sendMeetingAnswer: (sdp: RTCSessionDescriptionInit) => void;
+    /** Send a local ICE candidate back to the WA renderer (via main). */
+    sendMeetingIce: (candidate: RTCIceCandidateInit) => void;
 };
 
 declare global {
