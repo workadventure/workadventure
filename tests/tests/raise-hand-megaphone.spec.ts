@@ -53,8 +53,8 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         await Map.teleportToPosition(speaker, 4 * 32, 3 * 32);
         await expect(speaker.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 20_000 });
 
-        // No raised hand yet -> the speaker has no "raised hands" panel button.
-        await expect(speaker.getByTestId("raised-hands-panel-button")).toBeHidden();
+        // No raised hand yet -> the host's docked raised-hands panel is not shown.
+        await expect(speaker.getByTestId("raised-hands-dock")).toBeHidden();
 
         // Bob joins the listener zone. With "See attendees" OFF, the speaker does not see Bob's tile.
         await using bob = await getPage(browser, "Bob", Map.url("empty"));
@@ -67,9 +67,8 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         // Bob raises his hand. The metadata queue reaches the speaker despite "See attendees" being OFF.
         await bob.getByTestId("raise-hand-button").click();
 
-        // The speaker's panel button appears; opening it lists Bob.
-        await expect(speaker.getByTestId("raised-hands-panel-button")).toBeVisible({ timeout: 20_000 });
-        await speaker.getByTestId("raised-hands-panel-button").click();
+        // The host's docked raised-hands panel appears (expanded) and lists Bob.
+        await expect(speaker.getByTestId("raised-hands-dock")).toBeVisible({ timeout: 20_000 });
         await expect(speaker.getByTestId("raised-hands-panel").getByText("Bob")).toBeVisible({ timeout: 10_000 });
 
         // The speaker gives Bob the floor from the panel.
@@ -81,20 +80,17 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
             timeout: 30_000,
         });
 
-        // Bob can now speak, so his raise-hand button is hidden — never raise-hand and give-back at once.
-        await expect(bob.getByTestId("raise-hand-button")).toBeHidden({ timeout: 20_000 });
+        // Bob is on stage: his raise-hand button stays visible as the single control (there is never a separate
+        // give-back button). Clicking it now hands the floor back.
+        await expect(bob.getByTestId("raise-hand-button")).toBeVisible({ timeout: 20_000 });
+        await bob.getByTestId("raise-hand-button").click();
 
-        // Bob now has a "give back the floor" control and can hand the floor back himself.
-        await expect(bob.getByTestId("give-back-floor-button")).toBeVisible({ timeout: 20_000 });
-        await bob.getByTestId("give-back-floor-button").click();
-
-        // The control disappears and Bob is demoted, so the speaker no longer sees his camera.
-        await expect(bob.getByTestId("give-back-floor-button")).toBeHidden({ timeout: 20_000 });
+        // Bob is demoted, so the speaker no longer sees his camera.
         await expect(speaker.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
             timeout: 30_000,
         });
 
-        // Being a listener again, Bob can raise his hand once more.
+        // Being a listener again, Bob still has the raise-hand button and can raise his hand once more.
         await expect(bob.getByTestId("raise-hand-button")).toBeVisible({ timeout: 20_000 });
     });
 
@@ -123,24 +119,18 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         await Map.teleportToPosition(bob, 4 * 32, 7 * 32);
         await expect(bob.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
 
-        // Bob raises his hand and the host gives him the floor from the panel.
+        // Bob raises his hand and the host gives him the floor from the docked panel.
         await bob.getByTestId("raise-hand-button").click();
-        await expect(speaker.getByTestId("raised-hands-panel-button")).toBeVisible({ timeout: 20_000 });
-        await speaker.getByTestId("raised-hands-panel-button").click();
+        await expect(speaker.getByTestId("raised-hands-dock")).toBeVisible({ timeout: 20_000 });
         await speaker.getByTestId("panel-give-floor").first().click();
         await expect(speaker.locator("#cameras-container").getByText("Bob", { exact: true })).toBeVisible({
             timeout: 30_000,
         });
 
-        // The panel button stays visible even though the queue is now empty (Bob is speaking). Re-open the panel
-        // if the raised-hands -> speaking transition closed it, then take the floor back from the "Speaking" section.
-        await expect(speaker.getByTestId("raised-hands-panel-button")).toBeVisible({ timeout: 20_000 });
-        await expect(async () => {
-            if (!(await speaker.getByTestId("raised-hands-panel").isVisible())) {
-                await speaker.getByTestId("raised-hands-panel-button").click();
-            }
-            await expect(speaker.getByTestId("panel-revoke-floor")).toBeVisible({ timeout: 2_000 });
-        }).toPass({ timeout: 30_000 });
+        // The docked panel stays visible even though the raised-hands queue is now empty (Bob is speaking); take
+        // the floor back from the "Speaking" section.
+        await expect(speaker.getByTestId("raised-hands-dock")).toBeVisible({ timeout: 20_000 });
+        await expect(speaker.getByTestId("panel-revoke-floor")).toBeVisible({ timeout: 20_000 });
         await speaker.getByTestId("panel-revoke-floor").first().click();
 
         // Bob is told he no longer has the floor and is demoted (his camera disappears for the host).
@@ -212,10 +202,9 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         await Map.teleportToPosition(bob, 12 * 32, 12 * 32);
         await expect(bob.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 30_000 });
 
-        // Bob raises his hand; Admin1 gives him the floor from the panel.
+        // Bob raises his hand; Admin1 gives him the floor from the docked panel.
         await bob.getByTestId("raise-hand-button").click();
-        await expect(speaker.getByTestId("raised-hands-panel-button")).toBeVisible({ timeout: 20_000 });
-        await speaker.getByTestId("raised-hands-panel-button").click();
+        await expect(speaker.getByTestId("raised-hands-dock")).toBeVisible({ timeout: 20_000 });
         await speaker.getByTestId("panel-give-floor").first().click();
 
         // Bob is promoted: the global speaker now sees Bob's camera.
