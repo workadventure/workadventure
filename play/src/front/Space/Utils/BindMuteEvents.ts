@@ -117,8 +117,8 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
         if (space.filterType !== FilterType.ALL_USERS) {
             space.startStreaming();
             // Promote to a full speaker: this guarantees the local return feed (self-view) shows even when the
-            // user's availability status would otherwise hide it, and remembers the space so we can offer a
-            // "give back the floor" control (see GiveBackFloorMenuItem).
+            // user's availability status would otherwise hide it, and remembers the space so the raise-hand
+            // button can switch to its "on stage" state and hand the floor back (see RaiseHandMenuItem).
             isSpeakerStore.set(true);
             givenFloorSpaceStore.set(space);
         }

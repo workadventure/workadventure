@@ -1,5 +1,6 @@
 <script lang="ts">
     import { isSpeakerStore, silentStore } from "../../Stores/MediaStore";
+    import { givenFloorSpaceStore } from "../../Stores/MegaphoneStore";
 
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
@@ -129,9 +130,11 @@
                                 <!-- NAV : SCREENSHARING END -->
 
                                 <!-- NAV : RAISE HAND START -->
-                                <!-- Hidden for users who can already speak (speakers/promoted), so the raise-hand
-                                     and give-back-the-floor buttons are never shown at the same time. -->
-                                {#if !$inExternalServiceStore && $isInRemoteConversation && !$isSpeakerStore}
+                                <!-- Single control for the whole lifecycle: shown to raise the hand while in a
+                                     conversation and not yet a speaker, and kept on stage (green "live" state) once
+                                     the floor is granted so the user can hand it back. Hidden for genuine zone
+                                     speakers (speaker without a granted floor). -->
+                                {#if !$inExternalServiceStore && (($isInRemoteConversation && !$isSpeakerStore) || $givenFloorSpaceStore !== undefined)}
                                     <RaiseHandMenuItem />
                                 {/if}
                                 <!-- NAV : RAISE HAND END -->
