@@ -27,6 +27,7 @@ import { closePipWindow } from "./pip-window";
 import { rememberWorldUrl } from "./world-history";
 import { closeOverlayWindow } from "./overlay-window";
 import { stopCompanion, updateCompanion } from "./companion-controller";
+import { resetPresence } from "./presence";
 import { stopPresenterCursor } from "./presenter-cursor";
 import {
     activateTab,
@@ -663,6 +664,9 @@ export async function createWindow(initialUrl?: string) {
         closeAllHudWindows();
         stopPresenterCursor();
         stopCompanion();
+        // The renderer that fed presence is gone — drop to the disconnected baseline so the tray dot
+        // stops showing a stale "online" and the world-only quick actions gray out.
+        resetPresence();
     });
 
     mainWindow.on("resize", () => refreshRendererViewport("resize"));
