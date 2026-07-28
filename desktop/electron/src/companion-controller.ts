@@ -142,9 +142,10 @@ export function isCompanionVisible(): boolean {
 }
 
 /**
- * The front is opening the meeting video (embedded PiP): make sure the companion is open and mark the
- * video active so the panel stays open (even focused) until it closes. The panel jumps to the Meeting
- * tab on its own, driven by the meeting state (inMeeting rising edge), so no explicit tab select here.
+ * The front is opening the meeting video: make sure the companion is open and mark the video active
+ * so the panel stays open (even when WA is focused) until it closes. The companion renderer switches
+ * its own layout to the video-first view on the inMeeting rising edge, so there is nothing to select
+ * here — awaiting the open guarantees the renderer is ready before the WA renderer's first SDP offer.
  */
 export async function openCompanionForPip(): Promise<void> {
     pipActive = true;
@@ -178,7 +179,7 @@ export function startCompanionController(): void {
 export function stopCompanion(): void {
     cancelPendingOpen();
     override = "auto";
-    // The embedded PiP view is a child of the companion window and dies with it.
+    // The meeting video lives in the companion renderer, so it dies with the window.
     pipActive = false;
     closeHudWindow("companion");
 }

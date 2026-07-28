@@ -353,13 +353,132 @@ button {
     background: #0a1018;
 }
 .video-empty {
-    display: none;
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    text-align: center;
     color: var(--faint);
     font-size: 12px;
+    pointer-events: none;
 }
-/* Placeholder text only while a meeting is up (before the native video attaches). */
-.video-area.has-video .video-empty {
+/* The video area (grid + placeholder) is only revealed while in a meeting; out of a meeting the
+   full-width People/Chat panel covers it. `has-video` is toggled with the meeting state; the tile
+   count then drives the grid-vs-placeholder swap (updateVideoLayout hides the placeholder inline
+   once at least one tile exists). */
+.video-area:not(.has-video) .video-empty {
+    display: none;
+}
+.video-area.has-video .videos-grid {
+    display: grid;
+}
+
+/* Meeting video grid (HTML tiles, WebRTC-mirrored). Tile structure mirrors the web PiP MediaBox:
+   one persistent container per participant with a <video> layer + an avatar layer; only their
+   visibility flips when a track binds/unbinds — the DOM is never torn down on a track change. */
+.videos-grid {
+    position: absolute;
+    inset: 0;
+    display: none;
+    grid-template-columns: 1fr;
+    grid-auto-rows: 1fr;
+    gap: 3px;
+    padding: 3px;
+}
+.tile {
+    position: relative;
+    background: var(--tile-bg, #1b2a41);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.tile .video-layer,
+.tile .avatar-layer {
+    position: absolute;
+    inset: 0;
+}
+.tile .video-layer {
+    display: none;
+}
+.tile.has-video .video-layer {
     display: block;
+}
+.tile.has-video .avatar-layer {
+    display: none;
+}
+.tile .video-layer video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: #000;
+}
+/* Self tile mirrors the camera + gets an accent ring (active-speaker style). */
+.tile.is-self .video-layer video {
+    transform: scaleX(-1);
+}
+.tile.is-self {
+    box-shadow: inset 0 0 0 2px rgba(65, 86, 246, 0.55);
+}
+.tile .avatar-layer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.tile .avatar {
+    width: 56%;
+    max-width: 84px;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-weight: 650;
+    font-size: 22px;
+    background: rgba(255, 255, 255, 0.18);
+    text-transform: uppercase;
+    user-select: none;
+}
+.tile .mic-off-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: var(--danger);
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.tile.is-muted .mic-off-badge {
+    display: inline-flex;
+}
+.tile .mic-off-badge svg {
+    width: 14px;
+    height: 14px;
+    stroke: #fff;
+    fill: transparent;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.tile .name-chip {
+    position: absolute;
+    bottom: 6px;
+    left: 6px;
+    max-width: calc(100% - 12px);
+    padding: 2px 8px;
+    background: var(--chip);
+    border-radius: 999px;
+    font-size: 11px;
+    line-height: 1.4;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
 /* People / Chat views sit above the video; slide in from the right. When closed they are pushed
