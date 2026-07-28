@@ -1,10 +1,11 @@
 // Companion panel renderer (sandboxed, vanilla JS).
 //
 // Video-first quick-access panel shown by the main process when WorkAdventure is backgrounded.
-// The body has three views: the meeting video (a native PiP WebContentsView the main process floats
-// over #c-video-area), a People list (the out-of-meeting home), and Chat — People/Chat slide in over
-// the video. Stateless: the active world renderer pushes the full CompanionState on every change and
-// every action goes back as a command via the generic WAHud bridge (onState / sendCommand / ready).
+// The body has three views: the meeting video (HTML <video> tiles rendered right here in
+// #c-video-area, WebRTC-mirrored from the WA renderer via the WAHud meeting bridge), a People list
+// (the out-of-meeting home), and Chat — People/Chat slide in over the video. Stateless: the active
+// world renderer pushes the full CompanionState on every change and every action goes back as a
+// command via the generic WAHud bridge (onState / sendCommand / ready + the meeting signaling).
 (function () {
     "use strict";
 
@@ -57,6 +58,8 @@
         inviteDecline: byId("c-invite-decline"),
         body: byId("c-body"),
         videoArea: byId("c-video-area"),
+        videos: byId("c-videos"),
+        videoEmpty: byId("c-video-empty"),
         viewPeople: byId("c-view-people"),
         viewChat: byId("c-view-chat"),
         peopleClose: byId("c-people-close"),
@@ -93,10 +96,283 @@
         return STATUS_KEYS.indexOf(key) !== -1 || key === "offline" ? key : "offline";
     }
 
+    // ── Meeting video (WebRTC) ───────────────────────────────────────────────
+    // Ported from the former native PiP renderer. tileKey-centric: `tiles: Map<tileKey, TileElement>`
+    // is the ONLY source of truth for the visible grid; the WA renderer offers, we answer, and
+    // pc.ontrack just binds a track into the matching persistent tile. Tile lifecycle is decoupled
+    // from WebRTC track lifecycle, so renegotiations / cam toggles / simulcast swaps never reflow.
+    var peerConnection;
+    var tiles = new Map(); // tileKey → TileElement
+    var tileKeyByTrackId = new Map(); // trackId → tileKey (rebuilt on every tile state)
+    var pendingTracks = new Map(); // trackId → MediaStreamTrack parked until its tile lands
+
+    function computeInitials(name) {
+        if (!name) return "?";
+        var parts = String(name).trim().split(/\s+/).filter(Boolean);
+        if (parts.length === 0) return "?";
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    function colorForName(name) {
+        var s = String(name || "");
+        var hash = 0;
+        for (var i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) | 0;
+        var hue = Math.abs(hash) % 360;
+        return { bg: "hsl(" + hue + ", 35%, 22%)", avatar: "hsl(" + hue + ", 60%, 55%)" };
+    }
+    function makeMicBadge() {
+        var span = document.createElement("span");
+        span.className = "mic-off-badge";
+        span.setAttribute("aria-hidden", "true");
+        span.innerHTML =
+            '<svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M9 5a3 3 0 0 1 6 0v5a3 3 0 0 1 -.13 .874m-2 2a3 3 0 0 1 -3.87 -2.872v-1"/><path d="M5 10a7 7 0 0 0 10.846 5.85m2 -2a6.967 6.967 0 0 0 1.152 -3.85"/></svg>';
+        return span;
+    }
+
+    function TileElement(tileKey, meta) {
+        this.tileKey = tileKey;
+        this.trackId = null;
+        var container = document.createElement("div");
+        container.className = "tile";
+        container.dataset.tileKey = tileKey;
+        this.container = container;
+
+        var videoLayer = document.createElement("div");
+        videoLayer.className = "video-layer";
+        var video = document.createElement("video");
+        video.autoplay = true;
+        video.playsInline = true;
+        video.muted = true; // audio stays in the main window — never duplicate playback
+        videoLayer.appendChild(video);
+        container.appendChild(videoLayer);
+
+        var avatarLayer = document.createElement("div");
+        avatarLayer.className = "avatar-layer";
+        var avatarEl = document.createElement("div");
+        avatarEl.className = "avatar";
+        avatarLayer.appendChild(avatarEl);
+        container.appendChild(avatarLayer);
+
+        var nameChip = document.createElement("span");
+        nameChip.className = "name-chip";
+        container.appendChild(nameChip);
+        container.appendChild(makeMicBadge());
+
+        this.video = video;
+        this.avatarEl = avatarEl;
+        this.nameChip = nameChip;
+        this.update(meta);
+    }
+    TileElement.prototype.update = function (meta) {
+        var name = meta.name || (meta.isSelf ? "You" : "");
+        var colors = colorForName(name);
+        this.nameChip.textContent = name;
+        this.nameChip.style.display = name ? "" : "none";
+        this.container.style.setProperty("--tile-bg", colors.bg);
+        this.avatarEl.style.background = colors.avatar;
+        this.avatarEl.textContent = computeInitials(name);
+        this.container.classList.toggle("is-self", meta.isSelf === true);
+        this.container.classList.toggle("is-muted", meta.hasAudio === false);
+        // Track presence wins over the meta hint (avoids a black flicker before pc.ontrack lands).
+        this.container.classList.toggle("has-video", this.trackId !== null);
+    };
+    TileElement.prototype.attachTrack = function (track) {
+        if (this.trackId === track.id) return;
+        this.trackId = track.id;
+        try {
+            this.video.srcObject = new MediaStream([track]);
+        } catch (e) {
+            /* ignore */
+        }
+        this.container.classList.add("has-video");
+        var self = this;
+        track.addEventListener("ended", function () {
+            if (self.trackId === track.id) self.detachTrack();
+        });
+        var p = this.video.play();
+        if (p && typeof p.catch === "function") {
+            p.catch(function (err) {
+                // eslint-disable-next-line no-console
+                console.warn("Companion video play() rejected", err);
+            });
+        }
+    };
+    TileElement.prototype.detachTrack = function () {
+        if (this.trackId === null) return;
+        this.trackId = null;
+        try {
+            this.video.srcObject = null;
+        } catch (e) {
+            /* ignore */
+        }
+        this.container.classList.remove("has-video");
+    };
+    TileElement.prototype.destroy = function () {
+        try {
+            this.video.srcObject = null;
+        } catch (e) {
+            /* ignore */
+        }
+        this.container.remove();
+    };
+
+    function reorderSelfTilesFirst() {
+        var selfTiles = [];
+        tiles.forEach(function (tile) {
+            if (tile.container.classList.contains("is-self") && tile.container.parentNode === els.videos) {
+                selfTiles.push(tile.container);
+            }
+        });
+        for (var i = selfTiles.length - 1; i >= 0; i--) {
+            els.videos.insertBefore(selfTiles[i], els.videos.firstChild);
+        }
+    }
+    function updateVideoLayout() {
+        var count = tiles.size;
+        els.videoEmpty.style.display = count === 0 ? "" : "none";
+        els.videos.style.display = count === 0 ? "none" : "grid";
+        var cols = count <= 1 ? 1 : count <= 4 ? 2 : 3;
+        els.videos.style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
+    }
+
+    function ensurePeerConnection() {
+        if (peerConnection) return peerConnection;
+        peerConnection = new RTCPeerConnection({ iceServers: [] });
+        peerConnection.addEventListener("icecandidate", function (event) {
+            if (event.candidate) api.sendMeetingIce(event.candidate.toJSON());
+        });
+        peerConnection.addEventListener("track", function (event) {
+            if (event.track && event.track.kind === "video") onIncomingTrack(event.track);
+        });
+        peerConnection.addEventListener("connectionstatechange", function () {
+            var s = peerConnection.connectionState;
+            if (s === "failed" || s === "closed") {
+                teardownMeeting();
+            }
+        });
+        return peerConnection;
+    }
+    function onIncomingTrack(track) {
+        var tileKey = tileKeyByTrackId.get(track.id);
+        if (tileKey && tiles.has(tileKey)) {
+            tiles.get(tileKey).attachTrack(track);
+            return;
+        }
+        pendingTracks.set(track.id, track); // park until the matching tile state lands
+    }
+    function flushPendingTracks() {
+        if (pendingTracks.size === 0) return;
+        pendingTracks.forEach(function (track, trackId) {
+            var tileKey = tileKeyByTrackId.get(trackId);
+            if (tileKey && tiles.has(tileKey)) {
+                tiles.get(tileKey).attachTrack(track);
+                pendingTracks.delete(trackId);
+            }
+        });
+    }
+    function applyMeetingTiles(state) {
+        if (!state || typeof state !== "object") return;
+        var incoming = Array.isArray(state.tiles) ? state.tiles : [];
+        var byKey = new Map();
+        incoming.forEach(function (t) {
+            if (!t || typeof t.tileKey !== "string") return;
+            if (!byKey.has(t.tileKey)) byKey.set(t.tileKey, t);
+        });
+        tileKeyByTrackId.clear();
+        incoming.forEach(function (t) {
+            if (t && t.trackId && t.tileKey) tileKeyByTrackId.set(t.trackId, t.tileKey);
+        });
+        Array.from(tiles.keys()).forEach(function (key) {
+            if (!byKey.has(key)) {
+                tiles.get(key).destroy();
+                tiles.delete(key);
+            }
+        });
+        byKey.forEach(function (meta, key) {
+            var tile = tiles.get(key);
+            if (!tile) {
+                tile = new TileElement(key, meta);
+                tiles.set(key, tile);
+                els.videos.appendChild(tile.container);
+            } else {
+                tile.update(meta);
+            }
+            if (tile.trackId !== null && tile.trackId !== meta.trackId) {
+                tile.detachTrack();
+            }
+        });
+        flushPendingTracks();
+        reorderSelfTilesFirst();
+        updateVideoLayout();
+    }
+    function teardownMeeting() {
+        if (peerConnection) {
+            try {
+                peerConnection.close();
+            } catch (e) {
+                /* ignore */
+            }
+            peerConnection = undefined;
+        }
+        tiles.forEach(function (tile) {
+            tile.destroy();
+        });
+        tiles.clear();
+        tileKeyByTrackId.clear();
+        pendingTracks.clear();
+        updateVideoLayout();
+    }
+
+    // Serialize offer handling: two offers in quick succession would otherwise interleave and hit
+    // "Called in wrong state: stable". Chain onto a queue so each offer→answer completes in order.
+    var offerQueue = Promise.resolve();
+    api.onMeetingOffer(function (sdp) {
+        offerQueue = offerQueue.then(function () {
+            var pc = ensurePeerConnection();
+            return pc
+                .setRemoteDescription(sdp)
+                .then(function () {
+                    return pc.createAnswer();
+                })
+                .then(function (answer) {
+                    return pc.setLocalDescription(answer);
+                })
+                .then(function () {
+                    if (pc.localDescription) {
+                        api.sendMeetingAnswer({ type: pc.localDescription.type, sdp: pc.localDescription.sdp });
+                    }
+                })
+                .catch(function (err) {
+                    // eslint-disable-next-line no-console
+                    console.warn("Companion meeting offer handling failed", err);
+                });
+        });
+    });
+    api.onMeetingIce(function (candidate) {
+        ensurePeerConnection()
+            .addIceCandidate(candidate)
+            .catch(function (err) {
+                // eslint-disable-next-line no-console
+                console.warn("Companion addIceCandidate failed", err);
+            });
+    });
+    api.onMeetingClose(function () {
+        teardownMeeting();
+    });
+    api.onMeetingTiles(function (state) {
+        try {
+            applyMeetingTiles(state);
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error("Companion meeting tiles render failed", e);
+        }
+    });
+    window.addEventListener("pagehide", teardownMeeting);
+
     // ── Views: "video" | "people" | "chat" ──────────────────────────────────
-    // Base view is video while in a meeting, People otherwise. People/Chat slide over the video; the
-    // native meeting PiP is shown ONLY while the current view is "video" (main keys it off the
-    // companion-tab command — "meeting" shows it, anything else hides it).
+    // Base view is the meeting video (HTML tiles in #c-video-area) while in a meeting, People
+    // otherwise. People/Chat are left side panels that slide over the video (z-index); closing them
+    // reveals the video again.
     var currentView = "people";
     var inMeeting = false;
     var chatSub = "list"; // "list" | "conversation"
@@ -106,47 +382,16 @@
         return inMeeting ? "video" : "people";
     }
 
-    function reportVideoRect() {
-        if (!inMeeting || !els.body) {
-            return;
-        }
-        var b = els.body.getBoundingClientRect();
-        if (b.width <= 0 || b.height <= 0) {
-            return;
-        }
-        var rect;
-        if (currentView === "video") {
-            rect = { x: b.left, y: b.top, width: b.width, height: b.height };
-        } else {
-            // A side panel (people/chat) is open on the left — put the video in the strip to its
-            // right. offsetWidth is the panel's LAYOUT width (unaffected by the slide-in transform),
-            // so the strip is correct even while the panel is still animating in.
-            var panelWidth = (currentView === "chat" ? els.viewChat : els.viewPeople).offsetWidth;
-            rect = { x: b.left + panelWidth, y: b.top, width: Math.max(0, b.width - panelWidth), height: b.height };
-        }
-        send({ type: "meeting-rect", rect: rect });
-    }
-
     function applyView() {
-        // People and Chat are both left side panels. The base behind them is the meeting video (in a
-        // meeting) or an empty area (out of one). People is shown by default out of a meeting.
+        // People and Chat are both left side panels. Out of a meeting they take the full width; in a
+        // meeting they are side panels and the HTML meeting video (in #c-video-area behind them,
+        // z-index 0) shows through on the right — no native view, so no rect coordination needed.
         els.viewPeople.dataset.open = currentView === "people" ? "true" : "false";
         els.viewChat.dataset.open = currentView === "chat" ? "true" : "false";
-        // With no PiP (out of a meeting) the panels take the full width; in a meeting they are left
-        // side panels with the video shrunk to the strip on their right.
         els.viewPeople.classList.toggle("full", !inMeeting);
         els.viewChat.classList.toggle("full", !inMeeting);
         els.openPeople.dataset.active = currentView === "people" ? "true" : "false";
         els.openChat.dataset.active = currentView === "chat" ? "true" : "false";
-        // Video shows only in a meeting: full when the video view is on top, or shrunk to the right
-        // strip when a side panel is open (so the panel shows on the left). Set the rect FIRST, then
-        // reveal the video at that rect — no full-size flash covering the panel.
-        if (inMeeting) {
-            reportVideoRect();
-            send({ type: "companion-tab", tab: "meeting" });
-        } else {
-            send({ type: "companion-tab", tab: "people" });
-        }
     }
 
     function setView(view) {
@@ -166,7 +411,6 @@
     els.chatClose.addEventListener("click", function () {
         setView(baseView());
     });
-    window.addEventListener("resize", reportVideoRect);
 
     // ── Header actions ──────────────────────────────────────────────────────
     els.expand.addEventListener("click", function () {
