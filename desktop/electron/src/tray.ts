@@ -6,7 +6,7 @@ import { showAboutWindow } from "electron-util";
 import * as autoUpdater from "./auto-updater";
 import * as log from "./log";
 import settings from "./settings";
-import { getWindow, loadDesktopTarget } from "./window";
+import { createWindow, getWindow, loadDesktopTarget } from "./window";
 import { emitCameraToggle, emitMuteToggle, emitSetStatus } from "./ipc";
 import { createPinnedWorldMenuItems, createRecentWorldMenuItems, openNativeWorldSwitcher } from "./native-menu";
 import { onWorldHistoryChange } from "./world-history";
@@ -251,8 +251,11 @@ function updateTrayContextMenu() {
             label: "Show / Hide",
             click() {
                 const mainWindow = getWindow();
-                if (!mainWindow) {
-                    throw new Error("Main window not found");
+                // On macOS, closing the window keeps the app running (window destroyed, no window).
+                // Re-create it instead of throwing — the tray is the user's way back in.
+                if (!mainWindow || mainWindow.isDestroyed()) {
+                    void createWindow();
+                    return;
                 }
 
                 if (mainWindow.isVisible()) {
@@ -342,8 +345,9 @@ export function createTray() {
 
     tray.on("double-click", () => {
         const mainWindow = getWindow();
-        if (!mainWindow) {
-            throw new Error("Main window not found");
+        if (!mainWindow || mainWindow.isDestroyed()) {
+            void createWindow();
+            return;
         }
 
         mainWindow.show();
