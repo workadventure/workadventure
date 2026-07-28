@@ -72,9 +72,9 @@
         <!-- ── Body: video (native PiP floats over c-video-area) + slide-in views ── -->
         <div class="body" id="c-body">
             <div class="video-area" id="c-video-area">
-                <!-- The native PiP WebContentsView is positioned here by the main process while in a
-                     meeting. This placeholder shows only if the view hasn't attached yet. -->
-                <div class="video-empty" id="c-video-empty">Connecting to the meeting…</div>
+                <!-- Meeting tiles render here as HTML <video> (WebRTC-mirrored from the WA renderer). -->
+                <div class="videos-grid" id="c-videos"></div>
+                <div class="video-empty" id="c-video-empty">You're in a meeting.</div>
             </div>
 
             <!-- People view (base out of meeting; slide-in overlay in a meeting) -->
