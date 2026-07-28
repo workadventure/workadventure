@@ -36,6 +36,7 @@ const TRAY_STATUS_COLOR: Record<TrayStatus, string> = {
     back_in_a_moment: "#7382e2",
     idle: "#e9c84e",
     online: "#68e97a",
+    offline: "#6b7280",
 };
 
 const TRAY_STATUS_LABEL: Record<TrayStatus, string> = {
@@ -45,6 +46,7 @@ const TRAY_STATUS_LABEL: Record<TrayStatus, string> = {
     back_in_a_moment: "🔵 Be right back",
     idle: "🟡 Idle",
     online: "🟢 Available",
+    offline: "⚪ Offline",
 };
 
 // The four user-selectable availability statuses, in display order. Colors mirror WA's status dots.
@@ -197,6 +199,9 @@ function updateTrayContextMenu() {
     }
 
     const status = getTrayStatus();
+    // Status / mic / camera / companion only make sense inside a world; gray them out otherwise
+    // (landing / login, or no window). "offline" is exactly the not-in-a-world state.
+    const inWorld = status !== "offline";
     const media = getMediaState();
     const shortcuts = settings.get("shortcuts");
     const lastRoomUrl = settings.get("last_room_url");
@@ -208,6 +213,7 @@ function updateTrayContextMenu() {
         },
         {
             label: "Set status",
+            enabled: inWorld,
             submenu: buildStatusSubmenuItems(),
         },
         { type: "separator" },
@@ -215,6 +221,7 @@ function updateTrayContextMenu() {
             id: "microphone",
             label: "Microphone",
             type: "checkbox",
+            enabled: inWorld,
             checked: media.micEnabled,
             // Display-only accelerator: the real binding stays in shortcuts.ts (globalShortcut).
             accelerator: shortcuts?.mute_toggle || undefined,
@@ -226,6 +233,7 @@ function updateTrayContextMenu() {
             id: "camera",
             label: "Camera",
             type: "checkbox",
+            enabled: inWorld,
             checked: media.cameraEnabled,
             accelerator: shortcuts?.camera_toggle || undefined,
             click() {
@@ -240,6 +248,7 @@ function updateTrayContextMenu() {
         {
             label: "Companion panel",
             type: "checkbox",
+            enabled: inWorld,
             checked: isCompanionVisible(),
             click() {
                 toggleCompanion();
