@@ -11,7 +11,7 @@
         tooltipDesc?: string;
         disabledHelp?: boolean;
         tooltipDelay?: number;
-        state?: "normal" | "active" | "forbidden" | "disabled" | "disabledForbidden";
+        state?: "normal" | "active" | "forbidden" | "live" | "disabled" | "disabledForbidden";
         dataTestId?: string;
         classList?: string;
         hideIconInActionBar?: boolean;
@@ -119,6 +119,7 @@
                     {buttonState === 'normal' && !isGradient ? 'hover:bg-white/10 cursor-pointer' : ''}
                     {buttonState === 'active' ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
                     {buttonState === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
+                    {buttonState === 'live' ? 'bg-success hover:bg-success-600 cursor-pointer' : ''}
                     {!label
                 ? 'w-12 @sm/actions:w-10 @xl/actions:w-12'
                 : 'px-4 text-base @sm/actions:text-sm @xl/actions:text-base whitespace-nowrap'}
@@ -168,6 +169,7 @@
             ? 'bg-secondary hover:bg-secondary-600 cursor-pointer'
             : ''}
                     {buttonState === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
+                    {buttonState === 'live' ? 'bg-success hover:bg-success-600 cursor-pointer' : ''}
                     {isGradient ? 'gradient overflow-hidden' : ''}
                     {bgColor && !isGradient ? 'bg-[var(--bg-color)]' : ''}
                     {textColor ? 'text-[var(--text-color)]' : 'text-neutral-100'}
