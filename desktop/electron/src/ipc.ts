@@ -20,7 +20,7 @@ import {
 import { activateTab, closeTab, setActiveWorldTitle } from "./tab-manager";
 import { isTabStripSender, markTabStripReady } from "./tab-strip";
 import { createDesktopConfig, isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
-import { getPipWebContents, isPipWindowOpen, sendToPip } from "./pip-window";
+import { isPipWindowOpen, sendToPip } from "./pip-window";
 import {
     awaitOverlayReady,
     closeOverlayWindow,
@@ -31,7 +31,6 @@ import {
     sendToOverlay,
     setOverlayDrawMode,
 } from "./overlay-window";
-import { handleScreenIdentifyCancel, handleScreenIdentifyPick, identifyScreens } from "./screen-identify";
 import {
     broadcastHudState,
     closeHudWindow,
@@ -483,52 +482,9 @@ export default () => {
         getActiveWorldContents()?.send("app:pip:ice-to-main", candidate);
     });
 
-    // Source enumeration FOR the PiP window only. The main renderer goes through
-    // `app:getDesktopCapturerSources` which validates against allow-listed origins; that check
-    // would reject the PiP renderer (file://). Here we only need to confirm the sender IS our PiP
-    // window's webContents — there is no other webContents in the app with the preload-pip script,
-    // so no third party can reach this handler.
-    ipcMain.handle("app:pip:request-sources", async (event) => {
-        const pipContents = getPipWebContents();
-        if (!pipContents || event.sender !== pipContents) {
-            ElectronLog.warn("Rejected app:pip:request-sources from a non-PiP renderer");
-            return [];
-        }
-        const sources = await desktopCapturer.getSources({
-            types: ["screen", "window"],
-            thumbnailSize: { width: 320, height: 180 },
-        });
-        return sources.map((source) => ({
-            id: source.id,
-            name: source.name,
-            thumbnailURL: source.thumbnail.toDataURL(),
-            type: source.id.startsWith("window:") ? "window" : "screen",
-            // Lets pick-source carry the target display so the overlay/HUD land on the right screen.
-            display_id: source.display_id ? Number(source.display_id) : undefined,
-        }));
-    });
-
-    // Show a big number on every physical display; the user clicks one to share it. Resolves the
-    // matching screen source (with its display id) so the annotation overlay can target it exactly.
-    ipcMain.handle("app:pip:identify-screens", async (event) => {
-        const pipContents = getPipWebContents();
-        if (!pipContents || event.sender !== pipContents) {
-            ElectronLog.warn("Rejected app:pip:identify-screens from a non-PiP renderer");
-            return null;
-        }
-        return identifyScreens();
-    });
-    ipcMain.on("app:screen-identify:pick", (event) => {
-        handleScreenIdentifyPick(event.sender.id);
-    });
-    ipcMain.on("app:screen-identify:cancel", () => {
-        handleScreenIdentifyCancel();
-    });
-
-    // Main renderer pushes tile metadata + device state (mic/cam/screenshare) to the PiP renderer.
-    // The PiP renderer pushes user actions (toggle mic/cam/screenshare/close) back. Both channels
-    // are validated: state can only originate from the main renderer; commands can only come from
-    // the PiP window's webContents (the only sender that holds the preload-pip script).
+    // Main renderer pushes tile metadata + device state (mic/cam/screenshare) to the companion
+    // renderer, which drives the meeting tiles. Validated: state can only originate from the main
+    // renderer, and it is only forwarded while the companion (the meeting-video host) is open.
     ipcMain.on("app:pip:state-from-main", (event, state: unknown) => {
         if (!isFromMainRenderer(event) || !isPipWindowOpen()) return;
         sendToPip("app:pip:state-to-pip", state);
