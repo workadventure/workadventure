@@ -560,6 +560,9 @@ class DesktopApi {
             text: get(m.content).body ?? "",
             isSelf: m.isMyMessage === true,
             ts: m.date ? m.date.getTime() : 0,
+            // Proximity system notices ("New discussion with X", join/leave) — shown as a centered
+            // notice by the companion, not a chat bubble.
+            system: m.type === "incoming" || m.type === "outcoming",
         });
 
         // Stream the currently-selected conversation's last 50 messages. Reading the room is a fresh
