@@ -218,6 +218,8 @@ export type CompanionMessage = {
     isSelf: boolean;
     /** Epoch ms of the message; 0 when unknown. Drives per-message time + date separators. */
     ts: number;
+    /** Proximity system notice (e.g. "New discussion with X") — rendered centered, not as a bubble. */
+    system?: boolean;
 };
 
 export type CompanionConversation = {

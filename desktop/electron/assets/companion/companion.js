@@ -1,9 +1,10 @@
 // Companion panel renderer (sandboxed, vanilla JS).
 //
-// A compact, interactive quick-access panel (People / Chat / Controls) shown by the main process
-// when WorkAdventure is backgrounded. Stateless: the active world renderer pushes the full
-// CompanionState on every change; every action goes back as a command. Reuses the generic WAHud
-// bridge (onState / sendCommand / ready) — the state/command shapes are companion-specific.
+// Video-first quick-access panel shown by the main process when WorkAdventure is backgrounded.
+// The body has three views: the meeting video (a native PiP WebContentsView the main process floats
+// over #c-video-area), a People list (the out-of-meeting home), and Chat — People/Chat slide in over
+// the video. Stateless: the active world renderer pushes the full CompanionState on every change and
+// every action goes back as a command via the generic WAHud bridge (onState / sendCommand / ready).
 (function () {
     "use strict";
 
@@ -17,14 +18,12 @@
     var STATUS_KEYS = ["online", "busy", "back_in_a_moment", "do_not_disturb", "away"];
     var NEARBY_ID = "nearby";
 
-    // Static icon markup (constant, never user data — safe to assign via innerHTML).
     var ICON_DM =
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
     var ICON_LOCATE =
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
     var ICON_INVITE =
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>';
-    // Conversation-kind glyphs: proximity (broadcast), DM (person), group room (hash).
     var ICON_KIND_NEARBY =
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.6"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M6 6a8 8 0 0 0 0 12M18 6a8 8 0 0 1 0 12"/></svg>';
     var ICON_KIND_DIRECT =
@@ -37,11 +36,31 @@
     }
 
     var els = {
-        worldName: byId("c-world-name"),
-        worldSub: byId("c-world-sub"),
-        back: byId("c-back"),
-        close: byId("c-close"),
-        tabs: byId("c-tabs"),
+        openChat: byId("c-open-chat"),
+        openPeople: byId("c-open-people"),
+        chatBadge: byId("c-chat-badge"),
+        peopleCount: byId("c-people-count"),
+        peopleCountH: byId("c-people-count-h"),
+        hdrMic: byId("c-hdr-mic"),
+        hdrCam: byId("c-hdr-cam"),
+        hdrShare: byId("c-hdr-share"),
+        hdrClose: byId("c-hdr-close"),
+        expand: byId("c-expand"),
+        statusBtn: byId("c-status-btn"),
+        selfDot: byId("c-self-dot"),
+        selfName: byId("c-self-name"),
+        statusMenu: byId("c-status-menu"),
+        statusLocked: byId("c-status-locked"),
+        invitation: byId("c-invitation"),
+        invitationName: byId("c-invitation-name"),
+        inviteAccept: byId("c-invite-accept"),
+        inviteDecline: byId("c-invite-decline"),
+        body: byId("c-body"),
+        videoArea: byId("c-video-area"),
+        viewPeople: byId("c-view-people"),
+        viewChat: byId("c-view-chat"),
+        peopleClose: byId("c-people-close"),
+        chatClose: byId("c-chat-close"),
         people: byId("c-people"),
         peopleEmpty: byId("c-people-empty"),
         conversations: byId("c-conversations"),
@@ -54,21 +73,6 @@
         messagesEmpty: byId("c-messages-empty"),
         composer: byId("c-composer"),
         chatInput: byId("c-chat-input"),
-        statusGroup: document.querySelector(".status-group"),
-        status: byId("c-status"),
-        statusLocked: byId("c-status-locked"),
-        chatMentionsBadge: byId("c-chat-mentions-badge"),
-        hdrMic: byId("c-hdr-mic"),
-        hdrCam: byId("c-hdr-cam"),
-        hdrShare: byId("c-hdr-share"),
-        invitation: byId("c-invitation"),
-        invitationName: byId("c-invitation-name"),
-        inviteAccept: byId("c-invite-accept"),
-        inviteDecline: byId("c-invite-decline"),
-        meetingTab: byId("c-meeting-tab"),
-        meetingPane: document.querySelector('.pane[data-pane="meeting"]'),
-        videoToggle: byId("c-video-toggle"),
-        videoLabel: byId("c-video-label"),
     };
 
     function send(command) {
@@ -89,92 +93,137 @@
         return STATUS_KEYS.indexOf(key) !== -1 || key === "offline" ? key : "offline";
     }
 
-    // ---- Tabs (local state) ----
-    var activeTab = "people";
-    // Report the Meeting-tab content rect so main can position the embedded meeting-video view there.
-    function reportMeetingRect() {
-        if (activeTab !== "meeting" || !els.meetingPane) {
-            return;
-        }
-        var r = els.meetingPane.getBoundingClientRect();
-        if (r.width > 0 && r.height > 0) {
-            send({ type: "meeting-rect", rect: { x: r.left, y: r.top, width: r.width, height: r.height } });
-        }
-    }
-    function setTab(tab) {
-        activeTab = tab;
-        var tabButtons = els.tabs.querySelectorAll(".tab");
-        for (var i = 0; i < tabButtons.length; i++) {
-            tabButtons[i].classList.toggle("is-active", tabButtons[i].dataset.tab === tab);
-        }
-        var panes = document.querySelectorAll(".pane");
-        for (var j = 0; j < panes.length; j++) {
-            panes[j].classList.toggle("is-active", panes[j].dataset.pane === tab);
-        }
-        // Main shows the embedded meeting video only while the Meeting tab is active.
-        send({ type: "companion-tab", tab: tab });
-        if (tab === "meeting") {
-            requestAnimationFrame(reportMeetingRect);
-        }
-    }
-    els.tabs.addEventListener("click", function (e) {
-        var btn = e.target.closest(".tab");
-        if (btn && btn.dataset.tab) {
-            setTab(btn.dataset.tab);
-        }
-    });
-    window.addEventListener("resize", reportMeetingRect);
-
-    // ---- Header ----
-    els.back.addEventListener("click", function () {
-        send({ type: "focus-main" });
-    });
-    els.close.addEventListener("click", function () {
-        send({ type: "close" });
-    });
-    // Always-visible mic / camera / screen-share quick toggles (fold-in of the old floating pill).
-    if (els.hdrMic) {
-        els.hdrMic.addEventListener("click", function () {
-            send({ type: "toggle-mic" });
-        });
-    }
-    if (els.hdrCam) {
-        els.hdrCam.addEventListener("click", function () {
-            send({ type: "toggle-camera" });
-        });
-    }
-    if (els.hdrShare) {
-        els.hdrShare.addEventListener("click", function () {
-            if (els.hdrShare.disabled) return;
-            send({ type: "toggle-screenshare" });
-        });
-    }
-
-    // ---- Meeting invitation banner ----
-    if (els.inviteAccept) {
-        els.inviteAccept.addEventListener("click", function () {
-            // Accept, then bring WorkAdventure to the front so the user lands in the meeting.
-            send({ type: "focus-main" });
-            send({ type: "accept-invitation" });
-        });
-    }
-    if (els.inviteDecline) {
-        els.inviteDecline.addEventListener("click", function () {
-            send({ type: "decline-invitation" });
-        });
-    }
-
-    // ---- Chat (conversation list <-> conversation view) ----
-    var chatView = "list"; // "list" | "conversation"
+    // ── Views: "video" | "people" | "chat" ──────────────────────────────────
+    // Base view is video while in a meeting, People otherwise. People/Chat slide over the video; the
+    // native meeting PiP is shown ONLY while the current view is "video" (main keys it off the
+    // companion-tab command — "meeting" shows it, anything else hides it).
+    var currentView = "people";
+    var inMeeting = false;
+    var chatSub = "list"; // "list" | "conversation"
     var currentConvId = null;
 
-    function showConversationView(show) {
-        chatView = show ? "conversation" : "list";
-        els.conversation.hidden = !show;
-        els.conversations.hidden = show;
-        setEmpty(els.conversationsEmpty, false);
+    function baseView() {
+        return inMeeting ? "video" : "people";
     }
 
+    function reportVideoRect() {
+        if (!inMeeting || !els.body) {
+            return;
+        }
+        var b = els.body.getBoundingClientRect();
+        if (b.width <= 0 || b.height <= 0) {
+            return;
+        }
+        var rect;
+        if (currentView === "video") {
+            rect = { x: b.left, y: b.top, width: b.width, height: b.height };
+        } else {
+            // A side panel (people/chat) is open on the left — put the video in the strip to its
+            // right. offsetWidth is the panel's LAYOUT width (unaffected by the slide-in transform),
+            // so the strip is correct even while the panel is still animating in.
+            var panelWidth = (currentView === "chat" ? els.viewChat : els.viewPeople).offsetWidth;
+            rect = { x: b.left + panelWidth, y: b.top, width: Math.max(0, b.width - panelWidth), height: b.height };
+        }
+        send({ type: "meeting-rect", rect: rect });
+    }
+
+    function applyView() {
+        // People and Chat are both left side panels. The base behind them is the meeting video (in a
+        // meeting) or an empty area (out of one). People is shown by default out of a meeting.
+        els.viewPeople.dataset.open = currentView === "people" ? "true" : "false";
+        els.viewChat.dataset.open = currentView === "chat" ? "true" : "false";
+        // With no PiP (out of a meeting) the panels take the full width; in a meeting they are left
+        // side panels with the video shrunk to the strip on their right.
+        els.viewPeople.classList.toggle("full", !inMeeting);
+        els.viewChat.classList.toggle("full", !inMeeting);
+        els.openPeople.dataset.active = currentView === "people" ? "true" : "false";
+        els.openChat.dataset.active = currentView === "chat" ? "true" : "false";
+        // Video shows only in a meeting: full when the video view is on top, or shrunk to the right
+        // strip when a side panel is open (so the panel shows on the left). Set the rect FIRST, then
+        // reveal the video at that rect — no full-size flash covering the panel.
+        if (inMeeting) {
+            reportVideoRect();
+            send({ type: "companion-tab", tab: "meeting" });
+        } else {
+            send({ type: "companion-tab", tab: "people" });
+        }
+    }
+
+    function setView(view) {
+        currentView = view;
+        applyView();
+    }
+
+    els.openPeople.addEventListener("click", function () {
+        setView(currentView === "people" ? baseView() : "people");
+    });
+    els.openChat.addEventListener("click", function () {
+        setView(currentView === "chat" ? baseView() : "chat");
+    });
+    els.peopleClose.addEventListener("click", function () {
+        setView(baseView());
+    });
+    els.chatClose.addEventListener("click", function () {
+        setView(baseView());
+    });
+    window.addEventListener("resize", reportVideoRect);
+
+    // ── Header actions ──────────────────────────────────────────────────────
+    els.expand.addEventListener("click", function () {
+        send({ type: "focus-main" });
+    });
+    els.hdrMic.addEventListener("click", function () {
+        send({ type: "toggle-mic" });
+    });
+    els.hdrCam.addEventListener("click", function () {
+        send({ type: "toggle-camera" });
+    });
+    els.hdrShare.addEventListener("click", function () {
+        if (els.hdrShare.disabled) return;
+        send({ type: "toggle-screenshare" });
+    });
+    els.hdrClose.addEventListener("click", function () {
+        // Dismiss the companion (force-closed — it won't auto-reopen until brought back from the tray).
+        send({ type: "close" });
+    });
+
+    // ── Status dropdown ─────────────────────────────────────────────────────
+    function openStatusMenu(open) {
+        els.statusMenu.hidden = !open;
+        els.statusBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+    els.statusBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        openStatusMenu(els.statusMenu.hidden);
+    });
+    els.statusMenu.addEventListener("click", function (e) {
+        var btn = e.target.closest(".status-opt");
+        if (btn && btn.dataset.status && !els.statusMenu.classList.contains("is-locked")) {
+            send({ type: "set-status", status: btn.dataset.status });
+            openStatusMenu(false);
+        }
+    });
+    document.addEventListener("click", function () {
+        if (!els.statusMenu.hidden) {
+            openStatusMenu(false);
+        }
+    });
+
+    // ── Meeting invitation banner ───────────────────────────────────────────
+    els.inviteAccept.addEventListener("click", function () {
+        send({ type: "focus-main" });
+        send({ type: "accept-invitation" });
+    });
+    els.inviteDecline.addEventListener("click", function () {
+        send({ type: "decline-invitation" });
+    });
+
+    // ── Chat (list <-> conversation) ────────────────────────────────────────
+    function showConversationView(show) {
+        chatSub = show ? "conversation" : "list";
+        els.conversation.hidden = !show;
+        els.conversations.hidden = show;
+    }
     els.conversations.addEventListener("click", function (e) {
         var row = e.target.closest(".conversation-row");
         if (!row || !row.dataset.conversationId) {
@@ -203,7 +252,7 @@
         els.chatInput.value = "";
     });
 
-    // ---- People (event delegation for per-row actions) ----
+    // ── People per-row actions ──────────────────────────────────────────────
     els.people.addEventListener("click", function (e) {
         var btn = e.target.closest(".mini-btn");
         if (!btn) {
@@ -215,36 +264,18 @@
             return;
         }
         if (action === "invite") {
-            // Invite someone to a meeting — same action as the in-app user list.
-            // No focus stealing: the invite is sent server-side and the target gets a popup.
             send({ type: "invite", userId: userId });
         } else if (action === "dm") {
             send({ type: "dm", userId: userId });
-            setTab("chat");
+            setView("chat");
             showConversationView(true);
         } else if (action === "locate") {
-            // "Go to" someone: bring WorkAdventure to the front, then walk there.
             send({ type: "focus-main" });
             send({ type: "locate", userId: userId });
         }
     });
 
-    // ---- Controls (status only; mic/cam/share live in the header) ----
-    els.status.addEventListener("click", function (e) {
-        var btn = e.target.closest(".status-opt");
-        if (btn && btn.dataset.status && !els.statusGroup.classList.contains("is-locked")) {
-            send({ type: "set-status", status: btn.dataset.status });
-        }
-    });
-
-    // ---- Meeting ----
-    if (els.videoToggle) {
-        els.videoToggle.addEventListener("click", function () {
-            send({ type: "toggle-pip" });
-        });
-    }
-
-    // ---- Rendering ----
+    // ── Rendering ───────────────────────────────────────────────────────────
     function miniButton(action, userId, title, iconSvg) {
         var btn = document.createElement("button");
         btn.type = "button";
@@ -260,17 +291,18 @@
     function renderPeople(users) {
         els.people.textContent = "";
         setEmpty(els.peopleEmpty, users.length === 0);
+        var selfName = "You";
         for (var i = 0; i < users.length; i++) {
             var u = users[i];
+            if (u.isSelf && u.name) {
+                selfName = u.name;
+            }
             var row = document.createElement("div");
             row.className = "person";
 
             var dot = document.createElement("span");
             dot.className = "dot";
             dot.dataset.status = normStatus(u.status);
-            if (u.color) {
-                dot.style.background = u.color;
-            }
             row.appendChild(dot);
 
             var name = document.createElement("span");
@@ -293,6 +325,12 @@
             }
             els.people.appendChild(row);
         }
+        // Header self name + people count badges.
+        els.selfName.textContent = selfName;
+        var count = users.length;
+        els.peopleCountH.textContent = String(count);
+        els.peopleCount.textContent = count > 99 ? "99+" : String(count);
+        els.peopleCount.hidden = count === 0;
     }
 
     function conversationIcon(kind) {
@@ -310,8 +348,6 @@
             row.type = "button";
             row.className = "conversation-row";
             row.dataset.conversationId = c.id;
-
-            // Leading type glyph so proximity / DM / group rooms read apart at a glance.
             row.appendChild(conversationIcon(c.kind));
 
             var main = document.createElement("div");
@@ -326,13 +362,11 @@
             var highlight = Number(c.highlightCount) || 0;
             var unread = Number(c.unreadCount) || 0;
             if (highlight > 0) {
-                // @-mentions take priority (red).
                 var hl = document.createElement("span");
                 hl.className = "conv-badge hl";
                 hl.textContent = "@" + (highlight > 99 ? "99+" : highlight);
                 top.appendChild(hl);
             } else if (unread > 0) {
-                // Plain unread: the real count, not just a dot.
                 var cnt = document.createElement("span");
                 cnt.className = "conv-badge count";
                 cnt.textContent = unread > 99 ? "99+" : String(unread);
@@ -377,7 +411,6 @@
         for (var i = 0; i < messages.length; i++) {
             var m = messages[i];
             var ts = Number(m.ts) || 0;
-            // Date separator whenever the calendar day changes (skipped for messages with no date).
             if (ts) {
                 var dayKey = new Date(ts).toDateString();
                 if (dayKey !== lastDayKey) {
@@ -389,6 +422,15 @@
                     sep.appendChild(sepLabel);
                     els.messages.appendChild(sep);
                 }
+            }
+            // Proximity system notices ("New discussion with X", join/leave) — a centered notice, not
+            // a chat bubble (they'd otherwise look like the user's own message).
+            if (m.system) {
+                var notice = document.createElement("div");
+                notice.className = "msg-system";
+                notice.textContent = m.text || "";
+                els.messages.appendChild(notice);
+                continue;
             }
             var wrap = document.createElement("div");
             wrap.className = "msg" + (m.isSelf ? " is-self" : "");
@@ -414,27 +456,25 @@
     }
 
     function renderChat(conversations, selected, chatStatus) {
-        // Chat-tab badge = total unread @-mentions across conversations.
         var highlights = 0;
         for (var i = 0; i < conversations.length; i++) {
             highlights += Number(conversations[i].highlightCount) || 0;
         }
         if (highlights > 0) {
-            els.chatMentionsBadge.textContent = highlights > 99 ? "99+" : String(highlights);
-            els.chatMentionsBadge.hidden = false;
+            els.chatBadge.textContent = highlights > 99 ? "99+" : String(highlights);
+            els.chatBadge.hidden = false;
         } else {
-            els.chatMentionsBadge.hidden = true;
+            els.chatBadge.hidden = true;
         }
 
         renderConversationList(conversations);
         currentConvId = selected ? selected.id : currentConvId;
 
-        var inConversation = chatView === "conversation";
+        var inConversation = chatSub === "conversation";
         els.conversation.hidden = !inConversation;
         els.conversations.hidden = inConversation;
         var showEmpty = !inConversation && conversations.length === 0;
         if (showEmpty) {
-            // Don't mistake "chat still connecting / unavailable" for a genuinely empty list.
             els.conversationsEmpty.textContent =
                 chatStatus === "connecting"
                     ? "Connecting to chat…"
@@ -452,60 +492,44 @@
         }
     }
 
-    function renderControls(media) {
-        // Mic / camera / screen-share all live in the always-visible header quick toggles.
-        if (els.hdrMic) {
-            els.hdrMic.dataset.state = media.micEnabled ? "on" : "off";
-        }
-        if (els.hdrCam) {
-            els.hdrCam.dataset.state = media.cameraEnabled ? "on" : "off";
-        }
-        if (els.hdrShare) {
-            els.hdrShare.dataset.state = media.screenSharing ? "active" : "off";
-            els.hdrShare.disabled = !media.canScreenShare && !media.screenSharing;
-            els.hdrShare.title = media.screenSharing ? "Stop sharing your screen" : "Share your screen";
-            els.hdrShare.setAttribute("aria-label", els.hdrShare.title);
-        }
+    function renderMedia(media) {
+        // Mic/cam: icon swaps on data-state; "off" turns the button danger-red (like the app bar).
+        els.hdrMic.dataset.state = media.micEnabled ? "on" : "off";
+        els.hdrMic.classList.toggle("is-forbidden", !media.micEnabled);
+        els.hdrCam.dataset.state = media.cameraEnabled ? "on" : "off";
+        els.hdrCam.classList.toggle("is-forbidden", !media.cameraEnabled);
+        // Share: single icon; active (sharing) turns it secondary-blue.
+        els.hdrShare.classList.toggle("is-active", media.screenSharing === true);
+        els.hdrShare.disabled = !media.canScreenShare && !media.screenSharing;
+        els.hdrShare.title = media.screenSharing ? "Stop sharing your screen" : "Share your screen";
+        els.hdrShare.setAttribute("aria-label", els.hdrShare.title);
 
+        // Self status dot + status dropdown current/locked.
+        els.selfDot.dataset.status = normStatus(media.status);
         var locked = media.statusLocked === true;
-        els.statusGroup.classList.toggle("is-locked", locked);
+        els.statusMenu.classList.toggle("is-locked", locked);
         els.statusLocked.hidden = !locked;
-        var opts = els.status.querySelectorAll(".status-opt");
+        var opts = els.statusMenu.querySelectorAll(".status-opt");
         for (var i = 0; i < opts.length; i++) {
             opts[i].classList.toggle("is-current", !locked && opts[i].dataset.status === media.status);
         }
     }
 
-    var prevInMeeting = false;
     function renderMeeting(media) {
-        var inMeeting = media.inMeeting === true;
-        if (els.meetingTab) {
-            els.meetingTab.hidden = !inMeeting;
+        var was = inMeeting;
+        inMeeting = media.inMeeting === true;
+        if (inMeeting && !was) {
+            // Entering a meeting: jump to the video (edge-triggered, so the user can switch away).
+            setView("video");
+        } else if (!inMeeting && was) {
+            setView("people");
+        } else if (!inMeeting && currentView === "video") {
+            setView("people");
         }
-        // Entering a meeting/conversation: jump straight to the Meeting tab. Edge-triggered (only on
-        // the false->true transition) so the user can still switch away to People/Chat mid-meeting.
-        // Because the panel window is recreated on each (re)open, prevInMeeting starts false, so a
-        // panel that opens while a meeting is already active also lands on Meeting.
-        if (inMeeting && !prevInMeeting) {
-            setTab("meeting");
-        } else if (!inMeeting && activeTab === "meeting") {
-            // Meeting ended (or never started) while the Meeting tab was open: fall back to People.
-            setTab("people");
-        }
-        prevInMeeting = inMeeting;
-        if (els.videoToggle) {
-            var open = media.pipOpen === true;
-            els.videoToggle.dataset.state = open ? "on" : "off";
-            if (els.videoLabel) {
-                els.videoLabel.textContent = open ? "Close meeting video" : "Open meeting video";
-            }
-        }
+        els.videoArea.classList.toggle("has-video", inMeeting);
     }
 
     function renderInvitation(invitation) {
-        if (!els.invitation) {
-            return;
-        }
         if (invitation && typeof invitation === "object") {
             els.invitationName.textContent = invitation.name || "Someone";
             els.invitation.hidden = false;
@@ -515,11 +539,6 @@
     }
 
     function render(state) {
-        var world = state.world || {};
-        els.worldName.textContent = world.name || "WorkAdventure";
-        var count = typeof world.participantCount === "number" ? world.participantCount : 0;
-        els.worldSub.textContent = count === 1 ? "1 person present" : count + " people present";
-
         renderInvitation(state.invitation);
         renderPeople(Array.isArray(state.users) ? state.users : []);
         renderChat(
@@ -533,20 +552,17 @@
             screenSharing: false,
             canScreenShare: false,
             inMeeting: false,
-            pipOpen: false,
             status: "online",
             statusLocked: false,
         };
         renderMeeting(media);
-        renderControls(media);
+        renderMedia(media);
     }
 
     api.onState(function (state) {
         if (!state || typeof state !== "object") {
             return;
         }
-        // Never let one malformed field freeze the whole panel: a throw here would abort render and
-        // leave every later state push unrendered too.
         try {
             render(state);
         } catch (e) {
@@ -555,5 +571,7 @@
         }
     });
 
+    // Establish the initial view (People home) with the main process.
+    applyView();
     api.ready();
 })();

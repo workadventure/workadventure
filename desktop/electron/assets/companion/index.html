@@ -8,33 +8,59 @@
 </head>
 <body>
     <div class="panel">
+        <!-- ── Header ─────────────────────────────────────────────────────── -->
         <header class="header">
-            <div class="world">
-                <div class="world-name" id="c-world-name">WorkAdventure</div>
-                <div class="world-sub" id="c-world-sub">Not connected</div>
+            <div class="hdr-group hdr-nav">
+                <button class="icon-btn nav-btn" id="c-open-chat" type="button" data-active="false" title="Chat" aria-label="Chat">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <span class="nav-badge" id="c-chat-badge" hidden></span>
+                </button>
+                <button class="icon-btn nav-btn" id="c-open-people" type="button" data-active="false" title="People" aria-label="People">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span class="nav-badge count" id="c-people-count" hidden>0</span>
+                </button>
             </div>
-            <div class="header-actions">
-                <button class="icon-btn hdr-toggle" id="c-hdr-mic" type="button" data-state="off" title="Toggle microphone" aria-label="Toggle microphone">
-                    <svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-                    <svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="3" x2="21" y2="21"/><path d="M9 9v2a3 3 0 0 0 5.12 2.12M15 9.34V5a3 3 0 0 0-5.94-.6"/><path d="M19 10v1a7 7 0 0 1-.11 1.23M15.54 15.54A7 7 0 0 1 5 11v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+
+            <!-- Media controls: the app's ActionBar pill style (ported from the PiP toolbar / design-system). -->
+            <div class="toolbar-pill hdr-media">
+                <button class="toolbar-btn" id="c-hdr-mic" type="button" data-state="on" title="Toggle microphone" aria-label="Toggle microphone">
+                    <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 2m0 3a3 3 0 0 1 3 -3h0a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3h0a3 3 0 0 1 -3 -3z"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M8 21l8 0"/><path d="M12 17l0 4"/></svg>
+                    <svg class="icon-only-off" viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 3l18 18"/><path d="M9 5a3 3 0 0 1 6 0v5a3 3 0 0 1 -.13 .874m-2 2a3 3 0 0 1 -3.87 -2.872v-1"/><path d="M5 10a7 7 0 0 0 10.846 5.85m2 -2a6.967 6.967 0 0 0 1.152 -3.85"/><path d="M8 21l8 0"/><path d="M12 17l0 4"/></svg>
                 </button>
-                <button class="icon-btn hdr-toggle" id="c-hdr-cam" type="button" data-state="off" title="Toggle camera" aria-label="Toggle camera">
-                    <svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-                    <svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="3" x2="21" y2="21"/><path d="M16 16H3a2 2 0 0 1-2-2V6M9.5 5H14a2 2 0 0 1 2 2v4l.5.5M23 7l-7 5"/></svg>
+                <button class="toolbar-btn" id="c-hdr-cam" type="button" data-state="on" title="Toggle camera" aria-label="Toggle camera">
+                    <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4z"/><path d="M3 6m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z"/></svg>
+                    <svg class="icon-only-off" viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 3l18 18"/><path d="M15 11v-1l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -.675 .946"/><path d="M10 6h3a2 2 0 0 1 2 2v3m0 4v1a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-8a2 2 0 0 1 2 -2h1"/></svg>
                 </button>
-                <button class="icon-btn hdr-share" id="c-hdr-share" type="button" data-state="off" title="Share your screen" aria-label="Share your screen">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                <button class="toolbar-btn" id="c-hdr-share" type="button" title="Share your screen" aria-label="Share your screen">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M21 12v3a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10a1 1 0 0 1 1 -1h9"/><path d="M7 20l10 0"/><path d="M9 16l0 4"/><path d="M15 16l0 4"/><path d="M17 4h4v4"/><path d="M16 9l5 -5"/></svg>
                 </button>
-                <span class="hdr-sep"></span>
-                <button class="icon-btn" id="c-back" type="button" title="Back to WorkAdventure" aria-label="Back to WorkAdventure">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+            </div>
+
+            <div class="hdr-group hdr-end">
+                <button class="icon-btn" id="c-expand" type="button" title="Open in WorkAdventure" aria-label="Open in WorkAdventure">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M16 4l4 0l0 4"/><path d="M14 10l6 -6"/><path d="M8 20l-4 0l0 -4"/><path d="M4 20l6 -6"/></svg>
                 </button>
-                <button class="icon-btn" id="c-close" type="button" title="Close panel" aria-label="Close panel">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <button class="status-btn" id="c-status-btn" type="button" aria-haspopup="true" aria-expanded="false">
+                    <span class="dot" id="c-self-dot" data-status="online"></span>
+                    <span class="self-name" id="c-self-name">You</span>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <button class="icon-btn is-danger" id="c-hdr-close" type="button" title="Hide the companion" aria-label="Hide the companion">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>
                 </button>
             </div>
         </header>
 
+        <!-- ── Status dropdown ────────────────────────────────────────────── -->
+        <div class="status-menu" id="c-status-menu" hidden role="menu">
+            <button class="status-opt" role="menuitemradio" data-status="online" type="button"><span class="dot" data-status="online"></span>Available</button>
+            <button class="status-opt" role="menuitemradio" data-status="busy" type="button"><span class="dot" data-status="busy"></span>Busy</button>
+            <button class="status-opt" role="menuitemradio" data-status="back_in_a_moment" type="button"><span class="dot" data-status="back_in_a_moment"></span>Be right back</button>
+            <button class="status-opt" role="menuitemradio" data-status="do_not_disturb" type="button"><span class="dot" data-status="do_not_disturb"></span>Do not disturb</button>
+            <div class="status-locked" id="c-status-locked" hidden>Locked while in a meeting</div>
+        </div>
+
+        <!-- ── Meeting invitation banner ──────────────────────────────────── -->
         <div class="invitation" id="c-invitation" hidden>
             <div class="invitation-text"><strong id="c-invitation-name">Someone</strong> invites you to a meeting</div>
             <div class="invitation-actions">
@@ -43,71 +69,55 @@
             </div>
         </div>
 
-        <nav class="tabs" id="c-tabs">
-            <button class="tab is-active" data-tab="people" type="button">People</button>
-            <button class="tab" data-tab="chat" type="button">
-                Chat<span class="badge" id="c-chat-mentions-badge" title="Unread mentions" hidden></span>
-            </button>
-            <button class="tab" data-tab="meeting" type="button" id="c-meeting-tab" hidden>Meeting</button>
-            <button class="tab" data-tab="controls" type="button">Status</button>
-        </nav>
+        <!-- ── Body: video (native PiP floats over c-video-area) + slide-in views ── -->
+        <div class="body" id="c-body">
+            <div class="video-area" id="c-video-area">
+                <!-- The native PiP WebContentsView is positioned here by the main process while in a
+                     meeting. This placeholder shows only if the view hasn't attached yet. -->
+                <div class="video-empty" id="c-video-empty">Connecting to the meeting…</div>
+            </div>
 
-        <section class="pane is-active" data-pane="people">
-            <div class="list" id="c-people"></div>
-            <div class="empty" id="c-people-empty">No one around yet.</div>
-        </section>
-
-        <section class="pane" data-pane="chat">
-            <div class="list conversations" id="c-conversations"></div>
-            <div class="empty" id="c-conversations-empty">No conversations yet.</div>
-
-            <div class="conversation" id="c-conversation" hidden>
-                <div class="conversation-head">
-                    <button class="icon-btn" id="c-conv-back" type="button" title="Back to conversations" aria-label="Back to conversations">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-                    </button>
-                    <div class="conversation-title" id="c-conv-title">Conversation</div>
-                    <button class="icon-btn" id="c-conv-open-main" type="button" title="Open in WorkAdventure" aria-label="Open in WorkAdventure">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                    </button>
+            <!-- People view (base out of meeting; slide-in overlay in a meeting) -->
+            <section class="view view-people" id="c-view-people" data-open="true">
+                <div class="view-head">
+                    <span class="view-title">Online users <span class="view-count" id="c-people-count-h">0</span></span>
+                    <button class="icon-btn view-close" id="c-people-close" type="button" title="Close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 </div>
-                <div class="list messages" id="c-messages"></div>
-                <div class="empty" id="c-messages-empty">No messages yet.</div>
-                <form class="composer" id="c-composer">
-                    <input id="c-chat-input" type="text" autocomplete="off" placeholder="Message…" maxlength="2000" />
-                    <button class="send-btn" type="submit" aria-label="Send">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                    </button>
-                </form>
-            </div>
-        </section>
+                <div class="list" id="c-people"></div>
+                <div class="empty" id="c-people-empty">No one around yet.</div>
+            </section>
 
-        <section class="pane meeting-pane" data-pane="meeting">
-            <div class="meeting-body">
-                <div class="meeting-note">You're in a meeting.</div>
-                <button class="meeting-video-btn" id="c-video-toggle" type="button">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-                    <span id="c-video-label">Open meeting video</span>
-                </button>
-                <div class="meeting-hint">Video opens right here in the panel so you can keep it in view while you work.</div>
-            </div>
-        </section>
+            <!-- Chat view (slide-in) -->
+            <section class="view view-chat" id="c-view-chat" data-open="false">
+                <div class="view-head">
+                    <span class="view-title" id="c-chat-title">Chat</span>
+                    <button class="icon-btn view-close" id="c-chat-close" type="button" title="Close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                </div>
 
-        <section class="pane" data-pane="controls">
-            <div class="controls">
-                <div class="status-group">
-                    <div class="group-title">Status</div>
-                    <div class="status-opts" id="c-status">
-                        <button class="status-opt" data-status="online" type="button"><span class="dot" data-status="online"></span>Available</button>
-                        <button class="status-opt" data-status="busy" type="button"><span class="dot" data-status="busy"></span>Busy</button>
-                        <button class="status-opt" data-status="back_in_a_moment" type="button"><span class="dot" data-status="back_in_a_moment"></span>Be right back</button>
-                        <button class="status-opt" data-status="do_not_disturb" type="button"><span class="dot" data-status="do_not_disturb"></span>Do not disturb</button>
+                <div class="list conversations" id="c-conversations"></div>
+                <div class="empty" id="c-conversations-empty">No conversations yet.</div>
+
+                <div class="conversation" id="c-conversation" hidden>
+                    <div class="conversation-head">
+                        <button class="icon-btn" id="c-conv-back" type="button" title="Back to conversations" aria-label="Back to conversations">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                        <div class="conversation-title" id="c-conv-title">Conversation</div>
+                        <button class="icon-btn" id="c-conv-open-main" type="button" title="Open in WorkAdventure" aria-label="Open in WorkAdventure">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        </button>
                     </div>
-                    <div class="status-locked" id="c-status-locked" hidden>Locked while in a meeting</div>
+                    <div class="list messages" id="c-messages"></div>
+                    <div class="empty" id="c-messages-empty">No messages yet.</div>
+                    <form class="composer" id="c-composer">
+                        <input id="c-chat-input" type="text" autocomplete="off" placeholder="Message…" maxlength="2000" />
+                        <button class="send-btn" type="submit" aria-label="Send">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        </button>
+                    </form>
                 </div>
-            </div>
-        </section>
-
+            </section>
+        </div>
     </div>
     <script src="./companion.js"></script>
 </body>
