@@ -611,18 +611,6 @@ button {
     /* Woka snapshots are pixel art — keep the crisp edges the app renders. */
     image-rendering: pixelated;
 }
-/* Section label above the proximity-bubble group (and the "Online" rest) in the People list. */
-.person-section {
-    padding: 9px 8px 3px;
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--faint);
-}
-.person-section:first-child {
-    padding-top: 2px;
-}
 .person .dot {
     flex: 0 0 auto;
     width: 10px;
@@ -741,13 +729,17 @@ button {
     font-weight: 700;
     flex: 0 0 auto;
 }
-.conv-badge.count {
-    background: var(--surface-2);
-    color: var(--text);
-}
 .conv-badge.hl {
     background: var(--red);
     color: #fff;
+}
+/* Unread indicator on a chat row: a green dot (matches the design), right-aligned. */
+.conv-unread-dot {
+    flex: 0 0 auto;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--st-online);
 }
 
 /* Nav badges (header chat/people) */
