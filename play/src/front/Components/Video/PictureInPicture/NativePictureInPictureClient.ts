@@ -107,7 +107,11 @@ export class NativePictureInPictureClient {
     private nameUnsubscribers = new Map<string, Unsubscriber>();
     private hasAudioUnsubscribers = new Map<string, Unsubscriber>();
     private hasVideoUnsubscribers = new Map<string, Unsubscriber>();
+    /** Per-box subscriptions to the Woka picture (spaceUser.pictureStore) and the voice indicator. */
+    private pictureUnsubscribers = new Map<string, Unsubscriber>();
+    private voiceUnsubscribers = new Map<string, Unsubscriber>();
     private selfBoxUnsubscriber: Unsubscriber | undefined;
+    private selfPictureUnsubscriber: Unsubscriber | undefined;
     private selfStreamableUnsubscriber: Unsubscriber | undefined;
     private selfStreamUnsubscriber: Unsubscriber | undefined;
     private selfNameUnsubscriber: Unsubscriber | undefined;
@@ -120,6 +124,8 @@ export class NativePictureInPictureClient {
     private boxIdByTrackId = new Map<string, string>();
     private tileSources = new Map<string, TileSource>();
     private hasAudioByBoxId = new Map<string, boolean>();
+    private wokaByBoxId = new Map<string, string>();
+    private speakingByBoxId = new Map<string, boolean>();
     private lastDeviceState: DeviceState = {
         micEnabled: false,
         cameraEnabled: false,
@@ -213,6 +219,14 @@ export class NativePictureInPictureClient {
             if (videoBox) {
                 this.selfStreamableUnsubscriber = videoBox.streamable.subscribe((streamable) => {
                     this.attachStreamable("self", streamable, true);
+                });
+                this.selfPictureUnsubscriber = videoBox.spaceUser?.pictureStore?.subscribe((woka) => {
+                    if (woka) {
+                        this.wokaByBoxId.set("self", woka);
+                    } else {
+                        this.wokaByBoxId.delete("self");
+                    }
+                    this.scheduleStateSend();
                 });
             }
         });
@@ -357,8 +371,26 @@ export class NativePictureInPictureClient {
             }
         }
         this.hasVideoUnsubscribers.clear();
+        for (const unsub of this.voiceUnsubscribers.values()) {
+            try {
+                unsub();
+            } catch {
+                /* ignore */
+            }
+        }
+        this.voiceUnsubscribers.clear();
+        for (const unsub of this.pictureUnsubscribers.values()) {
+            try {
+                unsub();
+            } catch {
+                /* ignore */
+            }
+        }
+        this.pictureUnsubscribers.clear();
         this.tileSources.clear();
         this.hasAudioByBoxId.clear();
+        this.speakingByBoxId.clear();
+        this.wokaByBoxId.clear();
         this.senderByTrackId.clear();
         this.boxIdByTrackId.clear();
 
@@ -481,6 +513,7 @@ export class NativePictureInPictureClient {
                 this.attachStreamable(id, streamable, false);
             });
             this.videoBoxUnsubscribers.set(id, unsub);
+            this.subscribePicture(id, videoBox);
         }
         for (const [id, unsub] of this.videoBoxUnsubscribers) {
             if (!seenIds.has(id)) {
@@ -491,6 +524,7 @@ export class NativePictureInPictureClient {
                 }
                 this.videoBoxUnsubscribers.delete(id);
                 this.detachStreamable(id);
+                this.unsubscribePicture(id);
             }
         }
     }
@@ -548,6 +582,50 @@ export class NativePictureInPictureClient {
             this.applyStream(boxId, stream);
         });
         this.streamUnsubscribers.set(boxId, streamUnsub);
+
+        // Voice activity → active-speaker border in the companion tile.
+        const voiceUnsub = streamable.showVoiceIndicator.subscribe((speaking) => {
+            this.speakingByBoxId.set(boxId, Boolean(speaking));
+            this.scheduleStateSend();
+        });
+        this.voiceUnsubscribers.set(boxId, voiceUnsub);
+    }
+
+    /**
+     * Subscribe to a box's Woka picture (spaceUser.pictureStore renders the Woka to a base64 URL on
+     * first subscribe). Kept separate from attachStreamable because the picture lives on the VideoBox's
+     * space user, not on the (re-emitted) Streamable.
+     */
+    private subscribePicture(boxId: string, videoBox: VideoBox): void {
+        if (this.pictureUnsubscribers.has(boxId)) {
+            return;
+        }
+        const pictureStore = videoBox.spaceUser?.pictureStore;
+        if (!pictureStore) {
+            return;
+        }
+        const unsub = pictureStore.subscribe((woka) => {
+            if (woka) {
+                this.wokaByBoxId.set(boxId, woka);
+            } else {
+                this.wokaByBoxId.delete(boxId);
+            }
+            this.scheduleStateSend();
+        });
+        this.pictureUnsubscribers.set(boxId, unsub);
+    }
+
+    private unsubscribePicture(boxId: string): void {
+        const unsub = this.pictureUnsubscribers.get(boxId);
+        if (unsub) {
+            try {
+                unsub();
+            } catch {
+                /* ignore */
+            }
+            this.pictureUnsubscribers.delete(boxId);
+        }
+        this.wokaByBoxId.delete(boxId);
     }
 
     private detachStreamable(boxId: string): void {
@@ -587,6 +665,15 @@ export class NativePictureInPictureClient {
             }
             this.hasVideoUnsubscribers.delete(boxId);
         }
+        const voiceUnsub = this.voiceUnsubscribers.get(boxId);
+        if (voiceUnsub) {
+            try {
+                voiceUnsub();
+            } catch {
+                /* ignore */
+            }
+            this.voiceUnsubscribers.delete(boxId);
+        }
         const source = this.tileSources.get(boxId);
         if (source) {
             for (const trackId of source.trackIds) {
@@ -595,6 +682,7 @@ export class NativePictureInPictureClient {
         }
         this.tileSources.delete(boxId);
         this.hasAudioByBoxId.delete(boxId);
+        this.speakingByBoxId.delete(boxId);
         this.scheduleStateSend();
     }
 
@@ -617,6 +705,13 @@ export class NativePictureInPictureClient {
             /* ignore */
         }
         this.selfNameUnsubscriber = undefined;
+        try {
+            this.selfPictureUnsubscriber?.();
+        } catch {
+            /* ignore */
+        }
+        this.selfPictureUnsubscriber = undefined;
+        this.wokaByBoxId.delete("self");
         this.detachStreamable("self");
     }
 
@@ -778,6 +873,8 @@ export class NativePictureInPictureClient {
                 }
                 liveTrackIds.push(trackId);
             }
+            const woka = this.wokaByBoxId.get(source.boxId);
+            const speaking = this.speakingByBoxId.get(source.boxId) === true;
             const showVideo = source.hasVideo && liveTrackIds.length > 0;
             if (!showVideo) {
                 tiles.push({
@@ -787,6 +884,8 @@ export class NativePictureInPictureClient {
                     isSelf: source.isSelf,
                     hasAudio,
                     hasVideo: false,
+                    woka,
+                    speaking,
                 });
                 continue;
             }
@@ -801,6 +900,8 @@ export class NativePictureInPictureClient {
                 isSelf: source.isSelf,
                 hasAudio,
                 hasVideo: true,
+                woka,
+                speaking,
             });
         }
         const state: DesktopPipState = {
