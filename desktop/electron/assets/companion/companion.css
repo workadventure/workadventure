@@ -432,8 +432,8 @@ button {
     border-radius: 50%;
     display: grid;
     place-items: center;
-    color: #fff;
-    font-weight: 650;
+    color: #fff; /* fallback; JS sets a per-background contrast color like the app */
+    font-weight: 700;
     font-size: 22px;
     background: rgba(255, 255, 255, 0.18);
     text-transform: uppercase;
@@ -464,6 +464,8 @@ button {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
+/* Name tag: mirrors the app's UserName tag — bold white text, a squared `rounded` corner (not a
+   pill), a text shadow, over the contrast-dark chip background, bottom-left. */
 .tile .name-chip {
     position: absolute;
     bottom: 6px;
@@ -471,9 +473,12 @@ button {
     max-width: calc(100% - 12px);
     padding: 2px 8px;
     background: var(--chip);
-    border-radius: 999px;
-    font-size: 11px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
     line-height: 1.4;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
