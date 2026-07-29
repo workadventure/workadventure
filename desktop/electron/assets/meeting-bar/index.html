@@ -25,7 +25,9 @@
             user-select: none;
             -webkit-user-select: none;
         }
-        body { display: flex; flex-direction: column; }
+        /* Bottom-anchored: the pill stays pinned to the window's bottom edge, so when the window
+           grows upward (setExpanded) the source picker / device panel / "…" menu open ABOVE it. */
+        body { display: flex; flex-direction: column; justify-content: flex-end; }
 
         /* Source picker panel, revealed above the pill when the window is expanded. */
         #picker {
