@@ -187,6 +187,81 @@
         .icon-only-on, .icon-only-off { display: none; }
         .bar-btn[data-state="on"] .icon-only-on { display: inline; }
         .bar-btn[data-state="off"] .icon-only-off { display: inline; }
+
+        /* Drag handle (visual cue; the pill itself is the drag region). */
+        .bar-handle {
+            -webkit-app-region: drag;
+            display: inline-flex;
+            align-items: center;
+            padding: 0 2px;
+            color: var(--fg-muted);
+            cursor: grab;
+        }
+        .bar-handle svg { width: 18px; height: 22px; fill: currentColor; stroke: none; }
+
+        /* Overflow menu — positioned by JS above the "…" button; the window grows (setExpanded). */
+        #menu {
+            position: fixed;
+            bottom: 62px; /* just above the bar; the window grows upward (bottom-anchored) */
+            display: none;
+            flex-direction: column;
+            min-width: 224px;
+            padding: 6px;
+            background: var(--contrast);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            -webkit-app-region: no-drag;
+            z-index: 10;
+        }
+        #menu.visible { display: flex; }
+        .mn-item {
+            -webkit-app-region: no-drag;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 9px 10px;
+            background: transparent;
+            border: 0;
+            border-radius: 8px;
+            color: var(--fg);
+            font: inherit;
+            font-size: 13px;
+            text-align: left;
+            cursor: pointer;
+        }
+        .mn-item:hover { background: rgba(255, 255, 255, 0.10); }
+        .mn-item.is-active { background: var(--secondary); }
+        .mn-item.is-active:hover { background: var(--secondary-hover); }
+        .mn-ico { display: inline-flex; flex: 0 0 auto; }
+        .mn-ico svg {
+            width: 18px; height: 18px;
+            stroke: currentColor; fill: transparent;
+            stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+        }
+        .mn-label { flex: 1; }
+        .mn-sep { height: 1px; margin: 5px 6px; background: rgba(255, 255, 255, 0.12); }
+        .mn-toggle {
+            flex: 0 0 auto;
+            position: relative;
+            width: 34px; height: 18px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.18);
+            transition: background-color 120ms ease;
+        }
+        .mn-toggle::after {
+            content: "";
+            position: absolute;
+            top: 2px; left: 2px;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform 120ms ease;
+        }
+        .mn-item[aria-checked="true"] .mn-toggle { background: var(--secondary); }
+        .mn-item[aria-checked="true"] .mn-toggle::after { transform: translateX(16px); }
     </style>
 </head>
 <body>
@@ -201,8 +276,49 @@
         </div>
         <div class="pk-body loading" id="pk-body">Loading sources…</div>
     </div>
+    <!-- Overflow menu (grows the HUD window like the picker; anchored above the bar). -->
+    <div id="menu" role="menu" aria-label="More options">
+        <button class="mn-item" id="mn-laser" type="button" role="menuitemcheckbox">
+            <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M12 12m-5 0a5 5 0 1 0 10 0a5 5 0 1 0 -10 0"/><path d="M12 3l0 2"/><path d="M3 12l2 0"/><path d="M12 19l0 2"/><path d="M19 12l2 0"/></svg></span>
+            <span class="mn-label">Cursor highlight</span>
+        </button>
+        <button class="mn-item" id="mn-spotlight" type="button" role="menuitemcheckbox">
+            <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12h1m8 -9v1m8 8h1m-15.4 -6.4l.7 .7m12.1 -.7l-.7 .7"/><path d="M9 16a5 5 0 1 1 6 0a3.5 3.5 0 0 0 -1 3a2 2 0 0 1 -4 0a3.5 3.5 0 0 0 -1 -3"/><path d="M9.7 17l4.6 0"/></svg></span>
+            <span class="mn-label">Spotlight</span>
+        </button>
+        <button class="mn-item" id="mn-loupe" type="button" role="menuitemcheckbox">
+            <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M7 10l6 0"/><path d="M10 7l0 6"/><path d="M21 21l-6 -6"/></svg></span>
+            <span class="mn-label">Loupe</span>
+        </button>
+        <div class="mn-sep"></div>
+        <button class="mn-item" id="mn-switch" type="button">
+            <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 5m0 1a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1z"/><path d="M7 20h10"/><path d="M9 16v4"/><path d="M15 16v4"/><path d="M9 11l3 -3l3 3"/></svg></span>
+            <span class="mn-label">Switch shared screen</span>
+        </button>
+        <button class="mn-item" id="mn-devices" type="button">
+            <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4z"/><path d="M3 6m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z"/></svg></span>
+            <span class="mn-label">Change cam / mic</span>
+        </button>
+        <div class="mn-sep"></div>
+        <button class="mn-item" id="mn-tabs" type="button" role="menuitemcheckbox" aria-checked="false">
+            <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 5m0 1a1 1 0 0 1 1 -1h14a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-14a1 1 0 0 1 -1 -1z"/><path d="M4 9h16"/><path d="M9 5v4"/></svg></span>
+            <span class="mn-label">Display tabs</span>
+            <span class="mn-toggle" aria-hidden="true"></span>
+        </button>
+        <button class="mn-item" id="mn-settings" type="button">
+            <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></svg></span>
+            <span class="mn-label">Other settings</span>
+        </button>
+        <button class="mn-item" id="mn-back" type="button">
+            <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 11l-4 4l4 4m-4 -4h11a4 4 0 0 0 0 -8h-1"/></svg></span>
+            <span class="mn-label">Back to WorkAdventure</span>
+        </button>
+    </div>
     <div id="bar">
         <div class="pill">
+            <span class="bar-handle" id="bar-handle" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
+            </span>
             <button class="bar-btn" id="bar-mic" type="button" data-state="on" title="Toggle microphone" aria-label="Toggle microphone">
                 <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -233,28 +349,17 @@
                     <path d="M10 6h3a2 2 0 0 1 2 2v3m0 4v1a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-8a2 2 0 0 1 2 -2h1"/>
                 </svg>
             </button>
-            <div class="bar-sep"></div>
-            <button class="bar-btn" id="bar-switch" type="button" title="Switch screen or window" aria-label="Switch screen or window">
+            <button class="bar-btn is-active" id="bar-stop" type="button" title="Stop sharing your screen" aria-label="Stop sharing your screen">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M3 5m0 1a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1z"/>
-                    <path d="M7 20h10"/>
-                    <path d="M9 16v4"/>
-                    <path d="M15 16v4"/>
-                    <path d="M9 11l3 -3l3 3"/>
-                </svg>
-            </button>
-            <button class="bar-btn is-forbidden" id="bar-stop" type="button" title="Stop sharing" aria-label="Stop sharing">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M3 3l18 18"/>
                     <path d="M21 12v3a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10a1 1 0 0 1 1 -1h9"/>
                     <path d="M7 20l10 0"/>
                     <path d="M9 16l0 4"/>
                     <path d="M15 16l0 4"/>
+                    <path d="M17 4h4v4"/>
+                    <path d="M16 9l5 -5"/>
                 </svg>
             </button>
-            <div class="bar-sep"></div>
             <button class="bar-btn" id="bar-annotate" type="button" data-state="off" title="Annotate the shared screen" aria-label="Annotate the shared screen">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -262,60 +367,9 @@
                     <path d="M13.5 6.5l4 4"/>
                 </svg>
             </button>
-            <button class="bar-btn" id="bar-eye" type="button" data-state="on" title="Hide annotations for me only (others keep drawing)" aria-label="Hide annotations locally">
-                <!-- Eye open: annotations visible. -->
-                <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/>
-                    <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/>
-                </svg>
-                <!-- Eye off: annotations hidden locally. -->
-                <svg class="icon-only-off" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M10.585 10.587a2 2 0 0 0 2.829 2.828"/>
-                    <path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87"/>
-                    <path d="M3 3l18 18"/>
-                </svg>
-            </button>
-            <div class="bar-sep"></div>
-            <button class="bar-btn" id="bar-laser" type="button" data-state="off" title="Laser pointer" aria-label="Laser pointer">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/>
-                    <path d="M12 12m-5 0a5 5 0 1 0 10 0a5 5 0 1 0 -10 0"/>
-                    <path d="M12 3l0 2"/>
-                    <path d="M3 12l2 0"/>
-                    <path d="M12 19l0 2"/>
-                    <path d="M19 12l2 0"/>
-                </svg>
-            </button>
-            <button class="bar-btn" id="bar-spotlight" type="button" data-state="off" title="Spotlight" aria-label="Spotlight">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M3 12h1m8 -9v1m8 8h1m-15.4 -6.4l.7 .7m12.1 -.7l-.7 .7"/>
-                    <path d="M9 16a5 5 0 1 1 6 0a3.5 3.5 0 0 0 -1 3a2 2 0 0 1 -4 0a3.5 3.5 0 0 0 -1 -3"/>
-                    <path d="M9.7 17l4.6 0"/>
-                </svg>
-            </button>
-            <button class="bar-btn" id="bar-loupe" type="button" data-state="off" title="Magnifier loupe" aria-label="Magnifier loupe">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/>
-                    <path d="M7 10l6 0"/>
-                    <path d="M10 7l0 6"/>
-                    <path d="M21 21l-6 -6"/>
-                </svg>
-            </button>
-            <div class="bar-sep"></div>
-            <!-- TODO(presenter-bar): replace with an inline proximity-chat panel + reactions once
-                 the protocol (DesktopPipState.chatMessages + send-chat/send-reaction) is wired.
-                 Until then this jumps back to the WorkAdventure window. -->
-            <button class="bar-btn" id="bar-back" type="button" title="Back to WorkAdventure" aria-label="Back to WorkAdventure">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M8 9h8"/>
-                    <path d="M8 13h6"/>
-                    <path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12z"/>
+            <button class="bar-btn" id="bar-more" type="button" title="More options" aria-label="More options" aria-haspopup="true" aria-expanded="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true" style="fill:currentColor;stroke:none">
+                    <circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/>
                 </svg>
             </button>
         </div>
