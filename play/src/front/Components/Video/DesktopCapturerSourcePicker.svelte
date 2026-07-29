@@ -12,6 +12,11 @@
     let selectedKind: DesktopCapturerSourceKind = $state("screen");
     let loading = $state(true);
     let errorMessage: string | undefined = $state(undefined);
+    let identifying = $state(false);
+
+    // Older desktop shells don't expose identifyScreens; feature-detect so the affordance only
+    // shows where it works.
+    const canIdentify = Boolean(window.WAD?.identifyScreens);
 
     let visibleSources = $derived(
         desktopCapturerSources.filter((source) => getDesktopCapturerSourceKind(source) === selectedKind),
@@ -53,6 +58,12 @@
 
     onDestroy(() => {
         clearInterval(interval);
+        // If the picker is torn down while the identify overlays are still up (navigate away / world
+        // change), dismiss them — they're always-on-top over every display with no other app-side exit.
+        // Harmless after a completed pick: the module already settled, so cancel is a no-op.
+        if (identifying) {
+            window.WAD?.cancelIdentifyScreens?.();
+        }
     });
 
     function selectDesktopCapturerSource(source: DesktopCapturerSource) {
@@ -69,6 +80,30 @@
         }
         desktopCapturerSourcePromiseResolve(null);
         close();
+    }
+
+    // "Identify screens": each physical display gets a big-numbered, click-to-share overlay (in the
+    // main process). Clicking one resolves that screen source — reusing the same resolve path as a
+    // thumbnail click, so the display_id flows through to the annotation overlay unchanged. Escape
+    // resolves null: leave the picker open.
+    async function identifyScreensByClick() {
+        // Re-entry is prevented by the button's `disabled={identifying}`, so the guard doesn't read
+        // `identifying` (that read/await/write chain trips require-atomic-updates).
+        if (!window.WAD?.identifyScreens || !desktopCapturerSourcePromiseResolve) {
+            return;
+        }
+        identifying = true;
+        try {
+            const source = await window.WAD.identifyScreens();
+            if (source) {
+                desktopCapturerSourcePromiseResolve(source);
+                close();
+            }
+        } catch (error) {
+            errorMessage = error instanceof Error ? error.message : "Impossible d'identifier les ecrans.";
+        } finally {
+            identifying = false;
+        }
     }
 
     function close() {
@@ -145,6 +180,18 @@
         </div>
 
         <footer class="source-picker-footer">
+            {#if selectedKind === "screen" && canIdentify}
+                <button
+                    type="button"
+                    class="secondary-button identify-button"
+                    onclick={identifyScreensByClick}
+                    disabled={identifying}
+                >
+                    {identifying ? "Cliquez sur un ecran a partager..." : "Identifier les ecrans"}
+                </button>
+            {:else}
+                <span></span>
+            {/if}
             <button type="button" class="secondary-button" onclick={cancel}>Annuler</button>
         </footer>
     </div>
@@ -318,7 +365,9 @@
 
     .source-picker-footer {
         display: flex;
-        justify-content: flex-end;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
         padding: 14px 24px 20px;
         border-top: 1px solid rgb(255 255 255 / 10%);
     }
@@ -329,5 +378,19 @@
         background: rgb(255 255 255 / 10%);
         border-radius: 6px;
         font-weight: 600;
+    }
+
+    .identify-button {
+        color: white;
+        background: #4353ff;
+    }
+
+    .identify-button:hover:not(:disabled) {
+        background: #3646e6;
+    }
+
+    .identify-button:disabled {
+        cursor: default;
+        opacity: 0.7;
     }
 </style>
