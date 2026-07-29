@@ -15,6 +15,9 @@ import { activePictureInPictureStore, askPictureInPictureActivatingStore } from 
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
 import { playersStore } from "../../Stores/PlayersStore";
+import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+import { requestVisitCardsStore } from "../../Stores/GameStore";
+import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
@@ -907,6 +910,54 @@ class DesktopApi {
                             console.warn("Desktop companion: invitation response failed", error);
                         }
                         meetingInvitationRequestStore.set(null);
+                    }
+                    break;
+                }
+                case "tile-action": {
+                    // Same actions as the in-app video-tile menu (ActionMediaBox), resolved via the
+                    // streamable collection (tileKey = VideoBox id) to the participant's space user.
+                    const spaceUser = get(streamableCollectionStore).get(command.tileKey)?.spaceUser;
+                    if (!spaceUser) break;
+                    try {
+                        switch (command.action) {
+                            case "mute-audio":
+                                spaceUser.emitPrivateEvent({ $case: "muteAudio", muteAudio: { force: false } });
+                                break;
+                            case "mute-video":
+                                spaceUser.emitPrivateEvent({ $case: "muteVideo", muteVideo: { force: false } });
+                                break;
+                            case "mute-audio-all":
+                                spaceUser.space.emitPublicMessage({
+                                    $case: "muteAudioForEverybody",
+                                    muteAudioForEverybody: {},
+                                });
+                                break;
+                            case "mute-video-all":
+                                spaceUser.space.emitPublicMessage({
+                                    $case: "muteVideoForEverybody",
+                                    muteVideoForEverybody: {},
+                                });
+                                break;
+                            case "kick":
+                                spaceUser.emitPrivateEvent({ $case: "kickOffUser", kickOffUser: {} });
+                                break;
+                            case "report":
+                                showReportScreenStore.set({ userUuid: spaceUser.uuid, userName: spaceUser.name });
+                                break;
+                            case "visit-card":
+                                requestVisitCardsStore.set(spaceUser.visitCardUrl ?? null);
+                                break;
+                        }
+                    } catch (error) {
+                        console.warn("Desktop companion: tile action failed", error);
+                    }
+                    break;
+                }
+                case "tile-volume": {
+                    const box = get(streamableCollectionStore).get(command.tileKey);
+                    const streamable = box ? get(box.streamable) : undefined;
+                    if (streamable) {
+                        streamable.volume.set(Math.max(0, Math.min(1, command.value)));
                     }
                     break;
                 }
