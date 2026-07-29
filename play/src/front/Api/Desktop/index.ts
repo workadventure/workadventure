@@ -510,7 +510,7 @@ class DesktopApi {
         const pushNow = () => {
             const self: CompanionUser = {
                 id: "self",
-                name: "You",
+                name: gameManager.getPlayerName() || "You",
                 status: availabilityToCompanionKey(get(availabilityStatusStore)),
                 isSelf: true,
             };
