@@ -234,6 +234,13 @@ class PresenterHudBridge {
                 }
                 break;
             }
+            case "annotation-redo": {
+                const target = screenAnnotationManager.localUserId;
+                if (target) {
+                    screenAnnotationManager.redoLastLocalElement(target);
+                }
+                break;
+            }
             case "annotation-clear": {
                 const target = screenAnnotationManager.localUserId;
                 if (target) {
