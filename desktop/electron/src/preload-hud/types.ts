@@ -15,6 +15,13 @@ export type HudState = {
     };
     /** Active presenter tool: "none" | "laser" | "spotlight" | "loupe". */
     presenterTool?: string;
+    /** Available cam/mic input devices + current selection, for the "Change cam / mic" picker. */
+    devices?: {
+        cameras: { id: string; label: string }[];
+        microphones: { id: string; label: string }[];
+        currentCameraId?: string;
+        currentMicrophoneId?: string;
+    };
 };
 
 /** Commands raised by the bars; a subset/mirror of DesktopPipCommand on the WorkAdventure side. */
@@ -32,7 +39,8 @@ export type HudCommand =
     | { type: "annotation-clear" }
     | { type: "annotation-toggle-local-hide" }
     | { type: "annotation-toggle-others" }
-    | { type: "presenter-set-tool"; tool: string };
+    | { type: "presenter-set-tool"; tool: string }
+    | { type: "pick-device"; kind: "camera" | "microphone"; deviceId: string };
 
 export type HudSource = {
     id: string;
