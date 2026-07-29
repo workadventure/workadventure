@@ -261,6 +261,8 @@ export type CompanionConversation = {
     unreadCount: number;
     /** Unread @-mentions / highlights, distinct from plain unread. */
     highlightCount: number;
+    /** Base64 data URL of the conversation avatar (e.g. the local Woka for the proximity chat). */
+    woka?: string;
 };
 
 /** The currently-open conversation and its recent messages. */
