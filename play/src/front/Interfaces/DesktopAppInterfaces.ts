@@ -244,6 +244,8 @@ export type CompanionConversation = {
     lastActivityAt: number;
     unreadCount: number;
     highlightCount: number;
+    /** Base64 data URL of the conversation avatar (e.g. the local Woka for the proximity chat). */
+    woka?: string;
 };
 
 export type CompanionSelectedConversation = {
