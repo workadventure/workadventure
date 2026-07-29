@@ -87,6 +87,8 @@
         chatClose: byId("c-chat-close"),
         people: byId("c-people"),
         peopleEmpty: byId("c-people-empty"),
+        chatOnline: byId("c-chat-online"),
+        chatOnlineCount: byId("c-chat-online-count"),
         conversations: byId("c-conversations"),
         conversationsEmpty: byId("c-conversations-empty"),
         conversation: byId("c-conversation"),
@@ -851,10 +853,18 @@
         els.peopleCount.hidden = count === 0;
     }
 
-    function conversationIcon(kind) {
+    function conversationIcon(kind, woka) {
         var span = document.createElement("span");
         span.className = "conv-icon kind-" + (kind || "room");
-        span.innerHTML = kind === "nearby" ? ICON_KIND_NEARBY : kind === "direct" ? ICON_KIND_DIRECT : ICON_KIND_ROOM;
+        if (woka) {
+            span.className += " has-woka";
+            var img = document.createElement("img");
+            img.src = woka;
+            img.alt = "";
+            span.appendChild(img);
+        } else {
+            span.innerHTML = kind === "nearby" ? ICON_KIND_NEARBY : kind === "direct" ? ICON_KIND_DIRECT : ICON_KIND_ROOM;
+        }
         return span;
     }
 
@@ -866,7 +876,7 @@
             row.type = "button";
             row.className = "conversation-row";
             row.dataset.conversationId = c.id;
-            row.appendChild(conversationIcon(c.kind));
+            row.appendChild(conversationIcon(c.kind, c.woka));
 
             var main = document.createElement("div");
             main.className = "conv-main";
@@ -1061,7 +1071,11 @@
 
     function render(state) {
         renderInvitation(state.invitation);
-        renderPeople(Array.isArray(state.users) ? state.users : []);
+        var users = Array.isArray(state.users) ? state.users : [];
+        renderPeople(users);
+        // Online-user count shown in the Chat header (like the design).
+        els.chatOnlineCount.textContent = String(users.length);
+        els.chatOnline.hidden = users.length === 0;
         renderChat(
             Array.isArray(state.conversations) ? state.conversations : [],
             state.selectedConversation || null,
