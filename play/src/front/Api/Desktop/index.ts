@@ -17,6 +17,7 @@ import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationSto
 import { playersStore } from "../../Stores/PlayersStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { gameManager } from "../../Phaser/Game/GameManager";
+import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
 import { notificationManager } from "../../Notification/NotificationManager";
 import { chatVisibilityStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
@@ -464,6 +465,44 @@ class DesktopApi {
         };
         const playerById = new Map<string, PlayerInterface>();
 
+        // Woka avatars for the People list. Generating one renders a Phaser snapshot, so cache it by
+        // the character-texture signature (many players share a Woka) and reuse it across pushes;
+        // rows fall back to a colour disc in the panel until their Woka finishes generating.
+        const wokaCache = new Map<string, string>();
+        const wokaInFlight = new Set<string>();
+        const playerSig = new Map<string, string>(); // playerId → texture signature
+        const playerUuid = new Map<string, string>(); // playerId → user uuid
+        // Uuids of the current proximity "bubble" members (SpaceUser.uuid ↔ PlayerInterface.userUuid),
+        // used to group the People list under a "Discussion bubble" header like the mockup.
+        let bubbleUuids = new Set<string>();
+        const wokaSignature = (textures: PlayerInterface["characterTextures"]): string =>
+            textures.map((t) => t.id).join("|");
+        const ensureWoka = (sig: string, textures: PlayerInterface["characterTextures"]): void => {
+            if (!sig || textures.length === 0 || wokaCache.has(sig) || wokaInFlight.has(sig)) {
+                return;
+            }
+            if (!get(gameSceneIsLoadedStore)) {
+                return; // wokaBase64 needs an active game scene
+            }
+            wokaInFlight.add(sig);
+            // wokaBase64 only reads {id, url} from each texture, which is exactly what
+            // WokaTextureDescriptionInterface carries; the parameter is typed as the fuller
+            // CharacterTextureMessage, so widen through unknown.
+            CharacterLayerManager.wokaBase64(
+                textures as unknown as Parameters<typeof CharacterLayerManager.wokaBase64>[0],
+            )
+                .then((dataUrl) => {
+                    wokaCache.set(sig, dataUrl);
+                })
+                .catch(() => {
+                    /* keep the colour-disc fallback */
+                })
+                .finally(() => {
+                    wokaInFlight.delete(sig);
+                    schedulePush();
+                });
+        };
+
         // Debounced push: many stores change in bursts (players + messages + media), so coalesce.
         let pushTimer: ReturnType<typeof setTimeout> | undefined;
         const pushNow = () => {
@@ -473,12 +512,21 @@ class DesktopApi {
                 status: availabilityToCompanionKey(get(availabilityStatusStore)),
                 isSelf: true,
             };
+            // Fill each row's Woka (from the cache — generation may finish after the list was built)
+            // and bubble membership at push time, since both change independently of the player list.
+            const usersWithMeta = latestOtherUsers.map((u) => {
+                const sig = playerSig.get(u.id);
+                const woka = sig ? wokaCache.get(sig) : undefined;
+                const uuid = playerUuid.get(u.id);
+                const inBubble = uuid ? bubbleUuids.has(uuid) : false;
+                return woka || inBubble ? { ...u, ...(woka ? { woka } : {}), ...(inBubble ? { inBubble } : {}) } : u;
+            });
             companion.pushState({
                 world: {
                     name: connectionManager.currentRoom?.roomName ?? "WorkAdventure",
                     participantCount: latestOtherUsers.length + 1,
                 },
-                users: [self, ...latestOtherUsers],
+                users: [self, ...usersWithMeta],
                 conversations: sortCompanionConversations([
                     ...(latestNearby ? [latestNearby] : []),
                     ...latestMatrixConversations,
@@ -503,10 +551,16 @@ class DesktopApi {
         //eslint-disable-next-line svelte/no-ignored-unsubscribe
         playersStore.subscribe((players) => {
             playerById.clear();
+            playerSig.clear();
+            playerUuid.clear();
             const users: CompanionUser[] = [];
             for (const p of players.values()) {
                 const id = String(p.userId);
                 playerById.set(id, p);
+                playerUuid.set(id, p.userUuid);
+                const sig = wokaSignature(p.characterTextures);
+                playerSig.set(id, sig);
+                ensureWoka(sig, p.characterTextures);
                 users.push({
                     id,
                     name: p.name || "Someone",
@@ -652,10 +706,14 @@ class DesktopApi {
         // Nearby proximity conversation summary. The manager is per-scene, so re-wire on every load.
         let proximityRoomUnsub: Unsubscriber | undefined;
         let nearbyMessagesUnsub: Unsubscriber | undefined;
+        let bubbleMembersUnsub: Unsubscriber | undefined;
         //eslint-disable-next-line svelte/no-ignored-unsubscribe
         gameSceneIsLoadedStore.subscribe((loaded) => {
             nearbyMessagesUnsub?.();
             nearbyMessagesUnsub = undefined;
+            bubbleMembersUnsub?.();
+            bubbleMembersUnsub = undefined;
+            bubbleUuids = new Set();
             proximityRoomUnsub?.();
             proximityRoomUnsub = undefined;
             latestNearby = null;
@@ -672,6 +730,9 @@ class DesktopApi {
                     .proximityChatRoomManager.activeRoomStore.subscribe((room) => {
                         nearbyMessagesUnsub?.();
                         nearbyMessagesUnsub = undefined;
+                        bubbleMembersUnsub?.();
+                        bubbleMembersUnsub = undefined;
+                        bubbleUuids = new Set();
                         if (!room) {
                             latestNearby = null;
                             if (selectedConversationId === NEARBY_ID) {
@@ -680,6 +741,12 @@ class DesktopApi {
                             schedulePush();
                             return;
                         }
+                        // Track the bubble's members so the People list can group them (matched to
+                        // players by uuid). ForwardableStore, so this follows space join/leave.
+                        bubbleMembersUnsub = room.spaceUsersStore.subscribe((members) => {
+                            bubbleUuids = new Set(Array.from(members.values(), (m) => m.uuid));
+                            schedulePush();
+                        });
                         nearbyMessagesUnsub = room.messages.subscribe((msgs) => {
                             const last = msgs[msgs.length - 1];
                             latestNearby = {
