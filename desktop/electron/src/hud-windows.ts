@@ -35,6 +35,8 @@ const HUD_SIZES: Record<HudKind, { width: number; height: number }> = {
 /** Meeting-bar height while the screen-switch source picker is open (bottom edge stays anchored). */
 const MEETING_BAR_EXPANDED_HEIGHT = 420;
 const HUD_MARGIN = 24;
+/** Vertical gap between the annotation bar and the meeting bar it stacks on top of. */
+const ANNOTATION_BAR_GAP = 10;
 
 const hudWindows = new Map<HudKind, HudEntry>();
 
@@ -114,10 +116,11 @@ function positionFor(kind: HudKind, display: Electron.Display): { x: number; y: 
         };
     }
     const x = Math.round(area.x + (area.width - width) / 2);
-    // Meeting bar + floating toolbar sit bottom-center (like Zoom's control bar); annotation bar
-    // sits top-center so it doesn't overlap the meeting bar.
-    const bottomAnchored = kind === "meeting-bar";
-    const y = bottomAnchored ? Math.round(area.y + area.height - height - HUD_MARGIN) : area.y + HUD_MARGIN;
+    // Both presenter bars sit bottom-center (like Zoom's control bar). The annotation bar stacks
+    // directly ABOVE the meeting bar (one control cluster) rather than off at the top of the screen.
+    const meetingBar = HUD_SIZES["meeting-bar"];
+    const meetingBarY = area.y + area.height - meetingBar.height - HUD_MARGIN;
+    const y = kind === "meeting-bar" ? Math.round(meetingBarY) : Math.round(meetingBarY - height - ANNOTATION_BAR_GAP);
     return { x, y };
 }
 
