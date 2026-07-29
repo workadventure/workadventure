@@ -18,7 +18,7 @@ import {
     openWorldTab,
 } from "./window";
 import { activateTab, closeTab, setActiveWorldTitle } from "./tab-manager";
-import { isTabStripSender, markTabStripReady } from "./tab-strip";
+import { isTabStripSender, markTabStripReady, setTabStripVisible } from "./tab-strip";
 import { createDesktopConfig, isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
 import { isPipWindowOpen, sendToPip } from "./pip-window";
 import {
@@ -639,6 +639,14 @@ export default () => {
                 mainWindow.show();
                 mainWindow.focus();
             }
+            return;
+        }
+        // Meeting bar "Display tabs": toggle the tab strip (a main-process setting). Non-destructive —
+        // it only shows/hides the strip; the native menu keeps the multi-tab confirmation flow.
+        if (type === "toggle-tabs") {
+            const enabled = settings.get("tab_bar_enabled") !== false;
+            settings.set("tab_bar_enabled", !enabled);
+            setTabStripVisible(!enabled);
             return;
         }
         // The companion panel is main-managed (not tied to the screen-share PresenterHud bridge):

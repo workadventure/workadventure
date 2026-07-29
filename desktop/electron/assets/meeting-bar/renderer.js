@@ -1,10 +1,10 @@
 // Meeting bar renderer (sandboxed, vanilla JS).
 //
-// Zoom-style presenter controls floating on the SHARED screen: mic / camera / switch source /
-// stop share / annotate / hide-annotations-locally / back to the app. The window itself is
-// content-protected in the main process, so none of this UI leaks into the captured stream.
-// It is a thin, stateless client: state is pushed by the WorkAdventure renderer, every click
-// goes back as a command.
+// Zoom-style presenter controls floating on the SHARED screen. Compact bar (mic / camera /
+// screen-share / annotate / more) with an overflow "…" menu (presenter tools, switch source,
+// change devices, display tabs, settings, back to the app). The window is content-protected in
+// the main process, so none of this UI leaks into the captured stream. Thin, stateless client:
+// state is pushed by the WorkAdventure renderer, every click goes back as a command.
 (function () {
     "use strict";
 
@@ -14,22 +14,33 @@
         return;
     }
 
-    var btnMic = document.getElementById("bar-mic");
-    var btnCam = document.getElementById("bar-cam");
-    var btnSwitch = document.getElementById("bar-switch");
-    var btnStop = document.getElementById("bar-stop");
-    var btnAnnotate = document.getElementById("bar-annotate");
-    var btnEye = document.getElementById("bar-eye");
-    var btnLaser = document.getElementById("bar-laser");
-    var btnSpotlight = document.getElementById("bar-spotlight");
-    var btnLoupe = document.getElementById("bar-loupe");
-    var btnBack = document.getElementById("bar-back");
-    var picker = document.getElementById("picker");
-    var pickerBody = document.getElementById("pk-body");
-    var pickerCancel = document.getElementById("pk-cancel");
+    var byId = function (id) {
+        return document.getElementById(id);
+    };
+
+    var btnMic = byId("bar-mic");
+    var btnCam = byId("bar-cam");
+    var btnStop = byId("bar-stop");
+    var btnAnnotate = byId("bar-annotate");
+    var btnMore = byId("bar-more");
+
+    var menu = byId("menu");
+    var miLaser = byId("mn-laser");
+    var miSpotlight = byId("mn-spotlight");
+    var miLoupe = byId("mn-loupe");
+    var miSwitch = byId("mn-switch");
+    var miDevices = byId("mn-devices");
+    var miTabs = byId("mn-tabs");
+    var miSettings = byId("mn-settings");
+    var miBack = byId("mn-back");
+
+    var picker = byId("picker");
+    var pickerBody = byId("pk-body");
+    var pickerCancel = byId("pk-cancel");
     var pickerTabs = picker.querySelectorAll(".pk-tab");
 
     var pickerOpen = false;
+    var menuOpen = false;
     var pickerKind = "screen";
     var lastSources = [];
 
@@ -45,14 +56,11 @@
         setBtnState(btnCam, state.cameraEnabled === true, true);
         var annotation = state.annotation || {};
         setBtnState(btnAnnotate, annotation.active === true, false);
-        // Eye "on" = annotations visible; locallyHidden flips it off.
-        setBtnState(btnEye, annotation.locallyHidden !== true, false);
-        btnEye.classList.toggle("is-active", annotation.locallyHidden === true);
-        // Presenter tools: highlight only the active one.
+        // Presenter tools: highlight only the active one (in the "…" menu).
         var presenterTool = state.presenterTool || "none";
-        setBtnState(btnLaser, presenterTool === "laser", false);
-        setBtnState(btnSpotlight, presenterTool === "spotlight", false);
-        setBtnState(btnLoupe, presenterTool === "loupe", false);
+        miLaser.classList.toggle("is-active", presenterTool === "laser");
+        miSpotlight.classList.toggle("is-active", presenterTool === "spotlight");
+        miLoupe.classList.toggle("is-active", presenterTool === "loupe");
     });
 
     btnMic.addEventListener("click", function () {
@@ -67,31 +75,99 @@
     btnAnnotate.addEventListener("click", function () {
         api.sendCommand({ type: "annotation-toggle" });
     });
-    btnEye.addEventListener("click", function () {
-        api.sendCommand({ type: "annotation-toggle-local-hide" });
-    });
-    btnLaser.addEventListener("click", function () {
-        api.sendCommand({ type: "presenter-set-tool", tool: "laser" });
-    });
-    btnSpotlight.addEventListener("click", function () {
-        api.sendCommand({ type: "presenter-set-tool", tool: "spotlight" });
-    });
-    btnLoupe.addEventListener("click", function () {
-        api.sendCommand({ type: "presenter-set-tool", tool: "loupe" });
-    });
-    btnBack.addEventListener("click", function () {
-        api.sendCommand({ type: "focus-main" });
+
+    // ─────────── Overflow "…" menu ───────────
+    function onMenuOutside(e) {
+        if (btnMore.contains(e.target)) return; // the button's own click toggles it
+        if (menu && !menu.contains(e.target)) closeMenu();
+    }
+    function positionMenu() {
+        menu.style.visibility = "hidden";
+        menu.classList.add("visible");
+        var r = btnMore.getBoundingClientRect();
+        var left = r.right - menu.offsetWidth; // right-align to the "…"
+        if (left < 6) left = 6;
+        menu.style.left = Math.round(left) + "px";
+        menu.style.visibility = "";
+    }
+    function openMenu() {
+        if (pickerOpen) closePicker();
+        menuOpen = true;
+        btnMore.setAttribute("aria-expanded", "true");
+        api.setExpanded(true);
+        positionMenu();
+        document.addEventListener("mousedown", onMenuOutside, true);
+    }
+    function closeMenu() {
+        if (!menuOpen) return;
+        menuOpen = false;
+        btnMore.setAttribute("aria-expanded", "false");
+        menu.classList.remove("visible");
+        document.removeEventListener("mousedown", onMenuOutside, true);
+        if (!pickerOpen) api.setExpanded(false);
+    }
+    btnMore.addEventListener("click", function () {
+        if (menuOpen) closeMenu();
+        else openMenu();
     });
 
-    // ─────────── Direct source switcher ───────────
-    btnSwitch.addEventListener("click", function () {
-        if (pickerOpen) {
-            closePicker();
-        } else {
-            openPicker();
-        }
+    function menuAction(fn) {
+        return function () {
+            closeMenu();
+            fn();
+        };
+    }
+    miLaser.addEventListener(
+        "click",
+        menuAction(function () {
+            api.sendCommand({ type: "presenter-set-tool", tool: "laser" });
+        })
+    );
+    miSpotlight.addEventListener(
+        "click",
+        menuAction(function () {
+            api.sendCommand({ type: "presenter-set-tool", tool: "spotlight" });
+        })
+    );
+    miLoupe.addEventListener(
+        "click",
+        menuAction(function () {
+            api.sendCommand({ type: "presenter-set-tool", tool: "loupe" });
+        })
+    );
+    miSwitch.addEventListener("click", function () {
+        closeMenu();
+        openPicker();
     });
+    miDevices.addEventListener(
+        "click",
+        // Phase 2 replaces this with a real camera/microphone picker; for now bring the app forward
+        // where the media settings live.
+        menuAction(function () {
+            api.sendCommand({ type: "focus-main" });
+        })
+    );
+    miTabs.addEventListener("click", function () {
+        // Optimistic toggle; the real state is reflected once wired into the pushed HUD state.
+        var next = miTabs.getAttribute("aria-checked") !== "true";
+        miTabs.setAttribute("aria-checked", next ? "true" : "false");
+        api.sendCommand({ type: "toggle-tabs" });
+        closeMenu();
+    });
+    miSettings.addEventListener(
+        "click",
+        menuAction(function () {
+            api.sendCommand({ type: "focus-main" });
+        })
+    );
+    miBack.addEventListener(
+        "click",
+        menuAction(function () {
+            api.sendCommand({ type: "focus-main" });
+        })
+    );
 
+    // ─────────── Direct source switcher (opened from the "…" menu) ───────────
     function openPicker() {
         pickerOpen = true;
         api.setExpanded(true);
@@ -113,20 +189,23 @@
     function closePicker() {
         pickerOpen = false;
         picker.classList.remove("visible");
-        api.setExpanded(false);
+        if (!menuOpen) api.setExpanded(false);
     }
 
     function renderPicker() {
         if (!pickerOpen) return;
         pickerBody.innerHTML = "";
         pickerBody.className = "pk-body";
-        var filtered = lastSources.filter(function (s) { return s.type === pickerKind; });
+        var filtered = lastSources.filter(function (s) {
+            return s.type === pickerKind;
+        });
         if (filtered.length === 0) {
             var note = document.createElement("div");
             note.className = "pk-note";
-            note.textContent = pickerKind === "screen"
-                ? "No screen available. Check the Screen Recording permission."
-                : "No window available.";
+            note.textContent =
+                pickerKind === "screen"
+                    ? "No screen available. Check the Screen Recording permission."
+                    : "No window available.";
             pickerBody.appendChild(note);
             return;
         }
@@ -143,7 +222,7 @@
             nameEl.className = "pk-tile-name";
             nameEl.textContent =
                 pickerKind === "screen"
-                    ? (index + 1) + " · " + (source.name || "Screen")
+                    ? index + 1 + " · " + (source.name || "Screen")
                     : source.name || "Untitled";
             tile.appendChild(nameEl);
             tile.addEventListener("click", function () {
@@ -162,14 +241,18 @@
     pickerCancel.addEventListener("click", closePicker);
     pickerTabs.forEach(function (tab) {
         tab.addEventListener("click", function () {
-            pickerTabs.forEach(function (t) { t.classList.remove("active"); });
+            pickerTabs.forEach(function (t) {
+                t.classList.remove("active");
+            });
             tab.classList.add("active");
             pickerKind = tab.dataset.kind === "window" ? "window" : "screen";
             renderPicker();
         });
     });
     document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape" && pickerOpen) closePicker();
+        if (e.key !== "Escape") return;
+        if (menuOpen) closeMenu();
+        else if (pickerOpen) closePicker();
     });
 
     // Signal readiness AFTER all subscriptions are wired; the main process replays the last
