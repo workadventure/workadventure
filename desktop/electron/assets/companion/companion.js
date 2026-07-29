@@ -31,6 +31,9 @@
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20v-1a6.5 6.5 0 0 1 13 0v1"/></svg>';
     var ICON_KIND_ROOM =
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg>';
+    // Down chevron appended to a tile name tag (the app's UserTag dropdown affordance).
+    var CHEVRON_DOWN =
+        '<svg class="name-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
 
     function byId(id) {
         return document.getElementById(id);
@@ -186,22 +189,31 @@
 
         var nameChip = document.createElement("span");
         nameChip.className = "name-chip";
+        var nameText = document.createElement("span");
+        nameText.className = "name-text";
+        nameChip.appendChild(nameText);
+        nameChip.insertAdjacentHTML("beforeend", CHEVRON_DOWN);
         container.appendChild(nameChip);
         container.appendChild(makeMicBadge());
 
         this.video = video;
         this.avatarEl = avatarEl;
         this.nameChip = nameChip;
+        this.nameText = nameText;
         this.update(meta);
     }
     TileElement.prototype.update = function (meta) {
         var name = meta.name || (meta.isSelf ? "You" : "");
         var color = getColorByString(name);
-        this.nameChip.textContent = name;
+        var textColor = getTextColorByBackgroundColor(color);
+        this.nameText.textContent = name;
         this.nameChip.style.display = name ? "" : "none";
+        // Name tag mirrors the app's UserTag: solid per-name colour + contrast text.
+        this.nameChip.style.background = color;
+        this.nameChip.style.color = textColor;
         this.container.style.setProperty("--tile-bg", darken(color, 0.32));
         this.avatarEl.style.background = color;
-        this.avatarEl.style.color = getTextColorByBackgroundColor(color);
+        this.avatarEl.style.color = textColor;
         this.avatarEl.textContent = computeInitials(name);
         this.container.classList.toggle("is-self", meta.isSelf === true);
         this.container.classList.toggle("is-muted", meta.hasAudio === false);
@@ -564,6 +576,18 @@
         return btn;
     }
 
+    // Colour-coded initials disc, standing in for the app's Woka avatar (the companion has no Woka
+    // image), using the same per-name colour the app assigns.
+    function makePersonAvatar(name) {
+        var av = document.createElement("span");
+        av.className = "person-avatar";
+        var c = getColorByString(name || "");
+        av.style.background = c;
+        av.style.color = getTextColorByBackgroundColor(c);
+        av.textContent = computeInitials(name || "");
+        return av;
+    }
+
     function renderPeople(users) {
         els.people.textContent = "";
         setEmpty(els.peopleEmpty, users.length === 0);
@@ -573,13 +597,11 @@
             if (u.isSelf && u.name) {
                 selfName = u.name;
             }
+            // Row: [avatar] [name] … [actions on hover] [status dot, right].
             var row = document.createElement("div");
             row.className = "person";
 
-            var dot = document.createElement("span");
-            dot.className = "dot";
-            dot.dataset.status = normStatus(u.status);
-            row.appendChild(dot);
+            row.appendChild(makePersonAvatar(u.name));
 
             var name = document.createElement("span");
             name.className = "person-name";
@@ -599,6 +621,12 @@
                 actions.appendChild(miniButton("locate", u.id, "Locate", ICON_LOCATE));
                 row.appendChild(actions);
             }
+
+            var dot = document.createElement("span");
+            dot.className = "dot";
+            dot.dataset.status = normStatus(u.status);
+            row.appendChild(dot);
+
             els.people.appendChild(row);
         }
         // Header self name + people count badges.
