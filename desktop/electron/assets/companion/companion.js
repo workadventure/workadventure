@@ -182,6 +182,10 @@
 
         var avatarLayer = document.createElement("div");
         avatarLayer.className = "avatar-layer";
+        var wokaImg = document.createElement("img");
+        wokaImg.className = "tile-woka";
+        wokaImg.alt = "";
+        avatarLayer.appendChild(wokaImg);
         var avatarEl = document.createElement("div");
         avatarEl.className = "avatar";
         avatarLayer.appendChild(avatarEl);
@@ -198,6 +202,7 @@
 
         this.video = video;
         this.avatarEl = avatarEl;
+        this.wokaImg = wokaImg;
         this.nameChip = nameChip;
         this.nameText = nameText;
         this.update(meta);
@@ -215,8 +220,17 @@
         this.avatarEl.style.background = color;
         this.avatarEl.style.color = textColor;
         this.avatarEl.textContent = computeInitials(name);
+        // Camera-off placeholder: the participant's real Woka when we have it (like the app), else the
+        // colour initials disc. Only reset src when it actually changes to avoid re-decoding the image.
+        if (meta.woka) {
+            if (this.wokaImg.getAttribute("src") !== meta.woka) this.wokaImg.src = meta.woka;
+        } else if (this.wokaImg.getAttribute("src")) {
+            this.wokaImg.removeAttribute("src");
+        }
+        this.container.classList.toggle("has-woka", !!meta.woka);
         this.container.classList.toggle("is-self", meta.isSelf === true);
         this.container.classList.toggle("is-muted", meta.hasAudio === false);
+        this.container.classList.toggle("is-speaking", meta.speaking === true);
         // Track presence wins over the meta hint (avoids a black flicker before pc.ontrack lands).
         this.container.classList.toggle("has-video", this.trackId !== null);
     };
