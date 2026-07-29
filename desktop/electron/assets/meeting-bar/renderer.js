@@ -46,12 +46,26 @@
     var dvBody = byId("dv-body");
     var dvCancel = byId("dv-cancel");
 
+    var annotationPanel = byId("annotation");
+    var anCaret = byId("an-caret");
+    var anTools = annotationPanel.querySelectorAll("[data-tool]");
+    var anColors = annotationPanel.querySelectorAll("[data-color]");
+    var anUndo = byId("an-undo");
+    var anClear = byId("an-clear");
+    var anEye = byId("an-eye");
+    var anOthers = byId("an-others");
+    var anDone = byId("an-done");
+
     var pickerOpen = false;
     var menuOpen = false;
     var devicesOpen = false;
+    var annotationActive = false;
     var pickerKind = "screen";
     var lastSources = [];
     var lastDevices = null;
+    // The annotation panel is a single short row; grow the window just enough to clear the pill so
+    // the transparent area above it doesn't blanket (and swallow clicks over) the shared screen.
+    var ANNOTATION_EXPAND_HEIGHT = 128;
 
     function setBtnState(btn, isOn, forbiddenWhenOff) {
         btn.dataset.state = isOn ? "on" : "off";
@@ -65,6 +79,17 @@
         setBtnState(btnCam, state.cameraEnabled === true, true);
         var annotation = state.annotation || {};
         setBtnState(btnAnnotate, annotation.active === true, false);
+        // Annotation toolbar (a panel of this window): reflect the active tool / colour / toggles.
+        annotationActive = annotation.active === true;
+        anTools.forEach(function (b) {
+            b.classList.toggle("is-active", b.getAttribute("data-tool") === annotation.tool);
+        });
+        anColors.forEach(function (b) {
+            b.classList.toggle("is-active", b.getAttribute("data-color") === annotation.color);
+        });
+        anEye.dataset.state = annotation.locallyHidden === true ? "off" : "on";
+        anEye.classList.toggle("is-active", annotation.locallyHidden === true);
+        anOthers.classList.toggle("is-active", annotation.othersCanDraw === true);
         // Presenter tools: highlight only the active one (in the "…" menu).
         var presenterTool = state.presenterTool || "none";
         miLaser.classList.toggle("is-active", presenterTool === "laser");
@@ -73,6 +98,7 @@
         lastDevices = state.devices || null;
         if (devicesOpen) renderDevices();
         miTabs.setAttribute("aria-checked", state.tabBarEnabled === true ? "true" : "false");
+        syncAnnotationPanel();
     });
 
     btnMic.addEventListener("click", function () {
@@ -85,6 +111,56 @@
         api.sendCommand({ type: "toggle-screenshare" });
     });
     btnAnnotate.addEventListener("click", function () {
+        api.sendCommand({ type: "annotation-toggle" });
+    });
+
+    // ─────────── Annotation toolbar (panel above the pill, like the "…" menu) ───────────
+    // Grow the window to the tallest open panel: the picker/menu need the full height, the short
+    // annotation row needs far less, and nothing open collapses back to the pill.
+    function updateExpanded() {
+        if (menuOpen || pickerOpen || devicesOpen) {
+            api.setExpanded(true);
+        } else if (annotationActive) {
+            api.setExpanded(true, ANNOTATION_EXPAND_HEIGHT);
+        } else {
+            api.setExpanded(false);
+        }
+    }
+    function positionAnnotationCaret() {
+        var pr = annotationPanel.getBoundingClientRect();
+        var ar = btnAnnotate.getBoundingClientRect();
+        anCaret.style.left = Math.round((ar.left + ar.right) / 2 - pr.left) + "px";
+    }
+    // The annotation panel yields to the transient "…" menu / pickers, then returns when they close.
+    function syncAnnotationPanel() {
+        var show = annotationActive && !menuOpen && !pickerOpen && !devicesOpen;
+        annotationPanel.classList.toggle("visible", show);
+        if (show) positionAnnotationCaret();
+        updateExpanded();
+    }
+    anTools.forEach(function (b) {
+        b.addEventListener("click", function () {
+            api.sendCommand({ type: "annotation-set-tool", tool: b.getAttribute("data-tool") });
+        });
+    });
+    anColors.forEach(function (b) {
+        b.addEventListener("click", function () {
+            api.sendCommand({ type: "annotation-set-color", color: b.getAttribute("data-color") });
+        });
+    });
+    anUndo.addEventListener("click", function () {
+        api.sendCommand({ type: "annotation-undo" });
+    });
+    anClear.addEventListener("click", function () {
+        api.sendCommand({ type: "annotation-clear" });
+    });
+    anEye.addEventListener("click", function () {
+        api.sendCommand({ type: "annotation-toggle-local-hide" });
+    });
+    anOthers.addEventListener("click", function () {
+        api.sendCommand({ type: "annotation-toggle-others" });
+    });
+    anDone.addEventListener("click", function () {
         api.sendCommand({ type: "annotation-toggle" });
     });
 
@@ -111,7 +187,7 @@
         if (devicesOpen) closeDevices();
         menuOpen = true;
         btnMore.setAttribute("aria-expanded", "true");
-        api.setExpanded(true);
+        syncAnnotationPanel();
         positionMenu();
         document.addEventListener("mousedown", onMenuOutside, true);
     }
@@ -121,7 +197,7 @@
         btnMore.setAttribute("aria-expanded", "false");
         menu.classList.remove("visible");
         document.removeEventListener("mousedown", onMenuOutside, true);
-        if (!pickerOpen) api.setExpanded(false);
+        syncAnnotationPanel();
     }
     btnMore.addEventListener("click", function () {
         if (menuOpen) closeMenu();
@@ -184,7 +260,7 @@
     function openPicker() {
         if (devicesOpen) closeDevices();
         pickerOpen = true;
-        api.setExpanded(true);
+        syncAnnotationPanel();
         picker.classList.add("visible");
         pickerBody.className = "pk-body loading";
         pickerBody.textContent = "Loading sources…";
@@ -203,7 +279,7 @@
     function closePicker() {
         pickerOpen = false;
         picker.classList.remove("visible");
-        if (!menuOpen) api.setExpanded(false);
+        syncAnnotationPanel();
     }
 
     function renderPicker() {
@@ -256,14 +332,14 @@
     function openDevices() {
         if (pickerOpen) closePicker();
         devicesOpen = true;
-        api.setExpanded(true);
+        syncAnnotationPanel();
         devicesEl.classList.add("visible");
         renderDevices();
     }
     function closeDevices() {
         devicesOpen = false;
         devicesEl.classList.remove("visible");
-        if (!menuOpen && !pickerOpen) api.setExpanded(false);
+        syncAnnotationPanel();
     }
     function addDeviceGroup(label, list, currentId, kind) {
         if (!list || list.length === 0) return;
@@ -323,6 +399,7 @@
         if (menuOpen) closeMenu();
         else if (pickerOpen) closePicker();
         else if (devicesOpen) closeDevices();
+        else if (annotationActive) api.sendCommand({ type: "annotation-toggle" });
     });
 
     // Signal readiness AFTER all subscriptions are wired; the main process replays the last
