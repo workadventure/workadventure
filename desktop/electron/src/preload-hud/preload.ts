@@ -11,7 +11,11 @@ const api: WorkAdventureHudApi = {
     onState: (callback) => subscribe("app:hud:state", (state) => callback(state as HudState)),
     sendCommand: (command: HudCommand) => ipcRenderer.send("app:hud:command-from-hud", command),
     requestSources: () => ipcRenderer.invoke("app:hud:request-sources"),
-    setExpanded: (expanded) => ipcRenderer.send("app:hud:set-expanded", expanded === true),
+    setExpanded: (expanded, height) =>
+        ipcRenderer.send("app:hud:set-expanded", {
+            expanded: expanded === true,
+            height: typeof height === "number" ? height : undefined,
+        }),
     ready: () => ipcRenderer.send("app:hud:ready"),
 
     // Meeting video (WebRTC) — same channels the PiP view used; main relays them to the companion.
