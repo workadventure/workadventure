@@ -36,6 +36,10 @@ export type DesktopPipTile = {
     woka?: string;
     /** True while the participant is speaking (voice indicator) — drives the active-speaker border. */
     speaking?: boolean;
+    /** Local playback volume for this participant (0..1), for the tile menu's volume control. */
+    volume?: number;
+    /** True when the participant has a visit card (enables the "visit card" tile-menu action). */
+    hasVisitCard?: boolean;
 };
 
 /** A proximity-chat message mirrored into the floating desktop window. */
@@ -67,6 +71,10 @@ export type DesktopPipState = {
     canRecord?: boolean;
     chatMessages?: DesktopPipChatMessage[];
     annotation?: DesktopPipAnnotationState;
+    /** True when the local user can moderate the meeting (mute-everybody / kick tile actions). */
+    canModerate?: boolean;
+    /** True when the local user may ask others to mute (non-admin ask-to-mute tile actions). */
+    canAskToMute?: boolean;
 };
 
 export type DesktopPipCommand =
@@ -309,6 +317,12 @@ export type CompanionCommand =
     | { type: "dm"; userId: string }
     | { type: "locate"; userId: string }
     | { type: "invite"; userId: string }
+    | {
+          type: "tile-action";
+          tileKey: string;
+          action: "mute-audio" | "mute-video" | "mute-audio-all" | "mute-video-all" | "kick" | "report" | "visit-card";
+      }
+    | { type: "tile-volume"; tileKey: string; value: number }
     | { type: "accept-invitation" }
     | { type: "decline-invitation" };
 
