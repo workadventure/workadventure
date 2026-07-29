@@ -71,6 +71,7 @@
         miLoupe.classList.toggle("is-active", presenterTool === "loupe");
         lastDevices = state.devices || null;
         if (devicesOpen) renderDevices();
+        miTabs.setAttribute("aria-checked", state.tabBarEnabled === true ? "true" : "false");
     });
 
     btnMic.addEventListener("click", function () {

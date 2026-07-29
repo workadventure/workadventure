@@ -22,6 +22,8 @@ export type HudState = {
         currentCameraId?: string;
         currentMicrophoneId?: string;
     };
+    /** Whether the desktop tab strip is on (injected by main) — drives the "Display tabs" toggle. */
+    tabBarEnabled?: boolean;
 };
 
 /** Commands raised by the bars; a subset/mirror of DesktopPipCommand on the WorkAdventure side. */
