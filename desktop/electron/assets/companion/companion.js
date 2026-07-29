@@ -576,59 +576,92 @@
         return btn;
     }
 
-    // Colour-coded initials disc, standing in for the app's Woka avatar (the companion has no Woka
-    // image), using the same per-name colour the app assigns.
-    function makePersonAvatar(name) {
+    // The user's Woka avatar (the app's real avatar) when the front provides one; otherwise a
+    // colour-coded initials disc using the same per-name colour the app assigns.
+    function makePersonAvatar(name, woka) {
         var av = document.createElement("span");
         av.className = "person-avatar";
-        var c = getColorByString(name || "");
-        av.style.background = c;
-        av.style.color = getTextColorByBackgroundColor(c);
-        av.textContent = computeInitials(name || "");
+        if (woka) {
+            av.className = "person-avatar has-woka";
+            var img = document.createElement("img");
+            img.src = woka;
+            img.alt = "";
+            av.appendChild(img);
+        } else {
+            var c = getColorByString(name || "");
+            av.style.background = c;
+            av.style.color = getTextColorByBackgroundColor(c);
+            av.textContent = computeInitials(name || "");
+        }
         return av;
+    }
+
+    // Row: [avatar] [name] … [actions on hover] [status dot, right].
+    function buildPersonRow(u) {
+        var row = document.createElement("div");
+        row.className = "person";
+        row.appendChild(makePersonAvatar(u.name, u.woka));
+
+        var name = document.createElement("span");
+        name.className = "person-name";
+        name.textContent = u.name || "Someone";
+        row.appendChild(name);
+
+        if (u.isSelf) {
+            var you = document.createElement("span");
+            you.className = "person-you";
+            you.textContent = "you";
+            row.appendChild(you);
+        } else {
+            var actions = document.createElement("div");
+            actions.className = "person-actions";
+            actions.appendChild(miniButton("invite", u.id, "Invite to meeting", ICON_INVITE));
+            actions.appendChild(miniButton("dm", u.id, "Message", ICON_DM));
+            actions.appendChild(miniButton("locate", u.id, "Locate", ICON_LOCATE));
+            row.appendChild(actions);
+        }
+
+        var dot = document.createElement("span");
+        dot.className = "dot";
+        dot.dataset.status = normStatus(u.status);
+        row.appendChild(dot);
+        return row;
+    }
+
+    function appendPeopleSection(label) {
+        var h = document.createElement("div");
+        h.className = "person-section";
+        h.textContent = label;
+        els.people.appendChild(h);
     }
 
     function renderPeople(users) {
         els.people.textContent = "";
         setEmpty(els.peopleEmpty, users.length === 0);
+        // Self first, then the current proximity "bubble" (grouped under a header, like the mockup),
+        // then everyone else online. The grouping only appears when someone is actually in the bubble.
         var selfName = "You";
+        var self = null;
+        var bubble = [];
+        var rest = [];
         for (var i = 0; i < users.length; i++) {
             var u = users[i];
-            if (u.isSelf && u.name) {
-                selfName = u.name;
-            }
-            // Row: [avatar] [name] … [actions on hover] [status dot, right].
-            var row = document.createElement("div");
-            row.className = "person";
-
-            row.appendChild(makePersonAvatar(u.name));
-
-            var name = document.createElement("span");
-            name.className = "person-name";
-            name.textContent = u.name || "Someone";
-            row.appendChild(name);
-
             if (u.isSelf) {
-                var you = document.createElement("span");
-                you.className = "person-you";
-                you.textContent = "you";
-                row.appendChild(you);
+                self = u;
+                if (u.name) selfName = u.name;
+            } else if (u.inBubble) {
+                bubble.push(u);
             } else {
-                var actions = document.createElement("div");
-                actions.className = "person-actions";
-                actions.appendChild(miniButton("invite", u.id, "Invite to meeting", ICON_INVITE));
-                actions.appendChild(miniButton("dm", u.id, "Message", ICON_DM));
-                actions.appendChild(miniButton("locate", u.id, "Locate", ICON_LOCATE));
-                row.appendChild(actions);
+                rest.push(u);
             }
-
-            var dot = document.createElement("span");
-            dot.className = "dot";
-            dot.dataset.status = normStatus(u.status);
-            row.appendChild(dot);
-
-            els.people.appendChild(row);
         }
+        if (self) els.people.appendChild(buildPersonRow(self));
+        if (bubble.length) {
+            appendPeopleSection("Discussion bubble");
+            for (var b = 0; b < bubble.length; b++) els.people.appendChild(buildPersonRow(bubble[b]));
+            if (rest.length) appendPeopleSection("Online");
+        }
+        for (var r = 0; r < rest.length; r++) els.people.appendChild(buildPersonRow(rest[r]));
         // Header self name + people count badges.
         els.selfName.textContent = selfName;
         var count = users.length;
