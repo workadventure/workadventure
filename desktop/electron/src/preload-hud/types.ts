@@ -12,6 +12,8 @@ export type HudState = {
         color: string;
         othersCanDraw: boolean;
         locallyHidden: boolean;
+        canUndo: boolean;
+        canRedo: boolean;
     };
     /** Active presenter tool: "none" | "laser" | "spotlight" | "loupe". */
     presenterTool?: string;

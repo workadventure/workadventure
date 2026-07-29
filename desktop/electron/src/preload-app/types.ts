@@ -186,6 +186,8 @@ export type DesktopPresenterHudState = {
         color: string;
         othersCanDraw: boolean;
         locallyHidden: boolean;
+        canUndo: boolean;
+        canRedo: boolean;
     };
     /** Active presenter cursor tool: "none" | "laser" | "spotlight" | "loupe". */
     presenterTool?: string;
