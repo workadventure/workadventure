@@ -17,6 +17,8 @@
     var byId = function (id) {
         return document.getElementById(id);
     };
+    var ICON_CHECK =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10"/></svg>';
 
     var btnMic = byId("bar-mic");
     var btnCam = byId("bar-cam");
@@ -39,10 +41,16 @@
     var pickerCancel = byId("pk-cancel");
     var pickerTabs = picker.querySelectorAll(".pk-tab");
 
+    var devicesEl = byId("devices");
+    var dvBody = byId("dv-body");
+    var dvCancel = byId("dv-cancel");
+
     var pickerOpen = false;
     var menuOpen = false;
+    var devicesOpen = false;
     var pickerKind = "screen";
     var lastSources = [];
+    var lastDevices = null;
 
     function setBtnState(btn, isOn, forbiddenWhenOff) {
         btn.dataset.state = isOn ? "on" : "off";
@@ -61,6 +69,8 @@
         miLaser.classList.toggle("is-active", presenterTool === "laser");
         miSpotlight.classList.toggle("is-active", presenterTool === "spotlight");
         miLoupe.classList.toggle("is-active", presenterTool === "loupe");
+        lastDevices = state.devices || null;
+        if (devicesOpen) renderDevices();
     });
 
     btnMic.addEventListener("click", function () {
@@ -92,6 +102,7 @@
     }
     function openMenu() {
         if (pickerOpen) closePicker();
+        if (devicesOpen) closeDevices();
         menuOpen = true;
         btnMore.setAttribute("aria-expanded", "true");
         api.setExpanded(true);
@@ -139,14 +150,10 @@
         closeMenu();
         openPicker();
     });
-    miDevices.addEventListener(
-        "click",
-        // Phase 2 replaces this with a real camera/microphone picker; for now bring the app forward
-        // where the media settings live.
-        menuAction(function () {
-            api.sendCommand({ type: "focus-main" });
-        })
-    );
+    miDevices.addEventListener("click", function () {
+        closeMenu();
+        openDevices();
+    });
     miTabs.addEventListener("click", function () {
         // Optimistic toggle; the real state is reflected once wired into the pushed HUD state.
         var next = miTabs.getAttribute("aria-checked") !== "true";
@@ -169,6 +176,7 @@
 
     // ─────────── Direct source switcher (opened from the "…" menu) ───────────
     function openPicker() {
+        if (devicesOpen) closeDevices();
         pickerOpen = true;
         api.setExpanded(true);
         picker.classList.add("visible");
@@ -238,6 +246,61 @@
         });
     }
 
+    // ─────────── Camera / microphone picker (opened from the "…" menu) ───────────
+    function openDevices() {
+        if (pickerOpen) closePicker();
+        devicesOpen = true;
+        api.setExpanded(true);
+        devicesEl.classList.add("visible");
+        renderDevices();
+    }
+    function closeDevices() {
+        devicesOpen = false;
+        devicesEl.classList.remove("visible");
+        if (!menuOpen && !pickerOpen) api.setExpanded(false);
+    }
+    function addDeviceGroup(label, list, currentId, kind) {
+        if (!list || list.length === 0) return;
+        var head = document.createElement("div");
+        head.className = "dv-group";
+        head.textContent = label;
+        dvBody.appendChild(head);
+        list.forEach(function (device) {
+            var row = document.createElement("button");
+            row.type = "button";
+            row.className = "dv-item" + (device.id === currentId ? " is-current" : "");
+            var chk = document.createElement("span");
+            chk.className = "dv-check";
+            chk.innerHTML = ICON_CHECK;
+            row.appendChild(chk);
+            var name = document.createElement("span");
+            name.className = "dv-name";
+            name.textContent = device.label || device.id;
+            row.appendChild(name);
+            row.addEventListener("click", function () {
+                api.sendCommand({ type: "pick-device", kind: kind, deviceId: device.id });
+                closeDevices();
+            });
+            dvBody.appendChild(row);
+        });
+    }
+    function renderDevices() {
+        if (!devicesOpen) return;
+        var d = lastDevices || { cameras: [], microphones: [] };
+        var cams = d.cameras || [];
+        var mics = d.microphones || [];
+        dvBody.innerHTML = "";
+        addDeviceGroup("Camera", cams, d.currentCameraId, "camera");
+        addDeviceGroup("Microphone", mics, d.currentMicrophoneId, "microphone");
+        if (cams.length === 0 && mics.length === 0) {
+            var empty = document.createElement("div");
+            empty.className = "dv-empty";
+            empty.textContent = "No devices available.";
+            dvBody.appendChild(empty);
+        }
+    }
+    dvCancel.addEventListener("click", closeDevices);
+
     pickerCancel.addEventListener("click", closePicker);
     pickerTabs.forEach(function (tab) {
         tab.addEventListener("click", function () {
@@ -253,6 +316,7 @@
         if (e.key !== "Escape") return;
         if (menuOpen) closeMenu();
         else if (pickerOpen) closePicker();
+        else if (devicesOpen) closeDevices();
     });
 
     // Signal readiness AFTER all subscriptions are wired; the main process replays the last

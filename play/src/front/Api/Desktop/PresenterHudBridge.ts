@@ -4,7 +4,14 @@ import type {
     DesktopPresenterHudState,
     WorkAdventureDesktopApi,
 } from "../../Interfaces/DesktopAppInterfaces";
-import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import {
+    cameraListStore,
+    microphoneListStore,
+    requestedCameraDeviceIdStore,
+    requestedCameraState,
+    requestedMicrophoneDeviceIdStore,
+    requestedMicrophoneState,
+} from "../../Stores/MediaStore";
 import {
     activeScreenShareSourceStore,
     requestedScreenSharingState,
@@ -103,6 +110,10 @@ class PresenterHudBridge {
             screenAnnotationLocallyHiddenStore,
             screenAnnotationEnabledStore,
             presenterToolStore,
+            cameraListStore,
+            microphoneListStore,
+            requestedCameraDeviceIdStore,
+            requestedMicrophoneDeviceIdStore,
         ] as const;
         for (const store of pushOnChange) {
             this.subscriptions.push(store.subscribe(() => this.pushState()));
@@ -132,6 +143,18 @@ class PresenterHudBridge {
                 locallyHidden: get(screenAnnotationLocallyHiddenStore),
             },
             presenterTool: get(presenterToolStore),
+            devices: {
+                cameras: (get(cameraListStore) ?? []).map((d, i) => ({
+                    id: d.deviceId,
+                    label: d.label || `Camera ${i + 1}`,
+                })),
+                microphones: (get(microphoneListStore) ?? []).map((d, i) => ({
+                    id: d.deviceId,
+                    label: d.label || `Microphone ${i + 1}`,
+                })),
+                currentCameraId: get(requestedCameraDeviceIdStore),
+                currentMicrophoneId: get(requestedMicrophoneDeviceIdStore),
+            },
         };
     }
 
@@ -263,6 +286,15 @@ class PresenterHudBridge {
                     presenterToolStore.set(current === command.tool ? "none" : command.tool);
                 } else {
                     presenterToolStore.set("none");
+                }
+                break;
+            }
+            case "pick-device": {
+                // Same setter the in-app media settings use; the media machine re-acquires the stream.
+                if (command.kind === "camera") {
+                    requestedCameraDeviceIdStore.set(command.deviceId);
+                } else {
+                    requestedMicrophoneDeviceIdStore.set(command.deviceId);
                 }
                 break;
             }
