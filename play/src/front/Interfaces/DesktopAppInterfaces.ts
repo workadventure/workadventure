@@ -356,6 +356,14 @@ export type WorkAdventureDesktopApi = {
     getWindowState: () => Promise<DesktopWindowState>;
     onWindowStateChange: (callback: (state: DesktopWindowState) => void) => () => void;
     getDesktopCapturerSources: (options: SourcesOptions) => Promise<DesktopCapturerSource[]>;
+    /**
+     * Open a big-numbered, click-to-share overlay on every physical display and resolve the screen
+     * source the user clicks (null on Escape). Optional: absent on older desktop shells, so callers
+     * must feature-detect before offering the "click a screen" affordance.
+     */
+    identifyScreens?: () => Promise<DesktopCapturerSource | null>;
+    /** Dismiss any open "identify screens" overlays (no-op if none). Optional; absent on older shells. */
+    cancelIdentifyScreens?: () => void;
     pip?: WorkAdventureDesktopPipApi;
     navigation?: WorkAdventureDesktopNavigationApi;
     screenOverlay?: WorkAdventureDesktopOverlayApi;
