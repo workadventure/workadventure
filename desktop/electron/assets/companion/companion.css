@@ -500,6 +500,86 @@ button {
 .tile.is-speaking .name-chip {
     background: var(--secondary);
 }
+/* The name tag is a button (opens the tile action menu) — strip the default button chrome. */
+.tile .name-chip {
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+}
+.tile .name-chip:hover {
+    filter: brightness(1.14);
+}
+
+/* Tile action menu — parity with the app's ActionMediaBox. Positioned (fixed) over the panel. */
+.tile-menu {
+    position: fixed;
+    z-index: 100;
+    min-width: 204px;
+    max-width: 260px;
+    padding: 4px;
+    background: rgba(27, 42, 65, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: var(--text);
+    font-size: 13px;
+}
+.tile-menu-vol {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px 8px;
+}
+.tile-menu-mute {
+    flex: 0 0 auto;
+    display: inline-flex;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    color: var(--text);
+    cursor: pointer;
+}
+.tile-menu-mute svg {
+    width: 18px;
+    height: 18px;
+}
+.tile-menu-slider {
+    flex: 1;
+    accent-color: var(--secondary);
+}
+.tile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 8px;
+    background: transparent;
+    border: 0;
+    border-radius: 7px;
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+}
+.tile-menu-item svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+}
+.tile-menu-item:hover:not([disabled]) {
+    background: rgba(255, 255, 255, 0.1);
+}
+.tile-menu-item[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.tile-menu-item.danger {
+    color: var(--danger);
+}
 .tile .name-chip .name-text {
     flex: 0 1 auto;
     min-width: 0;
