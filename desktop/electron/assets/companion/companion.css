@@ -92,17 +92,14 @@ button {
 }
 
 /* Media controls pill — the app's ActionBar style, ported from the PiP toolbar. */
+/* No container at rest (matches the mockup): the media buttons float as plain icons and only pick up
+   a background when toggled (is-active blue / is-forbidden red) or hovered. */
 .toolbar-pill {
     -webkit-app-region: no-drag;
     justify-self: center;
     display: inline-flex;
     align-items: center;
     gap: 2px;
-    padding: 4px;
-    background: var(--chip);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border-radius: 10px;
 }
 .toolbar-btn {
     -webkit-app-region: no-drag;
@@ -464,26 +461,36 @@ button {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-/* Name tag: mirrors the app's UserName tag — bold white text, a squared `rounded` corner (not a
-   pill), a text shadow, over the contrast-dark chip background, bottom-left. */
+/* Name tag: mirrors the app's UserTag — a solid per-name colour pill (set inline from
+   getColorByString), contrast text, bold, with a dropdown chevron, bottom-left. */
 .tile .name-chip {
     position: absolute;
     bottom: 6px;
     left: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
     max-width: calc(100% - 12px);
-    padding: 2px 8px;
+    padding: 2px 6px 2px 8px;
     background: var(--chip);
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 12px;
     font-weight: 700;
     line-height: 1.4;
     color: #fff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+.tile .name-chip .name-text {
+    flex: 0 1 auto;
+    min-width: 0;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+}
+.tile .name-chip .name-chev {
+    flex: 0 0 auto;
+    width: 12px;
+    height: 12px;
+    opacity: 0.85;
 }
 
 /* People / Chat views sit above the video; slide in from the right. When closed they are pushed
@@ -568,17 +575,33 @@ button {
 }
 
 /* People rows */
+/* Row mirrors the mockup: [avatar] [name] … [status dot, right]. Per-user actions replace the
+   right side on hover (the dot stays; the actions slide in just to its left). */
 .person {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 7px 8px;
+    gap: 9px;
+    padding: 6px 8px;
     border-radius: 9px;
 }
 .person:hover {
     background: var(--surface);
 }
+.person-avatar {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    user-select: none;
+}
 .person .dot {
+    flex: 0 0 auto;
     width: 10px;
     height: 10px;
 }
@@ -590,17 +613,24 @@ button {
     font-weight: 550;
 }
 .person-you {
+    flex: 0 0 auto;
     color: var(--faint);
     font-size: 11px;
 }
 .person-actions {
+    position: absolute;
+    right: 22px;
     display: flex;
     gap: 2px;
+    padding-left: 8px;
+    background: var(--surface);
     opacity: 0;
+    pointer-events: none;
     transition: opacity 120ms ease;
 }
 .person:hover .person-actions {
     opacity: 1;
+    pointer-events: auto;
 }
 .mini-btn {
     display: inline-flex;
