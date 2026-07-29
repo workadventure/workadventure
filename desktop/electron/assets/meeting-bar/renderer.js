@@ -27,6 +27,7 @@
     var btnMore = byId("bar-more");
 
     var menu = byId("menu");
+    var menuCaret = byId("mn-caret");
     var miLaser = byId("mn-laser");
     var miSpotlight = byId("mn-spotlight");
     var miLoupe = byId("mn-loupe");
@@ -99,6 +100,10 @@
         var left = r.right - menu.offsetWidth; // right-align to the "…"
         if (left < 6) left = 6;
         menu.style.left = Math.round(left) + "px";
+        // Point the caret at the centre of the "…" button, whatever the clamped left edge.
+        if (menuCaret) {
+            menuCaret.style.left = Math.round((r.left + r.right) / 2 - left) + "px";
+        }
         menu.style.visibility = "";
     }
     function openMenu() {
