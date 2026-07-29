@@ -113,12 +113,43 @@
         if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
         return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
-    function colorForName(name) {
+    // Name → color using the EXACT algorithm the web app uses (shared-utils Color.getColorByString),
+    // so a participant's tile color matches the color WorkAdventure gives them everywhere else.
+    function getColorByString(name) {
         var s = String(name || "");
+        if (s.length === 0) return "#000000";
         var hash = 0;
-        for (var i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) | 0;
-        var hue = Math.abs(hash) % 360;
-        return { bg: "hsl(" + hue + ", 35%, 22%)", avatar: "hsl(" + hue + ", 60%, 55%)" };
+        for (var i = 0; i < s.length; i++) {
+            hash = s.charCodeAt(i) + ((hash << 5) - hash);
+            hash = hash & hash;
+        }
+        var color = "#";
+        for (var j = 0; j < 3; j++) {
+            var value = (hash >> (j * 8)) & 255;
+            var radix = "00" + value.toString(16);
+            color += radix.substring(radix.length - 2);
+        }
+        return color;
+    }
+    // Readable text (black/white) over a background — same brightness rule as the app.
+    function getTextColorByBackgroundColor(hex) {
+        if (!hex || hex.length < 7) return "#ffffff";
+        var brightness = Math.round(
+            (parseInt(hex.slice(1, 3), 16) * 299 +
+                parseInt(hex.slice(3, 5), 16) * 587 +
+                parseInt(hex.slice(5, 7), 16) * 114) /
+                1000
+        );
+        return brightness > 125 ? "#000000" : "#ffffff";
+    }
+    // Darken a #rrggbb toward black (keep = fraction of each channel), for the camera-off tile
+    // backdrop behind the avatar — a subtle per-person tint that stays dark like the app's tiles.
+    function darken(hex, keep) {
+        if (!hex || hex.length < 7) return "#12202f";
+        var r = Math.round(parseInt(hex.slice(1, 3), 16) * keep);
+        var g = Math.round(parseInt(hex.slice(3, 5), 16) * keep);
+        var b = Math.round(parseInt(hex.slice(5, 7), 16) * keep);
+        return "rgb(" + r + ", " + g + ", " + b + ")";
     }
     function makeMicBadge() {
         var span = document.createElement("span");
@@ -165,11 +196,12 @@
     }
     TileElement.prototype.update = function (meta) {
         var name = meta.name || (meta.isSelf ? "You" : "");
-        var colors = colorForName(name);
+        var color = getColorByString(name);
         this.nameChip.textContent = name;
         this.nameChip.style.display = name ? "" : "none";
-        this.container.style.setProperty("--tile-bg", colors.bg);
-        this.avatarEl.style.background = colors.avatar;
+        this.container.style.setProperty("--tile-bg", darken(color, 0.32));
+        this.avatarEl.style.background = color;
+        this.avatarEl.style.color = getTextColorByBackgroundColor(color);
         this.avatarEl.textContent = computeInitials(name);
         this.container.classList.toggle("is-self", meta.isSelf === true);
         this.container.classList.toggle("is-muted", meta.hasAudio === false);
