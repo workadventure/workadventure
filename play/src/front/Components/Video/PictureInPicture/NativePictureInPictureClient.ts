@@ -1,5 +1,6 @@
 import { get, type Readable, type Unsubscriber } from "svelte/store";
 import Debug from "debug";
+import { userIsAdminStore } from "../../../Stores/GameStore";
 import type { Streamable } from "../../../Space/Streamable";
 import type { VideoBox } from "../../../Space/VideoBox";
 import type {
@@ -857,9 +858,25 @@ export class NativePictureInPictureClient {
     private sendState(): void {
         const pip = getDesktopPipApi();
         if (!pip || !this.active) return;
+        // Moderation permissions (read once per push): admin = mute-everybody/kick; canAskToMute =
+        // non-admin ask-to-mute. canAskToMute is per-space, so read it off any current box's space.
+        const boxes = get(this.deps.streamables);
+        const canModerate = get(userIsAdminStore);
+        let canAskToMute = false;
+        for (const box of boxes.values()) {
+            if (box.spaceUser) {
+                canAskToMute = get(box.spaceUser.space.canAskToMuteAudioOrTurnOffVideo);
+                break;
+            }
+        }
         const tiles: DesktopPipTile[] = [];
         for (const source of this.tileSources.values()) {
             const hasAudio = this.hasAudioByBoxId.get(source.boxId) === true;
+            // Per-tile menu inputs (remote boxes only; the self box isn't in the collection).
+            const box = boxes.get(source.boxId);
+            const streamable = box ? get(box.streamable) : undefined;
+            const volume = streamable ? get(streamable.volume) : undefined;
+            const hasVisitCard = Boolean(box?.spaceUser?.visitCardUrl);
             // Filter out trackIds whose sender is dead/replaced. Without this, a fast cam
             // toggle (or a toggle triggered by a new getUserMedia call when the user toggles
             // their mic) can leave a stale id in source.trackIds for one tick — long enough to
@@ -886,6 +903,8 @@ export class NativePictureInPictureClient {
                     hasVideo: false,
                     woka,
                     speaking,
+                    volume,
+                    hasVisitCard,
                 });
                 continue;
             }
@@ -902,6 +921,8 @@ export class NativePictureInPictureClient {
                 hasVideo: true,
                 woka,
                 speaking,
+                volume,
+                hasVisitCard,
             });
         }
         const state: DesktopPipState = {
@@ -914,6 +935,8 @@ export class NativePictureInPictureClient {
             canRecord: false,
             chatMessages: this.lastChatMessages,
             annotation: this.lastAnnotationState,
+            canModerate,
+            canAskToMute,
         };
         try {
             pip.sendState(state);
