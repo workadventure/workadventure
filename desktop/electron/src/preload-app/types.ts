@@ -221,6 +221,8 @@ export type CompanionUser = {
     isSelf: boolean;
     /** True when this user is in the local user's current proximity meeting. */
     inBubble?: boolean;
+    /** Base64 data URL of the user's Woka avatar; optional — the panel falls back to a colour disc. */
+    woka?: string;
 };
 
 /** A chat message shown in the companion's selected conversation. */
