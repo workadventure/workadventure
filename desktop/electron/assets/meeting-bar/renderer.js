@@ -54,7 +54,6 @@
     var anClear = byId("an-clear");
     var anEye = byId("an-eye");
     var anOthers = byId("an-others");
-    var anDone = byId("an-done");
 
     var pickerOpen = false;
     var menuOpen = false;
@@ -159,9 +158,6 @@
     });
     anOthers.addEventListener("click", function () {
         api.sendCommand({ type: "annotation-toggle-others" });
-    });
-    anDone.addEventListener("click", function () {
-        api.sendCommand({ type: "annotation-toggle" });
     });
 
     // ─────────── Overflow "…" menu ───────────
