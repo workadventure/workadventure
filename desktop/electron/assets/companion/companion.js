@@ -87,7 +87,6 @@
         chatClose: byId("c-chat-close"),
         people: byId("c-people"),
         peopleEmpty: byId("c-people-empty"),
-        chatOnline: byId("c-chat-online"),
         chatOnlineCount: byId("c-chat-online-count"),
         conversations: byId("c-conversations"),
         conversationsEmpty: byId("c-conversations-empty"),
@@ -1073,9 +1072,9 @@
         renderInvitation(state.invitation);
         var users = Array.isArray(state.users) ? state.users : [];
         renderPeople(users);
-        // Online-user count shown in the Chat header (like the design).
+        // Online-user count shown as a leading badge in the Chat header (like the design).
         els.chatOnlineCount.textContent = String(users.length);
-        els.chatOnline.hidden = users.length === 0;
+        els.chatOnlineCount.hidden = users.length === 0;
         renderChat(
             Array.isArray(state.conversations) ? state.conversations : [],
             state.selectedConversation || null,
