@@ -320,7 +320,7 @@ export function markHudReady(sender: Electron.WebContents): void {
  * Grow/shrink the meeting bar so its source picker fits, keeping the bottom edge anchored where
  * the user left the bar (it may have been dragged away from its initial position).
  */
-export function setMeetingBarExpanded(sender: Electron.WebContents, expanded: boolean): void {
+export function setMeetingBarExpanded(sender: Electron.WebContents, expanded: boolean, height?: number): void {
     const kind = hudKindOfSender(sender);
     if (kind !== "meeting-bar") {
         return;
@@ -329,8 +329,12 @@ export function setMeetingBarExpanded(sender: Electron.WebContents, expanded: bo
     if (!entry || entry.window.isDestroyed()) {
         return;
     }
+    const collapsed = HUD_SIZES["meeting-bar"].height;
     const bounds = entry.window.getBounds();
-    const targetHeight = expanded ? MEETING_BAR_EXPANDED_HEIGHT : HUD_SIZES["meeting-bar"].height;
+    // Expanding: use the requested height (a short annotation panel asks for less than the full
+    // picker height), clamped between the collapsed pill and the tallest panel.
+    const requested = typeof height === "number" ? height : MEETING_BAR_EXPANDED_HEIGHT;
+    const targetHeight = expanded ? Math.min(Math.max(requested, collapsed), MEETING_BAR_EXPANDED_HEIGHT) : collapsed;
     if (bounds.height === targetHeight) {
         return;
     }
