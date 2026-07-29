@@ -102,6 +102,8 @@ const api: WorkAdventureDesktopApi = {
         return () => ipcRenderer.removeListener("app:on-window-state-change", listener);
     },
     getDesktopCapturerSources: (options) => ipcRenderer.invoke("app:getDesktopCapturerSources", options),
+    identifyScreens: () => ipcRenderer.invoke("app:screen-identify:start"),
+    cancelIdentifyScreens: () => ipcRenderer.send("app:screen-identify:cancel"),
     pip: pipApi,
     navigation: {
         joinWorld: (url: string) => ipcRenderer.invoke("app:navigation:joinWorld", url),
