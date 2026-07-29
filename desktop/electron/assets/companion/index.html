@@ -80,7 +80,8 @@
             <!-- People view (base out of meeting; slide-in overlay in a meeting) -->
             <section class="view view-people" id="c-view-people" data-open="true">
                 <div class="view-head">
-                    <span class="view-title">Online users <span class="view-count" id="c-people-count-h">0</span></span>
+                    <span class="view-count" id="c-people-count-h">0</span>
+                    <span class="view-title">Online users</span>
                     <button class="icon-btn view-close" id="c-people-close" type="button" title="Close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 </div>
                 <div class="list" id="c-people"></div>
@@ -90,11 +91,8 @@
             <!-- Chat view (slide-in) -->
             <section class="view view-chat" id="c-view-chat" data-open="false">
                 <div class="view-head">
+                    <span class="view-count" id="c-chat-online-count" title="Online users" hidden>0</span>
                     <span class="view-title" id="c-chat-title">Chat</span>
-                    <span class="head-count" id="c-chat-online" title="Online users" hidden>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        <span id="c-chat-online-count">0</span>
-                    </span>
                     <button class="icon-btn view-close" id="c-chat-close" type="button" title="Close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 </div>
 
