@@ -417,10 +417,28 @@ button {
 .tile.is-self {
     box-shadow: inset 0 0 0 2px rgba(65, 86, 246, 0.55);
 }
+/* Active speaker: a solid accent border, over video or placeholder (wins over the self ring). */
+.tile.is-speaking {
+    box-shadow: inset 0 0 0 3px var(--secondary);
+}
 .tile .avatar-layer {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+/* Camera-off Woka avatar (the app's real avatar); shown instead of the initials disc when present. */
+.tile .tile-woka {
+    display: none;
+    width: 50%;
+    max-width: 90px;
+    height: auto;
+    image-rendering: pixelated;
+}
+.tile.has-woka .avatar {
+    display: none;
+}
+.tile.has-woka .tile-woka {
+    display: block;
 }
 .tile .avatar {
     width: 56%;
