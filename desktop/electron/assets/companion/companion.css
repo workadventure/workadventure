@@ -599,6 +599,29 @@ button {
     font-weight: 700;
     text-transform: uppercase;
     user-select: none;
+    overflow: hidden;
+}
+.person-avatar.has-woka {
+    background: transparent;
+}
+.person-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* Woka snapshots are pixel art — keep the crisp edges the app renders. */
+    image-rendering: pixelated;
+}
+/* Section label above the proximity-bubble group (and the "Online" rest) in the People list. */
+.person-section {
+    padding: 9px 8px 3px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--faint);
+}
+.person-section:first-child {
+    padding-top: 2px;
 }
 .person .dot {
     flex: 0 0 auto;
