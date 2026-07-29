@@ -233,10 +233,11 @@
             display: inline-flex;
             align-items: center;
             padding: 0 2px;
+            margin-right: 6px;
             color: var(--fg-muted);
             cursor: grab;
         }
-        .bar-handle svg { width: 18px; height: 22px; fill: currentColor; stroke: none; }
+        .bar-handle svg { width: 20px; height: 22px; fill: currentColor; stroke: none; }
 
         /* Overflow menu — positioned by JS above the "…" button; the window grows (setExpanded). */
         #menu {
@@ -255,6 +256,19 @@
             z-index: 10;
         }
         #menu.visible { display: flex; }
+        /* Caret joining the menu to the "…" button, so it's clear which button opened it (positioned
+           by JS to sit under the button's centre). The menu always opens above the bar. */
+        .mn-caret {
+            position: absolute;
+            bottom: -7px;
+            width: 0;
+            height: 0;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-top: 8px solid var(--contrast);
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
         .mn-item {
             -webkit-app-region: no-drag;
             display: flex;
@@ -360,11 +374,12 @@
             <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 11l-4 4l4 4m-4 -4h11a4 4 0 0 0 0 -8h-1"/></svg></span>
             <span class="mn-label">Back to WorkAdventure</span>
         </button>
+        <span class="mn-caret" id="mn-caret" aria-hidden="true"></span>
     </div>
     <div id="bar">
         <div class="pill">
             <span class="bar-handle" id="bar-handle" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
+                <svg viewBox="0 0 24 24"><circle cx="8" cy="5" r="1.5"/><circle cx="16" cy="5" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="19" r="1.5"/><circle cx="16" cy="19" r="1.5"/></svg>
             </span>
             <button class="bar-btn" id="bar-mic" type="button" data-state="on" title="Toggle microphone" aria-label="Toggle microphone">
                 <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true">
