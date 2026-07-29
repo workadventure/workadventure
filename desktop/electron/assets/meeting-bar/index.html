@@ -41,7 +41,7 @@
             box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
         }
         #picker.visible { display: flex; }
-        #picker .pk-header {
+        .pk-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -49,7 +49,7 @@
             padding: 8px 10px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
-        #picker .pk-title { font-size: 12px; font-weight: 600; letter-spacing: 0.3px; }
+        .pk-title { font-size: 12px; font-weight: 600; letter-spacing: 0.3px; }
         #picker .pk-tabs { display: flex; gap: 4px; }
         #picker .pk-tab {
             background: rgba(255, 255, 255, 0.06);
@@ -62,7 +62,8 @@
         }
         #picker .pk-tab.active { background: var(--secondary); }
         #picker .pk-tab:hover:not(.active) { background: rgba(255, 255, 255, 0.12); }
-        #picker .pk-close {
+        .pk-close {
+            -webkit-app-region: no-drag;
             background: rgba(255, 255, 255, 0.06);
             border: 0;
             color: var(--fg);
@@ -72,7 +73,45 @@
             cursor: pointer;
             line-height: 1;
         }
-        #picker .pk-close:hover { background: rgba(255, 255, 255, 0.16); }
+        .pk-close:hover { background: rgba(255, 255, 255, 0.16); }
+
+        /* Device picker panel (shares the picker chrome). */
+        #devices {
+            flex: 1;
+            min-height: 0;
+            display: none;
+            flex-direction: column;
+            margin: 0 4px 8px;
+            border-radius: 12px;
+            background: var(--contrast);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+        }
+        #devices.visible { display: flex; }
+        .dv-body { flex: 1; overflow-y: auto; padding: 6px 8px 8px; }
+        .dv-group {
+            padding: 8px 4px 3px;
+            font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
+            text-transform: uppercase; color: var(--fg-muted);
+        }
+        .dv-item {
+            -webkit-app-region: no-drag;
+            display: flex; align-items: center; gap: 8px;
+            width: 100%; padding: 8px 10px;
+            background: transparent; border: 0; border-radius: 8px;
+            color: var(--fg); font: inherit; font-size: 12.5px;
+            text-align: left; cursor: pointer;
+        }
+        .dv-item:hover { background: rgba(255, 255, 255, 0.10); }
+        .dv-check {
+            flex: 0 0 auto; width: 16px; height: 16px;
+            color: var(--secondary); visibility: hidden;
+        }
+        .dv-item.is-current .dv-check { visibility: visible; }
+        .dv-check svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+        .dv-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dv-empty { color: var(--fg-muted); font-size: 12px; padding: 8px 10px; }
         #picker .pk-body {
             flex: 1;
             overflow-y: auto;
@@ -275,6 +314,14 @@
             <button class="pk-close" id="pk-cancel" type="button" aria-label="Cancel">×</button>
         </div>
         <div class="pk-body loading" id="pk-body">Loading sources…</div>
+    </div>
+    <!-- Device picker (grows the window like the source picker). Populated from the pushed state. -->
+    <div id="devices" role="dialog" aria-label="Change camera or microphone">
+        <div class="pk-header">
+            <span class="pk-title">Camera &amp; microphone</span>
+            <button class="pk-close" id="dv-cancel" type="button" aria-label="Close">×</button>
+        </div>
+        <div class="dv-body" id="dv-body"></div>
     </div>
     <!-- Overflow menu (grows the HUD window like the picker; anchored above the bar). -->
     <div id="menu" role="menu" aria-label="More options">
