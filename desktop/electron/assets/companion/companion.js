@@ -415,7 +415,11 @@
     // ── Tile action menu — parity with the app's ActionMediaBox ──────────────
     var tileMenuEl = null;
     var tileMenuOpenFor = null;
+    var tileMenuAnchor = null;
     function onTileMenuOutside(e) {
+        // Ignore clicks on the anchoring name chip: its own click handler toggles the menu closed.
+        // Closing here (on mousedown, before that click) would let the click re-open it.
+        if (tileMenuAnchor && tileMenuAnchor.contains(e.target)) return;
         if (tileMenuEl && !tileMenuEl.contains(e.target)) closeTileMenu();
     }
     function onTileMenuKey(e) {
@@ -427,6 +431,7 @@
             tileMenuEl = null;
         }
         tileMenuOpenFor = null;
+        tileMenuAnchor = null;
         document.removeEventListener("mousedown", onTileMenuOutside, true);
         document.removeEventListener("keydown", onTileMenuKey, true);
     }
@@ -541,12 +546,13 @@
         document.body.appendChild(menu);
         tileMenuEl = menu;
         tileMenuOpenFor = tile;
+        tileMenuAnchor = anchorEl;
         positionTileMenu(menu, anchorEl);
-        // Defer wiring the outside-click listener so the opening click doesn't immediately close it.
-        setTimeout(function () {
-            document.addEventListener("mousedown", onTileMenuOutside, true);
-            document.addEventListener("keydown", onTileMenuKey, true);
-        }, 0);
+        // The menu opens on `click`, so the opening `mousedown` has already passed — attaching now
+        // only catches subsequent clicks, and the anchor-skip in onTileMenuOutside handles re-clicks
+        // on the chevron.
+        document.addEventListener("mousedown", onTileMenuOutside, true);
+        document.addEventListener("keydown", onTileMenuKey, true);
     }
     function positionTileMenu(menu, anchorEl) {
         var r = anchorEl.getBoundingClientRect();
