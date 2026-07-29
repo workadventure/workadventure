@@ -656,24 +656,7 @@ button {
 .view-close {
     margin-left: auto;
 }
-/* Online-users count shown in the Chat header (like the design). */
-.head-count {
-    margin-left: auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
-    background: var(--surface-2);
-    border-radius: 999px;
-    color: var(--muted);
-    font-size: 11px;
-    font-weight: 700;
-}
-.head-count svg {
-    width: 13px;
-    height: 13px;
-}
-.head-count[hidden] {
+.view-count[hidden] {
     display: none;
 }
 
