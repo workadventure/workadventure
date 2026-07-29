@@ -16,6 +16,7 @@ import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { requestVisitCardsStore } from "../../Stores/GameStore";
 import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
@@ -451,6 +452,8 @@ class DesktopApi {
         let latestOtherUsers: CompanionUser[] = [];
         let latestMatrixConversations: CompanionConversation[] = [];
         let latestNearby: CompanionConversation | null = null;
+        // The local user's Woka — used as the proximity chat's avatar, like the app's ProximityRoomRow.
+        let latestLocalWoka: string | undefined = get(currentPlayerWokaStore);
         let latestSelected: CompanionSelectedConversation | null = null;
         let selectedConversationId: string | null = null;
         let chatConnection: ChatConnectionInterface | undefined;
@@ -544,6 +547,13 @@ class DesktopApi {
             }, 200);
         };
 
+        // Local Woka (proximity chat avatar) — re-push when it resolves / changes.
+        //eslint-disable-next-line svelte/no-ignored-unsubscribe
+        currentPlayerWokaStore.subscribe((woka) => {
+            latestLocalWoka = woka;
+            schedulePush();
+        });
+
         // People + count from the room's player list (availabilityStatus is a snapshot per join).
         //eslint-disable-next-line svelte/no-ignored-unsubscribe
         playersStore.subscribe((players) => {
@@ -629,7 +639,7 @@ class DesktopApi {
             let name = "";
             let messages: Readable<readonly ChatMessage[]> | undefined;
             if (id === NEARBY_ID) {
-                name = "Discussion bubble";
+                name = "Proximity Chat";
                 try {
                     messages = gameManager.getCurrentGameScene().proximityChatRoomManager.resolveTargetRoom()?.messages;
                 } catch {
@@ -733,12 +743,13 @@ class DesktopApi {
                             const last = msgs[msgs.length - 1];
                             latestNearby = {
                                 id: NEARBY_ID,
-                                name: "Discussion bubble",
+                                name: "Proximity Chat",
                                 kind: "nearby",
                                 preview: last ? (get(last.content).body ?? "") : "",
                                 lastActivityAt: last?.date instanceof Date ? last.date.getTime() : 0,
                                 unreadCount: 0,
                                 highlightCount: 0,
+                                woka: latestLocalWoka,
                             };
                             schedulePush();
                         });
